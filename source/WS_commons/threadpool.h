@@ -13,91 +13,24 @@
 #include <sstream>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition.hpp> 
-#include "fcgiapp.h"
+#ifdef FCGI
+#include "fcgi.h"
+#endif
 
 namespace webservice
 {
-    /// Types possibles de requètes
-    enum RequestType {GET, POST};
 
-    /// Type d'interface possible
-    enum InterfaceType {ISAPI, FCGI};
-
-    /** Structure contenant toutes les données liées à une requête entrante
+    /** Fonction à implémenter différemment selon que l'on fait du FCGI ou du ISAPI
      *
      */
-    struct RequestData {
-        /// Type de la requête (ex. GET ou POST)
-        RequestType type;
-        /// Chemin demandé (ex. "/const")
-        std::string path;
-        /// Paramètres passés à la requête (ex. "user=1&passwd=2")
-        std::string params;
-        /// Données brutes
-        std::string data;
-    };
-
-    /** Données de requêtes étendues pour pouvoir répondre au serveur selon le type d'interface */
-    template<InterfaceType it> struct RequestHandle{};
-    template<> struct RequestHandle<ISAPI>{
-
-    };
-    template<> struct RequestHandle<FCGI>{
-        FCGX_Request * request;
-    };
-
-    /** Structure contenant les réponses
-     *
-     */
-    struct ResponseData {
-        /// Type de la réponse (ex. "text/xml")
-        std::string content_type;
-        /// Réponse à proprement parler
-        std::string response;
-        /// Status http de la réponse (ex. 200)
-        int status_code;
-        /// Constructeur par défaut (status 200, type text/plain)
-        ResponseData() : content_type("text/plain"), status_code(200){}
-    };
-
-    /// Gère la requête (lecture des paramètres)
-    template<class Worker, class Data> void fcgi_request_parser(RequestHandle<FCGI> handle, Worker & w, Data & data){
-        int len = 0;
-        RequestData request_data;
-        char *contentLength = FCGX_GetParam("CONTENT_LENGTH", handle.request->envp);
-        if (contentLength != NULL)
-            len = strtol(contentLength, NULL, 10);
-
-        if(len > 0) {
-            char * tmp_str = new char[len + 1];
-            FCGX_GetStr(tmp_str, len, handle.request->in);
-            request_data.data = tmp_str;
-            delete tmp_str;
-        }
-        request_data.path = FCGX_GetParam("SCRIPT_FILENAME", handle.request->envp);
-        request_data.params = FCGX_GetParam("QUERY_STRING", handle.request->envp);
-
-        ResponseData resp = w(request_data, data);
-
-
-        std::stringstream ss;
-        ss << "Status: " << resp.status_code << "\r\n"
-                << "Content-Type: " << resp.content_type << "\r\n\r\n"
-                << resp.response;
-
-        FCGX_FPrintF(handle.request->out, ss.str().c_str());
-        FCGX_Finish_r(handle.request);
-        delete handle.request;
-    }
-
-
+//    template<class Worker, class Data> void request_parser(RequestHandle* handle, Worker & w, Data & data);
     /** Classe principale gérant les threads et dispatchant les requêtes
      *
      * L'utilisateur doit définir deux classes :
      * — Worker qui effectue le traitement à proprement parler (une instance par thread)
      * — Data qui contient les données globales (une unique instance pour l'application)
      */
-    template<class Data, class Worker, InterfaceType it> class ThreadPool {
+    template<class Data, class Worker> class ThreadPool {
         /// Nombre de thread pour traiter les requêtes
         int nb_threads;
 
@@ -108,7 +41,7 @@ namespace webservice
         bool run;
 
         /// Queue de requêtes à traiter
-        std::queue<RequestHandle<it> > queue;
+        std::queue<RequestHandle*> queue;
 
         /// Mutex global pour accéder à la queue
         boost::mutex queue_mutex;
@@ -127,7 +60,7 @@ namespace webservice
 
         public:
         /// Rajoute une requête dans queue. Si la queue est pleine, la fonction est bloquante.
-        void push(const RequestHandle<it> & request){
+        void push(RequestHandle* request){
             boost::unique_lock<boost::mutex> lock(queue_mutex);
             while(queue.size() >= max_queue_length){
                 request_poped_cond.wait(lock);
@@ -148,12 +81,11 @@ namespace webservice
                 if(!run)
                     return;
                 BOOST_ASSERT(!queue.empty());
-                RequestHandle<it> request = queue.front();
+                RequestHandle * request = queue.front();
                 queue.pop();
                 lock.unlock();
                 request_poped_cond.notify_one();
-                if(it == FCGI)
-                    fcgi_request_parser(request, w, data);
+                request_parser(request, w, data);
             }
         }
 
@@ -179,11 +111,11 @@ namespace webservice
             data(data)
         {
             for(int i = 0; i < nb_threads; ++i){
-                thread_group.create_thread(boost::bind(&ThreadPool<Data, Worker,it>::worker, this));
+                thread_group.create_thread(boost::bind(&ThreadPool<Data, Worker>::worker, this));
             }
         }
 
-
+#ifdef FCGI
         /// Lance la boucle de traitement fastcgi
         void run_fastcgi(){
             FCGX_Init();
@@ -197,12 +129,12 @@ namespace webservice
                 if(rc<0)
                     break;
 
-                RequestHandle<FCGI> handle;
-                handle.request = request;
-                push(handle);
+                push(request);
 
             }
         }
+#endif
+
     };
 };
 
