@@ -16,6 +16,9 @@
 #ifdef FCGI
 #include "fcgi.h"
 #endif
+#ifdef ISAPI
+#include "isapi.h"
+#endif
 
 namespace webservice
 {
@@ -110,6 +113,10 @@ namespace webservice
             run(true),
             data(data)
         {
+#ifdef ISAPI
+                push_request = boost::bind(&ThreadPool<Data, Worker>::push, this, _1);
+                stop_threadpool = boost::bind(&ThreadPool<Data, Worker>::stop, this);
+#endif
             for(int i = 0; i < nb_threads; ++i){
                 thread_group.create_thread(boost::bind(&ThreadPool<Data, Worker>::worker, this));
             }
@@ -134,7 +141,6 @@ namespace webservice
             }
         }
 #endif
-
     };
 };
 

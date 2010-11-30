@@ -1,4 +1,4 @@
-#define FCGI
+#define ISAPI
 
 #include "../threadpool.h"
 #include <iostream>
@@ -27,11 +27,12 @@ class Worker{
         }
 };
 
+
 int main(int, char**){
 
     Data d;
     ThreadPool<Data, Worker> tp(d, 16);
-    tp.run_fastcgi();
+  //  tp.run_fastcgi();
     /*for(int threads = 1; threads <= 64; threads *= 2){
         for(int size = 1000; size <= 100*1000*1000; size *= 10){
             //Un gros paquet de données pour être sur qu'il n'y a pas de ralentissements liés au passage des données
