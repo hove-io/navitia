@@ -3,7 +3,10 @@
 #include <fcgiapp.h>
 namespace webservice {typedef FCGX_Request RequestHandle;};
 
+#include <csignal>
 #include "data_structures.h"
+
+#include <iostream> 
 
 namespace webservice {
     /// Gère la requête (lecture des paramètres)
@@ -36,8 +39,19 @@ namespace webservice {
         delete handle;
     }
 
+    /** Gère les signaux pour un arrêt propre */
+    void handle_signal(int signum){
+        stop_threadpool();
+        exit(0);
+    }
+
+
     /// Lance la boucle de traitement fastcgi
     void run_fcgi(){
+        signal(SIGINT, handle_signal);
+        signal(SIGTERM, handle_signal);
+        signal(SIGABRT, handle_signal);
+ 
         FCGX_Init();
         int rc;
 
@@ -48,14 +62,10 @@ namespace webservice {
             rc = FCGX_Accept_r(request);
             if(rc<0)
                 break;
-
             webservice::push_request(request);
-
         }
     }
 
-
 }
-
 
 
