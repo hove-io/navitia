@@ -10,8 +10,8 @@ IF(FCGI)
   include_directories (${Boost_INCLUDE_DIRS} ${FCGI_INCLUDE_DIRS})
 
   SET(FCGI_SOURCES fcgi.h isapi.h threadpool.h data_structures.h examples/fcgi.cpp)
-  add_executable (fcgi ${FCGI_SOURCES})
-  target_link_libraries(fcgi ${LIBS})
+  add_executable (fcgi_demo ${FCGI_SOURCES})
+  target_link_libraries(fcgi_demo ${LIBS})
 ENDIF(FCGI)
 
 IF(FCGI)
