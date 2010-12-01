@@ -10,14 +10,21 @@ namespace webservice
     static boost::function<void()> stop_threadpool;
 
     /// Types possibles de requètes
-    enum RequestType {GET, POST};
+    enum RequestMethod {GET, POST, UNKNOWN};
+
+    /** Converti une string de méthode en RequestType */
+    RequestMethod parse_method(const std::string & method) {
+        if(method == "GET") return GET;
+        if(method == "POST") return POST;
+        else return UNKNOWN;
+    }
 
     /** Structure contenant toutes les données liées à une requête entrante
      *
      */
     struct RequestData {
-        /// Type de la requête (ex. GET ou POST)
-        RequestType type;
+        /// Méthode de la requête (ex. GET ou POST)
+        RequestMethod method;
         /// Chemin demandé (ex. "/const")
         std::string path;
         /// Paramètres passés à la requête (ex. "user=1&passwd=2")

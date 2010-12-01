@@ -36,6 +36,7 @@ namespace webservice {
         }
         request_data.path = handle->lpszPathInfo;
         request_data.params = handle->lpszQueryString;
+        request_data.method = parse_method(handle->lpszMethod);
 
         ResponseData resp = w(request_data, data);
 
