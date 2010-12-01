@@ -1,13 +1,11 @@
 #pragma once
 
 #include <fcgiapp.h>
-#include "threadpool.h"
+namespace webservice {typedef FCGX_Request RequestHandle;};
+
 #include "data_structures.h"
 
 namespace webservice {
-    typedef FCGX_Request RequestHandle;
-
-
     /// Gère la requête (lecture des paramètres)
     template<class Worker, class Data> void request_parser(RequestHandle* handle, Worker & w, Data & data){
         int len = 0;
@@ -36,6 +34,24 @@ namespace webservice {
         FCGX_FPrintF(handle->out, ss.str().c_str());
         FCGX_Finish_r(handle);
         delete handle;
+    }
+
+    /// Lance la boucle de traitement fastcgi
+    void run_fcgi(){
+        FCGX_Init();
+        int rc;
+
+        while(true)
+        {
+            FCGX_Request * request = new FCGX_Request();
+            FCGX_InitRequest(request, 0, 0);
+            rc = FCGX_Accept_r(request);
+            if(rc<0)
+                break;
+
+            webservice::push_request(request);
+
+        }
     }
 
 

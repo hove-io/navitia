@@ -1,4 +1,4 @@
-#define ISAPI
+#define FCGI
 
 #include "../threadpool.h"
 #include <iostream>

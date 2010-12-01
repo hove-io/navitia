@@ -1,6 +1,14 @@
 #pragma once
+
+#include <boost/function.hpp>
 namespace webservice 
 {
+    /** Fonction appelée lorsqu'une requête arrive pour la passer au threadpoll */
+    static boost::function<void(RequestHandle*)> push_request;
+
+    /** Fonction à appeler pour arrêter le threadpool */
+    static boost::function<void()> stop_threadpool;
+
     /// Types possibles de requètes
     enum RequestType {GET, POST};
 

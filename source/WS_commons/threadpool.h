@@ -22,11 +22,6 @@
 
 namespace webservice
 {
-
-    /** Fonction à implémenter différemment selon que l'on fait du FCGI ou du ISAPI
-     *
-     */
-//    template<class Worker, class Data> void request_parser(RequestHandle* handle, Worker & w, Data & data);
     /** Classe principale gérant les threads et dispatchant les requêtes
      *
      * L'utilisateur doit définir deux classes :
@@ -113,34 +108,13 @@ namespace webservice
             run(true),
             data(data)
         {
-#ifdef ISAPI
                 push_request = boost::bind(&ThreadPool<Data, Worker>::push, this, _1);
                 stop_threadpool = boost::bind(&ThreadPool<Data, Worker>::stop, this);
-#endif
             for(int i = 0; i < nb_threads; ++i){
                 thread_group.create_thread(boost::bind(&ThreadPool<Data, Worker>::worker, this));
             }
         }
 
-#ifdef FCGI
-        /// Lance la boucle de traitement fastcgi
-        void run_fastcgi(){
-            FCGX_Init();
-            int rc;
-
-            while(run)
-            {
-                FCGX_Request * request = new FCGX_Request();
-                FCGX_InitRequest(request, 0, 0);
-                rc = FCGX_Accept_r(request);
-                if(rc<0)
-                    break;
-
-                push(request);
-
-            }
-        }
-#endif
     };
 };
 
