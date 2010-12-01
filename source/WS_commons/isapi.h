@@ -41,7 +41,7 @@ namespace webservice {
 
 
         std::stringstream ss;
-        ss << "Content-Type: " << resp.content_type << "\r\n\r\n";
+        ss << "Content-Type: " << resp.content_type << "; charset=" << resp.charset <<"\r\n\r\n"
 
         SendHttpHeaders(handle, "200 OK", ss.str().c_str(), FALSE);
         DWORD response_length = resp.response.length();

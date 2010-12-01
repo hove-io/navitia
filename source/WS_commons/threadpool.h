@@ -19,6 +19,9 @@
 #ifdef ISAPI
 #include "isapi.h"
 #endif
+#ifdef DUMMY
+#include "dummy.h"
+#endif
 
 namespace webservice
 {

@@ -25,10 +25,9 @@ namespace webservice {
 
         ResponseData resp = w(request_data, data);
 
-
         std::stringstream ss;
         ss << "Status: " << resp.status_code << "\r\n"
-                << "Content-Type: " << resp.content_type << "\r\n\r\n"
+                << "Content-Type: " << resp.content_type << "; charset=" << resp.charset <<"\r\n\r\n"
                 << resp.response;
 
         FCGX_FPrintF(handle->out, ss.str().c_str());

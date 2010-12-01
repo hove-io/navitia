@@ -36,8 +36,10 @@ namespace webservice
         std::string response;
         /// Status http de la réponse (ex. 200)
         int status_code;
+        /// Encodage de la réponse par défaut utf-8
+        std::string charset;
         /// Constructeur par défaut (status 200, type text/plain)
-        ResponseData() : content_type("text/plain"), status_code(200){}
+        ResponseData() : content_type("text/plain"), status_code(200), charset("utf-8"){}
     };
 
 };
