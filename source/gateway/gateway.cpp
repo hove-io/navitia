@@ -63,32 +63,33 @@ std::string NavitiaPool::query(const std::string & query)
 
     return next_navitia->query(query);
 }
-/*
-   void NavitiaPool::const_stats(std::string &data)
-   {
-   rapidxml::xml_document<> doc;    // character type defaults to char
-   char * data_ptr = doc.allocate_string(data.c_str());
-   doc.parse<0>(data_ptr);    // 0 means default parse flags
 
-   rapidxml::xml_node<> *node = doc.first_node("const");
-   if(node)
-   {
-   node = node->first_node("Thread");
-   if(node)
-   {
-   node = node->first_node("ActiveThread");
-   if (node)
-   {
-   const_calls++;
-   nb_threads_sum += atoi(node->value());
-   if(const_calls % 100 == 0){
-   std::cout << "Nombre d'appels : " << const_calls << " moyenne de threads actifs : " << (nb_threads_sum/const_calls) << std::endl;
-   }
-   }
-   }
-   }
-   }
-   */
+/*void NavitiaPool::const_stats(std::string &data)
+{
+    rapidxml::xml_document<> doc;    // character type defaults to char
+    char * data_ptr = doc.allocate_string(data.c_str());
+    doc.parse<0>(data_ptr);    // 0 means default parse flags
+
+    rapidxml::xml_node<> *node = doc.first_node("const");
+    if(node)
+    {
+        node = node->first_node("Thread");
+        if(node)
+        {
+            node = node->first_node("ActiveThread");
+            if (node)
+            {
+                const_calls++;
+                nb_threads_sum += atoi(node->value());
+                if(const_calls % 100 == 0){
+                    std::cout << "Nombre d'appels : " << const_calls << " moyenne de threads actifs : " << (nb_threads_sum/const_calls) << std::endl;
+                }
+            }
+        }
+    }
+}*/
+
+
 int main(int, char**)
 {
     NavitiaPool pool;
@@ -98,7 +99,7 @@ int main(int, char**)
     pool.add(Navitia("10.2.0.16","/navitia/vfe3/cgi-bin/navitia_GU.dll"));
     pool.add(Navitia("10.2.0.16","/navitia/vfe4/cgi-bin/navitia_GU.dll"));
     pool.add(Navitia("10.2.0.16","/navitia/vfe5/cgi-bin/navitia_GU.dll"));
-    webservice::ThreadPool<NavitiaPool, Worker>(pool,64);
+    webservice::ThreadPool<NavitiaPool, Worker> tp(pool,16);
     webservice::run_fcgi();
     return 0;
 }
