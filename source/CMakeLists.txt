@@ -10,4 +10,5 @@ ENDIF(WIN32)
 add_subdirectory (WS_commons)
 add_subdirectory (http_lib)
 add_subdirectory (gateway)
+add_subdirectory (SqlServer)
 
