@@ -1,5 +1,5 @@
 SET (BOOST_INCLUDEDIR c:/mingw/include)
-FIND_PACKAGE(Boost 1.44.0 COMPONENTS system thread REQUIRED)
+FIND_PACKAGE(Boost 1.40.0 COMPONENTS system thread REQUIRED)
 
 include_directories (${CMAKE_SOURCE_DIR}/http_lib
     ${CMAKE_SOURCE_DIR}/WS_commons 
