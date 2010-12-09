@@ -1,20 +1,10 @@
-SET (BOOST_INCLUDEDIR c:/mingw/include)
-FIND_PACKAGE(Boost 1.40.0 COMPONENTS system thread REQUIRED)
+FIND_PACKAGE(WS_Commons)
 
-include_directories (${CMAKE_SOURCE_DIR}/http_lib
-    ${CMAKE_SOURCE_DIR}/WS_commons 
-    ${Boost_INCLUDE_DIRS})
-link_directories (${NAViTiA_SOURCE_DIR}/http_dll ${Boost_LIBRARY_DIRS} ) 
+include_directories (${CMAKE_SOURCE_DIR}/http_lib)
+link_directories (${NAViTiA_SOURCE_DIR}/http_dll) 
 
+#add_executable (gateway gateway.cpp gateway.h)
+#target_link_libraries(gateway ${WS_LIBSS})
 
-IF(WIN32)
-	ADD_DEFINITIONS(-D_WIN32_WINNT=0x0501)
-ENDIF(WIN32)
-
-add_executable (gateway gateway.cpp)
-
-IF(UNIX)
-        target_link_libraries(gateway boost_system boost_thread http fcgi)
-ELSE(UNIX)
-        target_link_libraries(gateway http fcgi)
-ENDIF(UNIX)
+SET(SOURCE_FILES gateway.cpp gateway.h)
+SET_WS_TYPE(gateway "ISAPI" ${SOURCE_FILES} http)

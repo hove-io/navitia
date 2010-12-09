@@ -12,14 +12,23 @@
 #include <queue>
 #include <sstream>
 #include <boost/thread/thread.hpp>
-#include <boost/thread/condition.hpp> 
-#ifdef FCGI
+#include <boost/thread/condition.hpp>
+#define FCGI 1
+#define ISAPI 2
+#define DUMMY 3
+#ifndef WS_TYPE
+#ifdef WIN32
+#define WS_TYPE ISAPI
+#else
+#define WS_TYPE FCGI
+#endif
+#endif
+
+#if WS_TYPE==FCGI
 #include "fcgi.h"
-#endif
-#ifdef ISAPI
+#elif WS_TYPE==ISAPI
 #include "isapi.h"
-#endif
-#ifdef DUMMY
+#elif WS_TYPE==DUMMY
 #include "dummy.h"
 #endif
 

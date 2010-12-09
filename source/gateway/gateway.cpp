@@ -89,7 +89,7 @@ std::string NavitiaPool::query(const std::string & query)
     }
 }*/
 
-
+#if WS_TYPE==FCGI
 int main(int, char**)
 {
     NavitiaPool pool;
@@ -103,3 +103,4 @@ int main(int, char**)
     webservice::run_fcgi();
     return 0;
 }
+#endif
