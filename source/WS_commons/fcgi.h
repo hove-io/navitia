@@ -34,7 +34,7 @@ namespace webservice {
                 << "Content-Type: " << resp.content_type << "; charset=" << resp.charset <<"\r\n\r\n"
                 << resp.response;
 
-        FCGX_FPrintF(handle->out, ss.str().c_str());
+        FCGX_PutStr(ss.str().c_str(), ss.str().size(), handle->out);
         FCGX_Finish_r(handle);
         delete handle;
     }
