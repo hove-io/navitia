@@ -42,7 +42,7 @@ namespace webservice {
 
 
         std::stringstream ss;
-        ss << "Content-Type: " << resp.content_type << "; charset=" << resp.charset <<"\r\n\r\n"
+        ss << "Content-Type: " << resp.content_type << "; charset=" << resp.charset <<"\r\n\r\n";
 
         SendHttpHeaders(handle, "200 OK", ss.str().c_str(), FALSE);
         DWORD response_length = resp.response.length();
@@ -69,8 +69,8 @@ extern "C"
 
     BOOL WINAPI GetExtensionVersion(HSE_VERSION_INFO *pVer) {
 
-        pVer->dwExtensionVersion = HSE_VERSION;
-        strncpy_s( pVer->lpszExtensionDesc, HSE_MAX_EXT_DLL_NAME_LEN, "Hello ISAPI Extension", _TRUNCATE );
+        pVer->dwExtensionVersion = MAKELONG( HSE_VERSION_MINOR, HSE_VERSION_MAJOR );
+        strncpy( pVer->lpszExtensionDesc, "Hello ISAPI Extension", HSE_MAX_EXT_DLL_NAME_LEN);
         return TRUE;
     }
 
@@ -80,3 +80,5 @@ extern "C"
     }
 
 }
+
+#define MAKE_WEBSERVICE(Data, Worker) static webservice::ThreadPool<Data, Worker> tp;

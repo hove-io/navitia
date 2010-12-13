@@ -13,22 +13,12 @@
 #include <sstream>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition.hpp>
-#define FCGI 1
-#define ISAPI 2
-#define DUMMY 3
-#ifndef WS_TYPE
-#ifdef WIN32
-#define WS_TYPE ISAPI
-#else
-#define WS_TYPE FCGI
-#endif
-#endif
 
-#if WS_TYPE==FCGI
+#if WS_TYPE==1
 #include "fcgi.h"
-#elif WS_TYPE==ISAPI
+#elif WS_TYPE==2
 #include "isapi.h"
-#elif WS_TYPE==DUMMY
+#elif WS_TYPE==3
 #include "dummy.h"
 #endif
 
@@ -41,6 +31,9 @@ namespace webservice
      * — Data qui contient les données globales (une unique instance pour l'application)
      */
     template<class Data, class Worker> class ThreadPool {
+        /// Données globales
+        Data data;
+
         /// Nombre de thread pour traiter les requêtes
         int nb_threads;
 
@@ -64,9 +57,6 @@ namespace webservice
 
         /// Groupe de threads
         boost::thread_group thread_group;
-
-        /// Données globales
-        Data & data;
 
         public:
         /// Rajoute une requête dans queue. Si la queue est pleine, la fonction est bloquante.
@@ -114,11 +104,11 @@ namespace webservice
         }
 
         /// Constructeur, on passe une instance de Data
-        ThreadPool(Data & data, int nb_threads = 2, int max_queue_length = 1):
-            nb_threads(nb_threads),
+        ThreadPool(int max_queue_length = 1):
+            data(),
+            nb_threads(data.nb_threads),
             max_queue_length(max_queue_length),
-            run(true),
-            data(data)
+            run(true)
         {
                 push_request = boost::bind(&ThreadPool<Data, Worker>::push, this, _1);
                 stop_threadpool = boost::bind(&ThreadPool<Data, Worker>::stop, this);

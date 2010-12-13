@@ -1,6 +1,5 @@
 #include "gateway.h"
 #include "http.h"
-#define FCGI
 #include "threadpool.h"
 #include "boost/lexical_cast.hpp"
 
@@ -26,7 +25,7 @@ struct Worker {
         resp.status_code = 200;
         resp.content_type = "text/xml";
         if(data.path == "/status"){
-            resp.response = "<info>Passerelle en FastCGI</info>";
+            resp.response = "<info>Passerelle en FastCGI</info>\n";
         }
         else if(data.path == "/api" || data.path == "/const") {
             try{
@@ -49,6 +48,15 @@ struct Worker {
         return resp;
     }
 };
+
+NavitiaPool::NavitiaPool() : nb_threads(16) {
+    add(Navitia("10.2.0.16","/navitia/vfe/cgi-bin/navitia_GU.dll")); 
+    add(Navitia("10.2.0.16","/navitia/vfe1/cgi-bin/navitia_GU.dll"));
+    add(Navitia("10.2.0.16","/navitia/vfe2/cgi-bin/navitia_GU.dll"));
+    add(Navitia("10.2.0.16","/navitia/vfe3/cgi-bin/navitia_GU.dll"));
+    add(Navitia("10.2.0.16","/navitia/vfe4/cgi-bin/navitia_GU.dll"));
+    add(Navitia("10.2.0.16","/navitia/vfe5/cgi-bin/navitia_GU.dll"));
+}
 
 std::string NavitiaPool::query(const std::string & query)
 {
@@ -89,18 +97,5 @@ std::string NavitiaPool::query(const std::string & query)
     }
 }*/
 
-#if WS_TYPE==FCGI
-int main(int, char**)
-{
-    NavitiaPool pool;
-    pool.add(Navitia("10.2.0.16","/navitia/vfe/cgi-bin/navitia_GU.dll"));
-    pool.add(Navitia("10.2.0.16","/navitia/vfe1/cgi-bin/navitia_GU.dll"));
-    pool.add(Navitia("10.2.0.16","/navitia/vfe2/cgi-bin/navitia_GU.dll"));
-    pool.add(Navitia("10.2.0.16","/navitia/vfe3/cgi-bin/navitia_GU.dll"));
-    pool.add(Navitia("10.2.0.16","/navitia/vfe4/cgi-bin/navitia_GU.dll"));
-    pool.add(Navitia("10.2.0.16","/navitia/vfe5/cgi-bin/navitia_GU.dll"));
-    webservice::ThreadPool<NavitiaPool, Worker> tp(pool,16);
-    webservice::run_fcgi();
-    return 0;
-}
-#endif
+
+MAKE_WEBSERVICE(NavitiaPool, Worker)

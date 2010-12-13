@@ -69,3 +69,4 @@ namespace webservice {
 }
 
 
+#define MAKE_WEBSERVICE(Data, Worker) int main(int, char**){webservice::ThreadPool<Data, Worker> tp; return 0;}

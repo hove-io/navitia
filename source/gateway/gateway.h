@@ -39,6 +39,10 @@ private:
     boost::mutex iter_mutex;
 
 public:
+    /// Nombre de threads
+    int nb_threads;
+    /// Constructeur par défaut
+    NavitiaPool();
     /// Rajoute un nouveau navitia au Pool. Celui-ci sera copié
     void add(const Navitia & n);
 
