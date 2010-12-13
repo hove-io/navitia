@@ -1,0 +1,15 @@
+** Tests de perfs simples (sans passer par un webservice)
+Résulats sur le poste de Tristram
+Avec mingw :
+g++ -O3 boucle_simple.cpp : 1m13.6
+
+Avec Visual Studio :
+cl /Ox boucle_simple.cpp : 1m13.0
+
+Sous linux
+
+** Tests au travers d'un webservice
+Serveur sur le poste de tristram, benchs avec ab sur le poste d'Alexandre (pour éviter les pb de perfs de jmeter)
+10000 requêtes, 5 en parallèle 
+isapi en mode release : 50.9 reqs/s
+fcgi gcc avec nginx sous linux : 

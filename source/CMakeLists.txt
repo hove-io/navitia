@@ -17,4 +17,4 @@ add_subdirectory (WS_commons)
 add_subdirectory (http_lib)
 add_subdirectory (gateway)
 add_subdirectory (SqlServer)
-
+add_subdirectory (benchmarks)
