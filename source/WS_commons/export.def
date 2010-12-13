@@ -1,0 +1,6 @@
+LIBRARY    "WebService"
+
+EXPORTS
+   HttpExtensionProc
+   GetExtensionVersion
+   TerminateExtension
