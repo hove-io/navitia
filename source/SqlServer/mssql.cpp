@@ -6,7 +6,7 @@
 namespace Sql {
 
     /** Callback utilisé pour remonter les erreurs de la lib freeTDS */
-    int err_handler(DBPROCESS * dbproc, int severity, int dberr, int oserr, char *dberrstr, char *oserrstr) {									
+    int err_handler(DBPROCESS *, int severity, int dberr, int, char *dberrstr, char *) {
         std::cout << "ERR HANDLER" << std::endl;
         if (dberr) {							
             std::cerr << "Error " << dberr << ", level " << severity << std::endl;
@@ -21,7 +21,7 @@ namespace Sql {
     }
 
     /** Callback utilisé pour remonter les messages de la lib freeTDS */
-    int msg_handler(DBPROCESS *dbproc, DBINT msgno, int msgstate, int severity, 
+    int msg_handler(DBPROCESS *, DBINT msgno, int msgstate, int severity,
             char *msgtext, char *srvname, char *procname, int line)
     {
         std::cout << "MSG HANDLER " << msgno << " " << msgtext << std::endl;
@@ -55,8 +55,10 @@ namespace Sql {
     }
 
 
-    RegisteredProcedure::RegisteredProcedure(DBPROCESS * dbproc, char * procedure_name) : dbproc(dbproc) {
-        if(dbrpcinit(dbproc, procedure_name, (DBSMALLINT)0) == FAIL)
+    RegisteredProcedure::RegisteredProcedure(DBPROCESS * dbproc, const std::string & procedure_name) : dbproc(dbproc) {
+        std::string * strp = new std::string(procedure_name);
+        strings.push_back(strp);
+        if(dbrpcinit(dbproc, const_cast<char*>(strp->c_str()), (DBSMALLINT)0) == FAIL)
             throw SqlException("Unable to initialize rpc");
     }
 
@@ -120,7 +122,7 @@ namespace Sql {
         return Result(dbproc);
     }
 
-    RegisteredProcedure MSSql::exec_proc(char * procedure_name){
+    RegisteredProcedure MSSql::exec_proc(const std::string & procedure_name){
         return RegisteredProcedure(dbproc, procedure_name);
     }
 
@@ -240,4 +242,4 @@ namespace Sql {
         dbclose(dbproc);
         dbexit();
     }
-};
+}

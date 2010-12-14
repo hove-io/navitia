@@ -38,7 +38,7 @@ namespace webservice
         int nb_threads;
 
         /// Taille maximum de la queue de requêtes (par défaut 1 : le serveur web la gère)
-        int max_queue_length;
+        size_t max_queue_length;
 
         /// Est-ce que les threads doivent continuer à s'executer
         bool run;
@@ -118,5 +118,4 @@ namespace webservice
         }
 
     };
-};
-
+}

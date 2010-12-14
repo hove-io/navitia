@@ -1,7 +1,7 @@
 #pragma once
 
 #include <fcgiapp.h>
-namespace webservice {typedef FCGX_Request RequestHandle; /**< Handle de la requête*/};
+namespace webservice {typedef FCGX_Request RequestHandle; /**< Handle de la requête*/}
 
 #include <csignal>
 #include "data_structures.h"
@@ -40,7 +40,7 @@ namespace webservice {
     }
 
     /** Gère les signaux pour un arrêt propre */
-    void handle_signal(int signum){
+    void handle_signal(int){
         stop_threadpool();
         exit(0);
     }

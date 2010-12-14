@@ -1,7 +1,7 @@
 #pragma once
 
 #include <HttpExt.h>
-namespace webservice {typedef EXTENSION_CONTROL_BLOCK RequestHandle; /**< Handle de la requête*/};
+namespace webservice {typedef EXTENSION_CONTROL_BLOCK RequestHandle; /**< Handle de la requête*/}
 #include "data_structures.h"
 
 namespace webservice {

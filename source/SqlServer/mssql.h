@@ -29,14 +29,14 @@ namespace Sql {
      * N'est pas destiné à être utilisé directement
      */
     class RegisteredProcedure {
-        DBPROCESS * dbproc;
-        std::vector<int *> integers;
-        std::vector<std::string*> strings;
+        DBPROCESS * dbproc; ///< Connecteur vers la base de données
+        std::vector<int *> integers; ///< Liste des entiers alloués sur le tas à détruire une fois la requête finie
+        std::vector<std::string*> strings; ///< Liste des chaînes de charactères alloués sur le tas à détruire une fois la requête finie
         private:
         /// Le constructeur est privé pour éviter un utilisateur trop malin/idiot veuille l'utiliser
         /// La conséquence serait imprévisible (problème de pointeurs invalides dans la nature)
         /// (mais au moins y'a pas de fuite de mémoire)
-        RegisteredProcedure(DBPROCESS * dbproc, char * procedure_name);
+        RegisteredProcedure(DBPROCESS * dbproc, const std::string & procedure_name);
         RegisteredProcedure(const RegisteredProcedure &){};
         /// L'opérateur est desactivé tout comme les constructeurs;
         void operator=(const RegisteredProcedure &){};
@@ -150,7 +150,7 @@ namespace Sql {
      * Tutoriel pour les curieux http://www.freetds.org/userguide/samplecode.htm
      * */
     class MSSql {
-        LOGINREC *login; ///<
+        LOGINREC *login;
         DBPROCESS *dbproc;
         public:
         /** Se connecte au serveur et à la base donnée
@@ -171,7 +171,7 @@ namespace Sql {
          *
          * Ex: Result res = conn.exec_proc("ma_procedure_stockee").arg(42).arg("foo");
          */
-        RegisteredProcedure exec_proc(char * procedure_name);
+        RegisteredProcedure exec_proc(const std::string & procedure_name);
     };
 
-};
+}

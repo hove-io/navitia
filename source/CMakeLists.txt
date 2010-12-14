@@ -12,6 +12,9 @@ IF(WIN32)
   ENDIF(MSVC)  
 ENDIF(WIN32)
 
+IF(CMAKE_COMPILER_IS_GNUCXX)
+    SET(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra")
+ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 add_subdirectory (WS_commons)
 add_subdirectory (http_lib)

@@ -24,7 +24,7 @@ class Worker{
     Worker() : i(0) {} /// Constructeur par défaut
     
     /// Fonction appelée à chaque requête. Il faut respecter cette signature !
-    ResponseData operator()(const RequestData & data, Data & d){
+    ResponseData operator()(const RequestData &, Data & d){
         i++;
         ResponseData rd;
         std::stringstream ss;

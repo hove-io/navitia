@@ -49,4 +49,4 @@ namespace webservice
         ResponseData() : content_type("text/plain"), status_code(200), charset("utf-8"){}
     };
 
-};
+}
