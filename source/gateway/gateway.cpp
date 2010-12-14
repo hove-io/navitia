@@ -18,8 +18,9 @@ void NavitiaPool::add(const Navitia & n)
     next_navitia = navitias.begin();
 }
 
-
+/// Classe associée à chaque thread
 struct Worker {
+    /// Fonction appelée à chaque requête
     webservice::ResponseData operator()(const webservice::RequestData & data, NavitiaPool & pool){
         webservice::ResponseData resp;
         resp.status_code = 200;

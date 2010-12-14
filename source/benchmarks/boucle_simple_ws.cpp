@@ -6,9 +6,10 @@
 #define RESULT_LENGTH 10000
 
 using namespace webservice;
+/// Structure de données commune à tous les threads
 struct Data {
-  int nb_threads;
-  int * data;//[LENGTH];
+  int nb_threads; ///< Nombre de threads
+  int * data; ///< Contient un gros tableau de données à lire à chaque requete
   Data() : nb_threads(8) {
       data = (int*) calloc(LENGTH, sizeof(int));
     for(int i = 0; i< LENGTH; i++){
@@ -17,14 +18,17 @@ struct Data {
   }
 };
 
+/// Structure de données propre à chaque thread
 struct Worker {
-  int *buffer;
-  char *p_result;
+  int *buffer; ///< Tableau trituré à chaque requete
+  char *p_result; ///< Chaine de characteres C qui contient le résultat
+  /// Constructeur qui alloue les tableau (une fois par thread)
   Worker() {
     buffer = (int*) calloc(BUFFER_LENGTH, sizeof(int));
     p_result = (char*) calloc(RESULT_LENGTH, sizeof(char));
   }
   
+  /// Fonction appelée à chaque requete
   ResponseData operator()(const RequestData & data, Data & d){
     char *current = NULL;
     long unsigned int index;

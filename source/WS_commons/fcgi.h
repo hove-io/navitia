@@ -1,7 +1,7 @@
 #pragma once
 
 #include <fcgiapp.h>
-namespace webservice {typedef FCGX_Request RequestHandle;};
+namespace webservice {typedef FCGX_Request RequestHandle; /**< Handle de la requête*/};
 
 #include <csignal>
 #include "data_structures.h"

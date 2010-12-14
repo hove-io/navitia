@@ -4,6 +4,8 @@
 #include <cstring>
 
 namespace Sql {
+
+    /** Callback utilisé pour remonter les erreurs de la lib freeTDS */
     int err_handler(DBPROCESS * dbproc, int severity, int dberr, int oserr, char *dberrstr, char *oserrstr) {									
         std::cout << "ERR HANDLER" << std::endl;
         if (dberr) {							
@@ -18,6 +20,7 @@ namespace Sql {
         return 0;
     }
 
+    /** Callback utilisé pour remonter les messages de la lib freeTDS */
     int msg_handler(DBPROCESS *dbproc, DBINT msgno, int msgstate, int severity, 
             char *msgtext, char *srvname, char *procname, int line)
     {

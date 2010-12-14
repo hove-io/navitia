@@ -9,21 +9,21 @@ using namespace boost::posix_time;
  *  N'est instancié qu'une seule fois au chargement
  */
 struct Data{
-  int nb_threads; // Nombre de threads. IMPORTANT ! Sans cette variable, ça ne compile pas
-  int count; // Notre compteur d'appels au webservice
-  boost::mutex mut; // Un mutex pour protéger ce cout
-  // Constructeur par défaut, il est appelé au chargement du webservice
+  int nb_threads; /// Nombre de threads. IMPORTANT ! Sans cette variable, ça ne compile pas
+  int count; /// Notre compteur d'appels au webservice
+  boost::mutex mut; /// Un mutex pour protéger ce cout
+  /// Constructeur par défaut, il est appelé au chargement du webservice
   Data() : nb_threads(8), count(0){
   }
 };
 
-// Classe associée à chaque thread
+/// Classe associée à chaque thread
 class Worker{
-    int i; // Compteur de requêtes sur le thread actuel
+    int i; /// Compteur de requêtes sur le thread actuel
     public:
-    Worker() : i(0) {} // Constructeur par défaut
+    Worker() : i(0) {} /// Constructeur par défaut
     
-    // Fonction appelée à chaque requête. Il faut respecter cette signature !
+    /// Fonction appelée à chaque requête. Il faut respecter cette signature !
     ResponseData operator()(const RequestData & data, Data & d){
         i++;
         ResponseData rd;
@@ -40,5 +40,5 @@ class Worker{
     }
 };
 
-// Macro qui va construire soit un exectuable FastCGI, soit une DLL ISAPI
+/// Macro qui va construire soit un exectuable FastCGI, soit une DLL ISAPI
 MAKE_WEBSERVICE(Data, Worker)

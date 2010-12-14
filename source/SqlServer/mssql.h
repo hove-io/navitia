@@ -6,13 +6,18 @@
 #include <sybdb.h>	/* sybdb.h is the only other file you need */
 
 #include <stdint.h>
+
+/** Contient des wrappers pour accéder aux bases SQL*/
 namespace Sql {
+    /// Tableau de chaînes de charactères
     typedef std::vector<std::string> StringVect;
 
     /** Exception lancée en cas de problème SQL */
     struct SqlException : public std::exception {
-        std::string str;
+        std::string str; ///< Message d'erreur lié à l'exception
+        /// constructeur avec un message d'erreur
         SqlException(const std::string & str) : str(str){};
+        /// Accesseur pour connaître le message de l'exception
         virtual const char* what() const throw() {
             return str.c_str();
         }
@@ -55,11 +60,11 @@ namespace Sql {
         /** Permet d'itérer sur les résultats */
         class iterator{
             public:
-            typedef StringVect value_type;
-            typedef StringVect* pointer;
-            typedef StringVect& reference;
-            typedef std::forward_iterator_tag iterator_category;
-            typedef int difference_type;
+            typedef StringVect value_type; ///< Type vers lequel pointe l'itérateur
+            typedef StringVect* pointer; ///< Type pointeur vers lequel pointe l'itérateur
+            typedef StringVect& reference; ///< Type référence vers lequel pointe l'itérateur
+            typedef std::forward_iterator_tag iterator_category; ///< Type d'itérateur : on ne peut aller que de l'avant
+            typedef int difference_type; ///< Type pour mesurer la distance entre deux itérateurs
             private:
             /// Pour savoir sur quoi pointe l'itérateur
             Result * result;
@@ -68,16 +73,18 @@ namespace Sql {
             /// Nombre de lignes ayant été lues
             int read_rows;
             private:
-            ///Permet de récupérer une ligne
+            /// Permet de récupérer une ligne
             void get_row();
             public:
             /// Par défaut, c'est un itérateur pour lequel il n'y a pas d'autre résultat (aka == .end())
             iterator() : result(NULL), read_rows(0){}
+            /// Construteur à partir d'un pointeur de Result
             iterator(Result * result) : result(result), read_rows(0) {get_row();};
             /// On va chercher l'élément suivant
             iterator & operator++(){get_row(); return *this;};
             /// On teste uniquement les deux itérateurs pointes sur NULL => .end()
             bool operator==(const iterator & it) {return result == NULL && it.result == NULL;};
+            /// On teste uniquement les deux itérateurs pointes sur NULL => .end()
             bool operator!=(const iterator & it) {return result != NULL || it.result != NULL;};
             /// On obtient les résultats sous forme de tableau de string
             value_type & operator*() {return data;};
@@ -85,15 +92,20 @@ namespace Sql {
             value_type * operator->(){return &data;};
         };
 
+        /// Iterateur sur les résultats
         typedef iterator const_iterator;
         /** Structure utilisée pour récupérer les données au niveau de la lib C */
         struct COL {
-            char *name;
-            char *buffer; 
-            int type, size, status; 
-        } *columns, *pcol;
+            char *name; ///< Nom de la colonne
+            char *buffer;  ///< Buffer contenant la valeur de la colonne
+            int type; ///< Type de la valeur contenue dans buffer
+            int size; ///< Taille de la donnée contenue dans buffer
+            int status; ///< Indique si on a bien réussi à se binder à la colonne
+        };
+        COL * columns; ///< Ensemble des colonnes
+        COL * pcol; ///< Pointeur vers une colonne
         
-        /// Nombre de colones
+        /// Nombre de colonnes
         int ncols;
 
         /// Connecteur de l'API C vers la base
@@ -138,7 +150,7 @@ namespace Sql {
      * Tutoriel pour les curieux http://www.freetds.org/userguide/samplecode.htm
      * */
     class MSSql {
-        LOGINREC *login;
+        LOGINREC *login; ///<
         DBPROCESS *dbproc;
         public:
         /** Se connecte au serveur et à la base donnée

@@ -11,8 +11,9 @@
 
 /// Exception levée en cas d'erreur
 struct http_error{
-    int code;
-    std::string message;
+    int code; ///< Code d'erreur (par exemple 400)
+    std::string message; ///< Message d'erreur
+    /// Constructeur simple
     http_error(int code, const std::string & message) : code(code), message(message) {}
 };
 
