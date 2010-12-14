@@ -1,9 +1,9 @@
 #include "threadpool.h"
 #include "data_structures.h"
 
-#define LENGTH 17000000
-#define BUFFER_LENGTH 300000
-#define RESULT_LENGTH 100000
+#define LENGTH 170000
+#define BUFFER_LENGTH 30000
+#define RESULT_LENGTH 10000
 
 using namespace webservice;
 struct Data {
