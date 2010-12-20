@@ -13,7 +13,7 @@ IF(WIN32)
 ENDIF(WIN32)
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
-    SET(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra")
+    SET(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra -std=c++0x")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 add_subdirectory (WS_commons)
@@ -21,3 +21,4 @@ add_subdirectory (http_lib)
 add_subdirectory (gateway)
 add_subdirectory (SqlServer)
 add_subdirectory (benchmarks)
+add_subdirectory (type)
