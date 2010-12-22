@@ -6,7 +6,7 @@ bool ValidityPattern::is_valid(int duration){
         std::cerr << "La date est avant le début de période" << std::endl;
         return false;
     }
-    else if(duration > max){
+    else if(duration > 366){
         std::cerr << "La date dépasse la fin de période" << std::endl;
         return false;
     }

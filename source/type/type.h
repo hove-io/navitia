@@ -2,6 +2,11 @@
 
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/bitset.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/date_time/gregorian/greg_serialize.hpp>
+//#include <boost/serialization/shared_ptr.hpp>
 #include <vector>
 #include <bitset>
 
@@ -44,6 +49,10 @@ struct Country {
     std::string name;
     City_ptr main_city;
     std::vector<District_ptr> district_list;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & name & main_city;// & district_list;
+    }
+
 };
 
 struct District {
@@ -51,6 +60,9 @@ struct District {
     City_ptr main_city;
     Country_ptr country;
     std::vector<Department_ptr> department_list;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & name & main_city & country;// & department_list;
+    }
 };
 
 struct Department {
@@ -58,16 +70,25 @@ struct Department {
     City_ptr main_city;
     District_ptr district;
     std::vector<City_ptr> city_list;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & name & main_city & district;// & city_list;
+    }
 };
 
 struct Coordinates {
     double x, y;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & x & y;
+    }
 };
 
 struct City {
     std::string name;
     Department_ptr department;
     Coordinates coord;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & name & department & coord;
+    }
 };
 
 struct StopArea {
@@ -75,27 +96,42 @@ struct StopArea {
     std::string name;
     City_ptr city;
     Coordinates coord;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & code & name & city & coord;
+    }
 };
 
 struct Network {
     std::string name;
     std::vector<Line_ptr> line_list;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & name;// & line_list;
+    }
 };
 
 struct Company {
     std::string name;
     std::vector<Line_ptr> line_list;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & name;// & line_list;
+    }
 };
 
 struct ModeType {
     std::string name;
     std::vector<Mode_ptr> mode_list;
-    std::vector<Line_ptr> mode_ptr;
+    std::vector<Line_ptr> line_list;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & name;// & mode_list & line_list;
+    }
 };
 
 struct Mode {
     std::string name;
     ModeType_ptr mode_type;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & name & mode_type;
+    }
 };
 
 struct Line {
@@ -111,6 +147,10 @@ struct Line {
     std::string additional_data;
     std::string color;
     int sort;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & name & code & mode & network & forward_name & backward_name & forward_thermo
+                & backward_thermo /*& validity_pattern_list*/ & additional_data & color & sort;
+    }
 };
 
 struct Route {
@@ -123,6 +163,10 @@ struct Route {
     std::vector<VehicleJourney_ptr> vehicle_journey_list;
     bool is_adapted;
     Route_ptr associated_route;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & name & line & mode_type & is_frequence & is_forward /*& route_point_list &
+                vehicle_journey_list & is_adapted & associated_route*/;
+    }
 };
 
 struct RoutePoint {
@@ -132,21 +176,27 @@ struct RoutePoint {
     StopPoint_ptr stop_point;
     bool main_stop_point;
     int fare_section;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & external_code & order & route /*& stop_point*/ & main_stop_point & fare_section;
+    }
 };
 
 struct ValidityPattern {
 private:
-    static const int max = 366;
     boost::gregorian::date beginning_date;
-    std::bitset<max> days;
+    std::bitset<366> days;
     bool is_valid(int duration);
 public:
+    ValidityPattern() {}
     ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date) {}
     void add(boost::gregorian::date day);
     void add(int day);
     void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
     void remove(boost::gregorian::date day);
     void remove(int day);
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & beginning_date & days;
+    }
 
 };
 
@@ -156,9 +206,12 @@ struct VehicleJourney {
     Route_ptr route;
     Company_ptr company;
     Mode_ptr mode;
-    Vehicle_ptr vehicle;
+    //Vehicle_ptr vehicle;
     bool is_adapted;
     ValidityPattern_ptr validity_pattern;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & name & external_code;/* &route & company & mode & vehicle & is_adapted & validity_pattern*/;
+    }
 };
 
 struct StopPoint {
@@ -168,7 +221,10 @@ struct StopPoint {
     Mode_ptr mode;
     Coordinates coord;
     int fare_zone;
-    std::vector<Line_ptr> line;
+    std::vector<Line_ptr> lines;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & code & name /*& stop_area*/ & mode & coord & fare_zone;// & lines;
+    }
 };
 
 struct StopTime {
@@ -180,4 +236,7 @@ struct StopTime {
     std::string comment;
     bool ODT;
     int zone;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & arrival_time & departure_time /*& vehicle_journey & stop_point*/ & order & comment & ODT & zone;
+    }
 };

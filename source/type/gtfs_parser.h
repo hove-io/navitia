@@ -2,6 +2,8 @@
 #include "type.h"
 #include <boost/unordered_map.hpp>
 #include <deque>
+#include <boost/serialization/deque.hpp>
+#include "unordered_map_serialization.h"
 
 /** Lit les fichiers au format General Transit Feed Specifications
   *
@@ -22,6 +24,9 @@ private:
 public:
     /// Constructeur qui prend en paramètre le chemin vers les fichiers
     GtfsParser(const std::string & path, const std::string & start_date);
+
+    /// Constructeur d'une instance vide
+    GtfsParser() {}
 
     /// Parse le fichier calendar_dates.txt
     /// Contient les dates définies par jour (et non par période)
@@ -46,6 +51,17 @@ public:
     /// Parse le fichier trips.txt
     /// Contient les VehicleJourney
     void parse_trips();
+
+    void save(const std::string & filename);
+    void load(const std::string & filename);
+    void save_bin(const std::string & filename);
+    void load_bin(const std::string & filename);
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & stop_points & stop_areas & validity_patterns & lines & routes & vehicle_journeys & stop_times
+                & path & start;
+    }
+
 };
 
 /** Convertit une chaine de charactères du type 8:12:31 en secondes depuis minuit
