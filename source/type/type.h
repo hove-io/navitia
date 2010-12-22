@@ -71,7 +71,7 @@ struct City {
 };
 
 struct StopArea {
-    std::string external_code;
+    std::string code;
     std::string name;
     City_ptr city;
     Coordinates coord;
@@ -99,9 +99,9 @@ struct Mode {
 };
 
 struct Line {
-    std::string external_code;
     std::string name;
     std::string code;
+    std::string mode;
     Network_ptr network;
     std::string forward_name;
     std::string backward_name;
@@ -158,10 +158,11 @@ struct VehicleJourney {
     Mode_ptr mode;
     Vehicle_ptr vehicle;
     bool is_adapted;
+    ValidityPattern_ptr validity_pattern;
 };
 
 struct StopPoint {
-    std::string external_code;
+    std::string code;
     std::string name;
     StopArea_ptr stop_area;
     Mode_ptr mode;
@@ -176,4 +177,7 @@ struct StopTime {
     VehicleJourney_ptr vehicle_journey;
     StopPoint_ptr stop_point;
     int order;
+    std::string comment;
+    bool ODT;
+    int zone;
 };

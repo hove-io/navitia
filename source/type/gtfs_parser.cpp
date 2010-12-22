@@ -10,6 +10,25 @@
 
 typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
 
+int time_to_int(const std::string & time) {
+   typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+   boost::char_separator<char> sep(":");
+   tokenizer tokens(time, sep);
+   std::vector<std::string> elts(tokens.begin(), tokens.end());
+   int result = 0;
+   if(elts.size() != 3)
+       return -1;
+   try {
+       result = boost::lexical_cast<int>(elts[0]) * 3600;
+       result += boost::lexical_cast<int>(elts[1]) * 60;
+       result += boost::lexical_cast<int>(elts[2]);
+   }
+   catch(boost::bad_lexical_cast){
+       return -1;
+   }
+   return result;
+}
+
 GtfsParser::GtfsParser(const std::string & path, const std::string & start) :
         path(path),
         start(boost::gregorian::from_undelimited_string(start))
@@ -17,6 +36,8 @@ GtfsParser::GtfsParser(const std::string & path, const std::string & start) :
     parse_stops();
     parse_calendar_dates();
     parse_routes();
+    parse_trips();
+    parse_stop_times();
 }
 
 void GtfsParser::parse_stops() {
@@ -61,20 +82,23 @@ void GtfsParser::parse_stops() {
         }
 
         sp->name = elts[2];
-        sp->external_code = elts[0];
+        if(elts[1] != "")
+            sp->code = elts[1];
+        else
+            sp->code = elts[0];
 
         if(elts[9] != "")
             stoppoint_areas.push_back(std::make_pair(sp, elts[9]));
 
-        stop_points[sp->external_code] = sp;
+        stop_points[sp->code] = sp;
 
         // Si c'est un stopArea
         if(elts[8] == "1") {
             StopArea_ptr sa(new StopArea());
             sa->coord = sp->coord;
             sa->name = sp->name;
-            sa->external_code = sp->external_code;
-            stop_areas[(sa->external_code)] =  sa;
+            sa->code = sp->code;
+            stop_areas[(sa->code)] =  sa;
         }
     }
 
@@ -84,7 +108,7 @@ void GtfsParser::parse_stops() {
         if(sa != stop_areas.end())
             (i.first)->stop_area = sa->second;
         else
-            std::cerr << "Le stopPoint " << (i.first)->external_code
+            std::cerr << "Le stopPoint " << (i.first)->code
                     << " a utilisé un stopArea inconnu : " << (i.second) << std::endl;
     }
 
@@ -155,12 +179,14 @@ void GtfsParser::parse_routes(){
         elts.assign(tok.begin(), tok.end());
 
         Line_ptr line(new Line());
+        line->name = elts[3];
+        line->code = elts[2];
+        line->mode = elts[5];
+        ///line->network =  networks[elts[1]];
         line->color = elts[7];
-        line->name = elts[2];
         line->additional_data = elts[3];
-        line->external_code = elts[0];
 
-        lines[line->external_code] = line;
+        lines[elts[0]] = line;
 
     }
     std::cout << "Nombre de lignes : " << lines.size() << std::endl;
@@ -185,7 +211,7 @@ void GtfsParser::parse_trips() {
     BOOST_ASSERT(elts[4] == "direction_id");
     BOOST_ASSERT(elts[5] == "block_id");
     BOOST_ASSERT(elts[6] == "shape_id");
-
+    int ignored = 0;
     while(getline(ifile, line)) {
         boost::trim(line);
         Tokenizer tok(line);
@@ -196,15 +222,78 @@ void GtfsParser::parse_trips() {
                     << " référencée par trip " << elts[2] << std::endl;
         }
         else {
+            Line_ptr line = lines[elts[0]];
             Route_ptr route(new Route());
-            route->line = lines[elts[0]];
+            route->line = line;
+
             if(validity_patterns.find(elts[1]) == validity_patterns.end()) {
-                std::cerr << "Impossible de trouvé le service " << elts[1] << " référencé par trip " << elts[2] << std::endl;
+                std::cerr << "Impossible de trouver le service " << elts[1] << " référencé par trip " << elts[2] << std::endl;
+                ignored++;
             }
             else {
-               route->vehicle_journey_list.push_back(validity_patterns[elts[1]]);
-           }
-            routes[elts[0] + elts[2]] = route;
+                line->validity_pattern_list.push_back(validity_patterns[elts[1]]);
+            }
+            routes[elts[2]] = route;
+
+            VehicleJourney_ptr vj(new VehicleJourney());
+            vj->route = route;
+            //vj->company = route->line->network;
+            vj->name = elts[3];
+            vj->external_code = elts[2];
+            //vj->mode = route->mode_type;
+            vj->validity_pattern = validity_patterns[elts[1]];
+            vehicle_journeys[vj->name] = vj;
         }
     }
+    std::cout << "Nombre de routes : " << routes.size() << std::endl;
+    std::cout << "Nombre de vehicle journeys : " << vehicle_journeys.size() << std::endl;
+    std::cout << "Nombre d'erreur de référence de service : " << ignored << std::endl;
+}
+
+void GtfsParser::parse_stop_times() {
+    std::cout << "On parse : " << (path + "/stop_times.txt").c_str() << std::endl;
+    std::fstream ifile((path + "/stop_times.txt").c_str());
+    std::string line;
+    if(!getline(ifile, line)) {
+        std::cerr << "Impossible d'ouvrir le fichier stop_times.txt" << std::endl;
+        return;
+    }
+
+    boost::trim(line);
+    Tokenizer tok_header(line);
+    std::vector<std::string> elts(tok_header.begin(), tok_header.end());
+    BOOST_ASSERT(elts[0] == "trip_id");
+    BOOST_ASSERT(elts[1] == "arrival_time");
+    BOOST_ASSERT(elts[2] == "departure_time");
+    BOOST_ASSERT(elts[3] == "stop_id");
+    BOOST_ASSERT(elts[4] == "stop_sequence");
+    BOOST_ASSERT(elts[5] == "stop_headsign");
+    BOOST_ASSERT(elts[6] == "pickup_type");
+    BOOST_ASSERT(elts[7] == "drop_off_type");
+    BOOST_ASSERT(elts[8] == "shape_dist_traveled");
+
+    while(getline(ifile, line)) {
+        boost::trim(line);
+        Tokenizer tok(line);
+        elts.assign(tok.begin(), tok.end());
+        if(routes.find(elts[0]) == routes.end()) {
+            std::cerr << "Impossible de trouver la route " << elts[0] << std::endl;
+        }
+        else if(stop_points.find(elts[3]) == stop_points.end()){
+            std::cerr << "Impossible le StopPoint " << elts[3] << std::endl;
+        }
+        else {
+            StopTime_ptr stop_time(new StopTime());
+            stop_time->arrival_time = time_to_int(elts[1]);
+            stop_time->departure_time = time_to_int(elts[2]);
+            stop_time->stop_point = stop_points[elts[3]];
+            stop_time->order = boost::lexical_cast<int>(elts[4]);
+            stop_time->vehicle_journey = vehicle_journeys[elts[0]];
+            stop_time->ODT = (elts[6] == "2" && elts[7] == "2");
+            stop_time->zone = 0; // à définir selon pickup_type ou drop_off_type = 10
+            stop_times.push_back(stop_time);
+        }
+    }
+    std::cout << "Nombre d'horaires : " << stop_times.size() << std::endl;
+
 }

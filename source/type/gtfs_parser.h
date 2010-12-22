@@ -1,6 +1,7 @@
 #pragma once
 #include "type.h"
 #include <boost/unordered_map.hpp>
+#include <deque>
 
 /** Lit les fichiers au format General Transit Feed Specifications
   *
@@ -13,6 +14,8 @@ private:
     boost::unordered_map<std::string, ValidityPattern_ptr> validity_patterns;
     boost::unordered_map<std::string, Line_ptr> lines;
     boost::unordered_map<std::string, Route_ptr> routes;
+    boost::unordered_map<std::string, VehicleJourney_ptr> vehicle_journeys;
+    std::deque<StopTime_ptr> stop_times;
     std::string path;///< Chemin vers les fichiers
     boost::gregorian::date start;///< Premier jour où les données sont valables
 
@@ -44,3 +47,9 @@ public:
     /// Contient les VehicleJourney
     void parse_trips();
 };
+
+/** Convertit une chaine de charactères du type 8:12:31 en secondes depuis minuit
+  *
+  * Retourne -1 s'il y a eu un problème
+  */
+int time_to_int(const std::string & time);
