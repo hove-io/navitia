@@ -1,6 +1,7 @@
 /** Exemple de webservice : il affiche le nombre de requêtes traitées par le webservice et par le thread courant */
 
-#include "threadpool.h"
+#include "baseworker.h"
+typedef BaseWorker<int> bw;
 
 using namespace webservice;
 using namespace boost::posix_time;
