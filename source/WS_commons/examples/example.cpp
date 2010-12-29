@@ -1,10 +1,8 @@
 /** Exemple de webservice : il affiche le nombre de requêtes traitées par le webservice et par le thread courant */
 
 #include "baseworker.h"
-typedef BaseWorker<int> bw;
 
 using namespace webservice;
-using namespace boost::posix_time;
 
 /** Structure de données globale au webservice
  *  N'est instancié qu'une seule fois au chargement
@@ -19,13 +17,11 @@ struct Data{
 };
 
 /// Classe associée à chaque thread
-class Worker{
+class Worker : public BaseWorker<Data> {
     int i; /// Compteur de requêtes sur le thread actuel
-    public:
-    Worker() : i(0) {} /// Constructeur par défaut
-    
-    /// Fonction appelée à chaque requête. Il faut respecter cette signature !
-    ResponseData operator()(const RequestData &, Data & d){
+
+    /** Api qui compte le nombre de fois qu'elle a été appelée */
+    ResponseData count(Parameters, Data & d) {
         i++;
         ResponseData rd;
         std::stringstream ss;
@@ -33,11 +29,24 @@ class Worker{
         d.mut.lock();
         ss << d.count++;
         d.mut.unlock();
-        
+
         rd.response = ss.str();
         rd.content_type = "text/html";
         rd.status_code = 200;
         return rd;
+    }
+
+
+
+    public:    
+    /** Constructeur par défaut
+      *
+      * On y enregistre toutes les api qu'on souhaite exposer
+      */
+    Worker() : i(0) {
+        register_api("/count",boost::bind(&Worker::count, this, _1, _2), "Api qui compte le nombre d'appels effectués");
+        add_default_api();
+        //register_api("/help", boost::bind(&Worker::help, this, _1, _2), "Liste des APIs utilisables");
     }
 };
 

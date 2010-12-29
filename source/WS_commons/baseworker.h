@@ -9,106 +9,147 @@
 #include <boost/foreach.hpp>
 #include <vector>
 
+#include <boost/accumulators/statistics/tail_quantile.hpp>
 
+namespace webservice
+{
+    using namespace boost::accumulators;
 
-/** Worker de base. Doit être hérité pour définir le comportement et les données souhaitées pour chaque thread */
-template<class Data>
-class BaseWorker {
-    /// Correspond à l'ensemble des paramètres (clef-valeurs)
-    typedef std::map<std::string, std::string> Parameters;
+    /** Worker de base. Doit être hérité pour définir le comportement et les données souhaitées pour chaque thread */
+    template<class Data>
+    class BaseWorker {
+    public: // Structures de données
+        /// Correspond à l'ensemble des paramètres (clef-valeurs)
+        typedef std::map<std::string, std::string> Parameters;
 
-    /// Fonction associée à une api : prend en paramètre un Parameters et retourne une chaîne de caractères correspondant au retour
-    typedef boost::function<std::string (Parameters)> ApiFun;
+        /// Fonction associée à une api : prend en paramètre un Parameters et retourne une chaîne de caractères correspondant au retour
+        typedef boost::function<ResponseData (Parameters, Data &)> ApiFun;
 
-    /// Fonction membre d'un worker associée à une api
-    typedef boost::function<std::string (BaseWorker *, Parameters)> ApiMemFun;
-
-    /** Définit un paramètre d'une API
+        /** Définit un paramètre d'une API
       *
       * Un requête du type foo?param=1&var=hello
       * aura param et var comme paramètres
       */
-    struct Parameter {
-        std::string description; ///< Description du paramètre (pour information à l'utilisateur)
-        std::string type; ///< Type du paramètre (entier, chaîne de caractère)
-        bool mandatory; ///< Est-ce que le paramètre est obligatoire
-    };
+        struct Parameter {
+            std::string description; ///< Description du paramètre (pour information à l'utilisateur)
+            std::string type; ///< Type du paramètre (entier, chaîne de caractère)
+            bool mandatory; ///< Est-ce que le paramètre est obligatoire
+        };
 
-    /** Définit une api
+        /** Définit une api
       *
       * Un requête du type foo?param=1&var=hello
       * correspond à l'api foo
       */
-    struct Api {
-        std::string description; ///< Description de l'api (pour information à l'utilisateur)
-        std::map<std::string, Parameter> params; ///< Liste des paramètres de l'api
-        ApiFun fun;///< Fonction associée à la requète
-    };
+        struct Api {
+            std::string description; ///< Description de l'api (pour information à l'utilisateur)
+            std::map<std::string, Parameter> params; ///< Liste des paramètres de l'api
+            ApiFun fun;///< Fonction associée à la requète
+        };
 
 
-    std::map<std::string, Api> apis;
-public:
-    /** Fonction appelée lorsqu'une requête appelle
+        /** Ensemble des apis indexées par leur nom */
+        std::map<std::string, Api> apis;
+
+        typedef accumulator_set<double, stats<tag::tail_quantile<right> > > quantilles;
+    public:
+        /** Fonction appelée lorsqu'une requête appelle
       *
       * Cette fonction dispatche ensuite à la bonne en fonction de l'appel
       */
-    webservice::ResponseData dispatch(const webservice::RequestData & data, Data d){
-        Parameters params;
-        std::vector<std::string> tokens;
-        boost::algorithm::split(tokens, data.params, boost::algorithm::is_any_of("&"));
-        BOOST_FOREACH(std::string token, tokens) {
-            std::vector<std::string> elts;
-            boost::algorithm::split(elts, token, boost::algorithm::is_any_of("="));
-            if(elts.size() == 1)
-                params[elts[0]] = 0;
-            else
-                params[elts[0]] = elts[1];
-        }
-        return webservice::ResponseData();
-    }
+        webservice::ResponseData dispatch(const webservice::RequestData & request, Data & d){
+            Parameters params;
+            std::vector<std::string> tokens;
+            boost::algorithm::split(tokens, request.params, boost::algorithm::is_any_of("&"));
+            BOOST_FOREACH(std::string token, tokens) {
+                std::vector<std::string> elts;
+                boost::algorithm::split(elts, token, boost::algorithm::is_any_of("="));
+                if(elts.size() == 1)
+                    params[elts[0]] = "";
+                else
+                    params[elts[0]] = elts[1];
+            }
 
-    /** Permet de rajouter une nouvelle api
+            if(apis.find(request.path) == apis.end()) {
+                webservice::ResponseData resp;
+                resp.content_type = "text/xml";
+                resp.response = "<error>API inconnue</error>";
+                return resp;
+            }
+            else {
+                return apis[request.path].fun(params, d);
+            }
+        }
+
+        /** Permet de rajouter une nouvelle api
       *
       * Le nom est celui utilisé dans la requête
       * La fonction (idéalement vers un membre du Worker pour profiter des données) va effectuer le traitement
       * La description est pour fournir l'aide à l'utilisateur
+      *
+      * Si la fonction est une methode membre, utiliser boost::bind(&Classe::methode, this, _1, _2)
       */
-    void register_api(const std::string & name, ApiFun fun, const std::string & description){
-        Api api;
-        api.fun = fun;
-        api.description = description;
-        apis[name] = api;
-    }
+        void register_api(const std::string & name, ApiFun fun, const std::string & description){
+            Api api;
+            api.fun = fun;
+            api.description = description;
+            apis[name] = api;
+        }
 
-    /** Même fonction, sauf qu'on passe une fonction membre en paramètre */
-    void register_api(const std::string & name, ApiMemFun mem_fun, const std::string & description){
-        ApiFun fun = boost::bind(mem_fun, this, _1);
-        register_api(name, fun, description);
-    }
-
-    /** Rajoute un paramètre à une api.
+        /** Rajoute un paramètre à une api.
       *
       * Retourne false si l'api n'existe pas.
       * Si le paramètre avait déjà été défini, il est écrasé
       */
-    bool add_param(const std::string & api, const std::string & name,
-                   const std::string & description, const std::string & type, bool mandatory) {
-        if(apis.find(api) == apis.end()) {
-            return false;
+        bool add_param(const std::string & api, const std::string & name,
+                       const std::string & description, const std::string & type, bool mandatory) {
+            if(apis.find(api) == apis.end()) {
+                return false;
+            }
+            Parameter param;
+            param.description = description;
+            param.type = type;
+            param.mandatory = mandatory;
+            apis[api].params[name] = param;
+            return true;
         }
-        Parameter param;
-        param.description = description;
-        param.type = type;
-        param.mandatory = mandatory;
-        apis[api].params[name] = param;
-        return true;
-    }
 
-    /** Ajoute quelques API par défaut
-      *
-      * help : donne une aide listant toutes les api disponibles et leurs paramètres
-      * status : donne des informations sur le webservice
-      */
-    void add_default_api();
-};
 
+        /** Fonction appelée à chaque requête */
+        ResponseData operator()(const RequestData & request, Data & d){
+            return dispatch(request,d);
+        }
+
+        // Quelques APIs par défaut
+        /** Liste l'ensemble des APIs disponibles avec les paramètres */
+        ResponseData help(Parameters, Data &){
+            ResponseData rd;
+            rd.content_type = "text/html";
+            rd.status_code = 200;
+            std::stringstream ss("<html><head><title>Liste des API</title></head><body>\n");
+            ss << "<h1>Liste des APIs</h1>\n";
+            BOOST_FOREACH(auto api, apis){
+                ss << "<h2>" << api.first << "</h2>\n";
+                ss << "<h3>Description</h3><p>" << api.second.description << "</p>\n";
+                ss << "<h3>Paramètres</h3><table><th><td>Paramètre</td><td>Type</td><td>Description</td><td>Obligatoire</td></th>\n";
+                BOOST_FOREACH(auto param, api.second.params){
+                    ss << "<tr><td>" << param.first << "</td><td>" << param.second.type << "</td><td>" << param.second.description << "</td><td>" << param.second.mandatory << "</td></tr>\n";
+                }
+                ss << "</table>\n";
+            }
+            ss << "</body></html>";
+            rd.response = ss.str();
+            return rd;
+        }
+
+        /** Ajoute quelques API par défaut
+          *
+          * help : donne une aide listant toutes les api disponibles et leurs paramètres
+          * status : donne des informations sur le webservice
+          */
+        void add_default_api() {
+            register_api("/help", boost::bind(&BaseWorker<Data>::help, this, _1, _2), "Liste des APIs utilisables");
+        }
+    };
+
+}
