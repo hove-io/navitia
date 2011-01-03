@@ -46,7 +46,6 @@ class Worker : public BaseWorker<Data> {
     Worker() : i(0) {
         register_api("/count",boost::bind(&Worker::count, this, _1, _2), "Api qui compte le nombre d'appels effectués");
         add_default_api();
-        //register_api("/help", boost::bind(&Worker::help, this, _1, _2), "Liste des APIs utilisables");
     }
 };
 

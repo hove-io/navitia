@@ -10,7 +10,6 @@
 #include <vector>
 
 #include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/tail_quantile.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/max.hpp>
 #include <boost/accumulators/statistics/count.hpp>
@@ -18,6 +17,16 @@
 namespace webservice
 {
     using namespace boost::accumulators;
+    /** Contient des données statiques aux workers */
+    struct StaticData {
+        typedef accumulator_set<double, features<tag::max, tag::mean, tag::count> > mean_t;
+        std::map<std::string, mean_t> means;
+    };
+
+    StaticData & static_data() {
+        static StaticData ans;
+        return ans;
+    }
 
     /** Worker de base. Doit être hérité pour définir le comportement et les données souhaitées pour chaque thread */
     template<class Data>
@@ -51,17 +60,9 @@ namespace webservice
             ApiFun fun;///< Fonction associée à la requète
         };
 
-
         /** Ensemble des apis indexées par leur nom */
         std::map<std::string, Api> apis;
-
-        typedef accumulator_set<double, stats<tag::tail_quantile<right> > > quantile_t;
-        typedef accumulator_set<double, features<tag::max, tag::mean, tag::count> > mean_t;
     
-
-        std::map<std::string, quantile_t> quants;
-        std::map<std::string, mean_t> means;
-
     public:
         /** Fonction appelée lorsqu'une requête appelle
       *
@@ -90,8 +91,7 @@ namespace webservice
                 boost::posix_time::ptime start(boost::posix_time::microsec_clock::local_time());
                 ResponseData resp = apis[request.path].fun(params, d);
                 int duration = (boost::posix_time::microsec_clock::local_time() - start).total_milliseconds();
-                means[request.path](duration);
-                quants[request.path](duration);
+                static_data().means[request.path](duration);
                 return resp;
             }
         }
@@ -166,10 +166,9 @@ namespace webservice
             ss << "<h1>Statistiques</h1>";
             BOOST_FOREACH(auto api, apis) {
                 ss << "<h2>" << api.first << "</h2>\n";
-                ss << "<p>Temps moyen (ms) : " << mean(means[api.first]) << "<br/>\n"
-                  //  << "Temps max d'appel (ms) : " << boost::accumulators::max(means[api.first]) << "<br/>\n"
-                //    << "Temps à 90% (ms) : " << quantile(quants[api.first], quantile_probability = 0.90 )
-                    << "Nombre d'appels : " << count(means[api.first]) << "<br/></p>\n";
+                ss << "<p>Temps moyen (ms) : " << mean(static_data().means[api.first]) << "<br/>\n"
+                    << "Temps max d'appel (ms) : " << (max)(static_data().means[api.first]) << "<br/>\n"
+                    << "Nombre d'appels : " << count(static_data().means[api.first]) << "<br/></p>\n";
             }
             ss << "</body></html>";
             rd.response = ss.str();
