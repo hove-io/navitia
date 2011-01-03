@@ -49,30 +49,30 @@ GtfsParser::GtfsParser(const std::string & path, const std::string & start) :
 void GtfsParser::save(const std::string & filename) {
     std::ofstream ofs(filename.c_str());
     boost::archive::text_oarchive oa(ofs);
-    oa << *this;
+    oa << data;
 }
 
 void GtfsParser::load(const std::string & filename) {
     std::ifstream ifs(filename.c_str());
     boost::archive::text_iarchive ia(ifs);
-    ia >> *this;
+    ia >> data;
 }
 
 void GtfsParser::save_bin(const std::string & filename) {
     std::ofstream ofs(filename.c_str(),  std::ios::out | std::ios::binary);
     boost::archive::binary_oarchive oa(ofs);
-    oa << *this;
+    oa << data;
 }
 
 void GtfsParser::load_bin(const std::string & filename) {
     std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
     boost::archive::binary_iarchive ia(ifs);
-    ia >> *this;
+    ia >> data;
 }
 
 void GtfsParser::parse_stops() {
-    stop_points.reserve(56000);
-    stop_areas.reserve(13000);
+    data.stop_points.items.reserve(56000);
+    data.stop_areas.items.reserve(13000);
     // En GTFS les stopPoint et stopArea sont définis en une seule fois
     // On garde donc le "parent station" (aka. stopArea) dans un tableau lors de la 1ère passe.
     std::deque<std::pair<int, std::string> > stoppoint_areas;
@@ -121,14 +121,13 @@ void GtfsParser::parse_stops() {
         else
             sp.code = elts[0];
 
-        if(!stop_points_map.empty() && stop_points_map.find(sp.code) != stop_points_map.end()) {
+        if(!data.stop_points.items.empty() && data.stop_points.exist(sp.code)) {
             ignored++;
         }
         else {
-            stop_points_map[sp.code] = stop_points.size();
-            stop_points.push_back(sp);
+            data.stop_points.add(sp.code, sp);
             if(elts[9] != "")
-                stoppoint_areas.push_back(std::make_pair(stop_points.size(), elts[9]));
+                stoppoint_areas.push_back(std::make_pair(data.stop_points.size()-1, elts[9]));
 
             // Si c'est un stopArea
             if(elts[8] == "1") {
@@ -136,32 +135,31 @@ void GtfsParser::parse_stops() {
                 sa.coord = sp.coord;
                 sa.name = sp.name;
                 sa.code = sp.code;
-                stop_areas_map[sa.code] =  stop_areas.size();
-                stop_areas.push_back(sa);
+                data.stop_areas.add(sa.code, sa);
             }
         }
     }
 
     // On reboucle pour récupérer les stop areas de tous les stop points
     BOOST_FOREACH(auto i, stoppoint_areas){
-        auto sa = stop_areas_map.find(i.second);
-        if(sa != stop_areas_map.end())
-            stop_points[i.first].stop_area_idx = sa->second;
+        if(data.stop_areas.exist(i.second)) {
+            data.stop_points[i.first].stop_area_idx = data.stop_areas.get_idx(i.second);
+        }
         else
-            std::cerr << "Le stopPoint " << stop_points[i.first].code
+            std::cerr << "Le stopPoint " << data.stop_points[i.first].code
                     << " a utilisé un stopArea inconnu : " << i.second << std::endl;
     }
 
-    BOOST_ASSERT(stop_points.size() == stop_points_map.size());
-    BOOST_ASSERT(stop_areas.size() == stop_areas_map.size());
-    std::cout << "J'ai parsé " << stop_points.size() << " stop points" << std::endl;
-    std::cout << "J'ai parsé " << stop_areas.size() << " stop areas" << std::endl;
+    BOOST_ASSERT(data.stop_points.items.size() == data.stop_points.items_map.size());
+    BOOST_ASSERT(data.stop_areas.items.size() == data.stop_areas.items_map.size());
+    std::cout << "J'ai parsé " << data.stop_points.size() << " stop points" << std::endl;
+    std::cout << "J'ai parsé " << data.stop_areas.size() << " stop areas" << std::endl;
     std::cout << "J'ai ignoré " << ignored << " points à cause de doublons" << std::endl;
     std::cout << std::endl;
 }
 
 void GtfsParser::parse_calendar_dates(){
-    validity_patterns.reserve(10000);
+    data.validity_patterns.items.reserve(10000);
     std::cout << "On parse : " << (path + "/calendar_dates.txt").c_str() << std::endl;
     std::fstream ifile((path + "/calendar_dates.txt").c_str());
     std::string line;
@@ -183,29 +181,27 @@ void GtfsParser::parse_calendar_dates(){
         elts.assign(tok.begin(), tok.end());
 
         int idx;
-        if(validity_patterns_map.find(elts[0]) == validity_patterns_map.end()){
-            idx = validity_patterns.size();
-            validity_patterns.push_back(ValidityPattern(start));
-            validity_patterns_map[elts[0]] = idx;
+        if(!data.validity_patterns.exist(elts[0])){
+            idx = data.validity_patterns.add(elts[0], ValidityPattern(start));
         }
         else {
-            idx = validity_patterns_map[elts[0]];
+            idx = data.validity_patterns.get_idx(elts[0]);
         }
 
         auto date = boost::gregorian::from_undelimited_string(elts[1]);
         if(elts[2] == "1")
-            validity_patterns[idx].add(date);
+            data.validity_patterns[idx].add(date);
         else if(elts[2] == "2")
-            validity_patterns[idx].remove(date);
+            data.validity_patterns[idx].remove(date);
         else
             std::cerr << "Exception pour le service " << elts[0] << " inconnue : " << elts[2] << std::endl;
     }
-    BOOST_ASSERT(validity_patterns.size() == validity_patterns_map.size());
-    std::cout << "Nombre de validity patterns : " << validity_patterns.size() << std::endl;
+    BOOST_ASSERT(data.validity_patterns.items.size() == data.validity_patterns.items_map.size());
+    std::cout << "Nombre de validity patterns : " << data.validity_patterns.size() << std::endl;
 }
 
 void GtfsParser::parse_routes(){
-    lines.reserve(10000);
+    data.lines.items.reserve(10000);
     std::cout << "On parse : " << (path + "/routes.txt").c_str() << std::endl;
     std::fstream ifile((path + "/routes.txt").c_str());
     std::string line;
@@ -233,7 +229,7 @@ void GtfsParser::parse_routes(){
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
 
-        if(lines.empty() || lines_map.find(elts[0]) == lines_map.end()) {
+        if(data.lines.items.empty() || !data.lines.exist(elts[0])) {
             Line line;
             line.name = elts[3];
             line.code = elts[2];
@@ -242,22 +238,21 @@ void GtfsParser::parse_routes(){
             line.color = elts[7];
             line.additional_data = elts[3];
 
-            lines_map[elts[0]] = lines.size();
-            lines.push_back(line);
+            data.lines.add(elts[0], line);
         }
         else {
             ignored++;
         }
     }
-    BOOST_ASSERT(lines.size() == lines_map.size());
-    std::cout << "Nombre de lignes : " << lines.size() << std::endl;
+    BOOST_ASSERT(data.lines.items.size() == data.lines.items_map.size());
+    std::cout << "Nombre de lignes : " << data.lines.items.size() << std::endl;
     std::cout << "J'ai ignoré " << ignored << " lignes pour cause de doublons" << std::endl;
     std::cout << std::endl;
 }
 
 void GtfsParser::parse_trips() {
-    routes.reserve(350000);
-    vehicle_journeys.reserve(350000);
+    data.routes.items.reserve(350000);
+    data.vehicle_journeys.items.reserve(350000);
     std::cout << "On parse : " << (path + "/trips.txt").c_str() << std::endl;
     std::fstream ifile((path + "/trips.txt").c_str());
     std::string line;
@@ -283,52 +278,50 @@ void GtfsParser::parse_trips() {
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
 
-        if(lines_map.find(elts[0]) == lines_map.end()){
+        if(!data.lines.exist(elts[0])){
             std::cerr << "Impossible de trouver la Route (au sens GTFS) " << elts[0]
                     << " référencée par trip " << elts[2] << std::endl;
         }
         else {
-            int line_idx = lines_map[elts[0]];
+            int line_idx = data.lines.get_idx(elts[0]);
             Route route;
             route.line_idx = line_idx;
 
-            if(validity_patterns_map.find(elts[1]) == validity_patterns_map.end()) {
+            if(!data.validity_patterns.exist(elts[1])) {
                 ignored++;
             }
             else {
-                lines[line_idx].validity_pattern_list.push_back(validity_patterns_map[elts[1]]);
+                data.lines[line_idx].validity_pattern_list.push_back(data.validity_patterns.get_idx(elts[1]));
             }
-            routes_map[elts[2]] = routes.size();
-            routes.push_back(route);
+            data.routes.add(elts[2], route);
 
-            if(vehicle_journeys.empty() || vehicle_journeys_map.find(elts[3]) == vehicle_journeys_map.end()) {
+            if(data.vehicle_journeys.items.empty() || !data.vehicle_journeys.exist(elts[3])) {
                 VehicleJourney vj;
-                vj.route_idx = routes.size() - 1;
+                vj.route_idx = data.routes.size() - 1;
                 //vj->company = route->line->network;
                 vj.name = elts[3];
                 vj.external_code = elts[2];
                 //vj->mode = route->mode_type;
-                vj.validity_pattern_idx = validity_patterns_map[elts[1]];
+                vj.validity_pattern_idx = data.validity_patterns.get_idx(elts[1]);
 
-                vehicle_journeys_map[vj.name] = vehicle_journeys.size();
-                vehicle_journeys.push_back(vj);
+                data.vehicle_journeys.add(vj.name, vj);
             }
             else {
                 ignored_vj++;
             }
         }
     }
-    BOOST_ASSERT(routes.size() == routes_map.size());
-    BOOST_ASSERT(vehicle_journeys.size() == vehicle_journeys_map.size());
-    std::cout << "Nombre de routes : " << routes.size() << std::endl;
-    std::cout << "Nombre de vehicle journeys : " << vehicle_journeys.size() << std::endl;
+    BOOST_ASSERT(data.routes.items.size() == data.routes.items_map.size());
+    BOOST_ASSERT(data.vehicle_journeys.items.size() == data.vehicle_journeys.items_map.size());
+    std::cout << "Nombre de routes : " << data.routes.items.size() << std::endl;
+    std::cout << "Nombre de vehicle journeys : " << data.vehicle_journeys.items.size() << std::endl;
     std::cout << "Nombre d'erreur de référence de service : " << ignored << std::endl;
     std::cout << "J'ai ignoré " << ignored_vj << " vehicule journey à cause de doublons" << std::endl;
     std::cout << std::endl;
 }
 
 void GtfsParser::parse_stop_times() {
-    stop_times.reserve(8000000);
+    data.stop_times.reserve(8000000);
     std::cout << "On parse : " << (path + "/stop_times.txt").c_str() << std::endl;
     std::fstream ifile((path + "/stop_times.txt").c_str());
     std::string line;
@@ -354,25 +347,25 @@ void GtfsParser::parse_stop_times() {
         boost::trim(line);
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
-        if(routes_map.find(elts[0]) == routes_map.end()) {
+        if(!data.routes.exist(elts[0])) {
             std::cerr << "Impossible de trouver la route " << elts[0] << std::endl;
         }
-        else if(stop_points_map.find(elts[3]) == stop_points_map.end()){
+        else if(!data.stop_points.exist(elts[3])){
             std::cerr << "Impossible le StopPoint " << elts[3] << std::endl;
         }
         else {
             StopTime stop_time;
             stop_time.arrival_time = time_to_int(elts[1]);
             stop_time.departure_time = time_to_int(elts[2]);
-            stop_time.stop_point_idx = stop_points_map[elts[3]];
+            stop_time.stop_point_idx = data.stop_points.get_idx(elts[3]);
             stop_time.order = boost::lexical_cast<int>(elts[4]);
-            stop_time.vehicle_journey_idx = vehicle_journeys_map[elts[0]];
+            stop_time.vehicle_journey_idx = data.vehicle_journeys.get_idx(elts[0]);
             stop_time.ODT = (elts[6] == "2" && elts[7] == "2");
             stop_time.zone = 0; // à définir selon pickup_type ou drop_off_type = 10
-            stop_times.push_back(stop_time);
+            data.stop_times.push_back(stop_time);
         }
     }
 
-    std::cout << "Nombre d'horaires : " << stop_times.size() << std::endl;
+    std::cout << "Nombre d'horaires : " << data.stop_times.size() << std::endl;
 
 }

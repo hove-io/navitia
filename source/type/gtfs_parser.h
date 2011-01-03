@@ -1,9 +1,10 @@
 #pragma once
 #include "type.h"
-#include <boost/unordered_map.hpp>
+#include <map>
 #include <deque>
 #include <boost/serialization/deque.hpp>
-#include "unordered_map_serialization.h"
+#include <boost/serialization/map.hpp>
+#include "data.h"
 
 /** Lit les fichiers au format General Transit Feed Specifications
   *
@@ -11,28 +12,9 @@
   */
 class GtfsParser {
 private:
-    std::vector<ValidityPattern> validity_patterns;
-    boost::unordered_map<std::string, int> validity_patterns_map;
-
-    std::vector<Line> lines;
-    boost::unordered_map<std::string, int> lines_map;
-
-    std::vector<Route> routes;
-    boost::unordered_map<std::string, int> routes_map;
-
-    std::vector<VehicleJourney> vehicle_journeys;
-    boost::unordered_map<std::string, int> vehicle_journeys_map;
-
-    std::vector<StopPoint> stop_points;
-    boost::unordered_map<std::string, int> stop_points_map;
-
-    std::vector<StopArea> stop_areas;
-    boost::unordered_map<std::string, int> stop_areas_map;
-
-    std::vector<StopTime> stop_times;
     std::string path;///< Chemin vers les fichiers
     boost::gregorian::date start;///< Premier jour où les données sont valables
-
+    Data data;
 public:
     /// Constructeur qui prend en paramètre le chemin vers les fichiers
     GtfsParser(const std::string & path, const std::string & start_date);
@@ -69,11 +51,11 @@ public:
     void save_bin(const std::string & filename);
     void load_bin(const std::string & filename);
 
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+ /*   template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & stop_points & stop_areas & validity_patterns & lines & routes & vehicle_journeys & stop_times
                 & stop_points_map & stop_areas_map & validity_patterns & lines_map & routes_map & vehicle_journeys_map
                 & path & start;
-    }
+    }*/
 
 };
 

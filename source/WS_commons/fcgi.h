@@ -24,7 +24,7 @@ namespace webservice {
             delete tmp_str;
         }
         request_data.path = FCGX_GetParam("SCRIPT_FILENAME", handle->envp);
-        request_data.params = FCGX_GetParam("QUERY_STRING", handle->envp);
+        request_data.raw_params = FCGX_GetParam("QUERY_STRING", handle->envp);
         request_data.method = parse_method(FCGX_GetParam("REQUEST_METHOD", handle->envp));
 
         ResponseData resp = w(request_data, data);

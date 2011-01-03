@@ -26,6 +26,52 @@ struct VehicleJourney;
 struct ValidityPattern;
 struct StopTime;
 
+
+template<class T>
+class Container{
+    public:
+    std::vector<T> items;
+    std::map<std::string, int> items_map;
+
+    int add(const std::string & external_code, const T & item){
+        items.push_back(item);
+        int position = items.size() - 1;
+        items_map[external_code] = position;
+        return position;
+    }
+
+    T & operator[](int position){
+        return items[position];
+    }
+    
+    T & operator[](const std::string & external_code){
+        if(!exist(external_code)){
+            throw std::out_of_range();
+        }
+        return items[get_idx[external_code]];
+    }
+
+    int get_idx(const std::string & external_code) {
+        return items_map[external_code];
+    }
+
+    bool exist(const std::string & external_code){
+        return (items_map.find(external_code) != items_map.end());
+    }
+
+    bool exist(int idx){
+        return (idx < items.size());
+    }
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & items & items_map;
+    }
+
+    int size() const {
+        return items.size();
+    }
+};
+
 struct Country {
     std::string name;
     int main_city_idx;
