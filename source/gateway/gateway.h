@@ -7,8 +7,7 @@
 /** Contient toutes les informations relatives aux instances NAViTiA
  * pilotées par la passerelle
  */
-class Navitia{
-private:
+struct Navitia{
     /// Serveur utilisé
     std::string server;
 
@@ -18,7 +17,6 @@ private:
     /// Nombre d'erreurs rencontrées
     int error_count;
 
-public:
     /// Constructeur : on passe le serveur, et le chemin vers dll/fcgi que l'on désire utiliser
     Navitia(const std::string & server, const std::string & path);
 
@@ -27,8 +25,7 @@ public:
 };
 
 /** Contient un ensemble de NAViTiA qui sont interrogeables */
-class NavitiaPool {
-private:
+struct NavitiaPool {
     /// Iterateur vers le prochain NAViTiA à interroger
     std::vector<Navitia>::iterator next_navitia;
 
@@ -38,7 +35,6 @@ private:
     /// Mutex pour proteger l'itérateur indiquant le prochain NAViTiA à utiliser
     boost::mutex iter_mutex;
 
-public:
     /// Nombre de threads
     int nb_threads;
     /// Constructeur par défaut

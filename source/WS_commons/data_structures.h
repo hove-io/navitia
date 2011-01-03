@@ -12,6 +12,9 @@ namespace webservice
     /// Types possibles de requètes
     enum RequestMethod {GET, POST, UNKNOWN};
 
+    /// Correspond à l'ensemble des paramètres (clef-valeurs)
+    typedef std::map<std::string, std::string> Parameters;
+
     /** Converti une string de méthode en RequestType */
     RequestMethod parse_method(const std::string & method) {
         if(method == "GET") return GET;
@@ -28,9 +31,11 @@ namespace webservice
         /// Chemin demandé (ex. "/const")
         std::string path;
         /// Paramètres passés à la requête (ex. "user=1&passwd=2")
-        std::string params;
+        std::string raw_params;
         /// Données brutes
         std::string data;
+        /// Paramètres parsés
+        Parameters params;
     };
 
     /** Structure contenant les réponses

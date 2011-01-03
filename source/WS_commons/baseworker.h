@@ -32,11 +32,9 @@ namespace webservice
     template<class Data>
     class BaseWorker {
     public: // Structures de données
-        /// Correspond à l'ensemble des paramètres (clef-valeurs)
-        typedef std::map<std::string, std::string> Parameters;
 
         /// Fonction associée à une api : prend en paramètre un Parameters et retourne une chaîne de caractères correspondant au retour
-        typedef boost::function<ResponseData (Parameters, Data &)> ApiFun;
+        typedef boost::function<ResponseData (RequestData, Data &)> ApiFun;
 
         /** Définit un paramètre d'une API
       *
@@ -68,17 +66,16 @@ namespace webservice
       *
       * Cette fonction dispatche ensuite à la bonne en fonction de l'appel
       */
-        webservice::ResponseData dispatch(const webservice::RequestData & request, Data & d){
-            Parameters params;
+        webservice::ResponseData dispatch(webservice::RequestData request, Data & d){
             std::vector<std::string> tokens;
-            boost::algorithm::split(tokens, request.params, boost::algorithm::is_any_of("&"));
+            boost::algorithm::split(tokens, request.raw_params, boost::algorithm::is_any_of("&"));
             BOOST_FOREACH(std::string token, tokens) {
                 std::vector<std::string> elts;
                 boost::algorithm::split(elts, token, boost::algorithm::is_any_of("="));
                 if(elts.size() == 1)
-                    params[elts[0]] = "";
+                    request.params[elts[0]] = "";
                 else
-                    params[elts[0]] = elts[1];
+                    request.params[elts[0]] = elts[1];
             }
 
             if(apis.find(request.path) == apis.end()) {
@@ -89,7 +86,7 @@ namespace webservice
             }
             else {
                 boost::posix_time::ptime start(boost::posix_time::microsec_clock::local_time());
-                ResponseData resp = apis[request.path].fun(params, d);
+                ResponseData resp = apis[request.path].fun(request, d);
                 int duration = (boost::posix_time::microsec_clock::local_time() - start).total_milliseconds();
                 static_data().means[request.path](duration);
                 return resp;
@@ -137,7 +134,7 @@ namespace webservice
 
         // Quelques APIs par défaut
         /** Liste l'ensemble des APIs disponibles avec les paramètres */
-        ResponseData help(Parameters, Data &){
+        ResponseData help(RequestData, Data &){
             ResponseData rd;
             rd.content_type = "text/html";
             rd.status_code = 200;
@@ -146,7 +143,8 @@ namespace webservice
             BOOST_FOREACH(auto api, apis){
                 ss << "<h2>" << api.first << "</h2>\n";
                 ss << "<h3>Description</h3><p>" << api.second.description << "</p>\n";
-                ss << "<h3>Paramètres</h3><table><th><td>Paramètre</td><td>Type</td><td>Description</td><td>Obligatoire</td></th>\n";
+                ss << "<h3>Paramètres</h3><table border=1>"
+                    << "<tr><th>Paramètre</th><th>Type</th><th>Description</th><th>Obligatoire</th></tr>\n";
                 BOOST_FOREACH(auto param, api.second.params){
                     ss << "<tr><td>" << param.first << "</td><td>" << param.second.type << "</td><td>" << param.second.description << "</td><td>" << param.second.mandatory << "</td></tr>\n";
                 }
@@ -158,7 +156,7 @@ namespace webservice
         }
 
         /** Affiche de statistiques sur l'utilisation de chaque API */
-        ResponseData stats(Parameters, Data & data) {
+        ResponseData stats(RequestData, Data &) {
             ResponseData rd;
             rd.content_type = "text/html";
             rd.status_code = 200;

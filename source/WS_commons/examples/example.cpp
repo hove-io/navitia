@@ -21,7 +21,7 @@ class Worker : public BaseWorker<Data> {
     int i; /// Compteur de requêtes sur le thread actuel
 
     /** Api qui compte le nombre de fois qu'elle a été appelée */
-    ResponseData count(Parameters, Data & d) {
+    ResponseData count(RequestData, Data & d) {
         i++;
         ResponseData rd;
         std::stringstream ss;

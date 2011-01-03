@@ -1,8 +1,9 @@
 #include "gateway.h"
 #include "http.h"
-#include "threadpool.h"
 #include "boost/lexical_cast.hpp"
+#include "baseworker.h"
 
+using namespace webservice;
 Navitia::Navitia(const std::string & server, const std::string & path) : server(server), path(path), error_count(0){
 }
 
@@ -16,19 +17,27 @@ void NavitiaPool::add(const Navitia & n){
 }
 
 /// Classe associée à chaque thread
-struct Worker {
-    /// Fonction appelée à chaque requête
-    webservice::ResponseData operator()(const webservice::RequestData & data, NavitiaPool & pool){
-        webservice::ResponseData resp;
+struct Worker : public BaseWorker<NavitiaPool> {
+    
+    ResponseData status(RequestData, NavitiaPool & np) {
+        ResponseData resp;
         resp.status_code = 200;
         resp.content_type = "text/xml";
-        if(data.path == "/status"){
-            resp.response = "<info>Passerelle en FastCGI</info>\n";
+        resp.response = "<status>\n<info>Passerelle en FastCGI</info>\n";
+        BOOST_FOREACH(Navitia & n, np.navitias) {
+            resp.response += "<Navitia host=\"http://" + n.server + n.path + "\" />\n" ;
         }
-        else if(data.path == "/api" || data.path == "/const") {
-            try{
-                resp.response = pool.query( data.path + "?" + data.params );
-            }
+        resp.response += "</status>";
+        return resp;
+    }
+
+    ResponseData relay(RequestData req, NavitiaPool & pool) {
+        ResponseData resp;
+        resp.status_code = 200;
+        resp.content_type = "text/xml";
+        try{
+                resp.response = pool.query(req.path + "?" + req.raw_params );
+           }
             catch(http_error e){
                 resp.response = "<error>"
                     "<http code=\"";
@@ -37,14 +46,16 @@ struct Worker {
                     resp.response += "</http>"
                     "</error>";
             }
-        }
-        else {
-            resp.status_code = 400;
-            resp.response = "<error>API inconnue</error>";
-        }
-
-        return resp;
+            return resp;
     }
+
+    Worker() {
+        register_api("/api", boost::bind(&Worker::relay, this, _1, _2), "Relaye la requête vers un NAViTiA du pool");
+        add_param("/api", "action", "Requête à demander à NAViTiA", "String", true);
+        register_api("/status", boost::bind(&Worker::status, this, _1, _2), "Donne des informations sur la passerelle");
+        add_default_api();
+    }
+
 };
 
 NavitiaPool::NavitiaPool() : nb_threads(16) {
