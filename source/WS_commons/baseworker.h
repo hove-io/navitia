@@ -9,7 +9,11 @@
 #include <boost/foreach.hpp>
 #include <vector>
 
+#include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/tail_quantile.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/max.hpp>
+#include <boost/accumulators/statistics/count.hpp>
 
 namespace webservice
 {
@@ -51,7 +55,13 @@ namespace webservice
         /** Ensemble des apis indexées par leur nom */
         std::map<std::string, Api> apis;
 
-        typedef accumulator_set<double, stats<tag::tail_quantile<right> > > quantilles;
+        typedef accumulator_set<double, stats<tag::tail_quantile<right> > > quantile_t;
+        typedef accumulator_set<double, features<tag::max, tag::mean, tag::count> > mean_t;
+    
+
+        std::map<std::string, quantile_t> quants;
+        std::map<std::string, mean_t> means;
+
     public:
         /** Fonction appelée lorsqu'une requête appelle
       *
@@ -71,13 +81,18 @@ namespace webservice
             }
 
             if(apis.find(request.path) == apis.end()) {
-                webservice::ResponseData resp;
+                ResponseData resp;
                 resp.content_type = "text/xml";
                 resp.response = "<error>API inconnue</error>";
                 return resp;
             }
             else {
-                return apis[request.path].fun(params, d);
+                boost::posix_time::ptime start(boost::posix_time::microsec_clock::local_time());
+                ResponseData resp = apis[request.path].fun(params, d);
+                int duration = (boost::posix_time::microsec_clock::local_time() - start).total_milliseconds();
+                means[request.path](duration);
+                quants[request.path](duration);
+                return resp;
             }
         }
 
@@ -142,6 +157,25 @@ namespace webservice
             return rd;
         }
 
+        /** Affiche de statistiques sur l'utilisation de chaque API */
+        ResponseData stats(Parameters, Data & data) {
+            ResponseData rd;
+            rd.content_type = "text/html";
+            rd.status_code = 200;
+            std::stringstream ss("<html><head><title>Statistiques</title></head><body>\n");
+            ss << "<h1>Statistiques</h1>";
+            BOOST_FOREACH(auto api, apis) {
+                ss << "<h2>" << api.first << "</h2>\n";
+                ss << "<p>Temps moyen (ms) : " << mean(means[api.first]) << "<br/>\n"
+                  //  << "Temps max d'appel (ms) : " << boost::accumulators::max(means[api.first]) << "<br/>\n"
+                //    << "Temps à 90% (ms) : " << quantile(quants[api.first], quantile_probability = 0.90 )
+                    << "Nombre d'appels : " << count(means[api.first]) << "<br/></p>\n";
+            }
+            ss << "</body></html>";
+            rd.response = ss.str();
+            return rd;
+        }
+
         /** Ajoute quelques API par défaut
           *
           * help : donne une aide listant toutes les api disponibles et leurs paramètres
@@ -149,6 +183,7 @@ namespace webservice
           */
         void add_default_api() {
             register_api("/help", boost::bind(&BaseWorker<Data>::help, this, _1, _2), "Liste des APIs utilisables");
+            register_api("/stats", boost::bind(&BaseWorker<Data>::stats, this, _1, _2), "Statistiques sur les appels d'api");
         }
     };
 
