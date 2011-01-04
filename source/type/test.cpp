@@ -2,13 +2,13 @@
 
 int main(int, char **) {
     {
-        GtfsParser p("/home/tristram/mumoro/idf_gtfs", "20101101");
+        GtfsParser p("/home/kinou/workspace/gtfs", "20101101");
   //  p.save("dump");
-    p.save_bin("dump_bin");
+  //  p.save_bin("dump_bin");
 }
     {
-  //  GtfsParser p2;
+//    GtfsParser p2;
 //    p2.load("dump");
- //   p2.load_bin("dump_bin");
+//    p2.load_bin("dump_bin");
 }
 }

@@ -7,6 +7,9 @@
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <vector>
 #include <bitset>
+#include <set>
+#include <boost/lambda/lambda.hpp>
+#include <boost/foreach.hpp>
 
 struct Country;
 struct District;
@@ -27,12 +30,17 @@ struct ValidityPattern;
 struct StopTime;
 
 
+/**
+ * Classe servant de container au type T
+ * permet via un seul objet d'obtenir un item via sont idx, ou sont externalCode
+ */
 template<class T>
 class Container{
     public:
     std::vector<T> items;
     std::map<std::string, int> items_map;
 
+    ///ajoute un élément dans le container
     int add(const std::string & external_code, const T & item){
         items.push_back(item);
         int position = items.size() - 1;
@@ -70,6 +78,40 @@ class Container{
     int size() const {
         return items.size();
     }
+};
+
+
+template<class From, class Target>
+class Index1ToN{
+    Container<Target> * container;
+
+    std::vector<std::set<int> > items;
+    
+    public:
+
+    Index1ToN(const Container<From> & from, Container<Target> & target,  int Target::* foreign_key){
+        container = &target;
+        items.resize(from.size());
+        for(int i=0; i<target.size(); i++){
+            int from_id = target[i].*foreign_key;
+            if(from_id > items.size()){
+                continue;
+            }
+            items[from_id].insert(i);
+        }
+
+    }
+
+
+    std::vector<Target> get(int idx){
+        std::vector<Target> result;
+        BOOST_FOREACH(int i, items[idx]) {
+            result.push_back((*container)[i]);
+        }
+        return result;
+    }
+
+
 };
 
 struct Country {
