@@ -83,32 +83,46 @@ class Container{
 
 template<class From, class Target>
 class Index1ToN{
-    Container<Target> * container;
+    Container<Target> * targets;
+
+    Container<From> * froms;
 
     std::vector<std::set<int> > items;
     
     public:
 
-    Index1ToN(const Container<From> & from, Container<Target> & target,  int Target::* foreign_key){
-        container = &target;
+    Index1ToN(){}
+
+    Index1ToN(Container<From> & from, Container<Target> & target,  int Target::* foreign_key){
+        create(from, target, foreign_key);
+    }
+
+
+    void create(Container<From> & from, Container<Target> & target,  int Target::* foreign_key){
+        targets = &target;
+        froms = &from;
         items.resize(from.size());
         for(int i=0; i<target.size(); i++){
-            int from_id = target[i].*foreign_key;
+            unsigned int from_id = target[i].*foreign_key;
             if(from_id > items.size()){
                 continue;
             }
             items[from_id].insert(i);
         }
-
     }
 
 
-    std::vector<Target> get(int idx){
-        std::vector<Target> result;
+    std::vector<Target*> get(int idx){
+        std::vector<Target*> result;
         BOOST_FOREACH(int i, items[idx]) {
-            result.push_back((*container)[i]);
+            result.push_back(&(*targets)[i]);
         }
         return result;
+    }
+
+
+    std::vector<Target*> get(const std::string & external_code){
+        return get(froms->get_idx(external_code));
     }
 
 

@@ -51,6 +51,8 @@ public:
     void save_bin(const std::string & filename);
     void load_bin(const std::string & filename);
 
+    inline Data getData(){return data;}
+
  /*   template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & stop_points & stop_areas & validity_patterns & lines & routes & vehicle_journeys & stop_times
                 & stop_points_map & stop_areas_map & validity_patterns & lines_map & routes_map & vehicle_journeys_map

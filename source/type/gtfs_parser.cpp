@@ -44,6 +44,7 @@ GtfsParser::GtfsParser(const std::string & path, const std::string & start) :
     parse_routes();
     parse_trips();
     parse_stop_times();
+
 }
 
 void GtfsParser::save(const std::string & filename) {
@@ -94,10 +95,10 @@ void GtfsParser::parse_stops() {
     BOOST_ASSERT(elts[3] == "stop_desc");
     BOOST_ASSERT(elts[4] == "stop_lat");
     BOOST_ASSERT(elts[5] == "stop_lon");
-    BOOST_ASSERT(elts[6] == "zone_id");
-    BOOST_ASSERT(elts[7] == "stop_url");
-    BOOST_ASSERT(elts[8] == "location_type");
-    BOOST_ASSERT(elts[9] == "parent_station");
+    //BOOST_ASSERT(elts[6] == "zone_id");
+    //BOOST_ASSERT(elts[7] == "stop_url");
+    BOOST_ASSERT(elts[6] == "location_type");
+    BOOST_ASSERT(elts[7] == "parent_station");
 
     int ignored = 0;
 
@@ -116,9 +117,9 @@ void GtfsParser::parse_stops() {
         }
 
         sp.name = elts[2];
-        if(elts[1] != "")
+    /*    if(elts[1] != "")
             sp.code = elts[1];
-        else
+        else*/
             sp.code = elts[0];
 
         if(!data.stop_points.items.empty() && data.stop_points.exist(sp.code)) {
@@ -126,16 +127,16 @@ void GtfsParser::parse_stops() {
         }
         else {
             data.stop_points.add(sp.code, sp);
-            if(elts[9] != "")
-                stoppoint_areas.push_back(std::make_pair(data.stop_points.size()-1, elts[9]));
+            if(elts[7] != "")
+                stoppoint_areas.push_back(std::make_pair(data.stop_points.size()-1, elts[7]));
 
             // Si c'est un stopArea
-            if(elts[8] == "1") {
+            if(elts[6] == "1") {
                 StopArea sa;
                 sa.coord = sp.coord;
                 sa.name = sp.name;
                 sa.code = sp.code;
-                data.stop_areas.add(sa.code, sa);
+                data.stop_areas.add(elts[0], sa);
             }
         }
     }
@@ -219,9 +220,9 @@ void GtfsParser::parse_routes(){
     BOOST_ASSERT(elts[3] == "route_long_name");
     BOOST_ASSERT(elts[4] == "route_desc");
     BOOST_ASSERT(elts[5] == "route_type");
-    BOOST_ASSERT(elts[6] == "route_url");
-    BOOST_ASSERT(elts[7] == "route_color");
-    BOOST_ASSERT(elts[8] == "route_text_color");
+//    BOOST_ASSERT(elts[6] == "route_url");
+    BOOST_ASSERT(elts[6] == "route_color");
+//    BOOST_ASSERT(elts[8] == "route_text_color");
 
     int ignored = 0;
     while(getline(ifile, line)) {
@@ -229,13 +230,13 @@ void GtfsParser::parse_routes(){
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
 
-        if(data.lines.items.empty() || !data.lines.exist(elts[0])) {
+        if(!data.lines.exist(elts[0])) {
             Line line;
             line.name = elts[3];
             line.code = elts[2];
             line.mode = elts[5];
             ///line->network =  networks[elts[1]];
-            line.color = elts[7];
+            line.color = elts[6];
             line.additional_data = elts[3];
 
             data.lines.add(elts[0], line);
@@ -270,7 +271,7 @@ void GtfsParser::parse_trips() {
     BOOST_ASSERT(elts[3] == "trip_headsign");
     BOOST_ASSERT(elts[4] == "direction_id");
     BOOST_ASSERT(elts[5] == "block_id");
-    BOOST_ASSERT(elts[6] == "shape_id");
+//    BOOST_ASSERT(elts[6] == "shape_id");
     int ignored = 0;
     int ignored_vj = 0;
     while(getline(ifile, line)) {
@@ -295,11 +296,11 @@ void GtfsParser::parse_trips() {
             }
             data.routes.add(elts[2], route);
 
-            if(data.vehicle_journeys.items.empty() || !data.vehicle_journeys.exist(elts[3])) {
+            if(!data.vehicle_journeys.exist(elts[2])) {
                 VehicleJourney vj;
                 vj.route_idx = data.routes.size() - 1;
                 //vj->company = route->line->network;
-                vj.name = elts[3];
+                vj.name = elts[2];
                 vj.external_code = elts[2];
                 //vj->mode = route->mode_type;
                 vj.validity_pattern_idx = data.validity_patterns.get_idx(elts[1]);
@@ -338,10 +339,10 @@ void GtfsParser::parse_stop_times() {
     BOOST_ASSERT(elts[2] == "departure_time");
     BOOST_ASSERT(elts[3] == "stop_id");
     BOOST_ASSERT(elts[4] == "stop_sequence");
-    BOOST_ASSERT(elts[5] == "stop_headsign");
-    BOOST_ASSERT(elts[6] == "pickup_type");
-    BOOST_ASSERT(elts[7] == "drop_off_type");
-    BOOST_ASSERT(elts[8] == "shape_dist_traveled");
+//    BOOST_ASSERT(elts[5] == "stop_headsign");
+    BOOST_ASSERT(elts[5] == "pickup_type");
+    BOOST_ASSERT(elts[6] == "drop_off_type");
+    BOOST_ASSERT(elts[7] == "shape_dist_traveled");
 
     while(getline(ifile, line)) {
         boost::trim(line);
@@ -351,7 +352,7 @@ void GtfsParser::parse_stop_times() {
             std::cerr << "Impossible de trouver la route " << elts[0] << std::endl;
         }
         else if(!data.stop_points.exist(elts[3])){
-            std::cerr << "Impossible le StopPoint " << elts[3] << std::endl;
+            std::cerr << "Impossible de trouver le StopPoint " << elts[3] << std::endl;
         }
         else {
             StopTime stop_time;
@@ -360,7 +361,7 @@ void GtfsParser::parse_stop_times() {
             stop_time.stop_point_idx = data.stop_points.get_idx(elts[3]);
             stop_time.order = boost::lexical_cast<int>(elts[4]);
             stop_time.vehicle_journey_idx = data.vehicle_journeys.get_idx(elts[0]);
-            stop_time.ODT = (elts[6] == "2" && elts[7] == "2");
+            stop_time.ODT = (elts[5] == "2" && elts[6] == "2");
             stop_time.zone = 0; // à définir selon pickup_type ou drop_off_type = 10
             data.stop_times.push_back(stop_time);
         }

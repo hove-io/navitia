@@ -18,10 +18,15 @@ class Data{
 
     std::vector<StopTime> stop_times;
 
+    Index1ToN<StopArea, StopPoint> stoppoint_of_stoparea;
+
     public:
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & validity_patterns & lines & routes & vehicle_journeys & stop_points & stop_areas & stop_times;
     }
+
+
+    void build_index();
 };
 
 
