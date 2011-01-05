@@ -22,9 +22,12 @@ class Data{
 
     Index1ToN<StopArea, StopPoint> stoppoint_of_stoparea;
 
+    SortedIndex<StopArea, std::string> stop_area_by_name;
+
     public:
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & validity_patterns & lines & stop_points & stop_areas & stop_times & routes& vehicle_journeys;
+        ar & validity_patterns & lines & stop_points & stop_areas & stop_times & routes 
+            & vehicle_journeys & stoppoint_of_stoparea & stop_area_by_name;
     }
 
 
@@ -45,25 +48,16 @@ class Data{
             }
         }
         return result;
-//        return find(attribute, std::string(str));
     }
 
-template<class Type> Container<Type> & get();
+    template<class Type> Container<Type> & get();
 
-/*    template<class AttributeType>
-    std::vector<StopArea*> find(AttributeType StopArea::* attribute, const AttributeType & value){
-        return std::vector<StopArea*>();
-    }
 
-    template<class AttributeType>
-    std::vector<StopPoint*> find(AttributeType StopPoint::* attribute, const AttributeType & value){
-        return std::vector<StopPoint*>();
-    }
-*/
+    void save(const std::string & filename);
+    void load(const std::string & filename);
+    void save_bin(const std::string & filename);
+    void load_bin(const std::string & filename);
+
 
 };
 
-
-
-
-//template<class Type> Container<Type> & Data::get(){throw "wtf?!";}

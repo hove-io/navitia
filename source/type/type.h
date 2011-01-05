@@ -1,15 +1,17 @@
 #pragma once
-
 #include <boost/date_time/gregorian/gregorian.hpp>
+#include <vector>
+#include <bitset>
+#include <map>
+#include <set>
+#include <boost/foreach.hpp>
+
+#include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/bitset.hpp>
 #include <boost/serialization/vector.hpp>
-#include <boost/date_time/gregorian/greg_serialize.hpp>
-#include <vector>
-#include <bitset>
-#include <set>
-#include <boost/lambda/lambda.hpp>
-#include <boost/foreach.hpp>
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/set.hpp>
 
 struct Country;
 struct District;
@@ -126,6 +128,61 @@ class Index1ToN{
     }
 
 
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & targets & froms & items;
+    }
+
+
+};
+
+template<class Type, class Attribute>
+class SortedIndex{
+    Container<Type> * items;
+
+    std::vector<int> indexes;
+
+    struct Sorter{
+
+        Attribute Type::*key;
+        Container<Type> * items;
+
+        Sorter(Container<Type> * items, Attribute Type::*key){
+            this->items = items;
+            this->key = key;
+        }
+
+        bool operator()(int a, int b){
+            return (*items)[a].*key < (*items)[b].*key;
+        }
+    };
+
+    public:
+    SortedIndex(){};
+
+    SortedIndex(Container<Type> & from, Attribute Type::*key){
+        create(from, key);
+    }
+
+
+    void create(Container<Type> & from, Attribute Type::*key){
+        items = &from;
+        indexes.resize(from.size());
+        for (int i = 0;i < from.size(); i++) {
+            indexes[i] = i;
+        }
+        std::sort(indexes.begin(), indexes.end(), Sorter(items, key));
+    }
+
+    Type & get(int idx) {
+        return (*items)[indexes[idx]];
+    }
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & indexes & items;
+    }
+
+
+
 };
 
 struct Country {
@@ -226,7 +283,7 @@ struct Line {
     std::string backward_name;
     int forward_thermo_idx;
     int backward_thermo_idx;
-    std::vector<int> validity_pattern_list; // Euh... y'en a plusieurs ?
+    std::vector<int> validity_pattern_list;
     std::string additional_data;
     std::string color;
     int sort;
@@ -246,9 +303,12 @@ struct Route {
     std::vector<int> vehicle_journey_list;
     bool is_adapted;
     int associated_route_idx;
+
+    Route(): is_frequence(false), is_forward(false), is_adapted(false){};
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & line_idx & mode_type & /*is_frequence & is_forward &*/ route_point_list &
-                vehicle_journey_list & /*is_adapted &*/ associated_route_idx;
+        ar & name & line_idx & mode_type & is_frequence & is_forward & route_point_list &
+                vehicle_journey_list & is_adapted & associated_route_idx;
     }
 };
 struct VehicleJourney {
@@ -260,8 +320,10 @@ struct VehicleJourney {
     int vehicle_idx;
     bool is_adapted;
     int validity_pattern_idx;
+
+    VehicleJourney(): is_adapted(false){};
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & /*is_adapted &*/ validity_pattern_idx;
+        ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & is_adapted & validity_pattern_idx;
     }
 };
 
