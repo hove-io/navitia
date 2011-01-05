@@ -247,10 +247,24 @@ struct Route {
     bool is_adapted;
     int associated_route_idx;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & line_idx & mode_type & is_frequence & is_forward & route_point_list &
-                vehicle_journey_list & is_adapted & associated_route_idx;
+        ar & name & line_idx & mode_type & /*is_frequence & is_forward &*/ route_point_list &
+                vehicle_journey_list & /*is_adapted &*/ associated_route_idx;
     }
 };
+struct VehicleJourney {
+    std::string name;
+    std::string external_code;
+    int route_idx;
+    int company_idx;
+    int mode_idx;
+    int vehicle_idx;
+    bool is_adapted;
+    int validity_pattern_idx;
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & /*is_adapted &*/ validity_pattern_idx;
+    }
+};
+
 
 struct RoutePoint {
     std::string external_code;
@@ -281,20 +295,6 @@ public:
         ar & beginning_date & days;
     }
 
-};
-
-struct VehicleJourney {
-    std::string name;
-    std::string external_code;
-    int route_idx;
-    int company_idx;
-    int mode_idx;
-    int vehicle_idx;
-    bool is_adapted;
-    int validity_pattern_idx;
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & is_adapted & validity_pattern_idx;
-    }
 };
 
 struct StopPoint {
