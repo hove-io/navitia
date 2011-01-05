@@ -23,13 +23,13 @@ struct Worker {
   int *buffer; ///< Tableau trituré à chaque requete
   char *p_result; ///< Chaine de characteres C qui contient le résultat
   /// Constructeur qui alloue les tableau (une fois par thread)
-  Worker() {
+  Worker(Data &) {
     buffer = (int*) calloc(BUFFER_LENGTH, sizeof(int));
     p_result = (char*) calloc(RESULT_LENGTH, sizeof(char));
   }
   
   /// Fonction appelée à chaque requete
-  ResponseData operator()(const RequestData & data, Data & d){
+  ResponseData operator()(const RequestData &, Data & d){
     char *current = NULL;
     long unsigned int index;
     long unsigned int counter = 0;

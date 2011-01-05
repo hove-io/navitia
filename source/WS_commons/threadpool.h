@@ -72,7 +72,7 @@ namespace webservice
 
         /// Fonction associée à chaque thread. Pop la queue et lance le traitement de la requête
         void worker(){
-            Worker w;
+            Worker w(data);
             while(run) {
                 boost::unique_lock<boost::mutex> lock(queue_mutex);
                 while(queue.empty() && run){

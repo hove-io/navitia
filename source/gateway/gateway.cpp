@@ -49,7 +49,7 @@ struct Worker : public BaseWorker<NavitiaPool> {
             return resp;
     }
 
-    Worker() {
+    Worker(NavitiaPool &) {
         register_api("/api", boost::bind(&Worker::relay, this, _1, _2), "Relaye la requête vers un NAViTiA du pool");
         add_param("/api", "action", "Requête à demander à NAViTiA", "String", true);
         register_api("/status", boost::bind(&Worker::status, this, _1, _2), "Donne des informations sur la passerelle");
