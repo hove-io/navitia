@@ -12,30 +12,12 @@ void Data::build_index(){
     
 }
 
-    Container<ValidityPattern> validity_patterns;
-
-
-    Container<Route> routes;
-
-
-template<>
-Container<StopPoint> & Data::get() {return stop_points;}
-template<>
-Container<StopArea> & Data::get() {return stop_areas;}
-template<>
-Container<VehicleJourney> & Data::get() {return vehicle_journeys;}
-
-template<>
-Container<Line> & Data::get() {return lines;}
-
-template<>
-Container<ValidityPattern> & Data::get() {return validity_patterns;}
-
-template<>
-Container<Route> & Data::get() {return routes;}
-
-
-
+template<> Container<StopPoint> & Data::get() {return stop_points;}
+template<> Container<StopArea> & Data::get() {return stop_areas;}
+template<> Container<VehicleJourney> & Data::get() {return vehicle_journeys;}
+template<> Container<Line> & Data::get() {return lines;}
+template<> Container<ValidityPattern> & Data::get() {return validity_patterns;}
+template<> Container<Route> & Data::get() {return routes;}
 
 void Data::save(const std::string & filename) {
     std::ofstream ofs(filename.c_str());

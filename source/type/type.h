@@ -39,8 +39,8 @@ struct StopTime;
 template<class T>
 class Container{
     public:
-    std::vector<T> items;
-    std::map<std::string, int> items_map;
+    std::vector<T> items; ///< Eléments à proprement parler
+    std::map<std::string, int> items_map; ///< map entre une clef exterene et l'indexe des éléments
 
     ///ajoute un élément dans le container
     int add(const std::string & external_code, const T & item){
@@ -50,10 +50,12 @@ class Container{
         return position;
     }
 
+    /// Retourne l'élément en fonction de son index
     T & operator[](int position){
         return items[position];
     }
     
+    /// Retourne l'élément en fonction de son code externe
     T & operator[](const std::string & external_code){
         if(!exist(external_code)){
             throw std::out_of_range();
@@ -61,129 +63,33 @@ class Container{
         return items[get_idx[external_code]];
     }
 
+    /// Retourne l'indexe d'un élément en fonction de son code externe
     int get_idx(const std::string & external_code) {
         return items_map[external_code];
     }
 
+    /// Est-ce que l'élément ayant telle clef exeterne existe ?
     bool exist(const std::string & external_code){
         return (items_map.find(external_code) != items_map.end());
     }
 
+    /// Est-ce que l'élément ayant tel index existe ?
     bool exist(int idx){
         return (idx < items.size());
     }
 
+    /// Fonction interne utilisée par boost pour sérialiser (aka. binariser) la structure de données
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & items & items_map;
     }
 
+    /// Nombre d'éléments dans la structure
     int size() const {
         return items.size();
     }
 };
 
 
-template<class From, class Target>
-class Index1ToN{
-    Container<Target> * targets;
-
-    Container<From> * froms;
-
-    std::vector<std::set<int> > items;
-    
-    public:
-
-    Index1ToN(){}
-
-    Index1ToN(Container<From> & from, Container<Target> & target,  int Target::* foreign_key){
-        create(from, target, foreign_key);
-    }
-
-
-    void create(Container<From> & from, Container<Target> & target,  int Target::* foreign_key){
-        targets = &target;
-        froms = &from;
-        items.resize(from.size());
-        for(int i=0; i<target.size(); i++){
-            unsigned int from_id = target[i].*foreign_key;
-            if(from_id > items.size()){
-                continue;
-            }
-            items[from_id].insert(i);
-        }
-    }
-
-
-    std::vector<Target*> get(int idx){
-        std::vector<Target*> result;
-        BOOST_FOREACH(int i, items[idx]) {
-            result.push_back(&(*targets)[i]);
-        }
-        return result;
-    }
-
-
-    std::vector<Target*> get(const std::string & external_code){
-        return get(froms->get_idx(external_code));
-    }
-
-
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & targets & froms & items;
-    }
-
-
-};
-
-template<class Type, class Attribute>
-class SortedIndex{
-    Container<Type> * items;
-
-    std::vector<int> indexes;
-
-    struct Sorter{
-
-        Attribute Type::*key;
-        Container<Type> * items;
-
-        Sorter(Container<Type> * items, Attribute Type::*key){
-            this->items = items;
-            this->key = key;
-        }
-
-        bool operator()(int a, int b){
-            return (*items)[a].*key < (*items)[b].*key;
-        }
-    };
-
-    public:
-    SortedIndex(){};
-
-    SortedIndex(Container<Type> & from, Attribute Type::*key){
-        create(from, key);
-    }
-
-
-    void create(Container<Type> & from, Attribute Type::*key){
-        items = &from;
-        indexes.resize(from.size());
-        for (int i = 0;i < from.size(); i++) {
-            indexes[i] = i;
-        }
-        std::sort(indexes.begin(), indexes.end(), Sorter(items, key));
-    }
-
-    Type & get(int idx) {
-        return (*items)[indexes[idx]];
-    }
-
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & indexes & items;
-    }
-
-
-
-};
 
 struct Country {
     std::string name;
@@ -192,7 +98,6 @@ struct Country {
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & main_city_idx & district_list;
     }
-
 };
 
 struct District {

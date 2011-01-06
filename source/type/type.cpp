@@ -1,7 +1,6 @@
 #include "type.h"
 #include <iostream>
 
-typedef Index1ToN<StopPoint, StopArea> Index;
 bool ValidityPattern::is_valid(int duration){
     if(duration < 0){
         std::cerr << "La date est avant le début de période" << std::endl;

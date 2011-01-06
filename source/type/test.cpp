@@ -7,7 +7,7 @@
 
 
 int main(int, char **) {
-   /* GtfsParser p("/home/kinou/workspace/gtfs", "20101101");
+   /* GtfsParser p("/home/tristram/gtfs", "20101101");
     Data data = p.getData();
     data.build_index();
     
