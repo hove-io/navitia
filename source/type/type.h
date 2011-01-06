@@ -6,6 +6,10 @@
 #include <set>
 #include <boost/foreach.hpp>
 
+#include <boost/iterator.hpp>
+#include <boost/iterator/filter_iterator.hpp>
+#include <boost/regex.hpp>
+
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/bitset.hpp>
@@ -38,9 +42,33 @@ struct StopTime;
  */
 template<class T>
 class Container{
+
+    template<class Value>
+    class iter : public boost::iterator_facade<iter<Value>, Value, std::random_access_iterator_tag> {
+        friend class boost::iterator_core_access;
+        Value* element;
     public:
+        iter() : element(0){};
+        iter(Value & val) : element(&val){};
+        Value & dereference() const { return *element;}
+        bool equal(const iter & other) const { return other.element == element;}
+        void increment(){element++;}
+        void decrement(){element--;}
+        void advance(size_t n){element += n;}
+        size_t distance_to(const iter & other){return other.element - element;}
+    };
+public:
+
+    typedef iter<T> iterator;
+    typedef iter<const T> const_iterator;
+
     std::vector<T> items; ///< Eléments à proprement parler
     std::map<std::string, int> items_map; ///< map entre une clef exterene et l'indexe des éléments
+
+    iterator begin() {return iterator(items.front());}
+    const_iterator begin() const {return const_iterator(items.front());}
+    iterator end() {iterator end(items.back()); end++; return end;}
+    const_iterator end() const {const_iterator end(items.back()); end++; return end;}
 
     ///ajoute un élément dans le container
     int add(const std::string & external_code, const T & item){
@@ -86,6 +114,60 @@ class Container{
     /// Nombre d'éléments dans la structure
     int size() const {
         return items.size();
+    }
+
+    /** Functor permettant de tester l'attribut passé en paramètre avec la valeur passée en paramètre
+      *
+      * par exemple is_equal<std::string>(&StopPoint::name, "Châtelet");
+      */
+    template<class Attribute>
+    struct is_equal{
+        const Attribute & ref;
+        Attribute T::*attr;
+        is_equal(Attribute T::*attr, const Attribute & ref) : ref(ref), attr(attr){}
+        bool operator()(const T & elt) const {return ref == elt.*attr;}
+    };
+
+    /** Functor qui matche une expression rationnelle sur l'attribut passé en paramètre
+      *
+      * L'attribut doit être une chaîne de caractères
+      */
+    struct matches {
+        const boost::regex e;
+        std::string T::*attr;
+        matches(std::string T::*attr, const std::string & e) : e(e), attr(attr){}
+        bool operator()(const T & elt) const {return boost::regex_match(elt.*attr, e);}
+    };
+
+
+    /** Permet de filtrer les éléments selon un functor
+      *
+      * Retourne une paire d'iterateurs vers les éléments filtrés
+      */
+    template<class Functor>
+    std::pair<boost::filter_iterator<Functor, iterator>, boost::filter_iterator<Functor, iterator> >
+    filter(Functor f){
+        return std::make_pair(boost::make_filter_iterator(f, begin(), end()),
+                              boost::make_filter_iterator(f, end(), end()) );
+    }
+
+    /** Filtre selon la valeur d'un attribut */
+    template<class Attribute>
+    std::pair<boost::filter_iterator<is_equal<Attribute>, iterator>, boost::filter_iterator<is_equal<Attribute>, iterator> >
+              filter(Attribute T::*attr, Attribute value ) {
+        return filter(is_equal<Attribute>(attr, value));
+    }
+
+    /** Surcharge de filter pour gérer le cas où on passe un litteral de string */
+    std::pair<boost::filter_iterator<is_equal<std::string>, iterator>, boost::filter_iterator<is_equal<std::string>, iterator> >
+            filter(std::string T::*attr, const char * str) {
+        return filter(is_equal<std::string>(attr, std::string(str)));
+    }
+
+    /** Filtre selon la valeur d'un attribut qui matche une regex */
+    std::pair<boost::filter_iterator<matches, iterator>, boost::filter_iterator<matches, iterator> >
+            filter_match(std::string T::*attr, const std::string & str ) {
+        return filter(matches(attr, str));
     }
 };
 

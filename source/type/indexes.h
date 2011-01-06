@@ -122,7 +122,4 @@ class SortedIndex{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & indexes & items;
     }
-
-
-
 };

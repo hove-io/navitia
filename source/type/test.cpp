@@ -50,4 +50,16 @@ int main(int, char **) {
     auto sa = data2.stop_area_by_name.get(0);
     auto sa2 = data2.stop_area_by_name.get(data2.stop_areas.size() -1);
     std::cout << sa.name << " " << sa2.name << " " << sa2.code << std::endl;
+
+    BOOST_FOREACH(auto line, data2.lines){
+        std::cout << line.name << std::endl;
+    }
+
+    BOOST_FOREACH(auto line, data2.lines.filter(&Line::name, "Noctambus 2B")) {
+        std::cout << line.name << std::endl;
+    }
+
+    BOOST_FOREACH(auto line, data2.lines.filter_match(&Line::name, ".*olaire.*")) {
+        std::cout << line.name << std::endl;
+    }
 }
