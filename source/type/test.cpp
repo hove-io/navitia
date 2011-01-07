@@ -59,7 +59,9 @@ int main(int, char **) {
         std::cout << line.name << std::endl;
     }
 
-    BOOST_FOREACH(auto line, data2.lines.filter_match(&Line::name, ".*olaire.*")) {
-        std::cout << line.name << std::endl;
+    BOOST_FOREACH(auto line, data2.lines.filter_match(&Line::name, ".*olaire.*").filter(&Line::code, "S14")) {
+        std::cout << line.name << " " << line.code << std::endl;
     }
+
+   // std::cout << data2.lines.order().begin().name << std::endl;
 }
