@@ -72,7 +72,7 @@ public:
     typedef typename Iter::pointer pointer;
     typedef Iter iterator;
     typedef Iter const_iterator;
-    Subset(Iter begin_it, Iter end_it) :  begin_it(begin_it), end_it(end_it) {}
+    Subset(const Iter & begin_it, const Iter & end_it) :  begin_it(begin_it), end_it(end_it) {}
     iterator begin() {return begin_it;}
     iterator end() {return end_it;}
     const_iterator begin() const {return begin_it;}
@@ -101,30 +101,31 @@ public:
     }
 
     /// Functor permettant de trier les données
-/*    template<class Functor>
+    template<class Functor>
     struct Sorter{
+        Iter begin_it;
         Functor f;
 
-        Sorter(Container<T> * items, Functor f) : items(items), f(f){}
+        Sorter(Iter begin_it, Functor f) : begin_it(begin_it), f(f){}
 
-        bool operator()(int a, int b){
-            return f((*items)[a], (*items)[b]);
+        bool operator()(size_t a, size_t b){
+            return f(*(begin_it + a), *(begin_it + b));
         }
     };
-*/
-/*     template<class Functor>
-    Subset<boost::permutation_iterator<iterator, std::vector<int>::iterator> >
-            order(Functor f){
-        std::vector<int> indexes(end_it - begin_it);
-        for(int i=0; i < indexes.size(); i++) {
+
+     template<class Functor = std::less<typename Iter::value_type> >
+    Subset<boost::permutation_iterator<iterator, std::vector<size_t>::iterator> >
+            order(Functor f = Functor()){
+        std::vector<size_t> indexes(end_it - begin_it);
+        for(size_t i=0; i < indexes.size(); i++) {
             indexes[i] = i;
         }
-        sort(indexes.begin(), indexes.end(), Sorter())
-        return Subset<boost::permutation_iterator<Functor, std::vector<int>::iterator> >
-                ( boost::make_permutation_iterator(f, begin(), end()),
-                  boost::make_permutation_iterator(f, end(), end() )
+        sort(indexes.begin(), indexes.end(), Sorter<Functor>(begin_it, f));
+        return Subset<boost::permutation_iterator<iterator, std::vector<size_t>::iterator> >
+                ( boost::make_permutation_iterator(begin(), indexes.begin()),
+                  boost::make_permutation_iterator(begin(), indexes.end() )
                 );
-    }*/
+    }
 };
 
 
@@ -141,6 +142,7 @@ public:
 
     template<class Value>
     class iter : public boost::iterator_facade<iter<Value>, Value, std::random_access_iterator_tag> {
+        typedef iter<const T> const_iterator;
         friend class boost::iterator_core_access;
         Value* element;
     public:
@@ -151,7 +153,7 @@ public:
         void increment(){element++;}
         void decrement(){element--;}
         void advance(size_t n){element += n;}
-        size_t distance_to(const iter & other){return other.element - element;}
+        size_t distance_to(const iter & other) const {return other.element - element;}
     };
 
    
@@ -233,16 +235,16 @@ public:
          return Subset<iterator>(begin(), end()).filter_match(attr, str);
     }
 
-   /* template<class Functor>
-    Subset<boost::permutation_iterator<iterator, std::vector<int>::iterator> >
+    template<class Functor>
+    Subset<boost::permutation_iterator<iterator, std::vector<size_t>::iterator> >
              order(Functor f) {
          return Subset<iterator>(begin(), end()).order(f);
     }
 
-    Subset<boost::permutation_iterator<Functor, iterator> >
+    Subset<boost::permutation_iterator<iterator, std::vector<size_t>::iterator> >
              order() {
          return Subset<iterator>(begin(), end()).order();
-    }*/
+    }
 };
 
 struct Country {
@@ -350,7 +352,7 @@ struct Line {
         ar & name & code & mode & network_idx & forward_name & backward_name & forward_thermo_idx
                 & backward_thermo_idx & validity_pattern_list & additional_data & color & sort;
     }
-    bool operator<(const Line & other){ return name > other.name;}
+    bool operator<(const Line & other) const { return name > other.name;}
 };
 
 struct Route {

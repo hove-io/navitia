@@ -74,5 +74,7 @@ int main(int, char **) {
     BOOST_FOREACH(auto line, std::make_pair(idx.begin(), idx.end())) {
         std::cout << line.name << " " << line.code << std::endl;
     }
-    // std::cout << data2.lines.order().begin().name << std::endl;
+    std::cout << data2.lines.order().begin()->name << std::endl;
+    std::cout << (data2.lines.order().begin() + data2.lines.size() - 1)->name << std::endl;
+    std::cout << data2.lines.items.back().name << std::endl;
 }
