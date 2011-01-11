@@ -123,3 +123,43 @@ class SortedIndex{
         ar & indexes & items;
     }
 };
+
+template<class Type>
+class Index {
+    typedef typename Type::pointer pointer;
+    std::vector<int> pointers;
+
+    public:
+    typedef typename boost::indirect_iterator<typename std::vector<pointer>::iterator> iterator;
+    typedef typename boost::indirect_iterator<typename std::vector<pointer>::const_iterator > const_iterator;
+    
+    Index(typename Type::iterator begin, typename Type::iterator end) {
+        BOOST_FOREACH(typename Type::value_type & element, std::make_pair(begin, end)) {
+            pointers.push_back(&element);
+        }
+    }
+
+    iterator begin(){return iterator(pointers.begin());}
+    iterator end(){return iterator(pointers.end());}
+    const_iterator begin() const {return const_iterator(pointers.begin());}
+    const_iterator end() const {return const_iterator(pointers.end());}
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & pointers;
+    }
+ };
+
+ template<class Type>
+ Index<typename Type::iterator>
+ make_index(typename Type::iterator begin, typename Type::iterator end) {
+    return Index<typename Type::iterator>(begin, end);
+ }
+
+ template<class Type>
+ Index<typename Type::iterator>
+ make_index(Type & t) {
+    return Index<typename Type::iterator>(t.begin(), t.end());
+ }
+
+
+

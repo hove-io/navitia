@@ -9,6 +9,7 @@
 #include <boost/iterator.hpp>
 #include <boost/iterator/filter_iterator.hpp>
 #include <boost/iterator/permutation_iterator.hpp>
+#include <boost/iterator/indirect_iterator.hpp>
 #include <boost/regex.hpp>
 
 #include <boost/date_time/gregorian/greg_serialize.hpp>
@@ -35,6 +36,96 @@ struct Vehicle;
 struct VehicleJourney;
 struct ValidityPattern;
 struct StopTime;
+
+ /** Functor permettant de tester l'attribut passé en paramètre avec la valeur passée en paramètre
+      *
+      * par exemple is_equal<std::string>(&StopPoint::name, "Châtelet");
+      */
+    template<class Attribute, class T>
+    struct is_equal{
+        const Attribute & ref;
+        Attribute T::*attr;
+        is_equal(Attribute T::*attr, const Attribute & ref) : ref(ref), attr(attr){}
+        bool operator()(const T & elt) const {return ref == elt.*attr;}
+    };
+
+    /** Functor qui matche une expression rationnelle sur l'attribut passé en paramètre
+      *
+      * L'attribut doit être une chaîne de caractères
+      */
+    template<class T>
+    struct matches {
+        const boost::regex e;
+        std::string T::*attr;
+        matches(std::string T::*attr, const std::string & e) : e(e), attr(attr){}
+        bool operator()(const T & elt) const {return boost::regex_match(elt.*attr, e );}
+    };
+
+
+
+template<class Iter>
+class Subset {
+    Iter begin_it;
+    Iter end_it;
+public:
+    typedef typename Iter::value_type value_type;
+    typedef typename Iter::pointer pointer;
+    typedef Iter iterator;
+    typedef Iter const_iterator;
+    Subset(Iter begin_it, Iter end_it) :  begin_it(begin_it), end_it(end_it) {}
+    iterator begin() {return begin_it;}
+    iterator end() {return end_it;}
+    const_iterator begin() const {return begin_it;}
+    const_iterator end() const {return end_it;}
+
+    template<class Functor>
+    Subset<boost::filter_iterator<Functor, iterator> >
+    filter(Functor f) const{
+        return Subset<boost::filter_iterator<Functor, iterator> >
+                (   boost::make_filter_iterator(f, begin(), end()),
+                    boost::make_filter_iterator(f, end(), end())
+                 );
+    }
+
+    /** Filtre selon la valeur d'un attribut qui matche une regex */
+    Subset<boost::filter_iterator<matches<value_type>, iterator> >
+             filter_match(std::string value_type::*attr, const std::string & str ) {
+         return filter(matches<value_type>(attr, str));
+    }
+
+    /** Filtre selon la valeur d'un attribut */
+    template<class Attribute, class Param>
+    Subset<boost::filter_iterator<is_equal<Attribute, value_type>, iterator> >
+              filter(Attribute value_type::*attr, Param value ) {
+        return filter(is_equal<Attribute, value_type>(attr, Param(value)));
+    }
+
+    /// Functor permettant de trier les données
+/*    template<class Functor>
+    struct Sorter{
+        Functor f;
+
+        Sorter(Container<T> * items, Functor f) : items(items), f(f){}
+
+        bool operator()(int a, int b){
+            return f((*items)[a], (*items)[b]);
+        }
+    };
+*/
+/*     template<class Functor>
+    Subset<boost::permutation_iterator<iterator, std::vector<int>::iterator> >
+            order(Functor f){
+        std::vector<int> indexes(end_it - begin_it);
+        for(int i=0; i < indexes.size(); i++) {
+            indexes[i] = i;
+        }
+        sort(indexes.begin(), indexes.end(), Sorter())
+        return Subset<boost::permutation_iterator<Functor, std::vector<int>::iterator> >
+                ( boost::make_permutation_iterator(f, begin(), end()),
+                  boost::make_permutation_iterator(f, end(), end() )
+                );
+    }*/
+};
 
 
 /**
@@ -63,91 +154,7 @@ public:
         size_t distance_to(const iter & other){return other.element - element;}
     };
 
-    /** Functor permettant de tester l'attribut passé en paramètre avec la valeur passée en paramètre
-      *
-      * par exemple is_equal<std::string>(&StopPoint::name, "Châtelet");
-      */
-    template<class Attribute>
-    struct is_equal{
-        const Attribute & ref;
-        Attribute T::*attr;
-        is_equal(Attribute T::*attr, const Attribute & ref) : ref(ref), attr(attr){}
-        bool operator()(const T & elt) const {return ref == elt.*attr;}
-    };
-
-    /** Functor qui matche une expression rationnelle sur l'attribut passé en paramètre
-      *
-      * L'attribut doit être une chaîne de caractères
-      */
-    struct matches {
-        const boost::regex e;
-        std::string T::*attr;
-        matches(std::string T::*attr, const std::string & e) : e(e), attr(attr){}
-        bool operator()(const T & elt) const {return boost::regex_match(elt.*attr, e );}
-    };
-
-    template<class Iter>
-    class Subset {
-        Iter begin_it;
-        Iter end_it;
-    public:
-        typedef Iter iterator;
-        typedef Iter const_iterator;
-        Subset(Iter begin_it, Iter end_it) :  begin_it(begin_it), end_it(end_it) {}
-        iterator begin() {return begin_it;}
-        iterator end() {return end_it;}
-        const_iterator begin() const {return begin_it;}
-        const_iterator end() const {return end_it;}
-
-        template<class Functor>
-        Subset<boost::filter_iterator<Functor, iterator> >
-        filter(Functor f) const{
-            return Subset<boost::filter_iterator<Functor, iterator> >
-                    (   boost::make_filter_iterator(f, begin(), end()),
-                        boost::make_filter_iterator(f, end(), end())
-                     );
-        }
-
-        /** Filtre selon la valeur d'un attribut qui matche une regex */
-        Subset<boost::filter_iterator<matches, iterator> >
-                 filter_match(std::string T::*attr, const std::string & str ) {
-             return filter(matches(attr, str));
-        }
-
-        /** Filtre selon la valeur d'un attribut */
-        template<class Attribute, class Param>
-        Subset<boost::filter_iterator<is_equal<Attribute>, iterator> >
-                  filter(Attribute T::*attr, Param value ) {
-            return filter(is_equal<Attribute>(attr, Param(value)));
-        }
-
-        /// Functor permettant de trier les données
-    /*    template<class Functor>
-        struct Sorter{
-            Functor f;
-
-            Sorter(Container<T> * items, Functor f) : items(items), f(f){}
-
-            bool operator()(int a, int b){
-                return f((*items)[a], (*items)[b]);
-            }
-        };
-*/
-   /*     template<class Functor>
-        Subset<boost::permutation_iterator<iterator, std::vector<int>::iterator> >
-                order(Functor f){
-            std::vector<int> indexes(end_it - begin_it);
-            for(int i=0; i < indexes.size(); i++) {
-                indexes[i] = i;
-            }
-            sort(indexes.begin(), indexes.end(), Sorter())
-            return Subset<boost::permutation_iterator<Functor, std::vector<int>::iterator> >
-                    ( boost::make_permutation_iterator(f, begin(), end()),
-                      boost::make_permutation_iterator(f, end(), end() )
-                    );
-        }*/
-    };
-
+   
     typedef iter<T> iterator;
     typedef iter<const T> const_iterator;
 
@@ -215,13 +222,13 @@ public:
 
     /** Filtre selon la valeur d'un attribut */
     template<class Attribute, class Param>
-    Subset<boost::filter_iterator<is_equal<Attribute>, iterator> >
+    Subset<boost::filter_iterator<is_equal<Attribute, T>, iterator> >
             filter(Attribute T::*attr, Param value ) {
         return Subset<iterator>(begin(), end()).filter(attr, value);
     }
 
     /** Filtre selon la valeur d'un attribut qui matche une regex */
-    Subset<boost::filter_iterator<matches, iterator> >
+    Subset<boost::filter_iterator<matches<T>, iterator> >
              filter_match(std::string T::*attr, const std::string & str ) {
          return Subset<iterator>(begin(), end()).filter_match(attr, str);
     }
