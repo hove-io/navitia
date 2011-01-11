@@ -74,7 +74,9 @@ int main(int, char **) {
     BOOST_FOREACH(auto line, std::make_pair(idx.begin(), idx.end())) {
         std::cout << line.name << " " << line.code << std::endl;
     }
-    std::cout << data2.lines.order().begin()->name << std::endl;
-    std::cout << (data2.lines.order().begin() + data2.lines.size() - 1)->name << std::endl;
-    std::cout << data2.lines.items.back().name << std::endl;
+    std::cout << "indes trié" << std::endl;
+    auto idx3 = make_index(data2.lines.order());
+    BOOST_FOREACH(auto line3, std::make_pair(idx3.begin(), idx3.end())) {
+        std::cout << line3.name << " " << line3.code << std::endl;
+    }
 }

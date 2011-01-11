@@ -139,7 +139,7 @@ class Index {
 
         Transformer(value_type * begin){this->begin = begin;}
 
-        value_type & operator()(size_t diff) const {
+        value_type & operator()(int diff) const {
             return *(begin + diff);
         }
         
@@ -147,11 +147,11 @@ class Index {
 
     value_type* begin_it;
 
-    std::vector<size_t> indexes;
+    std::vector<int> indexes;
 
     public:
-    typedef typename boost::transform_iterator<Transformer, typename std::vector<size_t>::iterator> iterator;
-    typedef typename boost::transform_iterator<Transformer, typename std::vector<size_t>::const_iterator> const_iterator;
+    typedef typename boost::transform_iterator<Transformer, typename std::vector<int>::iterator> iterator;
+    typedef typename boost::transform_iterator<Transformer, typename std::vector<int>::const_iterator> const_iterator;
    // typedef typename boost::indirect_iterator<typename std::vector<pointer>::const_iterator > const_iterator;
     
     Index(typename Type::iterator begin, typename Type::iterator end) {
