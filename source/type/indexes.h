@@ -1,4 +1,5 @@
 #include "type.h"
+#include <boost/iterator/transform_iterator.hpp>
 
 /** Indexe pour une relation 1-N
   *
@@ -126,39 +127,59 @@ class SortedIndex{
 
 template<class Type>
 class Index {
-    typedef typename Type::pointer pointer;
-    std::vector<int> pointers;
+
+
+
+    typedef typename Type::iterator::value_type value_type;
+    typedef value_type type;
+
+    struct Transformer{
+        typedef value_type & result_type;
+        value_type* begin;
+
+        Transformer(value_type * begin){this->begin = begin;}
+
+        value_type & operator()(size_t diff) const {
+            return *(begin + diff);
+        }
+        
+    };
+
+    value_type* begin_it;
+
+    std::vector<size_t> indexes;
 
     public:
-    typedef typename boost::indirect_iterator<typename std::vector<pointer>::iterator> iterator;
-    typedef typename boost::indirect_iterator<typename std::vector<pointer>::const_iterator > const_iterator;
+    typedef typename boost::transform_iterator<Transformer, typename std::vector<size_t>::iterator> iterator;
+    typedef typename boost::transform_iterator<Transformer, typename std::vector<size_t>::const_iterator> const_iterator;
+   // typedef typename boost::indirect_iterator<typename std::vector<pointer>::const_iterator > const_iterator;
     
     Index(typename Type::iterator begin, typename Type::iterator end) {
+        this->begin_it = &(*begin);
         BOOST_FOREACH(typename Type::value_type & element, std::make_pair(begin, end)) {
-            pointers.push_back(&element);
+            indexes.push_back(&element - this->begin_it);//on stock la différence entre les deux pointeurs
         }
     }
 
-    iterator begin(){return iterator(pointers.begin());}
-    iterator end(){return iterator(pointers.end());}
-    const_iterator begin() const {return const_iterator(pointers.begin());}
-    const_iterator end() const {return const_iterator(pointers.end());}
+    iterator begin(){return iterator(indexes.begin(), Transformer(begin_it));}
+    iterator end(){return iterator(indexes.end(), Transformer(begin_it));}
+    const_iterator begin() const {return const_iterator(indexes.begin(), Transformer(begin_it));}
+    const_iterator end() const {return const_iterator(indexes.end(), Transformer(begin_it));}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & pointers;
+        ar & indexes;
     }
  };
 
  template<class Type>
- Index<typename Type::iterator>
+ Index<Type>
  make_index(typename Type::iterator begin, typename Type::iterator end) {
-    return Index<typename Type::iterator>(begin, end);
+    return Index<Type>(begin, end);
  }
 
  template<class Type>
- Index<typename Type::iterator>
- make_index(Type & t) {
-    return Index<typename Type::iterator>(t.begin(), t.end());
+ Index<Type> make_index(const Type & t) {
+    return Index<Type>(t.begin(), t.end());
  }
 
 

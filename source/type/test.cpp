@@ -7,7 +7,7 @@
 
 
 int main(int, char **) {
-   /* GtfsParser p("/home/kinou/workspace/gtfs", "20101101");
+/*    GtfsParser p("/home/kinou/workspace/gtfs", "20101101");
     Data data = p.getData();
     data.build_index();
     
@@ -31,8 +31,8 @@ int main(int, char **) {
         oa << data;
         Index<decltype(data.stop_times)> idx(data.stop_times.begin(), data.stop_times.end());
         oa << idx;
-    }*/
-    std::ifstream ifs("data.nav");
+    }
+  */  std::ifstream ifs("data.nav");
     boost::archive::binary_iarchive ia(ifs);
     Data data2;
     Index<decltype(data2.stop_times)> idx2(data2.stop_times.begin(), data2.stop_times.end());
@@ -65,13 +65,13 @@ int main(int, char **) {
     BOOST_FOREACH(auto line, data2.lines.filter_match(&Line::name, ".*olaire.*").filter(&Line::code, "S14")) {
         std::cout << line.name << " " << line.code << std::endl;
     }
-    //    auto idx = make_index(data2.lines.filter_match(&Line::name, ".*olaire.*"));
+    auto idx = make_index(data2.lines.filter_match(&Line::name, ".*olaire.*"));
     auto subset = data2.lines.filter_match(&Line::name, ".*olaire.*");
     //    typedef Subset<boost::filter_iterator<matches<Line>, Container<Line>::iter<Line> > Moo;
-    Index<decltype(subset)> idx(subset.begin(), subset.end());
+    //Index<decltype(subset)> idx(subset.begin(), subset.end());
     std::cout << "Test de l'index" << std::endl;
     //  auto line = *(idx.begin());
-    BOOST_FOREACH(auto line, idx) {
+    BOOST_FOREACH(auto line, std::make_pair(idx.begin(), idx.end())) {
         std::cout << line.name << " " << line.code << std::endl;
     }
     // std::cout << data2.lines.order().begin().name << std::endl;
