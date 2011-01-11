@@ -1,5 +1,6 @@
 #include "type.h"
 #include <boost/iterator/transform_iterator.hpp>
+#include <boost/tuple/tuple.hpp>
 
 /** Indexe pour une relation 1-N
   *
@@ -171,16 +172,66 @@ class Index {
     }
  };
 
- template<class Type>
- Index<Type>
- make_index(typename Type::iterator begin, typename Type::iterator end) {
+template<class Type>
+Index<Type>
+make_index(typename Type::iterator begin, typename Type::iterator end) {
     return Index<Type>(begin, end);
- }
+}
 
- template<class Type>
- Index<Type> make_index(const Type & t) {
+template<class Type>
+Index<Type> make_index(const Type & t) {
     return Index<Type>(t.begin(), t.end());
- }
+}
 
 
+template<class Container1, class Container2, class Functor>
+class join_iterator {
+    typedef const typename boost::tuple<typename Container1::value_type*, typename Container2::value_type*> value_type;
+    typedef join_iterator<Container1, Container2, Functor> Derived;
+    typedef size_t difference_type;
+    typedef value_type* pointer;
+    typedef value_type& reference;
+    typedef std::forward_iterator_tag iterator_category;
+ 
+    public:
+    typename Container1::iterator begin1, current1, end1;
+    typename Container2::iterator begin2, current2, end2;
+    Functor f;
+
+    join_iterator(Container1 & c1, Container2 & c2, const Functor & f) :
+        begin1(c1.begin()), current1(c1.begin()), end1(c1.end()),
+        begin2(c2.begin()), current2(c2.begin()), end2(c2.end()),
+        f(f)
+    {}
+
+    value_type dereference() const { return boost::make_tuple(&(*current1), &(*current2));}
+
+    bool equal(const Derived  & other) const { return other.current1 == current1 && other.current2 == current2;}
+
+    void increment(){
+        current2++;//on passe a l'élément suivant, sinon on reste toujours bloqué sur la premiére solution
+        //fix: si current2 == end2 ?
+        for(; current1 != end1; ++current1) {
+            for(; current2 != end2; ++current2) {
+                if(f(*current1, *current2))
+                    return;
+            }
+            current2 = begin2;
+        }
+    
+    }
+
+    value_type operator*() const {
+        return dereference();
+    }
+
+    bool operator==(const Derived & other) const {
+        return equal(other);
+    }
+
+    void operator++(int){
+        increment();
+    }
+
+};
 

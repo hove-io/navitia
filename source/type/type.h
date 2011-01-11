@@ -43,7 +43,7 @@ struct StopTime;
       */
     template<class Attribute, class T>
     struct is_equal{
-        const Attribute & ref;
+        Attribute ref;
         Attribute T::*attr;
         is_equal(Attribute T::*attr, const Attribute & ref) : ref(ref), attr(attr){}
         bool operator()(const T & elt) const {return ref == elt.*attr;}

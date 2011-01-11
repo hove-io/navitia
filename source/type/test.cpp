@@ -4,7 +4,14 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <fstream>
+#include "boost/tuple/tuple_io.hpp"
 
+template<class T1, class T2>
+struct True{
+    bool operator()(const T1 &, const T2 &) {
+        return true;
+    }
+};
 
 int main(int, char **) {
 /*    GtfsParser p("/home/kinou/workspace/gtfs", "20101101");
@@ -79,4 +86,18 @@ int main(int, char **) {
     BOOST_FOREACH(auto line3, std::make_pair(idx3.begin(), idx3.end())) {
         std::cout << line3.name << " " << line3.code << std::endl;
     }
+    
+
+    std::cout << "join" << std::endl;
+    auto ton = join_iterator<decltype(data2.lines.items), decltype(data2.lines.items), True<Line, Line> >(data2.lines.items, data2.lines.items, True<Line, Line>());
+    std::cout << boost::get<0>(*ton)->name << " - " << boost::get<1>(*ton)->name << std::endl;
+    for (int i = 0; i < 50; i++) {
+        ton++;
+        std::cout << boost::get<0>(*ton)->name << " - " << boost::get<1>(*ton)->name << std::endl;
+        
+    }
+    /*BOOST_FOREACH(auto mou, ton){
+        std::cout << get<0>(mou).name << " - " << get<1>(mou).name << std::endl;
+    }*/
+
 }
