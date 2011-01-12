@@ -115,9 +115,9 @@ public:
         }
     };
 
-     template<class Functor = std::less<typename Iter::value_type> >
+     template<class Functor>
     Subset<boost::permutation_iterator<iterator, boost::shared_container_iterator< std::vector<ptrdiff_t> > > >
-            order(Functor f = Functor()){
+            order(Functor f){
         boost::shared_ptr< std::vector<ptrdiff_t> > indexes(new std::vector<ptrdiff_t>(end_it - begin_it));
 
         for(size_t i=0; i < indexes->size(); i++) {
@@ -255,7 +255,7 @@ public:
 
     Subset<boost::permutation_iterator<iterator, boost::shared_container_iterator< std::vector<ptrdiff_t> > > >
              order() {
-         return Subset<iterator>(begin(), end()).order();
+                 return Subset<iterator>(begin(), end()).order(std::less<T>());
     }
 };
 
