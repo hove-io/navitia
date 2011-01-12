@@ -19,6 +19,8 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/set.hpp>
 
+#include <boost/shared_container_iterator.hpp>
+
 struct Country;
 struct District;
 struct Department;
@@ -114,20 +116,30 @@ public:
     };
 
      template<class Functor = std::less<typename Iter::value_type> >
-    Subset<boost::permutation_iterator<iterator, std::vector<size_t>::iterator> >
+    Subset<boost::permutation_iterator<iterator, boost::shared_container_iterator< std::vector<ptrdiff_t> > > >
             order(Functor f = Functor()){
-        std::vector<size_t> indexes(end_it - begin_it);
-        for(size_t i=0; i < indexes.size(); i++) {
-            indexes[i] = i;
+        boost::shared_ptr< std::vector<ptrdiff_t> > indexes(new std::vector<ptrdiff_t>(end_it - begin_it));
+
+        for(size_t i=0; i < indexes->size(); i++) {
+            (*indexes)[i] = i;
         }
-        sort(indexes.begin(), indexes.end(), Sorter<Functor>(begin_it, f));
-        return Subset<boost::permutation_iterator<iterator, std::vector<size_t>::iterator> >
-                ( boost::make_permutation_iterator(begin(), indexes.begin()),
-                  boost::make_permutation_iterator(begin(), indexes.end() )
+
+        typedef boost::shared_container_iterator< std::vector<ptrdiff_t> > shared_iterator;
+        auto a = shared_iterator(indexes->begin(), indexes);
+        std::cout << *a;
+        auto b = shared_iterator(indexes->end(), indexes);
+        sort(indexes->begin(), indexes->end(), Sorter<Functor>(begin_it, f));
+        return Subset<boost::permutation_iterator<iterator, shared_iterator> >
+                ( boost::make_permutation_iterator(begin(), a),
+                  boost::make_permutation_iterator(begin(), b)
                 );
     }
 };
 
+template<class Iter>
+Subset<Iter> make_subset(Iter begin, Iter end) {
+    return Subset<Iter>(begin, end);
+}
 
 /**
  * Classe servant de container au type T
@@ -236,12 +248,12 @@ public:
     }
 
     template<class Functor>
-    Subset<boost::permutation_iterator<iterator, std::vector<size_t>::iterator> >
+    Subset<boost::permutation_iterator<iterator, boost::shared_container_iterator< std::vector<ptrdiff_t> > > >
              order(Functor f) {
          return Subset<iterator>(begin(), end()).order(f);
     }
 
-    Subset<boost::permutation_iterator<iterator, std::vector<size_t>::iterator> >
+    Subset<boost::permutation_iterator<iterator, boost::shared_container_iterator< std::vector<ptrdiff_t> > > >
              order() {
          return Subset<iterator>(begin(), end()).order();
     }

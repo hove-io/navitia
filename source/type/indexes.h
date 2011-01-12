@@ -128,9 +128,6 @@ class SortedIndex{
 
 template<class Type>
 class Index {
-
-
-
     typedef typename Type::iterator::value_type value_type;
     typedef value_type type;
 
@@ -171,7 +168,50 @@ class Index {
         ar & indexes;
     }
  };
+/*
+template<class Type>
+class JoinIndex {
+    typedef typename Type::iterator::value_type value_type;
+    typedef value_type type;
 
+    struct Transformer{
+        typedef value_type & result_type;
+        value_type* begin;
+
+        Transformer(value_type * begin){this->begin = begin;}
+
+        value_type & operator()(int diff) const {
+            return *(begin + diff);
+        }
+
+    };
+
+    //value_type* begin_it;
+
+    std::vector<int> indexes;
+
+    public:
+    typedef typename boost::transform_iterator<Transformer, typename std::vector<int>::iterator> iterator;
+    typedef typename boost::transform_iterator<Transformer, typename std::vector<int>::const_iterator> const_iterator;
+   // typedef typename boost::indirect_iterator<typename std::vector<pointer>::const_iterator > const_iterator;
+
+    Index(typename Type::iterator begin, typename Type::iterator end) {
+        this->begin_it = &(*begin);
+        BOOST_FOREACH(typename Type::value_type & element, std::make_pair(begin, end)) {
+            indexes.push_back(&element - this->begin_it);//on stock la différence entre les deux pointeurs
+        }
+    }
+
+    iterator begin(){return iterator(indexes.begin(), Transformer(begin_it));}
+    iterator end(){return iterator(indexes.end(), Transformer(begin_it));}
+    const_iterator begin() const {return const_iterator(indexes.begin(), Transformer(begin_it));}
+    const_iterator end() const {return const_iterator(indexes.end(), Transformer(begin_it));}
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & indexes;
+    }
+ };
+*/
 template<class Type>
 Index<Type>
 make_index(typename Type::iterator begin, typename Type::iterator end) {
@@ -184,29 +224,36 @@ Index<Type> make_index(const Type & t) {
 }
 
 
-template<class Container1, class Container2, class Functor>
+//template<class Container1, class Container2, class Functor>
+template<class Head, class Tail, class Functor>
 class join_iterator {
-    typedef const typename boost::tuple<typename Container1::value_type*, typename Container2::value_type*> value_type;
-    typedef join_iterator<Container1, Container2, Functor> Derived;
+public:
+    //typedef typename boost::tuple<typename Container1::value_type*, typename Container2::value_type*> value_type;
+    typedef typename boost::tuples::cons<typename Head::value_type*, typename Tail::value_type> value_type;
+    //typedef join_iterator<Container1, Container2, Functor> Derived;
     typedef size_t difference_type;
     typedef value_type* pointer;
-    typedef value_type& reference;
+    typedef value_type reference;
     typedef std::forward_iterator_tag iterator_category;
  
-    public:
-    typename Container1::iterator begin1, current1, end1;
-    typename Container2::iterator begin2, current2, end2;
+    //typename Container1::iterator begin1, current1, end1;
+    //typename Container2::iterator begin2, current2, end2;
+    typename Head::iterator begin1, current1, end1;
+    Tail begin2, current2, end2;
+
     Functor f;
 
-    join_iterator(Container1 & c1, Container2 & c2, const Functor & f) :
-        begin1(c1.begin()), current1(c1.begin()), end1(c1.end()),
-        begin2(c2.begin()), current2(c2.begin()), end2(c2.end()),
+    join_iterator(typename Head::iterator c1_begin, typename Head::iterator c1_end,
+                  Tail c2_begin, Tail c2_end,
+                  const Functor & f) :
+        begin1(c1_begin), current1(c1_begin), end1(c1_end),
+        begin2(c2_begin), current2(c2_begin), end2(c2_end),
         f(f)
     {}
 
-    value_type dereference() const { return boost::make_tuple(&(*current1), &(*current2));}
+    value_type dereference() const { return value_type(&(*current1), *current2);}
 
-    bool equal(const Derived  & other) const { return other.current1 == current1 && other.current2 == current2;}
+    bool equal(const join_iterator & other) const { return other.current1 == current1 && other.current2 == current2;}
 
     void increment(){
         current2++;//on passe a l'élément suivant, sinon on reste toujours bloqué sur la premiére solution
@@ -218,20 +265,83 @@ class join_iterator {
             }
             current2 = begin2;
         }
-    
+        current2 = end2;
     }
 
     value_type operator*() const {
         return dereference();
     }
 
-    bool operator==(const Derived & other) const {
+    bool operator==(const join_iterator & other) const {
         return equal(other);
+    }
+
+    bool operator!=(const join_iterator & other) const {
+        return !equal(other);
     }
 
     void operator++(int){
         increment();
     }
 
+    value_type operator++(){
+        increment();
+        return dereference();
+    }
 };
 
+template<class Head>
+class join_iterator<Head, boost::tuples::null_type, boost::tuples::null_type> {
+    //Functor f;
+    typename Head::iterator begin, current, end;
+
+public:
+    typedef boost::tuple<typename Head::value_type*> value_type;
+    typedef size_t difference_type;
+    typedef value_type* pointer;
+    typedef value_type reference;
+    typedef std::forward_iterator_tag iterator_category;
+    join_iterator(typename Head::iterator begin, typename Head::iterator end):
+            begin(begin), current(begin), end(end)//, f(f)
+    {}
+
+    value_type operator*() const{
+        return boost::make_tuple(&(*current));
+    }
+
+    join_iterator & operator++(){
+        ++current;
+        return *this;
+    }
+
+    bool operator==(const join_iterator & other) const {
+        return current == other.current;
+    }
+
+    bool operator!=(const join_iterator & other) const {
+        return current != other.current;
+    }
+
+    void operator++(int){
+        ++current;
+    }
+
+};
+
+template<class Container1, class Container2, class Functor>
+Subset<join_iterator<Container1, typename Container2::iterator, Functor> >
+        make_join(Container1 & c1, Container2 & c2, const Functor & f) {
+    return make_subset(
+            join_iterator<Container1, typename Container2::iterator, Functor>(c1.begin(), c1.end(), c2.begin(), c2.end(), f),
+            join_iterator<Container1, typename Container2::iterator, Functor>(c1.end(), c1.end(), c2.end(), c2.end(), f)
+            );
+}
+
+template<class Container>
+Subset<join_iterator<Container, boost::tuples::null_type, boost::tuples::null_type> >
+          make_join(Container & c) {
+          return make_subset (
+                  join_iterator<Container, boost::tuples::null_type, boost::tuples::null_type>(c.begin(), c.end()),
+                  join_iterator<Container, boost::tuples::null_type, boost::tuples::null_type>(c.end(), c.end())
+                  );
+}
