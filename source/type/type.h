@@ -4,13 +4,7 @@
 #include <bitset>
 #include <map>
 #include <set>
-#include <boost/foreach.hpp>
 
-#include <boost/iterator.hpp>
-#include <boost/iterator/filter_iterator.hpp>
-#include <boost/iterator/permutation_iterator.hpp>
-#include <boost/iterator/indirect_iterator.hpp>
-#include <boost/regex.hpp>
 
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/serialization/serialization.hpp>
@@ -19,7 +13,6 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/set.hpp>
 
-#include <boost/shared_container_iterator.hpp>
 
 struct Country;
 struct District;
@@ -38,108 +31,6 @@ struct Vehicle;
 struct VehicleJourney;
 struct ValidityPattern;
 struct StopTime;
-
- /** Functor permettant de tester l'attribut passé en paramètre avec la valeur passée en paramètre
-      *
-      * par exemple is_equal<std::string>(&StopPoint::name, "Châtelet");
-      */
-    template<class Attribute, class T>
-    struct is_equal{
-        Attribute ref;
-        Attribute T::*attr;
-        is_equal(Attribute T::*attr, const Attribute & ref) : ref(ref), attr(attr){}
-        bool operator()(const T & elt) const {return ref == elt.*attr;}
-    };
-
-    /** Functor qui matche une expression rationnelle sur l'attribut passé en paramètre
-      *
-      * L'attribut doit être une chaîne de caractères
-      */
-    template<class T>
-    struct matches {
-        const boost::regex e;
-        std::string T::*attr;
-        matches(std::string T::*attr, const std::string & e) : e(e), attr(attr){}
-        bool operator()(const T & elt) const {return boost::regex_match(elt.*attr, e );}
-    };
-
-
-
-template<class Iter>
-class Subset {
-    Iter begin_it;
-    Iter end_it;
-public:
-    typedef typename Iter::value_type value_type;
-    typedef typename Iter::pointer pointer;
-    typedef Iter iterator;
-    typedef Iter const_iterator;
-    Subset(const Iter & begin_it, const Iter & end_it) :  begin_it(begin_it), end_it(end_it) {}
-    iterator begin() {return begin_it;}
-    iterator end() {return end_it;}
-    const_iterator begin() const {return begin_it;}
-    const_iterator end() const {return end_it;}
-
-    template<class Functor>
-    Subset<boost::filter_iterator<Functor, iterator> >
-    filter(Functor f) const{
-        return Subset<boost::filter_iterator<Functor, iterator> >
-                (   boost::make_filter_iterator(f, begin(), end()),
-                    boost::make_filter_iterator(f, end(), end())
-                 );
-    }
-
-    /** Filtre selon la valeur d'un attribut qui matche une regex */
-    Subset<boost::filter_iterator<matches<value_type>, iterator> >
-             filter_match(std::string value_type::*attr, const std::string & str ) {
-         return filter(matches<value_type>(attr, str));
-    }
-
-    /** Filtre selon la valeur d'un attribut */
-    template<class Attribute, class Param>
-    Subset<boost::filter_iterator<is_equal<Attribute, value_type>, iterator> >
-              filter(Attribute value_type::*attr, Param value ) {
-        return filter(is_equal<Attribute, value_type>(attr, Param(value)));
-    }
-
-    /// Functor permettant de trier les données
-    template<class Functor>
-    struct Sorter{
-        Iter begin_it;
-        Functor f;
-
-        Sorter(Iter begin_it, Functor f) : begin_it(begin_it), f(f){}
-
-        bool operator()(size_t a, size_t b){
-            return f(*(begin_it + a), *(begin_it + b));
-        }
-    };
-
-     template<class Functor>
-    Subset<boost::permutation_iterator<iterator, boost::shared_container_iterator< std::vector<ptrdiff_t> > > >
-            order(Functor f){
-        boost::shared_ptr< std::vector<ptrdiff_t> > indexes(new std::vector<ptrdiff_t>(end_it - begin_it));
-
-        for(size_t i=0; i < indexes->size(); i++) {
-            (*indexes)[i] = i;
-        }
-
-        typedef boost::shared_container_iterator< std::vector<ptrdiff_t> > shared_iterator;
-        auto a = shared_iterator(indexes->begin(), indexes);
-        std::cout << *a;
-        auto b = shared_iterator(indexes->end(), indexes);
-        sort(indexes->begin(), indexes->end(), Sorter<Functor>(begin_it, f));
-        return Subset<boost::permutation_iterator<iterator, shared_iterator> >
-                ( boost::make_permutation_iterator(begin(), a),
-                  boost::make_permutation_iterator(begin(), b)
-                );
-    }
-};
-
-template<class Iter>
-Subset<Iter> make_subset(Iter begin, Iter end) {
-    return Subset<Iter>(begin, end);
-}
 
 /**
  * Classe servant de container au type T
