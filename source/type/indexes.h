@@ -23,7 +23,10 @@ struct is_equal_t{
     Attribute ref;
     Attribute T::*attr;
     is_equal_t(Attribute T::*attr, const Attribute & ref) : ref(ref), attr(attr){}
-    bool operator()(const T & elt) const {return ref == elt.*attr;}
+    bool operator()(const T & elt) const {
+        Attribute value = elt.*attr;    
+        return ref == value;
+    }
 };
 template<class Attribute, class T>
 is_equal_t<Attribute, T> is_equal(Attribute T::*attr, const Attribute & ref){
@@ -289,24 +292,37 @@ public:
                   const Functor & f) :
     begin1(c1_begin), current1(c1_begin), end1(c1_end),
     begin2(c2_begin), current2(c2_begin), end2(c2_end),
-    f(f)
-    {increment();}
+    f(f) {
+        if(begin1 == end1 || begin2 == end2){
+            current1 = end1;
+            current2 = end2;
+            return;
+        }
+        if(!this->f(*current1, *current2))
+            increment();
+    }
 
     value_type dereference() const { return value_type(&(*current1), *current2);}
 
     bool equal(const join_iterator & other) const { return other.current1 == current1 && other.current2 == current2;}
 
+    // Deux manières de sortir de la fonction :
+    // 1) on a atteint la fin (current1==end1 && current2==end2)
+    // 2) on a trouvé un cas qui valide le prédicat
     void increment(){
-        current2++;//on passe a l'élément suivant, sinon on reste toujours bloqué sur la premiére solution
-        //fix: si current2 == end2 ?
-        for(; current1 != end1; ++current1) {
-            for(; current2 != end2; ++current2) {
-                if(f(*current1, *current2))
-                    return;
+        ++current2;//on passe a l'élément suivant, sinon on reste toujours bloqué sur la premiére solution
+        if(current2 == end2) {
+            ++current1;
+            if(current1 == end1) {
+                return;
             }
-            current2 = begin2;
+            else {
+                current2 = begin2;
+            }
         }
-        current2 = end2;
+        if(!f(*current1, *current2)) {
+            increment();
+        }
     }
 
     value_type operator*() const {
@@ -379,11 +395,56 @@ Subset<join_iterator<Container1, join_iterator<Container2, boost::tuples::null_t
 }
 
 
+template<class Container1, class Container2, class Functor>
+Subset<join_iterator<Container1, join_iterator<Subset<Container2>, boost::tuples::null_type, boost::tuples::null_type>, Functor> >
+        make_join(Container1 & c1, Subset<Container2> c2, const Functor & f) {
+    typedef join_iterator<Subset<Container2>, boost::tuples::null_type, boost::tuples::null_type> join_c2_t;
+    auto tmp = make_join(c2);
+    return make_subset(
+            join_iterator<Container1, join_c2_t, Functor>(c1.begin(), c1.end(), tmp.begin(), tmp.end(), f),
+            join_iterator<Container1, join_c2_t, Functor>(c1.end(), c1.end(), tmp.end(), tmp.end(), f)
+            );
+}
+
+
+template<class Container1, class Container2, class Functor>
+Subset<join_iterator<Subset<Container1>, join_iterator<Container2, boost::tuples::null_type, boost::tuples::null_type>, Functor> >
+        make_join(Subset<Container1> c1, Container2 & c2, const Functor & f) {
+    typedef join_iterator<Container2, boost::tuples::null_type, boost::tuples::null_type> join_c2_t;
+    auto tmp = make_join(c2);
+    return make_subset(
+            join_iterator<Subset<Container1>, join_c2_t, Functor>(c1.begin(), c1.end(), tmp.begin(), tmp.end(), f),
+            join_iterator<Subset<Container1>, join_c2_t, Functor>(c1.end(), c1.end(), tmp.end(), tmp.end(), f)
+            );
+}
+
+
+template<class Container1, class Container2, class Functor>
+Subset<join_iterator<Subset<Container1>, join_iterator<Subset<Container2>, boost::tuples::null_type, boost::tuples::null_type>, Functor> >
+        make_join(Subset<Container1> c1, Subset<Container2> c2, const Functor & f) {
+    typedef join_iterator<Subset<Container2>, boost::tuples::null_type, boost::tuples::null_type> join_c2_t;
+    auto tmp = make_join(c2);
+    return make_subset(
+            join_iterator<Subset<Container1>, join_c2_t, Functor>(c1.begin(), c1.end(), tmp.begin(), tmp.end(), f),
+            join_iterator<Subset<Container1>, join_c2_t, Functor>(c1.end(), c1.end(), tmp.end(), tmp.end(), f)
+            );
+}
+
 template<class Container>
 Subset<join_iterator<Container, boost::tuples::null_type, boost::tuples::null_type> >
         make_join(Container & c) {
-    return make_subset (
+    auto result = make_subset (
             join_iterator<Container, boost::tuples::null_type, boost::tuples::null_type>(c.begin(), c.end()),
             join_iterator<Container, boost::tuples::null_type, boost::tuples::null_type>(c.end(), c.end())
             );
+    return result;
+}
+
+template<class Container>
+Subset<join_iterator<Subset<Container>, boost::tuples::null_type, boost::tuples::null_type> >
+        make_join(Subset<Container> ss){
+    return make_subset (
+                join_iterator<Subset<Container>, boost::tuples::null_type, boost::tuples::null_type>(ss.begin(), ss.end()),
+                join_iterator<Subset<Container>, boost::tuples::null_type, boost::tuples::null_type>(ss.end(), ss.end())
+                );
 }
