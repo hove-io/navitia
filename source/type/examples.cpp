@@ -84,7 +84,7 @@ int main(int, char**) {
                           filter(line_stops, &LineStops::line_name, std::string("Orient Express")),
                           attribute_equals(&Stop::id, &LineStops::stop_id));
     BOOST_FOREACH(auto stop, join){
-        std::cout << "  * " << join_get<0>(stop).name << " " << join_get<1>(stop).order << std::endl;
+        std::cout << "  * " << join_get<Stop>(stop).name << " " << join_get<LineStops>(stop).order << std::endl;
     }
 
     std::cout << "=== Stops of line Orient Express (bis) ===" << std::endl;
@@ -92,7 +92,7 @@ int main(int, char**) {
                            stops,
                            attribute_equals(&LineStops::stop_id, &Stop::id));
     BOOST_FOREACH(auto stop, join2){
-        std::cout << "  * " << join_get<1>(stop).name << " " << join_get<0>(stop).order << std::endl;
+        std::cout << "  * " << join_get<Stop>(stop).name << " " << join_get<LineStops>(stop).order << std::endl;
     }
 
     std::cout << "=== Stops of line Orient Express in Paris ===" << std::endl;
@@ -100,7 +100,7 @@ int main(int, char**) {
                            filter(stops, &Stop::city, std::string("Paris")),
                            attribute_equals(&LineStops::stop_id, &Stop::id));
     BOOST_FOREACH(auto stop, join3){
-        std::cout << "  * " << join_get<1>(stop).name << " " << join_get<0>(stop).order << std::endl;
+        std::cout << "  * " << join_get<Stop>(stop).name << " " << join_get<LineStops>(stop).order << std::endl;
     }
 
     std::cout << "=== (Stops, Lines) couples ===" << std::endl;
@@ -108,17 +108,17 @@ int main(int, char**) {
                            stops,
                            attribute_equals(&LineStops::stop_id, &Stop::id));
     BOOST_FOREACH(auto stop, join4){
-        std::cout << "  * " << join_get<1>(stop).name << ", " << join_get<0>(stop).line_name << std::endl;
+        std::cout << "  * " << join_get<Stop>(stop).name << ", " << join_get<LineStops>(stop).line_name << std::endl;
     }
-/*
-    std::cout << "=== Lines stoping in France ===" << std::endl;
-    auto join5 = make_join(
-                           make_join(filter(cities, &City::country, "France"), stops),
-                           line_stops,
+
+   std::cout << "=== Lines stoping in France ===" << std::endl;
+   auto join6 = make_join(filter(cities, &City::country, std::string("France")), stops, attribute_equals(&City::name, &Stop::city));
+    auto join5 = make_join( line_stops,
+                            join6,
                            attribute_equals(&LineStops::stop_id, &Stop::id));
-    BOOST_FOREACH(auto stop, join5){
-        std::cout << "  * " << join_get<LineStop>(stop).line_name << ", " << join_get<1>(stop).name << std::endl;
-    }*/
+   BOOST_FOREACH(auto stop, join5){
+        std::cout << "  * " << join_get<LineStops>(stop).line_name << ", " << join_get<Stop>(stop).name << std::endl;
+    }
 
     return 0;
 }

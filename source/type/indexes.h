@@ -13,6 +13,22 @@
 #include <boost/shared_container_iterator.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/utility/enable_if.hpp>
+#include <boost/type_traits.hpp>
+
+/** Fonction permettant d'accéder à l'élément N d'un tuple de jointure*/
+template<int N, class T> typename boost::remove_pointer<typename boost::tuples::element<N,T>::type>::type & join_get(T & t){
+    return *(boost::get<N>(t));
+}
+
+template<class E, class H, class T> typename boost::remove_pointer<E>::type &
+join_get(typename boost::tuples::cons<H,T> tuple){
+    return join_get<E>(tuple.get_tail());
+}
+
+template<class E, class T> typename boost::remove_pointer<E>::type &
+join_get(typename boost::tuples::cons<E*,T> tuple){
+    return *(tuple.get_head());
+}
 
 /** Functor permettant de tester l'attribut passé en paramètre avec la valeur passée en paramètre
      *
@@ -50,8 +66,11 @@ struct attribute_equals_t {
     A1 T1::*attr1;
     A2 T2::*attr2;
     attribute_equals_t(A1 T1::*attr1, A2 T2::*attr2) : attr1(attr1), attr2(attr2) {}
-    bool operator()(const T1 & t1, const boost::tuple<T2> & t2){ return t1.*attr1 == t2.*attr2;}
-    bool operator()(const T1 & t1, const boost::tuple<T2*> & t2){ return t1.*attr1 == (*(boost::get<0>(t2))).*attr2;}
+    template<class Tuple>
+    bool operator()(const T1 & t1, const Tuple & t2){ return t1.*attr1 == join_get<T2>(t2).*attr2;}
+    template<class Tuple1, class Tuple2>
+    bool operator()(const Tuple1 & t1, const Tuple2 & t2){return join_get<T1>(t1).*attr1 == join_get<T2>(t2).*attr2;}
+    //bool operator()()
 };
 template<class T1, class A1, class T2, class A2>
 attribute_equals_t<T1, A1, T2, A2> attribute_equals(A1 T1::*attr1, A2 T2::*attr2){
@@ -66,8 +85,6 @@ struct attribute_cmp_t {
 };
 template<class T, class A>
 attribute_cmp_t<T,A> attribute_cmp(A T::*attr){return attribute_cmp_t<T,A>(attr);}
-
-template<int N, class T> typename boost::remove_pointer<typename boost::tuples::element<N,T>::type>::type & join_get(T & t) {return *(boost::get<N>(t));}
 
 template<class Iter>
 class Subset {
@@ -352,7 +369,7 @@ class join_iterator<Head, boost::tuples::null_type, boost::tuples::null_type> {
     typename Head::iterator begin, current, end;
 
 public:
-    typedef boost::tuple<typename Head::value_type*> value_type;
+    typedef boost::tuples::cons<typename Head::value_type*, boost::tuples::null_type> value_type;
     typedef size_t difference_type;
     typedef value_type* pointer;
     typedef value_type reference;
@@ -362,7 +379,8 @@ public:
     {}
 
     value_type operator*() const{
-        return boost::make_tuple(&(*current));
+        typename Head::value_type & result = *current;
+        return value_type(&result, boost::tuples::null_type());
     }
 
     join_iterator & operator++(){
@@ -403,6 +421,16 @@ Subset<join_iterator<Container1, join_iterator<Subset<Container2>, boost::tuples
     return make_subset(
             join_iterator<Container1, join_c2_t, Functor>(c1.begin(), c1.end(), tmp.begin(), tmp.end(), f),
             join_iterator<Container1, join_c2_t, Functor>(c1.end(), c1.end(), tmp.end(), tmp.end(), f)
+            );
+}
+
+template<class Container1, class H, class T, class F, class Functor>
+Subset<join_iterator<Container1, join_iterator<H,T,F>, Functor> >
+        make_join(Container1 & c1, Subset<join_iterator<H,T,F> > c2, const Functor & f) {
+
+    return make_subset(
+            join_iterator<Container1, join_iterator<H,T,F>, Functor>(c1.begin(), c1.end(), c2.begin(), c2.end(), f),
+            join_iterator<Container1, join_iterator<H,T,F>, Functor>(c1.end(), c1.end(), c2.end(), c2.end(), f)
             );
 }
 
