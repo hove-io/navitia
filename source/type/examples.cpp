@@ -8,7 +8,8 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <fstream>
 #include <boost/serialization/vector.hpp>
-
+#include <sstream>
+#include <boost/date_time/posix_time/posix_time.hpp>
 struct Stop {
     int id;
     std::string name;
@@ -68,6 +69,7 @@ int main(int, char**) {
     City("Barcelona", "España"),
     City("Pepinyà", "France");
 
+
     line_stops += LineStops(0, "Orient Express", 0),
     LineStops(3, "Orient Express", 1),
     LineStops(2, "Orient Express", 2),
@@ -76,7 +78,6 @@ int main(int, char**) {
     LineStops(4, "Joan Miró", 42),
     LineStops(0, "Metro 5", 1),
     LineStops(1, "Metro 5", 2);
-
 
     std::cout << "=== Cities ordered by name ===" << std::endl;
     BOOST_FOREACH(auto city, order(cities, &City::name)){
@@ -181,5 +182,38 @@ int main(int, char**) {
         std::cout << "  * " << join_get<Stop>(city_stop).name << " (" << join_get<City>(city_stop).country << ")" << std::endl;
     }
 
+    std::cout << "=== Benchmarks ===" << std::endl;
+    cities.reserve(1000000);
+    for(int i = 0; i< 1000000; i++){
+        std::stringstream ss, ss2;
+        ss << "City_" << i;
+        ss2 << "Country_" << i%100;
+        cities.push_back(City(ss.str(), ss2.str()));
+    }
+    boost::posix_time::ptime start(boost::posix_time::microsec_clock::local_time());
+    int count = 0;
+    BOOST_FOREACH(auto city, filter(cities, &City::country, std::string("Country_10"))){
+        count++;
+    }
+    int duration = (boost::posix_time::microsec_clock::local_time() - start).total_milliseconds();
+    std::cout << "Filtre, Elements : " << count << ", durée : " << duration << "ms" << std::endl;
+
+    start = boost::posix_time::microsec_clock::local_time();
+    count = 0;
+    BOOST_FOREACH(auto city, order(cities, &City::country)){
+        count++;
+    }
+    duration = (boost::posix_time::microsec_clock::local_time() - start).total_milliseconds();
+    std::cout << "Tri, Elements : " << count << ", durée : " << duration << "ms" << std::endl;
+
+    Index<City> index = make_index(order(cities, &City::country));
+
+    start = boost::posix_time::microsec_clock::local_time();
+    count = 0;
+    BOOST_FOREACH(auto city, index){
+        count++;
+    }
+    duration = (boost::posix_time::microsec_clock::local_time() - start).total_milliseconds();
+    std::cout << "Tri avec indexe, Elements : " << count << ", durée : " << duration << "ms" << std::endl;
     return 0;
 }
