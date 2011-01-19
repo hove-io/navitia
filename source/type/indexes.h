@@ -332,7 +332,7 @@ class JoinIndex {
         struct as_fold_t{
             typedef value_type result_type;
             template<class H, class T>
-            boost::tuples::cons<H, T> operator()(const H & head, const T & tail) const {
+            boost::tuples::cons<H, T> operator()(const T & tail, const H & head) const {
                 return boost::tuples::cons<H, T>(head, tail);
             }
         };
@@ -352,8 +352,7 @@ class JoinIndex {
         value_type operator()(idx_vector diff) const {
             auto result_view = boost::fusion::transform(begin, diff, get_pointer());
             auto result_vec = boost::fusion::as_vector(boost::fusion::reverse(result_view));
-            auto result = boost::fusion::fold(result_vec, typename boost::tuples::null_type(), as_fold_t());
-            return result;
+            return boost::fusion::fold(result_vec, typename boost::tuples::null_type(), as_fold_t());
         }
         template<class Archive> void serialize(Archive & ar, const unsigned int ) {
             ar & indexes & begin_it;
