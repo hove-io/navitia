@@ -1,31 +1,19 @@
 #pragma once
 
-#include <boost/iterator/transform_iterator.hpp>
 #include <boost/tuple/tuple.hpp>
-
 #include <boost/foreach.hpp>
-
 #include <boost/iterator.hpp>
+#include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/filter_iterator.hpp>
 #include <boost/iterator/permutation_iterator.hpp>
-#include <boost/iterator/indirect_iterator.hpp>
 #include <boost/regex.hpp>
 #include <boost/shared_container_iterator.hpp>
-#include <boost/type_traits.hpp>
-#include <boost/utility/enable_if.hpp>
-#include <boost/type_traits.hpp>
-#include <boost/array.hpp>
 #include <boost/fusion/adapted/boost_tuple.hpp>
 #include <boost/fusion/algorithm.hpp>
-#include <boost/fusion/container/generation/make_cons.hpp>
-#include <boost/fusion/include/make_cons.hpp>
 #include <boost/fusion/view/reverse_view.hpp>
-#include <boost/fusion/include/reverse_view.hpp>
 #include <boost/fusion/include/as_vector.hpp>
 #include <boost/fusion/adapted/array.hpp>
 #include <boost/utility/result_of.hpp>
-
-#include <iostream>
 
 /** Fonction permettant d'accéder à l'élément N d'un tuple de jointure*/
 template<int N, class T> typename boost::remove_pointer<typename boost::tuples::element<N,T>::type>::type & join_get(T & t){
@@ -308,6 +296,24 @@ public:
     }
 };
 
+namespace boost {
+    namespace fusion {
+        template<class Archive>
+        struct serializer {
+            Archive & ar;
+            serializer(Archive & ar) : ar(ar) {}
+            template <typename T>
+            void operator()(T & data) const {
+                ar & data;
+            }
+        };
+
+        template <class T0,class T1, class T2,class T3,class T4,class T5,class T6,class T7,class T8,class T9, typename Archive>
+        void serialize(Archive & ar, vector<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9> & vec, unsigned int) {
+            for_each(vec, serializer<Archive>(ar));
+        }
+    }
+}
 
 template<class Type>
 class JoinIndex {
@@ -326,7 +332,7 @@ class JoinIndex {
         struct as_fold_t{
             typedef value_type result_type;
             template<class H, class T>
-            boost::tuples::cons<H, T> operator()(H head, T tail) const {
+            boost::tuples::cons<H, T> operator()(const H & head, const T & tail) const {
                 return boost::tuples::cons<H, T>(head, tail);
             }
         };
@@ -345,11 +351,12 @@ class JoinIndex {
 
         value_type operator()(idx_vector diff) const {
             auto result_view = boost::fusion::transform(begin, diff, get_pointer());
-            auto result_vec = boost::fusion::as_vector(result_view);
-            auto result = boost::fusion::fold(boost::fusion::reverse(result_view), typename boost::tuples::null_type(), as_fold_t());
-            //auto result = boost::fusion::fold(boost::fusion::reverse(begin), typename boost::tuples::null_type(), ptr_diff(diff));
-            //return *(begin + diff);
+            auto result_vec = boost::fusion::as_vector(boost::fusion::reverse(result_view));
+            auto result = boost::fusion::fold(result_vec, typename boost::tuples::null_type(), as_fold_t());
             return result;
+        }
+        template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+            ar & indexes & begin_it;
         }
 
     };
@@ -358,7 +365,6 @@ class JoinIndex {
     public:
     typedef typename boost::transform_iterator<Transformer, typename std::vector<idx_vector>::iterator> iterator;
     typedef typename boost::transform_iterator<Transformer, typename std::vector<idx_vector>::const_iterator> const_iterator;
-   // typedef typename boost::indirect_iterator<typename std::vector<pointer>::const_iterator > const_iterator;
 
     struct ptr_diff{
         typedef int result_type;

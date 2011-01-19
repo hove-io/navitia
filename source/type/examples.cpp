@@ -13,7 +13,7 @@ struct Stop {
     int id;
     std::string name;
     std::string city;
-    Stop(){}
+    Stop() {};
     Stop(int id, const std::string & name, const std::string & city) : id(id), name(name), city(city) {}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & name & city;
@@ -29,7 +29,11 @@ struct Line {
 struct City {
     std::string name;
     std::string country;
+    City(){};
     City(const std::string & name, const std::string & country) : name(name), country(country) {}
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & name & country;
+    }
 };
 
 struct LineStops {
@@ -128,30 +132,13 @@ int main(int, char**) {
     }
 
     Index<Stop> paris_stops_idx = make_index(filter(stops, &Stop::city, std::string("Paris")));
-    std::cout << "=== Stations of Paris ===" << std::endl;
+    std::cout << "=== SStations of Paris ===" << std::endl;
     BOOST_FOREACH(auto stop, paris_stops_idx){
         std::cout << "  * " << stop.name << std::endl;
     }
     std::cout << std::endl << std::endl;
 
-    {
-        std::ofstream ofs("idx_serialize",  std::ios::out | std::ios::binary);
-        boost::archive::binary_oarchive oa(ofs);
-        oa << stops << paris_stops_idx;
-    }
 
-    decltype(paris_stops_idx) paris_stops_idx2;
-    std::vector<Stop> stops2;
-
-    std::ifstream ifs("idx_serialize",  std::ios::in | std::ios::binary);
-    boost::archive::binary_iarchive ia(ifs);
-    ia >> stops2 >> paris_stops_idx2;
-
-    std::cout << "=== Stations of Paris ===" << std::endl;
-    BOOST_FOREACH(auto stop, paris_stops_idx2){
-        std::cout << "  * " << stop.name << std::endl;
-    }
-    std::cout << std::endl << std::endl;
 
     std::cout << "=== Stations by alphabetical order (and indexed by their name) ===" << std::endl;
     StringIndex<Stop> stops_str_idx = make_string_index(stops, &Stop::name);
@@ -162,9 +149,37 @@ int main(int, char**) {
 
     std::cout << "=== Stations and their country ===" << std::endl;
     auto join_idx = make_join_index(join6);
+    decltype(join_idx) join_idx2;
     typedef boost::tuple<City*, Stop*> elt_t;
     BOOST_FOREACH(elt_t city_stop, join_idx) {
         std::cout << "  * " << join_get<Stop>(city_stop).name << " (" << join_get<City>(city_stop).country << ")" << std::endl;
     }
+    std::cout << std::endl << std::endl;
+
+    std::cout << "=== Testing serialization ===" << std::endl;
+    {
+        std::ofstream ofs("idx_serialize",  std::ios::out | std::ios::binary);
+        boost::archive::binary_oarchive oa(ofs);
+        oa << stops << cities << paris_stops_idx << join_idx;
+    }
+
+    decltype(paris_stops_idx) paris_stops_idx2;
+    std::vector<Stop> stops2;
+
+    std::ifstream ifs("idx_serialize",  std::ios::in | std::ios::binary);
+    boost::archive::binary_iarchive ia(ifs);
+    decltype(cities) cities2;
+    ia >> stops2 >> cities2 >> paris_stops_idx2 >> join_idx2;
+
+
+    std::cout << "=== Stations of Paris ===" << std::endl;
+    BOOST_FOREACH(auto stop, paris_stops_idx2){
+        std::cout << "  * " << stop.name << std::endl;
+    }
+    std::cout << std::endl << std::endl;
+    BOOST_FOREACH(elt_t city_stop, join_idx2) {
+        std::cout << "  * " << join_get<Stop>(city_stop).name << " (" << join_get<City>(city_stop).country << ")" << std::endl;
+    }
+
     return 0;
 }
