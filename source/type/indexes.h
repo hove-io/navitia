@@ -14,6 +14,18 @@
 #include <boost/type_traits.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits.hpp>
+#include <boost/array.hpp>
+#include <boost/fusion/adapted/boost_tuple.hpp>
+#include <boost/fusion/algorithm.hpp>
+#include <boost/fusion/container/generation/make_cons.hpp>
+#include <boost/fusion/include/make_cons.hpp>
+#include <boost/fusion/view/reverse_view.hpp>
+#include <boost/fusion/include/reverse_view.hpp>
+#include <boost/fusion/include/as_vector.hpp>
+#include <boost/fusion/adapted/array.hpp>
+#include <boost/utility/result_of.hpp>
+
+#include <iostream>
 
 /** Fonction permettant d'accéder à l'élément N d'un tuple de jointure*/
 template<int N, class T> typename boost::remove_pointer<typename boost::tuples::element<N,T>::type>::type & join_get(T & t){
@@ -31,9 +43,9 @@ join_get(typename boost::tuples::cons<E*,T> tuple){
 }
 
 /** Functor permettant de tester l'attribut passé en paramètre avec la valeur passée en paramètre
-     *
-     * par exemple is_equal<std::string>(&StopPoint::name, "Châtelet");
-     */
+  *
+  * par exemple is_equal<std::string>(&StopPoint::name, "Châtelet");
+  */
 template<class Attribute, class T>
 struct is_equal_t{
     Attribute ref;
@@ -49,10 +61,11 @@ is_equal_t<Attribute, T> is_equal(Attribute T::*attr, const Attribute & ref){
     return is_equal_t<Attribute, T>(attr, ref);
 }
 
+
 /** Functor qui matche une expression rationnelle sur l'attribut passé en paramètre
-     *
-     * L'attribut doit être une chaîne de caractères
-     */
+  *
+  * L'attribut doit être une chaîne de caractères
+  */
 template<class T>
 struct matches {
     const boost::regex e;
@@ -197,8 +210,7 @@ Subset<typename boost::permutation_iterator<typename Container::iterator, typena
 
 template<class Type>
 class Index {
-    typedef typename Type::iterator::value_type value_type;
-    typedef value_type type;
+    typedef Type value_type;
 
     struct Transformer{
         typedef value_type & result_type;
@@ -220,9 +232,11 @@ public:
     typedef typename boost::transform_iterator<Transformer, typename std::vector<int>::iterator> iterator;
     typedef typename boost::transform_iterator<Transformer, typename std::vector<int>::const_iterator> const_iterator;
     
-    Index(typename Type::iterator begin, typename Type::iterator end) {
+    Index(){}
+    template<class Iterator>
+    Index(Iterator begin, Iterator end) {
         this->begin_it = &(*begin);
-        BOOST_FOREACH(typename Type::value_type & element, std::make_pair(begin, end)) {
+        BOOST_FOREACH(value_type & element, std::make_pair(begin, end)) {
             indexes.push_back(&element - this->begin_it);//on stock la différence entre les deux pointeurs
         }
     }
@@ -232,41 +246,138 @@ public:
     const_iterator begin() const {return const_iterator(indexes.begin(), Transformer(begin_it));}
     const_iterator end() const {return const_iterator(indexes.end(), Transformer(begin_it));}
 
+    value_type & operator[](int idx){
+        return *(begin_it + idx);
+    }
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & indexes;
+        ar & indexes & begin_it;
     }
 };
-/*
+
 template<class Type>
-class JoinIndex {
-    typedef typename Type::iterator::value_type value_type;
-    typedef value_type type;
+class StringIndex {
+    typedef Type value_type;
+
+    typedef std::map<std::string, int> map_t;
 
     struct Transformer{
         typedef value_type & result_type;
+        typedef result_type result;
         value_type* begin;
 
         Transformer(value_type * begin){this->begin = begin;}
 
-        value_type & operator()(int diff) const {
-            return *(begin + diff);
+        value_type & operator()(typename map_t::value_type elem) const {
+            return *(begin + elem.second);
+        }
+    };
+
+    value_type* begin_it;
+
+    map_t indexes;
+
+public:
+    typedef typename boost::transform_iterator<Transformer, map_t::iterator> iterator;
+    typedef typename boost::transform_iterator<Transformer, map_t::const_iterator> const_iterator;
+
+    StringIndex() {}
+    template<class Iterator>
+    StringIndex(Iterator begin, Iterator end, typename std::string value_type::* attr) {
+        this->begin_it = &(*begin);
+        BOOST_FOREACH(value_type & element, std::make_pair(begin, end)) {
+            indexes[element.*attr] = &element - this->begin_it;//on stock la différence entre les deux pointeurs
+        }
+    }
+
+    iterator begin(){return iterator(indexes.begin(), Transformer(begin_it));}
+    iterator end(){return iterator(indexes.end(), Transformer(begin_it));}
+    const_iterator begin() const {return const_iterator(indexes.begin(), Transformer(begin_it));}
+    const_iterator end() const {return const_iterator(indexes.end(), Transformer(begin_it));}
+
+    value_type & operator[](const std::string & key){
+        map_t::iterator it = indexes.find(key);
+        if(it == indexes.end()){
+            throw std::out_of_range("Key not found");
+        }
+        return *(begin_it + it->second);
+    }
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & indexes & begin_it;
+    }
+};
+
+
+template<class Type>
+class JoinIndex {
+    typedef Type value_type;
+    typedef typename boost::fusion::result_of::as_vector<value_type>::type begin_it_t;
+    typedef boost::array<int, boost::tuples::length<value_type>::value> idx_tuple;
+    typedef typename boost::fusion::result_of::as_vector<idx_tuple>::type idx_vector;
+
+    begin_it_t begin_it;
+    std::vector<idx_vector> indexes;
+
+    struct Transformer{
+        typedef value_type result_type;
+        begin_it_t begin;
+
+        struct as_fold_t{
+            typedef value_type result_type;
+            template<class H, class T>
+            boost::tuples::cons<H, T> operator()(H head, T tail) const {
+                return boost::tuples::cons<H, T>(head, tail);
+            }
+        };
+
+        struct get_pointer{
+            template <typename Sig> struct result;
+
+            template <typename T1, typename T2>
+            struct result<get_pointer(T1, T2)> {typedef T1 type; };
+
+            template<class T1, class T2>
+            T1 operator()(T1 begin, T2 position) const {return begin + position;}
+        };
+
+        Transformer(begin_it_t begin){this->begin = begin;}
+
+        value_type operator()(idx_vector diff) const {
+            auto result_view = boost::fusion::transform(begin, diff, get_pointer());
+            auto result_vec = boost::fusion::as_vector(result_view);
+            auto result = boost::fusion::fold(boost::fusion::reverse(result_view), typename boost::tuples::null_type(), as_fold_t());
+            //auto result = boost::fusion::fold(boost::fusion::reverse(begin), typename boost::tuples::null_type(), ptr_diff(diff));
+            //return *(begin + diff);
+            return result;
         }
 
     };
 
-    //value_type* begin_it;
-
-    std::vector<int> indexes;
 
     public:
-    typedef typename boost::transform_iterator<Transformer, typename std::vector<int>::iterator> iterator;
-    typedef typename boost::transform_iterator<Transformer, typename std::vector<int>::const_iterator> const_iterator;
+    typedef typename boost::transform_iterator<Transformer, typename std::vector<idx_vector>::iterator> iterator;
+    typedef typename boost::transform_iterator<Transformer, typename std::vector<idx_vector>::const_iterator> const_iterator;
    // typedef typename boost::indirect_iterator<typename std::vector<pointer>::const_iterator > const_iterator;
 
-    Index(typename Type::iterator begin, typename Type::iterator end) {
-        this->begin_it = &(*begin);
-        BOOST_FOREACH(typename Type::value_type & element, std::make_pair(begin, end)) {
-            indexes.push_back(&element - this->begin_it);//on stock la différence entre les deux pointeurs
+    struct ptr_diff{
+        typedef int result_type;
+        template<class T1>
+        int operator()(const T1 * begin, const T1 * current) const {return current - begin;}
+    };
+
+
+    JoinIndex(){}
+
+    template<class Iterator>
+    JoinIndex(Iterator begin, Iterator end) {
+        this->begin_it = *begin;
+        BOOST_FOREACH(const value_type & element, std::make_pair(begin, end)) {
+            auto moo = boost::fusion::transform(begin_it, element, ptr_diff());
+         //   auto moo2 = boost::fusion::as_vector(moo);
+            //indexes.push_back(&element - this->begin_it);//on stock la différence entre les deux pointeurs
+            indexes.push_back(moo);
+            //std::cout << boost::fusion::at_c<0>(moo) << " " << boost::fusion::at_c<1>(moo)  << std::endl;
         }
     }
 
@@ -276,19 +387,24 @@ class JoinIndex {
     const_iterator end() const {return const_iterator(indexes.end(), Transformer(begin_it));}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & indexes;
+        ar & indexes & begin_it;
     }
  };
-*/
+
+
 template<class Type>
-Index<Type>
-        make_index(typename Type::iterator begin, typename Type::iterator end) {
-    return Index<Type>(begin, end);
+Index<typename Type::value_type> make_index(const Type & t) {
+    return Index<typename Type::value_type>(t.begin(), t.end());
 }
 
 template<class Type>
-Index<Type> make_index(const Type & t) {
-    return Index<Type>(t.begin(), t.end());
+StringIndex<typename Type::value_type> make_string_index(Type & t, typename std::string Type::value_type::*attr) {
+    return StringIndex<typename Type::value_type>(t.begin(), t.end(), attr);
+}
+
+template<class Type>
+JoinIndex<typename Type::value_type> make_join_index(Type & t){
+    return JoinIndex<typename Type::value_type>(t.begin(), t.end());
 }
 
 template<class Head, class Tail, class Functor>
