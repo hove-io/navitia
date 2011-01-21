@@ -10,6 +10,8 @@
 #include <boost/serialization/vector.hpp>
 #include <sstream>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include "fusion_vector_serialize.h"
+
 struct Stop {
     int id;
     std::string name;
@@ -23,8 +25,8 @@ struct Stop {
 
 struct Line {
     std::string name;
-    float duration;
-    Line(const std::string & name, float duration) : name(name), duration(duration) {}
+    double duration;
+    Line(const std::string & name, double duration) : name(name), duration(duration) {}
 };
 
 struct City {
@@ -122,7 +124,7 @@ int main(int, char**) {
     BOOST_FOREACH(auto stop, join4){
         std::cout << "  * " << join_get<Stop>(stop).name << ", " << join_get<LineStops>(stop).line_name << std::endl;
     }
-
+    
     std::cout << "=== Lines stoping in France ===" << std::endl;
     auto join6 = make_join(filter(cities, &City::country, std::string("France")), stops, attribute_equals(&City::name, &Stop::city));
     auto join5 = make_join( line_stops,
@@ -147,12 +149,18 @@ int main(int, char**) {
         std::cout << "  * " << stop.name << std::endl;
     }
     std::cout << "Sants lies in " << stops_str_idx["Sants"].city << std::endl << std::endl;
-
-    std::cout << "=== Stations and their country ===" << std::endl;
+    
+ /*   std::cout << "=== Stations and their country ===" << std::endl;
     auto join_idx = make_join_index(join6);
-    decltype(join_idx) join_idx2;
-    typedef boost::tuple<City*, Stop*> elt_t;
-    BOOST_FOREACH(elt_t city_stop, join_idx) {
+//    decltype(join_idx) join_idx2;
+ //   typedef boost::tuple<City*, Stop*> elt_t;
+    auto foo = join_idx.begin();
+    auto moo = *foo;
+    auto coo = join_idx.end();
+    auto doo = foo++;
+    auto eoo = ++doo;
+    auto goo = join_get<Stop>(moo);
+    BOOST_FOREACH(auto city_stop, join_idx) {
         std::cout << "  * " << join_get<Stop>(city_stop).name << " (" << join_get<City>(city_stop).country << ")" << std::endl;
     }
     std::cout << std::endl << std::endl;
@@ -178,7 +186,7 @@ int main(int, char**) {
         std::cout << "  * " << stop.name << std::endl;
     }
     std::cout << std::endl << std::endl;
-    BOOST_FOREACH(elt_t city_stop, join_idx2) {
+    BOOST_FOREACH(auto city_stop, join_idx2) {
         std::cout << "  * " << join_get<Stop>(city_stop).name << " (" << join_get<City>(city_stop).country << ")" << std::endl;
     }
 
@@ -215,5 +223,5 @@ int main(int, char**) {
     }
     duration = (boost::posix_time::microsec_clock::local_time() - start).total_milliseconds();
     std::cout << "Tri avec indexe, Elements : " << count << ", durée : " << duration << "ms" << std::endl;
-    return 0;
+ */   return 0;
 }

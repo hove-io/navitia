@@ -1,6 +1,5 @@
 #pragma once
 
-#include <boost/tuple/tuple.hpp>
 #include <boost/foreach.hpp>
 #include <boost/iterator.hpp>
 #include <boost/iterator/transform_iterator.hpp>
@@ -8,26 +7,40 @@
 #include <boost/iterator/permutation_iterator.hpp>
 #include <boost/regex.hpp>
 #include <boost/shared_container_iterator.hpp>
-#include <boost/fusion/adapted/boost_tuple.hpp>
 #include <boost/fusion/algorithm.hpp>
 #include <boost/fusion/view/reverse_view.hpp>
 #include <boost/fusion/include/as_vector.hpp>
 #include <boost/fusion/adapted/array.hpp>
 #include <boost/utility/result_of.hpp>
+#include <boost/fusion/sequence/intrinsic/size.hpp>
+#include <boost/fusion/container/list.hpp>
+
+#include <boost/fusion/include/value_at.hpp>
+#include <boost/fusion/algorithm/query/find.hpp>
+#include <boost/array.hpp>
+
+#include <boost/mpl/print.hpp>
+
+#include <boost/tuple/tuple.hpp>
 
 /** Fonction permettant d'accéder à l'élément N d'un tuple de jointure*/
-template<int N, class T> typename boost::remove_pointer<typename boost::tuples::element<N,T>::type>::type & join_get(T & t){
-    return *(boost::get<N>(t));
+template<int N, class T> typename boost::remove_pointer<typename boost::fusion::result_of::value_at_c<T,N>::type>::type & join_get(T & t){
+    return *(boost::fusion::at<N>(t));
 }
 
-template<class E, class H, class T> typename boost::remove_pointer<E>::type &
-join_get(typename boost::tuples::cons<H,T> tuple){
+/*template<class E, class H, class T> typename boost::remove_pointer<E>::type &
+join_get(typename boost::fusion::cons<H,T> tuple){
     return join_get<E>(tuple.get_tail());
 }
 
 template<class E, class T> typename boost::remove_pointer<E>::type &
-join_get(typename boost::tuples::cons<E*,T> tuple){
+join_get(typename boost::fusion::cons<E*,T> tuple){
     return *(tuple.get_head());
+}*/
+
+template<class E, class T>
+E & join_get(T tuple){
+    return **(boost::fusion::find<E*>(tuple));
 }
 
 /** Functor permettant de tester l'attribut passé en paramètre avec la valeur passée en paramètre
@@ -217,7 +230,7 @@ class Index {
     std::vector<int> indexes;
 
 public:
-    typedef typename boost::transform_iterator<Transformer, typename std::vector<int>::iterator> iterator;
+    typedef typename boost::transform_iterator<Transformer, typename std::vector<int>::iterator, value_type> iterator;
     typedef typename boost::transform_iterator<Transformer, typename std::vector<int>::const_iterator> const_iterator;
     
     Index(){}
@@ -296,30 +309,13 @@ public:
     }
 };
 
-namespace boost {
-    namespace fusion {
-        template<class Archive>
-        struct serializer {
-            Archive & ar;
-            serializer(Archive & ar) : ar(ar) {}
-            template <typename T>
-            void operator()(T & data) const {
-                ar & data;
-            }
-        };
-
-        template <class T0,class T1, class T2,class T3,class T4,class T5,class T6,class T7,class T8,class T9, typename Archive>
-        void serialize(Archive & ar, vector<T0,T1,T2,T3,T4,T5,T6,T7,T8,T9> & vec, unsigned int) {
-            for_each(vec, serializer<Archive>(ar));
-        }
-    }
-}
 
 template<class Type>
 class JoinIndex {
     typedef Type value_type;
+ //   typedef typename boost::fusion::result_of::size<value_type>::type value_size;
     typedef typename boost::fusion::result_of::as_vector<value_type>::type begin_it_t;
-    typedef boost::array<int, boost::tuples::length<value_type>::value> idx_tuple;
+    typedef typename boost::array<int, 2> idx_tuple;
     typedef typename boost::fusion::result_of::as_vector<idx_tuple>::type idx_vector;
 
     begin_it_t begin_it;
@@ -328,14 +324,6 @@ class JoinIndex {
     struct Transformer{
         typedef value_type result_type;
         begin_it_t begin;
-
-        struct as_fold_t{
-            typedef value_type result_type;
-            template<class H, class T>
-            boost::tuples::cons<H, T> operator()(const T & tail, const H & head) const {
-                return boost::tuples::cons<H, T>(head, tail);
-            }
-        };
 
         struct get_pointer{
             template <typename Sig> struct result;
@@ -346,20 +334,25 @@ class JoinIndex {
             template<class T1, class T2>
             T1 operator()(T1 begin, T2 position) const {return begin + position;}
         };
-
-        Transformer(begin_it_t begin){this->begin = begin;}
-
+        
+        Transformer(begin_it_t begin){
+            this->begin = begin;
+        }
+        
         value_type operator()(idx_vector diff) const {
             auto result_view = boost::fusion::transform(begin, diff, get_pointer());
-            auto result_vec = boost::fusion::as_vector(boost::fusion::reverse(result_view));
-            return boost::fusion::fold(result_vec, typename boost::tuples::null_type(), as_fold_t());
+            auto tmp = boost::fusion::as_vector(result_view);
+            auto tmp2 = result_view;
+            auto xxx = boost::fusion::at_c<0>(result_view);
+            value_type tmp3(result_view);
+            return result_view;
+            //return tmp;
         }
         template<class Archive> void serialize(Archive & ar, const unsigned int ) {
             ar & indexes & begin_it;
         }
-
+        
     };
-
 
     public:
     typedef typename boost::transform_iterator<Transformer, typename std::vector<idx_vector>::iterator> iterator;
@@ -371,18 +364,13 @@ class JoinIndex {
         int operator()(const T1 * begin, const T1 * current) const {return current - begin;}
     };
 
-
     JoinIndex(){}
 
     template<class Iterator>
     JoinIndex(Iterator begin, Iterator end) {
         this->begin_it = *begin;
         BOOST_FOREACH(const value_type & element, std::make_pair(begin, end)) {
-            auto moo = boost::fusion::transform(begin_it, element, ptr_diff());
-         //   auto moo2 = boost::fusion::as_vector(moo);
-            //indexes.push_back(&element - this->begin_it);//on stock la différence entre les deux pointeurs
-            indexes.push_back(moo);
-            //std::cout << boost::fusion::at_c<0>(moo) << " " << boost::fusion::at_c<1>(moo)  << std::endl;
+            indexes.push_back(boost::fusion::transform(begin_it, element, ptr_diff()));
         }
     }
 
@@ -390,7 +378,7 @@ class JoinIndex {
     iterator end(){return iterator(indexes.end(), Transformer(begin_it));}
     const_iterator begin() const {return const_iterator(indexes.begin(), Transformer(begin_it));}
     const_iterator end() const {return const_iterator(indexes.end(), Transformer(begin_it));}
-
+    
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & indexes & begin_it;
     }
@@ -415,7 +403,7 @@ JoinIndex<typename Type::value_type> make_join_index(Type & t){
 template<class Head, class Tail, class Functor>
 class join_iterator{
 public:
-    typedef typename boost::tuples::cons<typename Head::value_type*, typename Tail::value_type> value_type;
+    typedef typename boost::fusion::result_of::as_vector< typename boost::fusion::result_of::push_front<typename Tail::value_type, typename Head::value_type*>::type>::type value_type;
     typedef size_t difference_type;
     typedef value_type* pointer;
     typedef value_type reference;
@@ -440,7 +428,9 @@ public:
             increment();
     }
 
-    value_type dereference() const { return value_type(&(*current1), *current2);}
+    value_type dereference() const { 
+        return boost::fusion::push_front(*current2, &(*current1));
+    }
 
     bool equal(const join_iterator & other) const { return other.current1 == current1 && other.current2 == current2;}
 
@@ -479,18 +469,18 @@ public:
         increment();
     }
 
-    value_type operator++(){
+    join_iterator<Head, Tail, Functor>& operator++(){
         increment();
-        return dereference();
+        return *this;
     }
 };
 
 template<class Head>
-class join_iterator<Head, boost::tuples::null_type, boost::tuples::null_type> {
+class join_iterator<Head, boost::fusion::nil, boost::fusion::nil> {
     typename Head::iterator begin, current, end;
 
 public:
-    typedef boost::tuples::cons<typename Head::value_type*, boost::tuples::null_type> value_type;
+    typedef typename boost::fusion::vector<typename Head::value_type*> value_type;
     typedef size_t difference_type;
     typedef value_type* pointer;
     typedef value_type reference;
@@ -501,7 +491,7 @@ public:
 
     value_type operator*() const{
         typename Head::value_type & result = *current;
-        return value_type(&result, boost::tuples::null_type());
+        return value_type(&result);
     }
 
     join_iterator & operator++(){
@@ -523,9 +513,9 @@ public:
 };
 
 template<class Container1, class Container2, class Functor>
-Subset<join_iterator<Container1, join_iterator<Container2, boost::tuples::null_type, boost::tuples::null_type>, Functor> >
+Subset<join_iterator<Container1, join_iterator<Container2,typename boost::fusion::nil,typename boost::fusion::nil>, Functor> >
         make_join(Container1 & c1, Container2 & c2, const Functor & f) {
-    typedef join_iterator<Container2, boost::tuples::null_type, boost::tuples::null_type> join_c2_t;
+    typedef join_iterator<Container2,typename boost::fusion::nil,typename boost::fusion::nil> join_c2_t;
     auto tmp = make_join(c2);
     return make_subset(
             join_iterator<Container1, join_c2_t, Functor>(c1.begin(), c1.end(), tmp.begin(), tmp.end(), f),
@@ -535,9 +525,9 @@ Subset<join_iterator<Container1, join_iterator<Container2, boost::tuples::null_t
 
 
 template<class Container1, class Container2, class Functor>
-Subset<join_iterator<Container1, join_iterator<Subset<Container2>, boost::tuples::null_type, boost::tuples::null_type>, Functor> >
+Subset<join_iterator<Container1, join_iterator<Subset<Container2>,typename boost::fusion::nil,typename boost::fusion::nil>, Functor> >
         make_join(Container1 & c1, Subset<Container2> c2, const Functor & f) {
-    typedef join_iterator<Subset<Container2>, boost::tuples::null_type, boost::tuples::null_type> join_c2_t;
+    typedef join_iterator<Subset<Container2>,typename boost::fusion::nil,typename boost::fusion::nil> join_c2_t;
     auto tmp = make_join(c2);
     return make_subset(
             join_iterator<Container1, join_c2_t, Functor>(c1.begin(), c1.end(), tmp.begin(), tmp.end(), f),
@@ -557,9 +547,9 @@ Subset<join_iterator<Container1, join_iterator<H,T,F>, Functor> >
 
 
 template<class Container1, class Container2, class Functor>
-Subset<join_iterator<Subset<Container1>, join_iterator<Container2, boost::tuples::null_type, boost::tuples::null_type>, Functor> >
+Subset<join_iterator<Subset<Container1>, join_iterator<Container2,typename boost::fusion::nil,typename boost::fusion::nil>, Functor> >
         make_join(Subset<Container1> c1, Container2 & c2, const Functor & f) {
-    typedef join_iterator<Container2, boost::tuples::null_type, boost::tuples::null_type> join_c2_t;
+    typedef join_iterator<Container2,typename boost::fusion::nil,typename boost::fusion::nil> join_c2_t;
     auto tmp = make_join(c2);
     return make_subset(
             join_iterator<Subset<Container1>, join_c2_t, Functor>(c1.begin(), c1.end(), tmp.begin(), tmp.end(), f),
@@ -569,9 +559,9 @@ Subset<join_iterator<Subset<Container1>, join_iterator<Container2, boost::tuples
 
 
 template<class Container1, class Container2, class Functor>
-Subset<join_iterator<Subset<Container1>, join_iterator<Subset<Container2>, boost::tuples::null_type, boost::tuples::null_type>, Functor> >
+Subset<join_iterator<Subset<Container1>, join_iterator<Subset<Container2>,typename boost::fusion::nil,typename boost::fusion::nil>, Functor> >
         make_join(Subset<Container1> c1, Subset<Container2> c2, const Functor & f) {
-    typedef join_iterator<Subset<Container2>, boost::tuples::null_type, boost::tuples::null_type> join_c2_t;
+    typedef join_iterator<Subset<Container2>,typename boost::fusion::nil,typename boost::fusion::nil> join_c2_t;
     auto tmp = make_join(c2);
     return make_subset(
             join_iterator<Subset<Container1>, join_c2_t, Functor>(c1.begin(), c1.end(), tmp.begin(), tmp.end(), f),
@@ -580,20 +570,20 @@ Subset<join_iterator<Subset<Container1>, join_iterator<Subset<Container2>, boost
 }
 
 template<class Container>
-Subset<join_iterator<Container, boost::tuples::null_type, boost::tuples::null_type> >
+Subset<join_iterator<Container,typename boost::fusion::nil,typename boost::fusion::nil> >
         make_join(Container & c) {
     auto result = make_subset (
-            join_iterator<Container, boost::tuples::null_type, boost::tuples::null_type>(c.begin(), c.end()),
-            join_iterator<Container, boost::tuples::null_type, boost::tuples::null_type>(c.end(), c.end())
+            join_iterator<Container,typename boost::fusion::nil,typename boost::fusion::nil>(c.begin(), c.end()),
+            join_iterator<Container,typename boost::fusion::nil,typename boost::fusion::nil>(c.end(), c.end())
             );
     return result;
 }
 
 template<class Container>
-Subset<join_iterator<Subset<Container>, boost::tuples::null_type, boost::tuples::null_type> >
+Subset<join_iterator<Subset<Container>, typename boost::fusion::nil,typename boost::fusion::nil> >
         make_join(Subset<Container> ss){
     return make_subset (
-                join_iterator<Subset<Container>, boost::tuples::null_type, boost::tuples::null_type>(ss.begin(), ss.end()),
-                join_iterator<Subset<Container>, boost::tuples::null_type, boost::tuples::null_type>(ss.end(), ss.end())
+                join_iterator<Subset<Container>, typename boost::fusion::nil,typename boost::fusion::nil>(ss.begin(), ss.end()),
+                join_iterator<Subset<Container>, typename boost::fusion::nil,typename boost::fusion::nil>(ss.end(), ss.end())
                 );
 }
