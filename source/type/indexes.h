@@ -1,5 +1,21 @@
 #pragma once
 
+/** Allows to relationalish queries on any datastructure stored in std::vector
+  *
+  * We use vocabulary form relationnal databases, however the querying and indexing possibilities
+  * are rather poor compared to a real DB
+  *
+  * The user must define the datastructures he want to use: struct City {std::string name; int population;}
+  * and store them in std::vectors
+  *
+  * There are four operations :
+  * — Filter
+  * – Join (like an inner join in a DB)
+  * – Index to cache a previous query to speed it up
+  * – Sort
+  * — any combination of thoses
+  */
+
 #include <boost/foreach.hpp>
 #include <boost/iterator.hpp>
 #include <boost/iterator/transform_iterator.hpp>
@@ -20,25 +36,22 @@
 #include <boost/type_traits/remove_pointer.hpp>
 #include <boost/mpl/transform.hpp>
 
-/** Fonction permettant d'accéder à l'élément N d'un tuple de jointure*/
-template<int N, class T> typename boost::remove_pointer<typename boost::fusion::result_of::value_at_c<T,N>::type>::type & join_get(T & t){
-    return *(boost::fusion::at<N>(t));
-}
 
-
+/// In a row of a join, gets the element of type E
 template<class E, class T>
 E & join_get(T tuple){
     return **(boost::fusion::find<E*>(tuple));
 }
 
+/// In a row of a join, gets the element of type E
 template<class E, class T>
 E & join_get2(T tuple){
     return *(boost::fusion::find<E>(tuple));
 }
 
-/** Functor permettant de tester l'attribut passé en paramètre avec la valeur passée en paramètre
+/** Functor that tests if an attribute is equal to the value passed at construction
   *
-  * par exemple is_equal<std::string>(&StopPoint::name, "Châtelet");
+  * Example: is_equal<std::string>(&StopPoint::name, "Châtelet");
   */
 template<class Attribute, class T>
 struct is_equal_t{
@@ -50,15 +63,20 @@ struct is_equal_t{
         return ref == value;
     }
 };
+
+/** Helper function to build an is_equal_t functor
+  *
+  * Example: auto func = is_equal(&StopPoint::name, "Châtelet");
+  */
 template<class Attribute, class T>
 is_equal_t<Attribute, T> is_equal(Attribute T::*attr, const Attribute & ref){
     return is_equal_t<Attribute, T>(attr, ref);
 }
 
 
-/** Functor qui matche une expression rationnelle sur l'attribut passé en paramètre
+/** Functor that matches an attribute with a regular expression
   *
-  * L'attribut doit être une chaîne de caractères
+  * The attribute must be a string
   */
 template<class T>
 struct matches {
@@ -68,6 +86,9 @@ struct matches {
     bool operator()(const T & elt) const {return boost::regex_match(elt.*attr, e );}
 };
 
+/** Functor that compares if two attributes of two classes are equal
+  * Used for joins
+  */
 template<class T1, class A1, class T2, class A2>
 struct attribute_equals_t {
     A1 T1::*attr1;
@@ -78,59 +99,44 @@ struct attribute_equals_t {
     template<class Tuple1, class Tuple2>
     bool operator()(const Tuple1 & t1, const Tuple2 & t2){return join_get<T1>(t1).*attr1 == join_get<T2>(t2).*attr2;}
 };
+
+/** Helper function to use attribute_equals_t
+  *
+  * Example: attribute_equals(&Stop::city, &City::name)
+  */
 template<class T1, class A1, class T2, class A2>
 attribute_equals_t<T1, A1, T2, A2> attribute_equals(A1 T1::*attr1, A2 T2::*attr2){
     return attribute_equals_t<T1, A1, T2, A2>(attr1, attr2);
 }
 
+/** Functor that compares two attributes
+  * The attributes must implement operator<
+  * Used for sorting
+  */
 template<class T, class A>
 struct attribute_cmp_t {
     A T::*attr;
     attribute_cmp_t(A T::*attr) : attr(attr) {}
     bool operator()(const T & t1, const T & t2){ return t1.*attr <t2.*attr;}
 };
+
+/** Helper function to use attribute_cmp_t
+  * Example: attribute_cmp(&City::name)
+  */
 template<class T, class A>
 attribute_cmp_t<T,A> attribute_cmp(A T::*attr){return attribute_cmp_t<T,A>(attr);}
 
+
+/** This class allows is the result of a request
+  * It actually is nothing more than a glorified pair of iterators
+  * It is built to enable to chain queries (for example first filter, then sort)
+  */
 template<class Iter>
 class Subset {
     Iter begin_it;
     Iter end_it;
-public:
 
-    typedef typename Iter::value_type value_type;
-    typedef typename Iter::pointer pointer;
-    typedef Iter iterator;
-    typedef Iter const_iterator;
-    Subset(const Iter & begin_it, const Iter & end_it) :  begin_it(begin_it), end_it(end_it) {}
-    iterator begin() {return begin_it;}
-    iterator end() {return end_it;}
-    const_iterator begin() const {return begin_it;}
-    const_iterator end() const {return end_it;}
-
-    template<class Functor>
-    Subset<boost::filter_iterator<Functor, iterator> >
-            filter(Functor f) const{
-        return Subset<boost::filter_iterator<Functor, iterator> >
-                (   boost::make_filter_iterator(f, begin(), end()),
-                    boost::make_filter_iterator(f, end(), end())
-                    );
-    }
-
-    /** Filtre selon la valeur d'un attribut qui matche une regex */
-    Subset<boost::filter_iterator<matches<value_type>, iterator> >
-            filter_match(std::string value_type::*attr, const std::string & str ) {
-        return filter(matches<value_type>(attr, str));
-    }
-
-    /** Filtre selon la valeur d'un attribut */
-    template<class Attribute, class Param>
-    Subset<boost::filter_iterator<is_equal_t<Attribute, value_type>, iterator> >
-            filter(Attribute value_type::*attr, Param value ) {
-        return filter(is_equal<Attribute, value_type>(attr, Param(value)));
-    }
-
-    /// Functor permettant de trier les données
+    /// Functor used for sorting
     template<class Functor>
     struct Sorter{
         Iter begin_it;
@@ -142,7 +148,48 @@ public:
             return f(*(begin_it + a), *(begin_it + b));
         }
     };
+public:
+    typedef typename Iter::value_type value_type; ///< Type of the data manipulated
+    typedef typename Iter::pointer pointer; ///< Pointer type to the data manipulated
+    typedef Iter iterator;
+    typedef Iter const_iterator;
 
+    /// Creates a subset from a range
+    Subset(const Iter & begin_it, const Iter & end_it) :  begin_it(begin_it), end_it(end_it) {}
+    iterator begin() {return begin_it;}
+    iterator end() {return end_it;}
+    const_iterator begin() const {return begin_it;}
+    const_iterator end() const {return end_it;}
+
+    /// Returns a new subset filtered according to the functor
+    template<class Functor>
+    Subset<boost::filter_iterator<Functor, iterator> >
+            filter(Functor f) const{
+        return Subset<boost::filter_iterator<Functor, iterator> >
+                (   boost::make_filter_iterator(f, begin(), end()),
+                    boost::make_filter_iterator(f, end(), end())
+                    );
+    }
+
+    /// Returns a new subset filtered where the attribute matches a regular expression
+    Subset<boost::filter_iterator<matches<value_type>, iterator> >
+            filter_match(std::string value_type::*attr, const std::string & str ) {
+        return filter(matches<value_type>(attr, str));
+    }
+
+    /// Returns a new subset where the attribute is equal to a value
+    template<class Attribute, class Param>
+    Subset<boost::filter_iterator<is_equal_t<Attribute, value_type>, iterator> >
+            filter(Attribute value_type::*attr, Param value ) {
+        return filter(is_equal<Attribute, value_type>(attr, Param(value)));
+    }
+
+    /** Returns a new subset where the rows are sorted according to the functor
+      *
+      * Implementation is based on boost::permutation_iterator
+      * We build an std::vector<int> of the same length and use the functor Sorter to
+      * order them according to the functor given by the user
+      */
     template<class Functor>
     Subset<boost::permutation_iterator<iterator, boost::shared_container_iterator< std::vector<ptrdiff_t> > > >
             order(Functor f){
@@ -164,16 +211,19 @@ public:
     }
 };
 
+/// Helper function tu build a subset from a range
 template<class Iter>
 Subset<Iter> make_subset(Iter begin, Iter end) {
     return Subset<Iter>(begin, end);
 }
 
+/// Helper function tu build a subset from a container
 template<class Container>
 Subset<typename Container::iterator> make_subset(Container & c) {
     return make_subset(c.begin(), c.end());
 }
 
+/// Free function to filter any range by a functor (returns a subset)
 template<class Container, class Functor>
 Subset<typename boost::filter_iterator<Functor, typename Container::iterator> >
         filter(typename Container::iterator begin, typename Container::iterator end, Functor f) {
@@ -181,11 +231,13 @@ Subset<typename boost::filter_iterator<Functor, typename Container::iterator> >
     return subset.filter(f);
 }
 
+/// Free function to filter any container by a functor (returns a subset)
 template<class Container, class Functor>
 Subset<typename boost::filter_iterator<Functor, typename Container::iterator> > filter(Container & c, Functor f) {
     auto subset = make_subset(c.begin(), c.end());
     return subset.filter(f);
 }
+
 
 template<class Container, class Attribute>
 Subset<typename boost::filter_iterator<is_equal_t<Attribute, typename Container::value_type>,typename Container::iterator > >
@@ -287,7 +339,7 @@ public:
     iterator end(){return iterator(indexes.end(), Transformer(begin_it));}
     const_iterator begin() const {return const_iterator(indexes.begin(), Transformer(begin_it));}
     const_iterator end() const {return const_iterator(indexes.end(), Transformer(begin_it));}
-
+They didn’t know it was impossible, so they did it. (Mark Twain)
     value_type & operator[](const std::string & key){
         map_t::iterator it = indexes.find(key);
         if(it == indexes.end()){
