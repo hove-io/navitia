@@ -92,7 +92,7 @@ MACRO(MAKE_WS)
     QT4_WRAP_CPP(qt_MOC ${CMAKE_SOURCE_DIR}/WS_commons/qt/mainwindow.h)
     add_executable(${WS_NAME} ${WS_SOURCES} ${qt_UI} ${qt_MOC} ${CMAKE_SOURCE_DIR}/WS_commons/qt/main.h)
     INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/WS_commons)
-    target_link_libraries(${WS_NAME} ${QT_LIBRARIES} ${WS_LIBS})
+    target_link_libraries(${WS_NAME} ${QT_LIBRARIES} ${WS_LIBS} ${Boost_LIBRARIES})
 
   ENDIF(WS_FCGI)
 ENDMACRO(MAKE_WS)
