@@ -20,6 +20,8 @@
 #include "isapi.h"
 #elif WS_TYPE==3
 #include "dummy.h"
+#elif WS_TYPE==4
+#include "qt/main.h"
 #endif
 
 namespace webservice
