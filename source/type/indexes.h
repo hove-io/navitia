@@ -14,33 +14,26 @@
 #include <boost/utility/result_of.hpp>
 #include <boost/fusion/sequence/intrinsic/size.hpp>
 #include <boost/fusion/container/list.hpp>
-
 #include <boost/fusion/include/value_at.hpp>
 #include <boost/fusion/algorithm/query/find.hpp>
 #include <boost/array.hpp>
-
-#include <boost/mpl/print.hpp>
-
-#include <boost/tuple/tuple.hpp>
+#include <boost/type_traits/remove_pointer.hpp>
+#include <boost/mpl/transform.hpp>
 
 /** Fonction permettant d'accéder à l'élément N d'un tuple de jointure*/
 template<int N, class T> typename boost::remove_pointer<typename boost::fusion::result_of::value_at_c<T,N>::type>::type & join_get(T & t){
     return *(boost::fusion::at<N>(t));
 }
 
-/*template<class E, class H, class T> typename boost::remove_pointer<E>::type &
-join_get(typename boost::fusion::cons<H,T> tuple){
-    return join_get<E>(tuple.get_tail());
-}
-
-template<class E, class T> typename boost::remove_pointer<E>::type &
-join_get(typename boost::fusion::cons<E*,T> tuple){
-    return *(tuple.get_head());
-}*/
 
 template<class E, class T>
 E & join_get(T tuple){
     return **(boost::fusion::find<E*>(tuple));
+}
+
+template<class E, class T>
+E & join_get2(T tuple){
+    return *(boost::fusion::find<E>(tuple));
 }
 
 /** Functor permettant de tester l'attribut passé en paramètre avec la valeur passée en paramètre
@@ -84,7 +77,6 @@ struct attribute_equals_t {
     bool operator()(const T1 & t1, const Tuple & t2){ return t1.*attr1 == join_get<T2>(t2).*attr2;}
     template<class Tuple1, class Tuple2>
     bool operator()(const Tuple1 & t1, const Tuple2 & t2){return join_get<T1>(t1).*attr1 == join_get<T2>(t2).*attr2;}
-    //bool operator()()
 };
 template<class T1, class A1, class T2, class A2>
 attribute_equals_t<T1, A1, T2, A2> attribute_equals(A1 T1::*attr1, A2 T2::*attr2){
@@ -309,44 +301,43 @@ public:
     }
 };
 
-
+class City; class Stop;
 template<class Type>
 class JoinIndex {
     typedef Type value_type;
- //   typedef typename boost::fusion::result_of::size<value_type>::type value_size;
+    typedef typename boost::fusion::result_of::size<value_type>::type value_size;
     typedef typename boost::fusion::result_of::as_vector<value_type>::type begin_it_t;
-    typedef typename boost::array<int, 2> idx_tuple;
+    typedef typename boost::array<int, value_size::value> idx_tuple;
     typedef typename boost::fusion::result_of::as_vector<idx_tuple>::type idx_vector;
 
     begin_it_t begin_it;
     std::vector<idx_vector> indexes;
 
     struct Transformer{
-        typedef value_type result_type;
+        typedef typename boost::mpl::transform<value_type, typename boost::reference_wrapper<typename boost::remove_pointer<typename boost::mpl::_1> > >::type result_type;
         begin_it_t begin;
 
         struct get_pointer{
             template <typename Sig> struct result;
 
             template <typename T1, typename T2>
-            struct result<get_pointer(T1, T2)> {typedef T1 type; };
-
+            struct result<get_pointer(T1, T2)> {typedef typename boost::reference_wrapper<
+                                                typename boost::remove_pointer<
+                                                typename boost::remove_const<
+                                                typename boost::remove_reference<T1>::type
+                                                >::type
+                                                >::type
+                                                > type; };
             template<class T1, class T2>
-            T1 operator()(T1 begin, T2 position) const {return begin + position;}
+            typename result<get_pointer(T1,T2)>::type operator()(T1 begin, T2 position) const {return boost::ref(*(begin + position));}
         };
         
         Transformer(begin_it_t begin){
             this->begin = begin;
         }
         
-        value_type operator()(idx_vector diff) const {
-            auto result_view = boost::fusion::transform(begin, diff, get_pointer());
-            auto tmp = boost::fusion::as_vector(result_view);
-            auto tmp2 = result_view;
-            auto xxx = boost::fusion::at_c<0>(result_view);
-            value_type tmp3(result_view);
-            return result_view;
-            //return tmp;
+        result_type operator()(idx_vector diff) const {
+            return boost::fusion::transform(begin, diff, get_pointer());
         }
         template<class Archive> void serialize(Archive & ar, const unsigned int ) {
             ar & indexes & begin_it;
