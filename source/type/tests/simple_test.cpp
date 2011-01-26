@@ -6,6 +6,23 @@
 #include "fixtures.h"
 
 
+BOOST_AUTO_TEST_CASE(test_is_equal_int){
+    is_equal_t<int, Stop> obj_is_equal = is_equal(&Stop::id, 0);
+    BOOST_CHECK(obj_is_equal(Stop(0, "foo", "bar")));
+    BOOST_CHECK(!obj_is_equal(Stop(1, "foo", "bar")));
+    BOOST_CHECK(!obj_is_equal(Stop(655536, "", "")));
+}
+
+
+BOOST_AUTO_TEST_CASE(test_is_equal_string){
+    is_equal_t<std::string, Stop> obj_is_equal = is_equal(&Stop::name, std::string("foo"));
+    BOOST_CHECK(obj_is_equal(Stop(0, "foo", "bar")));
+    BOOST_CHECK(obj_is_equal(Stop(1, "foo", "bar")));
+    BOOST_CHECK(!obj_is_equal(Stop(655536, "", "")));
+    BOOST_CHECK(!obj_is_equal(Stop(655536, "FOO", "")));
+}
+
+
 
 BOOST_AUTO_TEST_CASE(test_order){
     MyConfig f;
@@ -168,3 +185,4 @@ BOOST_AUTO_TEST_CASE(test_joinIndex){
         BOOST_CHECK(!join_get2<City>(stop).name.empty());
     }
 }
+
