@@ -16,6 +16,7 @@
   * — any combination of thoses
   */
 
+#include <functional>
 #include <boost/foreach.hpp>
 #include <boost/iterator.hpp>
 #include <boost/iterator/transform_iterator.hpp>
@@ -128,8 +129,14 @@ attribute_cmp_t<T,A> attribute_cmp(A T::*attr){return attribute_cmp_t<T,A>(attr)
 
 
 /** This class allows is the result of a request
+  *
   * It actually is nothing more than a glorified pair of iterators
   * It is built to enable to chain queries (for example first filter, then sort)
+  *
+  * As no data is stored, it is very lightweight and no iteration is when building the subset
+  *
+  * When iterating over the subset every operation (joins, filter, sorting...) is repeated.
+  * To have better performances, it is possible to create an index from a subset
   */
 template<class Iter>
 class Subset {
@@ -189,6 +196,7 @@ public:
       * Implementation is based on boost::permutation_iterator
       * We build an std::vector<int> of the same length and use the functor Sorter to
       * order them according to the functor given by the user
+      *
       */
     template<class Functor>
     Subset<boost::permutation_iterator<iterator, boost::shared_container_iterator< std::vector<ptrdiff_t> > > >
@@ -238,7 +246,7 @@ Subset<typename boost::filter_iterator<Functor, typename Container::iterator> > 
     return subset.filter(f);
 }
 
-
+/// Free function to filter any container where the attributes of any element is equals to a value (returns a subset)
 template<class Container, class Attribute>
 Subset<typename boost::filter_iterator<is_equal_t<Attribute, typename Container::value_type>,typename Container::iterator > >
         filter(Container & c, Attribute Container::value_type::*attr, const Attribute & val) {
@@ -246,6 +254,7 @@ Subset<typename boost::filter_iterator<is_equal_t<Attribute, typename Container:
     return filter(c, f);
 }
 
+/// Free function that sorts a container according to an attribute. The attribute must have an operator< (returns a subset)
 template<class Container, class Attribute>
 Subset<typename boost::permutation_iterator<typename Container::iterator, typename boost::shared_container_iterator<typename std::vector<ptrdiff_t> > > >
       order(Container & c, Attribute Container::value_type::*attr){
@@ -253,107 +262,139 @@ Subset<typename boost::permutation_iterator<typename Container::iterator, typena
     return tmp.order(attribute_cmp(attr));
 }
 
-template<class Type>
-class Index {
-    typedef Type value_type;
-
-    struct Transformer{
-        typedef value_type & result_type;
-        value_type* begin;
-
-        Transformer(value_type * begin){this->begin = begin;}
-
-        value_type & operator()(int diff) const {
-            return *(begin + diff);
-        }
-        
-    };
-
-    value_type* begin_it;
-
-    std::vector<int> indexes;
+/** The Index class iterates over a subset in order to index the positions for a faster access
+  *
+  * It stores the position a pointer to the first element and the difference to the following elements
+  * Therefor the memory consumption is roughly an int for each indexed element
+  *
+  * Warning : if you want to serialize an index, the underlying datastructure MUST be an stl::vector
+  * (or a plain C array, but who uses that?)
+  *
+  * Template parameters:
+  * – Type: type we manipulate
+  * – IndexType: conta
+  */
+template<class Type, class IndexContainer, class GetIntFunctor>
+class BaseIndex {
+public:
+    typedef Type value_type; ///< Type of the element we want to index
+    typedef value_type & result_type; ///< Type returned when we access to an element
 
 public:
-    typedef typename boost::transform_iterator<Transformer, typename std::vector<int>::iterator, value_type> iterator;
-    typedef typename boost::transform_iterator<Transformer, typename std::vector<int>::const_iterator> const_iterator;
-    
+    /// Pointer to the first element
+    value_type* begin_it;
+
+    /// Stores where the elements are
+    IndexContainer indexes;
+
+    /** This functor takes the start pointer, the difference and returns a reference to the element
+      * It is used to get back the data
+      */
+    struct Transformer{
+        /// Functor that given an index returns the int
+        mutable GetIntFunctor get_int;
+        value_type* begin;
+        Transformer(value_type * begin){this->begin = begin;}
+        value_type & operator()(typename IndexContainer::value_type idx) const {
+            return *(begin + get_int(idx));
+        }
+    };
+
+    /** Same transformer, only that it returns a constant reference */
+    struct ConstTransformer{
+        /// Functor that given an index returns the int
+        mutable GetIntFunctor get_int;
+        value_type* begin;
+        ConstTransformer(value_type * begin){this->begin = begin;}
+        const value_type & operator()(typename IndexContainer::value_type idx) const {
+            return *(begin + get_int(idx));
+        }
+    };
+
+public:
+
+    /** We use boost::transform iterator to create an iterator that will automatically
+      * get the reference of the element from the start pointer and the difference
+      */
+    typedef typename boost::transform_iterator<Transformer, typename IndexContainer::const_iterator, value_type> iterator;
+    typedef typename boost::transform_iterator<ConstTransformer, typename IndexContainer::const_iterator> const_iterator;
+
+    iterator begin(){return iterator(indexes.begin(), Transformer(begin_it));}
+    iterator end(){return iterator(indexes.end(), Transformer(begin_it));}
+
+    const_iterator begin() const {return const_iterator(indexes.begin(), ConstTransformer(begin_it));}
+    const_iterator end() const {return const_iterator(indexes.end(), ConstTransformer(begin_it));}
+
+    /// Used for serialization
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & indexes & begin_it;
+    }
+};
+
+/// Functor Identity for an int
+struct Identity {int operator()(int i){return i;}};
+
+/// Basic index that will give back the data in the same order as the subset
+template<class Type>
+class Index : public BaseIndex<Type, std::vector<int>, Identity >{
+public:
+    typedef Type value_type;
     Index(){}
+
+    /** Builds the index from a range
+      * It will iterate on the whole range
+      */
     template<class Iterator>
     Index(Iterator begin, Iterator end) {
         this->begin_it = &(*begin);
         BOOST_FOREACH(value_type & element, std::make_pair(begin, end)) {
-            indexes.push_back(&element - this->begin_it);//on stock la différence entre les deux pointeurs
+            // We keep the difference between two pointers
+            this->indexes.push_back(&element - this->begin_it);
         }
     }
 
-    iterator begin(){return iterator(indexes.begin(), Transformer(begin_it));}
-    iterator end(){return iterator(indexes.end(), Transformer(begin_it));}
-    const_iterator begin() const {return const_iterator(indexes.begin(), Transformer(begin_it));}
-    const_iterator end() const {return const_iterator(indexes.end(), Transformer(begin_it));}
-
+    /// Gets the n-th element
     value_type & operator[](int idx){
-        return *(begin_it + idx);
-    }
-
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & indexes & begin_it;
+        return *(this->begin_it + idx);
     }
 };
 
+/// Functor that given a pair, returns the second element
+struct GetSecond{template<class Pair> typename Pair::second_type operator()(Pair & p){return p.second;}};
+
+/** Index to access any element by a string */
 template<class Type>
-class StringIndex {
-    typedef Type value_type;
-
-    typedef std::map<std::string, int> map_t;
-
-    struct Transformer{
-        typedef value_type & result_type;
-        typedef result_type result;
-        value_type* begin;
-
-        Transformer(value_type * begin){this->begin = begin;}
-
-        value_type & operator()(typename map_t::value_type elem) const {
-            return *(begin + elem.second);
-        }
-    };
-
-    value_type* begin_it;
-
-    map_t indexes;
-
+class StringIndex: public BaseIndex<Type, std::map<std::string, int>, GetSecond >{
 public:
-    typedef typename boost::transform_iterator<Transformer, map_t::iterator> iterator;
-    typedef typename boost::transform_iterator<Transformer, map_t::const_iterator> const_iterator;
-
+    typedef Type value_type;
     StringIndex() {}
+
+    /** Builds the index from a range
+      * It will iterate on the whole range
+      */
     template<class Iterator>
     StringIndex(Iterator begin, Iterator end, typename std::string value_type::* attr) {
         this->begin_it = &(*begin);
         BOOST_FOREACH(value_type & element, std::make_pair(begin, end)) {
-            indexes[element.*attr] = &element - this->begin_it;//on stock la différence entre les deux pointeurs
+            this->indexes[element.*attr] = &element - this->begin_it;//on stock la différence entre les deux pointeurs
         }
     }
 
-    iterator begin(){return iterator(indexes.begin(), Transformer(begin_it));}
-    iterator end(){return iterator(indexes.end(), Transformer(begin_it));}
-    const_iterator begin() const {return const_iterator(indexes.begin(), Transformer(begin_it));}
-    const_iterator end() const {return const_iterator(indexes.end(), Transformer(begin_it));}
-They didn’t know it was impossible, so they did it. (Mark Twain)
+    /// Get an element with the key
     value_type & operator[](const std::string & key){
-        map_t::iterator it = indexes.find(key);
-        if(it == indexes.end()){
+        std::map<std::string, int>::iterator it = this->indexes.find(key);
+        if(it == this->indexes.end()){
             throw std::out_of_range("Key not found");
         }
-        return *(begin_it + it->second);
-    }
-
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & indexes & begin_it;
+        return *(this->begin_it + it->second);
     }
 };
 
-class City; class Stop;
+/** An index that saves a Join
+  * As a join is made of n tables, we store
+  * – a boost::fusion::vector<t1*,t2*,...> to the pointer of the first element of each table
+  * – a vector of boost::array<int, n> for the offset of each element to the first element
+  */
 template<class Type>
 class JoinIndex {
     typedef Type value_type;
@@ -365,15 +406,25 @@ class JoinIndex {
     begin_it_t begin_it;
     std::vector<idx_vector> indexes;
 
+    /** Functor that stores a boost::fusion::vector of n pointer (of arbitrary types)
+      * It takes a boost::array of n ints and
+      * It returns a boost::fusion::vector of references to n elements that represent one row of the join
+      */
     struct Transformer{
         typedef typename boost::mpl::transform<value_type, typename boost::reference_wrapper<typename boost::remove_pointer<typename boost::mpl::_1> > >::type result_type;
         begin_it_t begin;
 
-        struct get_pointer{
+        /** Given a pointer and an idx, it returns the a wrapped reference to the element
+          * It is used by a boost::fusion::transform an applied to boost::fusion::vector
+          */
+        struct get_element{
             template <typename Sig> struct result;
 
+            /** We need to get rid of any decorator (const, &, *)
+              * The return type is a boost::ref wrapper around the data
+              */
             template <typename T1, typename T2>
-            struct result<get_pointer(T1, T2)> {typedef typename boost::reference_wrapper<
+            struct result<get_element(T1, T2)> {typedef typename boost::reference_wrapper<
                                                 typename boost::remove_pointer<
                                                 typename boost::remove_const<
                                                 typename boost::remove_reference<T1>::type
@@ -381,16 +432,18 @@ class JoinIndex {
                                                 >::type
                                                 > type; };
             template<class T1, class T2>
-            typename result<get_pointer(T1,T2)>::type operator()(T1 begin, T2 position) const {return boost::ref(*(begin + position));}
+            typename result<get_element(T1,T2)>::type operator()(T1 begin, T2 position) const {return boost::ref(*(begin + position));}
         };
         
         Transformer(begin_it_t begin){
             this->begin = begin;
         }
-        
+
+        /// We apply get_element to every element of the boost::fusion::vector to get the row of a join
         result_type operator()(idx_vector diff) const {
-            return boost::fusion::transform(begin, diff, get_pointer());
+            return boost::fusion::transform(begin, diff, get_element());
         }
+
         template<class Archive> void serialize(Archive & ar, const unsigned int ) {
             ar & indexes & begin_it;
         }
@@ -401,6 +454,7 @@ class JoinIndex {
     typedef typename boost::transform_iterator<Transformer, typename std::vector<idx_vector>::iterator> iterator;
     typedef typename boost::transform_iterator<Transformer, typename std::vector<idx_vector>::const_iterator> const_iterator;
 
+    /** Functor that returns and int that is equal to the offset of two pointers */
     struct ptr_diff{
         typedef int result_type;
         template<class T1>
@@ -409,6 +463,9 @@ class JoinIndex {
 
     JoinIndex(){}
 
+    /** Builds a Join index from a range.
+      * It iterates over all rows of the join
+      */
     template<class Iterator>
     JoinIndex(Iterator begin, Iterator end) {
         this->begin_it = *begin;
@@ -427,25 +484,34 @@ class JoinIndex {
     }
  };
 
-
+/// Helper function that builds an index of a container
 template<class Type>
 Index<typename Type::value_type> make_index(const Type & t) {
     return Index<typename Type::value_type>(t.begin(), t.end());
 }
 
+/// Helper function that builds a stringIndex of a container on one attribute
 template<class Type>
 StringIndex<typename Type::value_type> make_string_index(Type & t, typename std::string Type::value_type::*attr) {
     return StringIndex<typename Type::value_type>(t.begin(), t.end(), attr);
 }
 
+/// Helper function that builds a JoinIndex of a join
 template<class Type>
 JoinIndex<typename Type::value_type> make_join_index(Type & t){
     return JoinIndex<typename Type::value_type>(t.begin(), t.end());
 }
 
+/** An iterator on a join
+  * To allow to chain multiple joins, it is templated by Head:Tail
+  * However, when dereferenced, a row is flatten into a single boost::fusion::vector instead of this recursive structure
+  *
+  * It is just a lazy iterator: there is no iteration on the data until iterates on it
+  */
 template<class Head, class Tail, class Functor>
 class join_iterator{
 public:
+    /// Output type, a boost::fusion::vector that is the concatenation of Tail and Head
     typedef typename boost::fusion::result_of::as_vector< typename boost::fusion::result_of::push_front<typename Tail::value_type, typename Head::value_type*>::type>::type value_type;
     typedef size_t difference_type;
     typedef value_type* pointer;
@@ -456,6 +522,9 @@ public:
     Tail begin2, current2, end2;
     Functor f;
 
+    /** We build a join_iterator from two ranges and a functor
+      * The functor's operator() must return true if two lines shall be joined
+      */
     join_iterator(typename Head::iterator c1_begin, typename Head::iterator c1_end,
                   Tail c2_begin, Tail c2_end,
                   const Functor & f) :
@@ -471,15 +540,17 @@ public:
             increment();
     }
 
-    value_type dereference() const { 
+    /// The dereference returns a boost::fusion::vector of pointers
+    value_type operator*() const {
         return boost::fusion::push_front(*current2, &(*current1));
     }
 
-    bool equal(const join_iterator & other) const { return other.current1 == current1 && other.current2 == current2;}
+    bool operator==(const join_iterator & other) const { return other.current1 == current1 && other.current2 == current2;}
 
-    // Deux manières de sortir de la fonction :
-    // 1) on a atteint la fin (current1==end1 && current2==end2)
-    // 2) on a trouvé un cas qui valide le prédicat
+    /* To get next value: to ways to get out of the function
+     * 1) we reached the end (current1==end1 && current2==end2)
+     * 2) we got a couple validating the functor
+     */
     void increment(){
         ++current2;//on passe a l'élément suivant, sinon on reste toujours bloqué sur la premiére solution
         if(current2 == end2) {
@@ -496,27 +567,12 @@ public:
         }
     }
 
-    value_type operator*() const {
-        return dereference();
-    }
-
-    bool operator==(const join_iterator & other) const {
-        return equal(other);
-    }
-
-    bool operator!=(const join_iterator & other) const {
-        return !equal(other);
-    }
-
-    void operator++(int){
-        increment();
-    }
-
     join_iterator<Head, Tail, Functor>& operator++(){
         increment();
         return *this;
     }
 };
+
 
 template<class Head>
 class join_iterator<Head, boost::fusion::nil, boost::fusion::nil> {
