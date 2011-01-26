@@ -1,28 +1,23 @@
 #pragma once
 #include "type.h"
 #include "indexes.h"
+#include "fusion_vector_serialize.h"
 
 class Data{
-    public:
-    Container<ValidityPattern> validity_patterns;
-
-    Container<Line> lines;
-
-    Container<Route> routes;
-
-    Container<VehicleJourney> vehicle_journeys;
-
-    Container<StopPoint> stop_points;
-
-    Container<StopArea> stop_areas;
-
+public:
+    std::vector<ValidityPattern> validity_patterns;
+    std::vector<Line> lines;
+    std::vector<Route> routes;
+    std::vector<VehicleJourney> vehicle_journeys;
+    std::vector<StopPoint> stop_points;
+    std::vector<StopArea> stop_areas;
     std::vector<StopTime> stop_times;
 
     /// Permet de retrouver tous les stoppoints d'un stop area
-    Index1ToN<StopArea, StopPoint> stoppoint_of_stoparea;
+    //Index1ToN<StopArea, StopPoint> stoppoint_of_stoparea;
 
     /// Les stop areas triés par leur nom
-    SortedIndex<StopArea, std::string> stop_area_by_name;
+    //SortedIndex<StopArea, std::string> stop_area_by_name;
 
     public:
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
@@ -31,7 +26,7 @@ class Data{
       */
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & validity_patterns & lines & stop_points & stop_areas & stop_times & routes 
-            & vehicle_journeys & stoppoint_of_stoparea & stop_area_by_name;
+            & vehicle_journeys ;//& stoppoint_of_stoparea & stop_area_by_name;
     }
 
     /** Initialise tous les indexes
@@ -49,6 +44,12 @@ class Data{
         return find(attribute, std::string(str));
     }
 
+    /** Retourne le conteneur associé au type
+      *
+      * Cette fonction est surtout utilisée en interne
+      */
+    template<class Type> std::vector<Type> & get();
+
     /** Retrouve un élément par un attribut arbitraire
       *
       * exemple : find<StopPoint>.find(&StopPoint::name, "Gare du nord")
@@ -56,19 +57,13 @@ class Data{
     template<class RequestedType, class AttributeType>
     std::vector<RequestedType*> find(AttributeType RequestedType::* attribute, AttributeType str){
         std::vector<RequestedType *> result;
-        BOOST_FOREACH(RequestedType & item, get<RequestedType>().items){
+        BOOST_FOREACH(RequestedType & item, get<RequestedType>()){
             if(item.*attribute == str){
                 result.push_back(&item);
             }
         }
         return result;
     }
-
-    /** Retourne le conteneur associé au type
-      *
-      * Cette fonction est surtout utilisée en interne
-      */
-    template<class Type> Container<Type> & get();
 
     /** Sauvegarde la structure de fichier au format texte
       *

@@ -1,5 +1,6 @@
 #pragma once
 #include "data.h"
+#include <boost/unordered_map.hpp>
 
 /** Lit les fichiers au format General Transit Feed Specifications
   *
@@ -10,6 +11,13 @@ private:
     std::string path;///< Chemin vers les fichiers
     boost::gregorian::date start;///< Premier jour où les données sont valables
     Data data;
+
+    // Plusieurs maps pour savoir à quel position est quel objet identifié par son ID GTFS
+    boost::unordered_map<std::string, int> stop_map;
+    boost::unordered_map<std::string, int> route_map;
+    boost::unordered_map<std::string, int> line_map;
+    boost::unordered_map<std::string, int> vp_map;
+    boost::unordered_map<std::string, int> vj_map;
 public:
     /// Constructeur qui prend en paramètre le chemin vers les fichiers
     GtfsParser(const std::string & path, const std::string & start_date);

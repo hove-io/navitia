@@ -36,6 +36,7 @@ struct StopTime;
  * Classe servant de container au type T
  * permet via un seul objet d'obtenir un item via sont idx, ou sont externalCode
  */
+/*
 template<class T>
 class Container{
 public:
@@ -114,26 +115,26 @@ public:
     int size() const {
         return items.size();
     }
-
+*/
     /** Permet de filtrer les éléments selon un functor
       *
       * Retourne une paire d'iterateurs vers les éléments filtrés
       */
-    template<class Functor>
+  /*  template<class Functor>
     Subset<boost::filter_iterator<Functor, iterator> >
             filter(Functor f){
         return Subset<iterator>(begin(), end()).filter(f);
     }
-
+*/
     /** Filtre selon la valeur d'un attribut */
-    template<class Attribute, class Param>
+  /*  template<class Attribute, class Param>
     Subset<boost::filter_iterator<is_equal<Attribute, T>, iterator> >
             filter(Attribute T::*attr, Param value ) {
         return Subset<iterator>(begin(), end()).filter(attr, value);
     }
-
+*/
     /** Filtre selon la valeur d'un attribut qui matche une regex */
-    Subset<boost::filter_iterator<matches<T>, iterator> >
+  /*  Subset<boost::filter_iterator<matches<T>, iterator> >
              filter_match(std::string T::*attr, const std::string & str ) {
          return Subset<iterator>(begin(), end()).filter_match(attr, str);
     }
@@ -149,7 +150,7 @@ public:
                  return Subset<iterator>(begin(), end()).order(std::less<T>());
     }
 };
-
+*/
 struct Country {
     std::string name;
     int main_city_idx;
