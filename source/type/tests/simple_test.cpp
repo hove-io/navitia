@@ -23,6 +23,19 @@ BOOST_AUTO_TEST_CASE(test_is_equal_string){
 }
 
 
+BOOST_AUTO_TEST_CASE(test_attr_compare){
+    attribute_cmp_t<Stop, int> attr_cmp = attribute_cmp(&Stop::id);
+    BOOST_CHECK(attr_cmp(Stop(0, "foo", "bar"), Stop(1, "foo", "bar")));
+    BOOST_CHECK(!attr_cmp(Stop(1, "foo", "bar"), Stop(0, "foo", "bar")));
+}
+
+BOOST_AUTO_TEST_CASE(test_matches_fonctor){
+    matches<Stop> match(&Stop::name, "fo?o");
+    BOOST_CHECK(match(Stop(0, "foo", "bar")));
+    BOOST_CHECK(match(Stop(0, "fo", "bar")));
+    BOOST_CHECK(!match(Stop(0, "fooooo", "bar")));
+    BOOST_CHECK(!match(Stop(0, "azerty", "bar")));
+}
 
 BOOST_AUTO_TEST_CASE(test_order){
     MyConfig f;
