@@ -16,6 +16,8 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
     SET(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra -std=c++0x")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
+ENABLE_TESTING()
+
 add_subdirectory (WS_commons)
 add_subdirectory (http_lib)
 add_subdirectory (gateway)
