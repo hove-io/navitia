@@ -1,4 +1,4 @@
-FIND_PACKAGE(Boost 1.40.0 COMPONENTS serialization date_time regex REQUIRED)
+FIND_PACKAGE(Boost 1.40.0 COMPONENTS serialization date_time regex thread REQUIRED)
 link_directories ( ${Boost_LIBRARY_DIRS} )
 include_directories ( ${Boost_INCLUDE_DIRS} )
  

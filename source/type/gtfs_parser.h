@@ -1,6 +1,11 @@
 #pragma once
 #include "data.h"
 #include <boost/unordered_map.hpp>
+#include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition_variable.hpp>
+#include <queue>
+
 
 /** Lit les fichiers au format General Transit Feed Specifications
   *
@@ -40,6 +45,20 @@ public:
     /// Parse le fichier stop_times.txt
     /// Contient les horaires
     void parse_stop_times();
+
+    /// Fonction pour faire un traitement multithread de stop_times
+    void parse_stop_times_worker(int id_c, int arrival_c, int departure_c, int stop_c, int stop_seq_c, int pickup_c, int drop_c);
+    /// Pour synchroniser l'accès à la structure data
+    boost::mutex data_mutex;
+    /// Pour synchroniser l'accès à la queue
+    boost::mutex queue_mutex;
+    /// Est-ce qu'on a fini de parser les stop_times
+    bool parse_ended;
+    /// La queue des lignes à traiter
+    std::queue<std::string> queue;
+    /// La variable qui permet de synchroniser les threads
+    boost::condition_variable cond;
+
 
     /// Parse le fichier transfers.txt
     /// Contient les correspondances entre arrêts
