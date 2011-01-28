@@ -80,12 +80,23 @@ is_equal_t<Attribute, T> is_equal(Attribute T::*attr, const Attribute & ref){
   * The attribute must be a string
   */
 template<class T>
-struct matches {
+struct matches_t {
     const boost::regex e;
     std::string T::*attr;
-    matches(std::string T::*attr, const std::string & e) : e(e), attr(attr){}
+    matches_t(std::string T::*attr, const std::string & e) : e(e,boost::regbase::normal | boost::regbase::icase), attr(attr){}
     bool operator()(const T & elt) const {return boost::regex_match(elt.*attr, e );}
 };
+
+/** Helper function to build matches_t functor
+  *
+  * Example: auto func = matches(&StopArea::name, ".*Lyon.*")
+  */
+template<class T>
+matches_t<T> matches(std::string T::*attr, const std::string & e) {
+    return matches_t<T>(attr, e);
+}
+
+
 
 /** Functor that compares if two attributes of two classes are equal
   * Used for joins
@@ -179,9 +190,9 @@ public:
     }
 
     /// Returns a new subset filtered where the attribute matches a regular expression
-    Subset<boost::filter_iterator<matches<value_type>, iterator> >
+    Subset<boost::filter_iterator<matches_t<value_type>, iterator> >
             filter_match(std::string value_type::*attr, const std::string & str ) {
-        return filter(matches<value_type>(attr, str));
+        return filter(matches(attr, str));
     }
 
     /// Returns a new subset where the attribute is equal to a value
@@ -611,6 +622,16 @@ public:
     }
 };
 
+template<class T>
+struct remove_subset{
+    typedef T type;
+};
+
+template<class T>
+struct remove_subset< Subset<T> >{
+    typedef T type;
+};
+
 template<class Container1, class Container2, class Functor>
 Subset<join_iterator<Container1, join_iterator<Container2,typename boost::fusion::nil,typename boost::fusion::nil>, Functor> >
         make_join(Container1 & c1, Container2 & c2, const Functor & f) {
@@ -671,18 +692,51 @@ Subset<join_iterator<Subset<Container1>, join_iterator<Subset<Container2>,typena
 template<class Container>
 Subset<join_iterator<Container,typename boost::fusion::nil,typename boost::fusion::nil> >
         make_join(Container & c) {
-    auto result = make_subset (
+    return make_subset (
             join_iterator<Container,typename boost::fusion::nil,typename boost::fusion::nil>(c.begin(), c.end()),
             join_iterator<Container,typename boost::fusion::nil,typename boost::fusion::nil>(c.end(), c.end())
             );
-    return result;
 }
 
-template<class Container>
-Subset<join_iterator<Subset<Container>, typename boost::fusion::nil,typename boost::fusion::nil> >
-        make_join(Subset<Container> ss){
-    return make_subset (
-                join_iterator<Subset<Container>, typename boost::fusion::nil,typename boost::fusion::nil>(ss.begin(), ss.end()),
-                join_iterator<Subset<Container>, typename boost::fusion::nil,typename boost::fusion::nil>(ss.end(), ss.end())
-                );
+
+template<class T1, class T2>
+class indexed_join_iterator{
+public:
+    typedef typename boost::fusion::vector<typename T1::pointer, typename T2::pointer> value_type;
+    typedef size_t difference_type;
+    typedef value_type* pointer;
+    typedef value_type reference;
+    typedef std::forward_iterator_tag iterator_category;
+    typename T1::iterator current1, end1;
+    typename T2::iterator begin2;
+    int T1::value_type::*attr;
+
+    indexed_join_iterator(typename T1::iterator c1_begin, typename T2::iterator c2_begin, int T1::value_type::*attr) :
+                    current1(c1_begin), begin2(c2_begin), attr(attr) {
+    }
+
+    /// The dereference returns a boost::fusion::vector of pointers
+    value_type operator*() const {
+        int idx = (*current1).*attr;
+        return value_type(&(*current1), &(*(begin2 + idx)));
+    }
+
+    bool operator==(const indexed_join_iterator & other) const { return other.current1 == current1;}
+
+    void increment(){
+        ++current1;
+    }
+
+    indexed_join_iterator<T1, T2>& operator++(){
+        increment();
+        return *this;
+    }
+};
+
+template<class T1, class T2>
+Subset<indexed_join_iterator<T1, T2> > make_indexed_join(T1 & t1, T2 & t2, int T1::value_type::*attr) {
+    return make_subset(
+            indexed_join_iterator<T1, T2>(t1.begin(), t2.begin(), attr),
+            indexed_join_iterator<T1, T2>(t1.end(), t2.end(), attr)
+            );
 }

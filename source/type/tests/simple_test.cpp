@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(test_attr_compare){
 }
 
 BOOST_AUTO_TEST_CASE(test_matches_fonctor){
-    matches<Stop> match(&Stop::name, "fo?o");
+    matches_t<Stop> match(&Stop::name, "fo?o");
     BOOST_CHECK(match(Stop(0, "foo", "bar")));
     BOOST_CHECK(match(Stop(0, "fo", "bar")));
     BOOST_CHECK(!match(Stop(0, "fooooo", "bar")));

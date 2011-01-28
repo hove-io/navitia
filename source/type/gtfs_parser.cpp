@@ -309,7 +309,7 @@ void GtfsParser::parse_trips() {
             route.line_idx = line_idx;
 
             boost::unordered_map<std::string, int>::iterator vp_it = vp_map.find(elts[service_c]);
-            if(vp_it != vp_map.end()) {
+            if(vp_it == vp_map.end()) {
                 ignored++;
             }
             else {

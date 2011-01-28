@@ -8,6 +8,10 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filter/bzip2.hpp>
+#include <boost/iostreams/filter/zlib.hpp>
 
 namespace pt = boost::posix_time;
 
@@ -24,7 +28,7 @@ int main(int, char **) {
     std::cout << "Benchmarks de parsage GTFS, Sérialisation et Indexes" << std::endl << std::endl;
     std::cout << "Chargement des données GTFS de l'IdF" << std::endl;
     pt::ptime start(pt::microsec_clock::local_time());
-    GtfsParser p("/home/tristram/mumoro/idf_gtfs", "20101101");
+    /*GtfsParser p("/home/tristram/mumoro/idf_gtfs", "20101101");
     Data data = p.getData();
     pt::ptime end(pt::microsec_clock::local_time());
     std::cout << "Durée pour lire les données de l'IdF depuis le GTFS : " << (end-start).total_milliseconds() << " ms" << std::endl << std::endl;
@@ -51,7 +55,7 @@ int main(int, char **) {
     std::cout << "Durée pour parcourir tous les stop times via un indexe et faire un test bidon (nombre d'horaires entre 9h et 19h) : " << (end-start).total_milliseconds() << " ms (" << count << "/" << total_count<< ")"<< std::endl;
 
 
-start = pt::microsec_clock::local_time();
+    start = pt::microsec_clock::local_time();
     {
         std::ofstream ofs("data.nav");
         boost::archive::binary_oarchive oa(ofs);
@@ -65,29 +69,115 @@ start = pt::microsec_clock::local_time();
         std::ifstream ifs("data.nav");
         boost::archive::binary_iarchive ia(ifs);
         Data data2;
-        decltype(st_by_dep_idx) index;
         ia >> data2;
+        BOOST_ASSERT(data2.stop_times.size() == data.stop_times.size());
+        BOOST_ASSERT(data2.stop_areas.size() == data.stop_areas.size());
+        BOOST_ASSERT(data2.stop_points.size() == data.stop_points.size());
     }
+    end = pt::microsec_clock::local_time();
     std::cout << "Durée pour dé-sérialiser les données uniqumeent : " << (end-start).total_milliseconds() << " ms" << std::endl;
 
     start = pt::microsec_clock::local_time();
     {
-        std::ofstream ofs("data2.nav");
-        boost::archive::binary_oarchive oa(ofs);
-        oa << data << st_by_dep_idx;
+        std::ofstream ofs("data.nav.gz",std::ios::out|std::ios::binary|std::ios::trunc);
+        boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
+        out.push(boost::iostreams::gzip_compressor());
+        out.push(ofs);
+        boost::archive::binary_oarchive oa(out);
+        oa << data;
     }
     end = pt::microsec_clock::local_time();
-    std::cout << "Durée pour sérialiser les données et l'indexe sur stop_times : " << (end-start).total_milliseconds() << " ms" << std::endl;
+    std::cout << "Durée pour sérialiser les données uniquement avec compression gz : " << (end-start).total_milliseconds() << " ms" << std::endl;
 
     start = pt::microsec_clock::local_time();
     {
-        std::ifstream ifs("data2.nav");
-        boost::archive::binary_iarchive ia(ifs);
+        std::ifstream ifs("data.nav.gz", std::ios::in|std::ios::binary);
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_decompressor());
+        in.push(ifs);
         Data data2;
-        decltype(st_by_dep_idx) index;
-        ia >> data2 >> index;
+        boost::archive::binary_iarchive ia(in);
+        ia >> data2;
+        BOOST_ASSERT(data2.stop_times.size() == data.stop_times.size());
+        BOOST_ASSERT(data2.stop_areas.size() == data.stop_areas.size());
+        BOOST_ASSERT(data2.stop_points.size() == data.stop_points.size());
     }
     end = pt::microsec_clock::local_time();
-    std::cout << "Durée pour dé-sérialiser les données et l'indexe' : " << (end-start).total_milliseconds() << " ms" << std::endl;
+    std::cout << "Durée pour dé-sérialiser les données avec compression gz : " << (end-start).total_milliseconds() << " ms" << std::endl;
 
+    start = pt::microsec_clock::local_time();
+    {
+        std::ofstream ofs("data.nav.Z",std::ios::out|std::ios::binary|std::ios::trunc);
+        boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
+        out.push(boost::iostreams::zlib_compressor());
+        out.push(ofs);
+        boost::archive::binary_oarchive oa(out);
+        oa << data;
+    }
+    end = pt::microsec_clock::local_time();
+    std::cout << "Durée pour sérialiser les données uniquement avec compression Z : " << (end-start).total_milliseconds() << " ms" << std::endl;
+
+    start = pt::microsec_clock::local_time();
+    {
+        std::ifstream ifs("data.nav.Z", std::ios::in|std::ios::binary);
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
+        in.push(boost::iostreams::zlib_decompressor());
+        in.push(ifs);
+        Data data2;
+        boost::archive::binary_iarchive ia(in);
+        ia >> data2;
+        BOOST_ASSERT(data2.stop_times.size() == data.stop_times.size());
+        BOOST_ASSERT(data2.stop_areas.size() == data.stop_areas.size());
+        BOOST_ASSERT(data2.stop_points.size() == data.stop_points.size());
+    }
+    end = pt::microsec_clock::local_time();
+    std::cout << "Durée pour dé-sérialiser les données avec compression Z : " << (end-start).total_milliseconds() << " ms" << std::endl;
+
+    start = pt::microsec_clock::local_time();
+    {
+        std::ofstream ofs("data.nav.bz2",std::ios::out|std::ios::binary|std::ios::trunc);
+        boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
+        out.push(boost::iostreams::bzip2_compressor());
+        out.push(ofs);
+        boost::archive::binary_oarchive oa(out);
+        oa << data;
+    }
+    end = pt::microsec_clock::local_time();
+    std::cout << "Durée pour sérialiser les données uniquement avec compression bz2 : " << (end-start).total_milliseconds() << " ms" << std::endl;
+
+    start = pt::microsec_clock::local_time();
+    {
+        std::ifstream ifs("data.nav.bz2", std::ios::in|std::ios::binary);
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
+        in.push(boost::iostreams::bzip2_decompressor());
+        in.push(ifs);
+        Data data2;
+        boost::archive::binary_iarchive ia(in);
+        ia >> data2;
+        BOOST_ASSERT(data2.stop_times.size() == data.stop_times.size());
+        BOOST_ASSERT(data2.stop_areas.size() == data.stop_areas.size());
+        BOOST_ASSERT(data2.stop_points.size() == data.stop_points.size());
+    }
+    end = pt::microsec_clock::local_time();
+    std::cout << "Durée pour dé-sérialiser les données avec compression bz2 : " << (end-start).total_milliseconds() << " ms" << std::endl;*/
+
+    std::ifstream ifs("data.nav");
+    boost::archive::binary_iarchive ia(ifs);
+    Data data;
+    ia >> data;
+
+    auto lyon = filter(data.stop_areas, matches(&StopArea::name, ".*Lyon.*"));
+    auto lyon_sp = make_indexed_join(data.stop_points, data.stop_areas, &StopPoint::stop_area_idx);
+    BOOST_FOREACH(auto l, lyon_sp){
+        std::cout  << join_get<StopPoint>(l).name << std::endl;
+    }
+    /*std::cout << " ----  " << std::endl;
+    auto sp_gare_de_lyon = make_indexed_join(data.stop_points,
+                                     filter(data.stop_areas, matches(&StopArea::name, "Gare de lyon")),
+                                     &StopPoint::stop_area_idx
+                                     )
+    auto lyon_sp = filter(data.stop_points, matches(&StopPoint::, ".*(L|l)yon.*"));
+    BOOST_FOREACH(auto sp, lyon_sp){
+        std::cout  << sp.name << std::endl;
+    }*/
 }
