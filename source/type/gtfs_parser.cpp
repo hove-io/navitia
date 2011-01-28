@@ -413,6 +413,7 @@ void GtfsParser::parse_stop_times_worker(int id_c, int arrival_c, int departure_
         std::string line = queue.back();
         queue.pop();
         lock.unlock();
+
         boost::trim(line);
         Tokenizer tok(line);
         std::vector<std::string> elts(tok.begin(), tok.end());

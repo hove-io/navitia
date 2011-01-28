@@ -2,6 +2,7 @@
 #include "type.h"
 #include "indexes.h"
 #include "fusion_vector_serialize.h"
+#include "boost/serialization/array.hpp"
 
 class Data{
 public:
@@ -13,20 +14,14 @@ public:
     std::vector<StopArea> stop_areas;
     std::vector<StopTime> stop_times;
 
-    /// Permet de retrouver tous les stoppoints d'un stop area
-    //Index1ToN<StopArea, StopPoint> stoppoint_of_stoparea;
-
-    /// Les stop areas triés par leur nom
-    //SortedIndex<StopArea, std::string> stop_area_by_name;
-
     public:
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
       *
       * Elle est appelée par boost et pas directement
       */
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & validity_patterns & lines & stop_points & stop_areas & stop_times & routes 
-            & vehicle_journeys ;//& stoppoint_of_stoparea & stop_area_by_name;
+        ar & validity_patterns & lines & stop_points & stop_areas & stop_times & routes
+            & vehicle_journeys ;
     }
 
     /** Initialise tous les indexes
