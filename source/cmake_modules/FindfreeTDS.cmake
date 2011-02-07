@@ -1,5 +1,5 @@
 IF(WIN32)
-  FIND_PATH(FreeTDS_INCLUDE_DIR sqlfront.h PATHS D:/freeTDS/include c:/freeTDS/include)
+  FIND_PATH(FreeTDS_INCLUDE_DIR sqlfront.h PATHS D:/freeTDS/include c:/freeTDS/include "${LIB_PREFIX}FreeTDS/include")
   IF(CMAKE_CFG_INTDIR MATCHES "Debug")
     SET(FreeTDS_LIBRARY_DIR ${FreeTDS_INCLUDE_DIR}/../lib-debug)
   else(CMAKE_CFG_INTDIR MATCHES "Debug")
