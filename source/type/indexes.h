@@ -81,7 +81,7 @@ is_equal_t<Attribute, T> is_equal(Attribute T::*attr, const Attribute & ref){
   */
 template<class T>
 struct matches_t {
-    const boost::regex e;
+    boost::regex e;
     std::string T::*attr;
     matches_t(std::string T::*attr, const std::string & e) : e(e,boost::regbase::normal | boost::regbase::icase), attr(attr){}
     bool operator()(const T & elt) const {return boost::regex_match(elt.*attr, e );}
@@ -130,6 +130,8 @@ struct attribute_cmp_t {
     A T::*attr;
     attribute_cmp_t(A T::*attr) : attr(attr) {}
     bool operator()(const T & t1, const T & t2){ return t1.*attr <t2.*attr;}
+    bool operator()(const T & t, const A & a){ return t.*attr < a;}
+    bool operator()(const A & a, const T & t){ return a < t.*attr;}
 };
 
 /** Helper function to use attribute_cmp_t
@@ -305,6 +307,7 @@ public:
         /// Functor that given an index returns the int
         mutable GetIntFunctor get_int;
         value_type* begin;
+        Transformer() {}
         Transformer(value_type * begin){this->begin = begin;}
         value_type & operator()(typename IndexContainer::value_type idx) const {
             return *(begin + get_int(idx));
@@ -316,6 +319,7 @@ public:
         /// Functor that given an index returns the int
         mutable GetIntFunctor get_int;
         value_type* begin;
+        ConstTransformer(){}
         ConstTransformer(value_type * begin){this->begin = begin;}
         const value_type & operator()(typename IndexContainer::value_type idx) const {
             return *(begin + get_int(idx));
@@ -327,8 +331,8 @@ public:
     /** We use boost::transform iterator to create an iterator that will automatically
       * get the reference of the element from the start pointer and the difference
       */
-    typedef typename boost::transform_iterator<Transformer, typename IndexContainer::const_iterator, value_type> iterator;
-    typedef typename boost::transform_iterator<ConstTransformer, typename IndexContainer::const_iterator> const_iterator;
+    typedef typename boost::transform_iterator<Transformer, typename IndexContainer::const_iterator, result_type> iterator;
+    typedef typename boost::transform_iterator<ConstTransformer, typename IndexContainer::const_iterator, const result_type> const_iterator;
 
     iterator begin(){return iterator(indexes.begin(), Transformer(begin_it));}
     iterator end(){return iterator(indexes.end(), Transformer(begin_it));}
@@ -600,8 +604,8 @@ public:
     {}
 
     value_type operator*() const{
-        typename Head::value_type & result = *current;
-        return value_type(&result);
+        //typename Head::value_type & result = *current;
+        return value_type(&(*current));
     }
 
     join_iterator & operator++(){
@@ -698,45 +702,3 @@ Subset<join_iterator<Container,typename boost::fusion::nil,typename boost::fusio
             );
 }
 
-
-template<class T1, class T2>
-class indexed_join_iterator{
-public:
-    typedef typename boost::fusion::vector<typename T1::pointer, typename T2::pointer> value_type;
-    typedef size_t difference_type;
-    typedef value_type* pointer;
-    typedef value_type reference;
-    typedef std::forward_iterator_tag iterator_category;
-    typename T1::iterator current1, end1;
-    typename T2::iterator begin2;
-    int T1::value_type::*attr;
-
-    indexed_join_iterator(typename T1::iterator c1_begin, typename T2::iterator c2_begin, int T1::value_type::*attr) :
-                    current1(c1_begin), begin2(c2_begin), attr(attr) {
-    }
-
-    /// The dereference returns a boost::fusion::vector of pointers
-    value_type operator*() const {
-        int idx = (*current1).*attr;
-        return value_type(&(*current1), &(*(begin2 + idx)));
-    }
-
-    bool operator==(const indexed_join_iterator & other) const { return other.current1 == current1;}
-
-    void increment(){
-        ++current1;
-    }
-
-    indexed_join_iterator<T1, T2>& operator++(){
-        increment();
-        return *this;
-    }
-};
-
-template<class T1, class T2>
-Subset<indexed_join_iterator<T1, T2> > make_indexed_join(T1 & t1, T2 & t2, int T1::value_type::*attr) {
-    return make_subset(
-            indexed_join_iterator<T1, T2>(t1.begin(), t2.begin(), attr),
-            indexed_join_iterator<T1, T2>(t1.end(), t2.end(), attr)
-            );
-}

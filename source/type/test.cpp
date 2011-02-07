@@ -28,9 +28,11 @@ int main(int, char **) {
     std::cout << "Benchmarks de parsage GTFS, Sérialisation et Indexes" << std::endl << std::endl;
     std::cout << "Chargement des données GTFS de l'IdF" << std::endl;
     pt::ptime start(pt::microsec_clock::local_time());
-    /*GtfsParser p("/home/tristram/mumoro/idf_gtfs", "20101101");
+    pt::ptime end;
+
+    GtfsParser p("/home/tristram/mumoro/idf_gtfs", "20101101");
     Data data = p.getData();
-    pt::ptime end(pt::microsec_clock::local_time());
+    end = pt::microsec_clock::local_time();
     std::cout << "Durée pour lire les données de l'IdF depuis le GTFS : " << (end-start).total_milliseconds() << " ms" << std::endl << std::endl;
 
     start = pt::microsec_clock::local_time();
@@ -48,11 +50,24 @@ int main(int, char **) {
     int total_count = 0;
     BOOST_FOREACH(StopTime tp, st_by_dep_idx){
         total_count++;
-        if(tp.arrival_time > 9*3600 && tp.arrival_time < 19*3600)
+        if(tp.departure_time >= 11*3600 && tp.departure_time <= 12*3600)
             count++;
     }
     end = pt::microsec_clock::local_time();
-    std::cout << "Durée pour parcourir tous les stop times via un indexe et faire un test bidon (nombre d'horaires entre 9h et 19h) : " << (end-start).total_milliseconds() << " ms (" << count << "/" << total_count<< ")"<< std::endl;
+    std::cout << "Durée pour parcourir tous les stop times via un indexe et faire un test bidon (nombre d'horaires entre 11h et 12h) : " << (end-start).total_milliseconds() << " ms (" << count << "/" << total_count<< ")"<< std::endl;
+
+    start = pt::microsec_clock::local_time();
+    auto low = std::lower_bound(st_by_dep_idx.begin(), st_by_dep_idx.end(), 11*3600, attribute_cmp(&StopTime::departure_time));
+    auto up = std::upper_bound(st_by_dep_idx.begin(), st_by_dep_idx.end(), 12*3600, attribute_cmp(&StopTime::departure_time));
+    count = 0;
+    total_count = 0;
+    BOOST_FOREACH(StopTime tp, std::make_pair(low, up)){
+        total_count++;
+        if(tp.departure_time >= 11*3600 && tp.departure_time <= 12*3600)
+            count++;
+    }
+    end = pt::microsec_clock::local_time();
+    std::cout << "Durée pour parcourir tous les stop times via un indexe + dichotomie et faire un test bidon (nombre d'horaires entre 11h et 12h) : " << (end-start).total_milliseconds() << " ms (" << count << "/" << total_count<< ")"<< std::endl;
 
 
     start = pt::microsec_clock::local_time();
@@ -159,25 +174,16 @@ int main(int, char **) {
         BOOST_ASSERT(data2.stop_points.size() == data.stop_points.size());
     }
     end = pt::microsec_clock::local_time();
-    std::cout << "Durée pour dé-sérialiser les données avec compression bz2 : " << (end-start).total_milliseconds() << " ms" << std::endl;*/
+    std::cout << "Durée pour dé-sérialiser les données avec compression bz2 : " << (end-start).total_milliseconds() << " ms" << std::endl;
 
-    std::ifstream ifs("data.nav");
-    boost::archive::binary_iarchive ia(ifs);
-    Data data;
-    ia >> data;
-
-    auto lyon = filter(data.stop_areas, matches(&StopArea::name, ".*Lyon.*"));
-    auto lyon_sp = make_indexed_join(data.stop_points, data.stop_areas, &StopPoint::stop_area_idx);
+    start = pt::microsec_clock::local_time();
+    auto lyon = make_index(filter(data.stop_areas, matches(&StopArea::name, ".*Lyon.*")));
+    auto lyon_sp = make_join(data.stop_points, lyon, attribute_equals(&StopPoint::stop_area_idx, &StopArea::idx));
+    count = 0;
     BOOST_FOREACH(auto l, lyon_sp){
-        std::cout  << join_get<StopPoint>(l).name << std::endl;
+        //std::cout  << join_get<StopArea>(l).name << " " << join_get<StopPoint>(l).name << std::endl;
+        count++;
     }
-    /*std::cout << " ----  " << std::endl;
-    auto sp_gare_de_lyon = make_indexed_join(data.stop_points,
-                                     filter(data.stop_areas, matches(&StopArea::name, "Gare de lyon")),
-                                     &StopPoint::stop_area_idx
-                                     )
-    auto lyon_sp = filter(data.stop_points, matches(&StopPoint::, ".*(L|l)yon.*"));
-    BOOST_FOREACH(auto sp, lyon_sp){
-        std::cout  << sp.name << std::endl;
-    }*/
+    end = pt::microsec_clock::local_time();
+    std::cout << "Durée pour trouver les stopPoints dont le stopArea contient Lyon: " << (end-start).total_milliseconds() << " ms (" << count << ")" << std::endl;
 }

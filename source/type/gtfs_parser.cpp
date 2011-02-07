@@ -107,10 +107,6 @@ void GtfsParser::parse_stops() {
             ignored++;
         }
         else {
-            stop_map[sp.code] = data.stop_points.size();
-            data.stop_points.push_back(sp);
-            if(elts[parent_c] != "") ///On sauvegarde la référence à la zone d'arrêt
-                stoppoint_areas.push_back(std::make_pair(data.stop_points.size()-1, elts[parent_c]));
 
             // Si c'est un stopArea
             if(elts[type_c] == "1") {
@@ -118,16 +114,24 @@ void GtfsParser::parse_stops() {
                 sa.coord = sp.coord;
                 sa.name = sp.name;
                 sa.code = sp.code;
+                sa.idx = stop_area_map[sa.code] = data.stop_areas.size();
                 data.stop_areas.push_back(sa);
+            }
+            // C'est un StopPoint
+            else {
+                sp.idx = stop_map[sp.code] = data.stop_points.size();
+                data.stop_points.push_back(sp);
+                if(elts[parent_c] != "") ///On sauvegarde la référence à la zone d'arrêt
+                    stoppoint_areas.push_back(std::make_pair(sp.idx, elts[parent_c]));
             }
         }
     }
 
     // On reboucle pour récupérer les stop areas de tous les stop points
     BOOST_FOREACH(auto sa, stoppoint_areas){
-        auto it = stop_map.find(sa.second);
-        if(it != stop_map.end()) {
-            data.stop_points[sa.first].stop_area_idx = stop_map[sa.second];
+        auto it = stop_area_map.find(sa.second);
+        if(it != stop_area_map.end()) {
+            data.stop_points[sa.first].stop_area_idx = it->second;
         }
         else
             std::cerr << "Le stopPoint " << data.stop_points[sa.first].code
@@ -175,9 +179,11 @@ void GtfsParser::parse_calendar_dates(){
         int idx;
         boost::unordered_map<std::string, int>::iterator it= vp_map.find(elts[id_c]);
         if(it == vp_map.end()){
-            idx = data.validity_patterns.size();
-            vp_map[elts[id_c]] = idx;
-            data.validity_patterns.push_back(ValidityPattern(start));
+            ValidityPattern vp(start);
+            vp.idx = data.validity_patterns.size();
+            vp_map[elts[id_c]] = vp.idx;
+            data.validity_patterns.push_back(vp);
+            idx = vp.idx;
         }
         else {
             idx = it->second;
@@ -243,7 +249,7 @@ void GtfsParser::parse_routes(){
             line.color = elts[color_c];
             line.additional_data = elts[long_name_c];
 
-            line_map[elts[id_c]] = data.lines.size();
+            line.idx = line_map[elts[id_c]] = data.lines.size();
             data.lines.push_back(line);
         }
         else {
@@ -316,7 +322,7 @@ void GtfsParser::parse_trips() {
                 data.lines[line_idx].validity_pattern_list.push_back(vp_it->second);
             }
 
-            route_map[elts[trip_c]] = data.routes.size();
+            route.idx = route_map[elts[trip_c]] = data.routes.size();
             data.routes.push_back(route); //elts[2]
 
             boost::unordered_map<std::string, int>::iterator vj_it = vj_map.find(elts[trip_c]);
@@ -329,7 +335,7 @@ void GtfsParser::parse_trips() {
                 //vj->mode = route->mode_type;
                 vj.validity_pattern_idx = vp_it->second;
 
-                vj_map[vj.name] = data.vehicle_journeys.size();
+                vj.idx = vj_map[vj.name] = data.vehicle_journeys.size();
                 data.vehicle_journeys.push_back(vj);
             }
             else {

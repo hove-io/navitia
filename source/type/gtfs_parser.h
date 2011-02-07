@@ -19,6 +19,7 @@ private:
 
     // Plusieurs maps pour savoir à quel position est quel objet identifié par son ID GTFS
     boost::unordered_map<std::string, int> stop_map;
+    boost::unordered_map<std::string, int> stop_area_map;
     boost::unordered_map<std::string, int> route_map;
     boost::unordered_map<std::string, int> line_map;
     boost::unordered_map<std::string, int> vp_map;
