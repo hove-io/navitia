@@ -35,18 +35,38 @@
 #include <boost/fusion/algorithm/query/find.hpp>
 #include <boost/array.hpp>
 #include <boost/type_traits/remove_pointer.hpp>
+#include <boost/type_traits/remove_reference.hpp>
+#include <boost/type_traits/is_pointer.hpp>
 #include <boost/mpl/transform.hpp>
 
 
 /// In a row of a join, gets the element of type E
 template<class E, class T>
-E & join_get(T tuple){
+E & join_get(T tuple,
+             typename boost::enable_if<
+                          boost::is_pointer<
+                              typename boost::remove_reference<
+                                  typename boost::fusion::result_of::deref<
+                                      typename boost::fusion::result_of::begin<T>::type
+                                  >::type
+                              >::type
+                           >
+                      >::type * = 0){
     return **(boost::fusion::find<E*>(tuple));
 }
 
 /// In a row of a join, gets the element of type E
 template<class E, class T>
-E & join_get2(T tuple){
+E & join_get(T tuple,
+             typename boost::disable_if<
+             boost::is_pointer<
+                 typename boost::remove_reference<
+                     typename boost::fusion::result_of::deref<
+                         typename boost::fusion::result_of::begin<T>::type
+                     >::type
+                 >::type
+              >
+         >::type * = 0){
     return *(boost::fusion::find<E>(tuple));
 }
 

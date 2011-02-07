@@ -193,9 +193,9 @@ BOOST_AUTO_TEST_CASE(test_joinIndex){
     auto join6 = make_join(filter(f.cities, &City::country, std::string("France")), f.stops, attribute_equals(&City::name, &Stop::city));
     auto join_idx = make_join_index(join6);
     BOOST_FOREACH(auto stop, join_idx){
-        BOOST_CHECK_EQUAL(join_get2<City>(stop).country, "France");
-        BOOST_CHECK_EQUAL(join_get2<City>(stop).name, join_get2<Stop>(stop).city);
-        BOOST_CHECK(!join_get2<City>(stop).name.empty());
+        BOOST_CHECK_EQUAL(join_get<City>(stop).country, "France");
+        BOOST_CHECK_EQUAL(join_get<City>(stop).name, join_get<Stop>(stop).city);
+        BOOST_CHECK(!join_get<City>(stop).name.empty());
     }
 }
 
