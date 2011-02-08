@@ -46,9 +46,7 @@ E & join_get(T tuple,
              typename boost::enable_if<
                           boost::is_pointer<
                               typename boost::remove_reference<
-                                  typename boost::fusion::result_of::deref<
-                                      typename boost::fusion::result_of::begin<T>::type
-                                  >::type
+                                      typename boost::fusion::result_of::at_c<T, 0>::type
                               >::type
                            >
                       >::type * = 0){
@@ -61,9 +59,7 @@ E & join_get(T tuple,
              typename boost::disable_if<
              boost::is_pointer<
                  typename boost::remove_reference<
-                     typename boost::fusion::result_of::deref<
-                         typename boost::fusion::result_of::begin<T>::type
-                     >::type
+                         typename boost::fusion::result_of::at_c<T, 0>::type
                  >::type
               >
          >::type * = 0){
