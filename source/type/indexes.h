@@ -192,6 +192,7 @@ public:
 
     /// Creates a subset from a range
     Subset(const Iter & begin_it, const Iter & end_it) :  begin_it(begin_it), end_it(end_it) {}
+    Subset(const Subset<Iter> & other) : begin_it(other.begin_it), end_it(other.end_it){}
     iterator begin() {return begin_it;}
     iterator end() {return end_it;}
     const_iterator begin() const {return begin_it;}
@@ -539,7 +540,7 @@ JoinIndex<typename Type::value_type> make_join_index(Type & t){
   *
   * It is just a lazy iterator: there is no iteration on the data until iterates on it
   */
-template<class Head, class Tail, class Functor>
+template<class Head, class Tail = typename boost::fusion::nil, class Functor = typename boost::fusion::nil>
 class join_iterator{
 public:
     /// Output type, a boost::fusion::vector that is the concatenation of Tail and Head
@@ -603,10 +604,14 @@ public:
         return *this;
     }
 };
-
+/*
+template<class T>
+class remove_subset {
+    typedef
+};*/
 
 template<class Head>
-class join_iterator<Head, boost::fusion::nil, boost::fusion::nil> {
+class join_iterator<Head> {
     typename Head::iterator begin, current, end;
 
 public:
@@ -616,11 +621,10 @@ public:
     typedef value_type reference;
     typedef std::forward_iterator_tag iterator_category;
     join_iterator(typename Head::iterator begin, typename Head::iterator end):
-            begin(begin), current(begin), end(end)//, f(f)
+            begin(begin), current(begin), end(end)
     {}
 
     value_type operator*() const{
-        //typename Head::value_type & result = *current;
         return value_type(&(*current));
     }
 
@@ -642,20 +646,10 @@ public:
     }
 };
 
-template<class T>
-struct remove_subset{
-    typedef T type;
-};
-
-template<class T>
-struct remove_subset< Subset<T> >{
-    typedef T type;
-};
-
 template<class Container1, class Container2, class Functor>
-Subset<join_iterator<Container1, join_iterator<Container2,typename boost::fusion::nil,typename boost::fusion::nil>, Functor> >
+Subset<join_iterator<Container1, join_iterator<Container2 >, Functor> >
         make_join(Container1 & c1, Container2 & c2, const Functor & f) {
-    typedef join_iterator<Container2,typename boost::fusion::nil,typename boost::fusion::nil> join_c2_t;
+    typedef join_iterator<Container2 > join_c2_t;
     auto tmp = make_join(c2);
     return make_subset(
             join_iterator<Container1, join_c2_t, Functor>(c1.begin(), c1.end(), tmp.begin(), tmp.end(), f),
@@ -665,9 +659,9 @@ Subset<join_iterator<Container1, join_iterator<Container2,typename boost::fusion
 
 
 template<class Container1, class Container2, class Functor>
-Subset<join_iterator<Container1, join_iterator<Subset<Container2>,typename boost::fusion::nil,typename boost::fusion::nil>, Functor> >
+Subset<join_iterator<Container1, join_iterator<Subset<Container2> >, Functor> >
         make_join(Container1 & c1, Subset<Container2> c2, const Functor & f) {
-    typedef join_iterator<Subset<Container2>,typename boost::fusion::nil,typename boost::fusion::nil> join_c2_t;
+    typedef join_iterator<Subset<Container2> > join_c2_t;
     auto tmp = make_join(c2);
     return make_subset(
             join_iterator<Container1, join_c2_t, Functor>(c1.begin(), c1.end(), tmp.begin(), tmp.end(), f),
@@ -687,9 +681,9 @@ Subset<join_iterator<Container1, join_iterator<H,T,F>, Functor> >
 
 
 template<class Container1, class Container2, class Functor>
-Subset<join_iterator<Subset<Container1>, join_iterator<Container2,typename boost::fusion::nil,typename boost::fusion::nil>, Functor> >
+Subset<join_iterator<Subset<Container1>, join_iterator<Container2 >, Functor> >
         make_join(Subset<Container1> c1, Container2 & c2, const Functor & f) {
-    typedef join_iterator<Container2,typename boost::fusion::nil,typename boost::fusion::nil> join_c2_t;
+    typedef join_iterator<Container2 > join_c2_t;
     auto tmp = make_join(c2);
     return make_subset(
             join_iterator<Subset<Container1>, join_c2_t, Functor>(c1.begin(), c1.end(), tmp.begin(), tmp.end(), f),
@@ -699,9 +693,9 @@ Subset<join_iterator<Subset<Container1>, join_iterator<Container2,typename boost
 
 
 template<class Container1, class Container2, class Functor>
-Subset<join_iterator<Subset<Container1>, join_iterator<Subset<Container2>,typename boost::fusion::nil,typename boost::fusion::nil>, Functor> >
+Subset<join_iterator<Subset<Container1>, join_iterator<Subset<Container2> >, Functor> >
         make_join(Subset<Container1> c1, Subset<Container2> c2, const Functor & f) {
-    typedef join_iterator<Subset<Container2>,typename boost::fusion::nil,typename boost::fusion::nil> join_c2_t;
+    typedef join_iterator<Subset<Container2> > join_c2_t;
     auto tmp = make_join(c2);
     return make_subset(
             join_iterator<Subset<Container1>, join_c2_t, Functor>(c1.begin(), c1.end(), tmp.begin(), tmp.end(), f),
@@ -710,11 +704,10 @@ Subset<join_iterator<Subset<Container1>, join_iterator<Subset<Container2>,typena
 }
 
 template<class Container>
-Subset<join_iterator<Container,typename boost::fusion::nil,typename boost::fusion::nil> >
+Subset<join_iterator<Container> >
         make_join(Container & c) {
     return make_subset (
-            join_iterator<Container,typename boost::fusion::nil,typename boost::fusion::nil>(c.begin(), c.end()),
-            join_iterator<Container,typename boost::fusion::nil,typename boost::fusion::nil>(c.end(), c.end())
+            join_iterator<Container>(c.begin(), c.end()),
+            join_iterator<Container>(c.end(), c.end())
             );
 }
-
