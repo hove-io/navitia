@@ -96,7 +96,6 @@ struct Worker : public BaseWorker<NavitiaPool> {
 		np.navitia_onload_index = 0;
 		BOOST_FOREACH(Navitia &nav, np.navitias)
 		{
-			Navitia n;
 			//Changer la valeur IsLoading = true pour bloquer ce navitia aux autres:
 			nav.is_loading = true;
 			np.navitia_onload_index ++;
