@@ -22,6 +22,13 @@ struct Navitia{
 	/// Constructeur par copie
 	Navitia(const Navitia & n);
 
+    /// Constructeur par défaut d'un Navitia
+    Navitia();
+
+
+    /// opérateur d'affection
+    void operator=(const Navitia & other);
+
     /// Mutex pour proteger l'itérateur indiquant le prochain NAViTiA à utiliser
     boost::mutex navitia_mutex;
 

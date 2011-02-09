@@ -2,12 +2,20 @@
 #include "http.h"
 #include "boost/lexical_cast.hpp"
 #include "baseworker.h"
-#include <rapidxml-1.13/rapidxml.hpp> 
-#include <boost\foreach.hpp>
+#include <rapidxml.hpp> 
+#include <boost/foreach.hpp>
 
 using namespace webservice;
 Navitia::Navitia(const std::string & server, const std::string & path) : 
 				server(server), path(path), error_count(0), next_time_status_ok(bt::second_clock::local_time()),
+					global_error_count(0),maxError_count(0), call_count(0),is_loading(false), is_navitia_ready(true), 
+					navitia_thread_date(bt::second_clock::local_time()) 
+{
+}
+
+
+Navitia::Navitia() : 
+			        error_count(0), next_time_status_ok(bt::second_clock::local_time()),
 					global_error_count(0),maxError_count(0), call_count(0),is_loading(false), is_navitia_ready(true), 
 					navitia_thread_date(bt::second_clock::local_time()) 
 {
@@ -20,6 +28,10 @@ Navitia::Navitia(const Navitia & n) :
 {
 }
 
+void Navitia::operator=(const Navitia & other){
+    this->server = other.server;
+    this->path = other.path;
+}
 std::string Navitia::query(const std::string & request){
 
 	std::string resp;
@@ -91,7 +103,6 @@ struct Worker : public BaseWorker<NavitiaPool> {
 		resp.response = "<Status>Loading</Status>"; 		
 		std::string response_load = "";
 		//Chargement de tous les NAViTiA:
-		int navitia_index = 0;
 		bool navitia_load_error;
 		np.navitia_onload_index = 0;
 		BOOST_FOREACH(Navitia &nav, np.navitias)
@@ -175,11 +186,11 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
 	std::string Path = "";
 	std::string sectionNameToFind = "";
 	std::string sectionNameINI = "";
-	int navitiaIndex = 1;
-	SIZE_T sectionFound;
+	size_t sectionFound;
 	boost::property_tree::ptree pt;
 	
-	boost::property_tree::read_ini("L:\\NAViTiACpp\\trunk\\build\\gateway\\Debug\\qgateway.ini", pt);
+	//boost::property_tree::read_ini("L:\\NAViTiACpp\\trunk\\build\\gateway\\Debug\\qgateway.ini", pt);
+	boost::property_tree::read_ini("qgateway.ini", pt);
 	boost::property_tree::ptree::const_iterator it_end = pt.end();
 	
 	/*
@@ -256,7 +267,7 @@ Navitia & NavitiaPool::get_next_navitia(){
 	//Initialiser la date de navitia_last_used_date à now + 10 seconds
 	bt::ptime  navitia_last_used_date = bt::second_clock::local_time() + bt::seconds(10);
 	
-	for(int index=0;index < this->navitias.size() * this->max_call_try; index++){
+	for(unsigned int index=0;index < this->navitias.size() * this->max_call_try; index++){
 		next_navitia++;
 		if (next_navitia == navitias.end())
 			next_navitia = navitias.begin();
@@ -325,7 +336,7 @@ std::string NavitiaPool::query(const std::string & query){
 	*/
 	
 	//Récupérer le prochain navitia libre à utiliser(gestion de loadbalancing):
-	for(int call_index = 0; call_index <= this->max_call_try, !is_response_ok; call_index++){
+	for(int call_index = 0; call_index <= this->max_call_try || !is_response_ok; call_index++){
 		Navitia & na = this->get_next_navitia();
 		response = na.query(query);
 	
@@ -364,7 +375,6 @@ std::string Navitia::get_status()
 	std::string strNodeName, strNodeValue ="";
 	rapidxml::xml_document<> doc; 
 	rapidxml::xml_node<> *FirstNode = NULL;
-	rapidxml::xml_node<> *SibNode = NULL;
 
 	resp = this->query("/status" );
 	// test s ' il n y a pas d'erreur
@@ -521,7 +531,7 @@ bool Navitia::is_navitia_loaded(const std::string & response)
 }
 
 bool Navitia::existe_in_response(const std::string &response, const std::string &word){
-	SIZE_T word_found;
+	size_t word_found;
 	word_found = response.find(word);
 	return (word_found != std::string::npos); 
 }
