@@ -14,13 +14,14 @@
 
 namespace bt = boost::posix_time;
 namespace po = boost::program_options;
-
+const static int a = 42;
+const static std::string s = "hello";
 /** Contient toutes les informations relatives aux instances NAViTiA
  * pilotées par la passerelle
  */
 struct Navitia{
-	/// Constructeur par copie
-	Navitia(const Navitia & n);
+    /// Constructeur par copie
+    Navitia(const Navitia & n);
 
     /// Constructeur par défaut d'un Navitia
     Navitia();
@@ -29,7 +30,7 @@ struct Navitia{
     /// opérateur d'affection
     void operator=(const Navitia & other);
 
-    /// Mutex pour proteger l'itérateur indiquant le prochain NAViTiA à utiliser
+    /// Mutex pour proteger l'itérateur indiquant le prochain NAViTiA �  utiliser
     boost::mutex navitia_mutex;
 
 	/// Serveur utilisé
@@ -41,26 +42,26 @@ struct Navitia{
     /// Nombre d'erreurs de type simple rencontrées
     int error_count;
 
-	/// La date à partir de laquelle ce NAViTiA sera actif
-	bt::ptime next_time_status_ok;
+    /// La date �  partir de laquelle ce NAViTiA sera actif
+    bt::ptime next_time_status_ok;
 
-	/// Nombre d'erreur de type grave rencontrées par NAViTiA
-	int global_error_count;
+    /// Nombre d'erreur de type grave rencontrées par NAViTiA
+    int global_error_count;
 
-	/// Nombre d'erreur de type grave incrémenté à chaque désactivation NAViTiA
-	int maxError_count;
+    /// Nombre d'erreur de type grave incrémenté �  chaque désactivation NAViTiA
+    int maxError_count;
 
-	/// Nombre d'appel NAViTiA
-	int call_count;
+    /// Nombre d'appel NAViTiA
+    int call_count;
 
-	/// Etat de chargement de NAViTiA
-	bool is_loading;
+    /// Etat de chargement de NAViTiA
+    bool is_loading;
 
-	/// Etat de NAViTiA
-	bool is_navitia_ready;
+    /// Etat de NAViTiA
+    bool is_navitia_ready;
 
-	/// La date de l'activation de la Thread NAViTiA
-	bt::ptime navitia_thread_date;
+    /// La date de l'activation de la Thread NAViTiA
+    bt::ptime navitia_thread_date;
 
     /// Constructeur : on passe le serveur, et le chemin vers dll/fcgi que l'on désire utiliser
     Navitia(const std::string & server, const std::string & path);
@@ -82,13 +83,13 @@ struct Navitia{
 
 /** Contient un ensemble de NAViTiA qui sont interrogeables */
 struct NavitiaPool {
-    /// Iterateur vers le prochain NAViTiA à interroger
+    /// Iterateur vers le prochain NAViTiA �  interroger
     std::vector<Navitia>::iterator next_navitia;
 
     /// Structure contenant l'ensemble des navitias
     std::vector<Navitia> navitias;
 
-    /// Mutex pour proteger l'itérateur indiquant le prochain NAViTiA à utiliser
+    /// Mutex pour proteger l'itérateur indiquant le prochain NAViTiA �  utiliser
     boost::mutex iter_mutex;
 
 	// L'index de navitia en chargement:

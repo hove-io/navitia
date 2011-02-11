@@ -9,9 +9,9 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
-#include <boost/iostreams/filter/bzip2.hpp>
-#include <boost/iostreams/filter/zlib.hpp>
+//#include <boost/iostreams/filter/gzip.hpp>
+//#include <boost/iostreams/filter/bzip2.hpp>
+//#include <boost/iostreams/filter/zlib.hpp>
 
 namespace pt = boost::posix_time;
 
@@ -91,7 +91,7 @@ int main(int, char **) {
     }
     end = pt::microsec_clock::local_time();
     std::cout << "Durée pour dé-sérialiser les données uniqumeent : " << (end-start).total_milliseconds() << " ms" << std::endl;
-
+/*
     start = pt::microsec_clock::local_time();
     {
         std::ofstream ofs("data.nav.gz",std::ios::out|std::ios::binary|std::ios::trunc);
@@ -147,7 +147,6 @@ int main(int, char **) {
     }
     end = pt::microsec_clock::local_time();
     std::cout << "Durée pour dé-sérialiser les données avec compression Z : " << (end-start).total_milliseconds() << " ms" << std::endl;
-
     start = pt::microsec_clock::local_time();
     {
         std::ofstream ofs("data.nav.bz2",std::ios::out|std::ios::binary|std::ios::trunc);
@@ -175,7 +174,7 @@ int main(int, char **) {
     }
     end = pt::microsec_clock::local_time();
     std::cout << "Durée pour dé-sérialiser les données avec compression bz2 : " << (end-start).total_milliseconds() << " ms" << std::endl;
-
+*/
     start = pt::microsec_clock::local_time();
     auto lyon = make_index(filter(data.stop_areas, matches(&StopArea::name, ".*Lyon.*")));
     auto lyon_sp = make_join(data.stop_points, lyon, attribute_equals(&StopPoint::stop_area_idx, &StopArea::idx));

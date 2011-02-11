@@ -13,7 +13,6 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/set.hpp>
 
-
 struct Country;
 struct District;
 struct Department;
@@ -40,7 +39,7 @@ struct StopTime;
 template<class T>
 class Container{
 public:
-    std::vector<T> items; ///< Eléments à proprement parler
+    std::vector<T> items; ///< Eléments �  proprement parler
     std::map<std::string, int> items_map; ///< map entre une clef exterene et l'indexe des éléments
 
 
@@ -369,3 +368,11 @@ struct StopTime {
         ar & arrival_time & departure_time & vehicle_journey_idx & stop_point_idx & order & comment & ODT & zone & idx;
     }
 };
+
+struct GeographicalCoord{
+	double X;
+	double Y;
+};
+
+enum PointType{ptCity, ptSite, ptAddress, ptStopArea, ptAlias, ptUndefined, ptSeparator};
+enum Criteria{cInitialization, cAsSoonAsPossible, cLeastInterchange, cLinkTime, cDebug, cWDI};

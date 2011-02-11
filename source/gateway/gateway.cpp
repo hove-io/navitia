@@ -4,6 +4,7 @@
 #include "baseworker.h"
 #include <rapidxml.hpp> 
 #include <boost/foreach.hpp>
+#include "stat.h"
 
 using namespace webservice;
 Navitia::Navitia(const std::string & server, const std::string & path) : 
@@ -56,7 +57,7 @@ void NavitiaPool::add(const std::string & server, const std::string & path){
     next_navitia = navitias.begin();
 }
 
-/// Classe associée à chaque thread
+/// Classe associée �  chaque thread
 struct Worker : public BaseWorker<NavitiaPool> {
     
     //API status
@@ -172,7 +173,7 @@ struct Worker : public BaseWorker<NavitiaPool> {
 
     Worker(NavitiaPool &) {
         register_api("/api", boost::bind(&Worker::relay, this, _1, _2), "Relaye la requête vers un NAViTiA du pool");
-        add_param("/api", "action", "Requête à demander à NAViTiA", "String", true);
+        add_param("/api", "action", "Requête �  demander �  NAViTiA", "String", true);
         register_api("/status", boost::bind(&Worker::status, this, _1, _2), "Donne des informations sur la passerelle");
         register_api("/load", boost::bind(&Worker::load, this, _1, _2), "Chargement de tous les NAViTiA");
         add_default_api();
@@ -189,8 +190,8 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
 	size_t sectionFound;
 	boost::property_tree::ptree pt;
 	
-	//boost::property_tree::read_ini("L:\\NAViTiACpp\\trunk\\build\\gateway\\Debug\\qgateway.ini", pt);
-	boost::property_tree::read_ini("qgateway.ini", pt);
+	boost::property_tree::read_ini("L:\\NAViTiACpp\\trunk\\build\\gateway\\Debug\\qgateway.ini", pt);
+	//boost::property_tree::read_ini("qgateway.ini", pt);
 	boost::property_tree::ptree::const_iterator it_end = pt.end();
 	
 	/*
@@ -264,7 +265,7 @@ Navitia & NavitiaPool::get_next_navitia(){
 	bool navitia_found = false;
 	std::vector<Navitia>::iterator oldest_navitia_index = this->next_navitia;
 	
-	//Initialiser la date de navitia_last_used_date à now + 10 seconds
+	//Initialiser la date de navitia_last_used_date �  now + 10 seconds
 	bt::ptime  navitia_last_used_date = bt::second_clock::local_time() + bt::seconds(10);
 	
 	for(unsigned int index=0;index < this->navitias.size() * this->max_call_try; index++){
@@ -272,7 +273,7 @@ Navitia & NavitiaPool::get_next_navitia(){
 		if (next_navitia == navitias.end())
 			next_navitia = navitias.begin();
 		
-		// Si ErrorCount est supérieur à exception_limit alors desactiver cette dll et aller au prochain navitia
+		// Si ErrorCount est supérieur �  exception_limit alors desactiver cette dll et aller au prochain navitia
 		//Attention : La désactivation se fait dans une criticalsection
 		if (next_navitia->error_count > this->exception_limit){
 			this->verify_and_desactivate_navitia(*next_navitia);
@@ -292,7 +293,7 @@ Navitia & NavitiaPool::get_next_navitia(){
 			navitia_found = true;
 			next_navitia->call_count++;
 
-			//Si callcount est supérieur à une valeur max alors reinitialiser erreurCount à 0:
+			//Si callcount est supérieur �  une valeur max alors reinitialiser erreurCount �  0:
 			if ((next_navitia->error_count > 0) && (next_navitia->call_count > this->reinitialise_exception)){
 				next_navitia->error_count = 0;
 				next_navitia->call_count = 0;
@@ -335,7 +336,7 @@ std::string NavitiaPool::query(const std::string & query){
 	return next_navitia->query(query);
 	*/
 	
-	//Récupérer le prochain navitia libre à utiliser(gestion de loadbalancing):
+	//Récupérer le prochain navitia libre �  utiliser(gestion de loadbalancing):
 	for(int call_index = 0; call_index <= this->max_call_try || !is_response_ok; call_index++){
 		Navitia & na = this->get_next_navitia();
 		response = na.query(query);
