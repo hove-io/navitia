@@ -192,6 +192,8 @@ BOOST_AUTO_TEST_CASE(test_joinIndex){
     MyConfig f;
     auto join6 = make_join(filter(f.cities, &City::country, std::string("France")), f.stops, attribute_equals(&City::name, &Stop::city));
     auto join_idx = make_join_index(join6);
+	auto test = join_idx.begin();
+	auto test2 = *test;
     BOOST_FOREACH(auto stop, join_idx){
         BOOST_CHECK_EQUAL(join_get<City>(stop).country, "France");
         BOOST_CHECK_EQUAL(join_get<City>(stop).name, join_get<Stop>(stop).city);

@@ -37,7 +37,11 @@
 /// In a row of a join, gets the element of type E
 template<class E, class T>
 E & join_get(T tuple){
-    return **(boost::fusion::find<E*>(tuple));
+	E * tmp = *(boost::fusion::find<E*>(tuple));
+	E & moo = *tmp;
+	int a = 42;
+	return moo;
+    //return **(boost::fusion::find<E*>(tuple));
 }
 
 
@@ -440,13 +444,15 @@ class JoinIndex {
 
         template<int N, class T1, class T2> typename boost::disable_if_c<N == 0>::type
         copy(const T1 & t1, T2 & t2) const {
-            boost::fusion::at_c<N>(t2) = boost::fusion::at_c<N>(t1);
+			auto el = boost::fusion::at_c<N>(t1);
+            boost::fusion::at_c<N>(t2) = el;
             copy<N-1>(t1, t2);
         }
 
         template<int N, class T1, class T2>
         typename boost::enable_if_c<N == 0>::type copy(const T1 & t1, T2 & t2) const {
-            boost::fusion::at_c<N>(t2) = boost::fusion::at_c<N>(t1);
+			auto el = boost::fusion::at_c<N>(t1);
+            boost::fusion::at_c<N>(t2) = el;
         }
 
 
