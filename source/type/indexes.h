@@ -37,11 +37,7 @@
 /// In a row of a join, gets the element of type E
 template<class E, class T>
 E & join_get(T tuple){
-	E * tmp = *(boost::fusion::find<E*>(tuple));
-	E & moo = *tmp;
-	int a = 42;
-	return moo;
-    //return **(boost::fusion::find<E*>(tuple));
+    return **(boost::fusion::find<E*>(tuple));
 }
 
 
