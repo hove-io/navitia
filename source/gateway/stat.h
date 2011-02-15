@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "boost\date_time\posix_time\posix_time.hpp"
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include "../type/type.h"
 #include <rapidxml.hpp>
 
