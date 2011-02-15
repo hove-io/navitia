@@ -30,7 +30,7 @@ int main(int, char **) {
     pt::ptime start(pt::microsec_clock::local_time());
     pt::ptime end;
 
-    GtfsParser p("/home/tristram/mumoro/idf_gtfs", "20101101");
+    GtfsParser p("/home/tristram/idf_gtfs", "20101101");
     Data data = p.getData();
     end = pt::microsec_clock::local_time();
     std::cout << "Durée pour lire les données de l'IdF depuis le GTFS : " << (end-start).total_milliseconds() << " ms" << std::endl << std::endl;

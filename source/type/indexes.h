@@ -24,47 +24,22 @@
 #include <boost/iterator/permutation_iterator.hpp>
 #include <boost/regex.hpp>
 #include <boost/shared_container_iterator.hpp>
+#include <boost/utility/result_of.hpp>
 #include <boost/fusion/algorithm.hpp>
-#include <boost/fusion/view/reverse_view.hpp>
 #include <boost/fusion/include/as_vector.hpp>
 #include <boost/fusion/adapted/array.hpp>
-#include <boost/utility/result_of.hpp>
 #include <boost/fusion/sequence/intrinsic/size.hpp>
 #include <boost/fusion/container/list.hpp>
-#include <boost/fusion/include/value_at.hpp>
 #include <boost/fusion/algorithm/query/find.hpp>
+#include <boost/fusion/include/size.hpp>
 #include <boost/array.hpp>
-#include <boost/type_traits/remove_pointer.hpp>
-#include <boost/type_traits/remove_reference.hpp>
-#include <boost/type_traits/is_pointer.hpp>
-#include <boost/mpl/transform.hpp>
-
 
 /// In a row of a join, gets the element of type E
 template<class E, class T>
-E & join_get(T tuple,
-             typename boost::enable_if<
-                          boost::is_pointer<
-                              typename boost::remove_reference<
-                                      typename boost::fusion::result_of::at_c<T, 0>::type
-                              >::type
-                           >
-                      >::type * = 0){
+E & join_get(T tuple){
     return **(boost::fusion::find<E*>(tuple));
 }
 
-/// In a row of a join, gets the element of type E
-template<class E, class T>
-E & join_get(T tuple,
-             typename boost::disable_if<
-             boost::is_pointer<
-                 typename boost::remove_reference<
-                         typename boost::fusion::result_of::at_c<T, 0>::type
-                 >::type
-              >
-         >::type * = 0){
-    return *(boost::fusion::find<E>(tuple));
-}
 
 /** Functor that tests if an attribute is equal to the value passed at construction
   *
@@ -429,6 +404,7 @@ public:
   */
 template<class Type>
 class JoinIndex {
+
     typedef Type value_type;
     typedef typename boost::fusion::result_of::size<value_type>::type value_size;
     typedef typename boost::fusion::result_of::as_vector<value_type>::type begin_it_t;
@@ -440,40 +416,51 @@ class JoinIndex {
 
     /** Functor that stores a boost::fusion::vector of n pointer (of arbitrary types)
       * It takes a boost::array of n ints and
-      * It returns a boost::fusion::vector of references to n elements that represent one row of the join
+      * It returns a boost::fusion::vector of pointers to n elements that represent one row of the join
       */
     struct Transformer{
-        typedef typename boost::mpl::transform<value_type, typename boost::reference_wrapper<typename boost::remove_pointer<typename boost::mpl::_1> > >::type result_type;
+        typedef value_type result_type;
         begin_it_t begin;
 
-        /** Given a pointer and an idx, it returns the a wrapped reference to the element
-          * It is used by a boost::fusion::transform an applied to boost::fusion::vector
+        /** Given a pointer and an idx, it returns a pointer to the element
           */
         struct get_element{
             template <typename Sig> struct result;
 
-            /** We need to get rid of any decorator (const, &, *)
-              * The return type is a boost::ref wrapper around the data
-              */
             template <typename T1, typename T2>
-            struct result<get_element(T1, T2)> {typedef typename boost::reference_wrapper<
-                                                typename boost::remove_pointer<
-                                                typename boost::remove_const<
-                                                typename boost::remove_reference<T1>::type
-                                                >::type
-                                                >::type
-                                                > type; };
+            struct result<get_element(T1, T2)> { typedef T1 type; };
+
             template<class T1, class T2>
-            typename result<get_element(T1,T2)>::type operator()(T1 begin, T2 position) const {return boost::ref(*(begin + position));}
+            typename result<get_element(T1,T2)>::type operator()(T1 begin, T2 position) const { return (begin + position);}
         };
         
         Transformer(begin_it_t begin){
             this->begin = begin;
         }
 
-        /// We apply get_element to every element of the boost::fusion::vector to get the row of a join
+        template<int N, class T1, class T2> typename boost::disable_if_c<N == 0>::type
+        copy(const T1 & t1, T2 & t2) const {
+            boost::fusion::at_c<N>(t2) = boost::fusion::at_c<N>(t1);
+            copy<N-1>(t1, t2);
+        }
+
+        template<int N, class T1, class T2>
+        typename boost::enable_if_c<N == 0>::type copy(const T1 & t1, T2 & t2) const {
+            boost::fusion::at_c<N>(t2) = boost::fusion::at_c<N>(t1);
+        }
+
+
+        /** We apply get_element to every element of the boost::fusion::vector to get the row of a join
+          *
+          * For some strange reason, if we do result = tmp or result = boost::fusion::as_vector(tmp),
+          * the pointers point to random stuff :'(
+          */
         result_type operator()(idx_vector diff) const {
-            return boost::fusion::transform(begin, diff, get_element());
+            result_type result;
+            auto tmp =  boost::fusion::transform(begin, diff, get_element());
+            typedef typename boost::fusion::result_of::size<result_type>::type size;
+            copy<size::value - 1>(tmp, result);
+            return result;
         }
 
         template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -493,15 +480,13 @@ class JoinIndex {
         int operator()(const T1 * begin, const T1 * current) const {return current - begin;}
     };
 
-    JoinIndex(){}
-
     /** Builds a Join index from a range.
       * It iterates over all rows of the join
       */
     template<class Iterator>
     JoinIndex(Iterator begin, Iterator end) {
         this->begin_it = *begin;
-        BOOST_FOREACH(const value_type & element, std::make_pair(begin, end)) {
+        BOOST_FOREACH(value_type element, std::make_pair(begin, end)) {
             indexes.push_back(boost::fusion::transform(begin_it, element, ptr_diff()));
         }
     }
@@ -544,7 +529,7 @@ template<class Head, class Tail = typename boost::fusion::nil, class Functor = t
 class join_iterator{
 public:
     /// Output type, a boost::fusion::vector that is the concatenation of Tail and Head
-    typedef typename boost::fusion::result_of::as_vector< typename boost::fusion::result_of::push_front<typename Tail::value_type, typename Head::value_type*>::type>::type value_type;
+    typedef typename boost::fusion::result_of::as_vector< typename boost::fusion::result_of::push_front<typename Tail::value_type, typename Head::pointer>::type>::type value_type;
     typedef size_t difference_type;
     typedef value_type* pointer;
     typedef value_type reference;
@@ -578,6 +563,7 @@ public:
     }
 
     bool operator==(const join_iterator & other) const { return other.current1 == current1 && other.current2 == current2;}
+    bool operator!=(const join_iterator & other) const { return other.current1 != current1 || other.current2 != current2;}
 
     /* To get next value: to ways to get out of the function
      * 1) we reached the end (current1==end1 && current2==end2)
@@ -604,11 +590,6 @@ public:
         return *this;
     }
 };
-/*
-template<class T>
-class remove_subset {
-    typedef
-};*/
 
 template<class Head>
 class join_iterator<Head> {

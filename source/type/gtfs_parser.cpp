@@ -254,6 +254,7 @@ void GtfsParser::parse_routes(){
         }
         else {
             ignored++;
+            std::cout << "Doublon de la ligne " << elts[id_c] << std::endl;
         }
     }
     BOOST_ASSERT(data.lines.size() == line_map.size());
@@ -313,13 +314,16 @@ void GtfsParser::parse_trips() {
             int line_idx = it->second;
             Route route;
             route.line_idx = line_idx;
+            int vp_xx = 0;
 
             boost::unordered_map<std::string, int>::iterator vp_it = vp_map.find(elts[service_c]);
             if(vp_it == vp_map.end()) {
                 ignored++;
+                //std::cerr << "Impossible de trouver le service " << elts[service_c] << std::endl;
             }
             else {
                 data.lines[line_idx].validity_pattern_list.push_back(vp_it->second);
+                vp_xx = vp_it->second;
             }
 
             route.idx = route_map[elts[trip_c]] = data.routes.size();
@@ -333,7 +337,7 @@ void GtfsParser::parse_trips() {
                 vj.name = elts[trip_c];
                 vj.external_code = elts[trip_c];
                 //vj->mode = route->mode_type;
-                vj.validity_pattern_idx = vp_it->second;
+                vj.validity_pattern_idx =vp_xx;// vp_it->second;
 
                 vj.idx = vj_map[vj.name] = data.vehicle_journeys.size();
                 data.vehicle_journeys.push_back(vj);
