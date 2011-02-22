@@ -337,7 +337,7 @@ std::string NavitiaPool::query(const std::string & query){
 	*/
 	
 	//Récupérer le prochain navitia libre �  utiliser(gestion de loadbalancing):
-	for(int call_index = 0; call_index <= this->max_call_try || !is_response_ok; call_index++){
+	for(int call_index = 0; (call_index <= this->max_call_try) && (!(is_response_ok)); call_index++){
 		Navitia & na = this->get_next_navitia();
 		response = na.query(query);
 	
@@ -354,6 +354,7 @@ std::string NavitiaPool::query(const std::string & query){
 		}
 		else{
 			is_response_ok = true;
+			break;
 		}
 		//il faut re-récupérer le prochain navitia et passer la requête.
 	}
@@ -362,7 +363,9 @@ std::string NavitiaPool::query(const std::string & query){
 	//1. il faut traiter les information dans le noeud <HIT>......</HIT> pour enregistrer les statistiques
 	//2. il faut supprimer ce noeud dans la réponse et renvoyer le reste de la réponse.
 	if (is_response_ok){
-
+		StatNavitia statnav; 
+		statnav.readXML(response);
+		statnav.writeSql();
 	}
 
 	return response;

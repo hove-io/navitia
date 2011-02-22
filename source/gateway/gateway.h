@@ -16,6 +16,7 @@ namespace bt = boost::posix_time;
 namespace po = boost::program_options;
 const static int a = 42;
 const static std::string s = "hello";
+const static std::string stat_fileName = "C:\Projet\NAViTiACpp\trunk\build\gateway\Debug\stat_hit.txt";  
 /** Contient toutes les informations relatives aux instances NAViTiA
  * pilotées par la passerelle
  */

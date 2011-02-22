@@ -1,4 +1,5 @@
 #include "http.h"
+#include <boost/algorithm/string/replace.hpp>
 
 using boost::asio::ip::tcp;
 
@@ -105,7 +106,7 @@ std::string send_http(const std::string & server, const std::string & req, const
 
 std::string get_http(const std::string & server, const std::string & request, const std::string & port)
 {
-    return send_http(server, request, port, "GET", "");
+	return send_http(server, boost::replace_all_copy(request, " ", "%20"), port, "GET", "");
 }
 
 std::string post_http(const std::string & server, const std::string & request, const std::string & data, const std::string & port)
