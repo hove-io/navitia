@@ -13,6 +13,7 @@ IF(WIN32)
 	ENDIF(CMAKE_CL_64)
 	
 	SET(BOOST_ROOT "${LIB_PREFIX}boost/")
+	SET(QT_QMAKE_EXECUTABLE "${LIB_PREFIX}qt-4.7/bin/qmake.exe")
   ELSEIF(MINGW)
     SET (BOOST_INCLUDEDIR "c:/mingw/include")
   ENDIF(MSVC)  
