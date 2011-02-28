@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <map>
 #include <exception>
 #include <iostream>
 #include <sqlfront.h>	/* sqlfront.h always comes first */
@@ -57,19 +58,45 @@ namespace Sql {
     /** Contient les réponses d'une requête */
     class Result {
         public:
+        /// Contient une ligne et permet d'accéder par n° de colonne ou nom de colonne
+        struct Row {
+            /// Pointeur vers la structure de données
+            Result * result;
+
+            /// Contient les données
+            StringVect data;
+
+            Row(Result * result) : result(result) {}
+
+            /// Retourne la colonne par indexe
+            /// Attention, pour des raisons de performances
+            std::string operator[](int idx){return data[idx];}
+
+            /// Retourne la colonne par nom. Attention ! Pour des raisons de performances,
+            /// la valeur n'est pas vérifiée
+            std::string operator[](std::string name)
+            {
+                return data[result->map[name] - 1];
+            }
+
+            /// Retourne l'indexe d'une colonne donnée par le nom
+            /// Lève une exception si la clef n'existe pas
+            int get_index(const std::string & name);
+        };
+
         /** Permet d'itérer sur les résultats */
         class iterator{
             public:
-            typedef StringVect value_type; ///< Type vers lequel pointe l'itérateur
-            typedef StringVect* pointer; ///< Type pointeur vers lequel pointe l'itérateur
-            typedef StringVect& reference; ///< Type référence vers lequel pointe l'itérateur
+            typedef Row value_type; ///< Type vers lequel pointe l'itérateur
+            typedef Row* pointer; ///< Type pointeur vers lequel pointe l'itérateur
+            typedef Row& reference; ///< Type référence vers lequel pointe l'itérateur
             typedef std::forward_iterator_tag iterator_category; ///< Type d'itérateur : on ne peut aller que de l'avant
             typedef int difference_type; ///< Type pour mesurer la distance entre deux itérateurs
             private:
             /// Pour savoir sur quoi pointe l'itérateur
             Result * result;
             /// Données courantes
-            StringVect data;
+            Row data;
             /// Nombre de lignes ayant été lues
             int read_rows;
             private:
@@ -77,9 +104,9 @@ namespace Sql {
             void get_row();
             public:
             /// Par défaut, c'est un itérateur pour lequel il n'y a pas d'autre résultat (aka == .end())
-            iterator() : result(NULL), read_rows(0){}
+            iterator() : result(NULL), data(NULL), read_rows(0){}
             /// Construteur à partir d'un pointeur de Result
-            iterator(Result * result) : result(result), read_rows(0) {get_row();};
+            iterator(Result * result) : result(result), data(result), read_rows(0) {get_row();};
             /// On va chercher l'élément suivant
             iterator & operator++(){get_row(); return *this;};
             /// On teste uniquement les deux itérateurs pointes sur NULL => .end()
@@ -115,6 +142,9 @@ namespace Sql {
         void init();
         /// Initialise à partir d'une procédure stockée
         void init(const RegisteredProcedure & proc);
+
+        /// Fait correspondr les noms de colonnes avec l'indexe
+        std::map<std::string, int> map;
 
         private:
         /// Desaloue les structuers

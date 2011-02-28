@@ -137,6 +137,8 @@ namespace Sql {
             pcol->type = dbcoltype(dbproc, c);
             pcol->size = dbcollen(dbproc, c);
 
+            map[pcol->name] = c;
+
             if (SYBCHAR != pcol->type) {			
                 pcol->size = dbwillconvert(pcol->type, SYBCHAR);
             }
@@ -204,7 +206,7 @@ namespace Sql {
     }
 
     void Result::iterator::get_row() {
-        data.clear();
+        data.data.clear();
         if(result == NULL)
             throw SqlException("Unable to get a result");
         else {
@@ -217,12 +219,12 @@ namespace Sql {
                     result = NULL;
                     break;
                 case REG_ROW:
-                    data.reserve(result->ncols);
+                    data.data.reserve(result->ncols);
                     for (result->pcol=result->columns; result->pcol - result->columns < result->ncols; result->pcol++) {
                         if(result->pcol->status == -1)
-                            data.push_back("NULL");
+                            data.data.push_back("NULL");
                         else
-                            data.push_back(result->pcol->buffer);
+                            data.data.push_back(result->pcol->buffer);
                     }
                     break;
 
@@ -241,5 +243,12 @@ namespace Sql {
         dbloginfree(login);
         dbclose(dbproc);
         dbexit();
+    }
+
+    int Result::Row::get_index(const std::string & name){
+        auto it = result->map.find(name);
+        if(it == result->map.end())
+            throw SqlException("Colonne inconnue");
+        return it->second;
     }
 }
