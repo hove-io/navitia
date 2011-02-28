@@ -13,7 +13,12 @@ IF(WIN32)
 	ENDIF(CMAKE_CL_64)
 	
 	SET(BOOST_ROOT "${LIB_PREFIX}boost/")
-	SET(QT_QMAKE_EXECUTABLE "${LIB_PREFIX}qt-4.7/bin/qmake.exe")
+	
+	# Sur un système ayant les 2 versions 32 et 64 bits on considère que Qt est installé à un endroit précis
+	FIND_PROGRAM(QMAKE "${LIB_PREFIX}qt-4.7/bin/qmake.exe")
+	IF(QMAKE)
+		SET(QT_QMAKE_EXECUTABLE "${LIB_PREFIX}qt-4.7/bin/qmake.exe")
+	ENDIF(QMAKE)
   ELSEIF(MINGW)
     SET (BOOST_INCLUDEDIR "c:/mingw/include")
   ENDIF(MSVC)  
