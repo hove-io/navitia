@@ -7,8 +7,16 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/bitset.hpp>
 #include <boost/serialization/vector.hpp>
+/*
+#include <boost/assign/list_of.hpp>
+#include <boost/unordered_map.hpp>
+#include <iostream>
 
+enum eee { AA,BB,CC };
 
+const boost::unordered_map<eee,const char*> eeeToString = boost::assign::map_list_of (AA, "AA") (BB, "BB") (CC, "CC");
+
+*/
 struct Country {
     int idx;
     std::string name;
@@ -232,5 +240,21 @@ struct GeographicalCoord{
 	double Y;
 };
 
-enum PointType{ptCity, ptSite, ptAddress, ptStopArea, ptAlias, ptUndefined, ptSeparator};
-enum Criteria{cInitialization, cAsSoonAsPossible, cLeastInterchange, cLinkTime, cDebug, cWDI};
+// Attenstion lors de l'ajout d'un type, il faut ajouter un libellé
+enum PointType{ptCity=0, ptSite, ptAddress, ptStopArea, ptAlias, ptUndefined, ptSeparator};
+const std::string PointTypeCaption[] = { "City", "Site", "Address", "StopArea", "Alias", "Undefined", "Separator"};
+
+enum Criteria{cInitialization=0, cAsSoonAsPossible, cLeastInterchange, cLinkTime, cDebug, cWDI};
+const std::string CriteriaCaption[] = { "Initialization", "AsSoonAsPossible", "LeastInterchange", "LinkTime", "Debug", "WDI"};
+const std::string TrueValue[] = {"true", "+", "1"};
+/*
+std::map<std::string, std::string> pointTypes;
+boost::insert (pointTypes) ("ptCity", "City");
+boost::insert (pointTypes) ("ptCity", "City");
+*/
+	/*("ptSite", "Site")
+	("ptAddress", "Address")
+	("ptStopArea", "CStopArea")
+	("ptAlias", "Alias")
+	("ptUndefined", "Undefined")
+	("ptSeparator", "Separator");*/

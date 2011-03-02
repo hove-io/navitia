@@ -12,11 +12,13 @@ namespace webservice{
         return m;
     }
 }
-std::map<std::string, std::string> parse_ini_file(std::string filename){
-	/*
-	std::string Server = "";
-	std::string Path = "";
-	std::string sectionNameToFind = "";
+
+/*
+SettingsMap parse_ini_file(std::string filename){
+	
+	std::string section = "";
+	std::string param = "";
+	std::string value = "";
 	std::string sectionNameINI = "";	
 	SIZE_T sectionFound;
 	boost::property_tree::ptree pt;
@@ -26,6 +28,7 @@ std::map<std::string, std::string> parse_ini_file(std::string filename){
 
 	BOOST_FOREACH(auto it, pt){
 		sectionNameINI = it.first;
+		it.
 		
 	}
 
@@ -82,8 +85,8 @@ std::map<std::string, std::string> parse_ini_file(std::string filename){
 			add(Navitia(Server,Path));
 		}
 	}
-	*/
 }
+*/
 int main(int, char**){
     webservice::parse_params("hi");
 }

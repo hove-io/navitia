@@ -3,11 +3,13 @@
  * Pour avoir un contrôle bas niveau, nous ré-implémentons le protocole en nous basant sur boost::asio
  */
 
-#include <iostream>
-#include <boost/asio.hpp>
 
 #ifndef HTTP_H
 #define HTTP_H
+
+#include <iostream>
+#include <boost/asio.hpp>
+
 
 /// Exception levée en cas d'erreur
 struct http_error{

@@ -1,7 +1,13 @@
 #include "stat.h"
 #include <rapidxml.hpp>
+#include <rapidxml_print.hpp>
 #include <iostream>
 #include <sstream>
+#include <fstream>
+#include <string> 
+#include <boost/foreach.hpp>
+#include "../SqlServer/mssql.h"
+#include "file_utilities.h"
 
 boost::posix_time::ptime seconds_from_epoch(const std::string& s) {
 	boost::posix_time::ptime pt;
@@ -12,6 +18,23 @@ boost::posix_time::ptime seconds_from_epoch(const std::string& s) {
 		if(pt != boost::posix_time::ptime()) break;
 	}
 	return pt;
+}
+
+std::string formatDateTime(boost::posix_time::ptime pt) {
+	std::stringstream ss;
+	ss.str("");
+	ss<<pt.date().day();
+	ss<<"-";
+	ss<<pt.date().month().as_number();
+	ss<<"-";
+	ss<<pt.date().year();
+	ss<<" ";
+	ss<<pt.time_of_day().hours();
+	ss<<":";
+	ss<<pt.time_of_day().minutes();
+	ss<<":";
+	ss<<pt.time_of_day().seconds();
+	return ss.str();
 }
 
 std::string format_double(double value, int lenth, int precesion, double default_value){
@@ -45,6 +68,7 @@ return result;
 
 double str_to_float_def(std::string value,double default_value){
 	double result;
+	replace(value.begin(), value.end(), ',', '.');
 	try{
 		result = boost::lexical_cast<double>(value);
 	}
@@ -55,6 +79,53 @@ return result;
 
 }
 
+PointType getpointTypeByCaption(const std::string strPointType){
+	PointType pt=ptUndefined;
+
+	for (int i = 0; i< (sizeof(PointTypeCaption)/sizeof(PointTypeCaption[0])); i++){
+		if (strcmp(PointTypeCaption[i].c_str(), strPointType.c_str()) == 0){
+			pt=(PointType) i;
+			break;
+		}
+	}
+	return pt;
+}
+
+Criteria getCriteriaByCaption(const std::string strCriteria){
+	Criteria ct = cInitialization;
+	for (int i = 0; i< (sizeof(CriteriaCaption)/sizeof(CriteriaCaption[0])); i++){
+		if (strcmp(CriteriaCaption[i].c_str(), strCriteria.c_str()) == 0){
+			ct=(Criteria) i;
+			break;
+		}
+	}
+	return ct;
+}
+
+bool strToBool(const std::string &strValue, bool defaultValue){
+	bool result = defaultValue;
+	for (int i = 0; i< (sizeof(TrueValue)/sizeof(TrueValue[0])); i++){
+		if (strcmp(boost::to_upper_copy(TrueValue[i]).c_str(), boost::to_upper_copy(strValue).c_str()) == 0){
+			result = true;
+			break;
+		}
+	}
+	return result;
+}
+
+void writeLineInFile(std::string & strline){
+	std::ofstream logfile(gs_logFileName, std::ios::app);
+	logfile<< strline;
+}
+
+std::string getApplicationPath(){
+	char buf[2048];
+	DWORD filePath = GetModuleFileName(NULL, buf, 2048);
+	std::string::size_type posSlash = std::string(buf).find_last_of( "\\/" );
+	std::string::size_type posDot = std::string(buf).find_last_of( "." );
+	gs_applicationName = std::string(buf).substr(posSlash + 1, posDot - (posSlash - 1));
+	return std::string(buf).substr( 0, posSlash);
+}
 
 
 
@@ -126,35 +197,80 @@ std::string DetailPlanJourney::writeXML(){
 };
 
 std::string DetailPlanJourney::getSql(){
-    std::string result = "toto";
-    return result;
+    std::string requete_detailPlanJourney = "";
+	requete_detailPlanJourney += ks_table_detailPlanJourney_insert+ (boost::format(ks_table_detailPlanJourney_values)
+
+		% "@PJO_IDE" //1
+		% "@RPJO_IDE"
+		% "@PJO_MONTH"
+		
+		% this->dep_external_code //4
+		% format_double(this->dep_coord.X, 10, 2, 0.0)
+		% format_double(this->dep_coord.Y, 10, 2, 0.0)
+		% this->line_external_code
+		% this->mode_external_code
+		% this->company_external_code
+		% this->network_external_code
+		% this->route_external_code
+		
+		% this->arr_external_code //12
+		% format_double(this->arr_coord.X, 10, 2, 0.0)
+		% format_double(this->arr_coord.Y, 10, 2, 0.0)
+
+		//% this->dep_dateTime //15
+		//% this->arr_dateTime
+		% formatDateTime(this->dep_dateTime)
+		% formatDateTime(this->arr_dateTime)
+
+		% this->dep_dateTime.date().year()//17
+		% this->dep_dateTime.date().month().as_number()
+		% this->dep_dateTime.date().day()
+		% this->dep_dateTime.time_of_day().hours()
+		% this->dep_dateTime.time_of_day().minutes()
+
+		% this->arr_dateTime.date().year()//22
+		% this->arr_dateTime.date().month().as_number()
+		% this->arr_dateTime.date().day()
+		% this->arr_dateTime.time_of_day().hours()
+		% this->arr_dateTime.time_of_day().minutes()
+
+		% this->section_type //27
+		% this->user_id
+		% this->wsn_id//29
+		).str() + ");"+ks_lineBreak;
+
+	requete_detailPlanJourney += ks_errorExit;
+	return requete_detailPlanJourney;
 };
 
 
 ResponsePlanJourney::ResponsePlanJourney():user_id(0), wsn_id(0), response_ide(-1), interchange(0),
-    total_link_time(boost::posix_time::second_clock::local_time()),
+    total_link_time(0.0),totalLink_hour(0),totalLink_minute(0),journey_duration(0.0), journeyDuration_hour(0),journeyDuration_minute(0),
     journey_dateTime(boost::posix_time::second_clock::local_time()),
     isBest(false), isFirst(false), isLast(false),
     detail_index(-1), detail_count(0), comment_type(0){
 };
 
-//void ResponsePlanJourney::addDetail(const std::string reponse_navitia){
+void ResponsePlanJourney::writeTotalLinkTime(){
+	this->totalLink_hour = this->total_link_time * ki_hoursPerDay;
+	this->totalLink_minute = (this->total_link_time * ki_minsPerDay) - (this->totalLink_hour * ki_minsPerHour);
+	
+}
+void ResponsePlanJourney::writeJourneyDuration(){
+	this->journeyDuration_hour = this->journey_duration * ki_hoursPerDay;
+	this->journeyDuration_minute = (this->journey_duration * ki_minsPerDay) - (this->journeyDuration_hour * ki_minsPerHour);
+	
+}
 
-//};
 
 void ResponsePlanJourney::add(DetailPlanJourney & detail){
     this->details.push_back(detail);
 };
 
 void ResponsePlanJourney::readXML(rapidxml::xml_node<> *Node){
-    std::string strTotalLinkTime="";
-    std::string strJourneyDuration="";
-    std::string strIsFirst="";
-    std::string strIsLast="";
-    std::string strIsBest="";
-    std::string strJourneyDateTime = "";
-    std::string strNodeName = "";
-    std::string attrName = "";
+
+	std::string strNodeName = "";
+	std::string attrName = "";
 
     //Lire les atributs et récupérer les information de ResponsePlanJourney
     for(rapidxml::xml_attribute<> * attr = Node->first_attribute(); attr; attr = attr->next_attribute()){
@@ -164,22 +280,24 @@ void ResponsePlanJourney::readXML(rapidxml::xml_node<> *Node){
 			this->interchange = str_to_int_def(attr->value(), -1);
         }
         else if (strcmp(attrName.c_str(), "TotalLinkTime") == 0){
-            strTotalLinkTime = attr->value();
+			this->total_link_time = str_to_float_def(attr->value(), 0.0);
+			this->writeTotalLinkTime();
         }
         else if (strcmp(attrName.c_str(), "JourneyDuration") == 0){
-            strJourneyDuration = attr->value();
+			this->journey_duration = str_to_float_def(attr->value(), 0.0);
+			this->writeJourneyDuration();
         }
         else if (strcmp(attrName.c_str(), "IsFirst") == 0){
-            strIsFirst = attr->value();
+			this->isFirst = strToBool(attr->value(), false);
         }
         else if (strcmp(attrName.c_str(), "IsBest") == 0){
-            strIsBest = attr->value();
+			this->isBest = strToBool(attr->value(), false);
         }
         else if (strcmp(attrName.c_str(), "IsLast") == 0){
-            strIsLast = attr->value();
+			this->isLast = strToBool(attr->value(), false);
         }
         else if (strcmp(attrName.c_str(), "JourneyDateTime") == 0){
-            strJourneyDateTime = attr->value();
+			this->journey_dateTime = seconds_from_epoch(attr->value());
         }
         else if (strcmp(attrName.c_str(), "CommentType") == 0){
             this->comment_type = str_to_int_def(attr->value(), -1);
@@ -192,8 +310,9 @@ void ResponsePlanJourney::readXML(rapidxml::xml_node<> *Node){
 
         if (strcmp(strNodeName.c_str(), "DetailPlanJourney") == 0){
             DetailPlanJourney detail;
-            this->add(detail);
             detail.readXML(detailNode);
+			this->add(detail);
+            
         }
     }
 
@@ -207,60 +326,47 @@ std::string ResponsePlanJourney::writeXML(){
 std::string ResponsePlanJourney::getSql(){
 
 	std::string requete_ResponsePlanJourney = "";
-	/*
 	requete_ResponsePlanJourney += ks_table_ResponsePlanJourney_insert + (boost::format(ks_table_ResponsePlanJourney_values)
 
-		% "@PJO_IDE" 
-		% this->journey_dateTime.date().month()
+		% "@PJO_IDE" //1
+		% this->journey_dateTime.date().month().as_number()
 		% this->interchange
-		% this->total_link_time.date()
-		% this->call_dateTime.time_of_day().hours()//5
-		% this->call_dateTime.time_of_day().minutes()
-
-		% this->server_info
-
-		% this->plan_dateTime
-		% this->plan_dateTime.date().year()
-		% this->plan_dateTime.date().month()//10
-		% this->plan_dateTime.date().day()
-		% this->plan_dateTime.time_of_day().hours()
-		% this->plan_dateTime.time_of_day().minutes()
-
-		% this->depType_value
-		% this->dep_external_code//15
-		% this->dep_city_External_code
-		% format_double(this->dep_coord.X, 10, 2, 0.0) //17
-		% format_double(this->dep_coord.Y, 10, 2, 0.0)//18
-
-		% this->destType_value
-		% this->dest_external_code//20
-		% this->dest_city_External_code
-		% format_double(this->dest_coord.X, 10, 2, 0.0)//22
-		% format_double(this->dest_coord.Y, 10, 2, 0.0)//23
-
-		% this->sens
-		% this->criteria//25
-		% this->mode
-		% this->walk_speed
-		% this->equipement
-		% this->vehicle
-		% this->total_plan_duration//30
+		% this->total_link_time
+		% this->totalLink_hour
+		% this->totalLink_minute
 		
-		% this->hang_distance
-		% this->dep_hang_distance
-		% this->dest_hang_distance
-		% this->via_external_code
-		% this->via_connection_duration//35
-		% this->manage_disrupt
-		% this->forbidden_SA_external_code
-		% this->forbidden_line_external_code
-		
-		% "@HIT_IDE"
-		% this->error//40
+		// reste à faire
+		% this->journey_duration//7
+		% this->journeyDuration_hour
+		% this->journeyDuration_minute
+
+		% this->isFirst//10
+		% this->isBest
+		% this->isLast
+
+		//% this->journey_dateTime//13
+		% formatDateTime(this->journey_dateTime)
+		% this->journey_dateTime.date().year()
+		% this->journey_dateTime.date().month().as_number()
+		% this->journey_dateTime.date().day()
+		% this->journey_dateTime.time_of_day().hours()
+		% this->journey_dateTime.time_of_day().minutes()
+
+		//Méthode à faire GetTrancheShift(journey_dateTime)
+		% 0//19
+		% 0 // OK
+
+		% this->comment_type//21
 		% this->user_id
-		% this->wsn_id
-		).str() + ");";
-	*/
+		% this->wsn_id//23
+		).str() + ");"+ks_lineBreak;
+	requete_ResponsePlanJourney += (boost::format(ks_scopeIdentity) % "RPJO_IDE").str() + ks_lineBreak;
+
+	requete_ResponsePlanJourney += ks_errorExit;
+
+	BOOST_FOREACH(DetailPlanJourney & dpj, this->details) {
+		requete_ResponsePlanJourney += dpj.getSql();
+	}
 	return requete_ResponsePlanJourney;
 }
 
@@ -281,31 +387,26 @@ PlanJourney::PlanJourney(): user_id(0), wsn_id(0), server_info(""), script_info(
 void PlanJourney::readXML(rapidxml::xml_node<> *Node){
     std::string strNodeName = "";
     std::string attrName = "";
-    std::string strRequestDate = "";
-    std::string strPlanDateTime = "";
-    std::string strDepPointType = "";
-    std::string strDestPointType = "";
+    //std::string strRequestDate = "";
+    //std::string strPlanDateTime = "";
     std::string strCumulCalcDuration = "";
     std::string strViaConnectionDuration = "";
-    int intCriteria;
+    //int intCriteria;
 
     //Lire les atributs et récupérer les information de PlanJourney
     for(rapidxml::xml_attribute<> * attr = Node->first_attribute(); attr; attr = attr->next_attribute()){
         attrName = attr->name();
         if (strcmp(attrName.c_str(), "RequestDate") == 0){
-			//this->call_dateTime = boost::posix_time::time_from_string(attr->value());
-			//this->call_dateTime = boost::posix_time::time_from_string ("2010-01-31");
 			this->call_dateTime = seconds_from_epoch (attr->value());
-			
-        }
+		}
         else if (strcmp(attrName.c_str(), "Server") == 0){
             this->server_info = attr->value();
         }
         else if (strcmp(attrName.c_str(), "PlanDateTime") == 0){
-            strPlanDateTime = attr->value();
+            this->plan_dateTime = seconds_from_epoch (attr->value());
         }
         else if (strcmp(attrName.c_str(), "DepPointType") == 0){
-			depType_value = str_to_int_def(attr->value(), -1);
+			this->depType = getpointTypeByCaption(attr->value());
         }
         else if (strcmp(attrName.c_str(), "DepPointExternalCode") == 0){
             this->dep_external_code = attr->value();
@@ -320,7 +421,7 @@ void PlanJourney::readXML(rapidxml::xml_node<> *Node){
             this->dep_coord.Y = str_to_float_def(attr->value(), 0.00);
         }
         else if (strcmp(attrName.c_str(), "DestPointType") == 0){
-			destType_value = str_to_int_def(attr->value(), -1);
+			this->destType = getpointTypeByCaption(attr->value());
         }
         else if (strcmp(attrName.c_str(), "DestPointExternalCode") == 0){
             this->dest_external_code = attr->value();
@@ -338,7 +439,7 @@ void PlanJourney::readXML(rapidxml::xml_node<> *Node){
             this->sens = str_to_int_def(attr->value(), -1);
         }
         else if (strcmp(attrName.c_str(), "Criteria") == 0){
-            intCriteria = str_to_int_def(attr->value(), -1);
+            this->criteria = getCriteriaByCaption(attr->value());
         }
         else if (strcmp(attrName.c_str(), "Mode") == 0){
             this->mode_string = attr->value();
@@ -390,8 +491,9 @@ void PlanJourney::readXML(rapidxml::xml_node<> *Node){
 
         if (strcmp(strNodeName.c_str(), "ResponsePlanJourney") == 0){
             ResponsePlanJourney response;
-            this->add(response);
             response.readXML(responseNode);
+			this->add(response);
+            
         }
     }
 };
@@ -410,38 +512,45 @@ std::string PlanJourney::writeXML(){
 std::string PlanJourney::getSql(){
 	
 	std::string requete_PlanJourney = "";
+	//SET @PJO_MONTH=2;
+	requete_PlanJourney += (boost::format(ks_pjo_month) % this->call_dateTime.date().month().as_number()).str();
+	//Insert into pjo_temp
 	requete_PlanJourney += ks_table_planjourney_insert + (boost::format(ks_table_planjourney_values)
 
-		% this->call_dateTime 
+		//% this->call_dateTime 
+		% formatDateTime(this->call_dateTime)
 		% this->call_dateTime.date().year()
-		% this->call_dateTime.date().month()
+		% this->call_dateTime.date().month().as_number()
 		% this->call_dateTime.date().day()
 		% this->call_dateTime.time_of_day().hours()//5
 		% this->call_dateTime.time_of_day().minutes()
 
 		% this->server_info
 
-		% this->plan_dateTime
+		//% this->plan_dateTime
+		% formatDateTime(this->plan_dateTime)
 		% this->plan_dateTime.date().year()
-		% this->plan_dateTime.date().month()//10
+		% this->plan_dateTime.date().month().as_number()//10
 		% this->plan_dateTime.date().day()
 		% this->plan_dateTime.time_of_day().hours()
 		% this->plan_dateTime.time_of_day().minutes()
 
-		% this->depType_value
+		% this->depType
+		//% this->depType_value
 		% this->dep_external_code//15
 		% this->dep_city_External_code
 		% format_double(this->dep_coord.X, 10, 2, 0.0) //17
 		% format_double(this->dep_coord.Y, 10, 2, 0.0)//18
 
-		% this->destType_value
+		% this->destType
 		% this->dest_external_code//20
 		% this->dest_city_External_code
 		% format_double(this->dest_coord.X, 10, 2, 0.0)//22
 		% format_double(this->dest_coord.Y, 10, 2, 0.0)//23
 
 		% this->sens
-		% this->criteria//25
+		//% CriteriaCaption[boost::lexical_cast<int> (this->criteria)]//25
+		% this->criteria
 		% this->mode
 		% this->walk_speed
 		% this->equipement
@@ -461,7 +570,11 @@ std::string PlanJourney::getSql(){
 		% this->error//40
 		% this->user_id
 		% this->wsn_id
-		).str() + ");";
+		).str() + ");"+ks_lineBreak;
+
+	requete_PlanJourney += (boost::format(ks_scopeIdentity) % "PJO_IDE").str() +ks_lineBreak;
+	requete_PlanJourney += ks_errorExit;
+	
 	// liste des réponses
 	BOOST_FOREACH(ResponsePlanJourney & rpj, this->responses) {
 		requete_PlanJourney += rpj.getSql();
@@ -503,7 +616,7 @@ void Hit::readXML(rapidxml::xml_node<> *Node){
             this->user_id = str_to_int_def(attr->value(), 0);
         }
         else if (strcmp(attrName.c_str(), ks_param_read_wsn_id.c_str()) == 0){
-            this->wsn_id = str_to_int_def(attr->value(), -1);
+            this->wsn_id = str_to_int_def(attr->value(), 0);
         }
 	}
 	this->client_ip = "localhost";
@@ -518,14 +631,17 @@ std::string Hit::writeXML(){
 std::string Hit::getSql(){
 	std::string requete_hit = "";
 	requete_hit += ks_table_hit_insert + (boost::format(ks_table_hit_values) 
-		% this->dateTime 
+		//% this->dateTime 
+		% formatDateTime(this->dateTime)
 		//boost::posix_time::ptime
 		% this->dateTime.date().year()
-		% this->dateTime.date().month()
+		% this->dateTime.date().month().as_number()
 		% this->dateTime.date().day()
 		% this->dateTime.time_of_day().hours()
 		% this->dateTime.time_of_day().minutes()
-		% this->dateTime.time_of_day()
+		//% this->dateTime.time_of_day()
+		// à faire
+		% 0
 		% this->server_ip
 		% this->user_id
 		% this->action
@@ -536,7 +652,11 @@ std::string Hit::getSql(){
 		% this->wsn_id
 		% this->api_cost
 		% this->client_ip
-		).str() + ");";
+		).str() + ");"+ks_lineBreak;
+
+	requete_hit += (boost::format(ks_scopeIdentity) % "HIT_IDE").str() + ks_lineBreak;
+	requete_hit += ks_errorExit;
+
 	return requete_hit;
 	
 }
@@ -582,11 +702,164 @@ std::string StatNavitia::writeXML(){
     return result;
 };
 
+void StatNavitia::writeSQLInFile(){
+	std::ofstream statfile(gs_statFileName, std::ios::app);
+	statfile<< this->sql_requete;
+}
+
 void StatNavitia::writeSql(){
 	this->sql_requete = "";
 	this->sql_requete += this->hit.getSql();
 	this->sql_requete += this->planJourney.getSql();
-	//this->planJourney.writeSql();
+	this->writeSQLInFile();
+	
 }
 
+std::string StatNavitia::delete_node_hit(std::string & response_navitia){
+	
+	//Utilisation de RapidXML pour parser le flux XML de HIT
+	std::stringstream ss;
+	rapidxml::xml_document<> xmlDoc;
+    rapidxml::xml_node<> * HitNode = NULL;
+	rapidxml::xml_node<> * Node = NULL;
+    std::string nodeName = "";
+    char * data_ptr = xmlDoc.allocate_string(response_navitia.c_str());
 
+    xmlDoc.parse<0>(data_ptr);
+
+    Node = xmlDoc.first_node();
+	for (rapidxml::xml_node<> * HitNode = Node->first_node(); HitNode; HitNode = HitNode->next_sibling()){
+		nodeName = HitNode->name();
+		if (nodeName=="Hit"){
+			Node->remove_node(HitNode);
+			break;
+		}
+	}
+	ss << *xmlDoc.first_node();
+	response_navitia = ks_header_xml + ss.str();	
+	return response_navitia;
+}
+
+// constructeur par défaul
+ClockThread::ClockThread(): th_stoped(false) {
+	this->start();
+	std::pair<std::string, std::string> application_params = initFileParams();
+	gs_applicationName = application_params.first;
+	gs_filePathName = application_params.second;
+
+}
+// démarrage du thread
+void ClockThread::start(){
+	assert(!m_thread);
+	m_thread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&ClockThread::work, this)));
+}
+// arrêt du thread
+void ClockThread::stop(){
+	assert(m_thread);
+	th_stoped = true;
+	m_thread->join();
+}
+// mettre à disposition des autres threads un nouveau fichier
+void ClockThread::createNewFileName(){
+	// Stat_MMDD-HHNNSS-MS_SERVER_WsnId
+	std::stringstream ss;
+	ss.clear();
+	boost::posix_time::ptime locale_dateTime = boost::posix_time::second_clock::local_time();
+
+	ss<< "STAT_";
+	ss<< locale_dateTime.date().month().as_number();
+	ss<< locale_dateTime.date().day();
+	ss<< "-";
+	ss<< locale_dateTime.time_of_day().hours();
+	ss<< locale_dateTime.time_of_day().minutes();
+	ss<< locale_dateTime.time_of_day().seconds();
+	ss<< "-";
+	// MS
+	ss<< locale_dateTime.time_of_day().total_milliseconds();
+	ss<< "_";
+	ss<< gs_serverName;
+	ss<< "_";
+	ss<< gi_wsn_id;
+	ss <<".txt";
+	this->m_mutex.lock();
+	gs_statFileName = gs_filePathName + ss.str(); 
+	this->m_mutex.unlock();
+}
+void ClockThread::work(){
+
+	std::stringstream ss;
+	boost::xtime xt; 
+	while (!th_stoped){
+		// le premier traitement : Attendre jusqu'à la fin du cycle
+		//Début du cycle
+		boost::xtime_get(&xt, boost::TIME_UTC); 
+		xt.sec += 1 * gi_clockTimer; 
+		// Créer un nouveau fichier
+		this->createNewFileName();
+
+		boost::thread::sleep(xt);
+		//Traiter les fichiers de stat sauf le dérnier 
+		this->getFileList();
+		//Lancer les requêts sql / gerer les erreurs / supprimer le fichier traité avec succés 
+		this->saveStatFromFileList();
+
+		boost::posix_time::ptime locale_dateTime = boost::posix_time::second_clock::local_time();
+		ss.str("");
+		ss<< locale_dateTime<<std::endl;
+		//writeLineInFile(ss.str());
+	} // Fin du clock
+}
+void ClockThread::getFileList(){
+	boost::filesystem::directory_iterator end_itr; 
+	// Default ctor yields past-the-end 
+	fileList.clear();
+	for( boost::filesystem::directory_iterator i( gs_filePathName ); i != end_itr; i++ ) {
+		// Skip if not a file
+		if( !boost::filesystem::is_regular_file( i->status() ) ) 
+			continue;
+		boost::smatch what;
+		// Skip if no match     
+		if( !boost::regex_match( i->filename(), what, gs_statFileFilter ) ) 
+			continue;      
+		// File matches, store it
+		if (i->leaf() != gs_statFileName){
+			fileList.push_back( i->filename() ); 
+		}
+	} 
+}
+void ClockThread::saveStatFromFileList(){
+
+	BOOST_FOREACH(std::string & fileName, this->fileList) {
+		this->saveStatFromFile(fileName);
+	}
+}
+void ClockThread::deleteStatFile(std::string & fileName){
+	if(boost::filesystem::exists(gs_filePathName+fileName)){
+		boost::filesystem::remove(gs_filePathName+fileName);
+		std::stringstream ss;
+		ss<<fileName;
+		ss<<std::endl;
+		writeLineInFile(ss.str());
+	}
+}
+void ClockThread::renameStatFile(std::string & fileName){
+	if(boost::filesystem::exists(gs_filePathName+fileName)){
+		boost::filesystem::rename(gs_filePathName+fileName, gs_filePathName + (boost::format(gs_statErrorFileName) % fileName).str());
+	}
+}
+void ClockThread::saveStatFromFile(std::string & fileName){
+	std::string lineSql; 
+	std::stringstream ss;
+	boost::iostreams::stream<boost::iostreams::file_source> file(gs_filePathName+fileName.c_str());
+	//std::ifstream
+	while (std::getline(file, lineSql)) {
+		ss<< lineSql;
+	}
+	file.close();
+	lineSql = ss.str();
+	lineSql = ks_Begin + lineSql + (boost::format(ks_End) % fileName).str();
+	//Sql::MSSql conn(gs_serverDb, gs_userDb, gs_pwdDb, gs_nameDb);
+	//Sql::Result res = conn.exec(lineSql);
+	this->deleteStatFile(fileName);
+	//this->renameStatFile(fileName);
+}

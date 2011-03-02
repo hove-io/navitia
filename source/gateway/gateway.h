@@ -10,13 +10,18 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include "../type/type.h"
+#include "../WS_commons/utils.h"
+#include "stat.h"
+#include <rapidxml.hpp>
+
+
+
 
 
 namespace bt = boost::posix_time;
 namespace po = boost::program_options;
 const static int a = 42;
 const static std::string s = "hello";
-const static std::string stat_fileName = "C:\Projet\NAViTiACpp\trunk\build\gateway\Debug\stat_hit.txt";  
 /** Contient toutes les informations relatives aux instances NAViTiA
  * pilotées par la passerelle
  */
@@ -30,7 +35,7 @@ struct Navitia{
 
     /// opérateur d'affection
     void operator=(const Navitia & other);
-
+	
     /// Mutex pour proteger l'itérateur indiquant le prochain NAViTiA �  utiliser
     boost::mutex navitia_mutex;
 
@@ -71,7 +76,7 @@ struct Navitia{
     std::string query(const std::string & request);
 
 	std::string get_status();
-	std::string get_load();
+	std::string get_load();	
 	bool is_navitia_loaded(const std::string & response);
 	bool is_server_error(const std::string & response);
 	bool is_navitia_error(const std::string & response);
@@ -84,6 +89,8 @@ struct Navitia{
 
 /** Contient un ensemble de NAViTiA qui sont interrogeables */
 struct NavitiaPool {
+	// clock pour la gestion des stats
+	ClockThread clockStat;
     /// Iterateur vers le prochain NAViTiA �  interroger
     std::vector<Navitia>::iterator next_navitia;
 
@@ -153,7 +160,7 @@ struct NavitiaPool {
     void add(const std::string & server, const std::string & path);
 
     /// Choisit un NAViTiA et lui fait executer la requête
-    std::string query(const std::string & query);
+    std::string query(std::string & query);
 
 	/// Choisi le prochain NAViTiA libre et l'envoyer
 	Navitia & get_next_navitia();
@@ -173,5 +180,6 @@ struct NavitiaPool {
 	void desactivate_navitia(Navitia & nav);
 	std::string get_query_response();
 	void add_navitia_error_count(Navitia & nav);
-
 };
+
+
