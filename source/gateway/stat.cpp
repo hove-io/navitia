@@ -6,7 +6,7 @@
 #include <fstream>
 #include <string> 
 #include <boost/foreach.hpp>
-#include "../SqlServer/mssql.h"
+//#include "../SqlServer/mssql.h"
 #include "configuration.h"
 
 boost::posix_time::ptime seconds_from_epoch(const std::string& s) {
@@ -113,9 +113,14 @@ bool strToBool(const std::string &strValue, bool defaultValue){
 	return result;
 }
 
-void writeLineInFile(const std::string & strline){
-	std::ofstream logfile(gs_logFileName, std::ios::app);
-	logfile<< strline;
+void writeLineInLogFile(const std::string & strline){
+	boost::posix_time::ptime locale_dateTime = boost::posix_time::second_clock::local_time();
+	Configuration * conf = Configuration::get();    
+	std::ofstream logfile(conf->strings["path"] + conf->strings["application"] + ".log", std::ios::app);
+	logfile << locale_dateTime;
+	logfile << "  =>  ";
+	logfile << strline;
+	logfile << ks_lineBreak;
 }
 
 
@@ -790,7 +795,7 @@ void ClockThread::work(){
 		boost::posix_time::ptime locale_dateTime = boost::posix_time::second_clock::local_time();
 		ss.str("");
 		ss<< locale_dateTime<<std::endl;
-		//writeLineInFile(ss.str());
+		//writeLineInLogFile(ss.str());
 	} // Fin du clock
 }
 void ClockThread::getFileList(){
@@ -822,8 +827,7 @@ void ClockThread::deleteStatFile(const std::string & fileName){
 		boost::filesystem::remove(gs_filePathName+fileName);
 		std::stringstream ss;
 		ss<<fileName;
-		ss<<std::endl;
-		writeLineInFile(ss.str());
+		writeLineInLogFile("Fichier de stat supprimé : " + ss.str());
 	}
 }
 void ClockThread::renameStatFile(const std::string & fileName){

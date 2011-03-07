@@ -92,7 +92,8 @@ struct Worker : public BaseWorker<NavitiaPool> {
 		resp.response +=" NAViTiAEventSynchro=\"0\" DeactivatedNAViTiA=\""+boost::lexical_cast<std::string>(np.deactivated_navitia_count())+"\">"+ks_lineBreak; 
 		resp.response +=strResponse;
 		resp.response += "</NavitiaList>"+ks_lineBreak;
-		resp.response += "</GatewayStatus>"+ks_lineBreak;		
+		resp.response += "</GatewayStatus>"+ks_lineBreak;
+		writeLineInLogFile("Appel de status");
 
 		return resp;
     }
@@ -149,6 +150,8 @@ struct Worker : public BaseWorker<NavitiaPool> {
 			}
 			nav.is_loading = false;
 		}
+		writeLineInLogFile("Appel de load");
+
 		return resp;
 	}	
 
@@ -177,6 +180,8 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
     gs_filePathName = conf->strings["path"];
 	std::string initFileName = gs_filePathName + gs_applicationName + ".ini";
 	gs_logFileName = gs_filePathName + gs_applicationName + ".log";
+	writeLineInLogFile("Lecture du fichier INI :" + initFileName); 
+
 	std::string Server = "";
 	std::string Path = "";
 	std::string sectionNameToFind = "";
@@ -313,6 +318,7 @@ Navitia & NavitiaPool::get_next_navitia(){
 	next_navitia->is_navitia_ready = false;
 	next_navitia->navitia_thread_date = bt::second_clock::local_time();
 	iter_mutex.unlock();
+	writeLineInLogFile("navitia utilisé : http://" + next_navitia->server + next_navitia->path);
 
 	return *next_navitia;
 }
@@ -325,17 +331,8 @@ std::string NavitiaPool::query(const std::string & q){
     if (this->use_database_stat){
 		query+="&safemode=0";
 	}
-	/*
-	iter_mutex.lock();
-    next_navitia++;
-    if(next_navitia == navitias.end())
-        next_navitia = navitias.begin();
-    if(next_navitia == navitias.end())
-        return "Aucune instance de NAViTiA prÃ©sente";
-    iter_mutex.unlock();
-	return next_navitia->query(query);
-	*/
-	
+	writeLineInLogFile("Requête d'appel : " + query);
+
 	//RÃ©cupÃ©rer le prochain navitia libre Ã  utiliser(gestion de loadbalancing):
 	for(int call_index = 0; (call_index <= this->max_call_try) && (!(is_response_ok)); call_index++){
 		Navitia & na = this->get_next_navitia();
@@ -496,17 +493,17 @@ int NavitiaPool::active_navitia_percent(){
 	}
 
 	return percent;
-
 }
 
 void NavitiaPool::activate_all_navitia(){
+	//Activation de tous les navitias sauf celui qui a été désactivé avec une valeur globale.
 	bt::ptime next_time_ok = bt::second_clock::local_time() + bt::seconds(this->reactivation_delay);
 	BOOST_FOREACH(Navitia & nav, this->navitias){
 		if (nav.next_time_status_ok < next_time_ok){
 			nav.activate();
 		}
 	}
-		
+	writeLineInLogFile("activation de tous les navitia");
 }
 void Navitia::desactivate(const int timeValue, const bool pb_global){
 	this->next_time_status_ok = bt::second_clock::local_time() + bt::seconds(timeValue);
@@ -517,9 +514,11 @@ void Navitia::desactivate(const int timeValue, const bool pb_global){
 	this->maxError_count++;
 	if (pb_global){
 		this->global_error_count = 0;
+		writeLineInLogFile("navitia deactivé avec une valeur global : http://" + this->server + this->path);
 	}
 	else {
 		this->global_error_count++;
+		writeLineInLogFile("navitia deactivé avec une valeur locale : http://" + this->server + this->path);
 	}
 	this->maxError_count++;
 }
@@ -559,6 +558,7 @@ void Navitia::activate_thread(){
 	this->is_navitia_ready = true;
 	this->navitia_thread_date = bt::second_clock::local_time();
 	this->navitia_mutex.unlock();
+	writeLineInLogFile("navitia libéré : http://" + this->server + this->path);
 }
 
 

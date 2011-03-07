@@ -171,7 +171,7 @@ struct NavitiaPool {
 
     int deactivated_navitia_count();
     int navitia_on_error_count();
-    //VÃ©rifie s'il y a un seul navitia activÃ© dans le NavitiaPool
+    //Vérifie s'il y a un seul navitia activé dans le NavitiaPool
     bool one_navitia_activated();
 
     int active_navitia_percent();

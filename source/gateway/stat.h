@@ -356,6 +356,6 @@ double str_to_float_def(std::string value,double default_value = 0.00);
 PointType getpointTypeByCaption(const std::string strPointType);
 Criteria getCriteriaByCaption(const std::string strCriteria);
 bool strToBool(const std::string &strValue, bool defaultValue);
-void writeLineInFile(std::string & strline);
+void writeLineInLogFile(const std::string & strline);
 std::string formatDateTime(boost::posix_time::ptime pt);
 std::string getApplicationPath();
