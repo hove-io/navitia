@@ -3,7 +3,7 @@
 #include "boost/lexical_cast.hpp"
 #include "baseworker.h"
 #include <boost/foreach.hpp>
-#include "file_utilities.h"
+#include "configuration.h"
 
 using namespace webservice;
 Navitia::Navitia(const std::string & server, const std::string & path) : 
@@ -172,9 +172,9 @@ struct Worker : public BaseWorker<NavitiaPool> {
 
 NavitiaPool::NavitiaPool() : nb_threads(16){
 	//Récuperer le chemin de la dll et le dom de l'application:
-	std::pair<std::string, std::string> application_params = initFileParams();
-	gs_applicationName = application_params.first;
-	gs_filePathName = application_params.second;
+    Configuration * conf = Configuration::get();
+    gs_applicationName = conf->strings["application"];
+    gs_filePathName = conf->strings["path"];
 	std::string initFileName = gs_filePathName + gs_applicationName + ".ini";
 	gs_logFileName = gs_filePathName + gs_applicationName + ".log";
 	std::string Server = "";
@@ -317,11 +317,12 @@ Navitia & NavitiaPool::get_next_navitia(){
 	return *next_navitia;
 }
 
-std::string NavitiaPool::query(std::string & query){
+std::string NavitiaPool::query(const std::string & q){
+    std::string query = q;
 	std::string response;
 	bool is_response_ok = false;
 	//Il faut ajouter &safemode=0 si enregistrement du stat est activé
-	if (this->use_database_stat = true){
+    if (this->use_database_stat){
 		query+="&safemode=0";
 	}
 	/*

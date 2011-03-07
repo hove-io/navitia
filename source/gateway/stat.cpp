@@ -7,7 +7,7 @@
 #include <string> 
 #include <boost/foreach.hpp>
 #include "../SqlServer/mssql.h"
-#include "file_utilities.h"
+#include "configuration.h"
 
 boost::posix_time::ptime seconds_from_epoch(const std::string& s) {
 	boost::posix_time::ptime pt;
@@ -113,28 +113,16 @@ bool strToBool(const std::string &strValue, bool defaultValue){
 	return result;
 }
 
-void writeLineInFile(std::string & strline){
+void writeLineInFile(const std::string & strline){
 	std::ofstream logfile(gs_logFileName, std::ios::app);
 	logfile<< strline;
 }
 
-std::string getApplicationPath(){
-	char buf[2048];
-	DWORD filePath = GetModuleFileName(NULL, buf, 2048);
-	std::string::size_type posSlash = std::string(buf).find_last_of( "\\/" );
-	std::string::size_type posDot = std::string(buf).find_last_of( "." );
-	gs_applicationName = std::string(buf).substr(posSlash + 1, posDot - (posSlash - 1));
-	return std::string(buf).substr( 0, posSlash);
-}
 
-
-
-DetailPlanJourney::DetailPlanJourney():user_id(0), wsn_id(0), response_ide(-1), dep_external_code(""),
-    line_external_code(""), mode_external_code(""), company_external_code(""),
-    network_external_code(""), route_external_code(""), arr_external_code(""),
+DetailPlanJourney::DetailPlanJourney() : user_id(0), wsn_id(0), response_ide(-1),
     dep_dateTime(boost::posix_time::second_clock::local_time()),
     arr_dateTime(boost::posix_time::second_clock::local_time()), section_type(0){
-};
+}
 
 void DetailPlanJourney::readXML(rapidxml::xml_node<> *Node){
     std::string attrName = "";
@@ -189,12 +177,12 @@ void DetailPlanJourney::readXML(rapidxml::xml_node<> *Node){
         }
     }
 
-};
+}
 
 std::string DetailPlanJourney::writeXML(){
     std::string result = "toto";
     return result;
-};
+}
 
 std::string DetailPlanJourney::getSql(){
     std::string requete_detailPlanJourney = "";
@@ -241,15 +229,15 @@ std::string DetailPlanJourney::getSql(){
 
 	requete_detailPlanJourney += ks_errorExit;
 	return requete_detailPlanJourney;
-};
+}
 
 
-ResponsePlanJourney::ResponsePlanJourney():user_id(0), wsn_id(0), response_ide(-1), interchange(0),
+ResponsePlanJourney::ResponsePlanJourney() : user_id(0), wsn_id(0), response_ide(-1), interchange(0),
     total_link_time(0.0),totalLink_hour(0),totalLink_minute(0),journey_duration(0.0), journeyDuration_hour(0),journeyDuration_minute(0),
     journey_dateTime(boost::posix_time::second_clock::local_time()),
     isBest(false), isFirst(false), isLast(false),
     detail_index(-1), detail_count(0), comment_type(0){
-};
+}
 
 void ResponsePlanJourney::writeTotalLinkTime(){
 	this->totalLink_hour = this->total_link_time * ki_hoursPerDay;
@@ -265,7 +253,7 @@ void ResponsePlanJourney::writeJourneyDuration(){
 
 void ResponsePlanJourney::add(DetailPlanJourney & detail){
     this->details.push_back(detail);
-};
+}
 
 void ResponsePlanJourney::readXML(rapidxml::xml_node<> *Node){
 
@@ -316,12 +304,12 @@ void ResponsePlanJourney::readXML(rapidxml::xml_node<> *Node){
         }
     }
 
-};
+}
 
 std::string ResponsePlanJourney::writeXML(){
     std::string result = "toto";
     return result;
-};
+}
 
 std::string ResponsePlanJourney::getSql(){
 
@@ -382,7 +370,7 @@ PlanJourney::PlanJourney(): user_id(0), wsn_id(0), server_info(""), script_info(
                             forbidden_SA_external_code(""), forbidden_line_external_code(""){
     //Initialiser les propriétés
 
-};
+}
 
 void PlanJourney::readXML(rapidxml::xml_node<> *Node){
     std::string strNodeName = "";
@@ -496,18 +484,18 @@ void PlanJourney::readXML(rapidxml::xml_node<> *Node){
             
         }
     }
-};
+}
 
 
 
 void PlanJourney::add(ResponsePlanJourney & response){
      this->responses.push_back(response);
-};
+}
 
 std::string PlanJourney::writeXML(){
     std::string result = "toto";
     return result;
-};
+}
 
 std::string PlanJourney::getSql(){
 	
@@ -582,11 +570,9 @@ std::string PlanJourney::getSql(){
 	return requete_PlanJourney;
 }
 
-Hit::Hit(): user_id(0), wsn_id(0), dateTime(boost::posix_time::second_clock::local_time()),
-            website(""), server_ip(""), client_ip(""),
-            client_login(""), script_info(""), action(""), response_size(0), api_cost(0){
+Hit::Hit(): dateTime(boost::posix_time::second_clock::local_time()), user_id(0), wsn_id(0), response_size(0), api_cost(0){
 
-};
+}
 
 void Hit::readXML(rapidxml::xml_node<> *Node){
     std::string attrName = "";
@@ -621,12 +607,12 @@ void Hit::readXML(rapidxml::xml_node<> *Node){
 	}
 	this->client_ip = "localhost";
 
-};
+}
 
 std::string Hit::writeXML(){
     std::string result = "toto";
     return result;
-};
+}
 
 std::string Hit::getSql(){
 	std::string requete_hit = "";
@@ -662,13 +648,12 @@ std::string Hit::getSql(){
 }
 
 StatNavitia::StatNavitia(){
-};
+}
 
 void StatNavitia::readXML(const std::string reponse_navitia){
 
     //Utilisation de RapidXML pour parser le flux XML de HIT
     rapidxml::xml_document<> xmlDoc;
-    rapidxml::xml_node<> * HitNode = NULL;
 	rapidxml::xml_node<> * Node = NULL;
     std::string nodeName = "";
     char * data_ptr = xmlDoc.allocate_string(reponse_navitia.c_str());
@@ -695,12 +680,12 @@ void StatNavitia::readXML(const std::string reponse_navitia){
 			}
 		}
 	}
-};
+}
 
 std::string StatNavitia::writeXML(){
     std::string result = "toto";
     return result;
-};
+}
 
 void StatNavitia::writeSQLInFile(){
 	std::ofstream statfile(gs_statFileName, std::ios::app);
@@ -720,8 +705,7 @@ std::string StatNavitia::delete_node_hit(std::string & response_navitia){
 	//Utilisation de RapidXML pour parser le flux XML de HIT
 	std::stringstream ss;
 	rapidxml::xml_document<> xmlDoc;
-    rapidxml::xml_node<> * HitNode = NULL;
-	rapidxml::xml_node<> * Node = NULL;
+    rapidxml::xml_node<> * Node = NULL;
     std::string nodeName = "";
     char * data_ptr = xmlDoc.allocate_string(response_navitia.c_str());
 
@@ -742,12 +726,12 @@ std::string StatNavitia::delete_node_hit(std::string & response_navitia){
 
 // constructeur par défaul
 ClockThread::ClockThread(): th_stoped(false) {
-	this->start();
-	std::pair<std::string, std::string> application_params = initFileParams();
-	gs_applicationName = application_params.first;
-	gs_filePathName = application_params.second;
-
+    Configuration * conf = Configuration::get();
+    gs_applicationName = conf->strings["application"];
+    gs_filePathName = conf->strings["path"];
+    this->start();
 }
+
 // démarrage du thread
 void ClockThread::start(){
 	assert(!m_thread);
@@ -833,7 +817,7 @@ void ClockThread::saveStatFromFileList(){
 		this->saveStatFromFile(fileName);
 	}
 }
-void ClockThread::deleteStatFile(std::string & fileName){
+void ClockThread::deleteStatFile(const std::string & fileName){
 	if(boost::filesystem::exists(gs_filePathName+fileName)){
 		boost::filesystem::remove(gs_filePathName+fileName);
 		std::stringstream ss;
@@ -842,12 +826,12 @@ void ClockThread::deleteStatFile(std::string & fileName){
 		writeLineInFile(ss.str());
 	}
 }
-void ClockThread::renameStatFile(std::string & fileName){
+void ClockThread::renameStatFile(const std::string & fileName){
 	if(boost::filesystem::exists(gs_filePathName+fileName)){
 		boost::filesystem::rename(gs_filePathName+fileName, gs_filePathName + (boost::format(gs_statErrorFileName) % fileName).str());
 	}
 }
-void ClockThread::saveStatFromFile(std::string & fileName){
+void ClockThread::saveStatFromFile(const std::string & fileName){
 	std::string lineSql; 
 	std::stringstream ss;
 	boost::iostreams::stream<boost::iostreams::file_source> file(gs_filePathName+fileName.c_str());

@@ -1,7 +1,7 @@
 /** Exemple de webservice : il affiche le nombre de requêtes traitées par le webservice et par le thread courant */
 
 #include "baseworker.h"
-
+#include <iostream>
 using namespace webservice;
 
 /** Structure de données globale au webservice
@@ -13,6 +13,8 @@ struct Data{
   boost::mutex mut; /// Un mutex pour protéger ce cout
   /// Constructeur par défaut, il est appelé au chargement du webservice
   Data() : nb_threads(8), count(0){
+      Configuration * conf = Configuration::get();
+      std::cout << conf->strings["application"] <<std::endl;
   }
 };
 

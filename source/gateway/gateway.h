@@ -35,11 +35,11 @@ struct Navitia{
 
     /// opérateur d'affection
     void operator=(const Navitia & other);
-	
+
     /// Mutex pour proteger l'itérateur indiquant le prochain NAViTiA �  utiliser
     boost::mutex navitia_mutex;
 
-	/// Serveur utilisé
+    /// Serveur utilisé
     std::string server;
 
     /// Chemin vers dll/fcgi que l'on désire interroger
@@ -75,22 +75,22 @@ struct Navitia{
     /// On interroge dll/fcgi avec la requête passée en paramètre
     std::string query(const std::string & request);
 
-	std::string get_status();
-	std::string get_load();	
-	bool is_navitia_loaded(const std::string & response);
-	bool is_server_error(const std::string & response);
-	bool is_navitia_error(const std::string & response);
-	bool existe_in_response(const std::string &response, const std::string &word);
-	void activate();
-	void desactivate(const int timeValue, const bool pb_global = false);
-	void activate_thread();
-	void add_error_count();
+    std::string get_status();
+    std::string get_load();
+    bool is_navitia_loaded(const std::string & response);
+    bool is_server_error(const std::string & response);
+    bool is_navitia_error(const std::string & response);
+    bool existe_in_response(const std::string &response, const std::string &word);
+    void activate();
+    void desactivate(const int timeValue, const bool pb_global = false);
+    void activate_thread();
+    void add_error_count();
 };
 
 /** Contient un ensemble de NAViTiA qui sont interrogeables */
 struct NavitiaPool {
-	// clock pour la gestion des stats
-	ClockThread clockStat;
+    // clock pour la gestion des stats
+    ClockThread clockStat;
     /// Iterateur vers le prochain NAViTiA �  interroger
     std::vector<Navitia>::iterator next_navitia;
 
@@ -100,86 +100,86 @@ struct NavitiaPool {
     /// Mutex pour proteger l'itérateur indiquant le prochain NAViTiA �  utiliser
     boost::mutex iter_mutex;
 
-	// L'index de navitia en chargement:
-	int navitia_onload_index;
+    // L'index de navitia en chargement:
+    int navitia_onload_index;
     
-	/// Nombre de threads
+    /// Nombre de threads
     int nb_threads;
 
-	///ErrorLevel
-	int error_level;
-	
-	/// ExecptionLimit pour chaque navitia
-	int exception_limit;
+    ///ErrorLevel
+    int error_level;
 
-	/// ReactivationDelay
-	int reactivation_delay;
+    /// ExecptionLimit pour chaque navitia
+    int exception_limit;
 
-	/// GlobalReactivationDelay
-	int global_reactivation_delay;
-	int global_error_limit;
-	int reinitialise_exception;
+    /// ReactivationDelay
+    int reactivation_delay;
 
-	/// UseDatabaseStat
-	bool use_database_stat;
+    /// GlobalReactivationDelay
+    int global_reactivation_delay;
+    int global_error_limit;
+    int reinitialise_exception;
 
-	///UseDatabaseuser;
-	bool use_database_user;
+    /// UseDatabaseStat
+    bool use_database_stat;
 
-	///MaxCallTry;
-	int max_call_try;
+    ///UseDatabaseuser;
+    bool use_database_user;
 
-	///Timer
-	int timer_value;
+    ///MaxCallTry;
+    int max_call_try;
 
-	///Section [LOG] Les paramètre d'activation de la recherche itinéraire.
-	std::string log_fileName;
-	bool plan_journey_enabled;
-	bool response_plan_journey_enabled;
-	bool detail_plan_journey_enabled;
+    ///Timer
+    int timer_value;
 
-	///Section [SQLLOG] paramètres de la base de stat
-	int web_service_id;
-	std::string db_host_name;
-	std::string db_name;
-	std::string db_user_name;
-	std::string db_password;
-	std::string db_datetime_format;
+    ///Section [LOG] Les paramètre d'activation de la recherche itinéraire.
+    std::string log_fileName;
+    bool plan_journey_enabled;
+    bool response_plan_journey_enabled;
+    bool detail_plan_journey_enabled;
 
-	///Section [LOAD] 
-	std::string load_user;
-	std::string load_password;
+    ///Section [SQLLOG] paramètres de la base de stat
+    int web_service_id;
+    std::string db_host_name;
+    std::string db_name;
+    std::string db_user_name;
+    std::string db_password;
+    std::string db_datetime_format;
 
-	///Section [STATUS]
-	std::string status_user;
-	std::string status_password;
+    ///Section [LOAD]
+    std::string load_user;
+    std::string load_password;
 
-	/// Constructeur par défaut
+    ///Section [STATUS]
+    std::string status_user;
+    std::string status_password;
+
+    /// Constructeur par défaut
     NavitiaPool();
     /// Rajoute un nouveau navitia au Pool. Celui-ci sera copié
     void add(const std::string & server, const std::string & path);
 
     /// Choisit un NAViTiA et lui fait executer la requête
-    std::string query(std::string & query);
+    std::string query(const std::string & query);
 
-	/// Choisi le prochain NAViTiA libre et l'envoyer
-	Navitia & get_next_navitia();
+    /// Choisi le prochain NAViTiA libre et l'envoyer
+    Navitia & get_next_navitia();
 
-	void desactivate_navitia_on_load(Navitia & nav);
+    void desactivate_navitia_on_load(Navitia & nav);
 
-	void activate_all_navitia();
+    void activate_all_navitia();
 
-	int deactivated_navitia_count();
-	int navitia_on_error_count();
-	//Vérifie s'il y a un seul navitia activé dans le NavitiaPool
-	bool one_navitia_activated();
+    int deactivated_navitia_count();
+    int navitia_on_error_count();
+    //Vérifie s'il y a un seul navitia activé dans le NavitiaPool
+    bool one_navitia_activated();
 
-	int active_navitia_percent();
+    int active_navitia_percent();
 
-	void verify_and_desactivate_navitia(Navitia & nav);
-	void desactivate_navitia(Navitia & nav);
-	std::string get_query_response();
-	void add_navitia_error_count(Navitia & nav);
+    void verify_and_desactivate_navitia(Navitia & nav);
+    void desactivate_navitia(Navitia & nav);
+    std::string get_query_response();
+    void add_navitia_error_count(Navitia & nav);
 };
 
 

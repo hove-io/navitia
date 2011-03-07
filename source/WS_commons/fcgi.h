@@ -1,5 +1,5 @@
 #pragma once
-
+#include <configuration.h>
 #include <fcgiapp.h>
 namespace webservice {typedef FCGX_Request RequestHandle; /**< Handle de la requête*/}
 
@@ -69,7 +69,10 @@ namespace webservice {
 }
 
 
-#define MAKE_WEBSERVICE(Data, Worker) int main(int, char**){webservice::ThreadPool<Data, Worker> tp;\
+#define MAKE_WEBSERVICE(Data, Worker) int main(int, char** argv){\
+    Configuration * conf = Configuration::get();\
+    conf->strings["application"] = argv[0];\
+    webservice::ThreadPool<Data, Worker> tp;\
     webservice::run_fcgi();\
     return 0;\
 }

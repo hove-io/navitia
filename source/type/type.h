@@ -7,16 +7,9 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/bitset.hpp>
 #include <boost/serialization/vector.hpp>
-/*
-#include <boost/assign/list_of.hpp>
-#include <boost/unordered_map.hpp>
-#include <iostream>
 
-enum eee { AA,BB,CC };
+#include <boost/any.hpp>
 
-const boost::unordered_map<eee,const char*> eeeToString = boost::assign::map_list_of (AA, "AA") (BB, "BB") (CC, "CC");
-
-*/
 struct Country {
     int idx;
     std::string name;
@@ -25,6 +18,7 @@ struct Country {
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & main_city_idx & district_list & idx;
     }
+
 };
 
 struct District {
@@ -74,6 +68,10 @@ struct StopArea{
     Coordinates coord;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & code & name & city_idx & coord & idx;
+    }
+    boost::any get(const std::string & el){
+        if(el == "idx") return idx;
+        else if(el == "name") return name;
     }
 };
 

@@ -4,7 +4,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include "../type/type.h"
 #include <rapidxml.hpp>
-#include <boost\format.hpp>
+#include <boost/format.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread/thread.hpp>
 #include "boost/regex.hpp"
@@ -187,9 +187,9 @@ const static int ki_mSecsPerDay   = ki_secsPerDay * ki_mSecsPerSec;
 
 // Detail d'un itinéraire
 struct DetailPlanJourney{
-	int response_ide;
 	int user_id;
-	int wsn_id;
+    int wsn_id;
+    int response_ide;
 	PointType depType;
 	std::string dep_external_code;
 	GeographicalCoord dep_coord;
@@ -200,9 +200,9 @@ struct DetailPlanJourney{
 	std::string route_external_code;
 	PointType arrType;
 	std::string arr_external_code;
-        GeographicalCoord arr_coord;
-        boost::posix_time::ptime dep_dateTime;
-        boost::posix_time::ptime arr_dateTime;
+    GeographicalCoord arr_coord;
+    boost::posix_time::ptime dep_dateTime;
+    boost::posix_time::ptime arr_dateTime;
 	int section_type;
 
         ///Constructeur par défaut:
@@ -214,9 +214,9 @@ struct DetailPlanJourney{
 };
 
 struct ResponsePlanJourney{
-	int response_ide;
 	int user_id;
-	int wsn_id;
+    int wsn_id;
+    int response_ide;
 	int interchange;
 	//boost::posix_time::ptime total_link_time;
 	double total_link_time;
@@ -299,16 +299,16 @@ struct Hit{
 	
 	boost::posix_time::ptime dateTime;
 	//Durée en milliseconds 
-	int response_duration;
-        std::string website;
+    int wsn_id;
+    int user_id;
+    int response_duration;
+    std::string website;
 	std::string server_ip;
 	std::string client_ip;
-	int user_id;
 	std::string client_login;
 	std::string script_info;
 	std::string action;
 	int response_size;
-	int wsn_id;
 	double api_cost;
 
         Hit();
@@ -344,9 +344,9 @@ struct ClockThread{
 	void createNewFileName();
 	void getFileList();
 	void saveStatFromFileList();
-	void saveStatFromFile(std::string & fileName);
-	void deleteStatFile(std::string & fileName);
-	void renameStatFile(std::string & fileName);
+    void saveStatFromFile(const std::string & fileName);
+    void deleteStatFile(const std::string & fileName);
+    void renameStatFile(const std::string & fileName);
 	};
 
 // fonction à deplacer
