@@ -34,7 +34,7 @@ struct Wrapper {
 };
 
 
-
+#ifndef WIN32
 #define MAKE_WEBSERVICE(Data, Worker) int main(int argc , char** argv){QApplication a(argc, argv); \
 Configuration * conf = Configuration::get();\
 std::string::size_type posSlash = std::string(argv[0]).find_last_of( "\\/" );\
@@ -46,3 +46,11 @@ if(getcwd(buf, 256)) conf->strings["path"] = std::string(buf) + "/"; else conf->
     w.show(); \
     return a.exec(); \
 }
+#else
+#define MAKE_WEBSERVICE(Data, Worker) int main(int argc , char** argv){QApplication a(argc, argv); \
+    Wrapper<Data, Worker> wrap; \
+    MainWindow w(boost::bind(&Wrapper<Data, Worker>::run, &wrap, _1)); \
+    w.show(); \
+    return a.exec(); \
+}
+#endif
