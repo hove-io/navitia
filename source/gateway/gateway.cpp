@@ -189,20 +189,9 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
 	size_t sectionFound;
 	boost::property_tree::ptree pt;
 	
-	//boost::property_tree::read_ini("L:\\NAViTiACpp\\trunk\\build\\gateway\\Debug\\qgateway.ini", pt);
 	boost::property_tree::read_ini(initFileName, pt);
 	boost::property_tree::ptree::const_iterator it_end = pt.end();
 	
-	/*
-	for(boost::property_tree::ptree::iterator it = pt.begin(); it != pt.end(); ++it){
-
-		//sectionNameINI = it.first;
-		std::cout<<it->first<<std::endl;
-		BOOST_FOREACH(auto a, it->first){
-			
-		}
-	}*/
-
 	BOOST_FOREACH(auto it, pt)
 	{
 		sectionNameINI = it.first;
@@ -311,6 +300,7 @@ Navitia & NavitiaPool::get_next_navitia(){
 	if (!navitia_found){
 		//Utiliser le navitia le plus ancien (le navitia le plus ancien n'est jamais désactivé)
 		next_navitia = oldest_navitia_index;
+		writeLineInLogFile("Oldest navitia used : http://" + next_navitia->server + next_navitia->path);
 		//Réactiver tous les navitia qui ont étés désactivés avec une valeur normale.
 		this->activate_all_navitia();
 	}
@@ -438,13 +428,15 @@ void NavitiaPool::desactivate_navitia_on_load(Navitia & nav)
 void NavitiaPool::verify_and_desactivate_navitia(Navitia & nav){
 	//Désactiver ce navitia:
 	//Si le nombre de NAViTiA activé = 1 alors on désactive jamais; 
-	if (one_navitia_activated()){ 
+	if (one_navitia_activated()){
+		writeLineInLogFile("Navitia disponible = 1");
 		return;
 	}
 			
 	//Si pourcentage de NAViTiA disponible < 50, alor on réactive tous les NAViTia
 	//sauf celui avec GlobalReactivationDelay
 	if (this->active_navitia_percent() < 50){
+		writeLineInLogFile("Navitia disponible < 50 %");
 		this->activate_all_navitia();
 	}
 			
