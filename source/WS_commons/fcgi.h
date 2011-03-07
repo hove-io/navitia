@@ -70,8 +70,12 @@ namespace webservice {
 
 
 #define MAKE_WEBSERVICE(Data, Worker) int main(int, char** argv){\
+std::cout << argv[0] << "moo" << std::endl;\
     Configuration * conf = Configuration::get();\
-    conf->strings["application"] = argv[0];\
+    std::string::size_type posSlash = std::string(argv[0]).find_last_of( "\\/" );\
+    conf->strings["application"] = std::string(argv[0]).substr(posSlash+1);\
+    char buf[256];\
+    if(getcwd(buf, 256)) conf->strings["path"] = std::string(buf) + "/"; else conf->strings["path"] = "unknown";\
     webservice::ThreadPool<Data, Worker> tp;\
     webservice::run_fcgi();\
     return 0;\

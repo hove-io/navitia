@@ -1,6 +1,7 @@
 /** Exemple de webservice : il affiche le nombre de requêtes traitées par le webservice et par le thread courant */
 
 #include "baseworker.h"
+#include "configuration.h"
 #include <iostream>
 using namespace webservice;
 
@@ -14,7 +15,8 @@ struct Data{
   /// Constructeur par défaut, il est appelé au chargement du webservice
   Data() : nb_threads(8), count(0){
       Configuration * conf = Configuration::get();
-      std::cout << conf->strings["application"] <<std::endl;
+      std::cout << "Je suis l'executable " << conf->strings["application"] <<std::endl;
+      std::cout << "Je réside dans le path " << conf->strings["path"] <<std::endl;
   }
 };
 
