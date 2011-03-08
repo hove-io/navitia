@@ -2,10 +2,7 @@
 
 #include <string>
 #include <vector>
-#include <boost/thread.hpp>
-//#include "boost/date_time/posix_time/posix_time_types.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
-#include "boost/program_options.hpp"
 #include <fstream>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
@@ -13,13 +10,10 @@
 #include "../WS_commons/utils.h"
 #include "stat.h"
 #include <rapidxml.hpp>
-
-
-
+#include <boost/thread/shared_mutex.hpp>
 
 
 namespace bt = boost::posix_time;
-namespace po = boost::program_options;
 const static int a = 42;
 const static std::string s = "hello";
 /** Contient toutes les informations relatives aux instances NAViTiA
@@ -34,10 +28,10 @@ struct Navitia{
 
 
     /// opérateur d'affection
-    void operator=(const Navitia & other);
+    Navitia & operator=(const Navitia & other);
 
     /// Mutex pour proteger l'itérateur indiquant le prochain NAViTiA �  utiliser
-    boost::mutex navitia_mutex;
+    boost::shared_mutex mutex;
 
     /// Serveur utilisé
     std::string server;
@@ -67,7 +61,7 @@ struct Navitia{
     bool is_navitia_ready;
 
     /// La date de l'activation de la Thread NAViTiA
-    bt::ptime navitia_thread_date;
+    bt::ptime thread_date;
 
     /// Constructeur : on passe le serveur, et le chemin vers dll/fcgi que l'on désire utiliser
     Navitia(const std::string & server, const std::string & path);
@@ -80,7 +74,7 @@ struct Navitia{
     bool is_navitia_loaded(const std::string & response);
     bool is_server_error(const std::string & response);
     bool is_navitia_error(const std::string & response);
-    bool existe_in_response(const std::string &response, const std::string &word);
+    bool exists_in_response(const std::string &response, const std::string &word);
     void activate();
     void desactivate(const int timeValue, const bool pb_global = false);
     void activate_thread();

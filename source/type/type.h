@@ -145,7 +145,7 @@ struct Route {
     bool is_adapted;
     int associated_route_idx;
 
-    Route(): is_frequence(false), is_forward(false), is_adapted(false){};
+    Route(): idx(0), line_idx(0), is_frequence(false), is_forward(false), is_adapted(false), associated_route_idx(0){};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & line_idx & mode_type & is_frequence & is_forward & route_point_list &
@@ -163,7 +163,7 @@ struct VehicleJourney {
     bool is_adapted;
     int validity_pattern_idx;
 
-    VehicleJourney(): is_adapted(false){};
+    VehicleJourney(): idx(0), route_idx(0), company_idx(0), mode_idx(0), vehicle_idx(0), is_adapted(false), validity_pattern_idx(0){};
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & is_adapted & validity_pattern_idx & idx;
     }
@@ -191,8 +191,8 @@ private:
     bool is_valid(int duration);
 public:
     int idx;
-    ValidityPattern() {}
-    ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date) {}
+    ValidityPattern() : idx(0) {}
+    ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date), idx(0){}
     void add(boost::gregorian::date day);
     void add(int day);
     void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
@@ -234,8 +234,10 @@ struct StopTime {
 };
 
 struct GeographicalCoord{
-	double X;
-	double Y;
+    double x;
+    double y;
+
+    GeographicalCoord() : x(0), y(0) {}
 };
 
 // Attenstion lors de l'ajout d'un type, il faut ajouter un libellé

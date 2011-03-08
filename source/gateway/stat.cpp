@@ -37,22 +37,11 @@ std::string formatDateTime(boost::posix_time::ptime pt) {
 	return ss.str();
 }
 
-std::string format_double(double value, int lenth, int precesion, double default_value){
-	std::string result;
+std::string format_double(double value, int precision){
 	std::stringstream oss;
-	oss<< "%";
-	oss<< lenth;
-	oss<< ".";
-	oss<< precesion;
-	oss<< "f";
-
-	try{
-		result = (boost::format(oss.str()) %value).str();
-	}
-	catch(int e){
-		result = boost::lexical_cast<std::string>(default_value);
-	}
-return result;
+    oss.precision(precision);
+    oss << value;
+    return oss.str();
 }
 
 int str_to_int_def(std::string value,int default_value){
@@ -79,7 +68,7 @@ return result;
 
 }
 
-PointType getpointTypeByCaption(const std::string strPointType){
+PointType getpointTypeByCaption(const std::string & strPointType){
 	PointType pt=ptUndefined;
 
 	for (int i = 0; i< (sizeof(PointTypeCaption)/sizeof(PointTypeCaption[0])); i++){
@@ -91,7 +80,7 @@ PointType getpointTypeByCaption(const std::string strPointType){
 	return pt;
 }
 
-Criteria getCriteriaByCaption(const std::string strCriteria){
+Criteria getCriteriaByCaption(const std::string & strCriteria){
 	Criteria ct = cInitialization;
 	for (int i = 0; i< (sizeof(CriteriaCaption)/sizeof(CriteriaCaption[0])); i++){
 		if (strcmp(CriteriaCaption[i].c_str(), strCriteria.c_str()) == 0){
@@ -116,7 +105,7 @@ bool strToBool(const std::string &strValue, bool defaultValue){
 void writeLineInLogFile(const std::string & strline){
 	boost::posix_time::ptime locale_dateTime = boost::posix_time::second_clock::local_time();
 	Configuration * conf = Configuration::get();    
-	std::ofstream logfile(conf->strings["path"] + conf->strings["application"] + ".log", std::ios::app);
+	std::ofstream logfile(conf->get_string("path") + conf->get_string("application") + ".log", std::ios::app);
 	logfile << locale_dateTime;
 	logfile << "  =>  ";
 	logfile << strline;
@@ -124,7 +113,7 @@ void writeLineInLogFile(const std::string & strline){
 }
 
 
-DetailPlanJourney::DetailPlanJourney() : user_id(0), wsn_id(0), response_ide(-1),
+DetailPlanJourney::DetailPlanJourney() : user_id(0), wsn_id(0), response_ide(-1), depType(ptCity), arrType(ptCity),
     dep_dateTime(boost::posix_time::second_clock::local_time()),
     arr_dateTime(boost::posix_time::second_clock::local_time()), section_type(0){
 }
@@ -142,10 +131,10 @@ void DetailPlanJourney::readXML(rapidxml::xml_node<> *Node){
             this->dep_external_code = attr->value();
         }
         else if (strcmp(attrName.c_str(), "DepCoordX") == 0){
-			this->dep_coord.X = str_to_float_def(attr->value(), 0.00);
+            this->dep_coord.x = str_to_float_def(attr->value(), 0.00);
         }
         else if (strcmp(attrName.c_str(), "DepCoordY") == 0){
-            this->dep_coord.Y = str_to_float_def(attr->value(), 0.00);
+            this->dep_coord.y = str_to_float_def(attr->value(), 0.00);
         }
         else if (strcmp(attrName.c_str(), "LineExternalCode") == 0){
             this->line_external_code = attr->value();
@@ -166,10 +155,10 @@ void DetailPlanJourney::readXML(rapidxml::xml_node<> *Node){
             this->arr_external_code = attr->value();
         }
         else if (strcmp(attrName.c_str(), "ArrCoordX") == 0){
-            this->arr_coord.X = str_to_float_def(attr->value(),0.00);
+            this->arr_coord.x = str_to_float_def(attr->value(),0.00);
         }
         else if (strcmp(attrName.c_str(), "ArrCoordY") == 0){
-            this->arr_coord.Y = str_to_float_def(attr->value(),0.00);
+            this->arr_coord.y = str_to_float_def(attr->value(),0.00);
         }
         else if (strcmp(attrName.c_str(), "DepDateTime") == 0){
             strDepDateTime = attr->value();
@@ -184,22 +173,20 @@ void DetailPlanJourney::readXML(rapidxml::xml_node<> *Node){
 
 }
 
-std::string DetailPlanJourney::writeXML(){
+std::string DetailPlanJourney::writeXML() const{
     std::string result = "toto";
     return result;
 }
 
-std::string DetailPlanJourney::getSql(){
-    std::string requete_detailPlanJourney = "";
-	requete_detailPlanJourney += ks_table_detailPlanJourney_insert+ (boost::format(ks_table_detailPlanJourney_values)
-
-		% "@PJO_IDE" //1
+std::string DetailPlanJourney::getSql() const{
+    std::string request = (boost::format("insert into  DPJO_TEMP (PJO_IDE, RPJ_IDE, PJO_REQUEST_MONTH, TRJ_DEP_ETERNAL_CODE, TRJ_DEP_COORD_X, TRJ_DEP_COORD_Y, TRJ_LINE_EXTERNAL_CODE, TRJ_MODE_EXTERNAL_CODE, TRJ_COMPANY_EXTERNAL_CODE, TRJ_NETWORK_EXTERNAL_CODE, TRJ_ROUTE_EXTERNAL_CODE, TRJ_ARR_EXTERNAL_CODE, TRJ_ARR_COORD_X, TRJ_ARR_COORD_Y, TRJ_DEP_DATETIME, TRJ_ARR_DATETIME, TRJ_DEP_YEAR, TRJ_DEP_MONTH, TRJ_DEP_DAY, TRJ_DEP_HOUR, TRJ_DEP_MINUTE, TRJ_ARR_YEAR, TRJ_ARR_MONTH, TRJ_ARR_DAY, TRJ_ARR_HOUR, TRJ_ARR_MINUTE, TRJ_SECTIONTYPE, USE_ID, WSN_ID) values (%1%, %2%, %3%, '%4%', %5%, %6%, '%7%', '%8%', '%9%', '%10%', '%11%', '%12%', %13%, %14%, '%15%', '%16%', %17%, %18%, %19%, %20%, %21%, %22%, %23%, %24%, %25%, %26%, %27%, %28%, %29%);\n SET @ERR = @@ERROR;\n IF @ERR <> 0 GOTO sortie;\n")
+        % "@PJO_IDE" //1
 		% "@RPJO_IDE"
 		% "@PJO_MONTH"
 		
 		% this->dep_external_code //4
-		% format_double(this->dep_coord.X, 10, 2, 0.0)
-		% format_double(this->dep_coord.Y, 10, 2, 0.0)
+        % format_double(this->dep_coord.x)
+        % format_double(this->dep_coord.y)
 		% this->line_external_code
 		% this->mode_external_code
 		% this->company_external_code
@@ -207,8 +194,8 @@ std::string DetailPlanJourney::getSql(){
 		% this->route_external_code
 		
 		% this->arr_external_code //12
-		% format_double(this->arr_coord.X, 10, 2, 0.0)
-		% format_double(this->arr_coord.Y, 10, 2, 0.0)
+        % format_double(this->arr_coord.x)
+        % format_double(this->arr_coord.y)
 
 		//% this->dep_dateTime //15
 		//% this->arr_dateTime
@@ -230,10 +217,8 @@ std::string DetailPlanJourney::getSql(){
 		% this->section_type //27
 		% this->user_id
 		% this->wsn_id//29
-		).str() + ");"+ks_lineBreak;
-
-	requete_detailPlanJourney += ks_errorExit;
-	return requete_detailPlanJourney;
+        ).str();
+    return request;
 }
 
 
@@ -311,15 +296,14 @@ void ResponsePlanJourney::readXML(rapidxml::xml_node<> *Node){
 
 }
 
-std::string ResponsePlanJourney::writeXML(){
+std::string ResponsePlanJourney::writeXML() const{
     std::string result = "toto";
     return result;
 }
 
-std::string ResponsePlanJourney::getSql(){
+std::string ResponsePlanJourney::getSql() const{
 
-	std::string requete_ResponsePlanJourney = "";
-	requete_ResponsePlanJourney += ks_table_ResponsePlanJourney_insert + (boost::format(ks_table_ResponsePlanJourney_values)
+    std::string request = (boost::format("insert into RPJO_TEMP (PJO_IDE, PJO_REQUEST_MONTH, RPJ_INTERCHANGE, RPJ_TOTAL_LINK_TIME, RPJ_TOTAL_LINK_TIME_HOUR, RPJ_TOTAL_LINK_TIME_MINUTE, RPJ_JOURNEY_DURATION, RPJ_JOURNEY_DURATION_HOUR, RPJ_JOURNEY_DURATION_MINUTE, RPJ_IS_FIRST, RPJ_IS_BEST, RPJ_IS_LAST, RPJ_JOURNEY_DATE_TIME, RPJ_JOURNEY_YEAR, RPJ_JOURNEY_MONTH, RPJ_JOURNEY_DAY, RPJ_JOURNEY_HOUR, RPJ_JOURNEY_MINUTE, RPJ_TRANCHE_SHIFT,RPJ_TRANCHE_DURATION,RPJ_COMMENT_TYPE,USE_ID,WSN_ID) values (%1%, %2%, %3%, %4%, %5%, %6%, %7%, %8%, %9%, %10%, %11%, %12%,'%13%', %14%,%15%,%16%,%17%,%18%, %19%, %20%,%21%, %22%, %23%);\nSET @RPJO_IDE = (SELECT SCOPE_IDENTITY());\n SET @ERR = @@ERROR;\n IF @ERR <> 0 GOTO sortie;\n")
 
 		% "@PJO_IDE" //1
 		% this->journey_dateTime.date().month().as_number()
@@ -352,27 +336,22 @@ std::string ResponsePlanJourney::getSql(){
 		% this->comment_type//21
 		% this->user_id
 		% this->wsn_id//23
-		).str() + ");"+ks_lineBreak;
-	requete_ResponsePlanJourney += (boost::format(ks_scopeIdentity) % "RPJO_IDE").str() + ks_lineBreak;
+        ).str();
 
-	requete_ResponsePlanJourney += ks_errorExit;
-
-	BOOST_FOREACH(DetailPlanJourney & dpj, this->details) {
-		requete_ResponsePlanJourney += dpj.getSql();
-	}
-	return requete_ResponsePlanJourney;
+    BOOST_FOREACH(const DetailPlanJourney & dpj, this->details) {
+        request += dpj.getSql();
+    }
+    return request;
 }
 
-PlanJourney::PlanJourney(): user_id(0), wsn_id(0), server_info(""), script_info(""),
-                            plan_dateTime(boost::posix_time::second_clock::local_time()),
+PlanJourney::PlanJourney(): user_id(0), wsn_id(0), plan_dateTime(boost::posix_time::second_clock::local_time()),
                             call_dateTime(boost::posix_time::second_clock::local_time()),
-                            dep_external_code(""), dep_city_External_code(""),
-                            dest_external_code(""), dest_city_External_code(""), sens(0),
-                            mode(0), mode_string(""), walk_speed(0), equipement(0), equipement_string(""),
-                            vehicle(0), vehicle_string(""),error(0),
-                            hang_distance(0), dep_hang_distance(0), dest_hang_distance(0),
-                            via_external_code(""), manage_disrupt(false),
-                            forbidden_SA_external_code(""), forbidden_line_external_code(""){
+                            depType_value(0), depType(ptCity), destType(ptCity), destType_value(0),
+                            sens(0), criteria(cInitialization), mode(0), walk_speed(0), equipement(0),
+                            vehicle(0), total_plan_duration(0),
+                            error(0), hang_distance(0), dep_hang_distance(0), dest_hang_distance(0),
+                            via_connection_duration(0), manage_disrupt(false)
+{
     //Initialiser les propriétés
 
 }
@@ -408,10 +387,10 @@ void PlanJourney::readXML(rapidxml::xml_node<> *Node){
             this->dep_city_External_code = attr->value();
         }
         else if (strcmp(attrName.c_str(), "DepCoordX") == 0){
-            this->dep_coord.X  = str_to_float_def(attr->value(), 0.00);
+            this->dep_coord.x  = str_to_float_def(attr->value(), 0.00);
         }
         else if (strcmp(attrName.c_str(), "DepCoordY") == 0){
-            this->dep_coord.Y = str_to_float_def(attr->value(), 0.00);
+            this->dep_coord.y = str_to_float_def(attr->value(), 0.00);
         }
         else if (strcmp(attrName.c_str(), "DestPointType") == 0){
 			this->destType = getpointTypeByCaption(attr->value());
@@ -423,10 +402,10 @@ void PlanJourney::readXML(rapidxml::xml_node<> *Node){
             this->dest_city_External_code = attr->value();
         }
         else if (strcmp(attrName.c_str(), "DestCoordX") == 0){
-            this->dest_coord.X = str_to_float_def(attr->value(), 0.00);
+            this->dest_coord.x = str_to_float_def(attr->value(), 0.00);
         }
         else if (strcmp(attrName.c_str(), "DestCoordY") == 0){
-            this->dest_coord.Y = str_to_float_def(attr->value(), 0.00);
+            this->dest_coord.y = str_to_float_def(attr->value(), 0.00);
         }
         else if (strcmp(attrName.c_str(), "Sens") == 0){
             this->sens = str_to_int_def(attr->value(), -1);
@@ -497,49 +476,45 @@ void PlanJourney::add(ResponsePlanJourney & response){
      this->responses.push_back(response);
 }
 
-std::string PlanJourney::writeXML(){
+std::string PlanJourney::writeXML() const{
     std::string result = "toto";
     return result;
 }
+//
 
-std::string PlanJourney::getSql(){
-	
-	std::string requete_PlanJourney = "";
-	//SET @PJO_MONTH=2;
-	requete_PlanJourney += (boost::format(ks_pjo_month) % this->call_dateTime.date().month().as_number()).str();
-	//Insert into pjo_temp
-	requete_PlanJourney += ks_table_planjourney_insert + (boost::format(ks_table_planjourney_values)
+std::string PlanJourney::getSql() const{
+    std::string request = (boost::format("insert into PJO_TEMP (PJO_REQUEST_DATE, PJO_REQUEST_YEAR, PJO_REQUEST_MONTH, PJO_REQUEST_DAY, PJO_REQUEST_HOUR, PJO_REQUEST_MINUTE, PJO_SERVER, PJO_PLAN_DATE_TIME, PJO_PLAN_YEAR, PJO_PLAN_MONTH, PJO_PLAN_DAY, PJO_PLAN_HOUR, PJO_PLAN_MINUTE, PJO_DEP_POINT_TYPE, PJO_DEP_POINT_EXTERNAL_CODE, PJO_DEP_CITY_EXTERNAL_CODE, PJO_DEP_COORD_X, PJO_DEP_COORD_Y, PJO_DEST_POINT_TYPE, PJO_DEST_POINT_EXTERNAL_CODE, PJO_DEST_CITY_EXTERNAL_CODE, PJO_DEST_COORD_X, PJO_DEST_COORD_Y, PJO_SENS, PJO_CRITERIA, PJO_MODE, PJO_WALK_SPEED, PJO_EQUIPMENT, PJO_VEHICLE, PJO_CUMUL_DUREE_CALC, PJO_HANG, PJO_DEP_HANG, PJO_DEST_HANG, PJO_VIA_EXTERNAL_CODE, PJO_VIA_CONNECTION_DURATION, PJO_MANAGE_DISRUPT,PJO_FORBIDDEN_SA_EXTERNAL_CODE, PJO_FORBIDDEN_LINE_EXTERNAL_CODE, HIT_IDE,PJO_ERROR,USE_ID,WSN_ID ) values ('%1%', %2%, %3%, %4%, %5%, %6%, '%7%', '%8%',%9%, %10%,%11%,%12%,%13%, %14%, '%15%', '%16%', %17%, %18%, %19%, '%20%','%21%', %22%, %23%, %24%, '%25%','%26%', %27%, '%28%', '%29%', %30%, %31%, %32%, %33%, '%34%', %35%, %36%, '%37%','%38%', %39%, %40%, %41%, %42%);\nSET @PJO_MONTH=%43%;\n IF ((@PJO_MONTH IS NULL) OR (@PJO_MONTH=0) OR (@PJO_MONTH>12)) SET @PJO_MONTH=1;\nSET @PJO_IDE = (SELECT SCOPE_IDENTITY());\nSET @ERR = @@ERROR; IF @ERR <> 0 GOTO sortie;\n")
 
 		//% this->call_dateTime 
-		% formatDateTime(this->call_dateTime)
-		% this->call_dateTime.date().year()
-		% this->call_dateTime.date().month().as_number()
-		% this->call_dateTime.date().day()
-		% this->call_dateTime.time_of_day().hours()//5
-		% this->call_dateTime.time_of_day().minutes()
+        % formatDateTime(this->call_dateTime)
+        % this->call_dateTime.date().year()
+        % this->call_dateTime.date().month().as_number()
+        % this->call_dateTime.date().day()
+        % this->call_dateTime.time_of_day().hours()//5
+        % this->call_dateTime.time_of_day().minutes()
 
 		% this->server_info
 
 		//% this->plan_dateTime
-		% formatDateTime(this->plan_dateTime)
-		% this->plan_dateTime.date().year()
-		% this->plan_dateTime.date().month().as_number()//10
-		% this->plan_dateTime.date().day()
-		% this->plan_dateTime.time_of_day().hours()
-		% this->plan_dateTime.time_of_day().minutes()
+        % formatDateTime(this->plan_dateTime)
+        % this->plan_dateTime.date().year()
+        % this->plan_dateTime.date().month().as_number()//10
+        % this->plan_dateTime.date().day()
+        % this->plan_dateTime.time_of_day().hours()
+        % this->plan_dateTime.time_of_day().minutes()
 
 		% this->depType
 		//% this->depType_value
 		% this->dep_external_code//15
 		% this->dep_city_External_code
-		% format_double(this->dep_coord.X, 10, 2, 0.0) //17
-		% format_double(this->dep_coord.Y, 10, 2, 0.0)//18
+        % format_double(this->dep_coord.x) //17
+        % format_double(this->dep_coord.y)//18
 
 		% this->destType
 		% this->dest_external_code//20
 		% this->dest_city_External_code
-		% format_double(this->dest_coord.X, 10, 2, 0.0)//22
-		% format_double(this->dest_coord.Y, 10, 2, 0.0)//23
+        % format_double(this->dest_coord.x)//22
+        % format_double(this->dest_coord.y)//23
 
 		% this->sens
 		//% CriteriaCaption[boost::lexical_cast<int> (this->criteria)]//25
@@ -563,19 +538,17 @@ std::string PlanJourney::getSql(){
 		% this->error//40
 		% this->user_id
 		% this->wsn_id
-		).str() + ");"+ks_lineBreak;
-
-	requete_PlanJourney += (boost::format(ks_scopeIdentity) % "PJO_IDE").str() +ks_lineBreak;
-	requete_PlanJourney += ks_errorExit;
+        % this->call_dateTime.date().month().as_number()
+        ).str();
 	
 	// liste des réponses
-	BOOST_FOREACH(ResponsePlanJourney & rpj, this->responses) {
-		requete_PlanJourney += rpj.getSql();
-	}
-	return requete_PlanJourney;
+    BOOST_FOREACH(const ResponsePlanJourney & rpj, this->responses) {
+        request += rpj.getSql();
+    }
+    return request;
 }
 
-Hit::Hit(): dateTime(boost::posix_time::second_clock::local_time()), user_id(0), wsn_id(0), response_size(0), api_cost(0){
+Hit::Hit(): dateTime(boost::posix_time::second_clock::local_time()), wsn_id(0), user_id(0), response_duration(0), response_size(0), api_cost(0){
 
 }
 
@@ -614,14 +587,13 @@ void Hit::readXML(rapidxml::xml_node<> *Node){
 
 }
 
-std::string Hit::writeXML(){
+std::string Hit::writeXML() const{
     std::string result = "toto";
     return result;
 }
 
-std::string Hit::getSql(){
-	std::string requete_hit = "";
-	requete_hit += ks_table_hit_insert + (boost::format(ks_table_hit_values) 
+std::string Hit::getSql() const{
+    std::string request = (boost::format("insert into HIT_TEMP (HIT_DATE, HIT_YEAR, HIT_MONTH,HIT_DAY,HIT_HOUR,HIT_MINUTE, HIT_TIME, HIT_SERVER, USE_ID, HIT_ACTION, HIT_DURATION, HIT_RESPONSE_SIZE, HIT_SCRIPT, WSN_ID, HIT_COST, HIT_CLIENT_IP) values ('%1%', %2%, %3%, %4%, %5%, %6%, '%7%', '%8%', %9%, '%10%', %11%, %12%, '%13%', %14%, %15%, '%16%');\nSET @HIT_IDE = (SELECT SCOPE_IDENTITY());\nSET @ERR = @@ERROR;\n IF @ERR <> 0 GOTO sortie;\n")
 		//% this->dateTime 
 		% formatDateTime(this->dateTime)
 		//boost::posix_time::ptime
@@ -643,19 +615,17 @@ std::string Hit::getSql(){
 		% this->wsn_id
 		% this->api_cost
 		% this->client_ip
-		).str() + ");"+ks_lineBreak;
+        ).str();
 
-	requete_hit += (boost::format(ks_scopeIdentity) % "HIT_IDE").str() + ks_lineBreak;
-	requete_hit += ks_errorExit;
-
-	return requete_hit;
+    return request;
 	
 }
 
 StatNavitia::StatNavitia(){
+    //stats_file = Configuration::get()->strings["stats_file"];
 }
 
-void StatNavitia::readXML(const std::string reponse_navitia){
+void StatNavitia::readXML(const std::string & reponse_navitia){
 
     //Utilisation de RapidXML pour parser le flux XML de HIT
     rapidxml::xml_document<> xmlDoc;
@@ -687,22 +657,21 @@ void StatNavitia::readXML(const std::string reponse_navitia){
 	}
 }
 
-std::string StatNavitia::writeXML(){
+std::string StatNavitia::writeXML() const{
     std::string result = "toto";
     return result;
 }
 
-void StatNavitia::writeSQLInFile(){
-	std::ofstream statfile(gs_statFileName, std::ios::app);
-	statfile<< this->sql_requete;
+void StatNavitia::writeSQLInFile(const std::string & request) const{
+    std::string stats_file = Configuration::get()->get_string("stats_file");
+    std::ofstream statfile(stats_file, std::ios::app);
+    statfile<< request;
 }
 
-void StatNavitia::writeSql(){
-	this->sql_requete = "";
-	this->sql_requete += this->hit.getSql();
-	this->sql_requete += this->planJourney.getSql();
-	this->writeSQLInFile();
-	
+void StatNavitia::writeSql() const{
+    std::string request = this->hit.getSql();
+    request += this->planJourney.getSql();
+    this->writeSQLInFile(request);
 }
 
 std::string StatNavitia::delete_node_hit(std::string & response_navitia){
@@ -731,9 +700,6 @@ std::string StatNavitia::delete_node_hit(std::string & response_navitia){
 
 // constructeur par défaul
 ClockThread::ClockThread(): th_stoped(false) {
-    Configuration * conf = Configuration::get();
-    gs_applicationName = conf->strings["application"];
-    gs_filePathName = conf->strings["path"];
     this->start();
 }
 
@@ -750,6 +716,7 @@ void ClockThread::stop(){
 }
 // mettre à disposition des autres threads un nouveau fichier
 void ClockThread::createNewFileName(){
+    Configuration * conf = Configuration::get();
 	// Stat_MMDD-HHNNSS-MS_SERVER_WsnId
 	std::stringstream ss;
 	ss.clear();
@@ -768,21 +735,20 @@ void ClockThread::createNewFileName(){
 	ss<< "_";
 	ss<< gs_serverName;
 	ss<< "_";
-	ss<< gi_wsn_id;
-	ss <<".txt";
-	this->m_mutex.lock();
-	gs_statFileName = gs_filePathName + ss.str(); 
-	this->m_mutex.unlock();
+    ss<< conf->get_int("wsn_id");
+    ss <<".txt";
+    conf->set_string("stats_file", conf->get_string("path") + ss.str());
 }
 void ClockThread::work(){
 
+    int timer = Configuration::get()->get_int("clock_timer");
 	std::stringstream ss;
 	boost::xtime xt; 
 	while (!th_stoped){
 		// le premier traitement : Attendre jusqu'à la fin du cycle
 		//Début du cycle
 		boost::xtime_get(&xt, boost::TIME_UTC); 
-		xt.sec += 1 * gi_clockTimer; 
+        xt.sec += 1 * timer;
 		// Créer un nouveau fichier
 		this->createNewFileName();
 
@@ -799,10 +765,11 @@ void ClockThread::work(){
 	} // Fin du clock
 }
 void ClockThread::getFileList(){
+    Configuration * conf = Configuration::get();
 	boost::filesystem::directory_iterator end_itr; 
 	// Default ctor yields past-the-end 
 	fileList.clear();
-	for( boost::filesystem::directory_iterator i( gs_filePathName ); i != end_itr; i++ ) {
+    for( boost::filesystem::directory_iterator i( conf->get_string("path") ); i != end_itr; i++ ) {
 		// Skip if not a file
 		if( !boost::filesystem::is_regular_file( i->status() ) ) 
 			continue;
@@ -811,7 +778,7 @@ void ClockThread::getFileList(){
 		if( !boost::regex_match( i->filename(), what, gs_statFileFilter ) ) 
 			continue;      
 		// File matches, store it
-		if (i->leaf() != gs_statFileName){
+        if (i->leaf() != conf->get_string("application")){
 			fileList.push_back( i->filename() ); 
 		}
 	} 
@@ -823,23 +790,24 @@ void ClockThread::saveStatFromFileList(){
 	}
 }
 void ClockThread::deleteStatFile(const std::string & fileName){
-	if(boost::filesystem::exists(gs_filePathName+fileName)){
-		boost::filesystem::remove(gs_filePathName+fileName);
+    std::string path = Configuration::get()->get_string("path");
+    if(boost::filesystem::exists(path+fileName)){
+       // boost::filesystem::remove(path+fileName);
 		std::stringstream ss;
 		ss<<fileName;
 		writeLineInLogFile("Fichier de stat supprimé : " + ss.str());
 	}
 }
 void ClockThread::renameStatFile(const std::string & fileName){
-	if(boost::filesystem::exists(gs_filePathName+fileName)){
-		boost::filesystem::rename(gs_filePathName+fileName, gs_filePathName + (boost::format(gs_statErrorFileName) % fileName).str());
+    std::string path = Configuration::get()->get_string("path");
+    if(boost::filesystem::exists(path+fileName)){
+        boost::filesystem::rename(path+fileName, path + (boost::format("ERROR_%1%") % fileName).str());
 	}
 }
 void ClockThread::saveStatFromFile(const std::string & fileName){
 	std::string lineSql; 
 	std::stringstream ss;
-	boost::iostreams::stream<boost::iostreams::file_source> file(gs_filePathName+fileName.c_str());
-	//std::ifstream
+    std::ifstream file(Configuration::get()->get_string("path")+fileName);
 	while (std::getline(file, lineSql)) {
 		ss<< lineSql;
 	}

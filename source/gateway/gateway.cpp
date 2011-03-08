@@ -9,43 +9,51 @@ using namespace webservice;
 Navitia::Navitia(const std::string & server, const std::string & path) : 
 				server(server), path(path), error_count(0), next_time_status_ok(bt::second_clock::local_time()),
 					global_error_count(0),maxError_count(0), call_count(0),is_loading(false), is_navitia_ready(true), 
-					navitia_thread_date(bt::second_clock::local_time()){	
+                    thread_date(bt::second_clock::local_time()){
 }
 
 
 Navitia::Navitia() : 
 			        error_count(0), next_time_status_ok(bt::second_clock::local_time()),
 					global_error_count(0),maxError_count(0), call_count(0),is_loading(false), is_navitia_ready(true), 
-					navitia_thread_date(bt::second_clock::local_time()) 
+                    thread_date(bt::second_clock::local_time())
 {
 }
 
 Navitia::Navitia(const Navitia & n) : 
 				server(n.server), path(n.path), error_count(0), next_time_status_ok(bt::second_clock::local_time()),
 					global_error_count(0),maxError_count(0), call_count(0),is_loading(false), is_navitia_ready(true), 
-					navitia_thread_date(bt::second_clock::local_time()) 
+                    thread_date(bt::second_clock::local_time())
 {
 }
 
-void Navitia::operator=(const Navitia & other){
+Navitia & Navitia::operator=(const Navitia & other){
     this->server = other.server;
     this->path = other.path;
+    is_navitia_ready = other.is_navitia_ready;
+    is_loading = other.is_loading;
+    call_count = other.call_count;
+    maxError_count =  other.maxError_count;
+    global_error_count = other.global_error_count;
+    error_count = other.error_count;
+    return *this;
 }
-std::string Navitia::query(const std::string & request){
 
+std::string Navitia::query(const std::string & request){
+    std::string q = path + request;
 	std::string resp;
 	try
 	{
 		//il faut ajouter &safemode=0 si 
-		resp = get_http(server, path + request);
+        resp = get_http(server, q);
 	}
 	catch (http_error e){
-		resp = "<ServerError>"+ks_lineBreak;
+        resp = "<ServerError>\n";
 		resp +="<http code=\"";
 		resp += boost::lexical_cast<std::string>(e.code)+ "\">";
 		resp += e.message;
 		resp += "</http>";
-		resp += "</ServerError>"+ks_lineBreak;
+        resp += "</ServerError>\n";
 	}
 
 	return resp;
@@ -69,30 +77,30 @@ struct Worker : public BaseWorker<NavitiaPool> {
         resp.response = "";
 		BOOST_FOREACH(Navitia & n, np.navitias) 
 		{
-			strResponse += "<WSN WSNId=\""+ boost::lexical_cast<std::string>(np.web_service_id)+ "\" WSNURL=\"http://"+n.server+"/"+n.path+"\">"+ks_lineBreak;
-			strResponse += "<NavitiaStatus ErrorCount=\"" + boost::lexical_cast<std::string>(n.error_count) + "\">"+ks_lineBreak;
+            strResponse += "<WSN WSNId=\""+ boost::lexical_cast<std::string>(np.web_service_id)+ "\" WSNURL=\"http://"+n.server+"/"+n.path+"\">\n";
+            strResponse += "<NavitiaStatus ErrorCount=\"" + boost::lexical_cast<std::string>(n.error_count) + "\">\n";
 			strResponse += n.get_status();
-			strResponse += "</NavitiaStatus>"+ks_lineBreak;
-			strResponse += "</WSN>"+ks_lineBreak; 	
+            strResponse += "</NavitiaStatus>\n";
+            strResponse += "</WSN>\n";
 		}
-		resp.response = "<GatewayStatus>"+ks_lineBreak;
-		resp.response +="<Version>0</Version>"+ks_lineBreak;
-		resp.response +="<CheckAccess>"+boost::lexical_cast<std::string>(np.use_database_user)+"</CheckAccess>"+ks_lineBreak;
-		resp.response +="<SafeMode>0</SafeMode>"+ks_lineBreak;
-		resp.response +="<SaveStat>"+boost::lexical_cast<std::string>(np.use_database_stat)+"</SaveStat>"+ks_lineBreak;
-		resp.response +="<SQLConnection>0</SQLConnection>"+ks_lineBreak;
-		resp.response +="<StatBlackListedFile>0</StatBlackListedFile>"+ks_lineBreak;
+        resp.response = "<GatewayStatus>\n";
+        resp.response +="<Version>0</Version>\n";
+        resp.response +="<CheckAccess>"+boost::lexical_cast<std::string>(np.use_database_user)+"</CheckAccess>\n";
+        resp.response +="<SafeMode>0</SafeMode>\n";
+        resp.response +="<SaveStat>"+boost::lexical_cast<std::string>(np.use_database_stat)+"</SaveStat>\n";
+        resp.response +="<SQLConnection>0</SQLConnection>\n";
+        resp.response +="<StatBlackListedFile>0</StatBlackListedFile>\n";
 		//Nom du fichier de stat
-		resp.response +="<StatFileWorking StatLineWorking=\"0\"></StatFileWorking>"+ks_lineBreak;
+        resp.response +="<StatFileWorking StatLineWorking=\"0\"></StatFileWorking>\n";
 		resp.response +="<StatFileSQLWriting StatLineSQLWriting=\"0\"></StatFileSQLWriting>";
-		resp.response +="<LoadStatus NavitiaCount=\"" + boost::lexical_cast<std::string>(np.navitias.size()) + "\" NavitiaToLoad=\"0\"></LoadStatus>"+ks_lineBreak;
+        resp.response +="<LoadStatus NavitiaCount=\"" + boost::lexical_cast<std::string>(np.navitias.size()) + "\" NavitiaToLoad=\"0\"></LoadStatus>\n";
 		resp.response +="<GatewayThread GatewayThreadMax=\""+ boost::lexical_cast<std::string>(np.nb_threads) + "\">";
-		resp.response += boost::lexical_cast<std::string>(np.nb_threads) +"</GatewayThread>"+ks_lineBreak;
+        resp.response += boost::lexical_cast<std::string>(np.nb_threads) +"</GatewayThread>\n";
 		resp.response += "<NavitiaList NAViTiAOnError=\"" + boost::lexical_cast<std::string>(np.navitia_on_error_count())+ "\"";
-		resp.response +=" NAViTiAEventSynchro=\"0\" DeactivatedNAViTiA=\""+boost::lexical_cast<std::string>(np.deactivated_navitia_count())+"\">"+ks_lineBreak; 
+        resp.response +=" NAViTiAEventSynchro=\"0\" DeactivatedNAViTiA=\""+boost::lexical_cast<std::string>(np.deactivated_navitia_count())+"\">\n";
 		resp.response +=strResponse;
-		resp.response += "</NavitiaList>"+ks_lineBreak;
-		resp.response += "</GatewayStatus>"+ks_lineBreak;
+        resp.response += "</NavitiaList>\n";
+        resp.response += "</GatewayStatus>\n";
 		writeLineInLogFile("Appel de status");
 
 		return resp;
@@ -176,11 +184,13 @@ struct Worker : public BaseWorker<NavitiaPool> {
 NavitiaPool::NavitiaPool() : nb_threads(16){
 	//Récuperer le chemin de la dll et le dom de l'application:
     Configuration * conf = Configuration::get();
-    gs_applicationName = conf->strings["application"];
-    gs_filePathName = conf->strings["path"];
-	std::string initFileName = gs_filePathName + gs_applicationName + ".ini";
-	gs_logFileName = gs_filePathName + gs_applicationName + ".log";
+    std::string initFileName = conf->get_string("path") + conf->get_string("application") + ".ini";
+    conf->set_string("log_file",conf->get_string("path") + conf->get_string("application") + ".log");
 	writeLineInLogFile("Lecture du fichier INI :" + initFileName); 
+    conf->load_ini(initFileName);
+    nb_threads = conf->get_as<int>("GENERAL","NbThread");
+    conf->set_int("wsn_id", 0);
+    conf->set_int("clock_timer", conf->get_as<int>("GENERAL","TIMER"));
 
 	std::string Server = "";
 	std::string Path = "";
@@ -189,9 +199,9 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
 	size_t sectionFound;
 	boost::property_tree::ptree pt;
 	
-	boost::property_tree::read_ini(initFileName, pt);
+    boost::property_tree::read_ini(initFileName, pt);
 	boost::property_tree::ptree::const_iterator it_end = pt.end();
-	
+
 	BOOST_FOREACH(auto it, pt)
 	{
 		sectionNameINI = it.first;
@@ -270,8 +280,8 @@ Navitia & NavitiaPool::get_next_navitia(){
 		}
 
 		//RÃ©cupÃ©rer la date de dÃ©rniÃ¨re utilisation de navitia la plus ancienne.
-		if (next_navitia->navitia_thread_date < navitia_last_used_date){
-			navitia_last_used_date = next_navitia->navitia_thread_date;
+        if (next_navitia->thread_date < navitia_last_used_date){
+            navitia_last_used_date = next_navitia->thread_date;
 			oldest_navitia_index = next_navitia;
 		}
 		
@@ -306,7 +316,7 @@ Navitia & NavitiaPool::get_next_navitia(){
 	}
 
 	next_navitia->is_navitia_ready = false;
-	next_navitia->navitia_thread_date = bt::second_clock::local_time();
+    next_navitia->thread_date = bt::second_clock::local_time();
 	iter_mutex.unlock();
 	writeLineInLogFile("navitia utilisé : http://" + next_navitia->server + next_navitia->path);
 
@@ -315,7 +325,7 @@ Navitia & NavitiaPool::get_next_navitia(){
 
 std::string NavitiaPool::query(const std::string & q){
     std::string query = q;
-	std::string response;
+    std::string response = "";
 	bool is_response_ok = false;
 	//Il faut ajouter &safemode=0 si enregistrement du stat est activé
     if (this->use_database_stat){
@@ -396,7 +406,7 @@ std::string Navitia::get_status()
 						strAttrValue = attr->value();
 						respStatus += " "+strAttrName+"=\""+strAttrValue+"\"";
 					}			
-					respStatus += ">" + strNodeValue + "</"+strNodeName+">"+ks_lineBreak;
+                    respStatus += ">" + strNodeValue + "</"+strNodeName+">\n";
 				}
 			}
 		}
@@ -410,9 +420,7 @@ std::string Navitia::get_load()
 }
 
 void Navitia::add_error_count(){
-	this->navitia_mutex.lock();
-	this->error_count++;
-	this->navitia_mutex.unlock();
+    this->error_count++;
 }
 
 void NavitiaPool::desactivate_navitia_on_load(Navitia & nav)
@@ -498,11 +506,13 @@ void NavitiaPool::activate_all_navitia(){
 	writeLineInLogFile("activation de tous les navitia");
 }
 void Navitia::desactivate(const int timeValue, const bool pb_global){
+    mutex.lock();
 	this->next_time_status_ok = bt::second_clock::local_time() + bt::seconds(timeValue);
+    this->thread_date = bt::second_clock::local_time();
+    mutex.unlock();
 	this->error_count = 0;
 	this->call_count = 0;
 	this->is_navitia_ready = true;
-	this->navitia_thread_date = bt::second_clock::local_time();
 	this->maxError_count++;
 	if (pb_global){
 		this->global_error_count = 0;
@@ -516,7 +526,9 @@ void Navitia::desactivate(const int timeValue, const bool pb_global){
 }
 
 void Navitia::activate(){
+    mutex.lock();
 	this->next_time_status_ok = bt::second_clock::local_time();
+    mutex.unlock();
 	this->error_count = 0;
 	this->call_count = 0;
 }
@@ -526,30 +538,30 @@ bool Navitia::is_navitia_loaded(const std::string & response)
 	std::string Complet = ">Complete<";
 	std::string LoadError = "<LoadError>";
 	std::string ServerError = "ServerError";	
-	return ((!existe_in_response(response, ServerError)) && existe_in_response(response, Complet) && (!existe_in_response(response, LoadError)));
+    return ((!exists_in_response(response, ServerError)) && exists_in_response(response, Complet) && (!exists_in_response(response, LoadError)));
 }
 
-bool Navitia::existe_in_response(const std::string &response, const std::string &word){
+bool Navitia::exists_in_response(const std::string &response, const std::string &word){
 	size_t word_found;
 	word_found = response.find(word);
 	return (word_found != std::string::npos); 
 }
 
 bool Navitia::is_server_error(const std::string & response){
-	return existe_in_response(response, "ServerError");
+    return exists_in_response(response, "ServerError");
 }
 
 bool Navitia::is_navitia_error(const std::string & response){
 	std::string navitiaError = "<error>";
 	std::string loadError = "<LoadError>";
-	return (existe_in_response(response, navitiaError) || existe_in_response(response, loadError));
+    return (exists_in_response(response, navitiaError) || exists_in_response(response, loadError));
 }
 
 void Navitia::activate_thread(){
-	this->navitia_mutex.lock();
+    this->mutex.lock();
 	this->is_navitia_ready = true;
-	this->navitia_thread_date = bt::second_clock::local_time();
-	this->navitia_mutex.unlock();
+    this->thread_date = bt::second_clock::local_time();
+    this->mutex.unlock();
 	writeLineInLogFile("navitia libéré : http://" + this->server + this->path);
 }
 

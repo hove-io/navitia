@@ -15,8 +15,8 @@ struct Data{
   /// Constructeur par défaut, il est appelé au chargement du webservice
   Data() : nb_threads(8), count(0){
       Configuration * conf = Configuration::get();
-      std::cout << "Je suis l'executable " << conf->strings["application"] <<std::endl;
-      std::cout << "Je réside dans le path " << conf->strings["path"] <<std::endl;
+      std::cout << "Je suis l'executable " << conf->get_string("application") <<std::endl;
+      std::cout << "Je réside dans le path " << conf->get_string("path") <<std::endl;
   }
 };
 

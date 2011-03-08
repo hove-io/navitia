@@ -38,9 +38,9 @@ struct Wrapper {
 #define MAKE_WEBSERVICE(Data, Worker) int main(int argc , char** argv){QApplication a(argc, argv); \
 Configuration * conf = Configuration::get();\
 std::string::size_type posSlash = std::string(argv[0]).find_last_of( "\\/" );\
-conf->strings["application"] = std::string(argv[0]).substr(posSlash+1);\
+conf->set_string("application", std::string(argv[0]).substr(posSlash+1));\
 char buf[256];\
-if(getcwd(buf, 256)) conf->strings["path"] = std::string(buf) + "/"; else conf->strings["path"] = "unknown";\
+if(getcwd(buf, 256)) conf->set_string("path",std::string(buf) + "/"); else conf->set_string("path", "unknown");\
     Wrapper<Data, Worker> wrap; \
     MainWindow w(boost::bind(&Wrapper<Data, Worker>::run, &wrap, _1)); \
     w.show(); \
