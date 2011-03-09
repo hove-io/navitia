@@ -188,9 +188,9 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
     conf->set_string("log_file",conf->get_string("path") + conf->get_string("application") + ".log");
 	writeLineInLogFile("Lecture du fichier INI :" + initFileName); 
     conf->load_ini(initFileName);
-    nb_threads = conf->get_as<int>("GENERAL","NbThread");
+    nb_threads = conf->get_as<int>("GENERAL","NbThread", 4);
     conf->set_int("wsn_id", 0);
-    conf->set_int("clock_timer", conf->get_as<int>("GENERAL","TIMER"));
+    conf->set_int("clock_timer", conf->get_as<int>("GENERAL","TIMER", 60));
 
 	std::string Server = "";
 	std::string Path = "";
@@ -259,7 +259,7 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
 }
 
 Navitia & NavitiaPool::get_next_navitia(){
-	iter_mutex.lock();
+    iter_mutex.lock();
 	bool navitia_found = false;
 	std::vector<Navitia>::iterator oldest_navitia_index = this->next_navitia;
 	
@@ -315,12 +315,17 @@ Navitia & NavitiaPool::get_next_navitia(){
 		this->activate_all_navitia();
 	}
 
-	next_navitia->is_navitia_ready = false;
-    next_navitia->thread_date = bt::second_clock::local_time();
-	iter_mutex.unlock();
-	writeLineInLogFile("navitia utilisé : http://" + next_navitia->server + next_navitia->path);
+    Navitia & nav = *next_navitia;
+    iter_mutex.unlock();
 
-	return *next_navitia;
+    nav.mutex.lock();
+	nav.is_navitia_ready = false;
+    nav.thread_date = bt::second_clock::local_time();
+    nav.mutex.unlock();
+    
+    writeLineInLogFile("navitia utilisé : http://" + nav.server + nav.path);
+
+    return nav;
 }
 
 std::string NavitiaPool::query(const std::string & q){
@@ -463,8 +468,10 @@ int NavitiaPool::deactivated_navitia_count(){
 	int desactive_navitia_count = 0;
 	BOOST_FOREACH(Navitia & n, this->navitias) 
 	{
+        n.mutex.lock_shared();
 		if (n.next_time_status_ok > bt::second_clock::local_time())
 			desactive_navitia_count++;
+        n.mutex.unlock_shared();
 	}
 	return desactive_navitia_count;	
 }
@@ -499,9 +506,14 @@ void NavitiaPool::activate_all_navitia(){
 	//Activation de tous les navitias sauf celui qui a été désactivé avec une valeur globale.
 	bt::ptime next_time_ok = bt::second_clock::local_time() + bt::seconds(this->reactivation_delay);
 	BOOST_FOREACH(Navitia & nav, this->navitias){
+        nav.mutex.lock_shared();
 		if (nav.next_time_status_ok < next_time_ok){
+            nav.mutex.unlock_shared();
 			nav.activate();
 		}
+        else {
+            nav.mutex.unlock_shared();
+        }
 	}
 	writeLineInLogFile("activation de tous les navitia");
 }
@@ -528,9 +540,9 @@ void Navitia::desactivate(const int timeValue, const bool pb_global){
 void Navitia::activate(){
     mutex.lock();
 	this->next_time_status_ok = bt::second_clock::local_time();
-    mutex.unlock();
 	this->error_count = 0;
 	this->call_count = 0;
+    mutex.unlock();
 }
 
 bool Navitia::is_navitia_loaded(const std::string & response)

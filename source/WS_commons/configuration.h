@@ -55,14 +55,19 @@ public:
     /// — la clef ou la section n'existe pas
     /// — la conversion est impossible
     template<class T>
-    T get_as(const std::string & section, const std::string & key) {
+    T get_as(const std::string & section, const std::string & key, T default_value) {
         auto section_it = ini.find(section);
         if(section_it == ini.end())
-            throw not_found();
+            return default_value;
         auto element_it = section_it->second.find(key);
         if(element_it == section_it->second.end())
-            throw not_found();
-        return boost::lexical_cast<T>(element_it->second);
+            return default_value;
+        try{
+            return boost::lexical_cast<T>(element_it->second);
+        }
+        catch(...) {
+            return default_value;
+        }
     }
 
     /// Charge un fichier ini
