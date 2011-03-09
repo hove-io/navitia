@@ -9,6 +9,7 @@
 #include <boost/serialization/vector.hpp>
 
 #include <boost/any.hpp>
+#include <boost/bimap.hpp>
 
 struct Country {
     int idx;
@@ -241,12 +242,23 @@ struct GeographicalCoord{
 };
 
 // Attenstion lors de l'ajout d'un type, il faut ajouter un libellé
-enum PointType{ptCity=0, ptSite, ptAddress, ptStopArea, ptAlias, ptUndefined, ptSeparator};
+
 const std::string PointTypeCaption[] = { "City", "Site", "Address", "StopArea", "Alias", "Undefined", "Separator"};
 
-enum Criteria{cInitialization=0, cAsSoonAsPossible, cLeastInterchange, cLinkTime, cDebug, cWDI};
-const std::string CriteriaCaption[] = { "Initialization", "AsSoonAsPossible", "LeastInterchange", "LinkTime", "Debug", "WDI"};
+
+//const std::string CriteriaCaption[] = { "Initialization", "AsSoonAsPossible", "LeastInterchange", "LinkTime", "Debug", "WDI"};
 const std::string TrueValue[] = {"true", "+", "1"};
+enum PointType{City, Site, Address, StopArea, Alias, Undefined, Separator};
+enum Criteria{Initialization, AsSoonAsPossible, LeastInterchange, LinkTime, Debug, WDI};
+
+struct static_data {
+private:
+    static static_data * instance;
+public:
+    static static_data * get();
+    boost::bimap<Criteria, std::string> criterias;
+};
+
 /*
 std::map<std::string, std::string> pointTypes;
 boost::insert (pointTypes) ("ptCity", "City");

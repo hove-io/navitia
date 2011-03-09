@@ -73,7 +73,7 @@ return result;
 }
 
 PointType getpointTypeByCaption(const std::string & strPointType){
-	PointType pt=ptUndefined;
+    PointType pt= Undefined;
 
 	for (unsigned int i = 0; i< (sizeof(PointTypeCaption)/sizeof(PointTypeCaption[0])); i++){
 		if (strcmp(PointTypeCaption[i].c_str(), strPointType.c_str()) == 0){
@@ -85,14 +85,15 @@ PointType getpointTypeByCaption(const std::string & strPointType){
 }
 
 Criteria getCriteriaByCaption(const std::string & strCriteria){
-	Criteria ct = cInitialization;
+    return static_data::get()->criterias.right.at(strCriteria);
+    /*Criteria ct = cInitialization;
 	for (unsigned int i = 0; i< (sizeof(CriteriaCaption)/sizeof(CriteriaCaption[0])); i++){
 		if (strcmp(CriteriaCaption[i].c_str(), strCriteria.c_str()) == 0){
 			ct=(Criteria) i;
 			break;
 		}
 	}
-	return ct;
+    return ct;*/
 }
 
 bool strToBool(const std::string &strValue, bool defaultValue){
@@ -117,7 +118,7 @@ bool strToBool(const std::string &strValue, bool defaultValue){
 }*/
 
 
-DetailPlanJourney::DetailPlanJourney() : user_id(0), wsn_id(0), response_ide(-1), depType(ptCity), arrType(ptCity),
+DetailPlanJourney::DetailPlanJourney() : user_id(0), wsn_id(0), response_ide(-1), depType(City), arrType(City),
     dep_dateTime(boost::posix_time::second_clock::local_time()),
     arr_dateTime(boost::posix_time::second_clock::local_time()), section_type(0){
 }
@@ -351,8 +352,8 @@ std::string ResponsePlanJourney::getSql() const{
 
 PlanJourney::PlanJourney(): user_id(0), wsn_id(0), plan_dateTime(boost::posix_time::second_clock::local_time()),
                             call_dateTime(boost::posix_time::second_clock::local_time()),
-                            depType_value(0), depType(ptCity), destType(ptCity), destType_value(0),
-                            sens(0), criteria(cInitialization), mode(0), walk_speed(0), equipement(0),
+                            depType_value(0), depType(City), destType(City), destType_value(0),
+                            sens(0), criteria(Initialization), mode(0), walk_speed(0), equipement(0),
                             vehicle(0), total_plan_duration(0),
                             error(0), hang_distance(0), dep_hang_distance(0), dest_hang_distance(0),
                             via_connection_duration(0), manage_disrupt(false)

@@ -1,5 +1,6 @@
 #include "type.h"
 #include <iostream>
+#include <boost/assign.hpp>
 
 bool ValidityPattern::is_valid(int duration){
     if(duration < 0){
@@ -31,4 +32,14 @@ void ValidityPattern::remove(boost::gregorian::date date){
 void ValidityPattern::remove(int day){
     if(is_valid(day))
         days[day] = false;
+}
+
+static_data * static_data::instance = 0;
+static_data * static_data::get() {
+    if (instance == 0) {
+        instance = new static_data();
+
+        boost::assign::insert(instance->criterias)(Initialization, "Initialization")(AsSoonAsPossible, "AsSoonAsPossible")(LeastInterchange, "LeastInterchange")(LinkTime, "LinkTime")(Debug, "Debug")(WDI,"WDI");
+    }
+    return instance;
 }
