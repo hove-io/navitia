@@ -71,7 +71,7 @@ return result;
 PointType getpointTypeByCaption(const std::string & strPointType){
 	PointType pt=ptUndefined;
 
-	for (int i = 0; i< (sizeof(PointTypeCaption)/sizeof(PointTypeCaption[0])); i++){
+	for (unsigned int i = 0; i< (sizeof(PointTypeCaption)/sizeof(PointTypeCaption[0])); i++){
 		if (strcmp(PointTypeCaption[i].c_str(), strPointType.c_str()) == 0){
 			pt=(PointType) i;
 			break;
@@ -82,7 +82,7 @@ PointType getpointTypeByCaption(const std::string & strPointType){
 
 Criteria getCriteriaByCaption(const std::string & strCriteria){
 	Criteria ct = cInitialization;
-	for (int i = 0; i< (sizeof(CriteriaCaption)/sizeof(CriteriaCaption[0])); i++){
+	for (unsigned int i = 0; i< (sizeof(CriteriaCaption)/sizeof(CriteriaCaption[0])); i++){
 		if (strcmp(CriteriaCaption[i].c_str(), strCriteria.c_str()) == 0){
 			ct=(Criteria) i;
 			break;
@@ -93,7 +93,7 @@ Criteria getCriteriaByCaption(const std::string & strCriteria){
 
 bool strToBool(const std::string &strValue, bool defaultValue){
 	bool result = defaultValue;
-	for (int i = 0; i< (sizeof(TrueValue)/sizeof(TrueValue[0])); i++){
+	for (unsigned int i = 0; i< (sizeof(TrueValue)/sizeof(TrueValue[0])); i++){
 		if (strcmp(boost::to_upper_copy(TrueValue[i]).c_str(), boost::to_upper_copy(strValue).c_str()) == 0){
 			result = true;
 			break;
