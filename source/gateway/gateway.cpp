@@ -256,6 +256,9 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
 			add(Server,Path);
 		}
 	}
+
+    // On lance le thread qui gère les statistiques & base
+    clockStat.start();
 }
 
 Navitia & NavitiaPool::get_next_navitia(){

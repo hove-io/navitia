@@ -222,6 +222,7 @@ std::string DetailPlanJourney::getSql() const{
 }
 
 
+const std::string ResponsePlanJourney::xml_node_name = "ResponsePlanJourney";
 ResponsePlanJourney::ResponsePlanJourney() : user_id(0), wsn_id(0), response_ide(-1), interchange(0),
     total_link_time(0.0),totalLink_hour(0),totalLink_minute(0),journey_duration(0.0), journeyDuration_hour(0),journeyDuration_minute(0),
     journey_dateTime(boost::posix_time::second_clock::local_time()),
@@ -700,7 +701,6 @@ std::string StatNavitia::delete_node_hit(std::string & response_navitia){
 
 // constructeur par défaul
 ClockThread::ClockThread(): th_stoped(false) {
-    this->start();
 }
 
 // démarrage du thread

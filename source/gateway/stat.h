@@ -185,6 +185,7 @@ struct DetailPlanJourney{
 };
 
 struct ResponsePlanJourney{
+    static const std::string xml_node_name;
 	int user_id;
     int wsn_id;
     int response_ide;
