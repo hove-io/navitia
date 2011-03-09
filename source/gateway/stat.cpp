@@ -12,8 +12,6 @@
 
 #include <log4cplus/logger.h>
 #include <log4cplus/configurator.h>
-#include <log4cplus/helpers/loglog.h>
-#include <log4cplus/helpers/stringhelper.h>
 
 boost::posix_time::ptime seconds_from_epoch(const std::string& s) {
 	boost::posix_time::ptime pt;
