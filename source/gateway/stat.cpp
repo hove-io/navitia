@@ -9,6 +9,12 @@
 //#include "../SqlServer/mssql.h"
 #include "configuration.h"
 
+
+#include <log4cplus/logger.h>
+#include <log4cplus/configurator.h>
+#include <log4cplus/helpers/loglog.h>
+#include <log4cplus/helpers/stringhelper.h>
+
 boost::posix_time::ptime seconds_from_epoch(const std::string& s) {
 	boost::posix_time::ptime pt;
 	for(size_t i=0; i<formats_n; ++i){
@@ -102,7 +108,7 @@ bool strToBool(const std::string &strValue, bool defaultValue){
 	return result;
 }
 
-void writeLineInLogFile(const std::string & strline){
+/*void writeLineInLogFile(const std::string & strline){
 	boost::posix_time::ptime locale_dateTime = boost::posix_time::second_clock::local_time();
 	Configuration * conf = Configuration::get();    
 	std::ofstream logfile(conf->get_string("path") + conf->get_string("application") + ".log", std::ios::app);
@@ -110,7 +116,7 @@ void writeLineInLogFile(const std::string & strline){
 	logfile << "  =>  ";
 	logfile << strline;
 	logfile << ks_lineBreak;
-}
+}*/
 
 
 DetailPlanJourney::DetailPlanJourney() : user_id(0), wsn_id(0), response_ide(-1), depType(ptCity), arrType(ptCity),
@@ -795,7 +801,8 @@ void ClockThread::deleteStatFile(const std::string & fileName){
        // boost::filesystem::remove(path+fileName);
 		std::stringstream ss;
 		ss<<fileName;
-		writeLineInLogFile("Fichier de stat supprimé : " + ss.str());
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+        LOG4CPLUS_WARN(logger, "Fichier de stat supprimé : " + ss.str());
 	}
 }
 void ClockThread::renameStatFile(const std::string & fileName){

@@ -5,6 +5,11 @@
 #include <boost/foreach.hpp>
 #include "configuration.h"
 
+#include <log4cplus/logger.h>
+#include <log4cplus/configurator.h>
+#include <log4cplus/helpers/loglog.h>
+#include <log4cplus/helpers/stringhelper.h>
+
 using namespace webservice;
 Navitia::Navitia(const std::string & server, const std::string & path) : 
 				server(server), path(path), error_count(0), next_time_status_ok(bt::second_clock::local_time()),
@@ -101,7 +106,9 @@ struct Worker : public BaseWorker<NavitiaPool> {
 		resp.response +=strResponse;
         resp.response += "</NavitiaList>\n";
         resp.response += "</GatewayStatus>\n";
-		writeLineInLogFile("Appel de status");
+
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+        LOG4CPLUS_DEBUG(logger, "Appel de status");
 
 		return resp;
     }
@@ -158,7 +165,8 @@ struct Worker : public BaseWorker<NavitiaPool> {
 			}
 			nav.is_loading = false;
 		}
-		writeLineInLogFile("Appel de load");
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+        LOG4CPLUS_DEBUG(logger, "Appel de load");
 
 		return resp;
 	}	
@@ -186,11 +194,18 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
     Configuration * conf = Configuration::get();
     std::string initFileName = conf->get_string("path") + conf->get_string("application") + ".ini";
     conf->set_string("log_file",conf->get_string("path") + conf->get_string("application") + ".log");
-	writeLineInLogFile("Lecture du fichier INI :" + initFileName); 
+    
+    //chargement de la configuration du logger
+    log4cplus::PropertyConfigurator::doConfigure(LOG4CPLUS_TEXT(initFileName));
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    LOG4CPLUS_DEBUG(logger, "chargement de la configuration");
+    
     conf->load_ini(initFileName);
     nb_threads = conf->get_as<int>("GENERAL","NbThread", 4);
     conf->set_int("wsn_id", 0);
     conf->set_int("clock_timer", conf->get_as<int>("GENERAL","TIMER", 60));
+
+    
 
 	std::string Server = "";
 	std::string Path = "";
@@ -201,6 +216,7 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
 	
     boost::property_tree::read_ini(initFileName, pt);
 	boost::property_tree::ptree::const_iterator it_end = pt.end();
+    
 
 	BOOST_FOREACH(auto it, pt)
 	{
@@ -313,7 +329,8 @@ Navitia & NavitiaPool::get_next_navitia(){
 	if (!navitia_found){
 		//Utiliser le navitia le plus ancien (le navitia le plus ancien n'est jamais d√©sactiv√©)
 		next_navitia = oldest_navitia_index;
-		writeLineInLogFile("Oldest navitia used : http://" + next_navitia->server + next_navitia->path);
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+        LOG4CPLUS_DEBUG(logger, "Oldest navitia used : http://" + next_navitia->server + next_navitia->path);
 		//R√©activer tous les navitia qui ont √©t√©s d√©sactiv√©s avec une valeur normale.
 		this->activate_all_navitia();
 	}
@@ -326,7 +343,8 @@ Navitia & NavitiaPool::get_next_navitia(){
     nav.thread_date = bt::second_clock::local_time();
     nav.mutex.unlock();
     
-    writeLineInLogFile("navitia utilisÈ : http://" + nav.server + nav.path);
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    LOG4CPLUS_DEBUG(logger, "navitia utilisÈ : http://" + nav.server + nav.path);
 
     return nav;
 }
@@ -339,7 +357,8 @@ std::string NavitiaPool::query(const std::string & q){
     if (this->use_database_stat){
 		query+="&safemode=0";
 	}
-	writeLineInLogFile("RequÍte d'appel : " + query);
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    LOG4CPLUS_DEBUG(logger, "RequÍte d'appel : " + query);
 
 	//R√©cup√©rer le prochain navitia libre √  utiliser(gestion de loadbalancing):
 	for(int call_index = 0; (call_index <= this->max_call_try) && (!(is_response_ok)); call_index++){
@@ -445,14 +464,16 @@ void NavitiaPool::verify_and_desactivate_navitia(Navitia & nav){
 	//D√©sactiver ce navitia:
 	//Si le nombre de NAViTiA activ√© = 1 alors on d√©sactive jamais; 
 	if (one_navitia_activated()){
-		writeLineInLogFile("Navitia disponible = 1");
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+        LOG4CPLUS_WARN(logger, "Navitia disponible = 1");
 		return;
 	}
 			
 	//Si pourcentage de NAViTiA disponible < 50, alor on r√©active tous les NAViTia
 	//sauf celui avec GlobalReactivationDelay
 	if (this->active_navitia_percent() < 50){
-		writeLineInLogFile("Navitia disponible < 50 %");
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+        LOG4CPLUS_WARN(logger, "Navitia disponible < 50 %");
 		this->activate_all_navitia();
 	}
 			
@@ -518,7 +539,8 @@ void NavitiaPool::activate_all_navitia(){
             nav.mutex.unlock_shared();
         }
 	}
-	writeLineInLogFile("activation de tous les navitia");
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    LOG4CPLUS_DEBUG(logger, "activation de tous les navitia");
 }
 void Navitia::desactivate(const int timeValue, const bool pb_global){
     mutex.lock();
@@ -531,11 +553,13 @@ void Navitia::desactivate(const int timeValue, const bool pb_global){
 	this->maxError_count++;
 	if (pb_global){
 		this->global_error_count = 0;
-		writeLineInLogFile("navitia deactivÈ avec une valeur global : http://" + this->server + this->path);
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+        LOG4CPLUS_DEBUG(logger, "navitia deactivÈ avec une valeur global : http://" + this->server + this->path);
 	}
 	else {
 		this->global_error_count++;
-		writeLineInLogFile("navitia deactivÈ avec une valeur locale : http://" + this->server + this->path);
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+        LOG4CPLUS_DEBUG(logger, "navitia deactivÈ avec une valeur locale : http://" + this->server + this->path);
 	}
 	this->maxError_count++;
 }
@@ -577,7 +601,8 @@ void Navitia::activate_thread(){
 	this->is_navitia_ready = true;
     this->thread_date = bt::second_clock::local_time();
     this->mutex.unlock();
-	writeLineInLogFile("navitia libÈrÈ : http://" + this->server + this->path);
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    LOG4CPLUS_DEBUG(logger, "navitia libÈrÈ : http://" + this->server + this->path);
 }
 
 
