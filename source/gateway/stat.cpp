@@ -1,3 +1,4 @@
+
 #include "stat.h"
 #include <rapidxml.hpp>
 #include <rapidxml_print.hpp>
@@ -12,17 +13,6 @@
 
 #include <log4cplus/logger.h>
 #include <log4cplus/configurator.h>
-
-boost::posix_time::ptime seconds_from_epoch(const std::string& s) {
-	boost::posix_time::ptime pt;
-	for(size_t i=0; i<formats_n; ++i){
-		std::istringstream is(s);
-		is.imbue(formats[i]);
-		is >> pt;
-		if(pt != boost::posix_time::ptime()) break;
-	}
-	return pt;
-}
 
 std::string formatDateTime(boost::posix_time::ptime pt) {
 	std::stringstream ss;
@@ -72,53 +62,7 @@ return result;
 
 }
 
-PointType getpointTypeByCaption(const std::string & strPointType){
-    PointType pt= Undefined;
-
-	for (unsigned int i = 0; i< (sizeof(PointTypeCaption)/sizeof(PointTypeCaption[0])); i++){
-		if (strcmp(PointTypeCaption[i].c_str(), strPointType.c_str()) == 0){
-			pt=(PointType) i;
-			break;
-		}
-	}
-	return pt;
-}
-
-Criteria getCriteriaByCaption(const std::string & strCriteria){
-    return static_data::get()->criterias.right.at(strCriteria);
-    /*Criteria ct = cInitialization;
-	for (unsigned int i = 0; i< (sizeof(CriteriaCaption)/sizeof(CriteriaCaption[0])); i++){
-		if (strcmp(CriteriaCaption[i].c_str(), strCriteria.c_str()) == 0){
-			ct=(Criteria) i;
-			break;
-		}
-	}
-    return ct;*/
-}
-
-bool strToBool(const std::string &strValue, bool defaultValue){
-	bool result = defaultValue;
-	for (unsigned int i = 0; i< (sizeof(TrueValue)/sizeof(TrueValue[0])); i++){
-		if (strcmp(boost::to_upper_copy(TrueValue[i]).c_str(), boost::to_upper_copy(strValue).c_str()) == 0){
-			result = true;
-			break;
-		}
-	}
-	return result;
-}
-
-/*void writeLineInLogFile(const std::string & strline){
-	boost::posix_time::ptime locale_dateTime = boost::posix_time::second_clock::local_time();
-	Configuration * conf = Configuration::get();    
-	std::ofstream logfile(conf->get_string("path") + conf->get_string("application") + ".log", std::ios::app);
-	logfile << locale_dateTime;
-	logfile << "  =>  ";
-	logfile << strline;
-	logfile << ks_lineBreak;
-}*/
-
-
-DetailPlanJourney::DetailPlanJourney() : user_id(0), wsn_id(0), response_ide(-1), depType(City), arrType(City),
+DetailPlanJourney::DetailPlanJourney() : user_id(0), wsn_id(0), response_ide(-1), depType(ptCity), arrType(ptCity),
     dep_dateTime(boost::posix_time::second_clock::local_time()),
     arr_dateTime(boost::posix_time::second_clock::local_time()), section_type(0){
 }
@@ -132,46 +76,46 @@ void DetailPlanJourney::readXML(rapidxml::xml_node<> *Node){
     for(rapidxml::xml_attribute<> * attr = Node->first_attribute(); attr; attr = attr->next_attribute()){
 
         attrName = attr->name();
-        if (strcmp(attrName.c_str(), "DepExternalCode") == 0){
+        if (attrName == "DepExternalCode"){
             this->dep_external_code = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "DepCoordX") == 0){
+        else if (attrName == "DepCoordX"){
             this->dep_coord.x = str_to_float_def(attr->value(), 0.00);
         }
-        else if (strcmp(attrName.c_str(), "DepCoordY") == 0){
+        else if (attrName == "DepCoordY"){
             this->dep_coord.y = str_to_float_def(attr->value(), 0.00);
         }
-        else if (strcmp(attrName.c_str(), "LineExternalCode") == 0){
+        else if (attrName == "LineExternalCode"){
             this->line_external_code = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "ModeExternalCode") == 0){
+        else if (attrName == "ModeExternalCode"){
             this->mode_external_code = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "CompanyExternalCode") == 0){
+        else if (attrName == "CompanyExternalCode"){
             this->company_external_code = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "NetworkExternalCode") == 0){
+        else if (attrName == "NetworkExternalCode"){
             this->network_external_code = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "RouteExternalCode") == 0){
+        else if (attrName == "RouteExternalCode"){
             this->route_external_code = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "ArrExternalCode") == 0){
+        else if (attrName == "ArrExternalCode"){
             this->arr_external_code = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "ArrCoordX") == 0){
+        else if (attrName == "ArrCoordX"){
             this->arr_coord.x = str_to_float_def(attr->value(),0.00);
         }
-        else if (strcmp(attrName.c_str(), "ArrCoordY") == 0){
+        else if (attrName == "ArrCoordY"){
             this->arr_coord.y = str_to_float_def(attr->value(),0.00);
         }
-        else if (strcmp(attrName.c_str(), "DepDateTime") == 0){
+        else if (attrName == "DepDateTime"){
             strDepDateTime = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "ArrDateTime") == 0){
+        else if (attrName == "ArrDateTime"){
             strArrDateTime = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "SectionType") == 0){
+        else if (attrName == "SectionType"){
             this->section_type = str_to_int_def(attr->value(), -1);
         }
     }
@@ -260,30 +204,30 @@ void ResponsePlanJourney::readXML(rapidxml::xml_node<> *Node){
     for(rapidxml::xml_attribute<> * attr = Node->first_attribute(); attr; attr = attr->next_attribute()){
 
         attrName = attr->name();
-        if (strcmp(attrName.c_str(), "Interchange") == 0){
+        if (attrName == "Interchange"){
 			this->interchange = str_to_int_def(attr->value(), -1);
         }
-        else if (strcmp(attrName.c_str(), "TotalLinkTime") == 0){
+        else if (attrName == "TotalLinkTime"){
 			this->total_link_time = str_to_float_def(attr->value(), 0.0);
 			this->writeTotalLinkTime();
         }
-        else if (strcmp(attrName.c_str(), "JourneyDuration") == 0){
+        else if (attrName == "JourneyDuration"){
 			this->journey_duration = str_to_float_def(attr->value(), 0.0);
 			this->writeJourneyDuration();
         }
-        else if (strcmp(attrName.c_str(), "IsFirst") == 0){
-			this->isFirst = strToBool(attr->value(), false);
+        else if (attrName == "IsFirst"){
+            this->isFirst = static_data::strToBool(attr->value());
         }
-        else if (strcmp(attrName.c_str(), "IsBest") == 0){
-			this->isBest = strToBool(attr->value(), false);
+        else if (attrName == "IsBest"){
+            this->isBest = static_data::strToBool(attr->value());
         }
-        else if (strcmp(attrName.c_str(), "IsLast") == 0){
-			this->isLast = strToBool(attr->value(), false);
+        else if (attrName == "IsLast"){
+            this->isLast = static_data::strToBool(attr->value());
         }
-        else if (strcmp(attrName.c_str(), "JourneyDateTime") == 0){
-			this->journey_dateTime = seconds_from_epoch(attr->value());
+        else if (attrName == "JourneyDateTime"){
+            this->journey_dateTime = static_data::parse_date_time(attr->value());
         }
-        else if (strcmp(attrName.c_str(), "CommentType") == 0){
+        else if (attrName == "CommentType"){
             this->comment_type = str_to_int_def(attr->value(), -1);
         }
     }
@@ -292,7 +236,7 @@ void ResponsePlanJourney::readXML(rapidxml::xml_node<> *Node){
     for (rapidxml::xml_node<> *detailNode = Node->first_node(); detailNode; detailNode = detailNode->next_sibling()){
         strNodeName = detailNode->name();
 
-        if (strcmp(strNodeName.c_str(), "DetailPlanJourney") == 0){
+        if (strNodeName == "DetailPlanJourney"){
             DetailPlanJourney detail;
             detail.readXML(detailNode);
 			this->add(detail);
@@ -352,8 +296,8 @@ std::string ResponsePlanJourney::getSql() const{
 
 PlanJourney::PlanJourney(): user_id(0), wsn_id(0), plan_dateTime(boost::posix_time::second_clock::local_time()),
                             call_dateTime(boost::posix_time::second_clock::local_time()),
-                            depType_value(0), depType(City), destType(City), destType_value(0),
-                            sens(0), criteria(Initialization), mode(0), walk_speed(0), equipement(0),
+                            depType_value(0), depType(ptCity), destType(ptCity), destType_value(0),
+                            sens(0), criteria(cInitialization), mode(0), walk_speed(0), equipement(0),
                             vehicle(0), total_plan_duration(0),
                             error(0), hang_distance(0), dep_hang_distance(0), dest_hang_distance(0),
                             via_connection_duration(0), manage_disrupt(false)
@@ -374,91 +318,91 @@ void PlanJourney::readXML(rapidxml::xml_node<> *Node){
     //Lire les atributs et récupérer les information de PlanJourney
     for(rapidxml::xml_attribute<> * attr = Node->first_attribute(); attr; attr = attr->next_attribute()){
         attrName = attr->name();
-        if (strcmp(attrName.c_str(), "RequestDate") == 0){
-			this->call_dateTime = seconds_from_epoch (attr->value());
+        if (attrName == "RequestDate"){
+            this->call_dateTime = static_data::parse_date_time(attr->value());
 		}
-        else if (strcmp(attrName.c_str(), "Server") == 0){
+        else if (attrName == "Server"){
             this->server_info = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "PlanDateTime") == 0){
-            this->plan_dateTime = seconds_from_epoch (attr->value());
+        else if (attrName == "PlanDateTime"){
+            this->plan_dateTime = static_data::parse_date_time(attr->value());
         }
-        else if (strcmp(attrName.c_str(), "DepPointType") == 0){
-			this->depType = getpointTypeByCaption(attr->value());
+        else if (attrName == "DepPointType"){
+            this->depType = static_data::getpointTypeByCaption(attr->value());
         }
-        else if (strcmp(attrName.c_str(), "DepPointExternalCode") == 0){
+        else if (attrName == "DepPointExternalCode"){
             this->dep_external_code = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "DepCityExternalCode") == 0){
+        else if (attrName == "DepCityExternalCode"){
             this->dep_city_External_code = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "DepCoordX") == 0){
+        else if (attrName == "DepCoordX"){
             this->dep_coord.x  = str_to_float_def(attr->value(), 0.00);
         }
-        else if (strcmp(attrName.c_str(), "DepCoordY") == 0){
+        else if (attrName == "DepCoordY"){
             this->dep_coord.y = str_to_float_def(attr->value(), 0.00);
         }
-        else if (strcmp(attrName.c_str(), "DestPointType") == 0){
-			this->destType = getpointTypeByCaption(attr->value());
+        else if (attrName ==  "DestPointType"){
+            this->destType = static_data::getpointTypeByCaption(attr->value());
         }
-        else if (strcmp(attrName.c_str(), "DestPointExternalCode") == 0){
+        else if (attrName == "DestPointExternalCode"){
             this->dest_external_code = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "DestCityExternalCode") == 0){
+        else if (attrName == "DestCityExternalCode"){
             this->dest_city_External_code = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "DestCoordX") == 0){
+        else if (attrName == "DestCoordX"){
             this->dest_coord.x = str_to_float_def(attr->value(), 0.00);
         }
-        else if (strcmp(attrName.c_str(), "DestCoordY") == 0){
+        else if (attrName == "DestCoordY"){
             this->dest_coord.y = str_to_float_def(attr->value(), 0.00);
         }
-        else if (strcmp(attrName.c_str(), "Sens") == 0){
+        else if (attrName == "Sens"){
             this->sens = str_to_int_def(attr->value(), -1);
         }
-        else if (strcmp(attrName.c_str(), "Criteria") == 0){
-            this->criteria = getCriteriaByCaption(attr->value());
+        else if (attrName == "Criteria"){
+            this->criteria = static_data::getCriteriaByCaption(attr->value());
         }
-        else if (strcmp(attrName.c_str(), "Mode") == 0){
+        else if (attrName == "Mode"){
             this->mode_string = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "WalkSpeed") == 0){
+        else if (attrName == "WalkSpeed"){
             this->walk_speed = str_to_int_def(attr->value(), -1);
         }
-        else if (strcmp(attrName.c_str(), "Equipment") == 0){
+        else if (attrName == "Equipment"){
             this->equipement_string = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "Vehicle") == 0){
+        else if (attrName == "Vehicle"){
             this->vehicle_string = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "CumulCalcDuration") == 0){
+        else if (attrName == "CumulCalcDuration"){
             strCumulCalcDuration = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "HangDistance") == 0){
+        else if (attrName == "HangDistance"){
             this->hang_distance = str_to_int_def(attr->value(), -1);
         }
-        else if (strcmp(attrName.c_str(), "HangDistanceDep") == 0){
+        else if (attrName == "HangDistanceDep"){
             this->dep_hang_distance= str_to_int_def(attr->value(), -1);
         }
-        else if (strcmp(attrName.c_str(), "HangDistanceArr") == 0){
+        else if (attrName == "HangDistanceArr"){
             this->dest_hang_distance = str_to_int_def(attr->value(), -1);
         }
-        else if (strcmp(attrName.c_str(), "ViaExternalCode") == 0){
+        else if (attrName == "ViaExternalCode"){
             this->via_external_code = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "ViaConnectionDuration") == 0){
+        else if (attrName == "ViaConnectionDuration"){
             strViaConnectionDuration = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "ManageDisrupt") == 0){
+        else if (attrName == "ManageDisrupt"){
             this->manage_disrupt = str_to_int_def(attr->value(), -1);
         }
-        else if (strcmp(attrName.c_str(), "ForbiddenStopAreaExtCode") == 0){
+        else if (attrName == "ForbiddenStopAreaExtCode"){
             this->forbidden_SA_external_code = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "ForbiddenLineExtCode") == 0){
+        else if (attrName == "ForbiddenLineExtCode"){
             this->forbidden_line_external_code = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "error") == 0){
+        else if (attrName == "error"){
             this->error = str_to_int_def(attr->value(),-1);
         }
     }
@@ -467,7 +411,7 @@ void PlanJourney::readXML(rapidxml::xml_node<> *Node){
     for (rapidxml::xml_node<> *responseNode = Node->first_node(); responseNode; responseNode = responseNode->next_sibling()){
         strNodeName = responseNode->name();
 
-        if (strcmp(strNodeName.c_str(), "ResponsePlanJourney") == 0){
+        if (strNodeName == "ResponsePlanJourney"){
             ResponsePlanJourney response;
             response.readXML(responseNode);
 			this->add(response);
@@ -567,25 +511,25 @@ void Hit::readXML(rapidxml::xml_node<> *Node){
     for(rapidxml::xml_attribute<> * attr = Node->first_attribute(); attr; attr = attr->next_attribute()){
 
         attrName = attr->name();
-        if (strcmp(attrName.c_str(), "Date") == 0){
+        if (attrName == "Date"){
         strDay = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "Month") == 0){
+        else if (attrName == "Month"){
             strMonth = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "Time") == 0){
+        else if (attrName == "Time"){
             strTime = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "Action") == 0){
+        else if (attrName == "Action"){
             this->action = attr->value();
         }
-        else if (strcmp(attrName.c_str(), "ResponseSize") == 0){
+        else if (attrName == "ResponseSize"){
             this->response_size = str_to_int_def(attr->value(), -1);
         }
-        else if (strcmp(attrName.c_str(), "Ide") == 0){
+        else if (attrName == "Ide"){
             this->user_id = str_to_int_def(attr->value(), 0);
         }
-        else if (strcmp(attrName.c_str(), "WsnId") == 0){
+        else if (attrName == "WsnId"){
             this->wsn_id = str_to_int_def(attr->value(), 0);
         }
 	}
@@ -705,7 +649,7 @@ std::string StatNavitia::delete_node_hit(std::string & response_navitia){
 }
 
 // constructeur par défaul
-ClockThread::ClockThread(): th_stoped(false) {
+ClockThread::ClockThread(): statFileFilter("STAT_.*\\.txt"), th_stoped(false) {
 }
 
 // démarrage du thread
@@ -737,8 +681,6 @@ void ClockThread::createNewFileName(){
 	ss<< "-";
 	// MS
 	ss<< locale_dateTime.time_of_day().total_milliseconds();
-	ss<< "_";
-	ss<< gs_serverName;
 	ss<< "_";
     ss<< conf->get_int("wsn_id");
     ss <<".txt";
@@ -785,7 +727,7 @@ void ClockThread::getFileList(){
 			continue;
 		boost::smatch what;
 		// Skip if no match     
-		if( !boost::regex_match( i->filename(), what, gs_statFileFilter ) ) 
+        if( !boost::regex_match( i->filename(), what, statFileFilter ) )
 			continue;      
 		// File matches, store it
         if (i->leaf() != conf->get_string("application")){

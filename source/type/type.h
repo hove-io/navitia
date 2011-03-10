@@ -7,6 +7,7 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/bitset.hpp>
 #include <boost/serialization/vector.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <boost/any.hpp>
 #include <boost/bimap.hpp>
@@ -241,32 +242,22 @@ struct GeographicalCoord{
     GeographicalCoord() : x(0), y(0) {}
 };
 
-// Attenstion lors de l'ajout d'un type, il faut ajouter un libellé
 
-const std::string PointTypeCaption[] = { "City", "Site", "Address", "StopArea", "Alias", "Undefined", "Separator"};
-
-
-//const std::string CriteriaCaption[] = { "Initialization", "AsSoonAsPossible", "LeastInterchange", "LinkTime", "Debug", "WDI"};
-const std::string TrueValue[] = {"true", "+", "1"};
-enum PointType{City, Site, Address, StopArea, Alias, Undefined, Separator};
-enum Criteria{Initialization, AsSoonAsPossible, LeastInterchange, LinkTime, Debug, WDI};
+enum PointType{ptCity, ptSite, ptAddress, ptStopArea, ptAlias, ptUndefined, ptSeparator};
+enum Criteria{cInitialization, cAsSoonAsPossible, cLeastInterchange, cLinkTime, cDebug, cWDI};
 
 struct static_data {
 private:
     static static_data * instance;
 public:
     static static_data * get();
-    boost::bimap<Criteria, std::string> criterias;
-};
+    static PointType getpointTypeByCaption(const std::string & strPointType);
+    static Criteria getCriteriaByCaption(const std::string & strCriteria);
+    static boost::posix_time::ptime parse_date_time(const std::string& s);
+    static bool strToBool(const std::string &strValue);
 
-/*
-std::map<std::string, std::string> pointTypes;
-boost::insert (pointTypes) ("ptCity", "City");
-boost::insert (pointTypes) ("ptCity", "City");
-*/
-	/*("ptSite", "Site")
-	("ptAddress", "Address")
-	("ptStopArea", "CStopArea")
-	("ptAlias", "Alias")
-	("ptUndefined", "Undefined")
-	("ptSeparator", "Separator");*/
+    boost::bimap<Criteria, std::string> criterias;
+    boost::bimap<PointType, std::string> point_types;
+    std::vector<std::string> true_strings;
+    std::vector<std::locale> date_locales;
+};

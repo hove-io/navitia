@@ -17,14 +17,4 @@ namespace webservice{
       */
     map parse_params(const std::string & query_string);
 }
-//		  section.key	, value
-
-/*namespace IniFile{
-			//	<section, <param,value>>
-	typedef std::map<std::string, boost::variant<std::string, std::string>> SettingsMap;
-	SettingsMap parse_ini_file(std::string filename);
-}*/
-
-
-// formatge d'un réel
 

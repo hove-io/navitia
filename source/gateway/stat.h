@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <vector>
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include "../type/type.h"
 #include <rapidxml.hpp>
 #include <boost/format.hpp>
@@ -11,21 +10,6 @@
 #include "boost/filesystem/operations.hpp"
 #include "boost/filesystem/path.hpp"
 #include <istream>
-
-
-//static std::string gs_statFileName = gs_filePathName+"stat_hit.txt";
-const boost::regex gs_statFileFilter("STAT_.*\\.txt");
-
-static std::string gs_serverName = "localhost";
-
-// formatage des dates à deplacer
-const std::locale formats[] = { std::locale(std::locale::classic(),
-		new boost::posix_time::time_input_facet("%Y-%m-%d %H:%M:%S")), std::locale(std::locale::classic(),
-		new boost::posix_time::time_input_facet("%Y/%m/%d %H:%M:%S")), std::locale(std::locale::classic(),
-		new boost::posix_time::time_input_facet("%d.%m.%Y %H:%M:%S")), std::locale(std::locale::classic(),
-		new boost::posix_time::time_input_facet("%d-%m-%Y %H:%M:%S")), std::locale(std::locale::classic(),
-		new boost::posix_time::time_input_facet("%Y-%m-%d"))}; 
-const size_t formats_n = sizeof(formats)/sizeof(formats[0]);
 
 
 const static std::string ks_header_xml = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
@@ -71,7 +55,6 @@ struct ResponsePlanJourney{
     int wsn_id;
     int response_ide;
 	int interchange;
-	//boost::posix_time::ptime total_link_time;
 	double total_link_time;
 	int totalLink_hour;
 	int totalLink_minute;
@@ -91,7 +74,6 @@ struct ResponsePlanJourney{
 
         ResponsePlanJourney();
         void add(DetailPlanJourney & detail);
-        //void addDetail(const std::string reponse_navitia);
         void readXML(rapidxml::xml_node<> *Node);
         std::string writeXML() const;
         std::string getSql() const;
@@ -185,6 +167,7 @@ struct StatNavitia{
 };
 // gestion du clock
 struct ClockThread{
+    boost::regex statFileFilter;
     bool th_stoped;
     boost::shared_ptr<boost::thread> m_thread;
 	std::vector<std::string> fileList;
@@ -205,9 +188,7 @@ struct ClockThread{
 std::string format_double(double value, int precision = 2);
 int str_to_int_def(std::string value,int default_value = -1);
 double str_to_float_def(std::string value,double default_value = 0.00);
-PointType getpointTypeByCaption(const std::string & strPointType);
-Criteria getCriteriaByCaption(const std::string & strCriteria);
-bool strToBool(const std::string &strValue, bool defaultValue);
+
 void writeLineInLogFile(const std::string & strline);
 std::string formatDateTime(boost::posix_time::ptime pt);
 std::string getApplicationPath();

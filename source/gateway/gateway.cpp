@@ -203,9 +203,7 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
     LOG4CPLUS_DEBUG(logger, "chargement de la configuration");
     
     conf->load_ini(initFileName);
-    nb_threads = conf->get_as<int>("GENERAL","NbThread", 4);
     conf->set_int("wsn_id", 0);
-    conf->set_int("clock_timer", conf->get_as<int>("GENERAL","TIMER", 60));
 	
 	//Lecture des paramètre dans la section "GENERAL"
 	nb_threads = conf->get_as<int>("GENERAL","NbThread", 4);
@@ -236,11 +234,13 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
 	//NAVITIA_
 	for (int i = 0;i < 20; i++){
 		sectionName = "NAVITIA_" + boost::lexical_cast<std::string>(i);
-		serverName = conf->get_as<std::string>(sectionName, "server", "");
-		pathValue = conf->get_as<std::string>(sectionName, "path", "");
-		if ((serverName != "") && (pathValue != "")){
-			add(serverName,pathValue);
-		}
+        if (conf->has_section(sectionName)){
+            serverName = conf->get_as<std::string>(sectionName, "server", "");
+            pathValue = conf->get_as<std::string>(sectionName, "path", "");
+            if ((serverName != "") && (pathValue != "")){
+                add(serverName,pathValue);
+            }
+        }
 	}
 
     // On lance le thread qui gère les statistiques & base
