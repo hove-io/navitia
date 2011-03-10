@@ -567,25 +567,25 @@ void Hit::readXML(rapidxml::xml_node<> *Node){
     for(rapidxml::xml_attribute<> * attr = Node->first_attribute(); attr; attr = attr->next_attribute()){
 
         attrName = attr->name();
-        if (strcmp(attrName.c_str(), ks_param_read_date.c_str()) == 0){
+        if (strcmp(attrName.c_str(), "Date") == 0){
         strDay = attr->value();
         }
-        else if (strcmp(attrName.c_str(), ks_param_read_month.c_str()) == 0){
+        else if (strcmp(attrName.c_str(), "Month") == 0){
             strMonth = attr->value();
         }
-        else if (strcmp(attrName.c_str(), ks_param_read_time.c_str()) == 0){
+        else if (strcmp(attrName.c_str(), "Time") == 0){
             strTime = attr->value();
         }
-        else if (strcmp(attrName.c_str(), ks_param_read_action.c_str()) == 0){
+        else if (strcmp(attrName.c_str(), "Action") == 0){
             this->action = attr->value();
         }
-        else if (strcmp(attrName.c_str(), ks_param_read_response_size.c_str()) == 0){
+        else if (strcmp(attrName.c_str(), "ResponseSize") == 0){
             this->response_size = str_to_int_def(attr->value(), -1);
         }
-        else if (strcmp(attrName.c_str(), ks_param_read_ide.c_str()) == 0){
+        else if (strcmp(attrName.c_str(), "Ide") == 0){
             this->user_id = str_to_int_def(attr->value(), 0);
         }
-        else if (strcmp(attrName.c_str(), ks_param_read_wsn_id.c_str()) == 0){
+        else if (strcmp(attrName.c_str(), "WsnId") == 0){
             this->wsn_id = str_to_int_def(attr->value(), 0);
         }
 	}
@@ -743,6 +743,9 @@ void ClockThread::createNewFileName(){
     ss<< conf->get_int("wsn_id");
     ss <<".txt";
     conf->set_string("stats_file", conf->get_string("path") + ss.str());
+
+	log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    LOG4CPLUS_WARN(logger, "Nouveau fichier de stat crée : " + conf->get_string("stats_file"));
 }
 void ClockThread::work(){
 
@@ -766,7 +769,9 @@ void ClockThread::work(){
 		boost::posix_time::ptime locale_dateTime = boost::posix_time::second_clock::local_time();
 		ss.str("");
 		ss<< locale_dateTime<<std::endl;
-		//writeLineInLogFile(ss.str());
+		
+		//log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+		//LOG4CPLUS_WARN(logger, ss.str());
 	} // Fin du clock
 }
 void ClockThread::getFileList(){
@@ -811,6 +816,14 @@ void ClockThread::renameStatFile(const std::string & fileName){
 	}
 }
 void ClockThread::saveStatFromFile(const std::string & fileName){
+	//Déclarer les variable de ks_Begin et ks_End ici  
+	std::string strBegin = "DECLARE @HIT_IDE bigint; \n DECLARE @PJO_IDE bigint; \n DECLARE @PJO_MONTH smallint; \n DECLARE @RPJO_IDE bigint; \n DECLARE @ERR int; \n ";
+	strBegin += " DECLARE @ERR_MSG varchar(255);\n BEGIN TRANSACTION \n SET TRANSACTION ISOLATION LEVEL REPEATABLE READ \n SET @ERR = @@ERROR;" ;
+	
+	std::string strEnd = " if @ERR = 0 goto fin \n sortie:  \n begin \n SET @ERR_MSG = (select description from master.dbo.sysmessages where error = @ERR); \n";
+	strEnd += "rollback transaction; \n insert into ERREUR_STAT values ('%1%', @ERR, @ERR_MSG, getdate()); \n if @@ERROR = 2601 goto upd_fic; \n return; \n end; ";
+	strEnd += " upd_fic: \n begin \n update ERREUR_STAT \n set NUM_ERREUR = @ERR, MES_ERREUR = @ERR_MSG, DATE_ERREUR = getdate() WHERE FICHIER = '%1%'\n return; \n end; \n fin: \n commit transaction;";
+	
 	std::string lineSql; 
 	std::stringstream ss;
     std::ifstream file(Configuration::get()->get_string("path")+fileName);
@@ -819,9 +832,9 @@ void ClockThread::saveStatFromFile(const std::string & fileName){
 	}
 	file.close();
 	lineSql = ss.str();
-	lineSql = ks_Begin + lineSql + (boost::format(ks_End) % fileName).str();
+	lineSql = strBegin + lineSql + (boost::format(strEnd) % fileName).str();
 	//Sql::MSSql conn(gs_serverDb, gs_userDb, gs_pwdDb, gs_nameDb);
 	//Sql::Result res = conn.exec(lineSql);
-	this->deleteStatFile(fileName);
+	//this->deleteStatFile(fileName);
 	//this->renameStatFile(fileName);
 }

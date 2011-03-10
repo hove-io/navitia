@@ -79,6 +79,7 @@ struct Navitia{
     void desactivate(const int timeValue, const bool pb_global = false);
     void activate_thread();
     void add_error_count();
+	bool is_navitia_on_load(const std::string & response);	
 };
 
 /** Contient un ensemble de NAViTiA qui sont interrogeables */

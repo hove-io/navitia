@@ -189,12 +189,16 @@ struct Worker : public BaseWorker<NavitiaPool> {
 
 NavitiaPool::NavitiaPool() : nb_threads(16){
 	//Récuperer le chemin de la dll et le dom de l'application:
-    Configuration * conf = Configuration::get();
+    std::string sectionName;
+	std::string serverName;
+	std::string pathValue;
+
+	Configuration * conf = Configuration::get();
     std::string initFileName = conf->get_string("path") + conf->get_string("application") + ".ini";
-    conf->set_string("log_file",conf->get_string("path") + conf->get_string("application") + ".log");
-    
+	//conf->set_string("log_file",conf->get_string("path") + conf->get_string("application") + ".log");
+	
     //chargement de la configuration du logger
-    log4cplus::PropertyConfigurator::doConfigure(LOG4CPLUS_TEXT(initFileName));
+	log4cplus::PropertyConfigurator::doConfigure(LOG4CPLUS_TEXT(initFileName));
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "chargement de la configuration");
     
@@ -202,72 +206,40 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
     nb_threads = conf->get_as<int>("GENERAL","NbThread", 4);
     conf->set_int("wsn_id", 0);
     conf->set_int("clock_timer", conf->get_as<int>("GENERAL","TIMER", 60));
-
-    
-
-	std::string Server = "";
-	std::string Path = "";
-	std::string sectionNameToFind = "";
-	std::string sectionNameINI = "";
-	size_t sectionFound;
-	boost::property_tree::ptree pt;
 	
-    boost::property_tree::read_ini(initFileName, pt);
-	boost::property_tree::ptree::const_iterator it_end = pt.end();
-    
+	//Lecture des paramètre dans la section "GENERAL"
+	nb_threads = conf->get_as<int>("GENERAL","NbThread", 4);
+	error_level = conf->get_as<int>("GENERAL","ErrorLevel", 0);
+	exception_limit = conf->get_as<int>("GENERAL","ExceptionLimit", 10);
+	reactivation_delay = conf->get_as<int>("GENERAL","ReactivationDelay", 60);
+	global_reactivation_delay = conf->get_as<int>("GENERAL","GlobalReactivationDelay", 3600);
+	global_error_limit = conf->get_as<int>("GENERAL","GlobalErrorLimit", 3);
+	reinitialise_exception = conf->get_as<int>("GENERAL","ReinitialiseException", 5000);
+	use_database_stat = conf->get_as<bool>("GENERAL","UseDataBaseStat", false);
+	use_database_user = conf->get_as<bool>("GENERAL","UseDataBaseUser", false);
+	max_call_try = conf->get_as<int>("GENERAL","MaxCallTry", 1);
+	timer_value = conf->get_as<int>("GENERAL","TIMER", 120); // 2 minutes
 
-	BOOST_FOREACH(auto it, pt)
-	{
-		sectionNameINI = it.first;
-		
-		//Lire les paramÃ¨tres de la section [GENERAL]
-		sectionNameToFind="GENERAL";
-		if (sectionNameINI == sectionNameToFind)
-		{
-			this->nb_threads = pt.get<int>(sectionNameToFind + ".NbThread");
-			this->error_level = pt.get<int>(sectionNameToFind + ".ErrorLevel");
-			this->exception_limit = pt.get<int>(sectionNameToFind + ".ExceptionLimit");
-			this->reactivation_delay = pt.get<int>(sectionNameToFind + ".ReactivationDelay");
-			this->global_reactivation_delay = pt.get<int>(sectionNameToFind + ".GlobalReactivationDelay");
-			this->global_error_limit = pt.get<int>(sectionNameToFind + ".GlobalErrorLimit");
-			this->reinitialise_exception = pt.get<int>(sectionNameToFind + ".ReinitialiseException");
-			this->use_database_stat = pt.get<int>(sectionNameToFind + ".UseDataBaseStat");
-			this->use_database_user = pt.get<int>(sectionNameToFind + ".UseDataBaseUser");
-			this->max_call_try = pt.get<int>(sectionNameToFind + ".MaxCallTry");
-			this->timer_value = pt.get<int>(sectionNameToFind + ".TIMER");
-		}
+	//Lecture des paramètre dans la section "LOG"
+	log_fileName = conf->get_as<std::string>("LOG","LogFile", conf->get_string("log_file"));
 
-		//Lire les paramÃ¨res de la section [LOG]
-		sectionNameToFind="LOG";
-		if (sectionNameINI == sectionNameToFind)
-		{
-			this->log_fileName = pt.get<std::string>(sectionNameToFind + ".LogFile");
-			this->plan_journey_enabled = pt.get<bool>(sectionNameToFind + ".PlanJourneyEnabled");
-			this->response_plan_journey_enabled = pt.get<bool>(sectionNameToFind + ".ResponsePlanJourneyEnabled");
-			this->detail_plan_journey_enabled = pt.get<bool>(sectionNameToFind + ".DetailPlanJourneyEnabled");
-		}
+	//Lecture des paramètre dans la section "SQLLOG"
+	plan_journey_enabled = conf->get_as<bool>("SQLLOG","PlanJourneyEnabled",false);
+	response_plan_journey_enabled = conf->get_as<bool>("SQLLOG","ResponsePlanJourneyEnabled",false);
+	detail_plan_journey_enabled = conf->get_as<bool>("SQLLOG","DetailPlanJourneyEnabled",false);
+	web_service_id = conf->get_as<int>("SQLLOG","WebServiceID",0);
+	db_host_name = conf->get_as<std::string>("SQLLOG","IP","");
+	db_name = conf->get_as<std::string>("SQLLOG","DatabaseName","");
+	db_user_name = conf->get_as<std::string>("SQLLOG","Login","");
+	db_password = conf->get_as<std::string>("SQLLOG","Password","");
 
-		//Lire les paramÃ¨res de la section [SQLLOG]
-		sectionNameToFind="SQLLOG";
-		if (sectionNameINI == sectionNameToFind)
-		{
-			this->web_service_id = pt.get<int>(sectionNameToFind + ".WebServiceID");
-			this->db_host_name = pt.get<std::string>(sectionNameToFind + ".IP");
-			this->db_name = pt.get<std::string>(sectionNameToFind + ".DatabaseName");
-			this->db_user_name = pt.get<std::string>(sectionNameToFind + ".Login");
-			this->db_password = pt.get<std::string>(sectionNameToFind + ".Password");
-		}
-
-		//Lire les paramÃ¨tres de la section [LOAD] ???
-		sectionNameToFind="LOAD";
-
-		//Lire les paramÃ¨tres des sections qui commencent par [NAVITIA_
-		sectionFound = sectionNameINI.find("NAVITIA_");
-		if (sectionFound!=std::string::npos)
-		{
-			Server= pt.get<std::string>(sectionNameINI + ".server");
-			Path= pt.get<std::string>(sectionNameINI + ".path");
-			add(Server,Path);
+	//NAVITIA_
+	for (int i = 0;i < 20; i++){
+		sectionName = "NAVITIA_" + boost::lexical_cast<std::string>(i);
+		serverName = conf->get_as<std::string>(sectionName, "server", "");
+		pathValue = conf->get_as<std::string>(sectionName, "path", "");
+		if ((serverName != "") && (pathValue != "")){
+			add(serverName,pathValue);
 		}
 	}
 
@@ -385,13 +357,16 @@ std::string NavitiaPool::query(const std::string & q){
 	//1. il faut traiter les information dans le noeud <HIT>......</HIT> pour enregistrer les statistiques
 	//2. il faut supprimer ce noeud dans la rÃ©ponse et renvoyer le reste de la rÃ©ponse.
 	if (is_response_ok){
-		StatNavitia statnav; 
-		///Lecture des informations sur hit/planjourney/responseplanjourney/detailplanjourney
-		statnav.readXML(response);
-		///Préparation des fichiers de stat avec les informations sur hit/planjourney/responseplanjourney/detailplanjourney 
-		statnav.writeSql();
-		///Supprimer le noeud HIT de la réponse NAViTiA
-		response = statnav.delete_node_hit(response);
+		//Si l'enregistrement de stat est activé alors traiter le flux de réponse navitia
+		if (this->use_database_stat==true){
+			StatNavitia statnav; 
+			///Lecture des informations sur hit/planjourney/responseplanjourney/detailplanjourney
+			statnav.readXML(response);
+			///Préparation des fichiers de stat avec les informations sur hit/planjourney/responseplanjourney/detailplanjourney 
+			statnav.writeSql();
+			///Supprimer le noeud HIT de la réponse NAViTiA
+			response = statnav.delete_node_hit(response);
+		}
 	}
 
 	return response;
@@ -591,7 +566,16 @@ bool Navitia::is_server_error(const std::string & response){
 bool Navitia::is_navitia_error(const std::string & response){
 	std::string navitiaError = "<error>";
 	std::string loadError = "<LoadError>";
-    return (exists_in_response(response, navitiaError) || exists_in_response(response, loadError));
+    return (exists_in_response(response, navitiaError) || exists_in_response(response, loadError) || this->is_navitia_on_load(response));
+}
+
+bool Navitia::is_navitia_on_load(const std::string & response){
+	// Quand on antérroge un Navitia qui est en erreur de chargement avec un paramète &safemode=0 
+	// il envoie un flux de réponse avec le neoud <FluxLoad> 
+	// qui contient une ligne <Load DLLState="Restoring" DataLoaded="No" BackUpActivated="No">Loading</Load>
+	std::string fluxLoad = "<FluxLoad>";
+	std::string loadError = ">Complete<";	
+	return (exists_in_response(response, fluxLoad) & !exists_in_response(response, loadError));
 }
 
 void Navitia::activate_thread(){
