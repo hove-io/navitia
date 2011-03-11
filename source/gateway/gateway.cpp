@@ -216,10 +216,7 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
 	use_database_stat = conf->get_as<bool>("GENERAL","UseDataBaseStat", false);
 	use_database_user = conf->get_as<bool>("GENERAL","UseDataBaseUser", false);
 	max_call_try = conf->get_as<int>("GENERAL","MaxCallTry", 1);
-	timer_value = conf->get_as<int>("GENERAL","TIMER", 120); // 2 minutes
-
-	//Lecture des paramètre dans la section "LOG"
-	log_fileName = conf->get_as<std::string>("LOG","LogFile", conf->get_string("log_file"));
+    timer_value = conf->get_as<int>("GENERAL","TIMER", 60); // 2 minutes
 
 	//Lecture des paramètre dans la section "SQLLOG"
 	plan_journey_enabled = conf->get_as<bool>("SQLLOG","PlanJourneyEnabled",false);

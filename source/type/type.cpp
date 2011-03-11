@@ -63,6 +63,7 @@ static_data * static_data::get() {
         boost::assign::push_back(instance->date_locales)
                 ( locale(locale::classic(), new time_input_facet("%Y-%m-%d %H:%M:%S")) )
                 ( locale(locale::classic(), new time_input_facet("%Y/%m/%d %H:%M:%S")) )
+                ( locale(locale::classic(), new time_input_facet("%d/%m/%Y %H:%M:%S")) )
                 ( locale(locale::classic(), new time_input_facet("%d.%m.%Y %H:%M:%S")) )
                 ( locale(locale::classic(), new time_input_facet("%d-%m-%Y %H:%M:%S")) )
                 ( locale(locale::classic(), new time_input_facet("%Y-%m-%d")) );
@@ -86,12 +87,13 @@ bool static_data::strToBool(const std::string &strValue){
 boost::posix_time::ptime static_data::parse_date_time(const std::string& s) {
     boost::posix_time::ptime pt;
     boost::posix_time::ptime invalid_date;
-    std::istringstream is(s);
-    BOOST_FOREACH(std::locale locale, instance->date_locales){
+    static_data * inst = static_data::get();
+    BOOST_FOREACH(const std::locale & locale, inst->date_locales){
+        std::istringstream is(s);
         is.imbue(locale);
         is >> pt;
-        if(pt != invalid_date)
-            return pt;
+        if(pt != boost::posix_time::ptime())
+            break;
     }
     return pt;
 }

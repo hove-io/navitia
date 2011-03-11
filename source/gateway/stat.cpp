@@ -14,6 +14,8 @@
 #include <log4cplus/logger.h>
 #include <log4cplus/configurator.h>
 
+#include <pqxx/pqxx>
+
 std::string formatDateTime(boost::posix_time::ptime pt) {
 	std::stringstream ss;
 	ss.str("");
@@ -128,10 +130,11 @@ std::string DetailPlanJourney::writeXML() const{
 }
 
 std::string DetailPlanJourney::getSql() const{
-    std::string request = (boost::format("insert into  DPJO_TEMP (PJO_IDE, RPJ_IDE, PJO_REQUEST_MONTH, TRJ_DEP_ETERNAL_CODE, TRJ_DEP_COORD_X, TRJ_DEP_COORD_Y, TRJ_LINE_EXTERNAL_CODE, TRJ_MODE_EXTERNAL_CODE, TRJ_COMPANY_EXTERNAL_CODE, TRJ_NETWORK_EXTERNAL_CODE, TRJ_ROUTE_EXTERNAL_CODE, TRJ_ARR_EXTERNAL_CODE, TRJ_ARR_COORD_X, TRJ_ARR_COORD_Y, TRJ_DEP_DATETIME, TRJ_ARR_DATETIME, TRJ_DEP_YEAR, TRJ_DEP_MONTH, TRJ_DEP_DAY, TRJ_DEP_HOUR, TRJ_DEP_MINUTE, TRJ_ARR_YEAR, TRJ_ARR_MONTH, TRJ_ARR_DAY, TRJ_ARR_HOUR, TRJ_ARR_MINUTE, TRJ_SECTIONTYPE, USE_ID, WSN_ID) values (%1%, %2%, %3%, '%4%', %5%, %6%, '%7%', '%8%', '%9%', '%10%', '%11%', '%12%', %13%, %14%, '%15%', '%16%', %17%, %18%, %19%, %20%, %21%, %22%, %23%, %24%, %25%, %26%, %27%, %28%, %29%);\n SET @ERR = @@ERROR;\n IF @ERR <> 0 GOTO sortie;\n")
-        % "@PJO_IDE" //1
-		% "@RPJO_IDE"
-		% "@PJO_MONTH"
+    //std::string request = (boost::format("insert into  DPJO_TEMP (PJO_IDE, RPJ_IDE, PJO_REQUEST_MONTH, TRJ_DEP_EXTERNAL_CODE, TRJ_DEP_COORD_X, TRJ_DEP_COORD_Y, TRJ_LINE_EXTERNAL_CODE, TRJ_MODE_EXTERNAL_CODE, TRJ_COMPANY_EXTERNAL_CODE, TRJ_NETWORK_EXTERNAL_CODE, TRJ_ROUTE_EXTERNAL_CODE, TRJ_ARR_EXTERNAL_CODE, TRJ_ARR_COORD_X, TRJ_ARR_COORD_Y, TRJ_DEP_DATETIME, TRJ_ARR_DATETIME, TRJ_DEP_YEAR, TRJ_DEP_MONTH, TRJ_DEP_DAY, TRJ_DEP_HOUR, TRJ_DEP_MINUTE, TRJ_ARR_YEAR, TRJ_ARR_MONTH, TRJ_ARR_DAY, TRJ_ARR_HOUR, TRJ_ARR_MINUTE, TRJ_SECTIONTYPE, USE_ID, WSN_ID) values (%1%, %2%, %3%, '%4%', %5%, %6%, '%7%', '%8%', '%9%', '%10%', '%11%', '%12%', %13%, %14%, '%15%', '%16%', %17%, %18%, %19%, %20%, %21%, %22%, %23%, %24%, %25%, %26%, %27%, %28%, %29%);\n SET @ERR = @@ERROR;\n IF @ERR <> 0 GOTO sortie;\n")
+    std::string request = (boost::format("insert into  DPJO_TEMP (PJO_REQUEST_MONTH, TRJ_DEP_EXTERNAL_CODE, TRJ_DEP_COORD_X, TRJ_DEP_COORD_Y, TRJ_LINE_EXTERNAL_CODE, TRJ_MODE_EXTERNAL_CODE, TRJ_COMPANY_EXTERNAL_CODE, TRJ_NETWORK_EXTERNAL_CODE, TRJ_ROUTE_EXTERNAL_CODE, TRJ_ARR_EXTERNAL_CODE, TRJ_ARR_COORD_X, TRJ_ARR_COORD_Y, TRJ_DEP_DATETIME, TRJ_ARR_DATETIME, TRJ_DEP_YEAR, TRJ_DEP_MONTH, TRJ_DEP_DAY, TRJ_DEP_HOUR, TRJ_DEP_MINUTE, TRJ_ARR_YEAR, TRJ_ARR_MONTH, TRJ_ARR_DAY, TRJ_ARR_HOUR, TRJ_ARR_MINUTE, TRJ_SECTIONTYPE, USE_ID, WSN_ID) values (%1%, '%2%', %3%, '%4%', '%5%', '%6%', '%7%', '%8%', '%9%', '%10%', '%11%', '%12%', '%13%', '%14%', '%15%', '%16%', %17%, %18%, %19%, %20%, %21%, %22%, %23%, %24%, %25%, %26%, %27%);\n")
+        //% "@PJO_IDE" //1
+        //% "@RPJO_IDE"
+        % "3" //@PJO_MONTH"
 		
 		% this->dep_external_code //4
         % format_double(this->dep_coord.x)
@@ -253,9 +256,10 @@ std::string ResponsePlanJourney::writeXML() const{
 
 std::string ResponsePlanJourney::getSql() const{
 
-    std::string request = (boost::format("insert into RPJO_TEMP (PJO_IDE, PJO_REQUEST_MONTH, RPJ_INTERCHANGE, RPJ_TOTAL_LINK_TIME, RPJ_TOTAL_LINK_TIME_HOUR, RPJ_TOTAL_LINK_TIME_MINUTE, RPJ_JOURNEY_DURATION, RPJ_JOURNEY_DURATION_HOUR, RPJ_JOURNEY_DURATION_MINUTE, RPJ_IS_FIRST, RPJ_IS_BEST, RPJ_IS_LAST, RPJ_JOURNEY_DATE_TIME, RPJ_JOURNEY_YEAR, RPJ_JOURNEY_MONTH, RPJ_JOURNEY_DAY, RPJ_JOURNEY_HOUR, RPJ_JOURNEY_MINUTE, RPJ_TRANCHE_SHIFT,RPJ_TRANCHE_DURATION,RPJ_COMMENT_TYPE,USE_ID,WSN_ID) values (%1%, %2%, %3%, %4%, %5%, %6%, %7%, %8%, %9%, %10%, %11%, %12%,'%13%', %14%,%15%,%16%,%17%,%18%, %19%, %20%,%21%, %22%, %23%);\nSET @RPJO_IDE = (SELECT SCOPE_IDENTITY());\n SET @ERR = @@ERROR;\n IF @ERR <> 0 GOTO sortie;\n")
+    //std::string request = (boost::format("insert into RPJO_TEMP (PJO_IDE, PJO_REQUEST_MONTH, RPJ_INTERCHANGE, RPJ_TOTAL_LINK_TIME, RPJ_TOTAL_LINK_TIME_HOUR, RPJ_TOTAL_LINK_TIME_MINUTE, RPJ_JOURNEY_DURATION, RPJ_JOURNEY_DURATION_HOUR, RPJ_JOURNEY_DURATION_MINUTE, RPJ_IS_FIRST, RPJ_IS_BEST, RPJ_IS_LAST, RPJ_JOURNEY_DATE_TIME, RPJ_JOURNEY_YEAR, RPJ_JOURNEY_MONTH, RPJ_JOURNEY_DAY, RPJ_JOURNEY_HOUR, RPJ_JOURNEY_MINUTE, RPJ_TRANCHE_SHIFT,RPJ_TRANCHE_DURATION,RPJ_COMMENT_TYPE,USE_ID,WSN_ID) values (%1%, %2%, %3%, %4%, %5%, %6%, %7%, %8%, %9%, %10%, %11%, %12%,'%13%', %14%,%15%,%16%,%17%,%18%, %19%, %20%,%21%, %22%, %23%);\nSET @RPJO_IDE = (SELECT SCOPE_IDENTITY());\n SET @ERR = @@ERROR;\n IF @ERR <> 0 GOTO sortie;\n")
+    std::string request = (boost::format("insert into RPJO_TEMP (PJO_REQUEST_MONTH, RPJ_INTERCHANGE, RPJ_TOTAL_LINK_TIME, RPJ_TOTAL_LINK_TIME_HOUR, RPJ_TOTAL_LINK_TIME_MINUTE, RPJ_JOURNEY_DURATION, RPJ_JOURNEY_DURATION_HOUR, RPJ_JOURNEY_DURATION_MINUTE, RPJ_IS_FIRST, RPJ_IS_BEST, RPJ_IS_LAST, RPJ_JOURNEY_DATE_TIME, RPJ_JOURNEY_YEAR, RPJ_JOURNEY_MONTH, RPJ_JOURNEY_DAY, RPJ_JOURNEY_HOUR, RPJ_JOURNEY_MINUTE, RPJ_TRANCHE_SHIFT,RPJ_TRANCHE_DURATION,RPJ_COMMENT_TYPE,USE_ID,WSN_ID) values (%1%, %2%, %3%, %4%, %5%, %6%, %7%, %8%, '%9%', '%10%', '%11%', '%12%','%13%', %14%,%15%,%16%,%17%,%18%, %19%, %20%,%21%, %22%);\n")
 
-		% "@PJO_IDE" //1
+    //	% "@PJO_IDE" //1
 		% this->journey_dateTime.date().month().as_number()
 		% this->interchange
 		% this->total_link_time
@@ -433,7 +437,8 @@ std::string PlanJourney::writeXML() const{
 //
 
 std::string PlanJourney::getSql() const{
-    std::string request = (boost::format("insert into PJO_TEMP (PJO_REQUEST_DATE, PJO_REQUEST_YEAR, PJO_REQUEST_MONTH, PJO_REQUEST_DAY, PJO_REQUEST_HOUR, PJO_REQUEST_MINUTE, PJO_SERVER, PJO_PLAN_DATE_TIME, PJO_PLAN_YEAR, PJO_PLAN_MONTH, PJO_PLAN_DAY, PJO_PLAN_HOUR, PJO_PLAN_MINUTE, PJO_DEP_POINT_TYPE, PJO_DEP_POINT_EXTERNAL_CODE, PJO_DEP_CITY_EXTERNAL_CODE, PJO_DEP_COORD_X, PJO_DEP_COORD_Y, PJO_DEST_POINT_TYPE, PJO_DEST_POINT_EXTERNAL_CODE, PJO_DEST_CITY_EXTERNAL_CODE, PJO_DEST_COORD_X, PJO_DEST_COORD_Y, PJO_SENS, PJO_CRITERIA, PJO_MODE, PJO_WALK_SPEED, PJO_EQUIPMENT, PJO_VEHICLE, PJO_CUMUL_DUREE_CALC, PJO_HANG, PJO_DEP_HANG, PJO_DEST_HANG, PJO_VIA_EXTERNAL_CODE, PJO_VIA_CONNECTION_DURATION, PJO_MANAGE_DISRUPT,PJO_FORBIDDEN_SA_EXTERNAL_CODE, PJO_FORBIDDEN_LINE_EXTERNAL_CODE, HIT_IDE,PJO_ERROR,USE_ID,WSN_ID ) values ('%1%', %2%, %3%, %4%, %5%, %6%, '%7%', '%8%',%9%, %10%,%11%,%12%,%13%, %14%, '%15%', '%16%', %17%, %18%, %19%, '%20%','%21%', %22%, %23%, %24%, '%25%','%26%', %27%, '%28%', '%29%', %30%, %31%, %32%, %33%, '%34%', %35%, %36%, '%37%','%38%', %39%, %40%, %41%, %42%);\nSET @PJO_MONTH=%43%;\n IF ((@PJO_MONTH IS NULL) OR (@PJO_MONTH=0) OR (@PJO_MONTH>12)) SET @PJO_MONTH=1;\nSET @PJO_IDE = (SELECT SCOPE_IDENTITY());\nSET @ERR = @@ERROR; IF @ERR <> 0 GOTO sortie;\n")
+    //std::string request = (boost::format("insert into PJO_TEMP (PJO_REQUEST_DATE, PJO_REQUEST_YEAR, PJO_REQUEST_MONTH, PJO_REQUEST_DAY, PJO_REQUEST_HOUR, PJO_REQUEST_MINUTE, PJO_SERVER, PJO_PLAN_DATE_TIME, PJO_PLAN_YEAR, PJO_PLAN_MONTH, PJO_PLAN_DAY, PJO_PLAN_HOUR, PJO_PLAN_MINUTE, PJO_DEP_POINT_TYPE, PJO_DEP_POINT_EXTERNAL_CODE, PJO_DEP_CITY_EXTERNAL_CODE, PJO_DEP_COORD_X, PJO_DEP_COORD_Y, PJO_DEST_POINT_TYPE, PJO_DEST_POINT_EXTERNAL_CODE, PJO_DEST_CITY_EXTERNAL_CODE, PJO_DEST_COORD_X, PJO_DEST_COORD_Y, PJO_SENS, PJO_CRITERIA, PJO_MODE, PJO_WALK_SPEED, PJO_EQUIPMENT, PJO_VEHICLE, PJO_CUMUL_DUREE_CALC, PJO_HANG, PJO_DEP_HANG, PJO_DEST_HANG, PJO_VIA_EXTERNAL_CODE, PJO_VIA_CONNECTION_DURATION, PJO_MANAGE_DISRUPT,PJO_FORBIDDEN_SA_EXTERNAL_CODE, PJO_FORBIDDEN_LINE_EXTERNAL_CODE, HIT_IDE,PJO_ERROR,USE_ID,WSN_ID ) values ('%1%', %2%, %3%, %4%, %5%, %6%, '%7%', '%8%',%9%, %10%,%11%,%12%,%13%, %14%, '%15%', '%16%', %17%, %18%, %19%, '%20%','%21%', %22%, %23%, %24%, '%25%','%26%', %27%, '%28%', '%29%', %30%, %31%, %32%, %33%, '%34%', %35%, %36%, '%37%','%38%', %39%, %40%, %41%, %42%);\nSET @PJO_MONTH=%43%;\n IF ((@PJO_MONTH IS NULL) OR (@PJO_MONTH=0) OR (@PJO_MONTH>12)) SET @PJO_MONTH=1;\nSET @PJO_IDE = (SELECT SCOPE_IDENTITY());\nSET @ERR = @@ERROR; IF @ERR <> 0 GOTO sortie;\n")
+    std::string request = (boost::format("insert into PJO_TEMP (PJO_REQUEST_DATE, PJO_REQUEST_YEAR, PJO_REQUEST_MONTH, PJO_REQUEST_DAY, PJO_REQUEST_HOUR, PJO_REQUEST_MINUTE, PJO_SERVER, PJO_PLAN_DATE_TIME, PJO_PLAN_YEAR, PJO_PLAN_MONTH, PJO_PLAN_DAY, PJO_PLAN_HOUR, PJO_PLAN_MINUTE, PJO_DEP_POINT_TYPE, PJO_DEP_POINT_EXTERNAL_CODE, PJO_DEP_CITY_EXTERNAL_CODE, PJO_DEP_COORD_X, PJO_DEP_COORD_Y, PJO_DEST_POINT_TYPE, PJO_DEST_POINT_EXTERNAL_CODE, PJO_DEST_CITY_EXTERNAL_CODE, PJO_DEST_COORD_X, PJO_DEST_COORD_Y, PJO_SENS, PJO_CRITERIA, PJO_MODE, PJO_WALK_SPEED, PJO_EQUIPMENT, PJO_VEHICLE, PJO_CUMUL_DUREE_CALC, PJO_HANG, PJO_DEP_HANG, PJO_DEST_HANG, PJO_VIA_EXTERNAL_CODE, PJO_VIA_CONNECTION_DURATION, PJO_MANAGE_DISRUPT,PJO_FORBIDDEN_SA_EXTERNAL_CODE, PJO_FORBIDDEN_LINE_EXTERNAL_CODE, PJO_ERROR,USE_ID,WSN_ID ) values ('%1%', %2%, %3%, %4%, %5%, %6%, '%7%', '%8%',%9%, %10%,%11%,%12%,%13%, %14%, '%15%', '%16%', %17%, %18%, %19%, '%20%','%21%', %22%, %23%, '%24%', '%25%','%26%', %27%, '%28%', '%29%', %30%, %31%, %32%, %33%, '%34%', %35%, '%36%', '%37%','%38%', %39%, %40%, %41%);\n")
 
 		//% this->call_dateTime 
         % formatDateTime(this->call_dateTime)
@@ -483,12 +488,12 @@ std::string PlanJourney::getSql() const{
 		% this->manage_disrupt
 		% this->forbidden_SA_external_code
 		% this->forbidden_line_external_code
-		
-		% "@HIT_IDE"
+
+
 		% this->error//40
 		% this->user_id
 		% this->wsn_id
-        % this->call_dateTime.date().month().as_number()
+      //  % this->call_dateTime.date().month().as_number()
         ).str();
 	
 	// liste des réponses
@@ -543,7 +548,8 @@ std::string Hit::writeXML() const{
 }
 
 std::string Hit::getSql() const{
-    std::string request = (boost::format("insert into HIT_TEMP (HIT_DATE, HIT_YEAR, HIT_MONTH,HIT_DAY,HIT_HOUR,HIT_MINUTE, HIT_TIME, HIT_SERVER, USE_ID, HIT_ACTION, HIT_DURATION, HIT_RESPONSE_SIZE, HIT_SCRIPT, WSN_ID, HIT_COST, HIT_CLIENT_IP) values ('%1%', %2%, %3%, %4%, %5%, %6%, '%7%', '%8%', %9%, '%10%', %11%, %12%, '%13%', %14%, %15%, '%16%');\nSET @HIT_IDE = (SELECT SCOPE_IDENTITY());\nSET @ERR = @@ERROR;\n IF @ERR <> 0 GOTO sortie;\n")
+    //std::string request = (boost::format("insert into HIT_TEMP (HIT_DATE, HIT_YEAR, HIT_MONTH,HIT_DAY,HIT_HOUR,HIT_MINUTE, HIT_TIME, HIT_SERVER, USE_ID, HIT_ACTION, HIT_DURATION, HIT_RESPONSE_SIZE, HIT_SCRIPT, WSN_ID, HIT_COST, HIT_CLIENT_IP) values ('%1%', %2%, %3%, %4%, %5%, %6%, '%7%', '%8%', %9%, '%10%', %11%, %12%, '%13%', %14%, %15%, '%16%');\nSET @HIT_IDE = (SELECT SCOPE_IDENTITY());\nSET @ERR = @@ERROR;\n IF @ERR <> 0 GOTO sortie;\n")
+        std::string request = (boost::format("insert into HIT_TEMP (HIT_DATE, HIT_YEAR, HIT_MONTH,HIT_DAY,HIT_HOUR,HIT_MINUTE, HIT_TIME, HIT_SERVER, USE_ID, HIT_ACTION, HIT_DURATION, HIT_RESPONSE_SIZE, HIT_SCRIPT, WSN_ID, HIT_COST, HIT_CLIENT_IP) values ('%1%', %2%, %3%, %4%, %5%, %6%, '%7%', '%8%', %9%, '%10%', %11%, %12%, '%13%', %14%, %15%, '%16%');\n")
 		//% this->dateTime 
 		% formatDateTime(this->dateTime)
 		//boost::posix_time::ptime
@@ -691,7 +697,8 @@ void ClockThread::createNewFileName(){
 }
 void ClockThread::work(){
 
-    int timer = Configuration::get()->get_int("clock_timer");
+    //int timer = Configuration::get()->get_int("clock_timer");
+    int timer = Configuration::get()->get_as<int>("GENERAL","TIMER", 60);
 	std::stringstream ss;
 	boost::xtime xt; 
 	while (!th_stoped){
@@ -744,7 +751,7 @@ void ClockThread::saveStatFromFileList(){
 void ClockThread::deleteStatFile(const std::string & fileName){
     std::string path = Configuration::get()->get_string("path");
     if(boost::filesystem::exists(path+fileName)){
-       // boost::filesystem::remove(path+fileName);
+        boost::filesystem::remove(path+fileName);
 		std::stringstream ss;
 		ss<<fileName;
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -759,24 +766,40 @@ void ClockThread::renameStatFile(const std::string & fileName){
 }
 void ClockThread::saveStatFromFile(const std::string & fileName){
 	//Déclarer les variable de ks_Begin et ks_End ici  
-	std::string strBegin = "DECLARE @HIT_IDE bigint; \n DECLARE @PJO_IDE bigint; \n DECLARE @PJO_MONTH smallint; \n DECLARE @RPJO_IDE bigint; \n DECLARE @ERR int; \n ";
+    /*std::string strBegin = "DECLARE @HIT_IDE bigint; \n DECLARE @PJO_IDE bigint; \n DECLARE @PJO_MONTH smallint; \n DECLARE @RPJO_IDE bigint; \n DECLARE @ERR int; \n ";
 	strBegin += " DECLARE @ERR_MSG varchar(255);\n BEGIN TRANSACTION \n SET TRANSACTION ISOLATION LEVEL REPEATABLE READ \n SET @ERR = @@ERROR;" ;
 	
 	std::string strEnd = " if @ERR = 0 goto fin \n sortie:  \n begin \n SET @ERR_MSG = (select description from master.dbo.sysmessages where error = @ERR); \n";
 	strEnd += "rollback transaction; \n insert into ERREUR_STAT values ('%1%', @ERR, @ERR_MSG, getdate()); \n if @@ERROR = 2601 goto upd_fic; \n return; \n end; ";
 	strEnd += " upd_fic: \n begin \n update ERREUR_STAT \n set NUM_ERREUR = @ERR, MES_ERREUR = @ERR_MSG, DATE_ERREUR = getdate() WHERE FICHIER = '%1%'\n return; \n end; \n fin: \n commit transaction;";
-	
-	std::string lineSql; 
-	std::stringstream ss;
-    std::ifstream file(Configuration::get()->get_string("path")+fileName);
+    */
+
+    std::string lineSql;
+    //std::stringstream ss;
+    /*std::ifstream file(Configuration::get()->get_string("path")+fileName);
 	while (std::getline(file, lineSql)) {
 		ss<< lineSql;
 	}
-	file.close();
-	lineSql = ss.str();
-	lineSql = strBegin + lineSql + (boost::format(strEnd) % fileName).str();
+    file.close();*/
+    //lineSql = ss.str();
+//	lineSql = strBegin + lineSql + (boost::format(strEnd) % fileName).str();
+    pqxx::connection Conn("dbname=statistiques hostaddr=10.2.0.63 port=5432 user=stats password=ctp");
+    std::ifstream file(Configuration::get()->get_string("path")+fileName);
+    try {
+        pqxx::work Xaction(Conn, "DemoTransaction");
+        while (std::getline(file, lineSql)) {
+            //ss<< lineSql;
+            Xaction.exec(lineSql);
+        }
+        Xaction.commit();
+        file.close();
+        this->deleteStatFile(fileName);
+    }catch(...){
+        std::cout << "Erreur"  <<std::endl;
+        this->renameStatFile(fileName);
+    }
+
+
 	//Sql::MSSql conn(gs_serverDb, gs_userDb, gs_pwdDb, gs_nameDb);
 	//Sql::Result res = conn.exec(lineSql);
-	//this->deleteStatFile(fileName);
-	//this->renameStatFile(fileName);
 }
