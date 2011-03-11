@@ -655,7 +655,7 @@ std::string StatNavitia::delete_node_hit(std::string & response_navitia){
 }
 
 // constructeur par défaul
-ClockThread::ClockThread(): statFileFilter("STAT_.*\\.txt"), th_stoped(false) {
+ClockThread::ClockThread(): statFileFilter("STAT_.*\\.txt"), th_stoped(false), hit_call_count(0) {
 }
 
 // démarrage du thread
@@ -671,7 +671,8 @@ void ClockThread::stop(){
 }
 // mettre à disposition des autres threads un nouveau fichier
 void ClockThread::createNewFileName(){
-    Configuration * conf = Configuration::get();
+    hit_call_count = 0;
+	Configuration * conf = Configuration::get();
 	// Stat_MMDD-HHNNSS-MS_SERVER_WsnId
 	std::stringstream ss;
 	ss.clear();
@@ -798,7 +799,7 @@ void ClockThread::saveStatFromFile(const std::string & fileName){
         std::cout << "Erreur"  <<std::endl;
         this->renameStatFile(fileName);
     }
-
+	
 
 	//Sql::MSSql conn(gs_serverDb, gs_userDb, gs_pwdDb, gs_nameDb);
 	//Sql::Result res = conn.exec(lineSql);

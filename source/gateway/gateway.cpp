@@ -361,6 +361,14 @@ std::string NavitiaPool::query(const std::string & q){
 			statnav.readXML(response);
 			///Préparation des fichiers de stat avec les informations sur hit/planjourney/responseplanjourney/detailplanjourney 
 			statnav.writeSql();
+
+			//Vérifier si le nombre d'appel hit et recréer un nouveau fichier si ça dépasse une valeur 
+			if (clockStat.hit_call_count > 1000){
+				clockStat.createNewFileName();
+			}
+			else
+				clockStat.hit_call_count++;
+
 			///Supprimer le noeud HIT de la réponse NAViTiA
 			response = statnav.delete_node_hit(response);
 		}

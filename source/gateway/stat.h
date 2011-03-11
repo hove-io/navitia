@@ -171,6 +171,7 @@ struct ClockThread{
     bool th_stoped;
     boost::shared_ptr<boost::thread> m_thread;
 	std::vector<std::string> fileList;
+	int hit_call_count;
 
 	ClockThread();
 	void start();
