@@ -159,9 +159,8 @@ struct StatNavitia{
 
         StatNavitia();
 
-        void readXML(const std::string & reponse_navitia);
+        std::string readXML(const std::string & reponse_navitia);
         std::string writeXML() const;
-		std::string delete_node_hit(std::string & response_navitia);
         void writeSql() const;
         void writeSQLInFile(const std::string & request) const;
 };

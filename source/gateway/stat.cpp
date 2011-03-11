@@ -581,36 +581,25 @@ StatNavitia::StatNavitia(){
     //stats_file = Configuration::get()->strings["stats_file"];
 }
 
-void StatNavitia::readXML(const std::string & reponse_navitia){
-
+std::string StatNavitia::readXML(const std::string & reponse_navitia){
     //Utilisation de RapidXML pour parser le flux XML de HIT
     rapidxml::xml_document<> xmlDoc;
-	rapidxml::xml_node<> * Node = NULL;
-    std::string nodeName = "";
     char * data_ptr = xmlDoc.allocate_string(reponse_navitia.c_str());
 
     xmlDoc.parse<0>(data_ptr);
 
-    //HitNode = xmlDoc.first_node("Hit");
-	Node = xmlDoc.first_node();
-	for (rapidxml::xml_node<> * HitNode = Node->first_node(); HitNode; HitNode = HitNode->next_sibling()){
-		nodeName = HitNode->name();
-		if (nodeName=="Hit"){
-		
-			//Appeler la méthode readXML de hit en passant le neoud HitNode;
-			this->hit.readXML(HitNode);
-
-			for (rapidxml::xml_node<> * PlanNode = HitNode->first_node(); PlanNode; PlanNode = PlanNode->next_sibling()){
-				nodeName = PlanNode->name();
-
-				//si c'est le node "PlanJourney" alors appeler la méthode readXML de Planjourney en passant
-				//le neoud PlanNode;
-				if (nodeName=="PlanJourney"){
-					this->planJourney.readXML(PlanNode);
-				}
-			}
-		}
-	}
+    rapidxml::xml_node<> * Node  = xmlDoc.first_node()->first_node("Hit");
+    if(Node){
+        this->hit.readXML(Node);
+        rapidxml::xml_node<> * PlanNode = Node->first_node("PlanJourney");
+        if(PlanNode)
+            this->planJourney.readXML(PlanNode);
+        // On supprime le n½ud HIT car on ne veut pas le retourner
+        xmlDoc.first_node()->remove_node(Node);
+    }
+    std::stringstream ss;
+    ss << xmlDoc;
+    return ss.str();
 }
 
 std::string StatNavitia::writeXML() const{
@@ -628,30 +617,6 @@ void StatNavitia::writeSql() const{
     std::string request = this->hit.getSql();
     request += this->planJourney.getSql();
     this->writeSQLInFile(request);
-}
-
-std::string StatNavitia::delete_node_hit(std::string & response_navitia){
-	
-	//Utilisation de RapidXML pour parser le flux XML de HIT
-	std::stringstream ss;
-	rapidxml::xml_document<> xmlDoc;
-    rapidxml::xml_node<> * Node = NULL;
-    std::string nodeName = "";
-    char * data_ptr = xmlDoc.allocate_string(response_navitia.c_str());
-
-    xmlDoc.parse<0>(data_ptr);
-
-    Node = xmlDoc.first_node();
-	for (rapidxml::xml_node<> * HitNode = Node->first_node(); HitNode; HitNode = HitNode->next_sibling()){
-		nodeName = HitNode->name();
-		if (nodeName=="Hit"){
-			Node->remove_node(HitNode);
-			break;
-		}
-	}
-	ss << *xmlDoc.first_node();
-	response_navitia = ks_header_xml + ss.str();	
-	return response_navitia;
 }
 
 // constructeur par défaul
