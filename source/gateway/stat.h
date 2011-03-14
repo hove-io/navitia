@@ -184,6 +184,36 @@ struct ClockThread{
     void renameStatFile(const std::string & fileName);
 	};
 
+struct User{
+	int wsn_id;
+	int user_id;
+	std::string user_ip;
+	std::string user_login;
+	User();
+};
+
+struct Cost{
+	int api_id;
+	std::string api_code;
+	double api_cost;
+	Cost();
+};
+
+struct Manage_user{
+	
+    /// Structure contenant l'ensemble des utilisateurs
+    std::vector<User> users;
+
+	///Constructeur par défaut
+	Manage_user();
+
+	void Add(const int wsnid, const int useid, const std::string &userip, const std::string &userlogin);
+	bool grant_access(const std::string &request);
+
+};
+
+
+
 // fonction à deplacer
 std::string format_double(double value, int precision = 2);
 int str_to_int_def(std::string value,int default_value = -1);
