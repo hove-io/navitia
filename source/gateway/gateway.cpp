@@ -240,8 +240,11 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
         }
 	}
 
-	// cahrgement des utilisateurs
+	// chargement des utilisateurs
 	manageUser.fill_user_list(web_service_id);
+
+	// Chargement des API et ces coûts.
+	manageCost.fill_cost_list();
 
     // On lance le thread qui gère les statistiques & base
     clockStat.start();
@@ -368,10 +371,18 @@ std::string NavitiaPool::query(const std::string & q){
 		//Si l'enregistrement de stat est activé alors traiter le flux de réponse navitia
 		if (this->use_database_stat==true){
 			StatNavitia statnav;
+
+			// Affectation du code de l'utilisateur et wsnid
+			statnav.user_id = user_id_local;
+			statnav.wsn_id = web_service_id;
+			
 			// Lecture des informations sur hit/planjourney/responseplanjourney/detailplanjourney
             // Supprime le noeud HIT de la réponse NAViTiA
             response = statnav.readXML(response);
-			statnav.hit.user_id = user_id_local;
+			
+			// Récuperations du coût de l'API
+			statnav.hit.api_cost = manageCost.getCostByApi(getStringByRequest(q, "action", "&"));
+
             if (clockStat.hit_call_count > 1000){
                 clockStat.createNewFileName();
             }

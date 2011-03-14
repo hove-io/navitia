@@ -154,6 +154,8 @@ struct Hit{
 };
 struct StatNavitia{
     std::string sql_requete;
+	int wsn_id;
+	int user_id;
 	Hit hit;
 	PlanJourney planJourney;
 
@@ -198,6 +200,7 @@ struct Cost{
 	std::string api_code;
 	double api_cost;
 	Cost();
+	Cost(const int apiid, const std::string & apicode, const double apicost);
 };
 
 struct Manage_user{
@@ -214,6 +217,17 @@ struct Manage_user{
 	int getUserIdByLogin(const std::string &login);
 
 };
+
+struct Manage_cost{
+	///Structure contenant l'ensemble des coûts
+	std::vector<Cost> costs;
+	Manage_cost();
+	void add(Cost &cost);
+	void fill_cost_list();
+	double getCostByApi(const std::string & apiCode);
+};
+
+
 
 
 

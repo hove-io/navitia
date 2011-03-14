@@ -90,6 +90,9 @@ struct NavitiaPool {
 	// gestion des utilisateurs
 	Manage_user manageUser;
 
+	// gestion du coût de l'API 
+	Manage_cost manageCost;
+
     /// Iterateur vers le prochain NAViTiA Ã  interroger
     std::vector<Navitia>::iterator next_navitia;
 

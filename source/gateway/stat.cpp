@@ -18,15 +18,18 @@
 //#include <pqxx/pqxx>
 
 std::string getStringByRequest(const std::string &request, const std::string &params, const std::string &separator ){
-            std::vector<std::string> tokens;
-            boost::algorithm::split(tokens, request, boost::algorithm::is_any_of(separator));
-            BOOST_FOREACH(std::string token, tokens) {
-                std::vector<std::string> elts;
-                boost::algorithm::split(elts, token, boost::algorithm::is_any_of("=")); 
-				if (elts[0] == params){
-					return elts[1];
-				}
-            }
+	std::string req = boost::to_lower_copy(request);
+	std::string param = boost::to_lower_copy(params);
+	req = boost::replace_all_copy(req, "/api?", "");
+	std::vector<std::string> tokens;
+	boost::algorithm::split(tokens, req, boost::algorithm::is_any_of(separator));
+	BOOST_FOREACH(std::string token, tokens) {
+		std::vector<std::string> elts;
+		boost::algorithm::split(elts, token, boost::algorithm::is_any_of("=")); 
+		if (elts[0] == param){
+			return elts[1];
+		}
+	}
 	return "";
 }
 std::string formatDateTime(boost::posix_time::ptime pt) {
@@ -254,6 +257,8 @@ void ResponsePlanJourney::readXML(rapidxml::xml_node<> *Node){
 
         if (strNodeName == "DetailPlanJourney"){
             DetailPlanJourney detail;
+			detail.wsn_id = this->wsn_id;
+			detail.user_id = this->user_id;
             detail.readXML(detailNode);
 			this->add(detail);
             
@@ -429,8 +434,10 @@ void PlanJourney::readXML(rapidxml::xml_node<> *Node){
         strNodeName = responseNode->name();
 
         if (strNodeName == "ResponsePlanJourney"){
-            ResponsePlanJourney response;
-            response.readXML(responseNode);
+			ResponsePlanJourney response;
+			response.wsn_id = this->wsn_id;
+			response.user_id = this->user_id;
+			response.readXML(responseNode);
 			this->add(response);
             
         }
@@ -547,9 +554,6 @@ void Hit::readXML(rapidxml::xml_node<> *Node){
         else if (attrName == "Ide"){
             this->user_id = str_to_int_def(attr->value(), 0);
         }
-        else if (attrName == "WsnId"){
-            this->wsn_id = str_to_int_def(attr->value(), 0);
-        }
 	}
 	this->client_ip = "localhost";
 
@@ -603,10 +607,15 @@ std::string StatNavitia::readXML(const std::string & reponse_navitia){
 
     rapidxml::xml_node<> * Node  = xmlDoc.first_node()->first_node("Hit");
     if(Node){
+		this->hit.wsn_id = this->wsn_id;
+		this->hit.user_id = this->user_id;
         this->hit.readXML(Node);
         rapidxml::xml_node<> * PlanNode = Node->first_node("PlanJourney");
-        if(PlanNode)
-            this->planJourney.readXML(PlanNode);
+        if(PlanNode){
+			this->planJourney.wsn_id = this->wsn_id;
+			this->planJourney.user_id = this->user_id;
+			this->planJourney.readXML(PlanNode);
+		}
         // On supprime le n½ud HIT car on ne veut pas le retourner
         xmlDoc.first_node()->remove_node(Node);
     }
@@ -845,3 +854,48 @@ int Manage_user::getUserIdByLogin(const std::string &login){
 	}
 	return -1;
 }
+
+Manage_cost::Manage_cost(){
+	
+};
+
+void Manage_cost::add(Cost &cost){
+	costs.push_back(cost);
+};
+
+Cost::Cost():api_id(0),api_cost(0) {
+};
+
+Cost::Cost(const int apiid, const std::string & apicode, const double apicost){
+	api_id = apiid;
+	api_code = apicode;
+	api_cost= apicost;
+};
+
+
+void Manage_cost::fill_cost_list(){
+	/*
+	pqxx::connection Conn("dbname=statistiques hostaddr=10.2.0.63 port=5432 user=stats password=ctp");
+    
+    try {
+        pqxx::work Xaction(Conn, "DemoTransaction");
+        Xaction.exec("SELECT API_IDE, API_CODE, API_COST FROM NAVITIA_API");
+        }
+    }catch(...){
+        std::cout << "Erreur"  <<std::endl;
+    }
+
+	*/
+	add(Cost(0, "planjourney", 0.15));
+	add(Cost(1, "linelist", 0.10));
+};
+
+double Manage_cost::getCostByApi(const std::string & apiCode){
+	std::string code = boost::to_lower_copy(apiCode);
+	BOOST_FOREACH(Cost & c, costs) {
+		if (c.api_code ==  code)
+			return c.api_cost;
+	}
+	return 0.00;
+
+};
