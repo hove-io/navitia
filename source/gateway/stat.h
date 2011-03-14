@@ -190,6 +190,7 @@ struct User{
 	std::string user_ip;
 	std::string user_login;
 	User();
+	User(const int wsnid, const int userid, const std::string &userip, const std::string &userlogin);
 };
 
 struct Cost{
@@ -206,9 +207,11 @@ struct Manage_user{
 
 	///Constructeur par défaut
 	Manage_user();
-
-	void Add(const int wsnid, const int useid, const std::string &userip, const std::string &userlogin);
-	bool grant_access(const std::string &request);
+	//void add(const int wsnid, const int userid, const std::string &userip, const std::string &userlogin);
+	void add(User & user);
+	void fill_user_list(const int wsnid);
+	int grant_access(const std::string &request);
+	int getUserIdByLogin(const std::string &login);
 
 };
 
@@ -222,3 +225,4 @@ double str_to_float_def(std::string value,double default_value = 0.00);
 void writeLineInLogFile(const std::string & strline);
 std::string formatDateTime(boost::posix_time::ptime pt);
 std::string getApplicationPath();
+std::string getStringByRequest(const std::string &request, const std::string &params, const std::string &separator = "&");

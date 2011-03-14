@@ -86,6 +86,10 @@ struct Navitia{
 struct NavitiaPool {
     // clock pour la gestion des stats
     ClockThread clockStat;
+
+	// gestion des utilisateurs
+	Manage_user manageUser;
+
     /// Iterateur vers le prochain NAViTiA Ã  interroger
     std::vector<Navitia>::iterator next_navitia;
 

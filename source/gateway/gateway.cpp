@@ -192,7 +192,7 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
     std::string sectionName;
 	std::string serverName;
 	std::string pathValue;
-
+	
 	Configuration * conf = Configuration::get();
     std::string initFileName = conf->get_string("path") + conf->get_string("application") + ".ini";
 	//conf->set_string("log_file",conf->get_string("path") + conf->get_string("application") + ".log");
@@ -239,6 +239,9 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
             }
         }
 	}
+
+	// cahrgement des utilisateurs
+	manageUser.fill_user_list(web_service_id);
 
     // On lance le thread qui gère les statistiques & base
     clockStat.start();
@@ -320,6 +323,14 @@ std::string NavitiaPool::query(const std::string & q){
     std::string query = q;
     std::string response = "";
 	bool is_response_ok = false;
+	int user_id_local = 0;
+
+	// test de l'utilisateur
+	if (this->use_database_user){
+		user_id_local = manageUser.grant_access(q);
+	}
+	if (user_id_local > -1 ) {
+
 	//Il faut ajouter &safemode=0 si enregistrement du stat est activé
     if (this->use_database_stat){
 		query+="&safemode=0";
@@ -356,10 +367,11 @@ std::string NavitiaPool::query(const std::string & q){
 	if (is_response_ok){
 		//Si l'enregistrement de stat est activé alors traiter le flux de réponse navitia
 		if (this->use_database_stat==true){
-			StatNavitia statnav; 
-            // Lecture des informations sur hit/planjourney/responseplanjourney/detailplanjourney
+			StatNavitia statnav;
+			// Lecture des informations sur hit/planjourney/responseplanjourney/detailplanjourney
             // Supprime le noeud HIT de la réponse NAViTiA
             response = statnav.readXML(response);
+			statnav.hit.user_id = user_id_local;
             if (clockStat.hit_call_count > 1000){
                 clockStat.createNewFileName();
             }
@@ -370,7 +382,14 @@ std::string NavitiaPool::query(const std::string & q){
 
 		}
 	}
-
+	} 
+	else{
+        response = "<ServerError>\n";
+		response +="<http>";
+		response +=  "User non valide";
+		response += "</http>";
+        response += "</ServerError>\n";
+	}
 	return response;
 }
 std::string Navitia::get_status()

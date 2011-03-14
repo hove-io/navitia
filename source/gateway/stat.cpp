@@ -9,13 +9,26 @@
 #include <boost/foreach.hpp>
 //#include "../SqlServer/mssql.h"
 #include "configuration.h"
-
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <log4cplus/logger.h>
 #include <log4cplus/configurator.h>
 
-#include <pqxx/pqxx>
+//#include <pqxx/pqxx>
 
+std::string getStringByRequest(const std::string &request, const std::string &params, const std::string &separator ){
+            std::vector<std::string> tokens;
+            boost::algorithm::split(tokens, request, boost::algorithm::is_any_of(separator));
+            BOOST_FOREACH(std::string token, tokens) {
+                std::vector<std::string> elts;
+                boost::algorithm::split(elts, token, boost::algorithm::is_any_of("=")); 
+				if (elts[0] == params){
+					return elts[1];
+				}
+            }
+	return "";
+}
 std::string formatDateTime(boost::posix_time::ptime pt) {
 	std::stringstream ss;
 	ss.str("");
@@ -749,7 +762,8 @@ void ClockThread::saveStatFromFile(const std::string & fileName){
     file.close();*/
     //lineSql = ss.str();
 //	lineSql = strBegin + lineSql + (boost::format(strEnd) % fileName).str();
-    pqxx::connection Conn("dbname=statistiques hostaddr=10.2.0.63 port=5432 user=stats password=ctp");
+ /*
+	pqxx::connection Conn("dbname=statistiques hostaddr=10.2.0.63 port=5432 user=stats password=ctp");
     std::ifstream file(Configuration::get()->get_string("path")+fileName);
     try {
         pqxx::work Xaction(Conn, "DemoTransaction");
@@ -764,8 +778,70 @@ void ClockThread::saveStatFromFile(const std::string & fileName){
         std::cout << "Erreur"  <<std::endl;
         this->renameStatFile(fileName);
     }
-	
+	*/
 
 	//Sql::MSSql conn(gs_serverDb, gs_userDb, gs_pwdDb, gs_nameDb);
 	//Sql::Result res = conn.exec(lineSql);
+}
+User::User(): wsn_id(-1), user_id(-1){
+}
+User::User(const int wsnid, const int userid, const std::string &userip, const std::string &userlogin){
+	wsn_id = wsnid;
+	user_id = userid;
+	user_ip = userip;
+	user_login = userlogin;
+}
+
+Manage_user::Manage_user(){
+}
+
+void Manage_user::add(User & user){
+	//users.push_back(User(wsnid, userid, userip, userlogin));
+	users.push_back(user);
+}
+void Manage_user::fill_user_list(const int wsnid){
+/*
+	pqxx::connection Conn("dbname=statistiques hostaddr=10.2.0.63 port=5432 user=stats password=ctp");
+    
+    try {
+        pqxx::work Xaction(Conn, "DemoTransaction");
+        Xaction.exec("SELECT USE_ID, USE_IP, USE_LOGIN, USE_PASSWORD, WSN_ID FROM USERS WHERE WSN_ID="+wsnid);
+        }
+    }catch(...){
+        std::cout << "Erreur"  <<std::endl;
+    }
+
+	*/
+	add(User(wsnid, 0, "0.0.0.0", "default"));
+	add(User(wsnid, 1, "127.0.0.0", "test"));
+}
+int Manage_user::grant_access(const std::string &request){
+  // Cas de test(C1- C4):
+  // C1. Utilisateur identifié (exemple &login=Transiliens)  avec vérification des adresse IP
+  // C2. Plusieurs utilisateurs identifiés par le même login (exemple &login=Transilien)
+  //     avec vérification de différentes adresses IP
+  // C3. Utilisateur identifié (exemple &login=Transilien) mais sans vérification d'adresse IP
+  // C4. Utilisateur non identifié (pas de "&login=..." dans l'URL NAViTIA appelées) mais en filtrant par adresse IP
+
+	std::string login = getStringByRequest(request, "login", "&");
+	int userid = -1;
+	if (login == "") {
+		userid = 0;
+	}
+	else{
+		userid = getUserIdByLogin(login);
+	}
+	/*
+	else{ // C4
+	}
+	*/
+return userid;
+}
+
+int Manage_user::getUserIdByLogin(const std::string &login){
+	BOOST_FOREACH(User & u, users) {
+		if (u.user_login == login)
+			return u.user_id;			
+	}
+	return -1;
 }
