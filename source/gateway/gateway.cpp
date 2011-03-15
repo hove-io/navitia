@@ -176,12 +176,23 @@ struct Worker : public BaseWorker<NavitiaPool> {
         resp.response = pool.query(req.path + "?" + req.raw_params );
        return resp;
     }
+	//API Const
+	ResponseData constant(RequestData req, NavitiaPool & pool) 
+	{
+		ResponseData response;
+        response.status_code = 200;
+		response.content_type = "text/xml"; 
+		response.response = pool.query(req.path + "?" + req.raw_params );
+		return response;
+	}	
+
 
     Worker(NavitiaPool &) {
         register_api("/api", boost::bind(&Worker::relay, this, _1, _2), "Relaye la requÃªte vers un NAViTiA du pool");
         add_param("/api", "action", "RequÃªte Ã  demander Ã  NAViTiA", "String", true);
         register_api("/status", boost::bind(&Worker::status, this, _1, _2), "Donne des informations sur la passerelle");
         register_api("/load", boost::bind(&Worker::load, this, _1, _2), "Chargement de tous les NAViTiA");
+		register_api("/const", boost::bind(&Worker::constant, this, _1, _2), "constante d'un des NAViTiA");
         add_default_api();
     }
 
@@ -319,6 +330,7 @@ Navitia & NavitiaPool::get_next_navitia(){
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "navitia utilisé : http://" + nav.server + nav.path);
 
+	
     return nav;
 }
 
