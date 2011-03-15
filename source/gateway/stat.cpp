@@ -15,7 +15,6 @@
 #include <log4cplus/logger.h>
 #include <log4cplus/configurator.h>
 
-//#include <pqxx/pqxx>
 
 std::string getStringByRequest(const std::string &request, const std::string &params, const std::string &separator ){
 	std::string req = boost::to_lower_copy(request);
@@ -771,8 +770,8 @@ void ClockThread::saveStatFromFile(const std::string & fileName){
     file.close();*/
     //lineSql = ss.str();
 //	lineSql = strBegin + lineSql + (boost::format(strEnd) % fileName).str();
- /*
-	pqxx::connection Conn("dbname=statistiques hostaddr=10.2.0.63 port=5432 user=stats password=ctp");
+/*
+
     std::ifstream file(Configuration::get()->get_string("path")+fileName);
     try {
         pqxx::work Xaction(Conn, "DemoTransaction");

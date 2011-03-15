@@ -34,6 +34,7 @@ int main(){
     }
 
     cout << "Exiting main()..." << endl;
+	system("pause");
     return 0;
 }
 

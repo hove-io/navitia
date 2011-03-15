@@ -6,12 +6,12 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
 IF(WIN32)
   ADD_DEFINITIONS(-D_WIN32_WINNT=0x0501)
   IF(MSVC)
+
 	IF(CMAKE_CL_64)
 		SET(LIB_PREFIX "C:/lib64/")
 	ELSE(CMAKE_CL_64)
 		SET(LIB_PREFIX "C:/lib32/")
 	ENDIF(CMAKE_CL_64)
-	
 	SET(BOOST_ROOT "${LIB_PREFIX}boost/")
 	
 	# Sur un système ayant les 2 versions 32 et 64 bits on considère que Qt est installé à un endroit précis
@@ -27,6 +27,12 @@ ENDIF(WIN32)
 IF(CMAKE_COMPILER_IS_GNUCXX)
     SET(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra -std=c++0x")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+
+IF(MSVC)
+	set(Boost_USE_STATIC_LIBS   ON)
+	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
+ENDIF(MSVC)
 
 ENABLE_TESTING()
 
