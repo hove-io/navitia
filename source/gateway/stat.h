@@ -192,7 +192,7 @@ struct User{
 	std::string user_ip;
 	std::string user_login;
 	User();
-	User(const int wsnid, const int userid, const std::string &userip, const std::string &userlogin);
+    User(int wsnid, int userid, const std::string &userip, const std::string &userlogin);
 };
 
 struct Cost{
@@ -200,7 +200,7 @@ struct Cost{
 	std::string api_code;
 	double api_cost;
 	Cost();
-	Cost(const int apiid, const std::string & apicode, const double apicost);
+    Cost(int apiid, const std::string & apicode, double apicost);
 };
 
 struct Manage_user{
@@ -211,8 +211,8 @@ struct Manage_user{
 	///Constructeur par défaut
 	Manage_user();
 	//void add(const int wsnid, const int userid, const std::string &userip, const std::string &userlogin);
-	void add(User & user);
-	void fill_user_list(const int wsnid);
+    void add(const User & user);
+    void fill_user_list(int wsnid);
 	int grant_access(const std::string &request);
 	int getUserIdByLogin(const std::string &login);
 
@@ -222,7 +222,7 @@ struct Manage_cost{
 	///Structure contenant l'ensemble des coûts
 	std::vector<Cost> costs;
 	Manage_cost();
-	void add(Cost &cost);
+    void add(const Cost &cost);
 	void fill_cost_list();
 	double getCostByApi(const std::string & apiCode);
 };

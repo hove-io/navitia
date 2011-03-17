@@ -793,7 +793,7 @@ void ClockThread::saveStatFromFile(const std::string & fileName){
 }
 User::User(): wsn_id(-1), user_id(-1){
 }
-User::User(const int wsnid, const int userid, const std::string &userip, const std::string &userlogin){
+User::User(int wsnid, int userid, const std::string &userip, const std::string &userlogin){
 	wsn_id = wsnid;
 	user_id = userid;
 	user_ip = userip;
@@ -803,11 +803,11 @@ User::User(const int wsnid, const int userid, const std::string &userip, const s
 Manage_user::Manage_user(){
 }
 
-void Manage_user::add(User & user){
+void Manage_user::add(const User & user){
 	//users.push_back(User(wsnid, userid, userip, userlogin));
 	users.push_back(user);
 }
-void Manage_user::fill_user_list(const int wsnid){
+void Manage_user::fill_user_list(int wsnid){
 /*
 	pqxx::connection Conn("dbname=statistiques hostaddr=10.2.0.63 port=5432 user=stats password=ctp");
     
@@ -856,20 +856,20 @@ int Manage_user::getUserIdByLogin(const std::string &login){
 
 Manage_cost::Manage_cost(){
 	
-};
+}
 
-void Manage_cost::add(Cost &cost){
+void Manage_cost::add(const Cost &cost){
 	costs.push_back(cost);
-};
+}
 
 Cost::Cost():api_id(0),api_cost(0) {
-};
+}
 
 Cost::Cost(const int apiid, const std::string & apicode, const double apicost){
 	api_id = apiid;
 	api_code = apicode;
 	api_cost= apicost;
-};
+}
 
 
 void Manage_cost::fill_cost_list(){
@@ -887,7 +887,7 @@ void Manage_cost::fill_cost_list(){
 	*/
 	add(Cost(0, "planjourney", 0.15));
 	add(Cost(1, "linelist", 0.10));
-};
+}
 
 double Manage_cost::getCostByApi(const std::string & apiCode){
 	std::string code = boost::to_lower_copy(apiCode);
@@ -897,4 +897,4 @@ double Manage_cost::getCostByApi(const std::string & apiCode){
 	}
 	return 0.00;
 
-};
+}
