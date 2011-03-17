@@ -49,7 +49,7 @@ struct Worker {
     }
     ResponseData rd;
     p_result[RESULT_LENGTH -1] = '\0';
-    rd.response = p_result + (RESULT_LENGTH*3/4); // On retourne juste le quart pour ne pas être limité par le réseau
+    rd.response << p_result << (RESULT_LENGTH*3/4); // On retourne juste le quart pour ne pas être limité par le réseau
     rd.content_type = "text/html";
     rd.status_code = 200;
     rd.charset = "latin1";

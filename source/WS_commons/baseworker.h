@@ -81,7 +81,7 @@ namespace webservice
             if(apis.find(request.path) == apis.end()) {
                 ResponseData resp;
                 resp.content_type = "text/xml";
-                resp.response = "<error>API inconnue</error>";
+                resp.response << "<error>API inconnue</error>";
                 return resp;
             }
             else {
@@ -138,20 +138,19 @@ namespace webservice
             ResponseData rd;
             rd.content_type = "text/html";
             rd.status_code = 200;
-            std::stringstream ss("<html><head><title>Liste des API</title></head><body>\n");
-            ss << "<h1>Liste des APIs</h1>\n";
+            rd.response << "<html><head><title>Liste des API</title></head><body>\n"
+                    << "<h1>Liste des APIs</h1>\n";
             BOOST_FOREACH(auto api, apis){
-                ss << "<h2>" << api.first << "</h2>\n";
-                ss << "<h3>Description</h3><p>" << api.second.description << "</p>\n";
-                ss << "<h3>Paramètres</h3><table border=1>"
-                    << "<tr><th>Paramètre</th><th>Type</th><th>Description</th><th>Obligatoire</th></tr>\n";
+                rd.response << "<h2>" << api.first << "</h2>\n"
+                        << "<h3>Description</h3><p>" << api.second.description << "</p>\n"
+                        << "<h3>Paramètres</h3><table border=1>"
+                        << "<tr><th>Paramètre</th><th>Type</th><th>Description</th><th>Obligatoire</th></tr>\n";
                 BOOST_FOREACH(auto param, api.second.params){
-                    ss << "<tr><td>" << param.first << "</td><td>" << param.second.type << "</td><td>" << param.second.description << "</td><td>" << param.second.mandatory << "</td></tr>\n";
+                    rd.response << "<tr><td>" << param.first << "</td><td>" << param.second.type << "</td><td>" << param.second.description << "</td><td>" << param.second.mandatory << "</td></tr>\n";
                 }
-                ss << "</table>\n";
+                rd.response << "</table>\n";
             }
-            ss << "</body></html>";
-            rd.response = ss.str();
+            rd.response << "</body></html>";
             return rd;
         }
 
@@ -160,16 +159,15 @@ namespace webservice
             ResponseData rd;
             rd.content_type = "text/html";
             rd.status_code = 200;
-            std::stringstream ss("<html><head><title>Statistiques</title></head><body>\n");
-            ss << "<h1>Statistiques</h1>";
+            rd.response << "<html><head><title>Statistiques</title></head><body>\n"
+                    << "<h1>Statistiques</h1>";
             BOOST_FOREACH(auto api, apis) {
-                ss << "<h2>" << api.first << "</h2>\n";
-                ss << "<p>Temps moyen (ms) : " << mean(static_data().means[api.first]) << "<br/>\n"
-                    << "Temps max d'appel (ms) : " << (max)(static_data().means[api.first]) << "<br/>\n"
-                    << "Nombre d'appels : " << count(static_data().means[api.first]) << "<br/></p>\n";
+                rd.response << "<h2>" << api.first << "</h2>\n"
+                        << "<p>Temps moyen (ms) : " << mean(static_data().means[api.first]) << "<br/>\n"
+                        << "Temps max d'appel (ms) : " << (max)(static_data().means[api.first]) << "<br/>\n"
+                        << "Nombre d'appels : " << count(static_data().means[api.first]) << "<br/></p>\n";
             }
-            ss << "</body></html>";
-            rd.response = ss.str();
+            rd.response << "</body></html>";
             return rd;
         }
 

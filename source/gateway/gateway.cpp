@@ -73,37 +73,35 @@ struct Worker : public BaseWorker<NavitiaPool> {
     //API status
 	
 	ResponseData status(RequestData, NavitiaPool & np) {
-		ResponseData resp;
-		std::string strResponse = ""; 
+        ResponseData resp;
         resp.status_code = 200;
         resp.content_type = "text/xml";
-        resp.response = "";
-		BOOST_FOREACH(Navitia & n, np.navitias) 
-		{
-            strResponse += "<WSN WSNId=\""+ boost::lexical_cast<std::string>(np.web_service_id)+ "\" WSNURL=\"http://"+n.server+"/"+n.path+"\">\n";
-            strResponse += "<NavitiaStatus ErrorCount=\"" + boost::lexical_cast<std::string>(n.error_count) + "\">\n";
-			strResponse += n.get_status();
-            strResponse += "</NavitiaStatus>\n";
-            strResponse += "</WSN>\n";
-		}
-        resp.response = "<GatewayStatus>\n";
-        resp.response +="<Version>0</Version>\n";
-        resp.response +="<CheckAccess>"+boost::lexical_cast<std::string>(np.use_database_user)+"</CheckAccess>\n";
-        resp.response +="<SafeMode>0</SafeMode>\n";
-        resp.response +="<SaveStat>"+boost::lexical_cast<std::string>(np.use_database_stat)+"</SaveStat>\n";
-        resp.response +="<SQLConnection>0</SQLConnection>\n";
-        resp.response +="<StatBlackListedFile>0</StatBlackListedFile>\n";
-		//Nom du fichier de stat
-        resp.response +="<StatFileWorking StatLineWorking=\"0\"></StatFileWorking>\n";
-		resp.response +="<StatFileSQLWriting StatLineSQLWriting=\"0\"></StatFileSQLWriting>";
-        resp.response +="<LoadStatus NavitiaCount=\"" + boost::lexical_cast<std::string>(np.navitias.size()) + "\" NavitiaToLoad=\"0\"></LoadStatus>\n";
-		resp.response +="<GatewayThread GatewayThreadMax=\""+ boost::lexical_cast<std::string>(np.nb_threads) + "\">";
-        resp.response += boost::lexical_cast<std::string>(np.nb_threads) +"</GatewayThread>\n";
-		resp.response += "<NavitiaList NAViTiAOnError=\"" + boost::lexical_cast<std::string>(np.navitia_on_error_count())+ "\"";
-        resp.response +=" NAViTiAEventSynchro=\"0\" DeactivatedNAViTiA=\""+boost::lexical_cast<std::string>(np.deactivated_navitia_count())+"\">\n";
-		resp.response +=strResponse;
-        resp.response += "</NavitiaList>\n";
-        resp.response += "</GatewayStatus>\n";
+
+        resp.response << "<GatewayStatus>\n"
+                <<"<Version>0</Version>\n"
+                <<"<CheckAccess>" << np.use_database_user << "</CheckAccess>\n"
+                <<"<SafeMode>0</SafeMode>\n"
+                <<"<SaveStat>" << np.use_database_stat << "</SaveStat>\n"
+                <<"<SQLConnection>0</SQLConnection>\n"
+                <<"<StatBlackListedFile>0</StatBlackListedFile>\n"
+                //Nom du fichier de stat
+                <<"<StatFileWorking StatLineWorking=\"0\"></StatFileWorking>\n"
+                <<"<StatFileSQLWriting StatLineSQLWriting=\"0\"></StatFileSQLWriting>"
+                <<"<LoadStatus NavitiaCount=\"" << np.navitias.size() <<  "\" NavitiaToLoad=\"0\"></LoadStatus>\n"
+                <<"<GatewayThread GatewayThreadMax=\"" << np.nb_threads << "\">"<< np.nb_threads << "</GatewayThread>\n"
+                << "<NavitiaList NAViTiAOnError=\"" << np.navitia_on_error_count() << "\"" <<" NAViTiAEventSynchro=\"0\" DeactivatedNAViTiA=\"" << np.deactivated_navitia_count() << "\">\n";
+
+        BOOST_FOREACH(Navitia & n, np.navitias)
+        {
+            resp.response << "<WSN WSNId=\"" << np.web_service_id <<  "\" WSNURL=\"http://" << n.server << "/" << n.path+"\">\n"
+                    << "<NavitiaStatus ErrorCount=\"" << n.error_count <<  "\">\n"
+                    << n.get_status()
+                    << "</NavitiaStatus>\n"
+                    << "</WSN>\n";
+        }
+
+        resp.response<< "</NavitiaList>\n"
+                << "</GatewayStatus>\n";
 
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
         LOG4CPLUS_DEBUG(logger, "Appel de status");
@@ -115,7 +113,7 @@ struct Worker : public BaseWorker<NavitiaPool> {
 	ResponseData load(RequestData, NavitiaPool & np) 
 	{
 		ResponseData resp;
-		resp.response = "<Status>Loading</Status>"; 		
+        resp.response << "<Status>Loading</Status>";
 		std::string response_load = "";
 		//Chargement de tous les NAViTiA:
 		bool navitia_load_error;
@@ -173,8 +171,8 @@ struct Worker : public BaseWorker<NavitiaPool> {
         ResponseData resp;
         resp.status_code = 200;
         resp.content_type = "text/xml";
-        resp.response = pool.query(req.path + "?" + req.raw_params );
-       return resp;
+        resp.response << pool.query(req.path + "?" + req.raw_params );
+        return resp;
     }
 	//API Const
 	ResponseData constant(RequestData req, NavitiaPool & pool) 
@@ -182,7 +180,7 @@ struct Worker : public BaseWorker<NavitiaPool> {
 		ResponseData response;
         response.status_code = 200;
 		response.content_type = "text/xml"; 
-		response.response = pool.query(req.path + "?" + req.raw_params );
+        response.response << pool.query(req.path + "?" + req.raw_params );
 		return response;
 	}	
 

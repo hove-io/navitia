@@ -29,7 +29,7 @@ struct Wrapper {
             query.path = request.left(pos).toStdString();
             query.raw_params = request.right(request.length() - (pos+1)).toStdString();
         }
-        return worker(query, data).response.c_str();
+        return worker(query, data).response.str().c_str();
     }
 };
 

@@ -42,10 +42,18 @@ namespace webservice
      *
      */
     struct ResponseData {
+        ResponseData(const ResponseData & resp) :
+                content_type(resp.content_type),
+                response(resp.response.str()),
+                status_code(resp.status_code),
+                charset(resp.charset)
+        {
+        }
+
         /// Type de la réponse (ex. "text/xml")
         std::string content_type;
         /// Réponse à proprement parler
-        std::string response;
+        std::stringstream response;
         /// Status http de la réponse (ex. 200)
         int status_code;
         /// Encodage de la réponse par défaut utf-8

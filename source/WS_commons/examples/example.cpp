@@ -27,14 +27,12 @@ class Worker : public BaseWorker<Data> {
     /** Api qui compte le nombre de fois qu'elle a été appelée */
     ResponseData count(RequestData, Data & d) {
         i++;
-        ResponseData rd;
-        std::stringstream ss;
-        ss << "Hello world!!! Exécuté par ce thread : " << i << " executé au total : ";
+        ResponseData rd;        
+        rd.response << "Hello world!!! Exécuté par ce thread : " << i << " executé au total : ";
         d.mut.lock();
-        ss << d.count++;
+        rd.response << d.count++;
         d.mut.unlock();
 
-        rd.response = ss.str();
         rd.content_type = "text/html";
         rd.status_code = 200;
         return rd;

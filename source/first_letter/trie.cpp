@@ -91,14 +91,12 @@ class Worker : public BaseWorker<Data> {
 
     /** Api qui compte le nombre de fois qu'elle a été appelée */
     ResponseData first_letter(RequestData req, Data & d) {
-        std::stringstream ss;
+        ResponseData rd;
         auto result = match_all(d.t, boost::to_lower_copy(boost::replace_all_copy(req.params["q"], "%20", " ")));
         BOOST_FOREACH(auto el, result){
-            ss << *el << std::endl;
+            rd.response << *el << std::endl;
         }
 
-        ResponseData rd;
-        rd.response = ss.str();
         rd.content_type = "text/html";
         rd.status_code = 200;
         return rd;
