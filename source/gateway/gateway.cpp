@@ -1,10 +1,9 @@
 #include "gateway.h"
 #include "http.h"
-#include "boost/lexical_cast.hpp"
 #include "baseworker.h"
 #include <boost/foreach.hpp>
 #include "configuration.h"
-
+#include <rapidxml.hpp>
 #include <log4cplus/logger.h>
 #include <log4cplus/configurator.h>
 

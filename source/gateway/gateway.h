@@ -2,20 +2,13 @@
 
 #include <string>
 #include <vector>
-#include "boost/date_time/posix_time/posix_time.hpp"
-#include <fstream>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/ini_parser.hpp>
-#include "../type/type.h"
-#include "../WS_commons/utils.h"
-#include "stat.h"
-#include <rapidxml.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/shared_mutex.hpp>
 
+#include "stat.h"
 
 namespace bt = boost::posix_time;
-const static int a = 42;
-const static std::string s = "hello";
+
 /** Contient toutes les informations relatives aux instances NAViTiA
  * pilotées par la passerelle
  */

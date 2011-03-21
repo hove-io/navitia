@@ -30,7 +30,8 @@ namespace webservice {
         std::stringstream ss;
         ss << "Status: " << resp.status_code << "\r\n"
                 << "Content-Type: " << resp.content_type << "; charset=" << resp.charset <<"\r\n\r\n"
-                << resp.response;
+                << resp.response.str();
+
 
         FCGX_PutStr(ss.str().c_str(), ss.str().size(), handle->out);
         FCGX_Finish_r(handle);
