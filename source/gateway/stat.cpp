@@ -66,6 +66,17 @@ int str_to_int_def(std::string value,int default_value){
 return result;
 }
 
+bool str_to_bool_def(std::string value,bool default_value){
+	bool result;
+	try{
+		result = boost::lexical_cast<bool>(value);
+	}
+	catch(boost::bad_lexical_cast &){
+		result = default_value;
+	}
+return result;
+}
+
 double str_to_float_def(std::string value,double default_value){
 	double result;
 	replace(value.begin(), value.end(), ',', '.');
@@ -593,7 +604,7 @@ std::string Hit::getSql() const{
 	
 }
 
-StatNavitia::StatNavitia(){
+StatNavitia::StatNavitia():hit_exist(false), planjourney_exist(false){
     //stats_file = Configuration::get()->strings["stats_file"];
 }
 
@@ -606,11 +617,13 @@ std::string StatNavitia::readXML(const std::string & reponse_navitia){
 
     rapidxml::xml_node<> * Node  = xmlDoc.first_node()->first_node("Hit");
     if(Node){
+		this->hit_exist = true;
 		this->hit.wsn_id = this->wsn_id;
 		this->hit.user_id = this->user_id;
         this->hit.readXML(Node);
         rapidxml::xml_node<> * PlanNode = Node->first_node("PlanJourney");
         if(PlanNode){
+			this->planjourney_exist = true;
 			this->planJourney.wsn_id = this->wsn_id;
 			this->planJourney.user_id = this->user_id;
 			this->planJourney.readXML(PlanNode);
@@ -635,8 +648,14 @@ void StatNavitia::writeSQLInFile(const std::string & request) const{
 }
 
 void StatNavitia::writeSql() const{
-    std::string request = this->hit.getSql();
-    request += this->planJourney.getSql();
+    std::string request = "";
+	if (this->hit_exist){
+		request += this->hit.getSql();
+	}
+	
+	if ((this->planjourney_exist) && (nonStat == false)){
+		request += this->planJourney.getSql();
+	}
     this->writeSQLInFile(request);
 }
 
@@ -889,12 +908,20 @@ void Manage_cost::fill_cost_list(){
 	add(Cost(1, "linelist", 0.10));
 }
 
-double Manage_cost::getCostByApi(const std::string & apiCode){
-	std::string code = boost::to_lower_copy(apiCode);
+double Manage_cost::getCostByApi(const std::string & query){
+	//si l'api est de type planjourney alors recalculer le coût total en utilisant la valeur de NbBefore et NbAfter
+	double cost = 0.00;
+	std::string api = boost::to_lower_copy(getStringByRequest(query, "action", "&"));
 	BOOST_FOREACH(Cost & c, costs) {
-		if (c.api_code ==  code)
-			return c.api_cost;
+		if (c.api_code ==  api)
+			cost = c.api_cost;
 	}
-	return 0.00;
+	if (api == "planjourney"){
+	// Récupérer la valeur de NbBefore et NbAfter
+		int before = str_to_int_def(getStringByRequest(query, "NbBefore", "&"), 0);
+		int after = str_to_int_def(getStringByRequest(query, "NbAfter", "&"), 0);
+		cost = cost * (before + after + 1);
+	}
+	return cost;
 
 }

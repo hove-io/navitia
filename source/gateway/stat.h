@@ -156,6 +156,9 @@ struct StatNavitia{
     std::string sql_requete;
 	int wsn_id;
 	int user_id;
+	bool hit_exist;
+	bool planjourney_exist;
+	bool nonStat;
 	Hit hit;
 	PlanJourney planJourney;
 
@@ -224,7 +227,7 @@ struct Manage_cost{
 	Manage_cost();
     void add(const Cost &cost);
 	void fill_cost_list();
-	double getCostByApi(const std::string & apiCode);
+	double getCostByApi(const std::string & query);
 };
 
 
@@ -235,6 +238,7 @@ struct Manage_cost{
 std::string format_double(double value, int precision = 2);
 int str_to_int_def(std::string value,int default_value = -1);
 double str_to_float_def(std::string value,double default_value = 0.00);
+bool str_to_bool_def(std::string value,bool default_value=false);
 
 void writeLineInLogFile(const std::string & strline);
 std::string formatDateTime(boost::posix_time::ptime pt);

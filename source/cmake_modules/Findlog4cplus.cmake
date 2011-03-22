@@ -1,9 +1,6 @@
 FIND_PATH(LOG4CPLUS_INCLUDE_DIR log4cplus/logger.h PATHS "${LIB_PREFIX}/log4cplus/include")
 
 set(LIB_NAME "log4cplus")
-IF(WIN32)
-	SET(LIB_NAME "lib${LIB_NAME}")
-ENDIF(WIN32)
 
 FIND_LIBRARY(LOG4CPLUS_LIBRARY_LOG NAMES ${LIB_NAME} PATHS "${LIB_PREFIX}/log4cplus/lib") 
 

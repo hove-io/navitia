@@ -45,9 +45,9 @@ namespace webservice {
         ss << "Content-Type: " << resp.content_type << "; charset=" << resp.charset <<"\r\n\r\n";
 
         SendHttpHeaders(handle, "200 OK", ss.str().c_str(), FALSE);
-        DWORD response_length = resp.response.length();
+        DWORD response_length = resp.response.str().length();
 
-        if(!handle->WriteClient(handle->ConnID, (LPVOID)resp.response.c_str(), &response_length, HSE_IO_SYNC)){
+        if(!handle->WriteClient(handle->ConnID, (LPVOID)resp.response.str().c_str(), &response_length, HSE_IO_SYNC)){
             int err = GetLastError(); 
         }
         handle->ServerSupportFunction(handle->ConnID, HSE_REQ_DONE_WITH_SESSION, NULL, NULL, NULL);

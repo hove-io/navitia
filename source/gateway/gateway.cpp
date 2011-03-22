@@ -70,12 +70,13 @@ void NavitiaPool::add(const std::string & server, const std::string & path){
 struct Worker : public BaseWorker<NavitiaPool> {
     
     //API status
+	//Reste à faire : Version ,SafeMode, SQLConnection, StatBlackListedFile, StatFileWorking, StatFileSQLWriting,
+	//NavitiaToLoad, NAViTiAEventSynchro 
 	
 	ResponseData status(RequestData, NavitiaPool & np) {
         ResponseData resp;
         resp.status_code = 200;
         resp.content_type = "text/xml";
-
         resp.response << "<GatewayStatus>\n"
                 <<"<Version>0</Version>\n"
                 <<"<CheckAccess>" << np.use_database_user << "</CheckAccess>\n"
@@ -111,9 +112,12 @@ struct Worker : public BaseWorker<NavitiaPool> {
 	//API load
 	ResponseData load(RequestData, NavitiaPool & np) 
 	{
+		/// Reste à faire 
+		// 1. Gestion de droit de load : utilisation de user et password dans l'url
 		ResponseData resp;
         resp.response << "<Status>Loading</Status>";
 		std::string response_load = "";
+		
 		//Chargement de tous les NAViTiA:
 		bool navitia_load_error;
 		np.navitia_onload_index = 0;
@@ -195,7 +199,7 @@ struct Worker : public BaseWorker<NavitiaPool> {
 
 };
 
-NavitiaPool::NavitiaPool() : nb_threads(16){
+NavitiaPool::NavitiaPool() : nb_threads(16){	
 	//Récuperer le chemin de la dll et le dom de l'application:
     std::string sectionName;
 	std::string serverName;
@@ -204,8 +208,8 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
 	Configuration * conf = Configuration::get();
     std::string initFileName = conf->get_string("path") + conf->get_string("application") + ".ini";
 	//conf->set_string("log_file",conf->get_string("path") + conf->get_string("application") + ".log");
-	
-    //chargement de la configuration du logger
+
+	//chargement de la configuration du logger
 	log4cplus::PropertyConfigurator::doConfigure(LOG4CPLUS_TEXT(initFileName));
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "chargement de la configuration");
@@ -248,7 +252,7 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
         }
 	}
 
-	// chargement des utilisateurs
+	// chargement des utilisateurs pour l'authontification de l'utilisateur
 	manageUser.fill_user_list(web_service_id);
 
 	// Chargement des API et ces coûts.
@@ -326,7 +330,6 @@ Navitia & NavitiaPool::get_next_navitia(){
     
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "navitia utilisé : http://" + nav.server + nav.path);
-
 	
     return nav;
 }
@@ -335,6 +338,7 @@ std::string NavitiaPool::query(const std::string & q){
     std::string query = q;
     std::string response = "";
 	bool is_response_ok = false;
+	bool nonStat = false;
 	int user_id_local = 0;
 
 	// test de l'utilisateur
@@ -380,7 +384,9 @@ std::string NavitiaPool::query(const std::string & q){
 		//Si l'enregistrement de stat est activé alors traiter le flux de réponse navitia
 		if (this->use_database_stat==true){
 			StatNavitia statnav;
-
+			//gestion de nonstat : à ne pas enregistrer pjo/rpjo/dpjo si l'url contient &nonstat=1 ou true
+			statnav.nonStat = str_to_bool_def(getStringByRequest(q, "nonstat", "&"), false);
+			
 			// Affectation du code de l'utilisateur et wsnid
 			statnav.user_id = user_id_local;
 			statnav.wsn_id = web_service_id;
@@ -390,16 +396,18 @@ std::string NavitiaPool::query(const std::string & q){
             response = statnav.readXML(response);
 			
 			// Récuperations du coût de l'API
-			statnav.hit.api_cost = manageCost.getCostByApi(getStringByRequest(q, "action", "&"));
-
-            if (clockStat.hit_call_count > 1000){
+			//statnav.hit.api_cost = manageCost.getCostByApi(getStringByRequest(q, "action", "&"));
+			statnav.hit.api_cost = manageCost.getCostByApi(q);
+            //Création d'un nouveau fichier de stat :
+			//Soit à chaque cycle du clock / soit quand le nombre d'appel enregister dans un fichier dépasse une valeur configuré (1000 par défaut)
+			if (clockStat.hit_call_count > 1000){
                 clockStat.createNewFileName();
             }
             else
                 clockStat.hit_call_count++;
-            // Préparation des fichiers de stat avec les informations sur hit/planjourney/responseplanjourney/detailplanjourney
+            
+			// Préparation des fichiers de stat avec les informations sur hit/planjourney/responseplanjourney/detailplanjourney
             statnav.writeSql();
-
 		}
 	}
 	} 
@@ -468,7 +476,8 @@ void NavitiaPool::desactivate_navitia_on_load(Navitia & nav)
 {
 	// DÃ©clarer les variables
 	std::string response;
-	//Appeler ce navitia avec /status?&SafeMode=0
+	//Appeler ce navitia avec /status?&SafeMode=0 et vérifier si ce navitia est chargé ou pas.
+	//Si le navitia n'est pas chargé alors désactiver le avec des vérification.
 	response = nav.query("/status?&SafeMode=0");
 	if (!nav.is_navitia_loaded(response)){
 		this->verify_and_desactivate_navitia(nav);
@@ -491,8 +500,8 @@ void NavitiaPool::verify_and_desactivate_navitia(Navitia & nav){
 		this->activate_all_navitia();
 	}
 			
-	//Si le global error count > global error limit alors dÃ©sactiver ce navitia avec 
-	//une valeur de global reactivation delay si non avec reactivation delay:
+	//Finalement désactiver ce navitia : si le global error count > global error limit alors 
+	//désactiver ce navitia avec une valeur de global reactivation delay si non avec reactivation delay
 	this->desactivate_navitia(nav);
 }
 void NavitiaPool::desactivate_navitia(Navitia & nav){
