@@ -8,9 +8,17 @@
 #include <boost/serialization/bitset.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-
+#include <boost/variant.hpp>
 #include <boost/any.hpp>
 #include <boost/bimap.hpp>
+
+/// Exception levée lorsqu'on demande un membre qu'on ne connait pas
+struct unknown_member{};
+
+typedef boost::variant<std::string, int>  col_t;
+
+template<class T> std::string T::* name_getter(){return &T::name;}
+template<class T> int T::* idx_getter(){return &T::idx;}
 
 struct Country {
     int idx;
@@ -60,6 +68,14 @@ struct City {
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & department_idx & coord & idx;
     }
+
+    /// Retourne la valeur d'un membre en fonction du nom
+    col_t get(const std::string & member) {
+        if(member == "idx") return idx;
+        else if(member == "department_idx") return department_idx;
+        else if(member == "name") return name;
+        else throw unknown_member();
+    }
 };
 
 struct StopArea{
@@ -71,9 +87,17 @@ struct StopArea{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & code & name & city_idx & coord & idx;
     }
-    boost::any get(const std::string & el){
-        if(el == "idx") return idx;
-        else if(el == "name") return name;
+
+    col_t get(const std::string & member) const{
+        if(member == "idx") return idx;
+        else if(member == "name") return name;
+        else if(member == "code") return code;
+        else if(member == "city_idx") return city_idx;
+        else throw unknown_member();
+    }
+    static boost::variant<int T::*, double T::*, std::string T::*> get2(const std::string & member) const{
+        if(member == "idx") return &StopArea::idx;
+        else if(member == "name") return &StopArea::name;
     }
 };
 
@@ -133,6 +157,20 @@ struct Line {
                 & backward_thermo_idx & validity_pattern_list & additional_data & color & sort & idx;
     }
     bool operator<(const Line & other) const { return name > other.name;}
+
+    col_t get(const std::string & member) const{
+        if(member == "idx") return idx;
+        else if(member == "name") return name;
+        else if(member == "code") return code;
+        else if(member == "network_idx") return network_idx;
+        else if(member == "forward_name") return forward_name;
+        else if(member == "backward_name") return backward_name;
+        else if(member == "additional_data") return additional_data;
+        else if(member == "color") return color;
+        else if(member == "sort") return sort;
+        else throw unknown_member();
+    }
+
 };
 
 struct Route {
@@ -153,7 +191,13 @@ struct Route {
         ar & name & line_idx & mode_type & is_frequence & is_forward & route_point_list &
                 vehicle_journey_list & is_adapted & associated_route_idx & idx;
     }
-};
+    col_t get(const std::string & member) const{
+        if(member == "idx") return idx;
+        else if(member == "name") return name;
+        else if(member == "line_idx") return line_idx;
+        else throw unknown_member();
+    }
+ };
 struct VehicleJourney {
     int idx;
     std::string name;
@@ -168,6 +212,12 @@ struct VehicleJourney {
     VehicleJourney(): idx(0), route_idx(0), company_idx(0), mode_idx(0), vehicle_idx(0), is_adapted(false), validity_pattern_idx(0){};
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & is_adapted & validity_pattern_idx & idx;
+    }
+    col_t get(const std::string & member) const {
+        if(member == "idx") return idx;
+        else if(member == "name") return name;
+        else if(member == "external_code") return external_code;
+        else throw unknown_member();
     }
 };
 
@@ -203,6 +253,11 @@ public:
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & beginning_date & days & idx;
     }
+    col_t get(const std::string & member) const {
+        if(member == "idx") return idx;
+        else if(member == "pattern") return days.to_string();
+        else throw unknown_member();
+    }
 
 };
 
@@ -217,6 +272,13 @@ struct StopPoint  {
     std::vector<int> lines;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & code & name & stop_area_idx & mode_idx & coord & fare_zone & lines & idx;
+    }
+
+    col_t get(const std::string & member) const {
+        if(member == "idx") return idx;
+        else if(member == "name") return name;
+        else if(member == "code") return code;
+        else throw unknown_member();
     }
 };
 
@@ -261,3 +323,5 @@ public:
     std::vector<std::string> true_strings;
     std::vector<std::locale> date_locales;
 };
+
+
