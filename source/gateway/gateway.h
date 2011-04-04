@@ -4,6 +4,7 @@
 #include <vector>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/shared_mutex.hpp>
+#include "baseworker.h"
 
 #include "stat.h"
 
@@ -155,7 +156,7 @@ struct NavitiaPool {
     void add(const std::string & server, const std::string & path);
 
     /// Choisit un NAViTiA et lui fait executer la requête
-    std::string query(const std::string & query);
+    void query(const std::string & query, ResponseData& response);
 
     /// Choisi le prochain NAViTiA libre et l'envoyer
     Navitia & get_next_navitia();

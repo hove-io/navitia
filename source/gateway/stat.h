@@ -10,6 +10,9 @@
 #include "boost/filesystem/operations.hpp"
 #include "boost/filesystem/path.hpp"
 #include <istream>
+#include "data_structures.h"
+
+using namespace webservice;
 
 
 const static std::string ks_header_xml = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
@@ -164,7 +167,7 @@ struct StatNavitia{
 
         StatNavitia();
 
-        std::string readXML(const std::string & reponse_navitia);
+        void readXML(const std::string & reponse_navitia, ResponseData& response);
         std::string writeXML() const;
         void writeSql() const;
         void writeSQLInFile(const std::string & request) const;

@@ -68,6 +68,7 @@ void NavitiaPool::add(const std::string & server, const std::string & path){
 
 /// Classe associ√©e √  chaque thread
 struct Worker : public BaseWorker<NavitiaPool> {
+
     
     //API status
 	//Reste ‡ faire : Version ,SafeMode, SQLConnection, StatBlackListedFile, StatFileWorking, StatFileSQLWriting,
@@ -174,7 +175,7 @@ struct Worker : public BaseWorker<NavitiaPool> {
         ResponseData resp;
         resp.status_code = 200;
         resp.content_type = "text/xml";
-        resp.response << pool.query(req.path + "?" + req.raw_params );
+        pool.query(req.path + "?" + req.raw_params, resp);
         return resp;
     }
 	//API Const
@@ -183,7 +184,7 @@ struct Worker : public BaseWorker<NavitiaPool> {
 		ResponseData response;
         response.status_code = 200;
 		response.content_type = "text/xml"; 
-        response.response << pool.query(req.path + "?" + req.raw_params );
+        pool.query(req.path + "?" + req.raw_params, response );
 		return response;
 	}	
 
@@ -334,92 +335,92 @@ Navitia & NavitiaPool::get_next_navitia(){
     return nav;
 }
 
-std::string NavitiaPool::query(const std::string & q){
+void NavitiaPool::query(const std::string & q, ResponseData& response){
     std::string query = q;
-    std::string response = "";
-	bool is_response_ok = false;
-	bool nonStat = false;
-	int user_id_local = 0;
+    std::string response_navitia; 
+    bool is_response_ok = false;
+    bool nonStat = false;
+    int user_id_local = 0;
 
-	// test de l'utilisateur
-	if (this->use_database_user){
-		user_id_local = manageUser.grant_access(q);
-	}
-	if (user_id_local > -1 ) {
+    // test de l'utilisateur
+    if (this->use_database_user){
+        user_id_local = manageUser.grant_access(q);
+    }
+    if (user_id_local > -1 ) {
 
-	//Il faut ajouter &safemode=0 si enregistrement du stat est activÈ
-    if (this->use_database_stat){
-		query+="&safemode=0";
-	}
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    LOG4CPLUS_DEBUG(logger, "RequÍte d'appel : " + query);
+        //Il faut ajouter &safemode=0 si enregistrement du stat est activÈ
+        if (this->use_database_stat){
+            query+="&safemode=0";
+        }
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+        LOG4CPLUS_DEBUG(logger, "RequÍte d'appel : " + query);
 
-	//R√©cup√©rer le prochain navitia libre √  utiliser(gestion de loadbalancing):
-	for(int call_index = 0; (call_index <= this->max_call_try) && (!(is_response_ok)); call_index++){
-		Navitia & na = this->get_next_navitia();
-		response = na.query(query);
-	
-		//Liberer ce navitia pour pouvoir utiliser par les autres appels:
-		na.activate_thread();
-		
-		//En cas d'erreur ServerError d√©sactiver ce navitita et faire appel au navitia suivant:
-		if (na.is_server_error(response)){
-			this->desactivate_navitia(na);
-		}
-		//En cas d'erreur NavitiaError incr√©menter le ErrorCount
-		else if (na.is_navitia_error(response)){
-			na.add_error_count();
-		}
-		else{
-			is_response_ok = true;
-			break;
-		}
-		//il faut re-r√©cup√©rer le prochain navitia et passer la requ√™te.
-	}
+        //R√©cup√©rer le prochain navitia libre √  utiliser(gestion de loadbalancing):
+        for(int call_index = 0; (call_index <= this->max_call_try) && (!(is_response_ok)); call_index++){
+            Navitia & na = this->get_next_navitia();
+            response_navitia = na.query(query);
 
-	//S'il y a une bonne r√©ponse alors traiter le HIT
-	//1. il faut traiter les information dans le noeud <HIT>......</HIT> pour enregistrer les statistiques
-	//2. il faut supprimer ce noeud dans la r√©ponse et renvoyer le reste de la r√©ponse.
-	if (is_response_ok){
-		//Si l'enregistrement de stat est activÈ alors traiter le flux de rÈponse navitia
-		if (this->use_database_stat==true){
-			StatNavitia statnav;
-			//gestion de nonstat : ‡ ne pas enregistrer pjo/rpjo/dpjo si l'url contient &nonstat=1 ou true
-			statnav.nonStat = str_to_bool_def(getStringByRequest(q, "nonstat", "&"), false);
-			
-			// Affectation du code de l'utilisateur et wsnid
-			statnav.user_id = user_id_local;
-			statnav.wsn_id = web_service_id;
-			
-			// Lecture des informations sur hit/planjourney/responseplanjourney/detailplanjourney
+            //Liberer ce navitia pour pouvoir utiliser par les autres appels:
+            na.activate_thread();
+
+            //En cas d'erreur ServerError d√©sactiver ce navitita et faire appel au navitia suivant:
+            if (na.is_server_error(response_navitia)){
+                this->desactivate_navitia(na);
+            }
+            //En cas d'erreur NavitiaError incr√©menter le ErrorCount
+            else if (na.is_navitia_error(response_navitia)){
+                na.add_error_count();
+            }
+            else{
+                is_response_ok = true;
+                break;
+            }
+            //il faut re-r√©cup√©rer le prochain navitia et passer la requ√™te.
+        }
+    }
+
+    //S'il y a une bonne r√©ponse alors traiter le HIT
+    //1. il faut traiter les information dans le noeud <HIT>......</HIT> pour enregistrer les statistiques
+    //2. il faut supprimer ce noeud dans la r√©ponse et renvoyer le reste de la r√©ponse.
+    if (is_response_ok){
+        //Si l'enregistrement de stat est activÈ alors traiter le flux de rÈponse navitia
+        if (this->use_database_stat==true){
+            StatNavitia statnav;
+            //gestion de nonstat : ‡ ne pas enregistrer pjo/rpjo/dpjo si l'url contient &nonstat=1 ou true
+            statnav.nonStat = str_to_bool_def(getStringByRequest(q, "nonstat", "&"), false);
+
+            // Affectation du code de l'utilisateur et wsnid
+            statnav.user_id = user_id_local;
+            statnav.wsn_id = web_service_id;
+
+            // Lecture des informations sur hit/planjourney/responseplanjourney/detailplanjourney
             // Supprime le noeud HIT de la rÈponse NAViTiA
-            response = statnav.readXML(response);
-			
-			// RÈcuperations du co˚t de l'API
-			//statnav.hit.api_cost = manageCost.getCostByApi(getStringByRequest(q, "action", "&"));
-			statnav.hit.api_cost = manageCost.getCostByApi(q);
+            statnav.readXML(response_navitia, response);
+
+            // RÈcuperations du co˚t de l'API
+            //statnav.hit.api_cost = manageCost.getCostByApi(getStringByRequest(q, "action", "&"));
+            statnav.hit.api_cost = manageCost.getCostByApi(q);
             //CrÈation d'un nouveau fichier de stat :
-			//Soit ‡ chaque cycle du clock / soit quand le nombre d'appel enregister dans un fichier dÈpasse une valeur configurÈ (1000 par dÈfaut)
-			if (clockStat.hit_call_count > 1000){
+            //Soit ‡ chaque cycle du clock / soit quand le nombre d'appel enregister dans un fichier dÈpasse une valeur configurÈ (1000 par dÈfaut)
+            if (clockStat.hit_call_count > 1000){
                 clockStat.createNewFileName();
             }
             else
                 clockStat.hit_call_count++;
-            
-			// PrÈparation des fichiers de stat avec les informations sur hit/planjourney/responseplanjourney/detailplanjourney
+
+            // PrÈparation des fichiers de stat avec les informations sur hit/planjourney/responseplanjourney/detailplanjourney
             statnav.writeSql();
-		}
-	}
-	} 
-	else{
-        response = "<ServerError>\n";
-		response +="<http>";
-		response +=  "User non valide";
-		response += "</http>";
-        response += "</ServerError>\n";
-	}
-	return response;
+        }
+
+    }else{
+        response.response << "<ServerError>\n";
+        response.response <<"<http>";
+        response.response <<  "User non valide";
+        response.response << "</http>";
+        response.response << "</ServerError>\n";
+    }
 }
+
 std::string Navitia::get_status()
 {
 	std::string resp;

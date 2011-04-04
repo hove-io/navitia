@@ -608,32 +608,39 @@ StatNavitia::StatNavitia():hit_exist(false), planjourney_exist(false){
     //stats_file = Configuration::get()->strings["stats_file"];
 }
 
-std::string StatNavitia::readXML(const std::string & reponse_navitia){
+void StatNavitia::readXML(const std::string& response_navitia, ResponseData& response){
     //Utilisation de RapidXML pour parser le flux XML de HIT
     rapidxml::xml_document<> xmlDoc;
-    char * data_ptr = xmlDoc.allocate_string(reponse_navitia.c_str());
+    char * data_ptr = xmlDoc.allocate_string(response_navitia.c_str());
 
-    xmlDoc.parse<0>(data_ptr);
+    xmlDoc.parse<rapidxml::parse_default | rapidxml::parse_declaration_node | rapidxml::parse_no_utf8>(data_ptr);
 
-    rapidxml::xml_node<> * Node  = xmlDoc.first_node()->first_node("Hit");
+    rapidxml::xml_node<> * parent_node = NULL;
+
+    if(xmlDoc.first_node()->type() == rapidxml::node_declaration){
+        response.charset = xmlDoc.first_node()->first_attribute("encoding")->value();
+        parent_node = xmlDoc.first_node()->next_sibling();
+    }else{
+        parent_node = xmlDoc.first_node();
+    }
+
+    rapidxml::xml_node<> * Node  = parent_node->first_node("Hit");
     if(Node){
 		this->hit_exist = true;
 		this->hit.wsn_id = this->wsn_id;
-		this->hit.user_id = this->user_id;
+                this->hit.user_id = this->user_id;
         this->hit.readXML(Node);
         rapidxml::xml_node<> * PlanNode = Node->first_node("PlanJourney");
         if(PlanNode){
-			this->planjourney_exist = true;
-			this->planJourney.wsn_id = this->wsn_id;
+                        this->planjourney_exist = true;
+                        this->planJourney.wsn_id = this->wsn_id;
 			this->planJourney.user_id = this->user_id;
 			this->planJourney.readXML(PlanNode);
 		}
-        // On supprime le n½ud HIT car on ne veut pas le retourner
-        xmlDoc.first_node()->remove_node(Node);
+        // On supprime le noeud HIT car on ne veut pas le retourner
+        parent_node->remove_node(Node);
     }
-    std::stringstream ss;
-    ss << xmlDoc;
-    return ss.str();
+    response.response << xmlDoc;
 }
 
 std::string StatNavitia::writeXML() const{
