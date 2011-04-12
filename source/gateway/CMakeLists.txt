@@ -4,8 +4,7 @@ FIND_PACKAGE(Boost 1.40.0 COMPONENTS serialization regex thread filesystem REQUI
 FIND_PACKAGE(log4cplus REQUIRED)
 #FIND_LIBRARY(pqxx REQUIRED)
 
-include_directories (${CMAKE_SOURCE_DIR}/http_lib ${RAPIDXML_INCLUDE_DIR} ${LOG4CPLUS_INCLUDE_DIR})
-link_directories (${NAViTiA_SOURCE_DIR}/http_dll) 
+include_directories (${RAPIDXML_INCLUDE_DIR} ${LOG4CPLUS_INCLUDE_DIR})
 
 SET(SOURCE_FILES gateway.cpp gateway.h ../type/type.h ../type/type.cpp ../type/const.h stat.cpp stat.h)
-MAKE_WS(gateway ${SOURCE_FILES} LIBS http ${LOG4CPLUS_LIBS} )
+MAKE_WS(gateway ${SOURCE_FILES} LIBS ${LOG4CPLUS_LIBS} curlpp)
