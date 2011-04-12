@@ -95,7 +95,7 @@ struct StopArea{
         else if(member == "city_idx") return city_idx;
         else throw unknown_member();
     }
-    static boost::variant<int T::*, double T::*, std::string T::*> get2(const std::string & member) const{
+    static boost::variant<int StopArea::*, double StopArea::*, std::string StopArea::*> get2(const std::string & member) {
         if(member == "idx") return &StopArea::idx;
         else if(member == "name") return &StopArea::name;
     }

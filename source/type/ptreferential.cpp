@@ -70,7 +70,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 };
 
-template<class T>
+/*template<class T>
 Where<T> build_clause(std::string & member) {
     Where<T> wh;
     boost::variant<int T::*, double T::*, std::string T::*> ptr = T::get2(member);
@@ -89,7 +89,7 @@ Where<T> build_clause(std::string & member) {
             wh = wh && WHERE(&T::idx, NEQ, clause.value);
         }
     }
-}
+}*/
 
 std::vector< std::vector<col_t> > query(std::string request, Data & data){
     std::vector< std::vector<col_t> > result;
@@ -167,14 +167,14 @@ std::vector< std::vector<col_t> > query(std::string request, Data & data){
     }
     else if(table == "stop_areas") {
 
-
+/*
             BOOST_FOREACH(auto vect, Index2<boost::fusion::vector<StopArea> >(data.stop_areas, wh)){
                 const StopArea & sa = *(boost::fusion::at_c<0>(vect));
             std::vector<col_t> row;
             BOOST_FOREACH(Column & col, r.columns)
                row.push_back(sa.get(col.column)); 
             result.push_back(row);
-        }
+        }*/
     }
     else if(table == "stop_times"){
         BOOST_FOREACH(const StopArea & sa, data.stop_areas){
