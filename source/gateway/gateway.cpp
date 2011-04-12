@@ -1,17 +1,11 @@
 #include "gateway.h"
+#include "http.h"
 #include "baseworker.h"
 #include <boost/foreach.hpp>
 #include "configuration.h"
 #include <rapidxml.hpp>
 #include <log4cplus/logger.h>
 #include <log4cplus/configurator.h>
-
-#include <curlpp/cURLpp.hpp>
-#include <curlpp/Easy.hpp>
-#include <curlpp/Options.hpp>
-#include <curlpp/Exception.hpp>
-#include <curlpp/Infos.hpp>
-
 
 using namespace webservice;
 Navitia::Navitia(const std::string & server, const std::string & path) : 
@@ -48,43 +42,24 @@ Navitia & Navitia::operator=(const Navitia & other){
 }
 
 std::string Navitia::query(const std::string & request){
-    std::stringstream ss;
-    std::stringstream response;
-    curlpp::Easy curl_request;
-    Configuration* conf = Configuration::get();
+    std::string q = path + request;
+	std::string resp;
+	try
+	{
+		//il faut ajouter &safemode=0 si 
+        resp = get_http(server, q);
+	}
+	catch (http_error e){
+        resp = "<ServerError>\n";
+		resp +="<http code=\"";
+		resp += boost::lexical_cast<std::string>(e.code)+ "\">";
+		resp += e.message;
+		resp += "</http>";
+        resp += "</ServerError>\n";
+	}
 
-    curl_request.setOpt(new curlpp::options::WriteStream(&ss));
-    curl_request.setOpt(new curlpp::options::Url(this->server + this->path + request));
-
-    if(conf->get_as<bool>("GENERAL","UseCompression", false)){
-        curl_request.setOpt(new curlpp::options::Encoding("gzip,deflate"));
-    }
-    try{
-        curl_request.perform();
-        long response_code = curlpp::infos::ResponseCode::get(curl_request);
-        if(response_code >= 200 && response_code < 300){
-            //tous va bien, on renvoie le flux
-            return ss.str();
-        }else{
-            //une erreurs est survenue
-            response << "<ServerError>\n";
-                response << "<http code=\"" << response_code << "\">";
-                response << "</http>";
-            response << "</ServerError>\n";
-            return response.str();
-        }
-    }catch(curlpp::RuntimeError e){
-        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-        LOG4CPLUS_DEBUG(logger, e.what());
-        response << "<ServerError>\n";
-            response << "<http code=\"\">";
-            response << e.what();
-            response << "</http>";
-        response << "</ServerError>\n";
-        return response.str();
-    }
+	return resp;
 }
-
 
 void NavitiaPool::add(const std::string & server, const std::string & path){
     navitias.push_back(Navitia(server, path));
