@@ -11,27 +11,19 @@
 
 class FastLZCompressor : public boost::iostreams::multichar_output_filter {
     std::size_t buffer_size;
-    char*  input_buffer;
     char*  output_buffer;
 public:
 
-
-
-
     FastLZCompressor(size_t buffer_size=1024): buffer_size(buffer_size){
-        input_buffer = new char[buffer_size];
         output_buffer = new char[buffer_size*2];
     }
 
     FastLZCompressor(const FastLZCompressor& other) : buffer_size(other.buffer_size){
-        input_buffer = new char[buffer_size];
         output_buffer = new char[buffer_size*2];
     }
 
 
     ~FastLZCompressor(){
-        ///@TODO trouver l'erreur
-        delete[] input_buffer;
         delete[] output_buffer;
     }
 
@@ -52,27 +44,20 @@ public:
 
 class FastLZDecompressor : public boost::iostreams::multichar_input_filter {
     std::streamsize buffer_size;
-    std::streamsize output_buffer_size;
     char*  input_buffer;
-    char*  output_buffer;
 public:
 
     FastLZDecompressor(size_t buffer_size=1024): buffer_size(buffer_size){
-        output_buffer_size = buffer_size * 2;
         input_buffer = new char[buffer_size];
-        output_buffer = new char[output_buffer_size];
     }
 
     FastLZDecompressor(const FastLZDecompressor& other) : buffer_size(other.buffer_size){
-        output_buffer_size = buffer_size * 2;
         input_buffer = new char[buffer_size];
-        output_buffer = new char[buffer_size*2];
     }
 
 
     ~FastLZDecompressor(){
         delete[] input_buffer;
-        delete[] output_buffer;
     }
 
     template<typename Source>
