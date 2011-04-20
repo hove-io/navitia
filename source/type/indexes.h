@@ -92,13 +92,13 @@ matches_t<T> matches(std::string T::*attr, const std::string & e) {
 /** Functor that compares if two attributes of two classes are equal
   * Used for joins
   */
-template<class T1, class A1, class T2, class A2>
+template<class T1, class A1, class T2, class A2, class TI>
 struct attribute_equals_t {
     A1 T1::*attr1;
     A2 T2::*attr2;
     attribute_equals_t(A1 T1::*attr1, A2 T2::*attr2) : attr1(attr1), attr2(attr2) {}
     template<class Tuple>
-    bool operator()(const T1 & t1, const Tuple & t2){ return t1.*attr1 == join_get<T2>(t2).*attr2;}
+    bool operator()(const T1 & t1, const Tuple & t2){ return t1.*attr1 == join_get<TI>(t2).*attr2;}
     template<class Tuple1, class Tuple2>
     bool operator()(const Tuple1 & t1, const Tuple2 & t2){return join_get<T1>(t1).*attr1 == join_get<T2>(t2).*attr2;}
 };
@@ -107,9 +107,10 @@ struct attribute_equals_t {
   *
   * Example: attribute_equals(&Stop::city, &City::name)
   */
-template<class T1, class A1, class T2, class A2>
-attribute_equals_t<T1, A1, T2, A2> attribute_equals(A1 T1::*attr1, A2 T2::*attr2){
-    return attribute_equals_t<T1, A1, T2, A2>(attr1, attr2);
+template<class TI, class T1, class A1, class T2, class A2>
+attribute_equals_t<T1, A1, T2, A2, TI> attribute_equals(A1 T1::*attr1, A2 T2::*attr2){
+    //TODO trouver un moyen de virer TI1 et TI2
+    return attribute_equals_t<T1, A1, T2, A2, TI>(attr1, attr2);
 }
 
 /** Functor that compares two attributes

@@ -30,7 +30,7 @@ int main(int, char **) {
     pt::ptime start(pt::microsec_clock::local_time());
     pt::ptime end;
 
-    GtfsParser p("/home/tristram/idf_gtfs", "20101101");
+    GtfsParser p("/home/kinou/workspace/navitiacpp/data/gtfs", "20101101");
     Data data = p.getData();
     end = pt::microsec_clock::local_time();
     std::cout << "Durée pour lire les données de l'IdF depuis le GTFS : " << (end-start).total_milliseconds() << " ms" << std::endl << std::endl;
@@ -177,7 +177,7 @@ int main(int, char **) {
 */
     start = pt::microsec_clock::local_time();
     auto lyon = make_index(filter(data.stop_areas, matches(&StopArea::name, ".*Lyon.*")));
-    auto lyon_sp = make_join(data.stop_points, lyon, attribute_equals(&StopPoint::stop_area_idx, &StopArea::idx));
+    auto lyon_sp = make_join(data.stop_points, lyon, attribute_equals<StopArea>(&StopPoint::stop_area_idx, &StopArea::idx));
     count = 0;
     BOOST_FOREACH(auto l, lyon_sp){
         //std::cout  << join_get<StopArea>(l).name << " " << join_get<StopPoint>(l).name << std::endl;

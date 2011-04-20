@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(test_join){
     MyConfig f;
     auto join = make_join(f.stops,
                           f.line_stops,
-                          attribute_equals(&Stop::id, &LineStops::stop_id));
+                          attribute_equals<LineStops>(&Stop::id, &LineStops::stop_id));
     int count = 0;
     BOOST_FOREACH(auto stop, join){
         BOOST_CHECK_EQUAL(join_get<LineStops>(stop).stop_id, join_get<Stop>(stop).id);
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(test_join_filtered){
     MyConfig f;
     auto join = make_join(f.stops,
                           filter(f.line_stops, &LineStops::line_name, std::string("Orient Express")),
-                          attribute_equals(&Stop::id, &LineStops::stop_id));
+                          attribute_equals<LineStops>(&Stop::id, &LineStops::stop_id));
     int count = 0;
     BOOST_FOREACH(auto stop, join){
         BOOST_CHECK_EQUAL(join_get<LineStops>(stop).line_name, "Orient Express");
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(test_join_filtered_alternate){
     MyConfig f;
     auto join = make_join(filter(f.line_stops, &LineStops::line_name, std::string("Orient Express")),
                           f.stops,
-                          attribute_equals(&LineStops::stop_id, &Stop::id));
+                          attribute_equals<Stop>(&LineStops::stop_id, &Stop::id));
     
     int count = 0;
     BOOST_FOREACH(auto stop, join){
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(test_join_filtered_and_ordered){
     MyConfig f;
     auto join = make_join(filter(f.line_stops, &LineStops::line_name, std::string("Orient Express")),
                           order(f.stops, &Stop::name),
-                          attribute_equals(&LineStops::stop_id, &Stop::id));
+                          attribute_equals<Stop>(&LineStops::stop_id, &Stop::id));
     int count = 0;
     BOOST_FOREACH(auto stop, join){
         BOOST_CHECK(join_get<LineStops>(stop).line_name == "Orient Express");
@@ -130,10 +130,10 @@ BOOST_AUTO_TEST_CASE(test_join_filtered_and_ordered){
 
 BOOST_AUTO_TEST_CASE(test_double_join){
     MyConfig f;
-    auto join6 = make_join(filter(f.cities, &City::country, std::string("France")), f.stops, attribute_equals(&City::name, &Stop::city));
+    auto join6 = make_join(filter(f.cities, &City::country, std::string("France")), f.stops, attribute_equals<Stop>(&City::name, &Stop::city));
     auto join5 = make_join( f.line_stops,
                             join6,
-                            attribute_equals(&LineStops::stop_id, &Stop::id));
+                            attribute_equals<Stop>(&LineStops::stop_id, &Stop::id));
     int count = 0;
     BOOST_FOREACH(auto stop, join5){
         BOOST_CHECK_EQUAL(join_get<LineStops>(stop).stop_id, join_get<Stop>(stop).id);
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(test_StringIndex){
 
 BOOST_AUTO_TEST_CASE(test_joinIndex){
     MyConfig f;
-    auto join6 = make_join(filter(f.cities, &City::country, std::string("France")), f.stops, attribute_equals(&City::name, &Stop::city));
+    auto join6 = make_join(filter(f.cities, &City::country, std::string("France")), f.stops, attribute_equals<Stop>(&City::name, &Stop::city));
     auto join_idx = make_join_index(join6);
 	auto test = join_idx.begin();
 	auto test2 = *test;

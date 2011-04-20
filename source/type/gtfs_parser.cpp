@@ -101,9 +101,9 @@ void GtfsParser::parse_stops() {
         }
 
         sp.name = elts[name_c];
-        sp.code = elts[id_c];
+        sp.external_code = elts[id_c];
 
-        if(!data.stop_points.empty() && stop_map.find(sp.code) != stop_map.end()) {
+        if(!data.stop_points.empty() && stop_map.find(sp.external_code) != stop_map.end()) {
             ignored++;
         }
         else {
@@ -113,13 +113,13 @@ void GtfsParser::parse_stops() {
                 StopArea sa;
                 sa.coord = sp.coord;
                 sa.name = sp.name;
-                sa.code = sp.code;
-                sa.idx = stop_area_map[sa.code] = data.stop_areas.size();
+                sa.external_code = sp.external_code;
+                sa.idx = stop_area_map[sa.external_code] = data.stop_areas.size();
                 data.stop_areas.push_back(sa);
             }
             // C'est un StopPoint
             else {
-                sp.idx = stop_map[sp.code] = data.stop_points.size();
+                sp.idx = stop_map[sp.external_code] = data.stop_points.size();
                 data.stop_points.push_back(sp);
                 if(elts[parent_c] != "") ///On sauvegarde la référence à la zone d'arrêt
                     stoppoint_areas.push_back(std::make_pair(sp.idx, elts[parent_c]));
@@ -134,7 +134,7 @@ void GtfsParser::parse_stops() {
             data.stop_points[sa.first].stop_area_idx = it->second;
         }
         else
-            std::cerr << "Le stopPoint " << data.stop_points[sa.first].code
+            std::cerr << "Le stopPoint " << data.stop_points[sa.first].external_code
                     << " a utilisé un stopArea inconnu : " << sa.second << std::endl;
     }
 
@@ -245,7 +245,7 @@ void GtfsParser::parse_routes(){
             Line line;
             line.name = elts[long_name_c];
             line.code = elts[short_name_c];
-            line.mode = elts[type_c];
+            line.mode_list.push_back(0);
             line.color = elts[color_c];
             line.additional_data = elts[long_name_c];
 

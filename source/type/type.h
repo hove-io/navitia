@@ -17,13 +17,31 @@ struct unknown_member{};
 
 typedef boost::variant<std::string, int>  col_t;
 
+
+typedef unsigned int idx_t;
+
+
 template<class T> std::string T::* name_getter(){return &T::name;}
 template<class T> int T::* idx_getter(){return &T::idx;}
 
-struct Country {
-    int idx;
+
+struct Nameable{
     std::string name;
-    int main_city_idx;
+    std::string external_code;
+};
+
+
+
+struct NavitiaObject{
+    int id;
+    idx_t idx;
+    NavitiaObject() : id(0), idx(0){};
+};
+
+struct Country {
+    idx_t idx;
+    std::string name;
+    idx_t main_city_idx;
     std::vector<int> district_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & main_city_idx & district_list & idx;
@@ -32,22 +50,22 @@ struct Country {
 };
 
 struct District {
-    int idx;
+    idx_t idx;
     std::string name;
-    int main_city_idx;
-    int country_idx;
-    std::vector<int> department_list;
+    idx_t main_city_idx;
+    idx_t country_idx;
+    std::vector<idx_t> department_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & main_city_idx & country_idx & department_list & idx;
     }
 };
 
 struct Department {
-    int idx;
+    idx_t idx;
     std::string name;
-    int main_city_idx;
-    int district_idx;
-    std::vector<int> city_list;
+    idx_t main_city_idx;
+    idx_t district_idx;
+    std::vector<idx_t> city_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & main_city_idx & district_idx & city_list & idx;
     }
@@ -60,11 +78,24 @@ struct Coordinates {
     }
 };
 
-struct City {
-    int idx;
-    std::string name;
-    int department_idx;
+struct City : public NavitiaObject, Nameable {
+    std::string main_postal_code;
+    bool main_city;
+    bool use_main_stop_area_property;
+
+    idx_t department_idx;
     Coordinates coord;
+
+    std::vector<idx_t> postal_code_list;
+    std::vector<idx_t> stop_area_list;
+    std::vector<idx_t> address_list;
+    std::vector<idx_t> site_list;
+    std::vector<idx_t> stop_point_list;
+    std::vector<idx_t> hang_list;
+    std::vector<idx_t> odt_list;
+
+    City() : main_city(false), use_main_stop_area_property(false), department_idx(0){};
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & department_idx & coord & idx;
     }
@@ -78,84 +109,132 @@ struct City {
     }
 };
 
-struct StopArea{
-    int idx;
-    std::string name;
-    std::string code;
-    int city_idx;
+struct Connection {
+    idx_t departure_stop_point_idx;
+    idx_t destination_stop_point_idx;
+    int duration;
+    int max_duration;
+    idx_t comment_idx;
+
+    Connection() : departure_stop_point_idx(0), destination_stop_point_idx(0), duration(0),
+        max_duration(0), comment_idx(0){};
+
+};
+
+struct StopArea : public NavitiaObject, Nameable{
     Coordinates coord;
+    int properties;
+    std::string additional_data;
+
+    std::vector<idx_t> stop_area_list;
+    std::vector<idx_t> stop_point_list;
+    std::vector<idx_t> impact_list;
+    idx_t city_idx;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & code & name & city_idx & coord & idx;
+        ar & id & idx & external_code & name & city_idx & coord & idx;
     }
 
     col_t get(const std::string & member) const{
         if(member == "idx") return idx;
         else if(member == "name") return name;
-        else if(member == "code") return code;
+        else if(member == "external_code") return external_code;
         else if(member == "city_idx") return city_idx;
         else throw unknown_member();
     }
-    static boost::variant<int StopArea::*, double StopArea::*, std::string StopArea::*> get2(const std::string & member) {
+    static boost::variant<int StopArea::*, idx_t StopArea::*, double StopArea::*, std::string StopArea::*> get2(const std::string & member) {
         if(member == "idx") return &StopArea::idx;
         else if(member == "name") return &StopArea::name;
     }
 };
 
-struct Network {
-    int idx;
-    std::string name;
-    std::vector<int> line_list;
+struct Network : public NavitiaObject, Nameable{
+    idx_t city_idx;
+    std::string address_name;
+    std::string address_number;
+    std::string address_type_name;
+    std::string phone_number;
+    std::string mail;
+    std::string website;
+    std::string fax;
+
+    std::vector<idx_t> line_list;
+    std::vector<idx_t> odt_list;
+    std::vector<idx_t> impact_list;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & line_list & idx;
+        ar & idx & id & name & external_code & city_idx & address_name & address_number & address_type_name 
+            & mail & website & fax & line_list & odt_list & impact_list;
     }
 };
 
-struct Company {
-    int idx;
-    std::string name;
-    std::vector<int> line_list;
+struct Company : public NavitiaObject, Nameable{
+    idx_t city_idx;
+    std::string address_name;
+    std::string address_number;
+    std::string address_type_name;
+    std::string phone_number;
+    std::string mail;
+    std::string website;
+    std::string fax;
+
+    std::vector<idx_t> line_list;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & line_list & idx;
+        ar & idx & id & name & external_code & address_name & address_number & address_type_name & phone_number 
+            & mail & website & fax;
     }
 };
 
-struct ModeType {
-    int idx;
-    std::string name;
-    std::vector<int> mode_list;
-    std::vector<int> line_list;
+struct ModeType : public NavitiaObject, Nameable{
+    std::vector<idx_t> mode_list;
+    std::vector<idx_t> line_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & mode_list & line_list & idx;
+        ar & idx & id & name & external_code & mode_list & line_list;
     }
 };
 
-struct Mode {
-    int idx;
-    std::string name;
-    int mode_type_idx;
+struct Mode : public NavitiaObject, Nameable{
+    idx_t mode_type_idx;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & mode_type_idx & idx;
+        ar & id & idx & name & external_code & mode_type_idx & idx;
     }
 };
 
-struct Line {
-    int idx;
-    std::string name;
+struct Line : public NavitiaObject, Nameable {
     std::string code;
-    std::string mode;
-    int network_idx;
     std::string forward_name;
     std::string backward_name;
-    int forward_thermo_idx;
-    int backward_thermo_idx;
-    std::vector<int> validity_pattern_list;
+
+    std::string comment;
     std::string additional_data;
     std::string color;
     int sort;
+    
+    idx_t mode_type_idx;
+    std::vector<idx_t> mode_list;
+    std::vector<idx_t> company_list;
+    idx_t network_idx;
+
+    /// StopPoint
+    idx_t forward_direction;
+
+    /// StopPoint
+    idx_t backward_direction;
+
+
+    std::vector<idx_t> forward_route;
+    std::vector<idx_t> backward_route;
+
+    std::vector<idx_t> impact_list;
+    std::vector<idx_t> validity_pattern_list;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & code & mode & network_idx & forward_name & backward_name & forward_thermo_idx
-                & backward_thermo_idx & validity_pattern_list & additional_data & color & sort & idx;
+        ar & id & idx & name & external_code & code & forward_name & backward_name & comment & additional_data & color 
+            & sort & mode_type_idx & mode_list & company_list & network_idx & forward_direction & backward_direction 
+            & impact_list & validity_pattern_list;
     }
+
     bool operator<(const Line & other) const { return name > other.name;}
 
     col_t get(const std::string & member) const{
@@ -173,23 +252,27 @@ struct Line {
 
 };
 
-struct Route {
-    int idx;
-    std::string name;
-    int line_idx;
-    ModeType mode_type;
+struct Route : public NavitiaObject, Nameable{
+    std::string comment;
     bool is_frequence;
     bool is_forward;
-    std::vector<int> route_point_list;
-    std::vector<int> vehicle_journey_list;
     bool is_adapted;
-    int associated_route_idx;
+    idx_t line_idx;
+    idx_t mode_type_idx;
+    idx_t associated_route_idx;
+    
+    std::vector<idx_t> route_point_list;
+    std::vector<idx_t> freq_route_point_list;
+    std::vector<idx_t> freq_setting_list;
+    std::vector<idx_t> vehicle_journey_list;
+    std::vector<idx_t> impact_list;
 
-    Route(): idx(0), line_idx(0), is_frequence(false), is_forward(false), is_adapted(false), associated_route_idx(0){};
+    Route(): is_frequence(false), is_forward(false), is_adapted(false), line_idx(0), associated_route_idx(0){};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & line_idx & mode_type & is_frequence & is_forward & route_point_list &
-                vehicle_journey_list & is_adapted & associated_route_idx & idx;
+        ar & id & idx & name & external_code & comment & is_frequence & is_forward & is_adapted & mode_type_idx
+            & line_idx & associated_route_idx & route_point_list & freq_route_point_list & freq_setting_list
+            & vehicle_journey_list & impact_list;
     }
     col_t get(const std::string & member) const{
         if(member == "idx") return idx;
@@ -199,15 +282,15 @@ struct Route {
     }
  };
 struct VehicleJourney {
-    int idx;
+    idx_t idx;
     std::string name;
     std::string external_code;
-    int route_idx;
-    int company_idx;
-    int mode_idx;
-    int vehicle_idx;
+    idx_t route_idx;
+    idx_t company_idx;
+    idx_t mode_idx;
+    idx_t vehicle_idx;
     bool is_adapted;
-    int validity_pattern_idx;
+    idx_t validity_pattern_idx;
 
     VehicleJourney(): idx(0), route_idx(0), company_idx(0), mode_idx(0), vehicle_idx(0), is_adapted(false), validity_pattern_idx(0){};
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -221,18 +304,38 @@ struct VehicleJourney {
     }
 };
 
+struct Equipement : public NavitiaObject {
+    enum EquipementKind{ Sheltred, 
+                            MIPAccess, 
+                            Escalator, 
+                            BikeAccepted, 
+                            BikeDepot, 
+                            VisualAnnouncement, 
+                            AudibleAnnoucement,
+                            AppropriateEscort, 
+                            AppropriateSignage
+    };
 
-struct RoutePoint {
-    int idx;
-    std::string name;
+    std::bitset<9> equipement_kind;
+    
+};
+
+struct RoutePoint : public NavitiaObject{
     std::string external_code;
     int order;
-    int route_idx;
-    int stop_point_idx;
     bool main_stop_point;
+    std::string comment;
     int fare_section;
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & external_code & order & route_idx & stop_point_idx & main_stop_point & fare_section & idx;
+    idx_t route_idx;
+    idx_t stop_point_idx;
+
+    std::vector<idx_t> impact_list;
+
+    RoutePoint() : main_stop_point(false){}
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar & id & idx & external_code & order & main_stop_point & comment & fare_section & route_idx 
+            & stop_point_idx & impact_list;
     }
 };
 
@@ -242,7 +345,7 @@ private:
     std::bitset<366> days;
     bool is_valid(int duration);
 public:
-    int idx;
+    idx_t idx;
     ValidityPattern() : idx(0) {}
     ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date), idx(0){}
     void add(boost::gregorian::date day);
@@ -261,23 +364,28 @@ public:
 
 };
 
-struct StopPoint  {
-    int idx;
-    std::string name;
-    std::string code;
-    int stop_area_idx;
-    int mode_idx;
+struct StopPoint : public NavitiaObject, Nameable{
     Coordinates coord;
+    std::string comment;
     int fare_zone;
-    std::vector<int> lines;
+
+    std::string address_name;
+    std::string address_number;
+    std::string address_type_name;
+
+    idx_t stop_area_idx;
+    idx_t city_idx;
+    idx_t mode_idx;
+    idx_t network_idx;
+    std::vector<idx_t> impact_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & code & name & stop_area_idx & mode_idx & coord & fare_zone & lines & idx;
+        ar & external_code & name & stop_area_idx & mode_idx & coord & fare_zone & idx;
     }
 
     col_t get(const std::string & member) const {
         if(member == "idx") return idx;
         else if(member == "name") return name;
-        else if(member == "code") return code;
+        else if(member == "external_code") return external_code;
         else throw unknown_member();
     }
 };
