@@ -24,7 +24,7 @@ void CsvFusio::fill_networks(BO::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            Network* network = new Network();
+            BO::types::Network* network = new BO::types::Network();
             network->id = boost::lexical_cast<int>(row[0]);
             network->name = row[2];
             network->external_code = row[3];
@@ -41,7 +41,6 @@ void CsvFusio::fill_networks(BO::Data& data){
         }
         counter++;
     }
-    std::cout << data.networks.size() << std::endl;
     reader.close();
 }
 
@@ -56,7 +55,7 @@ void CsvFusio::fill_modes_type(BO::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            ModeType* mode_type = new ModeType();
+            BO::types::ModeType* mode_type = new BO::types::ModeType();
             mode_type->id = boost::lexical_cast<int>(row[0]);
             mode_type->name = row[1];
             mode_type->external_code = row[2];
@@ -66,7 +65,6 @@ void CsvFusio::fill_modes_type(BO::Data& data){
         }
         counter++;       
     }
-    std::cout << data.mode_types.size() << std::endl;
     reader.close();
 }
 
@@ -80,7 +78,7 @@ void CsvFusio::fill_modes(BO::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            Mode* mode = new Mode();
+            BO::types::Mode* mode = new BO::types::Mode();
             mode->id = boost::lexical_cast<int>(row[0]);
             mode->name = row[2];
             mode->external_code = row[3];
@@ -93,7 +91,6 @@ void CsvFusio::fill_modes(BO::Data& data){
         }
         counter++;       
     }
-    std::cout << data.modes.size() << std::endl;
     reader.close();
 }
 
@@ -108,13 +105,13 @@ void CsvFusio::fill_lines(BO::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            Line* line = new Line();
-            line->id = boost::lexical_cast<int>(row[LineMapping::id]);
-            line->name = row[LineMapping::name];
-            line->external_code = row[LineMapping::external_code];
-            line->code = row[LineMapping::code];
+            BO::types::Line* line = new BO::types::Line();
+            line->id = boost::lexical_cast<int>(row[0]);
+            line->name = row[4];
+            line->external_code = row[3];
+            line->code = row[2];
 
-            int network_id = boost::lexical_cast<int>(row[LineMapping::network_id]);
+            int network_id = boost::lexical_cast<int>(row[5]);
             line->network = this->find(network_map, network_id);
 
             int mode_type_id = boost::lexical_cast<int>(row[1]);
@@ -124,6 +121,5 @@ void CsvFusio::fill_lines(BO::Data& data){
         }
         counter++;       
     }
-    std::cout << data.lines.size() << std::endl;
     reader.close();
 }

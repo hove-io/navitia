@@ -1,14 +1,14 @@
 #pragma once
-#include "type.h"
+#include "types.h"
 
 namespace BO{
 
     class Data{
     public:
-        std::vector<Network*> networks;
-        std::vector<ModeType*> mode_types;
-        std::vector<Line*> lines;
-        std::vector<Mode*> modes;
+        std::vector<BO::types::Network*> networks;
+        std::vector<BO::types::ModeType*> mode_types;
+        std::vector<BO::types::Line*> lines;
+        std::vector<BO::types::Mode*> modes;
 
     };
 }

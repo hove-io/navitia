@@ -25,30 +25,15 @@ class CsvFusio {
             return NULL;
         }
 
-        std::map<int, Network*> network_map;
-        std::map<int, ModeType*> mode_type_map;
-        std::map<int, Mode*> mode_map;
+        std::map<int, BO::types::Network*> network_map;
+        std::map<int, BO::types::ModeType*> mode_type_map;
+        std::map<int, BO::types::Mode*> mode_map;
 
         void fill_networks(BO::Data& data);
         void fill_modes_type(BO::Data& data);
         void fill_modes(BO::Data& data);
         void fill_lines(BO::Data& data);
 
-        enum LineMapping{
-            id,
-            mode_id,
-            code,
-            external_code,
-            name, 
-            network_id,
-            forward_name,
-            backward_name,
-            LIN_STA_FORWARDDIRECTION,
-            LIN_STA_BACKWARDDIRECTION,
-            additionnal_data,
-            service_id,
-            comment_id
-        };
 };
 
 
