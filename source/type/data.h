@@ -14,6 +14,8 @@ public:
     std::vector<StopArea> stop_areas;
     std::vector<StopTime> stop_times;
 
+    std::vector<Network> networks;
+
     public:
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
       *

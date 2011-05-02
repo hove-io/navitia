@@ -149,7 +149,6 @@ struct StopArea : public NavitiaObject, Nameable{
 };
 
 struct Network : public NavitiaObject, Nameable{
-    idx_t city_idx;
     std::string address_name;
     std::string address_number;
     std::string address_type_name;
@@ -163,7 +162,7 @@ struct Network : public NavitiaObject, Nameable{
     std::vector<idx_t> impact_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & external_code & city_idx & address_name & address_number & address_type_name 
+        ar & idx & id & name & external_code & address_name & address_number & address_type_name 
             & mail & website & fax & line_list & odt_list & impact_list;
     }
 };
@@ -196,6 +195,7 @@ struct ModeType : public NavitiaObject, Nameable{
 
 struct Mode : public NavitiaObject, Nameable{
     idx_t mode_type_idx;
+    ModeType* mode_type;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & external_code & mode_type_idx & idx;
     }
@@ -206,16 +206,19 @@ struct Line : public NavitiaObject, Nameable {
     std::string forward_name;
     std::string backward_name;
 
-    std::string comment;
+    idx_t comment_idx;
     std::string additional_data;
     std::string color;
     int sort;
     
     idx_t mode_type_idx;
+    ModeType* mode_type;
+
     std::vector<idx_t> mode_list;
     std::vector<idx_t> company_list;
     idx_t network_idx;
 
+    Network* network;
     /// StopPoint
     idx_t forward_direction;
 
@@ -230,7 +233,7 @@ struct Line : public NavitiaObject, Nameable {
     std::vector<idx_t> validity_pattern_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & external_code & code & forward_name & backward_name & comment & additional_data & color 
+        ar & id & idx & name & external_code & code & forward_name & backward_name & comment_idx & additional_data & color 
             & sort & mode_type_idx & mode_list & company_list & network_idx & forward_direction & backward_direction 
             & impact_list & validity_pattern_list;
     }
@@ -253,7 +256,7 @@ struct Line : public NavitiaObject, Nameable {
 };
 
 struct Route : public NavitiaObject, Nameable{
-    std::string comment;
+    idx_t comment_idx;
     bool is_frequence;
     bool is_forward;
     bool is_adapted;
@@ -270,7 +273,7 @@ struct Route : public NavitiaObject, Nameable{
     Route(): is_frequence(false), is_forward(false), is_adapted(false), line_idx(0), associated_route_idx(0){};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & external_code & comment & is_frequence & is_forward & is_adapted & mode_type_idx
+        ar & id & idx & name & external_code & comment_idx & is_frequence & is_forward & is_adapted & mode_type_idx
             & line_idx & associated_route_idx & route_point_list & freq_route_point_list & freq_setting_list
             & vehicle_journey_list & impact_list;
     }
@@ -324,7 +327,7 @@ struct RoutePoint : public NavitiaObject{
     std::string external_code;
     int order;
     bool main_stop_point;
-    std::string comment;
+    idx_t comment_idx;
     int fare_section;
     idx_t route_idx;
     idx_t stop_point_idx;
@@ -334,7 +337,7 @@ struct RoutePoint : public NavitiaObject{
     RoutePoint() : main_stop_point(false){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & id & idx & external_code & order & main_stop_point & comment & fare_section & route_idx 
+        ar & id & idx & external_code & order & main_stop_point & comment_idx & fare_section & route_idx 
             & stop_point_idx & impact_list;
     }
 };
@@ -366,7 +369,7 @@ public:
 
 struct StopPoint : public NavitiaObject, Nameable{
     Coordinates coord;
-    std::string comment;
+    idx_t comment_idx;
     int fare_zone;
 
     std::string address_name;
@@ -397,11 +400,11 @@ struct StopTime {
     int vehicle_journey_idx;
     int stop_point_idx;
     int order;
-    std::string comment;
+    idx_t comment_idx;
     bool ODT;
     int zone;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & arrival_time & departure_time & vehicle_journey_idx & stop_point_idx & order & comment & ODT & zone & idx;
+        ar & arrival_time & departure_time & vehicle_journey_idx & stop_point_idx & order & comment_idx & ODT & zone & idx;
     }
 };
 
