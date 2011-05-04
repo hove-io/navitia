@@ -5,9 +5,6 @@
 
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/variant.hpp>
-#include <boost/any.hpp>
-#include <boost/bimap.hpp>
 
 
 namespace BO{namespace types{
@@ -36,7 +33,7 @@ struct GeographicalCoord{
     GeographicalCoord() : x(0), y(0) {}
 };
 
-
+//forward declare
 class District;
 class Department;
 class City;
@@ -97,7 +94,6 @@ struct City : public NavitiaObject, Nameable {
     City() : main_city(false), use_main_stop_area_property(false) {};
 
 
-    /// Retourne la valeur d'un membre en fonction du nom
 };
 
 struct Connection {
@@ -119,7 +115,6 @@ struct StopArea : public NavitiaObject, Nameable{
 
     std::vector<idx_t> stop_area_list;
     std::vector<idx_t> stop_point_list;
-    std::vector<idx_t> impact_list;
     idx_t city_idx;
 
 };
@@ -134,7 +129,6 @@ struct Network : public NavitiaObject, Nameable{
     std::string fax;
 
     std::vector<Line*> line_list;
-    std::vector<idx_t> impact_list;
 
 
 };
@@ -190,7 +184,6 @@ struct Line : public NavitiaObject, Nameable {
     std::vector<idx_t> forward_route;
     std::vector<idx_t> backward_route;
 
-    std::vector<idx_t> impact_list;
     std::vector<idx_t> validity_pattern_list;
 
     Line(): sort(0), mode_type(NULL), network(NULL) {}
@@ -212,7 +205,6 @@ struct Route : public NavitiaObject, Nameable{
     std::vector<idx_t> freq_route_point_list;
     std::vector<idx_t> freq_setting_list;
     std::vector<idx_t> vehicle_journey_list;
-    std::vector<idx_t> impact_list;
 
     Route(): is_frequence(false), is_forward(false), is_adapted(false), line_idx(0), associated_route_idx(0){};
 
@@ -256,7 +248,6 @@ struct RoutePoint : public NavitiaObject{
     idx_t route_idx;
     idx_t stop_point_idx;
 
-    std::vector<idx_t> impact_list;
 
     RoutePoint() : main_stop_point(false){}
 
@@ -292,7 +283,6 @@ struct StopPoint : public NavitiaObject, Nameable{
     idx_t city_idx;
     idx_t mode_idx;
     idx_t network_idx;
-    std::vector<idx_t> impact_list;
 };
 
 struct StopTime {
