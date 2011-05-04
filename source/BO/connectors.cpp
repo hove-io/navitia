@@ -121,5 +121,6 @@ void CsvFusio::fill_lines(BO::Data& data){
         }
         counter++;       
     }
+    std::cout << counter -1 << " must be equals to " << data.lines.size() << std::endl;
     reader.close();
 }

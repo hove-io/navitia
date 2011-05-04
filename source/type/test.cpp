@@ -9,9 +9,10 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
-//#include <boost/iostreams/filter/gzip.hpp>
-//#include <boost/iostreams/filter/bzip2.hpp>
-//#include <boost/iostreams/filter/zlib.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filter/bzip2.hpp>
+#include <boost/iostreams/filter/zlib.hpp>
+#include "filter.h"
 
 namespace pt = boost::posix_time;
 
@@ -30,7 +31,8 @@ int main(int, char **) {
     pt::ptime start(pt::microsec_clock::local_time());
     pt::ptime end;
 
-    GtfsParser p("/home/kinou/workspace/navitiacpp/data/gtfs", "20101101");
+    GtfsParser p("/home/kinou/workspace/gtfs/export-idf", "20101101");
+    //GtfsParser p("/home/kinou/workspace/navitiacpp/data/gtfs", "20101101");
     Data data = p.getData();
     end = pt::microsec_clock::local_time();
     std::cout << "Durée pour lire les données de l'IdF depuis le GTFS : " << (end-start).total_milliseconds() << " ms" << std::endl << std::endl;
@@ -91,8 +93,8 @@ int main(int, char **) {
     }
     end = pt::microsec_clock::local_time();
     std::cout << "Durée pour dé-sérialiser les données uniqumeent : " << (end-start).total_milliseconds() << " ms" << std::endl;
-/*
-    start = pt::microsec_clock::local_time();
+
+    /*start = pt::microsec_clock::local_time();
     {
         std::ofstream ofs("data.nav.gz",std::ios::out|std::ios::binary|std::ios::trunc);
         boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
@@ -146,8 +148,8 @@ int main(int, char **) {
         BOOST_ASSERT(data2.stop_points.size() == data.stop_points.size());
     }
     end = pt::microsec_clock::local_time();
-    std::cout << "Durée pour dé-sérialiser les données avec compression Z : " << (end-start).total_milliseconds() << " ms" << std::endl;
-    start = pt::microsec_clock::local_time();
+    std::cout << "Durée pour dé-sérialiser les données avec compression Z : " << (end-start).total_milliseconds() << " ms" << std::endl;*/
+    /*start = pt::microsec_clock::local_time();
     {
         std::ofstream ofs("data.nav.bz2",std::ios::out|std::ios::binary|std::ios::trunc);
         boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
@@ -157,6 +159,7 @@ int main(int, char **) {
         oa << data;
     }
     end = pt::microsec_clock::local_time();
+    
     std::cout << "Durée pour sérialiser les données uniquement avec compression bz2 : " << (end-start).total_milliseconds() << " ms" << std::endl;
 
     start = pt::microsec_clock::local_time();
@@ -173,8 +176,41 @@ int main(int, char **) {
         BOOST_ASSERT(data2.stop_points.size() == data.stop_points.size());
     }
     end = pt::microsec_clock::local_time();
-    std::cout << "Durée pour dé-sérialiser les données avec compression bz2 : " << (end-start).total_milliseconds() << " ms" << std::endl;
-*/
+    std::cout << "Durée pour dé-sérialiser les données avec compression bz2 : " << (end-start).total_milliseconds() << " ms" << std::endl;*/
+
+
+    //fastlz
+    
+    start = pt::microsec_clock::local_time();
+    {
+        std::ofstream ofs("data.nav.flz",std::ios::out|std::ios::binary|std::ios::trunc);
+        boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
+        out.push(FastLZCompressor(2048*500), 1024*500, 1024*500);
+        out.push(ofs);
+        boost::archive::binary_oarchive oa(out);
+        oa << data;
+    }
+    end = pt::microsec_clock::local_time();
+    std::cout << "Durée pour sérialiser les données uniquement avec compression fastlz : " << (end-start).total_milliseconds() << " ms" << std::endl;
+
+    start = pt::microsec_clock::local_time();
+    {
+        std::ifstream ifs("data.nav.flz", std::ios::in|std::ios::binary);
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
+        in.push(FastLZDecompressor(1024*500), 8192*500, 8192*500);
+        in.push(ifs);
+        Data data2;
+        boost::archive::binary_iarchive ia(in);
+        ia >> data2;
+        BOOST_ASSERT(data2.stop_times.size() == data.stop_times.size());
+        BOOST_ASSERT(data2.stop_areas.size() == data.stop_areas.size());
+        BOOST_ASSERT(data2.stop_points.size() == data.stop_points.size());
+    }
+    end = pt::microsec_clock::local_time();
+    std::cout << "Durée pour dé-sérialiser les données avec compression fastlz : " << (end-start).total_milliseconds() << " ms" << std::endl;
+
+
+
     start = pt::microsec_clock::local_time();
     auto lyon = make_index(filter(data.stop_areas, matches(&StopArea::name, ".*Lyon.*")));
     auto lyon_sp = make_join(data.stop_points, lyon, attribute_equals<StopArea>(&StopPoint::stop_area_idx, &StopArea::idx));

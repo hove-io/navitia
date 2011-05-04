@@ -135,6 +135,8 @@ struct StopArea : public NavitiaObject, Nameable{
         ar & id & idx & external_code & name & city_idx & coord & idx;
     }
 
+    StopArea(): properties(0), city_idx(0){}
+
     col_t get(const std::string & member) const{
         if(member == "idx") return idx;
         else if(member == "name") return name;
@@ -195,7 +197,6 @@ struct ModeType : public NavitiaObject, Nameable{
 
 struct Mode : public NavitiaObject, Nameable{
     idx_t mode_type_idx;
-    ModeType* mode_type;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & external_code & mode_type_idx & idx;
     }
@@ -212,18 +213,10 @@ struct Line : public NavitiaObject, Nameable {
     int sort;
     
     idx_t mode_type_idx;
-    ModeType* mode_type;
 
     std::vector<idx_t> mode_list;
     std::vector<idx_t> company_list;
     idx_t network_idx;
-
-    Network* network;
-    /// StopPoint
-    idx_t forward_direction;
-
-    /// StopPoint
-    idx_t backward_direction;
 
 
     std::vector<idx_t> forward_route;
@@ -231,6 +224,11 @@ struct Line : public NavitiaObject, Nameable {
 
     std::vector<idx_t> impact_list;
     std::vector<idx_t> validity_pattern_list;
+
+    idx_t forward_direction;
+    idx_t backward_direction;
+
+    Line(): comment_idx(0), sort(0), mode_type_idx(0), network_idx(0), forward_direction(0), backward_direction(0){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & external_code & code & forward_name & backward_name & comment_idx & additional_data & color 
@@ -270,7 +268,7 @@ struct Route : public NavitiaObject, Nameable{
     std::vector<idx_t> vehicle_journey_list;
     std::vector<idx_t> impact_list;
 
-    Route(): is_frequence(false), is_forward(false), is_adapted(false), line_idx(0), associated_route_idx(0){};
+    Route(): comment_idx(0),  is_frequence(false), is_forward(false), is_adapted(false), line_idx(0), mode_type_idx(0), associated_route_idx(0){};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & external_code & comment_idx & is_frequence & is_forward & is_adapted & mode_type_idx
@@ -334,7 +332,7 @@ struct RoutePoint : public NavitiaObject{
 
     std::vector<idx_t> impact_list;
 
-    RoutePoint() : main_stop_point(false){}
+    RoutePoint() : order(0), main_stop_point(false), comment_idx(0), fare_section(0), route_idx(0), stop_point_idx(0){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & id & idx & external_code & order & main_stop_point & comment_idx & fare_section & route_idx 
@@ -385,6 +383,8 @@ struct StopPoint : public NavitiaObject, Nameable{
         ar & external_code & name & stop_area_idx & mode_idx & coord & fare_zone & idx;
     }
 
+    StopPoint(): comment_idx(0), fare_zone(0),  stop_area_idx(0), city_idx(0), mode_idx(0), network_idx(0){}
+
     col_t get(const std::string & member) const {
         if(member == "idx") return idx;
         else if(member == "name") return name;
@@ -403,6 +403,10 @@ struct StopTime {
     idx_t comment_idx;
     bool ODT;
     int zone;
+
+    StopTime(): idx(0), arrival_time(0), departure_time(0), vehicle_journey_idx(0), stop_point_idx(0), order(0), 
+        comment_idx(0), ODT(false), zone(0){}
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & arrival_time & departure_time & vehicle_journey_idx & stop_point_idx & order & comment_idx & ODT & zone & idx;
     }

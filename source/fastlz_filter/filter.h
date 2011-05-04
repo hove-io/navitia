@@ -6,20 +6,21 @@
 #include "fastlz.h"
 #include <boost/iostreams/write.hpp>
 #include <boost/iostreams/read.hpp>
+#include <boost/cstdint.hpp>
 
 
 
 class FastLZCompressor : public boost::iostreams::multichar_output_filter {
-    std::size_t buffer_size;
+    std::streamsize buffer_size;
     char*  output_buffer;
 public:
 
-    FastLZCompressor(size_t buffer_size=1024): buffer_size(buffer_size){
-        output_buffer = new char[buffer_size*2];
+    FastLZCompressor(size_t buffer_size=256): buffer_size(buffer_size){
+        output_buffer = new char[buffer_size];
     }
 
     FastLZCompressor(const FastLZCompressor& other) : buffer_size(other.buffer_size){
-        output_buffer = new char[buffer_size*2];
+        output_buffer = new char[buffer_size];
     }
 
 
@@ -29,14 +30,22 @@ public:
 
     template<typename Sink>
     std::streamsize write(Sink& dest, const char* src, std::streamsize size){
-        std::cout << "input: " << size << std::endl;
-        std::streamsize output_size;
-        output_size = fastlz_compress(src, size, output_buffer);
-        std::cout << "output: " << output_size << std::endl;
-        if(output_size > 0){
-            boost::iostreams::write(dest, output_buffer, output_size);
+        if(size > buffer_size){
+            std::cout << "it's bad!" << std::endl;
         }
-        return buffer_size;
+        uint32_t output_size;
+        output_size = fastlz_compress(src, size, output_buffer);
+        if(output_size > 0){
+            boost::iostreams::write(dest, (char*)&output_size, sizeof(uint32_t));
+            boost::iostreams::write(dest, output_buffer, output_size);
+        }else{
+            std::cout << "compression error" << std::endl;
+        }
+        if(buffer_size < size){
+            return buffer_size;
+        }else{
+            return size;
+        }
 
     }
 };
@@ -45,9 +54,10 @@ public:
 class FastLZDecompressor : public boost::iostreams::multichar_input_filter {
     std::streamsize buffer_size;
     char*  input_buffer;
+    char* metadata;
 public:
 
-    FastLZDecompressor(size_t buffer_size=1024): buffer_size(buffer_size){
+    FastLZDecompressor(size_t buffer_size=256): buffer_size(buffer_size){
         input_buffer = new char[buffer_size];
     }
 
@@ -62,10 +72,11 @@ public:
 
     template<typename Source>
     std::streamsize read(Source& src, char* dest, std::streamsize size){
-        std::cout << "decompression input: " << size << std::endl;
-        std::streamsize output_size=0, read_size;
-        
-        read_size = boost::iostreams::read(src, input_buffer, buffer_size);
+        std::streamsize output_size=0, read_size=0;
+        uint32_t chunck_size=0;
+
+        boost::iostreams::read(src, (char*)&chunck_size, sizeof(uint32_t));
+        read_size = boost::iostreams::read(src, input_buffer, chunck_size);
         if(read_size > 0){
             output_size = fastlz_decompress(input_buffer, read_size, dest, size);
         }else{
