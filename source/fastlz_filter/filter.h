@@ -31,7 +31,7 @@ public:
     template<typename Sink>
     std::streamsize write(Sink& dest, const char* src, std::streamsize size){
         if(size > buffer_size){
-            std::cout << "it's bad!" << std::endl;
+            size = buffer_size;
         }
         uint32_t output_size;
         output_size = fastlz_compress(src, size, output_buffer);
@@ -77,10 +77,14 @@ public:
 
         boost::iostreams::read(src, (char*)&chunck_size, sizeof(uint32_t));
         read_size = boost::iostreams::read(src, input_buffer, chunck_size);
-        if(read_size > 0){
+        if(read_size == chunck_size){
             output_size = fastlz_decompress(input_buffer, read_size, dest, size);
         }else{
-            std::cout << "rien de lu" << std::endl;
+            if(chunck_size == 0 && read_size == -1){
+                return -1;//le flux est vide
+            }else{
+                throw std::string("error");
+            }
         }
         return output_size;
     }
