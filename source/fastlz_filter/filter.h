@@ -8,6 +8,7 @@
 #include <boost/iostreams/read.hpp>
 #include <boost/cstdint.hpp>
 
+typedef std::exception FlzException;
 
 
 class FastLZCompressor : public boost::iostreams::multichar_output_filter {
@@ -39,7 +40,7 @@ public:
             boost::iostreams::write(dest, (char*)&output_size, sizeof(uint32_t));
             boost::iostreams::write(dest, output_buffer, output_size);
         }else{
-            std::cout << "compression error" << std::endl;
+            throw FlzException();
         }
         if(buffer_size < size){
             return buffer_size;
@@ -83,7 +84,7 @@ public:
             if(chunck_size == 0 && read_size == -1){
                 return -1;//le flux est vide
             }else{
-                throw std::string("error");
+                throw FlzException();
             }
         }
         return output_size;
