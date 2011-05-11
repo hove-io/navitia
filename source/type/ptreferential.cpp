@@ -6,6 +6,7 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <iostream>
 #include "indexes2.h"
+#include "where.h"
 
 namespace qi = boost::spirit::qi;
 
@@ -166,15 +167,13 @@ std::vector< std::vector<col_t> > query(std::string request, Data & data){
         }
     }
     else if(table == "stop_areas") {
-
-/*
-            BOOST_FOREACH(auto vect, Index2<boost::fusion::vector<StopArea> >(data.stop_areas, wh)){
-                const StopArea & sa = *(boost::fusion::at_c<0>(vect));
+        BOOST_FOREACH(auto sa, data.stop_areas){
+                //const StopArea & sa = *(boost::fusion::at_c<0>(vect));
             std::vector<col_t> row;
             BOOST_FOREACH(Column & col, r.columns)
                row.push_back(sa.get(col.column)); 
             result.push_back(row);
-        }*/
+        }
     }
     else if(table == "stop_times"){
         BOOST_FOREACH(const StopArea & sa, data.stop_areas){
@@ -192,12 +191,12 @@ std::vector< std::vector<col_t> > query(std::string request, Data & data){
 int main(int argc, char** argv){
     Data d;
     d.load_bin("data.nav");
-/*    Index2<boost::fusion::vector<StopArea> > x2(d.stop_areas, WHERE(&StopArea::idx, GT, 504) && WHERE(&StopArea::idx, LET, 505));
+    Index2<boost::fusion::vector<StopArea> > x2(d.stop_areas, WHERE(&StopArea::idx, GT, 504) && WHERE(&StopArea::idx, LT, 505));
     std::cout << x2.nb_types() << " " << x2.size() << std::endl;
 
     BOOST_FOREACH(auto bleh, x2) {
         std::cout << boost::fusion::at_c<0>(bleh)->name << std::endl;
-    }*/
+    }
 
     if(argc != 2)
         std::cout << "Il faut exactement un paramètre" << std::endl;

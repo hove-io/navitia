@@ -1,7 +1,7 @@
-/** We want to simmulate a relationnal database
+/** We want to simmulate a relationnal database Indexes
  *
  * Every "table" is an immutable std::vector<Data> where Data can be any class.
- * All the members are a "row"
+ * All the members are a "column"
  * The data must be in an std::vector
  */
 
@@ -13,12 +13,13 @@
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/fusion/container/vector/detail/as_vector.hpp>
+
 namespace f = boost::fusion;
 namespace m = boost::mpl;
 
 template<class T>
 bool true2(const T&) {return true;}
-    
+
 /// TypeVector is a boost::fusion vector of multiple data types
 template<class TypeVector>
 struct Index2 {
@@ -47,17 +48,15 @@ struct Index2 {
     /// Initialises the data having two iterators
     template<class Iterator>
     void initialize(Iterator begin, Iterator end){
+        offsets.reserve(end - begin);
         initialize(begin, end, &true2<typename Iterator::value_type>);
-
     }
     
     /// Initialises the data having two iterators and a Functor to filter every thing
     template<class Iterator, class Filter>
     void initialize(Iterator begin, Iterator end, const Filter & f){
-        offsets.reserve(end - begin);
         typename Iterator::pointer first_elt = &(*begin);
         begin_ptr = TypePtrVector(first_elt);
-
         while(begin != end) {
             if(f(*begin)) {
                 offset_t offset;
@@ -137,98 +136,3 @@ struct Index2 {
 };
 
 
-/// functor that always returns true
-template<class T>
-struct True {
-    bool operator()(const T&) const {return true;}
-};
-/// Possible Operators
-enum Operator_e{EQ, NEQ, LT, GT, LEQ, GEQ};
-
-/// What is the type of the current leaf
-enum Node_e {AND, OR, LEAF, NOT, TRUE};
-
-/// Models the WHERE clause as a tree to build a complete syntax of AND, OR...
-template<class T>
-struct Where{
-    /// What kind de node are we ?
-    Node_e current_node;
-
-    /// Left node; is the current node if we're a LEAF
-    boost::shared_ptr< Where<T> > left;
-
-    /// Right node. Nil if we are at a LEAF
-    boost::shared_ptr< Where<T> > right;
-
-    /// The pointer to the member we're interested in
-    /// The is one possible instance and we'll use it depending on current_type
-    int T::* iptr;
-    double T::*dptr;
-    std::string * sptr;
-
-    /// The operator to apply if it's a LEAF node
-    Operator_e op;
-
-    /// The value we to apply the operator with
-    int value;
-
-    /// Possible types we manage
-    enum Type_e{INT, DOUBLE, STRING};
-
-    /// What type is the current clause applied to
-    Type_e current_type;
-
-    /// Tests the clause holds for the given instance
-    bool eval(const T & element) const {
-        switch(op) {
-            case EQ: return element.*iptr == value; break;
-            case NEQ: return element.*iptr != value; break;
-            case LT: return element.*iptr < value; break;
-            case GT: return element.*iptr > value; break;
-            case LEQ: return element.*iptr <= value; break;
-            case GEQ: return element.*iptr >= value; break;
-        }
-        return false;
-    }
-
-    /// Default constructor : it restricts nothing
-    Where() : current_node(TRUE) {}
-
-    /// Constructor with a clause
-    /// It is overladed to match the type we wants
-    Where(int T::* ptr, Operator_e op, const std::string & value) : current_node(LEAF), iptr(ptr), op(op), value(boost::lexical_cast<int>(value)), current_type(INT) {}
-    Where(int T::* ptr, Operator_e op, int value) : current_node(LEAF), iptr(ptr), op(op), value(value), current_type(INT) {}
-    Where(double T::* ptr, Operator_e op, const std::string & value) : current_node(LEAF), dptr(ptr), op(op), value(boost::lexical_cast<double>(value)), current_type(DOUBLE) {}
-    Where(double T::* ptr, Operator_e op, double value) : current_node(LEAF), dptr(ptr), op(op), value(value), current_type(DOUBLE) {}
-    Where(std::string T::* ptr, Operator_e op, const std::string & value) : current_node(LEAF), sptr(ptr), op(op), value(value), current_type(STRING) {}
-
-    /// Constructor combining two clauses
-    Where(const Where<T> & left, const Where<T> & right, Node_e nt) : current_node(nt), left(new Where<T>(left)), right(new Where<T>(right)) {}
-
-    /// Evaluates if the clause is valid 
-    bool operator()(const T & element) const {
-        switch(current_node) {
-            case AND: return (*left)(element) && (*right)(element); break;
-            case OR: return (*left)(element) || (*right)(element); break;
-            case LEAF: return eval(element); break;
-            case NOT: return !eval(element); break;
-            case TRUE: return true; break;
-        }
-        return true;
-    }
-};
-
-template<class T, class M, class V>
-Where<T> WHERE(M T::* ptr, Operator_e op, V value) {
-    return Where<T>(ptr, op, value);
-}
-
-template<class T>
-Where<T> operator&&(const Where<T> & left, const Where<T> & right){
-    return Where<T>(left, right, AND);
-}
-
-template<class T>
-Where<T> operator||(const Where<T> & left, const Where<T> & right){
-    return Where<T>(left, right, OR);
-}
