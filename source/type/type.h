@@ -12,6 +12,8 @@
 #include <boost/any.hpp>
 #include <boost/bimap.hpp>
 
+#include "reflexion.h"
+
 /// Exception levée lorsqu'on demande un membre qu'on ne connait pas
 struct unknown_member{};
 
