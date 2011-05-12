@@ -6,10 +6,10 @@
 #define RESULT_LENGTH 10000
 
 using namespace webservice;
-/// Structure de données commune à tous les threads
+/// Structure de donnÃ©es commune Ã  tous les threads
 struct Data {
   int nb_threads; ///< Nombre de threads
-  int * data; ///< Contient un gros tableau de données à lire à chaque requete
+  int * data; ///< Contient un gros tableau de donnÃ©es Ã  lire Ã  chaque requete
   Data() : nb_threads(8) {
       data = (int*) calloc(LENGTH, sizeof(int));
     for(int i = 0; i< LENGTH; i++){
@@ -18,17 +18,17 @@ struct Data {
   }
 };
 
-/// Structure de données propre à chaque thread
+/// Structure de donnÃ©es propre Ã  chaque thread
 struct Worker {
-  int *buffer; ///< Tableau trituré à chaque requete
-  char *p_result; ///< Chaine de characteres C qui contient le résultat
+  int *buffer; ///< Tableau triturÃ© Ã  chaque requete
+  char *p_result; ///< Chaine de characteres C qui contient le rÃ©sultat
   /// Constructeur qui alloue les tableau (une fois par thread)
   Worker(Data &) {
     buffer = (int*) calloc(BUFFER_LENGTH, sizeof(int));
     p_result = (char*) calloc(RESULT_LENGTH, sizeof(char));
   }
   
-  /// Fonction appelée à chaque requete
+  /// Fonction appelÃ©e Ã  chaque requete
   ResponseData operator()(const RequestData &, Data & d){
     char *current = NULL;
     long unsigned int index;
@@ -45,11 +45,11 @@ struct Worker {
     for(index=0; (index<counter && index<RESULT_LENGTH); index++){
         *current = 32 + (buffer[index]%223);
         current++;
-        //la plage de caractére imprimable ascii s'étend entre 32 et 255
+        //la plage de caractÃ©re imprimable ascii s'Ã©tend entre 32 et 255
     }
     ResponseData rd;
     p_result[RESULT_LENGTH -1] = '\0';
-    rd.response << p_result << (RESULT_LENGTH*3/4); // On retourne juste le quart pour ne pas être limité par le réseau
+    rd.response << p_result << (RESULT_LENGTH*3/4); // On retourne juste le quart pour ne pas Ãªtre limitÃ© par le rÃ©seau
     rd.content_type = "text/html";
     rd.status_code = 200;
     rd.charset = "latin1";

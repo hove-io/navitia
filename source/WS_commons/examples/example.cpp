@@ -1,34 +1,34 @@
-/** Exemple de webservice : il affiche le nombre de requêtes traitées par le webservice et par le thread courant */
+/** Exemple de webservice : il affiche le nombre de requÃªtes traitÃ©es par le webservice et par le thread courant */
 
 #include "baseworker.h"
 #include "configuration.h"
 #include <iostream>
 using namespace webservice;
 
-/** Structure de données globale au webservice
- *  N'est instancié qu'une seule fois au chargement
+/** Structure de donnÃ©es globale au webservice
+ *  N'est instanciÃ© qu'une seule fois au chargement
  */
 struct Data{
-  int nb_threads; /// Nombre de threads. IMPORTANT ! Sans cette variable, ça ne compile pas
+  int nb_threads; /// Nombre de threads. IMPORTANT ! Sans cette variable, Ã§a ne compile pas
   int count; /// Notre compteur d'appels au webservice
-  boost::mutex mut; /// Un mutex pour protéger ce cout
-  /// Constructeur par défaut, il est appelé au chargement du webservice
+  boost::mutex mut; /// Un mutex pour protÃ©ger ce cout
+  /// Constructeur par dÃ©faut, il est appelÃ© au chargement du webservice
   Data() : nb_threads(8), count(0){
       Configuration * conf = Configuration::get();
       std::cout << "Je suis l'executable " << conf->get_string("application") <<std::endl;
-      std::cout << "Je réside dans le path " << conf->get_string("path") <<std::endl;
+      std::cout << "Je rÃ©side dans le path " << conf->get_string("path") <<std::endl;
   }
 };
 
-/// Classe associée à chaque thread
+/// Classe associÃ©e Ã  chaque thread
 class Worker : public BaseWorker<Data> {
-    int i; /// Compteur de requêtes sur le thread actuel
+    int i; /// Compteur de requÃªtes sur le thread actuel
 
-    /** Api qui compte le nombre de fois qu'elle a été appelée */
+    /** Api qui compte le nombre de fois qu'elle a Ã©tÃ© appelÃ©e */
     ResponseData count(RequestData, Data & d) {
         i++;
         ResponseData rd;        
-        rd.response << "Hello world!!! Exécuté par ce thread : " << i << " executé au total : ";
+        rd.response << "Hello world!!! ExÃ©cutÃ© par ce thread : " << i << " executÃ© au total : ";
         d.mut.lock();
         rd.response << d.count++;
         d.mut.unlock();
@@ -41,12 +41,12 @@ class Worker : public BaseWorker<Data> {
 
 
     public:    
-    /** Constructeur par défaut
+    /** Constructeur par dÃ©faut
       *
       * On y enregistre toutes les api qu'on souhaite exposer
       */
     Worker(Data &) : i(0) {
-        register_api("/count",boost::bind(&Worker::count, this, _1, _2), "Api qui compte le nombre d'appels effectués");
+        register_api("/count",boost::bind(&Worker::count, this, _1, _2), "Api qui compte le nombre d'appels effectuÃ©s");
         add_default_api();
     }
 };

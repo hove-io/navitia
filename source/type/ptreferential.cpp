@@ -70,8 +70,8 @@ BOOST_FUSION_ADAPT_STRUCT(
     }
 
 };
-
-/*template<class T>
+/*
+template<class T, class T2>
 Where<T> build_clause(std::string & member) {
     Where<T> wh;
     boost::variant<int T::*, double T::*, std::string T::*> ptr = T::get2(member);
@@ -191,7 +191,8 @@ std::vector< std::vector<col_t> > query(std::string request, Data & data){
 int main(int argc, char** argv){
     Data d;
     d.load_bin("data.nav");
-    Index2<boost::fusion::vector<StopArea> > x2(d.stop_areas, WHERE(&StopArea::idx, GT, 504) && WHERE(&StopArea::idx, LT, 505));
+    //Index2<boost::fusion::vector<StopArea> > x2(d.stop_areas, WHERE(&StopArea::idx, GT, 504) && WHERE(&StopArea::idx, LT, 505));
+    Index2<boost::fusion::vector<StopArea> > x2(d.stop_areas, WHERE(&StopArea::name, EQ, "Garonne"));
     std::cout << x2.nb_types() << " " << x2.size() << std::endl;
 
     BOOST_FOREACH(auto bleh, x2) {

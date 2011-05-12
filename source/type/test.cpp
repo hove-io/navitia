@@ -31,7 +31,7 @@ int main(int, char **) {
     pt::ptime start(pt::microsec_clock::local_time());
     pt::ptime end;
 
-    GtfsParser p("/home/kinou/workspace/gtfs/export-idf", "20101101");
+    GtfsParser p("/home/tristram/idf_gtfs", "20101101");
     //GtfsParser p("/home/kinou/workspace/navitiacpp/data/gtfs", "20101101");
     Data data = p.getData();
     end = pt::microsec_clock::local_time();

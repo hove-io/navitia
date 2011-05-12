@@ -1,11 +1,11 @@
 #pragma once
 
 #include <HttpExt.h>
-namespace webservice {typedef EXTENSION_CONTROL_BLOCK RequestHandle; /**< Handle de la requête*/}
+namespace webservice {typedef EXTENSION_CONTROL_BLOCK RequestHandle; /**< Handle de la requÃªte*/}
 #include "data_structures.h"
 
 namespace webservice {
-     /// Envoie les en-têtes
+     /// Envoie les en-tÃªtes
     BOOL SendHttpHeaders(EXTENSION_CONTROL_BLOCK *pECB, LPCSTR pszStatus, LPCSTR pszHeaders, BOOL fKeepConnection){
         HSE_SEND_HEADER_EX_INFO header_ex_info;
 
@@ -22,7 +22,7 @@ namespace webservice {
         return success;
     }
 
-    /// Gère la requête (lecture des paramètres)
+    /// GÃ¨re la requÃªte (lecture des paramÃ¨tres)
     template<class Worker, class Data> void request_parser(RequestHandle* handle, Worker & w, Data & data){
         RequestData request_data;
         DWORD totalBytes = handle->cbTotalBytes;

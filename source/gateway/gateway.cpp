@@ -66,12 +66,12 @@ void NavitiaPool::add(const std::string & server, const std::string & path){
     next_navitia = navitias.begin();
 }
 
-/// Classe associée �  chaque thread
+/// Classe associÃ©e Ã  chaque thread
 struct Worker : public BaseWorker<NavitiaPool> {
 
     
     //API status
-	//Reste � faire : Version ,SafeMode, SQLConnection, StatBlackListedFile, StatFileWorking, StatFileSQLWriting,
+	//Reste à faire : Version ,SafeMode, SQLConnection, StatBlackListedFile, StatFileWorking, StatFileSQLWriting,
 	//NavitiaToLoad, NAViTiAEventSynchro 
 	
 	ResponseData status(RequestData, NavitiaPool & np) {
@@ -113,7 +113,7 @@ struct Worker : public BaseWorker<NavitiaPool> {
 	//API load
 	ResponseData load(RequestData, NavitiaPool & np) 
 	{
-		/// Reste � faire 
+		/// Reste à faire 
 		// 1. Gestion de droit de load : utilisation de user et password dans l'url
 		ResponseData resp;
         resp.response << "<Status>Loading</Status>";
@@ -130,14 +130,14 @@ struct Worker : public BaseWorker<NavitiaPool> {
 			navitia_load_error = true;
 
 			//On appelle cette DLL (de l'index en cour) jusqu'au gi_MaxCallTry fois avec /load
-			//si le chargement passe mal : si le GATEWAY ne réussi pas charger la base, il désactive la DLL
+			//si le chargement passe mal : si le GATEWAY ne rÃ©ussi pas charger la base, il dÃ©sactive la DLL
 
 			for(int index=0; index < np.max_call_try; index++)
 			{
 				// Appeler le DLL avec /load
 				response_load = nav.get_load();
 
-				//Si serveur erreur alors désactiver ce navitia
+				//Si serveur erreur alors dÃ©sactiver ce navitia
 				if (nav.is_server_error(response_load)){
 					np.verify_and_desactivate_navitia(nav);
 					navitia_load_error = false;
@@ -153,10 +153,10 @@ struct Worker : public BaseWorker<NavitiaPool> {
 				}
 			}
 
-			//Si erreur de chargement après MaxCallTry iteration alors désactiver:
+			//Si erreur de chargement aprÃšs MaxCallTry iteration alors dÃ©sactiver:
 			if (navitia_load_error)
 			{
-				//Désactiver ce navitia avec une vérification de /status
+				//DÃ©sactiver ce navitia avec une vÃ©rification de /status
 				np.desactivate_navitia_on_load(nav);
 			}
 			else
@@ -190,8 +190,8 @@ struct Worker : public BaseWorker<NavitiaPool> {
 
 
     Worker(NavitiaPool &) {
-        register_api("/api", boost::bind(&Worker::relay, this, _1, _2), "Relaye la requête vers un NAViTiA du pool");
-        add_param("/api", "action", "Requête �  demander �  NAViTiA", "String", true);
+        register_api("/api", boost::bind(&Worker::relay, this, _1, _2), "Relaye la requÃªte vers un NAViTiA du pool");
+        add_param("/api", "action", "RequÃªte Ã  demander Ã  NAViTiA", "String", true);
         register_api("/status", boost::bind(&Worker::status, this, _1, _2), "Donne des informations sur la passerelle");
         register_api("/load", boost::bind(&Worker::load, this, _1, _2), "Chargement de tous les NAViTiA");
 		register_api("/const", boost::bind(&Worker::constant, this, _1, _2), "constante d'un des NAViTiA");
@@ -201,7 +201,7 @@ struct Worker : public BaseWorker<NavitiaPool> {
 };
 
 NavitiaPool::NavitiaPool() : nb_threads(16){	
-	//R�cuperer le chemin de la dll et le dom de l'application:
+	//Récuperer le chemin de la dll et le dom de l'application:
     std::string sectionName;
 	std::string serverName;
 	std::string pathValue;
@@ -218,7 +218,7 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
     conf->load_ini(initFileName);
     conf->set_int("wsn_id", 0);
 	
-	//Lecture des param�tre dans la section "GENERAL"
+	//Lecture des paramètre dans la section "GENERAL"
 	nb_threads = conf->get_as<int>("GENERAL","NbThread", 4);
 	error_level = conf->get_as<int>("GENERAL","ErrorLevel", 0);
 	exception_limit = conf->get_as<int>("GENERAL","ExceptionLimit", 10);
@@ -231,7 +231,7 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
 	max_call_try = conf->get_as<int>("GENERAL","MaxCallTry", 1);
     timer_value = conf->get_as<int>("GENERAL","TIMER", 60); // 2 minutes
 
-	//Lecture des param�tre dans la section "SQLLOG"
+	//Lecture des paramètre dans la section "SQLLOG"
 	plan_journey_enabled = conf->get_as<bool>("SQLLOG","PlanJourneyEnabled",false);
 	response_plan_journey_enabled = conf->get_as<bool>("SQLLOG","ResponsePlanJourneyEnabled",false);
 	detail_plan_journey_enabled = conf->get_as<bool>("SQLLOG","DetailPlanJourneyEnabled",false);
@@ -256,10 +256,10 @@ NavitiaPool::NavitiaPool() : nb_threads(16){
 	// chargement des utilisateurs pour l'authontification de l'utilisateur
 	manageUser.fill_user_list(web_service_id);
 
-	// Chargement des API et ces co�ts.
+	// Chargement des API et ces coûts.
 	manageCost.fill_cost_list();
 
-    // On lance le thread qui g�re les statistiques & base
+    // On lance le thread qui gère les statistiques & base
     clockStat.start();
 }
 
@@ -268,7 +268,7 @@ Navitia & NavitiaPool::get_next_navitia(){
 	bool navitia_found = false;
 	std::vector<Navitia>::iterator oldest_navitia_index = this->next_navitia;
 	
-	//Initialiser la date de navitia_last_used_date �  now + 10 seconds
+	//Initialiser la date de navitia_last_used_date Ã  now + 10 seconds
 	bt::ptime  navitia_last_used_date = bt::second_clock::local_time() + bt::seconds(10);
 	
 	for(unsigned int index=0;index < this->navitias.size() * this->max_call_try; index++){
@@ -277,34 +277,34 @@ Navitia & NavitiaPool::get_next_navitia(){
 		if (next_navitia == navitias.end())
 			next_navitia = navitias.begin();
 		
-		// Si ErrorCount est supérieur �  exception_limit alors desactiver cette dll et aller au prochain navitia
-		//Attention : La désactivation se fait dans une criticalsection
+		// Si ErrorCount est supÃ©rieur Ã  exception_limit alors desactiver cette dll et aller au prochain navitia
+		//Attention : La dÃ©sactivation se fait dans une criticalsection
 		if (next_navitia->error_count > this->exception_limit){
 			this->verify_and_desactivate_navitia(*next_navitia);
 			continue;
 		}
 
-		//Récupérer la date de dérnière utilisation de navitia la plus ancienne.
+		//RÃ©cupÃ©rer la date de dÃ©rniÃšre utilisation de navitia la plus ancienne.
         if (next_navitia->thread_date < navitia_last_used_date){
             navitia_last_used_date = next_navitia->thread_date;
 			oldest_navitia_index = next_navitia;
 		}
 		
-		//Vérifier si le NAViTiA est libre pour utiliser:
+		//VÃ©rifier si le NAViTiA est libre pour utiliser:
 		if ((!next_navitia->is_loading) && 
 			(next_navitia->is_navitia_ready) && 
 			(next_navitia->next_time_status_ok < bt::second_clock::local_time())){
 			navitia_found = true;
 			next_navitia->call_count++;
 
-			//Si callcount est supérieur �  une valeur max alors reinitialiser erreurCount �  0:
+			//Si callcount est supÃ©rieur Ã  une valeur max alors reinitialiser erreurCount Ã  0:
 			if ((next_navitia->error_count > 0) && (next_navitia->call_count > this->reinitialise_exception)){
 				next_navitia->error_count = 0;
 				next_navitia->call_count = 0;
 			}
 		}
 		
-		//Si navitia trouvé alors sortir de la boucle for
+		//Si navitia trouvÃ© alors sortir de la boucle for
 		if (navitia_found){
 			break;
 		}
@@ -313,11 +313,11 @@ Navitia & NavitiaPool::get_next_navitia(){
 	//A la sortie de la boucle for si aucun navitia est utilisable alors 
 	//envoyer le navitia le plus ancien et activer tous les navitia:
 	if (!navitia_found){
-		//Utiliser le navitia le plus ancien (le navitia le plus ancien n'est jamais désactivé)
+		//Utiliser le navitia le plus ancien (le navitia le plus ancien n'est jamais dÃ©sactivÃ©)
 		next_navitia = oldest_navitia_index;
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
         LOG4CPLUS_DEBUG(logger, "Oldest navitia used : http://" + next_navitia->server + next_navitia->path);
-		//Réactiver tous les navitia qui ont étés désactivés avec une valeur normale.
+		//RÃ©activer tous les navitia qui ont Ã©tÃ©s dÃ©sactivÃ©s avec une valeur normale.
 		this->activate_all_navitia();
 	}
 
@@ -330,7 +330,7 @@ Navitia & NavitiaPool::get_next_navitia(){
     nav.mutex.unlock();
     
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    LOG4CPLUS_DEBUG(logger, "navitia utilis� : http://" + nav.server + nav.path);
+    LOG4CPLUS_DEBUG(logger, "navitia utilisé : http://" + nav.server + nav.path);
 	
     return nav;
 }
@@ -348,14 +348,14 @@ void NavitiaPool::query(const std::string & q, ResponseData& response){
     }
     if (user_id_local > -1 ) {
 
-        //Il faut ajouter &safemode=0 si enregistrement du stat est activ�
+        //Il faut ajouter &safemode=0 si enregistrement du stat est activé
         if (this->use_database_stat){
             query+="&safemode=0";
         }
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-        LOG4CPLUS_DEBUG(logger, "Requ�te d'appel : " + query);
+        LOG4CPLUS_DEBUG(logger, "Requête d'appel : " + query);
 
-        //Récupérer le prochain navitia libre �  utiliser(gestion de loadbalancing):
+        //RÃ©cupÃ©rer le prochain navitia libre Ã  utiliser(gestion de loadbalancing):
         for(int call_index = 0; (call_index <= this->max_call_try) && (!(is_response_ok)); call_index++){
             Navitia & na = this->get_next_navitia();
             response_navitia = na.query(query);
@@ -363,11 +363,11 @@ void NavitiaPool::query(const std::string & q, ResponseData& response){
             //Liberer ce navitia pour pouvoir utiliser par les autres appels:
             na.activate_thread();
 
-            //En cas d'erreur ServerError désactiver ce navitita et faire appel au navitia suivant:
+            //En cas d'erreur ServerError dÃ©sactiver ce navitita et faire appel au navitia suivant:
             if (na.is_server_error(response_navitia)){
                 this->desactivate_navitia(na);
             }
-            //En cas d'erreur NavitiaError incrémenter le ErrorCount
+            //En cas d'erreur NavitiaError incrÃ©menter le ErrorCount
             else if (na.is_navitia_error(response_navitia)){
                 na.add_error_count();
             }
@@ -375,18 +375,18 @@ void NavitiaPool::query(const std::string & q, ResponseData& response){
                 is_response_ok = true;
                 break;
             }
-            //il faut re-récupérer le prochain navitia et passer la requête.
+            //il faut re-rÃ©cupÃ©rer le prochain navitia et passer la requÃªte.
         }
     }
 
-    //S'il y a une bonne réponse alors traiter le HIT
+    //S'il y a une bonne rÃ©ponse alors traiter le HIT
     //1. il faut traiter les information dans le noeud <HIT>......</HIT> pour enregistrer les statistiques
-    //2. il faut supprimer ce noeud dans la réponse et renvoyer le reste de la réponse.
+    //2. il faut supprimer ce noeud dans la rÃ©ponse et renvoyer le reste de la rÃ©ponse.
     if (is_response_ok){
-        //Si l'enregistrement de stat est activ� alors traiter le flux de r�ponse navitia
+        //Si l'enregistrement de stat est activé alors traiter le flux de réponse navitia
         if (this->use_database_stat==true){
             StatNavitia statnav;
-            //gestion de nonstat : � ne pas enregistrer pjo/rpjo/dpjo si l'url contient &nonstat=1 ou true
+            //gestion de nonstat : à ne pas enregistrer pjo/rpjo/dpjo si l'url contient &nonstat=1 ou true
             statnav.nonStat = str_to_bool_def(getStringByRequest(q, "nonstat", "&"), false);
 
             // Affectation du code de l'utilisateur et wsnid
@@ -394,21 +394,21 @@ void NavitiaPool::query(const std::string & q, ResponseData& response){
             statnav.wsn_id = web_service_id;
 
             // Lecture des informations sur hit/planjourney/responseplanjourney/detailplanjourney
-            // Supprime le noeud HIT de la r�ponse NAViTiA
+            // Supprime le noeud HIT de la réponse NAViTiA
             statnav.readXML(response_navitia, response);
 
-            // R�cuperations du co�t de l'API
+            // Récuperations du coût de l'API
             //statnav.hit.api_cost = manageCost.getCostByApi(getStringByRequest(q, "action", "&"));
             statnav.hit.api_cost = manageCost.getCostByApi(q);
-            //Cr�ation d'un nouveau fichier de stat :
-            //Soit � chaque cycle du clock / soit quand le nombre d'appel enregister dans un fichier d�passe une valeur configur� (1000 par d�faut)
+            //Création d'un nouveau fichier de stat :
+            //Soit à chaque cycle du clock / soit quand le nombre d'appel enregister dans un fichier dépasse une valeur configuré (1000 par défaut)
             if (clockStat.hit_call_count > 1000){
                 clockStat.createNewFileName();
             }
             else
                 clockStat.hit_call_count++;
 
-            // Pr�paration des fichiers de stat avec les informations sur hit/planjourney/responseplanjourney/detailplanjourney
+            // Préparation des fichiers de stat avec les informations sur hit/planjourney/responseplanjourney/detailplanjourney
             statnav.writeSql();
         }
 
@@ -475,25 +475,25 @@ void Navitia::add_error_count(){
 
 void NavitiaPool::desactivate_navitia_on_load(Navitia & nav)
 {
-	// Déclarer les variables
+	// DÃ©clarer les variables
 	std::string response;
-	//Appeler ce navitia avec /status?&SafeMode=0 et v�rifier si ce navitia est charg� ou pas.
-	//Si le navitia n'est pas charg� alors d�sactiver le avec des v�rification.
+	//Appeler ce navitia avec /status?&SafeMode=0 et vérifier si ce navitia est chargé ou pas.
+	//Si le navitia n'est pas chargé alors désactiver le avec des vérification.
 	response = nav.query("/status?&SafeMode=0");
 	if (!nav.is_navitia_loaded(response)){
 		this->verify_and_desactivate_navitia(nav);
 	}
 }
 void NavitiaPool::verify_and_desactivate_navitia(Navitia & nav){
-	//Désactiver ce navitia:
-	//Si le nombre de NAViTiA activé = 1 alors on désactive jamais; 
+	//DÃ©sactiver ce navitia:
+	//Si le nombre de NAViTiA activÃ© = 1 alors on dÃ©sactive jamais; 
 	if (one_navitia_activated()){
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
         LOG4CPLUS_WARN(logger, "Navitia disponible = 1");
 		return;
 	}
 			
-	//Si pourcentage de NAViTiA disponible < 50, alor on réactive tous les NAViTia
+	//Si pourcentage de NAViTiA disponible < 50, alor on rÃ©active tous les NAViTia
 	//sauf celui avec GlobalReactivationDelay
 	if (this->active_navitia_percent() < 50){
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -501,8 +501,8 @@ void NavitiaPool::verify_and_desactivate_navitia(Navitia & nav){
 		this->activate_all_navitia();
 	}
 			
-	//Finalement d�sactiver ce navitia : si le global error count > global error limit alors 
-	//d�sactiver ce navitia avec une valeur de global reactivation delay si non avec reactivation delay
+	//Finalement désactiver ce navitia : si le global error count > global error limit alors 
+	//désactiver ce navitia avec une valeur de global reactivation delay si non avec reactivation delay
 	this->desactivate_navitia(nav);
 }
 void NavitiaPool::desactivate_navitia(Navitia & nav){
@@ -551,7 +551,7 @@ int NavitiaPool::active_navitia_percent(){
 }
 
 void NavitiaPool::activate_all_navitia(){
-	//Activation de tous les navitias sauf celui qui a �t� d�sactiv� avec une valeur globale.
+	//Activation de tous les navitias sauf celui qui a été désactivé avec une valeur globale.
 	bt::ptime next_time_ok = bt::second_clock::local_time() + bt::seconds(this->reactivation_delay);
 	BOOST_FOREACH(Navitia & nav, this->navitias){
         nav.mutex.lock_shared();
@@ -578,12 +578,12 @@ void Navitia::desactivate(const int timeValue, const bool pb_global){
 	if (pb_global){
 		this->global_error_count = 0;
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-        LOG4CPLUS_DEBUG(logger, "navitia deactiv� avec une valeur global : http://" + this->server + this->path);
+        LOG4CPLUS_DEBUG(logger, "navitia deactivé avec une valeur global : http://" + this->server + this->path);
 	}
 	else {
 		this->global_error_count++;
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-        LOG4CPLUS_DEBUG(logger, "navitia deactiv� avec une valeur locale : http://" + this->server + this->path);
+        LOG4CPLUS_DEBUG(logger, "navitia deactivé avec une valeur locale : http://" + this->server + this->path);
 	}
 	this->maxError_count++;
 }
@@ -621,8 +621,8 @@ bool Navitia::is_navitia_error(const std::string & response){
 }
 
 bool Navitia::is_navitia_on_load(const std::string & response){
-	// Quand on ant�rroge un Navitia qui est en erreur de chargement avec un param�te &safemode=0 
-	// il envoie un flux de r�ponse avec le neoud <FluxLoad> 
+	// Quand on antérroge un Navitia qui est en erreur de chargement avec un paramète &safemode=0 
+	// il envoie un flux de réponse avec le neoud <FluxLoad> 
 	// qui contient une ligne <Load DLLState="Restoring" DataLoaded="No" BackUpActivated="No">Loading</Load>
 	std::string fluxLoad = "<FluxLoad>";
 	std::string loadError = ">Complete<";	
@@ -635,7 +635,7 @@ void Navitia::activate_thread(){
     this->thread_date = bt::second_clock::local_time();
     this->mutex.unlock();
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    LOG4CPLUS_DEBUG(logger, "navitia lib�r� : http://" + this->server + this->path);
+    LOG4CPLUS_DEBUG(logger, "navitia libéré : http://" + this->server + this->path);
 }
 
 

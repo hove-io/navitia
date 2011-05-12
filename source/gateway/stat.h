@@ -24,7 +24,7 @@ const static int ki_minsPerDay    = ki_hoursPerDay * ki_minsPerHour;
 const static int ki_secsPerDay    = ki_minsPerDay * ki_secsPerMin;
 const static int ki_mSecsPerDay   = ki_secsPerDay * ki_mSecsPerSec;
 
-// Detail d'un itinéraire
+// Detail d'un itinÃ©raire
 struct DetailPlanJourney{
 	int user_id;
     int wsn_id;
@@ -44,7 +44,7 @@ struct DetailPlanJourney{
     boost::posix_time::ptime arr_dateTime;
 	int section_type;
 
-        ///Constructeur par défaut:
+        ///Constructeur par dÃ©faut:
         DetailPlanJourney();
 
         void readXML(rapidxml::xml_node<> *Node);
@@ -72,7 +72,7 @@ struct ResponsePlanJourney{
 	int detail_count;
 	int comment_type;
 
-        /// Structure contenant l'ensemble des détails
+        /// Structure contenant l'ensemble des dÃ©tails
         std::vector<DetailPlanJourney> details;
 
         ResponsePlanJourney();
@@ -121,7 +121,7 @@ struct PlanJourney{
 	std::string forbidden_SA_external_code;
 	std::string forbidden_line_external_code;
 
-        /// Structure contenant l'ensemble des réponses
+        /// Structure contenant l'ensemble des rÃ©ponses
         std::vector<ResponsePlanJourney> responses;
 
         PlanJourney();
@@ -136,7 +136,7 @@ struct PlanJourney{
 struct Hit{
 	
 	boost::posix_time::ptime dateTime;
-	//Durée en milliseconds 
+	//DurÃ©e en milliseconds 
     int wsn_id;
     int user_id;
     int response_duration;
@@ -214,7 +214,7 @@ struct Manage_user{
     /// Structure contenant l'ensemble des utilisateurs
     std::vector<User> users;
 
-	///Constructeur par défaut
+	///Constructeur par dÃ©faut
 	Manage_user();
 	//void add(const int wsnid, const int userid, const std::string &userip, const std::string &userlogin);
     void add(const User & user);
@@ -225,7 +225,7 @@ struct Manage_user{
 };
 
 struct Manage_cost{
-	///Structure contenant l'ensemble des coûts
+	///Structure contenant l'ensemble des coÃ»ts
 	std::vector<Cost> costs;
 	Manage_cost();
     void add(const Cost &cost);
@@ -237,7 +237,7 @@ struct Manage_cost{
 
 
 
-// fonction à deplacer
+// fonction Ã  deplacer
 std::string format_double(double value, int precision = 2);
 int str_to_int_def(std::string value,int default_value = -1);
 double str_to_float_def(std::string value,double default_value = 0.00);

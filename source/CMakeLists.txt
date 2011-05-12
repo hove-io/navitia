@@ -13,7 +13,7 @@ IF(WIN32)
 	ENDIF(CMAKE_CL_64)
 	SET(BOOST_ROOT "${LIB_PREFIX}boost/")
 	
-	# Sur un système ayant les 2 versions 32 et 64 bits on considère que Qt est installé à un endroit précis
+	# Sur un systÃ¨me ayant les 2 versions 32 et 64 bits on considÃ¨re que Qt est installÃ© Ã  un endroit prÃ©cis
 	FIND_PROGRAM(QMAKE "${LIB_PREFIX}qt-4.7/bin/qmake.exe")
 	IF(QMAKE)
 		SET(QT_QMAKE_EXECUTABLE "${LIB_PREFIX}qt-4.7/bin/qmake.exe")

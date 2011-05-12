@@ -100,7 +100,7 @@ void DetailPlanJourney::readXML(rapidxml::xml_node<> *Node){
     std::string strDepDateTime = "";
     std::string strArrDateTime = "";
 
-    //Lire les atributs et récupérer les information de DetailPlanJourney
+    //Lire les atributs et rÃ©cupÃ©rer les information de DetailPlanJourney
     for(rapidxml::xml_attribute<> * attr = Node->first_attribute(); attr; attr = attr->next_attribute()){
 
         attrName = attr->name();
@@ -229,7 +229,7 @@ void ResponsePlanJourney::readXML(rapidxml::xml_node<> *Node){
 	std::string strNodeName = "";
 	std::string attrName = "";
 
-    //Lire les atributs et récupérer les information de ResponsePlanJourney
+    //Lire les atributs et rÃ©cupÃ©rer les information de ResponsePlanJourney
     for(rapidxml::xml_attribute<> * attr = Node->first_attribute(); attr; attr = attr->next_attribute()){
 
         attrName = attr->name();
@@ -294,7 +294,7 @@ std::string ResponsePlanJourney::getSql() const{
 		% this->totalLink_hour
 		% this->totalLink_minute
 		
-		// reste à faire
+		// reste Ã  faire
 		% this->journey_duration//7
 		% this->journeyDuration_hour
 		% this->journeyDuration_minute
@@ -311,7 +311,7 @@ std::string ResponsePlanJourney::getSql() const{
 		% this->journey_dateTime.time_of_day().hours()
 		% this->journey_dateTime.time_of_day().minutes()
 
-		//Méthode à faire GetTrancheShift(journey_dateTime)
+		//MÃ©thode Ã  faire GetTrancheShift(journey_dateTime)
 		% 0//19
 		% 0 // OK
 
@@ -334,7 +334,7 @@ PlanJourney::PlanJourney(): user_id(0), wsn_id(0), plan_dateTime(boost::posix_ti
                             error(0), hang_distance(0), dep_hang_distance(0), dest_hang_distance(0),
                             via_connection_duration(0), manage_disrupt(false)
 {
-    //Initialiser les propriétés
+    //Initialiser les propriÃ©tÃ©s
 
 }
 
@@ -347,7 +347,7 @@ void PlanJourney::readXML(rapidxml::xml_node<> *Node){
     std::string strViaConnectionDuration = "";
     //int intCriteria;
 
-    //Lire les atributs et récupérer les information de PlanJourney
+    //Lire les atributs et rÃ©cupÃ©rer les information de PlanJourney
     for(rapidxml::xml_attribute<> * attr = Node->first_attribute(); attr; attr = attr->next_attribute()){
         attrName = attr->name();
         if (attrName == "RequestDate"){
@@ -526,7 +526,7 @@ std::string PlanJourney::getSql() const{
       //  % this->call_dateTime.date().month().as_number()
         ).str();
 	
-	// liste des réponses
+	// liste des rÃ©ponses
     BOOST_FOREACH(const ResponsePlanJourney & rpj, this->responses) {
         request += rpj.getSql();
     }
@@ -586,12 +586,12 @@ std::string Hit::getSql() const{
 		% this->dateTime.time_of_day().hours()
 		% this->dateTime.time_of_day().minutes()
 		//% this->dateTime.time_of_day()
-		// à faire
+		// Ã  faire
 		% 0
 		% this->server_ip
 		% this->user_id
 		% this->action
-		//Reste à convertir
+		//Reste Ã  convertir
 		% this->response_duration
 		% this->response_size
 		% this->script_info
@@ -666,22 +666,22 @@ void StatNavitia::writeSql() const{
     this->writeSQLInFile(request);
 }
 
-// constructeur par défaul
+// constructeur par dÃ©faul
 ClockThread::ClockThread(): statFileFilter("STAT_.*\\.txt"), th_stoped(false), hit_call_count(0) {
 }
 
-// démarrage du thread
+// dÃ©marrage du thread
 void ClockThread::start(){
 	assert(!m_thread);
 	m_thread = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&ClockThread::work, this)));
 }
-// arrêt du thread
+// arrÃªt du thread
 void ClockThread::stop(){
 	assert(m_thread);
 	th_stoped = true;
 	m_thread->join();
 }
-// mettre à disposition des autres threads un nouveau fichier
+// mettre Ã  disposition des autres threads un nouveau fichier
 void ClockThread::createNewFileName(){
     hit_call_count = 0;
 	Configuration * conf = Configuration::get();
@@ -706,7 +706,7 @@ void ClockThread::createNewFileName(){
     conf->set_string("stats_file", conf->get_string("path") + ss.str());
 
 	log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    LOG4CPLUS_WARN(logger, "Nouveau fichier de stat crée : " + conf->get_string("stats_file"));
+    LOG4CPLUS_WARN(logger, "Nouveau fichier de stat crÃ©e : " + conf->get_string("stats_file"));
 }
 void ClockThread::work(){
 
@@ -715,17 +715,17 @@ void ClockThread::work(){
 	std::stringstream ss;
 	boost::xtime xt; 
 	while (!th_stoped){
-		// le premier traitement : Attendre jusqu'à la fin du cycle
-		//Début du cycle
+		// le premier traitement : Attendre jusqu'Ã  la fin du cycle
+		//DÃ©but du cycle
 		boost::xtime_get(&xt, boost::TIME_UTC); 
         xt.sec += 1 * timer;
-		// Créer un nouveau fichier
+		// CrÃ©er un nouveau fichier
 		this->createNewFileName();
 
 		boost::thread::sleep(xt);
-		//Traiter les fichiers de stat sauf le dérnier 
+		//Traiter les fichiers de stat sauf le dÃ©rnier 
 		this->getFileList();
-		//Lancer les requêts sql / gerer les erreurs / supprimer le fichier traité avec succés 
+		//Lancer les requÃªts sql / gerer les erreurs / supprimer le fichier traitÃ© avec succÃ©s 
 		this->saveStatFromFileList();
 
 		boost::posix_time::ptime locale_dateTime = boost::posix_time::second_clock::local_time();
@@ -768,7 +768,7 @@ void ClockThread::deleteStatFile(const std::string & fileName){
 		std::stringstream ss;
 		ss<<fileName;
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-        LOG4CPLUS_WARN(logger, "Fichier de stat supprimé : " + ss.str());
+        LOG4CPLUS_WARN(logger, "Fichier de stat supprimÃ© : " + ss.str());
 	}
 }
 void ClockThread::renameStatFile(const std::string & fileName){
@@ -778,7 +778,7 @@ void ClockThread::renameStatFile(const std::string & fileName){
 	}
 }
 void ClockThread::saveStatFromFile(const std::string & fileName){
-	//Déclarer les variable de ks_Begin et ks_End ici  
+	//DÃ©clarer les variable de ks_Begin et ks_End ici  
     /*std::string strBegin = "DECLARE @HIT_IDE bigint; \n DECLARE @PJO_IDE bigint; \n DECLARE @PJO_MONTH smallint; \n DECLARE @RPJO_IDE bigint; \n DECLARE @ERR int; \n ";
 	strBegin += " DECLARE @ERR_MSG varchar(255);\n BEGIN TRANSACTION \n SET TRANSACTION ISOLATION LEVEL REPEATABLE READ \n SET @ERR = @@ERROR;" ;
 	
@@ -851,11 +851,11 @@ void Manage_user::fill_user_list(int wsnid){
 }
 int Manage_user::grant_access(const std::string &request){
   // Cas de test(C1- C4):
-  // C1. Utilisateur identifié (exemple &login=Transiliens)  avec vérification des adresse IP
-  // C2. Plusieurs utilisateurs identifiés par le même login (exemple &login=Transilien)
-  //     avec vérification de différentes adresses IP
-  // C3. Utilisateur identifié (exemple &login=Transilien) mais sans vérification d'adresse IP
-  // C4. Utilisateur non identifié (pas de "&login=..." dans l'URL NAViTIA appelées) mais en filtrant par adresse IP
+  // C1. Utilisateur identifiÃ© (exemple &login=Transiliens)  avec vÃ©rification des adresse IP
+  // C2. Plusieurs utilisateurs identifiÃ©s par le mÃªme login (exemple &login=Transilien)
+  //     avec vÃ©rification de diffÃ©rentes adresses IP
+  // C3. Utilisateur identifiÃ© (exemple &login=Transilien) mais sans vÃ©rification d'adresse IP
+  // C4. Utilisateur non identifiÃ© (pas de "&login=..." dans l'URL NAViTIA appelÃ©es) mais en filtrant par adresse IP
 
 	std::string login = getStringByRequest(request, "login", "&");
 	int userid = -1;
@@ -916,7 +916,7 @@ void Manage_cost::fill_cost_list(){
 }
 
 double Manage_cost::getCostByApi(const std::string & query){
-	//si l'api est de type planjourney alors recalculer le coût total en utilisant la valeur de NbBefore et NbAfter
+	//si l'api est de type planjourney alors recalculer le coÃ»t total en utilisant la valeur de NbBefore et NbAfter
 	double cost = 0.00;
 	std::string api = boost::to_lower_copy(getStringByRequest(query, "action", "&"));
 	BOOST_FOREACH(Cost & c, costs) {
@@ -924,7 +924,7 @@ double Manage_cost::getCostByApi(const std::string & query){
 			cost = c.api_cost;
 	}
 	if (api == "planjourney"){
-	// Récupérer la valeur de NbBefore et NbAfter
+	// RÃ©cupÃ©rer la valeur de NbBefore et NbAfter
 		int before = str_to_int_def(getStringByRequest(query, "NbBefore", "&"), 0);
 		int after = str_to_int_def(getStringByRequest(query, "NbAfter", "&"), 0);
 		cost = cost * (before + after + 1);

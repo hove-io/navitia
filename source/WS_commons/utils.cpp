@@ -36,7 +36,7 @@ SettingsMap parse_ini_file(std::string filename){
 	{
 		sectionNameINI = it.first;
 		
-		//Lire les paramètres de la section [GENERAL]
+		//Lire les paramÃ¨tres de la section [GENERAL]
 		sectionNameToFind="GENERAL";
 		if (sectionNameINI == sectionNameToFind)
 		{
@@ -52,7 +52,7 @@ SettingsMap parse_ini_file(std::string filename){
 			this->timer_value = pt.get<int>(sectionNameToFind + ".TIMER");
 		}
 
-		//Lire les paramères de la section [LOG]
+		//Lire les paramÃ¨res de la section [LOG]
 		sectionNameToFind="LOG";
 		if (sectionNameINI == sectionNameToFind)
 		{
@@ -62,7 +62,7 @@ SettingsMap parse_ini_file(std::string filename){
 			this->detail_plan_journey_enabled = pt.get<bool>(sectionNameToFind + ".DetailPlanJourneyEnabled");
 		}
 
-		//Lire les paramères de la section [SQLLOG]
+		//Lire les paramÃ¨res de la section [SQLLOG]
 		sectionNameToFind="SQLLOG";
 		if (sectionNameINI == sectionNameToFind)
 		{
@@ -73,10 +73,10 @@ SettingsMap parse_ini_file(std::string filename){
 			this->db_password = pt.get<std::string>(sectionNameToFind + ".Password");
 		}
 
-		//Lire les paramètres de la section [LOAD] ???
+		//Lire les paramÃ¨tres de la section [LOAD] ???
 		sectionNameToFind="LOAD";
 
-		//Lire les paramètres des sections qui commencent par [NAVITIA_
+		//Lire les paramÃ¨tres des sections qui commencent par [NAVITIA_
 		sectionFound = sectionNameINI.find("NAVITIA_");
 		if (sectionFound!=std::string::npos)
 		{

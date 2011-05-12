@@ -11,38 +11,38 @@
 namespace bt = boost::posix_time;
 
 /** Contient toutes les informations relatives aux instances NAViTiA
- * pilotées par la passerelle
+ * pilotÃ©es par la passerelle
  */
 struct Navitia{
     /// Constructeur par copie
     Navitia(const Navitia & n);
 
-    /// Constructeur par défaut d'un Navitia
+    /// Constructeur par dÃ©faut d'un Navitia
     Navitia();
 
 
-    /// opérateur d'affection
+    /// opÃ©rateur d'affection
     Navitia & operator=(const Navitia & other);
 
-    /// Mutex pour proteger l'itérateur indiquant le prochain NAViTiA �  utiliser
+    /// Mutex pour proteger l'itÃ©rateur indiquant le prochain NAViTiA Ã  utiliser
     boost::shared_mutex mutex;
 
-    /// Serveur utilisé
+    /// Serveur utilisÃ©
     std::string server;
 
-    /// Chemin vers dll/fcgi que l'on désire interroger
+    /// Chemin vers dll/fcgi que l'on dÃ©sire interroger
     std::string path;
 
-    /// Nombre d'erreurs de type simple rencontrées
+    /// Nombre d'erreurs de type simple rencontrÃ©es
     int error_count;
 
-    /// La date �  partir de laquelle ce NAViTiA sera actif
+    /// La date Ã  partir de laquelle ce NAViTiA sera actif
     bt::ptime next_time_status_ok;
 
-    /// Nombre d'erreur de type grave rencontrées par NAViTiA
+    /// Nombre d'erreur de type grave rencontrÃ©es par NAViTiA
     int global_error_count;
 
-    /// Nombre d'erreur de type grave incrémenté �  chaque désactivation NAViTiA
+    /// Nombre d'erreur de type grave incrÃ©mentÃ© Ã  chaque dÃ©sactivation NAViTiA
     int maxError_count;
 
     /// Nombre d'appel NAViTiA
@@ -57,10 +57,10 @@ struct Navitia{
     /// La date de l'activation de la Thread NAViTiA
     bt::ptime thread_date;
 
-    /// Constructeur : on passe le serveur, et le chemin vers dll/fcgi que l'on désire utiliser
+    /// Constructeur : on passe le serveur, et le chemin vers dll/fcgi que l'on dÃ©sire utiliser
     Navitia(const std::string & server, const std::string & path);
 
-    /// On interroge dll/fcgi avec la requête passée en paramètre
+    /// On interroge dll/fcgi avec la requÃªte passÃ©e en paramÃštre
     std::string query(const std::string & request);
 
     std::string get_status();
@@ -84,16 +84,16 @@ struct NavitiaPool {
 	// gestion des utilisateurs
 	Manage_user manageUser;
 
-	// gestion du co�t de l'API 
+	// gestion du coût de l'API 
 	Manage_cost manageCost;
 
-    /// Iterateur vers le prochain NAViTiA �  interroger
+    /// Iterateur vers le prochain NAViTiA Ã  interroger
     std::vector<Navitia>::iterator next_navitia;
 
     /// Structure contenant l'ensemble des navitias
     std::vector<Navitia> navitias;
 
-    /// Mutex pour proteger l'itérateur indiquant le prochain NAViTiA �  utiliser
+    /// Mutex pour proteger l'itÃ©rateur indiquant le prochain NAViTiA Ã  utiliser
     boost::mutex iter_mutex;
 
     // L'index de navitia en chargement:
@@ -128,13 +128,13 @@ struct NavitiaPool {
     ///Timer
     int timer_value;
 
-    ///Section [LOG] Les paramètre d'activation de la recherche itinéraire.
+    ///Section [LOG] Les paramÃštre d'activation de la recherche itinÃ©raire.
     std::string log_fileName;
     bool plan_journey_enabled;
     bool response_plan_journey_enabled;
     bool detail_plan_journey_enabled;
 
-    ///Section [SQLLOG] paramètres de la base de stat
+    ///Section [SQLLOG] paramÃštres de la base de stat
     int web_service_id;
     std::string db_host_name;
     std::string db_name;
@@ -150,12 +150,12 @@ struct NavitiaPool {
     std::string status_user;
     std::string status_password;
 
-    /// Constructeur par défaut
+    /// Constructeur par dÃ©faut
     NavitiaPool();
-    /// Rajoute un nouveau navitia au Pool. Celui-ci sera copié
+    /// Rajoute un nouveau navitia au Pool. Celui-ci sera copiÃ©
     void add(const std::string & server, const std::string & path);
 
-    /// Choisit un NAViTiA et lui fait executer la requête
+    /// Choisit un NAViTiA et lui fait executer la requÃªte
     void query(const std::string & query, ResponseData& response);
 
     /// Choisi le prochain NAViTiA libre et l'envoyer
@@ -167,7 +167,7 @@ struct NavitiaPool {
 
     int deactivated_navitia_count();
     int navitia_on_error_count();
-    //V�rifie s'il y a un seul navitia activ� dans le NavitiaPool
+    //Vérifie s'il y a un seul navitia activé dans le NavitiaPool
     bool one_navitia_activated();
 
     int active_navitia_percent();
