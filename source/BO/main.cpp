@@ -8,12 +8,13 @@ int main (int argc, char const* argv[])
     BO::connectors::CsvFusio connector("/home/kinou/Public/BOD/");
     BO::Data data;
     connector.fill(data);
-    BOOST_FOREACH(BO::types::Line* line, data.lines){
-        std::cout << line->name << std::endl;
-        if(line->network != NULL)
-            std::cout << line->network->name << std::endl;
-        if(line->mode_type != NULL)
-            std::cout << line->mode_type->name << std::endl;
-    }
+
+    std::cout << "line: " << data.lines.size() << std::endl;
+    std::cout << "route: " << data.routes.size() << std::endl;
+    std::cout << "stoparea: " << data.stop_areas.size() << std::endl;
+    std::cout << "stoppoint: " << data.stop_points.size() << std::endl;
+    std::cout << "vehiclejourney: " << data.vehicle_journeys.size() << std::endl;
+    std::cout << "stop: " << data.stops.size() << std::endl;
+    std::cout << "connection: " << data.connections.size() << std::endl;
     return 0;
 }

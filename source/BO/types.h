@@ -46,6 +46,7 @@ class Mode;
 class Line;
 class Route;
 class VehicleJourney;
+class ValidityPattern;
 class Equipement;
 class RoutePoint;
 class StopPoint;
@@ -85,26 +86,40 @@ struct City : public NavitiaObject, Nameable {
 
     std::vector<std::string> postal_code_list;
     std::vector<StopArea*> stop_area_list;
-    std::vector<idx_t> address_list;
-    std::vector<idx_t> site_list;
-    std::vector<idx_t> stop_point_list;
-    std::vector<idx_t> hang_list;
-    std::vector<idx_t> odt_list;
 
-    City() : main_city(false), use_main_stop_area_property(false) {};
+    City() : main_city(false), use_main_stop_area_property(false), department(NULL) {};
 
 
 };
 
-struct Connection {
-    idx_t departure_stop_point_idx;
-    idx_t destination_stop_point_idx;
+struct Connection: public NavitiaObject {
+    enum ConnectionKind{
+        ckAddress,           //Jonction adresse / arrêt commercial
+        ckSite,              //Jonction Lieu public / arrêt commercial
+        ckStopArea,          //Correspondance intra arrêt commercial, entre 2 arrêts phy distincts
+        ckStopPoint,         //Correspondance intra-arrêt phy
+        ckVehicleJourney,    //Liaison en transport en commun
+        ckProlongation,      //Liaison en transport en commun / prolongement de service
+        ckLink,              //Liaison marche à pied
+        ckWalk,              //Trajet a pied
+        ckPersonnalCar,      //Liaison en transport personnel (voiture)
+        ckUndefined,
+        ckBicycle,
+        ckCab,
+        ckODT,
+        ckVLS,
+        ckDefault,
+        ckEnd  //à mettre en relation avec KindCaption
+    };
+
+    StopPoint* departure_stop_point;
+    StopPoint* destination_stop_point;
     int duration;
     int max_duration;
-    idx_t comment_idx;
+    ConnectionKind connection_kind;
 
-    Connection() : departure_stop_point_idx(0), destination_stop_point_idx(0), duration(0),
-        max_duration(0), comment_idx(0){};
+    Connection() : departure_stop_point(NULL), destination_stop_point(NULL), duration(0),
+        max_duration(0), connection_kind(ckDefault){}
 
 };
 
@@ -113,9 +128,10 @@ struct StopArea : public NavitiaObject, Nameable{
     int properties;
     std::string additional_data;
 
-    std::vector<idx_t> stop_area_list;
-    std::vector<idx_t> stop_point_list;
-    idx_t city_idx;
+    bool main_stop_area;
+    bool main_connection;
+
+    StopArea(): properties(0), main_stop_area(false), main_connection(false) {}
 
 };
 
@@ -193,34 +209,27 @@ struct Line : public NavitiaObject, Nameable {
 };
 
 struct Route : public NavitiaObject, Nameable{
-    idx_t comment_idx;
     bool is_frequence;
     bool is_forward;
     bool is_adapted;
-    idx_t line_idx;
-    idx_t mode_type_idx;
-    idx_t associated_route_idx;
-    
-    std::vector<idx_t> route_point_list;
-    std::vector<idx_t> freq_route_point_list;
-    std::vector<idx_t> freq_setting_list;
-    std::vector<idx_t> vehicle_journey_list;
+    Line* line;
+    Mode* mode;   
 
-    Route(): is_frequence(false), is_forward(false), is_adapted(false), line_idx(0), associated_route_idx(0){};
+    Route(): is_frequence(false), is_forward(false), is_adapted(false), line(NULL), mode(NULL){};
 
  };
-struct VehicleJourney {
-    idx_t idx;
-    std::string name;
-    std::string external_code;
-    idx_t route_idx;
-    idx_t company_idx;
-    idx_t mode_idx;
-    idx_t vehicle_idx;
+struct VehicleJourney: public NavitiaObject, Nameable{
+    Route* route;
+    Company* company;
+    Mode* mode;
+    //Vehicle* vehicle;
+    std::string comment;
     bool is_adapted;
-    idx_t validity_pattern_idx;
 
-    VehicleJourney(): idx(0), route_idx(0), company_idx(0), mode_idx(0), vehicle_idx(0), is_adapted(false), validity_pattern_idx(0){};
+    ValidityPattern* validity_pattern;
+
+
+    VehicleJourney(): route(NULL), company(NULL), mode(NULL), is_adapted(false), validity_pattern(NULL){};
 };
 
 struct Equipement : public NavitiaObject {
@@ -272,29 +281,30 @@ public:
 
 struct StopPoint : public NavitiaObject, Nameable{
     GeographicalCoord coord;
-    idx_t comment_idx;
     int fare_zone;
 
     std::string address_name;
     std::string address_number;
     std::string address_type_name;
 
-    idx_t stop_area_idx;
-    idx_t city_idx;
-    idx_t mode_idx;
-    idx_t network_idx;
+    StopArea* stop_area;
+    Mode* mode;
+    City* city;
+
+    StopPoint(): fare_zone(0), stop_area(NULL), mode(NULL), city(NULL) {}
 };
 
-struct StopTime {
-    int idx;
+struct StopTime: public NavitiaObject {
     int arrival_time; ///< En secondes depuis minuit
     int departure_time; ///< En secondes depuis minuit
-    int vehicle_journey_idx;
-    int stop_point_idx;
+    VehicleJourney* vehicle_journey;
+    StopPoint* stop_point;
     int order;
-    idx_t comment_idx;
     bool ODT;
     int zone;
+
+    StopTime(): arrival_time(0), departure_time(0), vehicle_journey(NULL), stop_point(NULL), order(0), 
+        ODT(false), zone(0){}
 };
 
 
@@ -303,4 +313,4 @@ enum PointType{ptCity, ptSite, ptAddress, ptStopArea, ptAlias, ptUndefined, ptSe
 enum Criteria{cInitialization, cAsSoonAsPossible, cLeastInterchange, cLinkTime, cDebug, cWDI};
 
 
-}}//end namespace BO::Type
+}}//end namespace BO::types

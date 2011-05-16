@@ -1,5 +1,6 @@
 #include "csv.h"
 #include <exception>
+#include <boost/algorithm/string.hpp>
 
 CsvReader::CsvReader(const std::string& filename, char separator): filename(filename), file(filename), closed(false),
     functor('\\', separator, '"')
@@ -31,7 +32,9 @@ std::vector<std::string> CsvReader::next(){
         std::getline(file, line);
     }while(line.empty());
     std::vector<std::string> vec;
+    boost::trim(line);
     Tokenizer tok(line, functor);
     vec.assign(tok.begin(), tok.end());
+
     return vec;
 }
