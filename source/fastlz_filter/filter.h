@@ -11,12 +11,21 @@
 typedef std::exception FlzException;
 
 
+/**
+ * Filtre de compression utilisant l'algorithme de compression fastlz pour boost::iostreams
+ *
+ */
 class FastLZCompressor : public boost::iostreams::multichar_output_filter {
     std::streamsize buffer_size;
     char*  output_buffer;
 public:
-
-    FastLZCompressor(size_t buffer_size=256): buffer_size(buffer_size){
+    
+    /**
+     * @param buffer_size correspond a la taille des chunk qui seront compressé, 
+     * attention une valeur trop faible fait perdre en taux de compression et en vitesse
+     *
+     */
+    FastLZCompressor(std::streamsize buffer_size=1024): buffer_size(buffer_size){
         output_buffer = new char[buffer_size];
     }
 
@@ -51,14 +60,22 @@ public:
     }
 };
 
-
+/**
+ * Filtre de décompression utilisant l'algorithme de compression fastlz pour boost::iostreams
+ *
+ * le buffer de sortie doit etre dimensionné afin de pouvoir contenir un chunk décompréssé complet
+ */
 class FastLZDecompressor : public boost::iostreams::multichar_input_filter {
     std::streamsize buffer_size;
     char*  input_buffer;
-    char* metadata;
 public:
 
-    FastLZDecompressor(size_t buffer_size=256): buffer_size(buffer_size){
+    /**
+     * @param buffer_size correspond au buffer de travail pour la décompression, il doit etre suffisament grand pour 
+     * intégralement contenir un chunk compréssé.
+     *
+     */
+    FastLZDecompressor(std::streamsize buffer_size=1024): buffer_size(buffer_size){
         input_buffer = new char[buffer_size];
     }
 
