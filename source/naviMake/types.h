@@ -7,14 +7,13 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 
-namespace BO{namespace types{
+namespace navimake{namespace types{
 
 typedef unsigned int idx_t;
 
 
 struct Nameable{
     std::string name;
-    std::string external_code;
 };
 
 
@@ -22,6 +21,8 @@ struct Nameable{
 struct NavitiaObject{
     int id;
     idx_t idx;
+    std::string external_code;
+    std::string comment;
     NavitiaObject() : id(0), idx(0){};
 };
 
@@ -94,22 +95,21 @@ struct City : public NavitiaObject, Nameable {
 
 struct Connection: public NavitiaObject {
     enum ConnectionKind{
-        ckAddress,           //Jonction adresse / arrêt commercial
-        ckSite,              //Jonction Lieu public / arrêt commercial
-        ckStopArea,          //Correspondance intra arrêt commercial, entre 2 arrêts phy distincts
-        ckStopPoint,         //Correspondance intra-arrêt phy
-        ckVehicleJourney,    //Liaison en transport en commun
-        ckProlongation,      //Liaison en transport en commun / prolongement de service
-        ckLink,              //Liaison marche à pied
-        ckWalk,              //Trajet a pied
-        ckPersonnalCar,      //Liaison en transport personnel (voiture)
-        ckUndefined,
-        ckBicycle,
-        ckCab,
-        ckODT,
-        ckVLS,
-        ckDefault,
-        ckEnd  //à mettre en relation avec KindCaption
+        AddressConnection,           //Jonction adresse / arrêt commercial
+        SiteConnection,              //Jonction Lieu public / arrêt commercial
+        StopAreaConnection,          //Correspondance intra arrêt commercial, entre 2 arrêts phy distincts
+        StopPointConnection,         //Correspondance intra-arrêt phy
+        VehicleJourneyConnection,    //Liaison en transport en commun
+        ProlongationConnection,      //Liaison en transport en commun / prolongement de service
+        LinkConnection,              //Liaison marche à pied
+        WalkConnection,              //Trajet a pied
+        PersonnalCarConnection,      //Liaison en transport personnel (voiture)
+        UndefinedConnection,
+        BicycleConnection,
+        CabConnection,
+        ODTConnection,
+        VLSConnection,
+        DefaultConnection
     };
 
     StopPoint* departure_stop_point;
@@ -119,7 +119,7 @@ struct Connection: public NavitiaObject {
     ConnectionKind connection_kind;
 
     Connection() : departure_stop_point(NULL), destination_stop_point(NULL), duration(0),
-        max_duration(0), connection_kind(ckDefault){}
+        max_duration(0), connection_kind(DefaultConnection){}
 
 };
 
@@ -179,7 +179,6 @@ struct Line : public NavitiaObject, Nameable {
     std::string forward_name;
     std::string backward_name;
 
-    idx_t comment_idx;
     std::string additional_data;
     std::string color;
     int sort;
@@ -223,7 +222,6 @@ struct VehicleJourney: public NavitiaObject, Nameable{
     Company* company;
     Mode* mode;
     //Vehicle* vehicle;
-    std::string comment;
     bool is_adapted;
 
     ValidityPattern* validity_pattern;
@@ -252,7 +250,6 @@ struct RoutePoint : public NavitiaObject{
     std::string external_code;
     int order;
     bool main_stop_point;
-    idx_t comment_idx;
     int fare_section;
     idx_t route_idx;
     idx_t stop_point_idx;
@@ -262,15 +259,14 @@ struct RoutePoint : public NavitiaObject{
 
 };
 
-struct ValidityPattern {
+struct ValidityPattern: public NavitiaObject {
 private:
     boost::gregorian::date beginning_date;
     std::bitset<366> days;
     bool is_valid(int duration);
 public:
-    idx_t idx;
-    ValidityPattern() : idx(0) {}
-    ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date), idx(0){}
+    ValidityPattern(){}
+    ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date){}
     void add(boost::gregorian::date day);
     void add(int day);
     void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
@@ -313,4 +309,4 @@ enum PointType{ptCity, ptSite, ptAddress, ptStopArea, ptAlias, ptUndefined, ptSe
 enum Criteria{cInitialization, cAsSoonAsPossible, cLeastInterchange, cLinkTime, cDebug, cWDI};
 
 
-}}//end namespace BO::types
+}}//end namespace navimake::types

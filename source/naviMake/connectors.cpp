@@ -4,11 +4,11 @@
 #include "csv.h"
 
 
-using namespace BO::connectors;
+using namespace navimake::connectors;
 
 CsvFusio::CsvFusio(const std::string& path): path(path){}
 
-void CsvFusio::fill(BO::Data& data){
+void CsvFusio::fill(navimake::Data& data){
     fill_networks(data);
     fill_modes_type(data);
     fill_modes(data);
@@ -22,7 +22,7 @@ void CsvFusio::fill(BO::Data& data){
     fill_connections(data);
 }
 
-void CsvFusio::fill_networks(BO::Data& data){
+void CsvFusio::fill_networks(navimake::Data& data){
     
     CsvReader reader(path + "Network.csv");
     std::vector<std::string> row;
@@ -32,7 +32,7 @@ void CsvFusio::fill_networks(BO::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            BO::types::Network* network = new BO::types::Network();
+            navimake::types::Network* network = new navimake::types::Network();
             network->id = boost::lexical_cast<int>(row[0]);
             network->name = row[2];
             network->external_code = row[3];
@@ -52,7 +52,7 @@ void CsvFusio::fill_networks(BO::Data& data){
 }
 
 
-void CsvFusio::fill_modes_type(BO::Data& data){
+void CsvFusio::fill_modes_type(navimake::Data& data){
     
     CsvReader reader(path + "ModeType.csv");
     std::vector<std::string> row;
@@ -62,7 +62,7 @@ void CsvFusio::fill_modes_type(BO::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            BO::types::ModeType* mode_type = new BO::types::ModeType();
+            navimake::types::ModeType* mode_type = new navimake::types::ModeType();
             mode_type->id = boost::lexical_cast<int>(row[0]);
             mode_type->name = row[1];
             mode_type->external_code = row[2];
@@ -74,7 +74,7 @@ void CsvFusio::fill_modes_type(BO::Data& data){
     reader.close();
 }
 
-void CsvFusio::fill_modes(BO::Data& data){
+void CsvFusio::fill_modes(navimake::Data& data){
     
     CsvReader reader(path + "Mode.csv");
     std::vector<std::string> row;
@@ -84,7 +84,7 @@ void CsvFusio::fill_modes(BO::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            BO::types::Mode* mode = new BO::types::Mode();
+            navimake::types::Mode* mode = new navimake::types::Mode();
             mode->id = boost::lexical_cast<int>(row[0]);
             mode->name = row[2];
             mode->external_code = row[3];
@@ -101,7 +101,7 @@ void CsvFusio::fill_modes(BO::Data& data){
 }
 
 
-void CsvFusio::fill_lines(BO::Data& data){
+void CsvFusio::fill_lines(navimake::Data& data){
     
     CsvReader reader(path + "Line.csv");
     std::vector<std::string> row;
@@ -111,7 +111,7 @@ void CsvFusio::fill_lines(BO::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            BO::types::Line* line = new BO::types::Line();
+            navimake::types::Line* line = new navimake::types::Line();
             line->id = boost::lexical_cast<int>(row[0]);
             line->name = row[4];
             line->external_code = row[3];
@@ -132,7 +132,7 @@ void CsvFusio::fill_lines(BO::Data& data){
     reader.close();
 }
 
-void CsvFusio::fill_cities(BO::Data& data){
+void CsvFusio::fill_cities(navimake::Data& data){
     CsvReader reader(path + "city.csv");
     std::vector<std::string> row;
     int counter = 0;
@@ -141,7 +141,7 @@ void CsvFusio::fill_cities(BO::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            BO::types::City* city = new BO::types::City();
+            navimake::types::City* city = new navimake::types::City();
             city->id = counter;//boost::lexical_cast<int>(row[0]);
             city->external_code = row[1];
             city->name = row[2];
@@ -161,7 +161,7 @@ void CsvFusio::fill_cities(BO::Data& data){
 
 
 
-void CsvFusio::fill_stop_areas(BO::Data& data){
+void CsvFusio::fill_stop_areas(navimake::Data& data){
     CsvReader reader(path + "StopArea.csv");
     std::vector<std::string> row;
     int counter = 0;
@@ -170,7 +170,7 @@ void CsvFusio::fill_stop_areas(BO::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            BO::types::StopArea* stop_area = new BO::types::StopArea();
+            navimake::types::StopArea* stop_area = new navimake::types::StopArea();
             stop_area->id = boost::lexical_cast<int>(row[0]);
             stop_area->external_code = row[2];
             stop_area->name = row[1];
@@ -183,7 +183,7 @@ void CsvFusio::fill_stop_areas(BO::Data& data){
 
 
             std::string city_external_code = row[3];
-            BO::types::City* city = this->find(city_map, city_external_code);
+            navimake::types::City* city = this->find(city_map, city_external_code);
             if(city != NULL){
                 city->stop_area_list.push_back(stop_area);
             }
@@ -198,7 +198,7 @@ void CsvFusio::fill_stop_areas(BO::Data& data){
 }
 
 
-void CsvFusio::fill_stop_points(BO::Data& data){
+void CsvFusio::fill_stop_points(navimake::Data& data){
     CsvReader reader(path + "StopPoint.csv");
     std::vector<std::string> row;
     int counter = 0;
@@ -207,7 +207,7 @@ void CsvFusio::fill_stop_points(BO::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            BO::types::StopPoint* stop_point = new BO::types::StopPoint();
+            navimake::types::StopPoint* stop_point = new navimake::types::StopPoint();
             stop_point->id = boost::lexical_cast<int>(row[0]);
             stop_point->external_code = row[2];
             stop_point->name = row[3];
@@ -239,7 +239,7 @@ void CsvFusio::fill_stop_points(BO::Data& data){
 
 
 
-void CsvFusio::fill_routes(BO::Data& data){
+void CsvFusio::fill_routes(navimake::Data& data){
     CsvReader reader(path + "Route.csv");
     std::vector<std::string> row;
     int counter = 0;
@@ -248,7 +248,7 @@ void CsvFusio::fill_routes(BO::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            BO::types::Route* route = new BO::types::Route();
+            navimake::types::Route* route = new navimake::types::Route();
             route->id = boost::lexical_cast<int>(row[0]);
             route->external_code = row[3];
             route->name = row[2];
@@ -271,7 +271,7 @@ void CsvFusio::fill_routes(BO::Data& data){
 }
 
 
-void CsvFusio::fill_vehicle_journeys(BO::Data& data){
+void CsvFusio::fill_vehicle_journeys(navimake::Data& data){
     CsvReader reader(path + "VehicleJourney.csv");
     std::vector<std::string> row;
     int counter = 0;
@@ -280,7 +280,7 @@ void CsvFusio::fill_vehicle_journeys(BO::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            BO::types::VehicleJourney* vehicle_journey = new BO::types::VehicleJourney();
+            navimake::types::VehicleJourney* vehicle_journey = new navimake::types::VehicleJourney();
             vehicle_journey->id = boost::lexical_cast<int>(row[0]);
             vehicle_journey->external_code = row[8];
             vehicle_journey->name = row[7];
@@ -302,7 +302,7 @@ void CsvFusio::fill_vehicle_journeys(BO::Data& data){
 }
 
 
-void CsvFusio::fill_stops(BO::Data& data){
+void CsvFusio::fill_stops(navimake::Data& data){
     CsvReader reader(path + "Stop.csv");
     std::vector<std::string> row;
     int counter = 0;
@@ -311,7 +311,7 @@ void CsvFusio::fill_stops(BO::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            BO::types::StopTime* stop = new BO::types::StopTime();
+            navimake::types::StopTime* stop = new navimake::types::StopTime();
             stop->id = boost::lexical_cast<int>(row[0]);
             stop->zone = boost::lexical_cast<int>(row[1]);
 
@@ -334,7 +334,7 @@ void CsvFusio::fill_stops(BO::Data& data){
     reader.close();
 }
 
-void CsvFusio::fill_connections(BO::Data& data){
+void CsvFusio::fill_connections(navimake::Data& data){
     CsvReader reader(path + "Connection.csv");
     std::vector<std::string> row;
     int counter = 0;
@@ -343,7 +343,7 @@ void CsvFusio::fill_connections(BO::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            BO::types::Connection* connection = new BO::types::Connection();
+            navimake::types::Connection* connection = new navimake::types::Connection();
             connection->id = boost::lexical_cast<int>(row[0]);
 
             int departure = boost::lexical_cast<int>(row[2]);

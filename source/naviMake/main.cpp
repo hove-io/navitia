@@ -5,8 +5,8 @@
 
 int main (int argc, char const* argv[])
 {
-    BO::connectors::CsvFusio connector("/home/kinou/Public/BOD/");
-    BO::Data data;
+    navimake::connectors::CsvFusio connector("/home/kinou/Public/BOD/");
+    navimake::Data data;
     connector.fill(data);
 
     std::cout << "line: " << data.lines.size() << std::endl;
