@@ -14,6 +14,7 @@ typedef unsigned int idx_t;
 
 struct Nameable{
     std::string name;
+    std::string comment;
 };
 
 
@@ -22,8 +23,7 @@ struct TransmodelHeader{
     int id;
     idx_t idx;
     std::string external_code;
-    std::string comment;
-    TransmodelHeader() : id(0), idx(0){};
+    TransmodelHeader() : id(0), idx(0){}
 };
 
 
@@ -58,6 +58,9 @@ struct Country : public TransmodelHeader, Nameable{
     City* main_city;
     std::vector<District*> district_list;
 
+
+    bool operator<(const Country& other){ return this->name < other.name;}
+
 };
 
 struct District {
@@ -89,6 +92,8 @@ struct City : public TransmodelHeader, Nameable {
     std::vector<StopArea*> stop_area_list;
 
     City() : main_city(false), use_main_stop_area_property(false), department(NULL) {};
+
+    bool operator<(const City& other){return this->name < other.name;}
 
 
 };
@@ -145,6 +150,8 @@ struct Network : public TransmodelHeader, Nameable{
     std::string fax;
 
     std::vector<Line*> line_list;
+
+    bool operator<(const Network& other){ return this->name < other.name;}
 
 
 };
@@ -288,6 +295,7 @@ struct StopPoint : public TransmodelHeader, Nameable{
     City* city;
 
     StopPoint(): fare_zone(0), stop_area(NULL), mode(NULL), city(NULL) {}
+
 };
 
 struct StopTime: public TransmodelHeader {
@@ -301,12 +309,11 @@ struct StopTime: public TransmodelHeader {
 
     StopTime(): arrival_time(0), departure_time(0), vehicle_journey(NULL), stop_point(NULL), order(0), 
         ODT(false), zone(0){}
+
+
+    bool operator<(const StopTime& other){return this->departure_time < other.departure_time;}
 };
 
-
-
-enum PointType{ptCity, ptSite, ptAddress, ptStopArea, ptAlias, ptUndefined, ptSeparator};
-enum Criteria{cInitialization, cAsSoonAsPossible, cLeastInterchange, cLinkTime, cDebug, cWDI};
 
 
 }}//end namespace navimake::types

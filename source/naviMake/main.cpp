@@ -5,9 +5,11 @@
 
 int main (int argc, char const* argv[])
 {
-    navimake::connectors::CsvFusio connector("/home/kinou/Public/BOD/");
     navimake::Data data;
-    connector.fill(data);
+    {
+        navimake::connectors::CsvFusio connector("/home/kinou/Public/BOD/");
+        connector.fill(data);
+    }
 
     std::cout << "line: " << data.lines.size() << std::endl;
     std::cout << "route: " << data.routes.size() << std::endl;
@@ -16,5 +18,14 @@ int main (int argc, char const* argv[])
     std::cout << "vehiclejourney: " << data.vehicle_journeys.size() << std::endl;
     std::cout << "stop: " << data.stops.size() << std::endl;
     std::cout << "connection: " << data.connections.size() << std::endl;
+
+
+    data.sort();
+
+    BOOST_FOREACH(navimake::types::Network* network, data.networks){
+        std::cout << network->name << std::endl;
+    }
+
+
     return 0;
 }

@@ -17,6 +17,24 @@ namespace navimake{
         std::vector<navimake::types::StopTime*> stops;
         std::vector<navimake::types::Connection*> connections;
 
+        template<class T> 
+        struct Less{
+             bool operator() (T* x, T* y) const{
+                 return *x < *y;
+             }
+        };
+
+        template<class T>
+        struct Indexer{
+            navimake::types::idx_t idx;
+            
+            Indexer(): idx(0){}
+
+            void operator()(T* obj){obj->idx = idx; idx++;}
+        };
+
+        void sort();
+
 
         ~Data(){
             BOOST_FOREACH(navimake::types::Network* network, networks){
