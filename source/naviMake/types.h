@@ -18,12 +18,12 @@ struct Nameable{
 
 
 
-struct NavitiaObject{
+struct TransmodelHeader{
     int id;
     idx_t idx;
     std::string external_code;
     std::string comment;
-    NavitiaObject() : id(0), idx(0){};
+    TransmodelHeader() : id(0), idx(0){};
 };
 
 
@@ -54,7 +54,7 @@ class StopPoint;
 class StopTime;
 
 
-struct Country : public NavitiaObject, Nameable{
+struct Country : public TransmodelHeader, Nameable{
     City* main_city;
     std::vector<District*> district_list;
 
@@ -77,7 +77,7 @@ struct Department {
 };
 
 
-struct City : public NavitiaObject, Nameable {
+struct City : public TransmodelHeader, Nameable {
     std::string main_postal_code;
     bool main_city;
     bool use_main_stop_area_property;
@@ -93,7 +93,7 @@ struct City : public NavitiaObject, Nameable {
 
 };
 
-struct Connection: public NavitiaObject {
+struct Connection: public TransmodelHeader {
     enum ConnectionKind{
         AddressConnection,           //Jonction adresse / arrêt commercial
         SiteConnection,              //Jonction Lieu public / arrêt commercial
@@ -123,7 +123,7 @@ struct Connection: public NavitiaObject {
 
 };
 
-struct StopArea : public NavitiaObject, Nameable{
+struct StopArea : public TransmodelHeader, Nameable{
     GeographicalCoord coord;
     int properties;
     std::string additional_data;
@@ -135,7 +135,7 @@ struct StopArea : public NavitiaObject, Nameable{
 
 };
 
-struct Network : public NavitiaObject, Nameable{
+struct Network : public TransmodelHeader, Nameable{
     std::string address_name;
     std::string address_number;
     std::string address_type_name;
@@ -149,7 +149,7 @@ struct Network : public NavitiaObject, Nameable{
 
 };
 
-struct Company : public NavitiaObject, Nameable{
+struct Company : public TransmodelHeader, Nameable{
     idx_t city_idx;
     std::string address_name;
     std::string address_number;
@@ -163,18 +163,18 @@ struct Company : public NavitiaObject, Nameable{
 
 };
 
-struct ModeType : public NavitiaObject, Nameable{
+struct ModeType : public TransmodelHeader, Nameable{
     std::vector<Mode*> mode_list;
     std::vector<Line*> line_list;
 };
 
-struct Mode : public NavitiaObject, Nameable{
+struct Mode : public TransmodelHeader, Nameable{
     ModeType* mode_type;
 
     Mode(): mode_type(NULL){}
 };
 
-struct Line : public NavitiaObject, Nameable {
+struct Line : public TransmodelHeader, Nameable {
     std::string code;
     std::string forward_name;
     std::string backward_name;
@@ -207,7 +207,7 @@ struct Line : public NavitiaObject, Nameable {
 
 };
 
-struct Route : public NavitiaObject, Nameable{
+struct Route : public TransmodelHeader, Nameable{
     bool is_frequence;
     bool is_forward;
     bool is_adapted;
@@ -217,7 +217,7 @@ struct Route : public NavitiaObject, Nameable{
     Route(): is_frequence(false), is_forward(false), is_adapted(false), line(NULL), mode(NULL){};
 
  };
-struct VehicleJourney: public NavitiaObject, Nameable{
+struct VehicleJourney: public TransmodelHeader, Nameable{
     Route* route;
     Company* company;
     Mode* mode;
@@ -230,7 +230,7 @@ struct VehicleJourney: public NavitiaObject, Nameable{
     VehicleJourney(): route(NULL), company(NULL), mode(NULL), is_adapted(false), validity_pattern(NULL){};
 };
 
-struct Equipement : public NavitiaObject {
+struct Equipement : public TransmodelHeader {
     enum EquipementKind{ Sheltred, 
                             MIPAccess, 
                             Escalator, 
@@ -246,7 +246,7 @@ struct Equipement : public NavitiaObject {
     
 };
 
-struct RoutePoint : public NavitiaObject{
+struct RoutePoint : public TransmodelHeader{
     std::string external_code;
     int order;
     bool main_stop_point;
@@ -259,7 +259,7 @@ struct RoutePoint : public NavitiaObject{
 
 };
 
-struct ValidityPattern: public NavitiaObject {
+struct ValidityPattern: public TransmodelHeader {
 private:
     boost::gregorian::date beginning_date;
     std::bitset<366> days;
@@ -275,7 +275,7 @@ public:
 
 };
 
-struct StopPoint : public NavitiaObject, Nameable{
+struct StopPoint : public TransmodelHeader, Nameable{
     GeographicalCoord coord;
     int fare_zone;
 
@@ -290,7 +290,7 @@ struct StopPoint : public NavitiaObject, Nameable{
     StopPoint(): fare_zone(0), stop_area(NULL), mode(NULL), city(NULL) {}
 };
 
-struct StopTime: public NavitiaObject {
+struct StopTime: public TransmodelHeader {
     int arrival_time; ///< En secondes depuis minuit
     int departure_time; ///< En secondes depuis minuit
     VehicleJourney* vehicle_journey;
