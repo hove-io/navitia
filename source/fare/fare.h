@@ -1,3 +1,8 @@
+#pragma once
+
+#include "../../utils/csv.h"
+#include <boost/graph/adjacency_list.hpp> 
+
 /// Définit l'état courant
 struct State {
     /// Dernier ticket utilisé
@@ -16,10 +21,17 @@ struct State {
     std::string last_stop;
 };
 
+/// Définit un état dans lequel on est
+/// Un état est lié à un mode de transport : « on est dans le métro »
+struct Node {
+    std::string mode;
+};
+
 /// Type de comparaison possible entre un arc et une valeur
 enum Comp_e { Less, Greater, Equal, Nil};
 
 /// Définit un arc et les conditions pour l'emprunter
+/// Les conditions peuvent être : prendre u
 struct Edge {
     /// Valeur à que doit respecter la condition
     std::string condition_value;

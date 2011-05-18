@@ -5,8 +5,8 @@
 /// What is the type of the current leaf
 enum Node_e {AND, OR, LEAF, NOT, TRUE};
 
+
 /// This is the base class of a clause node
-///
 /// it has two sons right and left that are combined with a logical operation
 template<class T>
 struct BaseWhere {
@@ -17,11 +17,10 @@ struct BaseWhere {
 
     /// Constructor combining two clauses
 
-    template<class LeftWhere, class RightWhere>
-    BaseWhere(const LeftWhere & left, const RightWhere & right, Node_e nt) :
-        current_node(nt), left(new LeftWhere(left)), right(new RightWhere(right))
-    {
-    }
+
+    BaseWhere( boost::shared_ptr<BaseWhere> left, boost::shared_ptr<BaseWhere> right, Node_e nt) :
+        current_node(nt), left(left), right(right)
+    {}
 
     /// What kind de node are we ?
     Node_e current_node;
@@ -48,6 +47,16 @@ struct BaseWhere {
         }
         return true;
     }
+};
+
+template<class T>
+struct WhereWrapper {
+    boost::shared_ptr< BaseWhere<T> > ptr;
+
+    WhereWrapper(const WhereWrapper & ww) : ptr(ww.ptr){}
+    WhereWrapper(BaseWhere<T> * w) : ptr(w) {}
+
+    bool operator()(const T & object) const {return (*ptr)(object);}
 };
 
 /// Possible Operators
@@ -88,18 +97,18 @@ struct Where : public BaseWhere<T> {
 
 /// Comfort wrapper to create a where clause
 template<class T, class M, class V>
-Where<T, M> WHERE(M T::* ptr, Operator_e op, V value) {
-    return Where<T, M>(ptr, op, value);
+WhereWrapper<T> WHERE(M T::* ptr, Operator_e op, V value) {
+    return WhereWrapper<T>(new Where<T,M>(ptr, op, value));
 }
 
 /// Logical AND between two clauses
 template<class T>
-BaseWhere<T> operator&&(const BaseWhere<T> & left, const BaseWhere<T> & right){
-    return BaseWhere<T>(left, right, AND);
+WhereWrapper<T>operator&&(const WhereWrapper<T> & left, const WhereWrapper<T> & right){
+    return WhereWrapper<T>(new BaseWhere<T>(left.ptr, right.ptr, AND));
 }
 
 /// Logical OR between two clauses
 template<class T>
-BaseWhere<T> operator||(const BaseWhere<T> & left, const BaseWhere<T> & right){
-    return BaseWhere<T>(left, right, OR);
+WhereWrapper< BaseWhere<T> > operator||(const WhereWrapper<BaseWhere<T> > & left, const WhereWrapper<BaseWhere<T> > & right){
+    return WhereWrapper<T>(new BaseWhere<T>(left, right, OR));
 }

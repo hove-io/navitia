@@ -192,14 +192,16 @@ std::vector< std::vector<col_t> > query(std::string request, Data & data){
 int main(int argc, char** argv){
     Data d;
     d.load_bin("data.nav");
-    Index2<boost::fusion::vector<StopArea> > x2(d.stop_areas, WHERE(&StopArea::idx, GT, 504) && WHERE(&StopArea::idx, LT, 505));
-    //Index2<boost::fusion::vector<StopArea> > x2(d.stop_areas, WHERE(Members<StopArea>::get<name>(), EQ, "Gambetta") && WHERE(Members<StopArea>::get<external_code>(), EQ, "DUANAV|617003|2399936"));
+    //Index2<boost::fusion::vector<StopArea> > x2(d.stop_areas, WHERE(&StopArea::idx, GT, 504) && WHERE(&StopArea::idx, LT, 505));
+    Index2<boost::fusion::vector<StopArea> > x2(d.stop_areas, WHERE(Members<StopArea>::ptr<external_code>(), EQ, "DUA5500109")); //&& WHERE(Members<StopArea>::get<external_code>(), EQ, "DUANAV|617003|2399936"));
     std::cout << x2.nb_types() << " " << x2.size() << std::endl;
 
     auto bli = Reflective<StopArea, id>();
     //int StopArea::* bli = Reflective<StopArea> id>();
     BOOST_FOREACH(auto bleh, x2) {
-        std::cout << boost::fusion::at_c<0>(bleh)->name << " " << boost::fusion::at_c<0>(bleh)->external_code << std::endl;
+        std::cout << boost::fusion::at_c<0>(bleh)->name << " "
+                  << boost::fusion::at_c<0>(bleh)->external_code << " "
+                  << Members<StopArea>::val<external_code>(*boost::fusion::at_c<0>(bleh)) << std::endl;
     }
 
     if(argc != 2)
