@@ -73,9 +73,9 @@ BOOST_FUSION_ADAPT_STRUCT(
 };
 /*
 template<class T, class T2>
-Where<T> build_clause(std::string & member) {
-    Where<T> wh;
-    boost::variant<int T::*, double T::*, std::string T::*> ptr = T::get2(member);
+WhereWrapper build_clause(std::string & member) {
+    WhereWrapper<T> wh;
+    //boost::variant<int T::*, double T::*, std::string T::*> ptr = T::get2(member);
     BOOST_FOREACH(auto clause, r.clauses) {
         if(clause.op == "=")
             wh = wh && WHERE(&T::idx, EQ, clause.value);
@@ -127,6 +127,7 @@ std::vector< std::vector<col_t> > query(std::string request, Data & data){
 
 
     std::string table = r.tables[0];
+
     if(table == "validity_pattern") {
         BOOST_FOREACH(const ValidityPattern & vp, data.validity_patterns){
             std::vector<col_t> row;
@@ -169,7 +170,6 @@ std::vector< std::vector<col_t> > query(std::string request, Data & data){
     }
     else if(table == "stop_areas") {
         BOOST_FOREACH(auto sa, data.stop_areas){
-                //const StopArea & sa = *(boost::fusion::at_c<0>(vect));
             std::vector<col_t> row;
             BOOST_FOREACH(Column & col, r.columns)
                row.push_back(sa.get(col.column)); 
@@ -201,7 +201,8 @@ int main(int argc, char** argv){
     BOOST_FOREACH(auto bleh, x2) {
         std::cout << boost::fusion::at_c<0>(bleh)->name << " "
                   << boost::fusion::at_c<0>(bleh)->external_code << " "
-                  << Members<StopArea>::val<external_code>(*boost::fusion::at_c<0>(bleh)) << std::endl;
+                  << get_value(*boost::fusion::at_c<0>(bleh), "external_code")
+                  << std::endl;
     }
 
     if(argc != 2)

@@ -8,17 +8,9 @@
 #include <boost/serialization/bitset.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/variant.hpp>
-#include <boost/any.hpp>
 #include <boost/bimap.hpp>
 
 #include "reflexion.h"
-
-/// Exception levée lorsqu'on demande un membre qu'on ne connait pas
-struct unknown_member{};
-
-typedef boost::variant<std::string, int>  col_t;
-
 
 typedef unsigned int idx_t;
 
@@ -439,6 +431,8 @@ public:
     boost::bimap<PointType, std::string> point_types;
     std::vector<std::string> true_strings;
     std::vector<std::locale> date_locales;
+
+
 };
 
 
