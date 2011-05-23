@@ -3,5 +3,5 @@ link_directories ( ${Boost_LIBRARY_DIRS} )
 include_directories ( ${Boost_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/utils)
  
 
-add_executable (BO_test main.cpp connectors.cpp connectors.h data.h ${CMAKE_SOURCE_DIR}/utils/csv.cpp data.cpp)
+add_executable (BO_test main.cpp connectors.cpp connectors.h data.h ${CMAKE_SOURCE_DIR}/utils/csv.cpp data.cpp types.cpp)
 target_link_libraries(BO_test ${Boost_LIBRARIES})

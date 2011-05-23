@@ -56,27 +56,22 @@ class StopTime;
 
 struct Country : public TransmodelHeader, Nameable{
     City* main_city;
-    std::vector<District*> district_list;
-
-
     bool operator<(const Country& other){ return this->name < other.name;}
 
 };
 
-struct District {
-    idx_t idx;
-    std::string name;
-    idx_t main_city_idx;
-    idx_t country_idx;
-    std::vector<idx_t> department_list;
+struct District: public TransmodelHeader, Nameable{
+    City* main_city;
+    Country* country;
+
+    bool operator<(const District& other) const;
 };
 
-struct Department {
-    idx_t idx;
-    std::string name;
-    idx_t main_city_idx;
-    idx_t district_idx;
-    std::vector<idx_t> city_list;
+struct Department: public TransmodelHeader, Nameable{
+    City* main_city;
+    District district;
+
+    bool operator<(const Department& other) const;
 };
 
 
@@ -93,7 +88,7 @@ struct City : public TransmodelHeader, Nameable {
 
     City() : main_city(false), use_main_stop_area_property(false), department(NULL) {};
 
-    bool operator<(const City& other){return this->name < other.name;}
+    bool operator<(const City& other) const {return this->name < other.name;}
 
 
 };
@@ -126,6 +121,8 @@ struct Connection: public TransmodelHeader {
     Connection() : departure_stop_point(NULL), destination_stop_point(NULL), duration(0),
         max_duration(0), connection_kind(DefaultConnection){}
 
+   bool operator<(const Connection& other) const;
+
 };
 
 struct StopArea : public TransmodelHeader, Nameable{
@@ -138,6 +135,7 @@ struct StopArea : public TransmodelHeader, Nameable{
 
     StopArea(): properties(0), main_stop_area(false), main_connection(false) {}
 
+    bool operator<(const StopArea& other) const;
 };
 
 struct Network : public TransmodelHeader, Nameable{
@@ -151,7 +149,7 @@ struct Network : public TransmodelHeader, Nameable{
 
     std::vector<Line*> line_list;
 
-    bool operator<(const Network& other){ return this->name < other.name;}
+    bool operator<(const Network& other)const{ return this->name < other.name;}
 
 
 };
@@ -173,12 +171,16 @@ struct Company : public TransmodelHeader, Nameable{
 struct ModeType : public TransmodelHeader, Nameable{
     std::vector<Mode*> mode_list;
     std::vector<Line*> line_list;
+
+    bool operator<(const ModeType& other)const ;
 };
 
 struct Mode : public TransmodelHeader, Nameable{
     ModeType* mode_type;
 
     Mode(): mode_type(NULL){}
+
+    bool operator<(const Mode& other) const;
 };
 
 struct Line : public TransmodelHeader, Nameable {
@@ -210,7 +212,7 @@ struct Line : public TransmodelHeader, Nameable {
 
     Line(): sort(0), mode_type(NULL), network(NULL) {}
 
-    bool operator<(const Line & other) const { return name > other.name;}
+    bool operator<(const Line & other) const;
 
 };
 
@@ -222,6 +224,8 @@ struct Route : public TransmodelHeader, Nameable{
     Mode* mode;   
 
     Route(): is_frequence(false), is_forward(false), is_adapted(false), line(NULL), mode(NULL){};
+
+    bool operator<(const Route& other) const;
 
  };
 struct VehicleJourney: public TransmodelHeader, Nameable{
@@ -235,6 +239,8 @@ struct VehicleJourney: public TransmodelHeader, Nameable{
 
 
     VehicleJourney(): route(NULL), company(NULL), mode(NULL), is_adapted(false), validity_pattern(NULL){};
+
+    bool operator<(const VehicleJourney& other) const;
 };
 
 struct Equipement : public TransmodelHeader {
@@ -295,6 +301,8 @@ struct StopPoint : public TransmodelHeader, Nameable{
     City* city;
 
     StopPoint(): fare_zone(0), stop_area(NULL), mode(NULL), city(NULL) {}
+
+    bool operator<(const StopPoint& other) const;
 
 };
 

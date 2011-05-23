@@ -22,8 +22,8 @@ int main (int argc, char const* argv[])
 
     data.sort();
 
-    BOOST_FOREACH(navimake::types::Network* network, data.networks){
-        std::cout << network->name << std::endl;
+    BOOST_FOREACH(navimake::types::Mode* mode, data.modes){
+        std::cout << mode->mode_type->idx << " " << mode->mode_type->name << " " << mode->idx << " " << mode->name << " " << std::endl;
     }
 
 

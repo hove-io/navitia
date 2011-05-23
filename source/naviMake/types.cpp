@@ -3,6 +3,8 @@
 #include <boost/assign.hpp>
 #include <boost/foreach.hpp>
 
+using namespace navimake::types;
+
 bool ValidityPattern::is_valid(int duration){
     if(duration < 0){
         std::cerr << "La date est avant le début de période" << std::endl;
@@ -35,65 +37,79 @@ void ValidityPattern::remove(int day){
         days[day] = false;
 }
 
-static_data * static_data::instance = 0;
-static_data * static_data::get() {
-    if (instance == 0) {
-        instance = new static_data();
 
-        boost::assign::insert(instance->criterias)
-                (cInitialization, "Initialization")
-                (cAsSoonAsPossible, "AsSoonAsPossible")
-                (cLeastInterchange, "LeastInterchange")
-                (cLinkTime, "LinkTime")
-                (cDebug, "Debug")
-                (cWDI,"WDI");
 
-        boost::assign::insert(instance->point_types)
-                (ptCity,"City")
-                (ptSite,"Site")
-                (ptAddress,"Address")
-                (ptStopArea,"StopArea")
-                (ptAlias,"Alias")
-                (ptUndefined,"Undefined")
-                (ptSeparator,"Separator");
-
-        boost::assign::push_back(instance->true_strings)("true")("+")("1");
-
-        using std::locale; using boost::posix_time::time_input_facet;
-        boost::assign::push_back(instance->date_locales)
-                ( locale(locale::classic(), new time_input_facet("%Y-%m-%d %H:%M:%S")) )
-                ( locale(locale::classic(), new time_input_facet("%Y/%m/%d %H:%M:%S")) )
-                ( locale(locale::classic(), new time_input_facet("%d/%m/%Y %H:%M:%S")) )
-                ( locale(locale::classic(), new time_input_facet("%d.%m.%Y %H:%M:%S")) )
-                ( locale(locale::classic(), new time_input_facet("%d-%m-%Y %H:%M:%S")) )
-                ( locale(locale::classic(), new time_input_facet("%Y-%m-%d")) );
+bool District::operator<(const District& other) const {
+    if(this->country == other.country || this->country == NULL){
+        return this->name < other.name;
+    }else{
+        return *this->country < *other.country;
     }
-    return instance;
 }
 
 
-PointType static_data::getpointTypeByCaption(const std::string & strPointType){
-    return instance->point_types.right.at(strPointType);
+bool ModeType::operator<(const ModeType& other) const {
+    return this->name < other.name;
 }
 
-Criteria static_data::getCriteriaByCaption(const std::string & strCriteria){
-    return instance->criterias.right.at(strCriteria);
-}
-
-bool static_data::strToBool(const std::string &strValue){
-    return std::find(instance->true_strings.begin(), instance->true_strings.end(), strValue) != instance->true_strings.end();
-}
-
-boost::posix_time::ptime static_data::parse_date_time(const std::string& s) {
-    boost::posix_time::ptime pt;
-    boost::posix_time::ptime invalid_date;
-    static_data * inst = static_data::get();
-    BOOST_FOREACH(const std::locale & locale, inst->date_locales){
-        std::istringstream is(s);
-        is.imbue(locale);
-        is >> pt;
-        if(pt != boost::posix_time::ptime())
-            break;
+bool Mode::operator<(const Mode& other) const {
+    if(this->mode_type == other.mode_type || this->mode_type == NULL){
+        return this->name < other.name;
+    }else{
+        return *(this->mode_type) < *(other.mode_type);
     }
-    return pt;
+}
+
+bool Line::operator<(const Line& other) const {
+    if(this->mode_type == NULL && other.mode_type != NULL){
+        return true;
+    }else if(other.mode_type == NULL && this->mode_type != NULL){
+        return false;
+    }
+    if(this->mode_type == other.mode_type){
+        return this->name < other.name;
+    }else{
+        return *(this->mode_type) < *(other.mode_type);
+    }
+}
+
+
+
+bool Route::operator<(const Route& other) const {
+    if(this->line == other.line){
+        return this->name < other.name;
+    }else{
+        return *(this->line) < *(other.line);
+    }
+}
+
+
+
+bool StopArea::operator<(const StopArea& other) const {
+    //@TODO géré la gestion de la city
+    return this->name < other.name;
+}
+
+
+
+bool StopPoint::operator<(const StopPoint& other) const {
+    if(this->stop_area == other.stop_area){
+        return this->name < other.name;
+    }else{
+        return *(this->stop_area) < *(other.stop_area);
+    }
+}
+
+
+bool VehicleJourney::operator<(const VehicleJourney& other) const {
+    if(this->route == other.route){
+        return this->name < other.name;
+    }else{
+        return *(this->route) < *(other.route);
+    }
+}
+
+
+bool Connection::operator<(const Connection& other) const{
+    return *(this->departure_stop_point) < *(other.departure_stop_point);
 }
