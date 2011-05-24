@@ -3,6 +3,8 @@
 #include <boost/assign.hpp>
 #include <boost/foreach.hpp>
 
+namespace navitia { namespace type {
+
 bool ValidityPattern::is_valid(int duration){
     if(duration < 0){
         std::cerr << "La date est avant le début de période" << std::endl;
@@ -97,3 +99,5 @@ boost::posix_time::ptime static_data::parse_date_time(const std::string& s) {
     }
     return pt;
 }
+
+}} //namespace navitia::type

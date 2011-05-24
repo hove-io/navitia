@@ -1,109 +1,42 @@
 #pragma once
 #include <string>
 #include <boost/variant.hpp>
+#include <boost/utility/enable_if.hpp>
+#include <iostream>
+
 typedef boost::variant<std::string, int>  col_t;
 
 /// Exception levée lorsqu'on demande un membre qu'on ne connait pas
 struct unknown_member{};
 
-/** Classe permettant la reflexion des données */
+#define DECL_HAS_MEMBER(MEM_NAME) \
+template <typename T> \
+struct Reflect_##MEM_NAME { \
+    typedef char yes[1]; \
+    typedef char no[2]; \
+    template <typename C> \
+    static yes& test(decltype(&C::MEM_NAME)*); \
+    template <typename> static no& test(...); \
+    static const bool value = sizeof(test<T>(0)) == sizeof(yes); \
+};\
+template<class T> typename boost::enable_if<Reflect_##MEM_NAME<T>, decltype(T::MEM_NAME)>::type get_##MEM_NAME(T&object){return object.MEM_NAME;}\
+template<class T> typename boost::disable_if<Reflect_##MEM_NAME<T>, int>::type get_##MEM_NAME(const T&){throw unknown_member();}\
+template<class T> typename boost::enable_if<Reflect_##MEM_NAME<T>, decltype(T::MEM_NAME) T::*>::type ptr_##MEM_NAME(){return &T::MEM_NAME;}\
+template<class T> typename boost::disable_if<Reflect_##MEM_NAME<T>, int T::*>::type ptr_##MEM_NAME(){throw unknown_member();}
 
-
-/// Énumération des attributs que l'on souhaite pouvoir accéder
-enum member_e {
-    id,
-    idx,
-    name,
-    external_code,
-    validity_pattern,
-    unknown_member_
-};
-
-member_e get_member(const std::string & member_str);
-/*
-/// Énumération des classes
-enum class_e {
-    stop_area,
-    stop_point,
-    line,
-    validity_pattern,
-    unknown_class
-};
-*/
-//class_e get_class(const std::string & class_str);
-
-/// Série de spécialisations qui retourne l'élément souhaité
-/// Il est créé car on ne peut pas spécialiser partiellement une fonction :/
-template<class T, member_e E>
-struct Reflective{typedef void type; static void ptr(){throw unknown_member();}};
-
-template<class T>
-struct Reflective<T,id> {
-    typedef decltype(T::id) type;
-    static decltype(&T::id) ptr(){ return &T::id; }
-};
-
-template<class T>
-struct Reflective<T,idx> {
-    typedef decltype(T::idx) type;
-    static decltype(&T::idx) ptr(){ return &T::idx; }
-};
-
-template<class T>
-struct Reflective<T,name> {
-    typedef decltype(T::name) type;
-    static decltype(&T::name) ptr(){ return &T::name; }
-};
-
-template<class T>
-struct Reflective<T,external_code> {
-    typedef decltype(T::external_code) type;
-    static decltype(&T::external_code) ptr(){ return &T::external_code;}
-};
-
-template<class T>
-struct Reflective<T,validity_pattern> {
-    typedef decltype(T::validity_pattern) type;
-    static decltype(&T::validity_pattern) ptr(){ return &T::validity_pattern;}
-};
-
-template<class T>
-struct Reflective<T,unknown_member_> {
-    typedef decltype(T::unknown_member_) type;
-    static decltype(&T::unknown_member_) ptr(){ return &T::unknown_member_;}
-};
-
-//template<typename U> typename Reflective<T, E>::type test( U ) {return 'a';}
-//template<typename U> int test(...) {return 42;}
-
-/// Wrapper qui permet d'accéder aux membres d'une classe T en fonction de l'attribut E
-template<class T>
-struct Members{
-    template<member_e E>
-    static decltype(Reflective<T, E>::ptr()) ptr(){return Reflective<T, E>::ptr();}
-
-    template<member_e E>
-    static typename Reflective<T, E>::type val(T& object){return object.*Reflective<T,E>::ptr();}
-
-    //template<member_e E>
-    //static int val(T& object, char = 0){return -1;}
-
-   // template<member_e E>
-    //static int val(T& object){return -1;}
-
-    static col_t value(T& object, const std::string & m_name){
-        if(m_name == "id") return val<id>(object);
-        else if(m_name == "idx") return val<idx>(object);
-        else if(m_name == "external_code") return val<external_code>(object);
-        else if(m_name == "name") return val<name>(object);
-      //  else if(m_name == "validity_pattern") return val<validity_pattern>(object);
-        else
-            throw unknown_member();
-    }
-};
-
+DECL_HAS_MEMBER(external_code)
+DECL_HAS_MEMBER(id)
+DECL_HAS_MEMBER(idx)
+DECL_HAS_MEMBER(name)
+DECL_HAS_MEMBER(validity_pattern)
+    
 /// Wrapper pour éviter de devoir définir explicitement le type
 template<class T>
 col_t get_value(T& object, const std::string & name){
-    return Members<T>::value(object, name);
+    if(name == "id") return get_id(object);
+    else if(name == "idx") return get_idx(object);
+    else if(name == "external_code") return get_external_code(object);
+    else if(name == "name") return get_name(object);
+    else
+        throw unknown_member();
 }

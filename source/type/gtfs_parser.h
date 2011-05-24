@@ -6,7 +6,6 @@
 #include <boost/thread/condition_variable.hpp>
 #include <queue>
 
-
 /** Lit les fichiers au format General Transit Feed Specifications
   *
   * http://code.google.com/intl/fr/transit/spec/transit_feed_specification.html
@@ -15,7 +14,7 @@ class GtfsParser {
 private:
     std::string path;///< Chemin vers les fichiers
     boost::gregorian::date start;///< Premier jour où les données sont valables
-    Data data;
+    navitia::type::Data data;
 
     // Plusieurs maps pour savoir à quel position est quel objet identifié par son ID GTFS
     boost::unordered_map<std::string, int> stop_map;
@@ -70,7 +69,7 @@ public:
     void parse_trips();
 
 
-    inline Data getData(){return data;}
+    inline navitia::type::Data getData(){return data;}
 
 };
 

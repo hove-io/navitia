@@ -10,7 +10,7 @@
 #include "reflexion.h"
 
 namespace qi = boost::spirit::qi;
-
+using namespace navitia::type;
 struct Column {
     std::string table;
     std::string column;
@@ -71,28 +71,44 @@ BOOST_FUSION_ADAPT_STRUCT(
     }
 
 };
-/*
-template<class T, class T2>
-WhereWrapper build_clause(std::string & member) {
-    WhereWrapper<T> wh;
-    //boost::variant<int T::*, double T::*, std::string T::*> ptr = T::get2(member);
-    BOOST_FOREACH(auto clause, r.clauses) {
-        if(clause.op == "=")
-            wh = wh && WHERE(&T::idx, EQ, clause.value);
-        else if(clause.op == "<")
-            wh = wh && WHERE(&T::idx, LT, clause.value);
-        else if(clause.op == "<=")
-            wh = wh && WHERE(&T::idx, LEQ, clause.value);
-        else if(clause.op == ">")
-            wh = wh && WHERE(&T::idx, GT, clause.value);
-        else if(clause.op == ">=")
-            wh = wh && WHERE(&T::idx, GEQ, clause.value);
-        else if(clause.op == "<>")
-            wh = wh && WHERE(&T::idx, NEQ, clause.value);
-        }
-    }
-}*/
 
+template<class T>
+WhereWrapper<T> build_clause(std::vector<WhereClause> clauses) {
+    WhereWrapper<T> wh(new BaseWhere<T>());
+    Operator_e op;
+    BOOST_FOREACH(auto clause, clauses) {
+        if(clause.op == "=") op = EQ;
+        else if(clause.op == "<") op = LT;
+        else if(clause.op == "<=") op = LEQ;
+        else if(clause.op == ">") op = GT;
+        else if(clause.op == ">=") op = GEQ;
+        else if(clause.op == "<>") op = NEQ;
+        else throw "grrr";
+
+        if(clause.col.column == "id")
+            wh = wh && WHERE(ptr_id<T>(), op, clause.value);
+        else if(clause.col.column == "idx")
+            wh = wh && WHERE(ptr_idx<T>(), op, clause.value);
+        else if(clause.col.column == "external_code")
+            wh = wh && WHERE(ptr_external_code<T>(), op, clause.value);
+    }
+    return wh;
+}
+
+template<class T>
+std::vector< std::vector<col_t> > extract_data( std::vector<T> & rows, const Request & r) {
+    std::vector< std::vector<col_t> > result;
+    Index2<boost::fusion::vector<T> > filtered(rows, build_clause<T>(r.clauses));
+    BOOST_FOREACH(auto item, filtered){
+        std::vector<col_t> row;
+        BOOST_FOREACH(const Column & col, r.columns)
+           row.push_back(get_value(*(boost::fusion::at_c<0>(item)), col.column));
+        result.push_back(row);
+    }
+    return result;
+}
+
+struct unknown_table{};
 std::vector< std::vector<col_t> > query(std::string request, Data & data){
     std::vector< std::vector<col_t> > result;
     std::string::iterator begin = request.begin();
@@ -106,98 +122,58 @@ std::vector< std::vector<col_t> > query(std::string request, Data & data){
     }
     else
         std::cout << "Parsage a échoué" << std::endl;
-        std::cout << "Columns : ";
-        BOOST_FOREACH(Column & col, r.columns)
-                std::cout << col.table << ":" << col.column << " ";
-        std::cout << std::endl;
+    std::cout << "Columns : ";
+    BOOST_FOREACH(Column & col, r.columns)
+            std::cout << col.table << ":" << col.column << " ";
+    std::cout << std::endl;
 
-        std::cout << "Clauses where : ";
-        BOOST_FOREACH(WhereClause & w, r.clauses)
-                std::cout << w.col.column << w.op << w.value << " ";
-        std::cout << std::endl;
+    std::cout << "Clauses where : ";
+    BOOST_FOREACH(WhereClause & w, r.clauses)
+            std::cout << w.col.column << w.op << w.value << " ";
+    std::cout << std::endl;
 
-        if(r.tables.size() != 1){
-            std::cout << "Pour l'instant on ne supporte que exactement une table" << std::endl;
-            return result;
-        }
-        else {
-            std::cout << "Table : " << r.tables[0] << std::endl;
-        }
-
-
+    if(r.tables.size() != 1){
+        std::cout << "Pour l'instant on ne supporte que exactement une table" << std::endl;
+        return result;
+    }
+    else {
+        std::cout << "Table : " << r.tables[0] << std::endl;
+    }
 
     std::string table = r.tables[0];
 
     if(table == "validity_pattern") {
-        BOOST_FOREACH(const ValidityPattern & vp, data.validity_patterns){
-            std::vector<col_t> row;
-            BOOST_FOREACH(Column & col, r.columns)
-               row.push_back(vp.get(col.column)); 
-            result.push_back(row);
-        }
+        return extract_data(data.validity_patterns, r);
     }
     else if(table == "lines") {
-        BOOST_FOREACH(const Line & line, data.lines){
-            std::vector<col_t> row;
-            BOOST_FOREACH(Column & col, r.columns)
-               row.push_back(line.get(col.column)); 
-            result.push_back(row);
-        }
+        return extract_data(data.lines, r);
     }
     else if(table == "routes") {
-        BOOST_FOREACH(const Route & route, data.routes){
-            std::vector<col_t> row;
-            BOOST_FOREACH(Column & col, r.columns)
-               row.push_back(route.get(col.column)); 
-            result.push_back(row);
-        }
+        return extract_data(data.routes, r);
     }
     else if(table == "vehicle_journey") {
-        BOOST_FOREACH(const VehicleJourney & vj, data.vehicle_journeys){
-            std::vector<col_t> row;
-            BOOST_FOREACH(Column & col, r.columns)
-               row.push_back(vj.get(col.column)); 
-            result.push_back(row);
-        }
+        return extract_data(data.vehicle_journeys, r);
     }
     else if(table == "stop_points") {
-        BOOST_FOREACH(const StopPoint & sp, data.stop_points){
-            std::vector<col_t> row;
-            BOOST_FOREACH(Column & col, r.columns)
-               row.push_back(sp.get(col.column)); 
-            result.push_back(row);
-        }
+        return extract_data(data.stop_points, r);
     }
     else if(table == "stop_areas") {
-        BOOST_FOREACH(auto sa, data.stop_areas){
-            std::vector<col_t> row;
-            BOOST_FOREACH(Column & col, r.columns)
-               row.push_back(sa.get(col.column)); 
-            result.push_back(row);
-        }
+        return extract_data(data.stop_areas, r);
     }
     else if(table == "stop_times"){
-        BOOST_FOREACH(const StopArea & sa, data.stop_areas){
-            std::vector<col_t> row;
-            BOOST_FOREACH(Column & col, r.columns)
-               row.push_back(sa.get(col.column)); 
-            result.push_back(row);
-        }
+        return extract_data(data.stop_times, r);
     }
     
-    return result;
+    throw unknown_table();
 }
 
 
 int main(int argc, char** argv){
     Data d;
     d.load_bin("data.nav");
-    //Index2<boost::fusion::vector<StopArea> > x2(d.stop_areas, WHERE(&StopArea::idx, GT, 504) && WHERE(&StopArea::idx, LT, 505));
-    Index2<boost::fusion::vector<StopArea> > x2(d.stop_areas, WHERE(Members<StopArea>::ptr<external_code>(), EQ, "DUA5500109")); //&& WHERE(Members<StopArea>::get<external_code>(), EQ, "DUANAV|617003|2399936"));
+    Index2<boost::fusion::vector<StopArea> > x2(d.stop_areas, WHERE(ptr_external_code<StopArea>(), EQ, "DUA5500109")); //&& WHERE(Members<StopArea>::get<external_code>(), EQ, "DUANAV|617003|2399936"));
     std::cout << x2.nb_types() << " " << x2.size() << std::endl;
 
-    auto bli = Reflective<StopArea, id>();
-    //int StopArea::* bli = Reflective<StopArea> id>();
     BOOST_FOREACH(auto bleh, x2) {
         std::cout << boost::fusion::at_c<0>(bleh)->name << " "
                   << boost::fusion::at_c<0>(bleh)->external_code << " "

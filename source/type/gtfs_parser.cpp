@@ -7,6 +7,7 @@
 #include <iostream>
 #include <deque>
 
+using namespace navitia::type;
 typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
 
 int time_to_int(const std::string & time) {

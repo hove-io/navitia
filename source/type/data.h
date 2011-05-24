@@ -4,6 +4,7 @@
 #include "fusion_vector_serialize.h"
 #include "boost/serialization/array.hpp"
 
+namespace navitia { namespace type {
 class Data{
 public:
     std::vector<ValidityPattern> validity_patterns;
@@ -80,3 +81,5 @@ public:
     /** Charge la structure de données depuis un fichier au format binaire */
     void load_bin(const std::string & filename);
 };
+
+} } //namespace navitia::type

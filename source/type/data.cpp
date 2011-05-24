@@ -6,6 +6,7 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <fstream>
 
+namespace navitia { namespace type {
 void Data::build_index(){
   //  stoppoint_of_stoparea.create(stop_areas, stop_points, &StopPoint::stop_area_idx);
   //  stop_area_by_name.create(stop_areas, &StopArea::name);
@@ -42,3 +43,5 @@ void Data::load_bin(const std::string & filename) {
     boost::archive::binary_iarchive ia(ifs);
     ia >> *this;
 }
+
+}} //namespace navitia::type

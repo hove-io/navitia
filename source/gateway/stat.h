@@ -13,7 +13,7 @@
 #include "data_structures.h"
 
 using namespace webservice;
-
+using namespace navitia::type;
 
 const static std::string ks_header_xml = "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
 const static int ki_hoursPerDay   = 24;

@@ -15,7 +15,7 @@
 #include "filter.h"
 
 namespace pt = boost::posix_time;
-
+using namespace navitia::type;
 template<class T1, class T2>
 struct True{
     bool operator()(const T1 &, const T2 &) {

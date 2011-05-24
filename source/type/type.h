@@ -12,6 +12,7 @@
 
 #include "reflexion.h"
 
+namespace navitia { namespace type {
 typedef unsigned int idx_t;
 
 
@@ -436,3 +437,4 @@ public:
 };
 
 
+} } //namespace navitia::type

@@ -14,6 +14,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/fusion/container/vector/detail/as_vector.hpp>
 
+namespace navitia { namespace type {
+
+
 namespace f = boost::fusion;
 namespace m = boost::mpl;
 
@@ -136,3 +139,4 @@ struct Index2 {
 };
 
 
+}} //namespace navitia::type

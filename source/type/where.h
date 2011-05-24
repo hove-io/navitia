@@ -47,6 +47,8 @@ struct BaseWhere {
         }
         return true;
     }
+
+    virtual ~BaseWhere(){}
 };
 
 template<class T>
@@ -93,6 +95,8 @@ struct Where : public BaseWhere<T> {
     /// It is overladed to handle the case we give a string to cast it to the right type
     Where(T2 T::* ptr, Operator_e op, const std::string & value) : Base(LEAF), ptr(ptr), op(op), value(boost::lexical_cast<T2>(value)) {}
     Where(T2 T::* ptr, Operator_e op, int value) : Base(LEAF), ptr(ptr), op(op), value(value) {}
+
+    ~Where(){}
 };
 
 /// Comfort wrapper to create a where clause
