@@ -155,3 +155,29 @@ nt::ModeType ModeType::Transformer::operator()(const ModeType& mode_type){
     return mode_type_nt;
 
 }
+
+nt::StopPoint StopPoint::Transformer::operator()(const StopPoint& stop_point){
+    nt::StopPoint stop_point_nt;
+    stop_point_nt.id = stop_point.id;
+    stop_point_nt.idx = stop_point.idx;
+    stop_point_nt.external_code = stop_point.external_code;
+    stop_point_nt.name = stop_point.name;
+    stop_point_nt.coord = stop_point.coord.transform();
+    stop_point_nt.fare_zone = stop_point.fare_zone;
+
+    stop_point_nt.address_name      = stop_point.address_name;
+    stop_point_nt.address_number    = stop_point.address_number;       
+    stop_point_nt.address_type_name = stop_point.address_type_name;
+    
+    if(stop_point.stop_area != NULL)
+        stop_point_nt.stop_area_idx = stop_point.stop_area->idx;
+
+    if(stop_point.mode != NULL)
+        stop_point_nt.mode_idx = stop_point.mode->idx;
+
+    if(stop_point.city != NULL)
+        stop_point_nt.city_idx = stop_point.city->idx;
+
+    return stop_point_nt;
+
+}

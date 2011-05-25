@@ -323,6 +323,11 @@ struct StopPoint : public TransmodelHeader, Nameable{
     Mode* mode;
     City* city;
 
+    struct Transformer{
+        nt::StopPoint operator()(const StopPoint* stop_point){return this->operator()(*stop_point);}   
+        nt::StopPoint operator()(const StopPoint& stop_point);   
+    };
+
     StopPoint(): fare_zone(0), stop_area(NULL), mode(NULL), city(NULL) {}
 
     bool operator<(const StopPoint& other) const;
