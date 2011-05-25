@@ -221,11 +221,10 @@ struct Line : public TransmodelHeader, Nameable {
     std::vector<Company*> company_list;
 
     Network* network;
-    /// StopPoint
-    idx_t forward_direction;
 
-    /// StopPoint
-    idx_t backward_direction;
+    StopPoint* forward_direction;
+
+    StopPoint* backward_direction;
 
 
     std::vector<idx_t> forward_route;
@@ -233,7 +232,12 @@ struct Line : public TransmodelHeader, Nameable {
 
     std::vector<idx_t> validity_pattern_list;
 
-    Line(): sort(0), mode_type(NULL), network(NULL) {}
+    struct Transformer{
+        nt::Line operator()(const Line* line){return this->operator()(*line);}   
+        nt::Line operator()(const Line& line);   
+    };
+
+    Line(): sort(0), mode_type(NULL), network(NULL), forward_direction(NULL), backward_direction(NULL){}
 
     bool operator<(const Line & other) const;
 

@@ -59,4 +59,7 @@ void Data::transform(navitia::type::Data& data){
 
     data.stop_points.resize(this->stop_points.size());
     std::transform(this->stop_points.begin(), this->stop_points.end(), data.stop_points.begin(), navimake::types::StopPoint::Transformer());
+
+    data.lines.resize(this->lines.size());
+    std::transform(this->lines.begin(), this->lines.end(), data.lines.begin(), navimake::types::Line::Transformer());
 }

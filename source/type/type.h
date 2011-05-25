@@ -202,14 +202,14 @@ struct Line : public NavitiaHeader, Nameable {
     std::vector<idx_t> impact_list;
     std::vector<idx_t> validity_pattern_list;
 
-    idx_t forward_direction;
-    idx_t backward_direction;
+    idx_t forward_direction_idx;
+    idx_t backward_direction_idx;
 
-    Line(): sort(0), mode_type_idx(0), network_idx(0), forward_direction(0), backward_direction(0){}
+    Line(): sort(0), mode_type_idx(0), network_idx(0), forward_direction_idx(0), backward_direction_idx(0){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & external_code & code & forward_name & backward_name & additional_data & color 
-            & sort & mode_type_idx & mode_list & company_list & network_idx & forward_direction & backward_direction 
+            & sort & mode_type_idx & mode_list & company_list & network_idx & forward_direction_idx & backward_direction_idx
             & impact_list & validity_pattern_list;
     }
 

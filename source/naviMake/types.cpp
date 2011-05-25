@@ -180,3 +180,33 @@ nt::StopPoint StopPoint::Transformer::operator()(const StopPoint& stop_point){
     return nt_stop_point;
 
 }
+
+
+nt::Line Line::Transformer::operator()(const Line& line){
+    navitia::type::Line nt_line;
+    nt_line.id = line.id;
+    nt_line.idx = line.idx;
+    nt_line.external_code = line.external_code;
+    nt_line.name = line.name;
+    nt_line.code = line.code;
+    nt_line.color = line.color;
+    nt_line.sort = line.sort;
+    nt_line.backward_name = line.backward_name;
+    nt_line.forward_name = line.forward_name;
+    nt_line.additional_data = line.additional_data;
+
+    if(line.mode_type != NULL)
+        nt_line.mode_type_idx = line.mode_type->idx;
+
+    if(line.network != NULL)
+        nt_line.network_idx = line.network->idx;
+
+    if(line.backward_direction != NULL)
+        nt_line.backward_direction_idx = line.backward_direction->idx;
+
+    if(line.forward_direction != NULL)
+        nt_line.forward_direction_idx = line.forward_direction->idx;
+
+    
+    return nt_line;
+}
