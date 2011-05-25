@@ -6,6 +6,7 @@
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include "type/type.h"
 
 namespace navimake{namespace types{
 
