@@ -134,3 +134,15 @@ navitia::type::StopArea StopArea::Transformer::operator()(const StopArea& stop_a
 }
 
 
+nt::Mode Mode::Transformer::operator()(const Mode& mode){
+    nt::Mode mode_nt;
+    mode_nt.id = mode.id;
+    mode_nt.idx = mode.idx;
+    mode_nt.external_code = mode.external_code;
+    mode_nt.name = mode.name;
+    mode_nt.mode_type_idx = mode.mode_type->idx;
+    return mode_nt;
+
+}
+
+

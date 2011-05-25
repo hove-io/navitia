@@ -16,6 +16,7 @@ public:
     std::vector<StopTime> stop_times;
 
     std::vector<Network> networks;
+    std::vector<Mode> modes;
 
     public:
     /** Fonction qui permet de sérialiser (aka binariser la structure de données

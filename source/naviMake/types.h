@@ -191,6 +191,11 @@ struct ModeType : public TransmodelHeader, Nameable{
 struct Mode : public TransmodelHeader, Nameable{
     ModeType* mode_type;
 
+    struct Transformer{
+        nt::Mode operator()(const Mode* mode){return this->operator()(*mode);}   
+        nt::Mode operator()(const Mode& mode);   
+    };
+
     Mode(): mode_type(NULL){}
 
     bool operator<(const Mode& other) const;
