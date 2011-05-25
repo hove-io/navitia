@@ -8,6 +8,7 @@
 #include "indexes2.h"
 #include "where.h"
 #include "reflexion.h"
+#include "proto/type.pb.h"
 
 namespace qi = boost::spirit::qi;
 using namespace navitia::type;
@@ -97,14 +98,23 @@ WhereWrapper<T> build_clause(std::vector<WhereClause> clauses) {
 
 template<class T>
 std::vector< std::vector<col_t> > extract_data( std::vector<T> & rows, const Request & r) {
+    pbnavitia::PTRefResponse pb_response;
+
     std::vector< std::vector<col_t> > result;
     Index2<boost::fusion::vector<T> > filtered(rows, build_clause<T>(r.clauses));
     BOOST_FOREACH(auto item, filtered){
         std::vector<col_t> row;
-        BOOST_FOREACH(const Column & col, r.columns)
+        pbnavitia::PTreferential * pb_row = pb_response.add_item();
+        BOOST_FOREACH(const Column & col, r.columns){
            row.push_back(get_value(*(boost::fusion::at_c<0>(item)), col.column));
+           if(col.column == "name"){
+               pb_row->mutable_stop_area()->set_name(boost::fusion::at_c<0>(item)->name);
+           }
+        }
         result.push_back(row);
     }
+    std::cout << "J'ai généré un protocol buffer de taille " <<     pb_response.ByteSize() << std::endl;
+   // std::cout << pb_response.SerializeToOstream(&std::cout) << std::endl;
     return result;
 }
 
@@ -133,27 +143,27 @@ std::vector< std::vector<col_t> > query(std::string request, Data & data){
 
     std::string table = r.tables[0];
 
-    if(table == "validity_pattern") {
+    /*if(table == "validity_pattern") {
         return extract_data(data.validity_patterns, r);
     }
-    else if(table == "lines") {
+    else*/ if(table == "lines") {
         return extract_data(data.lines, r);
     }
     else if(table == "routes") {
         return extract_data(data.routes, r);
     }
-    else if(table == "vehicle_journey") {
+    /*else if(table == "vehicle_journey") {
         return extract_data(data.vehicle_journeys, r);
-    }
+    }*/
     else if(table == "stop_points") {
         return extract_data(data.stop_points, r);
     }
     else if(table == "stop_areas") {
         return extract_data(data.stop_areas, r);
     }
-    else if(table == "stop_times"){
+  /*  else if(table == "stop_times"){
         return extract_data(data.stop_times, r);
-    }
+    }*/
     
     throw unknown_table();
 }

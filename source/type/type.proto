@@ -1,0 +1,74 @@
+package pbnavitia;
+
+message GeographicalCoord {
+    required double x = 1;
+    required double y = 2;
+}
+
+message Country {
+    optional int32 id = 1;
+    optional int32 idx = 2;
+    optional string name  = 3;
+}
+
+message StopArea {
+    optional int32 id = 1;
+    optional int32 idx = 2;
+    optional string name = 3;
+    optional string external_code = 4;
+    optional GeographicalCoord coord = 5;
+}
+
+message StopPoint {
+    optional int32 id = 1;
+    optional int32 idx = 2;
+    optional string name = 3;
+    optional string external_code = 4;
+    optional GeographicalCoord coord = 5;
+}
+
+message Line {
+    optional int32 id = 1;
+    optional int32 idx = 2;
+    optional string name = 3;
+    optional string external_code = 4;
+    optional string code = 5;
+    optional string forward_name = 6;
+    optional string backward_name = 7;
+    optional string additional_data = 8;
+    optional string color = 9;
+}
+
+message Route {
+    optional int32 id = 1;
+    optional int32 idx = 2;
+    optional string name = 3;
+    optional string external_code = 4;
+    optional bool is_frequence = 5;
+    optional bool is_adapted = 6;
+}
+
+message StopTime {
+}
+
+message VehicleJourney {
+    optional int32 id = 1;
+    optional int32 idx = 2;
+    optional string name = 3;
+    optional string external_code = 4;
+    optional bool is_adapted = 5;
+}
+
+message PTreferential {
+    optional Country country =1;
+    optional StopArea stop_area = 2;
+    optional StopPoint stop_point = 3;
+    optional Line line = 4;
+    optional Route route = 5;
+    optional StopTime stop_time = 6;
+    optional VehicleJourney vehicle_journey = 7;
+}
+
+message PTRefResponse {
+    repeated PTreferential item = 1;
+}
