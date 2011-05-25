@@ -4,7 +4,9 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
 #include <fstream>
+#include "filter.h"
 
 namespace navitia { namespace type {
 void Data::build_index(){
@@ -40,6 +42,15 @@ void Data::save_bin(const std::string & filename) {
 
 void Data::load_bin(const std::string & filename) {
     std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
+    boost::archive::binary_iarchive ia(ifs);
+    ia >> *this;
+}
+
+void Data::load_lz(const std::string & filename) {
+    std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
+    in.push(FastLZDecompressor(2048*500),8192*500, 8192*500);
+    in.push(ifs);
     boost::archive::binary_iarchive ia(ifs);
     ia >> *this;
 }

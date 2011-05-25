@@ -122,15 +122,6 @@ std::vector< std::vector<col_t> > query(std::string request, Data & data){
     }
     else
         std::cout << "Parsage a échoué" << std::endl;
-    std::cout << "Columns : ";
-    BOOST_FOREACH(Column & col, r.columns)
-            std::cout << col.table << ":" << col.column << " ";
-    std::cout << std::endl;
-
-    std::cout << "Clauses where : ";
-    BOOST_FOREACH(WhereClause & w, r.clauses)
-            std::cout << w.col.column << w.op << w.value << " ";
-    std::cout << std::endl;
 
     if(r.tables.size() != 1){
         std::cout << "Pour l'instant on ne supporte que exactement une table" << std::endl;
@@ -169,23 +160,25 @@ std::vector< std::vector<col_t> > query(std::string request, Data & data){
 
 
 int main(int argc, char** argv){
+    std::cout << "Chargement des données..." << std::flush;
     Data d;
-    d.load_bin("data.nav");
-    Index2<boost::fusion::vector<StopArea> > x2(d.stop_areas, WHERE(ptr_external_code<StopArea>(), EQ, "DUA5500109")); //&& WHERE(Members<StopArea>::get<external_code>(), EQ, "DUANAV|617003|2399936"));
-    std::cout << x2.nb_types() << " " << x2.size() << std::endl;
+    d.load_bin("data2.nav");
+    std::cout << " effectué" << std::endl << std::endl;
 
-    BOOST_FOREACH(auto bleh, x2) {
-        std::cout << boost::fusion::at_c<0>(bleh)->name << " "
-                  << boost::fusion::at_c<0>(bleh)->external_code << " "
-                  << get_value(*boost::fusion::at_c<0>(bleh), "external_code")
-                  << std::endl;
-    }
+    std::cout
+            << "Statistiques :" << std::endl
+            << "    Nombre de StopAreas : " << d.stop_areas.size() << std::endl
+            << "    Nombre de StopPoints : " << d.stop_points.size() << std::endl
+            << "    Nombre de lignes : " << d.lines.size() << std::endl
+            << "    Nombre d'horaires : " << d.stop_times.size() << std::endl << std::endl;
+
+
 
     if(argc != 2)
         std::cout << "Il faut exactement un paramètre" << std::endl;
     else {
         auto result = query(argv[1], d);
-        std::cout << "Il y a " << result.size() << " lignes" << std::endl;
+        std::cout << "Il y a " << result.size() << " lignes de résultat" << std::endl;
         BOOST_FOREACH(auto row, result){
             BOOST_FOREACH(auto col, row){
                 std::cout << col << ",\t";
