@@ -8,6 +8,8 @@
 
 #include "type/type.h"
 
+namespace nt = navitia::type;
+
 namespace navimake{namespace types{
 
 typedef unsigned int idx_t;
@@ -33,7 +35,11 @@ struct GeographicalCoord{
     double y;
 
     GeographicalCoord() : x(0), y(0) {}
+    
+    nt::GeographicalCoord transform() const;
+    
 };
+//typedef navitia::type::GeographicalCoord GeographicalCoord;
 
 //forward declare
 class District;
@@ -133,6 +139,12 @@ struct StopArea : public TransmodelHeader, Nameable{
 
     bool main_stop_area;
     bool main_connection;
+
+    struct Transformer{
+        navitia::type::StopArea operator()(const StopArea* stop_area){return this->operator()(*stop_area);}
+        navitia::type::StopArea operator()(const StopArea& stop_area);
+    };
+
 
     StopArea(): properties(0), main_stop_area(false), main_connection(false) {}
 

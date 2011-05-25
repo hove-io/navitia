@@ -34,6 +34,18 @@ struct NavitiaHeader{
     NavitiaHeader() : id(0), idx(0){};
 };
 
+struct GeographicalCoord{
+    double x;
+    double y;
+
+    GeographicalCoord() : x(0), y(0) {}
+    GeographicalCoord(double x, double y) : x(x), y(y) {}
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & x & y;
+    }
+};
+
 struct Country{
     idx_t idx;
     std::string name;
@@ -67,12 +79,6 @@ struct Department {
     }
 };
 
-struct Coordinates {
-    double x, y;
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & x & y;
-    }
-};
 
 struct City : public NavitiaHeader, Nameable {
     std::string main_postal_code;
@@ -80,7 +86,7 @@ struct City : public NavitiaHeader, Nameable {
     bool use_main_stop_area_property;
 
     idx_t department_idx;
-    Coordinates coord;
+    GeographicalCoord coord;
 
     std::vector<idx_t> postal_code_list;
     std::vector<idx_t> stop_area_list;
@@ -96,13 +102,6 @@ struct City : public NavitiaHeader, Nameable {
         ar & name & department_idx & coord & idx;
     }
 
-    /// Retourne la valeur d'un membre en fonction du nom
-    col_t get(const std::string & member) {
-        if(member == "idx") return idx;
-        else if(member == "department_idx") return department_idx;
-        else if(member == "name") return name;
-        else throw unknown_member();
-    }
 };
 
 struct Connection {
@@ -117,32 +116,16 @@ struct Connection {
 };
 
 struct StopArea : public NavitiaHeader, Nameable{
-    Coordinates coord;
+    GeographicalCoord coord;
     int properties;
     std::string additional_data;
-
-    std::vector<idx_t> stop_area_list;
-    std::vector<idx_t> stop_point_list;
-    std::vector<idx_t> impact_list;
     idx_t city_idx;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & external_code & name & city_idx & coord & idx;
+        ar & id & idx & external_code & name & city_idx & coord;
     }
 
     StopArea(): properties(0), city_idx(0){}
-
-    col_t get(const std::string & member) const{
-        if(member == "idx") return idx;
-        else if(member == "name") return name;
-        else if(member == "external_code") return external_code;
-        else if(member == "city_idx") return city_idx;
-        else throw unknown_member();
-    }
-    static boost::variant<int StopArea::*, idx_t StopArea::*, double StopArea::*, std::string StopArea::*> get2(const std::string & member) {
-        if(member == "idx") return &StopArea::idx;
-        else if(member == "name") return &StopArea::name;
-    }
 };
 
 struct Network : public NavitiaHeader, Nameable{
@@ -232,18 +215,6 @@ struct Line : public NavitiaHeader, Nameable {
 
     bool operator<(const Line & other) const { return name > other.name;}
 
-    col_t get(const std::string & member) const{
-        if(member == "idx") return idx;
-        else if(member == "name") return name;
-        else if(member == "code") return code;
-        else if(member == "network_idx") return network_idx;
-        else if(member == "forward_name") return forward_name;
-        else if(member == "backward_name") return backward_name;
-        else if(member == "additional_data") return additional_data;
-        else if(member == "color") return color;
-        else if(member == "sort") return sort;
-        else throw unknown_member();
-    }
 
 };
 
@@ -268,13 +239,8 @@ struct Route : public NavitiaHeader, Nameable{
             & line_idx & associated_route_idx & route_point_list & freq_route_point_list & freq_setting_list
             & vehicle_journey_list & impact_list;
     }
-    col_t get(const std::string & member) const{
-        if(member == "idx") return idx;
-        else if(member == "name") return name;
-        else if(member == "line_idx") return line_idx;
-        else throw unknown_member();
-    }
  };
+
 struct VehicleJourney {
     idx_t idx;
     std::string name;
@@ -289,12 +255,6 @@ struct VehicleJourney {
     VehicleJourney(): idx(0), route_idx(0), company_idx(0), mode_idx(0), vehicle_idx(0), is_adapted(false), validity_pattern_idx(0){};
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & is_adapted & validity_pattern_idx & idx;
-    }
-    col_t get(const std::string & member) const {
-        if(member == "idx") return idx;
-        else if(member == "name") return name;
-        else if(member == "external_code") return external_code;
-        else throw unknown_member();
     }
 };
 
@@ -349,16 +309,11 @@ public:
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & beginning_date & days & idx;
     }
-    col_t get(const std::string & member) const {
-        if(member == "idx") return idx;
-        else if(member == "pattern") return days.to_string();
-        else throw unknown_member();
-    }
 
 };
 
 struct StopPoint : public NavitiaHeader, Nameable{
-    Coordinates coord;
+    GeographicalCoord coord;
     int fare_zone;
 
     std::string address_name;
@@ -376,12 +331,6 @@ struct StopPoint : public NavitiaHeader, Nameable{
 
     StopPoint(): fare_zone(0),  stop_area_idx(0), city_idx(0), mode_idx(0), network_idx(0){}
 
-    col_t get(const std::string & member) const {
-        if(member == "idx") return idx;
-        else if(member == "name") return name;
-        else if(member == "external_code") return external_code;
-        else throw unknown_member();
-    }
 };
 
 struct StopTime {
@@ -398,16 +347,10 @@ struct StopTime {
         ODT(false), zone(0){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & arrival_time & departure_time & vehicle_journey_idx & stop_point_idx & order & ODT & zone & idx;
+            ar & arrival_time & departure_time & vehicle_journey_idx & stop_point_idx & order & ODT & zone & idx;
     }
 };
 
-struct GeographicalCoord{
-    double x;
-    double y;
-
-    GeographicalCoord() : x(0), y(0) {}
-};
 
 
 enum PointType{ptCity, ptSite, ptAddress, ptStopArea, ptAlias, ptUndefined, ptSeparator};

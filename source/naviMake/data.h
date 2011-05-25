@@ -1,6 +1,10 @@
 #pragma once
 #include "types.h"
 #include <boost/foreach.hpp>
+
+#include "type/type.h"
+#include "type/data.h"
+
 namespace navimake{
 
     class Data{
@@ -42,6 +46,8 @@ namespace navimake{
          * supprime les objets inutiles
          */
         void clean();
+
+        void transform(navitia::type::Data& data);
 
 
         ~Data(){

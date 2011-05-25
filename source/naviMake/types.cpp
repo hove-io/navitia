@@ -113,3 +113,24 @@ bool VehicleJourney::operator<(const VehicleJourney& other) const {
 bool Connection::operator<(const Connection& other) const{
     return *(this->departure_stop_point) < *(other.departure_stop_point);
 }
+
+
+nt::GeographicalCoord GeographicalCoord::transform()const {
+    return nt::GeographicalCoord(x, y);
+}
+
+navitia::type::StopArea StopArea::Transformer::operator()(const StopArea& stop_area){
+    navitia::type::StopArea sa;
+    sa.id = stop_area.id;
+    sa.idx = stop_area.idx;
+    sa.external_code = stop_area.external_code;
+    sa.coord = stop_area.coord.transform();
+    sa.comment = stop_area.comment;
+    sa.name = stop_area.name;
+
+    sa.additional_data = stop_area.additional_data;
+    sa.properties = stop_area.properties;
+    return sa;
+}
+
+
