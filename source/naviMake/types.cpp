@@ -135,49 +135,48 @@ navitia::type::StopArea StopArea::Transformer::operator()(const StopArea& stop_a
 
 
 nt::Mode Mode::Transformer::operator()(const Mode& mode){
-    nt::Mode mode_nt;
-    mode_nt.id = mode.id;
-    mode_nt.idx = mode.idx;
-    mode_nt.external_code = mode.external_code;
-    mode_nt.name = mode.name;
-    mode_nt.mode_type_idx = mode.mode_type->idx;
-    return mode_nt;
+    nt::Mode nt_mode;
+    nt_mode.id = mode.id;
+    nt_mode.idx = mode.idx;
+    nt_mode.external_code = mode.external_code;
+    nt_mode.name = mode.name;
+    nt_mode.mode_type_idx = mode.mode_type->idx;
+    return nt_mode;
 
 }
 
 
 nt::ModeType ModeType::Transformer::operator()(const ModeType& mode_type){
-    nt::ModeType mode_type_nt;
-    mode_type_nt.id = mode_type.id;
-    mode_type_nt.idx = mode_type.idx;
-    mode_type_nt.external_code = mode_type.external_code;
-    mode_type_nt.name = mode_type.name;
-    return mode_type_nt;
-
+    nt::ModeType nt_mode_type;
+    nt_mode_type.id = mode_type.id;
+    nt_mode_type.idx = mode_type.idx;
+    nt_mode_type.external_code = mode_type.external_code;
+    nt_mode_type.name = mode_type.name;
+    return nt_mode_type;
 }
 
 nt::StopPoint StopPoint::Transformer::operator()(const StopPoint& stop_point){
-    nt::StopPoint stop_point_nt;
-    stop_point_nt.id = stop_point.id;
-    stop_point_nt.idx = stop_point.idx;
-    stop_point_nt.external_code = stop_point.external_code;
-    stop_point_nt.name = stop_point.name;
-    stop_point_nt.coord = stop_point.coord.transform();
-    stop_point_nt.fare_zone = stop_point.fare_zone;
+    nt::StopPoint nt_stop_point;
+    nt_stop_point.id = stop_point.id;
+    nt_stop_point.idx = stop_point.idx;
+    nt_stop_point.external_code = stop_point.external_code;
+    nt_stop_point.name = stop_point.name;
+    nt_stop_point.coord = stop_point.coord.transform();
+    nt_stop_point.fare_zone = stop_point.fare_zone;
 
-    stop_point_nt.address_name      = stop_point.address_name;
-    stop_point_nt.address_number    = stop_point.address_number;       
-    stop_point_nt.address_type_name = stop_point.address_type_name;
+    nt_stop_point.address_name      = stop_point.address_name;
+    nt_stop_point.address_number    = stop_point.address_number;       
+    nt_stop_point.address_type_name = stop_point.address_type_name;
     
     if(stop_point.stop_area != NULL)
-        stop_point_nt.stop_area_idx = stop_point.stop_area->idx;
+        nt_stop_point.stop_area_idx = stop_point.stop_area->idx;
 
     if(stop_point.mode != NULL)
-        stop_point_nt.mode_idx = stop_point.mode->idx;
+        nt_stop_point.mode_idx = stop_point.mode->idx;
 
     if(stop_point.city != NULL)
-        stop_point_nt.city_idx = stop_point.city->idx;
+        nt_stop_point.city_idx = stop_point.city->idx;
 
-    return stop_point_nt;
+    return nt_stop_point;
 
 }
