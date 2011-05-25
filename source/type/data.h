@@ -71,7 +71,8 @@ public:
 
     /** Charge la structure de données du fichier au format texte */
     void load(const std::string & filename);
-    void load_lz(const std::string & filename);
+    void load_flz(const std::string & filename);
+    void save_flz(const std::string & filename);
 
     /** Sauvegarde la structure de fichier au format binaire
       *

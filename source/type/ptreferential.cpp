@@ -162,7 +162,7 @@ std::vector< std::vector<col_t> > query(std::string request, Data & data){
 int main(int argc, char** argv){
     std::cout << "Chargement des données..." << std::flush;
     Data d;
-    d.load_bin("data2.nav");
+    d.load_flz("data.nav.flz");
     std::cout << " effectué" << std::endl << std::endl;
 
     std::cout
