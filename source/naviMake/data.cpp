@@ -41,3 +41,6 @@ void Data::sort(){
     std::sort(connections.begin(), connections.end(), Less<navimake::types::Connection>());
     std::for_each(connections.begin(), connections.end(), Indexer<navimake::types::Connection>());
 }
+
+void Data::clean(){
+}

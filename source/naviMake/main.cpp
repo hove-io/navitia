@@ -19,7 +19,7 @@ int main (int argc, char const* argv[])
     std::cout << "stop: " << data.stops.size() << std::endl;
     std::cout << "connection: " << data.connections.size() << std::endl;
 
-
+    data.clean();
     data.sort();
 
     BOOST_FOREACH(navimake::types::Mode* mode, data.modes){

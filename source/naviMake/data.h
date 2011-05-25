@@ -32,8 +32,16 @@ namespace navimake{
 
             void operator()(T* obj){obj->idx = idx; idx++;}
         };
-
+        /***
+         * tris les différentes donnée et affecte l'idx
+         *
+         */
         void sort();
+
+        /**
+         * supprime les objets inutiles
+         */
+        void clean();
 
 
         ~Data(){
