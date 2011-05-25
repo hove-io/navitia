@@ -185,6 +185,11 @@ struct ModeType : public TransmodelHeader, Nameable{
     std::vector<Mode*> mode_list;
     std::vector<Line*> line_list;
 
+    struct Transformer{
+        nt::ModeType operator()(const ModeType* mode_type){return this->operator()(*mode_type);}   
+        nt::ModeType operator()(const ModeType& mode_type);   
+    };
+
     bool operator<(const ModeType& other)const ;
 };
 

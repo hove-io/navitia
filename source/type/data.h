@@ -17,6 +17,7 @@ public:
 
     std::vector<Network> networks;
     std::vector<Mode> modes;
+    std::vector<ModeType> mode_types;
 
     public:
     /** Fonction qui permet de sérialiser (aka binariser la structure de données

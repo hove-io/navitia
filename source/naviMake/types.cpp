@@ -146,3 +146,12 @@ nt::Mode Mode::Transformer::operator()(const Mode& mode){
 }
 
 
+nt::ModeType ModeType::Transformer::operator()(const ModeType& mode_type){
+    nt::ModeType mode_type_nt;
+    mode_type_nt.id = mode_type.id;
+    mode_type_nt.idx = mode_type.idx;
+    mode_type_nt.external_code = mode_type.external_code;
+    mode_type_nt.name = mode_type.name;
+    return mode_type_nt;
+
+}

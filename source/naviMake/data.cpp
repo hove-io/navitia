@@ -53,4 +53,7 @@ void Data::transform(navitia::type::Data& data){
 
     data.modes.resize(this->modes.size());
     std::transform(this->modes.begin(), this->modes.end(), data.modes.begin(), navimake::types::Mode::Transformer());
+
+    data.mode_types.resize(this->mode_types.size());
+    std::transform(this->mode_types.begin(), this->mode_types.end(), data.mode_types.begin(), navimake::types::ModeType::Transformer());
 }
