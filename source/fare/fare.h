@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../utils/csv.h"
+#include "../utils/csv.h"
 #include <boost/graph/adjacency_list.hpp> 
 
 /// Définit l'état courant
@@ -18,21 +18,39 @@ struct State {
     std::string zone;
 
     /// Dernier endroit où à eu lieu l'achat
-    std::string last_stop;
+    std::string stop_area;
+
+    std::string line;
+
+    /// Nombre de changements effectués
+    int changes;
+
+    /// Réseau utilisé
+    std::string network;
+
+    State() : duration(0), changes(0) {}
+
+    bool operator==(const State & other) const {
+        return ticket==other.ticket && duration==other.duration && mode == other.mode
+                && zone==other.zone && stop_area == other.stop_area && line == other.line
+                && changes == other.changes && network == other.network;
+    }
+
+
+    bool operator<(const State & other) const {
+        return ticket<other.ticket && duration<other.duration && mode < other.mode
+                && zone<other.zone && stop_area<other.stop_area && line<other.line
+                && changes<other.changes && network<other.network;
+    }
 };
 
-/// Définit un état dans lequel on est
-/// Un état est lié à un mode de transport : « on est dans le métro »
-struct Node {
-    std::string mode;
-};
 
 /// Type de comparaison possible entre un arc et une valeur
 enum Comp_e { Less, Greater, Equal, Nil};
 
 /// Définit un arc et les conditions pour l'emprunter
 /// Les conditions peuvent être : prendre u
-struct Edge {
+struct Condition {
     /// Valeur à que doit respecter la condition
     std::string condition_value;
 
@@ -47,3 +65,21 @@ struct Edge {
     /// Valeur à comparer
     std::string value;
 };
+
+/// Représente un transition possible et l'achat éventuel d'un billet
+struct Transition {
+    State source;
+    State target;
+    Condition cond;
+    std::string ticket;
+    float value;
+};
+
+/// Parse un état
+State parse_state(const std::string & state);
+
+/// Parse une condition de passage
+Condition parse_condition(const std::string & condition);
+
+/// Parse une ligne complète
+Transition parse_transition(const std::string & transition);
