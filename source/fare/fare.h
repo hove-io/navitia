@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../utils/csv.h"
-#include <boost/graph/adjacency_list.hpp> 
+#include <boost/fusion/include/adapt_struct.hpp>
 
 /// Définit l'état courant
 struct State {
@@ -46,13 +46,13 @@ struct State {
 
 
 /// Type de comparaison possible entre un arc et une valeur
-enum Comp_e { Less, Greater, Equal, Nil};
+enum Comp_e { EQ, NEQ, LT, GT, LTE, GTE};
 
 /// Définit un arc et les conditions pour l'emprunter
 /// Les conditions peuvent être : prendre u
 struct Condition {
     /// Valeur à que doit respecter la condition
-    std::string condition_value;
+    std::string key;
 
     /// Ticket à acheter pour prendre cet arc
     /// Chaîne vide si rien à faire
@@ -66,6 +66,13 @@ struct Condition {
     std::string value;
 };
 
+BOOST_FUSION_ADAPT_STRUCT(
+    Condition,
+    (std::string, key)
+    (Comp_e, comparaison)
+    (std::string, value)
+)
+
 /// Représente un transition possible et l'achat éventuel d'un billet
 struct Transition {
     State source;
@@ -75,11 +82,20 @@ struct Transition {
     float value;
 };
 
+/// Exception levée si on utilise une clef inconnue
+struct invalid_key : std::exception{};
+
 /// Parse un état
 State parse_state(const std::string & state);
 
 /// Parse une condition de passage
 Condition parse_condition(const std::string & condition);
+
+/// Exception levée si on n'arrive pas à parser une condition
+struct invalid_condition : std::exception {};
+
+/// Parse une liste de conditions séparés par des &
+std::vector<Condition> parse_conditions(const std::string & conditions);
 
 /// Parse une ligne complète
 Transition parse_transition(const std::string & transition);

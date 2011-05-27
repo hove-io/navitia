@@ -7,6 +7,7 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
 
     // * correspond au state vide, toujours vrai
     BOOST_CHECK(parse_state("*") == state);
+    BOOST_CHECK(parse_state("") == state);
 
     // on n'est pas case sensitive
     BOOST_CHECK(parse_state("mode=Metro").mode == "metro");
@@ -22,13 +23,37 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
     BOOST_CHECK(parse_state("mode=Metro=foo").mode == "metro=foo");
 
     // On ne respecte pas la grammaire => exception
-    //BOOST_CHECK(parse_state("coucou=møø"));
-    //BOOST_CHECK(parse_state("hello world!"));
+    BOOST_CHECK_THROW(parse_state("coucou=møø"), invalid_key);
 
+
+    // On essaye de parser des choses plus compliquées
+    State state2 = parse_state("mode=metro&stop_area=chatelet");
+    BOOST_CHECK(state2.mode == "metro");
+    BOOST_CHECK(state2.stop_area == "chatelet");
+
+    // Si un attribut est en double
+    BOOST_CHECK_THROW(parse_state("mode=foo&mode=bar"), invalid_key);
+
+    // On ne veut rien d'autre que de l'égalité
+   BOOST_CHECK_THROW(parse_state("mode < bli"), invalid_key);
 }
 
+
 BOOST_AUTO_TEST_CASE(parse_condition_test){
-     BOOST_CHECK(false);
+    BOOST_CHECK_THROW(parse_condition("moo"), invalid_condition);
+
+    Condition cond = parse_condition(" value = key ");
+    BOOST_CHECK(cond.value == "value");
+    BOOST_CHECK(cond.key == "key");
+    BOOST_CHECK(cond.comparaison == EQ);
+
+    BOOST_CHECK(parse_condition("coucou <= moo").comparaison == LTE);
+    BOOST_CHECK(parse_condition("coucou >= moo").comparaison == GTE);
+    BOOST_CHECK(parse_condition("coucou != moo").comparaison == NEQ);
+    BOOST_CHECK(parse_condition("coucou < moo").comparaison == LT);
+    BOOST_CHECK(parse_condition("coucou > moo").comparaison = GT);
+
+    BOOST_CHECK(parse_conditions("coucoun<= bli& foo =azw &abc>=123").size() == 3);
 }
 
 BOOST_AUTO_TEST_CASE(parse_section_key_test){
