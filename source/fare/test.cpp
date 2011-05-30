@@ -16,14 +16,14 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
 
     // on ignore les espaces
     BOOST_CHECK(parse_state(" mode = Metro  ").mode == "metro");
-    BOOST_CHECK(parse_state("line=L1").line == "L1");
+    BOOST_CHECK(parse_state("line=L1").line == "l1");
     BOOST_CHECK(parse_state("stop_area=chatelet").stop_area == "chatelet");
 
     // Qu'est-ce qui se passe avec des boulets ?
-    BOOST_CHECK(parse_state("mode=Metro=foo").mode == "metro=foo");
+    BOOST_CHECK_THROW(parse_state("mode=Metro=foo"), invalid_condition);
 
     // On ne respecte pas la grammaire => exception
-    BOOST_CHECK_THROW(parse_state("coucou=møø"), invalid_key);
+    BOOST_CHECK_THROW(parse_state("coucou=moo"), invalid_key);
 
 
     // On essaye de parser des choses plus compliquées
@@ -35,14 +35,14 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
     BOOST_CHECK_THROW(parse_state("mode=foo&mode=bar"), invalid_key);
 
     // On ne veut rien d'autre que de l'égalité
-   BOOST_CHECK_THROW(parse_state("mode < bli"), invalid_key);
+    BOOST_CHECK_THROW(parse_state("mode < bli"), invalid_key);
 }
 
 
 BOOST_AUTO_TEST_CASE(parse_condition_test){
     BOOST_CHECK_THROW(parse_condition("moo"), invalid_condition);
 
-    Condition cond = parse_condition(" value = key ");
+    Condition cond = parse_condition(" key = value ");
     BOOST_CHECK(cond.value == "value");
     BOOST_CHECK(cond.key == "key");
     BOOST_CHECK(cond.comparaison == EQ);
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(parse_condition_test){
     BOOST_CHECK(parse_conditions("coucoun<= bli& foo =azw &abc>=123").size() == 3);
 }
 
-BOOST_AUTO_TEST_CASE(parse_section_key_test){
+BOOST_AUTO_TEST_CASE(parse_file){
      BOOST_CHECK(false);
 }
 

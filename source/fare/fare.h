@@ -2,6 +2,7 @@
 
 #include "../utils/csv.h"
 #include <boost/fusion/include/adapt_struct.hpp>
+#include <boost/graph/adjacency_list.hpp>
 
 /// Définit l'état courant
 struct State {
@@ -75,8 +76,6 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 /// Représente un transition possible et l'achat éventuel d'un billet
 struct Transition {
-    State source;
-    State target;
     Condition cond;
     std::string ticket;
     float value;
@@ -99,3 +98,20 @@ std::vector<Condition> parse_conditions(const std::string & conditions);
 
 /// Parse une ligne complète
 Transition parse_transition(const std::string & transition);
+
+/// Structure représentant une étiquette
+struct Label {
+
+};
+
+/// Contient l'ensemble du système tarifaire
+struct Fare {
+    /// Charge le fichier
+    Fare(const std::string & filename);
+
+    /// Contient le graph des transitions
+    typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, State, Transition > Graph;
+    typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
+    typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
+    Graph g;
+};
