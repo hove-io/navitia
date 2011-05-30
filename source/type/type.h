@@ -104,7 +104,7 @@ struct City : public NavitiaHeader, Nameable {
 
 };
 
-struct Connection {
+struct Connection: public NavitiaHeader{
     idx_t departure_stop_point_idx;
     idx_t destination_stop_point_idx;
     int duration;
@@ -112,6 +112,10 @@ struct Connection {
 
     Connection() : departure_stop_point_idx(0), destination_stop_point_idx(0), duration(0),
         max_duration(0){};
+    
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & id & idx & external_code & departure_stop_point_idx & destination_stop_point_idx & duration & max_duration;
+    }
 
 };
 
@@ -275,7 +279,6 @@ struct Equipement : public NavitiaHeader {
 };
 
 struct RoutePoint : public NavitiaHeader{
-    std::string external_code;
     int order;
     bool main_stop_point;
     int fare_section;

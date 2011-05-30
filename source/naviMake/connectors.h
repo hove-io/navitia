@@ -46,6 +46,7 @@ class CsvFusio {
         void fill_routes(navimake::Data& data);
         void fill_stops(navimake::Data& data);
         void fill_connections(navimake::Data& data);
+        void fill_route_points(navimake::Data& data);
 
 
 };

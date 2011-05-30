@@ -83,6 +83,13 @@ bool Route::operator<(const Route& other) const {
     }
 }
 
+bool RoutePoint::operator<(const RoutePoint& other) const {
+    if(this->route == other.route){
+        return this->order < other.order;
+    }else{
+        return *(this->route) < *(other.route);
+    }
+}
 
 
 bool StopArea::operator<(const StopArea& other) const {
@@ -279,4 +286,30 @@ nt::StopTime StopTime::Transformer::operator()(const StopTime& stop){
     nt_stop.vehicle_journey_idx = stop.vehicle_journey->idx;
     return nt_stop;
 
+}
+
+nt::Connection Connection::Transformer::operator()(const Connection& connection){
+    nt::Connection nt_connection;
+    nt_connection.id = connection.id;
+    nt_connection.idx = connection.idx;
+    nt_connection.external_code = connection.external_code;
+    nt_connection.departure_stop_point_idx = connection.departure_stop_point->idx;
+    nt_connection.destination_stop_point_idx = connection.destination_stop_point->idx;
+    nt_connection.duration = connection.duration;
+    nt_connection.max_duration = connection.max_duration;
+    return nt_connection;
+}
+
+nt::RoutePoint RoutePoint::Transformer::operator()(const RoutePoint& route_point){
+    nt::RoutePoint nt_route_point;
+    nt_route_point.id = route_point.id;
+    nt_route_point.idx = route_point.idx;
+    nt_route_point.external_code = route_point.external_code;
+    nt_route_point.order = route_point.order;
+    nt_route_point.main_stop_point = route_point.main_stop_point;
+    nt_route_point.fare_section = route_point.fare_section;
+    
+    nt_route_point.stop_point_idx = route_point.stop_point->idx;
+    nt_route_point.route_idx = route_point.route->idx;
+    return nt_route_point;
 }

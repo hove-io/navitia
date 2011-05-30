@@ -131,6 +131,11 @@ struct Connection: public TransmodelHeader {
     int max_duration;
     ConnectionKind connection_kind;
 
+    struct Transformer{
+        inline navitia::type::Connection operator()(const Connection* connection){return this->operator()(*connection);}
+        navitia::type::Connection operator()(const Connection& connection);
+    };
+
     Connection() : departure_stop_point(NULL), destination_stop_point(NULL), duration(0),
         max_duration(0), connection_kind(DefaultConnection){}
 
@@ -302,16 +307,21 @@ struct Equipement : public TransmodelHeader {
     
 };
 
-struct RoutePoint : public TransmodelHeader{
-    std::string external_code;
+struct RoutePoint : public TransmodelHeader, Nameable{
     int order;
     bool main_stop_point;
     int fare_section;
-    idx_t route_idx;
-    idx_t stop_point_idx;
+    Route* route;
+    StopPoint* stop_point;
 
+    struct Transformer{
+        inline nt::RoutePoint operator()(const RoutePoint* route_point){return this->operator()(*route_point);}   
+        nt::RoutePoint operator()(const RoutePoint& route_point);
+    };
 
-    RoutePoint() : main_stop_point(false){}
+    RoutePoint() : order(0), main_stop_point(false), fare_section(0), route(NULL), stop_point(NULL){}
+
+    bool operator<(const RoutePoint& other) const;
 
 };
 

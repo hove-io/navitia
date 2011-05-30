@@ -18,8 +18,10 @@ namespace navimake{
         std::vector<navimake::types::StopPoint*> stop_points; //OK
         std::vector<navimake::types::VehicleJourney*> vehicle_journeys;
         std::vector<navimake::types::Route*> routes; //OK
-        std::vector<navimake::types::StopTime*> stops;
-        std::vector<navimake::types::Connection*> connections;
+        std::vector<navimake::types::StopTime*> stops; //OK
+        std::vector<navimake::types::Connection*> connections; //OK
+        std::vector<navimake::types::RoutePoint*> route_points;
+
 
         template<class T> 
         struct Less{

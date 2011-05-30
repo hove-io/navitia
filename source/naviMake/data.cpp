@@ -40,6 +40,9 @@ void Data::sort(){
 
     std::sort(connections.begin(), connections.end(), Less<navimake::types::Connection>());
     std::for_each(connections.begin(), connections.end(), Indexer<navimake::types::Connection>());
+
+    std::sort(route_points.begin(), route_points.end(), Less<navimake::types::RoutePoint>());
+    std::for_each(route_points.begin(), route_points.end(), Indexer<navimake::types::RoutePoint>());
 }
 
 void Data::clean(){
@@ -74,4 +77,10 @@ void Data::transform(navitia::type::Data& data){
 
     data.stop_times.resize(this->stops.size());
     std::transform(this->stops.begin(), this->stops.end(), data.stop_times.begin(), navimake::types::StopTime::Transformer());
+
+    data.connections.resize(this->connections.size());
+    std::transform(this->connections.begin(), this->connections.end(), data.connections.begin(), navimake::types::Connection::Transformer());
+
+    data.route_points.resize(this->route_points.size());
+    std::transform(this->route_points.begin(), this->route_points.end(), data.route_points.begin(), navimake::types::RoutePoint::Transformer());
 }

@@ -28,6 +28,7 @@ int main(int argc, char const* argv[])
     std::cout << "vehiclejourney: " << data.vehicle_journeys.size() << std::endl;
     std::cout << "stop: " << data.stops.size() << std::endl;
     std::cout << "connection: " << data.connections.size() << std::endl;
+    std::cout << "route points: " << data.route_points.size() << std::endl;
 
     start = pt::microsec_clock::local_time();
     data.clean();

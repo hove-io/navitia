@@ -19,6 +19,8 @@ public:
     std::vector<Mode> modes;
     std::vector<ModeType> mode_types;
     std::vector<City> cities;
+    std::vector<Connection> connections;
+    std::vector<RoutePoint> route_points;
 
     public:
     /** Fonction qui permet de sérialiser (aka binariser la structure de données

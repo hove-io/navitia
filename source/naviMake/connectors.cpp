@@ -20,6 +20,7 @@ void CsvFusio::fill(navimake::Data& data){
     fill_vehicle_journeys(data);
     fill_stops(data);
     fill_connections(data);
+    fill_route_points(data);
 }
 
 void CsvFusio::fill_networks(navimake::Data& data){
@@ -354,6 +355,35 @@ void CsvFusio::fill_connections(navimake::Data& data){
             connection->destination_stop_point = this->find(stop_point_map, destination);
 
             data.connections.push_back(connection);
+        }
+        counter++;       
+    }
+    reader.close();
+}
+
+void CsvFusio::fill_route_points(navimake::Data& data){
+    CsvReader reader(path + "RoutePoint.csv");
+    std::vector<std::string> row;
+    int counter = 0;
+    for(row=reader.next(); row != reader.end(); row = reader.next()){
+        if(row.size() < 6){
+            throw BadFormated();
+        }
+        if(counter != 0){
+            navimake::types::RoutePoint* route_point = new navimake::types::RoutePoint();
+            route_point->id = boost::lexical_cast<int>(row.at(0));
+            route_point->fare_section = boost::lexical_cast<int>(row.at(1));
+            route_point->order = boost::lexical_cast<int>(row.at(2));
+
+            if(row.at(4) == "True") route_point->main_stop_point = true;
+            
+            int route_id = boost::lexical_cast<int>(row.at(3));
+            route_point->route = this->find(route_map, route_id);
+
+            int stop_point_id = boost::lexical_cast<int>(row.at(5));
+            route_point->stop_point = this->find(stop_point_map, stop_point_id);
+
+            data.route_points.push_back(route_point);
         }
         counter++;       
     }
