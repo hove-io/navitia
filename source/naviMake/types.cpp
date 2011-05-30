@@ -210,3 +210,56 @@ nt::Line Line::Transformer::operator()(const Line& line){
     
     return nt_line;
 }
+
+nt::City City::Transformer::operator()(const City& city){
+    navitia::type::City nt_city;
+    nt_city.id = city.id;
+    nt_city.idx = city.idx;
+    nt_city.external_code = city.external_code;
+    nt_city.name = city.name;
+    nt_city.coord = city.coord.transform();
+    nt_city.main_postal_code = city.main_postal_code;
+    nt_city.use_main_stop_area_property = city.use_main_stop_area_property;
+    nt_city.main_city = city.main_city;
+    if(city.department != NULL)
+        nt_city.department_idx = city.department->idx;
+
+    
+    return nt_city;
+}
+
+nt::Network Network::Transformer::operator()(const Network& network){
+    nt::Network nt_network;
+    nt_network.id = network.id;
+    nt_network.idx = network.idx;
+    nt_network.external_code = network.external_code;
+    nt_network.name = network.name;
+
+    nt_network.address_name      = network.address_name;
+    nt_network.address_number    = network.address_number;       
+    nt_network.address_type_name = network.address_type_name;
+    nt_network.fax = network.fax;
+    nt_network.phone_number = network.phone_number;
+    nt_network.mail = network.mail;
+    nt_network.website = network.website;
+    return nt_network;
+}
+
+nt::Route Route::Transformer::operator()(const Route& route){
+    nt::Route nt_route;
+    nt_route.id = route.id;
+    nt_route.idx = route.idx;
+    nt_route.external_code = route.external_code;
+    nt_route.name = route.name;
+    nt_route.is_frequence = route.is_frequence;
+    nt_route.is_forward = route.is_forward;
+    nt_route.is_adapted = route.is_adapted;
+    
+    if(route.line != NULL)
+        nt_route.line_idx = route.line->idx;
+
+    if(route.mode != NULL && route.mode->mode_type != NULL)
+        nt_route.mode_type_idx = route.mode->mode_type->idx;
+
+    return nt_route;
+}

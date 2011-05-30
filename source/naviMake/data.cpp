@@ -62,4 +62,13 @@ void Data::transform(navitia::type::Data& data){
 
     data.lines.resize(this->lines.size());
     std::transform(this->lines.begin(), this->lines.end(), data.lines.begin(), navimake::types::Line::Transformer());
+
+    data.cities.resize(this->cities.size());
+    std::transform(this->cities.begin(), this->cities.end(), data.cities.begin(), navimake::types::City::Transformer());
+
+    data.networks.resize(this->networks.size());
+    std::transform(this->networks.begin(), this->networks.end(), data.networks.begin(), navimake::types::Network::Transformer());
+
+    data.routes.resize(this->routes.size());
+    std::transform(this->routes.begin(), this->routes.end(), data.routes.begin(), navimake::types::Route::Transformer());
 }

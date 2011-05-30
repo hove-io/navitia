@@ -92,6 +92,12 @@ struct City : public TransmodelHeader, Nameable {
 
     std::vector<std::string> postal_code_list;
     std::vector<StopArea*> stop_area_list;
+    
+
+    struct Transformer{
+        navitia::type::City operator()(const City* city){return this->operator()(*city);}
+        navitia::type::City operator()(const City& city);
+    };
 
     City() : main_city(false), use_main_stop_area_property(false), department(NULL) {};
 
@@ -161,6 +167,11 @@ struct Network : public TransmodelHeader, Nameable{
     std::string fax;
 
     std::vector<Line*> line_list;
+
+    struct Transformer{
+        navitia::type::Network operator()(const Network* network){return this->operator()(*network);}
+        navitia::type::Network operator()(const Network& network);
+    };
 
     bool operator<(const Network& other)const{ return this->name < other.name;}
 
@@ -249,6 +260,11 @@ struct Route : public TransmodelHeader, Nameable{
     bool is_adapted;
     Line* line;
     Mode* mode;   
+
+    struct Transformer{
+        inline navitia::type::Route operator()(const Route* route){return this->operator()(*route);}
+        navitia::type::Route operator()(const Route& route);
+    };
 
     Route(): is_frequence(false), is_forward(false), is_adapted(false), line(NULL), mode(NULL){};
 

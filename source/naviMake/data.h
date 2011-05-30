@@ -9,15 +9,15 @@ namespace navimake{
 
     class Data{
     public:
-        std::vector<navimake::types::Network*> networks;
-        std::vector<navimake::types::ModeType*> mode_types;
-        std::vector<navimake::types::Line*> lines;
-        std::vector<navimake::types::Mode*> modes;
-        std::vector<navimake::types::City*> cities;
-        std::vector<navimake::types::StopArea*> stop_areas;
-        std::vector<navimake::types::StopPoint*> stop_points;
+        std::vector<navimake::types::Network*> networks; //OK
+        std::vector<navimake::types::ModeType*> mode_types; //OK
+        std::vector<navimake::types::Line*> lines; //OK
+        std::vector<navimake::types::Mode*> modes; //OK
+        std::vector<navimake::types::City*> cities; //OK
+        std::vector<navimake::types::StopArea*> stop_areas; //OK
+        std::vector<navimake::types::StopPoint*> stop_points; //OK
         std::vector<navimake::types::VehicleJourney*> vehicle_journeys;
-        std::vector<navimake::types::Route*> routes;
+        std::vector<navimake::types::Route*> routes; //OK
         std::vector<navimake::types::StopTime*> stops;
         std::vector<navimake::types::Connection*> connections;
 

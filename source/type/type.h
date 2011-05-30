@@ -151,74 +151,74 @@ struct Company : public NavitiaHeader, Nameable{
     idx_t city_idx;
     std::string address_name;
     std::string address_number;
-    std::string address_type_name;
-    std::string phone_number;
-    std::string mail;
-    std::string website;
-    std::string fax;
+        std::string address_type_name;
+        std::string phone_number;
+        std::string mail;
+        std::string website;
+        std::string fax;
 
-    std::vector<idx_t> line_list;
+        std::vector<idx_t> line_list;
 
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & external_code & address_name & address_number & address_type_name & phone_number 
-            & mail & website & fax;
-    }
-};
+        template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+            ar & idx & id & name & external_code & address_name & address_number & address_type_name & phone_number 
+                & mail & website & fax;
+        }
+    };
 
-struct ModeType : public NavitiaHeader, Nameable{
-    std::vector<idx_t> mode_list;
-    std::vector<idx_t> line_list;
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & external_code & mode_list & line_list;
-    }
-};
+    struct ModeType : public NavitiaHeader, Nameable{
+        std::vector<idx_t> mode_list;
+        std::vector<idx_t> line_list;
+        template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+            ar & idx & id & name & external_code & mode_list & line_list;
+        }
+    };
 
-struct Mode : public NavitiaHeader, Nameable{
-    idx_t mode_type_idx;
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & external_code & mode_type_idx & idx;
-    }
-};
+    struct Mode : public NavitiaHeader, Nameable{
+        idx_t mode_type_idx;
+        template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+            ar & id & idx & name & external_code & mode_type_idx & idx;
+        }
+    };
 
-struct Line : public NavitiaHeader, Nameable {
-    std::string code;
-    std::string forward_name;
-    std::string backward_name;
+    struct Line : public NavitiaHeader, Nameable {
+        std::string code;
+        std::string forward_name;
+        std::string backward_name;
 
-    std::string additional_data;
-    std::string color;
-    int sort;
-    
-    idx_t mode_type_idx;
+        std::string additional_data;
+        std::string color;
+        int sort;
+        
+        idx_t mode_type_idx;
 
-    std::vector<idx_t> mode_list;
-    std::vector<idx_t> company_list;
-    idx_t network_idx;
-
-
-    std::vector<idx_t> forward_route;
-    std::vector<idx_t> backward_route;
-
-    std::vector<idx_t> impact_list;
-    std::vector<idx_t> validity_pattern_list;
-
-    idx_t forward_direction_idx;
-    idx_t backward_direction_idx;
-
-    Line(): sort(0), mode_type_idx(0), network_idx(0), forward_direction_idx(0), backward_direction_idx(0){}
-
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & external_code & code & forward_name & backward_name & additional_data & color 
-            & sort & mode_type_idx & mode_list & company_list & network_idx & forward_direction_idx & backward_direction_idx
-            & impact_list & validity_pattern_list;
-    }
-
-    bool operator<(const Line & other) const { return name > other.name;}
+        std::vector<idx_t> mode_list;
+        std::vector<idx_t> company_list;
+        idx_t network_idx;
 
 
-};
+        std::vector<idx_t> forward_route;
+        std::vector<idx_t> backward_route;
 
-struct Route : public NavitiaHeader, Nameable{
+        std::vector<idx_t> impact_list;
+        std::vector<idx_t> validity_pattern_list;
+
+        idx_t forward_direction_idx;
+        idx_t backward_direction_idx;
+
+        Line(): sort(0), mode_type_idx(0), network_idx(0), forward_direction_idx(0), backward_direction_idx(0){}
+
+        template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+            ar & id & idx & name & external_code & code & forward_name & backward_name & additional_data & color 
+                & sort & mode_type_idx & mode_list & company_list & network_idx & forward_direction_idx & backward_direction_idx
+                & impact_list & validity_pattern_list;
+        }
+
+        bool operator<(const Line & other) const { return name > other.name;}
+
+
+    };
+
+    struct Route : public NavitiaHeader, Nameable{
     bool is_frequence;
     bool is_forward;
     bool is_adapted;
