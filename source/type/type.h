@@ -245,10 +245,7 @@ struct Company : public NavitiaHeader, Nameable{
     }
  };
 
-struct VehicleJourney {
-    idx_t idx;
-    std::string name;
-    std::string external_code;
+struct VehicleJourney: public NavitiaHeader, Nameable {
     idx_t route_idx;
     idx_t company_idx;
     idx_t mode_idx;
@@ -256,7 +253,7 @@ struct VehicleJourney {
     bool is_adapted;
     idx_t validity_pattern_idx;
 
-    VehicleJourney(): idx(0), route_idx(0), company_idx(0), mode_idx(0), vehicle_idx(0), is_adapted(false), validity_pattern_idx(0){};
+    VehicleJourney(): route_idx(0), company_idx(0), mode_idx(0), vehicle_idx(0), is_adapted(false), validity_pattern_idx(0){};
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & is_adapted & validity_pattern_idx & idx;
     }

@@ -313,3 +313,22 @@ nt::RoutePoint RoutePoint::Transformer::operator()(const RoutePoint& route_point
     nt_route_point.route_idx = route_point.route->idx;
     return nt_route_point;
 }
+
+nt::VehicleJourney VehicleJourney::Transformer::operator()(const VehicleJourney& vj){
+    nt::VehicleJourney nt_vj;
+    nt_vj.id = vj.id;
+    nt_vj.idx = vj.idx;
+    nt_vj.name = vj.name;
+    nt_vj.external_code = vj.external_code;
+    nt_vj.comment = vj.comment;
+    nt_vj.is_adapted = vj.is_adapted;
+
+    if(vj.company != NULL)
+        nt_vj.company_idx = vj.company->idx;
+
+    if(vj.mode != NULL)
+        nt_vj.mode_idx = vj.mode->idx;
+
+    nt_vj.route_idx = vj.route->idx;
+    return nt_vj;
+}

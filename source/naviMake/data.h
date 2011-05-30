@@ -20,7 +20,7 @@ namespace navimake{
         std::vector<navimake::types::Route*> routes; //OK
         std::vector<navimake::types::StopTime*> stops; //OK
         std::vector<navimake::types::Connection*> connections; //OK
-        std::vector<navimake::types::RoutePoint*> route_points;
+        std::vector<navimake::types::RoutePoint*> route_points; //OK
 
 
         template<class T> 

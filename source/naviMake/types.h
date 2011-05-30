@@ -285,6 +285,10 @@ struct VehicleJourney: public TransmodelHeader, Nameable{
 
     ValidityPattern* validity_pattern;
 
+    struct Transformer{
+        inline navitia::type::VehicleJourney operator()(const VehicleJourney* vj){return this->operator()(*vj);}
+        navitia::type::VehicleJourney operator()(const VehicleJourney& vj);
+    };
 
     VehicleJourney(): route(NULL), company(NULL), mode(NULL), is_adapted(false), validity_pattern(NULL){};
 

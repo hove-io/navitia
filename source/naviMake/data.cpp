@@ -83,4 +83,7 @@ void Data::transform(navitia::type::Data& data){
 
     data.route_points.resize(this->route_points.size());
     std::transform(this->route_points.begin(), this->route_points.end(), data.route_points.begin(), navimake::types::RoutePoint::Transformer());
+
+    data.vehicle_journeys.resize(this->vehicle_journeys.size());
+    std::transform(this->vehicle_journeys.begin(), this->vehicle_journeys.end(), data.vehicle_journeys.begin(), navimake::types::VehicleJourney::Transformer());
 }
