@@ -10,10 +10,13 @@ struct BadFormated : public std::exception{};
 class CsvFusio {
     public:
         CsvFusio(const std::string & path);
+        ~CsvFusio();
         void fill(navimake::Data& data);
     private:
         std::string path;
 
+
+        
 
         template <class T, typename T2>
         T* find(const std::map<T2, T*>& items_map, T2 id){

@@ -2,13 +2,20 @@
 #include <exception>
 #include <boost/algorithm/string.hpp>
 
-CsvReader::CsvReader(const std::string& filename, char separator): filename(filename), file(filename), closed(false),
-    functor('\\', separator, '"')
-{}
+CsvReader::CsvReader(const std::string& filename, char separator, std::string encoding): filename(filename), file(filename), closed(false),
+    functor('\\', separator, '"'), converter(NULL)
+{
+    if(encoding != "UTF-8"){
+        //TODO la taille en dur s'mal
+        converter = new EncodingConverter(encoding, "UTF-8", 2048);
+    }
+}
 
 void CsvReader::close(){
     if(!closed){
         file.close();
+        delete converter;
+        converter = NULL;
     }
 }
 
@@ -31,8 +38,11 @@ std::vector<std::string> CsvReader::next(){
         }
         std::getline(file, line);
     }while(line.empty());
-    std::vector<std::string> vec;
     boost::trim(line);
+    if(converter != NULL){
+        line = converter->convert(line);
+    }
+    std::vector<std::string> vec;
     Tokenizer tok(line, functor);
     vec.assign(tok.begin(), tok.end());
 
