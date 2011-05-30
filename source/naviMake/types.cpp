@@ -263,3 +263,20 @@ nt::Route Route::Transformer::operator()(const Route& route){
 
     return nt_route;
 }
+
+nt::StopTime StopTime::Transformer::operator()(const StopTime& stop){
+    nt::StopTime nt_stop;
+    nt_stop.id = stop.id;
+    nt_stop.idx = stop.idx;
+    nt_stop.external_code = stop.external_code;
+    nt_stop.arrival_time = stop.arrival_time;
+    nt_stop.departure_time = stop.departure_time;
+    nt_stop.order = stop.order;
+    nt_stop.zone = stop.zone;
+    nt_stop.ODT = stop.ODT;
+
+    nt_stop.stop_point_idx = stop.stop_point->idx;
+    nt_stop.vehicle_journey_idx = stop.vehicle_journey->idx;
+    return nt_stop;
+
+}

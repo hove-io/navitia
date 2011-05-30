@@ -11,7 +11,7 @@ namespace pt = boost::posix_time;
 int main(int argc, char const* argv[])
 {
     pt::ptime start, end;
-    int64_t read, clean, sort, transform, save;
+    int read, clean, sort, transform, save;
 
     navimake::Data data;
     {

@@ -95,7 +95,7 @@ struct City : public TransmodelHeader, Nameable {
     
 
     struct Transformer{
-        navitia::type::City operator()(const City* city){return this->operator()(*city);}
+        inline navitia::type::City operator()(const City* city){return this->operator()(*city);}
         navitia::type::City operator()(const City& city);
     };
 
@@ -147,7 +147,7 @@ struct StopArea : public TransmodelHeader, Nameable{
     bool main_connection;
 
     struct Transformer{
-        navitia::type::StopArea operator()(const StopArea* stop_area){return this->operator()(*stop_area);}
+        inline navitia::type::StopArea operator()(const StopArea* stop_area){return this->operator()(*stop_area);}
         navitia::type::StopArea operator()(const StopArea& stop_area);
     };
 
@@ -169,7 +169,7 @@ struct Network : public TransmodelHeader, Nameable{
     std::vector<Line*> line_list;
 
     struct Transformer{
-        navitia::type::Network operator()(const Network* network){return this->operator()(*network);}
+        inline navitia::type::Network operator()(const Network* network){return this->operator()(*network);}
         navitia::type::Network operator()(const Network& network);
     };
 
@@ -197,7 +197,7 @@ struct ModeType : public TransmodelHeader, Nameable{
     std::vector<Line*> line_list;
 
     struct Transformer{
-        nt::ModeType operator()(const ModeType* mode_type){return this->operator()(*mode_type);}   
+        inline nt::ModeType operator()(const ModeType* mode_type){return this->operator()(*mode_type);}   
         nt::ModeType operator()(const ModeType& mode_type);   
     };
 
@@ -208,7 +208,7 @@ struct Mode : public TransmodelHeader, Nameable{
     ModeType* mode_type;
 
     struct Transformer{
-        nt::Mode operator()(const Mode* mode){return this->operator()(*mode);}   
+        inline nt::Mode operator()(const Mode* mode){return this->operator()(*mode);}   
         nt::Mode operator()(const Mode& mode);   
     };
 
@@ -244,7 +244,7 @@ struct Line : public TransmodelHeader, Nameable {
     std::vector<idx_t> validity_pattern_list;
 
     struct Transformer{
-        nt::Line operator()(const Line* line){return this->operator()(*line);}   
+        inline nt::Line operator()(const Line* line){return this->operator()(*line);}   
         nt::Line operator()(const Line& line);   
     };
 
@@ -344,7 +344,7 @@ struct StopPoint : public TransmodelHeader, Nameable{
     City* city;
 
     struct Transformer{
-        nt::StopPoint operator()(const StopPoint* stop_point){return this->operator()(*stop_point);}   
+        inline nt::StopPoint operator()(const StopPoint* stop_point){return this->operator()(*stop_point);}   
         nt::StopPoint operator()(const StopPoint& stop_point);   
     };
 
@@ -362,6 +362,11 @@ struct StopTime: public TransmodelHeader {
     int order;
     bool ODT;
     int zone;
+
+    struct Transformer{
+        inline navitia::type::StopTime operator()(const StopTime* stop){return this->operator()(*stop);}
+        navitia::type::StopTime operator()(const StopTime& stop);
+    };
 
     StopTime(): arrival_time(0), departure_time(0), vehicle_journey(NULL), stop_point(NULL), order(0), 
         ODT(false), zone(0){}

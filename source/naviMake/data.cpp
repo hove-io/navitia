@@ -71,4 +71,7 @@ void Data::transform(navitia::type::Data& data){
 
     data.routes.resize(this->routes.size());
     std::transform(this->routes.begin(), this->routes.end(), data.routes.begin(), navimake::types::Route::Transformer());
+
+    data.stop_times.resize(this->stops.size());
+    std::transform(this->stops.begin(), this->stops.end(), data.stop_times.begin(), navimake::types::StopTime::Transformer());
 }

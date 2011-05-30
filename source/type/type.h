@@ -333,8 +333,7 @@ struct StopPoint : public NavitiaHeader, Nameable{
 
 };
 
-struct StopTime {
-    int idx;
+struct StopTime: public NavitiaHeader{
     int arrival_time; ///< En secondes depuis minuit
     int departure_time; ///< En secondes depuis minuit
     int vehicle_journey_idx;
@@ -343,11 +342,13 @@ struct StopTime {
     bool ODT;
     int zone;
 
-    StopTime(): idx(0), arrival_time(0), departure_time(0), vehicle_journey_idx(0), stop_point_idx(0), order(0), 
+
+    StopTime(): arrival_time(0), departure_time(0), vehicle_journey_idx(0), stop_point_idx(0), order(0), 
         ODT(false), zone(0){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-            ar & arrival_time & departure_time & vehicle_journey_idx & stop_point_idx & order & ODT & zone & idx;
+            ar & arrival_time & departure_time & vehicle_journey_idx & stop_point_idx & order & ODT & zone 
+                & idx & id & external_code;
     }
 };
 
