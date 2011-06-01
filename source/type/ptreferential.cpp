@@ -10,6 +10,9 @@
 #include "reflexion.h"
 #include "proto/type.pb.h"
 
+#include <google/protobuf/descriptor.h>
+
+
 namespace qi = boost::spirit::qi;
 using namespace navitia::type;
 struct Column {
@@ -96,8 +99,44 @@ WhereWrapper<T> build_clause(std::vector<WhereClause> clauses) {
     return wh;
 }
 
+
+std::string unpluralize_table(const std::string& table_name){
+    if(table_name == "cities"){
+        return "city";
+    }else{
+        return table_name.substr(0, table_name.length() - 1);
+    }
+}
+
 template<class T>
-std::vector< std::vector<col_t> > extract_data( std::vector<T> & rows, const Request & r) {
+void set_value(google::protobuf::Message* message, const T& object, const std::string& column){
+    const google::protobuf::Reflection* reflection = message->GetReflection();
+    const google::protobuf::Descriptor* descriptor = message->GetDescriptor();
+    const google::protobuf::FieldDescriptor* field_descriptor = descriptor->FindFieldByName(column);
+
+    if(field_descriptor == NULL){
+        throw unknown_member();
+    }
+
+    if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_STRING){
+        reflection->SetString(message, field_descriptor, get_string_value(object, column));
+    }else if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
+        reflection->SetInt32(message, field_descriptor, get_int_value(object, column));
+    }else{
+        throw bad_type();
+    }
+}
+
+google::protobuf::Message* get_message(pbnavitia::PTreferential* row, const std::string& table){
+    const google::protobuf::Reflection* reflection = row->GetReflection();
+    const google::protobuf::Descriptor* descriptor = row->GetDescriptor();
+    std::string field = unpluralize_table(table);
+    const google::protobuf::FieldDescriptor* field_descriptor = descriptor->FindFieldByName(field);
+    return reflection->MutableMessage(row, field_descriptor);
+}
+
+template<class T>
+std::vector< std::vector<col_t> > extract_data(std::vector<T> & rows, const Request & r) {
     pbnavitia::PTRefResponse pb_response;
 
     std::vector< std::vector<col_t> > result;
@@ -105,16 +144,18 @@ std::vector< std::vector<col_t> > extract_data( std::vector<T> & rows, const Req
     BOOST_FOREACH(auto item, filtered){
         std::vector<col_t> row;
         pbnavitia::PTreferential * pb_row = pb_response.add_item();
+
+        google::protobuf::Message* pb_message = get_message(pb_row, r.tables.at(0));
+
+
         BOOST_FOREACH(const Column & col, r.columns){
-           row.push_back(get_value(*(boost::fusion::at_c<0>(item)), col.column));
-           if(col.column == "name"){
-               pb_row->mutable_stop_area()->set_name(boost::fusion::at_c<0>(item)->name);
-           }
+            row.push_back(get_value(*(boost::fusion::at_c<0>(item)), col.column));
+            set_value(pb_message, *(boost::fusion::at_c<0>(item)), col.column);
         }
         result.push_back(row);
     }
     std::cout << "J'ai généré un protocol buffer de taille " <<     pb_response.ByteSize() << std::endl;
-   // std::cout << pb_response.SerializeToOstream(&std::cout) << std::endl;
+    //std::cout << pb_response.SerializeToOstream(&std::cout) << std::endl;
     return result;
 }
 
@@ -181,7 +222,6 @@ int main(int argc, char** argv){
             << "    Nombre de StopPoints : " << d.stop_points.size() << std::endl
             << "    Nombre de lignes : " << d.lines.size() << std::endl
             << "    Nombre d'horaires : " << d.stop_times.size() << std::endl << std::endl;
-
 
 
     if(argc != 2)
