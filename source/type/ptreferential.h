@@ -93,6 +93,8 @@ google::protobuf::Message* get_message(pbnavitia::PTreferential* row, const std:
 /// Retourne une matrice 2D de chaînes de caractères
 pbnavitia::PTRefResponse query(std::string request, navitia::type::Data & data);
 
+std::string pb2txt(pbnavitia::PTRefResponse& response);
+
 template<class T>
 void set_value(google::protobuf::Message* message, const T& object, const std::string& column){
     const google::protobuf::Reflection* reflection = message->GetReflection();

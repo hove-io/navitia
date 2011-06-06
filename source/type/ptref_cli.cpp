@@ -24,6 +24,8 @@ int main(int argc, char** argv){
         std::cout << "Il faut exactement un paramètre" << std::endl;
     else {
         pbnavitia::PTRefResponse result = query(argv[1], d);
+        std::cout << "octets généré en protocol buffer: " << result.ByteSize() << std::endl;
+        std::cout << pb2txt(result);
         /*std::cout << "Il y a " << result.size() << " lignes de résultat" << std::endl;
         BOOST_FOREACH(auto row, result){
             BOOST_FOREACH(auto col, row){
@@ -31,7 +33,6 @@ int main(int argc, char** argv){
             }
             std::cout << std::endl;
         }*/
-        std::cout << result.ByteSize() << std::endl;
     }
     return 0;
 }
