@@ -15,7 +15,6 @@ class CsvReader {
         std::vector<std::string> next();
         void close();
     private:
-        EncodingConverter* converter;
 
 
         typedef boost::tokenizer<boost::escaped_list_separator<char> > Tokenizer;
@@ -24,6 +23,7 @@ class CsvReader {
         std::ifstream file;
         bool closed;
         boost::escaped_list_separator<char> functor;
+        EncodingConverter* converter;
 
 
 };
