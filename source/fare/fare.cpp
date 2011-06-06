@@ -1,5 +1,5 @@
 #include "fare.h"
-#include "utils/csv.h"
+#include "csv.h"
 
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
@@ -153,6 +153,6 @@ SectionKey::SectionKey(const std::string & key) {
     start_time = parse_time(string_vec[5]);
     dest_time = parse_time(string_vec[6]);
     start_zone = string_vec[7];
-    dest_zone = dest_vec[7];
+    dest_zone = string_vec[7];
 
 }
