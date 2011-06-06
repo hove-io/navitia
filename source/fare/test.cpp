@@ -62,6 +62,7 @@ BOOST_AUTO_TEST_CASE(parse_file){
 
 BOOST_AUTO_TEST_CASE(time_parse){
      BOOST_CHECK(parse_time("12|30") == 12*3600 + 30*60);
+     BOOST_CHECK(parse_time("01|03") == 1*3600 + 3*60);
 }
 
 BOOST_AUTO_TEST_CASE(transition_validation_test){

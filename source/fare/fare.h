@@ -4,6 +4,9 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/graph/adjacency_list.hpp>
 
+// Définit un billet : libellé et tarif
+typedef std::pair<std::string, float> ticket_t;
+
 /// Définit l'état courant
 struct State {
     /// Dernier ticket utilisé
@@ -67,18 +70,11 @@ struct Condition {
     std::string value;
 };
 
-BOOST_FUSION_ADAPT_STRUCT(
-    Condition,
-    (std::string, key)
-    (Comp_e, comparaison)
-    (std::string, value)
-)
 
 /// Représente un transition possible et l'achat éventuel d'un billet
 struct Transition {
     Condition cond;
-    std::string ticket;
-    float value;
+    ticket_t ticket;
 };
 
 /// Exception levée si on utilise une clef inconnue
@@ -101,20 +97,12 @@ Transition parse_transition(const std::string & transition);
 
 /// Structure représentant une étiquette
 struct Label {
-
+    float cost; //< Coût cummulé
+    boost::shared_ptr<Label> pred; //< pointeur vers le prédécesseur pour reconstituer le chemin
+    float duration;//< durée jusqu'à présent du trajet
+    int nb_changes;//< nombre de changement effectués
 };
 
-/// Contient l'ensemble du système tarifaire
-struct Fare {
-    /// Charge le fichier
-    Fare(const std::string & filename);
-
-    /// Contient le graph des transitions
-    typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, State, Transition > Graph;
-    typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
-    typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
-    Graph g;
-};
 
 /// Contient les données retournées par navitia
 struct SectionKey {
@@ -132,3 +120,31 @@ struct SectionKey {
 };
 
 int parse_time(const std::string & time_str);
+
+/// Contient l'ensemble du système tarifaire
+struct Fare {
+    /// Charge le fichier
+    Fare(const std::string & filename);
+
+    /// Contient le graph des transitions
+    typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, State, Transition > Graph;
+    typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
+    typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
+    Graph g;
+
+    /// Effectue la recherche du meilleur tarif
+    /// Retourne une liste de billets à acheter
+    std::vector<ticket_t> compute(const std::vector<std::string> & section_keys);
+
+};
+
+/// Retourne vrai s'il est possible d'emprunter un tel arc avec une telle section key
+bool valid_transition(const Transition & transition, boost::shared_ptr<Label> label);
+
+/// Wrapper pour pouvoir parser une condition en une seule fois avec boost::spirit::qi
+BOOST_FUSION_ADAPT_STRUCT(
+    Condition,
+    (std::string, key)
+    (Comp_e, comparaison)
+    (std::string, value)
+)

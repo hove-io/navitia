@@ -104,8 +104,7 @@ Fare::Fare(const std::string & filename){
 
          Transition transition;
          transition.cond = parse_condition(row[2]);
-         transition.ticket = row[3];
-         transition.value = boost::lexical_cast<double>(row[4]);;
+         transition.ticket = std::make_pair(row[3], boost::lexical_cast<float>(row[4]));
 
          vertex_t start_v, end_v;
          if(state_map.find(start) == state_map.end()){
@@ -129,8 +128,29 @@ Fare::Fare(const std::string & filename){
      }
 }
 
+
+ std::vector<ticket_t> Fare::compute(const std::vector<std::string> & section_keys){
+     std::vector< std::vector<ticket_t> > tickets(boost::num_vertices(g));
+
+     BOOST_FOREACH(const std::string & section_key, section_keys ){
+         std::vector< std::vector<ticket_t> > tickets(boost::num_vertices(g));
+         SectionKey sc(section_key);
+         BOOST_FOREACH(vertex_t v, boost::vertices(g)) {
+             BOOST_FOREACH(edge_t e, boost::out_edges(v, g)){
+                 BOOST_FOREACH(ticket_t ticket, tickets[v]){
+
+                 }
+             }
+         }
+     }
+
+     std::vector<ticket_t> result;
+     return result;
+ }
+
 int parse_time(const std::string & time_str){
-    qi::rule<std::string::const_iterator, int()> time_r =  qi::eps[qi::_val = 0] >> qi::int_[qi::_val += qi::_1 * 3600] >> '|' >> qi::int_[qi::_val += qi::_1 * 60];
+    // Règle permettant de parser une heure au format HH|MM
+    qi::rule<std::string::const_iterator, int()> time_r = (qi::int_ >> '|' >> qi::int_)[qi::_val = qi::_1 * 3600 + qi::_2 * 60];
     int time;
     std::string::const_iterator begin = time_str.begin();
     std::string::const_iterator end = time_str.end();
@@ -153,6 +173,36 @@ SectionKey::SectionKey(const std::string & key) {
     start_time = parse_time(string_vec[5]);
     dest_time = parse_time(string_vec[6]);
     start_zone = string_vec[7];
-    dest_zone = string_vec[7];
+    dest_zone = string_vec[8];
+}
 
+bool valid_transition(const Transition & transition, boost::shared_ptr<Label> label){
+    bool result = true;
+    if(transition.cond.key == "duration") {
+        float duration = boost::lexical_cast<float>(transition.cond.value);
+        if(transition.cond.comparaison == LT && label->duration >= duration)
+            result = false;
+        else if(transition.cond.comparaison == LTE && label->duration > duration)
+            result = false;
+        else if(transition.cond.comparaison == GT && label->duration <= duration)
+            result = false;
+        else if(transition.cond.comparaison == GTE && label->duration < duration)
+            result = false;
+        else if(transition.cond.comparaison == EQ && label->duration != duration)
+            result = false;
+    }
+    else if(transition.cond.key == "nb_changes") {
+        int nb_changes = boost::lexical_cast<int>(transition.cond.value);
+        if(transition.cond.comparaison == LT && label->nb_changes >= nb_changes)
+            result = false;
+        else if(transition.cond.comparaison == LTE && label->nb_changes > nb_changes)
+            result = false;
+        else if(transition.cond.comparaison == GT && label->nb_changes <= nb_changes)
+            result = false;
+        else if(transition.cond.comparaison == GTE && label->nb_changes < nb_changes)
+            result = false;
+        else if(transition.cond.comparaison == EQ && label->nb_changes != nb_changes)
+            result = false;
+    }
+    return result;
 }
