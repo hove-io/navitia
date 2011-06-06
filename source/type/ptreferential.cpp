@@ -8,7 +8,7 @@
 #include "indexes2.h"
 #include "where.h"
 #include "reflexion.h"
-#include "proto/type.pb.h"
+#include "type.pb.h"
 
 #include <google/protobuf/descriptor.h>
 
