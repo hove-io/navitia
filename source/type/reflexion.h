@@ -42,19 +42,3 @@ col_t get_value(T& object, const std::string & name){
         throw unknown_member();
 }
 
-
-template<class T>
-std::string get_string_value(T& object, const std::string & name){
-    if(name == "external_code") return get_external_code(object);
-    else if(name == "name") return get_name(object);
-    else
-        throw unknown_member();
-}
-
-template<class T>
-int get_int_value(T& object, const std::string & name){
-    if(name == "id") return get_id(object);
-    else if(name == "idx") return get_idx(object);
-    else
-        throw unknown_member();
-}

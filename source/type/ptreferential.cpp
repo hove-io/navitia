@@ -12,6 +12,8 @@
 
 #include <google/protobuf/descriptor.h>
 
+#include <fstream>
+
 
 namespace qi = boost::spirit::qi;
 using namespace navitia::type;
@@ -119,9 +121,9 @@ void set_value(google::protobuf::Message* message, const T& object, const std::s
     }
 
     if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_STRING){
-        reflection->SetString(message, field_descriptor, get_string_value(object, column));
+        reflection->SetString(message, field_descriptor, boost::get<std::string>(get_value(object, column)));
     }else if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
-        reflection->SetInt32(message, field_descriptor, get_int_value(object, column));
+        reflection->SetInt32(message, field_descriptor, boost::get<int>(get_value(object, column)));
     }else{
         throw bad_type();
     }
@@ -155,7 +157,8 @@ std::vector< std::vector<col_t> > extract_data(std::vector<T> & rows, const Requ
         result.push_back(row);
     }
     std::cout << "J'ai généré un protocol buffer de taille " <<     pb_response.ByteSize() << std::endl;
-    //std::cout << pb_response.SerializeToOstream(&std::cout) << std::endl;
+    /*std::ofstream file("response.pb");
+    pb_response.SerializeToOstream(&file);*/
     return result;
 }
 
@@ -184,27 +187,27 @@ std::vector< std::vector<col_t> > query(std::string request, Data & data){
 
     std::string table = r.tables[0];
 
-    /*if(table == "validity_pattern") {
+    if(table == "validity_pattern") {
         return extract_data(data.validity_patterns, r);
     }
-    else*/ if(table == "lines") {
+    else if(table == "lines") {
         return extract_data(data.lines, r);
     }
     else if(table == "routes") {
         return extract_data(data.routes, r);
     }
-    /*else if(table == "vehicle_journey") {
+    else if(table == "vehicle_journey") {
         return extract_data(data.vehicle_journeys, r);
-    }*/
+    }
     else if(table == "stop_points") {
         return extract_data(data.stop_points, r);
     }
     else if(table == "stop_areas") {
         return extract_data(data.stop_areas, r);
     }
-  /*  else if(table == "stop_times"){
+    else if(table == "stop_times"){
         return extract_data(data.stop_times, r);
-    }*/
+    }
     
     throw unknown_table();
 }
