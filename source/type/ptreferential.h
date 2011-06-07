@@ -23,7 +23,6 @@ using namespace navitia::type;
 
 namespace qi = boost::spirit::qi;
 
-struct unknown_table{};
 
 struct Column {
     std::string table;
@@ -86,6 +85,10 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 };
 
+namespace navitia{ namespace ptref{
+
+struct unknown_table{};
+
 std::string unpluralize_table(const std::string& table_name);
 google::protobuf::Message* get_message(pbnavitia::PTreferential* row, const std::string& table);
 
@@ -94,6 +97,7 @@ google::protobuf::Message* get_message(pbnavitia::PTreferential* row, const std:
 pbnavitia::PTRefResponse query(std::string request, navitia::type::Data & data);
 
 std::string pb2txt(pbnavitia::PTRefResponse& response);
+std::string pb2xml(pbnavitia::PTRefResponse& response);
 
 template<class T>
 void set_value(google::protobuf::Message* message, const T& object, const std::string& column){
@@ -160,4 +164,4 @@ pbnavitia::PTRefResponse extract_data(std::vector<T> & rows, const Request & r) 
 }
 
 
-
+}} //navitia::ptref

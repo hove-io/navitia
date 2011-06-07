@@ -1,7 +1,8 @@
 #pragma once
-
+#undef TRUE
 /** This file provides a way to build functors in a SQL-inspired approach */
-
+namespace navitia{
+    namespace ptref{
 /// What is the type of the current leaf
 enum Node_e {AND, OR, LEAF, NOT, TRUE};
 
@@ -116,3 +117,5 @@ template<class T>
 WhereWrapper< BaseWhere<T> > operator||(const WhereWrapper<BaseWhere<T> > & left, const WhereWrapper<BaseWhere<T> > & right){
     return WhereWrapper<T>(new BaseWhere<T>(left, right, OR));
 }
+
+}}// navitia::ptref

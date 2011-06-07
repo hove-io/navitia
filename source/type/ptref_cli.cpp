@@ -23,9 +23,9 @@ int main(int argc, char** argv){
     if(argc != 2)
         std::cout << "Il faut exactement un paramètre" << std::endl;
     else {
-        pbnavitia::PTRefResponse result = query(argv[1], d);
+        pbnavitia::PTRefResponse result = navitia::ptref::query(argv[1], d);
         std::cout << "octets généré en protocol buffer: " << result.ByteSize() << std::endl;
-        std::cout << pb2txt(result);
+        std::cout << navitia::ptref::pb2txt(result);
     }
     return 0;
 }

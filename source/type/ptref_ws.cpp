@@ -9,15 +9,34 @@ using namespace webservice;
 
 class Worker : public BaseWorker<navitia::type::Data> {
 
+    void decode(std::string& str){
+        size_t pos = -1;
+        int code = 0;
+        std::stringstream ss;
+        std::string number;
+        while((pos = str.find("%", pos+1)) != std::string::npos){
+            number = str.substr(pos+1, 2);
+            if(number.size() < 2){
+                continue;
+            }
+            ss << std::hex << number;
+            ss >> code;
+            ss.clear();
+            if(code < 32){
+                continue;
+            }
+            str.replace(pos, 3, 1, (char)code);
+        }
+
+    }
+
     ResponseData query(RequestData request, Data & d) {
         ResponseData rd;        
         std::string nql_request = request.params["arg"];
-        boost::algorithm::replace_all(nql_request, "%20", " ");
-        boost::algorithm::replace_all(nql_request, "%3C", "<");
-        rd.response << nql_request << "<br/>";
-        pbnavitia::PTRefResponse result = ::query(nql_request, d);
-        rd.response << pb2txt(result);
-        rd.content_type = "text/html";
+        decode(nql_request);
+        pbnavitia::PTRefResponse result = navitia::ptref::query(nql_request, d);
+        rd.response << navitia::ptref::pb2xml(result);
+        rd.content_type = "text/xml";
         rd.status_code = 200;
         return rd;
     }
