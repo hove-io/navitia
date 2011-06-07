@@ -18,4 +18,10 @@ PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS type.proto)
 add_executable (ptref ptreferential.h ptreferential.cpp type.h type.cpp data.h data.cpp indexes.h indexes2.h where.h reflexion.h ${CMAKE_SOURCE_DIR}/fastlz_filter/fastlz.c ${PROTO_SRCS} ${PROTO_HDRS} ptref_cli.cpp)
 target_link_libraries(ptref ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY})
 
+
+
+FIND_PACKAGE(WS_Commons)
+MAKE_WS(WS_ptref ${CMAKE_SOURCE_DIR}/WS_commons/threadpool.h ${CMAKE_SOURCE_DIR}/WS_commons/data_structures.h ${CMAKE_SOURCE_DIR}/WS_commons/fcgi.h ${CMAKE_SOURCE_DIR}/WS_commons/isapi.h ${CMAKE_SOURCE_DIR}/WS_commons/baseworker.h ptreferential.h ptreferential.cpp type.h type.cpp data.h data.cpp indexes.h indexes2.h where.h reflexion.h ${CMAKE_SOURCE_DIR}/fastlz_filter/fastlz.c ${PROTO_SRCS} ${PROTO_HDRS} ptref_ws.cpp LIBS ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY})
+
+
 add_subdirectory(tests)

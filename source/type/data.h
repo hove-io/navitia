@@ -7,6 +7,8 @@
 namespace navitia { namespace type {
 class Data{
 public:
+    int nb_threads; /// Nombre de threads. IMPORTANT ! Sans cette variable, ça ne compile pas
+    bool loaded;
     std::vector<ValidityPattern> validity_patterns;
     std::vector<Line> lines;
     std::vector<Route> routes;
@@ -23,6 +25,8 @@ public:
     std::vector<RoutePoint> route_points;
 
     public:
+
+    Data() : nb_threads(8), loaded(false){}
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
       *
       * Elle est appelée par boost et pas directement
