@@ -44,7 +44,7 @@ webservice::ResponseData Worker::handle(webservice::RequestData& request, Pool& 
     webservice::ResponseData rd;
     Context context;
     dispatcher(request, rd, pool, context);
-    rd.response << pb2xml((pbnavitia::PTRefResponse*)context.pb);
+    rd.response << pb2xml(context.pb);
     rd.content_type = "text/xml";
     rd.status_code = 200;
     return rd;
@@ -55,9 +55,10 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
     Navitia nav =  pool.next();
     std::cout << request.path << std::endl;
     std::string pb_response = nav.query(request.path + "?" + request.raw_params);
-    pbnavitia::PTRefResponse* resp = new pbnavitia::PTRefResponse();
+    std::unique_ptr<pbnavitia::PTRefResponse> resp(new pbnavitia::PTRefResponse());
     resp->ParseFromString(pb_response);
-    context.pb = resp;
+    context.pb = std::move(resp);
+    context.service = Context::PTREF;
 }
 
 

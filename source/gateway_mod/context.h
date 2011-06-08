@@ -1,8 +1,20 @@
 #pragma once
 #include <google/protobuf/message.h>
+#include <memory>
+
+
+
 
 struct Context {
-    google::protobuf::Message* pb;
+    enum Service{
+        UNKNOWN,
+        PTREF
+    };
 
-    Context() : pb(NULL){}
+    std::unique_ptr<google::protobuf::Message> pb;
+    Service service;
+
+
+
+    Context() : service(UNKNOWN){}
 };

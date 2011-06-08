@@ -4,11 +4,16 @@
 #include <boost/foreach.hpp>
 
 
-std::string pb2xml(pbnavitia::PTRefResponse* response){
+std::string pb2xml(std::unique_ptr<google::protobuf::Message>& response){
     std::stringstream buffer;
     buffer << "<list>";
-    for(int i=0; i < response->item_size(); i++){
-        pbnavitia::PTreferential* item = response->mutable_item(i);
+    const google::protobuf::Reflection* response_reflection = response->GetReflection();
+    const google::protobuf::Descriptor* response_descriptor = response->GetDescriptor();
+
+    const google::protobuf::FieldDescriptor* response_field_descriptor = response_descriptor->FindFieldByName("item");
+
+    for(int i=0; i < response_reflection->FieldSize(*response, response_field_descriptor); i++){
+        google::protobuf::Message* item = response_reflection->MutableRepeatedMessage(response.get(), response_field_descriptor, i);
 
         const google::protobuf::Reflection* item_reflection = item->GetReflection();
         std::vector<const google::protobuf::FieldDescriptor*> field_list;
