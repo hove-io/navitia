@@ -35,8 +35,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
         std::string nql_request = request.params["arg"];
         decode(nql_request);
         pbnavitia::PTRefResponse result = navitia::ptref::query(nql_request, d);
-        rd.response << navitia::ptref::pb2xml(result);
-        rd.content_type = "text/xml";
+        result.SerializeToOstream(&(rd.response));
+        rd.content_type = "text/protobuf";
         rd.status_code = 200;
         return rd;
     }

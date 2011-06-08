@@ -16,7 +16,6 @@
 #include "reflexion.h"
 #include "type.pb.h"
 
-#include <google/protobuf/descriptor.h>
 
 //TODO: change!
 using namespace navitia::type;
