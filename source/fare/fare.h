@@ -5,16 +5,10 @@
 #include <boost/graph/adjacency_list.hpp>
 
 // Définit un billet : libellé et tarif
-typedef std::pair<std::string, float> ticket_t;
+typedef std::pair<std::string, int> ticket_t;
 
 /// Définit l'état courant
 struct State {
-    /// Dernier ticket utilisé
-    std::string ticket;
-
-    /// Durée depuis le dernier ticket acheté (en secondes)
-    int duration;
-
     /// Dernier mode utilisé
     std::string mode;
 
@@ -24,33 +18,31 @@ struct State {
     /// Dernier endroit où à eu lieu l'achat
     std::string stop_area;
 
+    /// Dernière ligne utilisée
     std::string line;
-
-    /// Nombre de changements effectués
-    int changes;
 
     /// Réseau utilisé
     std::string network;
 
-    State() : duration(0), changes(0) {}
+    State() {}
 
     bool operator==(const State & other) const {
-        return ticket==other.ticket && duration==other.duration && mode == other.mode
-                && zone==other.zone && stop_area == other.stop_area && line == other.line
-                && changes == other.changes && network == other.network;
+        return this->concat() == other.concat();
     }
 
 
     bool operator<(const State & other) const {
-        return ticket<other.ticket && duration<other.duration && mode < other.mode
-                && zone<other.zone && stop_area<other.stop_area && line<other.line
-                && changes<other.changes && network<other.network;
+        return this->concat() < other.concat();
+    }
+
+    std::string concat() const {
+        return mode + zone + stop_area + line + network;
     }
 };
 
 
 /// Type de comparaison possible entre un arc et une valeur
-enum Comp_e { EQ, NEQ, LT, GT, LTE, GTE};
+enum Comp_e { EQ, NEQ, LT, GT, LTE, GTE, True, Exclusive};
 
 /// Définit un arc et les conditions pour l'emprunter
 /// Les conditions peuvent être : prendre u
@@ -68,6 +60,8 @@ struct Condition {
 
     /// Valeur à comparer
     std::string value;
+
+    Condition() : comparaison(True) {}
 };
 
 
@@ -75,6 +69,8 @@ struct Condition {
 struct Transition {
     Condition cond;
     ticket_t ticket;
+
+    Transition() : ticket("", 0) {}
 };
 
 /// Exception levée si on utilise une clef inconnue
@@ -96,11 +92,17 @@ std::vector<Condition> parse_conditions(const std::string & conditions);
 Transition parse_transition(const std::string & transition);
 
 /// Structure représentant une étiquette
+struct Label;
+typedef boost::shared_ptr<Label> Label_ptr;
 struct Label {
-    float cost; //< Coût cummulé
-    boost::shared_ptr<Label> pred; //< pointeur vers le prédécesseur pour reconstituer le chemin
-    float duration;//< durée jusqu'à présent du trajet
+    int cost; //< Coût cummulé
+    Label_ptr pred; //< pointeur vers le prédécesseur pour reconstituer le chemin
+    int duration;//< durée jusqu'à présent du trajet
     int nb_changes;//< nombre de changement effectués
+
+    std::vector<ticket_t> tickets; //< Ensemble de billets à acheter pour arriver à cette étiquette
+    ///Constructeur par défaut
+    Label() : cost(0), duration(0), nb_changes(0) {}
 };
 
 
@@ -110,13 +112,14 @@ struct SectionKey {
     std::string start_stop_area;
     std::string dest_stop_area;
     std::string line;
-    float start_time;
-    float dest_time;
+    int start_time;
+    int dest_time;
     std::string start_zone;
     std::string dest_zone;
+    std::string mode;
 
     SectionKey(const std::string & key);
-    float duration() const;
+    int duration() const;
 };
 
 int parse_time(const std::string & time_str);
@@ -138,8 +141,12 @@ struct Fare {
 
 };
 
-/// Retourne vrai s'il est possible d'emprunter un tel arc avec une telle section key
-bool valid_transition(const Transition & transition, boost::shared_ptr<Label> label);
+/// Retourne vrai s'il est possible d'emprunter un tel arc avec une telle étiquette
+bool valid_transition(const Transition & transition, Label_ptr label);
+
+/// Retourne vrai s'il est possible d'atteindre l'état par la section key
+bool valid_dest(const State & state, SectionKey section_key);
+bool valid_start(const State & state, SectionKey section_key);
 
 /// Wrapper pour pouvoir parser une condition en une seule fois avec boost::spirit::qi
 BOOST_FUSION_ADAPT_STRUCT(
