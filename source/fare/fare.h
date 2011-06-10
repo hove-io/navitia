@@ -3,9 +3,27 @@
 #include "utils/csv.h"
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/date_time/gregorian/gregorian.hpp>
 
-// Définit un billet : libellé et tarif
+/// Définit un billet : libellé et tarif
 typedef std::pair<std::string, int> ticket_t;
+
+/// Définit un billet pour une période données
+typedef std::pair<boost::gregorian::date_period, ticket_t> date_ticket_t;
+
+/// Contient un ensemble de tarif pour toutes les dates de validités
+struct DateTicket {
+    std::vector<date_ticket_t> tickets;
+
+    /// Retourne le tarif à une date données
+    ticket_t get_fare(boost::gregorian::date date);
+
+    /// Ajoute une nouvelle période
+    void add(std::string begin_date, std::string end_date, ticket_t ticket);
+};
+
+struct no_ticket{};
+
 
 /// Définit l'état courant
 struct State {
@@ -67,10 +85,8 @@ struct Condition {
 
 /// Représente un transition possible et l'achat éventuel d'un billet
 struct Transition {
-    Condition cond;
-    ticket_t ticket;
-
-    Transition() : ticket("", 0) {}
+    Condition cond; //< condition pour emprunter l'arc
+    std::string ticket_key; //< clef vers le tarif correspondant
 };
 
 /// Exception levée si on utilise une clef inconnue
@@ -117,17 +133,25 @@ struct SectionKey {
     std::string start_zone;
     std::string dest_zone;
     std::string mode;
+    boost::gregorian::date date;
 
     SectionKey(const std::string & key);
     int duration() const;
 };
 
 int parse_time(const std::string & time_str);
+boost::gregorian::date parse_nav_date(const std::string & date_str);
 
 /// Contient l'ensemble du système tarifaire
 struct Fare {
+    /// Map qui associe les clefs de tarifs aux tarifs
+    std::map<std::string, DateTicket> fare_map;
+
     /// Charge le fichier
-    Fare(const std::string & filename);
+    Fare(const std::string & filename, const std::string & prices_filename);
+
+    /// Charge les tarifs
+    void load_fares(const std::string & filename);
 
     /// Contient le graph des transitions
     typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, State, Transition > Graph;

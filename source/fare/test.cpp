@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(test_computation) {
 
     // Un trajet simple
     keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;02|06;02|10;1;1;metro");
-    Fare f("/home/tristram/idf.fares");
+    Fare f("/home/tristram/idf.fares", "/home/tristram/prix.csv");
     std::vector<ticket_t> res = f.compute(keys);
     BOOST_CHECK(res.size() == 1);
     BOOST_CHECK(res[0].second == 170);
@@ -91,7 +91,6 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;03|30;04|20;1;1;bus");
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 2);
-
     // On a dépassé les 90 minutes de validité du ticket t+, il faut en racheter un
     keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|30;04|40;1;1;bus");
     res = f.compute(keys);
@@ -133,6 +132,12 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("ratp;paris;FILNav31;FILGATO-2;2011|06|01;04|40;04|50;1;1;tram");
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 2);
+
+    // On teste le tarif à une autre date
+    keys.clear();
+    keys.push_back("ratp;mantes;FILNav31;FILGATO-2;2010|12|01;04|40;04|50;4;1;metro");
+    res = f.compute(keys);
+    BOOST_CHECK(res[0].second=160);
 }
 
 
