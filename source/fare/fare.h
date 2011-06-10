@@ -48,7 +48,6 @@ struct State {
         return this->concat() == other.concat();
     }
 
-
     bool operator<(const State & other) const {
         return this->concat() < other.concat();
     }
@@ -108,11 +107,8 @@ std::vector<Condition> parse_conditions(const std::string & conditions);
 Transition parse_transition(const std::string & transition);
 
 /// Structure représentant une étiquette
-struct Label;
-typedef boost::shared_ptr<Label> Label_ptr;
 struct Label {
     int cost; //< Coût cummulé
-    Label_ptr pred; //< pointeur vers le prédécesseur pour reconstituer le chemin
     int duration;//< durée jusqu'à présent du trajet
     int nb_changes;//< nombre de changement effectués
 
@@ -162,11 +158,10 @@ struct Fare {
     /// Effectue la recherche du meilleur tarif
     /// Retourne une liste de billets à acheter
     std::vector<ticket_t> compute(const std::vector<std::string> & section_keys);
-
 };
 
 /// Retourne vrai s'il est possible d'emprunter un tel arc avec une telle étiquette
-bool valid_transition(const Transition & transition, Label_ptr label);
+bool valid_transition(const Transition & transition, Label label);
 
 /// Retourne vrai s'il est possible d'atteindre l'état par la section key
 bool valid_dest(const State & state, SectionKey section_key);

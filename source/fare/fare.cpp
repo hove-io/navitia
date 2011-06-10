@@ -10,7 +10,6 @@
 #include <boost/lexical_cast.hpp>
 
 namespace greg = boost::gregorian;
-
 namespace qi = boost::spirit::qi;
 namespace ph = boost::phoenix;
 
@@ -21,7 +20,6 @@ std::vector<Condition> parse_conditions(const std::string & conditions){
     BOOST_FOREACH(const std::string & cond_str, string_vec){
         ret.push_back(parse_condition(cond_str));
     }
-
     return ret;
 }
 
@@ -66,11 +64,11 @@ Condition parse_condition(const std::string & condition_str) {
 
     if(str.empty())
         return cond;
+
     if(str == "exclusive"){
         cond.comparaison = Exclusive;
         return cond;
     }
-
 
     // Match du texte
     qi::rule<std::string::iterator, std::string()> txt =  qi::lexeme[+(qi::alnum|'_')];
@@ -90,8 +88,7 @@ Condition parse_condition(const std::string & condition_str) {
     std::string::iterator end = str.end();
 
     // Si on n'arrive pas à tout parser
-    if(!qi::phrase_parse(begin, end, condition_r, boost::spirit::ascii::space, cond) || begin != end)
-    {
+    if(!qi::phrase_parse(begin, end, condition_r, boost::spirit::ascii::space, cond) || begin != end) {
         throw invalid_condition();
     }
     return cond;
@@ -120,29 +117,40 @@ Fare::Fare(const std::string & filename, const std::string & prices_filename){
              start_v = boost::add_vertex(start, g);
              state_map[start] = start_v;
          }
-         else
-             start_v = state_map[start];
+         else start_v = state_map[start];
 
          if(state_map.find(end) == state_map.end()) {
              end_v = boost::add_vertex(end, g);
              state_map[end] = end_v;
          }
-         else
-             end_v = state_map[end];
+         else end_v = state_map[end];
 
          boost::add_edge(start_v, end_v, transition, g);
      }
      load_fares(prices_filename);
 }
 
+Label next_label(Label label, ticket_t ticket, int duration){
+    label.cost += ticket.second;
+    label.nb_changes++;
+    label.duration += duration;
+    // On ne note de nouveau billet que s'il vaut quelque chose ou qu'il a un intitulé
+    // Et on remet à 0 la durée et le nombre de changements
+    if(ticket.first != "" && ticket.second > 0){
+        label.tickets.push_back(ticket);
+        label.nb_changes = 0;
+        label.duration = duration;
+    }
+    return label;
+}
 
  std::vector<ticket_t> Fare::compute(const std::vector<std::string> & section_keys){
      int nb_nodes = boost::num_vertices(g);
-     std::vector< std::vector<Label_ptr> > labels(nb_nodes);
+     std::vector< std::vector<Label> > labels(nb_nodes);
      // Étiquette de départ
-     labels[0].push_back(Label_ptr(new Label()));
+     labels[0].push_back(Label());
      BOOST_FOREACH(const std::string & section_key, section_keys ){
-         std::vector< std::vector<Label_ptr> > new_labels(nb_nodes);
+         std::vector< std::vector<Label> > new_labels(nb_nodes);
          SectionKey section(section_key);
          try {
              BOOST_FOREACH(edge_t e, boost::edges(g)){
@@ -156,22 +164,10 @@ Fare::Fare(const std::string & filename, const std::string & prices_filename){
                      // Ah! c'est un segment exclusif, on est obligé de prendre ce billet et rien d'autre
                      if(transition.cond.comparaison == Exclusive)
                          throw ticket;
-                     BOOST_FOREACH(Label_ptr label, labels[u]){
+                     BOOST_FOREACH(Label label, labels[u]){
                          if (valid_transition(transition, label)){
-                             Label_ptr new_label(new Label(*label));
-                             new_label->cost += ticket.second;
-                             new_label->nb_changes++;
-                             new_label->duration += section.duration();
-                             // On ne note de nouveau billet que s'il vaut quelque chose ou qu'il a un intitulé
-                             // Et on remet à 0 la durée et le nombre de changements
-                             if( (transition.ticket_key != "") ){
-                                 new_label->tickets.push_back(ticket);
-                                 new_label->nb_changes = 0;
-                                 new_label->duration = section.duration();
-                             }
-                             new_label->pred = label;
-                             new_labels[v].push_back(new_label);
-                             new_labels[0].push_back(new_label);// On peut toujours partir du cas "aucun billet"
+                             new_labels[v].push_back(next_label(label, ticket, section.duration()));
+                             new_labels[0].push_back(next_label(label, ticket, section.duration()));// On peut toujours partir du cas "aucun billet"
                          }
                      }
                  }
@@ -181,19 +177,10 @@ Fare::Fare(const std::string & filename, const std::string & prices_filename){
          catch(ticket_t ticket) {
              new_labels.clear();
              new_labels.resize(nb_nodes);
-             BOOST_FOREACH(Label_ptr label, labels[0]){
-                 Label_ptr new_label(new Label(*label));
-                 new_label->cost += ticket.second;
-
-                 new_label->tickets.push_back(ticket);
-                 new_label->nb_changes = 0;
-                 new_label->duration = section.duration();
-
-                 new_label->pred = label;
-                 new_labels[0].push_back(new_label);
+             BOOST_FOREACH(Label label, labels[0]){
+                 new_labels[0].push_back(next_label(label, ticket, section.duration()));
              }
          }
-
          labels = new_labels;
      }
 
@@ -204,11 +191,11 @@ Fare::Fare(const std::string & filename, const std::string & prices_filename){
      int best_changes = std::numeric_limits<int>::max();
      int best_cost = std::numeric_limits<int>::max();
      BOOST_FOREACH(vertex_t u, boost::vertices(g)){
-         BOOST_FOREACH(Label_ptr label, labels[u]){
-             if(label->cost < best_cost || (label->cost == best_cost && label->nb_changes < best_changes)){
-                 result = label->tickets;
-                 best_cost = label->cost;
-                 best_changes = label->nb_changes;
+         BOOST_FOREACH(Label label, labels[u]){
+             if(label.cost < best_cost || (label.cost == best_cost && label.nb_changes < best_changes)){
+                 result = label.tickets;
+                 best_cost = label.cost;
+                 best_changes = label.nb_changes;
              }
          }
      }
@@ -282,18 +269,18 @@ template<class T> bool compare(T a, T b, Comp_e comp){
     }
 }
 
-bool valid_transition(const Transition & transition, Label_ptr label){
+bool valid_transition(const Transition & transition, Label label){
     if(transition.cond.comparaison == True)
         return true;
     bool result = true;
     if(transition.cond.key == "duration") {
         // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
         int duration = boost::lexical_cast<int>(transition.cond.value) * 60;
-        result = compare(label->duration, duration, transition.cond.comparaison);
+        result = compare(label.duration, duration, transition.cond.comparaison);
     }
     else if(transition.cond.key == "nb_changes") {
         int nb_changes = boost::lexical_cast<int>(transition.cond.value);
-        result = compare(label->nb_changes, nb_changes, transition.cond.comparaison);
+        result = compare(label.nb_changes, nb_changes, transition.cond.comparaison);
     }
     return result;
 }
