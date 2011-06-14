@@ -72,6 +72,7 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
 
 
 Navitia& Pool::next(){
+    //attention au thread!!!
     if(it == navitia_list.end()){
         it = navitia_list.begin();
     }
