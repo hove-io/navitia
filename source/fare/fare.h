@@ -59,7 +59,7 @@ struct State {
 
 
 /// Type de comparaison possible entre un arc et une valeur
-enum Comp_e { EQ, NEQ, LT, GT, LTE, GTE, True, Exclusive};
+enum Comp_e { EQ, NEQ, LT, GT, LTE, GTE, True};
 
 /// Définit un arc et les conditions pour l'emprunter
 /// Les conditions peuvent être : prendre u
@@ -82,41 +82,22 @@ struct Condition {
 };
 
 
-/// Représente un transition possible et l'achat éventuel d'un billet
-struct Transition {
-    Condition cond; //< condition pour emprunter l'arc
-    std::string ticket_key; //< clef vers le tarif correspondant
-};
-
-/// Exception levée si on utilise une clef inconnue
-struct invalid_key : std::exception{};
-
-/// Parse un état
-State parse_state(const std::string & state);
-
-/// Parse une condition de passage
-Condition parse_condition(const std::string & condition);
-
-/// Exception levée si on n'arrive pas à parser une condition
-struct invalid_condition : std::exception {};
-
-/// Parse une liste de conditions séparés par des &
-std::vector<Condition> parse_conditions(const std::string & conditions);
-
-/// Parse une ligne complète
-Transition parse_transition(const std::string & transition);
-
 /// Structure représentant une étiquette
 struct Label {
     int cost; //< Coût cummulé
-    int duration;//< durée jusqu'à présent du trajet
-    int nb_changes;//< nombre de changement effectués
+    int duration;//< durée jusqu'à présent du trajet depuis le dernier ticket
+    int nb_changes;//< nombre de changement effectués depuis le dernier ticket
+    std::string stop_area; //< stop_area d'achat du billet
+    std::string dest_stop_area; //< on est obligé de descendre à ce stop_area
+    std::string zone;
+    std::string mode;
+    std::string line;
+    std::string network;
 
     std::vector<ticket_t> tickets; //< Ensemble de billets à acheter pour arriver à cette étiquette
     ///Constructeur par défaut
     Label() : cost(0), duration(0), nb_changes(0) {}
 };
-
 
 /// Contient les données retournées par navitia
 struct SectionKey {
@@ -134,6 +115,34 @@ struct SectionKey {
     SectionKey(const std::string & key);
     int duration() const;
 };
+
+/// Représente un transition possible et l'achat éventuel d'un billet
+struct Transition {
+    std::vector<Condition> start_conditions; //< condition pour emprunter l'arc
+    std::vector<Condition> end_conditions; //< condition à la sortie de l'arc
+    std::string ticket_key; //< clef vers le tarif correspondant
+    std::string global_condition; //< condition telle que exclusivité ou OD
+
+    bool valid(const SectionKey & section, const Label & label) const;
+    bool is_exclusive() const;
+    std::string dest_stop_area() const;
+};
+
+/// Exception levée si on utilise une clef inconnue
+struct invalid_key : std::exception{};
+
+/// Parse un état
+State parse_state(const std::string & state);
+
+/// Parse une condition de passage
+Condition parse_condition(const std::string & condition);
+
+/// Exception levée si on n'arrive pas à parser une condition
+struct invalid_condition : std::exception {};
+
+/// Parse une liste de conditions séparés par des &
+std::vector<Condition> parse_conditions(const std::string & conditions);
+
 
 int parse_time(const std::string & time_str);
 boost::gregorian::date parse_nav_date(const std::string & date_str);
@@ -165,7 +174,7 @@ bool valid_transition(const Transition & transition, Label label);
 
 /// Retourne vrai s'il est possible d'atteindre l'état par la section key
 bool valid_dest(const State & state, SectionKey section_key);
-bool valid_start(const State & state, SectionKey section_key);
+bool valid_start(const State & state, const Label & label);
 
 /// Wrapper pour pouvoir parser une condition en une seule fois avec boost::spirit::qi
 BOOST_FUSION_ADAPT_STRUCT(

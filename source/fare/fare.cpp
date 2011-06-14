@@ -64,12 +64,16 @@ Condition parse_condition(const std::string & condition_str) {
 
     if(str.empty())
         return cond;
-
+/*
     if(str == "exclusive"){
         cond.comparaison = Exclusive;
         return cond;
     }
-
+    else if(str == "with_changes"){
+        cond.comparaison = WithChanges;
+        return cond;
+    }
+*/
     // Match du texte
     qi::rule<std::string::iterator, std::string()> txt =  qi::lexeme[+(qi::alnum|'_')];
 
@@ -103,14 +107,17 @@ Fare::Fare(const std::string & filename, const std::string & prices_filename){
      State begin; // Le début est un nœud vide
      vertex_t begin_v = boost::add_vertex(begin, g);
      state_map[begin] = begin_v;
+     reader.next(); //en-tête
 
      for(row=reader.next(); row != reader.end(); row = reader.next()) {
          State start = parse_state(row[0]);
          State end = parse_state(row[1]);
 
          Transition transition;
-         transition.cond = parse_condition(row[2]);
-         transition.ticket_key = boost::algorithm::trim_copy(row[3]);
+         transition.start_conditions = parse_conditions(row[2]);
+         transition.end_conditions = parse_conditions(row[3]);
+         transition.global_condition = boost::algorithm::trim_copy(row[4]);
+         transition.ticket_key = boost::algorithm::trim_copy(row[5]);
 
          vertex_t start_v, end_v;
          if(state_map.find(start) == state_map.end()){
@@ -130,16 +137,21 @@ Fare::Fare(const std::string & filename, const std::string & prices_filename){
      load_fares(prices_filename);
 }
 
-Label next_label(Label label, ticket_t ticket, int duration){
+Label next_label(Label label, ticket_t ticket, const SectionKey & section, const std::string & dest_stop_area){
     label.cost += ticket.second;
     label.nb_changes++;
-    label.duration += duration;
+    label.duration += section.duration();
+    label.line = section.line;
+    label.mode = section.mode;
+    label.network = section.network;
     // On ne note de nouveau billet que s'il vaut quelque chose ou qu'il a un intitulé
     // Et on remet à 0 la durée et le nombre de changements
     if(ticket.first != "" && ticket.second > 0){
         label.tickets.push_back(ticket);
         label.nb_changes = 0;
-        label.duration = duration;
+        label.duration = section.duration();
+        label.stop_area = section.start_stop_area;
+        label.dest_stop_area = dest_stop_area;
     }
     return label;
 }
@@ -160,15 +172,23 @@ Label next_label(Label label, ticket_t ticket, int duration){
                      ticket = fare_map[transition.ticket_key].get_fare(section.date);
                  vertex_t u = boost::source(e,g);
                  vertex_t v = boost::target(e,g);
-                 if(valid_start(g[u], section) && valid_dest(g[v], section)){
-                     // Ah! c'est un segment exclusif, on est obligé de prendre ce billet et rien d'autre
-                     if(transition.cond.comparaison == Exclusive)
-                         throw ticket;
+                 if(valid_dest(g[v], section)){
                      BOOST_FOREACH(Label label, labels[u]){
-                         if (valid_transition(transition, label)){
-                             new_labels[v].push_back(next_label(label, ticket, section.duration()));
-                             new_labels[0].push_back(next_label(label, ticket, section.duration()));// On peut toujours partir du cas "aucun billet"
-                         }
+                         if (valid_start(g[u], label) &&  transition.valid(section_key, label)){
+                             if(transition.is_exclusive()) throw ticket;
+
+
+                             if(label.dest_stop_area == ""){
+                                 new_labels[0].push_back(next_label(label, ticket, section, ""));// On peut toujours partir du cas "aucun billet"
+                                 new_labels[v].push_back(next_label(label, ticket, section, ""));
+                             } else if(label.dest_stop_area == section.dest_stop_area){
+                                 new_labels[0].push_back(next_label(label, ticket_t(), section, label.dest_stop_area));
+                                 new_labels[v].push_back(next_label(label, ticket_t(), section, label.dest_stop_area));
+                             } else
+                             //    new_labels[v].push_back(next_label(label, ticket_t(), section, transition.dest_stop_area()));
+                                     new_labels[v].push_back(next_label(label, ticket_t(), section, label.dest_stop_area));
+
+                        }
                      }
                  }
              }
@@ -178,7 +198,7 @@ Label next_label(Label label, ticket_t ticket, int duration){
              new_labels.clear();
              new_labels.resize(nb_nodes);
              BOOST_FOREACH(Label label, labels[0]){
-                 new_labels[0].push_back(next_label(label, ticket, section.duration()));
+                 new_labels[0].push_back(next_label(label, ticket, section, ""));
              }
          }
          labels = new_labels;
@@ -190,13 +210,11 @@ Label next_label(Label label, ticket_t ticket, int duration){
      // Si on a deux fois le même coût, on prend celui qui nécessite le moind de billets
      int best_changes = std::numeric_limits<int>::max();
      int best_cost = std::numeric_limits<int>::max();
-     BOOST_FOREACH(vertex_t u, boost::vertices(g)){
-         BOOST_FOREACH(Label label, labels[u]){
-             if(label.cost < best_cost || (label.cost == best_cost && label.nb_changes < best_changes)){
-                 result = label.tickets;
-                 best_cost = label.cost;
-                 best_changes = label.nb_changes;
-             }
+     BOOST_FOREACH(Label label, labels[0]){
+         if(label.cost < best_cost || (label.cost == best_cost && label.nb_changes < best_changes)){
+             result = label.tickets;
+             best_cost = label.cost;
+             best_changes = label.nb_changes;
          }
      }
 
@@ -269,36 +287,20 @@ template<class T> bool compare(T a, T b, Comp_e comp){
     }
 }
 
-bool valid_transition(const Transition & transition, Label label){
-    if(transition.cond.comparaison == True)
-        return true;
-    bool result = true;
-    if(transition.cond.key == "duration") {
-        // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
-        int duration = boost::lexical_cast<int>(transition.cond.value) * 60;
-        result = compare(label.duration, duration, transition.cond.comparaison);
-    }
-    else if(transition.cond.key == "nb_changes") {
-        int nb_changes = boost::lexical_cast<int>(transition.cond.value);
-        result = compare(label.nb_changes, nb_changes, transition.cond.comparaison);
-    }
-    return result;
-}
 
 bool valid_dest(const State & state, SectionKey section_key){
     if((state.mode != "" && state.mode != section_key.mode) ||
        (state.network != "" && state.network != section_key.network) ||
-       (state.line != "" && state.line != section_key.line) ||
-       (state.zone != "" && state.zone != section_key.dest_zone) ||
-       (state.stop_area != "" && state.stop_area != section_key.dest_stop_area))
+       (state.line != "" && state.line != section_key.line) )
         return false;
     return true;
 }
 
 
-bool valid_start(const State & state, SectionKey section_key){
-    if((state.zone != "" && state.zone != section_key.start_zone) ||
-       (state.stop_area != "" && state.stop_area != section_key.start_stop_area))
+bool valid_start(const State & state, const Label & label){
+    if((state.mode != "" && state.mode != label.mode) ||
+       (state.network != "" && state.network != label.network) ||
+       (state.line != "" && state.line != label.line) )
         return false;
     return true;
 }
@@ -316,4 +318,55 @@ ticket_t DateTicket::get_fare(boost::gregorian::date date){
             return dticket.second;
     }
     throw no_ticket();
+}
+
+bool Transition::valid(const SectionKey & section, const Label & label) const
+{
+    bool result = true;
+    BOOST_FOREACH(Condition cond, this->start_conditions)
+    {
+        if(cond.key == "zone" && cond.value != section.start_zone&& global_condition != "with_changes")
+            result = false;
+        else if(cond.key == "stop_area" && cond.value != section.start_stop_area
+                && !(global_condition == "with_changes" && label.stop_area == cond.value) )
+            result = false;
+        else if(cond.key == "duration") {
+            // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
+            int duration = boost::lexical_cast<int>(cond.value) * 60;
+            result = compare(label.duration, duration, cond.comparaison);
+        }
+        else if(cond.key == "nb_changes") {
+            int nb_changes = boost::lexical_cast<int>(cond.value);
+            result = compare(label.nb_changes, nb_changes, cond.comparaison);
+        }
+    }
+    BOOST_FOREACH(Condition cond, this->end_conditions)
+    {
+        if(cond.key == "zone" && cond.value != section.dest_zone&& global_condition != "with_changes")
+            result = false;
+        else if(cond.key == "stop_area" && cond.value != section.dest_stop_area && global_condition != "with_changes")
+            result = false;
+        else if(cond.key == "duration") {
+            // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
+            int duration = boost::lexical_cast<int>(cond.value) * 60 + section.duration();
+            result = compare(label.duration, duration, cond.comparaison);
+        }
+    }
+    return result;
+}
+
+bool Transition::is_exclusive() const {
+  /*  BOOST_FOREACH(Condition cond, this->start_conditions)
+            if(cond.comparaison == Exclusive) return true;
+    BOOST_FOREACH(Condition cond, this->end_conditions)
+            if(cond.comparaison == Exclusive) return true;
+    return false;*/
+    return global_condition == "exclusive";
+}
+
+std::string Transition::dest_stop_area() const {
+    BOOST_FOREACH(Condition cond, end_conditions)
+            if(cond.key == "stop_area")
+            return cond.value;
+    return "";
 }
