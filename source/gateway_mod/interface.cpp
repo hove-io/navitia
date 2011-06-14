@@ -43,3 +43,19 @@ std::string pb2xml(std::unique_ptr<google::protobuf::Message>& response){
     buffer << "</list>";
     return buffer.str();
 }
+
+void render(webservice::RequestData& request, webservice::ResponseData& response, Context& context){
+    switch(context.service){
+        case Context::PTREF:
+            response.response << pb2xml(context.pb);
+            response.content_type = "text/xml";
+            response.status_code = 200;
+            break;
+        case Context::BAD_RESPONSE:
+            response.response << context.str;
+            break;
+        default:
+            response.response << "<error/>";
+            response.content_type = "text/xml";
+    }
+}

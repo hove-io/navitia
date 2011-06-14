@@ -9,7 +9,7 @@ class Navitia {
         std::string url;
 
         Navitia(const std::string& url) : url(url){}
-        std::string query(const std::string& request);
+        std::pair<int, std::string> query(const std::string& request);
 
 };
 

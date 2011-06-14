@@ -34,15 +34,21 @@ class Worker : public BaseWorker<navitia::type::Data> {
         ResponseData rd;        
         std::string nql_request = request.params["arg"];
         decode(nql_request);
-        pbnavitia::PTRefResponse result = navitia::ptref::query(nql_request, d);
-        result.SerializeToOstream(&(rd.response));
-        rd.content_type = "text/protobuf";
-        rd.status_code = 200;
+        pbnavitia::PTRefResponse result;
+        try{
+            result = navitia::ptref::query(nql_request, d);
+            result.SerializeToOstream(&(rd.response));
+            rd.content_type = "text/protobuf";
+            rd.status_code = 200;
+        }catch(...){
+            rd.status_code = 500;
+        }
         return rd;
     }
 
     
     ResponseData load(RequestData, navitia::type::Data & d) {
+        //attention c'est mal, pas de lock sur data
         ResponseData rd;
         d.load_flz("data.nav.flz");
         d.loaded = true;

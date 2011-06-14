@@ -8,11 +8,13 @@
 struct Context {
     enum Service{
         UNKNOWN,
+        BAD_RESPONSE,
         PTREF
     };
 
     std::unique_ptr<google::protobuf::Message> pb;
     Service service;
+    std::string str;
 
 
 

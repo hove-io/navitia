@@ -10,7 +10,7 @@
 #include <google/protobuf/descriptor.h>
 #include "interface.h"
 
-std::string Navitia::query(const std::string& request){
+std::pair<int, std::string> Navitia::query(const std::string& request){
     std::stringstream ss;
     std::stringstream response;
     curlpp::Easy curl_request;
@@ -23,7 +23,7 @@ std::string Navitia::query(const std::string& request){
         long response_code = curlpp::infos::ResponseCode::get(curl_request);
         if(response_code >= 200 && response_code < 300){
             //tous va bien, on renvoie le flux
-            return ss.str();
+            return std::make_pair(response_code, ss.str());
         }else{
             throw response_code;
         }
@@ -44,9 +44,7 @@ webservice::ResponseData Worker::handle(webservice::RequestData& request, Pool& 
     webservice::ResponseData rd;
     Context context;
     dispatcher(request, rd, pool, context);
-    rd.response << pb2xml(context.pb);
-    rd.content_type = "text/xml";
-    rd.status_code = 200;
+    render(request, rd, context);
     return rd;
 }
 
@@ -54,11 +52,22 @@ webservice::ResponseData Worker::handle(webservice::RequestData& request, Pool& 
 void Dispatcher::operator()(webservice::RequestData& request, webservice::ResponseData& response, Pool& pool, Context& context){
     Navitia nav =  pool.next();
     std::cout << request.path << std::endl;
-    std::string pb_response = nav.query(request.path + "?" + request.raw_params);
+    std::pair<int, std::string> res;
+    try{
+        res = nav.query(request.path + "?" + request.raw_params);
+    }catch(long& code){
+        response.status_code = code;
+        return;
+    }
     std::unique_ptr<pbnavitia::PTRefResponse> resp(new pbnavitia::PTRefResponse());
-    resp->ParseFromString(pb_response);
-    context.pb = std::move(resp);
-    context.service = Context::PTREF;
+    if(resp->ParseFromString(res.second)){
+        context.pb = std::move(resp);
+        context.service = Context::PTREF;
+    }else{
+        context.str = res.second;
+        context.service = Context::BAD_RESPONSE;
+        response.status_code = res.first;
+    }
 }
 
 
