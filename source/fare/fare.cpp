@@ -110,13 +110,24 @@ Fare::Fare(const std::string & filename, const std::string & prices_filename){
      reader.next(); //en-tête
 
      for(row=reader.next(); row != reader.end(); row = reader.next()) {
+         bool symetric = false;
+
          State start = parse_state(row[0]);
          State end = parse_state(row[1]);
 
          Transition transition;
          transition.start_conditions = parse_conditions(row[2]);
          transition.end_conditions = parse_conditions(row[3]);
-         transition.global_condition = boost::algorithm::trim_copy(row[4]);
+         std::vector<std::string> global_conditions;
+         std::string str_condition = boost::algorithm::trim_copy(row[4]);
+         boost::algorithm::split(global_conditions, str_condition, boost::algorithm::is_any_of("&"));
+         BOOST_FOREACH(std::string cond, global_conditions){
+            if(cond == "symetric"){
+                symetric = true;
+            }else{
+                transition.global_condition = cond;
+            }
+         }
          transition.ticket_key = boost::algorithm::trim_copy(row[5]);
 
          vertex_t start_v, end_v;
@@ -133,6 +144,13 @@ Fare::Fare(const std::string & filename, const std::string & prices_filename){
          else end_v = state_map[end];
 
          boost::add_edge(start_v, end_v, transition, g);
+         if(symetric){
+            Transition sym_transition;
+            sym_transition.start_conditions = transition.end_conditions;
+            sym_transition.end_conditions = transition.start_conditions;
+            sym_transition.global_condition = transition.global_condition;
+            boost::add_edge(end_v, start_v, sym_transition, g);
+         }
      }
      load_fares(prices_filename);
 }

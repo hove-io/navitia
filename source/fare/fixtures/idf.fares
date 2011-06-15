@@ -16,7 +16,6 @@
 "*";"network=noctilien";"zone=1";"zone=3 ";"exclusive";"2tickett"
 "*";"mode=rapidtransit";"zone=1";"stop_area=mantes ";;"ODmantes"
 "*";"mode=rapidtransit";"stop_area=mantes ";"zone=1";;"ODmantes"
-"*";"mode=rapidtransit";"stop_area=versailles";"stop_area=disney";" with_changes";"VD"
-"*";"mode=rapidtransit";"stop_area=versailles";"stop_area=disney";" with_changes";"VD"
+"*";"mode=rapidtransit";"stop_area=versailles";"stop_area=disney";" with_changes&symetric";"VD"
 "*";"mode=rapidtransit";"stop_area=versailles";"zone=1";" with_changes";"VD"
 "*";"mode=rapidtransit";"zone=1";"stop_area=disney";" with_changes";"VD"
