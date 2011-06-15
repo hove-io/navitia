@@ -5,6 +5,7 @@
 #include "boost/serialization/array.hpp"
 
 namespace navitia { namespace type {
+
 class Data{
 public:
     int nb_threads; /// Nombre de threads. IMPORTANT ! Sans cette variable, ça ne compile pas
@@ -91,6 +92,12 @@ public:
 
     /** Charge la structure de données depuis un fichier au format binaire */
     void load_bin(const std::string & filename);
+
+    /** Étant donné une liste d'indexes pointant vers source,
+      * retourne une liste d'indexes pointant vers target
+      */
+    std::vector<idx_t> get_target_by_source(Type_e source, Type_e target, std::vector<idx_t> source_idx);
+
 };
 
 } } //namespace navitia::type

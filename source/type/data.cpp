@@ -61,4 +61,22 @@ void Data::save_flz(const std::string & filename) {
     oa << *this;
 }
 
+/*enum Type_e {eValidityPattern, eLine, eRoute, eVehicleJourney, eStopPoint, eStopArea, eStopTime,
+             eNetwork, eMode, eModeType, eCity, eConnection, eRoutePoint, eDistrict, eDepartment,
+             eCompany, eVehicle};*/
+std::vector<idx_t> Data::get_target_by_source(Type_e source, Type_e target, std::vector<idx_t> source_idx){
+    std::vector<idx_t> result;
+    result.reserve(source_idx.size());
+    BOOST_FOREACH(idx_t idx, source_idx) {
+        std::vector<idx_t> tmp;
+        switch(source) {
+        case eLine: tmp = lines[idx].get(target, *this); break;
+        case eRoute: tmp = routes[idx].get(target, *this); break;
+        default: break;
+        }
+        result.insert(result.end(), tmp.begin(), tmp.end());
+    }
+    return result;
+}
+
 }} //namespace navitia::type

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <boost/assign.hpp>
 #include <boost/foreach.hpp>
+#include "data.h"
 
 namespace navitia { namespace type {
 
@@ -98,6 +99,152 @@ boost::posix_time::ptime static_data::parse_date_time(const std::string& s) {
             break;
     }
     return pt;
+}
+
+std::vector<idx_t> Country::get(Type_e type, const Data &)  const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case eDistrict: return district_list; break;
+    default: break;
+    }
+    return result;
+}
+
+std::vector<idx_t> City::get(Type_e type, const Data &) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case eStopArea: return stop_area_list; break;
+    case eDepartment: result.push_back(department_idx); break;
+    default: break;
+    }
+    return result;
+}
+
+std::vector<idx_t> StopArea::get(Type_e type, const Data & data) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case eStopPoint:
+        BOOST_FOREACH(StopPoint sp, data.stop_points){
+            if (sp.stop_area_idx == idx)
+                result.push_back(sp.idx);
+        }
+        break;
+    case eCity: result.push_back(city_idx); break;
+    default: break;
+    }
+    return result;
+}
+
+std::vector<idx_t> Network::get(Type_e type, const Data &) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case eLine: return line_list; break;
+    default: break;
+    }
+    return result;
+}
+
+
+std::vector<idx_t> Company::get(Type_e type, const Data &) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case eLine: return line_list; break;
+    default: break;
+    }
+    return result;
+}
+
+std::vector<idx_t> ModeType::get(Type_e type, const Data &) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case eLine: return line_list; break;
+    case eMode: return mode_list; break;
+    default: break;
+    }
+    return result;
+}
+
+std::vector<idx_t> Mode::get(Type_e type, const Data &) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case eModeType: result.push_back(mode_type_idx); break;
+    default: break;
+    }
+    return result;
+}
+
+std::vector<idx_t> Line::get(Type_e type, const Data & data) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case eModeType: result.push_back(mode_type_idx); break;
+    case eMode: return mode_list; break;
+    case eCompany: return company_list; break;
+    case eNetwork: result.push_back(network_idx); break;
+    case eRoute: BOOST_FOREACH(Route route, data.routes) {
+            if(route.line_idx == idx)
+                result.push_back(route.idx);
+        }
+        break;
+    default: break;
+    }
+    return result;
+}
+
+
+std::vector<idx_t> Route::get(Type_e type, const Data &) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case eLine: result.push_back(line_idx); break;
+    case eModeType: result.push_back(mode_type_idx); break;
+    case eRoutePoint: return route_point_list; break;
+    case eVehicleJourney: return vehicle_journey_list; break;
+    default: break;
+    }
+    return result;
+}
+
+
+std::vector<idx_t> VehicleJourney::get(Type_e type, const Data &) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case eRoute: result.push_back(route_idx); break;
+    case eCompany: result.push_back(company_idx); break;
+    case eMode: result.push_back(mode_idx); break;
+    case eVehicle: result.push_back(vehicle_idx); break;
+    case eValidityPattern: result.push_back(validity_pattern_idx); break;
+    default: break;
+    }
+    return result;
+}
+
+std::vector<idx_t> RoutePoint::get(Type_e type, const Data &) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case eRoute: result.push_back(route_idx); break;
+    case eStopPoint: result.push_back(stop_point_idx); break;
+    default: break;
+    }
+}
+
+std::vector<idx_t> StopPoint::get(Type_e type, const Data &) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case eStopArea: result.push_back(stop_area_idx); break;
+    case eCity: result.push_back(city_idx); break;
+    case eMode: result.push_back(mode_idx); break;
+    case eNetwork: result.push_back(network_idx); break;
+    default: break;
+    }
+}
+
+
+std::vector<idx_t> StopTime::get(Type_e type, const Data &) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case eVehicle: result.push_back(vehicle_journey_idx); break;
+    case eStopPoint: result.push_back(stop_point_idx); break;
+    default: break;
+    }
 }
 
 }} //namespace navitia::type

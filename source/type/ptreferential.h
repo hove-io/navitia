@@ -8,7 +8,8 @@
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_lit.hpp>
-
+#include <boost/spirit/include/phoenix_core.hpp>
+#include <boost/spirit/include/phoenix_operator.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 
 #include "indexes2.h"
@@ -19,6 +20,7 @@
 
 //TODO: change!
 using namespace navitia::type;
+using namespace navitia::ptref;
 
 namespace qi = boost::spirit::qi;
 
@@ -36,14 +38,14 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 struct WhereClause{
     Column col;
-    std::string op;
+    Operator_e op;
     std::string value;
 }; 
 
 BOOST_FUSION_ADAPT_STRUCT(
     WhereClause,
     (Column,col)
-    (std::string, op)
+    (Operator_e, op)
     (std::string, value)
 )
 
@@ -59,6 +61,7 @@ BOOST_FUSION_ADAPT_STRUCT(
     (std::vector<std::string>, tables)
     (std::vector<WhereClause>, clauses)
 )
+
         template <typename Iterator>
         struct select_r
             : qi::grammar<Iterator, Request(), qi::space_type>
@@ -69,17 +72,27 @@ BOOST_FUSION_ADAPT_STRUCT(
     qi::rule<Iterator, std::vector<std::string>(), qi::space_type> from; // Matche la section FROM
     qi::rule<Iterator, Request(), qi::space_type> request; // Toute la requête
     qi::rule<Iterator, std::vector<WhereClause>(), qi::space_type> where;// section Where 
-    qi::rule<Iterator, std::string(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
+    qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
 
     select_r() : select_r::base_type(request) {
         txt %= qi::lexeme[+(qi::alnum|'_')]; // Match du texte
-        bin_op %=  qi::string("<=") | qi::string(">=") | qi::string("<>") | qi::string("<")  | qi::string(">") | qi::string("=") ;
-        table_col %= -(txt >> '.') // (Nom de la table suivit de point) optionnel (operateur -)
-                     >> txt; // Nom de la table obligatoire
+
+        bin_op =  qi::string("<=")[qi::_val = LEQ]
+                | qi::string(">=")[qi::_val = GEQ]
+                | qi::string("<>")[qi::_val = NEQ]
+                | qi::string("<") [qi::_val = LT]
+                | qi::string(">") [qi::_val = GT]
+                | qi::string("=") [qi::_val = EQ];
+
+        table_col %= -(txt >> '.') >> txt; // (Nom de la table suivit de point) optionnel (operateur -) et Nom de la table obligatoire
+
         select  %= qi::lexeme["select"] >> table_col % ',' ; // La liste de table_col séparée par des ,
+
         from %= qi::lexeme["from"] >> txt % ',';
+
         where %= qi::lexeme["where"] >> (table_col >> bin_op >> txt) % qi::lexeme["and"];
-        request %= select >> from >> -where;
+
+        request %= select >> from >> -where; // Clause where optionnelle
     }
 
 };
@@ -120,22 +133,13 @@ void set_value(google::protobuf::Message* message, const T& object, const std::s
 template<class T>
 WhereWrapper<T> build_clause(std::vector<WhereClause> clauses) {
     WhereWrapper<T> wh(new BaseWhere<T>());
-    Operator_e op;
     BOOST_FOREACH(auto clause, clauses) {
-        if(clause.op == "=") op = EQ;
-        else if(clause.op == "<") op = LT;
-        else if(clause.op == "<=") op = LEQ;
-        else if(clause.op == ">") op = GT;
-        else if(clause.op == ">=") op = GEQ;
-        else if(clause.op == "<>") op = NEQ;
-        else throw "grrr";
-
         if(clause.col.column == "id")
-            wh = wh && WHERE(ptr_id<T>(), op, clause.value);
+            wh = wh && WHERE(ptr_id<T>(), clause.op, clause.value);
         else if(clause.col.column == "idx")
-            wh = wh && WHERE(ptr_idx<T>(), op, clause.value);
+            wh = wh && WHERE(ptr_idx<T>(), clause.op, clause.value);
         else if(clause.col.column == "external_code")
-            wh = wh && WHERE(ptr_external_code<T>(), op, clause.value);
+            wh = wh && WHERE(ptr_external_code<T>(), clause.op, clause.value);
     }
     return wh;
 }
@@ -162,5 +166,20 @@ pbnavitia::PTRefResponse extract_data(std::vector<T> & rows, const Request & r) 
     return pb_response;
 }
 
+struct Node {
+    std::string name;
+};
 
+struct Edge {
+    float weight;
+    Type_e source;
+    Type_e target;
+};
+
+/// Contient le graph des transitions
+/*typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, Node, Edge > Graph;
+typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
+typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
+//Graph g;
+*/
 }} //navitia::ptref
