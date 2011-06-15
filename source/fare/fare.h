@@ -124,6 +124,7 @@ struct Transition {
     std::string global_condition; //< condition telle que exclusivité ou OD
 
     bool valid(const SectionKey & section, const Label & label) const;
+    bool use_change(const SectionKey & section, const Label & label) const;
     bool is_exclusive() const;
     std::string dest_stop_area() const;
 };

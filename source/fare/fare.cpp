@@ -156,71 +156,67 @@ Label next_label(Label label, ticket_t ticket, const SectionKey & section, const
     return label;
 }
 
- std::vector<ticket_t> Fare::compute(const std::vector<std::string> & section_keys){
-     int nb_nodes = boost::num_vertices(g);
-     std::vector< std::vector<Label> > labels(nb_nodes);
-     // Étiquette de départ
-     labels[0].push_back(Label());
-     BOOST_FOREACH(const std::string & section_key, section_keys ){
-         std::vector< std::vector<Label> > new_labels(nb_nodes);
-         SectionKey section(section_key);
-         try {
-             BOOST_FOREACH(edge_t e, boost::edges(g)){
-                 Transition transition = g[e];
-                 ticket_t ticket;
-                 if(transition.ticket_key != "")
-                     ticket = fare_map[transition.ticket_key].get_fare(section.date);
-                 vertex_t u = boost::source(e,g);
-                 vertex_t v = boost::target(e,g);
-                 if(valid_dest(g[v], section)){
-                     BOOST_FOREACH(Label label, labels[u]){
-                         if (valid_start(g[u], label) &&  transition.valid(section_key, label)){
-                             if(transition.is_exclusive()) throw ticket;
-
-
-                             if(label.dest_stop_area == ""){
-                                 new_labels[0].push_back(next_label(label, ticket, section, ""));// On peut toujours partir du cas "aucun billet"
-                                 new_labels[v].push_back(next_label(label, ticket, section, ""));
-                             } else if(label.dest_stop_area == section.dest_stop_area){
-                                 new_labels[0].push_back(next_label(label, ticket_t(), section, label.dest_stop_area));
-                                 new_labels[v].push_back(next_label(label, ticket_t(), section, label.dest_stop_area));
-                             } else
-                             //    new_labels[v].push_back(next_label(label, ticket_t(), section, transition.dest_stop_area()));
-                                     new_labels[v].push_back(next_label(label, ticket_t(), section, label.dest_stop_area));
+std::vector<ticket_t> Fare::compute(const std::vector<std::string> & section_keys){
+    int nb_nodes = boost::num_vertices(g);
+    std::vector< std::vector<Label> > labels(nb_nodes);
+    // Étiquette de départ
+    labels[0].push_back(Label());
+    BOOST_FOREACH(const std::string & section_key, section_keys ){
+        std::vector< std::vector<Label> > new_labels(nb_nodes);
+        SectionKey section(section_key);
+        try {
+            BOOST_FOREACH(edge_t e, boost::edges(g)){
+                Transition transition = g[e];
+                ticket_t ticket;
+                if(transition.ticket_key != "")
+                    ticket = fare_map[transition.ticket_key].get_fare(section.date);
+                vertex_t u = boost::source(e,g);
+                vertex_t v = boost::target(e,g);
+                if(valid_dest(g[v], section)){
+                    BOOST_FOREACH(Label label, labels[u]){
+                        if (valid_start(g[u], label) &&  transition.valid(section_key, label)){
+                            if(transition.is_exclusive()) throw ticket;
+                            if(!transition.use_change(section_key, label)){
+                                new_labels[0].push_back(next_label(label, ticket, section, transition.dest_stop_area()));// On peut toujours partir du cas "aucun billet"
+                                new_labels[v].push_back(next_label(label, ticket, section, transition.dest_stop_area()));
+                            }else{
+                                new_labels[0].push_back(next_label(label, ticket_t(), section, ""));// On peut toujours partir du cas "aucun billet"
+                                new_labels[v].push_back(next_label(label, ticket_t(), section, ""));
+                            }
 
                         }
-                     }
-                 }
-             }
-         }
-         // On est tombé sur un segment exclusif : on est obligé d'utilisé ce ticket
-         catch(ticket_t ticket) {
-             new_labels.clear();
-             new_labels.resize(nb_nodes);
-             BOOST_FOREACH(Label label, labels[0]){
-                 new_labels[0].push_back(next_label(label, ticket, section, ""));
-             }
-         }
-         labels = new_labels;
-     }
+                    }
+                }
+            }
+        }
+        // On est tombé sur un segment exclusif : on est obligé d'utilisé ce ticket
+        catch(ticket_t ticket) {
+            new_labels.clear();
+            new_labels.resize(nb_nodes);
+            BOOST_FOREACH(Label label, labels[0]){
+                new_labels[0].push_back(next_label(label, ticket, section, ""));
+            }
+        }
+        labels = new_labels;
+    }
 
-     std::vector<ticket_t> result;
+    std::vector<ticket_t> result;
 
-     // On recherche le label de moindre coût
-     // Si on a deux fois le même coût, on prend celui qui nécessite le moind de billets
-     int best_changes = std::numeric_limits<int>::max();
-     int best_cost = std::numeric_limits<int>::max();
-     BOOST_FOREACH(Label label, labels[0]){
-         if(label.cost < best_cost || (label.cost == best_cost && label.nb_changes < best_changes)){
-             result = label.tickets;
-             best_cost = label.cost;
-             best_changes = label.nb_changes;
-         }
-     }
+    // On recherche le label de moindre coût
+    // Si on a deux fois le même coût, on prend celui qui nécessite le moind de billets
+    int best_changes = std::numeric_limits<int>::max();
+    int best_cost = std::numeric_limits<int>::max();
+    BOOST_FOREACH(Label label, labels[0]){
+        if(label.cost < best_cost || (label.cost == best_cost && label.nb_changes < best_changes)){
+            result = label.tickets;
+            best_cost = label.cost;
+            best_changes = label.nb_changes;
+        }
+    }
 
-     std::cout << "nombre de résultats : " << result.size() << std::endl;
-     return result;
- }
+    std::cout << "nombre de résultats : " << result.size() << std::endl;
+    return result;
+}
 
  void Fare::load_fares(const std::string & filename){
      CsvReader reader(filename);
@@ -351,6 +347,18 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
             int duration = boost::lexical_cast<int>(cond.value) * 60 + section.duration();
             result = compare(label.duration, duration, cond.comparaison);
         }
+    }
+    return result;
+}
+
+bool Transition::use_change(const SectionKey & section, const Label & label) const
+{
+    bool result = false;
+    BOOST_FOREACH(Condition cond, this->end_conditions)
+    {
+        if(cond.key == "stop_area" && global_condition == "with_changes" &&  cond.value == section.dest_stop_area
+                && label.stop_area != section.start_stop_area && label.dest_stop_area == section.dest_stop_area )
+            result = true;
     }
     return result;
 }
