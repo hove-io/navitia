@@ -224,6 +224,7 @@ std::vector<idx_t> RoutePoint::get(Type_e type, const Data &) const {
     case eStopPoint: result.push_back(stop_point_idx); break;
     default: break;
     }
+    return result;
 }
 
 std::vector<idx_t> StopPoint::get(Type_e type, const Data &) const {
@@ -235,6 +236,7 @@ std::vector<idx_t> StopPoint::get(Type_e type, const Data &) const {
     case eNetwork: result.push_back(network_idx); break;
     default: break;
     }
+    return result;
 }
 
 
@@ -245,6 +247,7 @@ std::vector<idx_t> StopTime::get(Type_e type, const Data &) const {
     case eStopPoint: result.push_back(stop_point_idx); break;
     default: break;
     }
+    return result;
 }
 
 }} //namespace navitia::type

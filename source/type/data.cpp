@@ -72,6 +72,18 @@ std::vector<idx_t> Data::get_target_by_source(Type_e source, Type_e target, std:
         switch(source) {
         case eLine: tmp = lines[idx].get(target, *this); break;
         case eRoute: tmp = routes[idx].get(target, *this); break;
+        case eVehicleJourney: tmp = vehicle_journeys[idx].get(target, *this); break;
+        case eStopPoint: tmp = stop_points[idx].get(target, *this); break;
+        case eStopArea: tmp = stop_areas[idx].get(target, *this); break;
+        case eStopTime: tmp = stop_times[idx].get(target, *this); break;
+        case eNetwork: tmp = networks[idx].get(target, *this); break;
+        case eMode: tmp = modes[idx].get(target, *this); break;
+        case eModeType: tmp = mode_types[idx].get(target, *this); break;
+        case eCity: tmp = cities[idx].get(target, *this); break;
+        //case eDistrict: tmp = di
+        //case eDepartment: tmp = de
+        //case eCompany: tmp =
+        //case eVehicle: tmp =
         default: break;
         }
         result.insert(result.end(), tmp.begin(), tmp.end());

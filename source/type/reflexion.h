@@ -4,6 +4,7 @@
 #include <boost/utility/enable_if.hpp>
 #include <iostream>
 
+namespace navitia{ namespace ptref {
 typedef boost::variant<std::string, int>  col_t;
 
 /// Exception levée lorsqu'on demande un membre qu'on ne connait pas
@@ -42,3 +43,4 @@ col_t get_value(T& object, const std::string & name){
         throw unknown_member();
 }
 
+}}

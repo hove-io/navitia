@@ -1,7 +1,6 @@
 #include "ptreferential.h"
 
 #include <iostream>
-
 #include <fstream>
 namespace navitia{ namespace ptref{
 
@@ -140,5 +139,6 @@ std::string pb2xml(pbnavitia::PTRefResponse& response){
     buffer << "</list>";
     return buffer.str();
 }
+
 
 }} // navitia::ptref

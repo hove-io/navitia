@@ -17,7 +17,7 @@ typedef unsigned int idx_t;
 
 enum Type_e {eValidityPattern, eLine, eRoute, eVehicleJourney, eStopPoint, eStopArea, eStopTime,
              eNetwork, eMode, eModeType, eCity, eConnection, eRoutePoint, eDistrict, eDepartment,
-             eCompany, eVehicle};
+             eCompany, eVehicle, eCountry};
 
 struct Data;
 template<class T> std::string T::* name_getter(){return &T::name;}

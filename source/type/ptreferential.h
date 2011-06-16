@@ -12,6 +12,7 @@
 #include <boost/spirit/include/phoenix_operator.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 
+#include <boost/graph/adjacency_list.hpp>
 #include "indexes2.h"
 #include "where.h"
 #include "reflexion.h"
@@ -166,20 +167,29 @@ pbnavitia::PTRefResponse extract_data(std::vector<T> & rows, const Request & r) 
     return pb_response;
 }
 
-struct Node {
-    std::string name;
-};
-
 struct Edge {
     float weight;
-    Type_e source;
-    Type_e target;
+    Edge() : weight(1){}
+};
+
+struct Node {
+    Type_e type;
+    Node(Type_e type) : type(type) {}
 };
 
 /// Contient le graph des transitions
-/*typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, Node, Edge > Graph;
+typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, Type_e, Edge > Graph;
 typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
 typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
-//Graph g;
-*/
+
+struct Jointures {
+    std::map<Type_e, vertex_t> vertex_map;
+    Graph g;
+
+    Jointures();
+
+    std::vector<Type_e> find_path(Type_e source, Type_e target);
+
+};
+
 }} //navitia::ptref
