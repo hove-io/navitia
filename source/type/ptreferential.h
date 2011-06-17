@@ -27,13 +27,13 @@ namespace qi = boost::spirit::qi;
 
 
 struct Column {
-    std::string table;
+    Type_e table;
     std::string column;
 };
 
 BOOST_FUSION_ADAPT_STRUCT(
     Column,
-    (std::string, table)
+    (Type_e, table)
     (std::string, column)
 )
 
@@ -52,14 +52,14 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 struct Request {
     std::vector<Column> columns;
-    std::vector<std::string> tables;
+    std::vector<Type_e> tables;
     std::vector<WhereClause> clauses;
 };
 
 BOOST_FUSION_ADAPT_STRUCT(
     Request,
     (std::vector<Column>, columns)
-    (std::vector<std::string>, tables)
+    (std::vector<Type_e>, tables)
     (std::vector<WhereClause>, clauses)
 )
 
@@ -68,15 +68,35 @@ BOOST_FUSION_ADAPT_STRUCT(
             : qi::grammar<Iterator, Request(), qi::space_type>
 {
     qi::rule<Iterator, std::string(), qi::space_type> txt; // Match une string
+    qi::rule<Iterator, Type_e(), qi::space_type> table;
     qi::rule<Iterator, Column(), qi::space_type> table_col; // Match une colonne
     qi::rule<Iterator, std::vector<Column>(), qi::space_type> select; // Match toute la section SELECT
-    qi::rule<Iterator, std::vector<std::string>(), qi::space_type> from; // Matche la section FROM
+    qi::rule<Iterator, std::vector<Type_e>(), qi::space_type> from; // Matche la section FROM
     qi::rule<Iterator, Request(), qi::space_type> request; // Toute la requête
     qi::rule<Iterator, std::vector<WhereClause>(), qi::space_type> where;// section Where 
     qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
 
     select_r() : select_r::base_type(request) {
         txt %= qi::lexeme[+(qi::alnum|'_')]; // Match du texte
+
+        table =   qi::string("stop_areas")[qi::_val = eStopArea]
+                | qi::string("stop_points")[qi::_val = eStopPoint]
+                | qi::string("lines")[qi::_val = eLine]
+                | qi::string("routes")[qi::_val = eRoute]
+                | qi::string("validity_patterns")[qi::_val = eValidityPattern]
+                | qi::string("vehicle_journeys")[qi::_val = eVehicleJourney]
+                | qi::string("stop_times")[qi::_val = eStopTime]
+                | qi::string("networks")[qi::_val = eNetwork]
+                | qi::string("modes")[qi::_val = eMode]
+                | qi::string("mode_types")[qi::_val = eModeType]
+                | qi::string("cities")[qi::_val = eCity]
+                | qi::string("connections")[qi::_val = eConnection]
+                | qi::string("route_points")[qi::_val = eRoutePoint]
+                | qi::string("districts")[qi::_val = eDistrict]
+                | qi::string("departments")[qi::_val = eDepartment]
+                | qi::string("companies")[qi::_val = eCompany]
+                | qi::string("vehicles")[qi::_val = eVehicle]
+                | qi::string("countries")[qi::_val = eCountry];
 
         bin_op =  qi::string("<=")[qi::_val = LEQ]
                 | qi::string(">=")[qi::_val = GEQ]
@@ -85,11 +105,11 @@ BOOST_FUSION_ADAPT_STRUCT(
                 | qi::string(">") [qi::_val = GT]
                 | qi::string("=") [qi::_val = EQ];
 
-        table_col %= -(txt >> '.') >> txt; // (Nom de la table suivit de point) optionnel (operateur -) et Nom de la table obligatoire
+        table_col %= -(table >> '.') >> txt; // (Nom de la table suivit de point) optionnel (operateur -) et Nom de la table obligatoire
 
         select  %= qi::lexeme["select"] >> table_col % ',' ; // La liste de table_col séparée par des ,
 
-        from %= qi::lexeme["from"] >> txt % ',';
+        from %= qi::lexeme["from"] >> table % ',';
 
         where %= qi::lexeme["where"] >> (table_col >> bin_op >> txt) % qi::lexeme["and"];
 
@@ -102,8 +122,7 @@ namespace navitia{ namespace ptref{
 
 struct unknown_table{};
 
-std::string unpluralize_table(const std::string& table_name);
-google::protobuf::Message* get_message(pbnavitia::PTreferential* row, const std::string& table);
+google::protobuf::Message* get_message(pbnavitia::PTreferential* row, Type_e type);
 
 /// Exécute une requête sur les données Data
 /// Retourne une matrice 2D de chaînes de caractères

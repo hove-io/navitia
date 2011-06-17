@@ -70,6 +70,26 @@ static_data * static_data::get() {
                 ( locale(locale::classic(), new time_input_facet("%d.%m.%Y %H:%M:%S")) )
                 ( locale(locale::classic(), new time_input_facet("%d-%m-%Y %H:%M:%S")) )
                 ( locale(locale::classic(), new time_input_facet("%Y-%m-%d")) );
+
+        boost::assign::insert(instance->types_string)
+                (eValidityPattern, "validity_pattern")
+                (eLine, "line")
+                (eRoute, "route")
+                (eVehicleJourney, "vehicle_journey")
+                (eStopPoint, "stop_point")
+                (eStopArea, "stop_area")
+                (eStopTime, "stop_time")
+                (eNetwork, "network")
+                (eMode, "mode")
+                (eModeType, "mode_type")
+                (eCity, "city")
+                (eConnection, "connection")
+                (eRoutePoint, "route_point")
+                (eDistrict, "district")
+                (eDepartment, "department")
+                (eCompany, "company")
+                (eVehicle, "vehicle")
+                (eCountry, "country");
     }
     return instance;
 }
@@ -85,6 +105,14 @@ Criteria static_data::getCriteriaByCaption(const std::string & strCriteria){
 
 bool static_data::strToBool(const std::string &strValue){
     return std::find(instance->true_strings.begin(), instance->true_strings.end(), strValue) != instance->true_strings.end();
+}
+
+Type_e static_data::typeByCaption(const std::string & type_str) {
+    return instance->types_string.right.at(type_str);
+}
+
+std::string static_data::captionByType(Type_e type){
+    return instance->types_string.left.at(type);
 }
 
 boost::posix_time::ptime static_data::parse_date_time(const std::string& s) {

@@ -4,19 +4,10 @@
 #include <fstream>
 namespace navitia{ namespace ptref{
 
-std::string unpluralize_table(const std::string& table_name){
-    if(table_name == "cities"){
-        return "city";
-    }else{
-        return table_name.substr(0, table_name.length() - 1);
-    }
-}
-
-
-google::protobuf::Message* get_message(pbnavitia::PTreferential* row, const std::string& table){
+google::protobuf::Message* get_message(pbnavitia::PTreferential* row, Type_e type){
     const google::protobuf::Reflection* reflection = row->GetReflection();
     const google::protobuf::Descriptor* descriptor = row->GetDescriptor();
-    std::string field = unpluralize_table(table);
+    std::string field = static_data::get()->captionByType(type);
     const google::protobuf::FieldDescriptor* field_descriptor = descriptor->FindFieldByName(field);
     return reflection->MutableMessage(row, field_descriptor);
 }
@@ -40,36 +31,21 @@ pbnavitia::PTRefResponse query(std::string request, Data & data){
         throw std::string("too many table");
     }
     else {
-        std::cout << "Table : " << r.tables[0] << std::endl;
+        std::cout << "Table : " << static_data::get()->captionByType(r.tables[0]) << std::endl;
     }
 
-    std::string table = r.tables[0];
+    switch(r.tables[0]){
+    case eValidityPattern: return extract_data(data.validity_patterns, r); break;
+    case eLine: return extract_data(data.lines, r); break;
+    case eRoute: return extract_data(data.routes, r); break;
+    case eVehicleJourney: return extract_data(data.vehicle_journeys, r); break;
+    case eStopPoint: return extract_data(data.stop_points, r); break;
+    case eStopArea: return extract_data(data.stop_areas, r); break;
+    default:  break;
+    }
 
-    if(table == "validity_pattern") {
-        return extract_data(data.validity_patterns, r);
-    }
-    else if(table == "lines") {
-        return extract_data(data.lines, r);
-    }
-    else if(table == "routes") {
-        return extract_data(data.routes, r);
-    }
-    else if(table == "vehicle_journey") {
-        return extract_data(data.vehicle_journeys, r);
-    }
-    else if(table == "stop_points") {
-        return extract_data(data.stop_points, r);
-    }
-    else if(table == "stop_areas") {
-        return extract_data(data.stop_areas, r);
-    }
-    else if(table == "stop_times"){
-        return extract_data(data.stop_times, r);
-    }
-    
     throw unknown_table();
 }
-
 
 
 std::string pb2txt(pbnavitia::PTRefResponse& response){

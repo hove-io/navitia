@@ -14,11 +14,9 @@
 
 namespace navitia { namespace type {
 typedef unsigned int idx_t;
-
 enum Type_e {eValidityPattern, eLine, eRoute, eVehicleJourney, eStopPoint, eStopArea, eStopTime,
              eNetwork, eMode, eModeType, eCity, eConnection, eRoutePoint, eDistrict, eDepartment,
-             eCompany, eVehicle, eCountry};
-
+             eCompany, eVehicle, eCountry, eUnknown};
 struct Data;
 template<class T> std::string T::* name_getter(){return &T::name;}
 template<class T> int T::* idx_getter(){return &T::idx;}
@@ -378,6 +376,7 @@ struct StopTime: public NavitiaHeader{
 enum PointType{ptCity, ptSite, ptAddress, ptStopArea, ptAlias, ptUndefined, ptSeparator};
 enum Criteria{cInitialization, cAsSoonAsPossible, cLeastInterchange, cLinkTime, cDebug, cWDI};
 
+
 struct static_data {
 private:
     static static_data * instance;
@@ -387,9 +386,12 @@ public:
     static Criteria getCriteriaByCaption(const std::string & strCriteria);
     static boost::posix_time::ptime parse_date_time(const std::string& s);
     static bool strToBool(const std::string &strValue);
+    static Type_e typeByCaption(const std::string & type_str);
+    static std::string captionByType(Type_e type);
 
     boost::bimap<Criteria, std::string> criterias;
     boost::bimap<PointType, std::string> point_types;
+    boost::bimap<Type_e, std::string> types_string;
     std::vector<std::string> true_strings;
     std::vector<std::locale> date_locales;
 
