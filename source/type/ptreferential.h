@@ -105,7 +105,7 @@ BOOST_FUSION_ADAPT_STRUCT(
                 | qi::string(">") [qi::_val = GT]
                 | qi::string("=") [qi::_val = EQ];
 
-        table_col %= -(table >> '.') >> txt; // (Nom de la table suivit de point) optionnel (operateur -) et Nom de la table obligatoire
+        table_col %= table >> '.' >> txt; // Nom de la table suivit de point et Nom de la colonne obligatoire
 
         select  %= qi::lexeme["select"] >> table_col % ',' ; // La liste de table_col séparée par des ,
 
@@ -207,7 +207,7 @@ struct Jointures {
 
     Jointures();
 
-    std::vector<Type_e> find_path(Type_e source, Type_e target);
+    std::vector<Type_e> find_path(Type_e source);
 
 };
 

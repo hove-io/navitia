@@ -73,18 +73,16 @@ Jointures::Jointures() {
     boost::add_edge(vertex_map[eStopTime], vertex_map[eStopPoint], g);
 }
 
-std::vector<Type_e> Jointures::find_path(Type_e source, Type_e target) {
+std::vector<Type_e> Jointures::find_path(Type_e source) {
     std::vector<vertex_t> predecessors(boost::num_vertices(g));
     boost::dijkstra_shortest_paths(g, source,
                                    boost::predecessor_map(&predecessors[0]).
                                    weight_map(boost::get(&Edge::weight, g)));
 
-    vertex_t current = vertex_map[target];
+
     std::vector<Type_e> result;
-    while(current != predecessors[current]){
-        result.push_back(g[current]);
-        current = predecessors[current];
-    }
+    BOOST_FOREACH(vertex_t vertex, predecessors)
+            result.push_back(g[vertex]);
     return result;
 }
 

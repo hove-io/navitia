@@ -28,10 +28,40 @@ pbnavitia::PTRefResponse query(std::string request, Data & data){
 
     if(r.tables.size() != 1){
         std::cout << "Pour l'instant on ne supporte que exactement une table" << std::endl;
+        std::cout << r.tables.size() << std::endl;
         throw std::string("too many table");
     }
     else {
         std::cout << "Table : " << static_data::get()->captionByType(r.tables[0]) << std::endl;
+    }
+
+    // On regroupe les clauses par tables sur lequelles elles vont taper
+    // Ça va se compliquer le jour où l'on voudra gérer des and/or intermélangés...
+    std::map<Type_e, std::vector<WhereClause> > clauses;
+    BOOST_FOREACH(WhereClause clause, r.clauses){
+        clauses[clause.col.table].push_back(clause);
+    }
+
+    std::pair<Type_e, std::vector<WhereClause> > type_clauses;
+    Jointures j;
+    BOOST_FOREACH(type_clauses, clauses){
+        switch(type_clauses.first){
+        case eLine:
+            Index2<boost::fusion::vector<Line> > filtered(data.lines, build_clause<Line>(type_clauses.second));
+            auto offsets = filtered.get_offsets();
+            std::vector<idx_t> indexes;
+            indexes.reserve(filtered.size());
+            BOOST_FOREACH(auto item, offsets){
+                indexes.push_back(item[0]);
+            }
+            std::vector<Type_e> path = j.find_path(r.tables[0]);
+            Type_e current = eLine;
+            while(path[current] != current){
+                indexes = data.get_target_by_source(current, path[current], indexes);
+                std::cout << static_data::get()->captionByType(current) << " -> " << static_data::get()->captionByType(path[current]) << std::endl;
+                current = path[current];
+            }
+        }
     }
 
     switch(r.tables[0]){

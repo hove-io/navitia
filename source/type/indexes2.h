@@ -136,6 +136,10 @@ struct Index2 {
     const_iterator end() const {
         return const_iterator(offsets.end(), Transformer<ConstPtrVector>(begin_ptr));
     }
+
+    std::vector<offset_t> get_offsets() const{
+        return offsets;
+    }
 };
 
 
