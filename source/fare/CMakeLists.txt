@@ -11,3 +11,5 @@ add_executable (fare_tests fare.cpp fare.h test.cpp ${CMAKE_SOURCE_DIR}/utils/cs
 target_link_libraries(fare_tests ${Boost_LIBRARIES})
 ADD_TEST(test_fare ${EXECUTABLE_OUTPUT_PATH}/fare_tests --report_level=no)
 
+FIND_PACKAGE(WS_Commons)
+MAKE_WS(fare_ws fare_ws.cpp fare.cpp fare.h ${CMAKE_SOURCE_DIR}/utils/csv.cpp ${CMAKE_SOURCE_DIR}/utils/encoding_converter.cpp)

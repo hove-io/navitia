@@ -64,16 +64,7 @@ Condition parse_condition(const std::string & condition_str) {
 
     if(str.empty())
         return cond;
-/*
-    if(str == "exclusive"){
-        cond.comparaison = Exclusive;
-        return cond;
-    }
-    else if(str == "with_changes"){
-        cond.comparaison = WithChanges;
-        return cond;
-    }
-*/
+
     // Match du texte
     qi::rule<std::string::iterator, std::string()> txt =  qi::lexeme[+(qi::alnum|'_')];
 
@@ -98,7 +89,7 @@ Condition parse_condition(const std::string & condition_str) {
     return cond;
 }
 
-Fare::Fare(const std::string & filename, const std::string & prices_filename){
+void Fare::init(const std::string & filename, const std::string & prices_filename){
      CsvReader reader(filename);
      std::vector<std::string> row;
 
@@ -155,26 +146,44 @@ Fare::Fare(const std::string & filename, const std::string & prices_filename){
      load_fares(prices_filename);
 }
 
-Label next_label(Label label, ticket_t ticket, const SectionKey & section, const std::string & dest_stop_area){
-    label.cost += ticket.second;
-    label.nb_changes++;
-    label.duration += section.duration();
+Label next_label(Label label, Ticket ticket, const SectionKey & section){
+    // On note des informations sur le dernier mode utilisé
     label.line = section.line;
     label.mode = section.mode;
     label.network = section.network;
-    // On ne note de nouveau billet que s'il vaut quelque chose ou qu'il a un intitulé
-    // Et on remet à 0 la durée et le nombre de changements
-    if(ticket.first != "" && ticket.second > 0){
+    label.current_type = ticket.type;
+
+    // Si c'est un ticket vide, c'est juste un changement
+    // On incrémente le nombre de changements et la durée effectuée avec le même ticket
+    if(ticket.caption == "" && ticket.value == 0){
+        label.nb_changes++;
+        label.duration += section.duration();
+        if(ticket.type == Ticket::ODFare){
+            label.stop_area = section.start_stop_area;
+            label.zone = section.start_zone;
+        }
+    } else {
+        // On a acheté un nouveau billet
+        // On note le coût global du trajet, remet à 0 la durée/changements
+        label.cost += ticket.value;
         label.tickets.push_back(ticket);
         label.nb_changes = 0;
         label.duration = section.duration();
         label.stop_area = section.start_stop_area;
-        label.dest_stop_area = dest_stop_area;
     }
     return label;
 }
 
-std::vector<ticket_t> Fare::compute(const std::vector<std::string> & section_keys){
+template<class T>
+bool valid(const State & state, T t){
+    if((state.mode != "" && state.mode != t.mode) ||
+       (state.network != "" && state.network != t.network) ||
+       (state.line != "" && state.line != t.line) )
+        return false;
+    return true;
+}
+
+std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys){
     int nb_nodes = boost::num_vertices(g);
     std::vector< std::vector<Label> > labels(nb_nodes);
     // Étiquette de départ
@@ -184,51 +193,64 @@ std::vector<ticket_t> Fare::compute(const std::vector<std::string> & section_key
         SectionKey section(section_key);
         try {
             BOOST_FOREACH(edge_t e, boost::edges(g)){
-                Transition transition = g[e];
-                ticket_t ticket;
-                if(transition.ticket_key != "")
-                    ticket = fare_map[transition.ticket_key].get_fare(section.date);
                 vertex_t u = boost::source(e,g);
                 vertex_t v = boost::target(e,g);
-                if(valid_dest(g[v], section)){
+                if(valid(g[v], section)){
                     BOOST_FOREACH(Label label, labels[u]){
-                        if (valid_start(g[u], label) &&  transition.valid(section_key, label)){
-                            if(transition.is_exclusive()) throw ticket;
-                            if(!transition.use_change(section_key, label)){
-                                new_labels[0].push_back(next_label(label, ticket, section, transition.dest_stop_area()));// On peut toujours partir du cas "aucun billet"
-                                new_labels[v].push_back(next_label(label, ticket, section, transition.dest_stop_area()));
-                            }else{
-                                new_labels[0].push_back(next_label(label, ticket_t(), section, ""));// On peut toujours partir du cas "aucun billet"
-                                new_labels[v].push_back(next_label(label, ticket_t(), section, ""));
+                        Ticket ticket;
+                        Transition transition = g[e];
+                        if (valid(g[u], label) &&  transition.valid(section_key, label)){
+                            if(transition.global_condition == "exclusive") throw ticket;
+                            if(transition.ticket_key != ""){
+                                ticket = fare_map[transition.ticket_key].get_fare(section.date);
+                            }
+                            else if(transition.global_condition == "with_changes"){
+                                ticket.type = Ticket::ODFare;
+                            }
+                            Label next = next_label(label, ticket, section);
+                            if(label.current_type == Ticket::ODFare || ticket.type == Ticket::ODFare){
+                                try {
+                                    Ticket ticket_od;
+                                    ticket_od.type = Ticket::ODFare;
+                                    if(transition.global_condition == "with_changes")
+                                        ticket_od = get_od(next, section).get_fare(section.date);
+                                    else
+                                        ticket_od = get_od(label, section).get_fare(section.date);
+                                    new_labels[0].push_back(next_label(label,ticket_od , section));
+                                } catch (no_ticket) {}
+
+                            } else {
+                                new_labels[0].push_back(next);
                             }
 
+                            new_labels[v].push_back(next);
                         }
                     }
                 }
             }
         }
         // On est tombé sur un segment exclusif : on est obligé d'utilisé ce ticket
-        catch(ticket_t ticket) {
+        catch(Ticket ticket) {
             new_labels.clear();
             new_labels.resize(nb_nodes);
             BOOST_FOREACH(Label label, labels[0]){
-                new_labels[0].push_back(next_label(label, ticket, section, ""));
+                new_labels[0].push_back(next_label(label, ticket, section));
             }
         }
         labels = new_labels;
     }
 
-    std::vector<ticket_t> result;
+    std::vector<Ticket> result;
 
     // On recherche le label de moindre coût
-    // Si on a deux fois le même coût, on prend celui qui nécessite le moind de billets
-    int best_changes = std::numeric_limits<int>::max();
+    // Si on a deux fois le même coût, on prend celui qui nécessite le moins de billets
+    size_t best_num_tickets = std::numeric_limits<size_t>::max();
     int best_cost = std::numeric_limits<int>::max();
     BOOST_FOREACH(Label label, labels[0]){
-        if(label.cost < best_cost || (label.cost == best_cost && label.nb_changes < best_changes)){
+        if(label.cost < best_cost || (label.cost == best_cost && label.tickets.size() < best_num_tickets)){
             result = label.tickets;
             best_cost = label.cost;
-            best_changes = label.nb_changes;
+            best_num_tickets = label.tickets.size();
         }
     }
 
@@ -242,11 +264,11 @@ std::vector<ticket_t> Fare::compute(const std::vector<std::string> & section_key
      for(row=reader.next(); row != reader.end(); row = reader.next()) {
          // La structure du csv est : clef;date_debut;date_fin;prix;libellé
          fare_map[row[0]].add(row[1], row[2],
-                              ticket_t(row[4], boost::lexical_cast<int>(row[3])) );
+                              Ticket(row[4], boost::lexical_cast<int>(row[3])) );
      }
  }
 
- void DateTicket::add(std::string begin_date, std::string end_date, ticket_t ticket){
+ void DateTicket::add(std::string begin_date, std::string end_date, Ticket ticket){
      greg::date begin(greg::from_undelimited_string(begin_date));
      greg::date end(greg::from_undelimited_string(end_date));
      tickets.push_back(date_ticket_t(greg::date_period(begin, end), ticket));
@@ -301,24 +323,6 @@ template<class T> bool compare(T a, T b, Comp_e comp){
     }
 }
 
-
-bool valid_dest(const State & state, SectionKey section_key){
-    if((state.mode != "" && state.mode != section_key.mode) ||
-       (state.network != "" && state.network != section_key.network) ||
-       (state.line != "" && state.line != section_key.line) )
-        return false;
-    return true;
-}
-
-
-bool valid_start(const State & state, const Label & label){
-    if((state.mode != "" && state.mode != label.mode) ||
-       (state.network != "" && state.network != label.network) ||
-       (state.line != "" && state.line != label.line) )
-        return false;
-    return true;
-}
-
 int SectionKey::duration() const {
     if (start_time < dest_time)
         return dest_time-start_time;
@@ -326,11 +330,12 @@ int SectionKey::duration() const {
         return (dest_time + 24*3600) - start_time;
 }
 
-ticket_t DateTicket::get_fare(boost::gregorian::date date){
+Ticket DateTicket::get_fare(boost::gregorian::date date){
     BOOST_FOREACH(date_ticket_t dticket, tickets){
         if(dticket.first.contains(date))
             return dticket.second;
     }
+    std::cout << "No ticket..." << this->tickets.size() <<std::endl;
     throw no_ticket();
 }
 
@@ -339,10 +344,9 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
     bool result = true;
     BOOST_FOREACH(Condition cond, this->start_conditions)
     {
-        if(cond.key == "zone" && cond.value != section.start_zone&& global_condition != "with_changes")
+        if(cond.key == "zone" && cond.value != section.start_zone)
             result = false;
-        else if(cond.key == "stop_area" && cond.value != section.start_stop_area
-                && !(global_condition == "with_changes" && label.stop_area == cond.value) )
+        else if(cond.key == "stop_area" && cond.value != section.start_stop_area)
             result = false;
         else if(cond.key == "duration") {
             // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
@@ -356,9 +360,9 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
     }
     BOOST_FOREACH(Condition cond, this->end_conditions)
     {
-        if(cond.key == "zone" && cond.value != section.dest_zone&& global_condition != "with_changes")
+        if(cond.key == "zone" && cond.value != section.dest_zone)
             result = false;
-        else if(cond.key == "stop_area" && cond.value != section.dest_stop_area && global_condition != "with_changes")
+        else if(cond.key == "stop_area" && cond.value != section.dest_stop_area)
             result = false;
         else if(cond.key == "duration") {
             // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
@@ -369,30 +373,51 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
     return result;
 }
 
-bool Transition::use_change(const SectionKey & section, const Label & label) const
-{
-    bool result = false;
-    BOOST_FOREACH(Condition cond, this->end_conditions)
-    {
-        if(cond.key == "stop_area" && global_condition == "with_changes" &&  cond.value == section.dest_stop_area
-                && label.stop_area != section.start_stop_area && label.dest_stop_area == section.dest_stop_area )
-            result = true;
+void Fare::load_od_stif(const std::string & filename){
+    CsvReader reader(filename);
+    std::vector<std::string> row;
+    reader.next(); //en-tête
+
+    for(row=reader.next(); row != reader.end(); row = reader.next()) {
+        std::string start_saec = boost::algorithm::trim_copy(row[0]);
+        std::string dest_saec = boost::algorithm::trim_copy(row[2]);
+        std::string price_key = boost::algorithm::trim_copy(row[4]);
+
+        OD_key start, dest;
+        if(start_saec != "8775890")
+            start = OD_key(OD_key::StopArea, start_saec);
+        else
+            start = OD_key(OD_key::Zone, "1");
+
+        if(dest_saec != "8775890")
+            dest = OD_key(OD_key::StopArea, dest_saec);
+        else
+            dest = OD_key(OD_key::Zone, "1");
+
+        od_tickets[start][dest] = price_key;
+
     }
-    return result;
 }
 
-bool Transition::is_exclusive() const {
-  /*  BOOST_FOREACH(Condition cond, this->start_conditions)
-            if(cond.comparaison == Exclusive) return true;
-    BOOST_FOREACH(Condition cond, this->end_conditions)
-            if(cond.comparaison == Exclusive) return true;
-    return false;*/
-    return global_condition == "exclusive";
-}
+DateTicket Fare::get_od(Label label, SectionKey section){
+    OD_key sa(OD_key::StopArea, label.stop_area);
+    OD_key sb(OD_key::Zone, label.zone);
+    OD_key da(OD_key::StopArea, section.dest_stop_area);
+    OD_key db(OD_key::Zone, section.dest_zone);
 
-std::string Transition::dest_stop_area() const {
-    BOOST_FOREACH(Condition cond, end_conditions)
-            if(cond.key == "stop_area")
-            return cond.value;
-    return "";
+    std::map< OD_key, std::map<OD_key, std::string> >::iterator start_map;
+    start_map = od_tickets.find(sa);
+    if(start_map == od_tickets.end())
+        start_map = od_tickets.find(sb);
+    if(start_map == od_tickets.end())
+        throw no_ticket();
+
+    std::map<OD_key, std::string>::iterator end;
+    end = start_map->second.find(da);
+    if(end == start_map->second.end())
+        end = start_map->second.find(db);
+    if(end == start_map->second.end())
+        throw no_ticket();
+
+    return fare_map[end->second];
 }

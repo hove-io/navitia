@@ -6,20 +6,28 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 
 /// Définit un billet : libellé et tarif
-typedef std::pair<std::string, int> ticket_t;
+struct Ticket {
+    enum ticket_type {FlatFare, GraduatedFare, ODFare, None};
+    std::string caption;
+    int value;
+    ticket_type type;
+
+    Ticket() : value(0), type(None) {}
+    Ticket(const std::string & caption, int value, ticket_type type = FlatFare) : caption(caption), value(value), type(type){}
+};
 
 /// Définit un billet pour une période données
-typedef std::pair<boost::gregorian::date_period, ticket_t> date_ticket_t;
+typedef std::pair<boost::gregorian::date_period, Ticket> date_ticket_t;
 
 /// Contient un ensemble de tarif pour toutes les dates de validités
 struct DateTicket {
     std::vector<date_ticket_t> tickets;
 
     /// Retourne le tarif à une date données
-    ticket_t get_fare(boost::gregorian::date date);
+    Ticket get_fare(boost::gregorian::date date);
 
     /// Ajoute une nouvelle période
-    void add(std::string begin_date, std::string end_date, ticket_t ticket);
+    void add(std::string begin_date, std::string end_date, Ticket ticket);
 };
 
 struct no_ticket{};
@@ -88,15 +96,22 @@ struct Label {
     int duration;//< durée jusqu'à présent du trajet depuis le dernier ticket
     int nb_changes;//< nombre de changement effectués depuis le dernier ticket
     std::string stop_area; //< stop_area d'achat du billet
-    std::string dest_stop_area; //< on est obligé de descendre à ce stop_area
+   // std::string dest_stop_area; //< on est obligé de descendre à ce stop_area
     std::string zone;
     std::string mode;
     std::string line;
     std::string network;
 
-    std::vector<ticket_t> tickets; //< Ensemble de billets à acheter pour arriver à cette étiquette
+    Ticket::ticket_type current_type;
+
+    std::vector<Ticket> tickets; //< Ensemble de billets à acheter pour arriver à cette étiquette
     ///Constructeur par défaut
-    Label() : cost(0), duration(0), nb_changes(0) {}
+    Label() : cost(0), duration(0), nb_changes(0), current_type(Ticket::FlatFare) {}
+    bool operator==(const Label & l) const {
+        return cost==l.cost && duration==l.duration && nb_changes==l.nb_changes &&
+                stop_area==l.stop_area && zone==l.zone && mode == l.mode &&
+                line == l.line && network == l.network;
+    }
 };
 
 /// Contient les données retournées par navitia
@@ -124,9 +139,6 @@ struct Transition {
     std::string global_condition; //< condition telle que exclusivité ou OD
 
     bool valid(const SectionKey & section, const Label & label) const;
-    bool use_change(const SectionKey & section, const Label & label) const;
-    bool is_exclusive() const;
-    std::string dest_stop_area() const;
 };
 
 /// Exception levée si on utilise une clef inconnue
@@ -144,17 +156,36 @@ struct invalid_condition : std::exception {};
 /// Parse une liste de conditions séparés par des &
 std::vector<Condition> parse_conditions(const std::string & conditions);
 
-
+/// Parse l'heure au format hh|mm
 int parse_time(const std::string & time_str);
+
+/// Parse la date au format AAAA|MM|JJ
 boost::gregorian::date parse_nav_date(const std::string & date_str);
+
+struct OD_key{
+    enum od_type {Zone, StopArea};
+    od_type type;
+    std::string value;
+    OD_key() {}
+    OD_key(od_type type, std::string value) : type(type), value(value){}
+
+    bool operator<(const OD_key & other) const {
+        if (value != other.value)
+            return value < other.value ;
+        else
+            return type < other.type;
+    }
+};
 
 /// Contient l'ensemble du système tarifaire
 struct Fare {
     /// Map qui associe les clefs de tarifs aux tarifs
     std::map<std::string, DateTicket> fare_map;
 
-    /// Charge le fichier
-    Fare(const std::string & filename, const std::string & prices_filename);
+    std::map< OD_key, std::map<OD_key, std::string> > od_tickets;
+
+    /// Charge les deux fichiers obligatoires
+    void init(const std::string & filename, const std::string & prices_filename);
 
     /// Charge les tarifs
     void load_fares(const std::string & filename);
@@ -167,15 +198,15 @@ struct Fare {
 
     /// Effectue la recherche du meilleur tarif
     /// Retourne une liste de billets à acheter
-    std::vector<ticket_t> compute(const std::vector<std::string> & section_keys);
+    std::vector<Ticket> compute(const std::vector<std::string> & section_keys);
+
+    /// Charge le fichier d'OD du stif
+    void load_od_stif(const std::string & filename);
+
+    /// Retourne le ticket OD qui va bien ou lève une exception no_ticket si on ne trouve pas
+    DateTicket get_od(Label label, SectionKey section);
 };
 
-/// Retourne vrai s'il est possible d'emprunter un tel arc avec une telle étiquette
-bool valid_transition(const Transition & transition, Label label);
-
-/// Retourne vrai s'il est possible d'atteindre l'état par la section key
-bool valid_dest(const State & state, SectionKey section_key);
-bool valid_start(const State & state, const Label & label);
 
 /// Wrapper pour pouvoir parser une condition en une seule fois avec boost::spirit::qi
 BOOST_FUSION_ADAPT_STRUCT(
