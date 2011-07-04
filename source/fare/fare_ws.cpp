@@ -55,15 +55,21 @@ class Worker : public BaseWorker<Data> {
     }
 
     ResponseData fare(RequestData request, Data & d) {
-        std::vector<std::string> section_keys;
-        std::pair<std::string, std::string> section;
-        BOOST_FOREACH(section, request.params){
-            section_keys.push_back(section.second);
-        }
-        std::vector<Ticket> tickets = d.fares.compute(section_keys);
-
         ResponseData rd;
-        render(request, rd, tickets);
+        try{
+            std::vector<std::string> section_keys;
+            std::pair<std::string, std::string> section;
+            BOOST_FOREACH(section, request.params){
+                section_keys.push_back(section.second);
+            }
+            std::vector<Ticket> tickets = d.fares.compute(section_keys);
+            render(request, rd, tickets);
+        }catch(...){
+            rd.response.clear();
+            rd.content_type = "text/xml";
+            rd.response << "<error/>";
+        }
+
         return rd;
     }
 
