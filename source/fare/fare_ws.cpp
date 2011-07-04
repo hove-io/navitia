@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fstream>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/format.hpp>
 using namespace webservice;
 
 /** Structure de données globale au webservice
@@ -38,8 +39,22 @@ struct Data{
 
 /// Classe associée à chaque thread
 class Worker : public BaseWorker<Data> {
-    /** Api qui compte le nombre de fois qu'elle a été appelée */
-    ResponseData count(RequestData request, Data & d) {
+
+    void render(RequestData&, ResponseData& rd, std::vector<Ticket>& tickets){
+        rd.content_type = "text/html";
+        rd.status_code = 200;
+        rd.response << "<FareList FareCount=\"" << tickets.size() << "\">";
+    
+        BOOST_FOREACH(Ticket t, tickets){
+            rd.response << "<Fare><Cost Money=\"Euro\">" << boost::format("%2.2f") % (t.value/100.0) << "</Cost>";
+            
+            rd.response << "</Fare>";
+        }
+
+        rd.response << "</FareList>";
+    }
+
+    ResponseData fare(RequestData request, Data & d) {
         std::vector<std::string> section_keys;
         std::pair<std::string, std::string> section;
         BOOST_FOREACH(section, request.params){
@@ -48,16 +63,10 @@ class Worker : public BaseWorker<Data> {
         std::vector<Ticket> tickets = d.fares.compute(section_keys);
 
         ResponseData rd;
-        rd.response << "<html><body><h1>Fare : liste des billets à acheter</h1>\n<ul>";
-        BOOST_FOREACH(Ticket t, tickets){
-            rd.response << "<li>" << t.caption << " " << t.value << "</li>\n";
-        }
-        rd.response << "</ul></body></html>";
-
-        rd.content_type = "text/html";
-        rd.status_code = 200;
+        render(request, rd, tickets);
         return rd;
     }
+
 
 
 
@@ -67,7 +76,7 @@ class Worker : public BaseWorker<Data> {
      * On y enregistre toutes les api qu'on souhaite exposer
      */
     Worker(Data &) {
-        register_api("/journeyfare",boost::bind(&Worker::count, this, _1, _2), "Effectue le calcul de tarif");
+        register_api("/journeyfare",boost::bind(&Worker::fare, this, _1, _2), "Effectue le calcul de tarif");
         add_default_api();
     }
 };
