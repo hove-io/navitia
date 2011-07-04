@@ -41,7 +41,7 @@ struct Data{
 class Worker : public BaseWorker<Data> {
 
     void render(RequestData&, ResponseData& rd, std::vector<Ticket>& tickets){
-        rd.content_type = "text/html";
+        rd.content_type = "text/xml";
         rd.status_code = 200;
         rd.response << "<FareList FareCount=\"" << tickets.size() << "\">";
     
