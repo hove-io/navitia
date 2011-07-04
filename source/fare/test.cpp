@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(parse_condition_test){
     BOOST_CHECK(parse_condition("coucou >= moo").comparaison == GTE);
     BOOST_CHECK(parse_condition("coucou != moo").comparaison == NEQ);
     BOOST_CHECK(parse_condition("coucou < moo").comparaison == LT);
-    BOOST_CHECK(parse_condition("coucou > moo").comparaison = GT);
+    BOOST_CHECK(parse_condition("coucou > moo").comparaison == GT);
 
     BOOST_CHECK(parse_conditions("coucoun<= bli& foo =azw &abc>=123").size() == 3);
 }

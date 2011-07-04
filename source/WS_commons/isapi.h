@@ -3,6 +3,7 @@
 #include <HttpExt.h>
 namespace webservice {typedef EXTENSION_CONTROL_BLOCK RequestHandle; /**< Handle de la requête*/}
 #include "data_structures.h"
+#include "configuration.h"
 
 namespace webservice {
      /// Envoie les en-têtes
@@ -78,7 +79,15 @@ extern "C"
         webservice::stop_threadpool();
         return TRUE;
     }
+	
 
 }
 
-#define MAKE_WEBSERVICE(Data, Worker) static webservice::ThreadPool<Data, Worker> tp;
+
+#define MAKE_WEBSERVICE(Data, Worker) static webservice::ThreadPool<Data, Worker> * tp;\
+	extern "C"{\
+	BOOL WINAPI DllMain(__in  HINSTANCE hinstDLL, __in  DWORD fdwReason, __in  LPVOID lpvReserved){\
+		if(fdwReason == DLL_PROCESS_ATTACH){hinstance = hinstDLL;\
+	    Configuration * conf = Configuration::get();\
+		tp = new webservice::ThreadPool<Data, Worker>();}\
+		return TRUE;}}

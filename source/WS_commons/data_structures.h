@@ -7,6 +7,11 @@
 //#include <threadpool.h>
 class RequestHandle;
 
+#ifdef WIN32
+#include <windows.h>
+extern HINSTANCE hinstance;
+#endif
+
 namespace webservice 
 {
     /** Fonction appelée lorsqu'une requête arrive pour la passer au threadpoll */

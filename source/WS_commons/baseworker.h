@@ -78,7 +78,9 @@ namespace webservice
                     request.params[elts[0]] = elts[1];
             }
 
-            if(apis.find(request.path) == apis.end()) {
+            std::string api = request.path.substr(request.path.find_last_of('/'));
+
+            if(apis.find(api) == apis.end()) {
                 ResponseData resp;
                 resp.content_type = "text/xml";
                 resp.response << "<error>API inconnue</error>";
@@ -86,9 +88,9 @@ namespace webservice
             }
             else {
                 boost::posix_time::ptime start(boost::posix_time::microsec_clock::local_time());
-                ResponseData resp = apis[request.path].fun(request, d);
+                ResponseData resp = apis[api].fun(request, d);
                 int duration = (boost::posix_time::microsec_clock::local_time() - start).total_milliseconds();
-                static_data().means[request.path](duration);
+                static_data().means[api](duration);
                 return resp;
             }
         }

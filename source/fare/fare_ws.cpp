@@ -16,12 +16,12 @@ struct Data{
   Fare fares; /// Contient tout le graphe capable de calculer les tarifs
   /// Constructeur par défaut, il est appelé au chargement du webservice
   Data() : nb_threads(8){
-      Configuration * conf = Configuration::get();
-      conf->load_ini("fare.ini");
-      fares.init(conf->ini["files"]["grammar"], conf->ini["files"]["prices"]);
-      if(conf->ini["files"]["stif"] != "")
-          fares.load_od_stif(conf->ini["files"]["stif"]);
-      std::cout << "chargement terminé avec " << boost::num_vertices(fares.g) << " nœuds et " << boost::num_edges(fares.g) << " arcs" << std::endl;
+	 Configuration * conf = Configuration::get();
+	conf->load_ini(conf->get_string("path") + "fare.ini");
+	fares.init(conf->ini["files"]["grammar"], conf->ini["files"]["prices"]);
+	if(conf->ini["files"]["stif"] != "")
+		fares.load_od_stif(conf->ini["files"]["stif"]);
+    std::cout << "chargement terminé avec " << boost::num_vertices(fares.g) << " nœuds et " << boost::num_edges(fares.g) << " arcs" << std::endl;
   }
 };
 

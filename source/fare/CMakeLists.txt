@@ -4,12 +4,18 @@ include_directories (${Boost_INCLUDE_DIRS}
                      ${CMAKE_SOURCE_DIR}
                      ${CMAKE_SOURCE_DIR}/utils )
  
-add_executable (fare main.cpp fare.cpp fare.h ${CMAKE_SOURCE_DIR}/utils/csv.cpp ${CMAKE_SOURCE_DIR}/utils/encoding_converter.cpp)
 
 
-add_executable (fare_tests fare.cpp fare.h test.cpp ${CMAKE_SOURCE_DIR}/utils/csv.cpp ${CMAKE_SOURCE_DIR}/utils/encoding_converter.cpp)
+SET(FARE_SRC fare.cpp fare.h  ${CMAKE_SOURCE_DIR}/utils/csv.cpp)
+IF(NOT MSVC)
+	SET(FARE_SRC ${FARE_SRC} ${CMAKE_SOURCE_DIR}/utils/csv.cpp ${CMAKE_SOURCE_DIR}/utils/encoding_converter.cpp)
+ENDIF(NOT MSVC)
+
+add_executable (fare main.cpp ${FARE_SRC})
+
+add_executable (fare_tests test.cpp ${FARE_SRC})
 target_link_libraries(fare_tests ${Boost_LIBRARIES})
 ADD_TEST(test_fare ${EXECUTABLE_OUTPUT_PATH}/fare_tests --report_level=no)
 
 FIND_PACKAGE(WS_Commons)
-MAKE_WS(fare_ws fare_ws.cpp fare.cpp fare.h ${CMAKE_SOURCE_DIR}/utils/csv.cpp ${CMAKE_SOURCE_DIR}/utils/encoding_converter.cpp)
+MAKE_WS(fare_ws fare_ws.cpp ${FARE_SRC})

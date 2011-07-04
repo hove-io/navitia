@@ -2,9 +2,11 @@
 #include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
+#include "data_structures.h"
 
 #ifdef WIN32
 #include "windows.h"
+HINSTANCE hinstance = NULL;
 #endif
 
 
@@ -13,7 +15,7 @@ Configuration * Configuration::get() {
         instance = new Configuration();
 #ifdef WIN32
         char buf[2048];
-        DWORD filePath = GetModuleFileName(NULL, buf, 2048);
+        DWORD filePath = GetModuleFileName(::hinstance, buf, 2048);
         std::string::size_type posSlash = std::string(buf).find_last_of( "\\/" );
         std::string::size_type posDot = std::string(buf).find_last_of( "." );
         instance->strings["application"] = std::string(buf).substr(posSlash + 1, posDot - (posSlash + 1));

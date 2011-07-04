@@ -5,7 +5,9 @@
 #include <fstream>
 #include <vector>
 #include <boost/tokenizer.hpp>
+#ifndef WIN32
 #include "utils/encoding_converter.h"
+#endif
 
 class CsvReader {
     public:
@@ -23,7 +25,9 @@ class CsvReader {
         std::ifstream file;
         bool closed;
         boost::escaped_list_separator<char> functor;
+#ifndef WIN32
         EncodingConverter* converter;
+#endif
 
 
 };
