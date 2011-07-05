@@ -171,7 +171,7 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
         label.duration = section.duration();
         label.stop_area = section.start_stop_area;
     }
-    label.tickets.back().sections.push_back(section.section);
+    label.tickets.back().sections.push_back(section);
     return label;
 }
 

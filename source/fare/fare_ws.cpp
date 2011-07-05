@@ -40,16 +40,22 @@ struct Data{
 /// Classe associée à chaque thread
 class Worker : public BaseWorker<Data> {
 
-    void render(RequestData&, ResponseData& rd, std::vector<Ticket>& tickets){
+    void render(RequestData& request, ResponseData& rd, std::vector<Ticket>& tickets){
         rd.content_type = "text/xml";
         rd.status_code = 200;
         rd.response << "<FareList FareCount=\"" << tickets.size() << "\">";
+        rd.response << "<Params Function=\"Fare\">";
+        BOOST_FOREACH(auto params, request.params){
+            rd.response << "<" << params.first << ">" << params.second << "</" << params.first << ">";
+        }
+        rd.response << "</Params>";
     
         BOOST_FOREACH(Ticket t, tickets){
-            rd.response << "<Fare><Cost Money=\"Euro\">" << boost::format("%2.2f") % (t.value/100.0) << "</Cost>";
+            rd.response << "<Fare><Network>" << t.sections.at(0).network << "</Network>";
+            rd.response << "<Cost Money=\"Euro\">" << boost::format("%2.2f") % (t.value/100.0) << "</Cost>";
             rd.response << "<SectionList SectionCount=\"" << t.sections.size() << "\">";
-            BOOST_FOREACH(std::string section, t.sections){
-                rd.response << "<Section SectionKey=\"" << section << "\"/>";
+            BOOST_FOREACH(SectionKey section, t.sections){
+                rd.response << "<Section SectionKey=\"" << section.section << "\"/>";
             }
             rd.response << "</SectionList>";
             rd.response << "</Fare>";

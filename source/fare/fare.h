@@ -6,12 +6,13 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 
 /// Définit un billet : libellé et tarif
+struct SectionKey;
 struct Ticket {
     enum ticket_type {FlatFare, GraduatedFare, ODFare, None};
     std::string caption;
     int value;
     ticket_type type;
-    std::vector<std::string> sections;
+    std::vector<SectionKey> sections;
 
     Ticket() : value(0), type(None) {}
     Ticket(const std::string & caption, int value, ticket_type type = FlatFare) : caption(caption), value(value), type(type){}
