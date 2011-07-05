@@ -11,6 +11,7 @@ struct Ticket {
     std::string caption;
     int value;
     ticket_type type;
+    std::vector<std::string> sections;
 
     Ticket() : value(0), type(None) {}
     Ticket(const std::string & caption, int value, ticket_type type = FlatFare) : caption(caption), value(value), type(type){}
@@ -126,6 +127,7 @@ struct SectionKey {
     std::string dest_zone;
     std::string mode;
     boost::gregorian::date date;
+    std::string section;
 
     SectionKey(const std::string & key);
     int duration() const;

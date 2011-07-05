@@ -171,6 +171,7 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
         label.duration = section.duration();
         label.stop_area = section.start_stop_area;
     }
+    label.tickets.back().sections.push_back(section.section);
     return label;
 }
 
@@ -295,7 +296,7 @@ boost::gregorian::date parse_nav_date(const std::string & date_str){
                                   boost::lexical_cast<int>(res.at(2)));
 }
 
-SectionKey::SectionKey(const std::string & key) {
+SectionKey::SectionKey(const std::string & key) : section(key) {
     std::vector<std::string> string_vec;
     boost::algorithm::split(string_vec, key, boost::algorithm::is_any_of(";"));
     assert(string_vec.size() == 10);
