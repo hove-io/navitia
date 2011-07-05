@@ -103,14 +103,14 @@ void Fare::init(const std::string & filename, const std::string & prices_filenam
      for(row=reader.next(); row != reader.end(); row = reader.next()) {
          bool symetric = false;
 
-         State start = parse_state(row[0]);
-         State end = parse_state(row[1]);
+         State start = parse_state(row.at(0));
+         State end = parse_state(row.at(1));
 
          Transition transition;
-         transition.start_conditions = parse_conditions(row[2]);
-         transition.end_conditions = parse_conditions(row[3]);
+         transition.start_conditions = parse_conditions(row.at(2));
+         transition.end_conditions = parse_conditions(row.at(3));
          std::vector<std::string> global_conditions;
-         std::string str_condition = boost::algorithm::trim_copy(row[4]);
+         std::string str_condition = boost::algorithm::trim_copy(row.at(4));
          boost::algorithm::split(global_conditions, str_condition, boost::algorithm::is_any_of("&"));
          BOOST_FOREACH(std::string cond, global_conditions){
             if(cond == "symetric"){
@@ -216,11 +216,11 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
                                         ticket_od = get_od(next, section).get_fare(section.date);
                                     else
                                         ticket_od = get_od(label, section).get_fare(section.date);
-                                    new_labels[0].push_back(next_label(label,ticket_od , section));
+                                    new_labels.at(0).push_back(next_label(label,ticket_od , section));
                                 } catch (no_ticket) {}
 
                             } else {
-                                new_labels[0].push_back(next);
+                                new_labels.at(0).push_back(next);
                             }
 
                             new_labels[v].push_back(next);
@@ -233,8 +233,8 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
         catch(Ticket ticket) {
             new_labels.clear();
             new_labels.resize(nb_nodes);
-            BOOST_FOREACH(Label label, labels[0]){
-                new_labels[0].push_back(next_label(label, ticket, section));
+            BOOST_FOREACH(Label label, labels.at(0)){
+                new_labels.at(0).push_back(next_label(label, ticket, section));
             }
         }
         labels = new_labels;
@@ -246,7 +246,7 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
     // Si on a deux fois le même coût, on prend celui qui nécessite le moins de billets
     size_t best_num_tickets = std::numeric_limits<size_t>::max();
     int best_cost = std::numeric_limits<int>::max();
-    BOOST_FOREACH(Label label, labels[0]){
+    BOOST_FOREACH(Label label, labels.at(0)){
         if(label.cost < best_cost || (label.cost == best_cost && label.tickets.size() < best_num_tickets)){
             result = label.tickets;
             best_cost = label.cost;
@@ -263,8 +263,8 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
      std::vector<std::string> row;
      for(row=reader.next(); row != reader.end(); row = reader.next()) {
          // La structure du csv est : clef;date_debut;date_fin;prix;libellé
-         fare_map[row[0]].add(row[1], row[2],
-                              Ticket(row[4], boost::lexical_cast<int>(row[3])) );
+         fare_map[row.at(0)].add(row.at(1), row.at(2),
+                              Ticket(row.at(4), boost::lexical_cast<int>(row.at(3))) );
      }
  }
 
@@ -290,25 +290,25 @@ boost::gregorian::date parse_nav_date(const std::string & date_str){
     std::vector< std::string > res;
    boost::algorithm::split(res, date_str, boost::algorithm::is_any_of("|"));
 
-    return boost::gregorian::date(boost::lexical_cast<int>(res[0]),
-                                  boost::lexical_cast<int>(res[1]),
-                                  boost::lexical_cast<int>(res[2]));
+    return boost::gregorian::date(boost::lexical_cast<int>(res.at(0)),
+                                  boost::lexical_cast<int>(res.at(1)),
+                                  boost::lexical_cast<int>(res.at(2)));
 }
 
 SectionKey::SectionKey(const std::string & key) {
     std::vector<std::string> string_vec;
     boost::algorithm::split(string_vec, key, boost::algorithm::is_any_of(";"));
     assert(string_vec.size() == 10);
-    network = string_vec[0];
-    start_stop_area = string_vec[1];
-    dest_stop_area = string_vec[2];
-    line = string_vec[3];
-    date = parse_nav_date(string_vec[4]);
-    start_time = parse_time(string_vec[5]);
-    dest_time = parse_time(string_vec[6]);
-    start_zone = string_vec[7];
-    dest_zone = string_vec[8];
-    mode = string_vec[9];
+    network = string_vec.at(0);
+    start_stop_area = string_vec.at(1);
+    dest_stop_area = string_vec.at(2);
+    line = string_vec.at(3);
+    date = parse_nav_date(string_vec.at(4));
+    start_time = parse_time(string_vec.at(5));
+    dest_time = parse_time(string_vec.at(6));
+    start_zone = string_vec.at(7);
+    dest_zone = string_vec.at(8);
+    mode = string_vec.at(9);
 }
 
 template<class T> bool compare(T a, T b, Comp_e comp){
