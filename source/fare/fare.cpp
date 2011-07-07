@@ -136,11 +136,10 @@ void Fare::init(const std::string & filename, const std::string & prices_filenam
 
          boost::add_edge(start_v, end_v, transition, g);
          if(symetric){
-            Transition sym_transition;
+            Transition sym_transition = transition;
             sym_transition.start_conditions = transition.end_conditions;
             sym_transition.end_conditions = transition.start_conditions;
-            sym_transition.global_condition = transition.global_condition;
-            boost::add_edge(end_v, start_v, sym_transition, g);
+            boost::add_edge(start_v, end_v, sym_transition, g);
          }
      }
      load_fares(prices_filename);
@@ -171,15 +170,17 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
         label.duration = section.duration();
         label.stop_area = section.start_stop_area;
     }
-    label.tickets.back().sections.push_back(section);
+    if(!label.tickets.empty()){
+        label.tickets.back().sections.push_back(section);
+    }
     return label;
 }
 
 template<class T>
 bool valid(const State & state, T t){
-    if((state.mode != "" && state.mode != t.mode) ||
-       (state.network != "" && state.network != t.network) ||
-       (state.line != "" && state.line != t.line) )
+    if((state.mode != "" && !boost::iequals(state.mode, t.mode)) ||
+       (state.network != "" && !boost::iequals(state.network, t.network)) ||
+       (state.line != "" && !boost::iequals(state.line, t.line)) )
         return false;
     return true;
 }
@@ -189,7 +190,7 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
     std::vector< std::vector<Label> > labels(nb_nodes);
     // Étiquette de départ
     labels[0].push_back(Label());
-    BOOST_FOREACH(const std::string & section_key, section_keys ){
+    BOOST_FOREACH(const std::string & section_key, section_keys){
         std::vector< std::vector<Label> > new_labels(nb_nodes);
         SectionKey section(section_key);
         try {
@@ -201,10 +202,11 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
                         Ticket ticket;
                         Transition transition = g[e];
                         if (valid(g[u], label) &&  transition.valid(section_key, label)){
-                            if(transition.global_condition == "exclusive") throw ticket;
                             if(transition.ticket_key != ""){
                                 ticket = fare_map[transition.ticket_key].get_fare(section.date);
                             }
+                            if(transition.global_condition == "exclusive")
+                                throw ticket;
                             else if(transition.global_condition == "with_changes"){
                                 ticket.type = Ticket::ODFare;
                             }
