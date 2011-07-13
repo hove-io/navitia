@@ -31,7 +31,12 @@ public:
 
 private slots:
     void on_go_button_clicked(){
-        ui->textBrowser->setPlainText(callback(this->ui->query_input->text()));
+        QUrl url(this->ui->query_input->text());
+        ui->textBrowser->setPlainText(callback(QString(url.toEncoded())));
+    }
+
+    void on_query_input_returnPressed(){
+        on_go_button_clicked();
     }
 };
 

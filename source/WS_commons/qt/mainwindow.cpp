@@ -17,5 +17,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_go_button_clicked()
 {
+    QUrl url(this->ui->query_input->text());
+    std::cout << QString(url.encodedQuery()).toStdString() << std::endl;
     ui->textBrowser->setPlainText(wrapper.run(this->ui->query_input->text()));
 }
