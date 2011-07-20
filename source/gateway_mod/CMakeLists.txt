@@ -9,8 +9,13 @@ include_directories (${CMAKE_SOURCE_DIR} ${PROTOBUF_INCLUDE_DIRS})
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS type.proto)
 
 SET(SOURCE_FILES 
+    context.h
     gateway.h
     gateway.cpp
+    pool.h
+    pool.cpp
+    navitia.h
+    navitia.cpp
     ${PROTO_SRCS}
     ${PROTO_HDRS}
     interface.h

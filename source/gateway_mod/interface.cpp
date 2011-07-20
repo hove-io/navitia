@@ -85,9 +85,9 @@ void render(webservice::RequestData& request, webservice::ResponseData& response
     switch(context.service){
         case Context::PTREF:
             if(request.params["format"] == "txt"){
-            response.response << pb2txt(context.pb);
-            response.content_type = "text/html";
-            response.status_code = 200;
+                response.response << pb2txt(context.pb);
+                response.content_type = "text/html";
+                response.status_code = 200;
             }else{
                 //par défaut xml
                 response.response << pb2xml(context.pb);
@@ -103,3 +103,14 @@ void render(webservice::RequestData& request, webservice::ResponseData& response
             response.content_type = "text/xml";
     }
 }
+
+
+void render_status(webservice::RequestData& request, webservice::ResponseData& response, Context& context, Pool& pool){
+    response.response << "<GatewayStatus><NavitiaList Count=\"" << pool.navitia_list.size() << "\">";
+    BOOST_FOREACH(Navitia* nav, pool.navitia_list){
+        response.response << "<Navitia thread=\"" << nav->unused_thread << "\">" << nav->url << "</Navitia>";
+    }
+    response.response << "</NavitiaList></GatewayStatus>";
+    response.content_type = "text/xml";
+}
+
