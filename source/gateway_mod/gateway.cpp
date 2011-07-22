@@ -12,7 +12,8 @@ Worker::Worker(Pool &){
     register_api("/query", boost::bind(&Worker::handle, this, _1, _2), "traite les requétes");
     register_api("/load", boost::bind(&Worker::load, this, _1, _2), "traite les requétes");
     register_api("/register", boost::bind(&Worker::register_navitia, this, _1, _2), "ajout d'un NAViTiA au pool");
-    register_api("/status", boost::bind(&Worker::status, this, _1, _2), "ajout d'un NAViTiA au pool");
+    register_api("/status", boost::bind(&Worker::status, this, _1, _2), "status");
+    register_api("/unregister", boost::bind(&Worker::unregister_navitia, this, _1, _2), "suppression d'un NAViTiA du pool");
 
 }
 
@@ -36,6 +37,21 @@ webservice::ResponseData Worker::register_navitia(webservice::RequestData& reque
 
     //TODO valider l'url
     pool.add_navitia(new Navitia(request.params["url"], 8));
+    
+
+    return status(request, pool);
+}
+
+webservice::ResponseData Worker::unregister_navitia(webservice::RequestData& request, Pool& pool){
+    webservice::ResponseData rd;
+    
+    if(request.params.find("url") == request.params.end()){
+        rd.status_code = 500;
+        return rd;
+    }
+
+    //TODO valider l'url
+    pool.remove_navitia(new Navitia(request.params["url"], 8));
     
 
     return status(request, pool);

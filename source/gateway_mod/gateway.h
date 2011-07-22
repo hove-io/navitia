@@ -17,6 +17,7 @@ class Worker : public webservice::BaseWorker<Pool> {
 
     webservice::ResponseData handle(webservice::RequestData& request, Pool& pool);
     webservice::ResponseData register_navitia(webservice::RequestData& request, Pool& pool);
+    webservice::ResponseData unregister_navitia(webservice::RequestData& request, Pool& pool);
     webservice::ResponseData status(webservice::RequestData& request, Pool& pool);
     webservice::ResponseData load(webservice::RequestData& request, Pool& pool);
     

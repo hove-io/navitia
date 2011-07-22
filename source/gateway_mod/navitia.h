@@ -14,6 +14,10 @@ class Navitia {
 
         std::pair<int, std::string> query(const std::string& request);
 
+        bool operator==(const Navitia& other){
+            return this->url == other.url;
+        }
+
         void load();
         
         void use();

@@ -18,6 +18,15 @@ class Pool{
             }
         };
 
+        struct Comparer{
+            Navitia* ref;
+            Comparer(Navitia* ref) : ref(ref){}
+
+            bool operator()(Navitia* value){
+                return (*value == *ref);
+            }
+        };
+
     public:
         
         int nb_threads;
@@ -46,5 +55,6 @@ class Pool{
         }
 
         void add_navitia(Navitia* navitia);
+        void remove_navitia(Navitia* navitia);
 
 };

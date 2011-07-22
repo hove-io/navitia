@@ -32,7 +32,7 @@ std::string pb2xml(std::unique_ptr<google::protobuf::Message>& response){
                     }else if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
                         buffer << reflection->GetInt32(*object, field_descriptor) << "\" ";
                     }else{
-                        buffer << "type unkown\" ";
+                        buffer << "type_unkown\" ";
                     }
                 }
             }
