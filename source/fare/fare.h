@@ -10,12 +10,14 @@ struct SectionKey;
 struct Ticket {
     enum ticket_type {FlatFare, GraduatedFare, ODFare, None};
     std::string caption;
+    std::string comment;
     int value;
     ticket_type type;
     std::vector<SectionKey> sections;
 
     Ticket() : value(0), type(None) {}
-    Ticket(const std::string & caption, int value, ticket_type type = FlatFare) : caption(caption), value(value), type(type){}
+    Ticket(const std::string & caption, int value, const std::string & comment, ticket_type type = FlatFare) :
+        caption(caption), value(value), comment(comment), type(type){}
 };
 
 /// Définit un billet pour une période données
