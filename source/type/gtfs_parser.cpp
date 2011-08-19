@@ -395,36 +395,9 @@ void GtfsParser::parse_stop_times() {
         return;
     }
 
-    parse_ended = false;
-    int nb_threads = 4;
-    boost::thread_group theads;
-    for(int i=0; i < nb_threads; i++){
-        theads.create_thread(boost::bind(&GtfsParser::parse_stop_times_worker, this, id_c, arrival_c, departure_c, stop_c, stop_seq_c, pickup_c, drop_c));
-    }
 
+    size_t count = 0;
     while(getline(ifile, line)) {
-        queue_mutex.lock();
-        queue.push(line);
-        queue_mutex.unlock();
-        cond.notify_one();
-    }
-    parse_ended = true;
-    cond.notify_all();
-    theads.join_all();
-    std::cout << "Nombre d'horaires : " << data.stop_times.size() << std::endl;
-}
-
-void GtfsParser::parse_stop_times_worker(int id_c, int arrival_c, int departure_c, int stop_c, int stop_seq_c, int pickup_c, int drop_c){
-    while(true){
-        boost::unique_lock<boost::mutex> lock(queue_mutex);
-        while(queue.empty() && !parse_ended)
-            cond.wait(lock);
-        if(parse_ended && queue.empty())
-            return;
-        std::string line = queue.back();
-        queue.pop();
-        lock.unlock();
-
         boost::trim(line);
         Tokenizer tok(line);
         std::vector<std::string> elts(tok.begin(), tok.end());
@@ -447,9 +420,12 @@ void GtfsParser::parse_stop_times_worker(int id_c, int arrival_c, int departure_
             stop_time.vehicle_journey_idx = route_it->second;
             stop_time.ODT = (elts[pickup_c] == "2" && elts[drop_c] == "2");
             stop_time.zone = 0; // à définir selon pickup_type ou drop_off_type = 10
-            data_mutex.lock();
+            stop_time.idx = count;            
             data.stop_times.push_back(stop_time);
-            data_mutex.unlock();
+            count++;
+
         }
     }
+    std::cout << "Nombre d'horaires : " << data.stop_times.size() << std::endl;
 }
+

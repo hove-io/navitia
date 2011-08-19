@@ -37,6 +37,7 @@ int main(int, char **) {
     end = pt::microsec_clock::local_time();
     std::cout << "Durée pour lire les données de l'IdF depuis le GTFS : " << (end-start).total_milliseconds() << " ms" << std::endl << std::endl;
 
+    data.save_flz("idf_flz.nav");
     start = pt::microsec_clock::local_time();
     auto sa_name_idx = make_string_index(data.stop_areas, &StopArea::name);
     end = pt::microsec_clock::local_time();

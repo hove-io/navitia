@@ -43,25 +43,26 @@ class Worker : public BaseWorker<Data> {
     void render(RequestData& request, ResponseData& rd, std::vector<Ticket>& tickets){
         rd.content_type = "text/xml";
         rd.status_code = 200;
-        rd.response << "<FareList FareCount=\"" << tickets.size() << "\">";
-        rd.response << "<Params Function=\"Fare\">";
+        rd.response << "<FareList FareCount=\"" << tickets.size() << "\">\n";
+        rd.response << "<Params Function=\"Fare\">\n";
         BOOST_FOREACH(auto params, request.params){
-            rd.response << "<" << params.first << ">" << params.second << "</" << params.first << ">";
+            rd.response << "<" << params.first << ">" << params.second << "</" << params.first << ">\n";
         }
-        rd.response << "</Params>";
+        rd.response << "</Params>\n";
     
         BOOST_FOREACH(Ticket t, tickets){
-            rd.response << "<Fare><Network>" << t.sections.at(0).network << "</Network>";
-            rd.response << "<Cost Money=\"Euro\">" << boost::format("%2.2f") % (t.value/100.0) << "</Cost>";
-            rd.response << "<SectionList SectionCount=\"" << t.sections.size() << "\">";
+            rd.response << "<Fare><Network>" << t.sections.at(0).network << "</Network>\n";
+            rd.response << "<Cost Money=\"Euro\">" << boost::format("%2.2f") % (t.value/100.0) << "</Cost>\n";
+            rd.response << "<Comment>" << t.comment  << "</Comment>\n";
+            rd.response << "<SectionList SectionCount=\"" << t.sections.size() << "\">\n";
             BOOST_FOREACH(SectionKey section, t.sections){
-                rd.response << "<Section SectionKey=\"" << section.section << "\"/>";
+                rd.response << "<Section SectionKey=\"" << section.section << "\"/>\n";
             }
-            rd.response << "</SectionList>";
-            rd.response << "</Fare>";
+            rd.response << "</SectionList>\n";
+            rd.response << "</Fare>\n";
         }
 
-        rd.response << "</FareList>";
+        rd.response << "</FareList>\n";
     }
 
     ResponseData fare(RequestData request, Data & d) {

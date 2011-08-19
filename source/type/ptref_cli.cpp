@@ -9,7 +9,7 @@ using namespace navitia::type;
 int main(int argc, char** argv){
     std::cout << "Chargement des données..." << std::flush;
     Data d;
-    d.load_flz("data.nav.flz");
+    d.load_flz("idf_flz.nav");
     std::cout << " effectué" << std::endl << std::endl;
 
     std::cout
