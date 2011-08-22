@@ -267,7 +267,7 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
      for(row=reader.next(); row != reader.end(); row = reader.next()) {
          // La structure du csv est : clef;date_debut;date_fin;prix;libellé
          fare_map[row.at(0)].add(row.at(1), row.at(2),
-                              Ticket(row.at(4), row.at(5), boost::lexical_cast<int>(row.at(3))) );
+                              Ticket(row.at(4), boost::lexical_cast<int>(row.at(3)), row.at(5)) );
      }
  }
 

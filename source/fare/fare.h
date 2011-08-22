@@ -10,8 +10,8 @@ struct SectionKey;
 struct Ticket {
     enum ticket_type {FlatFare, GraduatedFare, ODFare, None};
     std::string caption;
-    std::string comment;
     int value;
+    std::string comment;
     ticket_type type;
     std::vector<SectionKey> sections;
 
