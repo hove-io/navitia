@@ -16,7 +16,7 @@ target_link_libraries(examples ${Boost_LIBRARIES})
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS type.proto)
 add_executable (ptref ptreferential.h ptreferential.cpp type.h type.cpp data.h data.cpp indexes.h indexes2.h where.h reflexion.h ${CMAKE_SOURCE_DIR}/fastlz_filter/fastlz.c ${PROTO_SRCS} ${PROTO_HDRS} ptref_cli.cpp ptref_graph.cpp)
-target_link_libraries(ptref ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY})
+target_link_libraries(ptref ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} readline)
 
 
 
