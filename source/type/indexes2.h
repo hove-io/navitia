@@ -5,48 +5,22 @@
  * The data must be in an std::vector
  */
 
-#include <boost/fusion/algorithm/query/find.hpp>
-#include <boost/fusion/include/for_each.hpp>
-#include <boost/mpl/lambda.hpp>
-#include <boost/mpl/for_each.hpp>
-#include <boost/array.hpp>
-#include <boost/optional.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/fusion/container/vector/detail/as_vector.hpp>
 
 namespace navitia { namespace type {
 
 
-namespace f = boost::fusion;
-namespace m = boost::mpl;
 
 template<class T>
 bool true2(const T&) {return true;}
 
 /// TypeVector is a boost::fusion vector of multiple data types
-template<class TypeVector>
+template<class T>
 struct Index2 {
-    /// A boost::vector of pointers of data types
-    typedef typename boost::mpl::transform<TypeVector, typename boost::add_pointer<typename boost::mpl::_1> >::type TypePtrVector;
-    typedef typename boost::mpl::transform<
-        typename boost::mpl::transform<TypeVector, typename boost::add_const<typename boost::mpl::_1> >::type,
-        typename boost::add_pointer<typename boost::mpl::_1>
-    >::type ConstPtrVector;
-
-
-    /// The number of types we consider
-    const static int NbTypes = boost::fusion::result_of::size<TypeVector>::type::value;
-
-    /// Type of the Array containing the offset of every element
-    typedef typename boost::array<uint32_t, NbTypes> offset_t;
-
-    /// NbTypes pointers to the begining of the data structures
-    TypePtrVector begin_ptr;
+    /// Pointer to the begining of the data structures
+    T * begin_ptr;
 
     /// Contains all the offsets so we can get back all our elements
-    std::vector<offset_t> offsets;
-
-    int nb_types(){return NbTypes;}
+    std::vector<idx_t> offsets;
 
     /// Initialises the data having two iterators
     template<class Iterator>
@@ -58,13 +32,10 @@ struct Index2 {
     /// Initialises the data having two iterators and a Functor to filter every thing
     template<class Iterator, class Filter>
     void initialize(Iterator begin, Iterator end, const Filter & f){
-        typename Iterator::pointer first_elt = &(*begin);
-        begin_ptr = TypePtrVector(first_elt);
+        begin_ptr = &(*begin);
         while(begin != end) {
             if(f(*begin)) {
-                offset_t offset;
-                offset[0] = &(*begin) - first_elt;
-                offsets.push_back(offset); 
+                offsets.push_back(&(*begin) - begin_ptr);
             }
             begin++;
         }
@@ -92,52 +63,36 @@ struct Index2 {
     /** This functor takes the start pointer, the difference and returns a reference to the element
       * It is used to get back the data
       */
-    template<class PtrVector>
+    template<class Type>
     struct Transformer{
-        template<int N>
-        typename boost::disable_if_c<N == 0>::type
-        copy(const TypePtrVector & t1, PtrVector & t2, const offset_t & offset) const {
-            boost::fusion::at_c<N>(t2) = f::at_c<N>(t1) + offset[N];
-            copy<N-1>(t1, t2, offset);
-        }
-
-        template<int N>
-        typename boost::enable_if_c<N == 0>::type
-        copy(const TypePtrVector & t1, PtrVector & t2, const offset_t & offset) const {
-            boost::fusion::at_c<N>(t2) = f::at_c<0>(t1) + offset[0];
-        }
-
         Transformer() {}
-
-        typedef PtrVector result_type;
-        TypePtrVector begin_ptr;
-        Transformer(const TypePtrVector & begin_ptr) : begin_ptr(begin_ptr){}
-        PtrVector operator()(const offset_t & offset) const {
-            PtrVector ret;
-            copy<NbTypes-1>(begin_ptr, ret, offset);
-            return ret;
+        typedef T result_type;
+        T * begin_ptr;
+        Transformer(T* begin_ptr) : begin_ptr(begin_ptr){}
+        Type operator()(idx_t offset) const {
+            return *(begin_ptr + offset);
         }
     };
 
-    typedef typename boost::transform_iterator<Transformer<TypePtrVector>, typename std::vector<offset_t>::const_iterator> iterator;
-    typedef typename boost::transform_iterator<Transformer<ConstPtrVector>, typename std::vector<offset_t>::const_iterator> const_iterator;
+    typedef typename boost::transform_iterator<Transformer<T&>, typename std::vector<idx_t>::const_iterator> iterator;
+    typedef typename boost::transform_iterator<Transformer<const T&>, typename std::vector<idx_t>::const_iterator> const_iterator;
     iterator begin() {
-        return iterator(offsets.begin(), Transformer<TypePtrVector>(begin_ptr));
+        return iterator(offsets.begin(), Transformer<T&>(begin_ptr));
     }
 
     iterator end() {
-        return iterator(offsets.end(), Transformer<TypePtrVector>(begin_ptr));
+        return iterator(offsets.end(), Transformer<T&>(begin_ptr));
     }
 
     const_iterator begin() const {
-        return const_iterator(offsets.begin(), Transformer<ConstPtrVector>(begin_ptr));
+        return const_iterator(offsets.begin(), Transformer<const T&>(begin_ptr));
     }
 
     const_iterator end() const {
-        return const_iterator(offsets.end(), Transformer<ConstPtrVector>(begin_ptr));
+        return const_iterator(offsets.end(), Transformer<const T&>(begin_ptr));
     }
 
-    std::vector<offset_t> get_offsets() const{
+    std::vector<idx_t> get_offsets() const{
         return offsets;
     }
 };
