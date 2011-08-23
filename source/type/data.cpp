@@ -91,4 +91,47 @@ std::vector<idx_t> Data::get_target_by_source(Type_e source, Type_e target, std:
     return result;
 }
 
+std::vector<idx_t> Data::get_all_index(Type_e type){
+    switch(type){
+    case eLine: return get_all_index<eLine>(); break;
+    case eValidityPattern: return get_all_index<eLine>(); break;
+    case eRoute: return get_all_index<eLine>(); break;
+    case eVehicleJourney: return get_all_index<eLine>(); break;
+    case eStopPoint: return get_all_index<eLine>(); break;
+    case eStopArea: return get_all_index<eLine>(); break;
+    case eStopTime: return get_all_index<eLine>(); break;
+    case eNetwork: return get_all_index<eLine>(); break;
+    case eMode: return get_all_index<eLine>(); break;
+    case eModeType: return get_all_index<eLine>(); break;
+    case eCity: return get_all_index<eLine>(); break;
+    case eConnection: return get_all_index<eLine>(); break;
+    case eRoutePoint: return get_all_index<eLine>(); break;
+    case eDistrict: return get_all_index<eLine>(); break;
+    case eDepartment: return get_all_index<eLine>(); break;
+    case eCompany: return get_all_index<eLine>(); break;
+    case eVehicle: return get_all_index<eLine>(); break;
+    case eCountry: return get_all_index<eLine>(); break;
+    case eUnknown: return std::vector<idx_t>(); break;
+    }
+}
+
+template<> std::vector<Line> & Data::get_data<eLine>(){return lines;}
+template<> std::vector<ValidityPattern> & Data::get_data<eValidityPattern>(){return validity_patterns;}
+template<> std::vector<Route> & Data::get_data<eRoute>(){return routes;}
+template<> std::vector<VehicleJourney> & Data::get_data<eVehicleJourney>(){return vehicle_journeys;}
+template<> std::vector<StopPoint> & Data::get_data<eStopPoint>(){return stop_points;}
+template<> std::vector<StopArea> & Data::get_data<eStopArea>(){return stop_areas;}
+template<> std::vector<StopTime> & Data::get_data<eStopTime>(){return stop_times;}
+template<> std::vector<Network> & Data::get_data<eNetwork>(){return networks;}
+template<> std::vector<Mode> & Data::get_data<eMode>(){return modes;}
+template<> std::vector<ModeType> & Data::get_data<eModeType>(){return mode_types;}
+template<> std::vector<City> & Data::get_data<eCity>(){return cities;}
+template<> std::vector<Connection> & Data::get_data<eConnection>(){return connections;}
+template<> std::vector<RoutePoint> & Data::get_data<eRoutePoint>(){return route_points;}
+template<> std::vector<District> & Data::get_data<eDistrict>(){return districts;}
+template<> std::vector<Department> & Data::get_data<eDepartment>(){return departments;}
+template<> std::vector<Company> & Data::get_data<eCompany>(){return companies;}
+template<> std::vector<Vehicle> & Data::get_data<eVehicle>(){return vehicles;}
+template<> std::vector<Country> & Data::get_data<eCountry>(){return countries;}
+
 }} //namespace navitia::type

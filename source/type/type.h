@@ -9,8 +9,10 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bimap.hpp>
+#include <boost/mpl/map.hpp>
 
 #include "reflexion.h"
+namespace mpl = boost::mpl;
 
 namespace navitia { namespace type {
 typedef unsigned int idx_t;
@@ -274,6 +276,9 @@ struct VehicleJourney: public NavitiaHeader, Nameable {
     std::vector<idx_t> get(Type_e type, const Data & data) const;
 };
 
+struct Vehicle: public NavitiaHeader, Nameable {
+};
+
 struct Equipement : public NavitiaHeader {
     enum EquipementKind{ Sheltred, 
                          MIPAccess,
@@ -398,5 +403,27 @@ public:
 
 };
 
+/** Correspondance entre les enums de type et les classes
+  *
+  *  L'utilisation des mpl::int_ est nécessaire car on ne peut pas passer d'énum de base (c'est naze)
+  */
+typedef boost::mpl::map< mpl::pair<mpl::int_<eValidityPattern>, ValidityPattern>,
+                         mpl::pair<mpl::int_<eLine>, Line>,
+                         mpl::pair<mpl::int_<eRoute>, Route>,
+                         mpl::pair<mpl::int_<eVehicleJourney>, VehicleJourney>,
+                         mpl::pair<mpl::int_<eStopPoint>, StopPoint>,
+                         mpl::pair<mpl::int_<eStopArea>, StopArea>,
+                         mpl::pair<mpl::int_<eStopTime>, StopTime>,
+                         mpl::pair<mpl::int_<eNetwork>, Network>,
+                         mpl::pair<mpl::int_<eMode>, Mode>,
+                         mpl::pair<mpl::int_<eModeType>, ModeType>,
+                         mpl::pair<mpl::int_<eCity>, City>,
+                         mpl::pair<mpl::int_<eConnection>, Connection>,
+                         mpl::pair<mpl::int_<eRoutePoint>, RoutePoint>,
+                         mpl::pair<mpl::int_<eDistrict>, District>,
+                         mpl::pair<mpl::int_<eDepartment>, Department>,
+                         mpl::pair<mpl::int_<eCompany>, Company>,
+                         mpl::pair<mpl::int_<eVehicle>, Vehicle>,
+                         mpl::pair<mpl::int_<eCountry>, Country> > enum_type_map;
 
 } } //namespace navitia::type

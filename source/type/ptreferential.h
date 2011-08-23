@@ -172,6 +172,7 @@ void set_value(google::protobuf::Message* message, const T& object, const std::s
     }
 }
 
+
 template<class T>
 WhereWrapper<T> build_clause(std::vector<WhereClause> clauses) {
     WhereWrapper<T> wh(new BaseWhere<T>());
@@ -185,7 +186,6 @@ WhereWrapper<T> build_clause(std::vector<WhereClause> clauses) {
     }
     return wh;
 }
-
 
 
 template<class T>
@@ -205,6 +205,20 @@ pbnavitia::PTRefResponse extract_data(std::vector<T> & rows, const Request & r) 
     }
     /*std::ofstream file("response.pb");
     pb_response.SerializeToOstream(&file);*/
+    return pb_response;
+}
+
+template<class T>
+pbnavitia::PTRefResponse extract_data(std::vector<T> & table, const Request & r, std::vector<idx_t> & rows) {
+    pbnavitia::PTRefResponse pb_response;
+
+    BOOST_FOREACH(idx_t row, rows){
+        pbnavitia::PTreferential * pb_row = pb_response.add_item();
+        google::protobuf::Message* pb_message = get_message(pb_row, r.tables.at(0));
+        BOOST_FOREACH(const Column & col, r.columns){
+            set_value(pb_message, table.at(row), col.column);
+        }
+    }
     return pb_response;
 }
 

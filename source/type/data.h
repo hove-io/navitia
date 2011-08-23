@@ -25,6 +25,11 @@ public:
     std::vector<Connection> connections;
     std::vector<RoutePoint> route_points;
 
+    std::vector<District> districts;
+    std::vector<Department> departments;
+    std::vector<Company> companies;
+    std::vector<Vehicle> vehicles;
+    std::vector<Country> countries;
     public:
 
     Data() : nb_threads(8), loaded(false){}
@@ -97,6 +102,22 @@ public:
       * retourne une liste d'indexes pointant vers target
       */
     std::vector<idx_t> get_target_by_source(Type_e source, Type_e target, std::vector<idx_t> source_idx);
+
+    /** Retourne la structure de données associée au type */
+    template<Type_e E>  std::vector<typename boost::mpl::at<enum_type_map, boost::mpl::int_<E> >::type> & get_data();
+
+    /** Retourne tous les indices d'un type donné */
+    template<Type_e E> std::vector<idx_t> get_all_index() {
+        size_t size = get_data<E>().size();
+        std::vector<idx_t> indexes(size);
+        for(size_t i=0; i < size; i++)
+            indexes[i] = i;
+        return indexes;
+    }
+
+    std::vector<idx_t> get_all_index(Type_e type);
+
+
 
 };
 

@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <algorithm>
+
 namespace navitia{ namespace ptref{
 
 google::protobuf::Message* get_message(pbnavitia::PTreferential* row, Type_e type){
@@ -12,6 +14,26 @@ google::protobuf::Message* get_message(pbnavitia::PTreferential* row, Type_e typ
     return reflection->MutableMessage(row, field_descriptor);
 }
 
+template<Type_e E, class T>
+std::vector<idx_t> foo(std::vector<WhereClause> clauses,  Type_e requested_type, std::vector<T> & data, Data & d)
+{
+    //typedef typename boost::mpl::at<enum_type_map, boost::mpl::int_<E> >::type T;
+    Index2<boost::fusion::vector<T> > filtered(data, build_clause<T>(clauses));
+    auto offsets = filtered.get_offsets();
+    std::vector<idx_t> indexes;
+    indexes.reserve(filtered.size());
+    BOOST_FOREACH(auto item, offsets){
+        indexes.push_back(item[0]);
+    }
+    std::vector<Type_e> path = Jointures().find_path(requested_type);
+    Type_e current = E;
+    while(path[current] != current){
+        indexes = d.get_target_by_source(current, path[current], indexes);
+        std::cout << static_data::get()->captionByType(current) << " -> " << static_data::get()->captionByType(path[current]) << std::endl;
+        current = path[current];
+    }
+    return indexes;
+}
 
 pbnavitia::PTRefResponse query(std::string request, Data & data){
     std::string::iterator begin = request.begin();
@@ -43,34 +65,45 @@ pbnavitia::PTRefResponse query(std::string request, Data & data){
     }
 
     std::pair<Type_e, std::vector<WhereClause> > type_clauses;
-    Jointures j;
+    Type_e requested_type = r.tables[0];
+    std::vector<idx_t> final_indexes = data.get_all_index(requested_type);
+    std::vector<idx_t> indexes;
     BOOST_FOREACH(type_clauses, clauses){
         switch(type_clauses.first){
-        case eLine:
-            Index2<boost::fusion::vector<Line> > filtered(data.lines, build_clause<Line>(type_clauses.second));
-            auto offsets = filtered.get_offsets();
-            std::vector<idx_t> indexes;
-            indexes.reserve(filtered.size());
-            BOOST_FOREACH(auto item, offsets){
-                indexes.push_back(item[0]);
-            }
-            std::vector<Type_e> path = j.find_path(r.tables[0]);
-            Type_e current = eLine;
-            while(path[current] != current){
-                indexes = data.get_target_by_source(current, path[current], indexes);
-                std::cout << static_data::get()->captionByType(current) << " -> " << static_data::get()->captionByType(path[current]) << std::endl;
-                current = path[current];
-            }
+        case eLine: indexes = foo<eLine>(type_clauses.second, requested_type, data.lines,data); break;
+        case eValidityPattern: indexes = foo<eValidityPattern>(type_clauses.second, requested_type, data.validity_patterns,data); break;
+        case eRoute: indexes = foo<eRoute>(type_clauses.second, requested_type, data.routes,data); break;
+        case eVehicleJourney: indexes = foo<eVehicleJourney>(type_clauses.second, requested_type, data.vehicle_journeys,data); break;
+        case eStopPoint: indexes = foo<eStopPoint>(type_clauses.second, requested_type, data.stop_points,data); break;
+        case eStopArea: indexes = foo<eStopArea>(type_clauses.second, requested_type, data.stop_areas,data); break;
+        case eStopTime: indexes = foo<eStopTime>(type_clauses.second, requested_type, data.stop_times,data); break;
+        case eNetwork: indexes = foo<eNetwork>(type_clauses.second, requested_type, data.networks,data); break;
+        case eMode: indexes = foo<eMode>(type_clauses.second, requested_type, data.modes,data); break;
+        case eModeType: indexes = foo<eModeType>(type_clauses.second, requested_type, data.mode_types,data); break;
+        case eCity: indexes = foo<eCity>(type_clauses.second, requested_type, data.cities,data); break;
+        case eConnection: indexes = foo<eConnection>(type_clauses.second, requested_type, data.connections,data); break;
+        case eRoutePoint: indexes = foo<eRoutePoint>(type_clauses.second, requested_type, data.route_points,data); break;
+        case eDistrict: indexes = foo<eDistrict>(type_clauses.second, requested_type, data.districts,data); break;
+        case eDepartment: indexes = foo<eDepartment>(type_clauses.second, requested_type, data.departments,data); break;
+        case eCompany: indexes = foo<eCompany>(type_clauses.second, requested_type, data.companies,data); break;
+        case eVehicle: indexes = foo<eVehicle>(type_clauses.second, requested_type, data.vehicles,data); break;
+        case eCountry: indexes = foo<eCountry>(type_clauses.second, requested_type, data.countries,data); break;
+        case eUnknown: break;
         }
+        // Attention ! les structures doivent être triées !
+        std::vector<idx_t> tmp_indexes;
+        std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
+        std::set_intersection(final_indexes.begin(), final_indexes.end(), indexes.begin(), indexes.end(), it);
+        final_indexes = tmp_indexes;
     }
 
     switch(r.tables[0]){
-    case eValidityPattern: return extract_data(data.validity_patterns, r); break;
-    case eLine: return extract_data(data.lines, r); break;
-    case eRoute: return extract_data(data.routes, r); break;
-    case eVehicleJourney: return extract_data(data.vehicle_journeys, r); break;
-    case eStopPoint: return extract_data(data.stop_points, r); break;
-    case eStopArea: return extract_data(data.stop_areas, r); break;
+    case eValidityPattern: return extract_data(data.validity_patterns, r, final_indexes); break;
+    case eLine: return extract_data(data.lines, r, final_indexes); break;
+    case eRoute: return extract_data(data.routes, r, final_indexes); break;
+    case eVehicleJourney: return extract_data(data.vehicle_journeys, r, final_indexes); break;
+    case eStopPoint: return extract_data(data.stop_points, r, final_indexes); break;
+    case eStopArea: return extract_data(data.stop_areas, r, final_indexes); break;
     default:  break;
     }
 
