@@ -14,10 +14,11 @@ google::protobuf::Message* get_message(pbnavitia::PTreferential* row, Type_e typ
     return reflection->MutableMessage(row, field_descriptor);
 }
 
-template<Type_e E, class T>
-std::vector<idx_t> foo(std::vector<WhereClause> clauses,  Type_e requested_type, std::vector<T> & data, Data & d)
+template<Type_e E>
+std::vector<idx_t> get_indexes(std::vector<WhereClause> clauses,  Type_e requested_type, Data & d)
 {
-    //typedef typename boost::mpl::at<enum_type_map, boost::mpl::int_<E> >::type T;
+    typedef typename boost::mpl::at<enum_type_map, boost::mpl::int_<E> >::type T;
+    auto data = d.get_data<E>();
     Index2<boost::fusion::vector<T> > filtered(data, build_clause<T>(clauses));
     auto offsets = filtered.get_offsets();
     std::vector<idx_t> indexes;
@@ -25,8 +26,12 @@ std::vector<idx_t> foo(std::vector<WhereClause> clauses,  Type_e requested_type,
     BOOST_FOREACH(auto item, offsets){
         indexes.push_back(item[0]);
     }
+
+    if(clauses.size() == 0)
+        return indexes;
+
     std::vector<Type_e> path = Jointures().find_path(requested_type);
-    Type_e current = E;
+    Type_e current = clauses[0].col.table;
     while(path[current] != current){
         indexes = d.get_target_by_source(current, path[current], indexes);
         std::cout << static_data::get()->captionByType(current) << " -> " << static_data::get()->captionByType(path[current]) << std::endl;
@@ -48,14 +53,8 @@ pbnavitia::PTRefResponse query(std::string request, Data & data){
     else
         std::cout << "Parsage a échoué" << std::endl;
 
-    if(r.tables.size() != 1){
-        std::cout << "Pour l'instant on ne supporte que exactement une table" << std::endl;
-        std::cout << r.tables.size() << std::endl;
-        throw std::string("too many table");
-    }
-    else {
-        std::cout << "Table : " << static_data::get()->captionByType(r.tables[0]) << std::endl;
-    }
+    std::cout << "Requested Type: " << static_data::get()->captionByType(r.requested_type) << std::endl;
+
 
     // On regroupe les clauses par tables sur lequelles elles vont taper
     // Ça va se compliquer le jour où l'on voudra gérer des and/or intermélangés...
@@ -65,29 +64,28 @@ pbnavitia::PTRefResponse query(std::string request, Data & data){
     }
 
     std::pair<Type_e, std::vector<WhereClause> > type_clauses;
-    Type_e requested_type = r.tables[0];
-    std::vector<idx_t> final_indexes = data.get_all_index(requested_type);
+    std::vector<idx_t> final_indexes = data.get_all_index(r.requested_type);
     std::vector<idx_t> indexes;
     BOOST_FOREACH(type_clauses, clauses){
         switch(type_clauses.first){
-        case eLine: indexes = foo<eLine>(type_clauses.second, requested_type, data.lines,data); break;
-        case eValidityPattern: indexes = foo<eValidityPattern>(type_clauses.second, requested_type, data.validity_patterns,data); break;
-        case eRoute: indexes = foo<eRoute>(type_clauses.second, requested_type, data.routes,data); break;
-        case eVehicleJourney: indexes = foo<eVehicleJourney>(type_clauses.second, requested_type, data.vehicle_journeys,data); break;
-        case eStopPoint: indexes = foo<eStopPoint>(type_clauses.second, requested_type, data.stop_points,data); break;
-        case eStopArea: indexes = foo<eStopArea>(type_clauses.second, requested_type, data.stop_areas,data); break;
-        case eStopTime: indexes = foo<eStopTime>(type_clauses.second, requested_type, data.stop_times,data); break;
-        case eNetwork: indexes = foo<eNetwork>(type_clauses.second, requested_type, data.networks,data); break;
-        case eMode: indexes = foo<eMode>(type_clauses.second, requested_type, data.modes,data); break;
-        case eModeType: indexes = foo<eModeType>(type_clauses.second, requested_type, data.mode_types,data); break;
-        case eCity: indexes = foo<eCity>(type_clauses.second, requested_type, data.cities,data); break;
-        case eConnection: indexes = foo<eConnection>(type_clauses.second, requested_type, data.connections,data); break;
-        case eRoutePoint: indexes = foo<eRoutePoint>(type_clauses.second, requested_type, data.route_points,data); break;
-        case eDistrict: indexes = foo<eDistrict>(type_clauses.second, requested_type, data.districts,data); break;
-        case eDepartment: indexes = foo<eDepartment>(type_clauses.second, requested_type, data.departments,data); break;
-        case eCompany: indexes = foo<eCompany>(type_clauses.second, requested_type, data.companies,data); break;
-        case eVehicle: indexes = foo<eVehicle>(type_clauses.second, requested_type, data.vehicles,data); break;
-        case eCountry: indexes = foo<eCountry>(type_clauses.second, requested_type, data.countries,data); break;
+        case eLine: indexes = get_indexes<eLine>(type_clauses.second, r.requested_type,data); break;
+        case eValidityPattern: indexes = get_indexes<eValidityPattern>(type_clauses.second, r.requested_type, data); break;
+        case eRoute: indexes = get_indexes<eRoute>(type_clauses.second, r.requested_type, data); break;
+        case eVehicleJourney: indexes = get_indexes<eVehicleJourney>(type_clauses.second, r.requested_type, data); break;
+        case eStopPoint: indexes = get_indexes<eStopPoint>(type_clauses.second, r.requested_type, data); break;
+        case eStopArea: indexes = get_indexes<eStopArea>(type_clauses.second, r.requested_type, data); break;
+        case eStopTime: indexes = get_indexes<eStopTime>(type_clauses.second, r.requested_type, data); break;
+        case eNetwork: indexes = get_indexes<eNetwork>(type_clauses.second, r.requested_type, data); break;
+        case eMode: indexes = get_indexes<eMode>(type_clauses.second, r.requested_type, data); break;
+        case eModeType: indexes = get_indexes<eModeType>(type_clauses.second, r.requested_type, data); break;
+        case eCity: indexes = get_indexes<eCity>(type_clauses.second, r.requested_type, data); break;
+        case eConnection: indexes = get_indexes<eConnection>(type_clauses.second, r.requested_type, data); break;
+        case eRoutePoint: indexes = get_indexes<eRoutePoint>(type_clauses.second, r.requested_type, data); break;
+        case eDistrict: indexes = get_indexes<eDistrict>(type_clauses.second, r.requested_type, data); break;
+        case eDepartment: indexes = get_indexes<eDepartment>(type_clauses.second, r.requested_type, data); break;
+        case eCompany: indexes = get_indexes<eCompany>(type_clauses.second, r.requested_type, data); break;
+        case eVehicle: indexes = get_indexes<eVehicle>(type_clauses.second, r.requested_type, data); break;
+        case eCountry: indexes = get_indexes<eCountry>(type_clauses.second, r.requested_type, data); break;
         case eUnknown: break;
         }
         // Attention ! les structures doivent être triées !
@@ -97,7 +95,7 @@ pbnavitia::PTRefResponse query(std::string request, Data & data){
         final_indexes = tmp_indexes;
     }
 
-    switch(r.tables[0]){
+    switch(r.requested_type){
     case eValidityPattern: return extract_data(data.validity_patterns, r, final_indexes); break;
     case eLine: return extract_data(data.lines, r, final_indexes); break;
     case eRoute: return extract_data(data.routes, r, final_indexes); break;

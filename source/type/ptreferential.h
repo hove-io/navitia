@@ -74,14 +74,14 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 struct Request {
     std::vector<Column> columns;
-    std::vector<Type_e> tables;
+    Type_e requested_type;
     std::vector<WhereClause> clauses;
 };
 
 BOOST_FUSION_ADAPT_STRUCT(
     Request,
     (std::vector<Column>, columns)
-    (std::vector<Type_e>, tables)
+    (Type_e, requested_type)
     (std::vector<WhereClause>, clauses)
 )
 
@@ -93,13 +93,13 @@ BOOST_FUSION_ADAPT_STRUCT(
     qi::rule<Iterator, Type_e(), qi::space_type> table;
     qi::rule<Iterator, Column(), qi::space_type> table_col; // Match une colonne
     qi::rule<Iterator, std::vector<Column>(), qi::space_type> select; // Match toute la section SELECT
-    qi::rule<Iterator, std::vector<Type_e>(), qi::space_type> from; // Matche la section FROM
+    qi::rule<Iterator, Type_e(), qi::space_type> from; // Matche la section FROM
     qi::rule<Iterator, Request(), qi::space_type> request; // Toute la requête
     qi::rule<Iterator, std::vector<WhereClause>(), qi::space_type> where;// section Where 
     qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
 
     select_r() : select_r::base_type(request) {
-        txt %= qi::lexeme[+(qi::alnum|'_')]; // Match du texte
+        txt %= qi::lexeme[+(qi::alnum|'_'|'|'|':')]; // Match du texte
 
         table =   qi::string("stop_areas")[qi::_val = eStopArea]
                 | qi::string("stop_points")[qi::_val = eStopPoint]
@@ -131,7 +131,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
         select  %= qi::lexeme["select"] >> table_col % ',' ; // La liste de table_col séparée par des ,
 
-        from %= qi::lexeme["from"] >> table % ',';
+        from %= qi::lexeme["from"] >> table ;
 
         where %= qi::lexeme["where"] >> (table_col >> bin_op >> txt) % qi::lexeme["and"];
 
@@ -189,32 +189,12 @@ WhereWrapper<T> build_clause(std::vector<WhereClause> clauses) {
 
 
 template<class T>
-pbnavitia::PTRefResponse extract_data(std::vector<T> & rows, const Request & r) {
-    pbnavitia::PTRefResponse pb_response;
-
-    Index2<boost::fusion::vector<T> > filtered(rows, build_clause<T>(r.clauses));
-    BOOST_FOREACH(auto item, filtered){
-        pbnavitia::PTreferential * pb_row = pb_response.add_item();
-
-        google::protobuf::Message* pb_message = get_message(pb_row, r.tables.at(0));
-
-
-        BOOST_FOREACH(const Column & col, r.columns){
-            set_value(pb_message, *(boost::fusion::at_c<0>(item)), col.column);
-        }
-    }
-    /*std::ofstream file("response.pb");
-    pb_response.SerializeToOstream(&file);*/
-    return pb_response;
-}
-
-template<class T>
 pbnavitia::PTRefResponse extract_data(std::vector<T> & table, const Request & r, std::vector<idx_t> & rows) {
     pbnavitia::PTRefResponse pb_response;
 
     BOOST_FOREACH(idx_t row, rows){
         pbnavitia::PTreferential * pb_row = pb_response.add_item();
-        google::protobuf::Message* pb_message = get_message(pb_row, r.tables.at(0));
+        google::protobuf::Message* pb_message = get_message(pb_row, r.requested_type);
         BOOST_FOREACH(const Column & col, r.columns){
             set_value(pb_message, table.at(row), col.column);
         }
