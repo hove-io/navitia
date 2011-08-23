@@ -19,8 +19,8 @@ std::vector<idx_t> get_indexes(std::vector<WhereClause> clauses,  Type_e request
 {
     typedef typename boost::mpl::at<enum_type_map, boost::mpl::int_<E> >::type T;
     auto data = d.get_data<E>();
-    //Index2<boost::fusion::vector<T> > filtered(data, build_clause<T>(clauses));
-    Index2<T> filtered(data, build_clause<T>(clauses));
+
+    Index<T> filtered(data, build_clause<T>(clauses));
     auto offsets = filtered.get_offsets();
     std::vector<idx_t> indexes;
     indexes.reserve(filtered.size());

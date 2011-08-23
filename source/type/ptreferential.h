@@ -35,7 +35,7 @@
 #include <boost/fusion/include/adapt_struct.hpp>
 
 #include <boost/graph/adjacency_list.hpp>
-#include "indexes2.h"
+#include "indexes.h"
 #include "where.h"
 #include "reflexion.h"
 #include "type.pb.h"

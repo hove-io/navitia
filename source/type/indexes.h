@@ -5,17 +5,13 @@
  * The data must be in an std::vector
  */
 
-
 namespace navitia { namespace type {
 
-
+template<class T>
+bool true_functor(const T&) {return true;}
 
 template<class T>
-bool true2(const T&) {return true;}
-
-/// TypeVector is a boost::fusion vector of multiple data types
-template<class T>
-struct Index2 {
+struct Index {
     /// Pointer to the begining of the data structures
     T * begin_ptr;
 
@@ -26,7 +22,7 @@ struct Index2 {
     template<class Iterator>
     void initialize(Iterator begin, Iterator end){
         offsets.reserve(end - begin);
-        initialize(begin, end, &true2<typename Iterator::value_type>);
+        initialize(begin, end, &true_functor<typename Iterator::value_type>);
     }
     
     /// Initialises the data having two iterators and a Functor to filter every thing
@@ -44,13 +40,13 @@ struct Index2 {
 
     /// Builds the index from a vector
     template<class Data>
-    Index2(std::vector<Data> & vect) {
+    Index(std::vector<Data> & vect) {
         initialize(vect.begin(), vect.end());
     }
 
     /// Builds the index from a vector and filters accordingly to the functor
     template<class Data, class Functor>
-    Index2(std::vector<Data> & vect, const Functor & f) {
+    Index(std::vector<Data> & vect, const Functor & f) {
         initialize(vect.begin(), vect.end(), f);
     }
 

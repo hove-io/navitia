@@ -1,8 +1,5 @@
 #pragma once
 #include "type.h"
-//#include "indexes.h"
-//#include "fusion_vector_serialize.h"
-//#include "boost/serialization/array.hpp"
 
 namespace navitia { namespace type {
 
