@@ -9,6 +9,7 @@
 #include "filter.h"
 #include "eos_portable_archive/portable_iarchive.hpp"
 #include "eos_portable_archive/portable_oarchive.hpp"
+#include <boost/foreach.hpp>
 
 namespace navitia { namespace type {
 
@@ -111,8 +112,9 @@ std::vector<idx_t> Data::get_all_index(Type_e type){
     case eCompany: return get_all_index<eLine>(); break;
     case eVehicle: return get_all_index<eLine>(); break;
     case eCountry: return get_all_index<eLine>(); break;
-    case eUnknown: return std::vector<idx_t>(); break;
+    case eUnknown:  break;
     }
+    return std::vector<idx_t>();
 }
 
 template<> std::vector<Line> & Data::get_data<eLine>(){return lines;}

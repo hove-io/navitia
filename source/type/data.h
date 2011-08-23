@@ -1,8 +1,8 @@
 #pragma once
 #include "type.h"
-#include "indexes.h"
-#include "fusion_vector_serialize.h"
-#include "boost/serialization/array.hpp"
+//#include "indexes.h"
+//#include "fusion_vector_serialize.h"
+//#include "boost/serialization/array.hpp"
 
 namespace navitia { namespace type {
 
@@ -67,7 +67,7 @@ public:
       *
       * exemple : find<StopPoint>.find(&StopPoint::name, "Gare du nord")
       */
-    template<class RequestedType, class AttributeType>
+    /*template<class RequestedType, class AttributeType>
     std::vector<RequestedType*> find(AttributeType RequestedType::* attribute, AttributeType str){
         std::vector<RequestedType *> result;
         BOOST_FOREACH(RequestedType & item, get<RequestedType>()){
@@ -76,7 +76,7 @@ public:
             }
         }
         return result;
-    }
+    }*/
 
     /** Sauvegarde la structure de fichier au format texte
       *
