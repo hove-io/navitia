@@ -78,7 +78,11 @@ namespace webservice
                     request.params[elts[0]] = elts[1];
             }
 
-            std::string api = request.path.substr(request.path.find_last_of('/'));
+            size_t position = request.path.find_last_of('/');
+            std::string api = "";
+            if(position != std::string::npos){
+                api = request.path.substr(position);
+            }
 
             if(apis.find(api) == apis.end()) {
                 ResponseData resp;
