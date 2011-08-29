@@ -16,6 +16,28 @@
 
 namespace webservice
 {
+    
+    void decode(std::string& str){
+        size_t pos = -1;
+        int code = 0;
+        std::stringstream ss;
+        std::string number;
+        while((pos = str.find("%", pos+1)) != std::string::npos){
+            number = str.substr(pos+1, 2);
+            if(number.size() < 2){
+                continue;
+            }
+            ss << std::hex << number;
+            ss >> code;
+            ss.clear();
+            if(code < 32){
+                continue;
+            }
+            str.replace(pos, 3, 1, (char)code);
+        }
+
+    }
+
     using namespace boost::accumulators;
     /** Contient des données statiques aux workers */
     struct StaticData {
@@ -67,6 +89,8 @@ namespace webservice
       * Cette fonction dispatche ensuite à la bonne en fonction de l'appel
       */
         webservice::ResponseData dispatch(webservice::RequestData request, Data & d){
+            decode(request.path);
+            decode(request.raw_params);
             std::vector<std::string> tokens;
             boost::algorithm::split(tokens, request.raw_params, boost::algorithm::is_any_of("&"));
             BOOST_FOREACH(std::string token, tokens) {
@@ -77,6 +101,7 @@ namespace webservice
                 else
                     request.params[elts[0]] = elts[1];
             }
+            
 
             size_t position = request.path.find_last_of('/');
             std::string api = "";

@@ -5,7 +5,7 @@
 #include <string>
 #include "fixtures.h"
 
-
+/*
 BOOST_AUTO_TEST_CASE(test_is_equal_int){
     is_equal_t<int, Stop> obj_is_equal = is_equal(&Stop::id, 0);
     BOOST_CHECK(obj_is_equal(Stop(0, "foo", "bar")));
@@ -201,3 +201,4 @@ BOOST_AUTO_TEST_CASE(test_joinIndex){
     }
 }
 
+*/

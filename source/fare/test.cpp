@@ -126,13 +126,13 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("ratp;8711388;8775890;FILGATO-2;2011|06|01;04|40;04|50;4;1;rapidtransit");
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 1);
-    BOOST_CHECK(res[0].value==800);
+    BOOST_CHECK(res.at(0).value==800);
 
     // Le métro doit être gratuit après
     keys.push_back("ratp;paris;FILNav31;FILGATO-2;2011|06|01;04|40;04|50;1;1;metro");
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 1);
-    BOOST_CHECK(res[0].value==800);
+    BOOST_CHECK(res.at(0).value==800);
 
     // Et le tram bien évidemment payant !
     // Le métro doit être gratuit après
@@ -144,12 +144,12 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.clear();
     keys.push_back("ratp;mantes;FILNav31;FILGATO-2;2010|12|01;04|40;04|50;4;1;metro");
     res = f.compute(keys);
-    BOOST_CHECK(res[0].value==160);
+    BOOST_CHECK(res.at(0).value==160);
 
     keys.clear();
     keys.push_back("ratp;versailles;disney;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
     res = f.compute(keys);
-    BOOST_CHECK(res[0].value==800);
+    BOOST_CHECK(res.at(0).value==800);
 
     // Cas avec deux RER
     keys.clear();
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("ratp;versailles;paris;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
     keys.push_back("ratp;nation;montparnasse;FILGATO-2;2010|12|01;04|40;04|50;1;1;metro");
     res = f.compute(keys);
-    BOOST_CHECK(res[0].value==800);
+    BOOST_CHECK(res.at(0).value==800);
     BOOST_CHECK(res.size() == 1);
 
     // Cas avec deux RER, un changement en métro au milieu
@@ -172,9 +172,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
   //  keys.push_back("ratp;nation;montparnasse;FILGATO-2;2010|12|01;04|40;04|50;1;1;metro");
     keys.push_back("ratp;paris;disney;FILGATO-2;2010|12|01;04|40;04|50;1;5;rapidtransit");
     res = f.compute(keys);
-    BOOST_CHECK(res[0].value==800);
+    BOOST_CHECK(res.at(0).value==800);
     BOOST_CHECK(res.size() == 1);
-    std::cout << res[0].caption << "  +  " << res[1].caption << std::endl;
+    std::cout << res.at(0).caption << "  +  " << res[1].caption << std::endl;
 
     // Cas avec un RER, un changement en bus => faut payer
     keys.clear();
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("ratp;nation;montparnasse;FILGATO-2;2010|12|01;04|40;04|50;1;1;bus");
     keys.push_back("ratp;paris;disney;FILGATO-2;2010|12|01;04|40;04|50;1;5;rapidtransit");
     res = f.compute(keys);
-    BOOST_CHECK(res[0].value==800);
+    BOOST_CHECK(res.at(0).value==800);
     BOOST_CHECK(res.size() == 3);
     //std::cout << res[0].caption << " " << res[0].value << std::endl;
 

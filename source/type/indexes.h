@@ -5,6 +5,8 @@
  * The data must be in an std::vector
  */
 
+#include <vector>
+#include <boost/iterator/transform_iterator.hpp>
 namespace navitia { namespace type {
 
 template<class T>
@@ -16,7 +18,9 @@ struct Index {
     T * begin_ptr;
 
     /// Contains all the offsets so we can get back all our elements
+    typedef int idx_t;
     std::vector<idx_t> offsets;
+
 
     /// Initialises the data having two iterators
     template<class Iterator>

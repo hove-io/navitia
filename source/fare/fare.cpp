@@ -243,7 +243,7 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
         labels = new_labels;
     }
 
-    std::vector<Ticket> result;
+     std::vector<Ticket> result;
 
     // On recherche le label de moindre coût
     // Si on a deux fois le même coût, on prend celui qui nécessite le moins de billets
@@ -290,18 +290,26 @@ int parse_time(const std::string & time_str){
 }
 
 boost::gregorian::date parse_nav_date(const std::string & date_str){
-    std::vector< std::string > res;
+     std::vector< std::string > res;
    boost::algorithm::split(res, date_str, boost::algorithm::is_any_of("|"));
-
-    return boost::gregorian::date(boost::lexical_cast<int>(res.at(0)),
-                                  boost::lexical_cast<int>(res.at(1)),
-                                  boost::lexical_cast<int>(res.at(2)));
+   if(res.size() != 3)
+       throw std::string("Date dans un format non parsable : " + date_str);
+   boost::gregorian::date date;
+   try{
+       date = boost::gregorian::date(boost::lexical_cast<int>(res.at(0)),
+                                     boost::lexical_cast<int>(res.at(1)),
+                                     boost::lexical_cast<int>(res.at(2)));
+   } catch (boost::bad_lexical_cast e){
+       throw std::string("Conversion des chiffres dans la date impossible " + date_str);
+   }
+   return date;
 }
 
 SectionKey::SectionKey(const std::string & key) : section(key) {
     std::vector<std::string> string_vec;
     boost::algorithm::split(string_vec, key, boost::algorithm::is_any_of(";"));
-    assert(string_vec.size() == 10);
+    if (string_vec.size() != 10)
+        throw std::string("Nombre incorrect d'éléments dans une section : 10 attendus");
     network = string_vec.at(0);
     start_stop_area = string_vec.at(1);
     dest_stop_area = string_vec.at(2);

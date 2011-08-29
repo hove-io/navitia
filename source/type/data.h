@@ -60,21 +60,6 @@ public:
       */
     template<class Type> std::vector<Type> & get();
 
-    /** Retrouve un élément par un attribut arbitraire
-      *
-      * exemple : find<StopPoint>.find(&StopPoint::name, "Gare du nord")
-      */
-    /*template<class RequestedType, class AttributeType>
-    std::vector<RequestedType*> find(AttributeType RequestedType::* attribute, AttributeType str){
-        std::vector<RequestedType *> result;
-        BOOST_FOREACH(RequestedType & item, get<RequestedType>()){
-            if(item.*attribute == str){
-                result.push_back(&item);
-            }
-        }
-        return result;
-    }*/
-
     /** Sauvegarde la structure de fichier au format texte
       *
       * Le format est plus portable que la version binaire
@@ -113,8 +98,6 @@ public:
     }
 
     std::vector<idx_t> get_all_index(Type_e type);
-
-
 
 };
 

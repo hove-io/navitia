@@ -36,7 +36,7 @@ int main(int, char **) {
     Data data = p.getData();
     end = pt::microsec_clock::local_time();
     std::cout << "Durée pour lire les données de l'IdF depuis le GTFS : " << (end-start).total_milliseconds() << " ms" << std::endl << std::endl;
-
+/*
     data.save_flz("idf_flz.nav");
     start = pt::microsec_clock::local_time();
     auto sa_name_idx = make_string_index(data.stop_areas, &StopArea::name);
@@ -94,7 +94,7 @@ int main(int, char **) {
     }
     end = pt::microsec_clock::local_time();
     std::cout << "Durée pour dé-sérialiser les données uniqumeent : " << (end-start).total_milliseconds() << " ms" << std::endl;
-
+*/
     /*start = pt::microsec_clock::local_time();
     {
         std::ofstream ofs("data.nav.gz",std::ios::out|std::ios::binary|std::ios::trunc);
@@ -181,7 +181,7 @@ int main(int, char **) {
 
 
     //fastlz
-    
+  /*
     start = pt::microsec_clock::local_time();
     {
         std::ofstream ofs("data.nav.flz",std::ios::out|std::ios::binary|std::ios::trunc);
@@ -220,6 +220,6 @@ int main(int, char **) {
         //std::cout  << join_get<StopArea>(l).name << " " << join_get<StopPoint>(l).name << std::endl;
         count++;
     }
-    end = pt::microsec_clock::local_time();
-    std::cout << "Durée pour trouver les stopPoints dont le stopArea contient Lyon: " << (end-start).total_milliseconds() << " ms (" << count << ")" << std::endl;
+    end = pt::microsec_clock::local_time();*/
+    //std::cout << "Durée pour trouver les stopPoints dont le stopArea contient Lyon: " << (end-start).total_milliseconds() << " ms (" << count << ")" << std::endl;
 }

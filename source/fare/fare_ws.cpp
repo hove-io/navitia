@@ -75,10 +75,18 @@ class Worker : public BaseWorker<Data> {
             }
             std::vector<Ticket> tickets = d.fares.compute(section_keys);
             render(request, rd, tickets);
+        }catch(std::string s){
+            rd.response.clear();
+            rd.content_type = "text/xml";
+            rd.response << "<error>" << s << "</error>";
+        }catch(std::exception e){
+            rd.response.clear();
+            rd.content_type = "text/xml";
+            rd.response << "<error>" << e.what() << "</error>";
         }catch(...){
             rd.response.clear();
             rd.content_type = "text/xml";
-            rd.response << "<error/>";
+            rd.response << "<error>Unknown</error>";
         }
 
         return rd;
