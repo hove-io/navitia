@@ -158,7 +158,8 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
         label.nb_changes++;
         label.duration += section.duration();
         if(ticket.type == Ticket::ODFare){
-            label.stop_area = section.start_stop_area;
+            if(label.stop_area == "")
+                label.stop_area = section.start_stop_area;
             label.zone = section.start_zone;
         }
     } else {
@@ -215,7 +216,7 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
                                 try {
                                     Ticket ticket_od;
                                     ticket_od.type = Ticket::ODFare;
-                                    if(transition.global_condition == "with_changes")
+                                    if(transition.global_condition == "with_changes" && label.current_type != Ticket::ODFare)
                                         ticket_od = get_od(next, section).get_fare(section.date);
                                     else
                                         ticket_od = get_od(label, section).get_fare(section.date);
@@ -389,6 +390,7 @@ void Fare::load_od_stif(const std::string & filename){
     std::vector<std::string> row;
     reader.next(); //en-tête
 
+    int count = 0;
     for(row=reader.next(); row != reader.end(); row = reader.next()) {
         std::string start_saec = boost::algorithm::trim_copy(row[0]);
         std::string dest_saec = boost::algorithm::trim_copy(row[2]);
@@ -406,8 +408,10 @@ void Fare::load_od_stif(const std::string & filename){
             dest = OD_key(OD_key::Zone, "1");
 
         od_tickets[start][dest] = price_key;
+        count++;
 
     }
+    std::cout << "Nombre de tarifs OD Île-de-France : " << count << std::endl;
 }
 
 DateTicket Fare::get_od(Label label, SectionKey section){

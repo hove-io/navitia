@@ -67,11 +67,11 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     // Un trajet simple
     keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;02|06;02|10;1;1;metro");
     Fare f;
-    f.init("/home/tristram/idf.fares", "/home/tristram/prix.csv");
-    f.load_od_stif("/home/tristram/tarifs_od_small.csv");
+    f.init("/home/tristram/fare/idf.fares", "/home/tristram/fare/prix.csv");
+    f.load_od_stif("/home/tristram/fare/tarifs_od.csv");
     std::vector<Ticket> res = f.compute(keys);
     BOOST_CHECK(res.size() == 1);
-    BOOST_CHECK(res[0].value == 170);
+    BOOST_CHECK(res.at(0).value == 170);
 
     // Correspondance métro sans billet
     keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;02|20;02|30;1;1;metro");
@@ -126,13 +126,13 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("ratp;8711388;8775890;FILGATO-2;2011|06|01;04|40;04|50;4;1;rapidtransit");
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 1);
-    BOOST_CHECK(res.at(0).value==800);
+    BOOST_CHECK(res.at(0).value==370);
 
     // Le métro doit être gratuit après
     keys.push_back("ratp;paris;FILNav31;FILGATO-2;2011|06|01;04|40;04|50;1;1;metro");
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 1);
-    BOOST_CHECK(res.at(0).value==800);
+    BOOST_CHECK(res.at(0).value==370);
 
     // Et le tram bien évidemment payant !
     // Le métro doit être gratuit après
@@ -147,47 +147,48 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK(res.at(0).value==160);
 
     keys.clear();
-    keys.push_back("ratp;versailles;disney;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
+    keys.push_back("ratp;8739300;8775499;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
     res = f.compute(keys);
-    BOOST_CHECK(res.at(0).value==800);
+    BOOST_CHECK(res.size() == 1);
+    BOOST_CHECK(res.at(0).value==215);
 
     // Cas avec deux RER
     keys.clear();
-    keys.push_back("ratp;versailles;paris;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
-    keys.push_back("ratp;paris;disney;FILGATO-2;2010|12|01;04|40;04|50;1;5;rapidtransit");
+    keys.push_back("ratp;8739300;8775890;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
+    keys.push_back("ratp;8775890;8775499;FILGATO-2;2010|12|01;04|40;04|50;1;5;rapidtransit");
     res = f.compute(keys);
+    BOOST_CHECK(res.size() == 1);
+    BOOST_CHECK(res.at(0).value==215);
 
     // Cas avec un RER, un changement en métro
     keys.clear();
-    keys.push_back("ratp;versailles;paris;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
+    keys.push_back("ratp;8739300;8775890;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
     keys.push_back("ratp;nation;montparnasse;FILGATO-2;2010|12|01;04|40;04|50;1;1;metro");
     res = f.compute(keys);
-    BOOST_CHECK(res.at(0).value==800);
     BOOST_CHECK(res.size() == 1);
+    BOOST_CHECK(res.at(0).value==295);
+
 
     // Cas avec deux RER, un changement en métro au milieu
     keys.clear();
-    keys.push_back("ratp;versailles;paris;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
+    keys.push_back("ratp;8739300;8775890;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
     keys.push_back("ratp;nation;montparnasse;FILGATO-2;2010|12|01;04|40;04|50;1;1;metro");
-  //  keys.push_back("ratp;nation;montparnasse;FILGATO-2;2010|12|01;04|40;04|50;1;1;metro");
-    keys.push_back("ratp;paris;disney;FILGATO-2;2010|12|01;04|40;04|50;1;5;rapidtransit");
+    keys.push_back("ratp;8775890;8775499;FILGATO-2;2010|12|01;04|40;04|50;1;5;rapidtransit");
     res = f.compute(keys);
-    BOOST_CHECK(res.at(0).value==800);
     BOOST_CHECK(res.size() == 1);
-    std::cout << res.at(0).caption << "  +  " << res[1].caption << std::endl;
+    BOOST_CHECK(res.at(0).value==215);
+
 
     // Cas avec un RER, un changement en bus => faut payer
     keys.clear();
-    keys.push_back("ratp;versailles;paris;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
-    keys.push_back("ratp;nation;montparnasse;FILGATO-2;2010|12|01;04|40;04|50;1;1;bus");
-    keys.push_back("ratp;paris;disney;FILGATO-2;2010|12|01;04|40;04|50;1;5;rapidtransit");
+    keys.push_back("ratp;8739300;8775890;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
+    keys.push_back("ratp;nation;montparnasse;FILGATO-2;2011|12|01;04|40;04|50;1;1;bus");
+    keys.push_back("ratp;8775890;8775499;FILGATO-2;2010|12|01;04|40;04|50;1;5;rapidtransit");
     res = f.compute(keys);
-    BOOST_CHECK(res.at(0).value==800);
     BOOST_CHECK(res.size() == 3);
-    //std::cout << res[0].caption << " " << res[0].value << std::endl;
-
-
-    //std::cout << res.at(1).caption << " " << res[1].value << std::endl;
+    BOOST_CHECK(res.at(0).value==295);
+    BOOST_CHECK(res.at(1).value==170);
+    BOOST_CHECK(res.at(2).value==655);
 }
 
 
