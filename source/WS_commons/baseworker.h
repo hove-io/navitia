@@ -101,6 +101,17 @@ namespace webservice
                 else
                     request.params[elts[0]] = elts[1];
             }
+
+            std::vector<std::string> tokens2;
+            boost::algorithm::split(tokens2, request.data, boost::algorithm::is_any_of("&"));
+            BOOST_FOREACH(std::string token, tokens2) {
+                std::vector<std::string> elts;
+                boost::algorithm::split(elts, token, boost::algorithm::is_any_of("="));
+                if(elts.size() == 1)
+                    request.params[elts[0]] = "";
+                else
+                    request.params[elts[0]] = elts[1];
+            }
             
 
             size_t position = request.path.find_last_of('/');
