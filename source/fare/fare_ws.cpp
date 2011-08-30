@@ -71,6 +71,7 @@ class Worker : public BaseWorker<Data> {
             std::vector<std::string> section_keys;
             std::pair<std::string, std::string> section;
             BOOST_FOREACH(section, request.params){
+                if(boost::to_lower_copy(section.first).find("section") == 0)
                 section_keys.push_back(section.second);
             }
             std::vector<Ticket> tickets = d.fares.compute(section_keys);
@@ -101,7 +102,7 @@ class Worker : public BaseWorker<Data> {
      * On y enregistre toutes les api qu'on souhaite exposer
      */
     Worker(Data &) {
-        register_api("/journeyfare",boost::bind(&Worker::fare, this, _1, _2), "Effectue le calcul de tarif");
+        register_api("/fare",boost::bind(&Worker::fare, this, _1, _2), "Effectue le calcul de tarif");
         add_default_api();
     }
 };
