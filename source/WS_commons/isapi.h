@@ -25,33 +25,56 @@ namespace webservice {
 
     /// Gère la requête (lecture des paramètres)
     template<class Worker, class Data> void request_parser(RequestHandle* handle, Worker & w, Data & data){
+		bool ok = true;
         RequestData request_data;
         DWORD totalBytes = handle->cbTotalBytes;
 
         if( totalBytes > 0) {
-            char * tmp_str = new char[totalBytes + 1];
-            BOOST_ASSERT(handle->ReadClient(handle->ConnID, tmp_str, &totalBytes));
-            BOOST_ASSERT(totalBytes == handle->cbTotalBytes);
+           /* char * tmp_str = new char[totalBytes + 1];
+            if (!(handle->ReadClient(handle->ConnID, tmp_str, &totalBytes)))// && totalBytes == handle->cbTotalBytes))
+				ok = false;
+		    tmp_str[totalBytes] = 0; 
             request_data.data = tmp_str;
-            delete tmp_str;
+            delete tmp_str;*/
+			request_data.data = std::string((char*)handle->lpbData, totalBytes);
         }
         request_data.path = handle->lpszPathInfo;
         request_data.raw_params = handle->lpszQueryString;
         request_data.method = parse_method(handle->lpszMethod);
 
-        ResponseData resp = w(request_data, data);
+		if(ok)
+		{
+			ResponseData resp = w(request_data, data);
 
+			std::stringstream ss;
+			ss << "Content-Type: " << resp.content_type << "; charset=" << resp.charset <<"\r\n\r\n";
 
-        std::stringstream ss;
-        ss << "Content-Type: " << resp.content_type << "; charset=" << resp.charset <<"\r\n\r\n";
+			SendHttpHeaders(handle, "200 OK", ss.str().c_str(), FALSE);
+			DWORD response_length = resp.response.str().length();
 
-        SendHttpHeaders(handle, "200 OK", ss.str().c_str(), FALSE);
-        DWORD response_length = resp.response.str().length();
+			if(!handle->WriteClient(handle->ConnID, (LPVOID)resp.response.str().c_str(), &response_length, HSE_IO_SYNC)){
+				int err = GetLastError(); 
+		    }
+	        handle->ServerSupportFunction(handle->ConnID, HSE_REQ_DONE_WITH_SESSION, NULL, NULL, NULL);
+		}
+		else
+		{
+			std::stringstream ss;
+			ss << "Content-Type: text/plain ; charset=ISO-8859-1\r\n\r\n";
 
-        if(!handle->WriteClient(handle->ConnID, (LPVOID)resp.response.str().c_str(), &response_length, HSE_IO_SYNC)){
-            int err = GetLastError(); 
-        }
-        handle->ServerSupportFunction(handle->ConnID, HSE_REQ_DONE_WITH_SESSION, NULL, NULL, NULL);
+			SendHttpHeaders(handle, "200 OK", ss.str().c_str(), FALSE);
+
+			std::stringstream resp;
+			int err = GetLastError();
+			resp << "Erreur pour récupérer les données POST : error code=" << err << std::endl;
+
+			DWORD response_length = resp.str().length();
+
+			if(!handle->WriteClient(handle->ConnID, (LPVOID)resp.str().c_str(), &response_length, HSE_IO_SYNC)){
+				int err = GetLastError(); 
+		    }
+	        handle->ServerSupportFunction(handle->ConnID, HSE_REQ_DONE_WITH_SESSION, NULL, NULL, NULL);
+		}
     }
 
 
