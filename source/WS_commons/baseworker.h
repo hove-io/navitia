@@ -96,9 +96,9 @@ namespace webservice
             BOOST_FOREACH(std::string token, tokens) {
                 std::vector<std::string> elts;
                 boost::algorithm::split(elts, token, boost::algorithm::is_any_of("="));
-                if(elts.size() == 1)
+                if(elts.size() == 1 && elts[0] != "")
                     request.params[elts[0]] = "";
-                else
+                else if(elts.size() >= 2 && elts[0] != "")
                     request.params[elts[0]] = elts[1];
             }
 
@@ -107,9 +107,9 @@ namespace webservice
             BOOST_FOREACH(std::string token, tokens2) {
                 std::vector<std::string> elts;
                 boost::algorithm::split(elts, token, boost::algorithm::is_any_of("="));
-                if(elts.size() == 1)
+                if(elts.size() == 1 && elts[0] != "")
                     request.params[elts[0]] = "";
-                else
+                else if(elts.size() >= 2 && elts[0] != "")
                     request.params[elts[0]] = elts[1];
             }
             
