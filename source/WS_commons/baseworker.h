@@ -98,9 +98,9 @@ namespace webservice
                 std::vector<std::string> elts;
                 boost::algorithm::split(elts, token, boost::algorithm::is_any_of("="));
                 if(elts.size() == 1 && elts[0] != "")
-                    request.params[elts[0]] = "";
+                    request.params[boost::algorithm::to_lower_copy(elts[0])] = "";
                 else if(elts.size() >= 2 && elts[0] != "")
-                    request.params[elts[0]] = elts[1];
+                    request.params[boost::algorithm::to_lower_copy(elts[0])] = elts[1];
             }
 
             std::vector<std::string> tokens2;
@@ -109,9 +109,9 @@ namespace webservice
                 std::vector<std::string> elts;
                 boost::algorithm::split(elts, token, boost::algorithm::is_any_of("="));
                 if(elts.size() == 1 && elts[0] != "")
-                    request.params[elts[0]] = "";
+                    request.params[boost::algorithm::to_lower_copy(elts[0])] = "";
                 else if(elts.size() >= 2 && elts[0] != "")
-                    request.params[elts[0]] = elts[1];
+                    request.params[boost::algorithm::to_lower_copy(elts[0])] = elts[1];
             }
             
 

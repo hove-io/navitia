@@ -62,6 +62,20 @@ class Worker : public BaseWorker<Data> {
             rd.response << "</Fare>\n";
         }
 
+        time_t rawtime;
+        struct tm * timeinfo;
+
+        time ( &rawtime );
+        timeinfo = localtime ( &rawtime );
+
+        if(request.params["safemode"] == "0")
+            rd.response << "<Hit Ide=\"%d\" "
+                        << "Date=\""<< timeinfo->tm_mday << "\" "
+                        << "Month=\"" << (timeinfo->tm_mon + 1)<< "\" "
+                        << "Time=\"" << timeinfo->tm_hour <<":" << timeinfo->tm_min << ":" << timeinfo->tm_sec <<"\" "
+                        << "Server=\"\" Action=\"journeyfare\" Duration=\"00:00:00\" "
+                        << "ResponseSize=\"" << rd.response.str().size() << "\" "
+                        << "Script=\"/" << request.path << "\" WsnId=\"%d\"/>";
         rd.response << "</FareList>\n";
     }
 
