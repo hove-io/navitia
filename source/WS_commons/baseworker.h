@@ -90,10 +90,11 @@ namespace webservice
       */
         webservice::ResponseData dispatch(webservice::RequestData request, Data & d){
             decode(request.path);
-            decode(request.raw_params);
+            std::string raw_params = request.raw_params;
+            decode(raw_params);
             decode(request.data);
             std::vector<std::string> tokens;
-            boost::algorithm::split(tokens, request.raw_params, boost::algorithm::is_any_of("&"));
+            boost::algorithm::split(tokens, raw_params, boost::algorithm::is_any_of("&"));
             BOOST_FOREACH(std::string token, tokens) {
                 std::vector<std::string> elts;
                 boost::algorithm::split(elts, token, boost::algorithm::is_any_of("="));
