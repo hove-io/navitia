@@ -19,11 +19,11 @@ class Pool{
         };
 
         struct Comparer{
-            Navitia* ref;
-            Comparer(Navitia* ref) : ref(ref){}
+            Navitia ref;
+            Comparer(const Navitia& ref) : ref(ref){}
 
-            bool operator()(Navitia* value){
-                return (*value == *ref);
+            bool operator()(Navitia* value) const{
+                return (*value == ref);
             }
         };
 
@@ -32,7 +32,7 @@ class Pool{
         int nb_threads;
         std::deque<Navitia*> navitia_list;
 
-        Pool() : nb_threads(8){
+        Pool() : nb_threads(16){
             navitia_list.push_back(new Navitia("http://localhost:81/1", 8));
             std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
         }
@@ -55,6 +55,6 @@ class Pool{
         }
 
         void add_navitia(Navitia* navitia);
-        void remove_navitia(Navitia* navitia);
+        void remove_navitia(const Navitia& navitia);
 
 };

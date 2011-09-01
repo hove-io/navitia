@@ -29,14 +29,19 @@ webservice::ResponseData Worker::status(webservice::RequestData& request, Pool& 
 
 webservice::ResponseData Worker::register_navitia(webservice::RequestData& request, Pool& pool){
     webservice::ResponseData rd;
+    int thread = 8;
     
     if(request.params.find("url") == request.params.end()){
         rd.status_code = 500;
         return rd;
     }
+    auto it = request.params.find("thread");
+    if(it != request.params.end()){
+        thread = atoi(it->second.c_str());
+    }
 
     //TODO valider l'url
-    pool.add_navitia(new Navitia(request.params["url"], 8));
+    pool.add_navitia(new Navitia(request.params["url"], thread));
     
 
     return status(request, pool);
@@ -51,7 +56,7 @@ webservice::ResponseData Worker::unregister_navitia(webservice::RequestData& req
     }
 
     //TODO valider l'url
-    pool.remove_navitia(new Navitia(request.params["url"], 8));
+    pool.remove_navitia(Navitia(request.params["url"], 8));
     
 
     return status(request, pool);
@@ -75,9 +80,6 @@ webservice::ResponseData Worker::load(webservice::RequestData& request, Pool& po
 
 void Dispatcher::operator()(webservice::RequestData& request, webservice::ResponseData& response, Pool& pool, Context& context){
     Navitia* nav =  pool.next();
-    std::cout << request.path << std::endl;
-    std::cout << nav->url << " - " << nav->unused_thread << std::endl;
-
     std::pair<int, std::string> res;
     try{
         res = nav->query(request.path.substr(request.path.find_last_of('/')) + "?" + request.raw_params);
@@ -97,8 +99,5 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
         response.status_code = res.first;
     }
 }
-
-
-
 
 MAKE_WEBSERVICE(Pool, Worker)

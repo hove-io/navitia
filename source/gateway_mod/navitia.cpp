@@ -10,8 +10,6 @@ std::pair<int, std::string> Navitia::query(const std::string& request){
     std::stringstream response;
     curlpp::Easy curl_request;
     
-    std::cout << (this->url + request) << std::endl;
-
     curl_request.setOpt(new curlpp::options::WriteStream(&ss));
     curl_request.setOpt(new curlpp::options::Url(this->url + request));
 
@@ -37,11 +35,13 @@ void Navitia::load(){
 void Navitia::use(){
     boost::lock_guard<boost::shared_mutex> lock(mutex);
     unused_thread--;
+    current_thread ++;
     last_request_at = time(NULL);
 }
 
 void Navitia::release(){
     boost::lock_guard<boost::shared_mutex> lock(mutex);
     unused_thread++;
+    current_thread--;
 
 }
