@@ -189,6 +189,21 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK(res.at(0).value==295);
     BOOST_CHECK(res.at(1).value==170);
     BOOST_CHECK(res.at(2).value==655);
+
+    keys.clear();
+    keys.push_back("ratp;nation;montparnasse;FILGATO-2;2011|12|01;04|40;04|50;1;1;rapidtransit");
+    keys.push_back("ratp;8775890;FILGATO-2;8775499;2011|12|01;04|40;04|50;1;5;rapidtransit");
+    res = f.compute(keys);
+    BOOST_CHECK(res.size() == 1);
+    BOOST_CHECK(res.at(0).value==655);
+
+    keys.clear();
+    keys.push_back("ratp;nation;montparnasse;FILGATO-2;2011|12|01;04|40;04|50;1;1;rapidtransit");
+    keys.push_back("ratp;8775890;FILGATO-2;blibal;2011|12|01;04|40;04|50;1;3;rapidtransit");
+    keys.push_back("ratp;bliabal;FILGATO-2;8775499;2011|12|01;04|40;04|50;3;5;rapidtransit");
+    res = f.compute(keys);
+    BOOST_CHECK(res.size() == 1);
+    BOOST_CHECK(res.at(0).value==655);
 }
 
 

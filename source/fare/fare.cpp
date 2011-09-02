@@ -158,8 +158,9 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
         label.nb_changes++;
         label.duration += section.duration();
         if(ticket.type == Ticket::ODFare){
-            if(label.stop_area == "")
+            if(label.stop_area == ""){
                 label.stop_area = section.start_stop_area;
+            }
             label.zone = section.start_zone;
         }
     } else {
@@ -347,8 +348,8 @@ Ticket DateTicket::get_fare(boost::gregorian::date date){
         if(dticket.first.contains(date))
             return dticket.second;
     }
-    std::cout << "No ticket..." << this->tickets.size() <<std::endl;
-    throw no_ticket();
+
+    throw std::string("Impossible de trouver le prix du billet pour la date donnée");
 }
 
 bool Transition::valid(const SectionKey & section, const Label & label) const

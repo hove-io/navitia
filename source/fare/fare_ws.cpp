@@ -53,6 +53,7 @@ class Worker : public BaseWorker<Data> {
         BOOST_FOREACH(Ticket t, tickets){
             rd.response << "<Fare><Network>" << t.sections.at(0).network << "</Network>\n";
             rd.response << "<Cost Money=\"Euro\">" << boost::format("%2.2f") % (t.value/100.0) << "</Cost>\n";
+            rd.response << "<Label>" << t.caption << "</Label>\n";
             rd.response << "<Comment>" << t.comment  << "</Comment>\n";
             rd.response << "<SectionList SectionCount=\"" << t.sections.size() << "\">\n";
             BOOST_FOREACH(SectionKey section, t.sections){
