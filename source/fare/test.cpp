@@ -147,22 +147,22 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK(res.at(0).value==160);
 
     keys.clear();
-    keys.push_back("ratp;8739300;8775499;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
+    keys.push_back("ratp;8739300;FILGATO-2;8775499;2010|12|01;04|40;04|50;4;1;rapidtransit");
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 1);
     BOOST_CHECK(res.at(0).value==215);
 
     // Cas avec deux RER
     keys.clear();
-    keys.push_back("ratp;8739300;8775890;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
-    keys.push_back("ratp;8775890;8775499;FILGATO-2;2010|12|01;04|40;04|50;1;5;rapidtransit");
+    keys.push_back("ratp;8739300;FILGATO-2;8775890;2010|12|01;04|40;04|50;4;1;rapidtransit");
+    keys.push_back("ratp;8775890;FILGATO-2;8775499;2010|12|01;04|40;04|50;1;5;rapidtransit");
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 1);
     BOOST_CHECK(res.at(0).value==215);
 
     // Cas avec un RER, un changement en métro
     keys.clear();
-    keys.push_back("ratp;8739300;8775890;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
+    keys.push_back("ratp;8739300;FILGATO-2;8775890;2010|12|01;04|40;04|50;4;1;rapidtransit");
     keys.push_back("ratp;nation;montparnasse;FILGATO-2;2010|12|01;04|40;04|50;1;1;metro");
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 1);
@@ -171,9 +171,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
 
     // Cas avec deux RER, un changement en métro au milieu
     keys.clear();
-    keys.push_back("ratp;8739300;8775890;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
+    keys.push_back("ratp;8739300;FILGATO-2;8775890;2010|12|01;04|40;04|50;4;1;rapidtransit");
     keys.push_back("ratp;nation;montparnasse;FILGATO-2;2010|12|01;04|40;04|50;1;1;metro");
-    keys.push_back("ratp;8775890;8775499;FILGATO-2;2010|12|01;04|40;04|50;1;5;rapidtransit");
+    keys.push_back("ratp;8775890;FILGATO-2;8775499;2010|12|01;04|40;04|50;1;5;rapidtransit");
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 1);
     BOOST_CHECK(res.at(0).value==215);
@@ -181,9 +181,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
 
     // Cas avec un RER, un changement en bus => faut payer
     keys.clear();
-    keys.push_back("ratp;8739300;8775890;FILGATO-2;2010|12|01;04|40;04|50;4;1;rapidtransit");
+    keys.push_back("ratp;8739300;FILGATO-2;8775890;2010|12|01;04|40;04|50;4;1;rapidtransit");
     keys.push_back("ratp;nation;montparnasse;FILGATO-2;2011|12|01;04|40;04|50;1;1;bus");
-    keys.push_back("ratp;8775890;8775499;FILGATO-2;2010|12|01;04|40;04|50;1;5;rapidtransit");
+    keys.push_back("ratp;8775890;FILGATO-2;8775499;2010|12|01;04|40;04|50;1;5;rapidtransit");
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 3);
     BOOST_CHECK(res.at(0).value==295);

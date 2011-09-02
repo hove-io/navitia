@@ -313,8 +313,8 @@ SectionKey::SectionKey(const std::string & key) : section(key) {
         throw std::string("Nombre incorrect d'éléments dans une section : 10 attendus");
     network = string_vec.at(0);
     start_stop_area = string_vec.at(1);
-    dest_stop_area = string_vec.at(2);
-    line = string_vec.at(3);
+    dest_stop_area = string_vec.at(3);
+    line = string_vec.at(2);
     date = parse_nav_date(string_vec.at(4));
     start_time = parse_time(string_vec.at(5));
     dest_time = parse_time(string_vec.at(6));
