@@ -17,11 +17,9 @@ SET(SOURCE
         data.cpp 
         types.cpp 
         ${CMAKE_SOURCE_DIR}/../third_party/fastlz/fastlz.c
-        ${CMAKE_SOURCE_DIR}/type/data.cpp
-        ${CMAKE_SOURCE_DIR}/type/type.cpp
         ${CMAKE_SOURCE_DIR}/utils/encoding_converter.cpp
 )
- 
 
-add_executable (BO_test ${SOURCE})
-target_link_libraries(BO_test ${Boost_LIBRARIES})
+
+add_executable (navimake ${SOURCE})
+target_link_libraries(navimake ${Boost_LIBRARIES} types)
