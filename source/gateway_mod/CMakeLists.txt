@@ -21,4 +21,4 @@ SET(SOURCE_FILES
     interface.h
     interface.cpp
 )
-MAKE_WS(gateway_mod ${SOURCE_FILES} LIBS curlpp ${PROTOBUF_LIBRARY} ${LOG4CPLUS_LIBS})
+MAKE_WS(gateway_mod ${SOURCE_FILES} LIBS curlpp ${PROTOBUF_LIBRARY} ${LOG4CPLUS_LIBS} curl)
