@@ -1,4 +1,4 @@
-FIND_PATH(RAPIDXML_INCLUDE_DIR rapidxml.hpp PATH "${CMAKE_SOURCE_DIR}/third_party/rapidxml/")
+FIND_PATH(RAPIDXML_INCLUDE_DIR rapidxml.hpp PATH "${CMAKE_SOURCE_DIR}/../third_party/rapidxml/")
 
 IF (RAPIDXML_INCLUDE_DIR)
       MESSAGE(STATUS "Found rapidxml: ${RAPIDXML_INCLUDE_DIR}")
