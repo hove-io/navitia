@@ -1,3 +1,4 @@
+#define BOOST_FILESYSTEM_VERSION 2
 
 #include "stat.h"
 #include <rapidxml.hpp>
@@ -14,7 +15,6 @@
 
 #include <log4cplus/logger.h>
 #include <log4cplus/configurator.h>
-
 
 std::string getStringByRequest(const std::string &request, const std::string &params, const std::string &separator ){
 	std::string req = boost::to_lower_copy(request);
