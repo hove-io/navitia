@@ -19,11 +19,13 @@ std::string pb2xml(std::unique_ptr<google::protobuf::Message>& response){
         std::vector<const google::protobuf::FieldDescriptor*> field_list;
         item_reflection->ListFields(*item, &field_list);
         BOOST_FOREACH(const google::protobuf::FieldDescriptor* item_field_descriptor, field_list){
+
             google::protobuf::Message* object = item_reflection->MutableMessage(item, item_field_descriptor);
             buffer << "<" << item_field_descriptor->name() << " ";
             const google::protobuf::Descriptor* descriptor = object->GetDescriptor();
             const google::protobuf::Reflection* reflection = object->GetReflection();
             for(int field_number=0; field_number < descriptor->field_count(); field_number++){
+
                 const google::protobuf::FieldDescriptor* field_descriptor = descriptor->field(field_number);
                 if(reflection->HasField(*object, field_descriptor)){
                     buffer << field_descriptor->name() << "=\"";
@@ -58,10 +60,12 @@ std::string pb2txt(std::unique_ptr<google::protobuf::Message>& response){
         std::vector<const google::protobuf::FieldDescriptor*> field_list;
         item_reflection->ListFields(*item, &field_list);
         BOOST_FOREACH(const google::protobuf::FieldDescriptor* item_field_descriptor, field_list){
+            
             google::protobuf::Message* object = item_reflection->MutableMessage(item, item_field_descriptor);
             const google::protobuf::Descriptor* descriptor = object->GetDescriptor();
             const google::protobuf::Reflection* reflection = object->GetReflection();
             for(int field_number=0; field_number < descriptor->field_count(); field_number++){
+
                 const google::protobuf::FieldDescriptor* field_descriptor = descriptor->field(field_number);
                 if(reflection->HasField(*object, field_descriptor)){
                     buffer << field_descriptor->name() << " = ";
@@ -108,7 +112,8 @@ void render(webservice::RequestData& request, webservice::ResponseData& response
 void render_status(webservice::RequestData& request, webservice::ResponseData& response, Context& context, Pool& pool){
     response.response << "<GatewayStatus><NavitiaList Count=\"" << pool.navitia_list.size() << "\">";
     BOOST_FOREACH(Navitia* nav, pool.navitia_list){
-        response.response << "<Navitia thread=\"" << nav->unused_thread << "\">" << nav->url << "</Navitia>";
+        response.response << "<Navitia unusedThread=\"" << nav->unused_thread << "\" currentRequest=\"";
+        response.response << nav->current_thread <<  "\">" << nav->url << "</Navitia>";
     }
     response.response << "</NavitiaList></GatewayStatus>";
     response.content_type = "text/xml";

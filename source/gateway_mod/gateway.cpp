@@ -6,6 +6,8 @@
 #include <iostream>
 #include <google/protobuf/descriptor.h>
 #include "interface.h"
+#include <curlpp/Exception.hpp>
+#include <log4cplus/logger.h>
 
 
 Worker::Worker(Pool &){
@@ -94,6 +96,8 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
         context.pb = std::move(resp);
         context.service = Context::PTREF;
     }else{
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+        LOG4CPLUS_WARN(logger, "erreur de chargement du protobuf");
         context.str = res.second;
         context.service = Context::BAD_RESPONSE;
         response.status_code = res.first;

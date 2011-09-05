@@ -32,10 +32,7 @@ class Pool{
         int nb_threads;
         std::deque<Navitia*> navitia_list;
 
-        Pool() : nb_threads(16){
-            navitia_list.push_back(new Navitia("http://localhost:81/1", 8));
-            std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
-        }
+        Pool();
 
         inline void release_navitia(Navitia* navitia){
             navitia->release();

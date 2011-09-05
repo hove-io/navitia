@@ -17,7 +17,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         try{
             result = navitia::ptref::query(nql_request, d);
             result.SerializeToOstream(&(rd.response));
-            rd.content_type = "text/protobuf";
+            rd.content_type = "application/octet-stream";
             rd.status_code = 200;
         }catch(...){
             rd.status_code = 500;
