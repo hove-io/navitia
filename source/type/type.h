@@ -11,7 +11,6 @@
 #include <boost/bimap.hpp>
 #include <boost/mpl/map.hpp>
 
-#include "reflexion.h"
 namespace mpl = boost::mpl;
 
 namespace navitia { namespace type {

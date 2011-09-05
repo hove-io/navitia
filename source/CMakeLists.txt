@@ -34,6 +34,7 @@ ENABLE_TESTING()
 
 add_subdirectory(WS_commons)
 add_subdirectory(type)
+add_subdirectory(ptreferential)
 add_subdirectory(first_letter)
 add_subdirectory(log)
 add_subdirectory(naviMake)
