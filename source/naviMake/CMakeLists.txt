@@ -3,8 +3,8 @@ link_directories ( ${Boost_LIBRARY_DIRS} )
 include_directories ( ${Boost_INCLUDE_DIRS} 
                       ${CMAKE_SOURCE_DIR}/utils
                       ${CMAKE_SOURCE_DIR}
-                      ${CMAKE_SOURCE_DIR}/fastlz_filter
-                      ${CMAKE_SOURCE_DIR}/../third_party/fastlz
+         #             ${CMAKE_SOURCE_DIR}/fastlz_filter
+         #             ${CMAKE_SOURCE_DIR}/../third_party/fastlz
                       ${CMAKE_SOURCE_DIR}/../third_party
 )
 
@@ -18,7 +18,7 @@ SET(SOURCE
         types.cpp 
         gtfs_parser.cpp
         gtfs_parser.h
-        ${CMAKE_SOURCE_DIR}/../third_party/fastlz/fastlz.c
+        #${CMAKE_SOURCE_DIR}/../third_party/fastlz/fastlz.c
         ${CMAKE_SOURCE_DIR}/utils/encoding_converter.cpp
 )
 

@@ -13,11 +13,11 @@ include_directories ( ${Boost_INCLUDE_DIRS}
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS type.proto)
 
 
-SET(TYPES_SRC type.h type.cpp data.h data.cpp ${PROTO_SRCS} ${PROTO_HDRS})
+SET(TYPES_SRC type.h type.cpp data.h data.cpp ${PROTO_SRCS} ${PROTO_HDRS} ${CMAKE_SOURCE_DIR}/../third_party/fastlz/fastlz.c)
 add_library(types ${TYPES_SRC})
 
 
-add_executable(navijkstra navijkstra.cpp ${CMAKE_SOURCE_DIR}/../third_party/fastlz/fastlz.c)
+add_executable(navijkstra navijkstra.cpp )
 target_link_libraries(navijkstra ${Boost_LIBRARIES} types)
 
 #add_subdirectory(tests)

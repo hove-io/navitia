@@ -1,15 +1,13 @@
 #include "baseworker.h"
 #include "configuration.h"
 #include <iostream>
-#include "data.h"
 #include "ptreferential.h"
-#include <boost/algorithm/string/replace.hpp>
-using namespace webservice;
 
+using namespace webservice;
 
 class Worker : public BaseWorker<navitia::type::Data> {
 
-    ResponseData query(RequestData request, Data & d) {
+    ResponseData query(RequestData request, navitia::type::Data & d) {
         ResponseData rd;        
         std::string nql_request = request.params["arg"];
         //decode(nql_request);
@@ -42,7 +40,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
       *
       * On y enregistre toutes les api qu'on souhaite exposer
       */
-    Worker(Data &){
+    Worker(navitia::type::Data &){
         register_api("/query",boost::bind(&Worker::query, this, _1, _2), "Api ptref");
         register_api("/load",boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
         add_default_api();

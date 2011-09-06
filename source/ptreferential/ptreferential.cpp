@@ -1,10 +1,169 @@
 #include "ptreferential.h"
+#include "reflexion.h"
+#include "indexes.h"
+#include "where.h"
 
 #include <iostream>
 #include <fstream>
 #include <algorithm>
 
+#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/include/qi_lit.hpp>
+#include <boost/spirit/include/phoenix_core.hpp>
+#include <boost/spirit/include/phoenix_operator.hpp>
+#include <boost/fusion/include/adapt_struct.hpp>
+
+//TODO: change!
+using namespace navitia::type;
+using namespace navitia::ptref;
+
+namespace qi = boost::spirit::qi;
+
+
+struct Column {
+    Type_e table;
+    std::string column;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(
+    Column,
+    (Type_e, table)
+    (std::string, column)
+)
+
+struct WhereClause{
+    Column col;
+    Operator_e op;
+    std::string value;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(
+    WhereClause,
+    (Column,col)
+    (Operator_e, op)
+    (std::string, value)
+)
+
+struct Request {
+    std::vector<Column> columns;
+    Type_e requested_type;
+    std::vector<WhereClause> clauses;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(
+    Request,
+    (std::vector<Column>, columns)
+    (Type_e, requested_type)
+    (std::vector<WhereClause>, clauses)
+)
+
+        template <typename Iterator>
+        struct select_r
+            : qi::grammar<Iterator, Request(), qi::space_type>
+{
+    qi::rule<Iterator, std::string(), qi::space_type> txt; // Match une string
+    qi::rule<Iterator, Type_e(), qi::space_type> table;
+    qi::rule<Iterator, Column(), qi::space_type> table_col; // Match une colonne
+    qi::rule<Iterator, std::vector<Column>(), qi::space_type> select; // Match toute la section SELECT
+    qi::rule<Iterator, Type_e(), qi::space_type> from; // Matche la section FROM
+    qi::rule<Iterator, Request(), qi::space_type> request; // Toute la requête
+    qi::rule<Iterator, std::vector<WhereClause>(), qi::space_type> where;// section Where
+    qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
+
+    select_r() : select_r::base_type(request) {
+        txt %= qi::lexeme[+(qi::alnum|'_'|'|'|':')]; // Match du texte
+
+        table =   qi::string("stop_areas")[qi::_val = eStopArea]
+                | qi::string("stop_points")[qi::_val = eStopPoint]
+                | qi::string("lines")[qi::_val = eLine]
+                | qi::string("routes")[qi::_val = eRoute]
+                | qi::string("validity_patterns")[qi::_val = eValidityPattern]
+                | qi::string("vehicle_journeys")[qi::_val = eVehicleJourney]
+                | qi::string("stop_times")[qi::_val = eStopTime]
+                | qi::string("networks")[qi::_val = eNetwork]
+                | qi::string("modes")[qi::_val = eMode]
+                | qi::string("mode_types")[qi::_val = eModeType]
+                | qi::string("cities")[qi::_val = eCity]
+                | qi::string("connections")[qi::_val = eConnection]
+                | qi::string("route_points")[qi::_val = eRoutePoint]
+                | qi::string("districts")[qi::_val = eDistrict]
+                | qi::string("departments")[qi::_val = eDepartment]
+                | qi::string("companies")[qi::_val = eCompany]
+                | qi::string("vehicles")[qi::_val = eVehicle]
+                | qi::string("countries")[qi::_val = eCountry];
+
+        bin_op =  qi::string("<=")[qi::_val = LEQ]
+                | qi::string(">=")[qi::_val = GEQ]
+                | qi::string("<>")[qi::_val = NEQ]
+                | qi::string("<") [qi::_val = LT]
+                | qi::string(">") [qi::_val = GT]
+                | qi::string("=") [qi::_val = EQ];
+
+        table_col %= table >> '.' >> txt; // Nom de la table suivit de point et Nom de la colonne obligatoire
+
+        select  %= qi::lexeme["select"] >> table_col % ',' ; // La liste de table_col séparée par des ,
+
+        from %= qi::lexeme["from"] >> table ;
+
+        where %= qi::lexeme["where"] >> (table_col >> bin_op >> txt) % qi::lexeme["and"];
+
+        request %= select >> from >> -where; // Clause where optionnelle
+    }
+
+};
+
+
+
 namespace navitia{ namespace ptref{
+
+
+template<class T>
+WhereWrapper<T> build_clause(std::vector<WhereClause> clauses) {
+    WhereWrapper<T> wh(new BaseWhere<T>());
+    BOOST_FOREACH(auto clause, clauses) {
+        if(clause.col.column == "id")
+            wh = wh && WHERE(ptr_id<T>(), clause.op, clause.value);
+        else if(clause.col.column == "idx")
+            wh = wh && WHERE(ptr_idx<T>(), clause.op, clause.value);
+        else if(clause.col.column == "external_code")
+            wh = wh && WHERE(ptr_external_code<T>(), clause.op, clause.value);
+    }
+    return wh;
+}
+
+
+template<class T>
+pbnavitia::PTRefResponse extract_data(std::vector<T> & table, const Request & r, std::vector<idx_t> & rows) {
+    pbnavitia::PTRefResponse pb_response;
+
+    BOOST_FOREACH(idx_t row, rows){
+        pbnavitia::PTreferential * pb_row = pb_response.add_item();
+        google::protobuf::Message* pb_message = get_message(pb_row, r.requested_type);
+        BOOST_FOREACH(const Column & col, r.columns){
+            set_value(pb_message, table.at(row), col.column);
+        }
+    }
+    return pb_response;
+}
+
+template<class T>
+void set_value(google::protobuf::Message* message, const T& object, const std::string& column){
+    const google::protobuf::Reflection* reflection = message->GetReflection();
+    const google::protobuf::Descriptor* descriptor = message->GetDescriptor();
+    const google::protobuf::FieldDescriptor* field_descriptor = descriptor->FindFieldByName(column);
+
+    if(field_descriptor == NULL){
+        throw unknown_member();
+    }
+
+    if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_STRING){
+        reflection->SetString(message, field_descriptor, boost::get<std::string>(get_value(object, column)));
+    }else if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
+        reflection->SetInt32(message, field_descriptor, boost::get<int>(get_value(object, column)));
+    }else{
+        throw bad_type();
+    }
+}
 
 google::protobuf::Message* get_message(pbnavitia::PTreferential* row, Type_e type){
     const google::protobuf::Reflection* reflection = row->GetReflection();
@@ -31,7 +190,7 @@ std::vector<idx_t> get_indexes(std::vector<WhereClause> clauses,  Type_e request
     if(clauses.size() == 0)
         return indexes;
 
-    std::vector<Type_e> path = Jointures().find_path(requested_type);
+    std::vector<Type_e> path = find_path(requested_type);
     Type_e current = clauses[0].col.table;
     while(path[current] != current){
         indexes = d.get_target_by_source(current, path[current], indexes);
