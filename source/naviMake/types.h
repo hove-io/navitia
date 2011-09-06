@@ -246,7 +246,7 @@ struct Line : public TransmodelHeader, Nameable {
     std::vector<idx_t> forward_route;
     std::vector<idx_t> backward_route;
 
-    std::vector<idx_t> validity_pattern_list;
+    std::vector<ValidityPattern*> validity_pattern_list;
 
     struct Transformer{
         inline nt::Line operator()(const Line* line){return this->operator()(*line);}   

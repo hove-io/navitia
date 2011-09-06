@@ -100,7 +100,11 @@ bool StopArea::operator<(const StopArea& other) const {
 
 
 bool StopPoint::operator<(const StopPoint& other) const {
-    if(this->stop_area == other.stop_area){
+    if(!this->stop_area)
+        return false;
+    else if(!other.stop_area)
+        return true;
+    else if(this->stop_area == other.stop_area){
         return this->name < other.name;
     }else{
         return *(this->stop_area) < *(other.stop_area);

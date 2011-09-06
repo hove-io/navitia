@@ -2,22 +2,51 @@
 #include <boost/foreach.hpp>
 
 #include "connectors.h"
+#include "gtfs_parser.h"
 
 #include <fstream>
 #include <boost/date_time/posix_time/posix_time.hpp>
-
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
 int main(int argc, char const* argv[])
 {
+    std::string type, input, output, date;
+    po::options_description desc("Allowed options");
+    desc.add_options()
+        ("help,h", "Affiche l'aide")
+        ("type,t", po::value<std::string>(&type), "Type du format d'entrée [fusio, gtfs]")
+        ("date,d", po::value<std::string>(&date), "Date de début")
+        ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
+        ("output,o", po::value<std::string>(&output)->default_value("data.nav"), "Fichier de sortie");
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
+
+    if(vm.count("help") || !vm.count("input") || !vm.count("type")) {
+        std::cout << desc <<  "\n";
+        return 1;
+    }
     pt::ptime start, end;
     int read, clean, sort, transform, save;
 
     navimake::Data data;
     {
         start = pt::microsec_clock::local_time();
-        navimake::connectors::CsvFusio connector("data/");
-        connector.fill(data);
+        if(type == "fusio") {
+            navimake::connectors::CsvFusio connector(input, date);
+            connector.fill(data);
+        }
+        else if(type == "gtfs") {
+            navimake::connectors::GtfsParser connector(input, date);
+            connector.fill(data);
+        }
+        else {
+            std::cout << desc << "\n";
+            return 1;
+        }
         read = (pt::microsec_clock::local_time() - start).total_milliseconds();
     }
 
@@ -43,7 +72,7 @@ int main(int argc, char const* argv[])
     data.transform(nav_data);
     transform = (pt::microsec_clock::local_time() - start).total_milliseconds();
     start = pt::microsec_clock::local_time();
-    nav_data.save_flz("data.nav.flz");
+    nav_data.save_flz(output);
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     std::cout << "temps de traitement" << std::endl;

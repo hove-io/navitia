@@ -21,6 +21,7 @@ namespace navimake{
         std::vector<navimake::types::StopTime*> stops; //OK
         std::vector<navimake::types::Connection*> connections; //OK
         std::vector<navimake::types::RoutePoint*> route_points; //OK
+        std::vector<navimake::types::ValidityPattern*> validity_patterns; 
 
 
         template<class T> 

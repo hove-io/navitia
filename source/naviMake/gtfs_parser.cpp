@@ -7,8 +7,11 @@
 #include <iostream>
 #include <deque>
 
-using namespace navitia::type;
+namespace nm = navimake::types;
 typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
+
+namespace navimake{ namespace connectors {
+
 
 int time_to_int(const std::string & time) {
    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
@@ -33,21 +36,23 @@ GtfsParser::GtfsParser(const std::string & path, const std::string & start) :
         path(path),
         start(boost::gregorian::from_undelimited_string(start)) {
     std::cout << "Date de début : " << this->start << std::endl;
-    parse_stops();
-    parse_calendar_dates();
-    parse_routes();
-    parse_trips();
-    parse_stop_times();
-
 }
 
+void GtfsParser::fill(Data & data){
+    parse_stops(data);
+    parse_calendar_dates(data);
+    parse_routes(data);
+    parse_trips(data);
+    parse_stop_times(data);
+}
 
-void GtfsParser::parse_stops() {
+void GtfsParser::parse_stops(Data & data) {
+    // On réserve un peu large, de l'ordre de l'Île-de-France
     data.stop_points.reserve(56000);
     data.stop_areas.reserve(13000);
     // En GTFS les stopPoint et stopArea sont définis en une seule fois
     // On garde donc le "parent station" (aka. stopArea) dans un tableau lors de la 1ère passe.
-    std::deque<std::pair<int, std::string> > stoppoint_areas;
+    std::deque<std::pair<nm::StopPoint*, std::string> > stoppoint_areas;
 
     std::cout << "On parse : " << (path + "/stops.txt").c_str() << std::endl;
     std::fstream ifile((path + "/stops.txt").c_str());
@@ -91,39 +96,40 @@ void GtfsParser::parse_stops() {
         boost::trim(line);
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
-        StopPoint sp;
+        nm::StopPoint * sp = new nm::StopPoint();
         try{
-            sp.coord.x = boost::lexical_cast<double>(elts[lon_c]);
-            sp.coord.y = boost::lexical_cast<double>(elts[lat_c]);
+            sp->coord.x = boost::lexical_cast<double>(elts[lon_c]);
+            sp->coord.y = boost::lexical_cast<double>(elts[lat_c]);
         }
         catch(boost::bad_lexical_cast ) {
             std::cerr << "Impossible de parser les coordonnées pour " << elts[id_c] << " " << elts[code_c]
                     << " " << elts[name_c] << std::endl;
         }
 
-        sp.name = elts[name_c];
-        sp.external_code = elts[id_c];
+        sp->name = elts[name_c];
+        sp->external_code = elts[id_c];
 
-        if(!data.stop_points.empty() && stop_map.find(sp.external_code) != stop_map.end()) {
+        if(!data.stop_points.empty() && stop_map.find(sp->external_code) != stop_map.end()) {
             ignored++;
         }
         else {
 
             // Si c'est un stopArea
             if(elts[type_c] == "1") {
-                StopArea sa;
-                sa.coord = sp.coord;
-                sa.name = sp.name;
-                sa.external_code = sp.external_code;
-                sa.idx = stop_area_map[sa.external_code] = data.stop_areas.size();
+                nm::StopArea * sa = new nm::StopArea();
+                sa->coord = sp->coord;
+                sa->name = sp->name;
+                sa->external_code = sp->external_code;
+                stop_area_map[sa->external_code] = sa;
                 data.stop_areas.push_back(sa);
+                delete sp;
             }
             // C'est un StopPoint
             else {
-                sp.idx = stop_map[sp.external_code] = data.stop_points.size();
+                stop_map[sp->external_code] = sp;
                 data.stop_points.push_back(sp);
                 if(elts[parent_c] != "") ///On sauvegarde la référence à la zone d'arrêt
-                    stoppoint_areas.push_back(std::make_pair(sp.idx, elts[parent_c]));
+                    stoppoint_areas.push_back(std::make_pair(sp, elts[parent_c]));
             }
         }
     }
@@ -132,11 +138,13 @@ void GtfsParser::parse_stops() {
     BOOST_FOREACH(auto sa, stoppoint_areas){
         auto it = stop_area_map.find(sa.second);
         if(it != stop_area_map.end()) {
-            data.stop_points[sa.first].stop_area_idx = it->second;
+            (sa.first)->stop_area = it->second;
         }
-        else
-            std::cerr << "Le stopPoint " << data.stop_points[sa.first].external_code
+        else{
+            std::cerr << "Le stopPoint " << (sa.first)->external_code
                     << " a utilisé un stopArea inconnu : " << sa.second << std::endl;
+            (sa.first)->stop_area = 0;
+        }
     }
 
     std::cout << "J'ai parsé " << data.stop_points.size() << " stop points" << std::endl;
@@ -145,7 +153,7 @@ void GtfsParser::parse_stops() {
     std::cout << std::endl;
 }
 
-void GtfsParser::parse_calendar_dates(){
+void GtfsParser::parse_calendar_dates(Data & data){
     data.validity_patterns.reserve(10000);
     std::cout << "On parse : " << (path + "/calendar_dates.txt").c_str() << std::endl;
     std::fstream ifile((path + "/calendar_dates.txt").c_str());
@@ -177,24 +185,26 @@ void GtfsParser::parse_calendar_dates(){
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
 
-        int idx;
-        boost::unordered_map<std::string, int>::iterator it= vp_map.find(elts[id_c]);
+        //int idx;
+        nm::ValidityPattern * vp;
+        boost::unordered_map<std::string, nm::ValidityPattern*>::iterator it= vp_map.find(elts[id_c]);
         if(it == vp_map.end()){
-            ValidityPattern vp(start);
-            vp.idx = data.validity_patterns.size();
-            vp_map[elts[id_c]] = vp.idx;
+            vp = new nm::ValidityPattern(start);
+            //vp.idx = data.validity_patterns.size();
+            vp_map[elts[id_c]] = vp;
             data.validity_patterns.push_back(vp);
-            idx = vp.idx;
+//            idx = vp.idx;
         }
         else {
-            idx = it->second;
+ //           idx = it->second;
+           vp = it->second;
         }
 
         auto date = boost::gregorian::from_undelimited_string(elts[date_c]);
         if(elts[e_type_c] == "1")
-            data.validity_patterns[idx].add(date);
+            vp->add(date);
         else if(elts[e_type_c] == "2")
-            data.validity_patterns[idx].remove(date);
+            vp->remove(date);
         else
             std::cerr << "Exception pour le service " << elts[id_c] << " inconnue : " << elts[e_type_c] << std::endl;
     }
@@ -202,7 +212,7 @@ void GtfsParser::parse_calendar_dates(){
     std::cout << "Nombre de validity patterns : " << data.validity_patterns.size() << std::endl;
 }
 
-void GtfsParser::parse_routes(){
+void GtfsParser::parse_routes(Data & data){
     data.lines.reserve(10000);
     std::cout << "On parse : " << (path + "/routes.txt").c_str() << std::endl;
     std::fstream ifile((path + "/routes.txt").c_str());
@@ -243,14 +253,14 @@ void GtfsParser::parse_routes(){
         elts.assign(tok.begin(), tok.end());
 
         if(line_map.find(elts[id_c]) == line_map.end()) {
-            Line line;
-            line.name = elts[long_name_c];
-            line.code = elts[short_name_c];
-            line.mode_list.push_back(0);
-            line.color = elts[color_c];
-            line.additional_data = elts[long_name_c];
+            nm::Line * line = new nm::Line();
+            line->name = elts[long_name_c];
+            line->code = elts[short_name_c];
+            line->mode_list.push_back(0);
+            line->color = elts[color_c];
+            line->additional_data = elts[long_name_c];
 
-            line.idx = line_map[elts[id_c]] = data.lines.size();
+            line_map[elts[id_c]] = line;
             data.lines.push_back(line);
         }
         else {
@@ -264,7 +274,7 @@ void GtfsParser::parse_routes(){
     std::cout << std::endl;
 }
 
-void GtfsParser::parse_trips() {
+void GtfsParser::parse_trips(Data & data) {
     data.routes.reserve(350000);
     data.vehicle_journeys.reserve(350000);
     std::cout << "On parse : " << (path + "/trips.txt").c_str() << std::endl;
@@ -306,41 +316,41 @@ void GtfsParser::parse_trips() {
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
 
-        boost::unordered_map<std::string, int>::iterator it = line_map.find(elts[id_c]);
+        boost::unordered_map<std::string, nm::Line*>::iterator it = line_map.find(elts[id_c]);
         if(it == line_map.end()){
             std::cerr << "Impossible de trouver la Route (au sens GTFS) " << elts[id_c]
                     << " référencée par trip " << elts[trip_c] << std::endl;
         }
         else {
-            int line_idx = it->second;
-            Route route;
-            route.line_idx = line_idx;
-            int vp_xx = 0;
+            nm::Line * line = it->second;
+            nm::Route * route = new nm::Route();
+            route->line  = line;
+            nm::ValidityPattern * vp_xx;
 
-            boost::unordered_map<std::string, int>::iterator vp_it = vp_map.find(elts[service_c]);
+            boost::unordered_map<std::string, nm::ValidityPattern*>::iterator vp_it = vp_map.find(elts[service_c]);
             if(vp_it == vp_map.end()) {
                 ignored++;
                 //std::cerr << "Impossible de trouver le service " << elts[service_c] << std::endl;
             }
             else {
-                data.lines[line_idx].validity_pattern_list.push_back(vp_it->second);
+                line->validity_pattern_list.push_back(vp_it->second);
                 vp_xx = vp_it->second;
             }
 
-            route.idx = route_map[elts[trip_c]] = data.routes.size();
+            //route.idx = route_map[elts[trip_c]] = data.routes.size();
             data.routes.push_back(route); //elts[2]
 
-            boost::unordered_map<std::string, int>::iterator vj_it = vj_map.find(elts[trip_c]);
+            boost::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(elts[trip_c]);
             if(vj_it == vj_map.end()) {
-                VehicleJourney vj;
-                vj.route_idx = data.routes.size() - 1;
+                nm::VehicleJourney * vj = new nm::VehicleJourney();
+                vj->route = route;//data.routes.size() - 1;
                 //vj->company = route->line->network;
-                vj.name = elts[trip_c];
-                vj.external_code = elts[trip_c];
+                vj->name = elts[trip_c];
+                vj->external_code = elts[trip_c];
                 //vj->mode = route->mode_type;
-                vj.validity_pattern_idx =vp_xx;// vp_it->second;
+                vj->validity_pattern =vp_xx;// vp_it->second;
 
-                vj.idx = vj_map[vj.name] = data.vehicle_journeys.size();
+                vj_map[vj->name] = vj;
                 data.vehicle_journeys.push_back(vj);
             }
             else {
@@ -357,9 +367,9 @@ void GtfsParser::parse_trips() {
     std::cout << std::endl;
 }
 
-void GtfsParser::parse_stop_times() {
+void GtfsParser::parse_stop_times(Data & data) {
     std::cout << "On parse : " << (path + "/stop_times.txt").c_str() << std::endl;
-    data.stop_times.reserve(8000000);
+    data.stops.reserve(8000000);
     std::fstream ifile((path + "/stop_times.txt").c_str());
     std::string line;
     if(!getline(ifile, line)) {
@@ -402,30 +412,30 @@ void GtfsParser::parse_stop_times() {
         Tokenizer tok(line);
         std::vector<std::string> elts(tok.begin(), tok.end());
 
-        // Accès en lecture seule, donc pas besoin de mutex
-        auto route_it = route_map.find(elts[id_c]);
+        auto vj_it = vj_map.find(elts[id_c]);
         auto stop_it = stop_map.find(elts[stop_c]);
-        if(route_it == route_map.end()) {
-            std::cerr << "Impossible de trouver la route " << elts[id_c] << std::endl;
+        if(vj_it == vj_map.end()) {
+            std::cerr << "Impossible de trouver le vehicle_journey " << elts[id_c] << std::endl;
         }
         else if(stop_it == stop_map.end()){
             std::cerr << "Impossible de trouver le StopPoint " << elts[stop_c] << std::endl;
         }
         else {
-            StopTime stop_time;
-            stop_time.arrival_time = time_to_int(elts[arrival_c]);
-            stop_time.departure_time = time_to_int(elts[departure_c]);
-            stop_time.stop_point_idx = stop_it->second;
-            stop_time.order = boost::lexical_cast<int>(elts[stop_seq_c]);
-            stop_time.vehicle_journey_idx = route_it->second;
-            stop_time.ODT = (elts[pickup_c] == "2" && elts[drop_c] == "2");
-            stop_time.zone = 0; // à définir selon pickup_type ou drop_off_type = 10
-            stop_time.idx = count;            
-            data.stop_times.push_back(stop_time);
+            nm::StopTime * stop_time = new nm::StopTime();
+            stop_time->arrival_time = time_to_int(elts[arrival_c]);
+            stop_time->departure_time = time_to_int(elts[departure_c]);
+            stop_time->stop_point = stop_it->second;
+            stop_time->order = boost::lexical_cast<int>(elts[stop_seq_c]);
+            stop_time->vehicle_journey = vj_it->second;
+            stop_time->ODT = (elts[pickup_c] == "2" && elts[drop_c] == "2");
+            stop_time->zone = 0; // à définir selon pickup_type ou drop_off_type = 10
+            //stop_time->idx = count;
+            data.stops.push_back(stop_time);
             count++;
 
         }
     }
-    std::cout << "Nombre d'horaires : " << data.stop_times.size() << std::endl;
+    std::cout << "Nombre d'horaires : " << data.stops.size() << std::endl;
 }
 
+}}

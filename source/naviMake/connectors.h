@@ -9,7 +9,7 @@ struct BadFormated : public std::exception{};
 
 class CsvFusio {
     public:
-        CsvFusio(const std::string & path);
+        CsvFusio(const std::string & path, const std::string & start_date);
         ~CsvFusio();
         void fill(navimake::Data& data);
     private:

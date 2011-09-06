@@ -6,7 +6,7 @@
 
 using namespace navimake::connectors;
 
-CsvFusio::CsvFusio(const std::string& path): path(path){
+CsvFusio::CsvFusio(const std::string& path, const std::string & start_date): path(path){
 }
 
 CsvFusio::~CsvFusio(){}
