@@ -150,28 +150,38 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
     label.line = section.line;
     label.mode = section.mode;
     label.network = section.network;
-    label.current_type = ticket.type;
 
-    // Si c'est un ticket vide, c'est juste un changement
-    // On incrémente le nombre de changements et la durée effectuée avec le même ticket
-    if(ticket.caption == "" && ticket.value == 0){
-        label.nb_changes++;
-        label.duration += section.duration();
-        if(ticket.type == Ticket::ODFare){
-            if(label.stop_area == ""){
-                label.stop_area = section.start_stop_area;
-            }
-            label.zone = section.start_zone;
+
+    if(ticket.type == Ticket::ODFare){
+        if(label.stop_area == "" || label.current_type != Ticket::ODFare){
+            label.stop_area = section.start_stop_area;
+            label.nb_changes = 0;
+            label.duration = section.duration();
+          //  label.tickets.push_back(ticket);
+            //label.cost += ticket.value;
+        }else{
+            label.nb_changes++;
+            label.duration += section.duration();
         }
-    } else {
-        // On a acheté un nouveau billet
-        // On note le coût global du trajet, remet à 0 la durée/changements
-        label.cost += ticket.value;
-        label.tickets.push_back(ticket);
-        label.nb_changes = 0;
-        label.duration = section.duration();
-        label.stop_area = section.start_stop_area;
+        label.zone = section.start_zone;
+
+    }else{
+        // Si c'est un ticket vide, c'est juste un changement
+        // On incrémente le nombre de changements et la durée effectuée avec le même ticket
+        if(ticket.caption == "" && ticket.value == 0){
+            label.nb_changes++;
+            label.duration += section.duration();
+        } else {
+            // On a acheté un nouveau billet
+            // On note le coût global du trajet, remet à 0 la durée/changements
+            label.cost += ticket.value;
+            label.tickets.push_back(ticket);
+            label.nb_changes = 0;
+            label.duration = section.duration();
+            label.stop_area = section.start_stop_area;
+        }
     }
+    label.current_type = ticket.type;
     if(!label.tickets.empty()){
         label.tickets.back().sections.push_back(section);
     }

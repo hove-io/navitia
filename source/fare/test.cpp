@@ -67,8 +67,8 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     // Un trajet simple
     keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;02|06;02|10;1;1;metro");
     Fare f;
-    f.init("/home/tristram/fare/idf.fares", "/home/tristram/fare/prix.csv");
-    f.load_od_stif("/home/tristram/fare/tarifs_od.csv");
+    f.init("/home/kinou/workspace/navitiacpp/build_debug/fare/idf.fares", "/home/kinou/workspace/navitiacpp/build_debug/fare/prix.csv");
+    f.load_od_stif("/home/kinou/workspace/navitiacpp/build_debug/fare/tarifs_od.csv");
     std::vector<Ticket> res = f.compute(keys);
     BOOST_CHECK(res.size() == 1);
     BOOST_CHECK(res.at(0).value == 170);
@@ -88,8 +88,8 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 2);
 
-    // Correspondance tramway-bus autant qu'on veut
-    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;02|50;03|30;1;1;tram");
+    // Correspondance Tramwayway-bus autant qu'on veut
+    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;02|50;03|30;1;1;Tramway");
     keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;03|30;04|20;1;1;bus");
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 2);
@@ -97,29 +97,6 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|30;04|40;1;1;bus");
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 3);
-
-    // On teste le noctilien
-    keys.clear();
-    keys.push_back("Noctilien;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|30;04|40;1;1;bus");
-    res = f.compute(keys);
-    BOOST_CHECK(res.size() == 1);
-    BOOST_CHECK(res[0].value == 170);
-
-    keys.clear();
-    keys.push_back("noctilien;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|30;04|40;1;3;bus");
-    res = f.compute(keys);
-    BOOST_CHECK(res.size() == 1);
-    BOOST_CHECK(res[0].value == 340); // C'est un trajet qui coûte 2 tickets
-
-    // Prendre le bus après le noctilien coûte
-    keys.push_back("ratp;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|30;04|40;1;3;bus");
-    res = f.compute(keys);
-    BOOST_CHECK(res.size() == 2);
-
-    // On rajoute un bus après : il faut reprendre un billet
-    keys.push_back("ratp;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|40;04|50;1;3;bus");
-    res = f.compute(keys);
-    BOOST_CHECK(res.size() == 2);
 
     // On teste un peu les OD vers paris
     keys.clear();
@@ -134,9 +111,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK(res.size() == 1);
     BOOST_CHECK(res.at(0).value==370);
 
-    // Et le tram bien évidemment payant !
+    // Et le Tramway bien évidemment payant !
     // Le métro doit être gratuit après
-    keys.push_back("ratp;paris;FILNav31;FILGATO-2;2011|06|01;04|40;04|50;1;1;tram");
+    keys.push_back("ratp;paris;FILNav31;FILGATO-2;2011|06|01;04|40;04|50;1;1;Tramway");
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 2);
 
@@ -145,6 +122,36 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("ratp;mantes;FILNav31;FILGATO-2;2010|12|01;04|40;04|50;4;1;metro");
     res = f.compute(keys);
     BOOST_CHECK(res.at(0).value==160);
+
+    // On teste le noctilien
+    keys.clear();
+    keys.push_back("Noctilien;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|30;04|40;1;1;bus");
+    res = f.compute(keys);
+    BOOST_CHECK(res.size() == 1);
+    BOOST_CHECK(res[0].value == 170);
+
+    keys.clear();
+    keys.push_back("Noctilien;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|30;04|40;1;3;bus");
+    res = f.compute(keys);
+    BOOST_CHECK(res.size() == 1);
+    BOOST_CHECK(res[0].value == 340); // C'est un trajet qui coûte 2 tickets
+
+
+    keys.clear();
+    keys.push_back("Noctilien;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|30;04|40;3;1;bus");
+    res = f.compute(keys);
+    BOOST_CHECK(res.size() == 1);
+    BOOST_CHECK(res[0].value == 340); // C'est un trajet qui coûte 2 tickets
+    std::cout << res[0].value << std::endl;
+    // Prendre le bus après le noctilien coûte
+    keys.push_back("ratp;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|30;04|40;1;3;bus");
+    res = f.compute(keys);
+    BOOST_CHECK(res.size() == 2);
+
+    // On rajoute un bus après : il faut reprendre un billet
+    keys.push_back("ratp;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|40;04|50;1;3;bus");
+    res = f.compute(keys);
+    BOOST_CHECK(res.size() == 2);
 
     keys.clear();
     keys.push_back("ratp;8739300;FILGATO-2;8775499;2010|12|01;04|40;04|50;4;1;rapidtransit");
@@ -204,6 +211,19 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 1);
     BOOST_CHECK(res.at(0).value==655);
+
+    keys.clear();
+    keys.push_back("5604:127;11:120;050050023:23;8727622;2011|05|31;09|28;09|39;4;4;Bus");
+    keys.push_back(";8727622;800:D;8775860;2011|05|31;09|47;10|09;4;1;RapidTransit");
+    keys.push_back(";8775860;100110007:7;R_0007;2011|05|31;10|20;10|21;1;1;Metro");
+    res = f.compute(keys);
+    BOOST_CHECK(res.size() == 2);
+    BOOST_CHECK(res.at(0).value==170);
+    BOOST_CHECK(res.at(1).value == 370);
+
+
+
+
 }
 
 
