@@ -17,7 +17,6 @@ SET(TYPES_SRC type.h type.cpp data.h data.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 add_library(types ${TYPES_SRC})
 
 
-
 add_executable(navijkstra navijkstra.cpp ${CMAKE_SOURCE_DIR}/../third_party/fastlz/fastlz.c)
 target_link_libraries(navijkstra ${Boost_LIBRARIES} types)
 
