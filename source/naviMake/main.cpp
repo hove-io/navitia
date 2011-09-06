@@ -10,7 +10,7 @@
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
-int main(int argc, char const* argv[])
+int main(int argc, char * argv[])
 {
     std::string type, input, output, date;
     po::options_description desc("Allowed options");

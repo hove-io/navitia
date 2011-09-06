@@ -185,18 +185,15 @@ void GtfsParser::parse_calendar_dates(Data & data){
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
 
-        //int idx;
+
         nm::ValidityPattern * vp;
         boost::unordered_map<std::string, nm::ValidityPattern*>::iterator it= vp_map.find(elts[id_c]);
         if(it == vp_map.end()){
             vp = new nm::ValidityPattern(start);
-            //vp.idx = data.validity_patterns.size();
             vp_map[elts[id_c]] = vp;
             data.validity_patterns.push_back(vp);
-//            idx = vp.idx;
         }
         else {
- //           idx = it->second;
            vp = it->second;
         }
 
@@ -337,18 +334,18 @@ void GtfsParser::parse_trips(Data & data) {
                 vp_xx = vp_it->second;
             }
 
-            //route.idx = route_map[elts[trip_c]] = data.routes.size();
+            route_map[elts[trip_c]] = route;
             data.routes.push_back(route); //elts[2]
 
             boost::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(elts[trip_c]);
             if(vj_it == vj_map.end()) {
                 nm::VehicleJourney * vj = new nm::VehicleJourney();
-                vj->route = route;//data.routes.size() - 1;
+                vj->route = route;
                 //vj->company = route->line->network;
                 vj->name = elts[trip_c];
                 vj->external_code = elts[trip_c];
                 //vj->mode = route->mode_type;
-                vj->validity_pattern =vp_xx;// vp_it->second;
+                vj->validity_pattern =vp_xx;
 
                 vj_map[vj->name] = vj;
                 data.vehicle_journeys.push_back(vj);
@@ -429,7 +426,6 @@ void GtfsParser::parse_stop_times(Data & data) {
             stop_time->vehicle_journey = vj_it->second;
             stop_time->ODT = (elts[pickup_c] == "2" && elts[drop_c] == "2");
             stop_time->zone = 0; // à définir selon pickup_type ou drop_off_type = 10
-            //stop_time->idx = count;
             data.stops.push_back(stop_time);
             count++;
 
