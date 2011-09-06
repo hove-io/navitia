@@ -37,14 +37,14 @@
  *
  * \section modules Modules
  * Chaque module existe dans un sous-repertoire de source
- *  - WS_Commons : squelette pour construire un webservice fcgi/isapi
- *  - fare : calcul des tarifs d'un trajet
+ *  - \ref WS_Commons : squelette pour construire un webservice fcgi/isapi
+ *  - \ref fare : calcul des tarifs d'un trajet
  *  - first_letter : expérimentation d'une api first letter basée sur les trie
- *  - gateway_mod : une passerelle plus modulaire adaptée au cloud
+ *  - \ref gateway : une passerelle plus modulaire adaptée au cloud
  *  - log : expérimentations des logs
- *  - naviMake : transformer des exports fusion .csv dans le format interne
+ *  - \ref navimake : transformer des exports fusion .csv dans le format interne
  *  - \ref ptreferential : effectuer des requêtes sur le référentiel de données
- *  - type : structures de données liées au référentiel
+ *  - \ref type : structures de données liées au référentiel
  *  - utils : petits outils qui peuvent servir (lire un CSV, soucis d'encodage…)
  * 
  */
