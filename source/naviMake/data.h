@@ -87,7 +87,9 @@ namespace navimake{
             BOOST_FOREACH(navimake::types::Connection* connection, connections){
                 delete connection;
             }
-
+            BOOST_FOREACH(navimake::types::ValidityPattern* validity_pattern, validity_patterns){
+                delete validity_pattern;
+            }
 
         }
 
