@@ -51,7 +51,7 @@ class Worker : public BaseWorker<Data> {
         rd.response << "</Params>\n";
     
         BOOST_FOREACH(Ticket t, tickets){
-            rd.response << "<Fare><Network>" << t.sections.at(0).network << "</Network>\n";
+            rd.response << "<Fare><Network>" << (t.sections.size() > 0 ? t.sections.at(0).network : "Unknown") << "</Network>\n";
             rd.response << "<Cost Money=\"Euro\">" << boost::format("%2.2f") % (t.value/100.0) << "</Cost>\n";
             rd.response << "<Label>" << t.caption << "</Label>\n";
             rd.response << "<Comment>" << t.comment  << "</Comment>\n";
