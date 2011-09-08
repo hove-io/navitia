@@ -58,7 +58,7 @@ void CsvFusio::fill_networks(navimake::Data& data){
 
 void CsvFusio::fill_modes_type(navimake::Data& data){
     
-    CsvReader reader(path + "ModeType.csv", ';', "ISO-8859-1");
+    CsvReader reader(path + "/ModeType.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
     for(row=reader.next(); row != reader.end(); row = reader.next()){
@@ -80,7 +80,7 @@ void CsvFusio::fill_modes_type(navimake::Data& data){
 
 void CsvFusio::fill_modes(navimake::Data& data){
     
-    CsvReader reader(path + "Mode.csv", ';', "ISO-8859-1");
+    CsvReader reader(path + "/Mode.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
     for(row=reader.next(); row != reader.end(); row = reader.next()){
@@ -107,7 +107,7 @@ void CsvFusio::fill_modes(navimake::Data& data){
 
 void CsvFusio::fill_lines(navimake::Data& data){
     
-    CsvReader reader(path + "Line.csv", ';', "ISO-8859-1");
+    CsvReader reader(path + "/Line.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
     for(row=reader.next(); row != reader.end(); row = reader.next()){
@@ -137,7 +137,7 @@ void CsvFusio::fill_lines(navimake::Data& data){
 }
 
 void CsvFusio::fill_cities(navimake::Data& data){
-    CsvReader reader(path + "city.csv", ';', "ISO-8859-1");
+    CsvReader reader(path + "/city.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
     for(row=reader.next(); row != reader.end(); row = reader.next()){
@@ -166,7 +166,7 @@ void CsvFusio::fill_cities(navimake::Data& data){
 
 
 void CsvFusio::fill_stop_areas(navimake::Data& data){
-    CsvReader reader(path + "StopArea.csv", ';', "ISO-8859-1");
+    CsvReader reader(path + "/StopArea.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
     for(row=reader.next(); row != reader.end(); row = reader.next()){
@@ -203,7 +203,7 @@ void CsvFusio::fill_stop_areas(navimake::Data& data){
 
 
 void CsvFusio::fill_stop_points(navimake::Data& data){
-    CsvReader reader(path + "StopPoint.csv", ';', "ISO-8859-1");
+    CsvReader reader(path + "/StopPoint.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
     for(row=reader.next(); row != reader.end(); row = reader.next()){
@@ -244,7 +244,7 @@ void CsvFusio::fill_stop_points(navimake::Data& data){
 
 
 void CsvFusio::fill_routes(navimake::Data& data){
-    CsvReader reader(path + "Route.csv", ';', "ISO-8859-1");
+    CsvReader reader(path + "/Route.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
     for(row=reader.next(); row != reader.end(); row = reader.next()){
@@ -276,7 +276,7 @@ void CsvFusio::fill_routes(navimake::Data& data){
 
 
 void CsvFusio::fill_vehicle_journeys(navimake::Data& data){
-    CsvReader reader(path + "VehicleJourney.csv", ';', "ISO-8859-1");
+    CsvReader reader(path + "/VehicleJourney.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
     for(row=reader.next(); row != reader.end(); row = reader.next()){
@@ -307,7 +307,7 @@ void CsvFusio::fill_vehicle_journeys(navimake::Data& data){
 
 
 void CsvFusio::fill_stops(navimake::Data& data){
-    CsvReader reader(path + "Stop.csv", ';', "ISO-8859-1");
+    CsvReader reader(path + "/Stop.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
     for(row=reader.next(); row != reader.end(); row = reader.next()){
@@ -339,7 +339,7 @@ void CsvFusio::fill_stops(navimake::Data& data){
 }
 
 void CsvFusio::fill_connections(navimake::Data& data){
-    CsvReader reader(path + "Connection.csv", ';', "ISO-8859-1");
+    CsvReader reader(path + "/Connection.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
     for(row=reader.next(); row != reader.end(); row = reader.next()){
@@ -365,7 +365,7 @@ void CsvFusio::fill_connections(navimake::Data& data){
 }
 
 void CsvFusio::fill_route_points(navimake::Data& data){
-    CsvReader reader(path + "RoutePoint.csv", ';', "ISO-8859-1");
+    CsvReader reader(path + "/RoutePoint.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
     for(row=reader.next(); row != reader.end(); row = reader.next()){
