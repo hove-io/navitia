@@ -158,10 +158,12 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
             label.zone = section.start_zone;
             label.nb_changes = 0;
             label.duration = section.duration();
-            ticket.sections.push_back(section);
+
             //label.tickets.push_back(ticket);
+            ticket.sections.push_back(section);
+            label.tickets.push_back(ticket);
         }else{ // On a un ancien ticket
-            //label.tickets.back().sections.push_back(section);
+            label.tickets.back().sections.push_back(section);
             label.nb_changes++;
             label.duration += section.duration();
         }
@@ -172,6 +174,7 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
         if(ticket.caption == "" && ticket.value == 0){
             label.nb_changes++;
             label.duration += section.duration();
+            //label.tickets.push_back(ticket);
         } else {
             // On a acheté un nouveau billet
             // On note le coût global du trajet, remet à 0 la durée/changements
@@ -181,9 +184,7 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
             label.duration = section.duration();
             label.stop_area = section.start_stop_area;
         }
-        if(!label.tickets.empty()){
-            label.tickets.back().sections.push_back(section);
-        }
+        label.tickets.back().sections.push_back(section);
     }
     label.current_type = ticket.type;
     return label;
@@ -230,9 +231,17 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
                                 try {
                                     Ticket ticket_od;
                                     ticket_od = get_od(next, section).get_fare(section.date);
-                                    new_labels.at(0).push_back(next_label(label,ticket_od , section));
+                                    if(label.tickets.size() > 0 && label.current_type == Ticket::ODFare)
+                                        ticket_od.sections = label.tickets.back().sections;
+                                        
+                                    ticket_od.sections.push_back(section);
+                                    Label n = next;
+                                    n.tickets.back() = ticket_od;
+                                    n.current_type = Ticket::FlatFare;
+                                    
+                                    //new_labels.at(0).push_back(next_label(label,ticket_od , section));
+                                    new_labels.at(0).push_back(n);
                                 } catch (no_ticket) {}
-
 
                             } else {
                                 new_labels.at(0).push_back(next);
