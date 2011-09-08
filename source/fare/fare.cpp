@@ -153,17 +153,18 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
 
 
     if(ticket.type == Ticket::ODFare){
-        if(label.stop_area == "" || label.current_type != Ticket::ODFare){
+        if(label.stop_area == "" || label.current_type != Ticket::ODFare){ // C'est un nouveau ticket de type OD
             label.stop_area = section.start_stop_area;
+            label.zone = section.start_zone;
             label.nb_changes = 0;
             label.duration = section.duration();
-          //  label.tickets.push_back(ticket);
-            //label.cost += ticket.value;
-        }else{
+            ticket.sections.push_back(section);
+            //label.tickets.push_back(ticket);
+        }else{ // On a un ancien ticket
+            //label.tickets.back().sections.push_back(section);
             label.nb_changes++;
             label.duration += section.duration();
         }
-        label.zone = section.start_zone;
 
     }else{
         // Si c'est un ticket vide, c'est juste un changement
@@ -180,11 +181,11 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
             label.duration = section.duration();
             label.stop_area = section.start_stop_area;
         }
+        if(!label.tickets.empty()){
+            label.tickets.back().sections.push_back(section);
+        }
     }
     label.current_type = ticket.type;
-    if(!label.tickets.empty()){
-        label.tickets.back().sections.push_back(section);
-    }
     return label;
 }
 
@@ -223,16 +224,15 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
                                 ticket.type = Ticket::ODFare;
                             }
                             Label next = next_label(label, ticket, section);
+
+                            // On résoud le ticket OD : cas où on ne se servira plus de ce ticket
                             if(label.current_type == Ticket::ODFare || ticket.type == Ticket::ODFare){
                                 try {
                                     Ticket ticket_od;
-                                    ticket_od.type = Ticket::ODFare;
-                                    if(transition.global_condition == "with_changes" && label.current_type != Ticket::ODFare)
-                                        ticket_od = get_od(next, section).get_fare(section.date);
-                                    else
-                                        ticket_od = get_od(label, section).get_fare(section.date);
+                                    ticket_od = get_od(next, section).get_fare(section.date);
                                     new_labels.at(0).push_back(next_label(label,ticket_od , section));
                                 } catch (no_ticket) {}
+
 
                             } else {
                                 new_labels.at(0).push_back(next);

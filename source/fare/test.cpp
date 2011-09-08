@@ -142,7 +142,6 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     res = f.compute(keys);
     BOOST_CHECK(res.size() == 1);
     BOOST_CHECK(res[0].value == 340); // C'est un trajet qui coûte 2 tickets
-    std::cout << res[0].value << std::endl;
     // Prendre le bus après le noctilien coûte
     keys.push_back("ratp;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|30;04|40;1;3;bus");
     res = f.compute(keys);
@@ -220,6 +219,8 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK(res.size() == 2);
     BOOST_CHECK(res.at(0).value==170);
     BOOST_CHECK(res.at(1).value == 370);
+    BOOST_CHECK(res.at(0).sections.size() == 1);
+    BOOST_CHECK(res.at(1).sections.size() == 2);
 
 
 

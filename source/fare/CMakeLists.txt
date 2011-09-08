@@ -11,11 +11,14 @@ IF(NOT MSVC)
 	SET(FARE_SRC ${FARE_SRC} ${CMAKE_SOURCE_DIR}/utils/csv.cpp ${CMAKE_SOURCE_DIR}/utils/encoding_converter.cpp)
 ENDIF(NOT MSVC)
 
-add_executable (fare main.cpp ${FARE_SRC})
+add_library(fare ${FARE_SRC})
 
-add_executable (fare_tests test.cpp ${FARE_SRC})
-target_link_libraries(fare_tests ${Boost_LIBRARIES})
+add_executable (fare_cli main.cpp)
+target_link_libraries(fare_cli fare)
+
+add_executable (fare_tests test.cpp)
+target_link_libraries(fare_tests ${Boost_LIBRARIES} fare)
 ADD_TEST(test_fare ${EXECUTABLE_OUTPUT_PATH}/fare_tests --report_level=no)
 
 FIND_PACKAGE(WS_Commons)
-MAKE_WS(fare_ws fare_ws.cpp ${FARE_SRC})
+MAKE_WS(fare_ws fare_ws.cpp LIBS fare)
