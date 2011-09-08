@@ -39,8 +39,8 @@ namespace navimake{
 
             void operator()(T* obj){obj->idx = idx; idx++;}
         };
-        /***
-         * tris les différentes donnée et affecte l'idx
+        /**
+         * trie les différentes donnée et affecte l'idx
          *
          */
         void sort();
@@ -50,8 +50,15 @@ namespace navimake{
          */
         void clean();
 
+        /**
+          * Transforme les les pointeurs en données
+          */
         void transform(navitia::type::Data& data);
 
+        /**
+          * Gère les relations
+          */
+        void build_relations(navitia::type::Data & data);
 
         ~Data(){
             BOOST_FOREACH(navimake::types::Network* network, networks){

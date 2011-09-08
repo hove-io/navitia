@@ -1,5 +1,6 @@
 #include "data.h"
 #include <iostream>
+#include "ptreferential/where.h"
 
 using namespace navimake;
 
@@ -86,4 +87,78 @@ void Data::transform(navitia::type::Data& data){
 
     data.vehicle_journeys.resize(this->vehicle_journeys.size());
     std::transform(this->vehicle_journeys.begin(), this->vehicle_journeys.end(), data.vehicle_journeys.begin(), navimake::types::VehicleJourney::Transformer());
+
+    build_relations(data);
+}
+
+void Data::build_relations(navitia::type::Data &data){
+    //BOOST_FOREACH(navimake::types::StopArea & sa, data.stop_areas){}
+
+    BOOST_FOREACH(navitia::type::Mode & mode, data.modes){
+        data.mode_types[mode.mode_type_idx].mode_list.push_back(mode.idx);
+    }
+
+    //BOOST_FOREACH(navitia::type::ModeType & mode_type, data.mode_types){}
+
+    BOOST_FOREACH(navitia::type::StopPoint & sp, data.stop_points){
+        navitia::type::City & city = data.cities[sp.city_idx];
+        navitia::type::StopArea & sa = data.stop_areas[sp.stop_area_idx];
+        sa.stop_point_list.push_back(sp.idx);
+        city.stop_point_list.push_back(sp.idx);
+        if(std::find(city.stop_area_list.begin(), city.stop_area_list.end(),sa.idx) == city.stop_area_list.end())
+            city.stop_area_list.push_back(sa.idx);
+    }
+
+    BOOST_FOREACH(navitia::type::Line & line, data.lines){
+        data.mode_types[line.mode_type_idx].line_list.push_back(line.idx);
+        data.networks[line.network_idx].line_list.push_back(line.idx);
+    }
+
+    BOOST_FOREACH(navitia::type::City & city, data.cities){
+        data.departments[city.department_idx].city_list.push_back(city.idx);
+    }
+
+    BOOST_FOREACH(navitia::type::District & district, data.districts){
+        data.countries[district.country_idx].district_list.push_back(district.idx);
+    }
+
+    BOOST_FOREACH(navitia::type::Department & department, data.departments) {
+        data.districts[department.district_idx].department_list.push_back(department.idx);
+    }
+
+    //BOOST_FOREACH(navitia::type::Network & network, data.networks){}
+
+    BOOST_FOREACH(navitia::type::Route & route, data.routes){
+        data.mode_types[route.mode_type_idx].line_list.push_back(route.line_idx);
+    }
+
+    //BOOST_FOREACH(navitia::type::StopTime & stop_time, data.stop_times){}
+
+    //BOOST_FOREACH(navitia::type::Connection & connection, data.connections){}
+
+    BOOST_FOREACH(navitia::type::RoutePoint & route_point, data.route_points){
+        data.routes[route_point.route_idx].route_point_list.push_back(route_point.idx);
+    }
+
+    BOOST_FOREACH(navitia::type::VehicleJourney & vj, data.vehicle_journeys){
+        navitia::type::Company & company = data.companies[vj.company_idx];
+        navitia::type::Line & line = data.lines[data.routes[vj.route_idx].line_idx];
+
+        if(std::find(line.company_list.begin(), line.company_list.end(), vj.company_idx) == line.company_list.end())
+            line.company_list.push_back(vj.company_idx);
+
+        if(std::find(company.line_list.begin(), company.line_list.end(), line.idx) == company.line_list.end())
+            company.line_list.push_back(line.idx);
+
+        if(std::find(line.mode_list.begin(), line.mode_list.end(), vj.mode_idx) == line.mode_list.end())
+            line.mode_list.push_back(vj.mode_idx);
+
+        line.validity_pattern_list.push_back(vj.validity_pattern_idx);
+
+        data.routes[vj.route_idx].vehicle_journey_list.push_back(vj.idx);
+    }
+
+    //BOOST_FOREACH(navitia::type::ValidityPattern & vp, data.validity_patterns){}
+
+    // BOOST_FOREACH(navitia::type::Company & company, data.companies){}
 }

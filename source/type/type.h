@@ -140,6 +140,7 @@ struct StopArea : public NavitiaHeader, Nameable{
 
     StopArea(): properties(0), city_idx(0){}
 
+    std::vector<idx_t> stop_point_list;
     std::vector<idx_t> get(Type_e type, const Data & data) const;
 };
 
