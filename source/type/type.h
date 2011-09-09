@@ -34,7 +34,8 @@ struct NavitiaHeader{
     int id;
     idx_t idx;
     std::string external_code;
-    NavitiaHeader() : id(0), idx(0){};
+    NavitiaHeader() : id(0), idx(0){}
+    std::vector<idx_t> get(Type_e, const Data &) const {return std::vector<idx_t>();}
 };
 
 struct GeographicalCoord{
@@ -49,42 +50,31 @@ struct GeographicalCoord{
     }
 };
 
-struct Country{
-    idx_t idx;
-    std::string name;
+struct Country: public NavitiaHeader, Nameable {
     idx_t main_city_idx;
     std::vector<idx_t> district_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & main_city_idx & district_list & idx;
     }
-
-    std::vector<idx_t> get(Type_e type, const Data & data) const;
+    std::vector<idx_t> get(Type_e type, const Data & data) const ;
 };
 
-struct District {
-    idx_t idx;
-    std::string name;
+struct District : public NavitiaHeader, Nameable {
     idx_t main_city_idx;
     idx_t country_idx;
     std::vector<idx_t> department_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & main_city_idx & country_idx & department_list & idx;
     }
-
-    std::vector<idx_t> get(Type_e type, const Data & data) const;
 };
 
-struct Department {
-    idx_t idx;
-    std::string name;
+struct Department : public NavitiaHeader, Nameable {
     idx_t main_city_idx;
     idx_t district_idx;
     std::vector<idx_t> city_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & main_city_idx & district_idx & city_list & idx;
     }
-
-    std::vector<idx_t> get(Type_e type, const Data & data) const;
 };
 
 
@@ -104,14 +94,13 @@ struct City : public NavitiaHeader, Nameable {
     std::vector<idx_t> hang_list;
     std::vector<idx_t> odt_list;
 
-    City() : main_city(false), use_main_stop_area_property(false), department_idx(0){};
+    City() : main_city(false), use_main_stop_area_property(false), department_idx(0){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & department_idx & coord & idx;
     }
 
     std::vector<idx_t> get(Type_e type, const Data & data) const;
-
 };
 
 struct Connection: public NavitiaHeader{
@@ -187,7 +176,6 @@ struct ModeType : public NavitiaHeader, Nameable{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & id & name & external_code & mode_list & line_list;
     }
-
     std::vector<idx_t> get(Type_e type, const Data & data) const;
 };
 
@@ -231,7 +219,6 @@ struct Line : public NavitiaHeader, Nameable {
                 & sort & mode_type_idx & mode_list & company_list & network_idx & forward_direction_idx & backward_direction_idx
                 & impact_list & validity_pattern_list;
     }
-
     std::vector<idx_t> get(Type_e type, const Data & data) const;
 };
 
@@ -268,11 +255,10 @@ struct VehicleJourney: public NavitiaHeader, Nameable {
     bool is_adapted;
     idx_t validity_pattern_idx;
 
-    VehicleJourney(): route_idx(0), company_idx(0), mode_idx(0), vehicle_idx(0), is_adapted(false), validity_pattern_idx(0){};
+    VehicleJourney(): route_idx(0), company_idx(0), mode_idx(0), vehicle_idx(0), is_adapted(false), validity_pattern_idx(0){}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & is_adapted & validity_pattern_idx & idx;
     }
-
     std::vector<idx_t> get(Type_e type, const Data & data) const;
 };
 
@@ -310,11 +296,10 @@ struct RoutePoint : public NavitiaHeader{
         ar & id & idx & external_code & order & main_stop_point & fare_section & route_idx 
                 & stop_point_idx & impact_list;
     }
-
     std::vector<idx_t> get(Type_e type, const Data & data) const;
 };
 
-struct ValidityPattern {
+struct ValidityPattern : public NavitiaHeader {
 private:
     boost::gregorian::date beginning_date;
     std::bitset<366> days;
@@ -372,7 +357,6 @@ struct StopTime: public NavitiaHeader{
             ar & arrival_time & departure_time & vehicle_journey_idx & stop_point_idx & order & ODT & zone 
                 & idx & id & external_code;
     }
-
     std::vector<idx_t> get(Type_e type, const Data & data) const;
 };
 

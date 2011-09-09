@@ -81,11 +81,15 @@ std::vector<idx_t> Data::get_target_by_source(Type_e source, Type_e target, std:
         case eMode: tmp = modes[idx].get(target, *this); break;
         case eModeType: tmp = mode_types[idx].get(target, *this); break;
         case eCity: tmp = cities[idx].get(target, *this); break;
-        //case eDistrict: tmp = di
-        //case eDepartment: tmp = de
-        //case eCompany: tmp =
-        //case eVehicle: tmp =
-        default: break;
+        case eDistrict: tmp = districts[idx].get(target, *this); break;
+        case eDepartment: tmp = departments[idx].get(target, *this); break;
+        case eCompany: tmp = companies[idx].get(target, *this); break;
+        case eVehicle: tmp = vehicles[idx].get(target, *this); break;
+        case eValidityPattern: tmp = validity_patterns[idx].get(target, *this); break;
+        case eConnection: tmp = connections[idx].get(target, *this); break;
+        case eCountry: tmp = countries[idx].get(target, *this); break;
+        case eRoutePoint: tmp = route_points[idx].get(target, *this); break;
+        case eUnknown: break;
         }
         result.insert(result.end(), tmp.begin(), tmp.end());
     }
