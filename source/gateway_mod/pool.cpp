@@ -3,6 +3,7 @@
 #include "configuration.h"
 #include <log4cplus/logger.h>
 #include <log4cplus/configurator.h>
+#include <curl/curl.h>
 
 Pool::Pool(){
 	Configuration * conf = Configuration::get();
@@ -18,6 +19,12 @@ Pool::Pool(){
 
     navitia_list.push_back(new Navitia("http://localhost:81/1", 8));
     std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
+
+
+    //Initialisation de curl, cette methode n'est pas THREADSAFE
+    if(curl_global_init(CURL_GLOBAL_NOTHING) != 0){
+        LOG4CPLUS_ERROR(logger, "erreurs lors de l'initialisation de CURL");
+    }
 }
 
 

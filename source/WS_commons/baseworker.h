@@ -131,6 +131,7 @@ namespace webservice
             else {
                 boost::posix_time::ptime start(boost::posix_time::microsec_clock::local_time());
                 ResponseData resp = apis[api].fun(request, d);
+                //@TODO not threadsafe
                 int duration = (boost::posix_time::microsec_clock::local_time() - start).total_milliseconds();
                 static_data().means[api](duration);
                 return resp;

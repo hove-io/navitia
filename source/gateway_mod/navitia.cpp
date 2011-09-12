@@ -12,10 +12,11 @@ std::pair<int, std::string> Navitia::query(const std::string& request){
     std::stringstream response;
     curlpp::Easy curl_request;
     
-    curl_request.setOpt(new curlpp::options::WriteStream(&ss));
+    curl_request.setOpt(curlpp::options::WriteStream(&ss));
     std::string req = this->url + request;
-    curl_request.setOpt(new curlpp::options::Url(req));
-    curl_request.setOpt(new curlpp::options::ConnectTimeout(5));
+    curl_request.setOpt(curlpp::options::Url(req));
+    curl_request.setOpt(curlpp::options::ConnectTimeout(5));
+    curl_request.setOpt(curlpp::options::NoSignal(1));
 
     try{
         curl_request.perform();
