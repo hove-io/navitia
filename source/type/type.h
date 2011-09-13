@@ -36,6 +36,7 @@ struct NavitiaHeader{
     std::string external_code;
     NavitiaHeader() : id(0), idx(0){}
     std::vector<idx_t> get(Type_e, const Data &) const {return std::vector<idx_t>();}
+
 };
 
 struct GeographicalCoord{

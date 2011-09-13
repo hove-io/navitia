@@ -1,5 +1,7 @@
 #include "encoding_converter.h"
 #include <string.h>
+#include <fstream>
+#include <iostream>
 
 EncodingConverter::EncodingConverter(std::string from, std::string to, size_t buffer_size) : buffer_size(buffer_size){
     iconv_handler = iconv_open(to.c_str(), from.c_str());
@@ -29,4 +31,18 @@ EncodingConverter::~EncodingConverter(){
     delete[] iconv_input_buffer;
     iconv_close(iconv_handler);
 
+}
+
+void remove_bom(std::fstream& stream){
+    char buffer[3];
+    stream.read(buffer, 3);
+    if(buffer[0] == (char)0xEF && buffer[1] == (char)0xBB){
+        //BOM UTF8
+        return;
+    }
+    
+    //pas de correspondace avec un BOM, on remet les caractére lu
+    for(int i=0; i<3; i++){
+        stream.unget();
+    }
 }

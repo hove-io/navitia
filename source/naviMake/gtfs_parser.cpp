@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <deque>
+#include "utils/encoding_converter.h"
 
 namespace nm = navimake::types;
 typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
@@ -56,6 +57,7 @@ void GtfsParser::parse_stops(Data & data) {
 
     std::cout << "On parse : " << (path + "/stops.txt").c_str() << std::endl;
     std::fstream ifile((path + "/stops.txt").c_str());
+    remove_bom(ifile);
     std::string line;
     if(!getline(ifile, line)) {
         std::cerr << "Impossible d'ouvrir stops.txt" << std::endl;
@@ -83,6 +85,9 @@ void GtfsParser::parse_stops(Data & data) {
             type_c = i;
         else if (elts[i] ==  "parent_station")
             parent_c = i;
+    }
+    if(code_c == -1){
+        code_c = id_c;
     }
 
     if(id_c == -1 || code_c == -1 || lat_c == -1 || lon_c == -1 || type_c == -1 || parent_c == -1 || name_c == -1) {
@@ -128,7 +133,7 @@ void GtfsParser::parse_stops(Data & data) {
             else {
                 stop_map[sp->external_code] = sp;
                 data.stop_points.push_back(sp);
-                if(elts[parent_c] != "") ///On sauvegarde la référence à la zone d'arrêt
+                if(parent_c < elts.size() && elts[parent_c] != "") ///On sauvegarde la référence à la zone d'arrêt
                     stoppoint_areas.push_back(std::make_pair(sp, elts[parent_c]));
             }
         }
@@ -157,8 +162,10 @@ void GtfsParser::parse_calendar_dates(Data & data){
     data.validity_patterns.reserve(10000);
     std::cout << "On parse : " << (path + "/calendar_dates.txt").c_str() << std::endl;
     std::fstream ifile((path + "/calendar_dates.txt").c_str());
+    remove_bom(ifile);
     std::string line;
-    if(!getline(ifile, line)) {
+
+    if(!getline(ifile, line)){
         std::cerr << "Impossible d'ouvrir le fichier calendar_dates.txt" << std::endl;
         return;
     }
@@ -213,6 +220,7 @@ void GtfsParser::parse_routes(Data & data){
     data.lines.reserve(10000);
     std::cout << "On parse : " << (path + "/routes.txt").c_str() << std::endl;
     std::fstream ifile((path + "/routes.txt").c_str());
+    remove_bom(ifile);
     std::string line;
     if(!getline(ifile, line)) {
         std::cerr << "Impossible d'ouvrir le fichier routes.txt" << std::endl;
@@ -276,6 +284,7 @@ void GtfsParser::parse_trips(Data & data) {
     data.vehicle_journeys.reserve(350000);
     std::cout << "On parse : " << (path + "/trips.txt").c_str() << std::endl;
     std::fstream ifile((path + "/trips.txt").c_str());
+    remove_bom(ifile);
     std::string line;
     if(!getline(ifile, line)) {
         std::cerr << "Impossible d'ouvrir le fichier trips.txt" << std::endl;
@@ -368,6 +377,7 @@ void GtfsParser::parse_stop_times(Data & data) {
     std::cout << "On parse : " << (path + "/stop_times.txt").c_str() << std::endl;
     data.stops.reserve(8000000);
     std::fstream ifile((path + "/stop_times.txt").c_str());
+    remove_bom(ifile);
     std::string line;
     if(!getline(ifile, line)) {
         std::cerr << "Impossible d'ouvrir le fichier stop_times.txt" << std::endl;
@@ -424,7 +434,7 @@ void GtfsParser::parse_stop_times(Data & data) {
             stop_time->stop_point = stop_it->second;
             stop_time->order = boost::lexical_cast<int>(elts[stop_seq_c]);
             stop_time->vehicle_journey = vj_it->second;
-            stop_time->ODT = (elts[pickup_c] == "2" && elts[drop_c] == "2");
+            stop_time->ODT = 0;//(elts[pickup_c] == "2" && elts[drop_c] == "2");
             stop_time->zone = 0; // à définir selon pickup_type ou drop_off_type = 10
             data.stops.push_back(stop_time);
             count++;
@@ -433,5 +443,6 @@ void GtfsParser::parse_stop_times(Data & data) {
     }
     std::cout << "Nombre d'horaires : " << data.stops.size() << std::endl;
 }
+
 
 }}

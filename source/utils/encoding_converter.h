@@ -16,3 +16,6 @@ class EncodingConverter{
 
 
 };
+
+void remove_bom(std::fstream& stream);
+

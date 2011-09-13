@@ -49,7 +49,7 @@ namespace webservice {
     void run_fcgi(){
         signal(SIGINT, handle_signal);
         signal(SIGTERM, handle_signal);
-        signal(SIGABRT, handle_signal);
+        //signal(SIGABRT, handle_signal);
  
         FCGX_Init();
         int rc;
