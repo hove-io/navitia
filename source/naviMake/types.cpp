@@ -228,6 +228,7 @@ nt::City City::Transformer::operator()(const City& city){
     nt_city.idx = city.idx;
     nt_city.external_code = city.external_code;
     nt_city.name = city.name;
+    nt_city.comment = city.comment;
     nt_city.coord = city.coord.transform();
     nt_city.main_postal_code = city.main_postal_code;
     nt_city.use_main_stop_area_property = city.use_main_stop_area_property;

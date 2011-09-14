@@ -8,8 +8,7 @@ include_directories ( ${Boost_INCLUDE_DIRS}
                       ${CMAKE_SOURCE_DIR}/../third_party
 )
 
-SET(SOURCE
-        main.cpp 
+SET(SOURCE_LIB
         connectors.cpp 
         connectors.h 
         data.h 
@@ -22,6 +21,14 @@ SET(SOURCE
         ${CMAKE_SOURCE_DIR}/utils/encoding_converter.cpp
 )
 
+SET(SOURCE_NAVIMAKE
+    main.cpp
+)
 
-add_executable (navimake ${SOURCE})
-target_link_libraries(navimake ${Boost_LIBRARIES} types)
+add_library(connectors ${SOURCE_LIB})
+target_link_libraries(connectors ${Boost_LIBRARIES} types)
+
+add_executable (navimake ${SOURCE_NAVIMAKE})
+target_link_libraries(navimake ${Boost_LIBRARIES} connectors)
+
+add_subdirectory(tests)

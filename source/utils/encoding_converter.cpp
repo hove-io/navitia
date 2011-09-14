@@ -1,7 +1,6 @@
 #include "encoding_converter.h"
 #include <string.h>
 #include <fstream>
-#include <iostream>
 
 EncodingConverter::EncodingConverter(std::string from, std::string to, size_t buffer_size) : buffer_size(buffer_size){
     iconv_handler = iconv_open(to.c_str(), from.c_str());
