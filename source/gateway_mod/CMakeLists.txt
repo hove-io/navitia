@@ -3,8 +3,12 @@ FIND_PACKAGE(Boost 1.40.0 COMPONENTS serialization regex thread filesystem REQUI
 find_package(Protobuf REQUIRED)
 FIND_PACKAGE(log4cplus REQUIRED)
 
-include_directories (${CMAKE_SOURCE_DIR} ${PROTOBUF_INCLUDE_DIRS} ${LOG4CPLUS_INCLUDE_DIR}) 
-
+include_directories (
+                    ${CMAKE_SOURCE_DIR}
+                    ${PROTOBUF_INCLUDE_DIRS}
+                    ${LOG4CPLUS_INCLUDE_DIR}
+                    ${CMAKE_CURRENT_BINARY_DIR}/../type
+)
 SET(SOURCE_FILES 
     context.h
     gateway.h

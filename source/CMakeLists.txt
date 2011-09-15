@@ -23,8 +23,13 @@ IF(WIN32)
 ENDIF(WIN32)
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
-    SET(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra -std=c++0x")
+    SET(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra -std=c++0x -rdynamic")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    SET(CMAKE_CXX_FLAGS "-std=gnu++0x -stdlib=libc++  -ferror-limit=10 -I/usr/local/include/c++/v1 -pthread")
+    SET(CMAKE_C_FLAGS "-stdlib=libc++  -ferror-limit=10 -I/usr/local/include/c++/v1 -pthread")
+endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+
 
 IF(MSVC)
 	

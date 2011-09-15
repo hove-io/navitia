@@ -10,6 +10,13 @@ class Pool{
 
         struct Sorter{
             bool operator()(const Navitia* a, const Navitia* b){
+                //on favorise celui qui a le moins d'erreurs
+                if(!a->enable){
+                    return true;
+                }else if(!b->enable){
+                    return false;
+                }
+                //si le nombre d'erreurs est identique, on favorise le moins chargé
                 if(a->unused_thread == b->unused_thread){
                     return a->last_request_at > b->last_request_at;
                 }else{
@@ -37,7 +44,7 @@ class Pool{
         inline void release_navitia(Navitia* navitia){
             navitia->release();
             mutex.lock();
-            std::sort_heap(navitia_list.begin(), navitia_list.end(), Sorter());
+            std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
             mutex.unlock();
         }
 
@@ -46,12 +53,13 @@ class Pool{
             std::pop_heap(navitia_list.begin(), navitia_list.end(), Sorter());
             Navitia* nav = navitia_list.back();
             nav->use();
-            std::sort_heap(navitia_list.begin(), navitia_list.end(), Sorter());
+            std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
 
             return nav;
         }
 
         void add_navitia(Navitia* navitia);
         void remove_navitia(const Navitia& navitia);
+        void check_desactivated_navitia();
 
 };

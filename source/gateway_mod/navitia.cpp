@@ -31,7 +31,7 @@ std::pair<int, std::string> Navitia::query(const std::string& request){
         }
     }catch(curlpp::RuntimeError& e){
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-        LOG4CPLUS_WARN(logger, e.what());
+        LOG4CPLUS_WARN(logger, e.what() + std::string(" - ") + req);
         throw 500L;
     }
 }
@@ -53,4 +53,27 @@ void Navitia::release(){
     unused_thread++;
     current_thread--;
 
+}
+
+void Navitia::on_error(){
+    boost::lock_guard<boost::shared_mutex> lock(mutex);
+    this->enable = false;
+    this->last_errors_at = time(NULL);
+    this->nb_errors++;
+    this->reactivate_at = this->last_errors_at + this->nb_errors * desactivation_time;
+}
+
+void Navitia::reactivate(){
+    boost::lock_guard<boost::shared_mutex> lock(mutex);
+    this->enable = true;
+    this->nb_errors--;
+    this->next_decrement = time(NULL) + 60;
+
+}
+void Navitia::decrement_error(){
+    boost::lock_guard<boost::shared_mutex> lock(mutex);
+    if(nb_errors > 0){
+        this->nb_errors--;
+        this->next_decrement = time(NULL) + 60;
+    }
 }

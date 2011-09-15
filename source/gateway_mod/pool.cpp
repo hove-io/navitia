@@ -4,6 +4,7 @@
 #include <log4cplus/logger.h>
 #include <log4cplus/configurator.h>
 #include <curl/curl.h>
+#include <boost/foreach.hpp>
 
 Pool::Pool(){
 	Configuration * conf = Configuration::get();
@@ -49,7 +50,7 @@ void Pool::remove_navitia(const Navitia& navitia){
     }
     const Navitia* nav = *it;
     navitia_list.erase(it);
-    std::sort_heap(navitia_list.begin(), navitia_list.end(), Sorter());
+    std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
     mutex.unlock();
     while(nav->current_thread > 0){
         LOG4CPLUS_DEBUG(logger, "attente avant suppression de: " + navitia.url);
@@ -59,3 +60,20 @@ void Pool::remove_navitia(const Navitia& navitia){
     //utilisé un thread pour détruire le navitia quand celui ci ne serat plus utilisé?
 }
 
+void Pool::check_desactivated_navitia(){
+    //@TODO manque des mutex sur le nav
+    int now = time(NULL);
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+
+    BOOST_FOREACH(Navitia* nav, navitia_list){
+        if(!nav->enable && nav->reactivate_at < now){
+            nav->reactivate();
+            LOG4CPLUS_DEBUG(logger, "réactivation de " + nav->url);
+        }
+
+        if(nav->nb_errors > 0 && nav->enable && nav->next_decrement < now){
+            nav->decrement_error();
+            LOG4CPLUS_DEBUG(logger, "reset des erreurs de " + nav->url);
+        }
+    }
+}
