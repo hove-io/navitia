@@ -101,6 +101,13 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
         }
         std::unique_ptr<pbnavitia::PTRefResponse> resp(new pbnavitia::PTRefResponse());
         if(resp->ParseFromString(res.second)){
+            if(resp->has_error()){
+                ok = false;
+                nav->on_error();
+                context.str = resp->error();
+                context.service = Context::BAD_RESPONSE;
+                continue;
+            }
             context.pb = std::move(resp);
             context.service = Context::PTREF;
         }else{
