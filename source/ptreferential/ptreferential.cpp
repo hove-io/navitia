@@ -127,6 +127,8 @@ WhereWrapper<T> build_clause(std::vector<WhereClause> clauses) {
             wh = wh && WHERE(ptr_idx<T>(), clause.op, clause.value);
         else if(clause.col.column == "external_code")
             wh = wh && WHERE(ptr_external_code<T>(), clause.op, clause.value);
+        else if(clause.col.column == "name")
+            wh = wh && WHERE(ptr_name<T>(), clause.op, clause.value);
     }
     return wh;
 }
@@ -203,15 +205,19 @@ std::vector<idx_t> get_indexes(std::vector<WhereClause> clauses,  Type_e request
 pbnavitia::PTRefResponse query(std::string request, Data & data){
     std::string::iterator begin = request.begin();
     Request r;
+    pbnavitia::PTRefResponse pb_response;
     select_r<std::string::iterator> s;
     if (qi::phrase_parse(begin, request.end(), s, qi::space, r))
     {
         if(begin != request.end()) {
-            std::cout << "Hrrrmmm on a pas tout parsé -_-'" << std::endl;
+            std::string unparsed(begin, request.end());
+            pb_response.set_error("PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + unparsed + "<<");
+            return pb_response;
         }
     }
     else
-        std::cout << "Parsage a échoué" << std::endl;
+        pb_response.set_error("PTReferential : Impossible de parser la requête");
+
 
     std::cout << "Requested Type: " << static_data::get()->captionByType(r.requested_type) << std::endl;
 
@@ -265,7 +271,8 @@ pbnavitia::PTRefResponse query(std::string request, Data & data){
     default:  break;
     }
 
-    throw unknown_table();
+    pb_response.set_error("Table inconnue : " + r.requested_type);
+    return pb_response;
 }
 
 

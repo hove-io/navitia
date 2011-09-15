@@ -71,4 +71,7 @@ message PTreferential {
 
 message PTRefResponse {
     repeated PTreferential item = 1;
+    optional string error = 2;
+    optional string warning = 3;
+    optional string info = 4;
 }
