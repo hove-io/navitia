@@ -55,17 +55,17 @@ int main(int argc, char** argv){
                     exit(0);
                 }
                 add_history (line_read);
-                pbnavitia::PTRefResponse result = navitia::ptref::query(line_read, d);
+                pbnavitia::PTReferential result = navitia::ptref::query(line_read, d);
                 std::cout << "octets généré en protocol buffer: " << result.ByteSize() << std::endl << std::endl;
-                std::cout << navitia::ptref::pb2txt(result);
+                std::cout << navitia::ptref::pb2txt(&result);
             }
 
         }
     }
     else if (argc == 2){
-        pbnavitia::PTRefResponse result = navitia::ptref::query(argv[1], d);
+        pbnavitia::PTReferential result = navitia::ptref::query(argv[1], d);
         std::cout << "octets généré en protocol buffer: " << result.ByteSize() << std::endl;
-        std::cout << navitia::ptref::pb2txt(result);
+        std::cout << navitia::ptref::pb2txt(&result);
     }
     else {
         std::cout << "Il faut exactement zéro ou un paramètre" << std::endl;

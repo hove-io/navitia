@@ -33,14 +33,14 @@ namespace navitia{ namespace ptref{
 
 struct unknown_table{};
 
-google::protobuf::Message* get_message(pbnavitia::PTreferential* row, Type_e type);
+google::protobuf::Message* get_message(pbnavitia::PTReferential * row, Type_e type);
 
 /// Exécute une requête sur les données Data
 /// Retourne une matrice 2D de chaînes de caractères
-pbnavitia::PTRefResponse query(std::string request, navitia::type::Data & data);
+pbnavitia::PTReferential query(std::string request, navitia::type::Data & data);
 
-std::string pb2txt(pbnavitia::PTRefResponse& response);
-std::string pb2xml(pbnavitia::PTRefResponse& response);
+std::string pb2txt(const google::protobuf::Message* response);
+std::string pb2xml(pbnavitia::PTReferential& response);
 
 
 std::vector<Type_e> find_path(Type_e source);

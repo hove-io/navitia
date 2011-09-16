@@ -11,7 +11,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         ResponseData rd;        
         std::string nql_request = request.params["arg"];
         //decode(nql_request);
-        pbnavitia::PTRefResponse result;
+        pbnavitia::PTReferential result;
         try{
             result = navitia::ptref::query(nql_request, d);
             result.SerializeToOstream(&(rd.response));

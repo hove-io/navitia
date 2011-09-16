@@ -9,6 +9,7 @@ message Country {
     optional int32 id = 1;
     optional int32 idx = 2;
     optional string name  = 3;
+    optional PTReferential child = 4; 
 }
 
 message StopArea {
@@ -17,6 +18,7 @@ message StopArea {
     optional string name = 3;
     optional string external_code = 4;
     optional GeographicalCoord coord = 5;
+    optional PTReferential child = 6; 
 }
 
 message StopPoint {
@@ -25,6 +27,7 @@ message StopPoint {
     optional string name = 3;
     optional string external_code = 4;
     optional GeographicalCoord coord = 5;
+    optional PTReferential child = 6; 
 }
 
 message Line {
@@ -37,6 +40,7 @@ message Line {
     optional string backward_name = 7;
     optional string additional_data = 8;
     optional string color = 9;
+    optional PTReferential child = 10; 
 }
 
 message Route {
@@ -46,6 +50,7 @@ message Route {
     optional string external_code = 4;
     optional bool is_frequence = 5;
     optional bool is_adapted = 6;
+    optional PTReferential child = 7; 
 }
 
 message StopTime {
@@ -57,21 +62,21 @@ message VehicleJourney {
     optional string name = 3;
     optional string external_code = 4;
     optional bool is_adapted = 5;
+    optional PTReferential child = 6; 
 }
 
-message PTreferential {
-    optional Country country =1;
-    optional StopArea stop_area = 2;
-    optional StopPoint stop_point = 3;
-    optional Line line = 4;
-    optional Route route = 5;
-    optional StopTime stop_time = 6;
-    optional VehicleJourney vehicle_journey = 7;
-}
 
-message PTRefResponse {
-    repeated PTreferential item = 1;
-    optional string error = 2;
-    optional string warning = 3;
-    optional string info = 4;
+
+message PTReferential {
+    repeated Country country =1;
+    repeated StopArea stop_area = 2;
+    repeated StopPoint stop_point = 3;
+    repeated Line line = 4;
+    repeated Route route = 5;
+    repeated StopTime stop_time = 6;
+    repeated VehicleJourney vehicle_journey = 7;
+
+    optional string error = 8;
+    optional string warning = 9;
+    optional string info = 10;
 }

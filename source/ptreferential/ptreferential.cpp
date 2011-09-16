@@ -135,12 +135,13 @@ WhereWrapper<T> build_clause(std::vector<WhereClause> clauses) {
 
 
 template<class T>
-pbnavitia::PTRefResponse extract_data(std::vector<T> & table, const Request & r, std::vector<idx_t> & rows) {
-    pbnavitia::PTRefResponse pb_response;
+pbnavitia::PTReferential extract_data(std::vector<T> & table, const Request & r, std::vector<idx_t> & rows) {
+    pbnavitia::PTReferential pb_response;
 
     BOOST_FOREACH(idx_t row, rows){
-        pbnavitia::PTreferential * pb_row = pb_response.add_item();
-        google::protobuf::Message* pb_message = get_message(pb_row, r.requested_type);
+       // "stop_area"
+        //pbnavitia::PTReferential * pb_row = pb_response.add_item();
+        google::protobuf::Message* pb_message = get_message(&pb_response, r.requested_type);
         BOOST_FOREACH(const Column & col, r.columns){
             set_value(pb_message, table.at(row), col.column);
         }
@@ -154,6 +155,7 @@ void set_value(google::protobuf::Message* message, const T& object, const std::s
     const google::protobuf::Descriptor* descriptor = message->GetDescriptor();
     const google::protobuf::FieldDescriptor* field_descriptor = descriptor->FindFieldByName(column);
 
+    std::cout << column << std::endl;
     if(field_descriptor == NULL){
         throw unknown_member();
     }
@@ -167,12 +169,14 @@ void set_value(google::protobuf::Message* message, const T& object, const std::s
     }
 }
 
-google::protobuf::Message* get_message(pbnavitia::PTreferential* row, Type_e type){
-    const google::protobuf::Reflection* reflection = row->GetReflection();
+google::protobuf::Message* get_message(pbnavitia::PTReferential * row, Type_e type){
+    const google::protobuf::Reflection * reflection = row->GetReflection();
     const google::protobuf::Descriptor* descriptor = row->GetDescriptor();
     std::string field = static_data::get()->captionByType(type);
     const google::protobuf::FieldDescriptor* field_descriptor = descriptor->FindFieldByName(field);
-    return reflection->MutableMessage(row, field_descriptor);
+
+    google::protobuf::Message* message = reflection->AddMessage(row, field_descriptor);
+    return message;
 }
 
 template<Type_e E>
@@ -202,10 +206,10 @@ std::vector<idx_t> get_indexes(std::vector<WhereClause> clauses,  Type_e request
     return indexes;
 }
 
-pbnavitia::PTRefResponse query(std::string request, Data & data){
+pbnavitia::PTReferential query(std::string request, Data & data){
     std::string::iterator begin = request.begin();
     Request r;
-    pbnavitia::PTRefResponse pb_response;
+    pbnavitia::PTReferential pb_response;
     select_r<std::string::iterator> s;
     if (qi::phrase_parse(begin, request.end(), s, qi::space, r))
     {
@@ -220,7 +224,7 @@ pbnavitia::PTRefResponse query(std::string request, Data & data){
 
 
     std::cout << "Requested Type: " << static_data::get()->captionByType(r.requested_type) << std::endl;
-
+    std::cout << r.columns[0].column << " - " << r.columns[1].column << std::endl;
 
     // On regroupe les clauses par tables sur lequelles elles vont taper
     // Ça va se compliquer le jour où l'on voudra gérer des and/or intermélangés...
@@ -276,44 +280,47 @@ pbnavitia::PTRefResponse query(std::string request, Data & data){
 }
 
 
-std::string pb2txt(pbnavitia::PTRefResponse& response){
+std::string pb2txt(const google::protobuf::Message * response){
     std::stringstream buffer;
-    for(int i=0; i < response.item_size(); i++){
-        pbnavitia::PTreferential* item = response.mutable_item(i);
 
-        const google::protobuf::Reflection* item_reflection = item->GetReflection();
-        std::vector<const google::protobuf::FieldDescriptor*> field_list;
-        item_reflection->ListFields(*item, &field_list);
-        BOOST_FOREACH(const google::protobuf::FieldDescriptor* item_field_descriptor, field_list){
-            google::protobuf::Message* object = item_reflection->MutableMessage(item, item_field_descriptor);
-            const google::protobuf::Descriptor* descriptor = object->GetDescriptor();
-            const google::protobuf::Reflection* reflection = object->GetReflection();
-            for(int field_number=0; field_number < descriptor->field_count(); field_number++){
-                const google::protobuf::FieldDescriptor* field_descriptor = descriptor->field(field_number);
-                if(reflection->HasField(*object, field_descriptor)){
-                    buffer << field_descriptor->name() << " = ";
-                    if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_STRING){
-                        buffer << reflection->GetString(*object, field_descriptor) << "; ";
-                    }else if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
-                        buffer << reflection->GetInt32(*object, field_descriptor) << "; ";
-                    }else{
-                        buffer << "type unkown; ";
-                    }
-                }
+    const google::protobuf::Reflection* reflection = response->GetReflection();
+    std::vector<const google::protobuf::FieldDescriptor*> field_list;
+    reflection->ListFields(*response, &field_list);
+
+    BOOST_FOREACH(const google::protobuf::FieldDescriptor* field, field_list){
+        if(field->is_repeated()) {
+            buffer << field->name() << " : [";
+            for(int i=0; i < reflection->FieldSize(*response, field); ++i){
+                buffer << pb2txt(&reflection->GetRepeatedMessage(*response, field, i)) << " ,";
             }
-            buffer << std::endl;
+            buffer << "]\n";
         }
+        else if(reflection->HasField(*response, field)){
+            buffer << field->name() << " = ";
+            if(field->type() == google::protobuf::FieldDescriptor::TYPE_STRING){
+                buffer << reflection->GetString(*response, field) << "; ";
+            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
+                buffer << reflection->GetInt32(*response, field) << "; ";
+            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE){
+                buffer << "\n\t" << pb2txt(&reflection->GetMessage(*response, field)) << "\n";
+            }else {
+                buffer << "type unkown; ";
+            }
+        }
+
+        buffer << std::endl;
+
 
     }
     return buffer.str();
 }
 
 
-std::string pb2xml(pbnavitia::PTRefResponse& response){
+std::string pb2xml(pbnavitia::PTReferential& response){
     std::stringstream buffer;
-    buffer << "<list>";
-    for(int i=0; i < response.item_size(); i++){
-        pbnavitia::PTreferential* item = response.mutable_item(i);
+   buffer << "<list>";
+  /*  for(int i=0; i < response.item_size(); i++){
+        pbnavitia::PTReferential* item = response.mutable_item(i);
 
         const google::protobuf::Reflection* item_reflection = item->GetReflection();
         std::vector<const google::protobuf::FieldDescriptor*> field_list;
@@ -339,7 +346,7 @@ std::string pb2xml(pbnavitia::PTRefResponse& response){
             buffer << "/>";
         }
 
-    }
+    }*/
     buffer << "</list>";
     return buffer.str();
 }
