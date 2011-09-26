@@ -99,7 +99,7 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
             response.status_code = code;
             continue;
         }
-        std::unique_ptr<pbnavitia::PTRefResponse> resp(new pbnavitia::PTRefResponse());
+        std::unique_ptr<pbnavitia::PTReferential> resp(new pbnavitia::PTReferential());
         if(resp->ParseFromString(res.second)){
             if(resp->has_error()){
                 ok = false;

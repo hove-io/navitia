@@ -4,82 +4,79 @@
 #include <boost/foreach.hpp>
 
 
-std::string pb2xml(std::unique_ptr<google::protobuf::Message>& response){
+std::string pb2xml(const google::protobuf::Message* response){
     std::stringstream buffer;
-    buffer << "<list>";
-    const google::protobuf::Reflection* response_reflection = response->GetReflection();
-    const google::protobuf::Descriptor* response_descriptor = response->GetDescriptor();
+    std::stringstream child_buffer;
 
-    const google::protobuf::FieldDescriptor* response_field_descriptor = response_descriptor->FindFieldByName("item");
-
-    for(int i=0; i < response_reflection->FieldSize(*response, response_field_descriptor); i++){
-        google::protobuf::Message* item = response_reflection->MutableRepeatedMessage(response.get(), response_field_descriptor, i);
-
-        const google::protobuf::Reflection* item_reflection = item->GetReflection();
-        std::vector<const google::protobuf::FieldDescriptor*> field_list;
-        item_reflection->ListFields(*item, &field_list);
-        BOOST_FOREACH(const google::protobuf::FieldDescriptor* item_field_descriptor, field_list){
-
-            google::protobuf::Message* object = item_reflection->MutableMessage(item, item_field_descriptor);
-            buffer << "<" << item_field_descriptor->name() << " ";
-            const google::protobuf::Descriptor* descriptor = object->GetDescriptor();
-            const google::protobuf::Reflection* reflection = object->GetReflection();
-            for(int field_number=0; field_number < descriptor->field_count(); field_number++){
-
-                const google::protobuf::FieldDescriptor* field_descriptor = descriptor->field(field_number);
-                if(reflection->HasField(*object, field_descriptor)){
-                    buffer << field_descriptor->name() << "=\"";
-                    if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_STRING){
-                        buffer << reflection->GetString(*object, field_descriptor) << "\" ";
-                    }else if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
-                        buffer << reflection->GetInt32(*object, field_descriptor) << "\" ";
-                    }else{
-                        buffer << "type_unkown\" ";
-                    }
-                }
+    const google::protobuf::Reflection* reflection = response->GetReflection();
+    const google::protobuf::Descriptor* descriptor = response->GetDescriptor();
+    std::vector<const google::protobuf::FieldDescriptor*> field_list;
+    reflection->ListFields(*response, &field_list);
+    buffer << "<" << descriptor->name() << " ";
+    BOOST_FOREACH(const google::protobuf::FieldDescriptor* field, field_list){
+        if(field->is_repeated()) {
+            child_buffer << "<" << field->name() << ">";
+            for(int i=0; i < reflection->FieldSize(*response, field); ++i){
+                child_buffer << pb2xml(&reflection->GetRepeatedMessage(*response, field, i));
             }
-            buffer << "/>";
+            child_buffer << "</" << field->name() << ">";
         }
-
+        else if(reflection->HasField(*response, field)){
+            if(field->type() == google::protobuf::FieldDescriptor::TYPE_STRING){
+                buffer << field->name() << "=\"";
+                buffer << reflection->GetString(*response, field) << "\" ";
+            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
+                buffer << field->name() << "=\"";
+                buffer << reflection->GetInt32(*response, field) << "\" ";
+            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE){
+                child_buffer << pb2xml(&reflection->GetMessage(*response, field));
+            }else {
+                buffer << field->name() << "=\"";
+                buffer << "type unkown\" ";
+            }
+        }
     }
-    buffer << "</list>";
+    std::string child = child_buffer.str();
+    if(child.length() > 0){
+        buffer << ">" << child << "</" << descriptor->name() << ">";
+    }else{
+        buffer << "/>";
+    }
+    buffer << std::endl;
     return buffer.str();
 }
 
 
-std::string pb2txt(std::unique_ptr<google::protobuf::Message>& response){
+std::string pb2txt(const google::protobuf::Message* response){
     std::stringstream buffer;
-    const google::protobuf::Reflection* response_reflection = response->GetReflection();
-    const google::protobuf::Descriptor* response_descriptor = response->GetDescriptor();
 
-    const google::protobuf::FieldDescriptor* response_field_descriptor = response_descriptor->FindFieldByName("item");
-    for(int i=0; i < response_reflection->FieldSize(*response, response_field_descriptor); i++){
-        google::protobuf::Message* item = response_reflection->MutableRepeatedMessage(response.get(), response_field_descriptor, i);
+    const google::protobuf::Reflection* reflection = response->GetReflection();
+    std::vector<const google::protobuf::FieldDescriptor*> field_list;
+    reflection->ListFields(*response, &field_list);
 
-        const google::protobuf::Reflection* item_reflection = item->GetReflection();
-        std::vector<const google::protobuf::FieldDescriptor*> field_list;
-        item_reflection->ListFields(*item, &field_list);
-        BOOST_FOREACH(const google::protobuf::FieldDescriptor* item_field_descriptor, field_list){
-            
-            google::protobuf::Message* object = item_reflection->MutableMessage(item, item_field_descriptor);
-            const google::protobuf::Descriptor* descriptor = object->GetDescriptor();
-            const google::protobuf::Reflection* reflection = object->GetReflection();
-            for(int field_number=0; field_number < descriptor->field_count(); field_number++){
-
-                const google::protobuf::FieldDescriptor* field_descriptor = descriptor->field(field_number);
-                if(reflection->HasField(*object, field_descriptor)){
-                    buffer << field_descriptor->name() << " = ";
-                    if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_STRING){
-                        buffer << reflection->GetString(*object, field_descriptor) << "; ";
-                    }else if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
-                        buffer << reflection->GetInt32(*object, field_descriptor) << "; ";
-                    }else{
-                        buffer << "type unkown; ";
-                    }
-                }
+    BOOST_FOREACH(const google::protobuf::FieldDescriptor* field, field_list){
+        if(field->is_repeated()) {
+            buffer << field->name() << " : [";
+            for(int i=0; i < reflection->FieldSize(*response, field); ++i){
+                buffer << pb2txt(&reflection->GetRepeatedMessage(*response, field, i)) << " ,";
             }
-            buffer << std::endl;
+            buffer << "]\n";
         }
+        else if(reflection->HasField(*response, field)){
+            buffer << field->name() << " = ";
+            if(field->type() == google::protobuf::FieldDescriptor::TYPE_STRING){
+                buffer << reflection->GetString(*response, field) << "; ";
+            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
+                buffer << reflection->GetInt32(*response, field) << "; ";
+            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE){
+                buffer << "\n\t" << pb2txt(&reflection->GetMessage(*response, field)) << "\n";
+            }else {
+                buffer << "type unkown; ";
+            }
+        }
+
+        buffer << std::endl;
+
 
     }
     return buffer.str();
@@ -89,12 +86,12 @@ void render(webservice::RequestData& request, webservice::ResponseData& response
     switch(context.service){
         case Context::PTREF:
             if(request.params["format"] == "txt"){
-                response.response << pb2txt(context.pb);
+                response.response << pb2txt(context.pb.get());
                 response.content_type = "text/html";
                 response.status_code = 200;
             }else{
                 //par défaut xml
-                response.response << pb2xml(context.pb);
+                response.response << pb2xml(context.pb.get());
                 response.content_type = "text/xml";
                 response.status_code = 200;
             }
