@@ -169,19 +169,26 @@ pbnavitia::PTReferential extract_data(Data & data, const Request & r, std::vecto
         //pbnavitia::PTReferential * pb_row = pb_response.add_item();
        google::protobuf::Message* pb_message = get_message(&pb_response, r.requested_type);
         std::pair<Type_e, std::vector<std::string> > col;
+        std::vector<Type_e> all_paths = find_path(r.requested_type);
         BOOST_FOREACH(col, columns_map){
-
-            std::vector<Type_e> path = find_path(col.first);
+            std::vector<Type_e> path;
             Type_e current = col.first;
-            std::vector<idx_t> indexes;
-            indexes.push_back(row);
-            while(path[current] != current){
-                indexes = data.get_target_by_source(current, path[current], indexes);
-                std::cout << static_data::get()->captionByType(current) << " -> " << static_data::get()->captionByType(path[current]) << std::endl;
-                current = path[current];
+            path.push_back(current);
+            if(all_paths[current] == current && current != r.requested_type)
+                std::cerr << "Impossible de trouver un chemin de " << static_data::get()->captionByType(r.requested_type)
+                    << "->" << static_data::get()->captionByType(current) << std::endl;
+            while(all_paths[current] != current){
+                current = all_paths[current];
+                path.push_back(current);
             }
 
-            //std::vector<idx_t> indexes = data.get_target_by_one_source(r.requested_type, col.first, row);
+            std::vector<idx_t> indexes;
+            indexes.push_back(row);
+
+            for(size_t i = path.size() - 1; i > 0; --i) {
+                indexes = data.get_target_by_source(path[i], path[i-1], indexes);
+                std::cout << static_data::get()->captionByType(path[i]) << " -> " << static_data::get()->captionByType(path[i-1]) << std::endl;
+            }
 
             BOOST_FOREACH(idx_t idx, indexes){
                 google::protobuf::Message* item;

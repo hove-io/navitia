@@ -156,6 +156,7 @@ void Data::build_relations(navitia::type::Data &data){
         try{
             data.routes.at(route_point.route_idx).route_point_list.push_back(route_point.idx);
         }catch(std::out_of_range ex){}
+        data.stop_points.at(route_point.stop_point_idx).route_point_list.push_back(route_point.idx);
     }
 
     BOOST_FOREACH(navitia::type::VehicleJourney & vj, data.vehicle_journeys){

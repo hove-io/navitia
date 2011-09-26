@@ -265,6 +265,7 @@ std::vector<idx_t> StopPoint::get(Type_e type, const Data &) const {
     case eCity: result.push_back(city_idx); break;
     case eMode: result.push_back(mode_idx); break;
     case eNetwork: result.push_back(network_idx); break;
+    case eRoutePoint: return route_point_list; break;
     default: break;
     }
     return result;

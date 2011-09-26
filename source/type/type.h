@@ -332,8 +332,9 @@ struct StopPoint : public NavitiaHeader, Nameable{
     idx_t mode_idx;
     idx_t network_idx;
     std::vector<idx_t> impact_list;
+    std::vector<idx_t> route_point_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & external_code & name & stop_area_idx & mode_idx & coord & fare_zone & idx;
+        ar & external_code & name & stop_area_idx & mode_idx & coord & fare_zone & idx & route_point_list;
     }
 
     StopPoint(): fare_zone(0),  stop_area_idx(0), city_idx(0), mode_idx(0), network_idx(0){}
