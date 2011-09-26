@@ -170,7 +170,18 @@ pbnavitia::PTReferential extract_data(Data & data, const Request & r, std::vecto
        google::protobuf::Message* pb_message = get_message(&pb_response, r.requested_type);
         std::pair<Type_e, std::vector<std::string> > col;
         BOOST_FOREACH(col, columns_map){
-            std::vector<idx_t> indexes = data.get_target_by_one_source(r.requested_type, col.first, row);
+
+            std::vector<Type_e> path = find_path(col.first);
+            Type_e current = col.first;
+            std::vector<idx_t> indexes;
+            indexes.push_back(row);
+            while(path[current] != current){
+                indexes = data.get_target_by_source(current, path[current], indexes);
+                std::cout << static_data::get()->captionByType(current) << " -> " << static_data::get()->captionByType(path[current]) << std::endl;
+                current = path[current];
+            }
+
+            //std::vector<idx_t> indexes = data.get_target_by_one_source(r.requested_type, col.first, row);
 
             BOOST_FOREACH(idx_t idx, indexes){
                 google::protobuf::Message* item;
