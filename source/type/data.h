@@ -1,12 +1,20 @@
 #pragma once
 #include "type.h"
-
+#include <boost/serialization/version.hpp>
 namespace navitia { namespace type {
 
+/** Contient toutes les données théoriques du référentiel transport en communs
+  *
+  * Il existe trois formats de stockage : texte, binaire, binaire compressé
+  * Il est conseillé de toujours utiliser le format compressé (la compression a un surcoût quasiment nul et
+  * peut même (sur des disques lents) accélerer le chargement).
+  */
 class Data{
 public:
-    int nb_threads; /// Nombre de threads. IMPORTANT ! Sans cette variable, ça ne compile pas
-    bool loaded;
+    static const unsigned int data_version = 1; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
+    int nb_threads; //< Nombre de threads. IMPORTANT ! Sans cette variable, ça ne compile pas
+    unsigned int version; //< Numéro de version des données chargées
+    bool loaded; //< Est-ce que lse données ont été chargées
     std::vector<ValidityPattern> validity_patterns;
     std::vector<Line> lines;
     std::vector<Route> routes;
@@ -27,6 +35,8 @@ public:
     std::vector<Company> companies;
     std::vector<Vehicle> vehicles;
     std::vector<Country> countries;
+
+    friend class boost::serialization::access;
     public:
 
     Data() : nb_threads(8), loaded(false){}
@@ -34,7 +44,12 @@ public:
       *
       * Elle est appelée par boost et pas directement
       */
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+    template<class Archive> void serialize(Archive & ar, const unsigned int version) {
+        this->version = version;
+        if(this->version != data_version){
+            std::cerr << "Attention le fichier de données est à la version " << version << " (version actuelle : " << data_version << ")" << std::endl;
+        }
+
         ar & validity_patterns & lines & stop_points & stop_areas & stop_times & routes
             & vehicle_journeys & route_points ;
     }
@@ -102,8 +117,15 @@ public:
         return indexes;
     }
 
+    /** Retourne tous les indices d'un type donné
+      *
+      * Concrètement, on a un tableau avec des éléments allant de 0 à (n-1) où n est le nombre d'éléments
+      */
     std::vector<idx_t> get_all_index(Type_e type);
 
 };
 
+
 } } //namespace navitia::type
+
+BOOST_CLASS_VERSION(navitia::type::Data, navitia::type::Data::data_version)
