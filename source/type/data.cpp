@@ -70,28 +70,39 @@ std::vector<idx_t> Data::get_target_by_source(Type_e source, Type_e target, std:
     result.reserve(source_idx.size());
     BOOST_FOREACH(idx_t idx, source_idx) {
         std::vector<idx_t> tmp;
-        switch(source) {
-        case eLine: tmp = lines[idx].get(target, *this); break;
-        case eRoute: tmp = routes[idx].get(target, *this); break;
-        case eVehicleJourney: tmp = vehicle_journeys[idx].get(target, *this); break;
-        case eStopPoint: tmp = stop_points[idx].get(target, *this); break;
-        case eStopArea: tmp = stop_areas[idx].get(target, *this); break;
-        case eStopTime: tmp = stop_times[idx].get(target, *this); break;
-        case eNetwork: tmp = networks[idx].get(target, *this); break;
-        case eMode: tmp = modes[idx].get(target, *this); break;
-        case eModeType: tmp = mode_types[idx].get(target, *this); break;
-        case eCity: tmp = cities[idx].get(target, *this); break;
-        case eDistrict: tmp = districts[idx].get(target, *this); break;
-        case eDepartment: tmp = departments[idx].get(target, *this); break;
-        case eCompany: tmp = companies[idx].get(target, *this); break;
-        case eVehicle: tmp = vehicles[idx].get(target, *this); break;
-        case eValidityPattern: tmp = validity_patterns[idx].get(target, *this); break;
-        case eConnection: tmp = connections[idx].get(target, *this); break;
-        case eCountry: tmp = countries[idx].get(target, *this); break;
-        case eRoutePoint: tmp = route_points[idx].get(target, *this); break;
-        case eUnknown: break;
-        }
+        tmp = get_target_by_one_source(source, target, idx);
         result.insert(result.end(), tmp.begin(), tmp.end());
+
+    }
+    return result;
+}
+
+std::vector<idx_t> Data::get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx){
+    std::vector<idx_t> result;
+    if(source == target){
+        result.push_back(source_idx);
+        return result;
+    }
+    switch(source) {
+        case eLine: result = lines[source_idx].get(target, *this); break;
+        case eRoute: result = routes[source_idx].get(target, *this); break;
+        case eVehicleJourney: result = vehicle_journeys[source_idx].get(target, *this); break;
+        case eStopPoint: result = stop_points[source_idx].get(target, *this); break;
+        case eStopArea: result = stop_areas[source_idx].get(target, *this); break;
+        case eStopTime: result = stop_times[source_idx].get(target, *this); break;
+        case eNetwork: result = networks[source_idx].get(target, *this); break;
+        case eMode: result = modes[source_idx].get(target, *this); break;
+        case eModeType: result = mode_types[source_idx].get(target, *this); break;
+        case eCity: result = cities[source_idx].get(target, *this); break;
+        case eDistrict: result = districts[source_idx].get(target, *this); break;
+        case eDepartment: result = departments[source_idx].get(target, *this); break;
+        case eCompany: result = companies[source_idx].get(target, *this); break;
+        case eVehicle: result = vehicles[source_idx].get(target, *this); break;
+        case eValidityPattern: result = validity_patterns[source_idx].get(target, *this); break;
+        case eConnection: result = connections[source_idx].get(target, *this); break;
+        case eCountry: result = countries[source_idx].get(target, *this); break;
+        case eRoutePoint: result = route_points[source_idx].get(target, *this); break;
+        case eUnknown: break;
     }
     return result;
 }
@@ -99,23 +110,23 @@ std::vector<idx_t> Data::get_target_by_source(Type_e source, Type_e target, std:
 std::vector<idx_t> Data::get_all_index(Type_e type){
     switch(type){
     case eLine: return get_all_index<eLine>(); break;
-    case eValidityPattern: return get_all_index<eLine>(); break;
-    case eRoute: return get_all_index<eLine>(); break;
-    case eVehicleJourney: return get_all_index<eLine>(); break;
-    case eStopPoint: return get_all_index<eLine>(); break;
-    case eStopArea: return get_all_index<eLine>(); break;
-    case eStopTime: return get_all_index<eLine>(); break;
-    case eNetwork: return get_all_index<eLine>(); break;
-    case eMode: return get_all_index<eLine>(); break;
-    case eModeType: return get_all_index<eLine>(); break;
-    case eCity: return get_all_index<eLine>(); break;
-    case eConnection: return get_all_index<eLine>(); break;
-    case eRoutePoint: return get_all_index<eLine>(); break;
-    case eDistrict: return get_all_index<eLine>(); break;
-    case eDepartment: return get_all_index<eLine>(); break;
-    case eCompany: return get_all_index<eLine>(); break;
-    case eVehicle: return get_all_index<eLine>(); break;
-    case eCountry: return get_all_index<eLine>(); break;
+    case eValidityPattern: return get_all_index<eValidityPattern>(); break;
+    case eRoute: return get_all_index<eRoute>(); break;
+    case eVehicleJourney: return get_all_index<eVehicleJourney>(); break;
+    case eStopPoint: return get_all_index<eStopPoint>(); break;
+    case eStopArea: return get_all_index<eStopArea>(); break;
+    case eStopTime: return get_all_index<eStopTime>(); break;
+    case eNetwork: return get_all_index<eNetwork>(); break;
+    case eMode: return get_all_index<eMode>(); break;
+    case eModeType: return get_all_index<eModeType>(); break;
+    case eCity: return get_all_index<eCity>(); break;
+    case eConnection: return get_all_index<eConnection>(); break;
+    case eRoutePoint: return get_all_index<eRoutePoint>(); break;
+    case eDistrict: return get_all_index<eDistrict>(); break;
+    case eDepartment: return get_all_index<eDepartment>(); break;
+    case eCompany: return get_all_index<eCompany>(); break;
+    case eVehicle: return get_all_index<eVehicle>(); break;
+    case eCountry: return get_all_index<eCountry>(); break;
     case eUnknown:  break;
     }
     return std::vector<idx_t>();

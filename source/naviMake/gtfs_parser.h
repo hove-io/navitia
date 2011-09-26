@@ -56,6 +56,7 @@ public:
     /// Parse le fichier trips.txt
     /// Contient les VehicleJourney
     void parse_trips(Data & data);
+
 };
 
 /** Convertit une chaine de charactères du type 8:12:31 en secondes depuis minuit

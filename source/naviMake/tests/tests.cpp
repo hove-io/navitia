@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(data.vehicle_journeys.size(), 11);
     BOOST_CHECK_EQUAL(data.stops.size(), 26);
     BOOST_CHECK_EQUAL(data.connections.size(), 0);
-    BOOST_CHECK_EQUAL(data.route_points.size(), 0);
+    BOOST_CHECK_EQUAL(data.route_points.size(), 8);
 
 
     navimake::types::Line* line = data.lines[0];
@@ -54,9 +54,9 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(stop->ODT, false);
     BOOST_CHECK_EQUAL(stop->arrival_time, 21600);
     BOOST_CHECK_EQUAL(stop->departure_time, 21600);
-    BOOST_CHECK_EQUAL(stop->stop_point->external_code, "STAGECOACH");
-    BOOST_CHECK_EQUAL(stop->stop_point->name, "Stagecoach Hotel & Casino (Demo)");
-    BOOST_CHECK_EQUAL(stop->stop_point, data.stop_points[3]);
+    BOOST_CHECK_EQUAL(stop->route_point->stop_point->external_code, "STAGECOACH");
+    BOOST_CHECK_EQUAL(stop->route_point->stop_point->name, "Stagecoach Hotel & Casino (Demo)");
+    BOOST_CHECK_EQUAL(stop->route_point->stop_point, data.stop_points[3]);
 
 }
 

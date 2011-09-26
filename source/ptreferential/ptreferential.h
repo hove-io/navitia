@@ -46,4 +46,6 @@ std::string pb2xml(pbnavitia::PTReferential& response);
 std::vector<Type_e> find_path(Type_e source);
 
 
+google::protobuf::Message* add_item(google::protobuf::Message* message, const std::string& table);
+
 }} //navitia::ptref

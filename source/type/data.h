@@ -36,7 +36,7 @@ public:
       */
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & validity_patterns & lines & stop_points & stop_areas & stop_times & routes
-            & vehicle_journeys ;
+            & vehicle_journeys & route_points ;
     }
 
     /** Initialise tous les indexes
@@ -84,6 +84,11 @@ public:
       * retourne une liste d'indexes pointant vers target
       */
     std::vector<idx_t> get_target_by_source(Type_e source, Type_e target, std::vector<idx_t> source_idx);
+
+    /** Étant donné un index pointant vers source,
+      * retourne une liste d'indexes pointant vers target
+      */
+    std::vector<idx_t> get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx);
 
     /** Retourne la structure de données associée au type */
     template<Type_e E>  std::vector<typename boost::mpl::at<enum_type_map, boost::mpl::int_<E> >::type> & get_data();

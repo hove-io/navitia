@@ -287,7 +287,7 @@ nt::StopTime StopTime::Transformer::operator()(const StopTime& stop){
     nt_stop.zone = stop.zone;
     nt_stop.ODT = stop.ODT;
 
-    nt_stop.stop_point_idx = stop.stop_point->idx;
+    nt_stop.route_point_idx = stop.route_point->idx;
     nt_stop.vehicle_journey_idx = stop.vehicle_journey->idx;
     return nt_stop;
 

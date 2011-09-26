@@ -272,7 +272,7 @@ std::vector<idx_t> StopTime::get(Type_e type, const Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case eVehicle: result.push_back(vehicle_journey_idx); break;
-    case eStopPoint: result.push_back(stop_point_idx); break;
+    case eRoutePoint: result.push_back(route_point_idx); break;
     default: break;
     }
     return result;

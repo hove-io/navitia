@@ -372,7 +372,7 @@ struct StopTime: public TransmodelHeader {
     int arrival_time; ///< En secondes depuis minuit
     int departure_time; ///< En secondes depuis minuit
     VehicleJourney* vehicle_journey;
-    StopPoint* stop_point;
+    RoutePoint* route_point;
     int order;
     bool ODT;
     int zone;
@@ -382,7 +382,7 @@ struct StopTime: public TransmodelHeader {
         navitia::type::StopTime operator()(const StopTime& stop);
     };
 
-    StopTime(): arrival_time(0), departure_time(0), vehicle_journey(NULL), stop_point(NULL), order(0), 
+    StopTime(): arrival_time(0), departure_time(0), vehicle_journey(NULL), route_point(NULL), order(0), 
         ODT(false), zone(0){}
 
 

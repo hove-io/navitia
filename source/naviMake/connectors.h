@@ -37,6 +37,7 @@ class CsvFusio {
         std::map<int, navimake::types::VehicleJourney*> vehicle_journey_map;
         std::map<int, navimake::types::Route*> route_map;
         std::map<int, navimake::types::Line*> line_map;
+        std::map<std::string, navimake::types::RoutePoint*> route_point_map;
 
         void fill_networks(navimake::Data& data);
         void fill_modes_type(navimake::Data& data);

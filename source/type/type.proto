@@ -65,16 +65,25 @@ message VehicleJourney {
     optional PTReferential child = 6; 
 }
 
+message RoutePoint{
+    optional int32 id = 1;
+    optional int32 idx = 2;
+    optional string external_code = 3;
+    optional int32 order = 4;
+
+    optional PTReferential child = 5; 
+}
 
 
 message PTReferential {
-    repeated Country country =1;
-    repeated StopArea stop_area = 2;
-    repeated StopPoint stop_point = 3;
-    repeated Line line = 4;
-    repeated Route route = 5;
-    repeated StopTime stop_time = 6;
-    repeated VehicleJourney vehicle_journey = 7;
+    repeated Country country_list =1;
+    repeated StopArea stop_area_list = 2;
+    repeated StopPoint stop_point_list = 3;
+    repeated Line line_list = 4;
+    repeated Route route_list = 5;
+    repeated StopTime stop_time_list = 6;
+    repeated VehicleJourney vehicle_journey_list = 7;
+    repeated RoutePoint route_point_list = 11;
 
     optional string error = 8;
     optional string warning = 9;

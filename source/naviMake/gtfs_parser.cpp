@@ -374,6 +374,7 @@ void GtfsParser::parse_trips(Data & data) {
 }
 
 void GtfsParser::parse_stop_times(Data & data) {
+    std::map<std::string, navimake::types::RoutePoint*> route_point_map;
     std::cout << "On parse : " << (path + "/stop_times.txt").c_str() << std::endl;
     data.stops.reserve(8000000);
     std::fstream ifile((path + "/stop_times.txt").c_str());
@@ -428,10 +429,24 @@ void GtfsParser::parse_stop_times(Data & data) {
             std::cerr << "Impossible de trouver le StopPoint " << elts[stop_c] << std::endl;
         }
         else {
+            std::string route_point_extcode = vj_it->second->route->external_code + ":" + stop_it->second->external_code;
+            auto route_point_it = route_point_map.find(route_point_extcode);
+            nm::RoutePoint * route_point;
+            if(route_point_it == route_point_map.end()) {
+                route_point = new nm::RoutePoint();
+                route_point->route = vj_it->second->route;
+                route_point->stop_point = stop_it->second;
+                route_point_map[route_point_extcode] = route_point;
+                route_point->order = boost::lexical_cast<int>(elts[stop_seq_c]);
+                data.route_points.push_back(route_point);
+            } else {
+                route_point = route_point_it->second;
+            }
+
             nm::StopTime * stop_time = new nm::StopTime();
             stop_time->arrival_time = time_to_int(elts[arrival_c]);
             stop_time->departure_time = time_to_int(elts[departure_c]);
-            stop_time->stop_point = stop_it->second;
+            stop_time->route_point = route_point;
             stop_time->order = boost::lexical_cast<int>(elts[stop_seq_c]);
             stop_time->vehicle_journey = vj_it->second;
             stop_time->ODT = 0;//(elts[pickup_c] == "2" && elts[drop_c] == "2");
@@ -443,6 +458,5 @@ void GtfsParser::parse_stop_times(Data & data) {
     }
     std::cout << "Nombre d'horaires : " << data.stops.size() << std::endl;
 }
-
 
 }}

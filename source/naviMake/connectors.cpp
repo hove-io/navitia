@@ -21,9 +21,9 @@ void CsvFusio::fill(navimake::Data& data){
     fill_stop_points(data);
     fill_routes(data);
     fill_vehicle_journeys(data);
+    fill_route_points(data);
     fill_stops(data);
     fill_connections(data);
-    fill_route_points(data);
 }
 
 void CsvFusio::fill_networks(navimake::Data& data){
@@ -329,7 +329,11 @@ void CsvFusio::fill_stops(navimake::Data& data){
             stop->vehicle_journey = this->find(vehicle_journey_map, vehicle_journey_id);
 
             int stop_point_id = boost::lexical_cast<int>(row.at(7));
-            stop->stop_point = this->find(stop_point_map, stop_point_id);
+            navimake::types::StopPoint* stop_point = this->find(stop_point_map, stop_point_id);
+            std::string code = stop_point->external_code + ":" + stop->vehicle_journey->route->external_code;
+            
+            stop->route_point = this->find(route_point_map, code);
+            
 
             data.stops.push_back(stop);
         }
@@ -387,6 +391,8 @@ void CsvFusio::fill_route_points(navimake::Data& data){
             route_point->stop_point = this->find(stop_point_map, stop_point_id);
 
             data.route_points.push_back(route_point);
+            std::string code = route_point->route->external_code + ":" + route_point->stop_point->external_code;
+            route_point_map[code] = route_point;
         }
         counter++;       
     }

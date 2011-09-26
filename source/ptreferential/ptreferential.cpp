@@ -135,21 +135,6 @@ WhereWrapper<T> build_clause(std::vector<WhereClause> clauses) {
 
 
 template<class T>
-pbnavitia::PTReferential extract_data(std::vector<T> & table, const Request & r, std::vector<idx_t> & rows) {
-    pbnavitia::PTReferential pb_response;
-
-    BOOST_FOREACH(idx_t row, rows){
-       // "stop_area"
-        //pbnavitia::PTReferential * pb_row = pb_response.add_item();
-        google::protobuf::Message* pb_message = get_message(&pb_response, r.requested_type);
-        BOOST_FOREACH(const Column & col, r.columns){
-            set_value(pb_message, table.at(row), col.column);
-        }
-    }
-    return pb_response;
-}
-
-template<class T>
 void set_value(google::protobuf::Message* message, const T& object, const std::string& column){
     const google::protobuf::Reflection* reflection = message->GetReflection();
     const google::protobuf::Descriptor* descriptor = message->GetDescriptor();
@@ -169,10 +154,92 @@ void set_value(google::protobuf::Message* message, const T& object, const std::s
     }
 }
 
+
+pbnavitia::PTReferential extract_data(Data & data, const Request & r, std::vector<idx_t> & rows) {
+    pbnavitia::PTReferential pb_response;
+
+    //on reconstruit
+    std::map<Type_e, std::vector<std::string> > columns_map;
+    BOOST_FOREACH(const Column & col, r.columns){
+        columns_map[col.table].push_back(col.column);
+    }
+
+    BOOST_FOREACH(idx_t row, rows){
+        // "stop_area"
+        //pbnavitia::PTReferential * pb_row = pb_response.add_item();
+       google::protobuf::Message* pb_message = get_message(&pb_response, r.requested_type);
+        std::pair<Type_e, std::vector<std::string> > col;
+        BOOST_FOREACH(col, columns_map){
+            std::vector<idx_t> indexes = data.get_target_by_one_source(r.requested_type, col.first, row);
+
+            BOOST_FOREACH(idx_t idx, indexes){
+                google::protobuf::Message* item;
+                if(col.first != r.requested_type){
+                    item = add_item(pb_message, static_data::get()->captionByType(col.first) + "_list");
+                }else{
+                    item = pb_message;
+                }
+                BOOST_FOREACH(std::string column_name, col.second){
+                    switch(col.first){
+                        case eLine: set_value(item, data.lines.at(idx), column_name); break;
+                        case eValidityPattern: set_value(item, data.validity_patterns.at(idx), column_name); break;
+                        case eRoute: set_value(item, data.routes.at(idx), column_name); break;
+                        case eVehicleJourney: set_value(item, data.vehicle_journeys.at(idx), column_name); break;
+                        case eStopPoint: set_value(item, data.stop_points.at(idx), column_name); break;
+                        case eStopArea: set_value(item, data.stop_areas.at(idx), column_name); break;
+                        case eStopTime: set_value(item, data.stop_times.at(idx), column_name); break;
+                        case eNetwork: set_value(item, data.networks.at(idx), column_name); break;
+                        case eMode: set_value(item, data.modes.at(idx), column_name); break;
+                        case eModeType: set_value(item, data.mode_types.at(idx), column_name); break;
+                        case eCity: set_value(item, data.cities.at(idx), column_name); break;
+                        case eConnection: set_value(item, data.connections.at(idx), column_name); break;
+                        case eRoutePoint: set_value(item, data.route_points.at(idx), column_name); break;
+                        case eDistrict: set_value(item, data.districts.at(idx), column_name); break;
+                        case eDepartment: set_value(item, data.departments.at(idx), column_name); break;
+                        case eCompany: set_value(item, data.companies.at(idx), column_name); break;
+                        case eVehicle: set_value(item, data.vehicles.at(idx), column_name); break;
+                        case eCountry: set_value(item, data.countries.at(idx), column_name); break;
+                        case eUnknown: break;
+                    }
+                }
+            }
+        }
+    }
+    return pb_response;
+}
+
+google::protobuf::Message* add_item(google::protobuf::Message* message, const std::string& table){
+    const google::protobuf::Reflection* reflection = message->GetReflection();
+    const google::protobuf::Descriptor* descriptor = message->GetDescriptor();
+    const google::protobuf::FieldDescriptor* ptref_field_descriptor = descriptor->FindFieldByName("child");
+    //@TODO  table est au pluriel
+
+    if(ptref_field_descriptor == NULL){
+        throw unknown_member();
+    }
+    google::protobuf::Message* ptref_message = reflection->MutableMessage(message, ptref_field_descriptor);
+
+    const google::protobuf::Descriptor* ptref_descriptor = ptref_message->GetDescriptor();
+    const google::protobuf::FieldDescriptor* field_descriptor = ptref_descriptor->FindFieldByName(table);
+    const google::protobuf::Reflection* ptref_reflection = ptref_message->GetReflection();
+    if(field_descriptor == NULL){
+        throw unknown_member();
+    }
+
+    if(field_descriptor->is_repeated()){
+        return ptref_reflection->AddMessage(ptref_message, field_descriptor);
+    }else if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE){
+        return ptref_reflection->MutableMessage(ptref_message, field_descriptor);
+    }else{
+        throw bad_type();
+    }
+}
+
+
 google::protobuf::Message* get_message(pbnavitia::PTReferential * row, Type_e type){
     const google::protobuf::Reflection * reflection = row->GetReflection();
     const google::protobuf::Descriptor* descriptor = row->GetDescriptor();
-    std::string field = static_data::get()->captionByType(type);
+    std::string field = static_data::get()->captionByType(type) + "_list";
     const google::protobuf::FieldDescriptor* field_descriptor = descriptor->FindFieldByName(field);
 
     google::protobuf::Message* message = reflection->AddMessage(row, field_descriptor);
@@ -224,7 +291,6 @@ pbnavitia::PTReferential query(std::string request, Data & data){
 
 
     std::cout << "Requested Type: " << static_data::get()->captionByType(r.requested_type) << std::endl;
-    std::cout << r.columns[0].column << " - " << r.columns[1].column << std::endl;
 
     // On regroupe les clauses par tables sur lequelles elles vont taper
     // Ça va se compliquer le jour où l'on voudra gérer des and/or intermélangés...
@@ -265,18 +331,8 @@ pbnavitia::PTReferential query(std::string request, Data & data){
         final_indexes = tmp_indexes;
     }
 
-    switch(r.requested_type){
-    case eValidityPattern: return extract_data(data.validity_patterns, r, final_indexes); break;
-    case eLine: return extract_data(data.lines, r, final_indexes); break;
-    case eRoute: return extract_data(data.routes, r, final_indexes); break;
-    case eVehicleJourney: return extract_data(data.vehicle_journeys, r, final_indexes); break;
-    case eStopPoint: return extract_data(data.stop_points, r, final_indexes); break;
-    case eStopArea: return extract_data(data.stop_areas, r, final_indexes); break;
-    default:  break;
-    }
 
-    pb_response.set_error("Table inconnue : " + r.requested_type);
-    return pb_response;
+    return extract_data(data, r, final_indexes);
 }
 
 

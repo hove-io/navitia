@@ -345,17 +345,17 @@ struct StopTime: public NavitiaHeader{
     int arrival_time; ///< En secondes depuis minuit
     int departure_time; ///< En secondes depuis minuit
     int vehicle_journey_idx;
-    int stop_point_idx;
+    int route_point_idx;
     int order;
     bool ODT;
     int zone;
 
 
-    StopTime(): arrival_time(0), departure_time(0), vehicle_journey_idx(0), stop_point_idx(0), order(0), 
+    StopTime(): arrival_time(0), departure_time(0), vehicle_journey_idx(0), route_point_idx(0), order(0), 
         ODT(false), zone(0){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-            ar & arrival_time & departure_time & vehicle_journey_idx & stop_point_idx & order & ODT & zone 
+            ar & arrival_time & departure_time & vehicle_journey_idx & route_point_idx & order & ODT & zone 
                 & idx & id & external_code;
     }
     std::vector<idx_t> get(Type_e type, const Data & data) const;
