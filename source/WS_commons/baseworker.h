@@ -87,6 +87,8 @@ namespace webservice
         /** Fonction appelée lorsqu'une requête appelle
       *
       * Cette fonction dispatche ensuite à la bonne en fonction de l'appel
+      * Elle découpe également la chaine de requêtes (en POST et GET)
+      * et mets le tout dans le dictionnaire request.params
       */
         webservice::ResponseData dispatch(webservice::RequestData request, Data & d){
             decode(request.path);
@@ -107,12 +109,11 @@ namespace webservice
             std::vector<std::string> tokens2;
             boost::algorithm::split(tokens2, request.data, boost::algorithm::is_any_of("&"));
             BOOST_FOREACH(std::string token, tokens2) {
-                std::vector<std::string> elts;
-                boost::algorithm::split(elts, token, boost::algorithm::is_any_of("="));
-                if(elts.size() == 1 && elts[0] != "")
-                    request.params[boost::algorithm::to_lower_copy(elts[0])] = "";
-                else if(elts.size() >= 2 && elts[0] != "")
-                    request.params[boost::algorithm::to_lower_copy(elts[0])] = elts[1];
+                size_t pos = token.find("=");
+                if(pos != std::string::npos && token != "")
+                    request.params[boost::algorithm::to_lower_copy(token)] = "";
+                else if(token.size() > 0 && token[0] != '=')
+                    request.params[boost::algorithm::to_lower_copy(token.substr(0, pos - 1))] = token.substr(pos +1);
             }
             
 
