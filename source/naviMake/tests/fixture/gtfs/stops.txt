@@ -1,16 +1,18 @@
-stop_id,stop_name,stop_desc,stop_lat,stop_lon,zone_id,stop_url,location_type,parent_station
-FUR_CREEK_RES_SA,Furnace Creek Resort SA (Demo),,36.425288,-117.133162,,,1,
-FUR_CREEK_RES,Furnace Creek Resort (Demo),,36.425288,-117.133162,,,0,FUR_CREEK_RES_SA
-BEATTY_AIRPORT_SA,Nye County Airport SA (Demo),,36.868446,-116.784582,,,1,
-BEATTY_AIRPORT,Nye County Airport (Demo),,36.868446,-116.784582,,,0,BEATTY_AIRPORT_SA
-BULLFROG_SA,Bullfrog SA (Demo),,36.88108,-116.81797,,,1,
-BULLFROG,Bullfrog (Demo),,36.88108,-116.81797,,,0,BULLFROG_SA
-STAGECOACH_SA,Stagecoach Hotel & Casino SA (Demo),,36.915682,-116.751677,,,1,
-STAGECOACH,Stagecoach Hotel & Casino (Demo),,36.915682,-116.751677,,,0,STAGECOACH_SA
-NADAV,North Ave / D Ave N SA (Demo),,36.914893,-116.76821,,,1,
-NANAA,North Ave / N A Ave (Demo),,36.914944,-116.761472,,,0,NADAV
-DADAN,Doing Ave / D Ave N (Demo),,36.909489,-116.768242,,,0,NADAV
-EMSI_SA,E Main St / S Irving St SA (Demo),,36.905697,-116.76218,,,1,
-EMSI,E Main St / S Irving St (Demo),,36.905697,-116.76218,,,0,EMSI_SA
-AMV_SA,Amargosa Valley SA (Demo),,36.641496,-116.40094,,,1,
-AMV,Amargosa Valley (Demo),,36.641496,-116.40094,,,0,AMV_SA
+"stop_id","stop_name","stop_desc","stop_lat","stop_lon","zone_id","stop_url","location_type","parent_station"
+"frpno","Gare du Nord",,"48.880342","2.355022",,,1,
+"frpno:surface","Gare du Nord Surface",,"48.880531","2.355381",,,0,"frpno"
+"frpno:metro5","Gare du Nord metro ligne 5",,"48.880191","2.354786",,,0,"frpno"
+"frpno:metro4","Gare du Nord metro ligne 4",,"48.880191","2.354786",,,0,"frpno"
+"frpes","gare de l'est",,"48.876333","2.359024",,,1,
+"frpes:surface","gare de l'est Surface",,"48.8768","2.359378",,,0,"frpes"
+"frpes:metro5","Gare de l'est Metro ligne 5",,"48.875951","2.35794",,,0,"frpes"
+"frpes:metro4","Gare de l'Est Metre ligne 4",,"48.875951","2.35794",,,0,"frpes"
+"republique","République",,"48.867313","2.364592",,,1,
+"republique:5","République ligne 5",,"48.867313","2.364592",,,0,"republique"
+"bastille","Bastille",,"48.853191","2.368969",,,1,
+"bastille:5","Bastille ligne 5",,"48.853191","2.368969",,,0,"bastille"
+"bastille:1","Bastille ligne 1",,"48.853191","2.368969",,,0,"bastille"
+"chatelet","Châtelet",,"48.858106","2.346696",,,1,
+"chatelet:4","Châtelet ligne 4",,"48.858106","2.346696",,,0,"chatelet"
+"montparnasse ","Gare de Montparnasse",,"48.84091","2.320217",,,1,
+"montparnasse:4","Montparnasse Bienvenüe ligne 4",,"48.843976","2.324315",,,0,"montparnasse "
