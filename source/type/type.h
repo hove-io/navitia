@@ -373,6 +373,7 @@ private:
 public:
     static static_data * get();
     static PointType getpointTypeByCaption(const std::string & strPointType);
+    static std::string getListNameByType(Type_e type);
     static Criteria getCriteriaByCaption(const std::string & strCriteria);
     static boost::posix_time::ptime parse_date_time(const std::string& s);
     static bool strToBool(const std::string &strValue);

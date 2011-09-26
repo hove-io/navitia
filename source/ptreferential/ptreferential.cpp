@@ -175,7 +175,7 @@ pbnavitia::PTReferential extract_data(Data & data, const Request & r, std::vecto
             BOOST_FOREACH(idx_t idx, indexes){
                 google::protobuf::Message* item;
                 if(col.first != r.requested_type){
-                    item = add_item(pb_message, static_data::get()->captionByType(col.first) + "_list");
+                    item = add_item(pb_message, static_data::get()->getListNameByType(col.first));
                 }else{
                     item = pb_message;
                 }
@@ -239,7 +239,7 @@ google::protobuf::Message* add_item(google::protobuf::Message* message, const st
 google::protobuf::Message* get_message(pbnavitia::PTReferential * row, Type_e type){
     const google::protobuf::Reflection * reflection = row->GetReflection();
     const google::protobuf::Descriptor* descriptor = row->GetDescriptor();
-    std::string field = static_data::get()->captionByType(type) + "_list";
+    std::string field = static_data::get()->getListNameByType(type);
     const google::protobuf::FieldDescriptor* field_descriptor = descriptor->FindFieldByName(field);
 
     google::protobuf::Message* message = reflection->AddMessage(row, field_descriptor);

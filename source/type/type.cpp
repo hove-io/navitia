@@ -94,6 +94,9 @@ static_data * static_data::get() {
     return instance;
 }
 
+std::string static_data::getListNameByType(Type_e type){
+    return instance->types_string.left.at(type) + "_list";
+}
 
 PointType static_data::getpointTypeByCaption(const std::string & strPointType){
     return instance->point_types.right.at(strPointType);
