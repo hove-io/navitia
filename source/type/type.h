@@ -314,6 +314,7 @@ public:
     void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
     void remove(boost::gregorian::date day);
     void remove(int day);
+    std::string str() const;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & beginning_date & days & idx;
     }
@@ -345,8 +346,8 @@ struct StopPoint : public NavitiaHeader, Nameable{
 struct StopTime: public NavitiaHeader{
     int arrival_time; ///< En secondes depuis minuit
     int departure_time; ///< En secondes depuis minuit
-    int vehicle_journey_idx;
-    int route_point_idx;
+    size_t vehicle_journey_idx;
+    size_t route_point_idx;
     int order;
     bool ODT;
     int zone;

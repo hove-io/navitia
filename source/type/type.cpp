@@ -38,6 +38,10 @@ void ValidityPattern::remove(int day){
         days[day] = false;
 }
 
+std::string ValidityPattern::str() const {
+    return days.to_string();
+}
+
 static_data * static_data::instance = 0;
 static_data * static_data::get() {
     if (instance == 0) {

@@ -83,7 +83,15 @@ public:
 
     /** Charge la structure de données du fichier au format texte */
     void load(const std::string & filename);
+
+    /** Charge les données binaires compressées en FastLZ
+      *
+      * La compression FastLZ est extrèmement rapide mais moyennement performante
+      * Le but est que la lecture du fichier compression soit aussi rapide que sans compression
+      */
     void load_flz(const std::string & filename);
+
+    /** Sauvegarde les données en binaire compressé avec FastLZ*/
     void save_flz(const std::string & filename);
 
     /** Sauvegarde la structure de fichier au format binaire

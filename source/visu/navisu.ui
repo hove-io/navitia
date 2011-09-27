@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>947</width>
     <height>600</height>
    </rect>
   </property>
@@ -22,9 +22,103 @@
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
-        <string>Tab 1</string>
+        <string>Données</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QComboBox" name="comboBox">
+          <item>
+           <property name="text">
+            <string>Line</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>ValidityPattern</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>StopTime</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Network</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Mode</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>ModeType</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>City</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Connection</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>District</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Department</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Company</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Vehicle</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Country</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>StopArea</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>StopPoint</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Route</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>RoutePoint</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>VehicleJourney</string>
+           </property>
+          </item>
+         </widget>
+        </item>
         <item>
          <widget class="QTableWidget" name="tableWidget"/>
         </item>
@@ -44,7 +138,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>947</width>
      <height>25</height>
     </rect>
    </property>
@@ -64,5 +158,26 @@
   </action>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>comboBox</sender>
+   <signal>currentIndexChanged(QString)</signal>
+   <receiver>navisu</receiver>
+   <slot>tableSelected(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>278</x>
+     <y>95</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>941</x>
+     <y>140</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>tableSelected(int)</slot>
+  <slot>tableSelected(QString)</slot>
+ </slots>
 </ui>
