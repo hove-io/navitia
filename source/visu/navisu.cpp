@@ -3,15 +3,15 @@
 
 #include <iostream>
 #include <boost/foreach.hpp>
+#include <QFileDialog>
+#include <QErrorMessage>
+
 using namespace navitia::type;
 navisu::navisu(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::navisu)
 {
     ui->setupUi(this);
-    d.load_flz("/home/tristram/idf.flz");
-    std::cout << "loading done" << std::endl;
-
 }
 
 template<class T>
@@ -19,6 +19,28 @@ std::string formatHeader(const T & t){
     std::stringstream ss;
     ss << t.name << "(ext=" << t.external_code << "; id=" << t.id << "; idx=" << t.idx << ")";
     return ss.str();
+}
+
+void navisu::menuAction(QAction * action){
+    if(action == ui->actionOuvrir){
+        QString filename;
+        try{
+            filename = QFileDialog::getOpenFileName(this, "Ouvrir un fichier de données NAViTiA2");
+            ui->statusbar->showMessage("Loading " + filename + "...");
+            d.load_flz(filename.toStdString());
+            ui->statusbar->showMessage("Loading done " + filename);
+        }catch(std::exception e){
+            QErrorMessage * err = new QErrorMessage(this);
+            err->showMessage(QString("Impossible d'ouvrir") + filename + " : " + e.what());
+            ui->statusbar->showMessage("Load error " + filename);
+            ui->tableWidget->clear();
+        }catch(...){
+            QErrorMessage * err = new QErrorMessage(this);
+            err->showMessage(QString("Impossible d'ouvrir") + filename + " : exception inconnue");
+            ui->statusbar->showMessage("Load error " + filename);
+            ui->tableWidget->clear();
+        }
+    }
 }
 
 navisu::~navisu()
@@ -205,47 +227,160 @@ void navisu::show_stop_time(){
 }
 
 void navisu::show_network(){
-
+    resetTable(4, d.networks.size());
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Nb lines");
+    for(size_t i=0; i < d.networks.size(); ++i){
+        Network & n = d.networks[i];
+        setItem(i, 0, n.external_code);
+        setItem(i, 1, n.id);
+        setItem(i, 2, n.name);
+        setItem(i, 3, n.line_list.size());
+    }
 }
 
 void navisu::show_mode() {
-
+    resetTable(4, d.modes.size());
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Mode Type");
+    for(size_t i=0; i < d.modes.size(); ++i){
+        Mode & m = d.modes[i];
+        setItem(i, 0, m.external_code);
+        setItem(i, 1, m.id);
+        setItem(i, 2, m.name);
+        if(m.mode_type_idx < d.mode_types.size())
+            setItem(i, 3, formatHeader(d.mode_types[m.mode_type_idx]));
+    }
 }
 
 void navisu::show_mode_type(){
-
+    resetTable(5, d.mode_types.size());
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Nb Modes" << "Nb lines");
+    for(size_t i=0; i < d.mode_types.size(); ++i){
+        ModeType & mt = d.mode_types[i];
+        setItem(i, 0, mt.external_code);
+        setItem(i, 1, mt.id);
+        setItem(i, 2, mt.name);
+        setItem(i, 3, mt.mode_list.size());
+        setItem(i, 4, mt.line_list.size());
+    }
 }
 
 void navisu::show_city() {
-
+    resetTable(6, d.cities.size());
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Postal Code" << "Department" << "X" << "Y");
+    for(size_t i=0; i < d.cities.size(); ++i){
+        City & c = d.cities[i];
+        setItem(i, 0, c.external_code);
+        setItem(i, 1, c.id);
+        setItem(i, 2, c.name);
+        setItem(i, 3, c.main_postal_code);
+        if(c.department_idx < d.departments.size())
+            setItem(i, 4, formatHeader(d.departments[c.department_idx]));
+        setItem(i, 5, c.coord.x);
+        setItem(i, 6, c.coord.y);
+    }
 }
 
 void navisu::show_connection(){
-
+    resetTable(6, d.connections.size());
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Departure" << "Destination" << "Duration" << "Max Duration");
+    for(size_t i=0; i < d.connections.size(); ++i){
+        Connection & c = d.connections[i];
+        setItem(i, 0, c.external_code);
+        setItem(i, 1, c.id);
+        if(c.departure_stop_point_idx < d.stop_points.size())
+            setItem(i, 2, formatHeader(d.stop_points[c.departure_stop_point_idx]));
+        if(c.destination_stop_point_idx < d.stop_points.size())
+            setItem(i, 3, formatHeader(d.stop_points[c.destination_stop_point_idx]));
+        setItem(i, 4, c.duration);
+        setItem(i, 5, c.max_duration);
+    }
 }
 
 void navisu::show_district(){
+    resetTable(6, d.districts.size());
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Main City" << "Country" << "Nb departments");
+    for(size_t i=0; i < d.districts.size(); ++i){
+        District & di = d.districts[i];
+        setItem(i, 0, di.external_code);
+        setItem(i, 1, di.id);
+        setItem(i, 2, di.name);
+        if(di.main_city_idx < d.cities.size())
+            setItem(i, 3, formatHeader(d.cities[di.main_city_idx]));
+        if(di.country_idx < d.countries.size())
+            setItem(i, 4, formatHeader(d.countries[di.country_idx]));
+        setItem(i, 5, di.department_list.size());
+    }
 
 }
 
 void navisu::show_route_point(){
+    resetTable(5, d.route_points.size());
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Order" << "Stop Point" << "Route");
+    for(size_t i=0; i < d.route_points.size(); ++i){
+        RoutePoint & rp = d.route_points[i];
+        setItem(i, 0, rp.external_code);
+        setItem(i, 1, rp.id);
+        setItem(i, 2, rp.order);
+        if(rp.stop_point_idx < d.stop_points.size())
+            setItem(i, 3, formatHeader(d.stop_points[rp.stop_point_idx]));
+        if(rp.route_idx < d.routes.size())
+            setItem(i, 4, formatHeader(d.routes[rp.route_idx]));
 
+    }
 }
 
 void navisu::show_department(){
-
+    resetTable(6, d.departments.size());
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Main City" << "District" << "Nb Cities");
+    for(size_t i=0; i < d.departments.size(); ++i){
+        Department & dpt = d.departments[i];
+        setItem(i, 0, dpt.external_code);
+        setItem(i, 1, dpt.id);
+        setItem(i, 2, dpt.name);
+        if(dpt.main_city_idx < d.cities.size())
+            setItem(i, 3, formatHeader(d.cities[dpt.main_city_idx]));
+        if(dpt.district_idx < d.districts.size())
+            setItem(i, 4, formatHeader(d.districts[dpt.district_idx]));
+        setItem(i, 5, dpt.city_list.size());
+    }
 }
 
 void navisu::show_company(){
-
+    resetTable(4, d.companies.size());
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Nb lines");
+    for(size_t i = 0; i < d.companies.size(); ++i){
+        Company & c = d.companies[i];
+        setItem(i, 0, c.external_code);
+        setItem(i, 1, c.id);
+        setItem(i, 2, c.name);
+        setItem(i, 3, c.line_list.size());
+    }
 }
 
 void navisu::show_vehicle(){
+    resetTable(3, d.vehicles.size());
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name");
+    for(size_t i = 0; i < d.vehicles.size(); ++i){
+        Vehicle & v = d.vehicles[i];
+        setItem(i, 0, v.external_code);
+        setItem(i, 1, v.id);
+        setItem(i, 2, v.name);
+    }
 
 }
 
 void navisu::show_country(){
-
+    resetTable(5, d.countries.size());
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Main City" << "Nb districts");
+    for(size_t i = 0; i < d.countries.size(); ++i){
+        Country & c = d.countries[i];
+        setItem(i, 0, c.external_code);
+        setItem(i, 1, c.id);
+        setItem(i, 2, c.name);
+        if(c.main_city_idx < d.cities.size())
+            setItem(i, 3, formatHeader(d.cities[c.main_city_idx]));
+        setItem(i, 4, c.district_list.size());
+    }
 }
 
 int main(int argc, char *argv[])

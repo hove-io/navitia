@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>NAViSU</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -142,6 +142,9 @@
      <height>25</height>
     </rect>
    </property>
+   <property name="defaultUp">
+    <bool>true</bool>
+   </property>
    <widget class="QMenu" name="menuFichier">
     <property name="title">
      <string>Fichier</string>
@@ -154,6 +157,26 @@
   <action name="actionOuvrir">
    <property name="text">
     <string>Ouvrir</string>
+   </property>
+  </action>
+  <action name="actionQuitter">
+   <property name="text">
+    <string>Quitter</string>
+   </property>
+  </action>
+  <action name="actionMoo">
+   <property name="text">
+    <string>Moo</string>
+   </property>
+  </action>
+  <action name="actionFoo">
+   <property name="text">
+    <string>Foo</string>
+   </property>
+  </action>
+  <action name="actionBar">
+   <property name="text">
+    <string>Bar</string>
    </property>
   </action>
  </widget>
@@ -175,9 +198,26 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>menubar</sender>
+   <signal>triggered(QAction*)</signal>
+   <receiver>navisu</receiver>
+   <slot>menuAction(QAction*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>28</x>
+     <y>12</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>943</x>
+     <y>45</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>tableSelected(int)</slot>
   <slot>tableSelected(QString)</slot>
+  <slot>menuAction(QAction*)</slot>
  </slots>
 </ui>

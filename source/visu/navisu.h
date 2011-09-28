@@ -13,6 +13,7 @@ class navisu : public QMainWindow
     Q_OBJECT
 private slots:
     void tableSelected(QString);
+    void menuAction(QAction *);
 public:
     explicit navisu(QWidget *parent = 0);
     void resetTable(int nb_cols, int nb_rows);
