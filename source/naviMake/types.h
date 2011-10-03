@@ -1,6 +1,5 @@
 #pragma once
 #include <boost/date_time/gregorian/gregorian.hpp>
-#include <vector>
 #include <bitset>
 
 #include <boost/date_time/gregorian/greg_serialize.hpp>
@@ -14,21 +13,22 @@ namespace navimake{namespace types{
 
 typedef unsigned int idx_t;
 
-
+/** En-tête commun pour tous les objets TC portant un nom*/
 struct Nameable{
     std::string name;
     std::string comment;
 };
 
-
-
+/** En tête de tous les objets TC.
+  *
+  * Cette classe est héritée par \b tous les objets TC
+  */
 struct TransmodelHeader{
-    int id;
-    idx_t idx;
-    std::string external_code;
+    int id; //< Identifiant de l'objet par le fournisseur de la donnée
+    idx_t idx; //< Indexe de l'objet dans le tableau
+    std::string external_code; //< Code pérène
     TransmodelHeader() : id(0), idx(0){}
 };
-
 
 struct GeographicalCoord{
     double x;
@@ -39,7 +39,7 @@ struct GeographicalCoord{
     nt::GeographicalCoord transform() const;
     
 };
-//typedef navitia::type::GeographicalCoord GeographicalCoord;
+
 
 //forward declare
 class District;
@@ -89,10 +89,6 @@ struct City : public TransmodelHeader, Nameable {
 
     Department* department;
     GeographicalCoord coord;
-
-    std::vector<std::string> postal_code_list;
-    std::vector<StopArea*> stop_area_list;
-    
 
     struct Transformer{
         inline navitia::type::City operator()(const City* city){return this->operator()(*city);}
@@ -171,8 +167,6 @@ struct Network : public TransmodelHeader, Nameable{
     std::string website;
     std::string fax;
 
-    std::vector<Line*> line_list;
-
     struct Transformer{
         inline navitia::type::Network operator()(const Network* network){return this->operator()(*network);}
         navitia::type::Network operator()(const Network& network);
@@ -192,14 +186,9 @@ struct Company : public TransmodelHeader, Nameable{
     std::string mail;
     std::string website;
     std::string fax;
-
-    std::vector<idx_t> line_list;
-
 };
 
 struct ModeType : public TransmodelHeader, Nameable{
-    std::vector<Mode*> mode_list;
-    std::vector<Line*> line_list;
 
     struct Transformer{
         inline nt::ModeType operator()(const ModeType* mode_type){return this->operator()(*mode_type);}   
@@ -233,20 +222,11 @@ struct Line : public TransmodelHeader, Nameable {
     
     ModeType* mode_type;
 
-    std::vector<Mode*> mode_list;
-    std::vector<Company*> company_list;
-
     Network* network;
 
     StopPoint* forward_direction;
 
     StopPoint* backward_direction;
-
-
-    std::vector<idx_t> forward_route;
-    std::vector<idx_t> backward_route;
-
-    std::vector<ValidityPattern*> validity_pattern_list;
 
     struct Transformer{
         inline nt::Line operator()(const Line* line){return this->operator()(*line);}   

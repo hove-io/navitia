@@ -5,8 +5,14 @@
 #include "type/type.h"
 #include "type/data.h"
 
+/** Ce namespace contient toutes les structures de données \b temporaires, à remplir par le connecteur */
 namespace navimake{
 
+    /** Structure de donnée temporaire destinée à être remplie par un connecteur
+      *
+      * Les vecteurs contiennent des pointeurs vers un objet TC.
+      * Les relations entre objets TC sont gèrés par des pointeurs
+      */
     class Data{
     public:
         std::vector<navimake::types::Network*> networks; //OK
@@ -24,6 +30,7 @@ namespace navimake{
         std::vector<navimake::types::ValidityPattern*> validity_patterns; 
 
 
+        /** Foncteur permettant de comparer les objets en passant des pointeurs vers ces objets */
         template<class T> 
         struct Less{
              bool operator() (T* x, T* y) const{
@@ -31,6 +38,10 @@ namespace navimake{
              }
         };
 
+        /** Foncteur fixe le membre "idx" d'un objet en incrémentant toujours de 1
+          *
+          * Cela permet de numéroter tous les objets de 0 à n-1 d'un vecteur de pointeurs
+          */
         template<class T>
         struct Indexer{
             navimake::types::idx_t idx;
@@ -39,6 +50,7 @@ namespace navimake{
 
             void operator()(T* obj){obj->idx = idx; idx++;}
         };
+
         /**
          * trie les différentes donnée et affecte l'idx
          *

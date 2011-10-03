@@ -1,4 +1,6 @@
-#include <cassert>
+#include "baseworker.h"
+
+
 #include <iostream>
 #include <ext/pb_ds/assoc_container.hpp>
 #include <ext/pb_ds/trie_policy.hpp>
@@ -10,7 +12,6 @@
 #include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/assign/std/set.hpp>
-#include <baseworker.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <vector>
@@ -58,6 +59,50 @@ mapped_type match_all(const trie_type & t, const std::string & str){
     }
     return ret;
 }
+
+typedef unsigned int idx_t;
+struct FirstLetter
+{
+    std::map<std::string, std::set<idx_t> > map;
+
+    void add_element(const std::string & token, idx_t position){
+        map[token].insert(position);
+    }
+
+    void add_string(const std::string & str, idx_t position){
+        Tokenizer tokens(str);
+        BOOST_FOREACH(auto token, tokens){
+            add_element(token, position);
+        }
+    }
+
+    std::set<idx_t> match(const std::string & token){
+        auto lower = map.lower_bound(token);
+        auto upper = map.upper_bound(token);
+
+        std::set<idx_t> result;
+        for(; lower != upper; ++lower){
+            auto & elts = *lower;
+            result.insert(elts.second.begin(), elts.second.end());
+        }
+
+        return result;
+    }
+
+    std::set<idx_t> find(const std::string & str){
+        Tokenizer tokens(str);
+        std::set<idx_t> result = match(*(tokens.begin()));
+
+        BOOST_FOREACH(auto token, tokens){
+            std::set<idx_t> tmp = match(token);
+            std::set<idx_t> new_result;
+            insert_iterator< std::set<idx_t> > ii(new_result, new_result.begin());
+            std::set_intersection(result.begin(), result.end(), tmp.begin(), tmp.end(), ii);
+            result = new_result;
+        }
+        return result;
+    }
+};
 
 struct Data{
     int nb_threads; /// Nombre de threads. IMPORTANT ! Sans cette variable, ça ne compile pas

@@ -5,7 +5,7 @@
 #include <boost/test/unit_test.hpp>
 #include <string>
 
-const std::string gtfs_path = "/home/kinou/workspace/navitiacpp/source/naviMake/tests/fixture/gtfs";
+const std::string gtfs_path = "../../source/naviMake/tests/fixture/gtfs";
 
 
 BOOST_AUTO_TEST_CASE(parse_gtfs){
@@ -78,8 +78,8 @@ BOOST_AUTO_TEST_CASE(city_transformer){
     city.coord.x = -54.08523;
     city.coord.x = 5.59273;
 
-    city.postal_code_list.push_back("42001");
-    city.postal_code_list.push_back("42002");
+  //  city.postal_code_list.push_back("42001");
+   // city.postal_code_list.push_back("42002");
 
     navimake::types::City::Transformer transformer;
     navitia::type::City city_n = transformer(city);

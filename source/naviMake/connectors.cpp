@@ -186,13 +186,6 @@ void CsvFusio::fill_stop_areas(navimake::Data& data){
             stop_area->coord.y = boost::lexical_cast<double>(row.at(7));
 
 
-            std::string city_external_code = row.at(3);
-            navimake::types::City* city = this->find(city_map, city_external_code);
-            if(city != NULL){
-                city->stop_area_list.push_back(stop_area);
-            }
-
-
             data.stop_areas.push_back(stop_area);
             stop_area_map[stop_area->id] = stop_area;
         }

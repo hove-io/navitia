@@ -261,7 +261,6 @@ void GtfsParser::parse_routes(Data & data){
             nm::Line * line = new nm::Line();
             line->name = elts[long_name_c];
             line->code = elts[short_name_c];
-            line->mode_list.push_back(0);
             line->color = elts[color_c];
             line->additional_data = elts[long_name_c];
 
@@ -339,7 +338,6 @@ void GtfsParser::parse_trips(Data & data) {
                 //std::cerr << "Impossible de trouver le service " << elts[service_c] << std::endl;
             }
             else {
-                line->validity_pattern_list.push_back(vp_it->second);
                 vp_xx = vp_it->second;
             }
 
