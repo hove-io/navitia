@@ -30,11 +30,15 @@ typedef trie<string, mapped_type, cmp_fn, tag_type,  trie_prefix_search_node_upd
 
 mapped_type match(const trie_type & t, const std::string & key) {
     mapped_type ret;
-    ret.reserve(1000);
     auto range = t.prefix_range(key);
+    ret.reserve(1000);
     for (auto it = range.first; it != range.second; ++it){
         ret.insert(ret.end(), it->second.begin(), it->second.end());
     }
+    //std::sort(ret.begin(), ret.end());
+    //std::unique(ret.begin(), ret.end());
+    if( !std::is_sorted(ret.begin(), ret.end()))
+        std::cout << "CRAP !" << std::endl;
     return ret;
 }
 
@@ -60,49 +64,6 @@ mapped_type match_all(const trie_type & t, const std::string & str){
     return ret;
 }
 
-typedef unsigned int idx_t;
-struct FirstLetter
-{
-    std::map<std::string, std::set<idx_t> > map;
-
-    void add_element(const std::string & token, idx_t position){
-        map[token].insert(position);
-    }
-
-    void add_string(const std::string & str, idx_t position){
-        Tokenizer tokens(str);
-        BOOST_FOREACH(auto token, tokens){
-            add_element(token, position);
-        }
-    }
-
-    std::set<idx_t> match(const std::string & token){
-        auto lower = map.lower_bound(token);
-        auto upper = map.upper_bound(token);
-
-        std::set<idx_t> result;
-        for(; lower != upper; ++lower){
-            auto & elts = *lower;
-            result.insert(elts.second.begin(), elts.second.end());
-        }
-
-        return result;
-    }
-
-    std::set<idx_t> find(const std::string & str){
-        Tokenizer tokens(str);
-        std::set<idx_t> result = match(*(tokens.begin()));
-
-        BOOST_FOREACH(auto token, tokens){
-            std::set<idx_t> tmp = match(token);
-            std::set<idx_t> new_result;
-            insert_iterator< std::set<idx_t> > ii(new_result, new_result.begin());
-            std::set_intersection(result.begin(), result.end(), tmp.begin(), tmp.end(), ii);
-            result = new_result;
-        }
-        return result;
-    }
-};
 
 struct Data{
     int nb_threads; /// Nombre de threads. IMPORTANT ! Sans cette variable, ça ne compile pas
@@ -111,7 +72,7 @@ struct Data{
     std::vector<std::string> adresses;
     Data() : nb_threads(8) {
         adresses.reserve(850000);
-        std::fstream ifile("/home/tristram/adresses_uniq.txt");
+        std::fstream ifile("/home/tristram/adresses.txt");
         std::string line;
         while(getline(ifile, line)) {
             adresses.push_back(boost::to_lower_copy(line));
@@ -161,8 +122,8 @@ class Worker : public BaseWorker<Data> {
 };
 
 /// Macro qui va construire soit un exectuable FastCGI, soit une DLL ISAPI
-MAKE_WEBSERVICE(Data, Worker)
-/*int main(int, char**) {
+//MAKE_WEBSERVICE(Data, Worker)
+int main(int, char**) {
     Data d;
     Worker w(d);
     RequestData rd1;
@@ -184,4 +145,4 @@ MAKE_WEBSERVICE(Data, Worker)
     }
     int duration = (boost::posix_time::microsec_clock::local_time() - start).total_milliseconds();
     std::cout << "Durée totale : " << duration << " ms" << std::endl;
-}*/
+}
