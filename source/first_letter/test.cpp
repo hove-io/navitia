@@ -10,14 +10,12 @@
 
 namespace pt = boost::posix_time;
 BOOST_AUTO_TEST_CASE(parse_state_test){
-    FirstLetter fl;
+    FirstLetter<unsigned int> fl;
     fl.add_string("rue jean jaures", 0);
     fl.add_string("place jean jaures", 1);
     fl.add_string("rue jeanne d'arc", 2);
     fl.add_string("avenue jean jaures", 3);
-    std::cout << "Maps chargés" << std::endl;
-    fl.build();
-    std::cout << "Construit" << std::endl;
+    fl.build();    
 
     auto res = fl.find("rue jean jaures");
 
@@ -44,7 +42,7 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
     expected = {0, 2};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
-
+    // Partie permettant de faire des benchmarks
     std::fstream ifile("/home/tristram/adresses_uniq.txt");
     std::string line;
     int idx = 0;
