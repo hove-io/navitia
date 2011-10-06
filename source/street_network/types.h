@@ -1,4 +1,8 @@
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/adj_list_serialize.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/utility.hpp>
 
 namespace bg = boost::graph;
 namespace navitia { namespace streetnetwork {
@@ -7,6 +11,10 @@ namespace navitia { namespace streetnetwork {
 struct Vertex {
     double lon;
     double lat;
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar & lon & lat;
+    }
 };
 
 /** Propriétés des arcs */
@@ -16,6 +24,10 @@ struct Edge {
     bool cyclable; //< est-ce que le segment est accessible à vélo ?
     int start_number; //< numéro de rue au début du segment
     int end_number; //< numéro de rue en fin de segment
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar & way_idx & length & cyclable & start_number & end_number;
+    }
 };
 
 // Plein de typedefs pour nous simpfilier un peu la vie
@@ -45,7 +57,12 @@ struct Way{
     unsigned int idx;
     std::string name;
     std::string city;
-    std::vector<edge_t> edges;
+    std::vector< std::pair<vertex_t, vertex_t> > edges;
+
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar & idx & name & city & edges;
+    }
 };
 
 struct StreetNetwork {
@@ -53,6 +70,20 @@ struct StreetNetwork {
     Graph graph;
 
     void load_bdtopo(std::string filename);
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar & ways & graph;
+    }
+
+
+    void save(const std::string & filename);
+    void load(const std::string & filename);
+
+    void save_bin(const std::string & filename);
+    void load_bin(const std::string & filename);
+
+    void load_flz(const std::string & filename);
+    void save_flz(const std::string & filename);
 
 };
 

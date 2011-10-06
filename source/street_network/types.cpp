@@ -7,6 +7,17 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+#include <boost/iostreams/filtering_streambuf.hpp>
+
+#include <fstream>
+#include "fastlz_filter/filter.h"
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include "eos_portable_archive/portable_iarchive.hpp"
+#include "eos_portable_archive/portable_oarchive.hpp"
+
 
 #include <iostream>
 #include <unordered_map>
@@ -88,10 +99,8 @@ void StreetNetwork::load_bdtopo(std::string filename) {
             std::cout << row[n_deb_d] << ", " << row[n_fin_d] << ", " << row[n_deb_g] << ", " << row[n_fin_g] << std::endl;
         }
 
-        edge_t edge1, edge2;
-        bool b;
-        boost::tie(edge1, b) = boost::add_edge(source, target, e1, graph);
-        boost::tie(edge2, b) = boost::add_edge(target, source, e2, graph);
+        boost::add_edge(source, target, e1, graph);
+        boost::add_edge(target, source, e2, graph);
 
         std::string way_key = row[nom] + row[insee];
         auto way_it = way_map.find(way_key);
@@ -100,8 +109,8 @@ void StreetNetwork::load_bdtopo(std::string filename) {
             way_map[way_key].city = row[insee];
         }
 
-        way_map[way_key].edges.push_back(edge1);
-        way_map[way_key].edges.push_back(edge2);
+        way_map[way_key].edges.push_back(std::make_pair(source, target));
+        way_map[way_key].edges.push_back(std::make_pair(target, source));
     }
 
     unsigned int idx=0;
@@ -109,7 +118,8 @@ void StreetNetwork::load_bdtopo(std::string filename) {
     BOOST_FOREACH(auto way, way_map){
         ways.push_back(way.second);
         ways.back().idx = idx;
-        BOOST_FOREACH(edge_t e, ways.back().edges){
+        BOOST_FOREACH(auto node_pair, ways.back().edges){
+            edge_t e = boost::edge(node_pair.first, node_pair.second, graph).first;
             graph[e].way_idx = idx;
         }
         fl.add_string(ways.back().name, idx);
@@ -130,8 +140,8 @@ void StreetNetwork::load_bdtopo(std::string filename) {
 
     std::cout << "On va partir de >" << w1.name << "< vers >" << w2.name << "<" << std::endl;
 
-    vertex_t start = boost::source(w1.edges.front(), graph);
-    vertex_t dest =  boost::source(w2.edges.front(), graph);
+    vertex_t start = w1.edges.front().first;
+    vertex_t dest = w2.edges.front().first;
 
     std::cout << "Nœuds : " << start << " et " << dest << std::endl;
 
@@ -155,6 +165,51 @@ void StreetNetwork::load_bdtopo(std::string filename) {
         }
         dest = preds[dest];
     }
+}
+
+
+
+
+void StreetNetwork::save(const std::string & filename) {
+    std::ofstream ofs(filename.c_str());
+    boost::archive::text_oarchive oa(ofs);
+    oa << *this;
+}
+
+void StreetNetwork::load(const std::string & filename) {
+    std::ifstream ifs(filename.c_str());
+    boost::archive::text_iarchive ia(ifs);
+    ia >> *this;
+}
+
+void StreetNetwork::save_bin(const std::string & filename) {
+    std::ofstream ofs(filename.c_str(),  std::ios::out | std::ios::binary);
+    boost::archive::binary_oarchive oa(ofs);
+    oa << *this;
+}
+
+void StreetNetwork::load_bin(const std::string & filename) {
+    std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
+    boost::archive::binary_iarchive ia(ifs);
+    ia >> *this;
+}
+
+void StreetNetwork::load_flz(const std::string & filename) {
+    std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
+    in.push(FastLZDecompressor(2048*500),8192*500, 8192*500);
+    in.push(ifs);
+    eos::portable_iarchive ia(in);
+    ia >> *this;
+}
+
+void StreetNetwork::save_flz(const std::string & filename) {
+    std::ofstream ofs(filename.c_str(),std::ios::out|std::ios::binary|std::ios::trunc);
+    boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
+    out.push(FastLZCompressor(2048*500), 1024*500, 1024*500);
+    out.push(ofs);
+    eos::portable_oarchive oa(out);
+    oa << *this;
 }
 
 }}
