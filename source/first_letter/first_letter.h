@@ -1,6 +1,8 @@
 #pragma once
 #include<boost/foreach.hpp>
 #include<boost/tokenizer.hpp>
+#include<boost/algorithm/string.hpp>
+
 #include<map>
 #include<set>
 
@@ -30,7 +32,8 @@ struct FirstLetter
       * – on découpe en mots la chaîne (tokens)
       * — on rajoute la position à la liste de chaque mot
       */
-    void add_string(const std::string & str, T position){
+    void add_string(std::string str, T position){
+        boost::to_lower(str);
         boost::tokenizer<> tokens(str);
         BOOST_FOREACH(auto token, tokens){
             map[token].insert(position);
@@ -85,7 +88,8 @@ struct FirstLetter
     }
 
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant tous ces mots*/
-    std::vector<T> find(const std::string & str){
+    std::vector<T> find(std::string str){
+        boost::to_lower(str);
         std::vector<T> result;
         boost::tokenizer<> tokens(str);
         auto token_it = tokens.begin();
