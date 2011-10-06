@@ -100,7 +100,7 @@ void Fare::init(const std::string & filename, const std::string & prices_filenam
      state_map[begin] = begin_v;
      reader.next(); //en-tête
 
-     for(row=reader.next(); row != reader.end(); row = reader.next()) {
+     for(row=reader.next(); !reader.eof(); row = reader.next()) {
          bool symetric = false;
 
          State start = parse_state(row.at(0));
@@ -285,7 +285,7 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
  void Fare::load_fares(const std::string & filename){
      CsvReader reader(filename);
      std::vector<std::string> row;
-     for(row=reader.next(); row != reader.end(); row = reader.next()) {
+     for(row=reader.next();  !reader.eof(); row = reader.next()) {
          // La structure du csv est : clef;date_debut;date_fin;prix;libellé
          fare_map[row.at(0)].add(row.at(1), row.at(2),
                               Ticket(row.at(4), boost::lexical_cast<int>(row.at(3)), row.at(5)) );
@@ -411,7 +411,7 @@ void Fare::load_od_stif(const std::string & filename){
     reader.next(); //en-tête
 
     int count = 0;
-    for(row=reader.next(); row != reader.end(); row = reader.next()) {
+    for(row=reader.next(); !reader.eof(); row = reader.next()) {
         std::string start_saec = boost::algorithm::trim_copy(row[0]);
         std::string dest_saec = boost::algorithm::trim_copy(row[2]);
         std::string price_key = boost::algorithm::trim_copy(row[4]);

@@ -25,6 +25,12 @@
 namespace pt = boost::posix_time;
 namespace navitia{ namespace streetnetwork{
 
+
+void StreetNetwork::load_bd(const std::string& path){
+    load_bdcity(path + "/commune.txt");
+    load_bdtopo(path + "/route_adresse.txt");
+}
+
 void StreetNetwork::load_bdtopo(std::string filename) {
     CsvReader reader(filename);
     std::map<std::string, int> cols;
@@ -48,7 +54,7 @@ void StreetNetwork::load_bdtopo(std::string filename) {
 
     std::unordered_map<std::string, vertex_t> vertex_map;
     std::unordered_map<std::string, Way> way_map;
-    for(reader.next(); row != reader.end() ;row = reader.next()){
+    for(reader.next(); !reader.eof() ;row = reader.next()){
         vertex_t source, target;
 
         auto it = vertex_map.find(row[x1] + row[y1]);
@@ -107,6 +113,10 @@ void StreetNetwork::load_bdtopo(std::string filename) {
         if(way_it == way_map.end()){
             way_map[way_key].name = row[nom];
             way_map[way_key].city = row[insee];
+            auto city_it = city_map.find(row[insee]);
+            if(city_it != city_map.end()){
+                way_map[way_key].city_idx = city_map[row[insee]];
+            }
         }
 
         way_map[way_key].edges.push_back(std::make_pair(source, target));
@@ -126,47 +136,36 @@ void StreetNetwork::load_bdtopo(std::string filename) {
         idx++;
     }
     fl.build();
-
-    std::cout << "On a " << boost::num_vertices(graph) << " nœuds, " << boost::num_edges(graph) << " arcs et " << ways.size() << " adresses" << std::endl;
-
-    auto idx1 = fl.find("boul ponia");
-    auto idx2 = fl.find("rue fontaine au ro");
-
-    std::cout  << idx1.size() << " " << idx2.size() << std::endl;
-
-
-    Way w1 = ways[idx1.front()];
-    Way w2 = ways[idx2.front()];
-
-    std::cout << "On va partir de >" << w1.name << "< vers >" << w2.name << "<" << std::endl;
-
-    vertex_t start = w1.edges.front().first;
-    vertex_t dest = w2.edges.front().first;
-
-    std::cout << "Nœuds : " << start << " et " << dest << std::endl;
-
-    std::vector<vertex_t> preds(boost::num_vertices(graph));
-    std::vector<vertex_t> d(boost::num_vertices(graph));
-    pt::ptime startt, end;
-    startt = pt::microsec_clock::local_time();
-    boost::dijkstra_shortest_paths(graph, start, boost::predecessor_map(&preds[0]).distance_map(&d[0]).weight_map(boost::get(&Edge::length, graph)));
-    end = pt::microsec_clock::local_time();
-
-    std::cout << "Durée isochrone : " << (end - startt).total_milliseconds() << std::endl;
-
-    std::string cur_name;
-    while(dest != preds[dest]){
-
-        edge_t e = boost::edge(preds[dest], dest, graph).first;
-
-        if(cur_name != ways[graph[e].way_idx].name && ways[graph[e].way_idx].name != ""){
-            cur_name = ways[graph[e].way_idx].name;
-            std::cout << cur_name << " au pm " << d[dest] << std::endl;
-        }
-        dest = preds[dest];
-    }
 }
 
+void StreetNetwork::load_bdcity(std::string filename){
+    
+    CsvReader reader(filename);
+    std::map<std::string, int> cols;
+
+    std::vector<std::string> row = reader.next();
+    for(size_t i=0; i < row.size(); i++){
+        cols[row[i]] = i;
+    }
+
+    size_t name = cols["NOM"];
+    size_t insee = cols["CODE_INSEE"];
+    
+    idx_t counter = 0;
+    for(reader.next(); !reader.eof() ;row = reader.next()){
+        if(row.size() < 2)
+            continue;
+        City city;
+        city.idx = counter;
+        city.code_insee = row[insee];
+        city.name = row[name];
+        cities.push_back(city);
+        city_map[city.code_insee] = city.idx;
+        counter++;
+        std::cout << row[insee] << " " << row[name] << std::endl;
+    }
+
+}
 
 
 

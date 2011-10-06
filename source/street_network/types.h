@@ -3,10 +3,13 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/utility.hpp>
+#include <unordered_map>
+#include <map>
 
 namespace bg = boost::graph;
 namespace navitia { namespace streetnetwork {
 
+typedef unsigned int idx_t;
 /** Propriétés Nœud (intersection entre deux routes) */
 struct Vertex {
     double lon;
@@ -19,7 +22,7 @@ struct Vertex {
 
 /** Propriétés des arcs */
 struct Edge {
-    unsigned int way_idx; //< indexe vers le nom de rue
+    idx_t way_idx; //< indexe vers le nom de rue
     float length; //< longeur en mètres de l'arc
     bool cyclable; //< est-ce que le segment est accessible à vélo ?
     int start_number; //< numéro de rue au début du segment
@@ -54,9 +57,10 @@ typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
 
 
 struct Way{
-    unsigned int idx;
+    idx_t idx;
     std::string name;
     std::string city;
+    idx_t city_idx;
     std::vector< std::pair<vertex_t, vertex_t> > edges;
 
 
@@ -65,11 +69,23 @@ struct Way{
     }
 };
 
+struct City{
+    idx_t idx;
+    std::string name;
+    std::string code_insee;
+};
+
 struct StreetNetwork {
     std::vector<Way> ways;
+    std::vector<City> cities;
     Graph graph;
 
+    ///map temporaire pour la correspondance way => city
+    std::map<std::string, idx_t> city_map;
+
     void load_bdtopo(std::string filename);
+    void load_bdcity(std::string filename);
+    void load_bd(const std::string& path);
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & ways & graph;

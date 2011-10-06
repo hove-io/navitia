@@ -27,10 +27,9 @@ void CsvReader::close(){
     }
 }
 
-std::vector<std::string> CsvReader::end(){
-    return std::vector<std::string>();
+bool CsvReader::eof() const{
+    return file.eof();
 }
-
 
 CsvReader::~CsvReader(){
     this->close();

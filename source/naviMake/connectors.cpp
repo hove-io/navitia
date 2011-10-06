@@ -31,7 +31,7 @@ void CsvFusio::fill_networks(navimake::Data& data){
     CsvReader reader(path + "Network.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
-    for(row=reader.next(); row != reader.end(); row = reader.next()){
+    for(row=reader.next(); !reader.eof(); row = reader.next()){
         if(row.size() < 11){
             throw BadFormated();
         }
@@ -61,7 +61,7 @@ void CsvFusio::fill_modes_type(navimake::Data& data){
     CsvReader reader(path + "/ModeType.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
-    for(row=reader.next(); row != reader.end(); row = reader.next()){
+    for(row=reader.next(); !reader.eof(); row = reader.next()){
         if(row.size() < 3){
             throw BadFormated();
         }
@@ -83,7 +83,7 @@ void CsvFusio::fill_modes(navimake::Data& data){
     CsvReader reader(path + "/Mode.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
-    for(row=reader.next(); row != reader.end(); row = reader.next()){
+    for(row=reader.next();!reader.eof(); row = reader.next()){
         if(row.size() < 5){
             throw BadFormated();
         }
@@ -110,7 +110,7 @@ void CsvFusio::fill_lines(navimake::Data& data){
     CsvReader reader(path + "/Line.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
-    for(row=reader.next(); row != reader.end(); row = reader.next()){
+    for(row=reader.next(); !reader.eof(); row = reader.next()){
         if(row.size() < 13){
             throw BadFormated();
         }
@@ -140,7 +140,7 @@ void CsvFusio::fill_cities(navimake::Data& data){
     CsvReader reader(path + "/city.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
-    for(row=reader.next(); row != reader.end(); row = reader.next()){
+    for(row=reader.next(); !reader.eof(); row = reader.next()){
         if(row.size() < 8){
             throw BadFormated();
         }
@@ -169,7 +169,7 @@ void CsvFusio::fill_stop_areas(navimake::Data& data){
     CsvReader reader(path + "/StopArea.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
-    for(row=reader.next(); row != reader.end(); row = reader.next()){
+    for(row=reader.next(); !reader.eof(); row = reader.next()){
         if(row.size() < 9){
             throw BadFormated();
         }
@@ -199,7 +199,7 @@ void CsvFusio::fill_stop_points(navimake::Data& data){
     CsvReader reader(path + "/StopPoint.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
-    for(row=reader.next(); row != reader.end(); row = reader.next()){
+    for(row=reader.next(); !reader.eof(); row = reader.next()){
         if(row.size() < 15){
             throw BadFormated();
         }
@@ -240,7 +240,7 @@ void CsvFusio::fill_routes(navimake::Data& data){
     CsvReader reader(path + "/Route.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
-    for(row=reader.next(); row != reader.end(); row = reader.next()){
+    for(row=reader.next(); !reader.eof(); row = reader.next()){
         if(row.size() < 9){
             throw BadFormated();
         }
@@ -272,7 +272,7 @@ void CsvFusio::fill_vehicle_journeys(navimake::Data& data){
     CsvReader reader(path + "/VehicleJourney.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
-    for(row=reader.next(); row != reader.end(); row = reader.next()){
+    for(row=reader.next(); !reader.eof(); row = reader.next()){
         if(row.size() < 14){
             throw BadFormated();
         }
@@ -303,7 +303,7 @@ void CsvFusio::fill_stops(navimake::Data& data){
     CsvReader reader(path + "/Stop.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
-    for(row=reader.next(); row != reader.end(); row = reader.next()){
+    for(row=reader.next(); !reader.eof(); row = reader.next()){
         if(row.size() < 9){
             throw BadFormated();
         }
@@ -339,7 +339,7 @@ void CsvFusio::fill_connections(navimake::Data& data){
     CsvReader reader(path + "/Connection.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
-    for(row=reader.next(); row != reader.end(); row = reader.next()){
+    for(row=reader.next(); !reader.eof(); row = reader.next()){
         if(row.size() < 6){
             throw BadFormated();
         }
@@ -365,7 +365,7 @@ void CsvFusio::fill_route_points(navimake::Data& data){
     CsvReader reader(path + "/RoutePoint.csv", ';', "ISO-8859-1");
     std::vector<std::string> row;
     int counter = 0;
-    for(row=reader.next(); row != reader.end(); row = reader.next()){
+    for(row=reader.next(); !reader.eof(); row = reader.next()){
         if(row.size() < 6){
             throw BadFormated();
         }
