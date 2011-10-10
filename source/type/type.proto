@@ -1,5 +1,13 @@
 package pbnavitia;
 
+enum NavitiaType {
+    COUNTRY = 0;
+    STOPAREA = 1;
+    WAY = 2;
+    CITY = 3;
+    SITE = 4;
+}
+
 message GeographicalCoord {
     required double x = 1;
     required double y = 2;
@@ -10,6 +18,7 @@ message Country {
     optional int32 idx = 2;
     optional string name  = 3;
     optional PTReferential child = 4; 
+    optional GeographicalCoord coord = 6;
 }
 
 message StopArea {
@@ -74,6 +83,46 @@ message RoutePoint{
     optional PTReferential child = 5; 
 }
 
+message Way {
+    optional int32 id = 1;
+    optional int32 idx = 2;
+    optional string external_code = 3;
+    optional string name = 4;
+    optional PTReferential child = 5; 
+    optional GeographicalCoord coord = 6;
+}
+
+message City {
+    optional int32 id = 1;
+    optional int32 idx = 2;
+    optional string external_code = 3;
+    optional string name = 4;
+    optional PTReferential child = 5; 
+    optional GeographicalCoord coord = 6;
+}
+
+message Site {
+    optional int32 id = 1;
+    optional int32 idx = 2;
+    optional string external_code = 3;
+    optional string name = 4;
+    optional PTReferential child = 5; 
+    optional GeographicalCoord coord = 6;
+}
+
+message Node {
+    optional int32 id = 1;
+    optional int32 idx = 2;
+    optional GeographicalCoord coord = 6;
+}
+    
+message Segment {
+    optional int32 id = 1;
+    optional int32 idx = 2;
+    optional Node start = 3;
+    optional Node end = 4;
+    optional float length = 5;
+}
 
 message PTReferential {
     repeated Country country_list =1;
@@ -84,8 +133,34 @@ message PTReferential {
     repeated StopTime stop_time_list = 6;
     repeated VehicleJourney vehicle_journey_list = 7;
     repeated RoutePoint route_point_list = 11;
+    repeated Way way_list = 12;
+    repeated City city_list = 13;
+    repeated Site site_list = 14;
+    repeated Segment segment_list = 15;
+
 
     optional string error = 8;
     optional string warning = 9;
     optional string info = 10;
+}
+
+message FirstLetterItem {
+    optional string name = 1;
+    optional NavitiaType type = 2;
+    optional int32 quality = 3;
+    optional Way way = 4;
+    optional City city = 5;
+    optional StopArea stop_area = 6;
+    optional Site site = 7;
+}
+
+message FirstLetter {
+    repeated FirstLetterItem items = 1;
+    repeated string ignored_word_list = 2;
+    repeated string bad_word_list = 3;
+}
+
+message StreetNetwork {
+    optional float length = 1;
+    repeated Way way_list = 2;
 }
