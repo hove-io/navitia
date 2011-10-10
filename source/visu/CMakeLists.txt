@@ -11,6 +11,7 @@ include_directories ( ${Boost_INCLUDE_DIRS}
                       ${PROTOBUF_INCLUDE_DIRS}
                       ${CMAKE_CURRENT_BINARY_DIR}/../type
                       ${CMAKE_CURRENT_BINARY_DIR}
+                      ${CMAKE_CURRENT_SOURCE_DIR}
                       /usr/include/marble
 )
 
