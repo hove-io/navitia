@@ -2,11 +2,24 @@
 #define NAVISU_H
 
 #include <QMainWindow>
+#include <marble/MarbleWidget.h>
+#include <marble/GeoPainter.h>
+
+using namespace Marble;
+
+class MyMarbleWidget : public MarbleWidget
+{
+public:
+    virtual void customPaint(GeoPainter* painter);
+    MyMarbleWidget(QWidget * parent = 0) : MarbleWidget(parent){}
+};
 
 #include "type/data.h"
 namespace Ui {
     class navisu;
 }
+
+
 
 class navisu : public QMainWindow
 {

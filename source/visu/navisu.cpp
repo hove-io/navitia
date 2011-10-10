@@ -5,13 +5,27 @@
 #include <boost/foreach.hpp>
 #include <QFileDialog>
 #include <QErrorMessage>
-
 using namespace navitia::type;
 navisu::navisu(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::navisu)
 {
     ui->setupUi(this);
+  //  MyMarbleWidget * my = new MyMarbleWidget(ui->carto);
+    ui->my->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
+    ui->my->show();
+    ui->actionBarmy->setHome(2.36, 48.84, 2500);
+
+    //ui->carto->model()->
+}
+
+void MyMarbleWidget::customPaint(GeoPainter* painter)
+{
+    GeoDataCoordinates home(8.4, 49.0, 0.0, GeoDataCoordinates::Degree);
+    painter->setPen(Qt::green);
+    painter->drawEllipse(home, 7, 7);
+    painter->setPen(Qt::black);
+    painter->drawText(home, "Hello Marble!");
 }
 
 template<class T>
