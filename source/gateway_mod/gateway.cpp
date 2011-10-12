@@ -100,8 +100,6 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
             response.status_code = code;
             continue;
         }
-        //@TODO FIX 
-        //std::unique_ptr<pbnavitia::PTReferential> resp(new pbnavitia::PTReferential());
         std::unique_ptr<google::protobuf::Message> resp = create_pb(request);
         if(resp->ParseFromString(res.second)){
             /*if(resp->has_error()){
@@ -126,11 +124,12 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
 }
 
 std::unique_ptr<google::protobuf::Message> Dispatcher::create_pb(webservice::RequestData& request){
-    if(request.api == "firstletter"){
-        return std::unique_ptr<google::protobuf::Message>(new pbnavitia::PTReferential());
-    }else{
+    if(request.api == "/firstletter"){
         return std::unique_ptr<google::protobuf::Message>(new pbnavitia::FirstLetter());
+    }else if(request.api == "/query"){
+        return std::unique_ptr<google::protobuf::Message>(new pbnavitia::PTReferential());
     }
+    throw std::exception();
 
 }
 
