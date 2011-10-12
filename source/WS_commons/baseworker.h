@@ -122,6 +122,7 @@ namespace webservice
             if(position != std::string::npos){
                 api = request.path.substr(position);
             }
+            request.api = api;
 
             if(apis.find(api) == apis.end()) {
                 ResponseData resp;

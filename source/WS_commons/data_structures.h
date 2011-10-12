@@ -42,6 +42,8 @@ namespace webservice
         std::string data;
         /// Paramètres parsés
         Parameters params;
+        ///API utilisée
+        std::string api;
     };
 
     /** Structure contenant les réponses

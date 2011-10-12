@@ -102,7 +102,7 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
         }
         //@TODO FIX 
         //std::unique_ptr<pbnavitia::PTReferential> resp(new pbnavitia::PTReferential());
-        std::unique_ptr<pbnavitia::FirstLetter> resp(new pbnavitia::FirstLetter());
+        std::unique_ptr<google::protobuf::Message> resp = create_pb(request);
         if(resp->ParseFromString(res.second)){
             /*if(resp->has_error()){
                 ok = false;
@@ -125,5 +125,13 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
     }while(!ok && nb_try < 4);
 }
 
+std::unique_ptr<google::protobuf::Message> Dispatcher::create_pb(webservice::RequestData& request){
+    if(request.api == "firstletter"){
+        return std::unique_ptr<google::protobuf::Message>(new pbnavitia::PTReferential());
+    }else{
+        return std::unique_ptr<google::protobuf::Message>(new pbnavitia::FirstLetter());
+    }
+
+}
 
 MAKE_WEBSERVICE(Pool, Worker)
