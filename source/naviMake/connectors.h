@@ -28,15 +28,15 @@ class CsvFusio {
             return NULL;
         }
 
-        std::map<int, navimake::types::Network*> network_map;
-        std::map<int, navimake::types::ModeType*> mode_type_map;
-        std::map<int, navimake::types::Mode*> mode_map;
+        std::map<std::string, navimake::types::Network*> network_map;
+        std::map<std::string, navimake::types::ModeType*> mode_type_map;
+        std::map<std::string, navimake::types::Mode*> mode_map;
         std::map<std::string, navimake::types::City*> city_map;
-        std::map<int, navimake::types::StopArea*> stop_area_map;
-        std::map<int, navimake::types::StopPoint*> stop_point_map;
-        std::map<int, navimake::types::VehicleJourney*> vehicle_journey_map;
-        std::map<int, navimake::types::Route*> route_map;
-        std::map<int, navimake::types::Line*> line_map;
+        std::map<std::string, navimake::types::StopArea*> stop_area_map;
+        std::map<std::string, navimake::types::StopPoint*> stop_point_map;
+        std::map<std::string, navimake::types::VehicleJourney*> vehicle_journey_map;
+        std::map<std::string, navimake::types::Route*> route_map;
+        std::map<std::string, navimake::types::Line*> line_map;
         std::map<std::string, navimake::types::RoutePoint*> route_point_map;
 
         void fill_networks(navimake::Data& data);

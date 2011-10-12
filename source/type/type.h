@@ -48,10 +48,10 @@ struct Nameable{
 
 
 struct NavitiaHeader{
-    int id;
+    std::string id;
     idx_t idx;
     std::string external_code;
-    NavitiaHeader() : id(0), idx(0){}
+    NavitiaHeader() : idx(0){}
     std::vector<idx_t> get(Type_e, const Data &) const {return std::vector<idx_t>();}
 
 };

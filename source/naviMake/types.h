@@ -24,10 +24,10 @@ struct Nameable{
   * Cette classe est héritée par \b tous les objets TC
   */
 struct TransmodelHeader{
-    int id; //< Identifiant de l'objet par le fournisseur de la donnée
+    std::string id; //< Identifiant de l'objet par le fournisseur de la donnée
     idx_t idx; //< Indexe de l'objet dans le tableau
     std::string external_code; //< Code pérène
-    TransmodelHeader() : id(0), idx(0){}
+    TransmodelHeader() : idx(0){}
 };
 
 struct GeographicalCoord{

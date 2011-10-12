@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(city_transformer){
     dep->idx = 7;
     city.name = "city";
     city.comment = "test city";
-    city.id = 1;
+    city.id = "1";
     city.idx = 1;
     city.external_code = "city01";
     city.main_postal_code = "42000";
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(connection_transformer){
     origin->idx = 8;
     destination->idx = 523;
     
-    connection.id = 12;
+    connection.id = "12";
     connection.idx = 32;
     connection.external_code = "connection_12";
     connection.departure_stop_point = origin;
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(connection_transformer){
 BOOST_AUTO_TEST_CASE(stop_area_transformer){
     navimake::types::StopArea stop_area;
 
-    stop_area.id = 12;
+    stop_area.id = "12";
     stop_area.idx = 32;
     stop_area.external_code = "stop_area_12";
     stop_area.name = "somewhere";

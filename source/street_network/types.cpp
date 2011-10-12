@@ -23,6 +23,7 @@
 #include <unordered_map>
 
 namespace pt = boost::posix_time;
+using navitia::type::City;
 namespace navitia{ namespace streetnetwork{
 
 
@@ -157,10 +158,10 @@ void StreetNetwork::load_bdcity(std::string filename){
             continue;
         City city;
         city.idx = counter;
-        city.code_insee = row[insee];
+        city.id = row[insee];
         city.name = row[name];
         cities.push_back(city);
-        city_map[city.code_insee] = city.idx;
+        city_map[city.id] = city.idx;
         counter++;
         std::cout << row[insee] << " " << row[name] << std::endl;
     }

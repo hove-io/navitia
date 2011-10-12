@@ -22,4 +22,3 @@ target_link_libraries(types ${Boost_LIBRARIES})
 add_executable(navijkstra navijkstra.cpp )
 target_link_libraries(navijkstra ${Boost_LIBRARIES} types)
 
-#add_subdirectory(tests)

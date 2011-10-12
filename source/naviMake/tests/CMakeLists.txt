@@ -12,4 +12,4 @@ SET(SOURCE
 add_executable(navimake_test ${SOURCE})
 target_link_libraries(navimake_test ${Boost_LIBRARIES} connectors)
 
-ADD_TEST(navimake_test ${EXECUTABLE_OUTPUT_PATH}/indexes_tests --report_level=no)
+ADD_TEST(navimake_test ${EXECUTABLE_OUTPUT_PATH}/navimake_test --report_level=no)

@@ -1,12 +1,16 @@
+#include "type/type.h"
+
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adj_list_serialize.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/utility.hpp>
+
 #include <unordered_map>
 #include <map>
 
 namespace bg = boost::graph;
+namespace nt = navitia::type;
 namespace navitia { namespace streetnetwork {
 
 typedef unsigned int idx_t;
@@ -55,7 +59,7 @@ typedef boost::graph_traits<Graph>::vertex_iterator vertex_iterator;
 /// Type itérateur sur les arcs du graphe
 typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
 
-
+/** Nommage d'une voie (anciennement "adresse"). Typiquement le nom de rue **/
 struct Way{
     idx_t idx;
     std::string name;
@@ -69,15 +73,23 @@ struct Way{
     }
 };
 
-struct City{
-    idx_t idx;
-    std::string name;
-    std::string code_insee;
+/** Un bout d'itinéraire : un nom de voie et une liste de segments */
+struct PathItem{
+    idx_t way_idx; //< Voie sur laquel porte le bout du trajet
+    float length; //< Longueur du trajet effectué sur cette voie
+    std::vector<idx_t> segments; //< Segments traversés
+};
+
+/** Itinéraire complet */
+struct Path {
+    float length; //< Longueur totale du parcours
+    std::vector<PathItem> path_items; //< Liste des voies parcourues
+    std::vector<nt::GeographicalCoord> coordinates; //< Coordonnées du parcours
 };
 
 struct StreetNetwork {
     std::vector<Way> ways;
-    std::vector<City> cities;
+    std::vector<nt::City> cities;
     Graph graph;
 
     ///map temporaire pour la correspondance way => city
