@@ -15,9 +15,26 @@ namespace mpl = boost::mpl;
 
 namespace navitia { namespace type {
 typedef unsigned int idx_t;
-enum Type_e {eValidityPattern, eLine, eRoute, eVehicleJourney, eStopPoint, eStopArea, eStopTime,
-             eNetwork, eMode, eModeType, eCity, eConnection, eRoutePoint, eDistrict, eDepartment,
-             eCompany, eVehicle, eCountry, eUnknown};
+enum Type_e {eValidityPattern = 0,
+    eLine = 1,
+    eRoute = 2,
+    eVehicleJourney = 3,
+    eStopPoint = 4,
+    eStopArea = 5,
+    eStopTime = 6,
+    eNetwork = 7,
+    eMode = 8,
+    eModeType = 9,
+    eCity = 10,
+    eConnection = 11,
+    eRoutePoint = 12,
+    eDistrict = 13,
+    eDepartment = 14,
+    eCompany = 15,
+    eVehicle = 16,
+    eCountry = 17,
+    eUnknown = 18
+};
 struct Data;
 template<class T> std::string T::* name_getter(){return &T::name;}
 template<class T> int T::* idx_getter(){return &T::idx;}

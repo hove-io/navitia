@@ -152,4 +152,18 @@ template<> std::vector<Company> & Data::get_data<eCompany>(){return companies;}
 template<> std::vector<Vehicle> & Data::get_data<eVehicle>(){return vehicles;}
 template<> std::vector<Country> & Data::get_data<eCountry>(){return countries;}
 
+
+void Data::build_first_letter(){
+    BOOST_FOREACH(StopArea sa, stop_areas){
+        this->stop_area_first_letter.add_string(sa.name, sa.idx);
+    }
+    BOOST_FOREACH(City city, cities){
+        this->city_first_letter.add_string(city.name, city.idx);
+    }
+
+    this->stop_area_first_letter.build();
+    this->city_first_letter.build();
+
+}
+
 }} //namespace navitia::type

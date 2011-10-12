@@ -30,7 +30,7 @@ int main(int argc, char * argv[])
         return 1;
     }
     pt::ptime start, end;
-    int read, clean, sort, transform, save;
+    int read, clean, sort, transform, save, first_letter;
 
     navimake::Data data;
     {
@@ -72,6 +72,9 @@ int main(int argc, char * argv[])
     data.transform(nav_data);
     transform = (pt::microsec_clock::local_time() - start).total_milliseconds();
     start = pt::microsec_clock::local_time();
+    nav_data.build_first_letter();
+    first_letter = (pt::microsec_clock::local_time() - start).total_milliseconds();
+    start = pt::microsec_clock::local_time();
     nav_data.save_flz(output);
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
@@ -80,6 +83,7 @@ int main(int argc, char * argv[])
     std::cout << "\t netoyage des données " << clean << "ms" << std::endl;
     std::cout << "\t trie des données " << sort << "ms" << std::endl;
     std::cout << "\t transformation " << transform << "ms" << std::endl;
+    std::cout << "\t construction de firstletter " << first_letter << "ms" << std::endl;
     std::cout << "\t serialization " << save << "ms" << std::endl;
 
     return 0;

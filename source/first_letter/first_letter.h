@@ -2,6 +2,9 @@
 #include<boost/foreach.hpp>
 #include<boost/tokenizer.hpp>
 #include<boost/algorithm/string.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/utility.hpp>
 
 #include<map>
 #include<set>
@@ -25,6 +28,11 @@ struct FirstLetter
 
     /// Structure principale de notre indexe
     std::vector<vec_elt> vec_map;
+
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar & vec_map;
+    }
 
     // Méthodes permettant de construire l'indexe
 

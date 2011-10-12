@@ -28,6 +28,9 @@ std::string pb2xml(const google::protobuf::Message* response){
             }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
                 buffer << field->name() << "=\"";
                 buffer << reflection->GetInt32(*response, field) << "\" ";
+            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_DOUBLE){
+                buffer << field->name() << "=\"";
+                buffer << reflection->GetDouble(*response, field) << "\" ";
             }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE){
                 child_buffer << pb2xml(&reflection->GetMessage(*response, field));
             }else {
@@ -68,6 +71,8 @@ std::string pb2txt(const google::protobuf::Message* response){
                 buffer << reflection->GetString(*response, field) << "; ";
             }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
                 buffer << reflection->GetInt32(*response, field) << "; ";
+            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_DOUBLE){
+                buffer << reflection->GetDouble(*response, field) << "; ";
             }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE){
                 buffer << "\n\t" << pb2txt(&reflection->GetMessage(*response, field)) << "\n";
             }else {

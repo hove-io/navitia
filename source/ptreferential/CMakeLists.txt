@@ -4,7 +4,6 @@ link_directories (${Boost_LIBRARY_DIRS})
 include_directories ( ${Boost_INCLUDE_DIRS}
                       ${CMAKE_SOURCE_DIR}/type
                       ${CMAKE_SOURCE_DIR}/../third_party
-                      ${PROTOBUF_INCLUDE_DIRS}
                       ${CMAKE_CURRENT_BINARY_DIR}/../type
 )
 

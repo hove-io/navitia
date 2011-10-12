@@ -12,6 +12,7 @@
 
 Worker::Worker(Pool &){
     register_api("/query", boost::bind(&Worker::handle, this, _1, _2), "traite les requétes");
+    register_api("/firstletter", boost::bind(&Worker::handle, this, _1, _2), "traite les requétes");
     register_api("/load", boost::bind(&Worker::load, this, _1, _2), "traite les requétes");
     register_api("/register", boost::bind(&Worker::register_navitia, this, _1, _2), "ajout d'un NAViTiA au pool");
     register_api("/status", boost::bind(&Worker::status, this, _1, _2), "status");
@@ -99,15 +100,17 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
             response.status_code = code;
             continue;
         }
-        std::unique_ptr<pbnavitia::PTReferential> resp(new pbnavitia::PTReferential());
+        //@TODO FIX 
+        //std::unique_ptr<pbnavitia::PTReferential> resp(new pbnavitia::PTReferential());
+        std::unique_ptr<pbnavitia::FirstLetter> resp(new pbnavitia::FirstLetter());
         if(resp->ParseFromString(res.second)){
-            if(resp->has_error()){
+            /*if(resp->has_error()){
                 ok = false;
                 nav->on_error();
                 context.str = resp->error();
                 context.service = Context::BAD_RESPONSE;
                 continue;
-            }
+            }*/
             context.pb = std::move(resp);
             context.service = Context::PTREF;
         }else{

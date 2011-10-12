@@ -1,5 +1,6 @@
 #pragma once
 #include "type.h"
+#include "first_letter/first_letter.h"
 #include <boost/serialization/version.hpp>
 namespace navitia { namespace type {
 
@@ -11,7 +12,7 @@ namespace navitia { namespace type {
   */
 class Data{
 public:
-    static const unsigned int data_version = 1; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
+    static const unsigned int data_version = 2; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
     int nb_threads; //< Nombre de threads. IMPORTANT ! Sans cette variable, ça ne compile pas
     unsigned int version; //< Numéro de version des données chargées
     bool loaded; //< Est-ce que lse données ont été chargées
@@ -36,6 +37,11 @@ public:
     std::vector<Vehicle> vehicles;
     std::vector<Country> countries;
 
+
+    //first letter
+    FirstLetter<idx_t> stop_area_first_letter;
+    FirstLetter<idx_t> city_first_letter;
+
     friend class boost::serialization::access;
     public:
 
@@ -51,7 +57,7 @@ public:
         }
 
         ar & validity_patterns & lines & stop_points & stop_areas & stop_times & routes
-            & vehicle_journeys & route_points ;
+            & vehicle_journeys & route_points & stop_area_first_letter & city_first_letter;
     }
 
     /** Initialise tous les indexes
@@ -59,6 +65,13 @@ public:
       * Les données doivent bien évidemment avoir été initialisés
       */
     void build_index();
+
+    /**
+     * Initialise les structure de firstletter
+     *
+     *
+     */
+    void build_first_letter();
 
     /** Retrouve un élément par un attribut arbitraire de type chaine de caractères
       *

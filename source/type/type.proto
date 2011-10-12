@@ -1,11 +1,11 @@
 package pbnavitia;
 
 enum NavitiaType {
-    COUNTRY = 0;
-    STOPAREA = 1;
-    WAY = 2;
-    CITY = 3;
-    SITE = 4;
+    STOPAREA = 5;
+    CITY = 10;
+    COUNTRY = 17;
+    WAY = 19;
+    SITE = 20;
 }
 
 message GeographicalCoord {
