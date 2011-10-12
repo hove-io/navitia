@@ -10,53 +10,53 @@ const std::string gtfs_path = "../../source/naviMake/tests/fixture/gtfs";
 
 BOOST_AUTO_TEST_CASE(parse_gtfs){
     navimake::Data data;
-    navimake::connectors::GtfsParser parser(gtfs_path, "20070101");
+    navimake::connectors::GtfsParser parser(gtfs_path, "20110101");
     parser.fill(data);
 
-    BOOST_CHECK_EQUAL(data.lines.size(), 5);
-    BOOST_CHECK_EQUAL(data.routes.size(), 11);
-    BOOST_CHECK_EQUAL(data.stop_areas.size(), 7);
-    BOOST_CHECK_EQUAL(data.stop_points.size(), 8);
-    BOOST_CHECK_EQUAL(data.vehicle_journeys.size(), 11);
-    BOOST_CHECK_EQUAL(data.stops.size(), 26);
+    BOOST_CHECK_EQUAL(data.lines.size(), 2);
+    BOOST_CHECK_EQUAL(data.routes.size(), 8);
+    BOOST_CHECK_EQUAL(data.stop_areas.size(), 6);
+    BOOST_CHECK_EQUAL(data.stop_points.size(), 11);
+    BOOST_CHECK_EQUAL(data.vehicle_journeys.size(), 8);
+    BOOST_CHECK_EQUAL(data.stops.size(), 32);
     BOOST_CHECK_EQUAL(data.connections.size(), 0);
     BOOST_CHECK_EQUAL(data.route_points.size(), 8);
 
 
     navimake::types::Line* line = data.lines[0];
-    BOOST_CHECK_EQUAL(line->code, "10");
-    BOOST_CHECK_EQUAL(line->name, "Airport - Bullfrog");
-    BOOST_CHECK_EQUAL(line->color, "blue");
+    BOOST_CHECK_EQUAL(line->code, "4");
+    BOOST_CHECK_EQUAL(line->name, "Metro 4 – Porte de clignancourt – Porte d'Orléans");
+    BOOST_CHECK_EQUAL(line->color, "");
 
 
     navimake::types::Route* route = data.routes[0];
-    BOOST_CHECK_EQUAL(route->line->code, "10");
+    BOOST_CHECK_EQUAL(route->line->code, "4");
 
     navimake::types::StopArea* stop_area = data.stop_areas[0];
-    BOOST_CHECK_EQUAL(stop_area->name, "Furnace Creek Resort SA (Demo)");
-    BOOST_CHECK_EQUAL(stop_area->external_code, "FUR_CREEK_RES_SA");
-    BOOST_CHECK_CLOSE(stop_area->coord.x, -117.133162, 0.0000001);
-    BOOST_CHECK_CLOSE(stop_area->coord.y, 36.425288, 0.0000001);
+    BOOST_CHECK_EQUAL(stop_area->name, "Gare du Nord");
+    BOOST_CHECK_EQUAL(stop_area->external_code, "frpno");
+    BOOST_CHECK_CLOSE(stop_area->coord.x, 2.355022, 0.0000001);
+    BOOST_CHECK_CLOSE(stop_area->coord.y, 48.880342, 0.0000001);
     
     navimake::types::StopPoint* stop_point = data.stop_points[0];
-    BOOST_CHECK_EQUAL(stop_point->name, "Furnace Creek Resort (Demo)");
-    BOOST_CHECK_EQUAL(stop_point->external_code, "FUR_CREEK_RES");
-    BOOST_CHECK_CLOSE(stop_point->coord.x, -117.133162, 0.0000001);
-    BOOST_CHECK_CLOSE(stop_point->coord.y, 36.425288, 0.0000001);
+    BOOST_CHECK_EQUAL(stop_point->name, "Gare du Nord Surface");
+    BOOST_CHECK_EQUAL(stop_point->external_code, "frpno:surface");
+    BOOST_CHECK_CLOSE(stop_point->coord.x, 2.355381, 0.0000001);
+    BOOST_CHECK_CLOSE(stop_point->coord.y, 48.880531, 0.0000001);
     BOOST_CHECK_EQUAL(stop_point->stop_area, stop_area);
 
     navimake::types::VehicleJourney* vj = data.vehicle_journeys[0];
-    BOOST_CHECK_EQUAL(vj->name, "AB1");
+    BOOST_CHECK_EQUAL(vj->name, "41");
     BOOST_CHECK_EQUAL(vj->name, vj->external_code);
     BOOST_CHECK_EQUAL(vj->route, route);
 
     navimake::types::StopTime* stop = data.stops[0];
     BOOST_CHECK_EQUAL(stop->ODT, false);
     BOOST_CHECK_EQUAL(stop->arrival_time, 21600);
-    BOOST_CHECK_EQUAL(stop->departure_time, 21600);
-    BOOST_CHECK_EQUAL(stop->route_point->stop_point->external_code, "STAGECOACH");
-    BOOST_CHECK_EQUAL(stop->route_point->stop_point->name, "Stagecoach Hotel & Casino (Demo)");
-    BOOST_CHECK_EQUAL(stop->route_point->stop_point, data.stop_points[3]);
+    BOOST_CHECK_EQUAL(stop->departure_time, 21601);
+    BOOST_CHECK_EQUAL(stop->route_point->stop_point->external_code, "frpno:metro4");
+    BOOST_CHECK_EQUAL(stop->route_point->stop_point->name, "Gare du Nord metro ligne 4");
+    BOOST_CHECK_EQUAL(stop->route_point->stop_point, data.stop_points[2]);
 
 }
 

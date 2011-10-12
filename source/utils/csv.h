@@ -11,8 +11,8 @@
 
 class CsvReader {
     public:
-        CsvReader (const std::string& filename, char separator=';', std::string encoding="UTF-8");
-        ~CsvReader ();
+        CsvReader(const std::string& filename, char separator=';', std::string encoding="UTF-8");
+        ~CsvReader();
         std::vector<std::string> next();
         bool eof() const;
         void close();
