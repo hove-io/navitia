@@ -18,7 +18,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
             switch(type){
                 case nt::eStopArea:
                     child = item->mutable_stop_area();
-                    navitia::fill_pb_object<nt::eStopArea>(idx, data, child);
+                    navitia::fill_pb_object<nt::eStopArea>(idx, data, child, 2);
                     item->set_name(data.stop_areas[idx].name);
                     break;
                 case nt::eCity:
