@@ -9,6 +9,29 @@
 #include <boost/spirit/include/phoenix_operator.hpp>
 #include <boost/lexical_cast.hpp>
 
+// Oui... le debug c'est à la porcasse, par flemme de devoir compiler log4cpp sous windows
+//#define DEBUG
+
+struct Logger{
+    template<class T>
+#ifdef DEBUG
+    Logger & operator<<(const T & t){
+        std::cout << t;
+        return *this;
+    }
+#else
+    Logger & operator<<(const T &){
+        return *this;
+    }
+#endif
+
+    ~Logger() {
+#ifdef DEBUG
+        std::cout << std::endl;
+#endif
+    }
+};
+
 namespace greg = boost::gregorian;
 namespace qi = boost::spirit::qi;
 namespace ph = boost::phoenix;
@@ -41,7 +64,7 @@ State parse_state(const std::string & state_str){
             if(state.mode != "") throw invalid_key();
             state.mode = cond.value;
         }
-        else if(cond.key == "stop_area"){
+        else if(cond.key == "stoparea"){
             if(state.stop_area != "") throw invalid_key();
             state.stop_area = cond.value;
         }
@@ -107,6 +130,7 @@ void Fare::init(const std::string & filename, const std::string & prices_filenam
          State end = parse_state(row.at(1));
 
          Transition transition;
+         transition.csv_string = boost::algorithm::join(row, "; ");
          transition.start_conditions = parse_conditions(row.at(2));
          transition.end_conditions = parse_conditions(row.at(3));
          std::vector<std::string> global_conditions;
@@ -205,6 +229,7 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
     // Étiquette de départ
     labels[0].push_back(Label());
     BOOST_FOREACH(const std::string & section_key, section_keys){
+        Logger() << "Nouvelle section à étudier : " << section_key;
         std::vector< std::vector<Label> > new_labels(nb_nodes);
         SectionKey section(section_key);
         try {
@@ -216,6 +241,7 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
                         Ticket ticket;
                         Transition transition = g[e];
                         if (valid(g[u], label) &&  transition.valid(section_key, label)){
+                            Logger() << "\tTransition valide : " << transition.csv_string;
                             if(transition.ticket_key != ""){
                                 ticket = fare_map[transition.ticket_key].get_fare(section.date);
                             }
@@ -236,11 +262,12 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
                                         
                                     ticket_od.sections.push_back(section);
                                     Label n = next;
+                                    n.cost += ticket_od.value;
                                     n.tickets.back() = ticket_od;
                                     n.current_type = Ticket::FlatFare;
-                                    
-                                    //new_labels.at(0).push_back(next_label(label,ticket_od , section));
+
                                     new_labels.at(0).push_back(n);
+                                    Logger() << "\t\tOn résoud un ticket OD : " << ticket_od.value;
                                 } catch (no_ticket) {}
 
                             } else {
@@ -255,6 +282,7 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
         }
         // On est tombé sur un segment exclusif : on est obligé d'utilisé ce ticket
         catch(Ticket ticket) {
+            Logger() << "\t On tombe sur un segment exclusif";
             new_labels.clear();
             new_labels.resize(nb_nodes);
             BOOST_FOREACH(Label label, labels.at(0)){
@@ -271,6 +299,7 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
     size_t best_num_tickets = std::numeric_limits<size_t>::max();
     int best_cost = std::numeric_limits<int>::max();
     BOOST_FOREACH(Label label, labels.at(0)){
+        Logger() << "prix : " << label.cost;
         if(label.cost < best_cost || (label.cost == best_cost && label.tickets.size() < best_num_tickets)){
             result = label.tickets;
             best_cost = label.cost;
@@ -278,7 +307,7 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
         }
     }
 
-    std::cout << "nombre de résultats : " << result.size() << std::endl;
+    Logger() << "nombre de résultats : " << result.size();
     return result;
 }
 
@@ -378,7 +407,7 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
     {
         if(cond.key == "zone" && cond.value != section.start_zone)
             result = false;
-        else if(cond.key == "stop_area" && cond.value != section.start_stop_area)
+        else if(cond.key == "stoparea" && cond.value != section.start_stop_area)
             result = false;
         else if(cond.key == "duration") {
             // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
@@ -394,7 +423,7 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
     {
         if(cond.key == "zone" && cond.value != section.dest_zone)
             result = false;
-        else if(cond.key == "stop_area" && cond.value != section.dest_stop_area)
+        else if(cond.key == "stoparea" && cond.value != section.dest_stop_area)
             result = false;
         else if(cond.key == "duration") {
             // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
@@ -431,7 +460,8 @@ void Fare::load_od_stif(const std::string & filename){
         count++;
 
     }
-    std::cout << "Nombre de tarifs OD Île-de-France : " << count << std::endl;
+  //  std::cout << "Nombre de tarifs OD Île-de-France : " << count << std::endl;
+    Logger() << "Nombre de tarifs OD Île-de-France : " << count;
 }
 
 DateTicket Fare::get_od(Label label, SectionKey section){

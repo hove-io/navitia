@@ -6,7 +6,7 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
     State state;
 
     // * correspond au state vide, toujours vrai
-    BOOST_CHECK(parse_state("*") == state);
+      BOOST_CHECK(parse_state("*") == state);
     BOOST_CHECK(parse_state("") == state);
 
     // on n'est pas case sensitive
@@ -17,17 +17,18 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
     // on ignore les espaces
     BOOST_CHECK(parse_state(" mode = Metro  ").mode == "metro");
     BOOST_CHECK(parse_state("line=L1").line == "l1");
-    BOOST_CHECK(parse_state("stop_area=chatelet").stop_area == "chatelet");
+    //parse_state("stop_area=chatelet").stop_area;
+    BOOST_CHECK(parse_state("stoparea=chatelet").stop_area == "chatelet");
 
     // Qu'est-ce qui se passe avec des boulets ?
-    BOOST_CHECK_THROW(parse_state("mode=Metro=foo"), invalid_condition);
+    BOOST_CHECK_THROW(parse_state("mode=Metro=foo"), std::exception);
 
     // On ne respecte pas la grammaire => exception
     BOOST_CHECK_THROW(parse_state("coucou=moo"), invalid_key);
 
 
     // On essaye de parser des choses plus compliquées
-    State state2 = parse_state("mode=metro&stop_area=chatelet");
+    State state2 = parse_state("mode=metro&stoparea=chatelet");
     BOOST_CHECK(state2.mode == "metro");
     BOOST_CHECK(state2.stop_area == "chatelet");
 
@@ -67,8 +68,8 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     // Un trajet simple
     keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;02|06;02|10;1;1;metro");
     Fare f;
-    f.init("/home/kinou/workspace/navitiacpp/build_debug/fare/idf.fares", "/home/kinou/workspace/navitiacpp/build_debug/fare/prix.csv");
-    f.load_od_stif("/home/kinou/workspace/navitiacpp/build_debug/fare/tarifs_od.csv");
+    f.init("/home/tristram/fare/idf.fares", "/home/tristram/fare/prix.csv");
+    f.load_od_stif("/home/tristram/fare/tarifs_od.csv");
     std::vector<Ticket> res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
     BOOST_CHECK_EQUAL(res.at(0).value , 170);
@@ -234,8 +235,29 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.at(1).sections.at(0).section, keys.at(1));
     BOOST_CHECK_EQUAL(res.at(1).sections.at(1).section, keys.at(2));
 
+    // On prend le RER intramuros
+    keys.clear();
+    keys.push_back(";8727141;RER B;8770870;2011|05|31;09|28;09|39;1;1;RapidTransit"); // Aulnay -> CDG "intramuros"
+    res = f.compute(keys);
+    BOOST_CHECK_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res.at(0).value, 170);
 
+    // 13/10/2011 : youpppiiii on peut prendre "parfois" le tramway avec un ticket O/D
+    keys.clear();
+    keys.push_back(";8711388;T4;8727141;2011|05|31;09|28;09|39;4;4;Tramway"); // L'abbaye -> Aulnay
+    keys.push_back(";8727141;RER B;8770870;2011|05|31;09|28;09|39;4;4;RapidTransit"); // Aulnay -> CDG
+    res = f.compute(keys);
+    BOOST_CHECK_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res.at(0).value, 280);
 
+    keys.clear();
+    keys.push_back(";bled_paumé;bus_magique;8711388;2011|05|31;09|28;09|39;4;4;Bus"); // Bled Paumé -> L'Abbaye
+    keys.push_back(";8711388;T4;8727141;2011|05|31;09|28;09|39;4;4;Tramway"); // L'abbaye -> Aulnay
+    keys.push_back(";8727141;RER B;8770870;2011|05|31;09|28;09|39;4;4;RapidTransit"); // Aulnay -> CDG
+    res = f.compute(keys);
+    BOOST_CHECK_EQUAL(res.size(), 2);
+    BOOST_CHECK_EQUAL(res.at(0).value, 170);
+    BOOST_CHECK_EQUAL(res.at(1).value, 215);
 
 }
 

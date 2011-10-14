@@ -143,6 +143,7 @@ struct Transition {
     std::string ticket_key; //< clef vers le tarif correspondant
     std::string global_condition; //< condition telle que exclusivité ou OD
 
+    std::string csv_string; //< Ligne brute dans le CSV
     bool valid(const SectionKey & section, const Label & label) const;
 };
 
