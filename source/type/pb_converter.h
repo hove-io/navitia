@@ -13,6 +13,9 @@ namespace nt = navitia::type;
  * @param data reférence vers l'objet Data de l'application
  * @param message l'objet protocol buffer a remplire 
  * @param depth profondeur de remplissage
+ *
+ * @throw std::out_of_range si l'idx n'est pas valide
+ * @throw std::bad_cast si le message PB n'est pas adapté
  */
 template<nt::Type_e type>
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int max_depth = 0){throw std::exception();}
@@ -44,8 +47,10 @@ void fill_pb_object<nt::eStopArea>(nt::idx_t idx, const nt::Data& data, google::
     stop_area->set_name(sa.name);
     stop_area->mutable_coord()->set_x(sa.coord.x);
     stop_area->mutable_coord()->set_y(sa.coord.y);
-    if(max_depth >= 1){
-        fill_pb_object<nt::eCity>(sa.city_idx, data, stop_area->mutable_child()->add_city_list(), max_depth-1);
+    if(max_depth > 0){
+        try{
+            fill_pb_object<nt::eCity>(sa.city_idx, data, stop_area->mutable_child()->add_city_list(), max_depth-1);
+        }catch(std::out_of_range e){}
     }
 }
 
