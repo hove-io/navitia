@@ -3,6 +3,7 @@
 #include <boost/assign.hpp>
 #include <boost/foreach.hpp>
 #include "data.h"
+#include <proj_api.h>
 
 namespace navitia { namespace type {
 
@@ -40,6 +41,39 @@ void ValidityPattern::remove(int day){
 
 std::string ValidityPattern::str() const {
     return days.to_string();
+}
+
+GeographicalCoord::GeographicalCoord(double x, double y, const Projection& projection) : x(x), y(y){
+    GeographicalCoord tmp_coord = this->convert_to(Projection(), projection);
+    this->x = tmp_coord.x;
+    this->y = tmp_coord.y;
+}
+
+
+GeographicalCoord GeographicalCoord::convert_to(const Projection& projection, const Projection& current_projection) const{
+    projPJ pj_src = pj_init_plus(current_projection.definition.c_str());
+    projPJ pj_dest = pj_init_plus(projection.definition.c_str());
+
+    double x, y;
+    x = this->x;
+    y = this->y;
+
+    if(current_projection.is_degree){
+        x *= DEG_TO_RAD;
+        y *= DEG_TO_RAD;
+    }
+
+    pj_transform(pj_src, pj_dest, 1, 1, &x, &y, NULL);
+
+    if(projection.is_degree){
+        x *= RAD_TO_DEG;
+        y *= RAD_TO_DEG;
+    }
+
+    pj_free(pj_dest);
+    pj_free(pj_src);
+    return GeographicalCoord(x, y);
+
 }
 
 static_data * static_data::instance = 0;

@@ -56,25 +56,46 @@ struct NavitiaHeader{
 
 };
 
+/**
+ * Représente un systéme de projection
+ * le constructeur par défaut doit renvoyer le sytéme de projection utilisé par l'application en interne
+ * WGS84 dans notre cas
+ */
+struct Projection{
+    std::string name;
+    std::string definition;
+    bool is_degree;
+
+    Projection(): name("wgs84"), definition("+init=epsg:4326"), is_degree(true){}
+
+    Projection(const std::string& name, const std::string& definition, bool is_degree = false):
+        name(name), definition(definition), is_degree(is_degree){}
+
+};
+
 struct GeographicalCoord{
     double x;
     double y;
 
     GeographicalCoord() : x(0), y(0) {}
     GeographicalCoord(double x, double y) : x(x), y(y) {}
+    GeographicalCoord(double x, double y, const Projection& projection);
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & x & y;
+        ar & x & y;// & current_projection;
     }
+
+    GeographicalCoord convert_to(const Projection& projection, const Projection& current_projection = Projection()) const;
 };
 
 struct Country: public NavitiaHeader, Nameable {
     idx_t main_city_idx;
     std::vector<idx_t> district_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+
         ar & name & main_city_idx & district_list & idx;
     }
-    std::vector<idx_t> get(Type_e type, const Data & data) const ;
+    std::vector<idx_t> get(Type_e type, const Data & data) const;
 };
 
 struct District : public NavitiaHeader, Nameable {

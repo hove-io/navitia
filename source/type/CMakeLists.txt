@@ -16,7 +16,7 @@ PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS type.proto)
 
 SET(TYPES_SRC type.h type.cpp data.h data.cpp ${PROTO_SRCS} ${PROTO_HDRS} ${CMAKE_SOURCE_DIR}/../third_party/fastlz/fastlz.c)
 add_library(types ${TYPES_SRC})
-target_link_libraries(types ${Boost_LIBRARIES})
+target_link_libraries(types ${Boost_LIBRARIES} proj)
 
 
 add_executable(navijkstra navijkstra.cpp )
