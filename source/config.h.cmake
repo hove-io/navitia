@@ -1,0 +1,1 @@
+#define FIXTURES_DIR "${FIXTURES_DIR}"

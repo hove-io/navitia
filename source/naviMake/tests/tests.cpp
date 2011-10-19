@@ -4,13 +4,14 @@
 #define BOOST_TEST_MODULE test_indexes
 #include <boost/test/unit_test.hpp>
 #include <string>
+#include "config.h"
 
-const std::string gtfs_path = "../../source/naviMake/tests/fixture/gtfs";
+const std::string gtfs_path = "/navimake/gtfs";
 
 
 BOOST_AUTO_TEST_CASE(parse_gtfs){
     navimake::Data data;
-    navimake::connectors::GtfsParser parser(gtfs_path, "20110101");
+    navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path, "20110101");
     parser.fill(data);
 
     BOOST_CHECK_EQUAL(data.lines.size(), 2);

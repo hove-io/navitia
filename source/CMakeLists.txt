@@ -35,6 +35,10 @@ IF(MSVC)
 	
 ENDIF(MSVC)
 
+SET(FIXTURES_DIR ${CMAKE_SOURCE_DIR}/../fixtures/)
+configure_file(${CMAKE_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR}/CTestCustom.cmake)
+configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
+
 ENABLE_TESTING()
 
 add_subdirectory(WS_commons)

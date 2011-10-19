@@ -2,6 +2,7 @@ FIND_PACKAGE(Boost 1.40.0 COMPONENTS unit_test_framework REQUIRED)
 link_directories ( ${Boost_LIBRARY_DIRS} )
 include_directories ( ${Boost_INCLUDE_DIRS} 
                       ${CMAKE_SOURCE_DIR}
+                      ${CMAKE_BINARY_DIR}
 )
 
 SET(SOURCE

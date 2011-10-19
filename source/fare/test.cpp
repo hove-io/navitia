@@ -2,6 +2,9 @@
 #define BOOST_TEST_MODULE test_fares
 #include <boost/test/unit_test.hpp>
 #include "fare.h"
+
+#include "config.h"
+
 BOOST_AUTO_TEST_CASE(parse_state_test){
     State state;
 
@@ -68,8 +71,8 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     // Un trajet simple
     keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;02|06;02|10;1;1;metro");
     Fare f;
-    f.init("/home/tristram/fare/idf.fares", "/home/tristram/fare/prix.csv");
-    f.load_od_stif("/home/tristram/fare/tarifs_od.csv");
+    f.init(std::string(FIXTURES_DIR) + "/fare/idf.fares", std::string(FIXTURES_DIR) + "/fare/prix.csv");
+    f.load_od_stif(std::string(FIXTURES_DIR) + "/fare/tarifs_od.csv");
     std::vector<Ticket> res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
     BOOST_CHECK_EQUAL(res.at(0).value , 170);
