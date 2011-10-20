@@ -83,10 +83,11 @@ class Worker : public BaseWorker<navitia::type::Data> {
         }
         Locker locker(d);
         if(!locker.locked){
+            //on est en cours de chargement
             rd.status_code = 500;
             rd.content_type = "text/plain";
             rd.response << "loading";
-            
+            return rd;
         }
 
         std::string name;
