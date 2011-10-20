@@ -31,13 +31,18 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
 
-IF(MSVC)
-	
-ENDIF(MSVC)
-
+#gestion des fixtures pour les test unitaire
 SET(FIXTURES_DIR ${CMAKE_SOURCE_DIR}/../fixtures/)
 configure_file(${CMAKE_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR}/CTestCustom.cmake)
-configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
+
+
+INCLUDE (CheckIncludeFiles)
+CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
+
+
+
+#ajout a l'include path le repertoirre de compilation, pour géré le config.h
+include_directories (${CMAKE_CURRENT_BINARY_DIR})
 
 ENABLE_TESTING()
 
@@ -52,3 +57,6 @@ add_subdirectory(fare)
 add_subdirectory(gateway_mod)
 add_subdirectory(visu)
 add_subdirectory(street_network)
+
+#on génére le fichier config.h
+configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)

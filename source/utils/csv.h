@@ -1,11 +1,12 @@
 #pragma once
 
+#include "config.h"
 
 #include <string>
 #include <fstream>
 #include <vector>
 #include <boost/tokenizer.hpp>
-#ifndef WIN32
+#ifdef HAVE_ICONV_H
 #include "utils/encoding_converter.h"
 #endif
 
@@ -25,7 +26,7 @@ class CsvReader {
         std::ifstream file;
         bool closed;
         boost::escaped_list_separator<char> functor;
-#ifndef WIN32
+#ifdef HAVE_ICONV_H
         EncodingConverter* converter;
 #endif
 

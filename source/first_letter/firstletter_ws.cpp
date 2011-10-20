@@ -11,7 +11,10 @@ using namespace webservice;
 namespace nt = navitia::type;
 
 class Worker : public BaseWorker<navitia::type::Data> {
-
+    /**
+     * se charge de remplir l'objet protocolbuffer firstletter passé en paramétre
+     *
+     */
     void create_pb(const std::vector<nt::idx_t>& result, const nt::Type_e type, const nt::Data& data, pbnavitia::FirstLetter& pb_fl){
         BOOST_FOREACH(nt::idx_t idx, result){
             pbnavitia::FirstLetterItem* item = pb_fl.add_items();
