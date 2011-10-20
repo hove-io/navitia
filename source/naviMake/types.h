@@ -30,16 +30,6 @@ struct TransmodelHeader{
     TransmodelHeader() : idx(0){}
 };
 
-struct GeographicalCoord{
-    double x;
-    double y;
-
-    GeographicalCoord() : x(0), y(0) {}
-    
-    nt::GeographicalCoord transform() const;
-    
-};
-
 
 //forward declare
 class District;
@@ -88,7 +78,7 @@ struct City : public TransmodelHeader, Nameable {
     bool use_main_stop_area_property;
 
     Department* department;
-    GeographicalCoord coord;
+    nt::GeographicalCoord coord;
 
     struct Transformer{
         inline navitia::type::City operator()(const City* city){return this->operator()(*city);}
@@ -140,7 +130,7 @@ struct Connection: public TransmodelHeader {
 };
 
 struct StopArea : public TransmodelHeader, Nameable{
-    GeographicalCoord coord;
+    nt::GeographicalCoord coord;
     int properties;
     std::string additional_data;
 
@@ -326,7 +316,7 @@ public:
 };
 
 struct StopPoint : public TransmodelHeader, Nameable{
-    GeographicalCoord coord;
+    nt::GeographicalCoord coord;
     int fare_zone;
 
     std::string address_name;

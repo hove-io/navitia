@@ -1,7 +1,7 @@
 #include "naviMake/data.h"
 #include "naviMake/gtfs_parser.h"
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE test_indexes
+#define BOOST_TEST_MODULE test_navimake
 #include <boost/test/unit_test.hpp>
 #include <string>
 #include "config.h"

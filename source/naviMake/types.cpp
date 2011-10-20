@@ -126,16 +126,12 @@ bool Connection::operator<(const Connection& other) const{
 }
 
 
-nt::GeographicalCoord GeographicalCoord::transform()const {
-    return nt::GeographicalCoord(x, y);
-}
-
 navitia::type::StopArea StopArea::Transformer::operator()(const StopArea& stop_area){
     navitia::type::StopArea sa;
     sa.id = stop_area.id;
     sa.idx = stop_area.idx;
     sa.external_code = stop_area.external_code;
-    sa.coord = stop_area.coord.transform();
+    sa.coord = stop_area.coord;
     sa.comment = stop_area.comment;
     sa.name = stop_area.name;
 
@@ -172,7 +168,7 @@ nt::StopPoint StopPoint::Transformer::operator()(const StopPoint& stop_point){
     nt_stop_point.idx = stop_point.idx;
     nt_stop_point.external_code = stop_point.external_code;
     nt_stop_point.name = stop_point.name;
-    nt_stop_point.coord = stop_point.coord.transform();
+    nt_stop_point.coord = stop_point.coord;
     nt_stop_point.fare_zone = stop_point.fare_zone;
 
     nt_stop_point.address_name      = stop_point.address_name;
@@ -229,7 +225,7 @@ nt::City City::Transformer::operator()(const City& city){
     nt_city.external_code = city.external_code;
     nt_city.name = city.name;
     nt_city.comment = city.comment;
-    nt_city.coord = city.coord.transform();
+    nt_city.coord = city.coord;
     nt_city.main_postal_code = city.main_postal_code;
     nt_city.use_main_stop_area_property = city.use_main_stop_area_property;
     nt_city.main_city = city.main_city;

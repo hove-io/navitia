@@ -100,6 +100,9 @@ namespace navimake{
             BOOST_FOREACH(navimake::types::Route* route, routes){
                 delete route;
             }
+            BOOST_FOREACH(navimake::types::RoutePoint* route_point, route_points){
+                delete route_point;
+            }
             BOOST_FOREACH(navimake::types::StopTime* stop, stops){
                 delete stop;
             }
