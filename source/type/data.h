@@ -2,6 +2,8 @@
 #include "type.h"
 #include "first_letter/first_letter.h"
 #include <boost/serialization/version.hpp>
+#include <boost/thread/shared_mutex.hpp>
+
 namespace navitia { namespace type {
 
 /** Contient toutes les données théoriques du référentiel transport en communs
@@ -41,6 +43,9 @@ public:
     //first letter
     FirstLetter<idx_t> stop_area_first_letter;
     FirstLetter<idx_t> city_first_letter;
+
+
+    boost::shared_mutex load_mutex;
 
     friend class boost::serialization::access;
     public:

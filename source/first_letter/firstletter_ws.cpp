@@ -11,6 +11,23 @@ using namespace webservice;
 namespace nt = navitia::type;
 
 class Worker : public BaseWorker<navitia::type::Data> {
+
+    struct Locker{
+        bool locked;
+        nt::Data& data;
+        Locker(navitia::type::Data& data) : data(data) { locked = data.load_mutex.try_lock_shared();}
+        
+        ~Locker() {
+            if(locked){
+                data.load_mutex.unlock_shared();
+            }
+        }
+        private: 
+            Locker(const Locker&);
+            Locker& operator=(const Locker&);
+            
+    };
+
     /**
      * se charge de remplir l'objet protocolbuffer firstletter passé en paramétre
      *
@@ -35,7 +52,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
             }
         }
     }
-
+    
+    /**
+     * methode qui parse le parametre filter afin de retourner une liste de Type_e
+     */
     std::vector<nt::Type_e> parse_param_filter(const std::string& filter){
         std::vector<nt::Type_e> result;
         if(filter.empty()){//on utilise la valeur par défaut si pas de paramétre
@@ -58,6 +78,17 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData firstletter(RequestData& request, navitia::type::Data & d){
         ResponseData rd;
+        if(!d.loaded){
+            this->load(request, d);
+        }
+        Locker locker(d);
+        if(!locker.locked){
+            rd.status_code = 500;
+            rd.content_type = "text/plain";
+            rd.response << "loading";
+            
+        }
+
         std::string name;
         std::vector<nt::Type_e> filter = parse_param_filter(request.params["filter"]);
         name = request.params["name"];
@@ -87,8 +118,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData load(RequestData, navitia::type::Data & d){
         //attention c'est mal, pas de lock sur data
         ResponseData rd;
-        d.load_flz("data.nav.flz");
+        d.load_mutex.lock();
         d.loaded = true;
+        d.load_flz("data.nav.flz");
+        d.load_mutex.unlock();
         rd.response << "loaded!";
         rd.content_type = "text/html";
         rd.status_code = 200;

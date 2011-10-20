@@ -39,7 +39,8 @@ class Navitia {
         Navitia(const Navitia& nav) : url(nav.url), unused_thread(nav.unused_thread), last_request_at(0), current_thread(0), nb_errors(0), last_errors_at(0), enable(true), reactivate_at(0), next_decrement(0){}
 
         std::pair<int, std::string> query(const std::string& request);
-
+        
+        /// la comparaison s'effectue uniquement sur l'url
         bool operator==(const Navitia& other){
             return this->url == other.url;
         }
