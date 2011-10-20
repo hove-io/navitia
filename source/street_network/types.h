@@ -77,6 +77,7 @@ struct PathItem{
     nt::idx_t way_idx; //< Voie sur laquel porte le bout du trajet
     float length; //< Longueur du trajet effectué sur cette voie
     std::vector<nt::idx_t> segments; //< Segments traversés
+    PathItem() : length(0){}
 };
 
 /** Itinéraire complet */
@@ -111,6 +112,10 @@ struct StreetNetwork {
 
     void load_flz(const std::string & filename);
     void save_flz(const std::string & filename);
+
+    /// Calcule le meilleur itinéraire entre deux listes de nœuds
+    Path compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations);
+
 
 };
 

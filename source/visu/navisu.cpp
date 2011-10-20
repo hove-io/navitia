@@ -14,7 +14,7 @@ navisu::navisu(QWidget *parent) :
   //  MyMarbleWidget * my = new MyMarbleWidget(ui->carto);
     ui->my->setMapThemeId("earth/openstreetmap/openstreetmap.dgml");
     ui->my->show();
-    ui->my->setHome(2.36, 48.84, 2500);
+  //  ui->my->setHome(2.36, 48.84, 2500);
 
     //ui->carto->model()->
 }

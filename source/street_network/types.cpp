@@ -168,6 +168,68 @@ void StreetNetwork::load_bdcity(std::string filename){
 
 }
 
+Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations) {
+    vertex_t start = starts.front();
+    Path p;
+    // Tableau des prédécesseurs de chaque nœuds
+    std::vector<vertex_t> preds(boost::num_vertices(this->graph));
+
+    // Tableau des distances des nœuds à l'origine
+    // si pred[v] == v, c'est soit qu'il n'y a pas de chemin possible, soit c'est l'origine
+    std::vector<float> dists(boost::num_vertices(this->graph));
+
+    boost::dijkstra_shortest_paths(this->graph,
+                                   start, // nœud de départ
+                                   boost::predecessor_map(&preds[0])
+                                   .distance_map(&dists[0])
+                                   .weight_map(boost::get(&Edge::length, this->graph))
+                                   );
+
+    // On cherche la destination la plus proche
+    vertex_t best_destination;
+    float best_distance = std::numeric_limits<float>::max();
+    BOOST_FOREACH(vertex_t destination, destinations){
+        if(dists[destination] < best_distance) {
+            best_distance = dists[destination];
+            best_destination = destination;
+        }
+    }
+
+    // Si un chemin existe
+    if(best_distance < std::numeric_limits<float>::max()){
+        p.length = best_distance;
+        // On reconstruit le chemin, on part de la destination pour remonter à l'arrivée
+        // Il est donc à l'envers
+        std::vector<vertex_t> reverse_path;
+        while(best_destination != preds[best_destination]){
+            reverse_path.push_back(best_destination);
+            best_destination = preds[best_destination];
+        }
+
+        // On reparcourre tout dans le bon ordre
+        idx_t last_way =  std::numeric_limits<idx_t>::max();
+        PathItem path_item;
+        for(size_t i = reverse_path.size(); i > 0; --i){
+            vertex_t u = reverse_path[i-1];
+            vertex_t v = reverse_path[i];
+            Edge edge = graph[boost::edge(u, v, graph).first];
+            nt::GeographicalCoord coord(graph[v].lon, graph[v].lat);
+            p.coordinates.push_back(coord);
+            path_item.way_idx = edge.way_idx;
+
+
+            if(edge.way_idx != last_way){
+                p.path_items.push_back(path_item);
+                last_way = edge.way_idx;
+                path_item.length += edge.length;
+            }
+        }
+        p.path_items.push_back(path_item);
+    }
+
+    return p;
+
+}
 
 
 void StreetNetwork::save(const std::string & filename) {
