@@ -1,20 +1,35 @@
 #pragma once
 #include <boost/thread/shared_mutex.hpp>
 
+/**
+ * représente une instance NAViTiA
+ */
 class Navitia {
     public:
+        /**
+         * url compléte vers navitia
+         */
         std::string url;
+        ///nombre de thread non utilisé, utilisé pour pour la répartition, cette valeur peut etre négative
         int unused_thread;
+        ///timestamp de la derniére requétes
         int last_request_at;
+
         boost::shared_mutex mutex;
+        ///nombre de requétes en cours sur ce navitia
         int current_thread;
+        ///nombre d'erreurs
         int nb_errors;
+        //timestamps de la derniére erreurs
         int last_errors_at;
+        ///état
         bool enable;
+        ///timestamp a partir duquel ce navitia pourras etre réactivé
         int reactivate_at;
+        ///ttimestamp ou le nombre d'erreurs pourras etre décrémenté de 1
         int next_decrement;
 
-
+        ///temps de désactivation par erreurs
         static const int desactivation_time = 5;
 
 
