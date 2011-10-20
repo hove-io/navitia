@@ -10,6 +10,9 @@
 #include "utils/encoding_converter.h"
 #endif
 
+/**
+ * lecteur CSV basique, si iconv est disponible, le resultat serat retourné en UTF8
+ */
 class CsvReader {
     public:
         CsvReader(const std::string& filename, char separator=';', std::string encoding="UTF-8");

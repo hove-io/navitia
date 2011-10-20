@@ -7,7 +7,13 @@
 class Pool{
     protected:
         boost::shared_mutex mutex;
-
+        
+        /**
+         * fonctor utilisé pour le tris des instances de navitia
+         * on met a la fin les instances en erreurs 
+         * et on favorise les instances les moins chargé en fonction de leurs capacité en thread disponible
+         *
+         */
         struct Sorter{
             bool operator()(const Navitia* a, const Navitia* b){
                 //on favorise celui qui a le moins d'erreurs
@@ -24,7 +30,8 @@ class Pool{
                 }
             }
         };
-
+        
+        ///fonctor utilisé pour cherché un navitia dans la liste
         struct Comparer{
             Navitia ref;
             Comparer(const Navitia& ref) : ref(ref){}
@@ -37,17 +44,23 @@ class Pool{
     public:
         
         int nb_threads;
+        ///liste des instances navitia trié sous la forme d'un tas
         std::deque<Navitia*> navitia_list;
 
         Pool();
-
+        
+        /// assure la libération du navitia, et retris la liste
         inline void release_navitia(Navitia* navitia){
             navitia->release();
             mutex.lock();
             std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
             mutex.unlock();
         }
-
+    
+        /**
+         * Methode qui assure le load Balancing
+         *
+         */
         inline Navitia* next(){
             boost::lock_guard<boost::shared_mutex> lock(mutex);
             std::pop_heap(navitia_list.begin(), navitia_list.end(), Sorter());
@@ -57,8 +70,8 @@ class Pool{
 
             return nav;
         }
-
         void add_navitia(Navitia* navitia);
+
         void remove_navitia(const Navitia& navitia);
         void check_desactivated_navitia();
 

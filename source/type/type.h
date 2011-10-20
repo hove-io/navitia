@@ -82,7 +82,7 @@ struct GeographicalCoord{
     GeographicalCoord(double x, double y, const Projection& projection);
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & x & y;// & current_projection;
+        ar & x & y;
     }
 
     GeographicalCoord convert_to(const Projection& projection, const Projection& current_projection = Projection()) const;

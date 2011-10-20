@@ -13,7 +13,6 @@ namespace bg = boost::graph;
 namespace nt = navitia::type;
 namespace navitia { namespace streetnetwork {
 
-typedef unsigned int idx_t;
 /** Propriétés Nœud (intersection entre deux routes) */
 struct Vertex {
     double lon;
@@ -26,7 +25,7 @@ struct Vertex {
 
 /** Propriétés des arcs */
 struct Edge {
-    idx_t way_idx; //< indexe vers le nom de rue
+    nt::idx_t way_idx; //< indexe vers le nom de rue
     float length; //< longeur en mètres de l'arc
     bool cyclable; //< est-ce que le segment est accessible à vélo ?
     int start_number; //< numéro de rue au début du segment
@@ -61,10 +60,10 @@ typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
 
 /** Nommage d'une voie (anciennement "adresse"). Typiquement le nom de rue **/
 struct Way{
-    idx_t idx;
+    nt::idx_t idx;
     std::string name;
     std::string city;
-    idx_t city_idx;
+    nt::idx_t city_idx;
     std::vector< std::pair<vertex_t, vertex_t> > edges;
 
 
@@ -75,9 +74,9 @@ struct Way{
 
 /** Un bout d'itinéraire : un nom de voie et une liste de segments */
 struct PathItem{
-    idx_t way_idx; //< Voie sur laquel porte le bout du trajet
+    nt::idx_t way_idx; //< Voie sur laquel porte le bout du trajet
     float length; //< Longueur du trajet effectué sur cette voie
-    std::vector<idx_t> segments; //< Segments traversés
+    std::vector<nt::idx_t> segments; //< Segments traversés
 };
 
 /** Itinéraire complet */
@@ -93,7 +92,7 @@ struct StreetNetwork {
     Graph graph;
 
     ///map temporaire pour la correspondance way => city
-    std::map<std::string, idx_t> city_map;
+    std::map<std::string, nt::idx_t> city_map;
 
     void load_bdtopo(std::string filename);
     void load_bdcity(std::string filename);

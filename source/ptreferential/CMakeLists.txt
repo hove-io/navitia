@@ -2,7 +2,6 @@ FIND_PACKAGE(Boost 1.40.0 COMPONENTS serialization date_time regex thread iostre
 find_package(Protobuf REQUIRED)
 link_directories (${Boost_LIBRARY_DIRS})
 include_directories ( ${Boost_INCLUDE_DIRS}
-                      ${CMAKE_SOURCE_DIR}
                       ${CMAKE_SOURCE_DIR}/type
                       ${CMAKE_SOURCE_DIR}
                       ${CMAKE_SOURCE_DIR}/../third_party
@@ -10,7 +9,7 @@ include_directories ( ${Boost_INCLUDE_DIRS}
 )
 
 
-SET(PTREF_SRC ptreferential.h ptreferential.cpp indexes.h where.h reflexion.h  ptref_graph.cpp)
+SET(PTREF_SRC ptreferential.h ptreferential.cpp indexes.h where.h reflexion.h ptref_graph.cpp)
 add_library(ptreferential ${PTREF_SRC})
 target_link_libraries(ptreferential ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} types)
 

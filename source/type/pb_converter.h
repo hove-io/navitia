@@ -1,8 +1,8 @@
 #include "type.h"
 #include "type.pb.h"
 
-namespace navitia{
 namespace nt = navitia::type;
+namespace navitia{
 
 
 

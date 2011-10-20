@@ -152,7 +152,7 @@ void StreetNetwork::load_bdcity(std::string filename){
     size_t name = cols["NOM"];
     size_t insee = cols["CODE_INSEE"];
     
-    idx_t counter = 0;
+    nt::idx_t counter = 0;
     for(reader.next(); !reader.eof() ;row = reader.next()){
         if(row.size() < 2)
             continue;
