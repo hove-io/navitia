@@ -2,7 +2,6 @@ FIND_PACKAGE(Boost 1.40.0 COMPONENTS graph serialization REQUIRED)
 link_directories ( ${Boost_LIBRARY_DIRS} )
 include_directories ( ${Boost_INCLUDE_DIRS}
                       ${CMAKE_SOURCE_DIR}
-                      ${CMAKE_SOURCE_DIR}/../third_party/fastlz
                       ${CMAKE_SOURCE_DIR}/../third_party
 )
 
