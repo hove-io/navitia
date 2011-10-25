@@ -117,7 +117,6 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     
     ResponseData load(RequestData, navitia::type::Data & d){
-        //attention c'est mal, pas de lock sur data
         ResponseData rd;
         d.load_mutex.lock();
         d.loaded = true;

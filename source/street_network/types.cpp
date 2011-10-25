@@ -207,7 +207,7 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
         }
 
         // On reparcourre tout dans le bon ordre
-        idx_t last_way =  std::numeric_limits<idx_t>::max();
+        nt::idx_t last_way =  std::numeric_limits<nt::idx_t>::max();
         PathItem path_item;
         for(size_t i = reverse_path.size(); i > 0; --i){
             vertex_t u = reverse_path[i-1];

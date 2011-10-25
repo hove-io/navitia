@@ -75,7 +75,16 @@ webservice::ResponseData Worker::handle(webservice::RequestData& request, Pool& 
 webservice::ResponseData Worker::load(webservice::RequestData& request, Pool& pool){
     //TODO gestion de la desactivation
     BOOST_FOREACH(Navitia* nav, pool.navitia_list){
-        nav->load();
+        try{
+            nav->load();
+        }catch(RequestException& ex){
+            if(ex.timeout){
+                //le rechargement est trop long, rien de dramatique, on enchaine
+                continue;
+            }
+            log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+            LOG4CPLUS_WARN(logger, "le rechargement de " + nav->url + " à echouer");
+        }
     }
     return this->status(request, pool);
 }
@@ -91,13 +100,13 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
         try{
             res = nav->query(request.path.substr(request.path.find_last_of('/')) + "?" + request.raw_params);
             pool.release_navitia(nav);
-        }catch(long& code){
+        }catch(RequestException& ex){
             ok = false;
             nav->on_error();
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
             LOG4CPLUS_WARN(logger, "la requétes a échouer");
             pool.release_navitia(nav);
-            response.status_code = code;
+            response.status_code = ex.code;
             continue;
         }
         std::unique_ptr<google::protobuf::Message> resp = create_pb(request);

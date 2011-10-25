@@ -27,12 +27,21 @@ std::pair<int, std::string> Navitia::query(const std::string& request){
         }else{
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
             LOG4CPLUS_WARN(logger, boost::format("réponse %d depuis %s") % response_code % req);
-            throw response_code;
+            throw RequestException(ss.str(), response_code);
         }
+    }catch(curlpp::LibcurlRuntimeError& e){
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+        LOG4CPLUS_WARN(logger, boost::format("exception depuis %s -- Curl Reason: %s -- Curl Code: %d") % req % e.what() % e.whatCode());
+
+        if(e.whatCode() == CURLE_OPERATION_TIMEDOUT){
+            throw RequestException(true);
+        }
+        throw RequestException("", 500);
+
     }catch(curlpp::RuntimeError& e){
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
         LOG4CPLUS_WARN(logger, e.what() + std::string(" - ") + req);
-        throw 500L;
+        throw RequestException("", 500);
     }
 }
 

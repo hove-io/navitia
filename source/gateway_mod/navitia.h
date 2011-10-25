@@ -4,8 +4,25 @@
 /**
  * représente une instance NAViTiA
  */
+
+struct RequestException : public std::exception{
+    std::string body;
+    int code;
+
+    bool timeout;
+
+    RequestException(): code(0), timeout(false){};
+    RequestException(const std::string& body, int code): body(body),  code(code), timeout(false){};
+    RequestException(bool timeout): code(0), timeout(timeout){};
+    
+    //destructeur pour faire plaisir a gcc
+    ~RequestException() throw(){}
+};
+
+
 class Navitia {
     public:
+
         /**
          * url compléte vers navitia
          */
