@@ -12,7 +12,12 @@ namespace nt = navitia::type;
 
 class Worker : public BaseWorker<navitia::type::Data> {
 
+    /**
+     * structure permettant de simuler un finaly afin 
+     * de délocké le mutex en sortant de la fonction appelante
+     */
     struct Locker{
+        /// indique si l'acquisition du verrou a réussi
         bool locked;
         nt::Data& data;
         Locker(navitia::type::Data& data) : data(data) { locked = data.load_mutex.try_lock_shared();}
@@ -29,7 +34,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     };
 
     /**
-     * se charge de remplir l'objet protocolbuffer firstletter passé en paramétre
+     * se charge de remplir l'objet protocolbuffer firstletter passé en paramètre
      *
      */
     void create_pb(const std::vector<nt::idx_t>& result, const nt::Type_e type, const nt::Data& data, pbnavitia::FirstLetter& pb_fl){
@@ -54,11 +59,11 @@ class Worker : public BaseWorker<navitia::type::Data> {
     }
     
     /**
-     * methode qui parse le parametre filter afin de retourner une liste de Type_e
+     * méthode qui parse le paramètre filter afin de retourner une liste de Type_e
      */
     std::vector<nt::Type_e> parse_param_filter(const std::string& filter){
         std::vector<nt::Type_e> result;
-        if(filter.empty()){//on utilise la valeur par défaut si pas de paramétre
+        if(filter.empty()){//on utilise la valeur par défaut si pas de paramètre
             result.push_back(nt::eStopArea);
             result.push_back(nt::eCity);
             return result;
