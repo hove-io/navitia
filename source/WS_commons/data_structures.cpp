@@ -1,4 +1,5 @@
 #include "data_structures.h"
+#include <boost/foreach.hpp>
 
 namespace webservice {
 
@@ -19,4 +20,60 @@ namespace webservice {
 
 
     ResponseData::ResponseData() : content_type("text/plain"), status_code(200), charset("utf-8"){}
+
+    RequestData::RequestData() : params_are_valid(true) {}
+
+    RequestParameter::RequestParameter() : valid_value(true), used_value(true) {}
+
+    RequestParameter ApiMetadata::convert_parameter(const std::string &key, const std::string &value) const {
+        auto api_param = params.find(key);
+        webservice::RequestParameter param;
+        if(api_param != params.end()){
+            switch(api_param->second.type){
+            case ApiParameter::STRING:
+                param.value = value;
+                break;
+            case ApiParameter::INT:
+                try{
+                param.value = boost::lexical_cast<int>(value);
+            }catch(boost::bad_lexical_cast){ param.valid_value = false;}
+            break;
+            case ApiParameter::DOUBLE:
+                try{
+                param.value = boost::lexical_cast<double>(value);
+            }catch(boost::bad_lexical_cast){ param.valid_value = false;}
+            break;
+            case ApiParameter::DATE:
+                break;
+            case ApiParameter::TIME:
+                break;
+            case ApiParameter::DATETIME:
+                break;
+            }
+        }else{
+            param.value = value;
+            param.used_value = false;
+        }
+        return param;
+    }
+
+    void ApiMetadata::check_manadatory_parameters(RequestData& request) {
+        std::pair<std::string, ApiParameter> p;
+        BOOST_FOREACH(p, this->params){
+            // On a un paramètre obligatoire et qui n'est pas renseigné
+            if(p.second.mandatory && request.params.find(p.first) == request.params.end()){
+                request.missing_params.push_back(p.first);
+                request.params_are_valid = false;
+            }
+        }
+    }
+
+    void ApiMetadata::parse_parameters(RequestData& request){
+        std::pair<std::string, std::string> p;
+        BOOST_FOREACH(p, request.params){
+            webservice::RequestParameter param = this->convert_parameter(p.first, p.second);
+            request.parsed_params[p.first] = param;
+            request.params_are_valid &= param.valid_value;
+        }
+    }
 }

@@ -58,43 +58,14 @@ namespace webservice
     class BaseWorker {
     public: // Structures de données
 
-        /// Fonction associée à une api : prend en paramètre un Parameters et retourne une chaîne de caractères correspondant au retour
-        typedef boost::function<ResponseData (RequestData, Data &)> ApiFun;
+        /** Type d'une fonction qui prend RequestData et Data en paramètre et qui retourne ResponseData */
+        typedef boost::function<ResponseData(RequestData, Data & )> ApiFun;
 
-        /** Définit un paramètre d'une API
-      *
-      * Un requête du type foo?param=1&var=hello
-      * aura param et var comme paramètres
-      */
-        struct Parameter {
-            
-            enum Type_p {
-                STRING,
-                INT, 
-                DOUBLE,
-                DATE,
-                TIME,
-                DATETIME
-            };
+        /** Ensemble des fonctions des apis indexées par leur nom */
+        std::map<std::string, ApiFun> apis;
 
-            std::string description; ///< Description du paramètre (pour information à l'utilisateur)
-            Type_p type; ///< Type du paramètre (entier, chaîne de caractère)
-            bool mandatory; ///< Est-ce que le paramètre est obligatoire
-        };
-
-        /** Définit une api
-      *
-      * Un requête du type foo?param=1&var=hello
-      * correspond à l'api foo
-      */
-        struct Api {
-            std::string description; ///< Description de l'api (pour information à l'utilisateur)
-            std::map<std::string, Parameter> params; ///< Liste des paramètres de l'api
-            ApiFun fun;///< Fonction associée à la requète
-        };
-
-        /** Ensemble des apis indexées par leur nom */
-        std::map<std::string, Api> apis;
+        /** Metadonnées des api indexées par leur nom */
+        std::map<std::string, ApiMetadata> api_metadata;
     
     public:
         /** Fonction appelée lorsqu'une requête appelle
@@ -145,61 +116,15 @@ namespace webservice
                 return resp;
             }else{
                 
-                parse_parameters(request);
+                api_metadata[api].parse_parameters(request);
 
                 boost::posix_time::ptime start(boost::posix_time::microsec_clock::local_time());
-                ResponseData resp = apis[api].fun(request, d);
+                ResponseData resp = apis[api](request, d);
                 //@TODO not threadsafe
                 int duration = (boost::posix_time::microsec_clock::local_time() - start).total_milliseconds();
                 static_data().means[api](duration);
                 return resp;
             }
-        }
-
-        void parse_parameters(RequestData& request){
-            Api api = apis[request.api];
-            if(api.params.size() < 1){//pas de paramétres défini pour cette api
-                request.params_is_valid = true;
-                return;
-            }
-
-            bool valid = true;
-            std::pair<std::string, Parameter> p;
-            BOOST_FOREACH(p, api.params){
-                if(request.params.find(p.first) != request.params.end()){
-                    webservice::Parameter param;
-                    switch(p.second.type){
-                        case Parameter::STRING:
-                            param.value = request.params[p.first];
-                            param.is_valid = true;
-                            break;
-                        case Parameter::INT:
-                            try{
-                                param.value = boost::lexical_cast<int>(request.params[p.first]);
-                                param.is_valid = true;
-                            }catch(boost::bad_lexical_cast){ param.is_valid = false;}
-                            break;
-                        case Parameter::DOUBLE:
-                            try{
-                                param.value = boost::lexical_cast<double>(request.params[p.first]);
-                                param.is_valid = true;
-                            }catch(boost::bad_lexical_cast){ param.is_valid = false;}
-                            break;
-                        case Parameter::DATE:
-                            break;
-                        case Parameter::TIME:
-                            break;
-                        case Parameter::DATETIME:
-                            break;
-                    }
-                    request.parsed_params[p.first] = param;
-                }else{
-                    if(p.second.mandatory){//le parametre est requis et n'est pas présent
-                        valid = false;
-                    }
-                }
-            }
-            request.params_is_valid = valid;
         }
 
 
@@ -212,10 +137,12 @@ namespace webservice
       * Si la fonction est une methode membre, utiliser boost::bind(&Classe::methode, this, _1, _2)
       */
         void register_api(const std::string & name, ApiFun fun, const std::string & description){
-            Api api;
-            api.fun = fun;
+            apis[name] = fun;
+
+            ApiMetadata api;
             api.description = description;
-            apis[name] = api;
+            api_metadata[name] = api;
+
         }
 
         /** Rajoute un paramètre à une api.
@@ -224,15 +151,15 @@ namespace webservice
       * Si le paramètre avait déjà été défini, il est écrasé
       */
         bool add_param(const std::string & api, const std::string & name,
-                       const std::string & description, enum Parameter::Type_p type, bool mandatory) {
-            if(apis.find(api) == apis.end()) {
+                       const std::string & description, enum ApiParameter::Type_p type, bool mandatory) {
+            if(api_metadata.find(api) == api_metadata.end()) {
                 return false;
             }
-            Parameter param;
+            ApiParameter param;
             param.description = description;
             param.type = type;
             param.mandatory = mandatory;
-            apis[api].params[name] = param;
+            api_metadata[api].params[name] = param;
             return true;
         }
 
@@ -250,13 +177,23 @@ namespace webservice
             rd.status_code = 200;
             rd.response << "<html><head><title>Liste des API</title></head><body>\n"
                     << "<h1>Liste des APIs</h1>\n";
-            BOOST_FOREACH(auto api, apis){
+            BOOST_FOREACH(auto api, api_metadata){
                 rd.response << "<h2>" << api.first << "</h2>\n"
                         << "<h3>Description</h3><p>" << api.second.description << "</p>\n"
                         << "<h3>Paramètres</h3><table border=1>"
                         << "<tr><th>Paramètre</th><th>Type</th><th>Description</th><th>Obligatoire</th></tr>\n";
                 BOOST_FOREACH(auto param, api.second.params){
-                    rd.response << "<tr><td>" << param.first << "</td><td>" << param.second.type << "</td><td>" << param.second.description << "</td><td>" << param.second.mandatory << "</td></tr>\n";
+                    std::string type_caption;
+                    switch(param.second.type){
+                    case ApiParameter::STRING: type_caption = "Chaîne de caractères"; break;
+                    case ApiParameter::INT: type_caption = "Entier"; break;
+                    case ApiParameter::DOUBLE: type_caption = "Réel p.ex. 3.14"; break;
+                    case ApiParameter::DATE: type_caption = "Date p.ex. 20111031"; break;
+                    case ApiParameter::TIME: type_caption = "Heure p.ex 0918"; break;
+                    case ApiParameter::DATETIME: type_caption = "Date-heure p.ex. 20111031T0918"; break;
+                    }
+
+                    rd.response << "<tr><td>" << param.first << "</td><td>" << type_caption << "</td><td>" << param.second.description << "</td><td>" << param.second.mandatory << "</td></tr>\n";
                 }
                 rd.response << "</table>\n";
             }
@@ -281,6 +218,67 @@ namespace webservice
             return rd;
         }
 
+        /** Analyse les paramêtres d'une requête */
+        ResponseData analyze(RequestData request, Data &){
+            ResponseData rd;
+            rd.content_type = "text/html";
+            rd.status_code = 200;
+            rd.response << "<html><head><title>Statistiques</title></head><body>\n"
+                    << "<h1>Analyse de requête</h1>";
+
+            if(request.params.find("api") == request.params.end()){
+                rd.response << "<p>Il faut préciser l'API que vous souhaitez interroger avec api=nom_api</p>"
+                            << "</body></html>";
+                return rd;
+            }
+
+            std::string api = request.params["api"];
+
+            if(apis.find(api) == apis.end()){
+                rd.response << "<p>L'API " << api << " est inconnue"
+                            << "</body></html>";
+                return rd;
+            }
+
+            rd.response << "<h2> Paramètres obligatoires </h2>"
+                        << "<ul>";
+
+            std::pair<std::string, ApiParameter> ap;
+            BOOST_FOREACH(ap, api_metadata[api].params){
+                rd.response << "<li><b>" << ap.first << "</b> : ";
+                if(ap.second.mandatory){
+                    if(request.params.find(ap.first) == request.params.end())
+                        rd.response << " Absent ! </li>";
+                    else
+                        rd.response << " Présent</li>";
+                }
+            }
+
+            rd.response << "</ul>"
+                        << "<h2>Valeurs</h2>"
+                        << "<ul>";
+
+            std::pair<std::string, std::string> sp;
+            BOOST_FOREACH(sp, request.params){
+                if(sp.first != "api"){
+                    RequestParameter rp = api_metadata[api].convert_parameter(sp.first, sp.second);
+                    rd.response << "<li><b>" << sp.first << "</b> : ";
+                    if(rp.used_value){
+                        if(rp.valid_value)
+                            rd.response << " format valide </li>";
+                        else
+                            rd.response << " format non valide </li>";
+                    }else {
+                        rd.response << " paramètre ignoré par l'API </li>";
+                    }
+                }
+            }
+            rd.response << "</ul>"
+                        << "</body></html>";
+
+            return rd;
+        }
+
         /** Ajoute quelques API par défaut
           *
           * help : donne une aide listant toutes les api disponibles et leurs paramètres
@@ -289,6 +287,7 @@ namespace webservice
         void add_default_api() {
             register_api("/help", boost::bind(&BaseWorker<Data>::help, this, _1, _2), "Liste des APIs utilisables");
             register_api("/stats", boost::bind(&BaseWorker<Data>::stats, this, _1, _2), "Statistiques sur les appels d'api");
+            register_api("/analyze", boost::bind(&BaseWorker<Data>::analyze, this, _1, _2), "Analyze une requête");
         }
     };
 

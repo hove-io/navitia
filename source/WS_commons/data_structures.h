@@ -3,9 +3,8 @@
 #include <boost/function.hpp>
 #include <boost/variant.hpp>
 #include <string>
-#include <sstream>
 #include <map>
-//#include <threadpool.h>
+
 class RequestHandle;
 
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -17,65 +16,126 @@ extern HINSTANCE hinstance;
 
 namespace webservice 
 {
-    /** Fonction appelée lorsqu'une requête arrive pour la passer au threadpoll */
-    static boost::function<void(RequestHandle*)> push_request;
+/** Fonction appelée lorsqu'une requête arrive pour la passer au threadpoll */
+static boost::function<void(RequestHandle*)> push_request;
 
-    /** Fonction à appeler pour arrêter le threadpool */
-    static boost::function<void()> stop_threadpool;
+/** Fonction à appeler pour arrêter le threadpool */
+static boost::function<void()> stop_threadpool;
 
-    /// Types possibles de requètes
-    enum RequestMethod {GET, POST, UNKNOWN};
+/// Types possibles de requètes
+enum RequestMethod {GET, POST, UNKNOWN};
 
-    /// Correspond à l'ensemble des paramètres (clef-valeurs)
-    typedef std::map<std::string, std::string> Parameters;
+/// Correspond à l'ensemble des paramètres (clef-valeurs)
+typedef std::map<std::string, std::string> Parameters;
 
-    struct Parameter{
-        typedef boost::variant<std::string, int, double, boost::posix_time::ptime> Parameter_variant;
-        Parameter_variant value;
-        bool is_valid;
+/** Définit le type d'un paramètre REST*/
+struct RequestParameter{
+    typedef boost::variant<std::string, int, double, boost::posix_time::ptime> Parameter_variant;
+    Parameter_variant value;
+    /// Est-ce que la valeur est valide (convertible dans le bon type, dans le bon ensemble de valeurs…)
+    bool valid_value;
+    /// Est-ce que la valeur est utilisée ? Il s'agirait typiquemetn d'une erreur de frappe
+    bool used_value;
 
-    };
+    RequestParameter();
+};
 
-    /** Converti une string de méthode en RequestType */
-    RequestMethod parse_method(const std::string & method);
-    /** Structure contenant toutes les données liées à une requête entrante
+/** Structure contenant les réponses
      *
      */
-    struct RequestData {
-        /// Méthode de la requête (ex. GET ou POST)
-        RequestMethod method;
-        /// Chemin demandé (ex. "/const")
-        std::string path;
-        /// Paramètres passés à la requête (ex. "user=1&passwd=2")
-        std::string raw_params;
-        /// Données brutes
-        std::string data;
-        /// Paramètres parsés
-        Parameters params;
+struct ResponseData {
+    ResponseData(const ResponseData & resp);
+    /// Type de la réponse (ex. "text/xml")
+    std::string content_type;
+    /// Réponse à proprement parler
+    std::stringstream response;
+    /// Status http de la réponse (ex. 200)
+    int status_code;
+    /// Encodage de la réponse par défaut utf-8
+    std::string charset;
+    /// Constructeur par défaut (status 200, type text/plain)
+    ResponseData();
+};
 
-        std::map<std::string, Parameter> parsed_params;
-        ///API utilisée
-        std::string api;
 
-        bool params_is_valid;
+/** Définit un paramètre d'une API
+  *
+  * Un requête du type foo?param=1&var=hello
+  * aura param et var comme paramètres
+  */
+struct ApiParameter {
+
+    enum Type_p {
+        STRING,
+        INT,
+        DOUBLE,
+        DATE,
+        TIME,
+        DATETIME
     };
 
-    /** Structure contenant les réponses
+    std::string description; ///< Description du paramètre (pour information à l'utilisateur)
+    Type_p type; ///< Type du paramètre (entier, chaîne de caractère)
+    bool mandatory; ///< Est-ce que le paramètre est obligatoire
+};
+
+
+/** Structure contenant toutes les données liées à une requête entrante
      *
      */
-    struct ResponseData {
-        ResponseData(const ResponseData & resp);
-        /// Type de la réponse (ex. "text/xml")
-        std::string content_type;
-        /// Réponse à proprement parler
-        std::stringstream response;
-        /// Status http de la réponse (ex. 200)
-        int status_code;
-        /// Encodage de la réponse par défaut utf-8
-        std::string charset;
-        /// Constructeur par défaut (status 200, type text/plain)
-        ResponseData();
-    };
+struct RequestData {
+    /// Méthode de la requête (ex. GET ou POST)
+    RequestMethod method;
+    /// Chemin demandé (ex. "/const")
+    std::string path;
+    /// Paramètres passés à la requête (ex. "user=1&passwd=2")
+    std::string raw_params;
+    /// Données brutes
+    std::string data;
+    /// Paramètres parsés
+    Parameters params;
+
+    /// Liste des paramètres REST parsés
+    std::map<std::string, RequestParameter> parsed_params;
+
+    /// Liste des paramètres REST obligatoires qui manquent
+    std::vector<std::string> missing_params;
+
+    /// API utilisée
+    std::string api;
+
+    /** Est-ce que les paramètres sont valide
+          *
+          * Le webservice doit décider de l'erreur à retourner si ceux-ci ne le sont pas
+          */
+    bool params_are_valid;
+
+    RequestData();
+};
+
+
+/** Méta-données d'une api : paramètres obligatoires, validation des types…
+  *
+  * Un requête du type foo?param=1&var=hello
+  * correspond à l'api foo
+  */
+struct ApiMetadata {
+    std::string description; ///< Description de l'api (pour information à l'utilisateur)
+    std::map<std::string, ApiParameter> params; ///< Liste des paramètres de l'api
+
+    /** Analyse un paramètre et le converti au besoin dans le bon type */
+    RequestParameter convert_parameter(const std::string & key, const std::string & value) const;
+
+    /// On vérifie que tous les paramètres obligatoires sont définis
+    void check_manadatory_parameters(RequestData& request);
+
+    /// Pour chaque paramètre, on le converti dans son type et on vérifie la validité de la valeur
+    void parse_parameters(RequestData& request);
+};
+
+/** Converti une string de méthode en RequestType */
+RequestMethod parse_method(const std::string & method);
+
 
 
 }

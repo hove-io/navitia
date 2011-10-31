@@ -84,7 +84,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData firstletter(RequestData& request, navitia::type::Data & d){
         ResponseData rd;
 
-        if(!request.params_is_valid){
+        if(!request.params_are_valid){
             rd.status_code = 500;
             rd.content_type = "text/plain";
             rd.response << "invalid argument";
@@ -148,7 +148,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
       */
     Worker(navitia::type::Data &){
         register_api("/firstletter", boost::bind(&Worker::firstletter, this, _1, _2), "Api firstletter");
-        add_param("/firstletter", "name", "valeur recherché", Parameter::STRING, true);
+        add_param("/firstletter", "name", "valeur recherché", ApiParameter::STRING, true);
 
         register_api("/load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
         add_default_api();
