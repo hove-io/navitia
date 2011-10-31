@@ -147,10 +147,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
       * On y enregistre toutes les api qu'on souhaite exposer
       */
     Worker(navitia::type::Data &){
-        register_api("/firstletter", boost::bind(&Worker::firstletter, this, _1, _2), "Api firstletter");
-        add_param("/firstletter", "name", "valeur recherché", ApiParameter::STRING, true);
+        register_api("firstletter", boost::bind(&Worker::firstletter, this, _1, _2), "Api firstletter");
+        add_param("firstletter", "name", "valeur recherché", ApiParameter::STRING, true);
 
-        register_api("/load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
+        register_api("load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
         add_default_api();
     }
 };

@@ -44,10 +44,16 @@ namespace webservice {
             }catch(boost::bad_lexical_cast){ param.valid_value = false;}
             break;
             case ApiParameter::DATE:
+                try{
+                param.value = boost::gregorian::from_undelimited_string(value);
+            }catch(...){ param.valid_value = false;}
                 break;
             case ApiParameter::TIME:
                 break;
             case ApiParameter::DATETIME:
+                try{
+                param.value = boost::posix_time::from_iso_string(value);
+            }catch(...){ param.valid_value = false;}
                 break;
             }
         }else{
