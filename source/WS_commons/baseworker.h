@@ -102,9 +102,9 @@ namespace webservice
             
 
             size_t position = request.path.find_last_of('/');
-            std::string api = "";
+            std::string api;
             if(position != std::string::npos){
-                api = request.path.substr(position);
+                api = request.path.substr(position+1);
             }
             request.api = api;
 
@@ -285,9 +285,10 @@ namespace webservice
           * status : donne des informations sur le webservice
           */
         void add_default_api() {
-            register_api("/help", boost::bind(&BaseWorker<Data>::help, this, _1, _2), "Liste des APIs utilisables");
-            register_api("/stats", boost::bind(&BaseWorker<Data>::stats, this, _1, _2), "Statistiques sur les appels d'api");
-            register_api("/analyze", boost::bind(&BaseWorker<Data>::analyze, this, _1, _2), "Analyze une requête");
+            register_api("help", boost::bind(&BaseWorker<Data>::help, this, _1, _2), "Liste des APIs utilisables");
+            register_api("stats", boost::bind(&BaseWorker<Data>::stats, this, _1, _2), "Statistiques sur les appels d'api");
+            register_api("analyze", boost::bind(&BaseWorker<Data>::analyze, this, _1, _2), "Analyze une requête");
+            add_param("analyze", "api", "Nom de l'api à analyser. Rajouter ensuite tous les paramètres habituels", ApiParameter::STRING, true);
         }
     };
 
