@@ -14,6 +14,9 @@
 #include <boost/accumulators/statistics/max.hpp>
 #include <boost/accumulators/statistics/count.hpp>
 
+
+#include <boost/lexical_cast.hpp>
+
 namespace webservice
 {
     
@@ -64,8 +67,18 @@ namespace webservice
       * aura param et var comme paramètres
       */
         struct Parameter {
+            
+            enum Type_p {
+                STRING,
+                INT, 
+                DOUBLE,
+                DATE,
+                TIME,
+                DATETIME
+            };
+
             std::string description; ///< Description du paramètre (pour information à l'utilisateur)
-            std::string type; ///< Type du paramètre (entier, chaîne de caractère)
+            Type_p type; ///< Type du paramètre (entier, chaîne de caractère)
             bool mandatory; ///< Est-ce que le paramètre est obligatoire
         };
 
@@ -124,13 +137,16 @@ namespace webservice
             }
             request.api = api;
 
+
             if(apis.find(api) == apis.end()) {
                 ResponseData resp;
                 resp.content_type = "text/xml";
                 resp.response << "<error>API inconnue</error>";
                 return resp;
-            }
-            else {
+            }else{
+                
+                parse_parameters(request);
+
                 boost::posix_time::ptime start(boost::posix_time::microsec_clock::local_time());
                 ResponseData resp = apis[api].fun(request, d);
                 //@TODO not threadsafe
@@ -140,7 +156,54 @@ namespace webservice
             }
         }
 
-        /** Permet de rajouter une nouvelle api
+        void parse_parameters(RequestData& request){
+            Api api = apis[request.api];
+            if(api.params.size() < 1){//pas de paramétres défini pour cette api
+                request.params_is_valid = true;
+                return;
+            }
+
+            bool valid = true;
+            std::pair<std::string, Parameter> p;
+            BOOST_FOREACH(p, api.params){
+                if(request.params.find(p.first) != request.params.end()){
+                    webservice::Parameter param;
+                    switch(p.second.type){
+                        case Parameter::STRING:
+                            param.value = request.params[p.first];
+                            param.is_valid = true;
+                            break;
+                        case Parameter::INT:
+                            try{
+                                param.value = boost::lexical_cast<int>(request.params[p.first]);
+                                param.is_valid = true;
+                            }catch(boost::bad_lexical_cast){ param.is_valid = false;}
+                            break;
+                        case Parameter::DOUBLE:
+                            try{
+                                param.value = boost::lexical_cast<double>(request.params[p.first]);
+                                param.is_valid = true;
+                            }catch(boost::bad_lexical_cast){ param.is_valid = false;}
+                            break;
+                        case Parameter::DATE:
+                            break;
+                        case Parameter::TIME:
+                            break;
+                        case Parameter::DATETIME:
+                            break;
+                    }
+                    request.parsed_params[p.first] = param;
+                }else{
+                    if(p.second.mandatory){//le parametre est requis et n'est pas présent
+                        valid = false;
+                    }
+                }
+            }
+            request.params_is_valid = valid;
+        }
+
+
+     /** Permet de rajouter une nouvelle api
       *
       * Le nom est celui utilisé dans la requête
       * La fonction (idéalement vers un membre du Worker pour profiter des données) va effectuer le traitement
@@ -161,7 +224,7 @@ namespace webservice
       * Si le paramètre avait déjà été défini, il est écrasé
       */
         bool add_param(const std::string & api, const std::string & name,
-                       const std::string & description, const std::string & type, bool mandatory) {
+                       const std::string & description, enum Parameter::Type_p type, bool mandatory) {
             if(apis.find(api) == apis.end()) {
                 return false;
             }

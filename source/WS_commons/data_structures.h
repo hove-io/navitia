@@ -1,11 +1,14 @@
 #pragma once
 
 #include <boost/function.hpp>
+#include <boost/variant.hpp>
 #include <string>
 #include <sstream>
 #include <map>
 //#include <threadpool.h>
 class RequestHandle;
+
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #ifdef WIN32
 #include <windows.h>
@@ -26,6 +29,13 @@ namespace webservice
     /// Correspond à l'ensemble des paramètres (clef-valeurs)
     typedef std::map<std::string, std::string> Parameters;
 
+    struct Parameter{
+        typedef boost::variant<std::string, int, double, boost::posix_time::ptime> Parameter_variant;
+        Parameter_variant value;
+        bool is_valid;
+
+    };
+
     /** Converti une string de méthode en RequestType */
     RequestMethod parse_method(const std::string & method);
     /** Structure contenant toutes les données liées à une requête entrante
@@ -42,8 +52,12 @@ namespace webservice
         std::string data;
         /// Paramètres parsés
         Parameters params;
+
+        std::map<std::string, Parameter> parsed_params;
         ///API utilisée
         std::string api;
+
+        bool params_is_valid;
     };
 
     /** Structure contenant les réponses
@@ -62,5 +76,6 @@ namespace webservice
         /// Constructeur par défaut (status 200, type text/plain)
         ResponseData();
     };
+
 
 }
