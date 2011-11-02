@@ -42,6 +42,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
       */
     Worker(navitia::type::Data &){
         register_api("query",boost::bind(&Worker::query, this, _1, _2), "Api ptref");
+        add_param("query", "arg", "Requête sur PTReferential à exécuter", ApiParameter::STRING, true);
         register_api("load",boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
         add_default_api();
     }
