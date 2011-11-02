@@ -41,8 +41,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
       * On y enregistre toutes les api qu'on souhaite exposer
       */
     Worker(navitia::type::Data &){
-        register_api("/query",boost::bind(&Worker::query, this, _1, _2), "Api ptref");
-        register_api("/load",boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
+        register_api("query",boost::bind(&Worker::query, this, _1, _2), "Api ptref");
+        register_api("load",boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
         add_default_api();
     }
 };

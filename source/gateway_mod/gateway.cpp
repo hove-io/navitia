@@ -11,12 +11,12 @@
 
 
 Worker::Worker(Pool &){
-    register_api("/query", boost::bind(&Worker::handle, this, _1, _2), "traite les requétes");
-    register_api("/firstletter", boost::bind(&Worker::handle, this, _1, _2), "traite les requétes");
-    register_api("/load", boost::bind(&Worker::load, this, _1, _2), "traite les requétes");
-    register_api("/register", boost::bind(&Worker::register_navitia, this, _1, _2), "ajout d'un NAViTiA au pool");
-    register_api("/status", boost::bind(&Worker::status, this, _1, _2), "status");
-    register_api("/unregister", boost::bind(&Worker::unregister_navitia, this, _1, _2), "suppression d'un NAViTiA du pool");
+    register_api("query", boost::bind(&Worker::handle, this, _1, _2), "traite les requétes");
+    register_api("firstletter", boost::bind(&Worker::handle, this, _1, _2), "traite les requétes");
+    register_api("load", boost::bind(&Worker::load, this, _1, _2), "traite les requétes");
+    register_api("register", boost::bind(&Worker::register_navitia, this, _1, _2), "ajout d'un NAViTiA au pool");
+    register_api("status", boost::bind(&Worker::status, this, _1, _2), "status");
+    register_api("unregister", boost::bind(&Worker::unregister_navitia, this, _1, _2), "suppression d'un NAViTiA du pool");
 
 }
 
@@ -133,9 +133,9 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
 }
 
 std::unique_ptr<google::protobuf::Message> Dispatcher::create_pb(webservice::RequestData& request){
-    if(request.api == "/firstletter"){
+    if(request.api == "firstletter"){
         return std::unique_ptr<google::protobuf::Message>(new pbnavitia::FirstLetter());
-    }else if(request.api == "/query"){
+    }else if(request.api == "query"){
         return std::unique_ptr<google::protobuf::Message>(new pbnavitia::PTReferential());
     }
     throw std::exception();
