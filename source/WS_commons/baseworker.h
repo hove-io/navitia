@@ -225,7 +225,7 @@ namespace webservice
             ResponseData rd;
             rd.content_type = "text/html";
             rd.status_code = 200;
-            rd.response << "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"><title>Statistiques</title></head><body>\n"
+            rd.response << "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"><title>analyse</title></head><body>\n"
                     << "<h1>Analyse de requête</h1>";
 
             if(request.params.find("api") == request.params.end()){
@@ -258,24 +258,26 @@ namespace webservice
 
             rd.response << "</ul>"
                         << "<h2>Valeurs</h2>"
-                        << "<ul>";
+                        << "<table border=\"1\">"
+                        << "<tr><td>nom</td><td>validité</td><td>valeur parsé</td><td>valeur originel</td></tr>";
 
             std::pair<std::string, std::string> sp;
             BOOST_FOREACH(sp, request.params){
                 if(sp.first != "api"){
                     RequestParameter rp = api_metadata[api].convert_parameter(sp.first, sp.second);
-                    rd.response << "<li><b>" << sp.first << "</b> : ";
+                    rd.response << "<tr><td>" << sp.first << "</td>";
                     if(rp.used_value){
                         if(rp.valid_value)
-                            rd.response << " format valide </li>";
+                            rd.response << "<td>format valide</td>";
                         else
-                            rd.response << " format non valide </li>";
+                            rd.response << "<td>format non valide</td>";
                     }else {
-                        rd.response << " paramètre ignoré par l'API </li>";
+                        rd.response << "<td>paramètre ignoré par l'API</td>";
                     }
+                    rd.response << "<td>" << sp.second << "</td><td>" << request.parsed_params[sp.first].value << "</td></tr>";
                 }
             }
-            rd.response << "</ul>"
+            rd.response << "</table>"
                         << "</body></html>";
 
             return rd;
