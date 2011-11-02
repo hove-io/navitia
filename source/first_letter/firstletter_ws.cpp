@@ -149,7 +149,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     Worker(navitia::type::Data &){
         register_api("firstletter", boost::bind(&Worker::firstletter, this, _1, _2), "Api firstletter");
         add_param("firstletter", "name", "valeur recherché", ApiParameter::STRING, true);
-        add_param("firstletter", "filter", "type à rechercher", ApiParameter::STRING, false);
+        add_param("firstletter", "filter", "type à rechercher", ApiParameter::STRING, false, {"stop_areas", "cities"});
 
         register_api("load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
         add_default_api();

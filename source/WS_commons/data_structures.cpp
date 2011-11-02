@@ -35,36 +35,43 @@ namespace webservice {
                 break;
             case ApiParameter::INT:
                 try{
-                param.value = boost::lexical_cast<int>(value);
-            }catch(boost::bad_lexical_cast){ param.valid_value = false;}
-            break;
+                    param.value = boost::lexical_cast<int>(value);
+                }catch(boost::bad_lexical_cast){ param.valid_value = false;}
+                break;
             case ApiParameter::DOUBLE:
                 try{
-                param.value = boost::lexical_cast<double>(value);
-            }catch(boost::bad_lexical_cast){ param.valid_value = false;}
-            break;
+                    param.value = boost::lexical_cast<double>(value);
+                }catch(boost::bad_lexical_cast){ param.valid_value = false;}
+                break;
             case ApiParameter::DATE:
                 try{
-                param.value = boost::gregorian::from_undelimited_string(value);
-            }catch(...){ param.valid_value = false;}
+                    param.value = boost::gregorian::from_undelimited_string(value);
+                }catch(...){ param.valid_value = false;}
                 break;
             case ApiParameter::TIME:
                 try{
                 // L'heure est au format 945 et on veut récupérer le nombre de secondes depuis minuit
-                int time = boost::lexical_cast<int>(value);
-                param.value = (time / 100) * 60 + (time % 60);
-            }catch(boost::bad_lexical_cast){param.valid_value = false;}
+                    int time = boost::lexical_cast<int>(value);
+                    param.value = (time / 100) * 60 + (time % 60);
+                }catch(boost::bad_lexical_cast){param.valid_value = false;}
                 break;
             case ApiParameter::DATETIME:
                 try{
-                param.value = boost::posix_time::from_iso_string(value);
-            }catch(...){ param.valid_value = false;}
+                    param.value = boost::posix_time::from_iso_string(value);
+                }catch(...){ param.valid_value = false;}
                 break;
             case ApiParameter::BOOLEAN:
                 if(value == "1") param.value = true;
                 else if(value == "0") param.value = false;
                 else param.valid_value = false;
                 break;
+            }
+            if(api_param->second.accepted_values.size() > 0){
+                if(std::find(api_param->second.accepted_values.begin(), api_param->second.accepted_values.end(), param.value) 
+                        == api_param->second.accepted_values.end()){
+                    param.valid_value = false;
+
+                }
             }
         }else{
             param.value = value;

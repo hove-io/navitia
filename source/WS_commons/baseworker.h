@@ -151,7 +151,7 @@ namespace webservice
       * Si le paramètre avait déjà été défini, il est écrasé
       */
         bool add_param(const std::string & api, const std::string & name,
-                       const std::string & description, enum ApiParameter::Type_p type, bool mandatory) {
+                       const std::string & description, enum ApiParameter::Type_p type, bool mandatory, const std::vector<RequestParameter::Parameter_variant>& accepted_values = std::vector<RequestParameter::Parameter_variant>()) {
             if(api_metadata.find(api) == api_metadata.end()) {
                 return false;
             }
@@ -159,6 +159,7 @@ namespace webservice
             param.description = description;
             param.type = type;
             param.mandatory = mandatory;
+            param.accepted_values = accepted_values;
             api_metadata[api].params[name] = param;
             return true;
         }

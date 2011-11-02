@@ -79,6 +79,8 @@ struct ApiParameter {
     std::string description; ///< Description du paramètre (pour information à l'utilisateur)
     Type_p type; ///< Type du paramètre (entier, chaîne de caractère)
     bool mandatory; ///< Est-ce que le paramètre est obligatoire
+    ///liste exaustive des valeurs attendu
+    std::vector<RequestParameter::Parameter_variant> accepted_values;
 };
 
 
