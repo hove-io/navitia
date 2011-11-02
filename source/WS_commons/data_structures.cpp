@@ -1,4 +1,5 @@
 #include "data_structures.h"
+#include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 
 namespace webservice {
@@ -65,12 +66,27 @@ namespace webservice {
                 else if(value == "0") param.value = false;
                 else param.valid_value = false;
                 break;
+            case ApiParameter::STRINGLIST:
+                std::vector<std::string> strings;
+                boost::algorithm::split(strings, value, boost::is_any_of(";"));
+                param.value = strings;
+                break;
             }
-            if(api_param->second.accepted_values.size() > 0){
-                if(std::find(api_param->second.accepted_values.begin(), api_param->second.accepted_values.end(), param.value) 
-                        == api_param->second.accepted_values.end()){
-                    param.valid_value = false;
 
+            if(api_param->second.accepted_values.size() > 0){
+                if(api_param->second.type != ApiParameter::STRINGLIST){
+                    if(std::find(api_param->second.accepted_values.begin(), api_param->second.accepted_values.end(), param.value)
+                            == api_param->second.accepted_values.end()){
+                        param.valid_value = false;
+
+                    }
+                }else{
+                    BOOST_FOREACH(std::string str, boost::get<std::vector<std::string> >(param.value)){
+                        if(std::find(api_param->second.accepted_values.begin(), api_param->second.accepted_values.end(),RequestParameter::Parameter_variant(str))
+                                == api_param->second.accepted_values.end()){
+                            param.valid_value = false;
+                        }
+                    }
                 }
             }
         }else{

@@ -31,7 +31,7 @@ typedef std::map<std::string, std::string> Parameters;
 
 /** Définit le type d'un paramètre REST*/
 struct RequestParameter{
-    typedef boost::variant<std::string, int, double, boost::posix_time::ptime, boost::gregorian::date> Parameter_variant;
+    typedef boost::variant<std::string, int, double, boost::posix_time::ptime, boost::gregorian::date, std::vector<std::string> > Parameter_variant;
     Parameter_variant value;
     /// Est-ce que la valeur est valide (convertible dans le bon type, dans le bon ensemble de valeurs…)
     bool valid_value;
@@ -73,7 +73,8 @@ struct ApiParameter {
         DATE,
         TIME,
         DATETIME,
-        BOOLEAN
+        BOOLEAN,
+        STRINGLIST
     };
 
     std::string description; ///< Description du paramètre (pour information à l'utilisateur)

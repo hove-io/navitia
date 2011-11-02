@@ -193,6 +193,7 @@ namespace webservice
                     case ApiParameter::TIME: type_caption = "Heure p.ex 0918"; break;
                     case ApiParameter::DATETIME: type_caption = "Date-heure p.ex. 20111031T0918"; break;
                     case ApiParameter::BOOLEAN: type_caption = "Booléen 1 pour vrai, 0 pour faux"; break;
+                    case ApiParameter::STRINGLIST: type_caption = "Liste de chaînes de caractères p.ex. bonjour;le;monde"; break;
                     }
 
                     rd.response << "<tr><td>" << param.first << "</td><td>" << type_caption << "</td><td>" << param.second.description << "</td><td>" << param.second.mandatory << "</td></tr>\n";
