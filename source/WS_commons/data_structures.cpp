@@ -49,11 +49,21 @@ namespace webservice {
             }catch(...){ param.valid_value = false;}
                 break;
             case ApiParameter::TIME:
+                try{
+                // L'heure est au format 945 et on veut récupérer le nombre de secondes depuis minuit
+                int time = boost::lexical_cast<int>(value);
+                param.value = (time / 100) * 60 + (time % 60);
+            }catch(boost::bad_lexical_cast){param.valid_value = false;}
                 break;
             case ApiParameter::DATETIME:
                 try{
                 param.value = boost::posix_time::from_iso_string(value);
             }catch(...){ param.valid_value = false;}
+                break;
+            case ApiParameter::BOOLEAN:
+                if(value == "1") param.value = true;
+                else if(value == "0") param.value = false;
+                else param.valid_value = false;
                 break;
             }
         }else{

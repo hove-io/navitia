@@ -72,7 +72,8 @@ struct ApiParameter {
         DOUBLE,
         DATE,
         TIME,
-        DATETIME
+        DATETIME,
+        BOOLEAN
     };
 
     std::string description; ///< Description du paramètre (pour information à l'utilisateur)
