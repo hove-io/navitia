@@ -225,7 +225,7 @@ namespace webservice
             ResponseData rd;
             rd.content_type = "text/html";
             rd.status_code = 200;
-            rd.response << "<html><head><title>Statistiques</title></head><body>\n"
+            rd.response << "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"><title>Statistiques</title></head><body>\n"
                     << "<h1>Analyse de requête</h1>";
 
             if(request.params.find("api") == request.params.end()){

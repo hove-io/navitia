@@ -32,7 +32,7 @@ public:
 private slots:
     void on_go_button_clicked(){
         QUrl url(this->ui->query_input->text());
-        ui->textBrowser->setPlainText(callback(QString(url.toEncoded())));
+        this->ui->web_view->setContent(callback(QString(url.toEncoded())).toUtf8());
     }
 
     void on_query_input_returnPressed(){

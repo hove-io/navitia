@@ -90,6 +90,7 @@ MACRO(MAKE_WS)
 
   # On créé systématiquement une version Qt pour déboggage
   # ADD_DEFINITIONS(-DWS_TYPE=4)
+  SET(QT_USE_QTWEBKIT TRUE)
   FIND_PACKAGE(Qt4 REQUIRED)
   include(${QT_USE_FILE})
   QT4_WRAP_UI(qt_UI ${CMAKE_SOURCE_DIR}/WS_commons/qt/mainwindow.ui)
