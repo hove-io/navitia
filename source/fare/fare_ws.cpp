@@ -117,7 +117,7 @@ class Worker : public BaseWorker<Data> {
      * On y enregistre toutes les api qu'on souhaite exposer
      */
     Worker(Data &) {
-        register_api("/fare",boost::bind(&Worker::fare, this, _1, _2), "Effectue le calcul de tarif");
+        register_api("fare",boost::bind(&Worker::fare, this, _1, _2), "Effectue le calcul de tarif");
         add_default_api();
     }
 };
