@@ -1,6 +1,5 @@
 #include "types.h"
 #include "utils/csv.h"
-#include "../first_letter/first_letter.h"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
@@ -24,6 +23,7 @@
 
 namespace pt = boost::posix_time;
 using navitia::type::City;
+using navitia::type::idx_t;
 namespace navitia{ namespace streetnetwork{
 
 
@@ -41,7 +41,7 @@ void StreetNetwork::load_bdtopo(std::string filename) {
         cols[row[i]] = i;
     }
 
-    size_t nom = cols["Etiquette"];
+    size_t nom = cols["Nom_rue_d"];
     size_t x1 = cols["X_debut"];
     size_t y1 = cols["Y_debut"];
     size_t x2 = cols["X_fin"];
@@ -103,13 +103,17 @@ void StreetNetwork::load_bdtopo(std::string filename) {
             e1.end_number = -1;
             e2.start_number = -1;
             e2.end_number = -1;
-            std::cout << row[n_deb_d] << ", " << row[n_fin_d] << ", " << row[n_deb_g] << ", " << row[n_fin_g] << std::endl;
+            //std::cout << row[n_deb_d] << ", " << row[n_fin_d] << ", " << row[n_deb_g] << ", " << row[n_fin_g] << std::endl;
         }
 
         boost::add_edge(source, target, e1, graph);
         boost::add_edge(target, source, e2, graph);
 
-        std::string way_key = row[nom] + row[insee];
+        std::string way_key;
+        if(row[insee].substr(0,2) == "75")
+            way_key = row[nom] + "75056";
+        else
+            way_key = row[nom] + row[insee];
         auto way_it = way_map.find(way_key);
         if(way_it == way_map.end()){
             way_map[way_key].name = row[nom];
@@ -125,7 +129,7 @@ void StreetNetwork::load_bdtopo(std::string filename) {
     }
 
     unsigned int idx=0;
-    FirstLetter<unsigned int> fl;
+
     BOOST_FOREACH(auto way, way_map){
         ways.push_back(way.second);
         ways.back().idx = idx;
@@ -209,7 +213,7 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
         // On reparcourre tout dans le bon ordre
         nt::idx_t last_way =  std::numeric_limits<nt::idx_t>::max();
         PathItem path_item;
-        for(size_t i = reverse_path.size(); i > 0; --i){
+        for(size_t i = reverse_path.size()-1; i > 0; --i){
             vertex_t u = reverse_path[i-1];
             vertex_t v = reverse_path[i];
             Edge edge = graph[boost::edge(u, v, graph).first];
@@ -221,8 +225,9 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
             if(edge.way_idx != last_way){
                 p.path_items.push_back(path_item);
                 last_way = edge.way_idx;
-                path_item.length += edge.length;
+                path_item = PathItem();
             }
+            path_item.length += edge.length;
         }
         p.path_items.push_back(path_item);
     }

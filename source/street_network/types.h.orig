@@ -1,5 +1,4 @@
 #include "type/type.h"
-#include "first_letter/first_letter.h"
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adj_list_serialize.hpp>
@@ -35,8 +34,6 @@ struct Edge {
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & way_idx & length & cyclable & start_number & end_number;
     }
-
-    Edge() : way_idx(0), length(0), cyclable(false), start_number(-1), end_number(-1){}
 };
 
 // Plein de typedefs pour nous simpfilier un peu la vie
@@ -93,7 +90,6 @@ struct Path {
 struct StreetNetwork {
     std::vector<Way> ways;
     std::vector<nt::City> cities;
-    FirstLetter<unsigned int> fl;
     Graph graph;
 
     ///map temporaire pour la correspondance way => city
@@ -104,7 +100,7 @@ struct StreetNetwork {
     void load_bd(const std::string& path);
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & ways & graph & cities & fl;
+        ar & ways & graph;
     }
 
 
