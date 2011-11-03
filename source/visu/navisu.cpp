@@ -17,6 +17,8 @@ navisu::navisu(QWidget *parent) :
   //  ui->my->setHome(2.36, 48.84, 2500);
 
     //ui->carto->model()->
+    QCompleter * completer = new QCompleter(new NavitiaItemModel(this->d));
+//    ui->first_letter_line_edit->setCompleter(completer);
 }
 
 void MyMarbleWidget::customPaint(GeoPainter* painter)
