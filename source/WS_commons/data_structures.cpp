@@ -115,4 +115,13 @@ namespace webservice {
             request.params_are_valid &= param.valid_value;
         }
     }
+
+
+template<>
+void PrintParameterVisitor::operator()(const std::vector<std::string> & vec) const{
+    BOOST_FOREACH(std::string str, vec){
+        stream << str;
+    }
+}
+
 }

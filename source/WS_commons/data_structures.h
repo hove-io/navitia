@@ -9,6 +9,7 @@ class RequestHandle;
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/foreach.hpp>
 
 #ifdef WIN32
 #include <windows.h>
@@ -141,6 +142,20 @@ struct ApiMetadata {
 /** Converti une string de méthode en RequestType */
 RequestMethod parse_method(const std::string & method);
 
+///visitor pour l'affichage de ParameterVariant 
+struct PrintParameterVisitor : public boost::static_visitor<>
+{
+    std::ostream& stream;
 
+    PrintParameterVisitor(std::ostream& stream): stream(stream){}
+
+    template<typename T>
+    void operator()(const T& value) const{
+        stream << value;
+    }
+};
+
+template<>
+void PrintParameterVisitor::operator()(const std::vector<std::string> & vec) const;
 
 }

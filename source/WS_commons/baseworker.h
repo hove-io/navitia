@@ -17,8 +17,10 @@
 
 #include <boost/lexical_cast.hpp>
 
+
 namespace webservice
 {
+
     
     void decode(std::string& str){
         size_t pos = -1;
@@ -275,7 +277,9 @@ namespace webservice
                     }else {
                         rd.response << "<td>paramètre ignoré par l'API</td>";
                     }
-                    rd.response << "<td>" << sp.second << "</td><td>" << request.parsed_params[sp.first].value << "</td></tr>";
+                    rd.response << "<td>" << sp.second << "</td><td>";
+                    boost::apply_visitor(PrintParameterVisitor(rd.response), request.parsed_params[sp.first].value);
+                    rd.response << "</td></tr>";
                 }
             }
             rd.response << "</table>"
