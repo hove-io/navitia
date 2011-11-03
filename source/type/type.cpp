@@ -73,7 +73,18 @@ GeographicalCoord GeographicalCoord::convert_to(const Projection& projection, co
     pj_free(pj_dest);
     pj_free(pj_src);
     return GeographicalCoord(x, y);
+}
 
+double GeographicalCoord::distance_to(const GeographicalCoord &other){
+    static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
+    double longitudeArc = (this->x - other.x) * DEG_TO_RAD;
+    double latitudeArc  = (this->y - other.y) * DEG_TO_RAD;
+    double latitudeH = sin(latitudeArc * 0.5);
+    latitudeH *= latitudeH;
+    double lontitudeH = sin(longitudeArc * 0.5);
+    lontitudeH *= lontitudeH;
+    double tmp = cos(this->y*DEG_TO_RAD) * cos(other.y*DEG_TO_RAD);
+    return EARTH_RADIUS_IN_METERS * 2.0 * asin(sqrt(latitudeH + tmp*lontitudeH));
 }
 
 static_data * static_data::instance = 0;

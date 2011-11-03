@@ -81,6 +81,13 @@ struct GeographicalCoord{
     GeographicalCoord(double x, double y) : x(x), y(y) {}
     GeographicalCoord(double x, double y, const Projection& projection);
 
+    /* Calcule la distance Grand Arc entre deux nœuds
+      *
+      * On utilise la formule de Haversine
+      * http://en.wikipedia.org/wiki/Law_of_haversines
+      */
+    double distance_to(const GeographicalCoord & other);
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & x & y;
     }
