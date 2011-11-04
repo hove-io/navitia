@@ -57,6 +57,7 @@ add_subdirectory(fare)
 add_subdirectory(gateway_mod)
 add_subdirectory(visu)
 add_subdirectory(street_network)
+add_subdirectory(proximity_list)
 
 #on génére le fichier config.h
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
