@@ -25,7 +25,7 @@
  *      - spirit pour parser du texte
  * - cURL : pour les requêtes http
  * - protocol buffers : sérialisation pour échanger des données entre différents services
- * - fastlz : compression extrèmement rapide
+ * - fastlz : compression extrèmement rapide mais pas nécessairement très performante
  *
  * \section cmake_use Utilisation de CMake
  * CMake permet de compiler dans un repertoire différent des sources pour ne pas les mélanger.
@@ -39,12 +39,13 @@
  * Chaque module existe dans un sous-repertoire de source
  *  - \ref WS_Commons : squelette pour construire un webservice fcgi/isapi
  *  - \ref fare : calcul des tarifs d'un trajet
- *  - first_letter : expérimentation d'une api first letter basée sur les trie
+ *  - \ref first_letter : indexation de chaînes de caractères pour retrouver rapidement un élément
  *  - \ref gateway : une passerelle plus modulaire adaptée au cloud
  *  - log : expérimentations des logs
  *  - \ref navimake : transformer des exports fusion .csv dans le format interne
  *  - \ref ptreferential : effectuer des requêtes sur le référentiel de données
- *  - \ref type : structures de données liées au référentiel
+ *  - \ref type : structures de données liées au référentiel de transports en communs
+ *  - \ref street_network : référentiel de données et algorithmes sur le filaire de voirie 
  *  - utils : petits outils qui peuvent servir (lire un CSV, soucis d'encodage…)
  * 
  */
