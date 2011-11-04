@@ -19,6 +19,8 @@ SET(SOURCE_LIB
         gtfs_parser.h
         #${CMAKE_SOURCE_DIR}/../third_party/fastlz/fastlz.c
         ${CMAKE_SOURCE_DIR}/utils/encoding_converter.cpp
+        bdtopo_parser.cpp
+        bdtopo_parser.h
 )
 
 SET(SOURCE_NAVIMAKE

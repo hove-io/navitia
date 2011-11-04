@@ -14,8 +14,6 @@ class CsvFusio {
         void fill(navimake::Data& data);
     private:
         std::string path;
-
-
         
 
         template <class T, typename T2>

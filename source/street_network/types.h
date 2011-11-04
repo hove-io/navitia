@@ -95,9 +95,6 @@ struct StreetNetwork {
     FirstLetter<unsigned int> fl;
     Graph graph;
 
-
-    void load_bdtopo(const std::string& filename, const std::vector<nt::City>& cities);
-
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & ways & graph & fl;
     }
