@@ -155,14 +155,18 @@ template<> std::vector<Country> & Data::get_data<eCountry>(){return countries;}
 
 void Data::build_first_letter(){
     BOOST_FOREACH(StopArea sa, stop_areas){
-        this->stop_area_first_letter.add_string(sa.name, sa.idx);
+        this->stop_area_first_letter.add_string(sa.name + " " + cities[sa.city_idx].name, sa.idx);
     }
     BOOST_FOREACH(City city, cities){
         this->city_first_letter.add_string(city.name, city.idx);
     }
+    BOOST_FOREACH(auto way, street_network.ways){
+        street_network.fl.add_string(way.name + " " + cities[way.city_idx].name, way.idx);
+    }
 
     this->stop_area_first_letter.build();
     this->city_first_letter.build();
+    this->street_network.fl.build();
 
 }
 
