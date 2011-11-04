@@ -27,14 +27,16 @@ using navitia::type::idx_t;
 namespace navitia{ namespace streetnetwork{
 
 
-void StreetNetwork::load_bd(const std::string& path){
-    load_bdcity(path + "/commune.txt");
-    load_bdtopo(path + "/route_adresse.txt");
-}
-
-void StreetNetwork::load_bdtopo(std::string filename) {
+void StreetNetwork::load_bdtopo(const std::string& filename, const std::vector<nt::City>& cities) {
     CsvReader reader(filename);
     std::map<std::string, int> cols;
+
+
+    //initialisation du map pour la recherche de city par external_code
+    std::map<std::string, idx_t> city_map;
+    std::for_each(cities.begin(), cities.end(), [&city_map](const nt::City& city){
+        city_map[city.external_code] = city.idx;
+    });
 
     std::vector<std::string> row = reader.next();
     for(size_t i=0; i < row.size(); i++){
@@ -141,35 +143,6 @@ void StreetNetwork::load_bdtopo(std::string filename) {
         idx++;
     }
     fl.build();
-}
-
-void StreetNetwork::load_bdcity(std::string filename){
-    
-    CsvReader reader(filename);
-    std::map<std::string, int> cols;
-
-    std::vector<std::string> row = reader.next();
-    for(size_t i=0; i < row.size(); i++){
-        cols[row[i]] = i;
-    }
-
-    size_t name = cols["NOM"];
-    size_t insee = cols["CODE_INSEE"];
-    
-    nt::idx_t counter = 0;
-    for(reader.next(); !reader.eof() ;row = reader.next()){
-        if(row.size() < 2)
-            continue;
-        City city;
-        city.idx = counter;
-        city.id = row[insee];
-        city.name = row[name];
-        cities.push_back(city);
-        city_map[city.id] = city.idx;
-        counter++;
-        std::cout << row[insee] << " " << row[name] << std::endl;
-    }
-
 }
 
 Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations) {

@@ -92,19 +92,14 @@ struct Path {
 
 struct StreetNetwork {
     std::vector<Way> ways;
-    std::vector<nt::City> cities;
     FirstLetter<unsigned int> fl;
     Graph graph;
 
-    ///map temporaire pour la correspondance way => city
-    std::map<std::string, nt::idx_t> city_map;
 
-    void load_bdtopo(std::string filename);
-    void load_bdcity(std::string filename);
-    void load_bd(const std::string& path);
+    void load_bdtopo(const std::string& filename, const std::vector<nt::City>& cities);
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & ways & graph & cities & fl;
+        ar & ways & graph & fl;
     }
 
 

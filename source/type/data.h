@@ -3,6 +3,7 @@
 #include "first_letter/first_letter.h"
 #include <boost/serialization/version.hpp>
 #include <boost/thread/shared_mutex.hpp>
+#include "street_network/types.h"
 
 namespace navitia { namespace type {
 
@@ -44,6 +45,9 @@ public:
     FirstLetter<idx_t> stop_area_first_letter;
     FirstLetter<idx_t> city_first_letter;
 
+
+    ///streetnetwork
+    navitia::streetnetwork::StreetNetwork street_network;
 
     boost::shared_mutex load_mutex;
 
