@@ -77,7 +77,7 @@ int main(int argc, char * argv[])
     navitia::type::Data nav_data;
 
     start = pt::microsec_clock::local_time();
-    data.transform(nav_data);
+    data.transform(nav_data.pt_data);
     transform = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     //street network => temporaire
@@ -86,7 +86,7 @@ int main(int argc, char * argv[])
     sn = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     start = pt::microsec_clock::local_time();
-    nav_data.build_first_letter();
+    nav_data.pt_data.build_first_letter();
     first_letter = (pt::microsec_clock::local_time() - start).total_milliseconds();
     start = pt::microsec_clock::local_time();
     nav_data.save_flz(output);

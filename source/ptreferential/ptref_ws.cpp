@@ -13,7 +13,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         //decode(nql_request);
         pbnavitia::PTReferential result;
         try{
-            result = navitia::ptref::query(nql_request, d);
+            result = navitia::ptref::query(nql_request, d.pt_data);
             result.SerializeToOstream(&(rd.response));
             rd.content_type = "application/octet-stream";
             rd.status_code = 200;

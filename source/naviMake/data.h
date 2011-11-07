@@ -65,12 +65,12 @@ namespace navimake{
         /**
           * Transforme les les pointeurs en données
           */
-        void transform(navitia::type::Data& data);
+        void transform(navitia::type::PT_Data& data);
 
         /**
           * Gère les relations
           */
-        void build_relations(navitia::type::Data & data);
+        void build_relations(navitia::type::PT_Data & data);
 
         ~Data(){
             BOOST_FOREACH(navimake::types::Network* network, networks){

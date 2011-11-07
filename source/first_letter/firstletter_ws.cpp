@@ -45,12 +45,12 @@ class Worker : public BaseWorker<navitia::type::Data> {
                 case nt::eStopArea:
                     child = item->mutable_stop_area();
                     navitia::fill_pb_object<nt::eStopArea>(idx, data, child, 2);
-                    item->set_name(data.stop_areas[idx].name);
+                    item->set_name(data.pt_data.stop_areas[idx].name);
                     break;
                 case nt::eCity:
                     child = item->mutable_city();
                     navitia::fill_pb_object<nt::eCity>(idx, data, child);
-                    item->set_name(data.cities[idx].name);
+                    item->set_name(data.pt_data.cities[idx].name);
                     break;
                 default:
                     break;
@@ -112,9 +112,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
             BOOST_FOREACH(nt::Type_e type, filter){
                 switch(type){
                 case nt::eStopArea:
-                    result = d.stop_area_first_letter.find(name);break;
+                    result = d.pt_data.stop_area_first_letter.find(name);break;
                 case nt::eCity:
-                    result = d.city_first_letter.find(name);break;
+                    result = d.pt_data.city_first_letter.find(name);break;
                 default: break;
                 }
                 create_pb(result, type, d, pb);

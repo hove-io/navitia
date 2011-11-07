@@ -20,9 +20,9 @@ namespace nt = navitia::type;
 class NavitiaItemModel : public QAbstractItemModel
 {
     Q_OBJECT
-    nt::Data * d;
+    nt::PT_Data * d;
 public:
-    NavitiaItemModel(nt::Data & data) : d(&data) {}
+    NavitiaItemModel(nt::Data & data) : d(&data.pt_data) {}
 
     QModelIndex index (int row, int column, const QModelIndex & = QModelIndex() ) const{
         return createIndex(row, column);

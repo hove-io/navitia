@@ -51,7 +51,7 @@ void Data::clean(){
 
 
 
-void Data::transform(navitia::type::Data& data){
+void Data::transform(navitia::type::PT_Data& data){
     data.stop_areas.resize(this->stop_areas.size());
     std::transform(this->stop_areas.begin(), this->stop_areas.end(), data.stop_areas.begin(), navimake::types::StopArea::Transformer());
 
@@ -91,7 +91,7 @@ void Data::transform(navitia::type::Data& data){
     build_relations(data);
 }
 
-void Data::build_relations(navitia::type::Data &data){
+void Data::build_relations(navitia::type::PT_Data &data){
     //BOOST_FOREACH(navimake::types::StopArea & sa, data.stop_areas){}
 
     BOOST_FOREACH(navitia::type::Mode & mode, data.modes){

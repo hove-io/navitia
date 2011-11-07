@@ -37,7 +37,7 @@ google::protobuf::Message* get_message(pbnavitia::PTReferential * row, Type_e ty
 
 /// Exécute une requête sur les données Data
 /// Retourne une matrice 2D de chaînes de caractères
-pbnavitia::PTReferential query(std::string request, navitia::type::Data & data);
+pbnavitia::PTReferential query(std::string request, navitia::type::PT_Data & data);
 
 std::string pb2txt(const google::protobuf::Message* response);
 std::string pb2xml(pbnavitia::PTReferential& response);

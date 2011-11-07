@@ -16,9 +16,6 @@ navisu::navisu(QWidget *parent) :
     ui->my->show();
   //  ui->my->setHome(2.36, 48.84, 2500);
 
-    //ui->carto->model()->
-    QCompleter * completer = new QCompleter(new NavitiaItemModel(this->d));
-//    ui->first_letter_line_edit->setCompleter(completer);
 }
 
 void MyMarbleWidget::customPaint(GeoPainter* painter)
@@ -106,16 +103,16 @@ void navisu::tableSelected(QString table){
 }
 
 void navisu::show_stop_area(){
-    resetTable(7, d.stop_areas.size());
+    resetTable(7, d.pt_data.stop_areas.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" <<"Name" <<"City" << "id" << "X" << "Y");
     int count = 0;
-    BOOST_FOREACH(StopArea & sa, d.stop_areas){
+    BOOST_FOREACH(StopArea & sa, d.pt_data.stop_areas){
 
         setItem(count ,0, sa.external_code);
         setItem(count, 1, sa.id);
         setItem(count ,2, sa.name);
-        if(sa.city_idx < d.cities.size())
-            setItem(count ,3, d.cities[sa.city_idx].name);
+        if(sa.city_idx < d.pt_data.cities.size())
+            setItem(count ,3, d.pt_data.cities[sa.city_idx].name);
         setItem(count ,4, sa.id);
         setItem(count ,5, sa.coord.x);
         setItem(count ,6, sa.coord.y);
@@ -124,11 +121,11 @@ void navisu::show_stop_area(){
 }
 
 void navisu::show_validity_pattern(){
-    resetTable(3, d.validity_patterns.size());
+    resetTable(3, d.pt_data.validity_patterns.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External code" << "Id" << "Pattern");
 
-    for(size_t i=0; i < d.validity_patterns.size(); ++i){
-        ValidityPattern & vp = d.validity_patterns[i];
+    for(size_t i=0; i < d.pt_data.validity_patterns.size(); ++i){
+        ValidityPattern & vp = d.pt_data.validity_patterns[i];
         setItem(i, 0, vp.external_code);
         setItem(i, 1, vp.id);
         setItem(i, 2, vp.str());
@@ -136,12 +133,12 @@ void navisu::show_validity_pattern(){
 }
 
 void navisu::show_line(){
-    resetTable(13, d.lines.size());
+    resetTable(13, d.pt_data.lines.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External code"<< "Id" << "Name" << "code" << "Forward Name" << "Backward Name"
                                                << "Additional data" << "Color" << "Sort" << "Mode Type"
                                                << "Network" << "Foward Direction" << "Backward Direction");
-    for(size_t i=0; i < d.lines.size(); ++i){
-        Line & l = d.lines[i];
+    for(size_t i=0; i < d.pt_data.lines.size(); ++i){
+        Line & l = d.pt_data.lines[i];
         setItem(i, 0, l.external_code);
         setItem(i, 1, l.id);
         setItem(i, 2, l.name);
@@ -151,90 +148,90 @@ void navisu::show_line(){
         setItem(i, 6, l.additional_data);
         setItem(i, 7, l.color);
         setItem(i, 8, l.sort);
-        if(l.mode_type_idx < d.mode_types.size())
-            setItem(i, 9, formatHeader(d.mode_types[l.mode_type_idx]));
-        if(l.network_idx < d.networks.size())
-            setItem(i, 10, formatHeader(d.networks[l.network_idx]));
-        if(l.forward_direction_idx < d.stop_areas.size())
-            setItem(i, 11, formatHeader(d.stop_areas[l.forward_direction_idx]));
-        if(l.backward_direction_idx < d.stop_areas.size())
-            setItem(i, 12, formatHeader(d.stop_points[l.backward_direction_idx]));
+        if(l.mode_type_idx < d.pt_data.mode_types.size())
+            setItem(i, 9, formatHeader(d.pt_data.mode_types[l.mode_type_idx]));
+        if(l.network_idx < d.pt_data.networks.size())
+            setItem(i, 10, formatHeader(d.pt_data.networks[l.network_idx]));
+        if(l.forward_direction_idx < d.pt_data.stop_areas.size())
+            setItem(i, 11, formatHeader(d.pt_data.stop_areas[l.forward_direction_idx]));
+        if(l.backward_direction_idx < d.pt_data.stop_areas.size())
+            setItem(i, 12, formatHeader(d.pt_data.stop_points[l.backward_direction_idx]));
     }
 }
 
 void navisu::show_route(){
-    resetTable(8, d.routes.size());
+    resetTable(8, d.pt_data.routes.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Is Frequence" << "Is Foward" << "Is Adapted" << "Line" << "Mode Type" );
 
-    for(size_t i=0; i < d.routes.size(); ++i){
-        Route & r = d.routes[i];
+    for(size_t i=0; i < d.pt_data.routes.size(); ++i){
+        Route & r = d.pt_data.routes[i];
         setItem(i, 0, r.external_code);
         setItem(i, 1, r.id);
         setItem(i, 2, r.name);
         setItem(i, 3, r.is_frequence);
         setItem(i, 4, r.is_forward);
         setItem(i, 5, r.is_adapted);
-        if(r.line_idx < d.lines.size())
-            setItem(i, 6, formatHeader(d.lines[r.line_idx]));
-        if(r.mode_type_idx < d.mode_types.size())
-            setItem(i, 7, formatHeader(d.mode_types[r.mode_type_idx]));
+        if(r.line_idx < d.pt_data.lines.size())
+            setItem(i, 6, formatHeader(d.pt_data.lines[r.line_idx]));
+        if(r.mode_type_idx < d.pt_data.mode_types.size())
+            setItem(i, 7, formatHeader(d.pt_data.mode_types[r.mode_type_idx]));
     }
 }
 
 void navisu::show_vehicle_journey(){
-    resetTable(8, d.vehicle_journeys.size());
+    resetTable(8, d.pt_data.vehicle_journeys.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() <<"External Code" << "Id" << "Name" << "Route" << "Company" << "Mode" << "Vehicle" << "Is adapted");
 
-    for(size_t i=0; i < d.vehicle_journeys.size(); ++i){
-        VehicleJourney & vj = d.vehicle_journeys[i];
+    for(size_t i=0; i < d.pt_data.vehicle_journeys.size(); ++i){
+        VehicleJourney & vj = d.pt_data.vehicle_journeys[i];
         setItem(i, 0, vj.external_code);
         setItem(i, 1, vj.id);
         setItem(i, 2, vj.name);
-        if(vj.route_idx < d.routes.size())
-            setItem(i, 3, formatHeader(d.routes[vj.route_idx]));
-        if(vj.company_idx < d.companies.size())
-            setItem(i, 4, formatHeader(d.companies[vj.company_idx]));
-        if(vj.mode_idx < d.modes.size())
-            setItem(i, 5, formatHeader(d.modes[vj.mode_idx]));
-        if(vj.vehicle_idx < d.vehicles.size())
-            setItem(i, 6, formatHeader(d.vehicles[vj.vehicle_idx]));
+        if(vj.route_idx < d.pt_data.routes.size())
+            setItem(i, 3, formatHeader(d.pt_data.routes[vj.route_idx]));
+        if(vj.company_idx < d.pt_data.companies.size())
+            setItem(i, 4, formatHeader(d.pt_data.companies[vj.company_idx]));
+        if(vj.mode_idx < d.pt_data.modes.size())
+            setItem(i, 5, formatHeader(d.pt_data.modes[vj.mode_idx]));
+        if(vj.vehicle_idx < d.pt_data.vehicles.size())
+            setItem(i, 6, formatHeader(d.pt_data.vehicles[vj.vehicle_idx]));
         setItem(i, 7, vj.is_adapted);
     }
 }
 
 void navisu::show_stop_point(){
-    resetTable(7, d.stop_points.size());
+    resetTable(7, d.pt_data.stop_points.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "StopArea" << "City" << "Mode"
                                                << "Network");
-    for(size_t i=0; i < d.stop_points.size(); ++i){
-        StopPoint & sp = d.stop_points[i];
+    for(size_t i=0; i < d.pt_data.stop_points.size(); ++i){
+        StopPoint & sp = d.pt_data.stop_points[i];
         setItem(i, 0, sp.external_code);
         setItem(i, 1, sp.id);
         setItem(i, 2, sp.name);
-        if(sp.stop_area_idx < d.stop_areas.size())
-            setItem(i, 3, formatHeader(d.stop_areas[sp.stop_area_idx]));
-        if(sp.city_idx < d.cities.size())
-            setItem(i, 4, formatHeader(d.cities[sp.city_idx]));
-        if(sp.mode_idx < d.modes.size())
-            setItem(i, 5, formatHeader(d.modes[sp.mode_idx]));
-        if(sp.network_idx < d.networks.size())
-            setItem(i, 6, formatHeader(d.networks[sp.network_idx]));
+        if(sp.stop_area_idx < d.pt_data.stop_areas.size())
+            setItem(i, 3, formatHeader(d.pt_data.stop_areas[sp.stop_area_idx]));
+        if(sp.city_idx < d.pt_data.cities.size())
+            setItem(i, 4, formatHeader(d.pt_data.cities[sp.city_idx]));
+        if(sp.mode_idx < d.pt_data.modes.size())
+            setItem(i, 5, formatHeader(d.pt_data.modes[sp.mode_idx]));
+        if(sp.network_idx < d.pt_data.networks.size())
+            setItem(i, 6, formatHeader(d.pt_data.networks[sp.network_idx]));
     }
 }
 
 void navisu::show_stop_time(){
-    resetTable(8, d.stop_times.size());
+    resetTable(8, d.pt_data.stop_times.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Arrival Time" << "Departure Time"
                                                << "Vehicle Journey" << "Order" << "ODT" << "Zone");
 
-    for(size_t i=0; i < d.stop_times.size(); ++i){
-        StopTime & st = d.stop_times[i];
+    for(size_t i=0; i < d.pt_data.stop_times.size(); ++i){
+        StopTime & st = d.pt_data.stop_times[i];
         setItem(i, 0, st.external_code);
         setItem(i, 1, st.id);
         setItem(i, 2, st.arrival_time);
         setItem(i, 3, st.departure_time);
-        if(st.vehicle_journey_idx < d.vehicle_journeys.size())
-            setItem(i, 4, formatHeader(d.vehicle_journeys[st.vehicle_journey_idx]));
+        if(st.vehicle_journey_idx < d.pt_data.vehicle_journeys.size())
+            setItem(i, 4, formatHeader(d.pt_data.vehicle_journeys[st.vehicle_journey_idx]));
         setItem(i, 5, st.order);
         setItem(i, 6, st.ODT);
         setItem(i, 7, st.zone);
@@ -243,10 +240,10 @@ void navisu::show_stop_time(){
 }
 
 void navisu::show_network(){
-    resetTable(4, d.networks.size());
+    resetTable(4, d.pt_data.networks.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Nb lines");
-    for(size_t i=0; i < d.networks.size(); ++i){
-        Network & n = d.networks[i];
+    for(size_t i=0; i < d.pt_data.networks.size(); ++i){
+        Network & n = d.pt_data.networks[i];
         setItem(i, 0, n.external_code);
         setItem(i, 1, n.id);
         setItem(i, 2, n.name);
@@ -255,23 +252,23 @@ void navisu::show_network(){
 }
 
 void navisu::show_mode() {
-    resetTable(4, d.modes.size());
+    resetTable(4, d.pt_data.modes.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Mode Type");
-    for(size_t i=0; i < d.modes.size(); ++i){
-        Mode & m = d.modes[i];
+    for(size_t i=0; i < d.pt_data.modes.size(); ++i){
+        Mode & m = d.pt_data.modes[i];
         setItem(i, 0, m.external_code);
         setItem(i, 1, m.id);
         setItem(i, 2, m.name);
-        if(m.mode_type_idx < d.mode_types.size())
-            setItem(i, 3, formatHeader(d.mode_types[m.mode_type_idx]));
+        if(m.mode_type_idx < d.pt_data.mode_types.size())
+            setItem(i, 3, formatHeader(d.pt_data.mode_types[m.mode_type_idx]));
     }
 }
 
 void navisu::show_mode_type(){
-    resetTable(5, d.mode_types.size());
+    resetTable(5, d.pt_data.mode_types.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Nb Modes" << "Nb lines");
-    for(size_t i=0; i < d.mode_types.size(); ++i){
-        ModeType & mt = d.mode_types[i];
+    for(size_t i=0; i < d.pt_data.mode_types.size(); ++i){
+        ModeType & mt = d.pt_data.mode_types[i];
         setItem(i, 0, mt.external_code);
         setItem(i, 1, mt.id);
         setItem(i, 2, mt.name);
@@ -281,91 +278,91 @@ void navisu::show_mode_type(){
 }
 
 void navisu::show_city() {
-    resetTable(6, d.cities.size());
+    resetTable(6, d.pt_data.cities.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Postal Code" << "Department" << "X" << "Y");
-    for(size_t i=0; i < d.cities.size(); ++i){
-        City & c = d.cities[i];
+    for(size_t i=0; i < d.pt_data.cities.size(); ++i){
+        City & c = d.pt_data.cities[i];
         setItem(i, 0, c.external_code);
         setItem(i, 1, c.id);
         setItem(i, 2, c.name);
         setItem(i, 3, c.main_postal_code);
-        if(c.department_idx < d.departments.size())
-            setItem(i, 4, formatHeader(d.departments[c.department_idx]));
+        if(c.department_idx < d.pt_data.departments.size())
+            setItem(i, 4, formatHeader(d.pt_data.departments[c.department_idx]));
         setItem(i, 5, c.coord.x);
         setItem(i, 6, c.coord.y);
     }
 }
 
 void navisu::show_connection(){
-    resetTable(6, d.connections.size());
+    resetTable(6, d.pt_data.connections.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Departure" << "Destination" << "Duration" << "Max Duration");
-    for(size_t i=0; i < d.connections.size(); ++i){
-        Connection & c = d.connections[i];
+    for(size_t i=0; i < d.pt_data.connections.size(); ++i){
+        Connection & c = d.pt_data.connections[i];
         setItem(i, 0, c.external_code);
         setItem(i, 1, c.id);
-        if(c.departure_stop_point_idx < d.stop_points.size())
-            setItem(i, 2, formatHeader(d.stop_points[c.departure_stop_point_idx]));
-        if(c.destination_stop_point_idx < d.stop_points.size())
-            setItem(i, 3, formatHeader(d.stop_points[c.destination_stop_point_idx]));
+        if(c.departure_stop_point_idx < d.pt_data.stop_points.size())
+            setItem(i, 2, formatHeader(d.pt_data.stop_points[c.departure_stop_point_idx]));
+        if(c.destination_stop_point_idx < d.pt_data.stop_points.size())
+            setItem(i, 3, formatHeader(d.pt_data.stop_points[c.destination_stop_point_idx]));
         setItem(i, 4, c.duration);
         setItem(i, 5, c.max_duration);
     }
 }
 
 void navisu::show_district(){
-    resetTable(6, d.districts.size());
+    resetTable(6, d.pt_data.districts.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Main City" << "Country" << "Nb departments");
-    for(size_t i=0; i < d.districts.size(); ++i){
-        District & di = d.districts[i];
+    for(size_t i=0; i < d.pt_data.districts.size(); ++i){
+        District & di = d.pt_data.districts[i];
         setItem(i, 0, di.external_code);
         setItem(i, 1, di.id);
         setItem(i, 2, di.name);
-        if(di.main_city_idx < d.cities.size())
-            setItem(i, 3, formatHeader(d.cities[di.main_city_idx]));
-        if(di.country_idx < d.countries.size())
-            setItem(i, 4, formatHeader(d.countries[di.country_idx]));
+        if(di.main_city_idx < d.pt_data.cities.size())
+            setItem(i, 3, formatHeader(d.pt_data.cities[di.main_city_idx]));
+        if(di.country_idx < d.pt_data.countries.size())
+            setItem(i, 4, formatHeader(d.pt_data.countries[di.country_idx]));
         setItem(i, 5, di.department_list.size());
     }
 
 }
 
 void navisu::show_route_point(){
-    resetTable(5, d.route_points.size());
+    resetTable(5, d.pt_data.route_points.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Order" << "Stop Point" << "Route");
-    for(size_t i=0; i < d.route_points.size(); ++i){
-        RoutePoint & rp = d.route_points[i];
+    for(size_t i=0; i < d.pt_data.route_points.size(); ++i){
+        RoutePoint & rp = d.pt_data.route_points[i];
         setItem(i, 0, rp.external_code);
         setItem(i, 1, rp.id);
         setItem(i, 2, rp.order);
-        if(rp.stop_point_idx < d.stop_points.size())
-            setItem(i, 3, formatHeader(d.stop_points[rp.stop_point_idx]));
-        if(rp.route_idx < d.routes.size())
-            setItem(i, 4, formatHeader(d.routes[rp.route_idx]));
+        if(rp.stop_point_idx < d.pt_data.stop_points.size())
+            setItem(i, 3, formatHeader(d.pt_data.stop_points[rp.stop_point_idx]));
+        if(rp.route_idx < d.pt_data.routes.size())
+            setItem(i, 4, formatHeader(d.pt_data.routes[rp.route_idx]));
 
     }
 }
 
 void navisu::show_department(){
-    resetTable(6, d.departments.size());
+    resetTable(6, d.pt_data.departments.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Main City" << "District" << "Nb Cities");
-    for(size_t i=0; i < d.departments.size(); ++i){
-        Department & dpt = d.departments[i];
+    for(size_t i=0; i < d.pt_data.departments.size(); ++i){
+        Department & dpt = d.pt_data.departments[i];
         setItem(i, 0, dpt.external_code);
         setItem(i, 1, dpt.id);
         setItem(i, 2, dpt.name);
-        if(dpt.main_city_idx < d.cities.size())
-            setItem(i, 3, formatHeader(d.cities[dpt.main_city_idx]));
-        if(dpt.district_idx < d.districts.size())
-            setItem(i, 4, formatHeader(d.districts[dpt.district_idx]));
+        if(dpt.main_city_idx < d.pt_data.cities.size())
+            setItem(i, 3, formatHeader(d.pt_data.cities[dpt.main_city_idx]));
+        if(dpt.district_idx < d.pt_data.districts.size())
+            setItem(i, 4, formatHeader(d.pt_data.districts[dpt.district_idx]));
         setItem(i, 5, dpt.city_list.size());
     }
 }
 
 void navisu::show_company(){
-    resetTable(4, d.companies.size());
+    resetTable(4, d.pt_data.companies.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Nb lines");
-    for(size_t i = 0; i < d.companies.size(); ++i){
-        Company & c = d.companies[i];
+    for(size_t i = 0; i < d.pt_data.companies.size(); ++i){
+        Company & c = d.pt_data.companies[i];
         setItem(i, 0, c.external_code);
         setItem(i, 1, c.id);
         setItem(i, 2, c.name);
@@ -374,10 +371,10 @@ void navisu::show_company(){
 }
 
 void navisu::show_vehicle(){
-    resetTable(3, d.vehicles.size());
+    resetTable(3, d.pt_data.vehicles.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name");
-    for(size_t i = 0; i < d.vehicles.size(); ++i){
-        Vehicle & v = d.vehicles[i];
+    for(size_t i = 0; i < d.pt_data.vehicles.size(); ++i){
+        Vehicle & v = d.pt_data.vehicles[i];
         setItem(i, 0, v.external_code);
         setItem(i, 1, v.id);
         setItem(i, 2, v.name);
@@ -386,15 +383,15 @@ void navisu::show_vehicle(){
 }
 
 void navisu::show_country(){
-    resetTable(5, d.countries.size());
+    resetTable(5, d.pt_data.countries.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Main City" << "Nb districts");
-    for(size_t i = 0; i < d.countries.size(); ++i){
-        Country & c = d.countries[i];
+    for(size_t i = 0; i < d.pt_data.countries.size(); ++i){
+        Country & c = d.pt_data.countries[i];
         setItem(i, 0, c.external_code);
         setItem(i, 1, c.id);
         setItem(i, 2, c.name);
-        if(c.main_city_idx < d.cities.size())
-            setItem(i, 3, formatHeader(d.cities[c.main_city_idx]));
+        if(c.main_city_idx < d.pt_data.cities.size())
+            setItem(i, 3, formatHeader(d.pt_data.cities[c.main_city_idx]));
         setItem(i, 4, c.district_list.size());
     }
 }

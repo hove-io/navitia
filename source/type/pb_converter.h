@@ -23,7 +23,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, google::protobuf::Messa
 template<>
 void fill_pb_object<nt::eCity>(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int max_depth){
     pbnavitia::City* city = dynamic_cast<pbnavitia::City*>(message);
-    nt::City city_n = data.cities.at(idx);
+    nt::City city_n = data.pt_data.cities.at(idx);
     city->set_id(city_n.id);
     city->set_id(city_n.id);
     city->set_idx(city_n.idx);
@@ -40,7 +40,7 @@ void fill_pb_object<nt::eCity>(nt::idx_t idx, const nt::Data& data, google::prot
 template<>
 void fill_pb_object<nt::eStopArea>(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int max_depth){
     pbnavitia::StopArea* stop_area = dynamic_cast<pbnavitia::StopArea*>(message);
-    nt::StopArea sa = data.stop_areas.at(idx);
+    nt::StopArea sa = data.pt_data.stop_areas.at(idx);
     stop_area->set_id(sa.id);
     stop_area->set_idx(sa.idx);
     stop_area->set_external_code(sa.external_code);

@@ -155,7 +155,7 @@ void set_value(google::protobuf::Message* message, const T& object, const std::s
 }
 
 
-pbnavitia::PTReferential extract_data(Data & data, const Request & r, std::vector<idx_t> & rows) {
+pbnavitia::PTReferential extract_data(PT_Data & data, const Request & r, std::vector<idx_t> & rows) {
     pbnavitia::PTReferential pb_response;
 
     //on reconstruit
@@ -265,7 +265,7 @@ google::protobuf::Message* get_message(pbnavitia::PTReferential * row, Type_e ty
 }
 
 template<Type_e E>
-std::vector<idx_t> get_indexes(std::vector<WhereClause> clauses,  Type_e requested_type, Data & d)
+std::vector<idx_t> get_indexes(std::vector<WhereClause> clauses,  Type_e requested_type, PT_Data & d)
 {
     typedef typename boost::mpl::at<enum_type_map, boost::mpl::int_<E> >::type T;
     auto data = d.get_data<E>();
@@ -291,7 +291,7 @@ std::vector<idx_t> get_indexes(std::vector<WhereClause> clauses,  Type_e request
     return indexes;
 }
 
-pbnavitia::PTReferential query(std::string request, Data & data){
+pbnavitia::PTReferential query(std::string request, PT_Data & data){
     std::string::iterator begin = request.begin();
     Request r;
     pbnavitia::PTReferential pb_response;

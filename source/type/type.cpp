@@ -181,7 +181,7 @@ boost::posix_time::ptime static_data::parse_date_time(const std::string& s) {
     return pt;
 }
 
-std::vector<idx_t> Country::get(Type_e type, const Data &)  const {
+std::vector<idx_t> Country::get(Type_e type, const PT_Data &)  const {
     std::vector<idx_t> result;
     switch(type) {
     case eDistrict: return district_list; break;
@@ -190,7 +190,7 @@ std::vector<idx_t> Country::get(Type_e type, const Data &)  const {
     return result;
 }
 
-std::vector<idx_t> City::get(Type_e type, const Data &) const {
+std::vector<idx_t> City::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case eStopArea: return stop_area_list; break;
@@ -200,7 +200,7 @@ std::vector<idx_t> City::get(Type_e type, const Data &) const {
     return result;
 }
 
-std::vector<idx_t> StopArea::get(Type_e type, const Data & data) const {
+std::vector<idx_t> StopArea::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
     case eStopPoint:
@@ -215,7 +215,7 @@ std::vector<idx_t> StopArea::get(Type_e type, const Data & data) const {
     return result;
 }
 
-std::vector<idx_t> Network::get(Type_e type, const Data &) const {
+std::vector<idx_t> Network::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case eLine: return line_list; break;
@@ -225,7 +225,7 @@ std::vector<idx_t> Network::get(Type_e type, const Data &) const {
 }
 
 
-std::vector<idx_t> Company::get(Type_e type, const Data &) const {
+std::vector<idx_t> Company::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case eLine: return line_list; break;
@@ -234,7 +234,7 @@ std::vector<idx_t> Company::get(Type_e type, const Data &) const {
     return result;
 }
 
-std::vector<idx_t> ModeType::get(Type_e type, const Data &) const {
+std::vector<idx_t> ModeType::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case eLine: return line_list; break;
@@ -244,7 +244,7 @@ std::vector<idx_t> ModeType::get(Type_e type, const Data &) const {
     return result;
 }
 
-std::vector<idx_t> Mode::get(Type_e type, const Data &) const {
+std::vector<idx_t> Mode::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case eModeType: result.push_back(mode_type_idx); break;
@@ -253,7 +253,7 @@ std::vector<idx_t> Mode::get(Type_e type, const Data &) const {
     return result;
 }
 
-std::vector<idx_t> Line::get(Type_e type, const Data & data) const {
+std::vector<idx_t> Line::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
     case eModeType: result.push_back(mode_type_idx); break;
@@ -271,7 +271,7 @@ std::vector<idx_t> Line::get(Type_e type, const Data & data) const {
 }
 
 
-std::vector<idx_t> Route::get(Type_e type, const Data &) const {
+std::vector<idx_t> Route::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case eLine: result.push_back(line_idx); break;
@@ -284,7 +284,7 @@ std::vector<idx_t> Route::get(Type_e type, const Data &) const {
 }
 
 
-std::vector<idx_t> VehicleJourney::get(Type_e type, const Data &) const {
+std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case eRoute: result.push_back(route_idx); break;
@@ -297,7 +297,7 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const Data &) const {
     return result;
 }
 
-std::vector<idx_t> RoutePoint::get(Type_e type, const Data &) const {
+std::vector<idx_t> RoutePoint::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case eRoute: result.push_back(route_idx); break;
@@ -307,7 +307,7 @@ std::vector<idx_t> RoutePoint::get(Type_e type, const Data &) const {
     return result;
 }
 
-std::vector<idx_t> StopPoint::get(Type_e type, const Data &) const {
+std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case eStopArea: result.push_back(stop_area_idx); break;
@@ -321,7 +321,7 @@ std::vector<idx_t> StopPoint::get(Type_e type, const Data &) const {
 }
 
 
-std::vector<idx_t> StopTime::get(Type_e type, const Data &) const {
+std::vector<idx_t> StopTime::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case eVehicle: result.push_back(vehicle_journey_idx); break;

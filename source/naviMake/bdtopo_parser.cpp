@@ -39,7 +39,7 @@ void BDTopoParser::load_city(navimake::Data& data){
 
     void BDTopoParser::load_streetnetwork(nt::Data& data){
         using namespace navitia::streetnetwork;
-        std::unordered_map<std::string, idx_t> city_map = create_cities_indexes(data.cities);
+        std::unordered_map<std::string, idx_t> city_map = create_cities_indexes(data.pt_data.cities);
 
         CsvReader reader(path + "/route_adresse.txt");
         std::map<std::string, int> cols;

@@ -27,10 +27,10 @@ int main(int argc, char** argv){
 
     std::cout
             << "Statistiques :" << std::endl
-            << "    Nombre de StopAreas : " << d.stop_areas.size() << std::endl
-            << "    Nombre de StopPoints : " << d.stop_points.size() << std::endl
-            << "    Nombre de lignes : " << d.lines.size() << std::endl
-            << "    Nombre d'horaires : " << d.stop_times.size() << std::endl << std::endl;
+            << "    Nombre de StopAreas : " << d.pt_data.stop_areas.size() << std::endl
+            << "    Nombre de StopPoints : " << d.pt_data.stop_points.size() << std::endl
+            << "    Nombre de lignes : " << d.pt_data.lines.size() << std::endl
+            << "    Nombre d'horaires : " << d.pt_data.stop_times.size() << std::endl << std::endl;
 
 
     if(argc == 1) {
@@ -55,7 +55,7 @@ int main(int argc, char** argv){
                     exit(0);
                 }
                 add_history (line_read);
-                pbnavitia::PTReferential result = navitia::ptref::query(line_read, d);
+                pbnavitia::PTReferential result = navitia::ptref::query(line_read, d.pt_data);
                 std::cout << "octets généré en protocol buffer: " << result.ByteSize() << std::endl << std::endl;
                 std::cout << navitia::ptref::pb2txt(&result);
             }
@@ -63,7 +63,7 @@ int main(int argc, char** argv){
         }
     }
     else if (argc == 2){
-        pbnavitia::PTReferential result = navitia::ptref::query(argv[1], d);
+        pbnavitia::PTReferential result = navitia::ptref::query(argv[1], d.pt_data);
         std::cout << "octets généré en protocol buffer: " << result.ByteSize() << std::endl;
         std::cout << navitia::ptref::pb2txt(&result);
     }
