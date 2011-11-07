@@ -45,12 +45,14 @@ struct PT_Data{
       */
     void build_index();
 
-    /**
-     * Initialise les structure de firstletter
-     *
-     *
-     */
+    /** Construit l'indexe ExternelCode */
+    void build_external_code();
+
+    /** Construit l'indexe FirstLetter */
     void build_first_letter();
+
+    /** Construit l'indexe ProximityList */
+    void build_proximity_list();
 
     /** Retrouve un élément par un attribut arbitraire de type chaine de caractères
       *

@@ -75,6 +75,14 @@ public:
     /** Charge la structure de données depuis un fichier au format binaire */
     void load_bin(const std::string & filename);
 
+    /** Construit l'indexe ExternelCode */
+    void build_external_code();
+
+    /** Construit l'indexe FirstLetter */
+    void build_first_letter();
+
+    /** Construit l'indexe ProximityList */
+    void build_proximity_list();
 };
 
 

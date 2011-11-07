@@ -89,7 +89,9 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
     }
 
     return p;
+}
 
+void StreetNetwork::build_proximity_list(){
 }
 
 

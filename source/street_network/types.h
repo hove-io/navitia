@@ -99,6 +99,8 @@ struct StreetNetwork {
         ar & ways & graph & fl;
     }
 
+    /** Construit l'indexe spatial */
+    void build_proximity_list();
 
     void save(const std::string & filename);
     void load(const std::string & filename);

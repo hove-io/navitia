@@ -56,5 +56,22 @@ void Data::save_flz(const std::string & filename) {
     oa << *this;
 }
 
+void Data::build_external_code(){
+    this->pt_data.build_external_code();
+}
+
+void Data::build_proximity_list(){
+    this->pt_data.build_proximity_list();
+    this->street_network.build_proximity_list();
+}
+
+void Data::build_first_letter(){
+    pt_data.build_first_letter();
+
+    BOOST_FOREACH(auto way, street_network.ways){
+        street_network.fl.add_string(way.name + " " + pt_data.cities[way.city_idx].name, way.idx);
+    }
+    this->street_network.fl.build();
+}
 
 }} //namespace navitia::type

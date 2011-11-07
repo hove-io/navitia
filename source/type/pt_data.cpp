@@ -107,13 +107,12 @@ void PT_Data::build_first_letter(){
         this->city_first_letter.add_string(city.name, city.idx);
     }
     this->city_first_letter.build();
+}
 
-    /*
-    BOOST_FOREACH(auto way, street_network.ways){
-        street_network.fl.add_string(way.name + " " + cities[way.city_idx].name, way.idx);
-    }
-    this->street_network.fl.build();
-    */
+void PT_Data::build_proximity_list() {
+}
+
+void PT_Data::build_external_code() {
 }
 
 }}
