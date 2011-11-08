@@ -152,6 +152,7 @@ message FirstLetterItem {
     optional City city = 5;
     optional StopArea stop_area = 6;
     optional Site site = 7;
+    optional string uri = 8;
 }
 
 message FirstLetter {

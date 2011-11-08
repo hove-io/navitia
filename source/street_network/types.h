@@ -1,5 +1,6 @@
 #include "type/type.h"
 #include "first_letter/first_letter.h"
+#include "proximity_list/proximity_list.h"
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adj_list_serialize.hpp>
@@ -16,11 +17,10 @@ namespace navitia { namespace streetnetwork {
 
 /** Propriétés Nœud (intersection entre deux routes) */
 struct Vertex {
-    double lon;
-    double lat;
+    type::GeographicalCoord coord;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & lon & lat;
+        ar & coord;
     }
 };
 
@@ -93,10 +93,11 @@ struct Path {
 struct StreetNetwork {
     std::vector<Way> ways;
     FirstLetter<unsigned int> fl;
+    ProximityList<vertex_t> pl;
     Graph graph;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & ways & graph & fl;
+        ar & ways & graph & fl & pl;
     }
 
     /** Construit l'indexe spatial */

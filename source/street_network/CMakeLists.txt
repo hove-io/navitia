@@ -8,7 +8,7 @@ include_directories ( ${Boost_INCLUDE_DIRS}
 add_library(streetnetwork  types.h types.cpp ../utils/csv.cpp ../utils/encoding_converter.cpp ${CMAKE_SOURCE_DIR}/../third_party/fastlz/fastlz.c)
 target_link_libraries(streetnetwork ${Boost_LIBRARIES})
 
-add_executable (test_sn test.cpp)
-target_link_libraries(test_sn ${Boost_LIBRARIES} streetnetwork)
+add_executable (test_sn test.cpp types.cpp ../type/type.cpp)
+target_link_libraries(test_sn ${Boost_LIBRARIES} streetnetwork proj)
 
 

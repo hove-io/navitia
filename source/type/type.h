@@ -97,6 +97,7 @@ struct GeographicalCoord{
 };
 
 struct Country: public NavitiaHeader, Nameable {
+    const static Type_e type = eCountry;
     idx_t main_city_idx;
     std::vector<idx_t> district_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -107,6 +108,7 @@ struct Country: public NavitiaHeader, Nameable {
 };
 
 struct District : public NavitiaHeader, Nameable {
+    const static Type_e type = eDistrict;
     idx_t main_city_idx;
     idx_t country_idx;
     std::vector<idx_t> department_list;
@@ -116,6 +118,7 @@ struct District : public NavitiaHeader, Nameable {
 };
 
 struct Department : public NavitiaHeader, Nameable {
+    const static Type_e type = eDepartment;
     idx_t main_city_idx;
     idx_t district_idx;
     std::vector<idx_t> city_list;
@@ -126,6 +129,7 @@ struct Department : public NavitiaHeader, Nameable {
 
 
 struct City : public NavitiaHeader, Nameable {
+    const static Type_e type = eCity;
     std::string main_postal_code;
     bool main_city;
     bool use_main_stop_area_property;
@@ -151,6 +155,7 @@ struct City : public NavitiaHeader, Nameable {
 };
 
 struct Connection: public NavitiaHeader{
+    const static Type_e type = eConnection;
     idx_t departure_stop_point_idx;
     idx_t destination_stop_point_idx;
     int duration;
@@ -165,6 +170,7 @@ struct Connection: public NavitiaHeader{
 };
 
 struct StopArea : public NavitiaHeader, Nameable{
+    const static Type_e type = eStopArea;
     GeographicalCoord coord;
     int properties;
     std::string additional_data;
@@ -181,6 +187,7 @@ struct StopArea : public NavitiaHeader, Nameable{
 };
 
 struct Network : public NavitiaHeader, Nameable{
+    const static Type_e type = eNetwork;
     std::string address_name;
     std::string address_number;
     std::string address_type_name;
@@ -200,6 +207,7 @@ struct Network : public NavitiaHeader, Nameable{
 };
 
 struct Company : public NavitiaHeader, Nameable{
+    const static Type_e type = eCompany;
     std::string address_name;
     std::string address_number;
     std::string address_type_name;
@@ -218,6 +226,7 @@ struct Company : public NavitiaHeader, Nameable{
 };
 
 struct ModeType : public NavitiaHeader, Nameable{
+    const static Type_e type = eModeType;
     std::vector<idx_t> mode_list;
     std::vector<idx_t> line_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -227,6 +236,7 @@ struct ModeType : public NavitiaHeader, Nameable{
 };
 
 struct Mode : public NavitiaHeader, Nameable{
+    const static Type_e type = eMode;
     idx_t mode_type_idx;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & external_code & mode_type_idx & idx;
@@ -235,6 +245,7 @@ struct Mode : public NavitiaHeader, Nameable{
 };
 
 struct Line : public NavitiaHeader, Nameable {
+    const static Type_e type = eLine;
     std::string code;
     std::string forward_name;
     std::string backward_name;
@@ -248,7 +259,6 @@ struct Line : public NavitiaHeader, Nameable {
     std::vector<idx_t> mode_list;
     std::vector<idx_t> company_list;
     idx_t network_idx;
-
 
     std::vector<idx_t> forward_route;
     std::vector<idx_t> backward_route;
@@ -270,6 +280,7 @@ struct Line : public NavitiaHeader, Nameable {
 };
 
 struct Route : public NavitiaHeader, Nameable{
+    const static Type_e type = eRoute;
     bool is_frequence;
     bool is_forward;
     bool is_adapted;
@@ -295,6 +306,7 @@ struct Route : public NavitiaHeader, Nameable{
 };
 
 struct VehicleJourney: public NavitiaHeader, Nameable {
+    const static Type_e type = eVehicleJourney;
     idx_t route_idx;
     idx_t company_idx;
     idx_t mode_idx;
@@ -310,6 +322,7 @@ struct VehicleJourney: public NavitiaHeader, Nameable {
 };
 
 struct Vehicle: public NavitiaHeader, Nameable {
+    const static Type_e type = eVehicle;
 };
 
 struct Equipement : public NavitiaHeader {
@@ -329,6 +342,7 @@ struct Equipement : public NavitiaHeader {
 };
 
 struct RoutePoint : public NavitiaHeader{
+    const static Type_e type = eRoutePoint;
     int order;
     bool main_stop_point;
     int fare_section;
@@ -347,6 +361,7 @@ struct RoutePoint : public NavitiaHeader{
 };
 
 struct ValidityPattern : public NavitiaHeader {
+    const static Type_e type = eValidityPattern;
 private:
     boost::gregorian::date beginning_date;
     std::bitset<366> days;
@@ -367,6 +382,7 @@ public:
 };
 
 struct StopPoint : public NavitiaHeader, Nameable{
+    const static Type_e type = eStopPoint;
     GeographicalCoord coord;
     int fare_zone;
 
@@ -390,6 +406,7 @@ struct StopPoint : public NavitiaHeader, Nameable{
 };
 
 struct StopTime: public NavitiaHeader{
+    const static Type_e type = eStopTime;
     int arrival_time; ///< En secondes depuis minuit
     int departure_time; ///< En secondes depuis minuit
     size_t vehicle_journey_idx;
@@ -444,5 +461,34 @@ typedef boost::mpl::map< mpl::pair<mpl::int_<eValidityPattern>, ValidityPattern>
                          mpl::pair<mpl::int_<eCompany>, Company>,
                          mpl::pair<mpl::int_<eVehicle>, Vehicle>,
                          mpl::pair<mpl::int_<eCountry>, Country> > enum_type_map;
+
+/** Type pour gérer le polymorphisme en entrée de l'API
+  *
+  * Les objets on un identifiant universel de type stop_area:872124
+  * Ces identifiants ne devraient pas être générés par le média
+  * C'est toujours NAViTiA qui le génère pour être repris tel quel par le média
+  */
+struct EntryPoint {
+    Type_e type;//< Le type de l'objet
+    std::string external_code; //< Le code externe de l'objet
+
+    /// Retourne une string unique à parti de n'importe quel objet
+    template<class T>
+    static std::string get_uri(T t){
+        return static_data::get()->captionByType(T::type) + ":" + t.external_code;
+    }
+
+    /// Construit le type à partir d'une chaîne
+    EntryPoint(const std::string & uri){
+        size_t pos = uri.find(":");
+        if(pos == std::string::npos)
+            type = eUnknown;
+        else {
+            type = static_data::get()->typeByCaption(uri.substr(0,pos));
+            external_code = uri.substr(pos+1);
+        }
+    }
+
+};
 
 } } //namespace navitia::type

@@ -71,8 +71,8 @@ void BDTopoParser::load_city(navimake::Data& data){
             if(it == vertex_map.end()){
                 Vertex v;
                 try{
-                    v.lon = boost::lexical_cast<double>(row[x1]);
-                    v.lat = boost::lexical_cast<double>(row[y1]);
+                    v.coord.x = boost::lexical_cast<double>(row[x1]);
+                    v.coord.y = boost::lexical_cast<double>(row[y1]);
                 } catch(...){
                     std::cout << "coord : " << row[x1] << ";" << row[y1] << std::endl;
                 }
@@ -85,8 +85,8 @@ void BDTopoParser::load_city(navimake::Data& data){
             if(it == vertex_map.end()){
                 Vertex v;
                 try{
-                    v.lon = boost::lexical_cast<double>(row[x2]);
-                    v.lat = boost::lexical_cast<double>(row[y2]);
+                    v.coord.x = boost::lexical_cast<double>(row[x2]);
+                    v.coord.y = boost::lexical_cast<double>(row[y2]);
                 } catch(...){
                     std::cout << "coord : " << row[x1] << ";" << row[y1] << std::endl;
                 }

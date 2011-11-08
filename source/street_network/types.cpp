@@ -73,8 +73,7 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
             vertex_t u = reverse_path[i-1];
             vertex_t v = reverse_path[i];
             Edge edge = graph[boost::edge(u, v, graph).first];
-            nt::GeographicalCoord coord(graph[v].lon, graph[v].lat);
-            p.coordinates.push_back(coord);
+            p.coordinates.push_back(graph[v].coord);
             path_item.way_idx = edge.way_idx;
 
 
@@ -92,6 +91,10 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
 }
 
 void StreetNetwork::build_proximity_list(){
+    BOOST_FOREACH(vertex_t u, boost::vertices(this->graph)){
+        pl.add(graph[u].coord, u);
+    }
+    pl.build();
 }
 
 

@@ -46,11 +46,13 @@ class Worker : public BaseWorker<navitia::type::Data> {
                     child = item->mutable_stop_area();
                     navitia::fill_pb_object<nt::eStopArea>(idx, data, child, 2);
                     item->set_name(data.pt_data.stop_areas[idx].name);
+                    item->set_uri(nt::EntryPoint::get_uri(data.pt_data.stop_areas[idx]));
                     break;
                 case nt::eCity:
                     child = item->mutable_city();
                     navitia::fill_pb_object<nt::eCity>(idx, data, child);
                     item->set_name(data.pt_data.cities[idx].name);
+                    item->set_uri(nt::EntryPoint::get_uri(data.pt_data.cities[idx]));
                     break;
                 default:
                     break;

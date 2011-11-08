@@ -74,6 +74,11 @@ struct ProximityList
         return std::vector<T>();
     }
 
+    /// Fonction de confort pour retrouver l'élément le plus proche dans l'indexe
+    T find_nearest(double lon, double lat){
+        return find_nearest(GeographicalCoord(lon, lat));
+    }
+
     /// Retourne l'élément le plus proche dans tout l'indexe
     T find_nearest(GeographicalCoord coord){
         return find_nearest(coord, items.begin(), items.end(), true).first;
