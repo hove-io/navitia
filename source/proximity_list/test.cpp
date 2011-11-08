@@ -25,7 +25,7 @@ using namespace navitia::type;
     pl.build();
 
     std::vector<unsigned int> expected {1,2,4,6,5,3};
-    for(size_t i; i < expected.size(); ++i)
+    for(size_t i=0; i < expected.size(); ++i)
         BOOST_CHECK_EQUAL(pl.items[i].element, expected[i]);
 
     auto res = pl.find_within(c, 100);

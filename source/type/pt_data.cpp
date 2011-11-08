@@ -98,9 +98,10 @@ template<> std::vector<Country> & PT_Data::get_data<eCountry>(){return countries
 
 
 void PT_Data::build_first_letter(){
-    BOOST_FOREACH(StopArea sa, stop_areas){
+    BOOST_FOREACH(StopArea sa, this->stop_areas){
         this->stop_area_first_letter.add_string(sa.name + " " + cities[sa.city_idx].name, sa.idx);
     }
+
     this->stop_area_first_letter.build();
 
     BOOST_FOREACH(City city, cities){
@@ -110,9 +111,31 @@ void PT_Data::build_first_letter(){
 }
 
 void PT_Data::build_proximity_list() {
+    BOOST_FOREACH(City city, this->cities){
+        this->city_proximity_list.add(city.coord, city.idx);
+    }
+    BOOST_FOREACH(StopArea stop_area, this->stop_areas){
+        this->stop_area_proximity_list.add(stop_area.coord, stop_area.idx);
+    }
+    BOOST_FOREACH(StopPoint stop_point, this->stop_points){
+        this->stop_point_proximity_list.add(stop_point.coord, stop_point.idx);
+    }
 }
 
 void PT_Data::build_external_code() {
+    BOOST_FOREACH(Line line, this->lines){line_map[line.external_code] = line.idx;}
+    BOOST_FOREACH(Route route, this->routes){route_map[route.external_code] = route.idx;}
+    BOOST_FOREACH(VehicleJourney vj, this->vehicle_journeys){vehicle_journey_map[vj.external_code] = vj.idx;}
+    BOOST_FOREACH(StopArea sa, this->stop_areas){stop_area_map[sa.external_code] = sa.idx;}
+    BOOST_FOREACH(StopPoint sp, this->stop_points){stop_point_map[sp.external_code] = sp.idx;}
+    BOOST_FOREACH(Network network, this->networks){network_map[network.external_code] = network.idx;}
+    BOOST_FOREACH(Mode mode, this->modes){mode_map[mode.external_code] = mode.idx;}
+    BOOST_FOREACH(ModeType mode_type, this->mode_types){mode_type_map[mode_type.external_code] = mode_type.idx;}
+    BOOST_FOREACH(City city, this->cities){city_map[city.external_code] = city.idx;}
+    BOOST_FOREACH(District district, this->districts){district_map[district.external_code] = district.idx;}
+    BOOST_FOREACH(Department department, this->departments){department_map[department.external_code] = department.idx;}
+    BOOST_FOREACH(Company company, this->companies){company_map[company.external_code] = company.idx;}
+    BOOST_FOREACH(Country country, this->countries){country_map[country.external_code] = country.idx;}
 }
 
 }}

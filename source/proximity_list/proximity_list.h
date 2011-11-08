@@ -22,7 +22,12 @@ struct ProximityList
     {
         GeographicalCoord coord;
         T element;
+        Item(){}
         Item(GeographicalCoord coord, T element) : coord(coord), element(element) {}
+        template<class Archive> void serialize(Archive & ar, const unsigned int) {
+            ar & coord & element;
+        }
+
     };
 
     /// Contient toutes les coordonnées de manière à trouver rapidement
@@ -60,12 +65,12 @@ struct ProximityList
     }
 
     /// Retourne tous les éléments dans un rayon de x mètres
-    std::vector<T> find_within(GeographicalCoord coord, double meters){
+    std::vector<T> find_within(GeographicalCoord , double ){
         return std::vector<T>();
     }
 
     /// Retourne les k-éléments les plus proches
-    std::vector<T> find_k_nearest(GeographicalCoord coord, size_t k){
+    std::vector<T> find_k_nearest(GeographicalCoord , size_t ){
         return std::vector<T>();
     }
 
@@ -111,6 +116,14 @@ struct ProximityList
                 best = other_best;
         }
         return best;
+    }
+
+    /** Fonction qui permet de sérialiser (aka binariser la structure de données
+      *
+      * Elle est appelée par boost et pas directement
+      */
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar & items;
     }
 
 };

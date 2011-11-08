@@ -1,5 +1,8 @@
 #include "type.h"
 #include "first_letter/first_letter.h"
+#include "proximity_list/proximity_list.h"
+
+#include <boost/serialization/map.hpp>
 
 namespace navitia { namespace type {
 
@@ -26,17 +29,50 @@ struct PT_Data{
     std::vector<Country> countries;
 
 
-    //first letter
+    // First letter
     FirstLetter<idx_t> stop_area_first_letter;
     FirstLetter<idx_t> city_first_letter;
+
+    // Proximity list
+    ProximityList<idx_t> stop_area_proximity_list;
+    ProximityList<idx_t> stop_point_proximity_list;
+    ProximityList<idx_t> city_proximity_list;
+
+    // Maps pour external code
+    // À refléchir si un hash_map ne serait pas mieux ; pas forcément en lecture car hasher une chaîne c'est plus long que comparer
+    // En attendant on utilise std::map car on sait le sérialiser...
+    typedef std::map<std::string, idx_t> ExtCodeMap;
+    ExtCodeMap line_map;
+    ExtCodeMap route_map;
+    ExtCodeMap vehicle_journey_map;
+    ExtCodeMap stop_area_map;
+    ExtCodeMap stop_point_map;
+    ExtCodeMap network_map;
+    ExtCodeMap mode_map;
+    ExtCodeMap mode_type_map;
+    ExtCodeMap city_map;
+    ExtCodeMap district_map;
+    ExtCodeMap department_map;
+    ExtCodeMap company_map;
+    ExtCodeMap country_map;
 
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
       *
       * Elle est appelée par boost et pas directement
       */
-    template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & validity_patterns & lines & stop_points & stop_areas & stop_times & routes
-            & vehicle_journeys & route_points & stop_area_first_letter & city_first_letter;
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {        
+        ar
+                // Les listes de données
+                & validity_patterns & lines & stop_points & stop_areas & stop_times & routes
+                & vehicle_journeys & route_points
+                // Les firstLetter
+                & stop_area_first_letter & city_first_letter
+                // Les map d'externalcode
+                & line_map & route_map & vehicle_journey_map & stop_area_map & stop_point_map
+                & network_map & mode_map & mode_type_map & city_map & district_map & department_map
+                & company_map & country_map
+                // Les proximity list
+                & stop_area_proximity_list & stop_point_proximity_list & city_proximity_list;
     }
 
     /** Initialise tous les indexes
