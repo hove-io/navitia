@@ -410,31 +410,16 @@ struct StopTime: public NavitiaHeader{
 };
 
 
-
-enum PointType{ptCity, ptSite, ptAddress, ptStopArea, ptAlias, ptUndefined, ptSeparator};
-enum Criteria{cInitialization, cAsSoonAsPossible, cLeastInterchange, cLinkTime, cDebug, cWDI};
-
-
 struct static_data {
 private:
     static static_data * instance;
 public:
     static static_data * get();
-    static PointType getpointTypeByCaption(const std::string & strPointType);
     static std::string getListNameByType(Type_e type);
-    static Criteria getCriteriaByCaption(const std::string & strCriteria);
     static boost::posix_time::ptime parse_date_time(const std::string& s);
-    static bool strToBool(const std::string &strValue);
     static Type_e typeByCaption(const std::string & type_str);
     static std::string captionByType(Type_e type);
-
-    boost::bimap<Criteria, std::string> criterias;
-    boost::bimap<PointType, std::string> point_types;
     boost::bimap<Type_e, std::string> types_string;
-    std::vector<std::string> true_strings;
-    std::vector<std::locale> date_locales;
-
-
 };
 
 /** Correspondance entre les enums de type et les classes

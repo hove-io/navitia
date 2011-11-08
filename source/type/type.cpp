@@ -92,34 +92,6 @@ static_data * static_data::get() {
     if (instance == 0) {
         instance = new static_data();
 
-        boost::assign::insert(instance->criterias)
-                (cInitialization, "Initialization")
-                (cAsSoonAsPossible, "AsSoonAsPossible")
-                (cLeastInterchange, "LeastInterchange")
-                (cLinkTime, "LinkTime")
-                (cDebug, "Debug")
-                (cWDI,"WDI");
-
-        boost::assign::insert(instance->point_types)
-                (ptCity,"City")
-                (ptSite,"Site")
-                (ptAddress,"Address")
-                (ptStopArea,"StopArea")
-                (ptAlias,"Alias")
-                (ptUndefined,"Undefined")
-                (ptSeparator,"Separator");
-
-        boost::assign::push_back(instance->true_strings)("true")("+")("1");
-
-        using std::locale; using boost::posix_time::time_input_facet;
-        boost::assign::push_back(instance->date_locales)
-                ( locale(locale::classic(), new time_input_facet("%Y-%m-%d %H:%M:%S")) )
-                ( locale(locale::classic(), new time_input_facet("%Y/%m/%d %H:%M:%S")) )
-                ( locale(locale::classic(), new time_input_facet("%d/%m/%Y %H:%M:%S")) )
-                ( locale(locale::classic(), new time_input_facet("%d.%m.%Y %H:%M:%S")) )
-                ( locale(locale::classic(), new time_input_facet("%d-%m-%Y %H:%M:%S")) )
-                ( locale(locale::classic(), new time_input_facet("%Y-%m-%d")) );
-
         boost::assign::insert(instance->types_string)
                 (eValidityPattern, "validity_pattern")
                 (eLine, "line")
@@ -147,38 +119,12 @@ std::string static_data::getListNameByType(Type_e type){
     return instance->types_string.left.at(type) + "_list";
 }
 
-PointType static_data::getpointTypeByCaption(const std::string & strPointType){
-    return instance->point_types.right.at(strPointType);
-}
-
-Criteria static_data::getCriteriaByCaption(const std::string & strCriteria){
-    return instance->criterias.right.at(strCriteria);
-}
-
-bool static_data::strToBool(const std::string &strValue){
-    return std::find(instance->true_strings.begin(), instance->true_strings.end(), strValue) != instance->true_strings.end();
-}
-
 Type_e static_data::typeByCaption(const std::string & type_str) {
     return instance->types_string.right.at(type_str);
 }
 
 std::string static_data::captionByType(Type_e type){
     return instance->types_string.left.at(type);
-}
-
-boost::posix_time::ptime static_data::parse_date_time(const std::string& s) {
-    boost::posix_time::ptime pt;
-    boost::posix_time::ptime invalid_date;
-    static_data * inst = static_data::get();
-    BOOST_FOREACH(const std::locale & locale, inst->date_locales){
-        std::istringstream is(s);
-        is.imbue(locale);
-        is >> pt;
-        if(pt != boost::posix_time::ptime())
-            break;
-    }
-    return pt;
 }
 
 std::vector<idx_t> Country::get(Type_e type, const PT_Data &)  const {
