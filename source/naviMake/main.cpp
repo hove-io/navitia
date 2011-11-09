@@ -82,7 +82,8 @@ int main(int argc, char * argv[])
 
     //street network => temporaire
     start = pt::microsec_clock::local_time();
-    topo_parser.load_streetnetwork(nav_data);
+    topo_parser.load_streetnetwork(nav_data.street_network);
+    nav_data.set_cities(); // Assigne les villes aux voiries du filaire
     sn = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     start = pt::microsec_clock::local_time();

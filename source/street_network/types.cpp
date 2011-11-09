@@ -38,6 +38,7 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
     // si pred[v] == v, c'est soit qu'il n'y a pas de chemin possible, soit c'est l'origine
     std::vector<float> dists(boost::num_vertices(this->graph));
 
+    std::cout << "On lance dijkstra" << std::endl;
     boost::dijkstra_shortest_paths(this->graph,
                                    start, // nœud de départ
                                    boost::predecessor_map(&preds[0])
@@ -45,6 +46,7 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
                                    .weight_map(boost::get(&Edge::length, this->graph))
                                    );
 
+    std::cout << "Dijkstra fini" << std::endl;
     // On cherche la destination la plus proche
     vertex_t best_destination;
     float best_distance = std::numeric_limits<float>::max();

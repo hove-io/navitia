@@ -25,8 +25,11 @@ public:
     /// Référentiel de transport en commun
     PT_Data pt_data;
 
-    ///streetnetwork
+    /// streetnetwork
     navitia::streetnetwork::StreetNetwork street_network;
+
+    /// Fixe les villes des voiries du filaire
+    void set_cities();
 
     boost::shared_mutex load_mutex;
 

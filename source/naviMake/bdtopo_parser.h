@@ -23,13 +23,11 @@ class BDTopoParser {
          * Charge les données du filaire de voirie dans un objet Data de NAViTiA /!\
          *
          */
-        void load_streetnetwork(nt::Data& data);
+        void load_streetnetwork(navitia::streetnetwork::StreetNetwork & street_network);
         
 
     private:
         std::string path;
-
-        std::unordered_map<std::string, idx_t> create_cities_indexes(const std::vector<nt::City>& cities)const;
 };
 
 

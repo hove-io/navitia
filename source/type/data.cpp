@@ -14,6 +14,15 @@
 
 namespace navitia { namespace type {
 
+void Data::set_cities(){
+    BOOST_FOREACH(navitia::streetnetwork::Way way, street_network.ways){
+        auto city_it = pt_data.city_map.find(way.city);
+        if(city_it != pt_data.city_map.end()){
+            way.city_idx = city_it->second;
+        }
+    }
+}
+
 void Data::save(const std::string & filename) {
     std::ofstream ofs(filename.c_str());
     boost::archive::text_oarchive oa(ofs);

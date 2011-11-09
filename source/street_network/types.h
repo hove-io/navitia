@@ -1,4 +1,5 @@
-#include "type/type.h"
+#pragma once
+
 #include "first_letter/first_letter.h"
 #include "proximity_list/proximity_list.h"
 
@@ -8,7 +9,6 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/utility.hpp>
 
-#include <unordered_map>
 #include <map>
 
 namespace bg = boost::graph;
