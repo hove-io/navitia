@@ -57,6 +57,7 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
         }
     }
 
+    std::cout << "On a trouvé le plus court chemin : " << best_distance << " mètres" << std::endl;
     // Si un chemin existe
     if(best_distance < std::numeric_limits<float>::max()){
         p.length = best_distance;
@@ -71,22 +72,23 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
         // On reparcourre tout dans le bon ordre
         nt::idx_t last_way =  std::numeric_limits<nt::idx_t>::max();
         PathItem path_item;
-        for(size_t i = reverse_path.size()-1; i > 0; --i){
-            vertex_t u = reverse_path[i-1];
-            vertex_t v = reverse_path[i];
+        for(size_t i = reverse_path.size(); i > 1; --i){
+            vertex_t u = reverse_path[i-2];
+            vertex_t v = reverse_path[i-1];
             Edge edge = graph[boost::edge(u, v, graph).first];
             p.coordinates.push_back(graph[v].coord);
             path_item.way_idx = edge.way_idx;
 
 
+            path_item.length += edge.length;
             if(edge.way_idx != last_way){
                 p.path_items.push_back(path_item);
                 last_way = edge.way_idx;
                 path_item = PathItem();
             }
-            path_item.length += edge.length;
         }
-        p.path_items.push_back(path_item);
+        if(revers_path.size() > 0)
+            p.path_items.push_back(path_item);
     }
 
     return p;
