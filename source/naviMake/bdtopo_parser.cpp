@@ -63,6 +63,8 @@ void BDTopoParser::load_streetnetwork(ns::StreetNetwork & street_network){
     size_t n_fin_d = cols["Bornefin_d"];
     size_t n_fin_g = cols["Bornefin_g"];
 
+    navitia::type::Projection proj_lambert2e("Lambert 2 étendu", "+init=epsg:27572", false);
+
     std::unordered_map<std::string, vertex_t> vertex_map;
     std::unordered_map<std::string, Way> way_map;
     for(reader.next(); !reader.eof() ;row = reader.next()){
@@ -72,8 +74,10 @@ void BDTopoParser::load_streetnetwork(ns::StreetNetwork & street_network){
         if(it == vertex_map.end()){
             Vertex v;
             try{
-                v.coord.x = boost::lexical_cast<double>(row[x1]);
-                v.coord.y = boost::lexical_cast<double>(row[y1]);
+                v.coord = navitia::type::GeographicalCoord(boost::lexical_cast<double>(row[x1]),
+                                                           boost::lexical_cast<double>(row[y1]),
+                                                           proj_lambert2e);
+
             } catch(...){
                 std::cout << "coord : " << row[x1] << ";" << row[y1] << std::endl;
             }
@@ -86,8 +90,9 @@ void BDTopoParser::load_streetnetwork(ns::StreetNetwork & street_network){
         if(it == vertex_map.end()){
             Vertex v;
             try{
-                v.coord.x = boost::lexical_cast<double>(row[x2]);
-                v.coord.y = boost::lexical_cast<double>(row[y2]);
+                v.coord = navitia::type::GeographicalCoord(boost::lexical_cast<double>(row[x1]),
+                                                           boost::lexical_cast<double>(row[y1]),
+                                                           proj_lambert2e);
             } catch(...){
                 std::cout << "coord : " << row[x1] << ";" << row[y1] << std::endl;
             }
