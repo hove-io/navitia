@@ -161,7 +161,13 @@ message FirstLetter {
     repeated string bad_word_list = 3;
 }
 
+message PathItem {
+    optional string name = 1;
+    optional double length = 2;
+}
+
 message StreetNetwork {
-    optional float length = 1;
-    repeated Way way_list = 2;
+    optional double length = 1;
+    repeated PathItem path_item_list = 2;
+    repeated GeographicalCoord coordinate_list = 3;
 }

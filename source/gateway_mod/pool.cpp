@@ -19,7 +19,7 @@ Pool::Pool(){
 	this->nb_threads = conf->get_as<int>("GENERAL","NbThread", 4);
     //@TODO géré l'enregistrement des NAVitIA depuis le fichiers de conf => définir un format potable
 
-    navitia_list.push_back(new Navitia("http://localhost:81/1", 8));
+    navitia_list.push_back(new Navitia("http://localhost/n1/", 8));
     std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
 
 

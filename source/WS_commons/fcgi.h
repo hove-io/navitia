@@ -21,9 +21,20 @@ namespace webservice {
             request_data.data = tmp_str;
             delete tmp_str;
         }
-        request_data.path = FCGX_GetParam("SCRIPT_FILENAME", handle->envp);
-        request_data.raw_params = FCGX_GetParam("QUERY_STRING", handle->envp);
-        request_data.method = parse_method(FCGX_GetParam("REQUEST_METHOD", handle->envp));
+        if(FCGX_GetParam("SCRIPT_FILENAME", handle->envp) != NULL)
+                request_data.path = FCGX_GetParam("SCRIPT_FILENAME", handle->envp);
+        else if(FCGX_GetParam("SCRIPT_NAME", handle->envp) != NULL)
+                request_data.path = FCGX_GetParam("SCRIPT_NAME", handle->envp);
+
+        if(FCGX_GetParam("QUERY_STRING", handle->envp) != NULL)
+            request_data.raw_params = FCGX_GetParam("QUERY_STRING", handle->envp);
+        else
+            request_data.raw_params = "(FCGI) FATAL ERROR: UNKNOWN QUERY_STRING";
+
+        if(FCGX_GetParam("REQUEST_METHOD", handle->envp) != NULL)
+            request_data.method = parse_method(FCGX_GetParam("REQUEST_METHOD", handle->envp));
+        else
+            request_data.method = UNKNOWN;
 
         ResponseData resp = w(request_data, data);
 

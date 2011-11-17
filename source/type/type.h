@@ -460,7 +460,8 @@ typedef boost::mpl::map< mpl::pair<mpl::int_<eValidityPattern>, ValidityPattern>
                          mpl::pair<mpl::int_<eDepartment>, Department>,
                          mpl::pair<mpl::int_<eCompany>, Company>,
                          mpl::pair<mpl::int_<eVehicle>, Vehicle>,
-                         mpl::pair<mpl::int_<eCountry>, Country> > enum_type_map;
+                         mpl::pair<mpl::int_<eCountry>, Country>
+                      > enum_type_map;
 
 /** Type pour gérer le polymorphisme en entrée de l'API
   *

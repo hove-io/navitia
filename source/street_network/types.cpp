@@ -87,7 +87,7 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
                 path_item = PathItem();
             }
         }
-        if(revers_path.size() > 0)
+        if(reverse_path.size() > 0)
             p.path_items.push_back(path_item);
     }
 
