@@ -68,56 +68,57 @@ BOOST_AUTO_TEST_CASE(time_parse){
 BOOST_AUTO_TEST_CASE(test_computation) {
     std::vector<std::string> keys;
 
-    // Un trajet simple
-    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;02|06;02|10;1;1;metro");
     Fare f;
     f.init(std::string(FIXTURES_DIR) + "/fare/idf.fares", std::string(FIXTURES_DIR) + "/fare/prix.csv");
     f.load_od_stif(std::string(FIXTURES_DIR) + "/fare/tarifs_od.csv");
+
+    // Un trajet simple
+    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;02|06;02|10;1;1;metro");
     std::vector<Ticket> res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
     BOOST_CHECK_EQUAL(res.at(0).value , 170);
 
     // Correspondance métro sans billet
-    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;02|20;02|30;1;1;metro");
+    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;02|20;02|30;1;1;metro");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
 
     // Correspondance RER sans billet
-    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;02|35;02|40;1;1;rapidtransit");
+    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;02|35;02|40;1;1;rapidtransit");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
 
     // Correspondance BUS, donc nouveau billet
-    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;02|35;02|40;1;1;bus");
+    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;02|35;02|40;1;1;bus");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 2);
 
     // Correspondance Tramwayway-bus autant qu'on veut
-    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;02|50;03|30;1;1;Tramway");
-    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;03|30;04|20;1;1;bus");
+    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;02|50;03|30;1;1;tramway");
+    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;03|30;04|20;1;1;bus");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 2);
     // On a dépassé les 90 minutes de validité du ticket t+, il faut en racheter un
-    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|30;04|40;1;1;bus");
+    keys.push_back("Filbleu;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;04|30;04|40;1;1;bus");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 3);
 
     // On teste un peu les OD vers paris
     keys.clear();
-    keys.push_back("ratp;8711388;8775890;FILGATO-2;2011|06|01;04|40;04|50;4;1;rapidtransit");
+    keys.push_back("ratp;8711388;8775890;FILGATO-2;2011|07|01;04|40;04|50;4;1;rapidtransit");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
     BOOST_CHECK_EQUAL(res.at(0).value,370);
 
     // Le métro doit être gratuit après
-    keys.push_back("ratp;paris;FILNav31;FILGATO-2;2011|06|01;04|40;04|50;1;1;metro");
+    keys.push_back("ratp;paris;FILNav31;FILGATO-2;2011|07|01;04|40;04|50;1;1;metro");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
     BOOST_CHECK_EQUAL(res.at(0).value,370);
 
     // Et le Tramway bien évidemment payant !
     // Le métro doit être gratuit après
-    keys.push_back("ratp;paris;FILNav31;FILGATO-2;2011|06|01;04|40;04|50;1;1;Tramway");
+    keys.push_back("ratp;paris;FILNav31;FILGATO-2;2011|07|01;04|40;04|50;1;1;tramway");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 2);
 
@@ -129,35 +130,35 @@ BOOST_AUTO_TEST_CASE(test_computation) {
 
     // On teste le noctilien
     keys.clear();
-    keys.push_back("Noctilien;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|30;04|40;1;1;bus");
+    keys.push_back("Noctilien;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;04|30;04|40;1;1;bus");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
     BOOST_CHECK_EQUAL(res[0].value , 170);
 
     keys.clear();
-    keys.push_back("Noctilien;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|30;04|40;1;3;bus");
+    keys.push_back("Noctilien;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;04|30;04|40;1;3;bus");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
     BOOST_CHECK_EQUAL(res[0].value , 340);  // C'est un trajet qui coûte 2 tickets
 
 
     keys.clear();
-    keys.push_back("Noctilien;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|30;04|40;3;1;bus");
+    keys.push_back("noctilien;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;04|30;04|40;3;1;bus");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
     BOOST_CHECK_EQUAL(res[0].value , 340);  // C'est un trajet qui coûte 2 tickets
     // Prendre le bus après le noctilien coûte
-    keys.push_back("ratp;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|30;04|40;1;3;bus");
+    keys.push_back("ratp;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;04|30;04|40;1;3;bus");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 2);
 
     // On rajoute un bus après : il faut reprendre un billet
-    keys.push_back("ratp;FILURSE-2;FILNav31;FILGATO-2;2011|06|01;04|40;04|50;1;3;bus");
+    keys.push_back("ratp;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;04|40;04|50;1;3;bus");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 2);
 
     keys.clear();
-    keys.push_back("ratp;8739300;FILGATO-2;8775499;2010|12|01;04|40;04|50;4;1;rapidtransit");
+    keys.push_back("ratp;8739300;FILGATO-2;8775499;2011|12|01;04|40;04|50;4;1;rapidtransit");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
     BOOST_CHECK_EQUAL(res.at(0).value,215);
@@ -165,8 +166,8 @@ BOOST_AUTO_TEST_CASE(test_computation) {
 
     // Cas avec deux RER
     keys.clear();
-    keys.push_back("ratp;8739300;FILGATO-2;8775890;2010|12|01;04|40;04|50;4;1;rapidtransit");
-    keys.push_back("ratp;8775890;FILGATO-2;8775499;2010|12|01;04|40;04|50;1;5;rapidtransit");
+    keys.push_back("ratp;8739300;FILGATO-2;8775890;2011|12|01;04|40;04|50;4;1;rapidtransit");
+    keys.push_back("ratp;8775890;FILGATO-2;8775499;2011|12|01;04|40;04|50;1;5;rapidtransit");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
     BOOST_CHECK_EQUAL(res.at(0).value,215);
@@ -174,8 +175,8 @@ BOOST_AUTO_TEST_CASE(test_computation) {
 
     // Cas avec un RER, un changement en métro
     keys.clear();
-    keys.push_back("ratp;8739300;FILGATO-2;8775890;2010|12|01;04|40;04|50;4;1;rapidtransit");
-    keys.push_back("ratp;nation;montparnasse;FILGATO-2;2010|12|01;04|40;04|50;1;1;metro");
+    keys.push_back("ratp;8739300;FILGATO-2;8775890;2011|12|01;04|40;04|50;4;1;rapidtransit");
+    keys.push_back("ratp;nation;montparnasse;FILGATO-2;2011|12|01;04|40;04|50;1;1;metro");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
     BOOST_CHECK_EQUAL(res.at(0).value,295);
@@ -184,9 +185,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
 
     // Cas avec deux RER, un changement en métro au milieu
     keys.clear();
-    keys.push_back("ratp;8739300;FILGATO-2;8775890;2010|12|01;04|40;04|50;4;1;rapidtransit");
-    keys.push_back("ratp;nation;montparnasse;FILGATO-2;2010|12|01;04|40;04|50;1;1;metro");
-    keys.push_back("ratp;8775890;FILGATO-2;8775499;2010|12|01;04|40;04|50;1;5;rapidtransit");
+    keys.push_back("ratp;8739300;FILGATO-2;8775890;2011|12|01;04|40;04|50;4;1;rapidtransit");
+    keys.push_back("ratp;nation;montparnasse;FILGATO-2;2011|12|01;04|40;04|50;1;1;metro");
+    keys.push_back("ratp;8775890;FILGATO-2;8775499;2011|12|01;04|40;04|50;1;5;rapidtransit");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
     BOOST_CHECK_EQUAL(res.at(0).value,215);
@@ -195,9 +196,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
 
     // Cas avec un RER, un changement en bus => faut payer
     keys.clear();
-    keys.push_back("ratp;8739300;FILGATO-2;8775890;2010|12|01;04|40;04|50;4;1;rapidtransit");
+    keys.push_back("ratp;8739300;FILGATO-2;8775890;2011|12|01;04|40;04|50;4;1;rapidtransit");
     keys.push_back("ratp;nation;montparnasse;FILGATO-2;2011|12|01;04|40;04|50;1;1;bus");
-    keys.push_back("ratp;8775890;FILGATO-2;8775499;2010|12|01;04|40;04|50;1;5;rapidtransit");
+    keys.push_back("ratp;8775890;FILGATO-2;8775499;2011|12|01;04|40;04|50;1;5;rapidtransit");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 3);
     BOOST_CHECK_EQUAL(res.at(0).value,295);
@@ -247,7 +248,7 @@ BOOST_AUTO_TEST_CASE(test_computation) {
 
     // 13/10/2011 : youpppiiii on peut prendre "parfois" le tramway avec un ticket O/D
     keys.clear();
-    keys.push_back(";8711388;T4;8727141;2011|05|31;09|28;09|39;4;4;Tramway"); // L'abbaye -> Aulnay
+    keys.push_back(";8711388;T4;8727141;2011|05|31;09|28;09|39;4;4;tramway"); // L'abbaye -> Aulnay
     keys.push_back(";8727141;RER B;8770870;2011|05|31;09|28;09|39;4;4;RapidTransit"); // Aulnay -> CDG
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size(), 1);
@@ -255,7 +256,7 @@ BOOST_AUTO_TEST_CASE(test_computation) {
 
     keys.clear();
     keys.push_back(";bled_paumé;bus_magique;8711388;2011|05|31;09|28;09|39;4;4;Bus"); // Bled Paumé -> L'Abbaye
-    keys.push_back(";8711388;T4;8727141;2011|05|31;09|28;09|39;4;4;Tramway"); // L'abbaye -> Aulnay
+    keys.push_back(";8711388;T4;8727141;2011|05|31;09|28;09|39;4;4;tramway"); // L'abbaye -> Aulnay
     keys.push_back(";8727141;RER B;8770870;2011|05|31;09|28;09|39;4;4;RapidTransit"); // Aulnay -> CDG
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size(), 2);

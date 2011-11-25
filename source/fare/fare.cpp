@@ -89,7 +89,7 @@ Condition parse_condition(const std::string & condition_str) {
         return cond;
 
     // Match du texte
-    qi::rule<std::string::iterator, std::string()> txt =  qi::lexeme[+(qi::alnum|'_')];
+    qi::rule<std::string::iterator, std::string()> txt =  qi::lexeme[+(qi::alnum|'_'|':'|'-')];
 
     // Tous les opérateurs que l'on veut matcher
     qi::rule<std::string::iterator, Comp_e()> operator_r = qi::string("<=")[qi::_val = LTE]
@@ -107,6 +107,7 @@ Condition parse_condition(const std::string & condition_str) {
 
     // Si on n'arrive pas à tout parser
     if(!qi::phrase_parse(begin, end, condition_r, boost::spirit::ascii::space, cond) || begin != end) {
+        std::cout << "impossible de parser la condition " << condition_str << std::endl;
         throw invalid_condition();
     }
     return cond;
@@ -125,6 +126,8 @@ void Fare::init(const std::string & filename, const std::string & prices_filenam
 
      for(row=reader.next(); !reader.eof(); row = reader.next()) {
          bool symetric = false;
+
+         if(row.size() != 6) std::cout << "Ligne sans le bon nombre d'items : " << row.size() << std::endl;
 
          State start = parse_state(row.at(0));
          State end = parse_state(row.at(1));
