@@ -226,9 +226,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.at(0).sections.size() , 3);
 
     keys.clear();
-    keys.push_back("5604:127;11:120;050050023:23;8727622;2011|05|31;09|28;09|39;4;4;Bus");
-    keys.push_back(";8727622;800:D;8775860;2011|05|31;09|47;10|09;4;1;RapidTransit");
-    keys.push_back(";8775860;100110007:7;R_0007;2011|05|31;10|20;10|21;1;1;Metro");
+    keys.push_back("5604:127;11:120;050050023:23;8727622;2011|07|31;09|28;09|39;4;4;Bus");
+    keys.push_back(";8727622;800:D;8775860;2011|07|31;09|47;10|09;4;1;RapidTransit");
+    keys.push_back(";8775860;100110007:7;R_0007;2011|07|31;10|20;10|21;1;1;Metro");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 2);
     BOOST_CHECK_EQUAL(res.at(0).value,170);
@@ -241,28 +241,42 @@ BOOST_AUTO_TEST_CASE(test_computation) {
 
     // On prend le RER intramuros
     keys.clear();
-    keys.push_back(";8727141;RER B;8770870;2011|05|31;09|28;09|39;1;1;RapidTransit"); // Aulnay -> CDG "intramuros"
+    keys.push_back(";8727141;RER B;8770870;2011|07|31;09|28;09|39;1;1;RapidTransit"); // Aulnay -> CDG "intramuros"
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res.at(0).value, 170);
 
     // 13/10/2011 : youpppiiii on peut prendre "parfois" le tramway avec un ticket O/D
     keys.clear();
-    keys.push_back(";8711388;T4;8727141;2011|05|31;09|28;09|39;4;4;tramway"); // L'abbaye -> Aulnay
-    keys.push_back(";8727141;RER B;8770870;2011|05|31;09|28;09|39;4;4;RapidTransit"); // Aulnay -> CDG
+    keys.push_back(";8711388;T4;8727141;2011|07|31;09|28;09|39;4;4;tramway"); // L'abbaye -> Aulnay
+    keys.push_back(";8727141;RER B;8770870;2011|07|31;09|28;09|39;4;4;RapidTransit"); // Aulnay -> CDG
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res.at(0).value, 280);
 
     keys.clear();
-    keys.push_back(";bled_paumé;bus_magique;8711388;2011|05|31;09|28;09|39;4;4;Bus"); // Bled Paumé -> L'Abbaye
-    keys.push_back(";8711388;T4;8727141;2011|05|31;09|28;09|39;4;4;tramway"); // L'abbaye -> Aulnay
-    keys.push_back(";8727141;RER B;8770870;2011|05|31;09|28;09|39;4;4;RapidTransit"); // Aulnay -> CDG
+    keys.push_back(";bled_paumé;bus_magique;8711388;2011|07|31;09|28;09|39;4;4;Bus"); // Bled Paumé -> L'Abbaye
+    keys.push_back(";8711388;T4;8727141;2011|07|31;09|28;09|39;4;4;tramway"); // L'abbaye -> Aulnay
+    keys.push_back(";8727141;RER B;8770870;2011|07|31;09|28;09|39;4;4;RapidTransit"); // Aulnay -> CDG
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size(), 2);
     BOOST_CHECK_EQUAL(res.at(0).value, 170);
     BOOST_CHECK_EQUAL(res.at(1).value, 215);
 
-}
+    // On teste les lignes à tarif exclusif
+    keys.clear();
+    keys.push_back(";paris;098098001:1;areoport;2011|07|31;09|28;09|39;4;4;Bus");
+    res = f.compute(keys);
+    BOOST_CHECK_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res.at(0).value, 1150); // Kof ! c'est cher la navette AF
 
+    keys.clear();
+    keys.push_back(";bled_paumé;bus_magique;8711388;2011|07|31;09|28;09|39;4;4;Bus"); // Bled Paumé -> L'Abbaye
+    keys.push_back(";paris;098098001:1;areoport;2011|07|31;09|28;09|39;4;4;Bus");
+    res = f.compute(keys);
+    BOOST_CHECK_EQUAL(res.size(), 2);
+    BOOST_CHECK_EQUAL(res.at(0).value, 170);
+    BOOST_CHECK_EQUAL(res.at(1).value, 1150); // Kof ! c'est cher la navette AF}
+
+}
 

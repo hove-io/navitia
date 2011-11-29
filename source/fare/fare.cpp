@@ -88,10 +88,10 @@ Condition parse_condition(const std::string & condition_str) {
     if(str.empty())
         return cond;
 
-    // Match du texte
-    qi::rule<std::string::iterator, std::string()> txt =  qi::lexeme[+(qi::alnum|'_'|':'|'-')];
+    // Match du texte : du alphanumérique et quelques chars spéciaux
+    qi::rule<std::string::iterator, std::string()> txt = +(qi::alnum|qi::char_("_:-"));
 
-    // Tous les opérateurs que l'on veut matcher
+    // Tous les opérateurs que l'on veut matcher et leur valeur associée
     qi::rule<std::string::iterator, Comp_e()> operator_r = qi::string("<=")[qi::_val = LTE]
                                                          | qi::string(">=")[qi::_val = GTE]
                                                          | qi::string("!=")[qi::_val = NEQ]
