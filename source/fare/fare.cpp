@@ -403,6 +403,19 @@ Ticket DateTicket::get_fare(boost::gregorian::date date){
     throw std::string("Impossible de trouver le prix du billet pour la date donnée");
 }
 
+DateTicket DateTicket::operator +(DateTicket & other){
+    DateTicket new_ticket = *this;
+    if(this->tickets.size() != other.tickets.size())
+        std::cerr << "Tickets n'ayant pas le même nombre de dates"  << std::endl;
+
+    for(size_t i = 0; i < std::min(this->tickets.size(), other.tickets.size()); ++i) {
+        if(this->tickets[i].first != other.tickets[i].first)
+            std::cerr << "Le ticket n° " << i << " n'a pas les même dates; " << this->tickets[i].first << " versus " << other.tickets[i].first << std::endl;
+        new_ticket.tickets[i].second.value = this->tickets[i].second.value + other.tickets[i].second.value;
+    }
+    return new_ticket;
+}
+
 bool Transition::valid(const SectionKey & section, const Label & label) const
 {
     bool result = true;
@@ -446,7 +459,7 @@ void Fare::load_od_stif(const std::string & filename){
     for(row=reader.next(); !reader.eof(); row = reader.next()) {
         std::string start_saec = boost::algorithm::trim_copy(row[0]);
         std::string dest_saec = boost::algorithm::trim_copy(row[2]);
-        std::string price_key = boost::algorithm::trim_copy(row[4]);
+
 
         OD_key start, dest;
         if(start_saec != "8775890")
@@ -459,9 +472,22 @@ void Fare::load_od_stif(const std::string & filename){
         else
             dest = OD_key(OD_key::Zone, "1");
 
-        od_tickets[start][dest] = price_key;
-        count++;
+        std::string price_key = boost::algorithm::trim_copy(row[4]);
+        od_tickets[start][dest].push_back(price_key);
 
+        price_key = boost::algorithm::trim_copy(row[5]);
+        if(price_key != "")
+            od_tickets[start][dest].push_back(price_key);
+
+        price_key = boost::algorithm::trim_copy(row[6]);
+        if(price_key != "")
+            od_tickets[start][dest].push_back(price_key);
+
+        price_key = boost::algorithm::trim_copy(row[7]);
+        if(price_key != "")
+            od_tickets[start][dest].push_back(price_key);
+
+        count++;
     }
   //  std::cout << "Nombre de tarifs OD Île-de-France : " << count << std::endl;
     Logger() << "Nombre de tarifs OD Île-de-France : " << count;
@@ -473,19 +499,25 @@ DateTicket Fare::get_od(Label label, SectionKey section){
     OD_key da(OD_key::StopArea, section.dest_stop_area);
     OD_key db(OD_key::Zone, section.dest_zone);
 
-    std::map< OD_key, std::map<OD_key, std::string> >::iterator start_map;
+    std::map< OD_key, std::map<OD_key, std::vector<std::string> > >::iterator start_map;
     start_map = od_tickets.find(sa);
     if(start_map == od_tickets.end())
         start_map = od_tickets.find(sb);
     if(start_map == od_tickets.end())
         throw no_ticket();
 
-    std::map<OD_key, std::string>::iterator end;
+    std::map<OD_key, std::vector<std::string> >::iterator end;
     end = start_map->second.find(da);
     if(end == start_map->second.end())
         end = start_map->second.find(db);
     if(end == start_map->second.end())
         throw no_ticket();
 
-    return fare_map[end->second];
+    // On crée un nouveau ticket en sommant toutes les composantes élémentaires
+    // Un ticket OD stif est en effet la somme de plusieurs tickets
+    DateTicket ticket = fare_map[end->second.at(0)];
+    for(size_t i = 1; i < end->second.size(); ++i){
+        ticket = ticket + fare_map[end->second.at(i)];
+    }
+    return ticket;
 }

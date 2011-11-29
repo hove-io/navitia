@@ -32,6 +32,9 @@ struct DateTicket {
 
     /// Ajoute une nouvelle période
     void add(std::string begin_date, std::string end_date, Ticket ticket);
+
+    /// Somme deux tickets, suppose qu'il y a le même nombre de billet et que les dates sont compatibles
+    DateTicket operator+(DateTicket & other);
 };
 
 struct no_ticket{};
@@ -188,7 +191,7 @@ struct Fare {
     /// Map qui associe les clefs de tarifs aux tarifs
     std::map<std::string, DateTicket> fare_map;
 
-    std::map< OD_key, std::map<OD_key, std::string> > od_tickets;
+    std::map< OD_key, std::map<OD_key, std::vector<std::string> > > od_tickets;
 
     /// Charge les deux fichiers obligatoires
     void init(const std::string & filename, const std::string & prices_filename);
