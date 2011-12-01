@@ -362,7 +362,7 @@ SectionKey::SectionKey(const std::string & key) : section(key) {
     std::vector<std::string> string_vec;
     boost::algorithm::split(string_vec, key, boost::algorithm::is_any_of(";"));
     if (string_vec.size() != 10)
-        throw std::string("Nombre incorrect d'éléments dans une section : 10 attendus");
+        throw std::string("Nombre incorrect d'éléments dans une section :" + boost::lexical_cast<std::string>(string_vec.size()) + " sur 10 attendus. " + key);
     network = string_vec.at(0);
     start_stop_area = string_vec.at(1);
     dest_stop_area = string_vec.at(3);
