@@ -97,7 +97,7 @@ namespace webservice
             BOOST_FOREACH(std::string token, tokens2) {
                 size_t pos = token.find("=");
                 if(pos != std::string::npos && token != "")
-                    request.params[boost::algorithm::to_lower_copy(token.substr(0, pos - 1))] = token.substr(pos +1);
+                    request.params[boost::algorithm::to_lower_copy(token.substr(0, pos))] = token.substr(pos +1);
                 else if(token.size() > 0 && token[0] != '=')
                     request.params[boost::algorithm::to_lower_copy(token)] = "";
             }
