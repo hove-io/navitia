@@ -278,5 +278,15 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.at(0).value, 170);
     BOOST_CHECK_EQUAL(res.at(1).value, 1150); // Kof ! c'est cher la navette AF}
 
+    // Metro-RER-Bus
+    keys.clear();
+    keys.push_back("439;59465;100110008:8;8739303;2011|12|01;16|07;16|34;1;1;Metro");
+    keys.push_back("436;8739303;800:C;8739315;2011|12|01;16|41;17|12;1;4;RapidTransit");
+    keys.push_back("285;8739315;056356006:H;2:212;2011|12|01;17|17;17|19;4;4;Bus");
+    res = f.compute(keys);
+    BOOST_CHECK_EQUAL(res.size(), 2);
+    BOOST_CHECK_EQUAL(res.at(0).value, 320);
+    BOOST_CHECK_EQUAL(res.at(1).value, 170);
+
 }
 

@@ -10,7 +10,7 @@
 #include <boost/lexical_cast.hpp>
 
 // Oui... le debug c'est à la porcasse, par flemme de devoir compiler log4cpp sous windows
-//#define DEBUG
+#define DEBUG
 
 struct Logger{
     template<class T>
