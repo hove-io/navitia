@@ -313,5 +313,21 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.size(), 2);
     BOOST_CHECK_EQUAL(res.at(0).value, 170);
     BOOST_CHECK_EQUAL(res.at(1).value, 170);
+
+    // Orlybus
+    keys.clear();
+    keys.push_back("442;8775863;100100283:ORLYBUS;59675;2011|12|05;05|35;05|56;1;4;Bus");
+    res = f.compute(keys);
+    BOOST_CHECK_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res.at(0).value, 690);
+
+    // UN trajet qui coûtait 0 pour des raison obscures
+    keys.clear();
+    keys.push_back("440;59108;100112013:T3;59624;2011|12|05;11|43;11|45;1;1;Tramway");
+    keys.push_back("442;59624;100100028:28;59349;2011|12|05;11|56;12|09;1;1;Bus");
+    keys.push_back("442;59349;100100092:92;59:181763;2011|12|05;12|12;12|27;1;1;Bus");
+    res = f.compute(keys);
+    BOOST_CHECK_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res.at(0).value, 170);
 }
 

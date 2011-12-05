@@ -186,13 +186,11 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
             label.nb_changes = 0;
             label.start_time = section.start_time;
 
-            //label.tickets.push_back(ticket);
             ticket.sections.push_back(section);
             label.tickets.push_back(ticket);
         }else{ // On a un ancien ticket
             label.tickets.back().sections.push_back(section);
             label.nb_changes++;
-            //label.duration += section.duration();
         }
 
     }else{
@@ -200,8 +198,6 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
         // On incrémente le nombre de changements et la durée effectuée avec le même ticket
         if(ticket.caption == "" && ticket.value == 0){
             label.nb_changes++;
-            //label.duration += section.duration();
-            //label.tickets.push_back(ticket);
         } else {
             // On a acheté un nouveau billet
             // On note le coût global du trajet, remet à 0 la durée/changements
@@ -276,7 +272,6 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
                             } else {
                                 new_labels.at(0).push_back(next);
                             }
-
                             new_labels[v].push_back(next);
                         }
                     }
@@ -426,6 +421,8 @@ DateTicket DateTicket::operator +(DateTicket & other){
 bool Transition::valid(const SectionKey & section, const Label & label) const
 {
     bool result = true;
+    if(label.current_type == Ticket::ODFare && this->global_condition!="with_changes")
+        result = false;
     BOOST_FOREACH(Condition cond, this->start_conditions)
     {
         if(cond.key == "zone" && cond.value != section.start_zone)
@@ -436,11 +433,11 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
             // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
             int duration = boost::lexical_cast<int>(cond.value) * 60;
             int ticket_duration = section.duration_at_begin(label.start_time);
-            result = compare(ticket_duration, duration, cond.comparaison);
+            result &= compare(ticket_duration, duration, cond.comparaison);
         }
         else if(cond.key == "nb_changes") {
             int nb_changes = boost::lexical_cast<int>(cond.value);
-            result = compare(label.nb_changes, nb_changes, cond.comparaison);
+            result &= compare(label.nb_changes, nb_changes, cond.comparaison);
         }
     }
     BOOST_FOREACH(Condition cond, this->end_conditions)
@@ -453,7 +450,7 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
             // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
             int duration = boost::lexical_cast<int>(cond.value) * 60;
             int ticket_duration = section.duration_at_end(label.start_time);
-            result = compare(ticket_duration, duration, cond.comparaison);
+            result &= compare(ticket_duration, duration, cond.comparaison);
         }
     }
     return result;
