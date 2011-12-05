@@ -130,20 +130,20 @@ BOOST_AUTO_TEST_CASE(test_computation) {
 
     // On teste le noctilien
     keys.clear();
-    keys.push_back("Noctilien;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;04|30;04|40;1;1;bus");
+    keys.push_back("56;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;04|30;04|40;1;1;bus");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
     BOOST_CHECK_EQUAL(res[0].value , 170);
 
     keys.clear();
-    keys.push_back("Noctilien;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;04|30;04|40;1;3;bus");
+    keys.push_back("56;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;04|30;04|40;1;3;bus");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
     BOOST_CHECK_EQUAL(res[0].value , 340);  // C'est un trajet qui coûte 2 tickets
 
 
     keys.clear();
-    keys.push_back("noctilien;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;04|30;04|40;3;1;bus");
+    keys.push_back("56;FILURSE-2;FILNav31;FILGATO-2;2011|07|01;04|30;04|40;3;1;bus");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size() , 1);
     BOOST_CHECK_EQUAL(res[0].value , 340);  // C'est un trajet qui coûte 2 tickets
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(test_computation) {
 
     keys.clear();
     keys.push_back(";bled_paumé;bus_magique;8711388;2011|07|31;09|28;09|39;4;4;Bus"); // Bled Paumé -> L'Abbaye
-    keys.push_back(";8711388;T4;8727141;2011|07|31;09|28;09|39;4;4;tramway"); // L'abbaye -> Aulnay
+    keys.push_back(";8711388;T4;8727141;2011|07|31;09|40;09|50;4;4;tramway"); // L'abbaye -> Aulnay
     keys.push_back(";8727141;RER B;8770870;2011|07|31;09|28;09|39;4;4;RapidTransit"); // Aulnay -> CDG
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size(), 2);
@@ -288,5 +288,30 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.at(0).value, 320);
     BOOST_CHECK_EQUAL(res.at(1).value, 170);
 
+    // Jeux de tests rajoutés par le STIF
+
+    // Essais avec noctilien
+    keys.clear();
+    keys.push_back("56;59557;100987785:N12;59452;2011|12|02;03|20;03|42;1;1;Bus");
+    keys.push_back("56;59452;100987762:N62;59:182428;2011|12|02;03|48;04|22;1;3;Bus");
+    keys.push_back("442;41:6487;100100195:195;59:153463;2011|12|02;05|14;05|20;3;3;Bus");
+    keys.push_back("442;59:153463;100100194:194;59:1055459;2011|12|02;05|28;05|31;3;3;Bus");
+    res = f.compute(keys);
+    BOOST_CHECK_EQUAL(res.size(), 3);
+    BOOST_CHECK_EQUAL(res.at(0).value, 170);
+    BOOST_CHECK_EQUAL(res.at(1).value, 340);
+    BOOST_CHECK_EQUAL(res.at(2).value, 170);
+
+    // Plus de 90min depuis le dernier compostage
+    keys.clear();
+    keys.push_back("442;59362;100100068:68;59624;2011|12|05;10|52;11|08;1;2;Bus");
+    keys.push_back("442;59624;100100295:295;24:14919;2011|12|05;11|15;11|56;2;3;Bus");
+    keys.push_back("101;24:14919;039039307:307;24:14929;2011|12|05;12|01;12|15;3;4;Bus");
+    keys.push_back("285;8739300;056356102:BAK;8739315;2011|12|05;12|21;12|26;4;4;Bus");
+    keys.push_back("405;8739315;027027011:11;50:8168;2011|12|05;12|30;12|33;4;4;Bus");
+    res = f.compute(keys);
+    BOOST_CHECK_EQUAL(res.size(), 2);
+    BOOST_CHECK_EQUAL(res.at(0).value, 170);
+    BOOST_CHECK_EQUAL(res.at(1).value, 170);
 }
 

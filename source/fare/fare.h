@@ -100,7 +100,8 @@ struct Condition {
 /// Structure représentant une étiquette
 struct Label {
     int cost; //< Coût cummulé
-    int duration;//< durée jusqu'à présent du trajet depuis le dernier ticket
+    int start_time; //< Heure de compostage du billet
+    //int duration;//< durée jusqu'à présent du trajet depuis le dernier ticket
     int nb_changes;//< nombre de changement effectués depuis le dernier ticket
     std::string stop_area; //< stop_area d'achat du billet
    // std::string dest_stop_area; //< on est obligé de descendre à ce stop_area
@@ -113,9 +114,9 @@ struct Label {
 
     std::vector<Ticket> tickets; //< Ensemble de billets à acheter pour arriver à cette étiquette
     ///Constructeur par défaut
-    Label() : cost(0), duration(0), nb_changes(0), current_type(Ticket::FlatFare) {}
+    Label() : cost(0), start_time(0), nb_changes(0), current_type(Ticket::FlatFare) {}
     bool operator==(const Label & l) const {
-        return cost==l.cost && duration==l.duration && nb_changes==l.nb_changes &&
+        return cost==l.cost && start_time==l.start_time && nb_changes==l.nb_changes &&
                 stop_area==l.stop_area && zone==l.zone && mode == l.mode &&
                 line == l.line && network == l.network;
     }
@@ -136,7 +137,8 @@ struct SectionKey {
     std::string section;
 
     SectionKey(const std::string & key);
-    int duration() const;
+    int duration_at_begin(int ticket_start_time) const;
+    int duration_at_end(int ticket_start_time) const;
 };
 
 /// Représente un transition possible et l'achat éventuel d'un billet

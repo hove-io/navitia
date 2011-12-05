@@ -10,7 +10,7 @@
 #include <boost/lexical_cast.hpp>
 
 // Oui... le debug c'est à la porcasse, par flemme de devoir compiler log4cpp sous windows
-#define DEBUG
+//#define DEBUG
 
 struct Logger{
     template<class T>
@@ -184,7 +184,7 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
             label.stop_area = section.start_stop_area;
             label.zone = section.start_zone;
             label.nb_changes = 0;
-            label.duration = section.duration();
+            label.start_time = section.start_time;
 
             //label.tickets.push_back(ticket);
             ticket.sections.push_back(section);
@@ -192,7 +192,7 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
         }else{ // On a un ancien ticket
             label.tickets.back().sections.push_back(section);
             label.nb_changes++;
-            label.duration += section.duration();
+            //label.duration += section.duration();
         }
 
     }else{
@@ -200,7 +200,7 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
         // On incrémente le nombre de changements et la durée effectuée avec le même ticket
         if(ticket.caption == "" && ticket.value == 0){
             label.nb_changes++;
-            label.duration += section.duration();
+            //label.duration += section.duration();
             //label.tickets.push_back(ticket);
         } else {
             // On a acheté un nouveau billet
@@ -208,7 +208,7 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
             label.cost += ticket.value;
             label.tickets.push_back(ticket);
             label.nb_changes = 0;
-            label.duration = section.duration();
+            label.start_time = section.start_time;
             label.stop_area = section.start_stop_area;
         }
         label.tickets.back().sections.push_back(section);
@@ -387,11 +387,18 @@ template<class T> bool compare(T a, T b, Comp_e comp){
     }
 }
 
-int SectionKey::duration() const {
-    if (start_time < dest_time)
-        return dest_time-start_time;
+int SectionKey::duration_at_begin(int ticket_start_time) const {
+    if (ticket_start_time < start_time)
+        return start_time - ticket_start_time;
     else // Passe-minuit
-        return (dest_time + 24*3600) - start_time;
+        return (start_time + 24*3600) - ticket_start_time;
+}
+
+int SectionKey::duration_at_end(int ticket_start_time) const {
+    if (ticket_start_time < dest_time)
+        return dest_time - ticket_start_time;
+    else // Passe-minuit
+        return (dest_time + 24*3600) - ticket_start_time;
 }
 
 Ticket DateTicket::get_fare(boost::gregorian::date date){
@@ -428,7 +435,8 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
         else if(cond.key == "duration") {
             // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
             int duration = boost::lexical_cast<int>(cond.value) * 60;
-            result = compare(label.duration, duration, cond.comparaison);
+            int ticket_duration = section.duration_at_begin(label.start_time);
+            result = compare(ticket_duration, duration, cond.comparaison);
         }
         else if(cond.key == "nb_changes") {
             int nb_changes = boost::lexical_cast<int>(cond.value);
@@ -443,8 +451,9 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
             result = false;
         else if(cond.key == "duration") {
             // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
-            int duration = boost::lexical_cast<int>(cond.value) * 60 + section.duration();
-            result = compare(label.duration, duration, cond.comparaison);
+            int duration = boost::lexical_cast<int>(cond.value) * 60;
+            int ticket_duration = section.duration_at_end(label.start_time);
+            result = compare(ticket_duration, duration, cond.comparaison);
         }
     }
     return result;
