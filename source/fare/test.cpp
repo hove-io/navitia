@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.at(0).value,170);
     BOOST_CHECK_EQUAL(res.at(1).value , 395); // code 140
     BOOST_CHECK_EQUAL(res.at(0).sections.size() , 1);
-    BOOST_CHECK_EQUAL(res.at(0).sections.at(0).section , keys.at(0));
+    BOOST_CHECK_EQUAL(res.at(0).sections.at(0).section, keys.at(0));
     BOOST_CHECK_EQUAL(res.at(1).sections.size(), 2);
     BOOST_CHECK_EQUAL(res.at(1).sections.at(0).section, keys.at(1));
     BOOST_CHECK_EQUAL(res.at(1).sections.at(1).section, keys.at(2));
@@ -329,5 +329,29 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res.at(0).value, 170);
+
+    // Ticket mantis sword 36393
+    // Ressort deux ticket t+ au lieu d'un seul
+    keys.clear();
+    keys.push_back("436;8768600;810:A;8775800;2011|12|13;09|49;09|57;1;1;RapidTransit");
+    keys.push_back("439;8775800;100110006:6;59455;2011|12|13;10|04;10|12;1;1;Metro");
+    res = f.compute(keys);
+    BOOST_CHECK_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res.at(0).value, 170);
+
+    // Remonté par le stif, deux tickets au lieu d'un
+    keys.clear();
+    keys.push_back("439;59500;100110009:9;59489;2011|12|13;10|17;10|23;1;1;Metro");
+    keys.push_back("437;8738400;800:J;8738107;2011|12|13;10|31;10|39;1;3;LocalTrain");
+    res = f.compute(keys);
+    BOOST_CHECK_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res.at(0).value, 245);
+
+    keys.clear();
+    keys.push_back("437;8738287;800:L;8738221;2011|12|13;19|36;19|52;4;3;LocalTrain");
+    keys.push_back("439;59594;100110001:1;59250;2011|12|13;20|04;20|09;2;2;Metro");
+    res = f.compute(keys);
+    BOOST_CHECK_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res.at(0).value, 395);
 }
 

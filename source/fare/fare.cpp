@@ -267,7 +267,12 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
 
                                     new_labels.at(0).push_back(n);
                                     Logger() << "\t\tOn résoud un ticket OD : " << ticket_od.value;
-                                } catch (no_ticket) {}
+                                } catch (no_ticket) {
+                                    Logger() << "\t\tOn a pas réussi à résoudre le ticket OD; SA=" << next.stop_area << " zone=" << next.zone
+                                             << ", section start_zone=" << section.start_zone << ", dest_zone=" << section.start_zone
+                                             << " start_sa=" << section.start_stop_area << " dest_sa=" << section.dest_stop_area
+                                             << " mode=" << section.mode;
+                                }
 
                             } else {
                                 new_labels.at(0).push_back(next);
@@ -354,8 +359,9 @@ boost::gregorian::date parse_nav_date(const std::string & date_str){
 }
 
 SectionKey::SectionKey(const std::string & key) : section(key) {
+    std::string lower_key = boost::algorithm::to_lower_copy(key);
     std::vector<std::string> string_vec;
-    boost::algorithm::split(string_vec, key, boost::algorithm::is_any_of(";"));
+    boost::algorithm::split(string_vec, lower_key , boost::algorithm::is_any_of(";"));
     if (string_vec.size() != 10)
         throw std::string("Nombre incorrect d'éléments dans une section :" + boost::lexical_cast<std::string>(string_vec.size()) + " sur 10 attendus. " + key);
     network = string_vec.at(0);
@@ -467,31 +473,49 @@ void Fare::load_od_stif(const std::string & filename){
         std::string dest_saec = boost::algorithm::trim_copy(row[2]);
 
 
-        OD_key start, dest;
-        if(start_saec != "8775890")
-            start = OD_key(OD_key::StopArea, start_saec);
-        else
-            start = OD_key(OD_key::Zone, "1");
-
-        if(dest_saec != "8775890")
-            dest = OD_key(OD_key::StopArea, dest_saec);
-        else
-            dest = OD_key(OD_key::Zone, "1");
-
+        std::vector<std::string> price_keys;
         std::string price_key = boost::algorithm::trim_copy(row[4]);
-        od_tickets[start][dest].push_back(price_key);
+        price_keys.push_back(price_key);
 
         price_key = boost::algorithm::trim_copy(row[5]);
         if(price_key != "")
-            od_tickets[start][dest].push_back(price_key);
+            price_keys.push_back(price_key);
 
         price_key = boost::algorithm::trim_copy(row[6]);
         if(price_key != "")
-            od_tickets[start][dest].push_back(price_key);
+            price_keys.push_back(price_key);
 
         price_key = boost::algorithm::trim_copy(row[7]);
         if(price_key != "")
-            od_tickets[start][dest].push_back(price_key);
+            price_keys.push_back(price_key);
+
+        OD_key start, dest;
+        if(start_saec != "8775890")
+        {
+            start = OD_key(OD_key::StopArea, start_saec);
+            if(dest_saec != "8775890")
+            {
+                od_tickets[start][OD_key(OD_key::StopArea, dest_saec)] = price_keys;
+            }
+            else
+            {
+                od_tickets[start][OD_key(OD_key::Mode, "metro")] = price_keys;
+                od_tickets[start][OD_key(OD_key::Zone, "1")] = price_keys;
+            }
+        }
+        else
+        {
+            dest = OD_key(OD_key::StopArea, dest_saec);
+            if(start_saec != "8775890")
+            {
+                od_tickets[OD_key(OD_key::StopArea, start_saec)][dest] = price_keys;
+            }
+            else
+            {
+                od_tickets[OD_key(OD_key::Mode, "metro")][dest] = price_keys;
+                od_tickets[OD_key(OD_key::Zone, "1")][dest] = price_keys;
+            }
+        }
 
         count++;
     }
@@ -501,14 +525,20 @@ void Fare::load_od_stif(const std::string & filename){
 
 DateTicket Fare::get_od(Label label, SectionKey section){
     OD_key sa(OD_key::StopArea, label.stop_area);
-    OD_key sb(OD_key::Zone, label.zone);
+    OD_key sb(OD_key::Mode, label.mode);
+    OD_key sc(OD_key::Zone, label.zone);
+
     OD_key da(OD_key::StopArea, section.dest_stop_area);
-    OD_key db(OD_key::Zone, section.dest_zone);
+    OD_key db(OD_key::Mode, section.mode);
+    OD_key dc(OD_key::Zone, section.dest_zone);
+
 
     std::map< OD_key, std::map<OD_key, std::vector<std::string> > >::iterator start_map;
     start_map = od_tickets.find(sa);
     if(start_map == od_tickets.end())
         start_map = od_tickets.find(sb);
+    if(start_map == od_tickets.end())
+        start_map = od_tickets.find(sc);
     if(start_map == od_tickets.end())
         throw no_ticket();
 
@@ -516,6 +546,8 @@ DateTicket Fare::get_od(Label label, SectionKey section){
     end = start_map->second.find(da);
     if(end == start_map->second.end())
         end = start_map->second.find(db);
+    if(end == start_map->second.end())
+        end = start_map->second.find(dc);
     if(end == start_map->second.end())
         throw no_ticket();
 

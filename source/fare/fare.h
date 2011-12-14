@@ -174,7 +174,7 @@ int parse_time(const std::string & time_str);
 boost::gregorian::date parse_nav_date(const std::string & date_str);
 
 struct OD_key{
-    enum od_type {Zone, StopArea};
+    enum od_type {Zone, StopArea, Mode};
     od_type type;
     std::string value;
     OD_key() {}
