@@ -87,6 +87,54 @@ std::string pb2txt(const google::protobuf::Message* response){
     return buffer.str();
 }
 
+std::string pb2json(const google::protobuf::Message* response, int depth = 0){
+    std::stringstream buffer;
+    if(depth == 1) buffer.width(5);
+    buffer << "{";
+
+    const google::protobuf::Reflection* reflection = response->GetReflection();
+    std::vector<const google::protobuf::FieldDescriptor*> field_list;
+    reflection->ListFields(*response, &field_list);
+
+    bool is_first = true;
+    BOOST_FOREACH(const google::protobuf::FieldDescriptor* field, field_list){
+        if(is_first){
+            is_first = false;
+        } else {
+            buffer << ", ";
+        }
+        if(depth == 1) buffer << "\n      ";
+        if(field->is_repeated()) {
+            buffer << "\"" << field->name() << "\": [";
+            if(depth == 0) buffer << "\n";
+            for(int i=0; i < reflection->FieldSize(*response, field); ++i){
+                buffer << pb2json(&reflection->GetRepeatedMessage(*response, field, i), depth+1);
+                if(i+1 < reflection->FieldSize(*response, field)){
+                    buffer << ", ";
+                    if(depth == 0) buffer << "\n";
+                }
+            }
+            if(depth == 0) buffer << "\n";
+            buffer <<  "]";
+        }
+        else if(reflection->HasField(*response, field)){
+            buffer << "\"" <<field->name() << "\": ";
+            if(field->type() == google::protobuf::FieldDescriptor::TYPE_STRING){
+                buffer << "\"" << reflection->GetString(*response, field) << "\"";
+            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
+                buffer << reflection->GetInt32(*response, field);
+            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_DOUBLE){
+                buffer << reflection->GetDouble(*response, field);
+            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE){
+                buffer << pb2json(&reflection->GetMessage(*response, field), depth + 1);
+            }
+        }
+    }
+    if(depth == 1) buffer << "\n    }";
+    else buffer << "}";
+    return buffer.str();
+}
+
 void render(webservice::RequestData& request, webservice::ResponseData& response, Context& context){
     switch(context.service){
         case Context::PTREF:
@@ -94,7 +142,11 @@ void render(webservice::RequestData& request, webservice::ResponseData& response
                 response.response << pb2txt(context.pb.get());
                 response.content_type = "text/html";
                 response.status_code = 200;
-            }else{
+            }else if(request.params["format"] == "json"){
+                response.response << pb2json(context.pb.get(),0);
+                response.content_type = "text/plain";
+                response.status_code = 200;
+            }else {
                 //par défaut xml
                 response.response << pb2xml(context.pb.get());
                 response.content_type = "text/xml";
