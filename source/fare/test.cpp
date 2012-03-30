@@ -353,5 +353,14 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res.at(0).value, 395);
+
+    // Remonté par le stif, deux tickets au lieu d'un
+    keys.clear();
+    keys.push_back("439;59591;100110001:1;59592;2012|01|03;11|13;11|17;1;1;Metro");
+    keys.push_back("439;59592;100110013:13;8739100;2012|01|03;11|23;11|30;1;1;Metro");
+    keys.push_back("437;8739100;800:N;8739156;2012|01|03;11|35;11|42;1;2;LocalTrain");
+    res = f.compute(keys);
+    BOOST_CHECK_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res.at(0).value, 245);
 }
 
