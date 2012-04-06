@@ -27,6 +27,8 @@ void ValidityPattern::add(int duration){
         days[duration] = true;
 }
 
+
+
 void ValidityPattern::remove(boost::gregorian::date date){
     long duration = (date - beginning_date).days();
     remove(duration);
@@ -37,7 +39,9 @@ void ValidityPattern::remove(int day){
         days[day] = false;
 }
 
-
+bool ValidityPattern::check(int day) const {
+    return days[day];
+}
 
 bool District::operator<(const District& other) const {
     if(this->country == other.country || this->country == NULL){
@@ -120,6 +124,17 @@ bool VehicleJourney::operator<(const VehicleJourney& other) const {
     }
 }
 
+bool ValidityPattern::operator <(const ValidityPattern &other) const {
+    int a, b;
+    a = 0;
+    b = 0;
+    for(int i=0; i<7; ++i) {
+        a += pow(this->days[i], i);
+        b += pow(other.check(i), i);
+    }
+
+    return a < b;
+}
 
 bool Connection::operator<(const Connection& other) const{
     return *(this->departure_stop_point) < *(other.departure_stop_point);
@@ -331,5 +346,24 @@ nt::VehicleJourney VehicleJourney::Transformer::operator()(const VehicleJourney&
         nt_vj.mode_idx = vj.mode->idx;
 
     nt_vj.route_idx = vj.route->idx;
+
+    if(vj.validity_pattern != NULL)
+        nt_vj.validity_pattern_idx = vj.validity_pattern->idx;
     return nt_vj;
+}
+nt::ValidityPattern ValidityPattern::Transformer::operator()(const ValidityPattern& vp){
+    nt::ValidityPattern nt_vp;
+
+    nt_vp.id = vp.id;
+    nt_vp.idx = vp.idx;
+    nt_vp.external_code = vp.external_code;
+    nt_vp.beginning_date = vp.beginning_date;
+
+    for(int i=0;i< 366;++i)
+        if(vp.days[i])
+            nt_vp.add(i);
+        else
+            nt_vp.remove(i);
+
+    return nt_vp;
 }

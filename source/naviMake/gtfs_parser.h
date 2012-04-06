@@ -17,6 +17,7 @@ private:
     boost::gregorian::date start;///< Premier jour où les données sont valables
 
     // Plusieurs maps pour savoir à quel position est quel objet identifié par son ID GTFS
+    boost::unordered_map<std::string, navimake::types::ModeType*> mode_type_map;
     boost::unordered_map<std::string, navimake::types::StopPoint*> stop_map;
     boost::unordered_map<std::string, navimake::types::StopArea*> stop_area_map;
     boost::unordered_map<std::string, navimake::types::Route*> route_map;
@@ -32,6 +33,9 @@ public:
 
     /// Remplis la structure passée en paramètre
     void fill(navimake::Data& data);
+
+    /// Remplis les modes types
+    void fill_mode_types(Data & data);
 
     /// Parse le fichier calendar_dates.txt
     /// Contient les dates définies par jour (et non par période)
@@ -56,6 +60,8 @@ public:
     /// Parse le fichier trips.txt
     /// Contient les VehicleJourney
     void parse_trips(Data & data);
+
+
 
 };
 

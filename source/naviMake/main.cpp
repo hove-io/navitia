@@ -20,22 +20,26 @@ int main(int argc, char * argv[])
         ("type,t", po::value<std::string>(&type), "Type du format d'entrée [fusio, gtfs]")
         ("date,d", po::value<std::string>(&date), "Date de début")
         ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
-        ("topo", po::value<std::string>(&topo_path), "Repertoire contenant la bd topo")
+        ("topo", po::value<std::string>(&topo_path)->default_value(""), "Repertoire contenant la bd topo")
         ("output,o", po::value<std::string>(&output)->default_value("data.nav"), "Fichier de sortie")
         ("outputsn", po::value<std::string>(&outputsn)->default_value("data.sn.nav"), "Fichier de sortie");
+
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    if(vm.count("help") || !vm.count("input") || !vm.count("type") || !vm.count("topo")) {
+    if(vm.count("help") || !vm.count("input") || !vm.count("type")) {
         std::cout << desc <<  "\n";
         return 1;
+    }
+    if(!vm.count("topo")) {
+        std::cout << "Pas de topologie chargee" << std::endl;
     }
     pt::ptime start, end;
     int read, clean, sort, transform, save, first_letter, sn;
 
-    navimake::connectors::BDTopoParser topo_parser(topo_path);
+//    navimake::connectors::BDTopoParser topo_parser(topo_path);
 
     navimake::Data data;
     {
@@ -48,7 +52,7 @@ int main(int argc, char * argv[])
             navimake::connectors::GtfsParser connector(input, date);
             connector.fill(data);
             //gtfs ne contient pas le référentiel des villes, on le charges depuis la BDTOPO
-            topo_parser.load_city(data);
+            //topo_parser.load_city(data);
         }
         else {
             std::cout << desc << "\n";
@@ -82,9 +86,9 @@ int main(int argc, char * argv[])
 
     //street network => temporaire
     start = pt::microsec_clock::local_time();
-    topo_parser.load_streetnetwork(nav_data.street_network);
-    nav_data.build_proximity_list();
-    nav_data.set_cities(); // Assigne les villes aux voiries du filaire
+//    topo_parser.load_streetnetwork(nav_data.street_network);
+//    nav_data.build_proximity_list();
+//    nav_data.set_cities(); // Assigne les villes aux voiries du filaire
     sn = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     start = pt::microsec_clock::local_time();
@@ -92,7 +96,7 @@ int main(int argc, char * argv[])
     first_letter = (pt::microsec_clock::local_time() - start).total_milliseconds();
     start = pt::microsec_clock::local_time();
     nav_data.save_flz(output);
-    nav_data.street_network.save_flz(outputsn);
+//    nav_data.street_network.save_flz(outputsn);
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     std::cout << "temps de traitement" << std::endl;

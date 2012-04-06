@@ -254,13 +254,14 @@ struct VehicleJourney: public TransmodelHeader, Nameable{
     bool is_adapted;
 
     ValidityPattern* validity_pattern;
+    std::vector<StopTime*> stop_time_list;
 
     struct Transformer{
         inline navitia::type::VehicleJourney operator()(const VehicleJourney* vj){return this->operator()(*vj);}
         navitia::type::VehicleJourney operator()(const VehicleJourney& vj);
     };
 
-    VehicleJourney(): route(NULL), company(NULL), mode(NULL), is_adapted(false), validity_pattern(NULL){};
+    VehicleJourney(): route(NULL), company(NULL), mode(NULL), is_adapted(false), validity_pattern(NULL), stop_time_list(){};
 
     bool operator<(const VehicleJourney& other) const;
 };
@@ -301,10 +302,10 @@ struct RoutePoint : public TransmodelHeader, Nameable{
 
 struct ValidityPattern: public TransmodelHeader {
 private:
-    boost::gregorian::date beginning_date;
     std::bitset<366> days;
     bool is_valid(int duration);
 public:
+    boost::gregorian::date beginning_date;
     ValidityPattern(){}
     ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date){}
     void add(boost::gregorian::date day);
@@ -312,6 +313,16 @@ public:
     void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
     void remove(boost::gregorian::date day);
     void remove(int day);
+
+    bool check(int day) const;
+
+    struct Transformer{
+        inline nt::ValidityPattern operator()(const ValidityPattern* validity_pattern){return this->operator()(*validity_pattern);}
+        nt::ValidityPattern operator()(const ValidityPattern& validity_pattern);
+    };
+
+    bool operator<(const ValidityPattern& other) const;
+
 
 };
 
@@ -358,7 +369,5 @@ struct StopTime: public TransmodelHeader {
 
     bool operator<(const StopTime& other){return this->departure_time < other.departure_time;}
 };
-
-
 
 }}//end namespace navimake::types

@@ -74,6 +74,7 @@ void Data::build_proximity_list(){
     this->street_network.build_proximity_list();
 }
 
+
 void Data::build_first_letter(){
     pt_data.build_first_letter();
 

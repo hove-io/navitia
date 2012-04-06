@@ -99,7 +99,10 @@ template<> std::vector<Country> & PT_Data::get_data<eCountry>(){return countries
 
 void PT_Data::build_first_letter(){
     BOOST_FOREACH(StopArea sa, this->stop_areas){
-        this->stop_area_first_letter.add_string(sa.name + " " + cities[sa.city_idx].name, sa.idx);
+        if(sa.city_idx >= 0 && sa.city_idx < this->cities.size())
+            this->stop_area_first_letter.add_string(sa.name + " " + cities[sa.city_idx].name, sa.idx);
+        else
+            this->stop_area_first_letter.add_string(sa.name, sa.idx);
     }
 
     this->stop_area_first_letter.build();

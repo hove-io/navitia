@@ -44,6 +44,11 @@ void Data::sort(){
 
     std::sort(route_points.begin(), route_points.end(), Less<navimake::types::RoutePoint>());
     std::for_each(route_points.begin(), route_points.end(), Indexer<navimake::types::RoutePoint>());
+
+    std::sort(validity_patterns.begin(), validity_patterns.end(), Less<navimake::types::ValidityPattern>());
+    std::for_each(validity_patterns.begin(), validity_patterns.end(), Indexer<navimake::types::ValidityPattern>());
+
+
 }
 
 void Data::clean(){
@@ -87,6 +92,9 @@ void Data::transform(navitia::type::PT_Data& data){
 
     data.vehicle_journeys.resize(this->vehicle_journeys.size());
     std::transform(this->vehicle_journeys.begin(), this->vehicle_journeys.end(), data.vehicle_journeys.begin(), navimake::types::VehicleJourney::Transformer());
+
+    data.validity_patterns.resize(this->validity_patterns.size());
+    std::transform(this->validity_patterns.begin(), this->validity_patterns.end(), data.validity_patterns.begin(), navimake::types::ValidityPattern::Transformer());
 
     build_relations(data);
 }
@@ -159,9 +167,12 @@ void Data::build_relations(navitia::type::PT_Data &data){
         data.stop_points.at(route_point.stop_point_idx).route_point_list.push_back(route_point.idx);
     }
 
+
+
     BOOST_FOREACH(navitia::type::VehicleJourney & vj, data.vehicle_journeys){
         try{
             navitia::type::Line & line = data.lines.at(data.routes.at(vj.route_idx).line_idx);
+
 
             line.validity_pattern_list.push_back(vj.validity_pattern_idx);
 
@@ -180,7 +191,14 @@ void Data::build_relations(navitia::type::PT_Data &data){
 
     }
 
-    //BOOST_FOREACH(navitia::type::ValidityPattern & vp, data.validity_patterns){}
+    // ICI VLA remplir les stop_time_list des vj
+    BOOST_FOREACH(navitia::type::StopTime & st, data.stop_times){
+        try {
+            data.vehicle_journeys.at(st.vehicle_journey_idx).stop_time_list.push_back(st.idx);
+        }catch(std::out_of_range ex){}
+    }
+
+
 
     // BOOST_FOREACH(navitia::type::Company & company, data.companies){}
 }

@@ -40,11 +40,70 @@ GtfsParser::GtfsParser(const std::string & path, const std::string & start) :
 }
 
 void GtfsParser::fill(Data & data){
+    fill_mode_types(data);
     parse_stops(data);
     parse_calendar_dates(data);
     parse_routes(data);
     parse_trips(data);
     parse_stop_times(data);
+ }
+
+void GtfsParser::fill_mode_types(Data & data) {
+    navimake::types::ModeType* mode_type = new navimake::types::ModeType();
+    mode_type->id = "0";
+    mode_type->name = "Tram";
+    mode_type->external_code = "0x0";
+    data.mode_types.push_back(mode_type);
+    mode_type_map[mode_type->id] = mode_type;
+
+    mode_type = new navimake::types::ModeType();
+    mode_type->id = "1";
+    mode_type->name = "Metro";
+    mode_type->external_code = "0x1";
+    data.mode_types.push_back(mode_type);
+    mode_type_map[mode_type->id] = mode_type;
+
+    mode_type = new navimake::types::ModeType();
+    mode_type->id = "2";
+    mode_type->name = "Rail";
+    mode_type->external_code = "0x2";
+    data.mode_types.push_back(mode_type);
+    mode_type_map[mode_type->id] = mode_type;
+
+    mode_type = new navimake::types::ModeType();
+    mode_type->id = "3";
+    mode_type->name = "Bus";
+    mode_type->external_code = "0x3";
+    data.mode_types.push_back(mode_type);
+    mode_type_map[mode_type->id] = mode_type;
+
+    mode_type = new navimake::types::ModeType();
+    mode_type->id = "4";
+    mode_type->name = "Ferry";
+    mode_type->external_code = "0x4";
+    data.mode_types.push_back(mode_type);
+    mode_type_map[mode_type->id] = mode_type;
+
+    mode_type = new navimake::types::ModeType();
+    mode_type->id = "5";
+    mode_type->name = "Cable car";
+    mode_type->external_code = "0x5";
+    data.mode_types.push_back(mode_type);
+    mode_type_map[mode_type->id] = mode_type;
+
+    mode_type = new navimake::types::ModeType();
+    mode_type->id = "6";
+    mode_type->name = "Gondola";
+    mode_type->external_code = "0x6";
+    data.mode_types.push_back(mode_type);
+    mode_type_map[mode_type->id] = mode_type;
+
+    mode_type = new navimake::types::ModeType();
+    mode_type->id = "7";
+    mode_type->name = "Funicular";
+    mode_type->external_code = "0x7";
+    data.mode_types.push_back(mode_type);
+    mode_type_map[mode_type->id] = mode_type;
 }
 
 void GtfsParser::parse_stops(Data & data) {
@@ -264,6 +323,10 @@ void GtfsParser::parse_routes(Data & data){
             line->color = elts[color_c];
             line->additional_data = elts[long_name_c];
 
+            boost::unordered_map<std::string, nm::ModeType*>::iterator it= mode_type_map.find(elts[type_c]);
+            if(it != mode_type_map.end())
+                line->mode_type = it->second;
+
             line_map[elts[id_c]] = line;
             data.lines.push_back(line);
         }
@@ -352,7 +415,7 @@ void GtfsParser::parse_trips(Data & data) {
                 vj->name = elts[trip_c];
                 vj->external_code = elts[trip_c];
                 //vj->mode = route->mode_type;
-                vj->validity_pattern =vp_xx;
+                vj->validity_pattern = vp_xx;
 
                 vj_map[vj->name] = vj;
                 data.vehicle_journeys.push_back(vj);

@@ -313,10 +313,11 @@ struct VehicleJourney: public NavitiaHeader, Nameable {
     idx_t vehicle_idx;
     bool is_adapted;
     idx_t validity_pattern_idx;
+    std::vector<idx_t> stop_time_list;
 
-    VehicleJourney(): route_idx(0), company_idx(0), mode_idx(0), vehicle_idx(0), is_adapted(false), validity_pattern_idx(0){}
+    VehicleJourney(): route_idx(0), company_idx(0), mode_idx(0), vehicle_idx(0), is_adapted(false), validity_pattern_idx(0), stop_time_list(){}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & is_adapted & validity_pattern_idx & idx;
+        ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & is_adapted & validity_pattern_idx & idx & stop_time_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
@@ -363,10 +364,10 @@ struct RoutePoint : public NavitiaHeader{
 struct ValidityPattern : public NavitiaHeader {
     const static Type_e type = eValidityPattern;
 private:
-    boost::gregorian::date beginning_date;
-    std::bitset<366> days;
     bool is_valid(int duration);
 public:
+    std::bitset<366> days;
+    boost::gregorian::date beginning_date;
     idx_t idx;
     ValidityPattern() : idx(0) {}
     ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date), idx(0){}
@@ -379,6 +380,10 @@ public:
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & beginning_date & days & idx;
     }
+
+    bool check(boost::gregorian::date day);
+    bool check(int day);
+    //void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
 };
 
 struct StopPoint : public NavitiaHeader, Nameable{

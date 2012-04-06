@@ -43,6 +43,18 @@ std::string ValidityPattern::str() const {
     return days.to_string();
 }
 
+bool ValidityPattern::check(boost::gregorian::date day) {
+    long duration = (day - beginning_date).days();
+    return ValidityPattern::check(duration);
+}
+
+bool ValidityPattern::check(int day) {
+    if(is_valid(day))
+        return days[day] == 1;
+    else
+        return false;
+}
+
 GeographicalCoord::GeographicalCoord(double x, double y, const Projection& projection) : x(x), y(y){
     GeographicalCoord tmp_coord = this->convert_to(Projection(), projection);
     this->x = tmp_coord.x;
