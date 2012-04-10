@@ -10,10 +10,12 @@ Table des matières :
 
 .. toctree::
    :maxdepth: 2
+   :numbered:
 
    introduction
    pre_requis
    archi_fonctionnelle
    implem_type
    spec_techniques
+   dev
 

@@ -82,6 +82,7 @@ exclude_patterns = []
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
+highlight_language = 'c++'
 
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
@@ -96,7 +97,12 @@ html_theme = 'default'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {
+#        'sidebarbgcolor' : '#ff6600',
+#        'relbarbgcolor' : '#ff6600',
+#        'sidebarlinkcolor' : '#FFBB99',
+        'headtextcolor': '#ff6600'
+        }
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
