@@ -124,9 +124,9 @@ BOOST_AUTO_TEST_CASE(test_computation) {
 
     // On teste le tarif à une autre date
     keys.clear();
-    keys.push_back("ratp;mantes;FILNav31;FILGATO-2;2010|12|01;04|40;04|50;4;1;metro");
+    keys.push_back("ratp;mantes;FILNav31;FILGATO-2;2011|12|01;04|40;04|50;4;1;metro");
     res = f.compute(keys);
-    BOOST_CHECK_EQUAL(res.at(0).value,160);
+    BOOST_CHECK_EQUAL(res.at(0).value,170);
 
     // On teste le noctilien
     keys.clear();
@@ -361,6 +361,6 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     keys.push_back("437;8739100;800:N;8739156;2012|01|03;11|35;11|42;1;2;LocalTrain");
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size(), 1);
-    BOOST_CHECK_EQUAL(res.at(0).value, 245);
+    BOOST_CHECK_EQUAL(res.at(0).value, 250);
 }
 
