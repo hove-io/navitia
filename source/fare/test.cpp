@@ -362,5 +362,13 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res.at(0).value, 250);
+
+    // Mantis sword 39517
+    keys.clear();
+    keys.push_back("440;8711389;800:T4;8743179;2012|04|23;14|28;14|29;4;4;Tramway");
+    res = f.compute(keys);
+    BOOST_CHECK_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res.at(0).value, 170);
+
 }
 
