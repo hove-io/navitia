@@ -33,7 +33,6 @@ endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
 #gestion des fixtures pour les test unitaire
 SET(FIXTURES_DIR ${CMAKE_SOURCE_DIR}/../fixtures/)
-configure_file(${CMAKE_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR}/CTestCustom.cmake)
 
 
 INCLUDE (CheckIncludeFiles)
