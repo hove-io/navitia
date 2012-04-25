@@ -14,6 +14,11 @@ struct NotFound : public std::exception{};
  * L'implémentation est un k-d tree http://en.wikipedia.org/wiki/K-d_tree.
  * L'arbre stocké dans un seul vector pour des raisons de mémoire et performance
  */
+template<class Item>
+bool along_x_comp(const Item & a, const Item & b){return a.coord.x < b.coord.x;}
+template<class Item>
+bool along_y_comp(const Item & a, const Item & b){return a.coord.y < b.coord.y;}
+
 template<class T>
 struct ProximityList
 {
@@ -54,9 +59,9 @@ struct ProximityList
 
         // On trie selon la bonne dimension
         if(along_x)
-            std::sort(begin, end, [](Item a, Item b){return a.coord.x < b.coord.x;});
+            std::sort(begin, end, along_x_comp<Item>);
         else
-            std::sort(begin, end, [](Item a, Item b){return a.coord.y < b.coord.y;});
+            std::sort(begin, end, along_x_comp<Item>);
 
         // On récupére l'élément médian
         iterator median = begin + (end - begin) / 2;
