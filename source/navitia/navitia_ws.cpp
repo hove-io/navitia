@@ -210,7 +210,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
         register_api("firstletter", boost::bind(&Worker::firstletter, this, _1, _2), "Retrouve les objets dont le nom commence par certaines lettres");
         add_param("firstletter", "name", "Valeur recherchée", ApiParameter::STRING, true);
-        add_param("firstletter", "filter", "Type à rechercher", ApiParameter::STRING, false, {"stop_areas", "cities"});
+        std::vector<RequestParameter::Parameter_variant> params;
+        params.push_back("stop_areas");
+        params.push_back("cities");
+        add_param("firstletter", "filter", "Type à rechercher", ApiParameter::STRING, false, params);
 
         register_api("load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
         add_default_api();

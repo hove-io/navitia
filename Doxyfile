@@ -897,7 +897,7 @@ TOC_EXPAND             = NO
 # Qt's qhelpgenerator to generate a Qt Compressed Help (.qch) of the generated
 # HTML documentation.
 
-GENERATE_QHP           = YES
+GENERATE_QHP           = NO
 
 # If the QHG_LOCATION tag is specified, the QCH_FILE tag can
 # be used to specify the file name of the resulting .qch file.
@@ -1442,7 +1442,7 @@ UML_LOOK               = NO
 # If set to YES, the inheritance and collaboration graphs will show the
 # relations between templates and their instances.
 
-TEMPLATE_RELATIONS     = YES
+TEMPLATE_RELATIONS     = NO
 
 # If the ENABLE_PREPROCESSING, SEARCH_INCLUDES, INCLUDE_GRAPH, and HAVE_DOT
 # tags are set to YES then doxygen will generate a graph for each documented
@@ -1548,4 +1548,4 @@ GENERATE_LEGEND        = YES
 # remove the intermediate dot files that are used to generate
 # the various graphs.
 
-DOT_CLEANUP            = YES
+DOT_CLEANUP            = NO
