@@ -1,19 +1,40 @@
 Introduction
 ============
 
-NAViTiA est une suite applicative complète permettant la conception, la gestion et la diffusion d'information voyageur multi-modale.
+NAViTiA est une suite applicative complÃ¨te permettant la conception, la gestion et la diffusion d'information voyageur multi-modale.
 
-Nous présentons dans cette introduction les 4 niveaux suivants :
-* Les fournisseurs d’information.
-* Le noyau de communication, qui assure l’interface avec les systèmes partenaires. Dans notre architecture, le noyau de communication est principalement composé des services FUSiO (données structurelles) et AlerteTrafic (données événementielles).
-* Le SIV qui assure la production des services applicatifs à destination des voyageurs et des partenaires. Dans notre architecture, le SIV est principalement composé du hub NAViTiA.
-* Les canaux d’accès à l’information.
+Nous prÃ©sentons dans cette introduction les 4 niveaux suivants :
 
-Les interfaces de ces sous-systèmes sont claires et bien documentées. 
-* Elles reposent sur des « web services », ce qui en garantit l’ouverture et la souplesse d’intégration pour intégrer une problématique locale spécifique par exemple.
-* Elles s’appuient sur la normalisation Transmodel notamment pour ce qui est des interfaces avec les systèmes des contributeurs ou de l’export du référentiel consolidé vers d’autres systèmes.
-* Elles sont évolutives. L’approche en service hébergé facilite l’accès à de nouveaux services développés dans le cadre d’autres projets. 
+* Les fournisseurs dâ€™information.
+* Le noyau de communication, qui assure lâ€™interface avec les systÃ¨mes partenaires. Dans notre architecture, le noyau de communication est principalement composÃ© des services FUSiO (donnÃ©es structurelles) et AlerteTrafic (donnÃ©es Ã©vÃ©nementielles).
+* Le SIV qui assure la production des services applicatifs Ã  destination des voyageurs et des partenaires. Dans notre architecture, le SIV est principalement composÃ© du hub NAViTiA.
+* Les canaux dâ€™accÃ¨s Ã  lâ€™information.
+
+Les interfaces de ces sous-systÃ¨mes sont claires et bien documentÃ©es. 
+
+* Elles reposent sur des Â« web services Â», ce qui en garantit lâ€™ouverture et la souplesse dâ€™intÃ©gration pour intÃ©grer une problÃ©matique locale spÃ©cifique par exemple.
+* Elles sâ€™appuient sur la normalisation Transmodel notamment pour ce qui est des interfaces avec les systÃ¨mes des contributeurs ou de lâ€™export du rÃ©fÃ©rentiel consolidÃ© vers dâ€™autres systÃ¨mes.
+* Elles sont Ã©volutives. Lâ€™approche en service hÃ©bergÃ© facilite lâ€™accÃ¨s Ã  de nouveaux services dÃ©veloppÃ©s dans le cadre dâ€™autres projets. 
 
 .. warning::
-La mise à disposition d’interfaces automatisées avec un nombre toujours plus important d’autres systèmes est un point fort de notre solution.
-::
+   La mise Ã  disposition dâ€™interfaces automatisÃ©es avec un nombre toujours plus important dâ€™autres systÃ¨mes est un point fort de notre solution.
+
+
+Architecture
+************
+
+Organisation des modules
+------------------------
+
+Le schÃ©ma ci-dessous donne une vision dâ€™ensemble de lâ€™architecture fonctionnelle du systÃ¨me.
+Elle permet notamment de visualiser de faÃ§on synthÃ©tique quelles sont les fonctions des principales composantes du systÃ¨me.
+
+* FUSiO permet aux partenaires (exploitants ou autoritÃ©s organisatrices) de fournir simplement leurs donnÃ©es thÃ©oriques. 
+* Le cas Ã©chÃ©ant AlerteTrafic permet de recueillir les informations conjoncturelles de faÃ§on automatique ou manuelle afin dâ€™alimenter NAViTiA-SIV en informations conjoncturelles. Ce module permet Ã©galement lâ€™envoi de messages aux abonnÃ©s.
+* NAViTiA-Core sâ€™appuie sur FUSiO et AlerteTrafic et autorise diffÃ©rents modes de diffusion : Internet, centres de relations clients, afficheursâ€¦
+* Ces modes de diffusion peuvent servir diffÃ©rentes communautÃ©s dâ€™utilisateurs : voyageurs, tÃ©lÃ©-conseillers ou partenaires du projet.
+ 
+.. warning::
+   INSERER L'IMAGE FUSIO/AT/NAVITIA
+
+
