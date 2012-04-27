@@ -38,7 +38,7 @@ Elle permet notamment de visualiser de façon synthétique quelles sont les fonc
    INSERER L'IMAGE FUSIO/AT/NAVITIA
 
 .. aafig::
-    :textual:
+ :textual:
  
  +--------------------------------------------------------------------------------------------------------+
  |                Outil de saisie des données partenaires                                                 |
