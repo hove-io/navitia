@@ -75,8 +75,6 @@ Sur la figure suivante, le point x sera projeté sur le point p
 
        |
       po- - - -+ x
-      po. . . .+ x
-      po.......+ x
        |
        |
   -----O---------
