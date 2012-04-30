@@ -1,6 +1,6 @@
 #include <iostream>
 #include "ptreferential.h"
-#include "data.h"
+#include "type/data.h"
 #include <stdio.h>
 #include <readline/readline.h>
 #include <readline/history.h>

@@ -1,17 +1,17 @@
 #include "data.h"
 
+#include <fstream>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
-
-#include <fstream>
-#include "filter.h"
-#include "eos_portable_archive/portable_iarchive.hpp"
-#include "eos_portable_archive/portable_oarchive.hpp"
 #include <boost/foreach.hpp>
 
+#include "third_party/eos_portable_archive/portable_iarchive.hpp"
+#include "third_party/eos_portable_archive/portable_oarchive.hpp"
+
+#include "fastlz_filter/filter.h"
 namespace navitia { namespace type {
 
 void Data::set_cities(){

@@ -1,5 +1,5 @@
 #include "gateway.h"
-#include "type.pb.h"
+#include "type/type.pb.h"
 
 #include <boost/thread/locks.hpp>
 #include <ctime>

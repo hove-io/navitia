@@ -22,8 +22,8 @@
   * 5) On fait un export protobuf
   */
 
-#include "data.h"
-#include "type.pb.h"
+#include "type/data.h"
+#include "type/type.pb.h"
 
 #include <google/protobuf/descriptor.h>
 

@@ -14,8 +14,8 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
-#include "eos_portable_archive/portable_iarchive.hpp"
-#include "eos_portable_archive/portable_oarchive.hpp"
+#include "third_party/eos_portable_archive/portable_iarchive.hpp"
+#include "third_party/eos_portable_archive/portable_oarchive.hpp"
 
 
 #include <iostream>

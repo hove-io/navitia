@@ -1,18 +1,16 @@
 FIND_PACKAGE(Boost 1.40.0 COMPONENTS serialization date_time regex thread iostreams REQUIRED)
 find_package(Protobuf REQUIRED)
-link_directories (${Boost_LIBRARY_DIRS})
-include_directories ( ${Boost_INCLUDE_DIRS}
-                      ${CMAKE_SOURCE_DIR}/fastlz_filter
-                      ${CMAKE_SOURCE_DIR}
-                      ${CMAKE_SOURCE_DIR}/../third_party
-                      ${PROTOBUF_INCLUDE_DIRS}
-)
- 
+
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS type.proto)
 
 
-SET(TYPES_SRC type.h type.cpp data.h data.cpp ${PROTO_SRCS} ${PROTO_HDRS} ${CMAKE_SOURCE_DIR}/../third_party/fastlz/fastlz.c pt_data.h pt_data.cpp)
+SET(TYPES_SRC
+    type.cpp
+    data.cpp
+    ${PROTO_SRCS}
+    ${CMAKE_SOURCE_DIR}/../third_party/fastlz/fastlz.c
+    pt_data.cpp)
 add_library(types ${TYPES_SRC})
 target_link_libraries(types ${Boost_LIBRARIES} proj streetnetwork)
 

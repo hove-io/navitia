@@ -1,9 +1,6 @@
 FIND_PACKAGE(Boost 1.40.0 COMPONENTS graph serialization REQUIRED)
 link_directories ( ${Boost_LIBRARY_DIRS} )
-include_directories ( ${Boost_INCLUDE_DIRS}
-                      ${CMAKE_SOURCE_DIR}
-                      ${CMAKE_SOURCE_DIR}/../third_party
-)
+include_directories ( ${Boost_INCLUDE_DIRS})
 
 add_library(streetnetwork  types.h types.cpp ../utils/csv.cpp ../utils/encoding_converter.cpp ${CMAKE_SOURCE_DIR}/../third_party/fastlz/fastlz.c)
 target_link_libraries(streetnetwork ${Boost_LIBRARIES})
