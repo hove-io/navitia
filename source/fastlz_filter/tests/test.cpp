@@ -1,4 +1,4 @@
-#include "filter.h"
+#include "fastlz_filter/filter.h"
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_fastlz_filter
 #include <boost/test/unit_test.hpp>

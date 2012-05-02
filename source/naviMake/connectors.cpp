@@ -1,7 +1,7 @@
 #include "connectors.h"
 
 #include <boost/lexical_cast.hpp>
-#include "csv.h"
+#include "utils/csv.h"
 
 
 using namespace navimake::connectors;

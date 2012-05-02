@@ -38,7 +38,7 @@ namespace webservice
             if(code < 32){
                 continue;
             }
-            str.replace(pos, 3, 1, (char)code);
+            str.replace(pos, 3, 1, static_cast<char>(code));
         }
 
     }

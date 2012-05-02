@@ -1,5 +1,5 @@
 #include "navisu.h"
-#include "ui_navisu.h"
+#include "visu/ui_navisu.h"
 
 #include <iostream>
 #include <boost/foreach.hpp>

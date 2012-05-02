@@ -2,6 +2,10 @@ project(NAViTiACpp)
 cmake_minimum_required(VERSION 2.6)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
 
+IF(NOT CMAKE_BUILD_TYPE)
+   SET(CMAKE_BUILD_TYPE Debug)
+ENDIF(NOT CMAKE_BUILD_TYPE)
+
 IF(WIN32)
   ADD_DEFINITIONS(-D_WIN32_WINNT=0x0501)
   IF(MSVC)
@@ -23,7 +27,7 @@ IF(WIN32)
 ENDIF(WIN32)
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
-    SET(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra -std=c++0x -rdynamic")
+    SET(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra -std=c++0x -Woverloaded-virtual -Wundef ")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     SET(CMAKE_CXX_FLAGS "-std=gnu++0x -stdlib=libc++  -ferror-limit=10 -I/usr/local/include/c++/v1 -pthread")
@@ -37,11 +41,18 @@ SET(FIXTURES_DIR ${CMAKE_SOURCE_DIR}/../fixtures/)
 
 INCLUDE (CheckIncludeFiles)
 CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
+FIND_PACKAGE(Boost 1.40.0 REQUIRED)
 
 
 
 #ajout a l'include path le repertoirre de compilation, pour géré le config.h
-include_directories (${CMAKE_CURRENT_BINARY_DIR})
+include_directories (${CMAKE_CURRENT_BINARY_DIR}
+                     ${CMAKE_SOURCE_DIR}
+                     ${CMAKE_SOURCE_DIR}/../
+                     ${Boost_INCLUDE_DIRS}
+)
+link_directories ( ${Boost_LIBRARY_DIRS} )
+
 
 ENABLE_TESTING()
 

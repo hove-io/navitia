@@ -3,7 +3,7 @@
 #include <boost/iostreams/concepts.hpp>
 #include <string.h>
 #include <iostream>
-#include "fastlz/fastlz.h"
+#include "third_party/fastlz/fastlz.h"
 #include <boost/iostreams/write.hpp>
 #include <boost/iostreams/read.hpp>
 #include <boost/cstdint.hpp>

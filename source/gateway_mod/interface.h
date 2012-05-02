@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "type.pb.h"
+#include "type/type.pb.h"
 #include "context.h"
 #include "pool.h"
 

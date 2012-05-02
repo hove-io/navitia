@@ -2,7 +2,7 @@
 #include "configuration.h"
 #include <iostream>
 #include "type/data.h"
-#include "type.pb.h"
+#include "type/type.pb.h"
 #include "type/pb_converter.h"
 #include <boost/tokenizer.hpp>
 
