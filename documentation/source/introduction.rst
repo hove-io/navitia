@@ -101,5 +101,22 @@ de perturbations sur les systèmes tiers qui composent votre système.
 les éventuelles nouvelles fonctionnalités proposées par toute nouvelle version de la suite NAViTiA 
 restent invisibles tant que la version d’interface ne permet pas leur utilisation. Ainsi :
 
+<<<<<<< HEAD
+=======
+les éventuelles nouvelles fonctionnalités proposées par toute nouvelle version de la suite NAViTiA restent invisibles tant que la version d’interface ne permet pas leur utilisation. Ainsi :
+
+>>>>>>> 73116fc7f9c32ed6c29f05eaf637a5418148f9fb
 .. warning::
    La mise en place des informations perturbations dans la chaine NAViTiA nécessite une Version d’interface 1.11 au minimum sur les API concernées
+
+.. mscgen::
+
+   msc {
+      hscale = "0.5";
+
+      a,b,c;
+
+      a->b [ label = "ab()" ] ;
+      b->c [ label = "bc(TRUE)"];
+      c=>c [ label = "process()" ];
+   }
