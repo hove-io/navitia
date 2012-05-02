@@ -87,7 +87,7 @@ std::string pb2txt(const google::protobuf::Message* response){
     return buffer.str();
 }
 
-std::string pb2json(const google::protobuf::Message* response, int depth = 0){
+std::string pb2json(const google::protobuf::Message* response, int depth){
     std::stringstream buffer;
     if(depth == 1) buffer.width(5);
     buffer << "{";
@@ -108,7 +108,17 @@ std::string pb2json(const google::protobuf::Message* response, int depth = 0){
             buffer << "\"" << field->name() << "\": [";
             if(depth == 0) buffer << "\n";
             for(int i=0; i < reflection->FieldSize(*response, field); ++i){
-                buffer << pb2json(&reflection->GetRepeatedMessage(*response, field, i), depth+1);
+                switch(field->type()) {
+                case google::protobuf::FieldDescriptor::TYPE_MESSAGE:
+                    buffer << pb2json(&reflection->GetRepeatedMessage(*response, field, i), depth+1);
+                    break;
+                case google::protobuf::FieldDescriptor::TYPE_INT32:
+                    buffer << reflection->GetRepeatedInt32(*response, field, i);
+                    break;
+                 default:
+                    buffer << "other" ;
+                }
+
                 if(i+1 < reflection->FieldSize(*response, field)){
                     buffer << ", ";
                     if(depth == 0) buffer << "\n";
@@ -119,14 +129,21 @@ std::string pb2json(const google::protobuf::Message* response, int depth = 0){
         }
         else if(reflection->HasField(*response, field)){
             buffer << "\"" <<field->name() << "\": ";
-            if(field->type() == google::protobuf::FieldDescriptor::TYPE_STRING){
+            switch(field->type()) {
+            case google::protobuf::FieldDescriptor::TYPE_STRING:
                 buffer << "\"" << reflection->GetString(*response, field) << "\"";
-            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
+                break;
+            case google::protobuf::FieldDescriptor::TYPE_INT32:
                 buffer << reflection->GetInt32(*response, field);
-            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_DOUBLE){
+                break;
+            case google::protobuf::FieldDescriptor::TYPE_DOUBLE:
                 buffer << reflection->GetDouble(*response, field);
-            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE){
+                break;
+            case google::protobuf::FieldDescriptor::TYPE_MESSAGE:
                 buffer << pb2json(&reflection->GetMessage(*response, field), depth + 1);
+                break;
+            default:
+                buffer << "Other !, " ;
             }
         }
     }
