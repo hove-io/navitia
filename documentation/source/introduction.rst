@@ -75,6 +75,7 @@ Elle permet notamment de visualiser de façon synthétique quelles sont les fonc
 Ou plus clairement:
 
 .. image:: _static/Archi_applicative_complete.png
+   :width: 600px
  
 Interface
 ---------
