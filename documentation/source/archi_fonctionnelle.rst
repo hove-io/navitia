@@ -7,19 +7,18 @@ Description des différents modules
 .. aafig::
   :textual:
   :foreground: #FF6600
-  :scale: 50%
+  :scale: 75%
 
   /--------------+ /-----+ /--------------+ /---------+     /--------------+ /-----+ /--------------+
   |"Données"     | |     | |"Données"     | |"Autres" |     |"Perturbation"| |     | |"Temps réel"  |
   |"Transporteur"| |"..."| |"Transporteur"| |"Données"|     |"Transporteur"| |"..."| |"Transporteur"|
   |   "1"        | |     | |"n"           | |         |     |"1"           | |     | |"n"           |
   +--------------+ +-----+ +--------------+ +---------+     +--------------+ +-----+ +--------------+
-    
 
 .. aafig::
   :textual:
   :foreground: #80CB66
-  :scale: 50%
+  :scale: 75%
 
                                    +-----+                              +------------+
                                    |FUSiO|                              |AlerteTrafic|
@@ -30,10 +29,11 @@ Description des différents modules
                                               /"données théorique et"\
                                              /       "temps réel"     \
                                             +--------------------------+
+
 .. aafig::
   :textual:
   :foreground: #4F81BD
-  :scale: 50%
+  :scale: 75%
 
                                                          |
                                                          v
