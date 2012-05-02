@@ -93,8 +93,12 @@ namespace webservice
 
         /// Arrête le pool de threads
         void stop(){
+            // On signale à tous les threads qu'il faut s'arrêter
+            queue_mutex.lock();
             run = false;
+            queue_mutex.unlock();
             request_pushed_cond.notify_all();
+            // On attend qu'ils soient tous arrêtés
             thread_group.join_all();
         }
 

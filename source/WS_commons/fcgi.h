@@ -87,5 +87,6 @@ namespace webservice {
     if(getcwd(buf, 256)) conf->set_string("path",std::string(buf) + "/"); else conf->set_string("path", "unknown");\
     webservice::ThreadPool<Data, Worker> tp;\
     webservice::run_fcgi();\
+    tp.stop();\
     return 0;\
 }
