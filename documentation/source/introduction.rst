@@ -103,7 +103,7 @@ restent invisibles tant que la version d’interface ne permet pas leur utilisat
 .. warning::
    La mise en place des informations perturbations dans la chaine NAViTiA nécessite une Version d’interface 1.11 au minimum sur les API concernées
 
-DESCRIPTION DES MODULES
+Description des modules
 =======================
 
 FUSiO : module de description du référentiel théorique
@@ -113,11 +113,12 @@ Ce module permet de décrire :
 
 * Le référentiel topologique de transport en commun.
 * L’offre en horaires théoriques sur ce référentiel.
-Afin de définir le référentiel théorique complet, il met en place les procédures suivantes : 
+  Afin de définir le référentiel théorique complet, il met en place les procédures suivantes : 
 * Récupération des données de chaque contributeur.
 * Enrichissement de propriétés complémentaires sur ces données.
 * Définition des correspondances entre chaque contributeur.
 * Enrichissement sur le référentiel de transport :
+
   * Données géographique (adresse).
   * Données régionales (lieux remarquables, tourisme…).
 
@@ -125,6 +126,7 @@ Le module offre en sortie :
 
 * La description complète du référentiel théorique. Il permet ainsi d’alimenter directement NAViTiA-SIV en "données prévues".
 * Il permet également de fournir des exports au format TRIDENT.
+
 Pour tout complément de description, voir le document de référence FUSiO "FUSiO_Document de référence_nnn.doc".
 
 Alerte-Trafic : module de prise en compte des perturbations
@@ -133,17 +135,21 @@ Alerte-Trafic : module de prise en compte des perturbations
 Ce module permet :
 
 * De décrire l’ensemble des perturbations sur le réseau de transport :
+
   * Récupération des perturbations automatiquement depuis un SAEIV.
   * Fabrications manuelles de perturbations grâce à un site dédié.
   * L’envoi d’alerte aux abonnés du réseau (mail ou SMS par exemple).
   * L’alimentation en données perturbée du module de diffusion NAViTiA-SIV.
+
 Les perturbations sont définies par rapport au référentiel théorique. Il est donc nécessaire de mettre en place les modules FUSiO et NAViTiA-SIV sur le même référentiel du réseau de transport que le module Alerte-Trafic.
 
 .. warning::
-La mise en place de l’information perturbée au sein d’un système d’information voyageur nécessite que chaque élément de la suite NAViTiA (FUSiO, Alerte-trafic, NAViTiA-SIV…) soit :
-* Basé sur *le même référentiel de transport*
-* Ce référentiel utilisant des codes d’objets ("codes externes") *pérennes et uniques*
-Les modalités de mise en œuvre sont décrites dans le catalogue de service
+   La mise en place de l’information perturbée au sein d’un système d’information voyageur nécessite que chaque élément de la suite NAViTiA (FUSiO, Alerte-trafic, NAViTiA-SIV…) soit :
+   
+   * Basé sur *le même référentiel de transport*
+   * Ce référentiel utilisant des codes d’objets ("codes externes") *pérennes et uniques*
+   
+   Les modalités de mise en œuvre sont décrites dans le catalogue de service
 
 Pour tout complément de description, voir le document de référence Alerte-Trafic "AlerteTrafic_Document de référence.doc".
 
@@ -157,7 +163,7 @@ Ce module est chargé de la diffusion de l’information de l’offre en transpo
 * Afin de bénéficier des statistiques avancées, le module nécessite l’utilisation du sous-module gwNAViTiA et son paramétrage à mettre en place conjointement entre Canal TP et le partenaire.
 
 .. warning::
-Pour la mise en place de statistiques métiers (observatoire des demandes de déplacement), une description détaillée des besoins doit être fournie à Canal TP.
+   Pour la mise en place de statistiques métiers (observatoire des demandes de déplacement), une description détaillée des besoins doit être fournie à Canal TP.
 
 Pour tout complément de description, voir le document de référence NAViTiA-SIV "NAViTiA_Document de référence.doc".
 
@@ -190,7 +196,7 @@ Le développement d’une application de mise en forme spécifique permet de red
 Le développement d’une interface spécifique doit suivre les préconisations décries 
 dans le document d’intégration "NAViTiA_Manuel_Integration" et être suivie dans le cadre d’un "projet d’intégration NAViTiA" par Canal TP.
 
-PRE-REQUIS
+Pré-requis
 ==========
 
 Administration des données
@@ -201,6 +207,7 @@ La qualité des données qui alimentent le système impacte l’ensemble de la c
 * Identification d’un administrateur.
 * Formation de cet administrateur aux outils NAViTiA.
 * Mise en cohérence des données.
+
   * Points d’arrêts géo-localisés.
   * Horaires mis à jour régulièrement.
   * Informations complémentaires conforment au message client.
@@ -211,18 +218,24 @@ Ouverture de compte
 Le projet type de mise en place d’une solution technique NAViTiA (hors mise en place de médias spécifiques) nécessitera :
 
 * FUSiO
+
   * Définition des formats d’alimentation :
+  
     * Utilisation du format d’échange standard NAViTiA.
     * Utilisation du format d’échange standard TRIDENT CHOUETTE.
     * Utilisation du format d’échange GoogleTransit.
     * Etude d’un connecteur spécifique si besoin.
+
 * Alerte-trafic
+
   * Mise à disposition d’une plateforme de saisie manuelle des perturbations.
   * Mise en place du module d’alerte push (SMS ou Mail) si besoin.
   * Eventuellement :
+  
     * Adaptation de l’application aux besoins spécifiques du projet (se rapporter à la documentation « AlerteTrafic_Document de référence ».
     * Etude d’un connecteur spécifique pour le module pull (alimentation en perturbation automatique) si besoin.
     * Etude d’un connecteur spécifique pour le module push (SMS ou Mail) si besoin.
+
 * Hub NAViTIA
 * Media de référence pour qualifier les données
 * Mise à disposition des statistiques. Mise en place du module gwNAViTiA
