@@ -1,36 +1,40 @@
 Architecture fonctionnelle
 ==========================
 
-Description des différents modules
+Description des diffÃ©rents modules
 **********************************
 
 .. aafig::
-  :fill:#FF6600
+  :textual:
+  :fill: #FF6600
 
 /------------+ /-----+ /------------+     /------------+ /-----+ /------------+
-|Données     | |     | |Données     |     |Données     | |     | |Données     |
+|DonnÃ©es     | |     | |DonnÃ©es     |     |DonnÃ©es     | |     | |DonnÃ©es     |
 |Transporteur| | ... | |Transporteur|     |Transporteur| | ... | |Transporteur|
 |1           | |     | |n           |     |1           | |     | |n           |
 +------------+ +-----+ +------------+     +------------+ +-----+ +------------+
     
 
 .. aafig::
+  :textual:
 
                /-----\                                /------------\
                |FUSiO|                                |AlerteTrafic|
                \-----/                                \------------/
                   |              +--------------+            |
                   |             /Espace de mise  \           |
-                  \----------->/à disposition des \<---------/
-                              /données théorique et\
-                             /     temps réel       \
+                  \----------->/Ã  disposition des \<---------/
+                              /donnÃ©es thÃ©orique et\
+                             /     temps rÃ©el       \
                             +------------------------+
                                          |
                                         /|\
                                        / | \
                                       v  v  v
 .. aafig::
-  :fill:#4F81BD
+  :textual:
+  :fill: #4F81BD
+
                                 /-----------------\
                                 |Moteurs de calcul|\
                                 \-----------------/|

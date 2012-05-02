@@ -21,6 +21,34 @@ La qualité des données qui alimentent le système impacte l’ensemble de la c
   * Informations complémentaires conforment au message client.
 
 
+Interfaces
+**********
+
+Les articulations présentés dans le schéma du chapitre 'Organisation des modules_' s’articulent 
+autour d’interfaces techniques standardisées http/XML (tous les modules sont des web-services REST). 
+Sur ces standards, la suite NAViTiA définie son propre langage d’échange afin d’échanger les informations entre les différents modules et avec 
+les applications tierces. Ce langage d’échange est nommé "interface d’échange NAViTiA".
+
+Cependant, afin d’assurer la compatibilité entre toute nouvelle version de la suite NAViTiA 
+et les systèmes qui l’utilisent (média, application tierce…), il est possible de faire évoluer 
+les différents modules sans modifier l’interface d’échange utilisée. 
+Ainsi la mise en place d’une nouvelle version corrective NAViTiA est réalisable sans risques 
+de perturbations sur les systèmes tiers qui composent votre système. 
+
+* La suite NAViTiA est caractérisée par le numéro de version de ses modules.
+* La mise en œuvre d’un système reposant sur la suite NAViTiA est caractérisée par la version d’interface d’échange sur laquelle le système repose.
+
+.. warning::
+   La mise en place d’un système NAViTiA complet nécessite une mise en cohérence de la version des modules qui le compose.
+
+**Remarque**
+
+les éventuelles nouvelles fonctionnalités proposées par toute nouvelle version de la suite NAViTiA 
+restent invisibles tant que la version d’interface ne permet pas leur utilisation. Ainsi :
+
+.. warning::
+   La mise en place des informations perturbations dans la chaine NAViTiA nécessite une Version d’interface 1.11 au minimum sur les API concernées
+
 Ouverture de compte
 *******************
 

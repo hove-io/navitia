@@ -26,11 +26,8 @@ Les interfaces de ces sous-systèmes sont claires et documentées.
    La mise à disposition d’interfaces automatisées avec un nombre toujours plus important d’autres systèmes est un point fort de notre solution.
 
 
-Description des modules
-***********************
-
-Organisation
-------------
+Présentation des modules
+************************
 
 La suite NAViTiA est composée des 3 modules fonctionnels principaux suivants:
 
@@ -49,7 +46,7 @@ Elle permet notamment de visualiser de façon synthétique quelles sont les fonc
 
 
 FUSiO : module de description du référentiel théorique
-------------------------------------------------------
+******************************************************
 
 Ce module permet de décrire :
 
@@ -72,7 +69,7 @@ Le module offre en sortie :
 Pour tout complément de description, voir le document de référence FUSiO "FUSiO_Document de référence_nnn.doc".
 
 Alerte-Trafic : module de prise en compte des perturbations
------------------------------------------------------------
+***********************************************************
 
 Ce module permet :
 
@@ -97,7 +94,7 @@ Les perturbations sont définies par rapport au référentiel théorique. Il est
 Pour tout complément de description, voir le document de référence Alerte-Trafic "AlerteTrafic_Document de référence.doc".
 
 Hub NAViTiA : module de fourniture d’information
-------------------------------------------------
+************************************************
 
 Ce module est chargé de la diffusion de l’information de l’offre en transport en commun. Le module est capable de mixer l’information théorique et l’information perturbée.
 
@@ -111,7 +108,7 @@ Ce module est chargé de la diffusion de l’information de l’offre en transpo
 Pour tout complément de description, voir le document de référence NAViTiA-SIV "NAViTiA_Document de référence.doc".
 
 Diffusion vers les médias
--------------------------
+*************************
 
 Média intégré EZ-Publish
 ++++++++++++++++++++++++
@@ -138,33 +135,3 @@ Le développement d’une application de mise en forme spécifique permet de red
 
 Le développement d’une interface spécifique doit suivre les préconisations décries 
 dans le document d’intégration "NAViTiA_Manuel_Integration" et être suivie dans le cadre d’un "projet d’intégration NAViTiA" par Canal TP.
-
-
-Interfaces
-**********
-
-Les articulations présentés dans le schéma du chapitre 'Organisation des modules_' s’articulent 
-autour d’interfaces techniques standardisées http/XML (tous les modules sont des web-services REST). 
-Sur ces standards, la suite NAViTiA définie son propre langage d’échange afin d’échanger les informations entre les différents modules et avec 
-les applications tierces. Ce langage d’échange est nommé "interface d’échange NAViTiA".
-
-Cependant, afin d’assurer la compatibilité entre toute nouvelle version de la suite NAViTiA 
-et les systèmes qui l’utilisent (média, application tierce…), il est possible de faire évoluer 
-les différents modules sans modifier l’interface d’échange utilisée. 
-Ainsi la mise en place d’une nouvelle version corrective NAViTiA est réalisable sans risques 
-de perturbations sur les systèmes tiers qui composent votre système. 
-
-* La suite NAViTiA est caractérisée par le numéro de version de ses modules.
-* La mise en œuvre d’un système reposant sur la suite NAViTiA est caractérisée par la version d’interface d’échange sur laquelle le système repose.
-
-.. warning::
-   La mise en place d’un système NAViTiA complet nécessite une mise en cohérence de la version des modules qui le compose.
-
-**Remarque**
-
-les éventuelles nouvelles fonctionnalités proposées par toute nouvelle version de la suite NAViTiA 
-restent invisibles tant que la version d’interface ne permet pas leur utilisation. Ainsi :
-
-.. warning::
-   La mise en place des informations perturbations dans la chaine NAViTiA nécessite une Version d’interface 1.11 au minimum sur les API concernées
-
