@@ -17,6 +17,7 @@ Description des différents modules
 
 .. aafig::
     :textual:
+    :foreground: #00FF66
 
                /-----\                                  /------------\
                |FUSiO|                                  |AlerteTrafic|
@@ -33,20 +34,21 @@ Description des différents modules
                                        v v v
 .. aafig::
   :textual:
-  :fill: #4F81BD
+  :background: #4F81BD
 
                                 /-----------------\
-                                |Moteurs de calcul|\
-                                \-----------------/|
-                                 \-----------------/
+                                |Moteurs de calcul| \
+                                \-----------------/ |
+                                  |                 |
+                                  \-----------------/
                                         /|\
                                        / | \
-                                       | | |
+                                      |  |  |
                                        \ | /
                                         \|/
                                          v
                                     /---------\
-                                    | NAViTiA |\
-                                    \---------/|
-                                     \---------/
+                                    | NAViTiA | \
+                                    \---------/ |
+                                      \---------/
 
