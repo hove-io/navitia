@@ -83,5 +83,18 @@ Cependant, afin d’assurer la compatibilité entre toute nouvelle version de la
 *Remarque*
 
 les éventuelles nouvelles fonctionnalités proposées par toute nouvelle version de la suite NAViTiA restent invisibles tant que la version d’interface ne permet pas leur utilisation. Ainsi :
+
 .. warning::
    La mise en place des informations perturbations dans la chaine NAViTiA nécessite une Version d’interface 1.11 au minimum sur les API concernées
+
+.. mscgen::
+
+   msc {
+      hscale = "0.5";
+
+      a,b,c;
+
+      a->b [ label = "ab()" ] ;
+      b->c [ label = "bc(TRUE)"];
+      c=>c [ label = "process()" ];
+   }
