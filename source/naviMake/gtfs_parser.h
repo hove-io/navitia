@@ -24,6 +24,8 @@ private:
     boost::unordered_map<std::string, navimake::types::Line*> line_map;
     boost::unordered_map<std::string, navimake::types::ValidityPattern*> vp_map;
     boost::unordered_map<std::string, navimake::types::VehicleJourney*> vj_map;
+    boost::unordered_map<std::string, navimake::types::Mode*> mode_map;
+
 public:
     /// Constructeur qui prend en paramètre le chemin vers les fichiers
     GtfsParser(const std::string & path, const std::string & start_date);
@@ -36,6 +38,10 @@ public:
 
     /// Remplis les modes types
     void fill_mode_types(Data & data);
+
+    /// Parse le fichier calendar.txt
+    /// Remplis les validity_patterns par période
+    void parse_calendar(Data & data);
 
     /// Parse le fichier calendar_dates.txt
     /// Contient les dates définies par jour (et non par période)

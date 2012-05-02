@@ -70,6 +70,9 @@ int main(int argc, char * argv[])
     std::cout << "connection: " << data.connections.size() << std::endl;
     std::cout << "route points: " << data.route_points.size() << std::endl;
     std::cout << "city: " << data.cities.size() << std::endl;
+    std::cout << "modes: " << data.modes.size() << std::endl;
+    std::cout << "validity pattern : " << data.validity_patterns.size() << std::endl;
+
 
     start = pt::microsec_clock::local_time();
     data.clean();
