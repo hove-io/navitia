@@ -11,7 +11,6 @@
 #include <boost/bimap.hpp>
 #include <boost/mpl/map.hpp>
 
-
 namespace mpl = boost::mpl;
 
 namespace navitia { namespace type {
@@ -94,6 +93,8 @@ struct GeographicalCoord{
     }
 
     GeographicalCoord convert_to(const Projection& projection, const Projection& current_projection = Projection()) const;
+
+
 };
 
 struct Country: public NavitiaHeader, Nameable {
@@ -184,6 +185,8 @@ struct StopArea : public NavitiaHeader, Nameable{
 
     std::vector<idx_t> stop_point_list;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+
+
 };
 
 struct Network : public NavitiaHeader, Nameable{
@@ -371,6 +374,7 @@ public:
     idx_t idx;
     ValidityPattern() : idx(0) {}
     ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date), idx(0){}
+    int slide(boost::gregorian::date day);
     void add(boost::gregorian::date day);
     void add(int day);
     void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
@@ -408,6 +412,7 @@ struct StopPoint : public NavitiaHeader, Nameable{
     StopPoint(): fare_zone(0),  stop_area_idx(0), city_idx(0), mode_idx(0), network_idx(0){}
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+
 };
 
 struct StopTime: public NavitiaHeader{
@@ -429,6 +434,7 @@ struct StopTime: public NavitiaHeader{
                 & idx & id & external_code;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+
 };
 
 

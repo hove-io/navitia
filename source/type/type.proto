@@ -35,7 +35,7 @@ message StopPoint {
     optional int32 idx = 2;
     optional string name = 3;
     optional string external_code = 4;
-    optional GeographicalCoord coord = 5;
+    optional GeographicalCoord coord = 5; 
     optional PTReferential child = 6; 
 }
 
@@ -63,6 +63,9 @@ message Route {
 }
 
 message StopTime {
+    optional int32 arrival_time = 1;
+    optional int32 departure_time = 2;
+    optional int32 vehicle_journey_idx = 3;
 }
 
 message VehicleJourney {
@@ -171,3 +174,29 @@ message StreetNetwork {
     repeated PathItem path_item_list = 2;
     repeated GeographicalCoord coordinate_list = 3;
 }
+
+message Parcours {
+        required int32 id = 1;
+	message Etape {
+                required StopArea descente = 1;
+		required int32 ligne	    = 2;
+	}
+	
+        repeated Etape etapes = 2;
+}
+
+message StopTimeEtape {
+	required StopTime depart  = 1;
+	required StopTime arrivee = 2;
+}
+
+message Itineraire {
+        required Parcours parcours 	  = 1;
+	repeated StopTimeEtape stop_times = 2;	
+}
+
+message Itineraires {
+    repeated Itineraire itineraires_liste = 1;
+}
+
+
