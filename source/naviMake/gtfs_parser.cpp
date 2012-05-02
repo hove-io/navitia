@@ -15,38 +15,39 @@ namespace navimake{ namespace connectors {
 
 
 int time_to_int(const std::string & time) {
-   typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-   boost::char_separator<char> sep(":");
-   tokenizer tokens(time, sep);
-   std::vector<std::string> elts(tokens.begin(), tokens.end());
-   int result = 0;
-   if(elts.size() != 3)
-       return -1;
-   try {
-       result = boost::lexical_cast<int>(elts[0]) * 3600;
-       result += boost::lexical_cast<int>(elts[1]) * 60;
-       result += boost::lexical_cast<int>(elts[2]);
-   }
-   catch(boost::bad_lexical_cast){
-       return -1;
-   }
-   return result;
+    typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
+    boost::char_separator<char> sep(":");
+    tokenizer tokens(time, sep);
+    std::vector<std::string> elts(tokens.begin(), tokens.end());
+    int result = 0;
+    if(elts.size() != 3)
+        return -1;
+    try {
+        result = boost::lexical_cast<int>(elts[0]) * 3600;
+        result += boost::lexical_cast<int>(elts[1]) * 60;
+        result += boost::lexical_cast<int>(elts[2]);
+    }
+    catch(boost::bad_lexical_cast){
+        return -1;
+    }
+    return result;
 }
 
 GtfsParser::GtfsParser(const std::string & path, const std::string & start) :
-        path(path),
-        start(boost::gregorian::from_undelimited_string(start)) {
+    path(path),
+    start(boost::gregorian::from_undelimited_string(start)) {
     std::cout << "Date de début : " << this->start << std::endl;
 }
 
 void GtfsParser::fill(Data & data){
     fill_mode_types(data);
     parse_stops(data);
+    parse_calendar(data);
     parse_calendar_dates(data);
     parse_routes(data);
     parse_trips(data);
     parse_stop_times(data);
- }
+}
 
 void GtfsParser::fill_mode_types(Data & data) {
     navimake::types::ModeType* mode_type = new navimake::types::ModeType();
@@ -104,6 +105,19 @@ void GtfsParser::fill_mode_types(Data & data) {
     mode_type->external_code = "0x7";
     data.mode_types.push_back(mode_type);
     mode_type_map[mode_type->id] = mode_type;
+
+
+    BOOST_FOREACH(navimake::types::ModeType *mt, data.mode_types) {
+        navimake::types::Mode* mode = new navimake::types::Mode();
+        mode->id = mt->id;
+        mode->name = mt->name;
+        mode->external_code = mt->external_code;
+        mode->mode_type = mt;
+        data.modes.push_back(mode);
+        mode_map[mode->id] = mode;
+    }
+
+
 }
 
 void GtfsParser::parse_stops(Data & data) {
@@ -167,7 +181,7 @@ void GtfsParser::parse_stops(Data & data) {
         }
         catch(boost::bad_lexical_cast ) {
             std::cerr << "Impossible de parser les coordonnées pour " << elts[id_c] << " " << elts[code_c]
-                    << " " << elts[name_c] << std::endl;
+                      << " " << elts[name_c] << std::endl;
         }
 
         sp->name = elts[name_c];
@@ -206,7 +220,7 @@ void GtfsParser::parse_stops(Data & data) {
         }
         else{
             std::cerr << "Le stopPoint " << (sa.first)->external_code
-                    << " a utilisé un stopArea inconnu : " << sa.second << std::endl;
+                      << " a utilisé un stopArea inconnu : " << sa.second << std::endl;
             (sa.first)->stop_area = 0;
         }
     }
@@ -217,8 +231,104 @@ void GtfsParser::parse_stops(Data & data) {
     std::cout << std::endl;
 }
 
-void GtfsParser::parse_calendar_dates(Data & data){
+
+void GtfsParser::parse_calendar(Data & data) {
     data.validity_patterns.reserve(10000);
+
+    std::cout << "On parse : " << (path + "calendar.txt").c_str() << std::endl;
+    std::fstream ifile((path + "calendar.txt").c_str());
+    remove_bom(ifile);
+    std::string line;
+
+    if(!getline(ifile, line)){
+        std::cerr << "Impossible d'ouvrir le fichier calendar.txt" << std::endl;
+        return;
+    }
+
+
+    boost::trim(line);
+    Tokenizer tok_header(line);
+    std::vector<std::string> elts(tok_header.begin(), tok_header.end());
+    int id_c = -1, monday_c = -1, tuesday_c = -1, wednesday_c = -1, thursday_c = -1, friday_c = -1, saturday_c = -1, sunday_c = -1, start_date_c = -1, end_date_c = -1;
+    for(size_t i = 0; i < elts.size(); i++) {
+        if (elts[i] == "service_id")
+            id_c = i;
+        else if (elts[i] == "monday")
+            monday_c = i;
+        else if (elts[i] == "tuesday")
+            tuesday_c = i;
+        else if (elts[i] == "wednesday")
+            wednesday_c = i;
+        else if (elts[i] == "thursday")
+            thursday_c = i;
+        else if (elts[i] == "friday")
+            friday_c = i;
+        else if (elts[i] == "saturday")
+            saturday_c = i;
+        else if (elts[i] == "sunday")
+            sunday_c = i;
+        else if (elts[i] == "start_date")
+            start_date_c = i;
+        else if (elts[i] == "end_date")
+            end_date_c = i;
+    }
+    if(id_c == -1 || monday_c == -1 || tuesday_c == -1 || wednesday_c == -1 || thursday_c == -1 || friday_c == -1 || saturday_c == -1 || sunday_c == -1 || start_date_c == -1 || end_date_c == -1){
+        std::cerr << "Il manque au moins une colonne dans calendar.txt" << std::endl;
+        return;
+    }
+
+    std::bitset<7> week;
+    unsigned int nblignes = 0;
+    while(getline(ifile, line)) {
+        nblignes ++;
+        boost::trim(line);
+        Tokenizer tok(line);
+        elts.assign(tok.begin(), tok.end());
+
+
+        nm::ValidityPattern * vp;
+        boost::unordered_map<std::string, nm::ValidityPattern*>::iterator it= vp_map.find(elts[id_c]);
+        if(it == vp_map.end()){
+            //On initialise la semaine
+            week[1] = (elts[monday_c] == "1");
+            week[2] = (elts[tuesday_c] == "1");
+            week[3] = (elts[wednesday_c] == "1");
+            week[4] = (elts[thursday_c] == "1");
+            week[5] = (elts[friday_c] == "1");
+            week[6] = (elts[saturday_c] == "1");
+            week[0] = (elts[sunday_c] == "1");
+
+            vp = new nm::ValidityPattern(start);
+
+
+            for(unsigned int i = 0; i<366;++i)
+                vp->remove(i);
+
+            //Initialisation des jours de la date de départ jusqu'à la date de fin du service
+            boost::gregorian::date_period period = boost::gregorian::date_period(boost::gregorian::from_undelimited_string(elts[start_date_c]), boost::gregorian::from_undelimited_string(elts[end_date_c]));
+            for(boost::gregorian::day_iterator it(period.begin()); it<period.end(); ++it) {
+                if(week[(*it).day_of_week()]) {
+                    vp->add((*it));
+                }
+                else
+                    vp->remove((*it));
+            }
+
+
+            vp_map[elts[id_c]] = vp;
+            data.validity_patterns.push_back(vp);
+
+        }
+        else {
+            vp = it->second;
+        }
+    }
+    BOOST_ASSERT(data.validity_patterns.size() == vp_map.size());
+    std::cout << "Nombre de validity patterns : " << data.validity_patterns.size() << "nb lignes : " << nblignes <<  std::endl;
+
+}
+
+void GtfsParser::parse_calendar_dates(Data & data){
     std::cout << "On parse : " << (path + "/calendar_dates.txt").c_str() << std::endl;
     std::fstream ifile((path + "/calendar_dates.txt").c_str());
     remove_bom(ifile);
@@ -260,7 +370,7 @@ void GtfsParser::parse_calendar_dates(Data & data){
             data.validity_patterns.push_back(vp);
         }
         else {
-           vp = it->second;
+            vp = it->second;
         }
 
         auto date = boost::gregorian::from_undelimited_string(elts[date_c]);
@@ -275,7 +385,7 @@ void GtfsParser::parse_calendar_dates(Data & data){
     std::cout << "Nombre de validity patterns : " << data.validity_patterns.size() << std::endl;
 }
 
-void GtfsParser::parse_routes(Data & data){
+void GtfsParser:: parse_routes(Data & data){
     data.lines.reserve(10000);
     std::cout << "On parse : " << (path + "/routes.txt").c_str() << std::endl;
     std::fstream ifile((path + "/routes.txt").c_str());
@@ -387,41 +497,50 @@ void GtfsParser::parse_trips(Data & data) {
         boost::unordered_map<std::string, nm::Line*>::iterator it = line_map.find(elts[id_c]);
         if(it == line_map.end()){
             std::cerr << "Impossible de trouver la Route (au sens GTFS) " << elts[id_c]
-                    << " référencée par trip " << elts[trip_c] << std::endl;
+                      << " référencée par trip " << elts[trip_c] << std::endl;
         }
         else {
             nm::Line * line = it->second;
-            nm::Route * route = new nm::Route();
-            route->line  = line;
-            nm::ValidityPattern * vp_xx;
 
-            boost::unordered_map<std::string, nm::ValidityPattern*>::iterator vp_it = vp_map.find(elts[service_c]);
-            if(vp_it == vp_map.end()) {
-                ignored++;
-                //std::cerr << "Impossible de trouver le service " << elts[service_c] << std::endl;
-            }
-            else {
-                vp_xx = vp_it->second;
-            }
+            boost::unordered_map<std::string, nm::Mode*>::iterator itm = mode_map.find(line->mode_type->id);
+            if(itm == mode_map.end()){
+                std::cerr << "Impossible de trouver le mode (au sens GTFS) " << line->mode_type->id
+                          << " référencée par trip " << elts[trip_c] << std::endl;
+            } else {
+                nm::Route * route = new nm::Route();
+                route->line  = line;
+                route->mode = itm->second;
+                nm::ValidityPattern * vp_xx;
 
-            route_map[elts[trip_c]] = route;
-            data.routes.push_back(route); //elts[2]
+                boost::unordered_map<std::string, nm::ValidityPattern*>::iterator vp_it = vp_map.find(elts[service_c]);
+                if(vp_it == vp_map.end()) {
+                    ignored++;
+                    //std::cerr << "Impossible de trouver le service " << elts[service_c] << std::endl;
+                }
+                else {
+                    vp_xx = vp_it->second;
+                }
 
-            boost::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(elts[trip_c]);
-            if(vj_it == vj_map.end()) {
-                nm::VehicleJourney * vj = new nm::VehicleJourney();
-                vj->route = route;
-                //vj->company = route->line->network;
-                vj->name = elts[trip_c];
-                vj->external_code = elts[trip_c];
-                //vj->mode = route->mode_type;
-                vj->validity_pattern = vp_xx;
+                route_map[elts[trip_c]] = route;
+                data.routes.push_back(route); //elts[2]
 
-                vj_map[vj->name] = vj;
-                data.vehicle_journeys.push_back(vj);
-            }
-            else {
-                ignored_vj++;
+                boost::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(elts[trip_c]);
+                if(vj_it == vj_map.end()) {
+                    nm::VehicleJourney * vj = new nm::VehicleJourney();
+                    vj->route = route;
+                    //vj->company = route->line->network;
+                    vj->name = elts[trip_c];
+                    vj->external_code = elts[trip_c];
+                    vj->mode = route->mode;
+                    vj->validity_pattern = vp_xx;
+
+                    vj_map[vj->name] = vj;
+                    data.vehicle_journeys.push_back(vj);
+                }
+                else {
+                    ignored_vj++;
+                }
+
             }
         }
     }
@@ -514,7 +633,6 @@ void GtfsParser::parse_stop_times(Data & data) {
             stop_time->zone = 0; // à définir selon pickup_type ou drop_off_type = 10
             data.stops.push_back(stop_time);
             count++;
-
         }
     }
     std::cout << "Nombre d'horaires : " << data.stops.size() << std::endl;

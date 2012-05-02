@@ -4,23 +4,29 @@
 #include <boost/foreach.hpp>
 #include "data.h"
 #include <proj_api.h>
+#include <stdint.h>
+
 
 namespace navitia { namespace type {
 
 bool ValidityPattern::is_valid(int duration){
     if(duration < 0){
-        std::cerr << "La date est avant le début de période" << std::endl;
+        std::cerr << "La date est avant le début de période(" << beginning_date << ")" << std::endl;
         return false;
     }
     else if(duration > 366){
-        std::cerr << "La date dépasse la fin de période" << std::endl;
+        std::cerr << "La date dépasse la fin de période " << duration << " " << std::endl;
         return false;
     }
     return true;
 }
 
+int ValidityPattern::slide(boost::gregorian::date day) {
+    return (day - beginning_date).days();
+}
+
 void ValidityPattern::add(boost::gregorian::date day){
-    long duration = (day - beginning_date).days();
+    long duration = slide(day);
     add(duration);
 }
 
@@ -30,7 +36,7 @@ void ValidityPattern::add(int duration){
 }
 
 void ValidityPattern::remove(boost::gregorian::date date){
-    long duration = (date - beginning_date).days();
+    long duration = slide(date);
     remove(duration);
 }
 
@@ -44,7 +50,7 @@ std::string ValidityPattern::str() const {
 }
 
 bool ValidityPattern::check(boost::gregorian::date day) {
-    long duration = (day - beginning_date).days();
+    long duration = slide(day);
     return ValidityPattern::check(duration);
 }
 
@@ -288,5 +294,11 @@ std::vector<idx_t> StopTime::get(Type_e type, const PT_Data &) const {
     }
     return result;
 }
+
+
+
+
+
+
 
 }} //namespace navitia::type

@@ -10,7 +10,9 @@ SET(TYPES_SRC
     data.cpp
     ${PROTO_SRCS}
     ${CMAKE_SOURCE_DIR}/../third_party/fastlz/fastlz.c
-    pt_data.cpp)
+    pt_data.cpp
+    to_proto.cpp
+)
 add_library(types ${TYPES_SRC})
 target_link_libraries(types ${Boost_LIBRARIES} proj streetnetwork)
 

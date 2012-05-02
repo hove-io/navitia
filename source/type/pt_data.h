@@ -64,7 +64,7 @@ struct PT_Data{
         ar
                 // Les listes de données
                 & validity_patterns & lines & stop_points & stop_areas & stop_times & routes
-                & vehicle_journeys & route_points & mode_types
+                & vehicle_journeys & route_points & mode_types & modes
                 // Les firstLetter
                 & stop_area_first_letter & city_first_letter
                 // Les map d'externalcode
