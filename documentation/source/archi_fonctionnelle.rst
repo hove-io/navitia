@@ -5,32 +5,32 @@ Description des différents modules
 **********************************
 
 .. aafig::
-  :textual:
-  :fill: #FF6600
+    :textual:
+    :fill: #FF6600
 
-/------------+ /-----+ /------------+     /------------+ /-----+ /------------+
-|Données     | |     | |Données     |     |Données     | |     | |Données     |
-|Transporteur| | ... | |Transporteur|     |Transporteur| | ... | |Transporteur|
-|1           | |     | |n           |     |1           | |     | |n           |
-+------------+ +-----+ +------------+     +------------+ +-----+ +------------+
+    /--------------+ /-----+ /--------------+     /--------------+ /-----+ /--------------+
+    |"Données"     | |     | |"Données"     |     |"Données"     | |     | |"Données"     |
+    |"Transporteur"| |"..."| |"Transporteur"|     |"Transporteur"| |"..."| |"Transporteur"|
+    |   "1"        | |     | |"n"           |     |"1"           | |     | |"n"           |
+    +--------------+ +-----+ +--------------+     +--------------+ +-----+ +--------------+
     
 
 .. aafig::
-  :textual:
+    :textual:
 
-               /-----\                                /------------\
-               |FUSiO|                                |AlerteTrafic|
-               \-----/                                \------------/
-                  |              +--------------+            |
-                  |             /Espace de mise  \           |
-                  \----------->/à disposition des \<---------/
-                              /données théorique et\
-                             /     temps réel       \
-                            +------------------------+
+               /-----\                                  /------------\
+               |FUSiO|                                  |AlerteTrafic|
+               \-----/                                  \------------/
+                  |              +----------------+            |
+                  |             / "Espace de mise" \           |
+                  \----------->/ "à disposition des"\<---------/
+                              /"données théorique et"\
+                             /       "temps réel"     \
+                            +--------------------------+
                                          |
                                         /|\
-                                       / | \
-                                      v  v  v
+                                       | | |
+                                       v v v
 .. aafig::
   :textual:
   :fill: #4F81BD

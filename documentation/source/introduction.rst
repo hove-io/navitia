@@ -26,8 +26,8 @@ Les interfaces de ces sous-systèmes sont claires et documentées.
    La mise à disposition d’interfaces automatisées avec un nombre toujours plus important d’autres systèmes est un point fort de notre solution.
 
 
-Présentation des modules
-************************
+Présentation générale
+*********************
 
 La suite NAViTiA est composée des 3 modules fonctionnels principaux suivants:
 
