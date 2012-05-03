@@ -39,7 +39,7 @@ Description des différents modules
                                                          v
                     +---------------+  +---------------+  +---------------+  +---------------+  
                     |"Moteur "      |+ |"Moteur"       |+ |"Moteur"       |+ |"Moteurs"      |+ 
-                    |"d'itinéraires"|| |"de requêtes"  || |"de phonétique"|| |"de tarif"     || 
+                    |"d'itinéraires"|| |"de requête"   || |"phonétique"   || |"de tarif"     || 
                     +---------------+| +---------------+| +---------------+| +---------------+| 
                      +---------------+  +---------------+  +---------------+  +---------------+ 
                                                          |

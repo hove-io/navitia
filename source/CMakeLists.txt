@@ -68,6 +68,7 @@ add_subdirectory(gateway_mod)
 add_subdirectory(visu)
 add_subdirectory(street_network)
 add_subdirectory(proximity_list)
+add_subdirectory(network)
 add_subdirectory(navitia)
 
 #on génére le fichier config.h
