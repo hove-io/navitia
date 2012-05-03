@@ -131,13 +131,13 @@ void charger_graph(navitia::type::Data &data, NW &g) {
     //Creation des stop points et creations lien SA->SP
     BOOST_FOREACH(navitia::type::StopPoint spi, data.pt_data.stop_points) {
         g[get_sp_idx(spi.idx, data)] = VertexDesc(spi.idx);
-        add_edge(spi.stop_area_idx, get_sp_idx(spi.idx, data), EdgeDesc(spi.stop_area_idx, get_sp_idx(spi.idx, data), 0, false), g);
+        add_edge(spi.stop_area_idx, get_sp_idx(spi.idx, data), EdgeDesc(spi.stop_area_idx, get_sp_idx(spi.idx, data), 0), g);
     }
 
     //Création des liens SP->RP
     BOOST_FOREACH(navitia::type::RoutePoint rpi, data.pt_data.route_points) {
         g[get_rp_idx(rpi.idx, data)] = VertexDesc(rpi.idx);
-        add_edge(get_sp_idx(rpi.stop_point_idx, data), get_rp_idx(rpi.idx, data), EdgeDesc(rpi.stop_point_idx, rpi.idx, 0, false), g);
+        add_edge(get_sp_idx(rpi.stop_point_idx, data), get_rp_idx(rpi.idx, data), EdgeDesc(rpi.stop_point_idx, rpi.idx, 0), g);
     }
 
 
@@ -158,7 +158,7 @@ void charger_graph(navitia::type::Data &data, NW &g) {
                     vptemp = *(decalage_pam(data.pt_data.validity_patterns.at(vj.validity_pattern_idx)));
                     vp_idx = get_validity_pattern_idx(vptemp, data);
                 }
-                add_edge(tdv, tav, EdgeDesc(tdv, tav, vp_idx, true), g);
+                add_edge(tdv, tav, EdgeDesc(tdv, tav, vp_idx), g);
             }
 
             //td
@@ -170,9 +170,9 @@ void charger_graph(navitia::type::Data &data, NW &g) {
                 vptemp = *decalage_pam(data.pt_data.validity_patterns.at(vj.validity_pattern_idx));
                 vp_idx = get_validity_pattern_idx(vptemp, data);
             }
-            add_edge(tav, tdv, EdgeDesc(tav, tdv, vp_idx, true), g);
+            add_edge(tav, tdv, EdgeDesc(tav, tdv, vp_idx), g);
 
-            add_edge(rpv, tav, EdgeDesc(rpv, tav, 0, false), g);
+            add_edge(rpv, tav, EdgeDesc(rpv, tav, 0), g);
         }
     }
 
@@ -220,7 +220,7 @@ void charger_graph(navitia::type::Data &data, NW &g) {
                                 tdp = num_vertices(g) + 1;
                                 BOOST_FOREACH(vertex_t tdv, verticesTD) {
                                     if(tdp != (num_vertices(g) + 1)) {
-                                        add_edge(tdp, tdv, EdgeDesc(tdp, tdv, 0, false), g);
+                                        add_edge(tdp, tdv, EdgeDesc(tdp, tdv, 0), g);
                                     }
                                     tdp = tdv;
                                 }
@@ -258,7 +258,7 @@ void charger_graph(navitia::type::Data &data, NW &g) {
 
                         verticesRPw[tdvi.first] = tdv;
                         if(!edge(tav, tdv, g).second) {
-                            add_edge(tav, tdv, EdgeDesc(tav, tdv, 0, false), g);
+                            add_edge(tav, tdv, EdgeDesc(tav, tdv, 0), g);
                         }
                     } else {
                         tdv = 0;
@@ -308,6 +308,9 @@ etiquette combine2::operator ()(etiquette debut, EdgeDesc ed) const  {
         uint32_t debut_temps = 0, fin_temps = 0;
 
 
+
+
+
         if(get_n_type(ed.debut, data) == TA) {
             debut_temps = data.pt_data.stop_times.at(get_idx(ed.debut, data)).arrival_time % 86400;
             fin_temps = data.pt_data.stop_times.at(get_idx(ed.fin, data)).departure_time % 86400;
@@ -321,14 +324,17 @@ etiquette combine2::operator ()(etiquette debut, EdgeDesc ed) const  {
             }
         }
 
-        if(!debut.commence) {
-            if(!ed.transport) {
+
+
+
+        if(get_saidx(ed.debut, data) == sa_depart) {
+            if((data.pt_data.stop_times.at(get_idx(ed.debut, data)).vehicle_journey_idx != data.pt_data.stop_times.at(get_idx(ed.fin, data)).vehicle_journey_idx)
+            || get_n_type(ed.debut, data) == SA || get_n_type(ed.debut, data) == SP || get_n_type(ed.debut, data) == RP){
                 if((get_n_type(ed.debut, data) == TD) & (get_n_type(ed.fin, data) == TD)) {
                     return etiquette::max();
                 } else {
                     retour.date_arrivee = debut.date_arrivee;
                     retour.heure_arrivee = debut.heure_arrivee;
-                    retour.commence = false;
                     retour.temps = 0;
                     return retour;
                 }
@@ -345,7 +351,6 @@ etiquette combine2::operator ()(etiquette debut, EdgeDesc ed) const  {
                 if(data.pt_data.validity_patterns.at(ed.validity_pattern).check(retour.date_arrivee)
                         & (retour.heure_arrivee < debut_temps)) {
                     retour.heure_arrivee = fin_temps;
-                    retour.commence = true;
                     return retour;
                 } else {
                     return etiquette::max();
@@ -354,7 +359,7 @@ etiquette combine2::operator ()(etiquette debut, EdgeDesc ed) const  {
         } else {
             //On verifie le validity pattern
             //On ne veut pas "trainer" dans la zone d'arret finale
-           if(debut_temps > fin_temps) { //Passe minuit
+            if(debut_temps > fin_temps) { //Passe minuit
                 retour.date_arrivee = debut.date_arrivee + 1;
                 retour.temps = 86400 - debut.heure_arrivee + fin_temps;
                 retour.heure_arrivee = 0;
@@ -362,10 +367,12 @@ etiquette combine2::operator ()(etiquette debut, EdgeDesc ed) const  {
                 retour.date_arrivee = debut.date_arrivee;
                 retour.temps = debut.temps + fin_temps - debut_temps;
             }
-            if((data.pt_data.validity_patterns.at(ed.validity_pattern).check(retour.date_arrivee) || !ed.transport)
+
+            if((data.pt_data.validity_patterns.at(ed.validity_pattern).check(retour.date_arrivee)
+                || data.pt_data.stop_times.at(get_idx(ed.debut, data)).vehicle_journey_idx != data.pt_data.stop_times.at(get_idx(ed.fin, data)).vehicle_journey_idx)
                     & (retour.heure_arrivee < debut_temps)) {
+
                 retour.heure_arrivee = fin_temps;
-                retour.commence = true;
                 return retour;
             } else {
                 return etiquette::max();

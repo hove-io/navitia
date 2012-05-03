@@ -9,23 +9,24 @@ typedef unsigned int idx_t;
 namespace network {
 
 
+/// Etiquette servant pour l'algorithme de Dijkstra
 struct etiquette {
     //public :
-    uint32_t temps, heure_arrivee;
-    uint16_t date_arrivee;
-    bool commence;
+    uint32_t temps;         /// Temps de parcours
+    uint32_t heure_arrivee; /// Heure d'arrivée
+    uint16_t date_arrivee;  /// Date d'arrivée
 
 
-    bool operator==(etiquette e) {return (e.date_arrivee == this->date_arrivee) & (e.heure_arrivee == this->heure_arrivee) & (e.temps == this->temps) & (e.commence == this->commence);}
+    bool operator==(etiquette e) {return (e.date_arrivee == this->date_arrivee) & (e.heure_arrivee == this->heure_arrivee) & (e.temps == this->temps);}
 
     bool operator !=(etiquette e) { return !((*this )== e);}
 
+    /// Etiquette maximum
     static etiquette max() {
         etiquette etiquettemax;
         etiquettemax.date_arrivee = std::numeric_limits<uint16_t>::max();
         etiquettemax.heure_arrivee = std::numeric_limits<uint32_t>::max();
         etiquettemax.temps = std::numeric_limits<uint32_t>::max();
-        etiquettemax.commence = true;
         return etiquettemax;
     }
 
@@ -40,12 +41,8 @@ struct etiquette {
     }
 };
 
-enum edge_type {
-    geo, //geographique
-    cor, //correspondance
-    tra //transport
-};
 
+/// Les différents types de nœuds disponibles
 enum node_type {
     SA,
     SP,
@@ -55,12 +52,13 @@ enum node_type {
     VOIDN
 };
 
+/// Descripteur de Vertex
 class VertexDesc {
 public:
     VertexDesc(unsigned int idx_) : idx(idx_){}
     VertexDesc() : idx(0) {}
 
-    idx_t idx;
+    idx_t idx; /// Idx du vertex, peut être supprimé
 
     bool operator==(VertexDesc vx) { return vx.idx == idx ;}
 
@@ -74,14 +72,15 @@ public:
 };
 
 
+/// Descripteur d'arête
 class EdgeDesc {
 public:
-    uint32_t debut, fin;
-    uint16_t validity_pattern;
-    bool transport;
+    uint32_t debut;                 /// Id ( dans le tableau des vertices ) du noeud de départ de l'arête
+    uint32_t fin;                   /// Id ( dans le tableau des vertices ) du noeud de fin de l'arête
+    uint16_t validity_pattern;      /// Validity Pattern de l'arête
 
-    EdgeDesc() : debut(0), fin(0), validity_pattern(0), transport(false){}
-    EdgeDesc(idx_t debut, idx_t fin, uint16_t validity_pattern, bool transport) : debut(debut), fin(fin), validity_pattern(validity_pattern), transport(transport){}
+    EdgeDesc() : debut(0), fin(0), validity_pattern(0){}
+    EdgeDesc(idx_t debut, idx_t fin, uint16_t validity_pattern) : debut(debut), fin(fin), validity_pattern(validity_pattern){}
 
     std::ostream &operator<<( std::ostream &out) {
         out << "edge : " << " " << debut << " " << fin;
@@ -90,6 +89,7 @@ public:
 };
 
 
+/// Sert à comparer deux étiquettes
 struct edge_less{
     bool operator()(etiquette a, etiquette b) const {
         return a < b;
@@ -99,47 +99,63 @@ struct edge_less{
 
 
 typedef boost::property<boost::edge_weight_t, EdgeDesc> DistanceProperty;
-
 typedef boost::property<boost::vertex_index_t, uint32_t> vertex_32;
-
-
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS,
 VertexDesc,
 EdgeDesc, vertex_32> NW;
 
 typedef boost::graph_traits<NW>::vertex_descriptor vertex_t;
-
 typedef boost::graph_traits<NW>::edge_descriptor edge_t;
 
-
+/// Fonction helper servant à récupérer l'id dans le tableau des vertices d'un sp
 unsigned int get_sp_idx(unsigned int spid, navitia::type::Data &data);
+
+/// Fonction helper servant à récupérer l'id dans le tableau des vertices d'un rp
 unsigned int get_rp_idx(unsigned int rpid, navitia::type::Data &data);
+
+/// Fonction helper servant à récupérer l'id dans le tableau des vertices d'un ta
 unsigned int get_ta_idx(unsigned int stid, navitia::type::Data &data);
+
+/// Fonction helper servant à récupérer l'id dans le tableau des vertices d'un td
 unsigned int get_td_idx(unsigned int stid, navitia::type::Data &data);
 
+/// Fonction helper retournant l'idx d'un vertex
 idx_t get_idx(unsigned int idx, navitia::type::Data &data);
+
+/// Fonction retournant  l'idx du sa auquel appartient le noeud
 uint32_t get_saidx(unsigned int idx, navitia::type::Data &data);
+
+/// Fonction retournant le type du nœud
 node_type get_n_type(unsigned int idx, navitia::type::Data &data);
+
+/// Fonction déterminant si une arête est un passe minuit ou non
 bool is_passe_minuit(uint32_t debut, uint32_t fin, navitia::type::Data &data);
+
+/// Fonction retournant l'idx du validity pattern, si le validity pattern n'existe pas il est ajouté
 int get_validity_pattern_idx(navitia::type::ValidityPattern vp, navitia::type::Data &data);
+
+/// Fonction renvoyant un validity pattern décalé d'une journée
 navitia::type::ValidityPattern* decalage_pam(navitia::type::ValidityPattern &vp);
 
-
+/// Remplit le graph passé en paramètre avec les données passées
 void charger_graph(navitia::type::Data &data, NW &g);
 
+
+/// Sert pour le calcul du plus court chemin
 class combine2 {
 private:
     navitia::type::Data &data;
     NW &g;
-    idx_t cible;
+    idx_t sa_depart, cible;
     uint16_t jour_debut;
 public:
-    combine2(navitia::type::Data &data, NW &g, idx_t cible, uint16_t jour_debut) : data(data), g(g), cible(cible), jour_debut(jour_debut) {}
+    combine2(navitia::type::Data &data, NW &g, idx_t sa_depart, idx_t cible, uint16_t jour_debut) : data(data), g(g), sa_depart(sa_depart), cible(cible), jour_debut(jour_debut) {}
+
 
     etiquette operator()(etiquette debut, EdgeDesc ed) const;
 };
 
-
+/// Compare deux arêtes entre elles
 class sort_edges {
 private:
     NW &g;
@@ -174,6 +190,8 @@ struct found_goal
 }; // exception for termination
 
 
+
+/// Sert à couper l'algorithme de Dijkstra lorsque le stop area cible est atteint
 class dijkstra_goal_visitor : public boost::default_dijkstra_visitor
 {
 public:
@@ -190,28 +208,14 @@ public:
         }
     }
 
-//    template <class Edge, class Graph>
-//    void edge_not_relaxed(Edge e, Graph &g)
-//    {
-//        if((get_n_type(target(e, g), data) == TA) & (get_saidx(target(e, g), data) == m_goal)){
-//            throw found_goal(target(e, g));
-//        }
-//    }
-
-//    template <class Graph>
-//    void finish_vertex(unsigned int u, Graph /*&g*/) {
-//        if((get_n_type(u, data) == TA) & (get_saidx(u, data) == m_goal)){
-//                        throw found_goal(u);
-//        }
-//    }
-
-
 private:
     unsigned int m_goal;
     navitia::type::Data &data;
     unsigned int prev;
 };
 
+
+/// Une étape est composée d'une ligne à empreinter et d'un stop area où descentre
 class etape {
 public:
     idx_t ligne;
@@ -223,6 +227,8 @@ public:
 
 };
 
+
+/// Un parcours est une liste d'étape
 class parcours {
 public:
     std::list<etape> etapes;
@@ -237,6 +243,8 @@ public:
 
 };
 
+
+/// Un itinéraire est composé d'un parcours ainsi que d'une liste de stop times correspondant au moment où l'on descend
 class itineraire {
 public :
     uint32_t parcours;
@@ -246,13 +254,14 @@ public :
 };
 }
 
+
+/// Sert à pour couper l'algorithme de Dijkstra
 namespace std {
 template <>
 class numeric_limits<network::etiquette> {
 public:
     static network::etiquette max() {
         network::etiquette e;
-        e.commence = network::etiquette::max().commence;
         e.date_arrivee = network::etiquette::max().date_arrivee;
         e.heure_arrivee = network::etiquette::max().heure_arrivee;
         e.temps = network::etiquette::max().temps;
