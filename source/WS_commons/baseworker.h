@@ -8,7 +8,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
 #include <vector>
-
+#include <chrono>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/max.hpp>
@@ -107,9 +107,9 @@ namespace webservice
             std::string api;
             if(position != std::string::npos){
                 api = request.path.substr(position+1);
+            }else{
+                api = request.path;
             }
-            request.api = api;
-
 
             if(apis.find(api) == apis.end()) {
                 ResponseData resp;
@@ -122,6 +122,7 @@ namespace webservice
 
                 boost::posix_time::ptime start(boost::posix_time::microsec_clock::local_time());
                 ResponseData resp = apis[api](request, d);
+                resp.api = api;
                 //@TODO not threadsafe
                 int duration = (boost::posix_time::microsec_clock::local_time() - start).total_milliseconds();
                 static_data().means[api](duration);
@@ -298,6 +299,37 @@ namespace webservice
             register_api("stats", boost::bind(&BaseWorker<Data>::stats, this, _1, _2), "Statistiques sur les appels d'api");
             register_api("analyze", boost::bind(&BaseWorker<Data>::analyze, this, _1, _2), "Analyze une requête");
             add_param("analyze", "api", "Nom de l'api à analyser. Rajouter ensuite tous les paramètres habituels", ApiParameter::STRING, true);
+        }
+
+
+        std::string run_query(const std::string & request, Data & d){
+            std::stringstream result;
+            auto start = std::chrono::high_resolution_clock::now();
+            webservice::RequestData query;
+            query.method = webservice::GET;
+
+            size_t pos = request.find("?");
+            if(pos == std::string::npos){
+                query.path = request;
+            }else{
+                query.path = request.substr(0, pos);
+                query.raw_params = request.substr(pos+1);
+            }
+            auto response = operator()(query, d);
+            std::string json_resp;
+            try{
+                auto pb = create_pb(response.api);
+                pb->ParseFromString(response.response.str());
+                json_resp = pb2json(pb.get());
+                result << "Taille protobuf : " << (response.response.str().size()/1024) << "ko, taille json : " << json_resp.size()/1024 <<  "ko" << std::endl;
+            } catch(...){
+                json_resp = response.response.str();
+            }
+
+            auto end = std::chrono::high_resolution_clock::now();
+            result << "Durée d'exécution : " << std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count() << "ms" << std::endl;
+            result << json_resp << std::endl;
+            return result.str();
         }
     };
 

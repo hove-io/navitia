@@ -135,7 +135,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         ResponseData rd;
         d.load_mutex.lock();
         d.loaded = true;
-        d.load_flz("../idf.nav.flz");
+        d.load_flz("/home/tristram/idf.flz");
         d.load_mutex.unlock();
         rd.response << "loaded!";
         rd.content_type = "text/html";

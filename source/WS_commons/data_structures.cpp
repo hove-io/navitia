@@ -15,7 +15,8 @@ namespace webservice {
                 content_type(resp.content_type),
                 response(resp.response.str()),
                 status_code(resp.status_code),
-                charset(resp.charset)
+                charset(resp.charset),
+                api(resp.api)
         {
         }
 

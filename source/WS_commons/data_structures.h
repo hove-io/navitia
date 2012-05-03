@@ -55,6 +55,8 @@ struct ResponseData {
     int status_code;
     /// Encodage de la réponse par défaut utf-8
     std::string charset;
+    /// API qui a été appelée
+    std::string api;
     /// Constructeur par défaut (status 200, type text/plain)
     ResponseData();
 };

@@ -2,7 +2,6 @@ FIND_PACKAGE(Boost 1.40.0 COMPONENTS program_options REQUIRED)
 
 SET(SOURCE_LIB
         connectors.cpp 
-        data.h 
         ${CMAKE_SOURCE_DIR}/utils/csv.cpp 
         data.cpp 
         types.cpp 
