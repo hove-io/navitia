@@ -271,34 +271,6 @@ void charger_graph(navitia::type::Data &data, NW &g) {
 
 
 
-
-bool etape::operator ==(network::etape e2) {
-    return (this->ligne == e2.ligne) & (this->descente == e2.descente);
-}
-
-bool etape::operator!=(network::etape e2) {
-    return !((*this) == e2);
-}
-
-void parcours::ajouter_etape(idx_t ligne, idx_t depart) {
-    this->etapes.push_front(network::etape(ligne, depart));
-}
-
-bool parcours::operator==(parcours i2) {
-    if(this->etapes.size() != i2.etapes.size())
-        return false;
-    std::list<network::etape>::iterator it1, it2;
-    for(it1 = this->etapes.begin(), it2 = i2.etapes.begin(); it1 != this->etapes.end(); ++it1, ++it2) {
-        if((*it1) != (*it2))
-            return false;
-    }
-    return true;
-}
-
-bool parcours::operator!=(network::parcours i2) {
-    return !((*this) == i2);
-}
-
 etiquette combine2::operator ()(etiquette debut, EdgeDesc ed) const  {
     if(debut == etiquette::max()) {
         return etiquette::max();
@@ -328,8 +300,8 @@ etiquette combine2::operator ()(etiquette debut, EdgeDesc ed) const  {
 
 
         if(get_saidx(ed.debut, data) == sa_depart) {
-            if((data.pt_data.stop_times.at(get_idx(ed.debut, data)).vehicle_journey_idx != data.pt_data.stop_times.at(get_idx(ed.fin, data)).vehicle_journey_idx)
-            || get_n_type(ed.debut, data) == SA || get_n_type(ed.debut, data) == SP || get_n_type(ed.debut, data) == RP){
+            if(est_transport(ed, data)
+                    || get_n_type(ed.debut, data) == SA || get_n_type(ed.debut, data) == SP || get_n_type(ed.debut, data) == RP){
                 if((get_n_type(ed.debut, data) == TD) & (get_n_type(ed.fin, data) == TD)) {
                     return etiquette::max();
                 } else {
@@ -368,8 +340,7 @@ etiquette combine2::operator ()(etiquette debut, EdgeDesc ed) const  {
                 retour.temps = debut.temps + fin_temps - debut_temps;
             }
 
-            if((data.pt_data.validity_patterns.at(ed.validity_pattern).check(retour.date_arrivee)
-                || data.pt_data.stop_times.at(get_idx(ed.debut, data)).vehicle_journey_idx != data.pt_data.stop_times.at(get_idx(ed.fin, data)).vehicle_journey_idx)
+            if((data.pt_data.validity_patterns.at(ed.validity_pattern).check(retour.date_arrivee) || est_transport(ed, data))
                     & (retour.heure_arrivee < debut_temps)) {
 
                 retour.heure_arrivee = fin_temps;
@@ -379,6 +350,20 @@ etiquette combine2::operator ()(etiquette debut, EdgeDesc ed) const  {
             }
         }
     }
+}
+
+
+
+bool est_transport(EdgeDesc e, navitia::type::Data &data) {
+    node_type nt1, nt2;
+
+    nt1 = get_n_type(e.debut, data);
+    nt2 = get_n_type(e.fin, data);
+
+    if((nt1!=TA) & (nt1!=TD) || (nt2!=TA) & (nt2!=TD))
+        return false;
+
+    return data.pt_data.stop_times.at(get_idx(e.debut, data)).vehicle_journey_idx != data.pt_data.stop_times.at(get_idx(e.fin, data)).vehicle_journey_idx;
 }
 
 }

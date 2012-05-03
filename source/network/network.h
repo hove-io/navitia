@@ -140,6 +140,8 @@ navitia::type::ValidityPattern* decalage_pam(navitia::type::ValidityPattern &vp)
 /// Remplit le graph passé en paramètre avec les données passées
 void charger_graph(navitia::type::Data &data, NW &g);
 
+/// Détermine si une arête est une arête de transport
+bool est_transport(EdgeDesc e, navitia::type::Data &data);
 
 /// Sert pour le calcul du plus court chemin
 class combine2 {
@@ -215,45 +217,7 @@ private:
 };
 
 
-/// Une étape est composée d'une ligne à empreinter et d'un stop area où descentre
-class etape {
-public:
-    idx_t ligne;
-    idx_t descente;
-    etape(idx_t ligne, idx_t depart) : ligne(ligne), descente(depart){}
-
-    bool operator==(etape e2);
-    bool operator!=(etape e2);
-
-};
-
-
-/// Un parcours est une liste d'étape
-class parcours {
-public:
-    std::list<etape> etapes;
-
-    parcours() {
-        etapes = std::list<etape>();
-    }
-
-    void ajouter_etape(idx_t ligne, idx_t descente);
-    bool operator==(parcours i2);
-    bool operator!=(parcours i2);
-
-};
-
-
-/// Un itinéraire est composé d'un parcours ainsi que d'une liste de stop times correspondant au moment où l'on descend
-class itineraire {
-public :
-    uint32_t parcours;
-    std::list<idx_t> stop_times;
-
-    itineraire(uint32_t parcours, std::list<idx_t> stop_times) : parcours(parcours), stop_times(stop_times){}
-};
 }
-
 
 /// Sert à pour couper l'algorithme de Dijkstra
 namespace std {
