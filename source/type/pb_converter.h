@@ -4,14 +4,12 @@
 namespace nt = navitia::type;
 namespace navitia{
 
-
-
 /**
- * fonction générique pour convertire un objet navitia en un message protocol buffer
+ * fonction générique pour convertir un objet navitia en un message protocol buffer
  *
- * @param idx identifiant de l'objet à convertire
+ * @param idx identifiant de l'objet à convertir
  * @param data reférence vers l'objet Data de l'application
- * @param message l'objet protocol buffer a remplire 
+ * @param message l'objet protocol buffer a remplir
  * @param depth profondeur de remplissage
  *
  * @throw std::out_of_range si l'idx n'est pas valide
@@ -21,7 +19,7 @@ template<nt::Type_e type>
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int max_depth = 0){throw std::exception();}
 
 template<>
-void fill_pb_object<nt::eCity>(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int max_depth){
+void fill_pb_object<nt::eCity>(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int){
     pbnavitia::City* city = dynamic_cast<pbnavitia::City*>(message);
     nt::City city_n = data.pt_data.cities.at(idx);
     city->set_id(city_n.id);

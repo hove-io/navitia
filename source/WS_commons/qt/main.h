@@ -8,6 +8,7 @@
 
 #include "mainwindow.h"
 #include "configuration.h"
+#include "type/pb_utils.h"
 
 namespace webservice {typedef void RequestHandle; /**< Handle de la requête*/}
 
@@ -19,17 +20,8 @@ struct Wrapper {
     Worker worker;
     Wrapper() : worker(data) {}
     QString run(QString request){
-        webservice::RequestData query;
-        query.method = webservice::GET;
-
-        int pos = request.indexOf("?");
-        if(pos < 1){
-            query.path = request.toStdString();
-        }else{
-            query.path = request.left(pos).toStdString();
-            query.raw_params = request.right(request.length() - (pos+1)).toStdString();
-        }
-        return QString::fromUtf8(worker(query, data).response.str().c_str());
+        std::string response = worker.run_query(request.toStdString(), data);
+        return QString::fromUtf8(response.c_str());
     }
 };
 

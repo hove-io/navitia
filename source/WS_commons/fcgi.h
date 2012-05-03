@@ -5,7 +5,9 @@ namespace webservice {typedef FCGX_Request RequestHandle; /**< Handle de la requ
 
 #include <csignal>
 #include "data_structures.h"
-
+#include "type/pb_utils.h"
+#include <readline/readline.h>
+#include <readline/history.h>
 namespace webservice {
     /// Gère la requête (lecture des paramètres)
     template<class Worker, class Data> void request_parser(RequestHandle* handle, Worker & w, Data & data){
@@ -57,13 +59,15 @@ namespace webservice {
 
 
     /// Lance la boucle de traitement fastcgi
-    void run_fcgi(){
+    /// Return false si on jamais utilisé de fcgi
+    bool run_fcgi(){
         signal(SIGINT, handle_signal);
         signal(SIGTERM, handle_signal);
         //signal(SIGABRT, handle_signal);
  
         FCGX_Init();
         int rc;
+        bool accepted_once = false;
 
         while(true)
         {
@@ -71,22 +75,64 @@ namespace webservice {
             FCGX_InitRequest(request, 0, 0);
             rc = FCGX_Accept_r(request);
             if(rc<0)
-                break;
+                return accepted_once;
+            else
+                accepted_once = true;
             webservice::push_request(request);
         }
+        return accepted_once;
     }
 
+    template<class Data, class Worker>
+    void run_cli(int argc, char** argv){
+        Data d;
+        Worker w(d);       
+
+        if(argc == 1) {
+            static char *line_read = (char *)NULL;
+            for(;;){
+                if (line_read)
+                  {
+                    free (line_read);
+                    line_read = (char *)NULL;
+                  }
+
+                /* Get a line from the user. */
+                line_read = readline ("NAViTiA> ");
+
+                /* If the line has any text in it,
+                   save it on the history. */
+                if (line_read && *line_read)
+                {
+                    if( strcmp(line_read, "exit") == 0 || strcmp(line_read, "quit") == 0)
+                    {
+                        std::cout << "\n Bye! See you soon!" << std::endl;
+                        exit(0);
+                    }
+                    add_history (line_read);
+                    std::cout << w.run_query(line_read, d);
+                }
+
+            }
+        }
+        else if (argc == 2){
+            std::cout << w.run_query(argv[1], d);
+        }
+        else {
+            std::cout << "Il faut exactement zéro ou un paramètre" << std::endl;
+        }
+    }
 }
 
 
-#define MAKE_WEBSERVICE(Data, Worker) int main(int, char** argv){\
+#define MAKE_WEBSERVICE(Data, Worker) int main(int argc, char** argv){\
     Configuration * conf = Configuration::get();\
     std::string::size_type posSlash = std::string(argv[0]).find_last_of( "\\/" );\
     conf->set_string("application", std::string(argv[0]).substr(posSlash+1));\
     char buf[256];\
     if(getcwd(buf, 256)) conf->set_string("path",std::string(buf) + "/"); else conf->set_string("path", "unknown");\
     webservice::ThreadPool<Data, Worker> tp;\
-    webservice::run_fcgi();\
+    if(!webservice::run_fcgi()) webservice::run_cli<Data, Worker>(argc, argv);\
     tp.stop();\
     return 0;\
 }

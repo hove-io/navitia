@@ -9,4 +9,4 @@ SET(SOURCE_FILES
     navitia.cpp
     interface.cpp
 )
-MAKE_WS(gateway_mod ${SOURCE_FILES} LIBS curlpp ${PROTOBUF_LIBRARY} ${LOG4CPLUS_LIBS} curl types)
+MAKE_WS(gateway_mod ${SOURCE_FILES} LIBS curlpp ${LOG4CPLUS_LIBS} curl types)

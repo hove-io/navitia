@@ -12,7 +12,8 @@ SET(TYPES_SRC
     ${CMAKE_SOURCE_DIR}/../third_party/fastlz/fastlz.c
     pt_data.cpp
     to_proto.cpp
+    pb_utils.cpp
 )
 add_library(types ${TYPES_SRC})
-target_link_libraries(types ${Boost_LIBRARIES} proj streetnetwork)
+target_link_libraries(types ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} proj streetnetwork)
 

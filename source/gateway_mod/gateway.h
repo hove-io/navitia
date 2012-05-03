@@ -4,14 +4,12 @@
 #include "context.h"
 #include "navitia.h"
 #include "pool.h"
-
-
+#include "interface.h"
 
 class Dispatcher{
     public:
     void operator()(webservice::RequestData& request, webservice::ResponseData& response, Pool& pool, Context& context);
     private:
-    std::unique_ptr<google::protobuf::Message> create_pb(webservice::RequestData& request);
 
 };
 

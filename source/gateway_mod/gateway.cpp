@@ -5,9 +5,9 @@
 #include <ctime>
 #include <iostream>
 #include <google/protobuf/descriptor.h>
-#include "interface.h"
 #include <curlpp/Exception.hpp>
 #include <log4cplus/logger.h>
+#include "type/pb_utils.h"
 
 
 Worker::Worker(Pool &){
@@ -131,18 +131,6 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
             response.status_code = res.first;
         }
     }while(!ok && nb_try < 4);
-}
-
-std::unique_ptr<google::protobuf::Message> Dispatcher::create_pb(webservice::RequestData& request){
-    if(request.api == "firstletter"){
-        return std::unique_ptr<google::protobuf::Message>(new pbnavitia::FirstLetter());
-    }else if(request.api == "streetnetwork"){
-        return std::unique_ptr<google::protobuf::Message>(new pbnavitia::StreetNetwork());
-    }else if(request.api == "query"){
-        return std::unique_ptr<google::protobuf::Message>(new pbnavitia::PTReferential());
-    }
-    throw std::exception();
-
 }
 
 MAKE_WEBSERVICE(Pool, Worker)
