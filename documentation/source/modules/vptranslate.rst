@@ -102,7 +102,7 @@ Exemple
 
 * En effet :
 
-.. image:: _static/VPTranslator.png
+.. image:: ../_static/VPTranslator.png
 
 * La réponse NAViTiA sera du type "circule du Lundi au vendredi, sauf mercredi, du 14/09/2009 au 25/09/2009"
 
