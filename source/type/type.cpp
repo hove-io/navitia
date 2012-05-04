@@ -94,6 +94,8 @@ GeographicalCoord GeographicalCoord::convert_to(const Projection& projection, co
 }
 
 double GeographicalCoord::distance_to(const GeographicalCoord &other){
+    if(!degrees)
+        return ::sqrt(::pow(x - other.x, 2)+ ::pow(y-other.y, 2));
     static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
     double longitudeArc = (this->x - other.x) * DEG_TO_RAD;
     double latitudeArc  = (this->y - other.y) * DEG_TO_RAD;

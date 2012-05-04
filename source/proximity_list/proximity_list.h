@@ -64,14 +64,52 @@ struct ProximityList
             std::sort(begin, end, along_x_comp<Item>);
 
         // On récupére l'élément médian
-        iterator median = begin + (end - begin) / 2;
+        iterator median = begin + (end - begin-1) / 2;
         build(begin, median, !along_x);
         build(median + 1, end, !along_x);
     }
 
     /// Retourne tous les éléments dans un rayon de x mètres
-    std::vector<T> find_within(GeographicalCoord , double ){
-        return std::vector<T>();
+    std::vector<T> find_within(GeographicalCoord coord, double distance ){
+        return find_within(coord, items.begin(), items.end(), distance, true);
+    }
+
+    /// Retourne l'élément les élements dans un espace restreint à moins d'une certaine distance
+    std::vector<T> find_within(GeographicalCoord coord, iterator begin, iterator end, double distance, bool along_x){
+        std::vector<T> result;
+        if(end == begin)
+            return result;
+
+        // On trouve l'éléement au milieu
+        iterator median = begin + ((end - begin)-1) / 2;
+        double median_distance = coord.distance_to(median->coord);
+        if(median_distance <= distance)
+            result.push_back(median->element);
+
+        // Si la distance mediane est inférieure à la limite, on regarde des deux cotés
+        // Cependant il faut regarder la distance projetée
+
+        GeographicalCoord projected = median->coord;
+        if(along_x) projected.y = coord.y;
+        else projected.y = coord.y;
+        double projected_distance = projected.distance_to(coord);
+
+        if(median_distance <= projected_distance){
+            auto left = find_within(coord, begin, median, distance, !along_x);
+            result.insert(result.end(), left.begin(), left.end());
+            auto right = find_within(coord, median+1, end, distance, !along_x);
+            result.insert(result.end(), right.begin(), right.end());
+        } else { // Sinon regarde que du côté qui nous intéresse
+            // On détermine de quel côté de l'élément médian on regarde
+            bool left;
+            if(along_x) left = coord.x < median->coord.x;
+            else left = coord.y < median->coord.y;
+            std::vector<T> tmp;
+            if(left) tmp = find_within(coord, begin, median, distance, !along_x);
+            else tmp = find_within(coord, median+1, end, distance, !along_x);
+            result.insert(result.end(), tmp.begin(), tmp.end());
+        }
+        return result;
     }
 
     /// Retourne les k-éléments les plus proches
@@ -119,7 +157,7 @@ struct ProximityList
         std::pair<T, double> other_best;
         if(other_half){
             if(!left) other_best = find_nearest(coord, begin, median, !along_x);
-            else other_best = find_nearest(coord, median, end, !along_x);
+            else other_best = find_nearest(coord, median+1, end, !along_x);
 
             // On ne garde que le meilleur des deux
             if(other_best.second < best.second)

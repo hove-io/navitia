@@ -77,14 +77,21 @@ struct GeographicalCoord{
     double x;
     double y;
 
-    GeographicalCoord() : x(0), y(0) {}
-    GeographicalCoord(double x, double y) : x(x), y(y) {}
+    /// Est-ce que les coordonnées sont en degres, par défaut on suppose que oui
+    /// Cela a des impacts sur le calcul des distances
+    /// Si ce n'est pas des degrés, on prend la distance euclidienne
+    bool degrees;
+
+    GeographicalCoord() : x(0), y(0), degrees(true) {}
+    GeographicalCoord(double x, double y, bool degrees = true) : x(x), y(y), degrees(degrees) {}
     GeographicalCoord(double x, double y, const Projection& projection);
 
     /* Calcule la distance Grand Arc entre deux nœuds
       *
       * On utilise la formule de Haversine
       * http://en.wikipedia.org/wiki/Law_of_haversines
+      *
+      * Si c'est des coordonnées non degrés, alors on utilise la distance euclidienne
       */
     double distance_to(const GeographicalCoord & other);
 
