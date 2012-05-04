@@ -24,7 +24,7 @@ La qualité des données qui alimentent le système impacte l’ensemble de la c
 Interfaces
 **********
 
-Les articulations présentés dans le schéma du chapitre 'Organisation des modules_' s’articulent 
+Les modules présentés dans le schéma du chapitre 'Architecture fonctionnelle <archi_fonctionnelle.html>'_ s’articulent 
 autour d’interfaces techniques standardisées http/XML (tous les modules sont des web-services REST). 
 Sur ces standards, la suite NAViTiA définie son propre langage d’échange afin d’échanger les informations entre les différents modules et avec 
 les applications tierces. Ce langage d’échange est nommé "interface d’échange NAViTiA".
