@@ -93,3 +93,4 @@ Si l’application média n’est pas hébergée par Canal TP, il faut vérifier
 
 * L’application qui interroge le hub NAViTiA doit avoir accès à tout le domaine http://*.navitia.com
 * La mise en œuvre d’une intégration spécifique du site de fabrication manuelle des informations perturbées (module Alerte-trafic/site de création des messages) nécessite un accès à NAViTiA-SIV.
+
