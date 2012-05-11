@@ -29,13 +29,19 @@ public:
     /// Premet de récupérer l'instance de configuration
     static Configuration * get();
 
+    /// Retourne vrai si la configuration a déjà été instancié
+    static bool is_instanciated();
+
     /// Récupère une chaîne de caractères
     std::string get_string(const std::string & key);
 
     /// Récupère un entier
     int get_int(const std::string & key);
 
+    /// Définit une clef-valeur dont la valeur est une string
     void set_string(const std::string & key, const std::string & value);
+
+    /// Définit une clef-valeur dont la valeur est un entier
     void set_int(const std::string & key, int value);
 
     /// Contient les données du fichier ini
@@ -51,9 +57,7 @@ public:
     struct not_found{};
 
     /// Cherche une clef dans une section et effectue la conversion
-    /// Lève une exception si :
-    /// — la clef ou la section n'existe pas
-    /// — la conversion est impossible
+    /// On doit spécifier la valeur par défaut lorsque la section ou la clef n'existe pas
     template<class T>
     T get_as(const std::string & section, const std::string & key, T default_value) {
         auto section_it = ini.find(section);

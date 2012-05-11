@@ -67,7 +67,7 @@ void BDTopoParser::load_streetnetwork(ns::StreetNetwork & street_network){
 
     std::unordered_map<std::string, vertex_t> vertex_map;
     std::unordered_map<std::string, Way> way_map;
-    for(reader.next(); !reader.eof() ;row = reader.next()){
+    for(row = reader.next(); !reader.eof() ;row = reader.next()){
         vertex_t source, target;
 
         auto it = vertex_map.find(row[x1] + row[y1]);

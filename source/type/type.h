@@ -10,11 +10,12 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bimap.hpp>
 #include <boost/mpl/map.hpp>
-
+#include <numeric>
 namespace mpl = boost::mpl;
 
 namespace navitia { namespace type {
 typedef unsigned int idx_t;
+const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
 enum Type_e {eValidityPattern = 0,
     eLine = 1,
     eRoute = 2,
@@ -51,7 +52,7 @@ struct NavitiaHeader{
     std::string id;
     idx_t idx;
     std::string external_code;
-    NavitiaHeader() : idx(0){}
+    NavitiaHeader() : idx(invalid_idx){}
     std::vector<idx_t> get(Type_e, const PT_Data &) const {return std::vector<idx_t>();}
 
 };
@@ -279,7 +280,7 @@ struct Line : public NavitiaHeader, Nameable {
     idx_t forward_direction_idx;
     idx_t backward_direction_idx;
 
-    Line(): sort(0), mode_type_idx(0), network_idx(0), forward_direction_idx(0), backward_direction_idx(0){}
+    Line(): sort(0), mode_type_idx(invalid_idx), network_idx(invalid_idx), forward_direction_idx(invalid_idx), backward_direction_idx(invalid_idx){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & external_code & code & forward_name & backward_name & additional_data & color
@@ -325,7 +326,7 @@ struct VehicleJourney: public NavitiaHeader, Nameable {
     idx_t validity_pattern_idx;
     std::vector<idx_t> stop_time_list;
 
-    VehicleJourney(): route_idx(0), company_idx(0), mode_idx(0), vehicle_idx(0), is_adapted(false), validity_pattern_idx(0), stop_time_list(){}
+    VehicleJourney(): route_idx(invalid_idx), company_idx(invalid_idx), mode_idx(invalid_idx), vehicle_idx(invalid_idx), is_adapted(false), validity_pattern_idx(invalid_idx), stop_time_list(){}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & is_adapted & validity_pattern_idx & idx & stop_time_list;
     }
@@ -379,7 +380,7 @@ public:
     std::bitset<366> days;
     boost::gregorian::date beginning_date;
     idx_t idx;
-    ValidityPattern() : idx(0) {}
+    ValidityPattern() : idx(invalid_idx) {}
     ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date), idx(0){}
     int slide(boost::gregorian::date day);
     void add(boost::gregorian::date day);
@@ -416,7 +417,7 @@ struct StopPoint : public NavitiaHeader, Nameable{
         ar & external_code & name & stop_area_idx & mode_idx & coord & fare_zone & idx & route_point_list;
     }
 
-    StopPoint(): fare_zone(0),  stop_area_idx(0), city_idx(0), mode_idx(0), network_idx(0){}
+    StopPoint(): fare_zone(0),  stop_area_idx(invalid_idx), city_idx(invalid_idx), mode_idx(invalid_idx), network_idx(invalid_idx){}
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -433,7 +434,7 @@ struct StopTime: public NavitiaHeader{
     int zone;
 
 
-    StopTime(): arrival_time(0), departure_time(0), vehicle_journey_idx(0), route_point_idx(0), order(0), 
+    StopTime(): arrival_time(0), departure_time(0), vehicle_journey_idx(invalid_idx), route_point_idx(invalid_idx), order(0),
         ODT(false), zone(0){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {

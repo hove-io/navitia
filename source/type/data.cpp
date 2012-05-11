@@ -19,6 +19,8 @@ void Data::set_cities(){
         auto city_it = pt_data.city_map.find(way.city);
         if(city_it != pt_data.city_map.end()){
             way.city_idx = city_it->second;
+        }else {
+            way.city_idx = invalid_idx;
         }
     }
 }
@@ -79,7 +81,10 @@ void Data::build_first_letter(){
     pt_data.build_first_letter();
 
     BOOST_FOREACH(auto way, street_network.ways){
-        street_network.fl.add_string(way.name + " " + pt_data.cities[way.city_idx].name, way.idx);
+        if(way.city_idx < pt_data.cities.size())
+            street_network.fl.add_string(way.name + " " + pt_data.cities[way.city_idx].name, way.idx);
+        else
+            street_network.fl.add_string(way.name, way.idx);
     }
     this->street_network.fl.build();
 }

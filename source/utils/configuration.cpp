@@ -2,7 +2,6 @@
 #include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
-#include "data_structures.h"
 
 #ifdef WIN32
 #include "windows.h"
@@ -25,6 +24,10 @@ Configuration * Configuration::get() {
     return instance;
 }
 
+bool Configuration::is_instanciated(){
+    return instance != 0;
+}
+
 void Configuration::load_ini(const std::string & filename){
     boost::property_tree::ptree pt;
     boost::property_tree::read_ini(filename, pt);
@@ -44,7 +47,7 @@ bool Configuration::has_section(const std::string &section_name) {
 
 std::string Configuration::get_string(const std::string & key){
     mutex.lock_shared();
-    std::string ret = strings[key];
+    std::string ret = strings.at(key);
     mutex.unlock_shared();
     return ret;
 }

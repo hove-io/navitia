@@ -1,6 +1,6 @@
 #include "pool.h"
 #include <iostream>
-#include "configuration.h"
+#include "utils/configuration.h"
 #include <log4cplus/logger.h>
 #include <log4cplus/configurator.h>
 #include <curl/curl.h>

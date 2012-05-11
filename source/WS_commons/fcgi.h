@@ -1,5 +1,5 @@
 #pragma once
-#include <configuration.h>
+#include "utils/configuration.h"
 #include <fcgiapp.h>
 namespace webservice {typedef FCGX_Request RequestHandle; /**< Handle de la requête*/}
 
@@ -84,8 +84,7 @@ namespace webservice {
     }
 
     template<class Data, class Worker>
-    void run_cli(int argc, char** argv){
-        Data d;
+    void run_cli(int argc, char** argv, Data & d){
         Worker w(d);       
 
         if(argc == 1) {
@@ -132,7 +131,7 @@ namespace webservice {
     char buf[256];\
     if(getcwd(buf, 256)) conf->set_string("path",std::string(buf) + "/"); else conf->set_string("path", "unknown");\
     webservice::ThreadPool<Data, Worker> tp;\
-    if(!webservice::run_fcgi()) webservice::run_cli<Data, Worker>(argc, argv);\
+    if(!webservice::run_fcgi()) webservice::run_cli<Data, Worker>(argc, argv, tp.get_data());\
     tp.stop();\
     return 0;\
 }

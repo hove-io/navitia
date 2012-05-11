@@ -15,5 +15,5 @@ SET(TYPES_SRC
     pb_utils.cpp
 )
 add_library(types ${TYPES_SRC})
-target_link_libraries(types ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} proj streetnetwork)
+target_link_libraries(types ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} proj streetnetwork utils)
 
