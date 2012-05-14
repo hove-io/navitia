@@ -569,20 +569,22 @@ void GtfsParser::build_routes(Data & data){
         // Si le vj n'appartient encore à aucune route
         if(vj1->route == 0) {
             auto it = line_routes_count.find(vj1->tmp_line->external_code);
+            int count = 1;
             if(it == line_routes_count.end()){
-                line_routes_count[vj1->tmp_line->external_code] = 1;
+                line_routes_count[vj1->tmp_line->external_code] = count;
             } else {
-                it->second = it->second + 1;
+                count = it->second + 1;
+                it->second = count;
             }
 
             nm::Route * route = new nm::Route();
-            route->external_code = vj1->tmp_line->external_code + "-" + boost::lexical_cast<std::string>(it->second);
+            route->external_code = vj1->tmp_line->external_code + "-" + boost::lexical_cast<std::string>(count);
             route->line = vj1->tmp_line;
             route->mode = vj1->mode;
             vj1->route = route;
             data.routes.push_back(route);
 
-            for(auto it2 = it1 + 1; it2 != data.vehicle_journeys.end(); ++it2){
+            for(auto it2 = it1 + 1; it1 != data.vehicle_journeys.end() && it2 != data.vehicle_journeys.end(); ++it2){
                 nm::VehicleJourney * vj2 = *it2;
                 if(vj2->route == 0 && same_route(vj1, vj2)){
                     vj2->route = vj1->route;
