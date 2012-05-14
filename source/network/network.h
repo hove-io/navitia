@@ -101,7 +101,7 @@ struct edge_less{
 typedef boost::property<boost::edge_weight_t, EdgeDesc> DistanceProperty;
 typedef boost::property<boost::vertex_index_t, uint32_t> vertex_32;
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS,
-VertexDesc,
+boost::no_property,
 EdgeDesc, vertex_32> NW;
 
 typedef boost::graph_traits<NW>::vertex_descriptor vertex_t;
@@ -136,6 +136,10 @@ int get_validity_pattern_idx(navitia::type::ValidityPattern vp, navitia::type::D
 
 /// Fonction renvoyant un validity pattern décalé d'une journée
 navitia::type::ValidityPattern* decalage_pam(navitia::type::ValidityPattern &vp);
+typedef std::list<idx_t> idx_t_list;
+typedef std::map<idx_t, idx_t_list> map_ar_t;
+/// Calcul les lignes aller retours
+void calculer_ar(navitia::type::Data &data, map_ar_t &map_ar);
 
 /// Remplit le graph passé en paramètre avec les données passées
 void charger_graph(navitia::type::Data &data, NW &g);
@@ -169,17 +173,17 @@ public:
         uint32_t t1 = 0, t2 = 0;
 
         if(get_n_type(v1, data) == TA)
-            t1 = data.pt_data.stop_times.at(g[v1].idx).arrival_time % 86400;
+            t1 = data.pt_data.stop_times.at(get_idx(v1, data)).arrival_time % 86400;
         if(get_n_type(v1, data) == TD)
-            t1 = data.pt_data.stop_times.at(g[v1].idx).departure_time % 86400;
+            t1 = data.pt_data.stop_times.at(get_idx(v1, data)).departure_time % 86400;
 
 
         if(get_n_type(v2, data) == TA)
-            t2 = data.pt_data.stop_times.at(g[v2].idx).arrival_time % 86400;
+            t2 = data.pt_data.stop_times.at(get_idx(v2, data)).arrival_time % 86400;
         if(get_n_type(v2, data) == TD)
-            t2 = data.pt_data.stop_times.at(g[v2].idx).departure_time % 86400;
+            t2 = data.pt_data.stop_times.at(get_idx(v2, data)).departure_time % 86400;
 
-        return (t1 < t2) || ((t1 == t2) & (g[v1].idx < g[v2].idx));
+        return (t1 < t2) || ((t1 == t2) & (get_idx(v1, data) < get_idx(v2, data)));
     }
 
 };

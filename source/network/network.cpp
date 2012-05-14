@@ -1,4 +1,5 @@
 #include "network.h"
+#include "type/type.h"
 
 
 namespace network {
@@ -115,7 +116,56 @@ navitia::type::ValidityPattern * decalage_pam(navitia::type::ValidityPattern &vp
     return vpr;
 }
 
+void calculer_ar(navitia::type::Data &data, map_ar_t &map_ar) {
+    std::vector<navitia::type::Route>::iterator it1, it2;
+    std::vector<idx_t>::iterator itr1;
+    std::vector<idx_t>::reverse_iterator itr2;
+    map_ar_t::iterator itm1, itm2;
+    std::pair<map_ar_t::iterator, bool> ret;
+    bool is_equal;
+    int nb_routes = 0;
+    //Chaque route
+    for(it1 = data.pt_data.routes.begin(); it1!=data.pt_data.routes.end();++it1) {
+        it2 = it1;
 
+        //Est comparee  aux autres routes
+        if(((*it1).idx % 1000) == 0 ) {
+            std::cout << "Comparaison de la route " << (*it1).idx << " aux autres "<< std::flush;
+        }
+        for(it2 = (++it2); it2!=data.pt_data.routes.end();++it2) {
+            //Si il y a le même nombre de stops on commence la comparaison (sinon les routes ne peuvent pas être égales
+            if(((*it2).route_point_list.size() != 0)
+               & ((*it1).route_point_list.size() == (*it2).route_point_list.size())
+                    & data.pt_data.lines.at((*it1).line_idx).network_idx == data.pt_data.lines.at((*it2).line_idx).network_idx){
+                is_equal = true;
+                nb_routes ++;
+                for(itr1 = (*it1).route_point_list.begin(), itr2 = (*it2).route_point_list.rbegin(); (itr1 != (*it1).route_point_list.end()) & is_equal; ++itr1, ++itr2) {
+                    is_equal = data.pt_data.stop_points.at(data.pt_data.route_points.at((*itr1)).stop_point_idx).stop_area_idx == data.pt_data.stop_points.at(data.pt_data.route_points.at((*itr2)).stop_point_idx).stop_area_idx;
+                }
+
+                // C'est qu'il s'agit alors d'un aller/retour
+                if(is_equal) {
+                    itm1 = map_ar.find((*it1).idx);
+                    itm2 = map_ar.find((*it2).idx);
+
+                    ret =  map_ar.insert(std::pair<idx_t, idx_t_list>((*it1).idx, idx_t_list()));
+                    itm1 = ret.first;
+
+                    ret = map_ar.insert(std::pair<idx_t, idx_t_list>((*it2).idx, idx_t_list()));
+                    itm2 = ret.first;
+
+                    (*itm1).second.push_front((*it2).idx);
+                    (*itm2).second.push_front((*it1).idx);
+                    std::cout << " ajout d'un A/R" << data.pt_data.lines.at((*it1).line_idx).name  <<" " << data.pt_data.lines.at((*it2).line_idx).name <<  std::endl;
+                }
+            }
+
+        }
+        if(((*it1).idx % 1000) == 0 )
+            std::cout << " nb routes explorées " << nb_routes <<std::endl;
+    }
+
+}
 
 
 void charger_graph(navitia::type::Data &data, NW &g) {
@@ -125,18 +175,18 @@ void charger_graph(navitia::type::Data &data, NW &g) {
     navitia::type::ValidityPattern vptemp;
 
     //Creation des stop areas
-    BOOST_FOREACH(navitia::type::StopArea sai, data.pt_data.stop_areas) {
-        g[sai.idx] = VertexDesc(sai.idx);
-    }
+    //    BOOST_FOREACH(navitia::type::StopArea sai, data.pt_data.stop_areas) {
+    //        g[sai.idx] = VertexDesc(sai.idx);
+    //    }
     //Creation des stop points et creations lien SA->SP
     BOOST_FOREACH(navitia::type::StopPoint spi, data.pt_data.stop_points) {
-        g[get_sp_idx(spi.idx, data)] = VertexDesc(spi.idx);
+        //        g[get_sp_idx(spi.idx, data)] = VertexDesc(spi.idx);
         add_edge(spi.stop_area_idx, get_sp_idx(spi.idx, data), EdgeDesc(spi.stop_area_idx, get_sp_idx(spi.idx, data), 0), g);
     }
 
     //Création des liens SP->RP
     BOOST_FOREACH(navitia::type::RoutePoint rpi, data.pt_data.route_points) {
-        g[get_rp_idx(rpi.idx, data)] = VertexDesc(rpi.idx);
+        //        g[get_rp_idx(rpi.idx, data)] = VertexDesc(rpi.idx);
         add_edge(get_sp_idx(rpi.stop_point_idx, data), get_rp_idx(rpi.idx, data), EdgeDesc(rpi.stop_point_idx, rpi.idx, 0), g);
     }
 
@@ -148,8 +198,8 @@ void charger_graph(navitia::type::Data &data, NW &g) {
             rpv = get_rp_idx(data.pt_data.stop_times.at(stid).route_point_idx, data);
 
             //Création des ta et td;
-            g[get_ta_idx(stid, data)] = VertexDesc(stid);
-            g[get_td_idx(stid, data)] = VertexDesc(stid);
+            //            g[get_ta_idx(stid, data)] = VertexDesc(stid);
+            //            g[get_td_idx(stid, data)] = VertexDesc(stid);
 
             //ta
             tav = get_ta_idx(stid, data) ;
@@ -203,7 +253,7 @@ void charger_graph(navitia::type::Data &data, NW &g) {
                                 //On itère sur les td
                                 BOOST_FOREACH(edge_t e4, out_edges(target(e3, g), g)) {
                                     if(get_n_type(target(e4, g), data) == TD) {
-                                        if(data.pt_data.stop_times.at(g[target(e4, g)].idx).route_point_idx == g[target(e2, g)].idx) {
+                                        if(data.pt_data.stop_times.at(get_idx(target(e4, g), data)).route_point_idx == get_idx(target(e2, g), data)) {
                                             verticesTD.insert(target(e4, g));
                                         }
                                     }
@@ -239,7 +289,7 @@ void charger_graph(navitia::type::Data &data, NW &g) {
                     if((tdv != 0) & (get_n_type(tdv, data) == TD)) {
                         bo = true;
                         //On recherche le premier td possible
-                        while(((data.pt_data.stop_times.at(g[tdv].idx).departure_time - data.pt_data.stop_times.at(g[tav].idx).arrival_time + verticesRPp[tdvi.first]) < min_corresp) & bo) {
+                        while(((data.pt_data.stop_times.at(get_idx(tdv, data)).departure_time - data.pt_data.stop_times.at(get_idx(tav, data)).arrival_time + verticesRPp[tdvi.first]) < min_corresp) & bo) {
                             bo = false;
                             BOOST_FOREACH(edge_t e3, out_edges(tdv, g)) {
                                 if((get_n_type(target(e3, g), data) == TD) & (get_saidx(target(e3, g), data) == sav))  {
@@ -330,19 +380,15 @@ etiquette combine2::operator ()(etiquette debut, EdgeDesc ed) const  {
             }
         } else {
             //On verifie le validity pattern
-            //On ne veut pas "trainer" dans la zone d'arret finale
             if(debut_temps > fin_temps) { //Passe minuit
                 retour.date_arrivee = debut.date_arrivee + 1;
                 retour.temps = 86400 - debut.heure_arrivee + fin_temps;
-                retour.heure_arrivee = 0;
             } else {
                 retour.date_arrivee = debut.date_arrivee;
                 retour.temps = debut.temps + fin_temps - debut_temps;
             }
 
-            if((data.pt_data.validity_patterns.at(ed.validity_pattern).check(retour.date_arrivee) || est_transport(ed, data))
-                    & (retour.heure_arrivee < debut_temps)) {
-
+            if(!est_transport(ed, data) || data.pt_data.validity_patterns.at(ed.validity_pattern).check(retour.date_arrivee)) {
                 retour.heure_arrivee = fin_temps;
                 return retour;
             } else {
@@ -360,10 +406,10 @@ bool est_transport(EdgeDesc e, navitia::type::Data &data) {
     nt1 = get_n_type(e.debut, data);
     nt2 = get_n_type(e.fin, data);
 
-    if((nt1!=TA) & (nt1!=TD) || (nt2!=TA) & (nt2!=TD))
+    if(!(((nt1 == TA) & (nt2 == TD)) || ((nt1 == TD) & (nt2 == TA))))
         return false;
 
-    return data.pt_data.stop_times.at(get_idx(e.debut, data)).vehicle_journey_idx != data.pt_data.stop_times.at(get_idx(e.fin, data)).vehicle_journey_idx;
+    return data.pt_data.stop_times.at(get_idx(e.debut, data)).vehicle_journey_idx == data.pt_data.stop_times.at(get_idx(e.fin, data)).vehicle_journey_idx;
 }
 
 }
