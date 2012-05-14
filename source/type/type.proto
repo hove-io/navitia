@@ -178,7 +178,7 @@ message StreetNetwork {
 message Parcours {
         required int32 id = 1;
 	message Etape {
-                required int32 descente     = 1;
+                required string descente     = 1;
 		required int32 ligne	    = 2;
 	}
 	

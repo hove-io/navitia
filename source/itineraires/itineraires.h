@@ -27,6 +27,8 @@ public:
     bool operator==(parcours i2);
     bool operator!=(parcours i2);
 
+
+
 };
 
 
@@ -36,7 +38,24 @@ public :
     uint32_t parcours;
     std::list<idx_t> stop_times;
 
-    itineraire(uint32_t parcours, std::list<idx_t> stop_times) : parcours(parcours), stop_times(stop_times){}
+    itineraire(uint32_t parcours, std::list<idx_t> stop_times) :parcours(parcours), stop_times(stop_times){}
+
+};
+
+class sort_itineraire {
+private:
+    navitia::type::Data &data;
+public:
+    sort_itineraire (navitia::type::Data &data) : data(data) { }
+    bool operator() (const itineraire& i1, const itineraire& i2) const {
+        if(i1.stop_times.size() == 0 || i2.stop_times.size() == 0)
+            return false;
+        else
+            return  ((data.pt_data.stop_times.at(*(i1.stop_times.begin())).departure_time == data.pt_data.stop_times.at(*(i2.stop_times.begin())).departure_time)
+                     &(data.pt_data.stop_times.at(*(--i1.stop_times.end())).departure_time < data.pt_data.stop_times.at(*(--i2.stop_times.end())).departure_time))
+                    || data.pt_data.stop_times.at(*(i1.stop_times.begin())).departure_time < data.pt_data.stop_times.at(*(i2.stop_times.begin())).departure_time;
+
+    }
 };
 
 typedef std::map<uint32_t, parcours> map_parcours;

@@ -44,41 +44,44 @@ void make_itineraires(network::vertex_t v1, network::vertex_t v2, std::vector<it
                     network::edge_t etemp, eprec;
                     bool eexists;
                     idx_t sadescente = network::get_saidx(tav, data);
-                    boost::tie(eprec, eexists) = edge(predecessors[tav], tav, g);
-                    stop_times.push_front(g[tav].idx);
+                    boost::tie(eprec, eexists) = edge(rpv, tav, g);
                     network::vertex_t v;
-                    for(v=predecessors[tav];  network::get_saidx(v, data)!=v1; v=predecessors[v]) {
+                    p.ajouter_etape(data.pt_data.routes.at(data.pt_data.vehicle_journeys.at(data.pt_data.stop_times.at(network::get_idx(tav, data)).vehicle_journey_idx).route_idx).line_idx, network::get_saidx(tav, data));
+                    for(v=tav;  (network::get_saidx(v, data)!=v1) & (v!=predecessors[v]); v=predecessors[v]) {
                         boost::tie(etemp, eexists) = boost::edge(predecessors[v], v, g);
                         if(eexists) {
                             if(network::est_transport(g[etemp], data)& !network::est_transport(g[eprec], data)) {
                                 //Descente
                                 sadescente = network::get_saidx(v, data);
-                                stop_times.push_front(g[v].idx);
+                                stop_times.push_front(network::get_idx(v, data));
                             }
                             if(!network::est_transport(g[etemp], data)& network::est_transport(g[eprec], data)) {
                                 //Montée
-                                p.ajouter_etape(data.pt_data.routes.at(data.pt_data.vehicle_journeys.at(data.pt_data.stop_times.at(g[v].idx).vehicle_journey_idx).route_idx).line_idx, sadescente);
-                                stop_times.push_front(g[v].idx);
+                                p.ajouter_etape(data.pt_data.routes.at(data.pt_data.vehicle_journeys.at(data.pt_data.stop_times.at(network::get_idx(v, data)).vehicle_journey_idx).route_idx).line_idx, network::get_saidx(v, data));
+                                stop_times.push_front(network::get_idx(v, data));
                             }
                             eprec = etemp;
                         }
                     }
-                    //Ajout de l'étape de montée
-                    p.ajouter_etape(data.pt_data.routes.at(data.pt_data.vehicle_journeys.at(data.pt_data.stop_times.at(g[v].idx).vehicle_journey_idx).route_idx).line_idx, v1);
-                    stop_times.push_front(g[v].idx);
+                    if(v!=predecessors[v]) {
+//                        std::cout  << "ajout d'un itineraire" << std::endl;
+                        //Ajout de l'étape de montée
+                        p.ajouter_etape(data.pt_data.routes.at(data.pt_data.vehicle_journeys.at(data.pt_data.stop_times.at(network::get_idx(v, data)).vehicle_journey_idx).route_idx).line_idx, v1);
+                        stop_times.push_front(network::get_idx(v, data));
 
-                    if(p.etapes.size() < 3) {
-                        //On regarde si l'on connait un parcours identique
-                        uint32_t pkey = parcours_list.size();
-                        BOOST_FOREACH(map_parcours::value_type &pi, parcours_list) {
-                            if(pi.second == p )
-                                pkey = pi.first;
+                        if(p.etapes.size() < 10) {
+                            //On regarde si l'on connait un parcours identique
+                            uint32_t pkey = parcours_list.size();
+                            BOOST_FOREACH(map_parcours::value_type &pi, parcours_list) {
+                                if(pi.second == p )
+                                    pkey = pi.first;
+                            }
+                            //Si non on l'ajoute à la liste des parcours
+                            if(pkey == parcours_list.size())
+                                parcours_list[pkey] = p;
+                            //On ajoute l'itineraire à la liste des itineraires
+                            itineraires.push_back(itineraire(pkey, stop_times));
                         }
-                        //Si non on l'ajoute à la liste des parcours
-                        if(pkey == parcours_list.size())
-                            parcours_list[pkey] = p;
-                        //On ajoute l'itineraire à la liste des itineraires
-                        itineraires.push_back(itineraire(pkey, stop_times));
                     }
 
                 }
@@ -87,7 +90,7 @@ void make_itineraires(network::vertex_t v1, network::vertex_t v2, std::vector<it
         }
     }
 
-
+    sort(itineraires.begin(), itineraires.end(), sort_itineraire(data));
 }
 
 

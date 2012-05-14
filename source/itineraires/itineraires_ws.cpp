@@ -20,7 +20,7 @@ struct Data2{
         Configuration * conf = Configuration::get();
         std::cout << "Je suis l'executable " << conf->get_string("application") <<std::endl;
         std::cout << "Je réside dans le path " << conf->get_string("path") <<std::endl;
-        data.load_flz("/home/vlara/navitia/jeu/passeminuit/passeminuit.nav");
+        data.load_flz("/home/vlara/navitia/jeu/IdF/IdF.nav");
         std::cout << "Chargement des données effectué" << std::endl;
         std::cout << "Nb route points : " << data.pt_data.route_points.size() << std::endl;
         g = NW(data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + (data.pt_data.stop_times.size()*2));
@@ -47,46 +47,61 @@ private:
         vertex_t v2 = atoi(get<std::string>(request.parsed_params["arrivee"].value).c_str());
 
         etiquette etdebut;
-        etdebut.temps = 0;
+        etdebut.temps = 28800;
         etdebut.date_arrivee = d.data.pt_data.validity_patterns.at(0).slide(gregorian::from_undelimited_string(get<std::string>(request.parsed_params["date"].value).c_str()));
         etdebut.heure_arrivee = 0;
 
+        std::cout << "Debut du calcul d'itineraire ... " << std::flush;
 
         dijkstra_shortest_paths(d.g, v1,
                                 predecessor_map(&predecessors[0])
                                 .weight_map(get(edge_bundle, d.g))
                                 .distance_map(&distances[0])
-                                .distance_combine(combine2(d.data, d.g, v1, v2, atoi(get<std::string>(request.parsed_params["jour"].value).c_str())))
+                                .distance_combine(combine2(d.data, d.g, v1, v2, etdebut.date_arrivee))
                                 .distance_zero(etdebut)
                                 .distance_inf(etiquette::max())
                                 .distance_compare(edge_less())
                                 );
+        std::cout << " Fin " << std::flush;
 
         std::vector<itineraire> itineraires;
 
         map_parcours parcours_list = map_parcours();
+        std::cout << " Debut parse itineraires ..." << std::flush;
         make_itineraires(v1, v2, itineraires, parcours_list, d.g, d.data, predecessors);
+        std::cout << "Fin parse " << std::flush;
 
+        std::cout << " Debut encodage ... " << std::flush;
         pbnavitia::Itineraires itineraires_proto;
         BOOST_FOREACH(itineraires::itineraire it, itineraires) {
             pbnavitia::Itineraire *i_proto = itineraires_proto.add_itineraires_liste();
             to_proto(it, parcours_list, d.data, i_proto);
         }
+        std::cout << " Fin encodage " << std::endl;
 
 
-
-        rd.response << pb2json(&itineraires_proto);
-        rd.content_type = "text/html";
+        rd.response << get<std::string>(request.parsed_params["jsoncallback"].value).c_str() << "(" << pb2json(&itineraires_proto) << ")";
+        rd.content_type = "application/json";
         rd.status_code = 200;
         return rd;
     }
 
+    ResponseData testons(RequestData& /*request*/, Data2 &/*d*/) {
+        ResponseData rd;
+        rd.charset = "utf-8";
+        rd.response << "blabla" << std::flush;
+        rd.content_type = "text/plain";
+        rd.status_code = 200;
+
+        return rd;
+    }
 
 
 
 public:
     Worker(Data2 &) : i(0) {
         register_api("getitineraires",bind(&Worker::getitineraires, this, _1, _2), "Api qui tous les itineraires d'un stop area");
+        register_api("testons",bind(&Worker::testons, this, _1, _2), "Api qui tous les itineraires d'un stop area");
         add_default_api();
     }
 };
