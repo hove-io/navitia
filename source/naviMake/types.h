@@ -250,11 +250,12 @@ struct VehicleJourney: public TransmodelHeader, Nameable{
     Route* route;
     Company* company;
     Mode* mode;
+    Line * tmp_line; // N'est pas à remplir obligatoirement
     //Vehicle* vehicle;
     bool is_adapted;
 
     ValidityPattern* validity_pattern;
-    std::vector<StopTime*> stop_time_list;
+    std::vector<StopTime*> stop_time_list; // N'est pas à remplir obligatoirement
 
     struct Transformer{
         inline navitia::type::VehicleJourney operator()(const VehicleJourney* vj){return this->operator()(*vj);}
@@ -354,6 +355,7 @@ struct StopTime: public TransmodelHeader {
     int departure_time; ///< En secondes depuis minuit
     VehicleJourney* vehicle_journey;
     RoutePoint* route_point;
+    StopPoint * tmp_stop_point;// ne pas remplir obligatoirement
     int order;
     bool ODT;
     int zone;

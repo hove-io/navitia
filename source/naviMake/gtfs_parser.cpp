@@ -47,6 +47,8 @@ void GtfsParser::fill(Data & data){
     parse_routes(data);
     parse_trips(data);
     parse_stop_times(data);
+    build_routes(data);
+    build_route_points(data);
 }
 
 void GtfsParser::fill_mode_types(Data & data) {
@@ -428,6 +430,7 @@ void GtfsParser:: parse_routes(Data & data){
 
         if(line_map.find(elts[id_c]) == line_map.end()) {
             nm::Line * line = new nm::Line();
+            line->external_code = elts[id_c];
             line->name = elts[long_name_c];
             line->code = elts[short_name_c];
             line->color = elts[color_c];
@@ -507,9 +510,6 @@ void GtfsParser::parse_trips(Data & data) {
                 std::cerr << "Impossible de trouver le mode (au sens GTFS) " << line->mode_type->id
                           << " référencée par trip " << elts[trip_c] << std::endl;
             } else {
-                nm::Route * route = new nm::Route();
-                route->line  = line;
-                route->mode = itm->second;
                 nm::ValidityPattern * vp_xx;
 
                 boost::unordered_map<std::string, nm::ValidityPattern*>::iterator vp_it = vp_map.find(elts[service_c]);
@@ -521,19 +521,16 @@ void GtfsParser::parse_trips(Data & data) {
                     vp_xx = vp_it->second;
                 }
 
-                route_map[elts[trip_c]] = route;
-                data.routes.push_back(route); //elts[2]
 
                 boost::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(elts[trip_c]);
                 if(vj_it == vj_map.end()) {
                     nm::VehicleJourney * vj = new nm::VehicleJourney();
-                    vj->route = route;
-                    //vj->company = route->line->network;
                     vj->name = elts[trip_c];
                     vj->external_code = elts[trip_c];
-                    vj->mode = route->mode;
                     vj->validity_pattern = vp_xx;
-
+                    vj->route = 0;
+                    vj->tmp_line = line;
+                    vj->mode = itm->second;
                     vj_map[vj->name] = vj;
                     data.vehicle_journeys.push_back(vj);
                 }
@@ -546,15 +543,82 @@ void GtfsParser::parse_trips(Data & data) {
     }
 
     BOOST_ASSERT(data.vehicle_journeys.size() == vj_map.size());
-    std::cout << "Nombre de routes : " << data.routes.size() << std::endl;
     std::cout << "Nombre de vehicle journeys : " << data.vehicle_journeys.size() << std::endl;
     std::cout << "Nombre d'erreur de référence de service : " << ignored << std::endl;
     std::cout << "J'ai ignoré " << ignored_vj << " vehicule journey à cause de doublons" << std::endl;
     std::cout << std::endl;
 }
 
-void GtfsParser::parse_stop_times(Data & data) {
+// Compare si deux vehicle journey appartiennent à la même route
+bool same_route(nm::VehicleJourney * vj1, nm::VehicleJourney * vj2){
+    if(vj1->stop_time_list.size() != vj2->stop_time_list.size())
+        return false;
+    for(size_t i = 0; i < vj1->stop_time_list.size(); ++i)
+        if(vj1->stop_time_list[i]->tmp_stop_point != vj2->stop_time_list[i]->tmp_stop_point){
+            return false;
+        }
+    return true;
+}
+
+void GtfsParser::build_routes(Data & data){
+    std::cout << "On calcule les routes" << std::endl;
+    // Associe à chaque line external_code le nombre de route trouvées jusqu'à present
+    std::map<std::string, int> line_routes_count;
+    for(auto it1 = data.vehicle_journeys.begin(); it1 != data.vehicle_journeys.end(); ++it1){
+        nm::VehicleJourney * vj1 = *it1;
+        // Si le vj n'appartient encore à aucune route
+        if(vj1->route == 0) {
+            auto it = line_routes_count.find(vj1->tmp_line->external_code);
+            if(it == line_routes_count.end()){
+                line_routes_count[vj1->tmp_line->external_code] = 1;
+            } else {
+                it->second = it->second + 1;
+            }
+
+            nm::Route * route = new nm::Route();
+            route->external_code = vj1->tmp_line->external_code + "-" + boost::lexical_cast<std::string>(it->second);
+            route->line = vj1->tmp_line;
+            route->mode = vj1->mode;
+            vj1->route = route;
+            data.routes.push_back(route);
+
+            for(auto it2 = it1 + 1; it2 != data.vehicle_journeys.end(); ++it2){
+                nm::VehicleJourney * vj2 = *it2;
+                if(vj2->route == 0 && same_route(vj1, vj2)){
+                    vj2->route = vj1->route;
+                }
+            }
+        }
+    }
+    std::cout << "Nombre de routes : " << data.routes.size() << std::endl;
+    std::cout << std::endl;
+}
+
+void GtfsParser::build_route_points(Data & data){
+    std::cout << "Construction des route points" << std::endl;
     std::map<std::string, navimake::types::RoutePoint*> route_point_map;
+    BOOST_FOREACH(nm::VehicleJourney * vj, data.vehicle_journeys){
+        BOOST_FOREACH(nm::StopTime * stop_time, vj->stop_time_list){
+            std::string route_point_extcode = vj->route->external_code + ":" + stop_time->tmp_stop_point->external_code;
+            auto route_point_it = route_point_map.find(route_point_extcode);
+            nm::RoutePoint * route_point;
+            if(route_point_it == route_point_map.end()) {
+                route_point = new nm::RoutePoint();
+                route_point->route = vj->route;
+                route_point->stop_point = stop_time->tmp_stop_point;
+                route_point_map[route_point_extcode] = route_point;
+                //route_point->order = boost::lexical_cast<int>(elts[stop_seq_c]);
+                data.route_points.push_back(route_point);
+            } else {
+                route_point = route_point_it->second;
+            }
+            stop_time->route_point = route_point;
+        }
+    }
+    std::cout << "Nombre de route points : " << data.route_points.size() << std::endl;
+}
+
+void GtfsParser::parse_stop_times(Data & data) {
     std::cout << "On parse : " << (path + "/stop_times.txt").c_str() << std::endl;
     data.stops.reserve(8000000);
     std::fstream ifile((path + "/stop_times.txt").c_str());
@@ -609,29 +673,17 @@ void GtfsParser::parse_stop_times(Data & data) {
             std::cerr << "Impossible de trouver le StopPoint " << elts[stop_c] << std::endl;
         }
         else {
-            std::string route_point_extcode = vj_it->second->route->external_code + ":" + stop_it->second->external_code;
-            auto route_point_it = route_point_map.find(route_point_extcode);
-            nm::RoutePoint * route_point;
-            if(route_point_it == route_point_map.end()) {
-                route_point = new nm::RoutePoint();
-                route_point->route = vj_it->second->route;
-                route_point->stop_point = stop_it->second;
-                route_point_map[route_point_extcode] = route_point;
-                route_point->order = boost::lexical_cast<int>(elts[stop_seq_c]);
-                data.route_points.push_back(route_point);
-            } else {
-                route_point = route_point_it->second;
-            }
-
             nm::StopTime * stop_time = new nm::StopTime();
             stop_time->arrival_time = time_to_int(elts[arrival_c]);
             stop_time->departure_time = time_to_int(elts[departure_c]);
-            stop_time->route_point = route_point;
+            stop_time->tmp_stop_point = stop_it->second;
+            //stop_time->route_point = route_point;
             stop_time->order = boost::lexical_cast<int>(elts[stop_seq_c]);
             stop_time->vehicle_journey = vj_it->second;
             stop_time->ODT = 0;//(elts[pickup_c] == "2" && elts[drop_c] == "2");
             stop_time->zone = 0; // à définir selon pickup_type ou drop_off_type = 10
             data.stops.push_back(stop_time);
+            stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
             count++;
         }
     }

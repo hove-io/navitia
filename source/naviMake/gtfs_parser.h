@@ -20,7 +20,6 @@ private:
     boost::unordered_map<std::string, navimake::types::ModeType*> mode_type_map;
     boost::unordered_map<std::string, navimake::types::StopPoint*> stop_map;
     boost::unordered_map<std::string, navimake::types::StopArea*> stop_area_map;
-    boost::unordered_map<std::string, navimake::types::Route*> route_map;
     boost::unordered_map<std::string, navimake::types::Line*> line_map;
     boost::unordered_map<std::string, navimake::types::ValidityPattern*> vp_map;
     boost::unordered_map<std::string, navimake::types::VehicleJourney*> vj_map;
@@ -48,8 +47,14 @@ public:
     void parse_calendar_dates(Data & data);
 
     /// Parse le fichier routes.txt
-    /// Contient les routes
+    /// Contient les lignes (au sens navitia)
     void parse_routes(Data & data);
+
+    /// Construit les routes en retrouvant les paterns à partir des VJ
+    void build_routes(Data & data);
+
+    /// Construit les routepoint
+    void build_route_points(Data & data);
 
     /// Parse le fichier stops.txt
     /// Contient les points d'arrêt et les zones d'arrêt
