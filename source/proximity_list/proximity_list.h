@@ -50,6 +50,12 @@ struct ProximityList
         build(items.begin(), items.end(), true);
     }
 
+    /// Calcule l'élément median
+    iterator get_median(iterator begin, iterator end){
+        int offset = (end - begin)/2;
+        return begin + offset;
+    }
+
     /** Construit l'indexe partiellement, sur une dimension
       * On découpe récursivement l'espace en deux de manière à ce que les éléments à gauche soient plus petits
       * que l'élément médian, et que les éléments à droite soient plus grand
@@ -61,10 +67,10 @@ struct ProximityList
         if(along_x)
             std::sort(begin, end, along_x_comp<Item>);
         else
-            std::sort(begin, end, along_x_comp<Item>);
+            std::sort(begin, end, along_y_comp<Item>);
 
         // On récupére l'élément médian
-        iterator median = begin + (end - begin-1) / 2;
+        iterator median = get_median(begin, end);
         build(begin, median, !along_x);
         build(median + 1, end, !along_x);
     }
@@ -81,7 +87,7 @@ struct ProximityList
             return result;
 
         // On trouve l'éléement au milieu
-        iterator median = begin + ((end - begin)-1) / 2;
+        iterator median = get_median(begin, end);
         double median_distance = coord.distance_to(median->coord);
         if(median_distance <= distance)
             result.push_back(median->element);
@@ -89,12 +95,12 @@ struct ProximityList
         // Si la distance mediane est inférieure à la limite, on regarde des deux cotés
         // Cependant il faut regarder la distance projetée
 
-        GeographicalCoord projected = median->coord;
-        if(along_x) projected.y = coord.y;
+        GeographicalCoord projected = coord;
+        if(along_x) projected.x = coord.x;
         else projected.y = coord.y;
         double projected_distance = projected.distance_to(coord);
 
-        if(median_distance <= projected_distance){
+        if(projected_distance <= distance){
             auto left = find_within(coord, begin, median, distance, !along_x);
             result.insert(result.end(), left.begin(), left.end());
             auto right = find_within(coord, median+1, end, distance, !along_x);
@@ -133,7 +139,7 @@ struct ProximityList
         if(end - begin == 1)
             return std::make_pair(begin->element, coord.distance_to(begin->coord));
 
-        iterator median = begin + (end - begin) / 2;
+        iterator median = get_median(begin, end);
 
         // On détermine de quel côté de l'élément médian on regarde
         bool left;

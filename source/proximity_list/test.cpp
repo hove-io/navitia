@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(distances_grand_cercle)
     BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
     BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
 }
-BOOST_AUTO_TEST_CASE(parse_state_test){
+BOOST_AUTO_TEST_CASE(find_nearest){
     ProximityList<unsigned int> pl;
 
     GeographicalCoord c;
@@ -128,7 +128,17 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
     BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
 
     expected={1,2,4,6};
-    tmp = pl.find_within(c, 7);
+    tmp = pl.find_within(c, 5.4);
+    std::sort(tmp.begin(), tmp.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
+
+    expected={1,2,4,5,6};
+    tmp = pl.find_within(c, 6.8);
+    std::sort(tmp.begin(), tmp.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
+
+    expected={1,2,3,4,5,6};
+    tmp = pl.find_within(c, 7.3);
     std::sort(tmp.begin(), tmp.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
 }
