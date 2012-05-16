@@ -6,5 +6,5 @@ add_library(streetnetwork types.cpp ${CMAKE_SOURCE_DIR}/../third_party/fastlz/fa
 target_link_libraries(streetnetwork ${Boost_LIBRARIES})
 
 add_executable (test_sn test.cpp)
-target_link_libraries(test_sn ${Boost_LIBRARIES} streetnetwork proj connectors)
+target_link_libraries(test_sn ${Boost_LIBRARIES} streetnetwork proj)
 ADD_TEST(test_sn ${EXECUTABLE_OUTPUT_PATH}/test_sn --report_level=no)

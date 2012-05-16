@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(outil_de_graph) {
     edge_t e = edge(a, b, g).first;
     BOOST_CHECK_EQUAL(g[e].length, 10);
 
-    // Construction implicite d'arcs
+    // Construction implicite de nœuds
     builder("c", "d", 42);
     BOOST_CHECK_EQUAL(num_vertices(g), 4);
     BOOST_CHECK_EQUAL(num_edges(g), 2);

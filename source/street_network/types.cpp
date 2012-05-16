@@ -148,12 +148,12 @@ GraphBuilder & GraphBuilder::add_edge(std::string source_name, std::string targe
     auto it = this->vertex_map.find(source_name);
     if(it == this->vertex_map.end())
         this->add_vertex(source_name, 0, 0);
-    source = it->second;
+    source = this->vertex_map[source_name];
 
     it = this->vertex_map.find(target_name);
     if(it == this->vertex_map.end())
         this->add_vertex(target_name, 0, 0);
-    target= it->second;
+    target= this->vertex_map[target_name];
 
     Edge edge;
     edge.length = length >= 0? length : 0;
