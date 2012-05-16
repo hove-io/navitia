@@ -1,17 +1,12 @@
 #include "types.h"
-#include "utils/csv.h"
 
-#include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include <boost/iostreams/filtering_streambuf.hpp>
 
 #include <fstream>
 #include "fastlz_filter/filter.h"
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include "third_party/eos_portable_archive/portable_iarchive.hpp"
@@ -114,18 +109,6 @@ void StreetNetwork::load(const std::string & filename) {
     ia >> *this;
 }
 
-void StreetNetwork::save_bin(const std::string & filename) {
-    std::ofstream ofs(filename.c_str(),  std::ios::out | std::ios::binary);
-    boost::archive::binary_oarchive oa(ofs);
-    oa << *this;
-}
-
-void StreetNetwork::load_bin(const std::string & filename) {
-    std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
-    boost::archive::binary_iarchive ia(ifs);
-    ia >> *this;
-}
-
 void StreetNetwork::load_flz(const std::string & filename) {
     std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
     boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
@@ -143,5 +126,42 @@ void StreetNetwork::save_flz(const std::string & filename) {
     eos::portable_oarchive oa(out);
     oa << *this;
 }
+
+GraphBuilder & GraphBuilder::add_vertex(std::string node_name, float x, float y){
+    auto it = this->vertex_map.find(node_name);
+    vertex_t v;
+    type::GeographicalCoord coord(x,y);
+    if(it  == this->vertex_map.end()){
+        v = boost::add_vertex(this->graph);
+        vertex_map[node_name] = v;
+    } else {
+        v = it->second;
+    }
+
+    graph[v].coord.x = x;
+    graph[v].coord.y = y;
+    return *this;
+}
+
+GraphBuilder & GraphBuilder::add_edge(std::string source_name, std::string target_name, float length){
+    vertex_t source, target;
+    auto it = this->vertex_map.find(source_name);
+    if(it == this->vertex_map.end())
+        this->add_vertex(source_name, 0, 0);
+    source = it->second;
+
+    it = this->vertex_map.find(target_name);
+    if(it == this->vertex_map.end())
+        this->add_vertex(target_name, 0, 0);
+    target= it->second;
+
+    Edge edge;
+    edge.length = length >= 0? length : 0;
+
+    boost::add_edge(source, target, edge, this->graph);
+
+    return *this;
+}
+
 
 }}

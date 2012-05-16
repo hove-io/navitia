@@ -11,7 +11,6 @@
 
 #include <map>
 
-namespace bg = boost::graph;
 namespace nt = navitia::type;
 namespace navitia { namespace streetnetwork {
 
@@ -90,10 +89,18 @@ struct Path {
     std::vector<nt::GeographicalCoord> coordinates; //< Coordonnées du parcours
 };
 
+/** Structure contenant tout ce qu'il faut savoir sur le référentiel de voirie */
 struct StreetNetwork {
+    /// Liste des voiries
     std::vector<Way> ways;
+
+    /// Indexe sur les noms de voirie
     FirstLetter<unsigned int> fl;
+
+    /// Indexe
     ProximityList<vertex_t> pl;
+
+    /// Graphe pour effectuer le calcul d'itinéraire
     Graph graph;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
@@ -106,16 +113,40 @@ struct StreetNetwork {
     void save(const std::string & filename);
     void load(const std::string & filename);
 
-    void save_bin(const std::string & filename);
-    void load_bin(const std::string & filename);
-
     void load_flz(const std::string & filename);
     void save_flz(const std::string & filename);
 
     /// Calcule le meilleur itinéraire entre deux listes de nœuds
     Path compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations);
-
-
 };
+
+
+/** Permet de construire un graphe de manière simple
+
+  C'est essentiellement destiné aux tests unitaires
+  */
+ struct GraphBuilder{
+     /// Graphe que l'on veut construire
+     Graph & graph;
+
+     /// Associe une chaine de caractères à un nœud
+     std::map<std::string, vertex_t> vertex_map;
+
+     /// Le constructeur : on précise sur quel graphe on va construire
+     GraphBuilder(Graph & graph) : graph(graph){}
+
+     /// Ajoute un nœud, s'il existe déjà, les informations sont mises à jour
+     GraphBuilder & add_vertex(std::string node_name, float x, float y);
+
+     /// Ajoute un arc. Si un nœud n'existe pas, il est créé automatiquement
+     /// Si la longueur n'est pas précisée, il s'agit de la longueur à vol d'oiseau
+     GraphBuilder & add_edge(std::string source_name, std::string target_name, float length = -1);
+
+     /// Surchage de la création de nœud pour plus de confort
+     GraphBuilder & operator()(std::string node_name, float x, float y){ return add_vertex(node_name, x, y);}
+
+     /// Surchage de la création d'arc pour plus de confort
+     GraphBuilder & operator()(std::string source_name, std::string target_name, float length = -1){ return add_edge(source_name, target_name, length);}
+ };
 
 }} //namespace navitia::streetnetwork
