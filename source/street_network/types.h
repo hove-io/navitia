@@ -118,6 +118,13 @@ struct StreetNetwork {
 
     /// Calcule le meilleur itinéraire entre deux listes de nœuds
     Path compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations);
+
+    /** Retourne l'arc (segment) le plus proche
+      *
+      * Pour le trouver, on cherche le nœud le plus proche, puis pour chaque arc adjacent, on garde le plus proche
+      * Ce n'est donc pas optimal, mais pour améliorer ça, il faudrait indexer des segments, ou ratisser plus large
+      */
+    edge_t nearest_edge(const type::GeographicalCoord & coordinates) const;
 };
 
 
@@ -127,13 +134,13 @@ struct StreetNetwork {
   */
  struct GraphBuilder{
      /// Graphe que l'on veut construire
-     Graph & graph;
+     StreetNetwork & street_network;
 
      /// Associe une chaine de caractères à un nœud
      std::map<std::string, vertex_t> vertex_map;
 
      /// Le constructeur : on précise sur quel graphe on va construire
-     GraphBuilder(Graph & graph) : graph(graph){}
+     GraphBuilder(StreetNetwork & street_network) : street_network(street_network){}
 
      /// Ajoute un nœud, s'il existe déjà, les informations sont mises à jour
      GraphBuilder & add_vertex(std::string node_name, float x, float y);
@@ -147,6 +154,12 @@ struct StreetNetwork {
 
      /// Surchage de la création d'arc pour plus de confort
      GraphBuilder & operator()(std::string source_name, std::string target_name, float length = -1){ return add_edge(source_name, target_name, length);}
+
+     /// Retourne le nœud demandé, jette une exception si on ne trouve pas
+     vertex_t get(const std::string & node_name);
+
+     /// Retourne l'arc demandé, jette une exception si on ne trouve pas
+     edge_t get(const std::string & source_name, const std::string & target_name);
  };
 
  /** Projette un point sur un segment

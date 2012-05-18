@@ -39,6 +39,7 @@ struct ProximityList
     std::vector<Item> items;
 
     typedef typename std::vector<Item>::iterator iterator;
+    typedef typename std::vector<Item>::const_iterator const_iterator;
 
     /// Rajoute un nouvel élément. Attention, il faut appeler build avant de pouvoir utiliser la structure
     void add(GeographicalCoord coord, T element){
@@ -50,7 +51,13 @@ struct ProximityList
         build(items.begin(), items.end(), true);
     }
 
-    /// Calcule l'élément median
+    /// Calcule l'élément median, version const
+    const_iterator get_median(const_iterator begin, const_iterator end) const {
+        int offset = (end - begin)/2;
+        return begin + offset;
+    }
+
+    /// Calcule l'élément median, version mutable
     iterator get_median(iterator begin, iterator end){
         int offset = (end - begin)/2;
         return begin + offset;
@@ -76,18 +83,18 @@ struct ProximityList
     }
 
     /// Retourne tous les éléments dans un rayon de x mètres
-    std::vector<T> find_within(GeographicalCoord coord, double distance ){
+    std::vector<T> find_within(GeographicalCoord coord, double distance ) const {
         return find_within(coord, items.begin(), items.end(), distance, true);
     }
 
     /// Retourne l'élément les élements dans un espace restreint à moins d'une certaine distance
-    std::vector<T> find_within(GeographicalCoord coord, iterator begin, iterator end, double distance, bool along_x){
+    std::vector<T> find_within(GeographicalCoord coord, const_iterator begin, const_iterator end, double distance, bool along_x) const {
         std::vector<T> result;
         if(end == begin)
             return result;
 
         // On trouve l'éléement au milieu
-        iterator median = get_median(begin, end);
+        const_iterator median = get_median(begin, end);
         double median_distance = coord.distance_to(median->coord);
         if(median_distance <= distance)
             result.push_back(median->element);
@@ -119,27 +126,27 @@ struct ProximityList
     }
 
     /// Retourne les k-éléments les plus proches
-    std::vector<T> find_k_nearest(GeographicalCoord , size_t ){
+    std::vector<T> find_k_nearest(GeographicalCoord , size_t ) const {
         return std::vector<T>();
     }
 
     /// Fonction de confort pour retrouver l'élément le plus proche dans l'indexe
-    T find_nearest(double lon, double lat){
+    T find_nearest(double lon, double lat) const {
         return find_nearest(GeographicalCoord(lon, lat));
     }
 
     /// Retourne l'élément le plus proche dans tout l'indexe
-    T find_nearest(GeographicalCoord coord){
+    T find_nearest(GeographicalCoord coord) const {
         return find_nearest(coord, items.begin(), items.end(), true).first;
     }
 
     /// Retourne l'élément le plus proche dans un espace restreint et sa distance à la cible
-    std::pair<T, double> find_nearest(GeographicalCoord coord, iterator begin, iterator end, bool along_x){
+    std::pair<T, double> find_nearest(GeographicalCoord coord, const_iterator begin, const_iterator end, bool along_x) const {
         if(end - begin == 0) throw NotFound();
         if(end - begin == 1)
             return std::make_pair(begin->element, coord.distance_to(begin->coord));
 
-        iterator median = get_median(begin, end);
+        const_iterator median = get_median(begin, end);
 
         // On détermine de quel côté de l'élément médian on regarde
         bool left;

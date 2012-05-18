@@ -96,6 +96,30 @@ void StreetNetwork::build_proximity_list(){
     pl.build();
 }
 
+edge_t StreetNetwork::nearest_edge(const type::GeographicalCoord & coordinates) const {
+    vertex_t u = pl.find_nearest(coordinates);
+    type::GeographicalCoord coord_u, coord_v;
+    coord_u = this->graph[u].coord;
+    float dist = std::numeric_limits<float>::max();
+    edge_t best;
+    bool found = false;
+    BOOST_FOREACH(edge_t e, boost::out_edges(u, this->graph)){
+        vertex_t v = boost::target(e, this->graph);
+        coord_v = this->graph[v].coord;
+        // Petite approximation de la projection : on ne suit pas le tracé de la voirie !
+        auto projected = project(coordinates, coord_u, coord_v);
+        if(projected.second < dist){
+            found = true;
+            dist = projected.second;
+            best = e;
+        }
+    }
+    if(!found)
+        throw NotFound();
+    else
+        return best;
+}
+
 
 void StreetNetwork::save(const std::string & filename) {
     std::ofstream ofs(filename.c_str());
@@ -130,16 +154,17 @@ void StreetNetwork::save_flz(const std::string & filename) {
 GraphBuilder & GraphBuilder::add_vertex(std::string node_name, float x, float y){
     auto it = this->vertex_map.find(node_name);
     vertex_t v;
-    type::GeographicalCoord coord(x,y);
+    type::GeographicalCoord coord(x,y,false);
     if(it  == this->vertex_map.end()){
-        v = boost::add_vertex(this->graph);
+        v = boost::add_vertex(this->street_network.graph);
         vertex_map[node_name] = v;
     } else {
         v = it->second;
     }
 
-    graph[v].coord.x = x;
-    graph[v].coord.y = y;
+    this->street_network.graph[v].coord = coord;
+    this->street_network.pl.add(coord, v);
+    this->street_network.pl.build();
     return *this;
 }
 
@@ -158,9 +183,23 @@ GraphBuilder & GraphBuilder::add_edge(std::string source_name, std::string targe
     Edge edge;
     edge.length = length >= 0? length : 0;
 
-    boost::add_edge(source, target, edge, this->graph);
+    boost::add_edge(source, target, edge, this->street_network.graph);
 
     return *this;
+}
+
+vertex_t GraphBuilder::get(const std::string &node_name){
+    return this->vertex_map[node_name];
+}
+
+edge_t GraphBuilder::get(const std::string &source_name, const std::string &target_name){
+    vertex_t source = this->get(source_name);
+    vertex_t target = this->get(target_name);
+    edge_t e;
+    bool b;
+    boost::tie(e,b) =  boost::edge(source, target, this->street_network.graph);
+    if(!b) throw NotFound();
+    else return e;
 }
 
 std::pair<type::GeographicalCoord, float> project(type::GeographicalCoord point, type::GeographicalCoord segment_start, type::GeographicalCoord segment_end){

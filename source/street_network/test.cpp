@@ -9,7 +9,7 @@ using namespace navitia::streetnetwork;
 using namespace boost;
 BOOST_AUTO_TEST_CASE(outil_de_graph) {
     StreetNetwork sn;
-    GraphBuilder builder(sn.graph);
+    GraphBuilder builder(sn);
     Graph & g = sn.graph;
 
     BOOST_CHECK_EQUAL(num_vertices(g), 0);
@@ -95,4 +95,31 @@ BOOST_AUTO_TEST_CASE(projection) {
     BOOST_CHECK_SMALL(pp.x, 1e-3);
     BOOST_CHECK_SMALL(pp.y, 1e-3);
     BOOST_CHECK_CLOSE(d, ::sqrt(2)*2, 1e-3);
+}
+
+BOOST_AUTO_TEST_CASE(nearest_segment){
+    StreetNetwork sn;
+    GraphBuilder b(sn);
+
+    /*               a           e
+                     |
+                  b—–o––c
+                     |
+                     d             */
+
+    b("a", 0,10)("b", -10, 0)("c",10,0)("d",0,-10)("o",0,0)("e", 50,10);
+    b("o", "a")("o","b")("o","c")("o","d")("b","o");
+
+    navitia::type::GeographicalCoord c(1,2,false);
+    BOOST_CHECK(sn.nearest_edge(c) == b.get("o", "a"));
+    c.x = 2; c.y = 1;
+    BOOST_CHECK(sn.nearest_edge(c) == b.get("o", "c"));
+    c.x = 2; c.y = -1;
+    BOOST_CHECK(sn.nearest_edge(c) == b.get("o", "c"));
+    c.x = 2; c.y = -3;
+    BOOST_CHECK(sn.nearest_edge(c) == b.get("o", "d"));
+    c.x = -10; c.y = 1;
+    BOOST_CHECK(sn.nearest_edge(c) == b.get("b", "o"));
+    c.x = 50; c.y = 10;
+    BOOST_CHECK_THROW(sn.nearest_edge(c), NotFound);
 }
