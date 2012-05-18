@@ -163,5 +163,28 @@ GraphBuilder & GraphBuilder::add_edge(std::string source_name, std::string targe
     return *this;
 }
 
+std::pair<type::GeographicalCoord, float> project(type::GeographicalCoord point, type::GeographicalCoord segment_start, type::GeographicalCoord segment_end){
+    std::pair<type::GeographicalCoord, float> result;
+    result.first.degrees = point.degrees;
+
+    float length = segment_start.distance_to(segment_end);
+    float u = ((point.x - segment_start.x)*(segment_end.x - segment_start.x)
+            + (point.y - segment_start.y)*(segment_end.y - segment_start.y) )/
+            (length * length);
+
+    // Les deux cas où le projeté tombe en dehors
+    if(u < 0)
+        result = std::make_pair(segment_start, segment_start.distance_to(point));
+    else if(u > 1)
+        result = std::make_pair(segment_end, segment_end.distance_to(point));
+    else {
+        result.first.x = segment_start.x + u * (segment_end.x - segment_start.x);
+        result.first.y = segment_start.y + u * (segment_end.y - segment_start.y);
+        result.second = point.distance_to(result.first);
+    }
+
+    return result;
+}
+
 
 }}

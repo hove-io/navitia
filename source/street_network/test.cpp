@@ -41,3 +41,58 @@ BOOST_AUTO_TEST_CASE(outil_de_graph) {
     BOOST_CHECK_EQUAL(num_vertices(g), 4);
     BOOST_CHECK_EQUAL(num_edges(g), 3);
 }
+
+BOOST_AUTO_TEST_CASE(projection) {
+    using namespace navitia::type;
+    using boost::tie;
+
+    GeographicalCoord a(0,0, false); // Début de segment
+    GeographicalCoord b(10, 0, false); // Fin de segment
+    GeographicalCoord p(5, 5, false); // Point à projeter
+    GeographicalCoord pp; //Point projeté
+    float d; // Distance du projeté
+    tie(pp,d) = project(p, a, b);
+
+    BOOST_CHECK_EQUAL(pp.x, 5);
+    BOOST_CHECK_EQUAL(pp.y, 0);
+    BOOST_CHECK_EQUAL(d, 5);
+
+    // Si on est à l'extérieur à gauche
+    p.x = -10; p.y = 0;
+    tie(pp,d) = project(p, a, b);
+    BOOST_CHECK_EQUAL(pp.x, a.x);
+    BOOST_CHECK_EQUAL(pp.y, a.y);
+    BOOST_CHECK_EQUAL(d, 10);
+
+    // Si on est à l'extérieur à droite
+    p.x = 20; p.y = 0;
+    tie(pp,d) = project(p, a, b);
+    BOOST_CHECK_EQUAL(pp.x, b.x);
+    BOOST_CHECK_EQUAL(pp.y, b.y);
+    BOOST_CHECK_EQUAL(d, 10);
+
+    // On refait la même en permutant A et B
+
+    // Si on est à l'extérieur à gauche
+    p.x = -10; p.y = 0;
+    tie(pp,d) = project(p, b, a);
+    BOOST_CHECK_EQUAL(pp.x, a.x);
+    BOOST_CHECK_EQUAL(pp.y, a.y);
+    BOOST_CHECK_EQUAL(d, 10);
+
+    // Si on est à l'extérieur à droite
+    p.x = 20; p.y = 0;
+    tie(pp,d) = project(p, b, a);
+    BOOST_CHECK_EQUAL(pp.x, b.x);
+    BOOST_CHECK_EQUAL(pp.y, b.y);
+    BOOST_CHECK_EQUAL(d, 10);
+
+    // On essaye avec des trucs plus pentus ;)
+    a.x = -3; a.y = -3;
+    b.x = 5; b.y = 5;
+    p.x = -2;  p.y = 2;
+    tie(pp,d) = project(p, a, b);
+    BOOST_CHECK_SMALL(pp.x, 1e-3);
+    BOOST_CHECK_SMALL(pp.y, 1e-3);
+    BOOST_CHECK_CLOSE(d, ::sqrt(2)*2, 1e-3);
+}

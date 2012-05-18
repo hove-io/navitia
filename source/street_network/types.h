@@ -149,4 +149,14 @@ struct StreetNetwork {
      GraphBuilder & operator()(std::string source_name, std::string target_name, float length = -1){ return add_edge(source_name, target_name, length);}
  };
 
+ /** Projette un point sur un segment
+
+   Retourne les coordonnées projetées et la distance au segment
+
+   Si le point projeté tombe en dehors du segment, alors ça tombe sur le nœud le plus proche
+
+   http://paulbourke.net/geometry/pointline/
+   */
+ std::pair<type::GeographicalCoord, float> project(type::GeographicalCoord point, type::GeographicalCoord segment_start, type::GeographicalCoord segment_end);
+
 }} //namespace navitia::streetnetwork
