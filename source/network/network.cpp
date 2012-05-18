@@ -29,11 +29,13 @@ idx_t get_idx(unsigned int idx, navitia::type::Data &data) {
         return (idx - data.pt_data.stop_areas.size() - data.pt_data.stop_points.size());
     else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + data.pt_data.stop_times.size()))
         return (idx - data.pt_data.stop_areas.size() - data.pt_data.stop_points.size() - data.pt_data.route_points.size());
-    else
+    else if(idx - data.pt_data.stop_areas.size() - data.pt_data.stop_points.size() - data.pt_data.route_points.size() - (data.pt_data.stop_times.size() * 2))
         return (idx - data.pt_data.stop_areas.size() - data.pt_data.stop_points.size() - data.pt_data.route_points.size() - data.pt_data.stop_times.size());
+    else
+        return 0;
 }
 
-uint32_t get_saidx(unsigned int idx, navitia::type::Data &data) {
+uint32_t get_saidx(unsigned int idx, navitia::type::Data &data, NW &g) {
     if(idx < data.pt_data.stop_areas.size())
         return idx;
     else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size()))
@@ -43,8 +45,20 @@ uint32_t get_saidx(unsigned int idx, navitia::type::Data &data) {
     else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + data.pt_data.stop_times.size()))
 
         return data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at((idx - data.pt_data.stop_areas.size() - data.pt_data.stop_points.size() - data.pt_data.route_points.size())).route_point_idx).stop_point_idx).stop_area_idx;
-    else
+    else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + (data.pt_data.stop_times.size()) * 2))
         return data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at((idx - data.pt_data.stop_areas.size() - data.pt_data.stop_points.size() - data.pt_data.route_points.size() - data.pt_data.stop_times.size())).route_point_idx).stop_point_idx).stop_area_idx;
+    else
+        return get_tc_saidx(idx, data, g);
+}
+
+uint32_t get_tc_saidx(unsigned int idx, navitia::type::Data &data, NW &g) {
+    typename NW::out_edge_iterator out_i, out_end;
+
+    for (tie(out_i, out_end) = out_edges(idx, g); (out_i != out_end); ++out_i) {
+        if(get_n_type(target(*out_i, g), data) == TD)
+            return data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(target(*out_i, g),data)).route_point_idx).stop_point_idx).stop_area_idx;
+    }
+    return data.pt_data.stop_areas.size();
 }
 
 node_type get_n_type(unsigned int idx, navitia::type::Data &data) {
@@ -56,31 +70,45 @@ node_type get_n_type(unsigned int idx, navitia::type::Data &data) {
         return RP;
     else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + data.pt_data.stop_times.size()))
         return TA;
-    else
+    else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + (data.pt_data.stop_times.size()) * 2))
         return TD;
-    return VOIDN;
+    else
+        return TC;
 }
 
-bool is_passe_minuit(uint32_t debut, uint32_t fin, navitia::type::Data &data) {
-    uint32_t debut_t, fin_t;
+bool is_passe_minuit(uint32_t debut, uint32_t fin, navitia::type::Data &data, NW &g) {
+    uint32_t debut_t = get_time(debut, data, g), fin_t = get_time(fin, data, g);
+    return is_passe_minuit(debut_t, fin_t);
+}
 
-    if(get_n_type(debut, data) == TA)
-        debut_t = data.pt_data.stop_times.at(get_idx(debut, data)).arrival_time;
-    else if(get_n_type(debut, data) == TD)
-        debut_t = data.pt_data.stop_times.at(get_idx(debut, data)).departure_time;
-    else
-        return false;
+bool is_passe_minuit(int32_t debut_t, int32_t fin_t) {
+    return ((debut_t % 86400) > (fin_t % 86400)) & (debut_t != -1) & (fin_t!=-1);
+}
 
+int32_t get_time(unsigned int idx, navitia::type::Data &data, NW &g) {
+    switch(get_n_type(idx, data)) {
+    case TA:
+        return data.pt_data.stop_times.at(get_idx(idx, data)).arrival_time;
+        break;
+    case TD:
+        return data.pt_data.stop_times.at(get_idx(idx, data)).departure_time;
+        break;
+    case TC:
+        return get_tc_time(idx, data, g);
+        break;
+    default:
+        return -1;
+    }
+}
 
-    if(get_n_type(fin, data) == TA)
-        fin_t = data.pt_data.stop_times.at(get_idx(fin, data)).arrival_time;
-    else if(get_n_type(fin, data) == TD)
-        fin_t = data.pt_data.stop_times.at(get_idx(fin, data)).departure_time;
-    else
-        return false;
+int32_t get_tc_time(unsigned int idx, navitia::type::Data &data, NW &g) {
+    typename NW::out_edge_iterator out_i, out_end;
 
-    //    return ((debut_t <= 86400) & (fin_t > 86400)) || (debut_t > fin_t);
-    return (debut_t % 86400) > (fin_t % 86400);
+    for (tie(out_i, out_end) = out_edges(idx, g); (out_i != out_end); ++out_i) {
+        if(get_n_type(target(*out_i, g), data) == TD)
+            return data.pt_data.stop_times.at(get_idx(target(*out_i, g),data)).departure_time;
+    }
+    return -1;
 }
 
 int get_validity_pattern_idx(navitia::type::ValidityPattern vp, navitia::type::Data &data) {
@@ -115,29 +143,80 @@ navitia::type::ValidityPattern * decalage_pam(navitia::type::ValidityPattern &vp
     return vpr;
 }
 
+void calculer_AR(navitia::type::Data &data, NW &g, map_routes_t &map_routes) {
+    map_routes_t::iterator i_toadd;
 
+    std::vector<navitia::type::Route>::iterator i_route1, i_route2;
+
+    unsigned int nb_trouves = 0;
+
+    for(i_route1 = data.pt_data.routes.begin(); i_route1 != data.pt_data.routes.end(); ++i_route1) {
+
+        i_route2 = i_route1;
+
+        for(++i_route2; i_route2 != data.pt_data.routes.end(); ++i_route2) {
+            navitia::type::Route route1 = *i_route1, route2 = *i_route2;
+
+            if(route1.route_point_list.size() == route2.route_point_list.size()) {
+                bool test = true;
+                for(unsigned int i=0; (i < route1.route_point_list.size()) & test; ++i) {
+                    test = test &
+                            (data.pt_data.stop_points.at(data.pt_data.route_points.at(route1.route_point_list[i]).stop_point_idx).stop_area_idx ==
+                             data.pt_data.stop_points.at(data.pt_data.route_points.at(route2.route_point_list[route1.route_point_list.size() - i - 1]).stop_point_idx).stop_area_idx
+                             );
+                }
+
+                if(test) {
+                    nb_trouves ++;
+                    i_toadd = map_routes.find(route1.idx);
+                    i_toadd->second.push_back(route2.idx);
+
+
+                    i_toadd = map_routes.find(route2.idx);
+
+                    i_toadd->second.push_back(route1.idx);
+                }
+            }
+        }
+    }
+    std::cout << "On a trouve " << nb_trouves << " A/R" << std::endl;
+}
+
+
+bool correspondance_valide(idx_t tav, idx_t tdv, bool pam, NW &g, navitia::type::Data &data, map_routes_t & map_routes) {
+    bool retour;
+    int min_corresp = 5*60, max_corresp = 2*3600; //Temps minimal de correspondance en secondes
+    retour = (data.pt_data.stop_times.at(get_idx(tdv, data)).departure_time - data.pt_data.stop_times.at(get_idx(tdv, data)).arrival_time + (pam*86400)) > min_corresp;
+
+    retour = retour & ((data.pt_data.stop_times.at(get_idx(tdv, data)).departure_time - data.pt_data.stop_times.at(get_idx(tdv, data)).arrival_time + (pam*86400)) < max_corresp) ;
+
+    list_idx l_route = map_routes[data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(tdv, data)).route_point_idx).route_idx];
+    retour = retour & (std::find(l_route.begin(), l_route.end(), data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(tdv, data)).route_point_idx).route_idx) == l_route.end());
+
+    return retour;
+}
 
 
 void charger_graph(navitia::type::Data &data, NW &g) {
     vertex_t tav, tdv, tdp, rpv;
     bool bo;
-    int min_corresp = 5*60; //Temps minimal de correspondance en secondes
+    int min_corresp = 5 * 60;
     navitia::type::ValidityPattern vptemp;
 
     //Creation des stop areas
-    BOOST_FOREACH(navitia::type::StopArea sai, data.pt_data.stop_areas) {
-        g[sai.idx] = VertexDesc(sai.idx);
-    }
+    //    BOOST_FOREACH(navitia::type::StopArea sai, data.pt_data.stop_areas) {
+    //        g[sai.idx] = VertexDesc(sai.idx);
+    //    }
     //Creation des stop points et creations lien SA->SP
     BOOST_FOREACH(navitia::type::StopPoint spi, data.pt_data.stop_points) {
-        g[get_sp_idx(spi.idx, data)] = VertexDesc(spi.idx);
-        add_edge(spi.stop_area_idx, get_sp_idx(spi.idx, data), EdgeDesc(spi.stop_area_idx, get_sp_idx(spi.idx, data), 0), g);
+        //        g[get_sp_idx(spi.idx, data)] = VertexDesc(spi.idx);
+        add_edge(spi.stop_area_idx, get_sp_idx(spi.idx, data), EdgeDesc(0), g);
     }
 
     //Création des liens SP->RP
     BOOST_FOREACH(navitia::type::RoutePoint rpi, data.pt_data.route_points) {
-        g[get_rp_idx(rpi.idx, data)] = VertexDesc(rpi.idx);
-        add_edge(get_sp_idx(rpi.stop_point_idx, data), get_rp_idx(rpi.idx, data), EdgeDesc(rpi.stop_point_idx, rpi.idx, 0), g);
+        //        g[get_rp_idx(rpi.idx, data)] = VertexDesc(rpi.idx);
+        add_edge(get_sp_idx(rpi.stop_point_idx, data), get_rp_idx(rpi.idx, data), EdgeDesc(0), g);
     }
 
 
@@ -148,17 +227,17 @@ void charger_graph(navitia::type::Data &data, NW &g) {
             rpv = get_rp_idx(data.pt_data.stop_times.at(stid).route_point_idx, data);
 
             //Création des ta et td;
-            g[get_ta_idx(stid, data)] = VertexDesc(stid);
-            g[get_td_idx(stid, data)] = VertexDesc(stid);
+            //            g[get_ta_idx(stid, data)] = VertexDesc(stid);
+            //            g[get_td_idx(stid, data)] = VertexDesc(stid);
 
             //ta
             tav = get_ta_idx(stid, data) ;
             if(tdv != 0) {
-                if(is_passe_minuit(tdv, tav, data)) {
+                if(is_passe_minuit(tdv, tav, data, g)) {
                     vptemp = *(decalage_pam(data.pt_data.validity_patterns.at(vj.validity_pattern_idx)));
                     vp_idx = get_validity_pattern_idx(vptemp, data);
                 }
-                add_edge(tdv, tav, EdgeDesc(tdv, tav, vp_idx), g);
+                add_edge(tdv, tav, EdgeDesc(vp_idx), g);
             }
 
             //td
@@ -166,36 +245,40 @@ void charger_graph(navitia::type::Data &data, NW &g) {
             //edges
 
 
-            if(is_passe_minuit(tav, tdv, data)) {
+            if(is_passe_minuit(tav, tdv, data, g)) {
                 vptemp = *decalage_pam(data.pt_data.validity_patterns.at(vj.validity_pattern_idx));
                 vp_idx = get_validity_pattern_idx(vptemp, data);
             }
-            add_edge(tav, tdv, EdgeDesc(tav, tdv, vp_idx), g);
+            add_edge(tav, tdv, EdgeDesc(vp_idx), g);
 
-            add_edge(rpv, tav, EdgeDesc(rpv, tav, 0), g);
+            add_edge(rpv, tav, EdgeDesc(0), g);
         }
     }
 
     typedef std::map<vertex_t, vertex_t> map_t;
-    typedef std::map<vertex_t, uint32_t> mapam_t;
+    typedef std::map<vertex_t, bool> mapam_t;
+    typedef std::pair<vertex_t, int32_t> pairTC_t;
     std::set<vertex_t, sort_edges> verticesTD = std::set<vertex_t, sort_edges>(sort_edges(g, data));
-    map_t verticesRPw = map_t();
-    map_t verticesRPi = map_t();
-    map_t verticesRPp = map_t();
     std::set<vertex_t, sort_edges> verticesTA = std::set<vertex_t, sort_edges>(sort_edges(g, data));
 
+    std::vector<pairTC_t> verticesTC = std::vector<pairTC_t>();
 
+    //    map_routes_t map_AR = map_routes_t();
+    //    for(unsigned int i=0; i<data.pt_data.routes.size();++i)
+    //        map_AR.insert(std::pair<idx_t, list_idx>(i, list_idx()));
+
+    //    calculer_AR(data, g, map_AR);
+
+    //    std::cout <<"Taille map ar" << map_AR.size();
     for(unsigned int sav = 0; sav<data.pt_data.stop_areas.size();++sav) {
         //On itère sur les stop points
-        verticesRPw.clear();
-        verticesRPi.clear();
-        verticesRPp.clear();
         verticesTA.clear();
+        verticesTD.clear();
+        verticesTC.clear();
         BOOST_FOREACH(edge_t e1, out_edges(sav, g)) {
             if(get_n_type(target(e1, g), data)== SP) {
                 BOOST_FOREACH(edge_t e2, out_edges(target(e1, g), g)) {
                     if(get_n_type(target(e2, g), data) == RP) {
-                        verticesTD.clear();
                         //On itère sur les ta
                         BOOST_FOREACH(edge_t e3, out_edges(target(e2, g), g)) {
                             if(get_n_type(target(e3, g), data) == TA) {
@@ -203,69 +286,75 @@ void charger_graph(navitia::type::Data &data, NW &g) {
                                 //On itère sur les td
                                 BOOST_FOREACH(edge_t e4, out_edges(target(e3, g), g)) {
                                     if(get_n_type(target(e4, g), data) == TD) {
-                                        if(data.pt_data.stop_times.at(g[target(e4, g)].idx).route_point_idx == g[target(e2, g)].idx) {
+                                        if(data.pt_data.stop_times.at(get_idx(target(e4, g), data)).route_point_idx == data.pt_data.stop_times.at(get_idx(target(e3, g), data)).route_point_idx) {
                                             verticesTD.insert(target(e4, g));
                                         }
                                     }
                                 }
                             }
                         }
-
-                        if(verticesTD.size() > 0) {
-                            verticesRPw.insert(std::pair<vertex_t, vertex_t>(target(e2, g), *verticesTD.begin()));
-                            verticesRPi.insert(std::pair<vertex_t, vertex_t>(target(e2, g), *verticesTD.begin()));
-                            verticesRPp.insert(std::pair<vertex_t, uint32_t>(target(e2, g), 0));
-                            //On lie les td d'un même RP entre eux
-                            if(verticesTD.size() > 1) {
-                                tdp = num_vertices(g) + 1;
-                                BOOST_FOREACH(vertex_t tdv, verticesTD) {
-                                    if(tdp != (num_vertices(g) + 1)) {
-                                        add_edge(tdp, tdv, EdgeDesc(tdp, tdv, 0), g);
-                                    }
-                                    tdp = tdv;
-                                }
-
-                            }
-                        }
                     }
                 }
             }
         }
-        //On relie chaque ta au premier td possible pour chaque rp du sa
-        BOOST_FOREACH(vertex_t tav, verticesTA) {
-            BOOST_FOREACH(map_t::value_type &tdvi, verticesRPw) {
-                if(data.pt_data.stop_times.at(get_idx(tav, data)).route_point_idx != tdvi.first) {
-                    vertex_t tdv = tdvi.second;
-                    if((tdv != 0) & (get_n_type(tdv, data) == TD)) {
-                        bo = true;
-                        //On recherche le premier td possible
-                        while(((data.pt_data.stop_times.at(g[tdv].idx).departure_time - data.pt_data.stop_times.at(g[tav].idx).arrival_time + verticesRPp[tdvi.first]) < min_corresp) & bo) {
-                            bo = false;
-                            BOOST_FOREACH(edge_t e3, out_edges(tdv, g)) {
-                                if((get_n_type(target(e3, g), data) == TD) & (get_saidx(target(e3, g), data) == sav))  {
-                                    tdv = target(e3, g);
-                                    bo = true;
-                                }
-                            }
-                            //C'est qu'il faut faire un passe minuit
-                            if(!bo & (verticesRPp[tdvi.first] == 0)) {
-                                verticesRPp[tdvi.first] = 3600 * 24 ;
-                                verticesRPw[tdvi.first] = verticesRPi[tdvi.first];
-                                tdv = verticesRPi[tdvi.first];
-                                bo = true;
-                            }
-                        }
+        if(verticesTA.size() > 0) {
 
-                        verticesRPw[tdvi.first] = tdv;
-                        if(!edge(tav, tdv, g).second) {
-                            add_edge(tav, tdv, EdgeDesc(tav, tdv, 0), g);
-                        }
-                    } else {
-                        tdv = 0;
+            BOOST_FOREACH(vertex_t ta, verticesTA) {
+                verticesTC.push_back(pairTC_t(add_vertex(g), data.pt_data.stop_times.at(get_idx(ta, data)).arrival_time + min_corresp));
+                add_edge(ta, verticesTC.back().first, EdgeDesc(0), g);
+
+            }
+
+            std::vector<pairTC_t>::iterator itTC = verticesTC.begin();
+            BOOST_FOREACH(vertex_t td, verticesTD) {
+                while(((*itTC).second < data.pt_data.stop_times.at(get_idx(td, data)).departure_time) & (itTC != verticesTC.end()))
+                    ++itTC;
+                if((*itTC).second != data.pt_data.stop_times.at(get_idx(td, data)).departure_time) {
+                    itTC = verticesTC.insert(itTC, pairTC_t(add_vertex(g), data.pt_data.stop_times.at(get_idx(td, data)).departure_time));
+                }
+                add_edge((*itTC).first, td, EdgeDesc(0), g);
+
+            }
+
+
+            //On lie les TC entre eux
+            itTC = verticesTC.begin();
+            pairTC_t prec = pairTC_t(0, -1);
+
+
+            BOOST_FOREACH(pairTC_t tc, verticesTC) {
+                if((prec.second != -1) & !edge(prec.first, tc.first, g).second & (prec.first != tc.first)) {
+                    add_edge(prec.first, tc.first, EdgeDesc(0), g);
+                }
+                prec = tc;
+            }
+
+            std::vector<pairTC_t>::iterator precTC= verticesTC.begin(), pamTC= verticesTC.begin();
+            for(itTC = (++precTC); itTC!=verticesTC.end();++itTC) {
+                //On rajoute le passe minuit
+                if((*itTC).second > 86400) {
+                    while((pamTC != verticesTC.end()) & ((*pamTC).second <= ((*itTC).second % 86400)))
+                        ++pamTC;
+                    if((*pamTC).second > ((*itTC).second % 86400)) {
+                        if(!edge((*precTC).first, (*pamTC).first, g).second & ((*precTC).first != (*pamTC).first))
+                            add_edge((*precTC).first, (*pamTC).first, EdgeDesc(0), g);
                     }
                 }
+                precTC = itTC;
             }
+            if((*precTC).second > 86400) {
+                while((pamTC != verticesTC.end()) & ((*pamTC).second <= ((*precTC).second % 86400)))
+                    ++pamTC;
+                if((*pamTC).second > ((*precTC).second % 86400)) {
+                    if(!edge((*precTC).first, (*pamTC).first, g).second & ((*precTC).first != (*pamTC).first))
+                        add_edge((*precTC).first, (*pamTC).first, EdgeDesc(0), g);
+                }
+            }
+
         }
+
+
+
     }
 }
 
@@ -299,86 +388,86 @@ bool parcours::operator!=(network::parcours i2) {
     return !((*this) == i2);
 }
 
-etiquette combine2::operator ()(etiquette debut, EdgeDesc ed) const  {
+etiquette combine::operator()(etiquette debut, edge_t e) const{
     if(debut == etiquette::max()) {
         return etiquette::max();
     }
     else {
         etiquette retour;
-        uint32_t debut_temps = 0, fin_temps = 0;
+        int32_t debut_temps = 0, fin_temps = 0;
+        EdgeDesc ed = g[e];
+        idx_t debut_idx = source(e, g), fin_idx = target(e, g);
 
+        debut_temps = get_time(debut_idx, data, g);
+        fin_temps = get_time(fin_idx, data, g);
 
+        if((get_n_type(debut_idx, data) == TC) || (get_n_type(fin_idx, data) == TC)) {
+            retour.date_arrivee = debut.date_arrivee;
+            retour.heure_arrivee = debut.heure_arrivee;
+            retour.temps = debut.temps;
+            return retour;
+        } else {
 
-
-
-        if(get_n_type(ed.debut, data) == TA) {
-            debut_temps = data.pt_data.stop_times.at(get_idx(ed.debut, data)).arrival_time % 86400;
-            fin_temps = data.pt_data.stop_times.at(get_idx(ed.fin, data)).departure_time % 86400;
-        } else if(get_n_type(ed.debut, data) == TD) {
-            debut_temps = data.pt_data.stop_times.at(get_idx(ed.debut, data)).departure_time % 86400;
-            if(get_n_type(ed.fin, data) == TD) {
-                fin_temps = data.pt_data.stop_times.at(get_idx(ed.fin, data)).departure_time % 86400;
-            }
-            else {
-                fin_temps = data.pt_data.stop_times.at(get_idx(ed.fin, data)).arrival_time % 86400;
-            }
-        }
-
-
-
-
-        if(get_saidx(ed.debut, data) == sa_depart) {
-            if((data.pt_data.stop_times.at(get_idx(ed.debut, data)).vehicle_journey_idx != data.pt_data.stop_times.at(get_idx(ed.fin, data)).vehicle_journey_idx)
-            || get_n_type(ed.debut, data) == SA || get_n_type(ed.debut, data) == SP || get_n_type(ed.debut, data) == RP){
-                if((get_n_type(ed.debut, data) == TD) & (get_n_type(ed.fin, data) == TD)) {
+            if(get_saidx(debut_idx, data, g) == sa_depart) {
+                if(get_n_type(debut_idx, data) == TC || get_n_type(fin_idx, data) == TC)
                     return etiquette::max();
+                if((data.pt_data.stop_times.at(get_idx(debut_idx, data)).vehicle_journey_idx != data.pt_data.stop_times.at(get_idx(fin_idx, data)).vehicle_journey_idx)
+                        || get_n_type(debut_idx, data) == SA || get_n_type(debut_idx, data) == SP || get_n_type(debut_idx, data) == RP){
+                    if((get_n_type(debut_idx, data) == TD) & (get_n_type(fin_idx, data) == TD)) {
+                        return etiquette::max();
+                    } else {
+                        retour.date_arrivee = debut.date_arrivee;
+                        retour.heure_arrivee = debut.heure_arrivee;
+                        retour.temps = 0;
+                        return retour;
+                    }
                 } else {
-                    retour.date_arrivee = debut.date_arrivee;
-                    retour.heure_arrivee = debut.heure_arrivee;
-                    retour.temps = 0;
-                    return retour;
+                    if(is_passe_minuit(debut_temps, fin_temps)) {
+                        retour.date_arrivee = debut.date_arrivee + 1;
+                        retour.temps = 86400 - debut.heure_arrivee + fin_temps;
+                        retour.heure_arrivee = debut_temps % 86400;
+                    } else {
+                        retour.date_arrivee = debut.date_arrivee;
+                        retour.temps = debut.temps + fin_temps - debut_temps;
+                        retour.heure_arrivee = debut.heure_arrivee;
+                    }
+                    if(data.pt_data.validity_patterns.at(ed.validity_pattern).check(retour.date_arrivee)
+                            & (retour.heure_arrivee <= debut_temps)) {
+                        retour.heure_arrivee = fin_temps;
+                        return retour;
+                    } else {
+                        return etiquette::max();
+                    }
                 }
             } else {
-                if(debut_temps > fin_temps) {
+                //On verifie le validity pattern
+                if(is_passe_minuit(debut_temps, fin_temps)) { //Passe minuit
                     retour.date_arrivee = debut.date_arrivee + 1;
                     retour.temps = 86400 - debut.heure_arrivee + fin_temps;
-                    retour.heure_arrivee = 0;
+                    retour.heure_arrivee = fin_temps%86400;
                 } else {
                     retour.date_arrivee = debut.date_arrivee;
                     retour.temps = debut.temps + fin_temps - debut_temps;
-                    retour.heure_arrivee = debut.heure_arrivee;
-                }
-                if(data.pt_data.validity_patterns.at(ed.validity_pattern).check(retour.date_arrivee)
-                        & (retour.heure_arrivee < debut_temps)) {
                     retour.heure_arrivee = fin_temps;
+                }
+
+                if(data.pt_data.validity_patterns.at(ed.validity_pattern).check(retour.date_arrivee)) {
                     return retour;
                 } else {
                     return etiquette::max();
                 }
             }
-        } else {
-            //On verifie le validity pattern
-            //On ne veut pas "trainer" dans la zone d'arret finale
-            if(debut_temps > fin_temps) { //Passe minuit
-                retour.date_arrivee = debut.date_arrivee + 1;
-                retour.temps = 86400 - debut.heure_arrivee + fin_temps;
-                retour.heure_arrivee = 0;
-            } else {
-                retour.date_arrivee = debut.date_arrivee;
-                retour.temps = debut.temps + fin_temps - debut_temps;
-            }
 
-            if((data.pt_data.validity_patterns.at(ed.validity_pattern).check(retour.date_arrivee)
-                || data.pt_data.stop_times.at(get_idx(ed.debut, data)).vehicle_journey_idx != data.pt_data.stop_times.at(get_idx(ed.fin, data)).vehicle_journey_idx)
-                    & (retour.heure_arrivee < debut_temps)) {
-
-                retour.heure_arrivee = fin_temps;
-                return retour;
-            } else {
-                return etiquette::max();
-            }
         }
     }
 }
+
+
+
+
+
+
+
+
 
 }

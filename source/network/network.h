@@ -49,7 +49,7 @@ enum node_type {
     RP,
     TA,
     TD,
-    VOIDN
+    TC
 };
 
 /// Descripteur de Vertex
@@ -75,18 +75,27 @@ public:
 /// Descripteur d'arête
 class EdgeDesc {
 public:
-    uint32_t debut;                 /// Id ( dans le tableau des vertices ) du noeud de départ de l'arête
-    uint32_t fin;                   /// Id ( dans le tableau des vertices ) du noeud de fin de l'arête
     uint16_t validity_pattern;      /// Validity Pattern de l'arête
 
-    EdgeDesc() : debut(0), fin(0), validity_pattern(0){}
-    EdgeDesc(idx_t debut, idx_t fin, uint16_t validity_pattern) : debut(debut), fin(fin), validity_pattern(validity_pattern){}
+    EdgeDesc() :validity_pattern(0){}
+    EdgeDesc(uint16_t validity_pattern) : validity_pattern(validity_pattern){}
+
 
     std::ostream &operator<<( std::ostream &out) {
-        out << "edge : " << " " << debut << " " << fin;
+        out << "edge : " << " " ;
         return out;
     }
 };
+
+//class EdgeCombine {
+//public:
+//    EdgeDesc ed;
+//    uint32_t debut;                 /// Id ( dans le tableau des vertices ) du noeud de départ de l'arête
+//    uint32_t fin;                   /// Id ( dans le tableau des vertices ) du noeud de fin de l'arête
+
+//    EdgeCombine() : debut(0), fin(0), EdgeDesc() {}
+//    EdgeCombine(EdgeDesc ed_, uint32_t debut, uint32_t fin) : debut(debut), fin(fin) {ed = EdgeDesc(ed.debut, ed.fin, ed.validity_pattern);}
+//};
 
 
 /// Sert à comparer deux étiquettes
@@ -101,12 +110,17 @@ struct edge_less{
 typedef boost::property<boost::edge_weight_t, EdgeDesc> DistanceProperty;
 typedef boost::property<boost::vertex_index_t, uint32_t> vertex_32;
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS,
-VertexDesc,
+boost::no_property,
 EdgeDesc, vertex_32> NW;
 
 typedef boost::graph_traits<NW>::vertex_descriptor vertex_t;
 typedef boost::graph_traits<NW>::edge_descriptor edge_t;
-
+struct edge_less2{
+    bool operator()(etiquette a, etiquette b) const {
+        return a < b;
+    }
+    bool operator ()(edge_t, etiquette) const{return false;}
+};
 /// Fonction helper servant à récupérer l'id dans le tableau des vertices d'un sp
 unsigned int get_sp_idx(unsigned int spid, navitia::type::Data &data);
 
@@ -123,13 +137,23 @@ unsigned int get_td_idx(unsigned int stid, navitia::type::Data &data);
 idx_t get_idx(unsigned int idx, navitia::type::Data &data);
 
 /// Fonction retournant  l'idx du sa auquel appartient le noeud
-uint32_t get_saidx(unsigned int idx, navitia::type::Data &data);
+uint32_t get_saidx(unsigned int idx, navitia::type::Data &data, NW & g);
+
+uint32_t get_tc_saidx(unsigned int idx, navitia::type::Data &data, NW & g);
 
 /// Fonction retournant le type du nœud
 node_type get_n_type(unsigned int idx, navitia::type::Data &data);
 
 /// Fonction déterminant si une arête est un passe minuit ou non
-bool is_passe_minuit(uint32_t debut, uint32_t fin, navitia::type::Data &data);
+bool is_passe_minuit(uint32_t debut, uint32_t fin, navitia::type::Data &data, NW &g);
+bool is_passe_minuit(int32_t debut_t, int32_t fin_t);
+/// Retourne le temps associé au noeud passé
+/// Renvoie -1 s'il s'agit d'un SA, SP, RP
+
+int32_t get_time(unsigned int idx, navitia::type::Data &data, NW &g);
+
+/// Fonction retournant le temps lié au TC
+int32_t get_tc_time(unsigned int idx, navitia::type::Data &data, NW &g);
 
 /// Fonction retournant l'idx du validity pattern, si le validity pattern n'existe pas il est ajouté
 int get_validity_pattern_idx(navitia::type::ValidityPattern vp, navitia::type::Data &data);
@@ -137,22 +161,32 @@ int get_validity_pattern_idx(navitia::type::ValidityPattern vp, navitia::type::D
 /// Fonction renvoyant un validity pattern décalé d'une journée
 navitia::type::ValidityPattern* decalage_pam(navitia::type::ValidityPattern &vp);
 
+typedef std::list<idx_t> list_idx;
+typedef std::map<idx_t, list_idx> map_routes_t;
+/// Trouve les routes A/R
+void calculer_AR(navitia::type::Data &data, NW &g, map_routes_t & map_routes);
+
+
+/// Verifie si une correspondance est valide
+bool correspondance_valide(idx_t tav, idx_t tdv, bool pam, NW &g, navitia::type::Data &data, map_routes_t & map_routes);
+
 /// Remplit le graph passé en paramètre avec les données passées
 void charger_graph(navitia::type::Data &data, NW &g);
 
 
 /// Sert pour le calcul du plus court chemin
-class combine2 {
+
+class combine {
 private:
     navitia::type::Data &data;
     NW &g;
     idx_t sa_depart, cible;
     uint16_t jour_debut;
 public:
-    combine2(navitia::type::Data &data, NW &g, idx_t sa_depart, idx_t cible, uint16_t jour_debut) : data(data), g(g), sa_depart(sa_depart), cible(cible), jour_debut(jour_debut) {}
+    combine(navitia::type::Data &data, NW &g, idx_t sa_depart, idx_t cible, uint16_t jour_debut) : data(data), g(g), sa_depart(sa_depart), cible(cible), jour_debut(jour_debut) {}
 
 
-    etiquette operator()(etiquette debut, EdgeDesc ed) const;
+    etiquette operator()(etiquette debut, edge_t e) const;
 };
 
 /// Compare deux arêtes entre elles
@@ -167,17 +201,17 @@ public:
         uint32_t t1 = 0, t2 = 0;
 
         if(get_n_type(v1, data) == TA)
-            t1 = data.pt_data.stop_times.at(g[v1].idx).arrival_time % 86400;
+            t1 = data.pt_data.stop_times.at(get_idx(v1, data)).arrival_time/* % 86400*/;
         if(get_n_type(v1, data) == TD)
-            t1 = data.pt_data.stop_times.at(g[v1].idx).departure_time % 86400;
+            t1 = data.pt_data.stop_times.at(get_idx(v1, data)).departure_time/* % 86400*/;
 
 
         if(get_n_type(v2, data) == TA)
-            t2 = data.pt_data.stop_times.at(g[v2].idx).arrival_time % 86400;
+            t2 = data.pt_data.stop_times.at(get_idx(v2, data)).arrival_time/* % 86400*/;
         if(get_n_type(v2, data) == TD)
-            t2 = data.pt_data.stop_times.at(g[v2].idx).departure_time % 86400;
+            t2 = data.pt_data.stop_times.at(get_idx(v2, data)).departure_time /*% 86400*/;
 
-        return (t1 < t2) || ((t1 == t2) & (g[v1].idx < g[v2].idx));
+        return (t1 < t2) || ((t1 == t2) & (get_idx(v1, data) < get_idx(v2, data)));
     }
 
 };
@@ -196,14 +230,16 @@ class dijkstra_goal_visitor : public boost::default_dijkstra_visitor
 {
 public:
 
-    dijkstra_goal_visitor(vertex_t goal, navitia::type::Data &data) : m_goal(goal), data(data)
+    dijkstra_goal_visitor(vertex_t goal, navitia::type::Data &data, NW &g_) : m_goal(goal), data(data), g_(g_)
     {
     }
 
     template <class Edge, class Graph>
     void edge_relaxed(Edge e, Graph &g)
     {
-        if((get_n_type(target(e, g), data) == TA) & (get_saidx(target(e, g), data) == m_goal)){
+        if(get_n_type(target(e, g), data) == TA)
+            if (get_saidx(target(e, g), data, g_) == m_goal){
+            std::cout << "throw" << std::endl;
             throw found_goal(target(e, g));
         }
     }
@@ -211,6 +247,7 @@ public:
 private:
     unsigned int m_goal;
     navitia::type::Data &data;
+    NW & g_;
     unsigned int prev;
 };
 
