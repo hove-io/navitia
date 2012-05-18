@@ -52,7 +52,7 @@ uint32_t get_saidx(unsigned int idx, navitia::type::Data &data, NW &g) {
 }
 
 uint32_t get_tc_saidx(unsigned int idx, navitia::type::Data &data, NW &g) {
-    typename NW::out_edge_iterator out_i, out_end;
+    NW::out_edge_iterator out_i, out_end;
 
     for (tie(out_i, out_end) = out_edges(idx, g); (out_i != out_end); ++out_i) {
         if(get_n_type(target(*out_i, g), data) == TD)
