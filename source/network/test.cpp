@@ -1,50 +1,51 @@
 #include "network.h"
+#include "boost/property_map/property_map.hpp"
+#include <boost/graph/graphviz.hpp>
 
 using namespace network;
+
+struct label_name {
+    NW g;
+    navitia::type::Data &data;
+    map_tc_t map_tc;
+
+    label_name(NW &g, navitia::type::Data &data, map_tc_t map_tc): g(g), data(data), map_tc(map_tc){}
+
+    void operator()(std::ostream& oss,vertex_t v) {
+            oss << "[label=\"";
+            switch(get_n_type(v, data)) {
+            case SA : oss << "SA " << get_idx(v, data, map_tc); break;
+            case SP : oss << "SP " << get_idx(v, data, map_tc); break;
+            case RP : oss << "RP " << get_idx(v, data, map_tc); break;
+            case TA : oss << "TA " << get_idx(v, data, map_tc) << " " << get_time(v, data, g, map_tc); break;
+            case TD : oss << "TD " << get_idx(v, data, map_tc) << " "<< get_time(v, data, g, map_tc); break;
+            case TC : oss << "TC " << get_idx(v, data, map_tc) << " "<< get_time(v, data, g, map_tc); break;
+            }
+            oss << "\"]";
+        }
+
+};
+
+
+
+
+
 
 int main(int , char** argv) {
     navitia::type::Data data;
     std::cout << "Debut chargement des données ... " << std::flush;
-    data.load_flz("/home/vlara/navitia/jeu/IdF/IdF.nav");
-
+    data.load_flz("/home/vlara/navitia/jeu/passeminuit/passeminuit.nav");
     std::cout << " Fin chargement des données" << std::endl;
 
-
-
-//    navitia::type::Route r1, r2;
-//    navitia::type::RoutePoint rp1, rp2;
-
-
-
-//    rp1.idx = 0;
-//    rp2.idx = 1;
-//    rp1.stop_point_idx = 1;
-//    rp2.stop_point_idx = 2;
-
-//    r1.route_point_list.push_back(rp1.idx);
-//    r1.route_point_list.push_back(rp2.idx);
-
-
-//    r2.route_point_list.push_back(rp2.idx);
-//    r2.route_point_list.push_back(rp1.idx);
-
-//    data.pt_data.routes.push_back(r1);
-//    data.pt_data.routes.push_back(r2);
-
-//    data.pt_data.route_points.push_back(rp1);
-//    data.pt_data.route_points.push_back(rp2);
-
-//    map_ar_t map_ar;
-//    calculer_ar(data, map_ar);
-
-//    std::cout << "Nombre d'aller retour trouvés : " << map_ar.size() << std::endl;
 
     std::cout << "Création et chargement du graph ..." << std::flush;
 
     NW g(data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + data.pt_data.stop_times.size() * 2);
-    charger_graph(data, g);
+    map_tc_t map_tc;
+    charger_graph(data, g, map_tc);
     std::cout << " Fin de création et chargement du graph" << std::endl;
 
+    std::cout << "Nombre de TC : " << (boost::num_vertices(g) - (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + data.pt_data.stop_times.size() * 2)) << std::endl;
     vertex_t v1, v2;
     v1 = atoi(argv[1]);
     v2 = atoi(argv[2]);
@@ -56,32 +57,48 @@ int main(int , char** argv) {
     etdebut.heure_arrivee = atoi(argv[3]);
 
 
+    std::cout  << "Recherche du chemin entre : " << data.pt_data.stop_areas.at(v1).name << " et " << data.pt_data.stop_areas.at(v2).name << std::endl;
+
+    boost::typed_identity_property_map<edge_t> identity;
+
 
 
     try {
         boost::dijkstra_shortest_paths(g, v1,
                                        boost::predecessor_map(&predecessors[0])
-                                       .weight_map(boost::get(boost::edge_bundle, g))
+                                       .weight_map(identity)
                                        .distance_map(&distances[0])
-                                       .distance_combine(combine2(data, g, v1, v2, etdebut.date_arrivee))
+                                       .distance_combine(combine(data, g, map_tc, v1, v2, etdebut.date_arrivee))
                                        .distance_zero(etdebut)
                                        .distance_inf(etiquette::max())
-                                       .distance_compare(edge_less())
-                                       .visitor(dijkstra_goal_visitor(v2, data))
+                                       .distance_compare(edge_less2())
+                                       .visitor(dijkstra_goal_visitor(v2, data, g, map_tc))
                                        );
-    } catch(found_goal fg) { v2 = fg.v;}
+    } catch(found_goal fg) { v2 = fg.v; }
+
+
     if(predecessors[v2] == v2) {
-        std::cout << " Fail" << std::endl;
+        std::cout << "Pas de chemin trouve" << std::endl;
     } else {
-        for(vertex_t v = v2; v != v1; v = predecessors[v]) {
-            std::cout << data.pt_data.stop_areas.at(get_saidx(v, data)).name << " : " << data.pt_data.stop_times.at(get_idx(v, data)).departure_time;
-            std::cout << "Ligne : "  << data.pt_data.lines.at(data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v,data)).route_point_idx).route_idx).line_idx).name<< "Route : " << data.pt_data.stop_times.at(get_idx(v,data)).vehicle_journey_idx<<std::endl;
+        std::cout << "Chemin trouve" << std::endl;
+
+        for(vertex_t v = v2; (v!=v1); v = predecessors[v]) {
+
+            if(get_n_type(v, data) == TA) {
+                std::cout << data.pt_data.stop_areas.at(data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).stop_point_idx).stop_area_idx).name;
+                std::cout << " " << data.pt_data.stop_times.at(get_idx(v, data, map_tc)).arrival_time;
+                std::cout << " " << data.pt_data.lines.at(data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).route_idx).line_idx).name;
+                std::cout << " " << distances[v].temps << std::endl;
+            }
         }
     }
 
-    BOOST_FOREACH(idx_t idx, data.pt_data.routes.at(334317).route_point_list) {
-        std::cout << data.pt_data.stop_areas.at(data.pt_data.stop_points.at(data.pt_data.route_points.at(idx).stop_point_idx).stop_area_idx).name << std::endl;
-    }
+
+    label_name ln(g, data, map_tc);
+    std::ofstream f("test.z");
+    write_graphviz(f, g, ln);
+
+
 
     return 0;
 }

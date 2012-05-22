@@ -176,27 +176,28 @@ message StreetNetwork {
 }
 
 message Parcours {
-        required int32 id = 1;
-	message Etape {
-                required string descente     = 1;
-		required int32 ligne	    = 2;
-	}
+    required int32 id = 1;
+    message Etape {
+        required string descente    = 1;
+        required int32 mode	    = 2;
+        repeated int32 lignes       = 3;
+    }
 	
-        repeated Etape etapes = 2;
+    repeated Etape etapes = 2;
 }
 
 message StopTimeEtape {
-	required StopTime depart  = 1;
-	required StopTime arrivee = 2;
+    required StopTime depart  = 1;
+    required StopTime arrivee = 2;
 }
 
 message Itineraire {
-        required Parcours parcours 	  = 1;
-	repeated StopTimeEtape stop_times = 2;	
+    required int32 parcours 	  = 1;
+    repeated StopTimeEtape stop_times = 2;
 }
 
-message Itineraires {
-    repeated Itineraire itineraires_liste = 1;
+message ReponseDemonstrateur {
+    repeated Parcours Parcours_Liste = 1;
+    repeated Itineraire itineraires_liste  = 2;
 }
-
 

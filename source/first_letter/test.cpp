@@ -51,26 +51,4 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
     res = fl.find("ponia");
     expected = {4};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
-
-    // Partie permettant de faire des benchmarks
-    std::fstream ifile("/home/tristram/adresses_uniq.txt");
-    std::string line;
-    int idx = 0;
-    while(getline(ifile, line)) {
-        fl.add_string(boost::to_lower_copy(line), idx++);
-    }
-    std::cout << "Nombre d'adresses : " << fl.map.size() << std::endl;
-
-    fl.build();
-    std::cout << "Serious stuff now !" << std::endl;
-    pt::ptime start, end;
-    start = pt::microsec_clock::local_time();
-    for(int i=0; i <100; i++){
-        fl.find("rue jaur");
-        fl.find("av char de gau");
-        fl.find("poniat");
-    }
-    end = pt::microsec_clock::local_time();
-    std::cout << "Il y a " /*<< indexes.size()*/ << " rue jean jaures en France, et il a fallu "
-              << (end - start).total_milliseconds() << " ms pour le calculer" << std::endl;
 }

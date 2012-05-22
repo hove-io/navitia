@@ -4,31 +4,28 @@ namespace itineraires {
 /// Une étape est composée d'une ligne à empreinter et d'un stop area où descentre
 class etape {
 public:
-    idx_t ligne;
+    idx_t mode;
     idx_t descente;
-    etape(idx_t ligne, idx_t depart) : ligne(ligne), descente(depart){}
+    std::set<idx_t> lignes;
+    etape(idx_t mode, idx_t depart, idx_t ligne) : mode(mode), descente(depart){lignes = std::set<idx_t>(); lignes.insert(lignes.begin(), ligne);}
 
-    bool operator==(etape e2);
-    bool operator!=(etape e2);
-
+    void ajouter_ligne(idx_t &ligne);
+    bool operator==(etape const & e2) const;
+    bool operator!=(etape const & e2) const;
 };
-
+typedef std::vector<etape> vector_etapes;
 
 /// Un parcours est une liste d'étape
 class parcours {
 public:
-    std::list<etape> etapes;
+    vector_etapes etapes;
 
-    parcours() {
-        etapes = std::list<etape>();
-    }
+    parcours() {}
 
-    void ajouter_etape(idx_t ligne, idx_t descente);
+    void ajouter_etape(idx_t mode, idx_t descente, idx_t ligne);
+    void ajouter_ligne(idx_t mode, idx_t descente, idx_t ligne);
     bool operator==(parcours i2);
     bool operator!=(parcours i2);
-
-
-
 };
 
 
@@ -60,6 +57,6 @@ public:
 
 typedef std::map<uint32_t, parcours> map_parcours;
 
-void make_itineraires(network::vertex_t v1, network::vertex_t v2, std::vector<itineraire> &itineraires, map_parcours &parcours_list, network::NW &g, navitia::type::Data &data, std::vector<network::vertex_t> &predecessors);
+void make_itineraires(network::vertex_t v1, network::vertex_t v2, std::vector<itineraire> &itineraires, map_parcours &parcours_list, network::NW &g, navitia::type::Data &data, std::vector<network::vertex_t> &predecessors, network::map_tc_t &map_tc);
 
 }

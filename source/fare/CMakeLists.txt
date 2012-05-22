@@ -12,4 +12,4 @@ target_link_libraries(fare_tests ${Boost_LIBRARIES} fare)
 ADD_TEST(test_fare ${EXECUTABLE_OUTPUT_PATH}/fare_tests --report_level=no)
 
 FIND_PACKAGE(WS_Commons)
-MAKE_WS(fare_ws fare_ws.cpp LIBS fare types)
+MAKE_WS(fare_ws fare_ws.cpp LIBS fare types utils)

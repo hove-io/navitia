@@ -1,5 +1,4 @@
 #include "baseworker.h"
-#include "configuration.h"
 #include <iostream>
 #include "ptreferential.h"
 

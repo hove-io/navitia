@@ -70,6 +70,7 @@ add_subdirectory(street_network)
 add_subdirectory(proximity_list)
 add_subdirectory(network)
 add_subdirectory(navitia)
+add_subdirectory(utils)
 add_subdirectory(itineraires)
 
 #on génére le fichier config.h

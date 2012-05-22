@@ -7,7 +7,7 @@
 #include <boost/function.hpp>
 
 #include "mainwindow.h"
-#include "configuration.h"
+#include "utils/configuration.h"
 #include "type/pb_utils.h"
 
 namespace webservice {typedef void RequestHandle; /**< Handle de la requête*/}

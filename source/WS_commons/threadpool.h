@@ -71,6 +71,8 @@ namespace webservice
             request_pushed_cond.notify_one();
         } 
 
+        /// Retourne la structure de données principale
+        Data & get_data() {return data;}
 
         /// Fonction associée à chaque thread. Pop la queue et lance le traitement de la requête
         void worker(){

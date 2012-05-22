@@ -14,6 +14,7 @@ using namespace boost;
 struct Data2{
     navitia::type::Data data;
     network::NW g;
+    map_tc_t map_tc;
     int nb_threads;
 
     Data2() : nb_threads(8) {
@@ -24,7 +25,7 @@ struct Data2{
         std::cout << "Chargement des données effectué" << std::endl;
         std::cout << "Nb route points : " << data.pt_data.route_points.size() << std::endl;
         g = NW(data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + (data.pt_data.stop_times.size()*2));
-        charger_graph(data, g);
+        charger_graph(data, g, map_tc);
 
         std::cout << "Num stop areas : " << data.pt_data.stop_areas.size() << std::endl;
     }
@@ -47,20 +48,22 @@ private:
         vertex_t v2 = atoi(get<std::string>(request.parsed_params["arrivee"].value).c_str());
 
         etiquette etdebut;
-        etdebut.temps = 28800;
+        etdebut.temps = 0;
         etdebut.date_arrivee = d.data.pt_data.validity_patterns.at(0).slide(gregorian::from_undelimited_string(get<std::string>(request.parsed_params["date"].value).c_str()));
         etdebut.heure_arrivee = 0;
 
         std::cout << "Debut du calcul d'itineraire ... " << std::flush;
 
+        boost::typed_identity_property_map<edge_t> identity;
+
         dijkstra_shortest_paths(d.g, v1,
                                 predecessor_map(&predecessors[0])
-                                .weight_map(get(edge_bundle, d.g))
+                                .weight_map(identity)
                                 .distance_map(&distances[0])
-                                .distance_combine(combine2(d.data, d.g, v1, v2, etdebut.date_arrivee))
+                                .distance_combine(combine(d.data, d.g, d.map_tc, v1, v2, etdebut.date_arrivee))
                                 .distance_zero(etdebut)
                                 .distance_inf(etiquette::max())
-                                .distance_compare(edge_less())
+                                .distance_compare(edge_less2())
                                 );
         std::cout << " Fin " << std::flush;
 
@@ -68,19 +71,21 @@ private:
 
         map_parcours parcours_list = map_parcours();
         std::cout << " Debut parse itineraires ..." << std::flush;
-        make_itineraires(v1, v2, itineraires, parcours_list, d.g, d.data, predecessors);
+        make_itineraires(v1, v2, itineraires, parcours_list, d.g, d.data, predecessors, d.map_tc);
         std::cout << "Fin parse " << std::flush;
 
         std::cout << " Debut encodage ... " << std::flush;
-        pbnavitia::Itineraires itineraires_proto;
+        pbnavitia::ReponseDemonstrateur reponse_demonstrateur;
+        to_proto(parcours_list, &reponse_demonstrateur, d.data);
+
         BOOST_FOREACH(itineraires::itineraire it, itineraires) {
-            pbnavitia::Itineraire *i_proto = itineraires_proto.add_itineraires_liste();
-            to_proto(it, parcours_list, d.data, i_proto);
+            pbnavitia::Itineraire *i_proto = reponse_demonstrateur.add_itineraires_liste();
+            to_proto(it, d.data, i_proto);
         }
         std::cout << " Fin encodage " << std::endl;
 
 
-        rd.response << get<std::string>(request.parsed_params["jsoncallback"].value).c_str() << "(" << pb2json(&itineraires_proto) << ")";
+        rd.response << get<std::string>(request.parsed_params["jsoncallback"].value).c_str() << "(" << pb2json(&reponse_demonstrateur) <<  ")";
         rd.content_type = "application/json";
         rd.status_code = 200;
         return rd;

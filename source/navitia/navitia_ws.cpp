@@ -1,5 +1,5 @@
 #include "baseworker.h"
-#include "configuration.h"
+#include "utils/configuration.h"
 #include <iostream>
 #include "type/data.h"
 #include "type/type.pb.h"
@@ -185,14 +185,19 @@ class Worker : public BaseWorker<navitia::type::Data> {
     }
 
     ResponseData load(RequestData, navitia::type::Data & d){
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+        Configuration * conf = Configuration::get();
+        std::string database = conf->get_as<std::string>("GENERAL", "database", "data.flz");
+        LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
         ResponseData rd;
         d.load_mutex.lock();
         d.loaded = true;
-        d.load_flz("/home/tristram/data.nav");
+        d.load_flz(database);
         d.load_mutex.unlock();
         rd.response << "loaded!";
         rd.content_type = "text/html";
         rd.status_code = 200;
+        LOG4CPLUS_INFO(logger, "Chargement fini");
         return rd;
     }
 
