@@ -123,3 +123,92 @@ BOOST_AUTO_TEST_CASE(nearest_segment){
     c.x = 50; c.y = 10;
     BOOST_CHECK_THROW(sn.nearest_edge(c), NotFound);
 }
+
+// Est-ce que le calcul de plusieurs nœuds vers plusieurs nœuds fonctionne
+BOOST_AUTO_TEST_CASE(compute_route_n_n){
+    using namespace navitia::type;
+    StreetNetwork sn;
+    GraphBuilder b(sn);
+
+    /*               a           e
+                     |
+                  b—–o––c
+                     |
+                     d             */
+    b("e", 0,0)("a",0,1)("b",0,2)("c",0,3)("d",0,4)("o",0,5);
+    b("a", "o", 1)("b","o",2)("o","c", 3)("o","d", 4);
+
+    std::vector<vertex_t> starts = {b.get("a"), b.get("b")};
+    std::vector<vertex_t> dests = {b.get("c"), b.get("d")};
+    Path p = sn.compute(starts, dests);
+
+    BOOST_CHECK_EQUAL(p.coordinates.size(), 3);
+    BOOST_CHECK(p.coordinates[0] == GeographicalCoord(0,1,false)); // a
+    BOOST_CHECK(p.coordinates[1] == GeographicalCoord(0,5,false)); // o
+    BOOST_CHECK(p.coordinates[2] == GeographicalCoord(0,3,false)); // c
+
+    // On lève une exception s'il n'y a pas d'itinéraire
+    starts = {b.get("e")};
+    dests = {b.get("a")};
+    BOOST_CHECK_THROW(sn.compute(starts, dests), NotFound);
+
+    // Cas où le nœud de départ et d'arrivée sont confondus
+    starts = {b.get("a")};
+    dests = {b.get("a")};
+    p = sn.compute(starts, dests);
+    BOOST_CHECK_EQUAL(p.coordinates.size(), 1);
+    BOOST_CHECK_EQUAL(p.path_items.size(), 0);
+    BOOST_CHECK(p.coordinates[0] == GeographicalCoord(0,1,false)); // a
+}
+
+// On teste la prise en compte de la distance initiale au nœud
+BOOST_AUTO_TEST_CASE(compute_zeros){
+    StreetNetwork sn;
+    GraphBuilder b(sn);
+    b("a", "o", 1)("b", "o",2);
+    std::vector<vertex_t> starts = {b.get("a"), b.get("b")};
+    std::vector<vertex_t> dests = {b.get("o")};
+
+    Path p = sn.compute(starts, dests);
+    BOOST_CHECK_EQUAL(p.path_items.size(), 1);
+    BOOST_CHECK(p.path_items[0].segments[0] == b.get("a","o"));
+
+    p = sn.compute(starts, dests, {3,1});
+    BOOST_CHECK(p.path_items[0].segments[0] == b.get("b","o"));
+
+    p = sn.compute(starts, dests, {2,2});
+    BOOST_CHECK(p.path_items[0].segments[0] == b.get("a","o"));
+}
+
+// Est-ce que les indications retournées sont bonnes
+BOOST_AUTO_TEST_CASE(compute_directions){
+    using namespace navitia::type;
+    StreetNetwork sn;
+    GraphBuilder b(sn);
+    Way w;
+    w.name = "Jaures"; sn.ways.push_back(w);
+    w.name = "Hugo"; sn.ways.push_back(w);
+
+    b("a", "b")("b","c")("c","d")("d","e");
+    sn.graph[b.get("a","b")].way_idx = 0;
+    sn.graph[b.get("b","c")].way_idx = 0;
+    sn.graph[b.get("c","d")].way_idx = 1;
+    sn.graph[b.get("d","e")].way_idx = 1;
+
+    std::vector<vertex_t> starts = {b.get("a")};
+    std::vector<vertex_t> dests = {b.get("e")};
+    Path p = sn.compute(starts, dests);
+    BOOST_CHECK_EQUAL(p.path_items.size(), 2);
+    BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 0);
+    BOOST_CHECK_EQUAL(p.path_items[1].way_idx, 1);
+    BOOST_CHECK(p.path_items[0].segments[0] == b.get("a", "b"));
+    BOOST_CHECK(p.path_items[0].segments[1] == b.get("b", "c"));
+    BOOST_CHECK(p.path_items[1].segments[0] == b.get("c", "d"));
+    BOOST_CHECK(p.path_items[1].segments[1] == b.get("d", "e"));
+
+    starts = {b.get("d")};
+    dests = {b.get("e")};
+    p = sn.compute(starts, dests);
+    BOOST_CHECK_EQUAL(p.path_items.size(), 1);
+    BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 1);
+}

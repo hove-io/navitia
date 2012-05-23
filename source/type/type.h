@@ -101,9 +101,9 @@ struct GeographicalCoord{
     }
 
     GeographicalCoord convert_to(const Projection& projection, const Projection& current_projection = Projection()) const;
-
-
 };
+
+bool operator==(const GeographicalCoord & a, const GeographicalCoord & b);
 
 struct Country: public NavitiaHeader, Nameable {
     const static Type_e type = eCountry;

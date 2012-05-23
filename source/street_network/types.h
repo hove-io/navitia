@@ -78,7 +78,7 @@ struct Way{
 struct PathItem{
     nt::idx_t way_idx; //< Voie sur laquel porte le bout du trajet
     float length; //< Longueur du trajet effectué sur cette voie
-    std::vector<nt::idx_t> segments; //< Segments traversés
+    std::vector<edge_t> segments; //< Segments traversés
     PathItem() : length(0){}
 };
 
@@ -116,8 +116,15 @@ struct StreetNetwork {
     void load_flz(const std::string & filename);
     void save_flz(const std::string & filename);
 
-    /// Calcule le meilleur itinéraire entre deux listes de nœuds
-    Path compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations);
+    /** Calcule le meilleur itinéraire entre deux listes de nœuds
+     *
+     * Le paramètre zeros indique la distances (en mètres) de chaque nœud de départ. Il faut qu'il y ait autant d'éléments que dans starts
+     * Si la taille ne correspond pas, on considère une distance de 0
+     */
+    Path compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<float> zeros = std::vector<float>());
+
+    /// Calcule le meilleur itinéraire entre deux coordonnées
+    Path compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & end_coord);
 
     /** Retourne l'arc (segment) le plus proche
       *

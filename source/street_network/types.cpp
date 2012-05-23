@@ -12,7 +12,7 @@
 #include "third_party/eos_portable_archive/portable_iarchive.hpp"
 #include "third_party/eos_portable_archive/portable_oarchive.hpp"
 
-
+#include <boost/graph/dijkstra_shortest_paths_no_color_map.hpp>
 #include <iostream>
 #include <unordered_map>
 
@@ -21,27 +21,56 @@ using navitia::type::City;
 using navitia::type::idx_t;
 namespace navitia{ namespace streetnetwork{
 
+// Exception levée dès que l'on trouve une destination
+struct DestinationFound{};
 
+// Visiteur qui lève une exception dès qu'une des cibles souhaitées est atteinte
+struct my_visitor : public boost::dijkstra_visitor<> {
+    const std::vector<vertex_t> & destinations;
+    my_visitor(const std::vector<vertex_t> & destinations) : destinations(destinations){}
+    void finish_vertex(vertex_t u, Graph){
+        if(std::find(destinations.begin(), destinations.end(), u) != destinations.end())
+            throw DestinationFound();
+    }
+};
 
-Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations) {
-    vertex_t start = starts.front();
-    Path p;
+Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<float> zeros) {
+    if(starts.size() == 0 || destinations.size() == 0)
+        throw NotFound();
+
+    if(zeros.size() != starts.size())
+        zeros = std::vector<float>(starts.size(), 0);
+
+    size_t n = boost::num_vertices(this->graph);
+
     // Tableau des prédécesseurs de chaque nœuds
-    std::vector<vertex_t> preds(boost::num_vertices(this->graph));
-
-    // Tableau des distances des nœuds à l'origine
     // si pred[v] == v, c'est soit qu'il n'y a pas de chemin possible, soit c'est l'origine
-    std::vector<float> dists(boost::num_vertices(this->graph));
+    std::vector<vertex_t> preds(n);
+    for(size_t i = 0; i<preds.size(); ++i)
+        preds[i] = i;
 
-    std::cout << "On lance dijkstra" << std::endl;
-    boost::dijkstra_shortest_paths(this->graph,
-                                   start, // nœud de départ
-                                   boost::predecessor_map(&preds[0])
-                                   .distance_map(&dists[0])
-                                   .weight_map(boost::get(&Edge::length, this->graph))
-                                   );
+    // Tableau des distances des nœuds à l'origine, par défaut à l'infini
+    std::vector<float> dists(n, std::numeric_limits<float>::max());
 
-    std::cout << "Dijkstra fini" << std::endl;
+    for(size_t i = 0; i < starts.size(); ++i){
+        boost::two_bit_color_map<> color(n);
+        vertex_t start = starts[i];
+        dists[start] = zeros[i];    
+
+        // On effectue un Dijkstra sans ré-initialiser les tableaux de distances et de prédécesseur
+        try {
+            boost::dijkstra_shortest_paths_no_init(this->graph, start, &preds[0], &dists[0],
+                                                   boost::get(&Edge::length, this->graph), // weigth map
+                                                   boost::identity_property_map(),
+                                                   //boost::get(boost::vertex_index, this->graph),
+                                                   std::less<float>(), boost::closed_plus<float>(),
+                                                   0,
+                                                   my_visitor(destinations),
+                                                   color
+                                                   );
+        } catch (DestinationFound) {}
+    }
+
     // On cherche la destination la plus proche
     vertex_t best_destination;
     float best_distance = std::numeric_limits<float>::max();
@@ -52,8 +81,8 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
         }
     }
 
-    std::cout << "On a trouvé le plus court chemin : " << best_distance << " mètres" << std::endl;
     // Si un chemin existe
+    Path p;
     if(best_distance < std::numeric_limits<float>::max()){
         p.length = best_distance;
         // On reconstruit le chemin, on part de la destination pour remonter à l'arrivée
@@ -63,30 +92,44 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
             reverse_path.push_back(best_destination);
             best_destination = preds[best_destination];
         }
+        reverse_path.push_back(best_destination);
 
         // On reparcourre tout dans le bon ordre
-        nt::idx_t last_way =  std::numeric_limits<nt::idx_t>::max();
+        nt::idx_t last_way =  type::invalid_idx;
         PathItem path_item;
+        p.coordinates.push_back(graph[reverse_path.back()].coord);
         for(size_t i = reverse_path.size(); i > 1; --i){
-            vertex_t u = reverse_path[i-2];
-            vertex_t v = reverse_path[i-1];
-            Edge edge = graph[boost::edge(u, v, graph).first];
+            vertex_t v = reverse_path[i-2];
+            vertex_t u = reverse_path[i-1];
             p.coordinates.push_back(graph[v].coord);
-            path_item.way_idx = edge.way_idx;
 
-
-            path_item.length += edge.length;
-            if(edge.way_idx != last_way){
+            edge_t e = boost::edge(u, v, graph).first;
+            Edge edge = graph[e];
+            if(edge.way_idx != last_way && last_way != type::invalid_idx){
                 p.path_items.push_back(path_item);
-                last_way = edge.way_idx;
                 path_item = PathItem();
             }
+            last_way = edge.way_idx;
+            path_item.way_idx = edge.way_idx;
+            path_item.segments.push_back(e);
+            path_item.length += edge.length;
         }
-        if(reverse_path.size() > 0)
+        if(reverse_path.size() > 1)
             p.path_items.push_back(path_item);
+    } else {
+        throw NotFound();
     }
 
     return p;
+}
+
+Path StreetNetwork::compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & end_coord){
+    edge_t start = this->nearest_edge(start_coord);
+    edge_t dest = this->nearest_edge(end_coord);
+
+    std::vector<vertex_t> starts = {boost::source(start, this->graph), boost::target(start, this->graph)};
+    std::vector<vertex_t> dests = {boost::source(dest, this->graph), boost::source(dest, this->graph)};
+    return compute(starts, dests);
 }
 
 void StreetNetwork::build_proximity_list(){
@@ -207,9 +250,19 @@ std::pair<type::GeographicalCoord, float> project(type::GeographicalCoord point,
     result.first.degrees = point.degrees;
 
     float length = segment_start.distance_to(segment_end);
-    float u = ((point.x - segment_start.x)*(segment_end.x - segment_start.x)
-            + (point.y - segment_start.y)*(segment_end.y - segment_start.y) )/
-            (length * length);
+    float u;
+
+    // On gère le cas où le segment est particulièrement court, et donc ça peut poser des problèmes (à cause de la division par length²)
+    if(length < 1){ // moins d'un mètre, on projette sur une extrémité
+        if(point.distance_to(segment_start) < point.distance_to(segment_end))
+            u = 0;
+        else
+            u = 1;
+    } else {
+        u = ((point.x - segment_start.x)*(segment_end.x - segment_start.x)
+             + (point.y - segment_start.y)*(segment_end.y - segment_start.y) )/
+                (length * length);
+    }
 
     // Les deux cas où le projeté tombe en dehors
     if(u < 0)

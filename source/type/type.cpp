@@ -107,6 +107,11 @@ double GeographicalCoord::distance_to(const GeographicalCoord &other){
     return EARTH_RADIUS_IN_METERS * 2.0 * asin(sqrt(latitudeH + tmp*lontitudeH));
 }
 
+bool operator==(const GeographicalCoord & a, const GeographicalCoord & b){
+    return a.degrees == b.degrees && a.x == b.x && a.y == b.y;
+}
+
+
 static_data * static_data::instance = 0;
 static_data * static_data::get() {
     if (instance == 0) {
