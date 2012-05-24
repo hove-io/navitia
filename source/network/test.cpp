@@ -21,7 +21,7 @@ struct label_name {
             case TD : oss << "TD " << get_idx(v, data, map_tc) << " "<< get_time(v, data, g, map_tc); break;
             case TC : oss << "TC " << get_idx(v, data, map_tc) << " "<< get_time(v, data, g, map_tc); break;
             }
-            oss << "\"]";
+            oss << " " << v << " " << get_saidx(v, data, g, map_tc) << "\"]";
         }
 
 };
@@ -34,7 +34,7 @@ struct label_name {
 int main(int , char** argv) {
     navitia::type::Data data;
     std::cout << "Debut chargement des données ... " << std::flush;
-    data.load_flz("/home/vlara/navitia/jeu/passeminuit/passeminuit.nav");
+    data.load_flz("/home/vlara/navitia/jeu/IdF/IdF.nav");
     std::cout << " Fin chargement des données" << std::endl;
 
 
@@ -44,8 +44,8 @@ int main(int , char** argv) {
     map_tc_t map_tc;
     charger_graph(data, g, map_tc);
     std::cout << " Fin de création et chargement du graph" << std::endl;
+    std::cout << "Nombre d'arêtes : " << num_edges(g) << std::endl;
 
-    std::cout << "Nombre de TC : " << (boost::num_vertices(g) - (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + data.pt_data.stop_times.size() * 2)) << std::endl;
     vertex_t v1, v2;
     v1 = atoi(argv[1]);
     v2 = atoi(argv[2]);
@@ -83,20 +83,19 @@ int main(int , char** argv) {
         std::cout << "Chemin trouve" << std::endl;
 
         for(vertex_t v = v2; (v!=v1); v = predecessors[v]) {
-
-            if(get_n_type(v, data) == TA) {
+            if(get_n_type(v, data) == TD || get_n_type(v, data) == TA) {
                 std::cout << data.pt_data.stop_areas.at(data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).stop_point_idx).stop_area_idx).name;
                 std::cout << " " << data.pt_data.stop_times.at(get_idx(v, data, map_tc)).arrival_time;
                 std::cout << " " << data.pt_data.lines.at(data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).route_idx).line_idx).name;
-                std::cout << " " << distances[v].temps << std::endl;
+                std::cout << " t : " << distances[v].temps << " d : " << distances[v].date_arrivee << std::endl;
             }
         }
     }
 
 
-    label_name ln(g, data, map_tc);
-    std::ofstream f("test.z");
-    write_graphviz(f, g, ln);
+//    label_name ln(g, data, map_tc);
+//    std::ofstream f("test.z");
+//    write_graphviz(f, g, ln);
 
 
 

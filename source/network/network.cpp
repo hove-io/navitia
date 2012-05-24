@@ -44,12 +44,11 @@ uint32_t get_saidx(unsigned int idx, navitia::type::Data &data, NW &g, map_tc_t 
     else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size()))
         return data.pt_data.stop_points.at(data.pt_data.route_points.at(idx - data.pt_data.stop_areas.size() - data.pt_data.stop_points.size()).stop_point_idx).stop_area_idx;
     else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + data.pt_data.stop_times.size()))
-
         return data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at((idx - data.pt_data.stop_areas.size() - data.pt_data.stop_points.size() - data.pt_data.route_points.size())).route_point_idx).stop_point_idx).stop_area_idx;
     else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + (data.pt_data.stop_times.size()) * 2))
         return data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at((idx - data.pt_data.stop_areas.size() - data.pt_data.stop_points.size() - data.pt_data.route_points.size() - data.pt_data.stop_times.size())).route_point_idx).stop_point_idx).stop_area_idx;
     else
-        return get_saidx(get_idx(idx, data, map_tc), data, g, map_tc);
+        return get_saidx(map_tc[idx], data, g, map_tc);
 }
 
 node_type get_n_type(unsigned int idx, navitia::type::Data &data) {
@@ -179,24 +178,29 @@ bool correspondance_valide(idx_t tav, idx_t tdv, bool pam, NW &g, navitia::type:
 
 
 void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc) {
-    vertex_t tav, tdv, tdp, rpv;
+    vertex_t tav, tdv, tcv, rpv;
     bool bo;
-    int min_corresp = 5 * 60;
+    int min_corresp = 2 * 60;
     navitia::type::ValidityPattern vptemp;
 
+    typedef std::set<vertex_t, sort_edges> set_vertices;
+    typedef std::map<vertex_t, set_vertices> map_t;
+
+    map_t map_stop_areas;
+
     //Creation des stop areas
-    //    BOOST_FOREACH(navitia::type::StopArea sai, data.pt_data.stop_areas) {
+        BOOST_FOREACH(navitia::type::StopArea sai, data.pt_data.stop_areas) {
     //        g[sai.idx] = VertexDesc(sai.idx);
-    //    }
+            map_stop_areas.insert(std::pair<vertex_t, set_vertices>(sai.idx, set_vertices(sort_edges(g, data, map_tc))));
+        }
     //Creation des stop points et creations lien SA->SP
     BOOST_FOREACH(navitia::type::StopPoint spi, data.pt_data.stop_points) {
-        //        g[get_sp_idx(spi.idx, data)] = VertexDesc(spi.idx);
         add_edge(spi.stop_area_idx, get_sp_idx(spi.idx, data), EdgeDesc(0), g);
+
     }
 
     //Création des liens SP->RP
     BOOST_FOREACH(navitia::type::RoutePoint rpi, data.pt_data.route_points) {
-        //        g[get_rp_idx(rpi.idx, data)] = VertexDesc(rpi.idx);
         add_edge(get_sp_idx(rpi.stop_point_idx, data), get_rp_idx(rpi.idx, data), EdgeDesc(0), g);
     }
 
@@ -206,10 +210,6 @@ void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc) {
         unsigned int vp_idx = vj.validity_pattern_idx;
         BOOST_FOREACH(unsigned int stid, vj.stop_time_list) {
             rpv = get_rp_idx(data.pt_data.stop_times.at(stid).route_point_idx, data);
-
-            //Création des ta et td;
-            //            g[get_ta_idx(stid, data)] = VertexDesc(stid);
-            //            g[get_td_idx(stid, data)] = VertexDesc(stid);
 
             //ta
             tav = get_ta_idx(stid, data) ;
@@ -223,6 +223,11 @@ void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc) {
 
             //td
             tdv = get_td_idx(stid, data);
+
+            //tc
+            tcv = add_vertex(g);
+            map_tc.insert(std::pair<idx_t, idx_t>(tcv, tdv));
+            map_stop_areas.find(data.pt_data.stop_points.at(data.pt_data.route_points.at(get_idx(rpv, data, map_tc)).stop_point_idx).stop_area_idx)->second.insert(tcv);
             //edges
 
 
@@ -231,114 +236,55 @@ void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc) {
                 vp_idx = get_validity_pattern_idx(vptemp, data);
             }
             add_edge(tav, tdv, EdgeDesc(vp_idx), g);
-
-            add_edge(rpv, tav, EdgeDesc(0), g);
+            add_edge(tcv, tdv, EdgeDesc(0), g);
         }
     }
 
-    typedef std::map<vertex_t, vertex_t> map_t;
-    typedef std::map<vertex_t, bool> mapam_t;
-    typedef std::pair<vertex_t, int32_t> pairTC_t;
-    std::set<vertex_t, sort_edges> verticesTD = std::set<vertex_t, sort_edges>(sort_edges(g, data, map_tc));
-    std::set<vertex_t, sort_edges> verticesTA = std::set<vertex_t, sort_edges>(sort_edges(g, data, map_tc));
+    BOOST_FOREACH(map_t::value_type sa, map_stop_areas) {
+        //On fabrique la chaine de tc
+        vertex_t prec = num_vertices(g) + 1;
+        set_vertices::iterator itc, pam = sa.second.begin();
+        itc = sa.second.begin();
+        pam = sa.second.begin();
+        BOOST_FOREACH(vertex_t tc, sa.second) {
+            if((prec != (num_vertices(g) + 1)) & !edge(prec, tc, g).second & (prec != tc)) {
+                add_edge(prec, tc, EdgeDesc(0), g);
+            }
+            prec = tc;
+            //Je relie le ta au premier tc possible
+            while((itc != sa.second.end()) & (data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time + min_corresp > get_time(*itc, data, g, map_tc)) )
+                ++itc;
+            if(itc != sa.second.end()& (data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time + min_corresp <= get_time(*itc, data, g, map_tc)))
+                if(!edge(get_ta_idx(get_idx(tc, data, map_tc), data), *itc, g).second)
+                    add_edge(get_ta_idx(get_idx(tc, data, map_tc), data), *itc, EdgeDesc(0), g);
 
-    std::vector<pairTC_t> verticesTC = std::vector<pairTC_t>();
+            //Si > 86400 je relie au premier tc possible avec le temps % 86400
+            if((data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time + min_corresp) > 86400) {
+                while((pam != sa.second.end()) & ((data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time%86400 + min_corresp )> get_time(*pam, data, g, map_tc)) )
+                    ++pam;
+                if(get_ta_idx(get_idx(tc, data, map_tc), data) == 33)
+                    std::cout << "T1 : " <<(pam != sa.second.end()) << " "  << (data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time%86400) + min_corresp <<" " << get_time(*pam, data, g, map_tc) << std::endl  ;
+                if(pam != sa.second.end())
+                    if((pam != sa.second.end()) & ((data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time%86400) + min_corresp <= get_time(*pam, data, g, map_tc)))
+                        add_edge(get_ta_idx(get_idx(tc, data, map_tc), data), *pam, EdgeDesc(0), g);
+            }
+        }
 
-    //    map_routes_t map_AR = map_routes_t();
-    //    for(unsigned int i=0; i<data.pt_data.routes.size();++i)
-    //        map_AR.insert(std::pair<idx_t, list_idx>(i, list_idx()));
 
-    //    calculer_AR(data, g, map_AR);
-
-    //    std::cout <<"Taille map ar" << map_AR.size();
-    for(unsigned int sav = 0; sav<data.pt_data.stop_areas.size();++sav) {
-        //On itère sur les stop points
-        verticesTA.clear();
-        verticesTD.clear();
-        verticesTC.clear();
-        BOOST_FOREACH(edge_t e1, out_edges(sav, g)) {
-            if(get_n_type(target(e1, g), data)== SP) {
+        //On lie les RP a premier TC de la chaine
+        BOOST_FOREACH(edge_t e1, out_edges(sa.first, g)) {
+            if(get_n_type(target(e1, g), data) == SP) {
                 BOOST_FOREACH(edge_t e2, out_edges(target(e1, g), g)) {
                     if(get_n_type(target(e2, g), data) == RP) {
-                        //On itère sur les ta
-                        BOOST_FOREACH(edge_t e3, out_edges(target(e2, g), g)) {
-                            if(get_n_type(target(e3, g), data) == TA) {
-                                verticesTA.insert(target(e3, g));
-                                //On itère sur les td
-                                BOOST_FOREACH(edge_t e4, out_edges(target(e3, g), g)) {
-                                    if(get_n_type(target(e4, g), data) == TD) {
-                                        if(data.pt_data.stop_times.at(get_idx(target(e4, g), data, map_tc)).route_point_idx == data.pt_data.stop_times.at(get_idx(target(e3, g), data, map_tc)).route_point_idx) {
-                                            verticesTD.insert(target(e4, g));
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        add_edge(target(e2, g), *sa.second.begin(), EdgeDesc(0), g);
                     }
                 }
             }
         }
-        if(verticesTA.size() > 0) {
-            std::vector<pairTC_t>::iterator itTC = verticesTC.begin();
-            BOOST_FOREACH(vertex_t ta, verticesTA) {
-
-                verticesTC.push_back(pairTC_t(add_vertex(g), data.pt_data.stop_times.at(get_idx(ta, data, map_tc)).arrival_time + min_corresp));
-                add_edge(ta, verticesTC.back().first, EdgeDesc(0), g);
-                map_tc.insert(std::pair<idx_t, idx_t>(verticesTC.back().first, ta));
-            }
-
-            itTC = verticesTC.begin();
-            BOOST_FOREACH(vertex_t td, verticesTD) {
-                while(((*itTC).second < data.pt_data.stop_times.at(get_idx(td, data, map_tc)).departure_time) & (itTC != verticesTC.end()))
-                    ++itTC;
-                if((*itTC).second != data.pt_data.stop_times.at(get_idx(td, data, map_tc)).departure_time) {
-                    itTC = verticesTC.insert(itTC, pairTC_t(add_vertex(g), data.pt_data.stop_times.at(get_idx(td, data, map_tc)).departure_time));
-                    map_tc.insert(std::pair<idx_t, idx_t>((*itTC).first, td));
-                }
-                add_edge((*itTC).first, td, EdgeDesc(0), g);
-
-            }
-
-
-            //On lie les TC entre eux
-            itTC = verticesTC.begin();
-            pairTC_t prec = pairTC_t(0, -1);
-
-
-            BOOST_FOREACH(pairTC_t tc, verticesTC) {
-                if((prec.second != -1) & !edge(prec.first, tc.first, g).second & (prec.first != tc.first)) {
-                    add_edge(prec.first, tc.first, EdgeDesc(0), g);
-                }
-                prec = tc;
-            }
-
-            std::vector<pairTC_t>::iterator precTC= verticesTC.begin(), pamTC= verticesTC.begin();
-            for(itTC = (++precTC); itTC!=verticesTC.end();++itTC) {
-                //On rajoute le passe minuit
-                if((*itTC).second > 86400) {
-                    while((pamTC != verticesTC.end()) & ((*pamTC).second <= ((*itTC).second % 86400)))
-                        ++pamTC;
-                    if((*pamTC).second > ((*itTC).second % 86400)) {
-                        if(!edge((*precTC).first, (*pamTC).first, g).second & ((*precTC).first != (*pamTC).first))
-                            add_edge((*precTC).first, (*pamTC).first, EdgeDesc(0), g);
-                    }
-                }
-                precTC = itTC;
-            }
-            if((*precTC).second > 86400) {
-                while((pamTC != verticesTC.end()) & ((*pamTC).second <= ((*precTC).second % 86400)))
-                    ++pamTC;
-                if((*pamTC).second > ((*precTC).second % 86400)) {
-                    if(!edge((*precTC).first, (*pamTC).first, g).second & ((*precTC).first != (*pamTC).first))
-                        add_edge((*precTC).first, (*pamTC).first, EdgeDesc(0), g);
-                }
-            }
-
-        }
-
-
 
     }
+
+
 
 
 }
@@ -388,38 +334,30 @@ etiquette combine::operator()(etiquette debut, edge_t e) const{
         debut_temps = get_time(debut_idx, data, g, map_tc);
         fin_temps = get_time(fin_idx, data, g, map_tc);
 
-
-        if(get_saidx(fin_idx, data, g, map_tc) == sa_depart) {
-            if(get_n_type(debut_idx, data) == TC) {
-                return etiquette::max();
+        if((get_saidx(debut_idx, data, g, map_tc) == sa_depart) & (get_saidx(fin_idx, data, g, map_tc) == sa_depart)) {
+            if(is_passe_minuit(debut_temps, fin_temps)) {
+                retour.date_arrivee = debut.date_arrivee + 1;
             } else {
-                if(get_n_type(debut_idx, data) == SA || get_n_type(debut_idx, data) == SP || get_n_type(debut_idx, data) == RP){
-                    retour.date_arrivee = debut.date_arrivee;
-                    retour.heure_arrivee = debut.heure_arrivee;
+                retour.date_arrivee = debut.date_arrivee;
+            }
+
+            if((get_n_type(debut_idx, data) == TC) & (get_n_type(fin_idx, data) == TD)){
+                if((debut.heure_arrivee % 86400) <= debut_temps) {
+                    retour.heure_arrivee = fin_temps;
                     retour.temps = 0;
                     retour.correspondances = 0;
                     return retour;
                 } else {
-                    if(is_passe_minuit(debut_temps, fin_temps)) {
-                        retour.date_arrivee = debut.date_arrivee + 1;
-                    } else {
-                        retour.date_arrivee = debut.date_arrivee;
-                    }
-
-                    if(data.pt_data.validity_patterns.at(ed.validity_pattern).check(retour.date_arrivee)
-                            & ((debut.heure_arrivee % 86400) <= debut_temps)) {
-                        retour.heure_arrivee = fin_temps;
-                        retour.temps = 0;
-                        retour.correspondances = 0;
-                        return retour;
-                    } else {
-                        return etiquette::max();
-                    }
+                    return etiquette::max();
                 }
+            } else {
+                retour.heure_arrivee = debut.heure_arrivee;
+                retour.temps = 0;
+                retour.correspondances = 0;
+                return retour;
             }
         } else {
 
-            //On verifie le validity pattern
             if(is_passe_minuit(debut_temps, fin_temps)) { //Passe minuit
                 retour.date_arrivee = debut.date_arrivee + 1;
                 retour.temps = debut.temps + 86400 - debut_temps%86400 + fin_temps%86400 ;
