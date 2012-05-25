@@ -212,3 +212,38 @@ BOOST_AUTO_TEST_CASE(compute_directions){
     BOOST_CHECK_EQUAL(p.path_items.size(), 1);
     BOOST_CHECK_EQUAL(p.path_items[0].way_idx, 1);
 }
+
+// On teste le calcul d'itinéraire de coordonnées à coordonnées
+BOOST_AUTO_TEST_CASE(compute_coord){
+    using namespace navitia::type;
+    StreetNetwork sn;
+    GraphBuilder b(sn);
+
+    /*           a+------+b
+     *            |      |
+     *            |      |
+     *           c+------+d
+     */
+
+    b("a",0,0)("b",10,0)("c",0,10)("d",10,10);
+    b("a","b", 10)("b","a",10)("a","c",10)("b","d",10)("c","d",10)("d","c",10);
+
+    GeographicalCoord start(3, -1, false);
+    GeographicalCoord destination(4, 11, false);
+    Path p = sn.compute(start, destination);
+    BOOST_CHECK_EQUAL(p.coordinates.size(), 4);
+    BOOST_CHECK_EQUAL(p.path_items.size(), 1);
+    BOOST_CHECK_EQUAL(p.coordinates[0], GeographicalCoord(3,0,false) );
+    BOOST_CHECK_EQUAL(p.coordinates[1], GeographicalCoord(0,0,false) );
+    BOOST_CHECK_EQUAL(p.coordinates[2], GeographicalCoord(0,10,false) );
+    BOOST_CHECK_EQUAL(p.coordinates[3], GeographicalCoord(4,10,false) );
+
+    start.x = 6; destination.x = 7;
+    p = sn.compute(start, destination);
+    BOOST_CHECK_EQUAL(p.coordinates.size(), 4);
+    BOOST_CHECK_EQUAL(p.path_items.size(), 1);
+    BOOST_CHECK_EQUAL(p.coordinates[0], GeographicalCoord(6,0,false) );
+    BOOST_CHECK_EQUAL(p.coordinates[1], GeographicalCoord(10,0,false) );
+    BOOST_CHECK_EQUAL(p.coordinates[2], GeographicalCoord(10,10,false) );
+    BOOST_CHECK_EQUAL(p.coordinates[3], GeographicalCoord(7,10,false) );
+}

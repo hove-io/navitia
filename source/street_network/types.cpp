@@ -34,12 +34,15 @@ struct my_visitor : public boost::dijkstra_visitor<> {
     }
 };
 
-Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<float> zeros) {
+Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<double> start_zeros, std::vector<double> dest_zeros) {
     if(starts.size() == 0 || destinations.size() == 0)
         throw NotFound();
 
-    if(zeros.size() != starts.size())
-        zeros = std::vector<float>(starts.size(), 0);
+    if(start_zeros.size() != starts.size())
+        start_zeros = std::vector<double>(starts.size(), 0);
+
+    if(dest_zeros.size() != destinations.size())
+        dest_zeros = std::vector<double>(destinations.size(), 0);
 
     size_t n = boost::num_vertices(this->graph);
 
@@ -55,7 +58,7 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
     for(size_t i = 0; i < starts.size(); ++i){
         boost::two_bit_color_map<> color(n);
         vertex_t start = starts[i];
-        dists[start] = zeros[i];    
+        dists[start] = start_zeros[i];
 
         // On effectue un Dijkstra sans ré-initialiser les tableaux de distances et de prédécesseur
         try {
@@ -74,7 +77,9 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
     // On cherche la destination la plus proche
     vertex_t best_destination;
     float best_distance = std::numeric_limits<float>::max();
-    BOOST_FOREACH(vertex_t destination, destinations){
+    for(size_t i = 0; i < destinations.size(); ++i){
+        vertex_t destination = destinations[i];
+        dists[i] += dest_zeros[i];
         if(dists[destination] < best_distance) {
             best_distance = dists[destination];
             best_destination = destination;
@@ -123,13 +128,40 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
     return p;
 }
 
-Path StreetNetwork::compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & end_coord){
+Path StreetNetwork::compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord){
+    // On prend le nœud de départ, et on trouve le segment le plus proche
     edge_t start = this->nearest_edge(start_coord);
-    edge_t dest = this->nearest_edge(end_coord);
+    // On cherche les coordonnées des extrémités de ce segment
+    vertex_t start1 = boost::source(start, this->graph);
+    vertex_t start2 = boost::target(start, this->graph);
+    type::GeographicalCoord start1_coord = this->graph[start1].coord;
+    type::GeographicalCoord start2_coord = this->graph[start2].coord;
+    // On projette le nœud sur le segment
+    type::GeographicalCoord projected_start = project(start_coord, start1_coord, start2_coord).first;
+    // On calcule la distance « initiale » déjà parcourue avant d'atteindre ces extrémité d'où on effectue le calcul d'itinéraire
+    std::vector<double> start_zeros = {projected_start.distance_to(start1_coord), projected_start.distance_to(start2_coord)};
+    std::vector<vertex_t> starts = {start1, start2};
 
-    std::vector<vertex_t> starts = {boost::source(start, this->graph), boost::target(start, this->graph)};
-    std::vector<vertex_t> dests = {boost::source(dest, this->graph), boost::source(dest, this->graph)};
-    return compute(starts, dests);
+    // On répète le même cirque avec la destination...
+    edge_t dest = this->nearest_edge(dest_coord);
+    vertex_t dest1 = boost::source(dest, this->graph);
+    vertex_t dest2 = boost::target(dest, this->graph);
+    type::GeographicalCoord dest1_coord = this->graph[dest1].coord;
+    type::GeographicalCoord dest2_coord = this->graph[dest2].coord;
+    type::GeographicalCoord projected_dest = project(dest_coord, dest1_coord, dest2_coord).first;
+    std::vector<double> dest_zeros = {projected_dest.distance_to(dest1_coord), projected_dest.distance_to(dest2_coord)};
+    std::vector<vertex_t> dests = {dest1, dest2};
+
+    Path p = compute(starts, dests, start_zeros, dest_zeros);
+
+    // On rajoute les bouts de coordonnées manquants à partir et vers le projeté de respectivement le départ et l'arrivée
+    std::vector<type::GeographicalCoord> coords = {projected_start};
+    coords.resize(p.coordinates.size() + 2);
+    std::copy(p.coordinates.begin(), p.coordinates.end(), coords.begin() + 1);
+    coords.back() = projected_dest;
+    p.coordinates = coords;
+
+    return p;
 }
 
 void StreetNetwork::build_proximity_list(){

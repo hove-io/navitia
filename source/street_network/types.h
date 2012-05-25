@@ -121,10 +121,10 @@ struct StreetNetwork {
      * Le paramètre zeros indique la distances (en mètres) de chaque nœud de départ. Il faut qu'il y ait autant d'éléments que dans starts
      * Si la taille ne correspond pas, on considère une distance de 0
      */
-    Path compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<float> zeros = std::vector<float>());
+    Path compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<double> start_zeros = std::vector<double>(), std::vector<double> dest_zeros = std::vector<double>());
 
     /// Calcule le meilleur itinéraire entre deux coordonnées
-    Path compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & end_coord);
+    Path compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord);
 
     /** Retourne l'arc (segment) le plus proche
       *
