@@ -170,7 +170,7 @@ struct ProximityList
         std::pair<T, double> other_best;
         if(other_half){
             if(!left) other_best = find_nearest(coord, begin, median, !along_x);
-            else other_best = find_nearest(coord, median+1, end, !along_x);
+            else other_best = find_nearest(coord, median, end, !along_x);
 
             // On ne garde que le meilleur des deux
             if(other_best.second < best.second)
