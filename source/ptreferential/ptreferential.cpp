@@ -281,8 +281,8 @@ std::vector<idx_t> get_indexes(std::vector<WhereClause> clauses,  Type_e request
     if(clauses.size() == 0)
         return indexes;
 
-    std::vector<Type_e> path = find_path(requested_type);
     Type_e current = clauses[0].col.table;
+    std::vector<Type_e> path = find_path(requested_type);
     while(path[current] != current){
         indexes = d.get_target_by_source(current, path[current], indexes);
         std::cout << static_data::get()->captionByType(current) << " -> " << static_data::get()->captionByType(path[current]) << std::endl;
@@ -290,6 +290,25 @@ std::vector<idx_t> get_indexes(std::vector<WhereClause> clauses,  Type_e request
     }
     return indexes;
 }
+
+std::vector<idx_t> get(Type_e source, Type_e destination, idx_t source_idx, PT_Data & d){
+    std::vector<Type_e> tree = find_path(source);
+    std::vector<Type_e> path;
+
+    Type_e current = destination;
+    while(tree[current] != current){
+        path.push_back(current);
+    }
+
+    std::vector<idx_t> indexes = d.get_target_by_one_source(source, path[source], source_idx);
+    for(size_t i = path.size() - 1; i > 0; --i){
+        indexes = d.get_target_by_source(path[i], path[i-1], indexes);
+    }
+
+    return indexes;
+}
+
+
 
 pbnavitia::PTReferential query(std::string request, PT_Data & data){
     std::string::iterator begin = request.begin();
