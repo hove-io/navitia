@@ -93,7 +93,7 @@ GeographicalCoord GeographicalCoord::convert_to(const Projection& projection, co
     return GeographicalCoord(x, y);
 }
 
-double GeographicalCoord::distance_to(const GeographicalCoord &other){
+double GeographicalCoord::distance_to(const GeographicalCoord &other) const{
     if(!degrees)
         return ::sqrt(::pow(x - other.x, 2)+ ::pow(y-other.y, 2));
     static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
@@ -108,9 +108,13 @@ double GeographicalCoord::distance_to(const GeographicalCoord &other){
 }
 
 bool operator==(const GeographicalCoord & a, const GeographicalCoord & b){
-    return a.degrees == b.degrees && a.x == b.x && a.y == b.y;
+    return a.degrees == b.degrees && a.distance_to(b) < 1e-3; // soit 1mm
 }
 
+std::ostream & operator<<(std::ostream & os, const GeographicalCoord & coord){
+    os << coord.x << ";" << coord.y;
+    return os;
+}
 
 static_data * static_data::instance = 0;
 static_data * static_data::get() {
