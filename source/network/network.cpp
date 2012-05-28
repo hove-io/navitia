@@ -102,7 +102,7 @@ int32_t get_time(unsigned int idx, navitia::type::Data &data, NW &g) {
 }
 
 int32_t get_tc_time(unsigned int idx, navitia::type::Data &data, NW &g) {
-    typename NW::out_edge_iterator out_i, out_end;
+    NW::out_edge_iterator out_i, out_end;
 
     for (tie(out_i, out_end) = out_edges(idx, g); (out_i != out_end); ++out_i) {
         if(get_n_type(target(*out_i, g), data) == TD)
