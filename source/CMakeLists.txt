@@ -27,11 +27,13 @@ IF(WIN32)
 ENDIF(WIN32)
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
-    SET(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra -std=c++0x -Woverloaded-virtual -Wundef ")
+    SET(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra -std=c++0x -Woverloaded-virtual -Wundef")
+    SET(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAG} --coverage -g")
+    SET(CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    SET(CMAKE_CXX_FLAGS "-std=gnu++0x -stdlib=libc++  -ferror-limit=10 -I/usr/local/include/c++/v1 -pthread")
-    SET(CMAKE_C_FLAGS "-stdlib=libc++  -ferror-limit=10 -I/usr/local/include/c++/v1 -pthread")
+    SET(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libstdc++  -ferror-limit=10 -pthread")
+    SET(CMAKE_C_FLAGS "-ferror-limit=10 -I/usr/local/include/c++/v1 -pthread")
 endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
 
