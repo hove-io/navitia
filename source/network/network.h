@@ -35,7 +35,10 @@ struct etiquette {
     bool operator<(etiquette e) {
         if(this->date_arrivee == e.date_arrivee) {
             if(this->heure_arrivee == e.heure_arrivee) {
-                return this->temps < e.temps;
+                if(this->temps == e.temps)
+                    return this->correspondances < e.correspondances;
+                else
+                    return this->temps < e.temps;
             }
             else
                 return this->heure_arrivee < e.heure_arrivee;

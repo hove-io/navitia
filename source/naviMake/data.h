@@ -8,112 +8,160 @@
 /** Ce namespace contient toutes les structures de données \b temporaires, à remplir par le connecteur */
 namespace navimake{
 
-    /** Structure de donnée temporaire destinée à être remplie par un connecteur
+/** Structure de donnée temporaire destinée à être remplie par un connecteur
       *
       * Les vecteurs contiennent des pointeurs vers un objet TC.
       * Les relations entre objets TC sont gèrés par des pointeurs
       */
-    class Data{
-    public:
-        std::vector<navimake::types::Network*> networks; //OK
-        std::vector<navimake::types::ModeType*> mode_types; //OK
-        std::vector<navimake::types::Line*> lines; //OK
-        std::vector<navimake::types::Mode*> modes; //OK
-        std::vector<navimake::types::City*> cities; //OK
-        std::vector<navimake::types::StopArea*> stop_areas; //OK
-        std::vector<navimake::types::StopPoint*> stop_points; //OK
-        std::vector<navimake::types::VehicleJourney*> vehicle_journeys;
-        std::vector<navimake::types::Route*> routes; //OK
-        std::vector<navimake::types::StopTime*> stops; //OK
-        std::vector<navimake::types::Connection*> connections; //OK
-        std::vector<navimake::types::RoutePoint*> route_points; //OK
-        std::vector<navimake::types::ValidityPattern*> validity_patterns; 
+class Data{
+public:
+    std::vector<navimake::types::Network*> networks; //OK
+    std::vector<navimake::types::ModeType*> mode_types; //OK
+    std::vector<navimake::types::Line*> lines; //OK
+    std::vector<navimake::types::Mode*> modes; //OK
+    std::vector<navimake::types::City*> cities; //OK
+    std::vector<navimake::types::StopArea*> stop_areas; //OK
+    std::vector<navimake::types::StopPoint*> stop_points; //OK
+    std::vector<navimake::types::VehicleJourney*> vehicle_journeys;
+    std::vector<navimake::types::Route*> routes; //OK
+    std::vector<navimake::types::StopTime*> stops; //OK
+    std::vector<navimake::types::Connection*> connections; //OK
+    std::vector<navimake::types::RoutePoint*> route_points; //OK
+    std::vector<navimake::types::ValidityPattern*> validity_patterns;
 
 
-        /** Foncteur permettant de comparer les objets en passant des pointeurs vers ces objets */
-        template<class T> 
-        struct Less{
-             bool operator() (T* x, T* y) const{
-                 return *x < *y;
-             }
-        };
+    /** Foncteur permettant de comparer les objets en passant des pointeurs vers ces objets */
+    template<class T>
+    struct Less{
+        bool operator() (T* x, T* y) const{
+            return *x < *y;
+        }
+    };
 
-        /** Foncteur fixe le membre "idx" d'un objet en incrémentant toujours de 1
+    /** Foncteur fixe le membre "idx" d'un objet en incrémentant toujours de 1
           *
           * Cela permet de numéroter tous les objets de 0 à n-1 d'un vecteur de pointeurs
           */
-        template<class T>
-        struct Indexer{
-            navimake::types::idx_t idx;
-            
-            Indexer(): idx(0){}
+    template<class T>
+    struct Indexer{
+        navimake::types::idx_t idx;
 
-            void operator()(T* obj){obj->idx = idx; idx++;}
-        };
+        Indexer(): idx(0){}
 
-        /**
+        void operator()(T* obj){obj->idx = idx; idx++;}
+    };
+
+    /**
          * trie les différentes donnée et affecte l'idx
          *
          */
-        void sort();
+    void sort();
 
-        /**
+    struct sort_vehicle_journey_list {
+        navitia::type::PT_Data & data;
+        sort_vehicle_journey_list(navitia::type::PT_Data & data) : data(data){}
+        bool operator ()(unsigned int i, unsigned int j) {
+            if((data.vehicle_journeys.at(i).stop_time_list.size() > 0) && (data.vehicle_journeys.at(j).stop_time_list.size() > 0)) {
+                unsigned int dt1 = data.stop_times.at(data.vehicle_journeys.at(i).stop_time_list.front()).departure_time,
+                             dt2 = data.stop_times.at(data.vehicle_journeys.at(j).stop_time_list.front()).departure_time,
+                             at1 = data.stop_times.at(data.vehicle_journeys.at(i).stop_time_list.back()).arrival_time,
+                             at2 = data.stop_times.at(data.vehicle_journeys.at(j).stop_time_list.back()).arrival_time;
+                return dt1 < dt2 || ((dt1 == dt1) && (at1 < at2 || (at1==at2 && (i < j))));
+            }
+
+            else return i < j;
+        }
+    };
+
+    struct sort_vehicle_journey_list_rp {
+        navitia::type::PT_Data & data;
+        unsigned int order;
+        sort_vehicle_journey_list_rp(navitia::type::PT_Data & data, unsigned int order) : data(data), order(order){}
+        bool operator ()(unsigned int i, unsigned int j) {
+            if((data.vehicle_journeys.at(i).stop_time_list.size() > 0) && (data.vehicle_journeys.at(j).stop_time_list.size() > 0)) {
+
+                unsigned int dt1 = data.stop_times.at(data.vehicle_journeys.at(i).stop_time_list.at(order)).departure_time % 86400,
+                             dt2 = data.stop_times.at(data.vehicle_journeys.at(j).stop_time_list.at(order)).departure_time % 86400;
+                return dt1 < dt2 || (dt1 == dt2 && (i < j));
+            }
+
+            else return i < j;
+        }
+    };
+
+    struct sort_route_points_list {
+        navitia::type::PT_Data & data;
+        sort_route_points_list(navitia::type::PT_Data & data) : data(data){}
+        bool operator ()(unsigned int i, unsigned int j) {
+            return data.route_points.at(i).order < data.route_points.at(j).order || ((data.route_points.at(i).order == data.route_points.at(j).order) && (i < j));
+        }
+    };
+
+    struct sort_stop_times_list {
+        navitia::type::PT_Data & data;
+        sort_stop_times_list(navitia::type::PT_Data & data) : data(data){}
+        bool operator ()(unsigned int i, unsigned int j) {
+            return data.stop_times.at(i).order < data.stop_times.at(j).order || ((data.stop_times.at(i).order == data.stop_times.at(j).order) && (i < j));
+        }
+    };
+
+    /**
          * supprime les objets inutiles
          */
-        void clean();
+    void clean();
 
-        /**
+    /**
           * Transforme les les pointeurs en données
           */
-        void transform(navitia::type::PT_Data& data);
+    void transform(navitia::type::PT_Data& data);
 
-        /**
+    /**
           * Gère les relations
           */
-        void build_relations(navitia::type::PT_Data & data);
+    void build_relations(navitia::type::PT_Data & data);
 
-        ~Data(){
-            BOOST_FOREACH(navimake::types::Network* network, networks){
-                delete network;
-            }
-            BOOST_FOREACH(navimake::types::ModeType* mode_type, mode_types){
-                delete mode_type;
-            }
-            BOOST_FOREACH(navimake::types::Line* line, lines){
-                delete line;
-            }
-            BOOST_FOREACH(navimake::types::Mode* mode, modes){
-                delete mode;
-            }
-            BOOST_FOREACH(navimake::types::City* city, cities){
-                delete city;
-            }
-            BOOST_FOREACH(navimake::types::StopArea* stop_area, stop_areas){
-                delete stop_area;
-            }
-            BOOST_FOREACH(navimake::types::StopPoint* stop_point, stop_points){
-                delete stop_point;
-            }
-            BOOST_FOREACH(navimake::types::VehicleJourney* vehicle_journey, vehicle_journeys){
-                delete vehicle_journey;
-            }
-            BOOST_FOREACH(navimake::types::Route* route, routes){
-                delete route;
-            }
-            BOOST_FOREACH(navimake::types::RoutePoint* route_point, route_points){
-                delete route_point;
-            }
-            BOOST_FOREACH(navimake::types::StopTime* stop, stops){
-                delete stop;
-            }
-            BOOST_FOREACH(navimake::types::Connection* connection, connections){
-                delete connection;
-            }
-            BOOST_FOREACH(navimake::types::ValidityPattern* validity_pattern, validity_patterns){
-                delete validity_pattern;
-            }
-
+    ~Data(){
+        BOOST_FOREACH(navimake::types::Network* network, networks){
+            delete network;
+        }
+        BOOST_FOREACH(navimake::types::ModeType* mode_type, mode_types){
+            delete mode_type;
+        }
+        BOOST_FOREACH(navimake::types::Line* line, lines){
+            delete line;
+        }
+        BOOST_FOREACH(navimake::types::Mode* mode, modes){
+            delete mode;
+        }
+        BOOST_FOREACH(navimake::types::City* city, cities){
+            delete city;
+        }
+        BOOST_FOREACH(navimake::types::StopArea* stop_area, stop_areas){
+            delete stop_area;
+        }
+        BOOST_FOREACH(navimake::types::StopPoint* stop_point, stop_points){
+            delete stop_point;
+        }
+        BOOST_FOREACH(navimake::types::VehicleJourney* vehicle_journey, vehicle_journeys){
+            delete vehicle_journey;
+        }
+        BOOST_FOREACH(navimake::types::Route* route, routes){
+            delete route;
+        }
+        BOOST_FOREACH(navimake::types::RoutePoint* route_point, route_points){
+            delete route_point;
+        }
+        BOOST_FOREACH(navimake::types::StopTime* stop, stops){
+            delete stop;
+        }
+        BOOST_FOREACH(navimake::types::Connection* connection, connections){
+            delete connection;
+        }
+        BOOST_FOREACH(navimake::types::ValidityPattern* validity_pattern, validity_patterns){
+            delete validity_pattern;
         }
 
-    };
+    }
+
+};
 }

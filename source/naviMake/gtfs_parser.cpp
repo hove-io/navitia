@@ -531,6 +531,7 @@ void GtfsParser::parse_trips(Data & data) {
                     vj->route = 0;
                     vj->tmp_line = line;
                     vj->mode = itm->second;
+                    vj->first_stop_time = NULL;
                     vj_map[vj->name] = vj;
                     data.vehicle_journeys.push_back(vj);
                 }
@@ -599,9 +600,15 @@ void GtfsParser::build_routes(Data & data){
 void GtfsParser::build_route_points(Data & data){
     std::cout << "Construction des route points" << std::endl;
     std::map<std::string, navimake::types::RoutePoint*> route_point_map;
+
+    int stop_seq;
     BOOST_FOREACH(nm::VehicleJourney * vj, data.vehicle_journeys){
+
+        stop_seq = 0;
         BOOST_FOREACH(nm::StopTime * stop_time, vj->stop_time_list){
-            std::string route_point_extcode = vj->route->external_code + ":" + stop_time->tmp_stop_point->external_code;
+            std::string route_point_extcode = vj->route->external_code + ":" + stop_time->tmp_stop_point->external_code+":"+boost::lexical_cast<std::string>(stop_seq);
+
+
             auto route_point_it = route_point_map.find(route_point_extcode);
             nm::RoutePoint * route_point;
             if(route_point_it == route_point_map.end()) {
@@ -609,13 +616,17 @@ void GtfsParser::build_route_points(Data & data){
                 route_point->route = vj->route;
                 route_point->stop_point = stop_time->tmp_stop_point;
                 route_point_map[route_point_extcode] = route_point;
-                //route_point->order = boost::lexical_cast<int>(elts[stop_seq_c]);
+                route_point->order = stop_seq;
+                route_point->external_code = route_point_extcode;
                 data.route_points.push_back(route_point);
             } else {
                 route_point = route_point_it->second;
             }
+            ++stop_seq;
             stop_time->route_point = route_point;
+
         }
+
     }
     std::cout << "Nombre de route points : " << data.route_points.size() << std::endl;
 }
@@ -684,8 +695,12 @@ void GtfsParser::parse_stop_times(Data & data) {
             stop_time->vehicle_journey = vj_it->second;
             stop_time->ODT = 0;//(elts[pickup_c] == "2" && elts[drop_c] == "2");
             stop_time->zone = 0; // à définir selon pickup_type ou drop_off_type = 10
-            data.stops.push_back(stop_time);
             stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
+            if(stop_time->vehicle_journey->first_stop_time == NULL)
+                stop_time->vehicle_journey->first_stop_time = stop_time;
+            else if(stop_time->vehicle_journey->first_stop_time->departure_time > stop_time->departure_time)
+                stop_time->vehicle_journey->first_stop_time = stop_time;
+            data.stops.push_back(stop_time);
             count++;
         }
     }

@@ -15,9 +15,6 @@ void Data::sort(){
     std::sort(modes.begin(), modes.end(), Less<navimake::types::Mode>());
     std::for_each(modes.begin(), modes.end(), Indexer<navimake::types::Mode>());
 
-    std::sort(networks.begin(), networks.end(), Less<navimake::types::Network>());
-    std::for_each(networks.begin(), networks.end(), Indexer<navimake::types::Network>());
-
     std::sort(cities.begin(), cities.end(), Less<navimake::types::City>());
     std::for_each(cities.begin(), cities.end(), Indexer<navimake::types::City>());
 
@@ -26,6 +23,7 @@ void Data::sort(){
 
     std::sort(routes.begin(), routes.end(), Less<navimake::types::Route>());
     std::for_each(routes.begin(), routes.end(), Indexer<navimake::types::Route>());
+
 
     std::sort(stops.begin(), stops.end(), Less<navimake::types::StopTime>());
     std::for_each(stops.begin(), stops.end(), Indexer<navimake::types::StopTime>());
@@ -50,6 +48,7 @@ void Data::sort(){
 
 
 }
+
 
 void Data::clean(){
 }
@@ -97,6 +96,7 @@ void Data::transform(navitia::type::PT_Data& data){
     std::transform(this->validity_patterns.begin(), this->validity_patterns.end(), data.validity_patterns.begin(), navimake::types::ValidityPattern::Transformer());
 
     build_relations(data);
+
 }
 
 void Data::build_relations(navitia::type::PT_Data &data){
@@ -110,15 +110,16 @@ void Data::build_relations(navitia::type::PT_Data &data){
 
     BOOST_FOREACH(navitia::type::StopPoint & sp, data.stop_points){
         navitia::type::StopArea & sa = data.stop_areas[sp.stop_area_idx];
+        sa.stop_point_list.push_back(sp.idx);
         try{
             navitia::type::City & city = data.cities.at(sp.city_idx);
-            sa.stop_point_list.push_back(sp.idx);
             city.stop_point_list.push_back(sp.idx);
             if(std::find(city.stop_area_list.begin(), city.stop_area_list.end(),sa.idx) == city.stop_area_list.end())
                 city.stop_area_list.push_back(sa.idx);
         }catch(std::out_of_range ex){//aucune city lié au stopPoint
             continue;
         }
+
     }
 
     BOOST_FOREACH(navitia::type::Line & line, data.lines){
@@ -150,12 +151,6 @@ void Data::build_relations(navitia::type::PT_Data &data){
 
     //BOOST_FOREACH(navitia::type::Network & network, data.networks){}
 
-    BOOST_FOREACH(navitia::type::Route & route, data.routes){
-        try{
-            data.mode_types.at(route.mode_type_idx).line_list.push_back(route.line_idx);
-        }catch(std::out_of_range ex){}
-    }
-
     //BOOST_FOREACH(navitia::type::StopTime & stop_time, data.stop_times){}
 
     //BOOST_FOREACH(navitia::type::Connection & connection, data.connections){}
@@ -163,11 +158,31 @@ void Data::build_relations(navitia::type::PT_Data &data){
     BOOST_FOREACH(navitia::type::RoutePoint & route_point, data.route_points){
         try{
             data.routes.at(route_point.route_idx).route_point_list.push_back(route_point.idx);
-        }catch(std::out_of_range ex){}
+        }catch(std::out_of_range ex){std::cout << "out of range route point" << std::endl;}
         data.stop_points.at(route_point.stop_point_idx).route_point_list.push_back(route_point.idx);
+
     }
 
 
+
+
+
+
+
+
+    // ICI VLA remplir les stop_time_list des vj
+    BOOST_FOREACH(navitia::type::StopTime & st, data.stop_times){
+        try {
+            data.vehicle_journeys.at(st.vehicle_journey_idx).stop_time_list.push_back(st.idx);
+        }catch(std::out_of_range ex){std::cout << "oor sur les st " << std::endl;}
+    }
+
+    BOOST_FOREACH(navitia::type::Route & route, data.routes){
+        try{
+            data.mode_types.at(route.mode_type_idx).line_list.push_back(route.line_idx);
+            std::sort(route.route_point_list.begin(), route.route_point_list.end(), sort_route_points_list(data));
+        }catch(std::out_of_range ex){}
+    }
 
     BOOST_FOREACH(navitia::type::VehicleJourney & vj, data.vehicle_journeys){
         try{
@@ -187,17 +202,30 @@ void Data::build_relations(navitia::type::PT_Data &data){
 
             if(std::find(company.line_list.begin(), company.line_list.end(), line.idx) == company.line_list.end())
                 company.line_list.push_back(line.idx);
+
+
+            std::sort(vj.stop_time_list.begin(), vj.stop_time_list.end(), sort_stop_times_list(data));
         }catch(std::out_of_range ex){}
 
-    }
 
-    // ICI VLA remplir les stop_time_list des vj
-    BOOST_FOREACH(navitia::type::StopTime & st, data.stop_times){
-        try {
-            data.vehicle_journeys.at(st.vehicle_journey_idx).stop_time_list.push_back(st.idx);
+
+    }
+    BOOST_FOREACH(navitia::type::Route & route, data.routes){
+        try{
+            std::sort(route.vehicle_journey_list.begin(), route.vehicle_journey_list.end(), sort_vehicle_journey_list(data));
         }catch(std::out_of_range ex){}
     }
 
+    BOOST_FOREACH(navitia::type::RoutePoint & routepoint, data.route_points) {
+        BOOST_FOREACH(unsigned int vjidx, data.routes.at(routepoint.route_idx).vehicle_journey_list) {
+            routepoint.vehicle_journey_list.push_back(vjidx);
+        }
+
+        try{
+            std::sort(routepoint.vehicle_journey_list.begin(), routepoint.vehicle_journey_list.end(), sort_vehicle_journey_list_rp(data, routepoint.order));
+        }catch(std::out_of_range ex){std::cout << "  ! "<< std::endl;}
+
+    }
 
 
     // BOOST_FOREACH(navitia::type::Company & company, data.companies){}

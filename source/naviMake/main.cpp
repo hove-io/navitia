@@ -83,9 +83,11 @@ int main(int argc, char * argv[])
     std::cout << "validity pattern : " << data.validity_patterns.size() << std::endl;
 
 
+
     start = pt::microsec_clock::local_time();
     data.clean();
     clean = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
     start = pt::microsec_clock::local_time();
     data.sort();
     sort = (pt::microsec_clock::local_time() - start).total_milliseconds();

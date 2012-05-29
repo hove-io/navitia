@@ -256,6 +256,7 @@ struct VehicleJourney: public TransmodelHeader, Nameable{
 
     ValidityPattern* validity_pattern;
     std::vector<StopTime*> stop_time_list; // N'est pas à remplir obligatoirement
+    StopTime * first_stop_time;
 
     struct Transformer{
         inline navitia::type::VehicleJourney operator()(const VehicleJourney* vj){return this->operator()(*vj);}
@@ -369,7 +370,7 @@ struct StopTime: public TransmodelHeader {
         ODT(false), zone(0){}
 
 
-    bool operator<(const StopTime& other){return this->departure_time < other.departure_time;}
+    bool operator<(const StopTime& other) const;
 };
 
 }}//end namespace navimake::types
