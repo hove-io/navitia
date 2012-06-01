@@ -143,9 +143,9 @@ BOOST_AUTO_TEST_CASE(compute_route_n_n){
     Path p = sn.compute(starts, dests);
 
     BOOST_CHECK_EQUAL(p.coordinates.size(), 3);
-    BOOST_CHECK(p.coordinates[0] == GeographicalCoord(0,1,false)); // a
-    BOOST_CHECK(p.coordinates[1] == GeographicalCoord(0,5,false)); // o
-    BOOST_CHECK(p.coordinates[2] == GeographicalCoord(0,3,false)); // c
+    BOOST_CHECK_EQUAL(p.coordinates[0], GeographicalCoord(0,1,false)); // a
+    BOOST_CHECK_EQUAL(p.coordinates[1], GeographicalCoord(0,5,false)); // o
+    BOOST_CHECK_EQUAL(p.coordinates[2], GeographicalCoord(0,3,false)); // c
 
     // On lève une exception s'il n'y a pas d'itinéraire
     starts = {b.get("e")};
@@ -246,4 +246,44 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     BOOST_CHECK_EQUAL(p.coordinates[1], GeographicalCoord(10,0,false) );
     BOOST_CHECK_EQUAL(p.coordinates[2], GeographicalCoord(10,10,false) );
     BOOST_CHECK_EQUAL(p.coordinates[3], GeographicalCoord(7,10,false) );
+}
+
+BOOST_AUTO_TEST_CASE(compute_nearest){
+    using namespace navitia::type;
+    StreetNetwork sn;
+    GraphBuilder b(sn);
+
+    /*       1             2
+     *       +             +
+     *    o------o---o---o------o
+     *    a      b   c   d      e
+     */
+
+    b("a",0,0)("b",100,0)("c",200,0)("d",300,0)("e",400,0);
+    b("a","b",100)("b","a",100)("b","c",100)("c","b",100)("c","d",100)("d","c",100)("d","e",100)("e","d",100);
+
+    GeographicalCoord c1(50,10,false);
+    GeographicalCoord c2(350,20,false);
+    ProximityList<idx_t> pl;
+    pl.add(c1, 1);
+    pl.add(c2, 2);
+    pl.build();
+
+    GeographicalCoord o(0,0,false);
+
+    auto res = sn.find_nearest(o, pl, 10);
+    BOOST_CHECK_EQUAL(res.size(), 0);
+
+    res = sn.find_nearest(o, pl, 100);
+    BOOST_CHECK_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].first , 1);
+    BOOST_CHECK_CLOSE(res[0].second, 50, 1);
+
+    res = sn.find_nearest(o, pl, 1000);
+    std::sort(res.begin(), res.end());
+    BOOST_CHECK_EQUAL(res.size(), 2);
+    BOOST_CHECK_EQUAL(res[0].first , 1);
+    BOOST_CHECK_CLOSE(res[0].second, 50, 1);
+    BOOST_CHECK_EQUAL(res[1].first , 2);
+    BOOST_CHECK_CLOSE(res[1].second, 350, 1);
 }
