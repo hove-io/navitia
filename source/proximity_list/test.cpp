@@ -2,6 +2,7 @@
 #define BOOST_TEST_MODULE test_proximity_list
 
 #include <boost/test/unit_test.hpp>
+#include <boost/foreach.hpp>
 #include "proximity_list.h"
 
 using namespace navitia::type;
@@ -83,18 +84,20 @@ BOOST_AUTO_TEST_CASE(distances_grand_cercle)
     BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
 }
 BOOST_AUTO_TEST_CASE(find_nearest){
+    typedef std::pair<unsigned int, GeographicalCoord> p;
     ProximityList<unsigned int> pl;
 
     GeographicalCoord c;
+    std::vector<GeographicalCoord> coords;
     c.degrees = false;
 
     // Exemple d'illustration issu de wikipedia
-    c.x = 2; c.y = 3; pl.add(c, 1);
-    c.x = 5; c.y = 4; pl.add(c, 2);
-    c.x = 9; c.y = 6; pl.add(c, 3);
-    c.x = 4; c.y = 7; pl.add(c, 4);
-    c.x = 8; c.y = 1; pl.add(c, 5);
-    c.x = 7; c.y = 2; pl.add(c, 6);
+    c.x = 2; c.y = 3; pl.add(c, 1); coords.push_back(c);
+    c.x = 5; c.y = 4; pl.add(c, 2); coords.push_back(c);
+    c.x = 9; c.y = 6; pl.add(c, 3); coords.push_back(c);
+    c.x = 4; c.y = 7; pl.add(c, 4); coords.push_back(c);
+    c.x = 8; c.y = 1; pl.add(c, 5); coords.push_back(c);
+    c.x = 7; c.y = 2; pl.add(c, 6); coords.push_back(c);
     
     pl.build();
 
@@ -113,32 +116,46 @@ BOOST_AUTO_TEST_CASE(find_nearest){
     BOOST_CHECK_EQUAL(pl.find_nearest(c), 3);
 
     c.x = 2; c.y=4;
+
     expected = {1};
-    auto tmp = pl.find_within(c, 1.1);
+    auto tmp1 = pl.find_within(c, 1.1);
+    std::vector<unsigned int> tmp;
+    BOOST_FOREACH(auto p, tmp1) tmp.push_back(p.first);
+    BOOST_CHECK_EQUAL(tmp1[0].second, coords[0]);
     BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
 
     expected={1,2};
-    tmp = pl.find_within(c, 3.1);
+    tmp1 = pl.find_within(c, 3.1);
+    tmp.clear();
+    BOOST_FOREACH(auto p, tmp1) tmp.push_back(p.first);
     std::sort(tmp.begin(), tmp.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
 
     expected={1,2,4};
-    tmp = pl.find_within(c, 3.7);
+    tmp.clear();
+    tmp1 = pl.find_within(c, 3.7);
+    BOOST_FOREACH(auto p, tmp1) tmp.push_back(p.first);
     std::sort(tmp.begin(), tmp.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
 
     expected={1,2,4,6};
-    tmp = pl.find_within(c, 5.4);
+    tmp.clear();
+    tmp1 = pl.find_within(c, 5.4);
+    BOOST_FOREACH(auto p, tmp1) tmp.push_back(p.first);
     std::sort(tmp.begin(), tmp.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
 
     expected={1,2,4,5,6};
-    tmp = pl.find_within(c, 6.8);
+    tmp.clear();
+    tmp1 = pl.find_within(c, 6.8);
+    BOOST_FOREACH(auto p, tmp1) tmp.push_back(p.first);
     std::sort(tmp.begin(), tmp.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
 
     expected={1,2,3,4,5,6};
-    tmp = pl.find_within(c, 7.3);
+    tmp.clear();
+    tmp1 = pl.find_within(c, 7.3);
+    BOOST_FOREACH(auto p, tmp1) tmp.push_back(p.first);
     std::sort(tmp.begin(), tmp.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
 }
