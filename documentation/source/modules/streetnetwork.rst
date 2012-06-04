@@ -105,8 +105,11 @@ Trouver les points d'arrêt les plus proches
 À partir d'une coordonnée, on veut retrouver tous les arrêtes accessibles à une certaine distance. Le calcul se fait de la manière suivante :
 
 #. Trouver tous les stop point à moins de X mètres
-#. Trouver l'arc le plus proche pour chaque stop point
+#. Trouver le nœud le plus proche
 #. Lancer un calcul isochrone bridé à X mètres
-#. Pour chaque stop point, retourner l'extrémité du segment la plus proche
+#. Pour chaque stop point, projeter sur le segment le plus proche
+
+    #. Pour les deux extrémités, verifier si la distance jusqu'à ce nœud plus la distance de la projection est inférieure à X mètre
+    #. Si oui, la rajouter à la liste des solution à retourner
 
 Il se peut que pour un stop point, il n'y ait pas de trajet acceptable.

@@ -211,6 +211,7 @@ void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc) {
         BOOST_FOREACH(unsigned int stid, vj.stop_time_list) {
             rpv = get_rp_idx(data.pt_data.stop_times.at(stid).route_point_idx, data);
 
+
             //ta
             tav = get_ta_idx(stid, data) ;
             if(tdv != 0) {
@@ -293,6 +294,9 @@ void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc) {
 bool est_transport(edge_t e, navitia::type::Data &data, NW & g) {
     return (get_n_type(source(e, g), data) == TA || get_n_type(source(e, g), data) == TD) & (get_n_type(target(e, g), data) == TA || get_n_type(target(e, g), data) == TD);
 }
+
+
+
 
 bool etape::operator ==(network::etape e2) {
     return (this->ligne == e2.ligne) & (this->descente == e2.descente);

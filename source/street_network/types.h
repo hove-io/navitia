@@ -8,7 +8,7 @@
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/utility.hpp>
-
+#include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <map>
 
 namespace nt = navitia::type;
@@ -78,7 +78,7 @@ struct Way{
 struct PathItem{
     nt::idx_t way_idx; //< Voie sur laquel porte le bout du trajet
     float length; //< Longueur du trajet effectué sur cette voie
-    std::vector<nt::idx_t> segments; //< Segments traversés
+    std::vector<edge_t> segments; //< Segments traversés
     PathItem() : length(0){}
 };
 
@@ -116,8 +116,15 @@ struct StreetNetwork {
     void load_flz(const std::string & filename);
     void save_flz(const std::string & filename);
 
-    /// Calcule le meilleur itinéraire entre deux listes de nœuds
-    Path compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations);
+    /** Calcule le meilleur itinéraire entre deux listes de nœuds
+     *
+     * Le paramètre zeros indique la distances (en mètres) de chaque nœud de départ. Il faut qu'il y ait autant d'éléments que dans starts
+     * Si la taille ne correspond pas, on considère une distance de 0
+     */
+    Path compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<double> start_zeros = std::vector<double>(), std::vector<double> dest_zeros = std::vector<double>());
+
+    /// Calcule le meilleur itinéraire entre deux coordonnées
+    Path compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord);
 
     /** Retourne l'arc (segment) le plus proche
       *
@@ -125,8 +132,61 @@ struct StreetNetwork {
       * Ce n'est donc pas optimal, mais pour améliorer ça, il faudrait indexer des segments, ou ratisser plus large
       */
     edge_t nearest_edge(const type::GeographicalCoord & coordinates) const;
+
+    /** On définit les coordonnées de départ, un proximitylist et un rayon
+     *
+     * Retourne tous les idx atteignables dans ce rayon, ainsi que la distance en suivant le filaire de voirie
+     **/
+    std::vector< std::pair<type::idx_t, double> > find_nearest(const type::GeographicalCoord & start_coord, const ProximityList<type::idx_t> & pl, double radius);
+
+private :
+    /** Initialise les structures nécessaires à dijkstra
+     *
+     * Attention !!! Modifie distances et predecessors
+     **/
+    void init(std::vector<float> & distances, std::vector<vertex_t> & predecessors) const;
+
+    /** Lance un calcul de dijkstra sans initaliser de structure de données
+     *
+     * Attention !!! Modifie distances et predecessors
+     **/
+    template<class Visitor>
+    void dijkstra(vertex_t start, std::vector<float> & distances, std::vector<vertex_t> & predecessors, Visitor visitor){
+        boost::two_bit_color_map<> color(boost::num_vertices(this->graph));
+        boost::dijkstra_shortest_paths_no_init(this->graph, start, &predecessors[0], &distances[0],
+                                               boost::get(&Edge::length, this->graph), // weigth map
+                                               boost::identity_property_map(),
+                                               std::less<float>(), boost::closed_plus<float>(),
+                                               0,
+                                               visitor,
+                                               color
+                                               );
+    }
 };
 
+
+/** Lorsqu'on a une coordonnée, il faut l'accrocher au filaire. Cette structure contient l'accroche
+  *
+  * Elle consiste en deux nœuds possibles (les extrémités du segment où a été projeté la coordonnée)
+  * La coordonnée projetée
+  * Les distances entre le projeté les les nœuds
+  */
+struct ProjectionData {
+    /// deux nœuds possibles (les extrémités du segment où a été projeté la coordonnée)
+    std::vector<vertex_t> vertices;
+
+    /// Segment sur lequel a été projeté la coordonnée
+    edge_t edge;
+
+    /// La coordonnée projetée sur le segment
+    type::GeographicalCoord projected;
+
+    /// Distance entre le projeté et les nœuds du segment
+    std::vector<double> distances;
+
+    /// Initialise la structure à partir d'une coordonnée et d'un graphe sur lequel on projette
+    ProjectionData(const type::GeographicalCoord & coord, const StreetNetwork &sn);
+};
 
 /** Permet de construire un graphe de manière simple
 

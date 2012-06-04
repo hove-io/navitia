@@ -83,13 +83,13 @@ struct ProximityList
     }
 
     /// Retourne tous les éléments dans un rayon de x mètres
-    std::vector<T> find_within(GeographicalCoord coord, double distance ) const {
+    std::vector< std::pair<T, GeographicalCoord> > find_within(GeographicalCoord coord, double distance ) const {
         return find_within(coord, items.begin(), items.end(), distance, true);
     }
 
     /// Retourne l'élément les élements dans un espace restreint à moins d'une certaine distance
-    std::vector<T> find_within(GeographicalCoord coord, const_iterator begin, const_iterator end, double distance, bool along_x) const {
-        std::vector<T> result;
+    std::vector< std::pair<T, GeographicalCoord> > find_within(GeographicalCoord coord, const_iterator begin, const_iterator end, double distance, bool along_x) const {
+        std::vector< std::pair<T, GeographicalCoord> > result;
         if(end == begin)
             return result;
 
@@ -97,7 +97,7 @@ struct ProximityList
         const_iterator median = get_median(begin, end);
         double median_distance = coord.distance_to(median->coord);
         if(median_distance <= distance)
-            result.push_back(median->element);
+            result.push_back(std::make_pair(median->element, median->coord));
 
         // Si la distance mediane est inférieure à la limite, on regarde des deux cotés
         // Cependant il faut regarder la distance projetée
@@ -117,7 +117,7 @@ struct ProximityList
             bool left;
             if(along_x) left = coord.x < median->coord.x;
             else left = coord.y < median->coord.y;
-            std::vector<T> tmp;
+            std::vector< std::pair<T, GeographicalCoord> > tmp;
             if(left) tmp = find_within(coord, begin, median, distance, !along_x);
             else tmp = find_within(coord, median+1, end, distance, !along_x);
             result.insert(result.end(), tmp.begin(), tmp.end());

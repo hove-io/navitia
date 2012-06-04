@@ -94,16 +94,20 @@ struct GeographicalCoord{
       *
       * Si c'est des coordonnées non degrés, alors on utilise la distance euclidienne
       */
-    double distance_to(const GeographicalCoord & other);
+    double distance_to(const GeographicalCoord & other) const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & x & y;
     }
 
     GeographicalCoord convert_to(const Projection& projection, const Projection& current_projection = Projection()) const;
-
-
 };
+
+std::ostream & operator<<(std::ostream &_os, const GeographicalCoord & coord);
+
+// Deux points sont considérés comme étant égaux s'ils sont du même type de coordonnées
+// et si la distance entre eux est inférieure à 1mm
+bool operator==(const GeographicalCoord & a, const GeographicalCoord & b);
 
 struct Country: public NavitiaHeader, Nameable {
     const static Type_e type = eCountry;
