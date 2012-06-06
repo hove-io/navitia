@@ -255,7 +255,7 @@ void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc) {
             //Je relie le ta au premier tc possible
             while((itc != sa.second.end()) & (data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time + min_corresp > get_time(*itc, data, g, map_tc)) )
                 ++itc;
-            if(itc != sa.second.end()& (data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time + min_corresp <= get_time(*itc, data, g, map_tc)))
+            if(itc != sa.second.end() && (data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time + min_corresp <= get_time(*itc, data, g, map_tc)))
                 if(!edge(get_ta_idx(get_idx(tc, data, map_tc), data), *itc, g).second)
                     add_edge(get_ta_idx(get_idx(tc, data, map_tc), data), *itc, EdgeDesc(0), g);
 

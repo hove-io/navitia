@@ -17,13 +17,35 @@ struct DateTime {
     int date;
     int hour;
 
-    bool operator<(DateTime other){
+    DateTime() {
+        *this = DateTime::infinity();
+    }
+
+    bool operator<(DateTime other) const {
         if(other.date == other.date)
             return hour < other.hour;
         else
             return other.date < other.date;
     }
+
+    static DateTime infinity() {
+        DateTime dt;
+        dt.date = std::numeric_limits<int>::max();
+        dt.hour = std::numeric_limits<int>::max();
+        return dt;
+    }
+
+    void normalize(){
+        this->date += this->date / (24*3600);
+        this->hour = hour % (24*3600);
+    }
+
+    bool operator==(DateTime other) {
+        return this->hour == other.hour && this->date == other.date;
+    }
 };
+
+DateTime operator+(DateTime dt, int seconds);
 
 /** Représente un horaire associé à un validity pattern
  *
@@ -33,12 +55,20 @@ struct ValidityPatternTime {
     type::idx_t vp_idx;
     int hour;
 
-    bool operator<(ValidityPatternTime other){
+    template<class T>
+    bool operator<(T other) const {
         return hour < other.hour;
     }
 
+    void normalize(){
+        this->vp_idx += this->vp_idx / 24*3600;
+        this->hour = hour % 24*3600;
+    }
+
     ValidityPatternTime() {}
-    ValidityPatternTime(int vp_idx, int hour) : vp_idx(vp_idx), hour(hour) {}
+    ValidityPatternTime(int vp_idx, int hour) : vp_idx(vp_idx), hour(hour){
+        this->normalize();
+    }
 };
 
 /// Un nœud représente un RoutePoint
@@ -46,7 +76,7 @@ struct Vertex {
 };
 
 /// Propriété des arcs : ils contiennent une grille horaire ou un horaire constant
-struct Edge {
+struct TimeTable {
     /// Parfois on a des durées constantes : correspondance, réseau en fréquence; vaut -1 s'il faut utiliser les horaires
     int constant_duration;
 
@@ -58,11 +88,20 @@ struct Edge {
         time_table.push_back(std::make_pair(departure, arrival));
     }
 
-    /// Évalue la prochaine arrivée possible étant donnée une heure d'arrivée
-    DateTime eval(DateTime departure);
+    /** Évalue la prochaine arrivée possible étant donnée une heure d'arrivée
+     *
+     * Prend en compte le passe-minuit
+     */
+    DateTime eval(DateTime departure, const type::PT_Data & data) const;
 
-    Edge() : constant_duration(-1){}
-    Edge(int constant_duration) : constant_duration(constant_duration){}
+    TimeTable() : constant_duration(-1){}
+    TimeTable(int constant_duration) : constant_duration(constant_duration){}
+};
+
+struct Edge {
+    TimeTable t;
+    Edge() : t(-1) {}
+    Edge(int duration) : t(duration){}
 };
 
 // Plein de typedefs pour nous simpfilier un peu la vie
@@ -109,6 +148,17 @@ struct TimeDependent {
 
     void build_graph();
 
+    std::vector<std::string> compute(const type::StopArea & departure, const type::StopArea & arrival);
 };
 
 }}
+
+namespace std {
+template <>
+class numeric_limits<navitia::routing::DateTime> {
+public:
+    static navitia::routing::DateTime max() {
+        return navitia::routing::DateTime::infinity();
+    }
+};
+}
