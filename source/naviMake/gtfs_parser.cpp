@@ -165,7 +165,7 @@ void GtfsParser::parse_stops(Data & data) {
         code_c = id_c;
     }
 
-    if(id_c == -1 || code_c == -1 || lat_c == -1 || lon_c == -1 || type_c == -1 || parent_c == -1 || name_c == -1) {
+    if(id_c == -1 || code_c == -1 || lat_c == -1 || lon_c == -1 || name_c == -1) {
         std::cerr << "Il manque au moins une colonne dans le fichier stops.txt" << std::endl;
         return;
     }
@@ -194,6 +194,7 @@ void GtfsParser::parse_stops(Data & data) {
         }
         else {
 
+
             // Si c'est un stopArea
             if(elts[type_c] == "1") {
                 nm::StopArea * sa = new nm::StopArea();
@@ -211,8 +212,10 @@ void GtfsParser::parse_stops(Data & data) {
                 if(parent_c < elts.size() && elts[parent_c] != "") ///On sauvegarde la référence à la zone d'arrêt
                     stoppoint_areas.push_back(std::make_pair(sp, elts[parent_c]));
             }
+
         }
     }
+
 
     // On reboucle pour récupérer les stop areas de tous les stop points
     BOOST_FOREACH(auto sa, stoppoint_areas){
@@ -226,6 +229,8 @@ void GtfsParser::parse_stops(Data & data) {
             (sa.first)->stop_area = 0;
         }
     }
+
+
 
     std::cout << "J'ai parsé " << data.stop_points.size() << " stop points" << std::endl;
     std::cout << "J'ai parsé " << data.stop_areas.size() << " stop areas" << std::endl;
@@ -418,7 +423,7 @@ void GtfsParser:: parse_routes(Data & data){
         else if(elts[i] == "route_color")
             color_c = i;
     }
-    if(id_c == -1 || agency_c == -1 || short_name_c == -1 || long_name_c == -1 || desc_c == -1 || type_c == -1 || color_c == -1) {
+    if(id_c == -1 || short_name_c == -1 || long_name_c == -1 || type_c == -1 || color_c == -1) {
         std::cerr << "Il manque au moins une colonne dans routes.txt" << std::endl;
         return;
     }
@@ -485,7 +490,7 @@ void GtfsParser::parse_trips(Data & data) {
             block_c = i;
     }
 
-    if (id_c == -1 || service_c == -1 || trip_c == -1 || headsign_c == -1 || direction_c == -1 || block_c == -1){
+    if (id_c == -1 || service_c == -1 || trip_c == -1 || headsign_c == -1){
         std::cerr << "Il manque au moins une colonne dans trips.txt" << std::endl;
         return;
     }
@@ -665,7 +670,7 @@ void GtfsParser::parse_stop_times(Data & data) {
             dist_c = i;
     }
 
-    if(id_c == -1 || arrival_c == -1 || departure_c == -1 || stop_c == -1 || stop_seq_c == -1 || pickup_c == -1 || drop_c == -1 || dist_c == -1){
+    if(id_c == -1 || arrival_c == -1 || departure_c == -1 || stop_c == -1 || stop_seq_c == -1){
         std::cerr << "Il manque au moins une colonne dans stop_times.txt" << std::endl;
         return;
     }
@@ -678,12 +683,13 @@ void GtfsParser::parse_stop_times(Data & data) {
         std::vector<std::string> elts(tok.begin(), tok.end());
 
         auto vj_it = vj_map.find(elts[id_c]);
+        boost::algorithm::trim(elts[stop_c]);
         auto stop_it = stop_map.find(elts[stop_c]);
         if(vj_it == vj_map.end()) {
             std::cerr << "Impossible de trouver le vehicle_journey " << elts[id_c] << std::endl;
         }
         else if(stop_it == stop_map.end()){
-            std::cerr << "Impossible de trouver le StopPoint " << elts[stop_c] << std::endl;
+            std::cerr << "Impossible de trouver le StopPoint " << elts[stop_c] << "!"<< std::endl;
         }
         else {
             nm::StopTime * stop_time = new nm::StopTime();
