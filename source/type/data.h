@@ -83,10 +83,10 @@ public:
       * La compression FastLZ est extrèmement rapide mais moyennement performante
       * Le but est que la lecture du fichier compression soit aussi rapide que sans compression
       */
-    void load_flz(const std::string & filename);
+    void load_lz4(const std::string & filename);
 
     /** Sauvegarde les données en binaire compressé avec FastLZ*/
-    void save_flz(const std::string & filename);
+    void lz4(const std::string & filename);
 
     /** Sauvegarde la structure de fichier au format binaire
       *

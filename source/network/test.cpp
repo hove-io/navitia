@@ -34,7 +34,7 @@ struct label_name {
 int main(int , char** argv) {
     navitia::type::Data data;
     std::cout << "Debut chargement des données ... " << std::flush;
-    data.load_flz("/home/vlara/navitia/jeu/IdF/IdF.nav");
+    data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.nav");
     std::cout << " Fin chargement des données" << std::endl;
 
 

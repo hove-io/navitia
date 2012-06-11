@@ -1,3 +1,4 @@
+#pragma once
 #include "type.h"
 #include "first_letter/first_letter.h"
 #include "proximity_list/proximity_list.h"
