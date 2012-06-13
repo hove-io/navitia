@@ -42,7 +42,7 @@ void remove_bom(std::fstream& stream){
         return;
     }
     
-    //pas de correspondace avec un BOM, on remet les caractére lu
+    //pas de correspondance avec un BOM, on remet les caractères lus
     for(int i=0; i<3; i++){
         stream.unget();
     }
