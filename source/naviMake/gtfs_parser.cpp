@@ -565,7 +565,7 @@ bool same_route(nm::VehicleJourney * vj1, nm::VehicleJourney * vj2){
     return true;
 }
 
-void GtfsParser::build_routes(Data & data){
+void build_routes(Data & data){
     std::cout << "On calcule les routes" << std::endl;
     // Associe à chaque line external_code le nombre de route trouvées jusqu'à present
     std::map<std::string, int> line_routes_count;
@@ -601,7 +601,7 @@ void GtfsParser::build_routes(Data & data){
     std::cout << std::endl;
 }
 
-void GtfsParser::build_route_points(Data & data){
+void build_route_points(Data & data){
     std::cout << "Construction des route points" << std::endl;
     std::map<std::string, navimake::types::RoutePoint*> route_point_map;
 
