@@ -354,13 +354,8 @@ nt::VehicleJourney VehicleJourney::Transformer::operator()(const VehicleJourney&
 
     nt_vj.route_idx = vj.route->idx;
 
-    if(vj.first_stop_time != NULL)
-        nt_vj.first_stop_time_idx = vj.first_stop_time->idx;
-
     if(vj.validity_pattern != NULL)
         nt_vj.validity_pattern_idx = vj.validity_pattern->idx;
-
-
 
     return nt_vj;
 }

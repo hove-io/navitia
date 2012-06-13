@@ -536,7 +536,6 @@ void GtfsParser::parse_trips(Data & data) {
                     vj->route = 0;
                     vj->tmp_line = line;
                     vj->mode = itm->second;
-                    vj->first_stop_time = NULL;
                     vj_map[vj->name] = vj;
                     data.vehicle_journeys.push_back(vj);
                 }
@@ -702,10 +701,6 @@ void GtfsParser::parse_stop_times(Data & data) {
             stop_time->ODT = 0;//(elts[pickup_c] == "2" && elts[drop_c] == "2");
             stop_time->zone = 0; // à définir selon pickup_type ou drop_off_type = 10
             stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
-            if(stop_time->vehicle_journey->first_stop_time == NULL)
-                stop_time->vehicle_journey->first_stop_time = stop_time;
-            else if(stop_time->vehicle_journey->first_stop_time->departure_time > stop_time->departure_time)
-                stop_time->vehicle_journey->first_stop_time = stop_time;
             data.stops.push_back(stop_time);
             count++;
         }

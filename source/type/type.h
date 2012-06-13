@@ -301,7 +301,6 @@ struct Route : public NavitiaHeader, Nameable{
     bool is_adapted;
     idx_t line_idx;
     idx_t mode_type_idx;
-    idx_t associated_route_idx;
     
     std::vector<idx_t> route_point_list;
     std::vector<idx_t> freq_route_point_list;
@@ -310,12 +309,11 @@ struct Route : public NavitiaHeader, Nameable{
     std::vector<idx_t> impact_list;
 
 
-
-    Route(): is_frequence(false), is_forward(false), is_adapted(false), line_idx(0), mode_type_idx(0), associated_route_idx(0){};
+    Route(): is_frequence(false), is_forward(false), is_adapted(false), line_idx(0), mode_type_idx(0) {};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & external_code & is_frequence & is_forward & is_adapted & mode_type_idx
-                & line_idx & associated_route_idx & route_point_list & freq_route_point_list & freq_setting_list
+                & line_idx & route_point_list & freq_route_point_list & freq_setting_list
                 & vehicle_journey_list & impact_list;
     }
 
@@ -331,11 +329,10 @@ struct VehicleJourney: public NavitiaHeader, Nameable {
     bool is_adapted;
     idx_t validity_pattern_idx;
     std::vector<idx_t> stop_time_list;
-    idx_t first_stop_time_idx;
 
     VehicleJourney(): route_idx(invalid_idx), company_idx(invalid_idx), mode_idx(invalid_idx), vehicle_idx(invalid_idx), is_adapted(false), validity_pattern_idx(invalid_idx), stop_time_list(){}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & is_adapted & validity_pattern_idx & idx & stop_time_list & first_stop_time_idx;
+        ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & is_adapted & validity_pattern_idx & idx & stop_time_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };

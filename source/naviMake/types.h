@@ -309,7 +309,7 @@ private:
 public:
     boost::gregorian::date beginning_date;
     ValidityPattern(){}
-    ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date){}
+    ValidityPattern(boost::gregorian::date beginning_date, const std::string & vp = "") : days(vp), beginning_date(beginning_date){}
     void add(boost::gregorian::date day);
     void add(int day);
     void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
