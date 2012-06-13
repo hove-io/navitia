@@ -35,6 +35,8 @@ EncodingConverter::~EncodingConverter(){
 void remove_bom(std::fstream& stream){
     char buffer[3];
     stream.read(buffer, 3);
+    if(stream.gcount() != 3)
+        return;
     if(buffer[0] == (char)0xEF && buffer[1] == (char)0xBB){
         //BOM UTF8
         return;
