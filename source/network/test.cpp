@@ -12,17 +12,17 @@ struct label_name {
     label_name(NW &g, navitia::type::Data &data, map_tc_t map_tc): g(g), data(data), map_tc(map_tc){}
 
     void operator()(std::ostream& oss,vertex_t v) {
-            oss << "[label=\"";
-            switch(get_n_type(v, data)) {
-            case SA : oss << "SA " << get_idx(v, data, map_tc); break;
-            case SP : oss << "SP " << get_idx(v, data, map_tc); break;
-            case RP : oss << "RP " << get_idx(v, data, map_tc); break;
-            case TA : oss << "TA " << get_idx(v, data, map_tc) << " " << get_time(v, data, g, map_tc); break;
-            case TD : oss << "TD " << get_idx(v, data, map_tc) << " "<< get_time(v, data, g, map_tc); break;
-            case TC : oss << "TC " << get_idx(v, data, map_tc) << " "<< get_time(v, data, g, map_tc); break;
-            }
-            oss << " " << v << " " << get_saidx(v, data, g, map_tc) << "\"]";
+        oss << "[label=\"";
+        switch(get_n_type(v, data)) {
+        case SA : oss << "SA " << get_idx(v, data, map_tc); break;
+        case SP : oss << "SP " << get_idx(v, data, map_tc); break;
+        case RP : oss << "RP " << get_idx(v, data, map_tc); break;
+        case TA : oss << "TA " << get_idx(v, data, map_tc) << " " << get_time(v, data, g, map_tc); break;
+        case TD : oss << "TD " << get_idx(v, data, map_tc) << " "<< get_time(v, data, g, map_tc); break;
+        case TC : oss << "TC " << get_idx(v, data, map_tc) << " "<< get_time(v, data, g, map_tc); break;
         }
+        oss << " " << v << " " << get_saidx(v, data, g, map_tc) << "\"]";
+    }
 
 };
 
@@ -61,8 +61,11 @@ int main(int , char** argv) {
 
     boost::typed_identity_property_map<edge_t> identity;
 
+    boost::posix_time::ptime start, end;
 
 
+
+    start = boost::posix_time::microsec_clock::local_time();
     try {
         boost::dijkstra_shortest_paths(g, v1,
                                        boost::predecessor_map(&predecessors[0])
@@ -75,27 +78,28 @@ int main(int , char** argv) {
                                        .visitor(dijkstra_goal_visitor(v2, data, g, map_tc))
                                        );
     } catch(found_goal fg) { v2 = fg.v; }
-
+    end = boost::posix_time::microsec_clock::local_time();
 
     if(predecessors[v2] == v2) {
         std::cout << "Pas de chemin trouve" << std::endl;
     } else {
-        std::cout << "Chemin trouve" << std::endl;
+        std::cout << "Chemin trouve en " << (end-start).total_milliseconds() << std::endl;
 
         for(vertex_t v = v2; (v!=v1); v = predecessors[v]) {
             if(get_n_type(v, data) == TD || get_n_type(v, data) == TA) {
-                std::cout << data.pt_data.stop_areas.at(data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).stop_point_idx).stop_area_idx).name;
+                std::cout << data.pt_data.stop_areas.at(data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).stop_point_idx).stop_area_idx).name << " ";
+                std::cout << data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).stop_point_idx).stop_area_idx;
                 std::cout << " " << data.pt_data.stop_times.at(get_idx(v, data, map_tc)).arrival_time;
                 std::cout << " " << data.pt_data.lines.at(data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).route_idx).line_idx).name;
-                std::cout << " t : " << distances[v].temps << " d : " << distances[v].date_arrivee << std::endl;
+                std::cout << " t : " << distances[v].temps << " d : " << distances[v].date_arrivee << " " << data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).route_idx << std::endl;
             }
         }
     }
 
 
-//    label_name ln(g, data, map_tc);
-//    std::ofstream f("test.z");
-//    write_graphviz(f, g, ln);
+    //    label_name ln(g, data, map_tc);
+    //    std::ofstream f("test.z");
+    //    write_graphviz(f, g, ln);
 
 
 

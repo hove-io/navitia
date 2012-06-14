@@ -252,7 +252,6 @@ public:
     {
         if(get_n_type(target(e, g), data) == TA)
             if (get_saidx(target(e, g), data, g_, map_tc) == m_goal){
-            std::cout << "throw" << std::endl;
             throw found_goal(target(e, g));
         }
     }

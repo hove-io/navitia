@@ -10,7 +10,7 @@ int main(int , char** /*argv*/) {
 
     std::cout << "Fin chargement" << std::endl;
 
-    unsigned int depart = 9033, arrivee = 12869;
+    unsigned int depart = 13587, arrivee = 16331;
 
     BOOST_FOREACH(navitia::type::Route route, data.pt_data.routes) {
 
@@ -32,18 +32,22 @@ int main(int , char** /*argv*/) {
 
 
         boost::posix_time::ptime start, end;
+
+
         CALLGRIND_START_INSTRUMENTATION;
         start = boost::posix_time::microsec_clock::local_time();
-        raptor::pair_retour_t pair_retour = raptor::RAPTOR(depart, arrivee, 20000, data.pt_data.validity_patterns.at(0).slide(boost::gregorian::from_undelimited_string("20120417")), data);
+        raptor::pair_retour_t pair_retour = raptor::RAPTOR(depart, arrivee, 28800, data.pt_data.validity_patterns.at(0).slide(boost::gregorian::from_undelimited_string("20120219")), data);
         end = boost::posix_time::microsec_clock::local_time();
         CALLGRIND_STOP_INSTRUMENTATION;
         CALLGRIND_DUMP_STATS;
+
+
         std::cout << "temps : "  << (end - start).total_milliseconds() << std::endl;
 
 
         std::cout << "Depart : " << data.pt_data.stop_areas.at(depart).name << " Arrivée : " << data.pt_data.stop_areas.at(arrivee).name << std::endl << std::endl;
         raptor::map_retour_t retour = pair_retour.first;
-        std::cout << "DeBuGGG " << retour[1][11476].temps << std::endl;
+
         BOOST_FOREACH(raptor::map_retour_t::value_type r1, retour) {
             if(r1.first > 0) {
                 if(r1.second.count(arrivee) == 0)

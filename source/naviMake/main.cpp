@@ -101,6 +101,7 @@ int main(int argc, char * argv[])
     start = pt::microsec_clock::local_time();
     nav_data.build_first_letter();
     first_letter = (pt::microsec_clock::local_time() - start).total_milliseconds();
+    std::cout <<"Debut sauvegarde ..." << std::endl;
     start = pt::microsec_clock::local_time();
     nav_data.save_flz(output);
 //    nav_data.street_network.save_flz(outputsn);

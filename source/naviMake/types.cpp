@@ -7,7 +7,7 @@ using namespace navimake::types;
 
 bool ValidityPattern::is_valid(int duration){
     if(duration < 0){
-        std::cerr << "La date est avant le début de période" << std::endl;
+        std::cerr << "La date est avant le début de période " << beginning_date << " " << duration <<  std::endl;
         return false;
     }
     else if(duration > 366){
