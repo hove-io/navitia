@@ -29,9 +29,9 @@ int main(int, char**){
         // Porte maillot 13207
         // bérault 1878
         // buzenval 1866
-        auto l = td.compute(data.pt_data.stop_areas[1866], data.pt_data.stop_areas[5980]);
+        /*auto l = td.compute(data.pt_data.stop_areas[1866], data.pt_data.stop_areas[5980]);
         for(auto s : l){
             std::cout << s << std::endl;
-        }
+        }*/
     }
 }
