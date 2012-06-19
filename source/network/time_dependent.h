@@ -17,26 +17,22 @@ struct DateTime {
     int date;
     int hour;
 
-    DateTime() {
-        *this = DateTime::infinity();
-    }
+    DateTime() : date(std::numeric_limits<int>::max()), hour(std::numeric_limits<int>::max()){}
 
     bool operator<(DateTime other) const {
-        if(other.date == other.date)
+        if(this->date == other.date)
             return hour < other.hour;
         else
-            return other.date < other.date;
+            return this->date < other.date;
     }
 
     static DateTime infinity() {
-        DateTime dt;
-        dt.date = std::numeric_limits<int>::max();
-        dt.hour = std::numeric_limits<int>::max();
-        return dt;
+        return DateTime();
     }
 
     void normalize(){
-        this->date += this->date / (24*3600);
+        if(date > 300) std::cout << "on normalise l'infini..." << std::endl;
+        this->date += this->hour / (24*3600);
         this->hour = hour % (24*3600);
     }
 
@@ -44,6 +40,8 @@ struct DateTime {
         return this->hour == other.hour && this->date == other.date;
     }
 };
+
+std::ostream & operator<<(std::ostream & os, const DateTime & dt);
 
 DateTime operator+(DateTime dt, int seconds);
 
@@ -60,15 +58,8 @@ struct ValidityPatternTime {
         return hour < other.hour;
     }
 
-    void normalize(){
-        this->vp_idx += this->vp_idx / 24*3600;
-        this->hour = hour % 24*3600;
-    }
-
     ValidityPatternTime() {}
-    ValidityPatternTime(int vp_idx, int hour) : vp_idx(vp_idx), hour(hour){
-        this->normalize();
-    }
+    ValidityPatternTime(int vp_idx, int hour) : vp_idx(vp_idx), hour(hour){}
 };
 
 /// Un nœud représente un RoutePoint
@@ -94,11 +85,17 @@ struct TimeTable {
      */
     DateTime eval(DateTime departure, const type::PT_Data & data) const;
 
+    /** Plus courte durée possible de faire */
+    int min_duration() const;
+
     TimeTable() : constant_duration(-1){}
     TimeTable(int constant_duration) : constant_duration(constant_duration){}
 };
 
 struct Edge {
+    /// Correspond à la meilleure durée possible. On s'en sert pour avoir une borne inférieure de temps
+    int min_duration;
+
     TimeTable t;
     Edge() : t(-1) {}
     Edge(int duration) : t(duration){}
@@ -112,7 +109,7 @@ struct Edge {
   * les arcs sont orientés
   * les propriétés des nœuds et arcs sont les classes définies précédemment
   */
-typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, Vertex, Edge> Graph;
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, Vertex, Edge> Graph;
 
 /// Représentation d'un nœud dans le graphe
 typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
@@ -125,6 +122,14 @@ typedef boost::graph_traits<Graph>::vertex_iterator vertex_iterator;
 
 /// Type itérateur sur les arcs du graphe
 typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
+
+/** Étape d'un itinéraire*/
+
+struct PathItem{
+    std::string stop_point_name;
+    int time;
+    int day;
+};
 
 /** Représentation du réseau de transport en commun de type « type-dependent »
  *
@@ -139,16 +144,20 @@ struct TimeDependent {
     const type::PT_Data & data;
     Graph graph;
 
-    int stop_area_offset_dep;
-    int stop_area_offset_arr;
-    int stop_point_offset_dep;
-    int stop_point_offset_arr;
+    int stop_area_offset;
+    int stop_point_offset;
 
     TimeDependent(const type::PT_Data & data);
 
+    /// Génère le graphe sur le quel sera fait le calcul
     void build_graph();
 
-    std::vector<std::string> compute(const type::StopArea & departure, const type::StopArea & arrival);
+    /** Calcule un itinéraire entre deux stop area
+     *
+     * hour correspond à
+     * day correspond au jour de circulation au départ
+     */
+    std::vector<PathItem> compute(const type::StopArea & departure, const type::StopArea & arr, int hour, int day);
 };
 
 }}
