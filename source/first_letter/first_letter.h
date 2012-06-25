@@ -9,7 +9,6 @@
 #include<map>
 #include<set>
 
-
 /** Map de type first letter
   *
   * On associe une chaine de caractères, par exemple "rue jean jaures" à une valeur T (typiquement un pointeur
@@ -121,5 +120,16 @@ struct FirstLetter
             }
         }
         return result;
+    }
+    /** Méthode pour récuperer le mot alias (Ghostword, alias et ShortName sont géré ici)*/
+    /** Si le mot cherché n'est pas trouvé alors envoyer le même mot*/
+    std::string get_alias(std::string str, const std::map<std::string, std::string> & map_alias){
+        std::map<std::string, std::string>::const_iterator it = map_alias.find(str);
+        if (it!= map_alias.end()){
+            return it->second;
+        }
+        else{
+            return str;
+        }
     }
 };

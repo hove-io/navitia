@@ -1,12 +1,14 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_first_letter
 
-#include "first_letter/first_letter.h"
+#include "first_letter.h"
+#include "type/data.h"
 #include <boost/test/unit_test.hpp>
 #include <vector>
 #include <iostream>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <fstream>
+#include<map>
 
 namespace pt = boost::posix_time;
 BOOST_AUTO_TEST_CASE(parse_state_test){
@@ -51,4 +53,21 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
     res = fl.find("ponia");
     expected = {4};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
+
+    res = fl.find("ru je jau");
+    expected = {0};
+    BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
+}
+
+BOOST_AUTO_TEST_CASE(alias_test){
+    FirstLetter<unsigned int> fl;
+    std::map <std::string,std::string> map;
+    map["st"]="saint";
+    std::string str = fl.get_alias("st", map);
+    BOOST_CHECK_EQUAL("saint",str);
+
+    map["de"]="";
+    str = fl.get_alias("de", map);
+    BOOST_CHECK_EQUAL("", str);
+
 }
