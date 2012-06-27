@@ -153,7 +153,8 @@ void Data::build_relations(navitia::type::PT_Data &data){
     }
 
     BOOST_FOREACH(navitia::type::Route & route, data.routes){
-        data.mode_types.at(route.mode_type_idx).line_list.push_back(route.line_idx);
+        if(route.mode_type_idx != navitia::type::invalid_idx)
+            data.mode_types.at(route.mode_type_idx).line_list.push_back(route.line_idx);
         std::sort(route.route_point_list.begin(), route.route_point_list.end(), sort_route_points_list(data));
     }
 
