@@ -81,7 +81,7 @@ bool Line::operator<(const Line& other) const {
 
 bool Route::operator<(const Route& other) const {
     if(this->line == other.line){
-        return this->name < other.name;
+        return this->external_code <  other.external_code;
     }else{
         return *(this->line) < *(other.line);
     }
