@@ -260,7 +260,7 @@ std::vector<PathItem> TimeDependent::compute(const type::StopArea &dep, const ty
     std::cout << "Dijkstra : " << 100*count/boost::num_vertices(this->graph) << "%  ";
 
 
- /*   vertex_t arrival = arr.idx + stop_area_offset;
+    vertex_t arrival = arr.idx + stop_area_offset;
     while(preds[arrival] != arrival){
         if(arrival < data.route_points.size()){
             const type::StopPoint & sp = data.stop_points[data.route_points[arrival].stop_point_idx];
@@ -272,7 +272,7 @@ std::vector<PathItem> TimeDependent::compute(const type::StopArea &dep, const ty
         }
         arrival = preds[arrival];
     }
-    std::reverse(result.begin(), result.end());*/
+    std::reverse(result.begin(), result.end());
     return result;
 }
 
@@ -309,7 +309,6 @@ std::vector<PathItem> TimeDependent::compute_astar(const type::StopArea &dep, co
     }
     std::cout << "A* : " << 100*count/boost::num_vertices(this->graph) << "%  ";
 
-    /*vertex_t arrival = arr.idx + stop_area_offset;
     while(preds[arrival] != arrival){
         if(arrival < data.route_points.size()){
             const type::StopPoint & sp = data.stop_points[data.route_points[arrival].stop_point_idx];
@@ -321,7 +320,7 @@ std::vector<PathItem> TimeDependent::compute_astar(const type::StopArea &dep, co
         }
         arrival = preds[arrival];
     }
-    std::reverse(result.begin(), result.end());*/
+    std::reverse(result.begin(), result.end());
     return result;
 }
 

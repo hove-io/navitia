@@ -1,7 +1,7 @@
 #include "time_dependent.h"
 #include "type/data.h"
 #include "utils/timer.h"
-#include "valgrind/callgrind.h"
+//#include "valgrind/callgrind.h"
 using namespace navitia;
 
 
@@ -98,8 +98,8 @@ int main(int, char**){
             std::cout << s.stop_point_name << " " << s.time << " " << s.day << std::endl;
         }*/
 
-        CALLGRIND_START_INSTRUMENTATION;
+//        CALLGRIND_START_INSTRUMENTATION;
         benchmark(td, data);
-        CALLGRIND_STOP_INSTRUMENTATION;
+//        CALLGRIND_STOP_INSTRUMENTATION;
     }
 }
