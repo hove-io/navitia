@@ -46,6 +46,7 @@ void GtfsParser::fill(Data & data){
     parse_calendar_dates(data);
     parse_routes(data);
     parse_trips(data);
+    parse_transfers(data);
     parse_stop_times(data);
     build_routes(data);
     build_route_points(data);
@@ -238,6 +239,70 @@ void GtfsParser::parse_stops(Data & data) {
     std::cout << std::endl;
 }
 
+void GtfsParser::parse_transfers(Data & data) {
+    std::cout << "On parse : " << (path + "transfers.txt").c_str() << std::endl;
+    std::fstream ifile((path + "transfers.txt").c_str());
+    remove_bom(ifile);
+    std::string line;
+
+    if(!getline(ifile, line)){
+        std::cerr << "Impossible d'ouvrir le fichier transfers.txt" << std::endl;
+        return;
+    }
+
+
+    boost::trim(line);
+    Tokenizer tok_header(line);
+    std::vector<std::string> elts(tok_header.begin(), tok_header.end());
+
+    int from_c = -1, to_c = -1, time_c = -1;
+    for(size_t  i = 0; i < elts.size(); ++i){
+        if(elts[i] == "from_stop_id")
+            from_c = i;
+        else if(elts[i] == "to_stop_id")
+            to_c = i;
+        else if(elts[i] == "min_transfer_time")
+            time_c = i;
+    }
+
+    if(from_c == -1 || to_c == -1 || time_c == -1){
+        std::cerr << "Il manque au moins une colonne dans transfers.txt" << std::endl;
+        return;
+    }
+
+    int nblines = 0;
+    while(getline(ifile, line)) {
+        boost::trim(line);
+        Tokenizer tok(line);
+        elts.assign(tok.begin(), tok.end());
+
+        nm::Connection * connection = new nm::Connection();
+        boost::unordered_map<std::string, navimake::types::StopPoint*>::iterator it;
+        it = this->stop_map.find(elts[from_c]);
+        if(it == this->stop_map.end()){
+            std::cerr << "Ipmossible de trouver le stop point " << elts[from_c] << std::endl;
+            delete connection;
+            continue;
+        } else {
+            connection->departure_stop_point = it->second;
+        }
+
+        it = this->stop_map.find(elts[to_c]);
+        if(it == this->stop_map.end()){
+            std::cerr << "Ipmossible de trouver le stop point " << elts[from_c] << std::endl;
+            delete connection;
+            continue;
+        } else {
+           connection->destination_stop_point  = it->second;
+        }
+        nblines++;
+        connection->connection_kind = nm::Connection::LinkConnection;
+        connection->duration = boost::lexical_cast<int>(elts[time_c]);
+        data.connections.push_back(connection);
+    }
+
+    std::cout << nblines << " correspondances prises en compte sur " << data.connections.size() << std::endl;
+}
 
 void GtfsParser::parse_calendar(Data & data) {
     data.validity_patterns.reserve(10000);

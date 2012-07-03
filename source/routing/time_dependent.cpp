@@ -130,6 +130,18 @@ void  TimeDependent::build_graph(){
         }
     }
 
+    // 4.bis on rajoute les correspondances
+    BOOST_FOREACH(type::Connection conn, data.connections){
+        if(data.stop_points[conn.departure_stop_point_idx].stop_area_idx != data.stop_points[conn.destination_stop_point_idx].stop_area_idx){
+            bool b;
+            edge_t e;
+            boost::tie(e, b) = boost::add_edge(conn.departure_stop_point_idx, conn.destination_stop_point_idx, graph);
+            graph[e].t.constant_duration = conn.duration;
+            boost::tie(e, b) = boost::add_edge(conn.destination_stop_point_idx, conn.departure_stop_point_idx, graph);
+            graph[e].t.constant_duration = conn.duration;
+        }
+    }
+
     // 5. On trie les horaires de chaque arc et on garde le temps le plus court pour l'heuristique A*
     BOOST_FOREACH(edge_t e, boost::edges(graph)){
         std::sort(graph[e].t.time_table.begin(), graph[e].t.time_table.end());
@@ -231,13 +243,22 @@ struct edge_less{
     bool operator ()(const TimeTable&, DateTime) const{return false;}
 };
 
-std::vector<PathItem> TimeDependent::compute(const type::StopArea &dep, const type::StopArea &arr, int hour, int day){
+bool operator==(const PathItem & a, const PathItem & b){
+    return a.stop_point_name == b.stop_point_name && a.time == b.time && a.day == b.day;
+}
+
+std::ostream & operator<<(std::ostream & os, const PathItem & b){
+    os << b.stop_point_name << " " << b.day << " " << b.time;
+    return os;
+}
+
+Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day){
     DateTime start_time;
     start_time.date = day;
     start_time.hour = hour;
 
     try{
-        boost::dijkstra_shortest_paths(this->graph, dep.idx + stop_area_offset,
+        boost::dijkstra_shortest_paths(this->graph, dep + stop_area_offset,
                                        boost::distance_map(&distance[0])
                                        .predecessor_map(&preds[0])
                                        .weight_map(boost::get(&Edge::t, graph))
@@ -245,11 +266,11 @@ std::vector<PathItem> TimeDependent::compute(const type::StopArea &dep, const ty
                                        .distance_inf(DateTime::infinity())
                                        .distance_zero(start_time)
                                        .distance_compare(edge_less())
-                                       .visitor(goal_visitor(arr.idx + stop_area_offset))
+                                       .visitor(goal_visitor(arr + stop_area_offset))
                                        );
     } catch(found_goal){}
 
-    std::vector<PathItem> result;
+    Path result;
 
 
     int count = 1;
@@ -260,7 +281,7 @@ std::vector<PathItem> TimeDependent::compute(const type::StopArea &dep, const ty
     std::cout << "Dijkstra : " << 100*count/boost::num_vertices(this->graph) << "%  ";
 
 
-    vertex_t arrival = arr.idx + stop_area_offset;
+    vertex_t arrival = arr + stop_area_offset;
     while(preds[arrival] != arrival){
         if(arrival < data.route_points.size()){
             const type::StopPoint & sp = data.stop_points[data.route_points[arrival].stop_point_idx];
@@ -268,11 +289,11 @@ std::vector<PathItem> TimeDependent::compute(const type::StopArea &dep, const ty
             item.stop_point_name = sp.name;
             item.day = distance[arrival].date;
             item.time = distance[arrival].hour;
-            result.push_back(item);
+            result.items.push_back(item);
         }
         arrival = preds[arrival];
     }
-    std::reverse(result.begin(), result.end());
+    std::reverse(result.items.begin(), result.items.end());
     return result;
 }
 

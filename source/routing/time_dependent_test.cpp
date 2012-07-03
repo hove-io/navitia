@@ -8,16 +8,24 @@ using namespace navitia;
 void benchmark(routing::TimeDependent & td, type::Data & data){
     {
     Timer t("Calcul d'itinéraire");
-    for(int i=0; i < 10; ++i){
+    for(int i=0; i < 100; ++i){
+        routing::Path res1;
+        std::vector<routing::PathItem> res2;
         std::cout << "Depart de " << data.pt_data.stop_areas[i].name << std::endl;
         {Timer t2("simple");
             std::cout << "  ";
-        td.compute(data.pt_data.stop_areas[i], data.pt_data.stop_areas[1142], 8000, 8);
+            res1 = td.compute(data.pt_data.stop_areas[i].idx, data.pt_data.stop_areas[1142].idx, 8000, 8);
         }
         {Timer t3("astar");
             std::cout << "  ";
-            td.compute_astar(data.pt_data.stop_areas[i], data.pt_data.stop_areas[1142], 8000, 8);
+            res2 = td.compute_astar(data.pt_data.stop_areas[i], data.pt_data.stop_areas[1142], 8000, 8);
         }
+/*        if(res1.items != res2){
+            std::cout << "DIJKSTRA RESULT " << std::endl;
+            for(auto x: res1.items) std::cout << x << std::endl;
+            std::cout << "A* RESULT" << std::endl;
+            for(auto x: res2) std::cout << x << std::endl;
+        }*/
     }
      }
 }

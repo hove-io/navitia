@@ -1,5 +1,6 @@
 #pragma once
 
+#include "routing.h"
 #include "type/pt_data.h"
 #include <boost/graph/adjacency_list.hpp>
 
@@ -125,14 +126,9 @@ typedef boost::graph_traits<Graph>::vertex_iterator vertex_iterator;
 /// Type itérateur sur les arcs du graphe
 typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
 
-/** Étape d'un itinéraire*/
 
-struct PathItem{
-    std::string stop_point_name;
-    int time;
-    int day;
-};
-
+bool operator==(const PathItem & a, const PathItem & b);
+std::ostream & operator<<(std::ostream & os, const PathItem & b);
 /** Représentation du réseau de transport en commun de type « type-dependent »
  *
  *C'est un modèle où les nœuds représentent les arrêtes (des RoutePoint pour être précis) et les arcs tous les horaires
@@ -141,7 +137,7 @@ struct PathItem{
  *Le calcul d'itinéaire se fait avec un Dijkstra modifié de manière à prendre des fonctions qui calculent l'arrivée au plus tôt
  *comme poids des arcs
  */
-struct TimeDependent {
+struct TimeDependent : public AbstractRouter{
 
     const type::PT_Data & data;
     Graph graph;
@@ -165,7 +161,7 @@ struct TimeDependent {
      * hour correspond à
      * day correspond au jour de circulation au départ
      */
-    std::vector<PathItem> compute(const type::StopArea & departure, const type::StopArea & arr, int hour, int day);
+    Path compute(type::idx_t dep, type::idx_t arr, int hour, int day);
     std::vector<PathItem> compute_astar(const type::StopArea & departure, const type::StopArea & arr, int hour, int day);
 
     /** Calcule le temps minimal pour atteindre un nœud
