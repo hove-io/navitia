@@ -13,7 +13,7 @@ Dans une première étape on initalise toutes les étiquettes à l'infini(sauf c
 Puis on parcourt les routes comprises dans les files d'attente, en marquant les stops que l'on arrive à atteindre plus tôt qu'au round précédent. 
 On s'arrête lorsque la file d'attente est vide.
 
-.. image:: images/raptor.png
+.. image:: ../_static/raptor.png
 
 
 Sur cet exemple, on veut aller de ps à pt. Procédons par étape :
