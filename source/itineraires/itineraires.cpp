@@ -47,16 +47,15 @@ bool parcours::operator!=(parcours i2) {
     return !((*this) == i2);
 }
 
+
+
 void make_itineraires(network::vertex_t v1, network::vertex_t v2, std::vector<itineraire> &itineraires, map_parcours &parcours_list, network::NW &g, navitia::type::Data &data, std::vector<network::vertex_t> &predecessors, network::map_tc_t &map_tc){
 
-    BOOST_FOREACH(network::edge_t e1, out_edges(v2, g)) {
-        network::vertex_t spv = target(e1, g);
-        BOOST_FOREACH(network::edge_t e2, out_edges(spv, g)) {
-            network::vertex_t rpv = target(e2, g);
-            BOOST_FOREACH(network::edge_t e3, out_edges(rpv, g)) {
-                network::vertex_t tav = target(e3, g);
-                if((network::get_n_type(tav, data) == network::TA) & (network::get_saidx(tav, data, g, map_tc) == v2) & (predecessors[tav] != tav))  {
-
+    BOOST_FOREACH(unsigned int sp, data.pt_data.stop_areas.at(v2).stop_point_list) {
+        BOOST_FOREACH(unsigned int rpv, data.pt_data.stop_points.at(sp).route_point_list) {
+            BOOST_FOREACH(unsigned int vj, data.pt_data.route_points.at(rpv).vehicle_journey_list) {
+                unsigned int tav = network::get_ta_idx(data.pt_data.vehicle_journeys.at(vj).stop_time_list.at(data.pt_data.route_points.at(rpv).order), data);
+                if((network::get_n_type(tav, data) == network::TA) && (network::get_saidx(tav, data, g, map_tc) == v2) && (predecessors[tav] != tav))  {
                     parcours p = parcours();
                     std::list<idx_t> stop_times = std::list<idx_t>();
                     network::edge_t etemp, eprec;
@@ -108,13 +107,15 @@ void make_itineraires(network::vertex_t v1, network::vertex_t v2, std::vector<it
                     }
 
                 }
-
             }
         }
     }
 
+
     sort(itineraires.begin(), itineraires.end(), sort_itineraire(data));
 }
+
+
 
 
 

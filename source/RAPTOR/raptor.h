@@ -1,7 +1,7 @@
 #pragma once
 #include "type/type.h"
 #include "type/data.h"
-
+#include <unordered_map>
 
 namespace raptor {
 
@@ -25,20 +25,17 @@ struct type_best {
         if(this->jour < b2.jour)
             return true;
         else if(this->jour == b2.jour)
-            if(this->temps < b2.temps)
-                return true;
-            else
-                return false;
+            return (this->temps < b2.temps);
         else return false;
         /*return this->jour < b2.jour ||((this->jour == b2.jour) && (this->temps < b2.temps));*/}
 };
 
 typedef std::pair<int, int> pair_int;
-typedef std::map<int, int> map_int_int_t;
-typedef std::map<int, type_retour> map_int_pint_t;
-typedef std::map<int, type_best> map_best_t;
+typedef std::unordered_map<int, int> map_int_int_t;
+typedef std::unordered_map<int, type_retour> map_int_pint_t;
+typedef std::unordered_map<int, type_best> map_best_t;
 
-typedef std::map<unsigned int, map_int_pint_t> map_retour_t;
+typedef std::unordered_map<unsigned int, map_int_pint_t> map_retour_t;
 typedef std::pair<map_retour_t, map_best_t> pair_retour_t;
 typedef std::vector<type_retour> itineraire_t;
 

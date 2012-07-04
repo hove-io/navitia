@@ -84,11 +84,16 @@ int32_t get_time(unsigned int idx, navitia::type::Data &data, NW &g, map_tc_t &m
         return data.pt_data.stop_times.at(get_idx(idx, data, map_tc)).departure_time;
         break;
     case TC:
-        return get_time(map_tc[idx], data, g, map_tc) + (5*60)*(get_n_type(map_tc[idx], data)==TA);
+        return get_time(map_tc.at(idx), data, g, map_tc);
         break;
     default:
         return -1;
     }
+}
+
+uint16_t calc_diff(uint16_t debut, uint16_t fin) {
+  int diff = fin - debut;
+  return (diff>0) ? diff : 86400 + diff;
 }
 
 int get_validity_pattern_idx(navitia::type::ValidityPattern vp, navitia::type::Data &data) {
@@ -177,7 +182,7 @@ bool correspondance_valide(idx_t tav, idx_t tdv, bool pam, NW &g, navitia::type:
 }
 
 
-void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc) {
+void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc, map_tc_t &map_td) {
     vertex_t tav, tdv, tcv, rpv;
     bool bo;
     int min_corresp = 2 * 60;
@@ -219,7 +224,7 @@ void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc) {
                     vptemp = *(decalage_pam(data.pt_data.validity_patterns.at(vj.validity_pattern_idx)));
                     vp_idx = get_validity_pattern_idx(vptemp, data);
                 }
-                add_edge(tdv, tav, EdgeDesc(vp_idx), g);
+                add_edge(tdv, tav, EdgeDesc(vp_idx, calc_diff(get_time(tdv, data, g, map_tc), get_time(tav, data, g, map_tc)), is_passe_minuit(tdv, tav, data, g, map_tc)), g);
             }
 
             //td
@@ -236,7 +241,7 @@ void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc) {
                 vptemp = *decalage_pam(data.pt_data.validity_patterns.at(vj.validity_pattern_idx));
                 vp_idx = get_validity_pattern_idx(vptemp, data);
             }
-            add_edge(tav, tdv, EdgeDesc(vp_idx), g);
+            add_edge(tav, tdv, EdgeDesc(vp_idx, calc_diff(get_time(tav, data, g, map_tc), get_time(tdv, data, g, map_tc)),is_passe_minuit(tav, tdv, data, g, map_tc)), g);
             add_edge(tcv, tdv, EdgeDesc(0), g);
         }
     }
@@ -248,26 +253,37 @@ void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc) {
         itc = sa.second.begin();
         pam = sa.second.begin();
         BOOST_FOREACH(vertex_t tc, sa.second) {
-            if((prec != (num_vertices(g) + 1)) & !edge(prec, tc, g).second & (prec != tc)) {
-                add_edge(prec, tc, EdgeDesc(0), g);
+            if((prec != (num_vertices(g) + 1)) && !edge(prec, tc, g).second && (prec != tc)) {
+                add_edge(prec, tc, EdgeDesc(0, data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).departure_time -  data.pt_data.stop_times.at(get_idx(prec, data, map_tc)).departure_time, false), g);
             }
             prec = tc;
             //Je relie le ta au premier tc possible
-            while((itc != sa.second.end()) & (data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time + min_corresp > get_time(*itc, data, g, map_tc)) )
+            while((itc != sa.second.end()) & ((data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time + min_corresp % 86400) > get_time(*itc, data, g, map_tc) % 86400) )
                 ++itc;
-            if(itc != sa.second.end() && (data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time + min_corresp <= get_time(*itc, data, g, map_tc)))
+            if((itc != sa.second.end()) && ((data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time  + min_corresp% 86400) <= (get_time(*itc, data, g, map_tc) % 86400))) {
                 if(!edge(get_ta_idx(get_idx(tc, data, map_tc), data), *itc, g).second)
-                    add_edge(get_ta_idx(get_idx(tc, data, map_tc), data), *itc, EdgeDesc(0), g);
+                    add_edge(get_ta_idx(get_idx(tc, data, map_tc), data), *itc,
+                             EdgeDesc(0, (data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time %86400) - data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).departure_time,  is_passe_minuit(get_ta_idx(get_idx(tc, data, map_tc), data), *itc, data, g, map_tc)), g);
+            } else {
+                if(!edge(get_ta_idx(get_idx(tc, data, map_tc), data), *itc, g).second)
+                    add_edge(get_ta_idx(get_idx(tc, data, map_tc), data), *sa.second.begin(),
+                             EdgeDesc(0, (86400 - data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).departure_time % 86400) + data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time %86400, is_passe_minuit(get_ta_idx(get_idx(tc, data, map_tc), data),  *sa.second.begin(), data, g, map_tc)), g);
+            }
 
-            //Si > 86400 je relie au premier tc possible avec le temps % 86400
-            if((data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time + min_corresp) > 86400) {
-                while((pam != sa.second.end()) & ((data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time%86400 + min_corresp )> get_time(*pam, data, g, map_tc)) )
-                    ++pam;
-                if(get_ta_idx(get_idx(tc, data, map_tc), data) == 33)
-                    std::cout << "T1 : " <<(pam != sa.second.end()) << " "  << (data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time%86400) + min_corresp <<" " << get_time(*pam, data, g, map_tc) << std::endl  ;
-                if(pam != sa.second.end())
-                    if((pam != sa.second.end()) & ((data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time%86400) + min_corresp <= get_time(*pam, data, g, map_tc)))
-                        add_edge(get_ta_idx(get_idx(tc, data, map_tc), data), *pam, EdgeDesc(0), g);
+//            //Si > 86400 je relie au premier tc possible avec le temps % 86400
+//            if((data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time + min_corresp) > 86400) {
+//                while((pam != sa.second.end()) & ((data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time%86400 + min_corresp )> get_time(*pam, data, g, map_tc)) )
+//                    ++pam;
+//                if(get_ta_idx(get_idx(tc, data, map_tc), data) == 33)
+//                    std::cout << "T1 : " <<(pam != sa.second.end()) << " "  << (data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time%86400) + min_corresp <<" " << get_time(*pam, data, g, map_tc) << std::endl  ;
+//                if(pam != sa.second.end())
+//                    if((pam != sa.second.end()) & ((data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time%86400) + min_corresp <= get_time(*pam, data, g, map_tc)))
+//                        add_edge(get_ta_idx(get_idx(tc, data, map_tc), data), *pam, EdgeDesc(0), g);
+//            }
+        }
+        if(sa.second.size() > 1) {
+            if(!edge(*(--sa.second.end()), *sa.second.begin(), g).second) {
+                add_edge(*(--sa.second.end()), *sa.second.begin(), EdgeDesc(0, true), g);
             }
         }
 
@@ -286,13 +302,17 @@ void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc) {
     }
 
 
+    BOOST_FOREACH(auto pairtc, map_tc) {
+        map_td.insert(std::pair<unsigned int, unsigned int>(pairtc.second, pairtc.first));
+    }
+
 
 
 }
 
 
 bool est_transport(edge_t e, navitia::type::Data &data, NW & g) {
-    return (get_n_type(source(e, g), data) == TA || get_n_type(source(e, g), data) == TD) & (get_n_type(target(e, g), data) == TA || get_n_type(target(e, g), data) == TD);
+    return (get_n_type(source(e, g), data) == TA && get_n_type(target(e, g), data) == TD) || (get_n_type(source(e, g), data) == TD || get_n_type(target(e, g), data) == TA);
 }
 
 
@@ -331,6 +351,8 @@ etiquette combine::operator()(etiquette debut, edge_t e) const{
     }
     else {
         etiquette retour;
+        retour.temps = 0;
+        retour.correspondances = 0;
         int32_t debut_temps = 0, fin_temps = 0;
         EdgeDesc ed = g[e];
         idx_t debut_idx = source(e, g), fin_idx = target(e, g);
@@ -364,10 +386,16 @@ etiquette combine::operator()(etiquette debut, edge_t e) const{
 
             if(is_passe_minuit(debut_temps, fin_temps)) { //Passe minuit
                 retour.date_arrivee = debut.date_arrivee + 1;
-                retour.temps = debut.temps + 86400 - debut_temps%86400 + fin_temps%86400 ;
+                if(est_transport(e, data, g))
+                    retour.temps = debut.temps + 86400 - debut_temps%86400 + fin_temps%86400 ;
+                else
+                    retour.temps = debut.temps;
             } else {
                 retour.date_arrivee = debut.date_arrivee;
-                retour.temps = debut.temps + fin_temps%86400 - debut_temps%86400;
+                if(est_transport(e, data, g))
+                    retour.temps = debut.temps + fin_temps%86400 - debut_temps%86400;
+                else
+                    retour.temps = debut.temps;
             }
 
             if((get_n_type(debut_idx, data) == TC) & (get_n_type(debut_idx, data) == TD) )
@@ -385,6 +413,77 @@ etiquette combine::operator()(etiquette debut, edge_t e) const{
 
 
     }
+}
+
+int count_combine = 0;
+
+etiquette combine_simple::operator ()(etiquette debut, EdgeDesc ed) const {
+    ++ count_combine;
+//    std::cout << "Je suis dans le combine " << count_combine << std::endl;
+    if(debut == etiquette::max()) {
+        return etiquette::max();
+    }
+    else {
+        etiquette retour;
+//        EdgeDesc ed = g[e];
+
+        if(!ed.is_pam)
+            retour.date_arrivee = debut.date_arrivee;
+        else
+            retour.date_arrivee = debut.date_arrivee + 1;
+
+        if(ed.temps ==0) {
+            retour.heure_arrivee = debut.heure_arrivee;
+            return retour;
+        } else {
+            if(data.pt_data.validity_patterns.at(ed.validity_pattern).check(retour.date_arrivee)) {
+                retour.heure_arrivee  =debut.heure_arrivee + ed.temps;
+                return retour;
+            }
+            else
+                return retour;
+        }
+
+    }
+}
+idx_t trouver_premier_tc(idx_t saidx, int depart, navitia::type::Data & data, map_tc_t &map_td) {
+
+    boost::posix_time::ptime start, end;
+    start = boost::posix_time::microsec_clock::local_time();
+    idx_t stidx = data.pt_data.stop_times.size();
+    BOOST_FOREACH(idx_t spidx, data.pt_data.stop_areas.at(saidx).stop_point_list) {
+        BOOST_FOREACH(idx_t rpidx, data.pt_data.stop_points.at(spidx).route_point_list) {
+            BOOST_FOREACH(idx_t vjidx, data.pt_data.route_points.at(rpidx).vehicle_journey_list) {
+
+                if(data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vjidx).stop_time_list.at(data.pt_data.route_points.at(rpidx).order)).departure_time >= depart) {
+                    if(stidx == data.pt_data.stop_times.size()) {
+                        stidx = data.pt_data.vehicle_journeys.at(vjidx).stop_time_list.at(data.pt_data.route_points.at(rpidx).order);
+                    } else {
+                        if(data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vjidx).stop_time_list.at(data.pt_data.route_points.at(rpidx).order)).departure_time <
+                           data.pt_data.stop_times.at(stidx).departure_time) {
+                            stidx = data.pt_data.vehicle_journeys.at(vjidx).stop_time_list.at(data.pt_data.route_points.at(rpidx).order);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    end = boost::posix_time::microsec_clock::local_time();
+    std::cout << "t1 : " << (end-start).    total_milliseconds() << std::endl;
+    if(stidx == data.pt_data.stop_times.size()) {
+        stidx = data.pt_data.vehicle_journeys.at(data.pt_data.route_points.at(data.pt_data.stop_points.at(data.pt_data.stop_areas.at(saidx).stop_point_list.front()).route_point_list.front()).vehicle_journey_list.front()).stop_time_list.at(data.pt_data.route_points.at(data.pt_data.stop_points.at(data.pt_data.stop_areas.at(saidx).stop_point_list.front()).route_point_list.front()).order);
+    }
+
+    if(stidx != data.pt_data.stop_times.size()) {
+        auto iter = map_td.find(get_td_idx(stidx,data));
+        if(iter!= map_td.end())
+            return (*iter).second;
+        else
+            return -1;
+    }  else {
+        return 1;
+    }
+
 }
 
 

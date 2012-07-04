@@ -11,6 +11,6 @@ SET(SOURCE
 
 
 add_executable(navimake_test ${SOURCE})
-target_link_libraries(navimake_test ${Boost_LIBRARIES} connectors)
+target_link_libraries(navimake_test ${Boost_LIBRARIES} connectors utils)
 
 ADD_TEST(navimake_test ${EXECUTABLE_OUTPUT_PATH}/navimake_test --report_level=no)

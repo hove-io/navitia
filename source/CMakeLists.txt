@@ -74,6 +74,8 @@ add_subdirectory(network)
 add_subdirectory(navitia)
 add_subdirectory(utils)
 add_subdirectory(itineraires)
+add_subdirectory(RAPTOR)
+add_subdirectory(benchmark)
 add_subdirectory(lz4_filter)
 add_subdirectory(routing)
 
