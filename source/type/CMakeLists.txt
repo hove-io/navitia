@@ -9,7 +9,7 @@ SET(TYPES_SRC
     type.cpp
     data.cpp
     ${PROTO_SRCS}
-    ${CMAKE_SOURCE_DIR}/../third_party/fastlz/fastlz.c
+    ${CMAKE_SOURCE_DIR}/../third_party/lz4/lz4.c
     pt_data.cpp
     to_proto.cpp
     pb_utils.cpp

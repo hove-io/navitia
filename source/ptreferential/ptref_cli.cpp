@@ -20,9 +20,13 @@ int main(int argc, char** argv){
                  "  / /_/ / / / / ___/ _ \\/ /_/ _ \\/ ___/ _ \\/ __ \\/ __/ / __ `/ /\n"
                  " / ____/ / / / /  /  __/ __/  __/ /  /  __/ / / / /_/ / /_/ / /\n"
                  "/_/     /_/ /_/   \\___/_/  \\___/_/   \\___/_/ /_/\\__/_/\\__,_/_/\n\n";
+    if(argc != 2) {
+        std::cout << "Utilisation : " << argv[0] << " base_de_données" << std::endl;
+        return 1;
+    }
     std::cout << "Chargement des données..." << std::flush;
     Data d;
-    d.load_flz("idf_flz.nav");
+    d.load_lz4(argv[1]);
     std::cout << " effectué" << std::endl << std::endl;
 
     std::cout

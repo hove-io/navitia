@@ -50,12 +50,6 @@ public:
     /// Contient les lignes (au sens navitia)
     void parse_routes(Data & data);
 
-    /// Construit les routes en retrouvant les paterns à partir des VJ
-    void build_routes(Data & data);
-
-    /// Construit les routepoint
-    void build_route_points(Data & data);
-
     /// Parse le fichier stops.txt
     /// Contient les points d'arrêt et les zones d'arrêt
     void parse_stops(Data & data);
@@ -71,10 +65,13 @@ public:
     /// Parse le fichier trips.txt
     /// Contient les VehicleJourney
     void parse_trips(Data & data);
-
-
-
 };
+
+/// Construit les routes en retrouvant les paterns à partir des VJ
+void build_routes(Data & data);
+
+/// Construit les routepoint
+void build_route_points(Data & data);
 
 /** Convertit une chaine de charactères du type 8:12:31 en secondes depuis minuit
   *

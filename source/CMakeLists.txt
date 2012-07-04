@@ -76,6 +76,8 @@ add_subdirectory(utils)
 add_subdirectory(itineraires)
 add_subdirectory(RAPTOR)
 add_subdirectory(benchmark)
+add_subdirectory(lz4_filter)
+add_subdirectory(routing)
 
 #on génére le fichier config.h
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)

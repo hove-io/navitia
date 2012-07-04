@@ -5,6 +5,7 @@
 #include <boost/test/unit_test.hpp>
 #include <string>
 #include "config.h"
+#include "naviMake/build_helper.h"
 
 const std::string gtfs_path = "/navimake/gtfs";
 
@@ -161,38 +162,3 @@ BOOST_AUTO_TEST_CASE(stop_area_transformer){
     BOOST_CHECK_EQUAL(stop_area_n.coord.y, stop_area.coord.y);
     BOOST_CHECK_EQUAL(stop_area_n.additional_data, stop_area.additional_data);
 }
-
-BOOST_AUTO_TEST_CASE(route_points_transformer) {
-    navimake::Data data;
-    navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path, "20110101");
-    parser.fill(data);
-
-    navitia::type::Data nav_data;
-    data.clean();
-    data.sort();
-    data.transform(nav_data.pt_data);
-
-
-    int prev_rp;
-    BOOST_FOREACH(navitia::type::Route route, nav_data.pt_data.routes) {
-        prev_rp = -1;
-
-        BOOST_FOREACH(int rp, route.route_point_list) {
-            BOOST_CHECK_LT(prev_rp, rp);
-            prev_rp = rp;
-        }
-    }
-
-
-    int prev_departure_time;
-    BOOST_FOREACH(navitia::type::RoutePoint route_point, nav_data.pt_data.route_points) {
-
-        prev_departure_time = -1;
-        BOOST_FOREACH(unsigned int vj_idx, nav_data.pt_data.routes.at(route_point.route_idx).vehicle_journey_list) {
-            BOOST_CHECK_LE(prev_departure_time, nav_data.pt_data.stop_times.at(nav_data.pt_data.vehicle_journeys.at(vj_idx).stop_time_list.at(route_point.order)).departure_time);
-            prev_departure_time = nav_data.pt_data.stop_times.at(nav_data.pt_data.vehicle_journeys.at(vj_idx).stop_time_list.at(route_point.order)).departure_time;
-        }
-
-    }
-}
-

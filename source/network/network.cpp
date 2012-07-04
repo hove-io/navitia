@@ -21,17 +21,17 @@ unsigned int get_td_idx(unsigned int stid, navitia::type::Data &data) {
 
 
 idx_t get_idx(unsigned int idx, navitia::type::Data &data,map_tc_t &map_tc) {
-    if(idx < data.pt_data.stop_areas.size()) //SA
+    if(idx < data.pt_data.stop_areas.size())
         return idx;
-    else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size())) //SP
+    else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size()))
         return (idx - data.pt_data.stop_areas.size());
-    else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size())) //RP
+    else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size()))
         return (idx - data.pt_data.stop_areas.size() - data.pt_data.stop_points.size());
-    else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + data.pt_data.stop_times.size())) //TA
+    else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + data.pt_data.stop_times.size()))
         return (idx - data.pt_data.stop_areas.size() - data.pt_data.stop_points.size() - data.pt_data.route_points.size());
-    else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + data.pt_data.stop_times.size()*2)) //TD
+    else if(idx < (data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + data.pt_data.stop_times.size()*2))
         return (idx - data.pt_data.stop_areas.size() - data.pt_data.stop_points.size() - data.pt_data.route_points.size() - data.pt_data.stop_times.size());
-    else { //TC
+    else {
         return get_idx(map_tc[idx], data, map_tc);
     }
 }
@@ -286,8 +286,6 @@ void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc, map_tc_t 
                 add_edge(*(--sa.second.end()), *sa.second.begin(), EdgeDesc(0, true), g);
             }
         }
-
-
 
 
         //On lie les RP a premier TC de la chaine

@@ -192,7 +192,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         ResponseData rd;
         d.load_mutex.lock();
         d.loaded = true;
-        d.load_flz(database);
+        d.load_lz4(database);
         d.load_mutex.unlock();
         rd.response << "loaded!";
         rd.content_type = "text/html";
