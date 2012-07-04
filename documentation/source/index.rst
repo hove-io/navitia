@@ -13,11 +13,8 @@ Table des matières :
    :numbered:
 
    introduction
-   pre_requis 
-   raptor	
-   archi_fonctionnelle
-   implem_type
-   spec_techniques
+   pre_requis
+   hub_navitia
    dev
    
 
