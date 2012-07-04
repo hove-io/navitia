@@ -4,21 +4,8 @@
 #include <boost/graph/reverse_graph.hpp>
 #include <boost/foreach.hpp>
 #include "utils/timer.h"
-namespace navitia { namespace routing {
+namespace navitia { namespace routing { namespace timedependent {
 
-
-DateTime operator+(DateTime dt, int seconds) {
-    if(!(dt == DateTime::infinity())){
-        dt.hour += seconds;
-        //dt.normalize();
-    }
-    return dt;
-}
-
-std::ostream & operator<<(std::ostream & os, const DateTime & dt){
-    os << "D=" << dt.date << " " << dt.hour/(3600) << ":" << (dt.hour%3600)/60;
-    return os;
-}
 
 struct found_goal{};
 
@@ -356,4 +343,4 @@ void TimeDependent::build_heuristic(vertex_t destination){
             );
 }
 
-}}
+}}}

@@ -5,7 +5,7 @@
 using namespace navitia;
 
 
-void benchmark(routing::TimeDependent & td, type::Data & data){
+void benchmark(routing::timedependent::TimeDependent & td, type::Data & data){
     {
     Timer t("Calcul d'itinéraire");
     for(int i=0; i < 100; ++i){
@@ -44,7 +44,7 @@ int main(int, char**){
         std::cout << count << " stop points avec un seul route point sur " << data.pt_data.stop_points.size() << std::endl;
     }
 
-    routing::TimeDependent td(data.pt_data);
+    routing::timedependent::TimeDependent td(data.pt_data);
     {
         Timer t("Constuction du graphe");
         td.build_graph();

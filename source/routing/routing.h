@@ -24,4 +24,64 @@ struct Path {
 struct AbstractRouter {
     virtual Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day) = 0;
 };
+
+
+/** On se crée une structure qui représente une date et heure
+ *
+ * Date : sous la forme d'un numéro de jour à chercher dans le validity pattern
+ * Heure : entier en nombre de secondes depuis minuit. S'il dépasse minuit, on fait modulo 24h et on incrémente la date
+ *
+ * On utilise cette structure pendant le calcul d'itinéaire
+ */
+struct DateTime {
+    // TODO : on pourrait optimiser la conso mémoire en utilisant 8 bits pour la date, et 24 pour l'heure ;)
+    int date;
+    int hour;
+
+    DateTime() : date(std::numeric_limits<int>::max()), hour(std::numeric_limits<int>::max()){}
+
+    bool operator<(DateTime other) const {
+        if(this->date == other.date)
+            return hour < other.hour;
+        else
+            return this->date < other.date;
+    }
+
+    static DateTime infinity() {
+        return DateTime();
+    }
+
+    void normalize(){
+        if(date > 300) std::cout << "on normalise l'infini..." << std::endl;
+        this->date += this->hour / (24*3600);
+        this->hour = hour % (24*3600);
+    }
+
+    bool operator==(DateTime other) {
+        return this->hour == other.hour && this->date == other.date;
+    }
+};
+
+std::ostream & operator<<(std::ostream & os, const DateTime & dt);
+
+DateTime operator+(DateTime dt, int seconds);
+
+/** Représente un horaire associé à un validity pattern
+ *
+ * Il s'agit donc des horaires théoriques
+ */
+struct ValidityPatternTime {
+    type::idx_t vp_idx;
+    int hour;
+
+    template<class T>
+    bool operator<(T other) const {
+        return hour < other.hour;
+    }
+
+    ValidityPatternTime() {}
+    ValidityPatternTime(int vp_idx, int hour) : vp_idx(vp_idx), hour(hour){}
+};
+
+
 }}

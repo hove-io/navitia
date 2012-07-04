@@ -6,7 +6,7 @@
 #include "naviMake/build_helper.h"
 
 using namespace navitia;
-using namespace routing;
+using namespace routing::timedependent;
 
 BOOST_AUTO_TEST_CASE(direct){
     navimake::builder b("20120614");
