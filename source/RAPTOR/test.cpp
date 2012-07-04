@@ -6,9 +6,11 @@ int main(int , char** /*argv*/) {
     navitia::type::Data data;
     std::cout << "Chargemement des données ... " << std::flush;
 
-    data.load_flz("/home/vlara/navitia/jeu/IdF/IdF.nav");
+    data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.nav");
 
     std::cout << "Fin chargement" << std::endl;
+    std::cout << "Nb stop areas : " << data.pt_data.stop_areas.size() << std::endl
+              << "Nb stop points : " << data.pt_data.stop_points.size() << std::endl;
 
     unsigned int depart = 13587, arrivee = 16331;
 
@@ -61,6 +63,7 @@ int main(int , char** /*argv*/) {
             }
 
         }
+        raptor::McRAPTOR(depart, arrivee, 28800, data.pt_data.validity_patterns.at(0).slide(boost::gregorian::from_undelimited_string("20120219")), data, 973);
 
 
 
