@@ -1,0 +1,55 @@
+\documentclass{article}
+\usepackage{tikz,amsmath,siunitx}
+\usetikzlibrary{arrows,snakes,backgrounds,patterns,matrix,shapes,fit,calc,shadows,plotmarks}
+\usepackage[graphics,tightpage,active]{preview}
+\PreviewEnvironment{tikzpicture}
+\PreviewEnvironment{equation}
+\PreviewEnvironment{equation*}
+\newlength{\imagewidth}
+\newlength{\imagescale}
+\pagestyle{empty}
+\thispagestyle{empty}
+\begin{document}
+
+\begin{tikzpicture}
+
+
+\draw[color=red, very thick] (0,2) to[bend right] (3,4) sin (6,6) to (9,6);
+\draw[color=blue, very thick] (0,5) sin (3,4) cos (5,2);
+\draw[color=gray, very thick] (3,0) sin (5,2) cos (8,3) sin (11,3) cos (16,2) sin (19,2); 
+\draw[color=green, very thick] (6,4) cos (8,3) sin (11,1) cos (16,2);
+\draw[color=orange, very thick] (5,8) sin (9,6) cos (11,4) sin (14,3) cos (16,2) sin (19,0);
+
+
+\node(a) at (0,2){$\bullet$};
+\node(b) at (0,5){$\bullet$};
+\node(c) at (3,0){$\bullet$};
+\node(d) at (3,4){$\bullet$};
+\node(de) at (3,3.5){$A$};
+\node(e) at (5,2){$\bullet$};
+\node(ee) at (5,1.5){$C$};
+\node(f) at (6,4){$\bullet$};
+\node(g) at (6,6){$\bullet$};
+\node(h) at (8,3){$\bullet$};
+\node(he) at (8,2.5){$D$};
+\node(i0) at (5,8){$\bullet$};
+\node(i) at (9,6){$\bullet$};
+\node(ie) at (9,5.5){$B$};
+\node(j) at (11,1){$\bullet$};
+\node(k) at (11,3){$\bullet$};
+\node(l) at (11,4){$\bullet$};
+\node(m) at (14,3){$\bullet$};
+\node(n) at (16,2){$\bullet$};
+\node(o) at (19,0){$\bullet$};
+\node(p) at (19,2){$\bullet$};
+\node(ps) at (0,1.5){$p_s$};
+\node(pt) at (16,1.5){$p_t$};
+
+\node(r1) at(1.2,5){$route1$};
+\node(r2) at(1.0,2.7){$route2$};
+\node(r3) at(2.9,1){$route3$};
+\node(r4) at(6,8){$route4$};
+\node(r5) at(7.5, 4){$route5$};
+\end{tikzpicture}
+
+\end{document}
