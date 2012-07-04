@@ -1,36 +1,29 @@
 #include "time_dependent.h"
 #include "type/data.h"
 #include "utils/timer.h"
-//#include "valgrind/callgrind.h"
+#include <time.h>
 using namespace navitia;
 
 
-void benchmark(routing::timedependent::TimeDependent & td, type::Data & data){
-    {
-    Timer t("Calcul d'itinéraire");
-    for(int i=0; i < 100; ++i){
-        routing::Path res1;
-        std::vector<routing::PathItem> res2;
-        std::cout << "Depart de " << data.pt_data.stop_areas[i].name << std::endl;
-        {Timer t2("simple");
-            std::cout << "  ";
-            res1 = td.compute(data.pt_data.stop_areas[i].idx, data.pt_data.stop_areas[1142].idx, 8000, 8);
-        }
-        {Timer t3("astar");
-            std::cout << "  ";
-            res2 = td.compute_astar(data.pt_data.stop_areas[i], data.pt_data.stop_areas[1142], 8000, 8);
-        }
-/*        if(res1.items != res2){
-            std::cout << "DIJKSTRA RESULT " << std::endl;
-            for(auto x: res1.items) std::cout << x << std::endl;
-            std::cout << "A* RESULT" << std::endl;
-            for(auto x: res2) std::cout << x << std::endl;
-        }*/
+void benchmark(routing::timedependent::TimeDependent & td, type::Data & data, int runs){
+    srand ( time(NULL) );
+    std::cout << "rand max : " << RAND_MAX << std::endl;
+    Timer t;
+    std::cout << "Depart;Arrivée;temps de calcul;distance à vol d'oiseau;% visité" << std::endl;
+    for(int i=0; i < runs; ++i){
+        type::idx_t dep = rand() % data.pt_data.stop_areas.size();
+        type::idx_t arr = rand() % data.pt_data.stop_areas.size();
+        int day = rand() % 10;
+        int hour = rand() % (24*3600);
+        type::StopArea sa_dep = data.pt_data.stop_areas[dep];
+        type::StopArea sa_arr = data.pt_data.stop_areas[arr];
+        t.reset();
+        auto res = td.compute(dep, arr, hour, day);
+        std::cout <<sa_dep.external_code << ";" << sa_arr.external_code << ";" << t.ms() << ";" << sa_dep.coord.distance_to(sa_arr.coord) << ";" << res.percent_visited << std::endl;
     }
-     }
 }
 
-int main(int, char**){
+int main(int argc, char** argv){
     type::Data data;
     {
         Timer t("Chargement des données");
@@ -106,8 +99,9 @@ int main(int, char**){
             std::cout << s.stop_point_name << " " << s.time << " " << s.day << std::endl;
         }*/
 
-//        CALLGRIND_START_INSTRUMENTATION;
-        benchmark(td, data);
-//        CALLGRIND_STOP_INSTRUMENTATION;
+        int runs;
+        if(argc == 2) runs = atoi(argv[1]);
+        else runs = 100;
+        benchmark(td, data, runs);
     }
 }
