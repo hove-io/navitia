@@ -237,8 +237,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
         add_param("proximitylist", "filter", "Type à rechercher", ApiParameter::STRING, false, {"stop_area", "stop_name"});
 
         register_api("planner", boost::bind(&Worker::planner, this, _1, _2), "Calcul d'itinéraire en Transport en Commun");
-        add_param("planner", "departure", "Point de départ", ApiParameter::ENTRYPOINT, true);
-        add_param("planner", "destination", "Point d'arrivée", ApiParameter::ENTRYPOINT, true);
+        add_param("planner", "departure", "Point de départ", ApiParameter::STRING, true);
+        add_param("planner", "destination", "Point d'arrivée", ApiParameter::STRING, true);
         add_param("planner", "time", "Heure de début de l'itinéraire", ApiParameter::TIME, true);
         add_param("planner", "date", "Date de début de l'itinéraire", ApiParameter::DATE, true);
 
