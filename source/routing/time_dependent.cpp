@@ -227,7 +227,8 @@ Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day)
         if(preds[v] != v)
             count++;
     }
-    std::cout << "Dijkstra : " << 100*count/boost::num_vertices(this->graph) << "%  ";
+
+    result.percent_visited = 100*count/boost::num_vertices(this->graph);
 
 
     vertex_t arrival = arr + stop_area_offset;

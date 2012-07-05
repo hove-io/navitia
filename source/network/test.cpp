@@ -1,6 +1,8 @@
 #include "network.h"
+#include "routing/time_dependent.h"
 #include "boost/property_map/property_map.hpp"
 #include <boost/graph/graphviz.hpp>
+#include <boost/graph/astar_search.hpp>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <valgrind/callgrind.h>
@@ -37,7 +39,7 @@ struct label_name {
 int main(int , char** argv) {
     navitia::type::Data data;
     std::cout << "Debut chargement des données ... " << std::flush;
-    data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.nav");
+    data.load_lz4("/home/vlara/navitia/jeu/poitiers/poitiers.nav");
     std::cout << " Fin chargement des données" << std::endl;
 
     std::cout << "Nombre de stop areas : " << data.pt_data.stop_areas.size() << std::endl;
@@ -108,6 +110,28 @@ int main(int , char** argv) {
                                        );
 
     } catch(found_goal fg) { v2 = fg.v; }
+    end = boost::posix_time::microsec_clock::local_time();
+    CALLGRIND_STOP_INSTRUMENTATION;
+    CALLGRIND_DUMP_STATS;
+
+    if(predecessors[v2] == v2) {
+        std::cout << "Pas de chemin trouve" << std::endl;
+    } else {
+        std::cout << "Chemin trouve en " << (end-start).total_milliseconds() << std::endl;
+
+        for(vertex_t v = v2; (v!=v1); v = predecessors[v]) {
+            if(get_n_type(v, data) == TD || get_n_type(v, data) == TA) {
+                std::cout << get_n_type(v,data) << " " << get_time(v, data, g, map_tc) << " "
+                          << data.pt_data.stop_areas.at(data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).stop_point_idx).stop_area_idx).name << " ";
+                std::cout << data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).stop_point_idx).stop_area_idx;
+                std::cout << " " << data.pt_data.stop_times.at(get_idx(v, data, map_tc)).arrival_time;
+                std::cout << " " << data.pt_data.lines.at(data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).route_idx).line_idx).name;
+                std::cout << " t : " << distances[v].heure_arrivee << " d : " << distances[v].date_arrivee << " " << data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).route_idx
+                          << " vj : " << data.pt_data.stop_times.at(get_idx(v, data,map_tc)).vehicle_journey_idx << std::endl;
+            }
+        }
+    }
+
     end = boost::posix_time::microsec_clock::local_time();
     CALLGRIND_STOP_INSTRUMENTATION;
     CALLGRIND_DUMP_STATS;
