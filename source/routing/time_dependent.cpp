@@ -49,8 +49,9 @@ TimeDependent::TimeDependent(const type::PT_Data & data) : data(data),
        // On crée un nœud par route point, deux par stopArea, deux par stopPoint
        graph(data.route_points.size() + data.stop_areas.size() + data.stop_points.size()),
        astar_graph(data),
-       stop_area_offset(data.route_points.size()),
-       stop_point_offset(stop_area_offset + data.stop_areas.size()),
+       stop_area_offset(0),
+       stop_point_offset(stop_area_offset),
+       route_point_offset(stop_area_offset + data.stop_areas.size()),
        preds(boost::num_vertices(graph)),
        distance(boost::num_vertices(graph)),
        astar_dist(boost::num_vertices(graph))
@@ -64,7 +65,7 @@ void  TimeDependent::build_graph(){
     // 1. On rajoute un arc pour chaque segment de route
     BOOST_FOREACH(type::Route route, data.routes){
         for(size_t i = 1; i < route.route_point_list.size(); ++i){
-            boost::add_edge(route.route_point_list[i-1], route.route_point_list[i], graph);
+            boost::add_edge(route.route_point_list[i-1] + route_point_offset, route.route_point_list[i]+ route_point_offset, graph);
         }
     }
 
@@ -78,9 +79,9 @@ void  TimeDependent::build_graph(){
     // 3. On rajoute un arc entre route_points et stop_points de durée constante
     BOOST_FOREACH(type::RoutePoint route_point, data.route_points){
         // Deux minutes de battement à l'arrivée
-        boost::add_edge(route_point.stop_point_idx + stop_point_offset, route_point.idx, Edge(120), graph);
+        boost::add_edge(route_point.stop_point_idx + stop_point_offset, route_point.idx + route_point_offset, Edge(120), graph);
         // 0 à l'arrivée
-        boost::add_edge(route_point.idx, route_point.stop_point_idx + stop_point_offset, Edge(1), graph);
+        boost::add_edge(route_point.idx + route_point_offset, route_point.stop_point_idx + stop_point_offset, Edge(1), graph);
     }
 
     // 4. On rajoute les horaires
@@ -96,7 +97,7 @@ void  TimeDependent::build_graph(){
             }
             bool b;
             edge_t e;
-            boost::tie(e, b) = boost::edge(stop1.route_point_idx, stop2.route_point_idx, graph);
+            boost::tie(e, b) = boost::edge(stop1.route_point_idx + route_point_offset, stop2.route_point_idx + route_point_offset, graph);
             BOOST_ASSERT(b);
             graph[e].t.add(vpt1, vpt2);
         }
@@ -107,9 +108,9 @@ void  TimeDependent::build_graph(){
         if(data.stop_points[conn.departure_stop_point_idx].stop_area_idx != data.stop_points[conn.destination_stop_point_idx].stop_area_idx){
             bool b;
             edge_t e;
-            boost::tie(e, b) = boost::add_edge(conn.departure_stop_point_idx, conn.destination_stop_point_idx, graph);
+            boost::tie(e, b) = boost::add_edge(conn.departure_stop_point_idx + stop_point_offset, conn.destination_stop_point_idx + stop_point_offset, graph);
             graph[e].t.constant_duration = conn.duration;
-            boost::tie(e, b) = boost::add_edge(conn.destination_stop_point_idx, conn.departure_stop_point_idx, graph);
+            boost::tie(e, b) = boost::add_edge(conn.destination_stop_point_idx + stop_point_offset, conn.departure_stop_point_idx + stop_point_offset, graph);
             graph[e].t.constant_duration = conn.duration;
         }
     }

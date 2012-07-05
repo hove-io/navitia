@@ -85,6 +85,7 @@ struct TimeDependent : public AbstractRouter{
 
     size_t stop_area_offset;
     size_t stop_point_offset;
+    size_t route_point_offset;
 
     std::vector<vertex_t> preds;
     std::vector<DateTime> distance;
