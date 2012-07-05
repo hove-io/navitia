@@ -3,7 +3,8 @@ Spécifications techniques
 
 .. toctree::
    :maxdepth: 2
-
+   
+   modules/introduction
    modules/line_schedule
    modules/event
    modules/fare
@@ -17,4 +18,6 @@ Spécifications techniques
    modules/ptref
    modules/streetnetwork
    modules/vptranslate
+
+   modules/gateway
  

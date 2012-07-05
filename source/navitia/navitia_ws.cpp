@@ -201,13 +201,23 @@ class Worker : public BaseWorker<navitia::type::Data> {
         return rd;
     }
 
+    ResponseData proximitylist(RequestData & , navitia::type::Data & ){
+        ResponseData rd;
+        return rd;
+    }
+
+    ResponseData planner(RequestData & , navitia::type::Data & ){
+        ResponseData rd;
+        return rd;
+    }
+
     public:
     /** Constructeur par défaut
       *
       * On y enregistre toutes les api qu'on souhaite exposer
       */
     Worker(navitia::type::Data &){
-        register_api("streetnetwork", boost::bind(&Worker::streetnetwork, this, _1, _2), "Retrouve les objets à proximité");
+        register_api("streetnetwork", boost::bind(&Worker::streetnetwork, this, _1, _2), "Calcul d'itinéraire piéton");
         add_param("streetnetwork", "startlon", "Longitude en degrés", ApiParameter::DOUBLE, true);
         add_param("streetnetwork", "startlat", "Latitude en degrés", ApiParameter::DOUBLE, true);
         add_param("streetnetwork", "destlon", "Longitude en degrés", ApiParameter::DOUBLE, true);
@@ -220,7 +230,21 @@ class Worker : public BaseWorker<navitia::type::Data> {
         params.push_back("cities");
         add_param("firstletter", "filter", "Type à rechercher", ApiParameter::STRING, false, params);
 
+        register_api("proximitylist", boost::bind(&Worker::proximitylist, this, _1, _2), "Liste des objets à proxmité");
+        add_param("proximitylist", "lon", "Longitude en degrés", ApiParameter::DOUBLE, true);
+        add_param("proximitylist", "lat", "Latitude en degrés", ApiParameter::DOUBLE, true);
+        add_param("proximitylist", "dist", "Distance maximale, 100m par défaut", ApiParameter::DOUBLE, false);
+        add_param("proximitylist", "filter", "Type à rechercher", ApiParameter::STRING, false, {"stop_area", "stop_name"});
+
+        register_api("planner", boost::bind(&Worker::planner, this, _1, _2), "Calcul d'itinéraire en Transport en Commun");
+        add_param("planner", "departure", "Point de départ", ApiParameter::STRING, true);
+        add_param("planner", "destination", "Point d'arrivée", ApiParameter::STRING, true);
+        add_param("planner", "time", "Heure de début de l'itinéraire", ApiParameter::TIME, true);
+        add_param("planner", "date", "Date de début de l'itinéraire", ApiParameter::DATE, true);
+
         register_api("load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
+
+
         add_default_api();
     }
 };

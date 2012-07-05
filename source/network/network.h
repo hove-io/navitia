@@ -17,6 +17,7 @@ struct etiquette {
     uint16_t date_arrivee;  /// Date d'arrivée
     uint8_t correspondances;
 
+    etiquette() : temps(std::numeric_limits<uint32_t>::max()), heure_arrivee(std::numeric_limits<uint32_t>::max()), date_arrivee(std::numeric_limits<uint16_t>::max()), correspondances(std::numeric_limits<uint8_t>::max()) {}
 
     bool operator==(etiquette e) {return (e.date_arrivee == this->date_arrivee) & (e.heure_arrivee == this->heure_arrivee) & (e.temps == this->temps);}
 
@@ -81,9 +82,13 @@ public:
 class EdgeDesc {
 public:
     uint16_t validity_pattern;      /// Validity Pattern de l'arête
-
-    EdgeDesc() :validity_pattern(0){}
-    EdgeDesc(uint16_t validity_pattern) : validity_pattern(validity_pattern){}
+    uint16_t temps;                 /// Temps sur l'arc
+    bool is_pam;                    /// Vrai si l'arête est un passe minuit, faux sinon
+    EdgeDesc() :validity_pattern(0), temps(0), is_pam(false){}
+    EdgeDesc(uint16_t validity_pattern) : validity_pattern(validity_pattern), temps(0), is_pam(false){}
+    EdgeDesc(uint16_t validity_pattern, bool is_pam) : validity_pattern(validity_pattern), temps(0), is_pam(is_pam){}
+    EdgeDesc(uint16_t validity_pattern, uint16_t temps) : validity_pattern(validity_pattern), temps(temps){}
+    EdgeDesc(uint16_t validity_pattern, uint16_t temps, bool is_pam) : validity_pattern(validity_pattern), temps(temps), is_pam(is_pam){}
 
 
     std::ostream &operator<<( std::ostream &out) {
@@ -128,6 +133,7 @@ struct edge_less2{
         return a < b;
     }
     bool operator ()(edge_t, etiquette) const{return false;}
+    bool operator ()(EdgeDesc, etiquette) const{return false;}
 };
 /// Fonction helper servant à récupérer l'id dans le tableau des vertices d'un sp
 unsigned int get_sp_idx(unsigned int spid, navitia::type::Data &data);
@@ -158,6 +164,9 @@ bool is_passe_minuit(int32_t debut_t, int32_t fin_t);
 
 int32_t get_time(unsigned int idx, navitia::type::Data &data, NW &g, map_tc_t &map_tc);
 
+/// Fonction calculant la différence entre le deuxieme et le premier argument
+uint16_t calc_diff(uint16_t debut, uint16_t fin);
+
 
 /// Fonction retournant l'idx du validity pattern, si le validity pattern n'existe pas il est ajouté
 int get_validity_pattern_idx(navitia::type::ValidityPattern vp, navitia::type::Data &data);
@@ -179,7 +188,7 @@ void calculer_AR(navitia::type::Data &data, NW &g, map_routes_t & map_routes);
 bool correspondance_valide(idx_t tav, idx_t tdv, bool pam, NW &g, navitia::type::Data &data, map_routes_t & map_routes, map_tc_t map_tc);
 
 /// Remplit le graph passé en paramètre avec les données passées
-void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc);
+void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc, map_tc_t &map_td);
 
 /// Détermine si une arête est une arête de transport
 bool est_transport(edge_t e, navitia::type::Data &data, NW & g);
@@ -200,6 +209,20 @@ public:
     etiquette operator()(etiquette debut, edge_t e) const;
 };
 
+class combine_simple {
+private:
+    navitia::type::Data &data;
+    NW &g;
+    map_tc_t &map_tc;
+    idx_t sa_depart, cible;
+    uint16_t jour_debut;
+public:
+    combine_simple(navitia::type::Data &data, NW &g, map_tc_t &map_tc, idx_t sa_depart, idx_t cible, uint16_t jour_debut) : data(data), g(g), map_tc(map_tc), sa_depart(sa_depart), cible(cible), jour_debut(jour_debut) {}
+
+
+    etiquette operator()(etiquette debut, EdgeDesc ed) const;
+};
+
 /// Compare deux arêtes entre elles
 class sort_edges {
 private:
@@ -210,20 +233,7 @@ public:
     sort_edges (NW &g, navitia::type::Data &data, map_tc_t &map_tc) : g(g), data(data), map_tc(map_tc) { }
     bool operator() (const vertex_t& v1, const vertex_t& v2) const {
 
-        uint32_t t1 = get_time(v1, data, g, map_tc), t2 = get_time(v2, data, g, map_tc);
-
-//        if(get_n_type(v1, data) == TA)
-//            t1 = data.pt_data.stop_times.at(get_idx(v1, data, map_tc)).arrival_time/* % 86400*/;
-//        if(get_n_type(v1, data) == TD)
-//            t1 = data.pt_data.stop_times.at(get_idx(v1, data, map_tc)).departure_time/* % 86400*/;
-
-
-//        if(get_n_type(v2, data) == TA)
-//            t2 = data.pt_data.stop_times.at(get_idx(v2, data, map_tc)).arrival_time/* % 86400*/;
-//        if(get_n_type(v2, data) == TD)
-//            t2 = data.pt_data.stop_times.at(get_idx(v2, data, map_tc)).departure_time /*% 86400*/;
-
-
+        uint32_t t1 = get_time(v1, data, g, map_tc) % 86400, t2 = get_time(v2, data, g, map_tc) % 86400;
         return (t1 < t2) || ((t1 == t2) & (get_idx(v1, data, map_tc) < get_idx(v2, data, map_tc)));
     }
 
@@ -247,13 +257,12 @@ public:
     {
     }
 
-    template <class Edge, class Graph>
-    void edge_relaxed(Edge e, Graph &g)
+    template <class Graph>
+    void examine_vertex(unsigned int u, Graph &/*g*/)
     {
-        if(get_n_type(target(e, g), data) == TA)
-            if (get_saidx(target(e, g), data, g_, map_tc) == m_goal){
-            std::cout << "throw" << std::endl;
-            throw found_goal(target(e, g));
+        if(get_n_type(u, data) == TA)
+            if (get_saidx(u, data, g_, map_tc) == m_goal){
+            throw found_goal(u);
         }
     }
 
@@ -282,6 +291,8 @@ public:
     bool operator==(network::parcours i2);
     bool operator!=(network::parcours i2);
 };
+
+idx_t trouver_premier_tc(idx_t saidx, int depart, navitia::type::Data & data, map_tc_t & map_td) ;
 
 }
 

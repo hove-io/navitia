@@ -1,17 +1,26 @@
 #include "timer.h"
 
-Timer::Timer() : start(std::chrono::system_clock::now()) {}
+Timer::Timer() : start(std::chrono::system_clock::now()), print_at_destruction(false) {}
 
-Timer::Timer(const std::string &name) : start(std::chrono::system_clock::now()), name(name){}
+Timer::Timer(const std::string &name, bool print_at_destruction) : start(std::chrono::system_clock::now()), name(name), print_at_destruction(print_at_destruction){}
 
 Timer::~Timer() {
-    std::cout << *this << std::endl;
+    if(this->print_at_destruction)
+        std::cout << *this << std::endl;
+}
+
+int Timer::ms() const {
+    auto delta = std::chrono::system_clock::now() - this->start;
+    return std::chrono::duration_cast<std::chrono::milliseconds>(delta).count();
+}
+
+void Timer::reset() {
+    start = std::chrono::system_clock::now();
 }
 
 std::ostream & operator<<(std::ostream & os, const Timer & timer){
     os << "Timer " << timer.name << " ";
-    auto delta = std::chrono::system_clock::now() - timer.start;
-    int ms = std::chrono::duration_cast<std::chrono::milliseconds>(delta).count();
+    int ms = timer.ms();
 
     if(ms < 10000)
         os << ms << " ms";
@@ -20,3 +29,4 @@ std::ostream & operator<<(std::ostream & os, const Timer & timer){
 
     return os;
 }
+

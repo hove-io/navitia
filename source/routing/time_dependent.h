@@ -1,66 +1,12 @@
 #pragma once
 
+#include "routing.h"
+#include "astar.h"
 #include "type/pt_data.h"
 #include <boost/graph/adjacency_list.hpp>
 
-namespace navitia { namespace routing {
+namespace navitia { namespace routing {  namespace timedependent {
 
-/** On se crée une structure qui représente une date et heure
- *
- * Date : sous la forme d'un numéro de jour à chercher dans le validity pattern
- * Heure : entier en nombre de secondes depuis minuit. S'il dépasse minuit, on fait modulo 24h et on incrémente la date
- *
- * On utilise cette structure pendant le calcul d'itinéaire
- */
-struct DateTime {
-    // TODO : on pourrait optimiser la conso mémoire en utilisant 8 bits pour la date, et 24 pour l'heure ;)
-    int date;
-    int hour;
-
-    DateTime() : date(std::numeric_limits<int>::max()), hour(std::numeric_limits<int>::max()){}
-
-    bool operator<(DateTime other) const {
-        if(this->date == other.date)
-            return hour < other.hour;
-        else
-            return this->date < other.date;
-    }
-
-    static DateTime infinity() {
-        return DateTime();
-    }
-
-    void normalize(){
-        if(date > 300) std::cout << "on normalise l'infini..." << std::endl;
-        this->date += this->hour / (24*3600);
-        this->hour = hour % (24*3600);
-    }
-
-    bool operator==(DateTime other) {
-        return this->hour == other.hour && this->date == other.date;
-    }
-};
-
-std::ostream & operator<<(std::ostream & os, const DateTime & dt);
-
-DateTime operator+(DateTime dt, int seconds);
-
-/** Représente un horaire associé à un validity pattern
- *
- * Il s'agit donc des horaires théoriques
- */
-struct ValidityPatternTime {
-    type::idx_t vp_idx;
-    int hour;
-
-    template<class T>
-    bool operator<(T other) const {
-        return hour < other.hour;
-    }
-
-    ValidityPatternTime() {}
-    ValidityPatternTime(int vp_idx, int hour) : vp_idx(vp_idx), hour(hour){}
-};
 
 /// Un nœud représente un RoutePoint
 struct Vertex {
@@ -94,7 +40,7 @@ struct TimeTable {
 
 struct Edge {
     /// Correspond à la meilleure durée possible. On s'en sert pour avoir une borne inférieure de temps
-    int min_duration;
+    uint min_duration;
 
     TimeTable t;
     Edge() : t(-1) {}
@@ -109,7 +55,7 @@ struct Edge {
   * les arcs sont orientés
   * les propriétés des nœuds et arcs sont les classes définies précédemment
   */
-typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::bidirectionalS, Vertex, Edge> Graph;
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, Vertex, Edge> Graph;
 
 /// Représentation d'un nœud dans le graphe
 typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
@@ -123,14 +69,6 @@ typedef boost::graph_traits<Graph>::vertex_iterator vertex_iterator;
 /// Type itérateur sur les arcs du graphe
 typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
 
-/** Étape d'un itinéraire*/
-
-struct PathItem{
-    std::string stop_point_name;
-    int time;
-    int day;
-};
-
 /** Représentation du réseau de transport en commun de type « type-dependent »
  *
  *C'est un modèle où les nœuds représentent les arrêtes (des RoutePoint pour être précis) et les arcs tous les horaires
@@ -139,28 +77,39 @@ struct PathItem{
  *Le calcul d'itinéaire se fait avec un Dijkstra modifié de manière à prendre des fonctions qui calculent l'arrivée au plus tôt
  *comme poids des arcs
  */
-struct TimeDependent {
+struct TimeDependent : public AbstractRouter{
 
     const type::PT_Data & data;
     Graph graph;
+    navitia::routing::astar::Astar astar_graph;
 
-    int stop_area_offset;
-    int stop_point_offset;
+    size_t stop_area_offset;
+    size_t stop_point_offset;
+    size_t route_point_offset;
+
+    std::vector<vertex_t> preds;
+    std::vector<DateTime> distance;
+    std::vector<DateTime> astar_dist;
 
     TimeDependent(const type::PT_Data & data);
 
     /// Génère le graphe sur le quel sera fait le calcul
     void build_graph();
 
+
     /** Calcule un itinéraire entre deux stop area
      *
      * hour correspond à
      * day correspond au jour de circulation au départ
      */
-    std::vector<PathItem> compute(const type::StopArea & departure, const type::StopArea & arr, int hour, int day);
+    Path compute(type::idx_t dep, type::idx_t arr, int hour, int day);
+
+    std::vector<routing::PathItem> compute_astar(const type::StopArea &dep, const type::StopArea &arr, int hour, int day);
+
+
 };
 
-}}
+}}}
 
 namespace std {
 template <>

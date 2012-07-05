@@ -73,7 +73,8 @@ struct PT_Data{
                 & network_map & mode_map & mode_type_map & city_map & district_map & department_map
                 & company_map & country_map
                 // Les proximity list
-                & stop_area_proximity_list & stop_point_proximity_list & city_proximity_list;
+                & stop_area_proximity_list & stop_point_proximity_list & city_proximity_list
+                & connections;
     }
 
     /** Initialise tous les indexes

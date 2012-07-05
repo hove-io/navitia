@@ -162,21 +162,3 @@ BOOST_AUTO_TEST_CASE(stop_area_transformer){
     BOOST_CHECK_EQUAL(stop_area_n.coord.y, stop_area.coord.y);
     BOOST_CHECK_EQUAL(stop_area_n.additional_data, stop_area.additional_data);
 }
-
-BOOST_AUTO_TEST_CASE(builder){
-    navimake::builder b("20120612");
-    b.sa("StopArea")("StopPoint1")("StopPoint2");
-    b.vj("A")("StopPoint1", 3600*8)("StopPoint2", 3600*9);
-    b.vj("A")("StopPoint1", 3600*9)("StopPoint2", 3600*10);
-    b.vj("A")("StopPoint2", 3600*10)("StopPoint1", 3600*11);
-    b.vj("A")("StopPoint2", 3600*12)("StopPoint1", 3600*13)("Bli", 3600*14);
-
-    navitia::type::PT_Data data = b.build();
-    BOOST_CHECK_EQUAL(data.stop_areas.size(), 2); // "StopArea" et "Bli"
-    BOOST_CHECK_EQUAL(data.stop_points.size(), 3); // "StopPoint1", "StopPoint2" et "Bli"
-    BOOST_CHECK_EQUAL(data.lines.size(), 1); //"A"
-    BOOST_CHECK_EQUAL(data.routes.size(), 3);
-    BOOST_CHECK_EQUAL(data.vehicle_journeys.size(), 4);
-    BOOST_CHECK_EQUAL(data.route_points.size(), 7);
-
-}

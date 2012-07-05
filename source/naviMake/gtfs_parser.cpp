@@ -46,6 +46,7 @@ void GtfsParser::fill(Data & data){
     parse_calendar_dates(data);
     parse_routes(data);
     parse_trips(data);
+    parse_transfers(data);
     parse_stop_times(data);
     build_routes(data);
     build_route_points(data);
@@ -209,7 +210,7 @@ void GtfsParser::parse_stops(Data & data) {
             else {
                 stop_map[sp->external_code] = sp;
                 data.stop_points.push_back(sp);
-                if(parent_c < elts.size() && elts[parent_c] != "") ///On sauvegarde la référence à la zone d'arrêt
+                if(elts[parent_c] != "") // On sauvegarde la référence à la zone d'arrêt
                     stoppoint_areas.push_back(std::make_pair(sp, elts[parent_c]));
             }
 
@@ -238,6 +239,70 @@ void GtfsParser::parse_stops(Data & data) {
     std::cout << std::endl;
 }
 
+void GtfsParser::parse_transfers(Data & data) {
+    std::cout << "On parse : " << (path + "transfers.txt").c_str() << std::endl;
+    std::fstream ifile((path + "transfers.txt").c_str());
+    remove_bom(ifile);
+    std::string line;
+
+    if(!getline(ifile, line)){
+        std::cerr << "Impossible d'ouvrir le fichier transfers.txt" << std::endl;
+        return;
+    }
+
+
+    boost::trim(line);
+    Tokenizer tok_header(line);
+    std::vector<std::string> elts(tok_header.begin(), tok_header.end());
+
+    int from_c = -1, to_c = -1, time_c = -1;
+    for(size_t  i = 0; i < elts.size(); ++i){
+        if(elts[i] == "from_stop_id")
+            from_c = i;
+        else if(elts[i] == "to_stop_id")
+            to_c = i;
+        else if(elts[i] == "min_transfer_time")
+            time_c = i;
+    }
+
+    if(from_c == -1 || to_c == -1 || time_c == -1){
+        std::cerr << "Il manque au moins une colonne dans transfers.txt" << std::endl;
+        return;
+    }
+
+    int nblines = 0;
+    while(getline(ifile, line)) {
+        boost::trim(line);
+        Tokenizer tok(line);
+        elts.assign(tok.begin(), tok.end());
+
+        nm::Connection * connection = new nm::Connection();
+        boost::unordered_map<std::string, navimake::types::StopPoint*>::iterator it;
+        it = this->stop_map.find(elts[from_c]);
+        if(it == this->stop_map.end()){
+            std::cerr << "Ipmossible de trouver le stop point " << elts[from_c] << std::endl;
+            delete connection;
+            continue;
+        } else {
+            connection->departure_stop_point = it->second;
+        }
+
+        it = this->stop_map.find(elts[to_c]);
+        if(it == this->stop_map.end()){
+            std::cerr << "Ipmossible de trouver le stop point " << elts[from_c] << std::endl;
+            delete connection;
+            continue;
+        } else {
+           connection->destination_stop_point  = it->second;
+        }
+        nblines++;
+        connection->connection_kind = nm::Connection::LinkConnection;
+        connection->duration = boost::lexical_cast<int>(elts[time_c]);
+        data.connections.push_back(connection);
+    }
+
+    std::cout << nblines << " correspondances prises en compte sur " << data.connections.size() << std::endl;
+}
 
 void GtfsParser::parse_calendar(Data & data) {
     data.validity_patterns.reserve(10000);
@@ -406,18 +471,14 @@ void GtfsParser:: parse_routes(Data & data){
     boost::trim(line);
     Tokenizer tok_header(line);
     std::vector<std::string> elts(tok_header.begin(), tok_header.end());
-    int id_c = -1, agency_c = -1, short_name_c = -1, long_name_c = -1, desc_c = -1, type_c = -1, color_c = -1;
+    int id_c = -1, short_name_c = -1, long_name_c = -1, type_c = -1, color_c = -1;
     for(size_t i = 0; i < elts.size(); i++){
         if (elts[i] == "route_id")
             id_c = i;
-        else if(elts[i] == "agency_id")
-            agency_c = i;
         else if(elts[i] == "route_short_name")
             short_name_c = i;
         else if(elts[i] == "route_long_name")
             long_name_c = i;
-        else if(elts[i] == "route_desc")
-            desc_c = i;
         else if(elts[i] == "route_type")
             type_c = i;
         else if(elts[i] == "route_color")
@@ -474,7 +535,7 @@ void GtfsParser::parse_trips(Data & data) {
     boost::trim(line);
     Tokenizer tok_header(line);
     std::vector<std::string> elts(tok_header.begin(), tok_header.end());
-    int id_c = -1, service_c = -1, trip_c = -1, headsign_c = -1, direction_c = -1, block_c = -1;
+    int id_c = -1, service_c = -1, trip_c = -1, headsign_c = -1;
     for(size_t i = 0; i < elts.size(); i++){
         if (elts[i] == "route_id")
             id_c = i;
@@ -484,10 +545,6 @@ void GtfsParser::parse_trips(Data & data) {
             trip_c = i;
         else if (elts[i] == "trip_headsign")
             headsign_c = i;
-        else if (elts[i] == "direction_id")
-            direction_c = i;
-        else if (elts[i] == "block_id")
-            block_c = i;
     }
 
     if (id_c == -1 || service_c == -1 || trip_c == -1 || headsign_c == -1){
@@ -520,7 +577,7 @@ void GtfsParser::parse_trips(Data & data) {
                 boost::unordered_map<std::string, nm::ValidityPattern*>::iterator vp_it = vp_map.find(elts[service_c]);
                 if(vp_it == vp_map.end()) {
                     ignored++;
-                    //std::cerr << "Impossible de trouver le service " << elts[service_c] << std::endl;
+                    continue;
                 }
                 else {
                     vp_xx = vp_it->second;
@@ -649,7 +706,7 @@ void GtfsParser::parse_stop_times(Data & data) {
     boost::trim(line);
     Tokenizer tok_header(line);
     std::vector<std::string> elts(tok_header.begin(), tok_header.end());
-    int id_c = -1, arrival_c = -1, departure_c = -1, stop_c = -1, stop_seq_c = -1, pickup_c = -1, drop_c = -1, dist_c = -1;
+    int id_c = -1, arrival_c = -1, departure_c = -1, stop_c = -1, stop_seq_c = -1;
     for(size_t i = 0; i < elts.size(); i++){
         if (elts[i] == "trip_id")
             id_c = i;
@@ -661,12 +718,6 @@ void GtfsParser::parse_stop_times(Data & data) {
             stop_c = i;
         else if (elts[i] == "stop_sequence")
             stop_seq_c = i;
-        else if (elts[i] == "pickup_type")
-            pickup_c = i;
-        else if (elts[i] == "drop_off_type")
-            drop_c = i;
-        else if (elts[i] == "shape_dist_traveled")
-            dist_c = i;
     }
 
     if(id_c == -1 || arrival_c == -1 || departure_c == -1 || stop_c == -1 || stop_seq_c == -1){

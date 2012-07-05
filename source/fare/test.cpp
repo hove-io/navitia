@@ -370,5 +370,10 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     BOOST_CHECK_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res.at(0).value, 170);
 
+    // on rajoute un bout de RER, on doit basculer vers un ticket OD
+    keys.push_back("436;8727141;810:B;8727148;2012|06|26;19|41;19|50;4;4;RapidTransit");
+    res = f.compute(keys);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res.at(0).value, 265);
 }
 

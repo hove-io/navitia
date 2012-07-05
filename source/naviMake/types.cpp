@@ -7,7 +7,7 @@ using namespace navimake::types;
 
 bool ValidityPattern::is_valid(int duration){
     if(duration < 0){
-        std::cerr << "La date est avant le début de période" << std::endl;
+        std::cerr << "La date est avant le début de période " << beginning_date << " " << duration <<  std::endl;
         return false;
     }
     else if(duration > 366){
@@ -81,7 +81,7 @@ bool Line::operator<(const Line& other) const {
 
 bool Route::operator<(const Route& other) const {
     if(this->line == other.line){
-        return this->name < other.name;
+        return this->external_code <  other.external_code;
     }else{
         return *(this->line) < *(other.line);
     }

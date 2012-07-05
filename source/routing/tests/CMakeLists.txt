@@ -6,6 +6,6 @@ SET(SOURCE
 )
 
 add_executable(time_dep_test ${SOURCE})
-target_link_libraries(time_dep_test ${Boost_LIBRARIES} network connectors)
+target_link_libraries(time_dep_test ${Boost_LIBRARIES} routing connectors)
 
 ADD_TEST(time_dep_test ${EXECUTABLE_OUTPUT_PATH}/time_dep_test --report_level=no)

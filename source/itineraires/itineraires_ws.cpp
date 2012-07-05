@@ -14,10 +14,10 @@ using namespace boost;
 struct Data2{
     navitia::type::Data data;
     network::NW g;
-    map_tc_t map_tc;
+    map_tc_t map_tc, map_td;
     int nb_threads;
 
-    Data2() : nb_threads(8) {
+    Data2() : nb_threads(1) {
         Configuration * conf = Configuration::get();
         std::cout << "Je suis l'executable " << conf->get_string("application") <<std::endl;
         std::cout << "Je réside dans le path " << conf->get_string("path") <<std::endl;
@@ -25,7 +25,7 @@ struct Data2{
         std::cout << "Chargement des données effectué" << std::endl;
         std::cout << "Nb route points : " << data.pt_data.route_points.size() << std::endl;
         g = NW(data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + (data.pt_data.stop_times.size()*2));
-        charger_graph(data, g, map_tc);
+        charger_graph(data, g, map_tc, map_td);
 
         std::cout << "Num stop areas : " << data.pt_data.stop_areas.size() << std::endl;
     }
@@ -72,7 +72,7 @@ private:
         map_parcours parcours_list = map_parcours();
         std::cout << " Debut parse itineraires ..." << std::flush;
         make_itineraires(v1, v2, itineraires, parcours_list, d.g, d.data, predecessors, d.map_tc);
-        std::cout << "Fin parse " << std::flush;
+        std::cout << "Fin parse "  <<  std::flush;
 
         std::cout << " Debut encodage ... " << std::flush;
         pbnavitia::ReponseDemonstrateur reponse_demonstrateur;
