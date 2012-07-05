@@ -1,7 +1,7 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_first_letter
 
-#include "first_letter.h"
+#include "first_letter/first_letter.h"
 #include <boost/test/unit_test.hpp>
 #include <vector>
 #include <iostream>
