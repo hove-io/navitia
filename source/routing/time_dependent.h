@@ -1,6 +1,7 @@
 #pragma once
 
 #include "routing.h"
+#include "astar.h"
 #include "type/pt_data.h"
 #include <boost/graph/adjacency_list.hpp>
 
@@ -55,14 +56,12 @@ struct Edge {
   * les propriétés des nœuds et arcs sont les classes définies précédemment
   */
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, Vertex, Edge> Graph;
-typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, boost::no_property, boost::property<boost::edge_weight_t, uint> > GraphAStar;
 
 /// Représentation d'un nœud dans le graphe
 typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
 
 /// Représentation d'un arc dans le graphe
 typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
-typedef boost::graph_traits<GraphAStar>::edge_descriptor as_edge_t;
 
 /// Type Itérateur sur les nœuds du graphe
 typedef boost::graph_traits<Graph>::vertex_iterator vertex_iterator;
@@ -70,9 +69,6 @@ typedef boost::graph_traits<Graph>::vertex_iterator vertex_iterator;
 /// Type itérateur sur les arcs du graphe
 typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
 
-
-bool operator==(const PathItem & a, const PathItem & b);
-std::ostream & operator<<(std::ostream & os, const PathItem & b);
 /** Représentation du réseau de transport en commun de type « type-dependent »
  *
  *C'est un modèle où les nœuds représentent les arrêtes (des RoutePoint pour être précis) et les arcs tous les horaires
@@ -85,14 +81,13 @@ struct TimeDependent : public AbstractRouter{
 
     const type::PT_Data & data;
     Graph graph;
-    GraphAStar astar_graph;
+    navitia::routing::astar::Astar astar_graph;
 
     size_t stop_area_offset;
     size_t stop_point_offset;
 
     std::vector<vertex_t> preds;
     std::vector<DateTime> distance;
-    std::vector<uint> min_time;
     std::vector<DateTime> astar_dist;
 
     TimeDependent(const type::PT_Data & data);
@@ -100,19 +95,17 @@ struct TimeDependent : public AbstractRouter{
     /// Génère le graphe sur le quel sera fait le calcul
     void build_graph();
 
+
     /** Calcule un itinéraire entre deux stop area
      *
      * hour correspond à
      * day correspond au jour de circulation au départ
      */
     Path compute(type::idx_t dep, type::idx_t arr, int hour, int day);
-    std::vector<PathItem> compute_astar(const type::StopArea & departure, const type::StopArea & arr, int hour, int day);
 
-    /** Calcule le temps minimal pour atteindre un nœud
-     *
-     *  Sert pour la heuristique A*
-     */
-    void build_heuristic(vertex_t destination);
+    std::vector<routing::PathItem> compute_astar(const type::StopArea &dep, const type::StopArea &arr, int hour, int day);
+
+
 };
 
 }}}

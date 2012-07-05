@@ -20,6 +20,11 @@ struct Path {
     std::vector<PathItem> items;
 };
 
+
+
+bool operator==(const PathItem & a, const PathItem & b);
+std::ostream & operator<<(std::ostream & os, const PathItem & b);
+
 /** Classe abstraite que tous les calculateurs doivent implémenter */
 struct AbstractRouter {
     virtual Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day) = 0;

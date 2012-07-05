@@ -6,6 +6,28 @@
 #include "utils/timer.h"
 namespace navitia { namespace routing { namespace timedependent {
 
+class distance_heuristic : public boost::astar_heuristic<Graph, DateTime>
+{
+public:
+  distance_heuristic(const TimeDependent & td) : td(td){}
+
+  // Estimation de l'heure d'arrivée. Cette heure doit est sous-estimée
+  DateTime operator()(Vertex u){
+      Vertex a = u;
+      /*if(a > td.stop_area_offset)
+          a -= td.stop_area_offset;
+      else
+          a = td.data.route_points[a].stop_point_idx;*/
+      //BOOST_ASSERT(td.distance[u] == DateTime::infinity());
+      DateTime result;
+      result.hour = td.astar_graph.min_time.at(a);
+      result.date = -1;
+      return result;
+  }
+private:
+  const TimeDependent & td;
+};
+
 
 struct found_goal{};
 
@@ -22,52 +44,15 @@ private:
   vertex_t m_goal;
 };
 
-class distance_heuristic : public boost::astar_heuristic<Graph, DateTime>
-{
-public:
-  distance_heuristic(const TimeDependent & td) : td(td){}
-
-  // Estimation de l'heure d'arrivée. Cette heure doit est sous-estimée
-  DateTime operator()(Vertex u){
-      Vertex a = u;
-      /*if(a > td.stop_area_offset)
-          a -= td.stop_area_offset;
-      else
-          a = td.data.route_points[a].stop_point_idx;*/
-      //BOOST_ASSERT(td.distance[u] == DateTime::infinity());
-      DateTime result;
-      result.hour = td.min_time[a];
-      result.date = -1;
-      return result;
-  }
-private:
-  const TimeDependent & td;
-};
-
-// visitor that terminates when we find the goal
-class astar_goal_visitor : public boost::default_astar_visitor
-{
-public:
-  astar_goal_visitor(vertex_t goal) : m_goal(goal) {}
-
-  void examine_vertex(vertex_t u, const Graph& ) const {
-    if(u == m_goal)
-      throw found_goal();
-  }
-private:
-  vertex_t m_goal;
-};
-
 
 TimeDependent::TimeDependent(const type::PT_Data & data) : data(data),
        // On crée un nœud par route point, deux par stopArea, deux par stopPoint
        graph(data.route_points.size() + data.stop_areas.size() + data.stop_points.size()),
-       astar_graph(data.stop_areas.size() + data.stop_points.size()),
+       astar_graph(data),
        stop_area_offset(data.route_points.size()),
        stop_point_offset(stop_area_offset + data.stop_areas.size()),
        preds(boost::num_vertices(graph)),
        distance(boost::num_vertices(graph)),
-       min_time(boost::num_vertices(graph)),
        astar_dist(boost::num_vertices(graph))
    {
     BOOST_ASSERT(boost::num_vertices(this->graph) == stop_point_offset + data.stop_points.size());
@@ -133,29 +118,6 @@ void  TimeDependent::build_graph(){
     BOOST_FOREACH(edge_t e, boost::edges(graph)){
         std::sort(graph[e].t.time_table.begin(), graph[e].t.time_table.end());
         graph[e].min_duration = graph[e].t.min_duration();
-
-        // 6. On calcule le graphe qui servira pour A*
-        vertex_t u = boost::source(e, graph);
-        vertex_t v = boost::target(e, graph);
-        /*if(u > stop_area_offset)
-            u -= stop_area_offset;
-        else
-            u = data.route_points[u].stop_point_idx;
-        if(v > stop_area_offset)
-            v -= stop_area_offset;
-        else
-            v = data.route_points[v].stop_point_idx;
-        BOOST_ASSERT(u < boost::num_vertices(astar_graph));
-        BOOST_ASSERT(v < boost::num_vertices(astar_graph));*/
-        as_edge_t ae;
-        bool new_edge;
-        boost::tie(ae, new_edge) = boost::add_edge(v, u, astar_graph);
-        auto weightmap = boost::get(boost::edge_weight, astar_graph);
-        if(new_edge){
-            weightmap[ae] = graph[e].min_duration;
-        } else {
-            weightmap[ae] = std::min(graph[e].min_duration, weightmap[ae]);
-        }
     }
 
 
@@ -284,7 +246,8 @@ Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day)
     return result;
 }
 
-std::vector<PathItem> TimeDependent::compute_astar(const type::StopArea &dep, const type::StopArea &arr, int hour, int day){
+
+std::vector<routing::PathItem> TimeDependent::compute_astar(const type::StopArea &dep, const type::StopArea &arr, int hour, int day){
     DateTime start_time;
     start_time.date = day;
     start_time.hour = hour;
@@ -292,7 +255,7 @@ std::vector<PathItem> TimeDependent::compute_astar(const type::StopArea &dep, co
     vertex_t departure = dep.idx + stop_area_offset;
     vertex_t arrival = arr.idx + stop_area_offset;
 
-    //build_heuristic(arrival);
+//    astar_graph.build_heuristic(arrival);
 
     try{
         boost::astar_search(this->graph, departure, distance_heuristic(*this),
@@ -303,12 +266,12 @@ std::vector<PathItem> TimeDependent::compute_astar(const type::StopArea &dep, co
                             .distance_inf(DateTime::infinity())
                             .distance_zero(start_time)
                             .distance_compare(edge_less())
-                            .visitor(astar_goal_visitor(arrival))
+                            .visitor(navitia::routing::astar::astar_goal_visitor(arrival))
                             .rank_map(&astar_dist[0])
             );
-    } catch(found_goal){}
+    } catch(navitia::routing::astar::found_goal){}
 
-    std::vector<PathItem> result;
+    std::vector<routing::PathItem> result;
 
     int count = 1;
     BOOST_FOREACH(auto v, boost::vertices(this->graph)){
@@ -330,17 +293,6 @@ std::vector<PathItem> TimeDependent::compute_astar(const type::StopArea &dep, co
     }
     std::reverse(result.begin(), result.end());
     return result;
-}
-
-void TimeDependent::build_heuristic(vertex_t destination){
-  /*  if(destination > stop_area_offset)
-        destination -= stop_area_offset;
-    else
-        std::cout << "C'est pas normal là !" << std::endl;*/
-    // on travaille sur le graphe inverse : pour la destination on veut savoir le temps minimal pour l'atteindre depuis tous les nœuds
-    boost::dijkstra_shortest_paths(this->astar_graph, destination,
-                                   boost::distance_map(&min_time[0])
-            );
 }
 
 }}}

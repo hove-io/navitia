@@ -1,4 +1,4 @@
-SET(ROUTING_SRC routing.cpp time_dependent.cpp)
+SET(ROUTING_SRC routing.cpp astar.cpp time_dependent.cpp )
 add_library(routing ${ROUTING_SRC})
 target_link_libraries(routing types)
 

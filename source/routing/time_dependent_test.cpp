@@ -14,11 +14,11 @@ void benchmark(routing::timedependent::TimeDependent & td, type::Data & data){
         std::cout << "Depart de " << data.pt_data.stop_areas[i].name << std::endl;
         {Timer t2("simple");
             std::cout << "  ";
-            res1 = td.compute(data.pt_data.stop_areas[i].idx, data.pt_data.stop_areas[1142].idx, 8000, 8);
+            res1 = td.compute(data.pt_data.stop_areas[i].idx, data.pt_data.stop_areas[142].idx, 8000, 8);
         }
         {Timer t3("astar");
             std::cout << "  ";
-            res2 = td.compute_astar(data.pt_data.stop_areas[i], data.pt_data.stop_areas[1142], 8000, 8);
+            res2 = td.compute_astar(data.pt_data.stop_areas[i], data.pt_data.stop_areas[142], 8000, 8);
         }
 /*        if(res1.items != res2){
             std::cout << "DIJKSTRA RESULT " << std::endl;
@@ -34,7 +34,7 @@ int main(int, char**){
     type::Data data;
     {
         Timer t("Chargement des données");
-        data.load_lz4("IdF.nav");
+        data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.nav");
         std::cout << "Num RoutePoints : " << data.pt_data.route_points.size() << std::endl;
         int count = 0;
         BOOST_FOREACH(auto sp, data.pt_data.stop_points){
@@ -48,7 +48,8 @@ int main(int, char**){
     {
         Timer t("Constuction du graphe");
         td.build_graph();
-        td.build_heuristic(data.pt_data.stop_areas[1142].idx + data.pt_data.route_points.size());
+        td.astar_graph.build_graph();
+        td.astar_graph.build_heuristic(data.pt_data.stop_areas[142].idx);
         std::cout << "Num nodes: " <<  boost::num_vertices(td.graph) << ", num edges: " << boost::num_edges(td.graph) << std::endl;
     }
 
