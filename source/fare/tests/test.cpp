@@ -1,7 +1,7 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_fares
 #include <boost/test/unit_test.hpp>
-#include "fare.h"
+#include "fare/fare.h"
 
 #include "config.h"
 
