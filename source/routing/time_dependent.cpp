@@ -50,8 +50,8 @@ TimeDependent::TimeDependent(const type::PT_Data & data) : data(data),
        graph(data.route_points.size() + data.stop_areas.size() + data.stop_points.size()),
        astar_graph(data),
        stop_area_offset(0),
-       stop_point_offset(stop_area_offset),
-       route_point_offset(stop_area_offset + data.stop_areas.size()),
+       stop_point_offset(data.stop_areas.size()),
+       route_point_offset(stop_point_offset + data.stop_points.size()),
        preds(boost::num_vertices(graph)),
        distance(boost::num_vertices(graph)),
        astar_dist(boost::num_vertices(graph))
@@ -234,8 +234,8 @@ Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day)
 
     vertex_t arrival = arr + stop_area_offset;
     while(preds[arrival] != arrival){
-        if(arrival < data.route_points.size()){
-            const type::StopPoint & sp = data.stop_points[data.route_points[arrival].stop_point_idx];
+        if(arrival >= this->route_point_offset){
+            const type::StopPoint & sp = data.stop_points[data.route_points[arrival-route_point_offset].stop_point_idx];
             PathItem item;
             item.stop_point_name = sp.name;
             item.day = distance[arrival].date;
