@@ -41,7 +41,7 @@ int main(int argc, char** argv){
     {
         Timer t("Constuction du graphe");
         td.build_graph();
-        td.astar_graph.build_heuristic(data.pt_data.stop_areas[1142].idx + data.pt_data.route_points.size());
+        td.build_heuristic(data.pt_data.stop_areas[1142].idx);
         std::cout << "Num nodes: " <<  boost::num_vertices(td.graph) << ", num edges: " << boost::num_edges(td.graph) << std::endl;
     }
 

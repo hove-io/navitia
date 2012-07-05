@@ -96,6 +96,9 @@ struct TimeDependent : public AbstractRouter{
     /// Génère le graphe sur le quel sera fait le calcul
     void build_graph();
 
+    /// Génère le graphe astar
+    void build_heuristic(uint destination);
+
 
     /** Calcule un itinéraire entre deux stop area
      *

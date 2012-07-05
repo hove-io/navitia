@@ -159,8 +159,8 @@ node_type get_n_type(unsigned int idx, navitia::type::Data &data);
 /// Fonction déterminant si une arête est un passe minuit ou non
 bool is_passe_minuit(uint32_t debut, uint32_t fin, navitia::type::Data &data, NW &g, map_tc_t &map_tc);
 bool is_passe_minuit(int32_t debut_t, int32_t fin_t);
-/// Retourne le temps associé au noeud passé
-/// Renvoie -1 s'il s'agit d'un SA, SP, RP
+/** Retourne le temps associé au noeud passé
+    Renvoie -1 s'il s'agit d'un SA, SP, RP */
 
 int32_t get_time(unsigned int idx, navitia::type::Data &data, NW &g, map_tc_t &map_tc);
 
