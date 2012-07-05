@@ -3,7 +3,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/foreach.hpp>
-#include "proximity_list.h"
+#include "proximity_list/proximity_list.h"
 
 using namespace navitia::type;
 
