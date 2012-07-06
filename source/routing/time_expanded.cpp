@@ -1,20 +1,35 @@
 #include "time_expanded.h"
-
+#include "boost/timer.hpp"
 
 namespace navitia { namespace routing { namespace timeexpanded {
 
 
-TimeExpanded::TimeExpanded(type::PT_Data & data) : data(data),
-    graph(data.stop_areas.size() + data.stop_points.size() + data.route_points.size() + data.stop_times.size() * 2),
+class sort_edges {
+private:
+    TimeExpanded & te;
+public:
+    sort_edges (TimeExpanded & te) : te(te) { }
+    bool operator() (const vertex_t& v1, const vertex_t& v2) const {
+
+        int32_t t1 = te.get_time(v1) % 86400,
+                t2 = te.get_time(v2) % 86400;
+        return (t1 < t2) || ((t1 == t2) & (te.get_idx(v1) < te.get_idx(v2)));
+    }
+
+};
+
+
+
+TimeExpanded::TimeExpanded(const type::PT_Data & data) : data(data),
+    graph(data.stop_areas.size() + data.stop_points.size() + data.route_points.size() + data.stop_times.size() * 3),
     astar_graph(data),
-    map_tc(),
-    map_td(),
     stop_area_offset(0),
     stop_point_offset(data.stop_areas.size()),
     route_point_offset(stop_point_offset + data.stop_points.size()),
     ta_offset(route_point_offset + data.route_points.size()),
     td_offset(ta_offset + data.stop_times.size()),
-    tc_offset(td_offset + data.stop_times.size()) {}
+    tc_offset(td_offset + data.stop_times.size())
+    {}
 
 
 void TimeExpanded::build_graph() {
@@ -29,7 +44,7 @@ void TimeExpanded::build_graph() {
 
     //Creation des stop areas
         BOOST_FOREACH(navitia::type::StopArea sai, data.stop_areas) {
-            map_stop_areas.insert(std::pair<vertex_t, set_vertices>(sai.idx, set_vertices(sort_edges(this))));
+            map_stop_areas.insert(std::pair<vertex_t, set_vertices>(sai.idx, set_vertices(sort_edges(*this))));
         }
     //Creation des stop points et creations lien SA->SP
     BOOST_FOREACH(navitia::type::StopPoint spi, data.stop_points) {
@@ -63,8 +78,7 @@ void TimeExpanded::build_graph() {
             tdv = get_td_idx(stid);
 
             //tc
-            tcv = add_vertex(graph);
-            map_tc.insert(std::pair<idx_t, idx_t>(tcv, tdv));
+            tcv = get_tc_idx(stid);
             map_stop_areas.find(data.stop_points.at(data.route_points.at(get_idx(rpv)).stop_point_idx).stop_area_idx)->second.insert(tcv);
             //edges
 
@@ -137,37 +151,51 @@ void TimeExpanded::build_graph() {
     }
 
 
-    BOOST_FOREACH(auto pairtc, map_tc) {
-        map_td.insert(std::pair<unsigned int, unsigned int>(pairtc.second, pairtc.first));
-    }
+    distances.resize(boost::num_vertices(graph));
+    predecessors.resize(boost::num_vertices(graph));
 }
 
 idx_t TimeExpanded::get_idx(const vertex_t& v) const {
-    if(v < stop_area_offset + data.stop_areas.size())
+    if(v < stop_point_offset)
         return v;
-    else if(v < stop_point_offset + data.stop_points.size())
+    else if(v < route_point_offset)
         return v - stop_point_offset;
-    else if(v < route_point_offset + data.route_points.size())
+    else if(v < ta_offset)
         return v - route_point_offset;
-    else if(v < ta_offset + data.stop_times.size())
+    else if(v < td_offset)
         return v - ta_offset;
-    else if(v < td_offset + data.stop_times.size())
+    else if(v < tc_offset)
         return v - td_offset;
     else {
-        return get_idx(map_tc.at(v));
+        return v - tc_offset;
     }
 }
 
-node_type TimeExpanded::get_n_type(const vertex_t& v) const {
+uint32_t TimeExpanded::get_saidx(const vertex_t& v) const {
     if(v < stop_area_offset + data.stop_areas.size())
-        return SA;
+        return v;
     else if(v < stop_point_offset + data.stop_points.size())
-        return SP;
+        return data.stop_points.at(v - stop_point_offset).stop_area_idx;
     else if(v < route_point_offset + data.route_points.size())
-        return RP;
+        return data.stop_points.at(data.route_points.at(v - route_point_offset).stop_point_idx).stop_area_idx;
     else if(v < ta_offset + data.stop_times.size())
-        return TA;
+        return data.stop_points.at(data.route_points.at(data.stop_times.at(v - ta_offset).route_point_idx).stop_point_idx).stop_area_idx;
     else if(v < td_offset + data.stop_times.size())
+        return data.stop_points.at(data.route_points.at(data.stop_times.at(v - td_offset).route_point_idx).stop_point_idx).stop_area_idx;
+    else
+        return data.stop_points.at(data.route_points.at(data.stop_times.at(v - tc_offset).route_point_idx).stop_point_idx).stop_area_idx;
+}
+
+node_type TimeExpanded::get_n_type(const vertex_t& v) const {
+    if(v < stop_point_offset)
+        return SA;
+    else if(v < route_point_offset)
+        return SP;
+    else if(v < ta_offset)
+        return RP;
+    else if(v < td_offset)
+        return TA;
+    else if(v < tc_offset)
         return TD;
     else
         return TC;
@@ -185,9 +213,21 @@ int TimeExpanded::get_validity_pattern_idx(navitia::type::ValidityPattern vp) {
         if(test)
             return vpi.idx;
     }
-    vp.idx = data.validity_patterns.size();
 
-    data.validity_patterns.push_back(vp);
+    BOOST_FOREACH(navitia::type::ValidityPattern vpi, validityPatterns) {
+        unsigned int i=0;
+        bool test = true;
+        while((i<366) & test) {
+            test = vpi.days[i] == vp.days[i];
+            ++i;
+        }
+
+        if(test)
+            return vpi.idx;
+    }
+    vp.idx = data.validity_patterns.size() + validityPatterns.size();
+
+    validityPatterns.push_back(vp);
 
 
     return vp.idx;
@@ -215,20 +255,122 @@ int32_t TimeExpanded::get_time(const vertex_t& v) const {
         return data.stop_times.at(get_idx(v)).departure_time;
         break;
     case TC:
-        return get_time(map_tc.at(v));
+        return data.stop_times.at(get_idx(v)).departure_time;
         break;
     default:
         return -1;
     }
 }
 
-bool TimeExpanded::is_passe_minuit(int32_t debut_t, int32_t fin_t) {
+bool TimeExpanded::is_passe_minuit(int32_t debut_t, int32_t fin_t) const {
     return ((debut_t % 86400) > (fin_t % 86400)) & (debut_t != -1) & (fin_t!=-1);
 }
 
  Path TimeExpanded::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day) {
     Path result;
+
+    etiquette etdebut;
+    etdebut.temps = 0;
+    etdebut.date_arrivee = departure_day;
+    etdebut.heure_arrivee = departure_hour;
+
+
+    if(trouver_premier_tc(departure_idx, departure_hour) == -1)
+        std::cout << "L'erreur est humaine" << std::endl;
+
+    departure_idx = trouver_premier_tc(departure_idx, departure_hour);
+
+    std::cout << "Premier tc : " << departure_idx << std::endl;
+
+
+    try {
+        boost::dijkstra_shortest_paths(this->graph, departure_idx,
+                                       boost::predecessor_map(&predecessors[0])
+                                       .weight_map(boost::get(boost::edge_bundle, graph)/*identity*/)
+                                       .distance_map(&distances[0])
+                                       .distance_combine(combine_simple(data, validityPatterns))
+                                       .distance_zero(etdebut)
+                                       .distance_inf(etiquette::max())
+                                       .distance_compare(edge_less())
+                                       .visitor(dijkstra_goal_visitor(destination_idx, *this))
+                                       );
+
+    } catch(found_goal fg) { destination_idx = fg.v; }
+
+
+    std::cout << "temps final : " << get_time(destination_idx) << std::endl;
+
+
     return result;
+ }
+
+ etiquette combine_simple::operator ()(etiquette debut, EdgeDesc ed) const {
+     if(debut == etiquette::max()) {
+         return etiquette::max();
+     }
+     else {
+         etiquette retour;
+         if(!ed.is_pam)
+             retour.date_arrivee = debut.date_arrivee;
+         else
+             retour.date_arrivee = debut.date_arrivee + 1;
+
+         if(ed.temps ==0) {
+             retour.heure_arrivee = debut.heure_arrivee;
+             return retour;
+         } else {
+
+             type::ValidityPattern vp;
+             if(ed.validity_pattern < data.validity_patterns.size())
+                vp = data.validity_patterns.at(ed.validity_pattern);
+             else
+                vp = validityPatterns.at(ed.validity_pattern - data.validity_patterns.size());
+             if(vp.check(retour.date_arrivee)) {
+                 retour.heure_arrivee = debut.heure_arrivee + ed.temps;
+                 return retour;
+             }
+             else
+                 return retour;
+         }
+
+     }
+ }
+
+
+ int TimeExpanded::trouver_premier_tc(idx_t saidx, int depart) {
+
+     boost::posix_time::ptime start, end;
+     start = boost::posix_time::microsec_clock::local_time();
+     idx_t stidx = data.stop_times.size();
+     BOOST_FOREACH(idx_t spidx, data.stop_areas.at(saidx).stop_point_list) {
+         BOOST_FOREACH(idx_t rpidx, data.stop_points.at(spidx).route_point_list) {
+             BOOST_FOREACH(idx_t vjidx, data.route_points.at(rpidx).vehicle_journey_list) {
+
+                 if(data.stop_times.at(data.vehicle_journeys.at(vjidx).stop_time_list.at(data.route_points.at(rpidx).order)).departure_time >= depart) {
+                     if(stidx == data.stop_times.size()) {
+                         stidx = data.vehicle_journeys.at(vjidx).stop_time_list.at(data.route_points.at(rpidx).order);
+                     } else {
+                         if(data.stop_times.at(data.vehicle_journeys.at(vjidx).stop_time_list.at(data.route_points.at(rpidx).order)).departure_time <
+                            data.stop_times.at(stidx).departure_time) {
+                             stidx = data.vehicle_journeys.at(vjidx).stop_time_list.at(data.route_points.at(rpidx).order);
+                         }
+                     }
+                 }
+             }
+         }
+     }
+     end = boost::posix_time::microsec_clock::local_time();
+     std::cout << "t1 : " << (end-start).    total_milliseconds() << std::endl;
+     if(stidx == data.stop_times.size()) {
+         stidx = data.vehicle_journeys.at(data.route_points.at(data.stop_points.at(data.stop_areas.at(saidx).stop_point_list.front()).route_point_list.front()).vehicle_journey_list.front()).stop_time_list.at(data.route_points.at(data.stop_points.at(data.stop_areas.at(saidx).stop_point_list.front()).route_point_list.front()).order);
+     }
+
+     if(stidx != data.stop_times.size()) {
+         return get_tc_idx(stidx);
+     }  else {
+         return -1;
+     }
+
  }
 
 

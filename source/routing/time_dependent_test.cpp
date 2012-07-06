@@ -27,7 +27,7 @@ int main(int argc, char** argv){
     type::Data data;
     {
         Timer t("Chargement des données");
-        data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.nav");
+        data.load_lz4("/home/vlara/navitia/jeu/poitiers/poitiers.nav");
         std::cout << "Num RoutePoints : " << data.pt_data.route_points.size() << std::endl;
         int count = 0;
         BOOST_FOREACH(auto sp, data.pt_data.stop_points){
@@ -41,7 +41,7 @@ int main(int argc, char** argv){
     {
         Timer t("Constuction du graphe");
         td.build_graph();
-        td.build_heuristic(data.pt_data.stop_areas[1142].idx);
+        td.build_heuristic(data.pt_data.stop_areas[142].idx);
         std::cout << "Num nodes: " <<  boost::num_vertices(td.graph) << ", num edges: " << boost::num_edges(td.graph) << std::endl;
     }
 
