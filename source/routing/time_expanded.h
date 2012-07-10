@@ -160,7 +160,7 @@ struct TimeExpanded : public AbstractRouter {
      */
     Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
 
-    std::vector<routing::PathItem> compute_astar(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
+    Path compute_astar(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
 
 
 
@@ -177,12 +177,14 @@ struct TimeExpanded : public AbstractRouter {
     /// Fonction helper retournant l'idx d'un vertex
     idx_t get_idx(const vertex_t& v) const;
 
+private:
+
+    Path makePath(idx_t departure_idx, idx_t destination_idx);
 
     /// Fonction helper servant à récupérer l'id dans le tableau des vertices d'un rp
     unsigned int get_rp_idx(unsigned int rpid) {
         return route_point_offset + rpid;
     }
-private:
 
     /// Fonction helper servant à récupérer l'id dans le tableau des vertices d'un sp
     unsigned int get_sp_idx(unsigned int spid) {

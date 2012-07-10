@@ -322,7 +322,6 @@ bool TimeExpanded::is_passe_minuit(int32_t debut_t, int32_t fin_t) const {
 }
 
 Path TimeExpanded::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day) {
-    Path result;
 
     departure_idx = trouver_premier_tc(departure_idx, departure_hour);
 
@@ -346,37 +345,13 @@ Path TimeExpanded::compute(idx_t departure_idx, idx_t destination_idx, int depar
 
     } catch(found_goal fg) { arrival = fg.v; }
 
-    int count = 1;
-    BOOST_FOREACH(auto v, boost::vertices(this->graph)){
-        if(predecessors[v] != v)
-            count++;
-    }
 
-    result.percent_visited = 100 * count / boost::num_vertices(graph);
-
-
-    result.duration = distances[arrival] - distances[departure_idx];
-
-    while(predecessors[arrival] != arrival){
-        if(arrival < tc_offset && arrival >= ta_offset){
-            PathItem item(data.stop_areas.at(data.stop_points.at(data.route_points.at(data.stop_times.at(get_idx(arrival)).route_point_idx).stop_point_idx).stop_area_idx).name+"("+boost::lexical_cast<std::string>(get_saidx(arrival))+")",
-                          distances[arrival].hour, distances[arrival].date, data.lines.at(data.routes.at(data.vehicle_journeys.at(data.stop_times.at(get_idx(arrival)).vehicle_journey_idx).route_idx).line_idx).name);
-            result.items.push_back(item);
-        }
-        if(get_n_type(arrival) == TC && get_n_type(predecessors[arrival]) == TA)
-            ++result.nb_changes;
-        arrival = predecessors[arrival];
-    }
-    std::reverse(result.items.begin(), result.items.end());
-
-    return result;
+    return makePath(departure_idx, arrival);
 }
 
 
-std::vector<routing::PathItem> TimeExpanded::compute_astar(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day){
+Path TimeExpanded::compute_astar(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day){
     DateTime etdebut;
-    etdebut.date = departure_day;
-    etdebut.hour = departure_hour;
 
     std::cout << "Etiquette debut : " << etdebut.date << "  " << etdebut.hour << std::endl;
 
@@ -386,6 +361,8 @@ std::vector<routing::PathItem> TimeExpanded::compute_astar(idx_t departure_idx, 
     departure = trouver_premier_tc(departure_idx, departure_hour);
 
 
+    etdebut.date = departure_day;
+    etdebut.hour = get_time(departure);
 
     try{
         boost::astar_search(this->graph, departure, distance_heuristic(*this),
@@ -399,28 +376,36 @@ std::vector<routing::PathItem> TimeExpanded::compute_astar(idx_t departure_idx, 
                             .visitor(astar_goal_visitor_te(arrival, *this))
                             .rank_map(&astar_dist[0])
                             );
-    } catch(navitia::routing::timeexpanded::found_goal fg){  destination_idx = fg.v; }
+    } catch(navitia::routing::timeexpanded::found_goal fg){  arrival = fg.v; }
 
-    std::vector<routing::PathItem> result;
 
+    return makePath(departure, arrival);
+}
+
+Path TimeExpanded::makePath(idx_t departure_idx, idx_t destination_idx) {
+    Path result;
     int count = 1;
     BOOST_FOREACH(auto v, boost::vertices(this->graph)){
         if(predecessors[v] != v)
             count++;
     }
 
-    //     while(preds[arrival] != arrival){
-    //         if(arrival < data.route_points.size()){
-    //             const type::StopPoint & sp = data.stop_points[data.route_points[arrival].stop_point_idx];
-    //             PathItem item;
-    //             item.stop_point_name = sp.name;
-    //             item.day = distance[arrival].date;
-    //             item.time = distance[arrival].hour;
-    //             result.push_back(item);
-    //         }
-    //         arrival = preds[arrival];
-    //     }
-    //     std::reverse(result.begin(), result.end());
+    result.percent_visited = 100 * count / boost::num_vertices(graph);
+
+
+    result.duration = distances[destination_idx] - distances[departure_idx];
+
+    while(predecessors[destination_idx] != destination_idx){
+        if(destination_idx < tc_offset && destination_idx >= ta_offset){
+            PathItem item(data.stop_areas.at(data.stop_points.at(data.route_points.at(data.stop_times.at(get_idx(destination_idx)).route_point_idx).stop_point_idx).stop_area_idx).name+"("+boost::lexical_cast<std::string>(get_saidx(destination_idx))+")",
+                          distances[destination_idx].hour, distances[destination_idx].date, data.lines.at(data.routes.at(data.vehicle_journeys.at(data.stop_times.at(get_idx(destination_idx)).vehicle_journey_idx).route_idx).line_idx).name);
+            result.items.push_back(item);
+        }
+        if(get_n_type(destination_idx) == TC && get_n_type(predecessors[destination_idx]) == TA)
+            ++result.nb_changes;
+        destination_idx = predecessors[destination_idx];
+    }
+    std::reverse(result.items.begin(), result.items.end());
     return result;
 }
 
