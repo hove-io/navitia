@@ -50,13 +50,13 @@ TimeDependent::TimeDependent(const type::PT_Data & data) : data(data),
        graph(data.route_points.size() + data.stop_areas.size() + data.stop_points.size()),
        astar_graph(data),
        stop_area_offset(0),
-       stop_point_offset(stop_area_offset),
-       route_point_offset(stop_area_offset + data.stop_areas.size()),
+       stop_point_offset(stop_area_offset + data.stop_areas.size()),
+       route_point_offset(stop_point_offset + data.stop_points.size()),
        preds(boost::num_vertices(graph)),
        distance(boost::num_vertices(graph)),
        astar_dist(boost::num_vertices(graph))
    {
-    BOOST_ASSERT(boost::num_vertices(this->graph) == stop_point_offset + data.stop_points.size());
+    BOOST_ASSERT(boost::num_vertices(this->graph) == route_point_offset + data.route_points.size());
     std::cout <<  3*data.route_points.size() - data.routes.size() + 2*data.stop_points.size() << std::endl;
     //BOOST_ASSERT(boost::num_edges(this->graph) == 3*data.route_points.size() - data.vehicle_journeys.size() + 2*data.stop_points.size() );
     }
@@ -240,10 +240,7 @@ Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day)
     while(preds[arrival] != arrival){
         if(arrival < data.route_points.size()){
             const type::StopPoint & sp = data.stop_points[data.route_points[arrival].stop_point_idx];
-            PathItem item;
-            item.stop_point_name = sp.name;
-            item.day = distance[arrival].date;
-            item.time = distance[arrival].hour;
+            PathItem item(sp.name, distance[arrival].hour,distance[arrival].date);
             result.items.push_back(item);
         }
         arrival = preds[arrival];
@@ -289,10 +286,7 @@ std::vector<routing::PathItem> TimeDependent::compute_astar(const type::StopArea
     while(preds[arrival] != arrival){
         if(arrival < data.route_points.size()){
             const type::StopPoint & sp = data.stop_points[data.route_points[arrival].stop_point_idx];
-            PathItem item;
-            item.stop_point_name = sp.name;
-            item.day = distance[arrival].date;
-            item.time = distance[arrival].hour;
+            PathItem item(sp.name, distance[arrival].date, distance[arrival].hour);
             result.push_back(item);
         }
         arrival = preds[arrival];

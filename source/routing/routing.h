@@ -10,6 +10,11 @@ struct PathItem{
     std::string stop_point_name;
     int time;
     int day;
+    std::string line;
+
+    PathItem() : stop_point_name(""), time(-1), day(-1), line("") {}
+    PathItem(std::string stop_point_name, int time, int day) : stop_point_name(stop_point_name), time(time), day(day), line("") {}
+    PathItem(std::string stop_point_name, int time, int day, std::string line) : stop_point_name(stop_point_name), time(time), day(day), line(line) {}
 };
 
 /** Un itinéraire complet */
@@ -18,13 +23,15 @@ struct Path {
     int nb_changes;
     int percent_visited;
     std::vector<PathItem> items;
+
+    Path() : duration(0), nb_changes(0), percent_visited(0) {}
 };
 
 
 
 bool operator==(const PathItem & a, const PathItem & b);
 std::ostream & operator<<(std::ostream & os, const PathItem & b);
-
+std::ostream & operator<<(std::ostream & os, const Path & path);
 /** Classe abstraite que tous les calculateurs doivent implémenter */
 struct AbstractRouter {
     virtual Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day) = 0;
@@ -44,10 +51,18 @@ struct DateTime {
     int hour;
 
     DateTime() : date(std::numeric_limits<int>::max()), hour(std::numeric_limits<int>::max()){}
+    DateTime(int date, int hour) : date(date), hour(hour) {}
 
     bool operator<(DateTime other) const {
         if(this->date == other.date)
             return hour < other.hour;
+        else
+            return this->date < other.date;
+    }
+
+    bool operator<=(DateTime other) const {
+        if(this->date == other.date)
+            return hour <= other.hour;
         else
             return this->date < other.date;
     }
@@ -64,6 +79,10 @@ struct DateTime {
 
     bool operator==(DateTime other) {
         return this->hour == other.hour && this->date == other.date;
+    }
+
+    int operator-(DateTime other) {
+        return (this->date - other.date) * 86400 + this->hour - other.hour;
     }
 };
 
