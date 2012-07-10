@@ -104,6 +104,9 @@ std::string pb2json(const google::protobuf::Message* response, int depth){
             case google::protobuf::FieldDescriptor::TYPE_MESSAGE:
                 buffer << pb2json(&reflection->GetMessage(*response, field), depth + 1);
                 break;
+            case google::protobuf::FieldDescriptor::TYPE_ENUM:
+                buffer << "\"" << reflection->GetEnum(*response, field)->name() << "\"";
+                break;
             default:
                 buffer << "Other !, " ;
             }
