@@ -42,7 +42,7 @@ int main(int , char** argv) {
     std::cout << "Debut chargement des données ... " << std::flush;
     {
         Timer t("Chargement des données");
-        data.load_lz4("/home/vlara/navitia/jeu/poitiers/poitiers.nav");
+        data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.nav");
     }
     std::cout << " Fin chargement des données" << std::endl;
 

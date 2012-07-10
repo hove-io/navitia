@@ -263,11 +263,11 @@ void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc, map_tc_t 
             if((itc != sa.second.end()) && ((data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time  + min_corresp% 86400) <= (get_time(*itc, data, g, map_tc) % 86400))) {
                 if(!edge(get_ta_idx(get_idx(tc, data, map_tc), data), *itc, g).second)
                     add_edge(get_ta_idx(get_idx(tc, data, map_tc), data), *itc,
-                             EdgeDesc(0, (data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time %86400) - data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).departure_time,  is_passe_minuit(get_ta_idx(get_idx(tc, data, map_tc), data), *itc, data, g, map_tc)), g);
+                             EdgeDesc(-1, (data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time %86400) - data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).departure_time,  is_passe_minuit(get_ta_idx(get_idx(tc, data, map_tc), data), *itc, data, g, map_tc)), g);
             } else {
                 if(!edge(get_ta_idx(get_idx(tc, data, map_tc), data), *itc, g).second)
                     add_edge(get_ta_idx(get_idx(tc, data, map_tc), data), *sa.second.begin(),
-                             EdgeDesc(0, (86400 - data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).departure_time % 86400) + data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time %86400, is_passe_minuit(get_ta_idx(get_idx(tc, data, map_tc), data),  *sa.second.begin(), data, g, map_tc)), g);
+                             EdgeDesc(-1, (86400 - data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).departure_time % 86400) + data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time %86400, is_passe_minuit(get_ta_idx(get_idx(tc, data, map_tc), data),  *sa.second.begin(), data, g, map_tc)), g);
             }
 
 //            //Si > 86400 je relie au premier tc possible avec le temps % 86400
@@ -432,16 +432,16 @@ etiquette combine_simple::operator ()(etiquette debut, EdgeDesc ed) const {
         else
             retour.date_arrivee = debut.date_arrivee + 1;
 
-        if(ed.temps ==0) {
+        if(ed.validity_pattern == -1 || ed.temps == 0) {
             retour.heure_arrivee = debut.heure_arrivee;
             return retour;
         } else {
             if(data.pt_data.validity_patterns.at(ed.validity_pattern).check(retour.date_arrivee)) {
-                retour.heure_arrivee  =debut.heure_arrivee + ed.temps;
+                retour.heure_arrivee  = debut.heure_arrivee + ed.temps;
                 return retour;
             }
             else
-                return retour;
+                return etiquette::max();
         }
 
     }

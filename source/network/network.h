@@ -81,14 +81,14 @@ public:
 /// Descripteur d'arête
 class EdgeDesc {
 public:
-    uint16_t validity_pattern;      /// Validity Pattern de l'arête
+    int16_t validity_pattern;      /// Validity Pattern de l'arête
     uint16_t temps;                 /// Temps sur l'arc
     bool is_pam;                    /// Vrai si l'arête est un passe minuit, faux sinon
-    EdgeDesc() :validity_pattern(0), temps(0), is_pam(false){}
-    EdgeDesc(uint16_t validity_pattern) : validity_pattern(validity_pattern), temps(0), is_pam(false){}
-    EdgeDesc(uint16_t validity_pattern, bool is_pam) : validity_pattern(validity_pattern), temps(0), is_pam(is_pam){}
-    EdgeDesc(uint16_t validity_pattern, uint16_t temps) : validity_pattern(validity_pattern), temps(temps){}
-    EdgeDesc(uint16_t validity_pattern, uint16_t temps, bool is_pam) : validity_pattern(validity_pattern), temps(temps), is_pam(is_pam){}
+    EdgeDesc() :validity_pattern(-1), temps(0), is_pam(false){}
+    EdgeDesc(int16_t validity_pattern) : validity_pattern(validity_pattern), temps(0), is_pam(false){}
+    EdgeDesc(int16_t validity_pattern, bool is_pam) : validity_pattern(validity_pattern), temps(0), is_pam(is_pam){}
+    EdgeDesc(int16_t validity_pattern, uint16_t temps) : validity_pattern(validity_pattern), temps(temps){}
+    EdgeDesc(int16_t validity_pattern, uint16_t temps, bool is_pam) : validity_pattern(validity_pattern), temps(temps), is_pam(is_pam){}
 
 
     std::ostream &operator<<( std::ostream &out) {
