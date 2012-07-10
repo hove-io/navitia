@@ -119,13 +119,6 @@ std::unique_ptr<google::protobuf::Message> create_pb(const webservice::RequestDa
     return create_pb(request.api);
 }
 
-std::unique_ptr<google::protobuf::Message> create_pb(const std::string & api){
-    if(api == "firstletter"){
-        return std::unique_ptr<google::protobuf::Message>(new pbnavitia::FirstLetter());
-    }else if(api == "streetnetwork"){
-        return std::unique_ptr<google::protobuf::Message>(new pbnavitia::StreetNetwork());
-    }else if(api == "query"){
-        return std::unique_ptr<google::protobuf::Message>(new pbnavitia::PTReferential());
-    }
-    throw std::exception();
+std::unique_ptr<google::protobuf::Message> create_pb(const std::string &){
+    return std::unique_ptr<google::protobuf::Message>(new pbnavitia::Response());
 }

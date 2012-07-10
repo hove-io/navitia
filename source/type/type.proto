@@ -8,6 +8,14 @@ enum NavitiaType {
     SITE = 20;
 }
 
+
+enum API {
+    FIRSTLETTER = 1;
+    PTREFERENTIAL = 2;
+    STREET_NETWORK = 3;
+
+}
+
 message GeographicalCoord {
     required double x = 1;
     required double y = 2;
@@ -199,5 +207,20 @@ message Itineraire {
 message ReponseDemonstrateur {
     repeated Parcours Parcours_Liste = 1;
     repeated Itineraire itineraires_liste  = 2;
+}
+
+
+message Response{
+    required API requested_api = 1;
+    optional string error = 2;
+
+    optional string info = 3;
+
+    optional FirstLetter firstletter = 4;
+
+    optional PTReferential ptref = 5;
+
+    optional StreetNetwork street_network = 6;
+
 }
 

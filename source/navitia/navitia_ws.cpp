@@ -85,11 +85,14 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData firstletter(RequestData& request, navitia::type::Data & d){
         ResponseData rd;
+        pbnavitia::Response pb_response;
+        pb_response.set_requested_api(pbnavitia::FIRSTLETTER);
 
         if(!request.params_are_valid){
             rd.status_code = 500;
-            rd.content_type = "text/plain";
-            rd.response << "invalid argument";
+            rd.content_type = "application/octet-stream";
+            pb_response.set_error("invalid argument");
+            pb_response.SerializeToOstream(&rd.response);
             return rd;
         }
 
@@ -100,8 +103,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
         if(!locker.locked){
             //on est en cours de chargement
             rd.status_code = 500;
-            rd.content_type = "text/plain";
-            rd.response << "loading";
+            rd.content_type = "application/octet-stream";
+            pb_response.set_error("loading");
+            pb_response.SerializeToOstream(&rd.response);
             return rd;
         }
 
@@ -110,18 +114,19 @@ class Worker : public BaseWorker<navitia::type::Data> {
         name = boost::get<std::string>(request.parsed_params["name"].value);
         std::vector<nt::idx_t> result;
         try{
-            pbnavitia::FirstLetter pb;
+            pbnavitia::FirstLetter* pb = pb_response.mutable_firstletter();
             BOOST_FOREACH(nt::Type_e type, filter){
                 switch(type){
                 case nt::eStopArea:
-                    result = d.pt_data.stop_area_first_letter.find(name);break;
+                    result = d.pt_data.stop_area_first_letter.find(name); break;
                 case nt::eCity:
-                    result = d.pt_data.city_first_letter.find(name);break;
+                    result = d.pt_data.city_first_letter.find(name); break;
                 default: break;
                 }
-                create_pb(result, type, d, pb);
+                create_pb(result, type, d, *pb);
             }
-            pb.SerializeToOstream(&rd.response);
+            //pb_response.set_firstletter(pb);
+            pb_response.SerializeToOstream(&rd.response);
             rd.content_type = "application/octet-stream";
             rd.status_code = 200;
         }catch(...){
@@ -132,10 +137,13 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData streetnetwork(RequestData & request, navitia::type::Data & d){
         ResponseData rd;
+        pbnavitia::Response pb_response;
+        pb_response.set_requested_api(pbnavitia::STREET_NETWORK);
         if(!request.params_are_valid){
             rd.status_code = 500;
-            rd.content_type = "text/plain";
-            rd.response << "invalid argument";
+            rd.content_type = "application/octet-stream";
+            pb_response.set_error("invalid argument");
+            pb_response.SerializeToOstream(&rd.response);
             return rd;
         }
         if(!d.loaded){
@@ -145,8 +153,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
         if(!locker.locked){
             //on est en cours de chargement
             rd.status_code = 500;
-            rd.content_type = "text/plain";
-            rd.response << "loading";
+            rd.content_type = "application/octet-stream";
+            pb_response.set_error("loading");
+            pb_response.SerializeToOstream(&rd.response);
             return rd;
         }
 
@@ -159,11 +168,11 @@ class Worker : public BaseWorker<navitia::type::Data> {
         std::vector<navitia::streetnetwork::vertex_t> dest = {d.street_network.pl.find_nearest(destlon, destlat)};
         navitia::streetnetwork::Path path = d.street_network.compute(start, dest);
 
-        pbnavitia::StreetNetwork sn;
-        sn.set_length(path.length);
+        pbnavitia::StreetNetwork* sn = pb_response.mutable_street_network();
+        sn->set_length(path.length);
         BOOST_FOREACH(auto item, path.path_items){
             if(item.way_idx < d.street_network.ways.size()){
-                pbnavitia::PathItem * path_item = sn.add_path_item_list();
+                pbnavitia::PathItem * path_item = sn->add_path_item_list();
                 path_item->set_name(d.street_network.ways[item.way_idx].name);
                 path_item->set_length(item.length);
             }else{
@@ -173,11 +182,11 @@ class Worker : public BaseWorker<navitia::type::Data> {
         }
 
         BOOST_FOREACH(auto coord, path.coordinates){
-            pbnavitia::GeographicalCoord * pb_coord = sn.add_coordinate_list();
+            pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinate_list();
             pb_coord->set_x(coord.x);
             pb_coord->set_y(coord.y);
         }
-        sn.SerializeToOstream(&rd.response);
+        pb_response.SerializeToOstream(&rd.response);
         rd.content_type = "application/octet-stream";
         rd.status_code = 200;
 
