@@ -48,7 +48,7 @@ typedef std::pair<map_retour_t, map_best_t> pair_retour_t;
 typedef std::vector<type_retour> itineraire_t;
 
 
-std::pair<unsigned int, bool> earliest_trip(unsigned int route, unsigned int stop_area, map_retour_t &retour, navitia::type::Data &data);
+std::pair<unsigned int, bool> earliest_trip(unsigned int route, unsigned int stop_area, map_retour_t &retour, unsigned int count, navitia::type::Data &data);
 std::pair<unsigned int, bool> earliest_trip(unsigned int route, unsigned int stop_area, int time, int day, navitia::type::Data &data);
 int get_rp_order(navitia::type::Route &route, unsigned int stop_area, navitia::type::Data &data);
 int get_rp_order(unsigned int route, unsigned int stop_area, navitia::type::Data &data);
