@@ -48,10 +48,15 @@ std::string pb2xml(const google::protobuf::Message* response){
     return buffer.str();
 }
 
+void indent(std::stringstream& buffer, int depth){
+    for (int i = 0; i < depth; ++i) {
+        buffer << "    ";
+    }
+}
+
 
 std::string pb2json(const google::protobuf::Message* response, int depth){
     std::stringstream buffer;
-    if(depth == 1) buffer.width(5);
     buffer << "{";
 
     const google::protobuf::Reflection* reflection = response->GetReflection();
@@ -65,7 +70,10 @@ std::string pb2json(const google::protobuf::Message* response, int depth){
         } else {
             buffer << ", ";
         }
-        if(depth == 1) buffer << "\n      ";
+        if(depth > 0){ 
+            buffer << "\n";
+            indent(buffer, depth);
+        }
         if(field->is_repeated()) {
             buffer << "\"" << field->name() << "\": [";
             if(depth == 0) buffer << "\n";
@@ -112,8 +120,11 @@ std::string pb2json(const google::protobuf::Message* response, int depth){
             }
         }
     }
-    if(depth == 1) buffer << "\n    }";
-    else buffer << "}";
+    if(depth > 0){
+        buffer << "\n";
+        indent(buffer, depth-1);
+    }
+    buffer << "}";
     return buffer.str();
 }
 
