@@ -108,6 +108,8 @@ struct ValidityPatternTime {
 };
 
 
+Path makeItineraire(const Path &path);
+
 }}
 
 

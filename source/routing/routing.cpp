@@ -28,6 +28,29 @@ std::ostream & operator<<(std::ostream & os, const Path & path) {
     return os;
 }
 
+Path makeItineraire(const Path &path) {
+    Path result;
+    result.duration = path.duration;
+    result.nb_changes = path.nb_changes;
+    result.percent_visited = path.percent_visited;
 
+    if(path.items.size() > 0) {
+        result.items.push_back(PathItem(path.items.front().said, path.items.front().time, path.items.front().day, path.items.front().line_idx));
+        PathItem precitem = result.items.front();
+
+        BOOST_FOREACH(PathItem item, path.items) {
+            if(precitem.line_idx != item.line_idx) {
+                result.items.push_back(PathItem(precitem.said, precitem.time, precitem.day, precitem.line_idx));
+                result.items.push_back(PathItem(item.said, item.time, item.day, item.line_idx));
+            }
+            precitem = item;
+        }
+
+
+        std::reverse(result.items.begin(), result.items.end());
+
+    }
+    return result;
+}
 
 }}
