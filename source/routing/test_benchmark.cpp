@@ -1,15 +1,13 @@
 #include "benchmark.h"
 
 int main(int , char **) {
-    navitia::routing::benchmark::benchmark b("/home/vlara/navitiagit/build/routing/IdF", "/home/vlara/navitia/jeu/IdF/IdF.nav");
-
-        b.load_input();
-
+    navitia::routing::benchmark::benchmark b("poitiers", "/home/vlara/navitia/jeu/poitiers/poitiers.nav");
+    b.generate_input();
 
 
-        {
-            Timer t("Compute Raptor");
-            b.computeBench_ra();
-        }
+    {
+        Timer tg("Benchmarks");
+        b.computeBench();
+    }
 
 }
