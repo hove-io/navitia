@@ -107,19 +107,9 @@ struct TimeDependent : public AbstractRouter{
      */
     Path compute(type::idx_t dep, type::idx_t arr, int hour, int day);
 
-    std::vector<routing::PathItem> compute_astar(const type::StopArea &dep, const type::StopArea &arr, int hour, int day);
+    Path compute_astar(type::idx_t dep, type::idx_t arr, int hour, int day);
 
-
+    Path makePath(type::idx_t arr);
 };
 
 }}}
-
-namespace std {
-template <>
-class numeric_limits<navitia::routing::DateTime> {
-public:
-    static navitia::routing::DateTime max() {
-        return navitia::routing::DateTime::infinity();
-    }
-};
-}

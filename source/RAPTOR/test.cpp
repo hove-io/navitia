@@ -6,13 +6,13 @@ int main(int , char** /*argv*/) {
     navitia::type::Data data;
     std::cout << "Chargemement des données ... " << std::flush;
 
-    data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.nav");
+    data.load_lz4("/home/vlara/navitia/jeu/poitiers/poitiers.nav");
 
     std::cout << "Fin chargement" << std::endl;
     std::cout << "Nb stop areas : " << data.pt_data.stop_areas.size() << std::endl
               << "Nb stop points : " << data.pt_data.stop_points.size() << std::endl;
 
-    unsigned int depart = 13587, arrivee = 16331;
+    unsigned int depart = 361, arrivee = 175;
 
     BOOST_FOREACH(navitia::type::Route route, data.pt_data.routes) {
 
@@ -38,7 +38,7 @@ int main(int , char** /*argv*/) {
 
         CALLGRIND_START_INSTRUMENTATION;
         start = boost::posix_time::microsec_clock::local_time();
-        raptor::pair_retour_t pair_retour = raptor::RAPTOR(depart, arrivee, 28800, data.pt_data.validity_patterns.at(0).slide(boost::gregorian::from_undelimited_string("20120219")), data);
+        raptor::pair_retour_t pair_retour = raptor::RAPTOR(depart, arrivee, 86000, data.pt_data.validity_patterns.at(0).slide(boost::gregorian::from_undelimited_string("20120520")), data);
         end = boost::posix_time::microsec_clock::local_time();
         CALLGRIND_STOP_INSTRUMENTATION;
         CALLGRIND_DUMP_STATS;

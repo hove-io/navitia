@@ -352,9 +352,6 @@ Path TimeExpanded::compute(idx_t departure_idx, idx_t destination_idx, int depar
 
 Path TimeExpanded::compute_astar(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day){
     DateTime etdebut;
-
-    std::cout << "Etiquette debut : " << etdebut.date << "  " << etdebut.hour << std::endl;
-
     vertex_t departure = departure_idx + stop_area_offset;
     vertex_t arrival = destination_idx + stop_area_offset;
 

@@ -88,9 +88,6 @@ void Astar::build_heuristic(vertex_t destination){
     else
         std::cout << "C'est pas normal là !" << std::endl;*/
     // on travaille sur le graphe inverse : pour la destination on veut savoir le temps minimal pour l'atteindre depuis tous les nœuds
-
-    std::cout << "Astar : destination "  << destination << " graph size : " << (data.stop_areas.size()+data.stop_points.size() + data.route_points.size()) << std::endl;
-
     boost::dijkstra_shortest_paths(this->a_graph, destination,
                                    boost::distance_map(&min_time[0])
             );

@@ -27,7 +27,7 @@ int main(int argc, char** argv){
     type::Data data;
     {
         Timer t("Chargement des données");
-        data.load_lz4("/home/vlara/navitia/jeu/passeminuit/passeminuit.nav");
+        data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.nav");
         std::cout << "Num RoutePoints : " << data.pt_data.route_points.size() << std::endl;
         int count = 0;
         BOOST_FOREACH(auto sp, data.pt_data.stop_points){
@@ -41,12 +41,32 @@ int main(int argc, char** argv){
     {
         Timer t("Constuction du graphe");
         td.build_graph();
-        std::cout << td.compute(5, 4, 0, 124);
 
 //        td.build_heuristic(data.pt_data.stop_areas[142].idx);
 //        td.compute_astar(data.pt_data.stop_areas[1], data.pt_data.stop_areas[142], 28800, 2);
         std::cout << "Num nodes: " <<  boost::num_vertices(td.graph) << ", num edges: " << boost::num_edges(td.graph) << std::endl;
     }
+
+    {
+        Timer t("Calcul itinéraire");
+        std::cout << data.pt_data.stop_areas.at(312).name << " à " << data.pt_data.stop_areas.at(566).name << std::endl;
+        std::cout << td.compute(14796, 2460, 72000, 7);
+    }
+
+    BOOST_FOREACH(navitia::type::VehicleJourney vj, data.pt_data.vehicle_journeys) {
+        int prec = -1;
+        BOOST_FOREACH(unsigned int stid, vj.stop_time_list) {
+            if(prec != -1) {
+                if(data.pt_data.stop_times.at(prec).arrival_time > data.pt_data.stop_times.at(stid).arrival_time ||
+                   data.pt_data.stop_times.at(prec).departure_time > data.pt_data.stop_times.at(stid).departure_time) {
+                    std::cout << "Bug sur le vj : " << vj.idx << " arrival times : " <<   data.pt_data.stop_times.at(prec).arrival_time << " " << data.pt_data.stop_times.at(stid).arrival_time
+                              << "departure times : " <<     data.pt_data.stop_times.at(prec).departure_time << " " << data.pt_data.stop_times.at(stid).departure_time << std::endl;
+                }
+            }
+            prec = stid;
+        }
+    }
+
 
 
     {
@@ -102,9 +122,9 @@ int main(int argc, char** argv){
             std::cout << s.stop_point_name << " " << s.time << " " << s.day << std::endl;
         }*/
 
-        int runs;
-        if(argc == 2) runs = atoi(argv[1]);
-        else runs = 100;
-        benchmark(td, data, runs);
+//        int runs;
+//        if(argc == 2) runs = atoi(argv[1]);
+//        else runs = 100;
+//        benchmark(td, data, runs);
     }
 }

@@ -280,14 +280,3 @@ public:
 
 }}}
 
-
-
-namespace std {
-template <>
-class numeric_limits<navitia::routing::DateTime> {
-public:
-    static navitia::routing::DateTime max() {
-        return navitia::routing::DateTime::infinity();
-    }
-};
-}
