@@ -82,6 +82,7 @@ namespace webservice
             decode(raw_params);
             decode(request.data);
             std::vector<std::string> tokens;
+
             boost::algorithm::split(tokens, raw_params, boost::algorithm::is_any_of("&"));
             BOOST_FOREACH(std::string token, tokens) {
                 std::vector<std::string> elts;
@@ -119,6 +120,7 @@ namespace webservice
             }else{
                 
                 api_metadata[api].parse_parameters(request);
+                api_metadata[api].check_manadatory_parameters(request);
 
                 boost::posix_time::ptime start(boost::posix_time::microsec_clock::local_time());
                 ResponseData resp = apis[api](request, d);
@@ -197,7 +199,6 @@ namespace webservice
                     case ApiParameter::DATETIME: type_caption = "Date-heure p.ex. 20111031T0918"; break;
                     case ApiParameter::BOOLEAN: type_caption = "Booléen 1 pour vrai, 0 pour faux"; break;
                     case ApiParameter::STRINGLIST: type_caption = "Liste de chaînes de caractères p.ex. bonjour;le;monde"; break;
-                    case ApiParameter::ENTRYPOINT: type_caption = "Identifiant unique d'un objet"; break;
                     }
 
                     rd.response << "<tr><td>" << param.first << "</td><td>" << type_caption << "</td><td>" << param.second.description << "</td><td>" << param.second.mandatory << "</td></tr>\n";
@@ -316,14 +317,18 @@ namespace webservice
                 query.path = request.substr(0, pos);
                 query.raw_params = request.substr(pos+1);
             }
-            auto response = operator()(query, d);
+            auto response = dispatch(query, d);
             std::string json_resp;
-            try{
-                auto pb = create_pb(response.api);
-                pb->ParseFromString(response.response.str());
-                json_resp = pb2json(pb.get());
-                result << "Taille protobuf : " << (response.response.str().size()/1024) << "ko, taille json : " << json_resp.size()/1024 <<  "ko" << std::endl;
-            } catch(...){
+            if(response.content_type == "application/octet-stream"){
+                try{
+                    auto pb = create_pb(response.api);
+                    pb->ParseFromIstream(&response.response);
+                    json_resp = pb2json(pb.get());
+                    result << "Taille protobuf : " << (response.response.str().size()/1024) << "ko, taille json : " << json_resp.size()/1024 <<  "ko" << std::endl;
+                } catch(...){
+                    json_resp = response.response.str();
+                }
+            }else{
                 json_resp = response.response.str();
             }
 

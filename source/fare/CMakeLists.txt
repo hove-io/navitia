@@ -7,7 +7,7 @@ ENDIF(NOT MSVC)
 
 add_library(fare ${FARE_SRC})
 
-add_executable (fare_tests test.cpp)
+add_executable (fare_tests tests/test.cpp)
 target_link_libraries(fare_tests ${Boost_LIBRARIES} fare)
 ADD_TEST(test_fare ${EXECUTABLE_OUTPUT_PATH}/fare_tests --report_level=no)
 

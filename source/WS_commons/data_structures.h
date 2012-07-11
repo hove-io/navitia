@@ -77,8 +77,7 @@ struct ApiParameter {
         TIME,
         DATETIME,
         BOOLEAN,
-        STRINGLIST,
-        ENTRYPOINT
+        STRINGLIST
     };
 
     std::string description; ///< Description du paramètre (pour information à l'utilisateur)

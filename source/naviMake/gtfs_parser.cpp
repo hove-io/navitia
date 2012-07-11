@@ -210,7 +210,7 @@ void GtfsParser::parse_stops(Data & data) {
             else {
                 stop_map[sp->external_code] = sp;
                 data.stop_points.push_back(sp);
-                if(parent_c < elts.size() && elts[parent_c] != "") ///On sauvegarde la référence à la zone d'arrêt
+                if(elts[parent_c] != "") // On sauvegarde la référence à la zone d'arrêt
                     stoppoint_areas.push_back(std::make_pair(sp, elts[parent_c]));
             }
 
@@ -471,18 +471,14 @@ void GtfsParser:: parse_routes(Data & data){
     boost::trim(line);
     Tokenizer tok_header(line);
     std::vector<std::string> elts(tok_header.begin(), tok_header.end());
-    int id_c = -1, agency_c = -1, short_name_c = -1, long_name_c = -1, desc_c = -1, type_c = -1, color_c = -1;
+    int id_c = -1, short_name_c = -1, long_name_c = -1, type_c = -1, color_c = -1;
     for(size_t i = 0; i < elts.size(); i++){
         if (elts[i] == "route_id")
             id_c = i;
-        else if(elts[i] == "agency_id")
-            agency_c = i;
         else if(elts[i] == "route_short_name")
             short_name_c = i;
         else if(elts[i] == "route_long_name")
             long_name_c = i;
-        else if(elts[i] == "route_desc")
-            desc_c = i;
         else if(elts[i] == "route_type")
             type_c = i;
         else if(elts[i] == "route_color")
@@ -539,7 +535,7 @@ void GtfsParser::parse_trips(Data & data) {
     boost::trim(line);
     Tokenizer tok_header(line);
     std::vector<std::string> elts(tok_header.begin(), tok_header.end());
-    int id_c = -1, service_c = -1, trip_c = -1, headsign_c = -1, direction_c = -1, block_c = -1;
+    int id_c = -1, service_c = -1, trip_c = -1, headsign_c = -1;
     for(size_t i = 0; i < elts.size(); i++){
         if (elts[i] == "route_id")
             id_c = i;
@@ -549,10 +545,6 @@ void GtfsParser::parse_trips(Data & data) {
             trip_c = i;
         else if (elts[i] == "trip_headsign")
             headsign_c = i;
-        else if (elts[i] == "direction_id")
-            direction_c = i;
-        else if (elts[i] == "block_id")
-            block_c = i;
     }
 
     if (id_c == -1 || service_c == -1 || trip_c == -1 || headsign_c == -1){
@@ -585,7 +577,7 @@ void GtfsParser::parse_trips(Data & data) {
                 boost::unordered_map<std::string, nm::ValidityPattern*>::iterator vp_it = vp_map.find(elts[service_c]);
                 if(vp_it == vp_map.end()) {
                     ignored++;
-                    //std::cerr << "Impossible de trouver le service " << elts[service_c] << std::endl;
+                    continue;
                 }
                 else {
                     vp_xx = vp_it->second;
@@ -714,7 +706,7 @@ void GtfsParser::parse_stop_times(Data & data) {
     boost::trim(line);
     Tokenizer tok_header(line);
     std::vector<std::string> elts(tok_header.begin(), tok_header.end());
-    int id_c = -1, arrival_c = -1, departure_c = -1, stop_c = -1, stop_seq_c = -1, pickup_c = -1, drop_c = -1, dist_c = -1;
+    int id_c = -1, arrival_c = -1, departure_c = -1, stop_c = -1, stop_seq_c = -1;
     for(size_t i = 0; i < elts.size(); i++){
         if (elts[i] == "trip_id")
             id_c = i;
@@ -726,12 +718,6 @@ void GtfsParser::parse_stop_times(Data & data) {
             stop_c = i;
         else if (elts[i] == "stop_sequence")
             stop_seq_c = i;
-        else if (elts[i] == "pickup_type")
-            pickup_c = i;
-        else if (elts[i] == "drop_off_type")
-            drop_c = i;
-        else if (elts[i] == "shape_dist_traveled")
-            dist_c = i;
     }
 
     if(id_c == -1 || arrival_c == -1 || departure_c == -1 || stop_c == -1 || stop_seq_c == -1){

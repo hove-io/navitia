@@ -125,10 +125,6 @@ void  TimeDependent::build_graph(){
 
 }
 
-void TimeDependent::build_heuristic(uint destination) {
-    astar_graph.build_heuristic(destination);
-}
-
 DateTime TimeTable::eval(DateTime departure, const type::PT_Data &data) const{
     BOOST_ASSERT(departure.date >= 0);
     if(departure == DateTime::infinity())

@@ -20,7 +20,6 @@ void Timer::reset() {
 
 std::ostream & operator<<(std::ostream & os, const Timer & timer){
     os << "Timer " << timer.name << " ";
-    auto delta = std::chrono::system_clock::now() - timer.start;
     int ms = timer.ms();
 
     if(ms < 10000)

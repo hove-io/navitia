@@ -41,6 +41,7 @@ webservice::ResponseData Worker::register_navitia(webservice::RequestData& reque
     }
     auto it = request.params.find("thread");
     if(it != request.params.end()){
+        //@TODO: std::lexical_cast
         thread = atoi(it->second.c_str());
     }
 
@@ -81,6 +82,7 @@ webservice::ResponseData Worker::load(webservice::RequestData& request, Pool& po
         }catch(RequestException& ex){
             if(ex.timeout){
                 //le rechargement est trop long, rien de dramatique, on enchaine
+                // ==> euh si, ca serait balot d'avoir tous les moteurs qui load en meme temps
                 continue;
             }
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));

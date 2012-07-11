@@ -37,7 +37,7 @@ int main(int argc, char** argv){
             << "    Nombre d'horaires : " << d.pt_data.stop_times.size() << std::endl << std::endl;
 
 
-    if(argc == 1) {
+    if(argc == 2) {
         static char *line_read = (char *)NULL;
         for(;;){
             if (line_read)
@@ -66,7 +66,7 @@ int main(int argc, char** argv){
 
         }
     }
-    else if (argc == 2){
+    else if (argc == 3){
         pbnavitia::PTReferential result = navitia::ptref::query(argv[1], d.pt_data);
         std::cout << "octets généré en protocol buffer: " << result.ByteSize() << std::endl;
         std::cout << navitia::ptref::pb2txt(&result);
