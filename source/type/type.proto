@@ -13,7 +13,7 @@ enum API {
     FIRSTLETTER = 1;
     PTREFERENTIAL = 2;
     STREET_NETWORK = 3;
-
+    PLANNER = 4;	
 }
 
 message GeographicalCoord {
@@ -209,21 +209,6 @@ message ReponseDemonstrateur {
     repeated Itineraire itineraires_liste  = 2;
 }
 
-
-message Response{
-    required API requested_api = 1;
-    optional string error = 2;
-
-    optional string info = 3;
-
-    optional FirstLetter firstletter = 4;
-
-    optional PTReferential ptref = 5;
-
-    optional StreetNetwork street_network = 6;
-
-}
-
 message Mode {
 	required string ligne = 1;
 	optional string reseau = 2;
@@ -255,7 +240,26 @@ message Etape {
 	required Mode mode = 3;
 }
 
-message Solution {
+message Planner {
 	repeated Etape etapes = 1;
+	required int32 nbchanges = 2;
+	required int32 duree = 3;
 }
 
+
+
+message Response{
+    required API requested_api = 1;
+    optional string error = 2;
+
+    optional string info = 3;
+
+    optional FirstLetter firstletter = 4;
+
+    optional PTReferential ptref = 5;
+
+    optional StreetNetwork street_network = 6;
+ 
+    optional Planner planner = 7;	
+
+}

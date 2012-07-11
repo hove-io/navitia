@@ -35,6 +35,8 @@ std::ostream & operator<<(std::ostream & os, const Path & path);
 /** Classe abstraite que tous les calculateurs doivent implémenter */
 struct AbstractRouter {
     virtual Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day) = 0;
+    Path makeItineraire(const Path &path);
+
 };
 
 
@@ -108,7 +110,6 @@ struct ValidityPatternTime {
 };
 
 
-Path makeItineraire(const Path &path);
 
 }}
 

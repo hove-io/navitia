@@ -4,14 +4,19 @@
 #include "type/data.h"
 #include "type/type.pb.h"
 #include "type/pb_converter.h"
+#include "routing/routing.h"
+#include "routing/time_dependent.h"
 #include <boost/tokenizer.hpp>
 
 using namespace webservice;
 
 namespace nt = navitia::type;
 
+
+
 class Worker : public BaseWorker<navitia::type::Data> {
 
+    navitia::routing::timedependent::TimeDependent *td;
     /**
      * structure permettant de simuler un finaly afin
      * de délocké le mutex en sortant de la fonction appelante
@@ -59,6 +64,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
             }
         }
     }
+
+
+
 
     /**
      * méthode qui parse le paramètre filter afin de retourner une liste de Type_e
@@ -196,13 +204,15 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData load(RequestData, navitia::type::Data & d){
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
         Configuration * conf = Configuration::get();
-        std::string database = conf->get_as<std::string>("GENERAL", "database", "data.flz");
+        std::string database = conf->get_as<std::string>("GENERAL", "database", "/home/vlara/navitia/jeu/poitiers/poitiers.nav");
         LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
         ResponseData rd;
         d.load_mutex.lock();
         d.loaded = true;
         d.load_lz4(database);
         d.load_mutex.unlock();
+        td = new navitia::routing::timedependent::TimeDependent(d.pt_data);
+        td->build_graph();
         rd.response << "loaded!";
         rd.content_type = "text/html";
         rd.status_code = 200;
@@ -215,8 +225,74 @@ class Worker : public BaseWorker<navitia::type::Data> {
         return rd;
     }
 
-    ResponseData planner(RequestData & , navitia::type::Data & ){
+    /**
+     *  se charge de remplir l'objet protocolbuffer solution passé en paramètre
+    */
+    void create_pb_solution(navitia::routing::Path & path, const nt::Data & data, pbnavitia::Planner &solution) {
+        solution.set_nbchanges(path.nb_changes);
+        solution.set_duree(path.duration);
+        int i =0;
+        pbnavitia::Etape * etape;
+        BOOST_FOREACH(navitia::routing::PathItem item, path.items) {
+            if(i%2 == 0) {
+                etape = solution.add_etapes();
+                etape->mutable_mode()->set_ligne(data.pt_data.lines.at(item.line_idx).name);
+                etape->mutable_depart()->mutable_lieu()->mutable_geo()->set_x(data.pt_data.stop_areas.at(item.said).coord.x);
+                etape->mutable_depart()->mutable_lieu()->mutable_geo()->set_y(data.pt_data.stop_areas.at(item.said).coord.y);
+                etape->mutable_depart()->mutable_lieu()->set_nom(data.pt_data.stop_areas.at(item.said).name);
+                etape->mutable_depart()->mutable_date()->set_date(item.day);
+                etape->mutable_depart()->mutable_date()->set_heure(item.time);
+            } else {
+                etape->mutable_arrivee()->mutable_lieu()->mutable_geo()->set_x(data.pt_data.stop_areas.at(item.said).coord.x);
+                etape->mutable_arrivee()->mutable_lieu()->mutable_geo()->set_y(data.pt_data.stop_areas.at(item.said).coord.y);
+                etape->mutable_arrivee()->mutable_lieu()->set_nom(data.pt_data.stop_areas.at(item.said).name);
+                etape->mutable_arrivee()->mutable_date()->set_date(item.day);
+                etape->mutable_arrivee()->mutable_date()->set_heure(item.time);
+            }
+
+            ++i;
+        }
+
+    }
+
+
+    ResponseData planner(RequestData & request, navitia::type::Data & d){
         ResponseData rd;
+        pbnavitia::Response pb_response;
+        pb_response.set_requested_api(pbnavitia::PLANNER);
+        if(!request.params_are_valid){
+            rd.status_code = 500;
+            rd.content_type = "application/octet-stream";
+            pb_response.set_error("invalid argument");
+            pb_response.SerializeToOstream(&rd.response);
+            return rd;
+        }
+        if(!d.loaded){
+            this->load(request, d);
+        }
+        Locker locker(d);
+        if(!locker.locked){
+            //on est en cours de chargement
+            rd.status_code = 500;
+            rd.content_type = "application/octet-stream";
+            pb_response.set_error("loading");
+            pb_response.SerializeToOstream(&rd.response);
+            return rd;
+        }
+
+        int departure_idx = boost::get<int>(request.parsed_params["departure"].value);
+        int arrival_idx = boost::get<int>(request.parsed_params["destination"].value);
+        int time = boost::get<int>(request.parsed_params["time"].value);
+        int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
+
+        navitia::routing::Path path = td->compute(departure_idx, arrival_idx, time, date);
+        navitia::routing::Path itineraire = td->makeItineraire(path);
+
+        create_pb_solution(itineraire, d, *pb_response.mutable_planner());
+
+        pb_response.SerializeToOstream(&rd.response);
+        rd.content_type = "application/octet-stream";
+        rd.status_code = 200;
         return rd;
     }
 
@@ -225,7 +301,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
       *
       * On y enregistre toutes les api qu'on souhaite exposer
       */
-    Worker(navitia::type::Data &){
+    Worker(navitia::type::Data & ) {
         register_api("streetnetwork", boost::bind(&Worker::streetnetwork, this, _1, _2), "Calcul d'itinéraire piéton");
         add_param("streetnetwork", "startlon", "Longitude en degrés", ApiParameter::DOUBLE, true);
         add_param("streetnetwork", "startlat", "Latitude en degrés", ApiParameter::DOUBLE, true);
@@ -246,8 +322,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
         add_param("proximitylist", "filter", "Type à rechercher", ApiParameter::STRING, false, {"stop_area", "stop_name"});
 
         register_api("planner", boost::bind(&Worker::planner, this, _1, _2), "Calcul d'itinéraire en Transport en Commun");
-        add_param("planner", "departure", "Point de départ", ApiParameter::STRING, true);
-        add_param("planner", "destination", "Point d'arrivée", ApiParameter::STRING, true);
+        add_param("planner", "departure", "Point de départ", ApiParameter::INT, true);
+        add_param("planner", "destination", "Point d'arrivée", ApiParameter::INT, true);
         add_param("planner", "time", "Heure de début de l'itinéraire", ApiParameter::TIME, true);
         add_param("planner", "date", "Date de début de l'itinéraire", ApiParameter::DATE, true);
 
@@ -256,6 +332,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
         add_default_api();
     }
+~Worker() {
+    delete td;
+}
 };
 
 MAKE_WEBSERVICE(navitia::type::Data, Worker)

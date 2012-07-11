@@ -28,7 +28,7 @@ std::ostream & operator<<(std::ostream & os, const Path & path) {
     return os;
 }
 
-Path makeItineraire(const Path &path) {
+Path AbstractRouter::makeItineraire(const Path &path) {
     Path result;
     result.duration = path.duration;
     result.nb_changes = path.nb_changes;
@@ -50,6 +50,7 @@ Path makeItineraire(const Path &path) {
         std::reverse(result.items.begin(), result.items.end());
 
     }
+    result.items.push_back(PathItem(path.items.back().said, path.items.back().time, path.items.back().day, path.items.back().line_idx));
     return result;
 }
 
