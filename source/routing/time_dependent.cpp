@@ -198,11 +198,11 @@ struct edge_less{
 };
 
 bool operator==(const PathItem & a, const PathItem & b){
-    return a.stop_point_name == b.stop_point_name && a.time == b.time && a.day == b.day;
+    return a.said == b.said && a.time == b.time && a.day == b.day;
 }
 
 std::ostream & operator<<(std::ostream & os, const PathItem & b){
-    os << b.stop_point_name << " " << b.day << " " << b.time;
+    os << b.said << " " << b.day << " " << b.time;
     return os;
 }
 
@@ -274,8 +274,8 @@ Path TimeDependent::makePath(type::idx_t arr) {
         if(arrival >= route_point_offset){
             const type::StopPoint & sp = data.stop_points[data.route_points[arrival - route_point_offset].stop_point_idx];
 
-            PathItem item(sp.name, distance[arrival].hour,distance[arrival].date,
-                          data.lines.at(data.routes.at(data.route_points.at(arrival - route_point_offset).route_idx).line_idx).name);
+            PathItem item(sp.stop_area_idx, distance[arrival].hour,distance[arrival].date,
+                          data.routes.at(data.route_points.at(arrival - route_point_offset).route_idx).line_idx);
 
             result.items.push_back(item);
         }

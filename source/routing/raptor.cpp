@@ -416,9 +416,8 @@ Path RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_h
         int countdebug = 0;
         int heure = data.pt_data.stop_times.at(precretour.stid).departure_time;
         int date = precretour.dt.date;
-        std::string line = data.pt_data.lines.at(data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(precretour.stid).route_point_idx).route_idx).line_idx).name;
-        result.items.push_back(PathItem(data.pt_data.stop_areas.at(current_said).name,
-                                        heure, date, line ));
+        result.items.push_back(PathItem(current_said,
+                                        heure, date, data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(precretour.stid).route_point_idx).route_idx).line_idx ));
         while(current_said != departure_idx && countdebug < 50) {
             ++ countdebug;
 
@@ -427,8 +426,8 @@ Path RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_h
                 int heure = data.pt_data.stop_times.at(precretour.stid).departure_time;
                 int date = precretour.dt.date;
                 std::string line = data.pt_data.lines.at(data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(precretour.stid).route_point_idx).route_idx).line_idx).name;
-                result.items.push_back(PathItem(data.pt_data.stop_areas.at(current_said).name,
-                                                heure, date, line ));
+                result.items.push_back(PathItem(current_said, heure, date,
+                                                data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(precretour.stid).route_point_idx).route_idx).line_idx));
 
                 countb = 0;
                 for(;countb<=count;++countb) {
@@ -440,9 +439,9 @@ Path RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_h
 
 
             }
-            result.items.push_back(PathItem(data.pt_data.stop_areas.at(current_said).name,
+            result.items.push_back(PathItem(current_said,
                                             retour[countb][current_said].dt.hour, retour[countb][current_said].dt.date,
-                                            data.pt_data.lines.at(data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(retour[countb][current_said].stid).route_point_idx).route_idx).line_idx).name));
+                                            data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(retour[countb][current_said].stid).route_point_idx).route_idx).line_idx));
 
             precretour = retour[countb][current_said];
             st = data.pt_data.stop_times.at(retour[countb][current_said].stid);

@@ -394,8 +394,8 @@ Path TimeExpanded::makePath(idx_t departure_idx, idx_t destination_idx) {
 
     while(predecessors[destination_idx] != destination_idx){
         if(destination_idx < tc_offset && destination_idx >= ta_offset){
-            PathItem item(data.stop_areas.at(data.stop_points.at(data.route_points.at(data.stop_times.at(get_idx(destination_idx)).route_point_idx).stop_point_idx).stop_area_idx).name+"("+boost::lexical_cast<std::string>(get_saidx(destination_idx))+")",
-                          distances[destination_idx].hour, distances[destination_idx].date, data.lines.at(data.routes.at(data.vehicle_journeys.at(data.stop_times.at(get_idx(destination_idx)).vehicle_journey_idx).route_idx).line_idx).name);
+            PathItem item(get_saidx(destination_idx), distances[destination_idx].hour, distances[destination_idx].date,
+                          data.routes.at(data.vehicle_journeys.at(data.stop_times.at(get_idx(destination_idx)).vehicle_journey_idx).route_idx).line_idx);
             result.items.push_back(item);
         }
         if(get_n_type(destination_idx) == TC && get_n_type(predecessors[destination_idx]) == TA)

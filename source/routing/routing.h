@@ -7,14 +7,14 @@ using type::idx_t;
 
 /** Étape d'un itinéraire*/
 struct PathItem{
-    std::string stop_point_name;
+    unsigned int said;
     int time;
     int day;
-    std::string line;
+    unsigned int line_idx;
 
-    PathItem() : stop_point_name(""), time(-1), day(-1), line("") {}
-    PathItem(std::string stop_point_name, int time, int day) : stop_point_name(stop_point_name), time(time), day(day), line("") {}
-    PathItem(std::string stop_point_name, int time, int day, std::string line) : stop_point_name(stop_point_name), time(time), day(day), line(line) {}
+    PathItem() : said(0), time(-1), day(-1), line_idx(0) {}
+    PathItem(unsigned int said, int time, int day) : said(said), time(time), day(day), line_idx(0) {}
+    PathItem(unsigned int said, int time, int day, unsigned int line_idx) : said(said), time(time), day(day), line_idx(line_idx) {}
 };
 
 /** Un itinéraire complet */
