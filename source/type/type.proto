@@ -224,3 +224,38 @@ message Response{
 
 }
 
+message Mode {
+	required string ligne = 1;
+	optional string reseau = 2;
+}
+
+message DateHeure {
+	required int32 date = 1;
+	required int32 heure = 2;
+}
+
+message Geocode {
+	required int32 x = 1;
+	required int32 y = 2;
+	optional int32 type = 3;
+}
+
+message Lieu {
+	required string nom = 1;
+	optional Geocode geo = 2;
+}
+
+message PointEtape {
+	required Lieu lieu = 1;
+	required DateHeure date = 2;
+}
+message Etape {
+	required PointEtape depart =1;
+	required PointEtape arrivee = 2;
+	required Mode mode = 3;
+}
+
+message Solution {
+	repeated Etape etapes = 1;
+}
+
