@@ -50,22 +50,10 @@ int main(int argc, char** argv){
     {
         Timer t("Calcul itinéraire");
         std::cout << data.pt_data.stop_areas.at(312).name << " à " << data.pt_data.stop_areas.at(566).name << std::endl;
-        std::cout << td.compute(14796, 2460, 72000, 7);
+        std::cout << td.makeItineraire(td.compute(14796, 2460, 72000, 7));
     }
 
-    BOOST_FOREACH(navitia::type::VehicleJourney vj, data.pt_data.vehicle_journeys) {
-        int prec = -1;
-        BOOST_FOREACH(unsigned int stid, vj.stop_time_list) {
-            if(prec != -1) {
-                if(data.pt_data.stop_times.at(prec).arrival_time > data.pt_data.stop_times.at(stid).arrival_time ||
-                   data.pt_data.stop_times.at(prec).departure_time > data.pt_data.stop_times.at(stid).departure_time) {
-                    std::cout << "Bug sur le vj : " << vj.idx << " arrival times : " <<   data.pt_data.stop_times.at(prec).arrival_time << " " << data.pt_data.stop_times.at(stid).arrival_time
-                              << "departure times : " <<     data.pt_data.stop_times.at(prec).departure_time << " " << data.pt_data.stop_times.at(stid).departure_time << std::endl;
-                }
-            }
-            prec = stid;
-        }
-    }
+
 
 
 

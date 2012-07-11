@@ -37,20 +37,23 @@ Path AbstractRouter::makeItineraire(const Path &path) {
     if(path.items.size() > 0) {
         result.items.push_back(PathItem(path.items.front().said, path.items.front().time, path.items.front().day, path.items.front().line_idx));
         PathItem precitem = result.items.front();
-
+        bool eviterpremier = false;
         BOOST_FOREACH(PathItem item, path.items) {
-            if(precitem.line_idx != item.line_idx) {
+            if(eviterpremier) {
+            if(precitem.said == item.said) {
                 result.items.push_back(PathItem(precitem.said, precitem.time, precitem.day, precitem.line_idx));
                 result.items.push_back(PathItem(item.said, item.time, item.day, item.line_idx));
+
+            }
+            } else {
+                eviterpremier = true;
             }
             precitem = item;
         }
-
-
-        std::reverse(result.items.begin(), result.items.end());
+        result.items.push_back(PathItem(path.items.back().said, path.items.back().time, path.items.back().day, path.items.back().line_idx));
+//        std::reverse(result.items.begin(), result.items.end());
 
     }
-    result.items.push_back(PathItem(path.items.back().said, path.items.back().time, path.items.back().day, path.items.back().line_idx));
     return result;
 }
 

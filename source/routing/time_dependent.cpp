@@ -271,18 +271,24 @@ Path TimeDependent::makePath(type::idx_t arr) {
 
 
     vertex_t arrival = arr;
+    int precsaid = -1;
     while(preds[arrival] != arrival){
         if(arrival >= route_point_offset){
             const type::StopPoint & sp = data.stop_points[data.route_points[arrival - route_point_offset].stop_point_idx];
 
-            PathItem item(sp.stop_area_idx, distance[arrival].hour,distance[arrival].date,
+            PathItem item(sp.stop_area_idx, distance[arrival].hour, distance[arrival].date,
                           data.routes.at(data.route_points.at(arrival - route_point_offset).route_idx).line_idx);
 
             result.items.push_back(item);
+            if(precsaid == sp.stop_area_idx)
+                ++result.nb_changes;
+            precsaid = sp.stop_area_idx;
         }
         arrival = preds[arrival];
     }
     std::reverse(result.items.begin(), result.items.end());
+
+    result.duration = (86400 * (result.items.back().day - result.items.front().day)) + result.items.back().time - result.items.front().time;
     return result;
 }
 
