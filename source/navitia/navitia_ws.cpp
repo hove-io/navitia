@@ -17,6 +17,7 @@ namespace nt = navitia::type;
 class Worker : public BaseWorker<navitia::type::Data> {
 
     navitia::routing::timedependent::TimeDependent *td;
+
     /**
      * structure permettant de simuler un finaly afin
      * de délocké le mutex en sortant de la fonction appelante
@@ -301,7 +302,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
       *
       * On y enregistre toutes les api qu'on souhaite exposer
       */
-    Worker(navitia::type::Data & ) {
+    Worker(navitia::type::Data & ) : td(NULL) {
         register_api("streetnetwork", boost::bind(&Worker::streetnetwork, this, _1, _2), "Calcul d'itinéraire piéton");
         add_param("streetnetwork", "startlon", "Longitude en degrés", ApiParameter::DOUBLE, true);
         add_param("streetnetwork", "startlat", "Latitude en degrés", ApiParameter::DOUBLE, true);
@@ -332,9 +333,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
         add_default_api();
     }
-~Worker() {
-    delete td;
-}
+
+    ~Worker() {
+        delete td;
+    }
 };
 
 MAKE_WEBSERVICE(navitia::type::Data, Worker)
