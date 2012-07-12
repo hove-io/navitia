@@ -129,10 +129,6 @@ std::string pb2json(const google::protobuf::Message* response, int depth){
 }
 
 
-std::unique_ptr<google::protobuf::Message> create_pb(const webservice::RequestData& request){
-    return create_pb(request.api);
-}
-
-std::unique_ptr<google::protobuf::Message> create_pb(const std::string &){
+std::unique_ptr<google::protobuf::Message> create_pb(){
     return std::unique_ptr<google::protobuf::Message>(new pbnavitia::Response());
 }

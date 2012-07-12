@@ -321,7 +321,7 @@ namespace webservice
             std::string json_resp;
             if(response.content_type == "application/octet-stream"){
                 try{
-                    auto pb = create_pb(response.api);
+                    auto pb = create_pb();
                     pb->ParseFromIstream(&response.response);
                     json_resp = pb2json(pb.get());
                     result << "Taille protobuf : " << (response.response.str().size()/1024) << "ko, taille json : " << json_resp.size()/1024 <<  "ko" << std::endl;

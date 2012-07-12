@@ -128,7 +128,7 @@ navitia::type::ValidityPattern * decalage_pam(navitia::type::ValidityPattern &vp
     return vpr;
 }
 
-void calculer_AR(navitia::type::Data &data, NW &g, map_routes_t &map_routes) {
+void calculer_AR(navitia::type::Data &data, NW &, map_routes_t &map_routes) {
     map_routes_t::iterator i_toadd;
 
     std::vector<navitia::type::Route>::iterator i_route1, i_route2;
@@ -168,7 +168,7 @@ void calculer_AR(navitia::type::Data &data, NW &g, map_routes_t &map_routes) {
 }
 
 
-bool correspondance_valide(idx_t tav, idx_t tdv, bool pam, NW &g, navitia::type::Data &data, map_routes_t & map_routes, map_tc_t map_tc) {
+bool correspondance_valide(idx_t, idx_t tdv, bool pam, NW &, navitia::type::Data &data, map_routes_t & map_routes, map_tc_t map_tc) {
     bool retour;
     int min_corresp = 5*60, max_corresp = 2*3600; //Temps minimal de correspondance en secondes
     retour = (data.pt_data.stop_times.at(get_idx(tdv, data, map_tc)).departure_time - data.pt_data.stop_times.at(get_idx(tdv, data, map_tc)).arrival_time + (pam*86400)) > min_corresp;
@@ -184,7 +184,6 @@ bool correspondance_valide(idx_t tav, idx_t tdv, bool pam, NW &g, navitia::type:
 
 void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc, map_tc_t &map_td) {
     vertex_t tav, tdv, tcv, rpv;
-    bool bo;
     int min_corresp = 2 * 60;
     navitia::type::ValidityPattern vptemp;
 

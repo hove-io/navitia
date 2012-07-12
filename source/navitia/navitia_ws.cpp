@@ -342,7 +342,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
         add_param("proximitylist", "lon", "Longitude en degrés", ApiParameter::DOUBLE, true);
         add_param("proximitylist", "lat", "Latitude en degrés", ApiParameter::DOUBLE, true);
         add_param("proximitylist", "dist", "Distance maximale, 100m par défaut", ApiParameter::DOUBLE, false);
-        add_param("proximitylist", "filter", "Type à rechercher", ApiParameter::STRING, false, {"stop_area", "stop_name"});
+        std::vector<RequestParameter::Parameter_variant> default_params;
+        default_params.push_back("stop_areas");
+        default_params.push_back("stop_name");
+        add_param("proximitylist", "filter", "Type à rechercher", ApiParameter::STRING, false, default_params);
 
         register_api("planner", boost::bind(&Worker::planner, this, _1, _2), "Calcul d'itinéraire en Transport en Commun");
         add_param("planner", "departure", "Point de départ", ApiParameter::INT, true);

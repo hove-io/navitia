@@ -46,7 +46,7 @@ webservice::ResponseData Worker::register_navitia(webservice::RequestData& reque
     }
 
     //TODO valider l'url
-    pool.add_navitia(new Navitia(request.params["url"], thread));
+    pool.add_navitia(std::make_shared<Navitia>(request.params["url"], thread));
 
     return status(request, pool);
 }
@@ -76,7 +76,7 @@ webservice::ResponseData Worker::handle(webservice::RequestData& request, Pool& 
 
 webservice::ResponseData Worker::load(webservice::RequestData& request, Pool& pool){
     //TODO gestion de la desactivation
-    BOOST_FOREACH(Navitia* nav, pool.navitia_list){
+    BOOST_FOREACH(auto nav, pool.navitia_list){
         try{
             nav->load();
         }catch(RequestException& ex){
@@ -99,7 +99,7 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
     do{
         ok = true;
         nb_try++;
-        Navitia* nav = pool.next();
+        auto nav = pool.next();
         try{
             res = nav->query(request.path.substr(request.path.find_last_of('/')) + "?" + request.raw_params);
             pool.release_navitia(nav);
@@ -112,7 +112,7 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
             response.status_code = ex.code;
             continue;
         }
-        std::unique_ptr<google::protobuf::Message> resp = create_pb(request);
+        std::unique_ptr<google::protobuf::Message> resp = create_pb();
         if(resp->ParseFromString(res.second)){
             /*if(resp->has_error()){
                 ok = false;

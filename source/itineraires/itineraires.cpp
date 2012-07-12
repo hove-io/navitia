@@ -60,7 +60,7 @@ void make_itineraires(network::vertex_t v1, network::vertex_t v2, std::vector<it
                     std::list<idx_t> stop_times = std::list<idx_t>();
                     network::edge_t etemp, eprec;
                     bool eexists;
-                    idx_t sadescente = network::get_saidx(tav, data, g, map_tc);
+                    network::get_saidx(tav, data, g, map_tc);
                     boost::tie(eprec, eexists) = edge(rpv, tav, g);
                     network::vertex_t v;
                     p.ajouter_etape(data.pt_data.routes.at(data.pt_data.vehicle_journeys.at(data.pt_data.stop_times.at(network::get_idx(tav, data, map_tc)).vehicle_journey_idx).route_idx).mode_type_idx
@@ -71,7 +71,7 @@ void make_itineraires(network::vertex_t v1, network::vertex_t v2, std::vector<it
                         if(eexists) {
                             if(network::est_transport(etemp, data, g)& !network::est_transport(eprec, data, g)) {
                                 //Descente
-                                sadescente = network::get_saidx(v, data, g, map_tc);
+                                network::get_saidx(v, data, g, map_tc);
                                 stop_times.push_front(network::get_idx(v, data, map_tc));
                             }
                             if(!network::est_transport(etemp, data, g)& network::est_transport(eprec, data, g)) {
