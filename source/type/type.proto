@@ -235,17 +235,31 @@ message PointEtape {
 	required DateHeure date = 2;
 }
 message Etape {
-	required PointEtape depart =1;
+	required PointEtape depart = 1;
 	required PointEtape arrivee = 2;
 	required Mode mode = 3;
 }
 
-message Planner {
+message FeuilleRoute {
 	repeated Etape etapes = 1;
 	required int32 nbchanges = 2;
 	required int32 duree = 3;
 }
 
+message Trajet {
+	required int32 mode = 1;
+	required string ligne = 2;
+	repeated Geocode pas = 3;
+}
+
+message ItineraireDetail {
+	repeated Trajet trajets = 1;
+}
+
+message Planner {
+	required FeuilleRoute feuilleroute = 1;
+	required ItineraireDetail itineraire = 2;
+}
 
 
 message Response{

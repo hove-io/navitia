@@ -5,7 +5,7 @@
 #include "type/type.pb.h"
 #include "type/pb_converter.h"
 #include "routing/routing.h"
-#include "routing/time_dependent.h"
+#include "routing/raptor.h"
 #include <boost/tokenizer.hpp>
 
 using namespace webservice;
@@ -16,7 +16,7 @@ namespace nt = navitia::type;
 
 class Worker : public BaseWorker<navitia::type::Data> {
 
-    navitia::routing::timedependent::TimeDependent *td;
+    navitia::routing::raptor::RAPTOR *calculateur;
 
     /**
      * structure permettant de simuler un finaly afin
@@ -212,8 +212,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
         d.loaded = true;
         d.load_lz4(database);
         d.load_mutex.unlock();
-        td = new navitia::routing::timedependent::TimeDependent(d.pt_data);
-        td->build_graph();
+        calculateur = new navitia::routing::raptor::RAPTOR(d);
+//        calculateur->build_graph();
         rd.response << "loaded!";
         rd.content_type = "text/html";
         rd.status_code = 200;
@@ -229,7 +229,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     /**
      *  se charge de remplir l'objet protocolbuffer solution passé en paramètre
     */
-    void create_pb_solution(navitia::routing::Path & path, const nt::Data & data, pbnavitia::Planner &solution) {
+    void create_pb_froute(navitia::routing::Path & path, const nt::Data & data, pbnavitia::FeuilleRoute &solution) {
         solution.set_nbchanges(path.nb_changes);
         solution.set_duree(path.duration);
         int i =0;
@@ -256,8 +256,30 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     }
 
+    void create_pb_itineraire(navitia::routing::Path &path, const nt::Data & data, pbnavitia::ItineraireDetail &itineraire) {
+        if(path.items.size() > 0) {
+            pbnavitia::Trajet * trajet = itineraire.add_trajets();
+            trajet->set_mode(0);
+            trajet->set_ligne("");
 
-    ResponseData planner(RequestData & request, navitia::type::Data & d){
+            unsigned int precsaid = std::numeric_limits<unsigned int>::max();
+            BOOST_FOREACH(navitia::routing::PathItem item, path.items) {
+                if(item.said == precsaid) {
+                    trajet = itineraire.add_trajets();
+                    trajet->set_mode(0);
+                    trajet->set_ligne("");
+                }
+                pbnavitia::Geocode * geo = trajet->add_pas();
+                geo->set_x(data.pt_data.stop_areas.at(item.said).coord.x);
+                geo->set_y(data.pt_data.stop_areas.at(item.said).coord.y);
+                precsaid = item.said;
+
+            }
+        }
+    }
+
+
+    ResponseData planner(RequestData & request, navitia::type::Data & d) {
         ResponseData rd;
         pbnavitia::Response pb_response;
         pb_response.set_requested_api(pbnavitia::PLANNER);
@@ -286,11 +308,11 @@ class Worker : public BaseWorker<navitia::type::Data> {
         int time = boost::get<int>(request.parsed_params["time"].value);
         int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
 
-        navitia::routing::Path path = td->compute(departure_idx, arrival_idx, time, date);
-        navitia::routing::Path itineraire = td->makeItineraire(path);
+        navitia::routing::Path path = calculateur->compute(departure_idx, arrival_idx, time, date);
+        navitia::routing::Path itineraire = calculateur->makeItineraire(path);
 
-        create_pb_solution(itineraire, d, *pb_response.mutable_planner());
-
+        create_pb_froute(itineraire, d, *pb_response.mutable_planner()->mutable_feuilleroute());
+        create_pb_itineraire(path, d, *pb_response.mutable_planner()->mutable_itineraire());
         pb_response.SerializeToOstream(&rd.response);
         rd.content_type = "application/octet-stream";
         rd.status_code = 200;
@@ -302,7 +324,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
       *
       * On y enregistre toutes les api qu'on souhaite exposer
       */
-    Worker(navitia::type::Data & ) : td(NULL) {
+    Worker(navitia::type::Data & ) : calculateur(NULL) {
         register_api("streetnetwork", boost::bind(&Worker::streetnetwork, this, _1, _2), "Calcul d'itinéraire piéton");
         add_param("streetnetwork", "startlon", "Longitude en degrés", ApiParameter::DOUBLE, true);
         add_param("streetnetwork", "startlat", "Latitude en degrés", ApiParameter::DOUBLE, true);
@@ -335,7 +357,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     }
 
     ~Worker() {
-        delete td;
+        delete calculateur;
     }
 };
 
