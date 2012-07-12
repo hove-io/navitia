@@ -220,8 +220,8 @@ message DateHeure {
 }
 
 message Geocode {
-	required int32 x = 1;
-	required int32 y = 2;
+	required double x = 1;
+	required double y = 2;
 	optional int32 type = 3;
 }
 
