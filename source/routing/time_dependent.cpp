@@ -267,7 +267,7 @@ Path TimeDependent::makePath(type::idx_t arr) {
             count++;
     }
 
-    result.percent_visited = 100*count/boost::num_vertices(this->graph);
+    result.percent_visited = 100 * count/boost::num_vertices(this->graph);
 
 
     vertex_t arrival = arr;
