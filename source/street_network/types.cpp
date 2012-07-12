@@ -106,7 +106,7 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
         }
         reverse_path.push_back(best_destination);
 
-        // On reparcourre tout dans le bon ordre
+        // On reparcourt tout dans le bon ordre
         nt::idx_t last_way =  type::invalid_idx;
         PathItem path_item;
         p.coordinates.push_back(graph[reverse_path.back()].coord);
