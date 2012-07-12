@@ -2,15 +2,15 @@
 #include <iostream>
 #include "utils/configuration.h"
 #include <log4cplus/logger.h>
-#include <log4cplus/configurator.h>
 #include <curl/curl.h>
 #include <boost/foreach.hpp>
+#include <utils/logger.h>
 
 Pool::Pool(){
+    init_logger();
 	Configuration * conf = Configuration::get();
     std::string initFileName = conf->get_string("path") + conf->get_string("application") + ".ini";
-
-	log4cplus::PropertyConfigurator::doConfigure(LOG4CPLUS_TEXT(initFileName));
+    init_logger(initFileName);
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "chargement de la configuration");
 
