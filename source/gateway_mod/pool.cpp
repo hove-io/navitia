@@ -25,7 +25,7 @@ Pool::Pool(){
     while(conf->has_section(section_name)){
         std::string url = conf->get_as<std::string>(section_name, "url", "");
         int nb_thread = conf->get_as<int>(section_name, "thread", 8);
-        add_navitia(new Navitia(url, nb_thread));       
+        add_navitia(std::make_shared<Navitia>(url, nb_thread));       
         i++;
         section_name = std::string("NAVITIA_") + boost::lexical_cast<std::string>(i); 
     }
@@ -37,7 +37,7 @@ Pool::Pool(){
 }
 
 
-void Pool::add_navitia(Navitia* navitia){
+void Pool::add_navitia(std::shared_ptr<Navitia> navitia){
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "ajout du navitia " + navitia->url);
     mutex.lock();
@@ -50,22 +50,15 @@ void Pool::remove_navitia(const Navitia& navitia){
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "suppression du navitia" + navitia.url);
     mutex.lock();
-    std::deque<Navitia*>::iterator it = std::find_if(navitia_list.begin(), navitia_list.end(), Comparer(navitia));
+    auto it = std::find_if(navitia_list.begin(), navitia_list.end(), Comparer(navitia));
     if(it == navitia_list.end()){
         mutex.unlock();
         LOG4CPLUS_DEBUG(logger, "navitia : " + navitia.url + " introuvable");
         return;
     }
-    const Navitia* nav = *it;
     navitia_list.erase(it);
     std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
     mutex.unlock();
-    while(nav->current_thread > 0){
-        LOG4CPLUS_DEBUG(logger, "attente avant suppression de: " + navitia.url);
-        usleep(2);
-    }
-    delete nav;
-    //utilisé un thread pour détruire le navitia quand celui ci ne serat plus utilisé?
 }
 
 void Pool::check_desactivated_navitia(){
@@ -73,7 +66,7 @@ void Pool::check_desactivated_navitia(){
     int now = time(NULL);
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
-    BOOST_FOREACH(Navitia* nav, navitia_list){
+    BOOST_FOREACH(auto nav, navitia_list){
         if(!nav->enable && nav->reactivate_at < now){
             nav->reactivate();
             LOG4CPLUS_DEBUG(logger, "réactivation de " + nav->url);
