@@ -17,11 +17,18 @@ Pool::Pool(){
     conf->load_ini(initFileName);
 
 	this->nb_threads = conf->get_as<int>("GENERAL","NbThread", 4);
-    //@TODO géré l'enregistrement des NAVitIA depuis le fichiers de conf => définir un format potable
-
-    navitia_list.push_back(new Navitia("http://localhost/n1/", 8));
     std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
 
+    int i = 0;
+    std::string section_name = std::string("NAVITIA_") + boost::lexical_cast<std::string>(i); 
+
+    while(conf->has_section(section_name)){
+        std::string url = conf->get_as<std::string>(section_name, "url", "");
+        int nb_thread = conf->get_as<int>(section_name, "thread", 8);
+        add_navitia(new Navitia(url, nb_thread));       
+        i++;
+        section_name = std::string("NAVITIA_") + boost::lexical_cast<std::string>(i); 
+    }
 
     //Initialisation de curl, cette methode n'est pas THREADSAFE
     if(curl_global_init(CURL_GLOBAL_NOTHING) != 0){
