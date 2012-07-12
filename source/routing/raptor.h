@@ -2,6 +2,7 @@
 #include "type/type.h"
 #include "type/data.h"
 #include "routing.h"
+#include "utils/timer.h"
 #include <unordered_map>
 
 namespace navitia { namespace routing { namespace raptor{
@@ -121,6 +122,10 @@ struct RAPTOR : public AbstractRouter
     Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
 
 
+    Path compute(const type::GeographicalCoord departure, double radius, idx_t destination_idx, int departure_hour, int departure_day);
+
+    Path compute(map_int_pint_t bests_, idx_t destination_idx);
+
     std::pair<unsigned int, bool> earliest_trip(unsigned int route, unsigned int stop_area, map_retour_t &retour, unsigned int count);
     std::pair<unsigned int, bool> earliest_trip(unsigned int route, unsigned int stop_area, int time, int day);
     int get_rp_order(const navitia::type::Route &route, unsigned int stop_area);
@@ -131,7 +136,6 @@ struct RAPTOR : public AbstractRouter
 
 
     map_int_int_t make_queue(std::vector<unsigned int> stops) ;
-//    pair_retour_t RAPTOR(unsigned int depart, int arrivee, int debut, int date);
     void McRAPTOR(unsigned int depart, int arrivee, int debut, int date, unsigned int said_via = std::numeric_limits<int>::max());
 
 

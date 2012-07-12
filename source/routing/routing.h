@@ -62,6 +62,8 @@ struct DateTime {
             return this->date < other.date;
     }
 
+
+
     bool operator<=(DateTime other) const {
         if(this->date == other.date)
             return hour <= other.hour;
