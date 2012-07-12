@@ -112,7 +112,7 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
             response.status_code = ex.code;
             continue;
         }
-        std::unique_ptr<google::protobuf::Message> resp = create_pb(request);
+        std::unique_ptr<google::protobuf::Message> resp = create_pb();
         if(resp->ParseFromString(res.second)){
             /*if(resp->has_error()){
                 ok = false;
