@@ -23,7 +23,7 @@ void benchmark(routing::timedependent::TimeDependent & td, type::Data & data, in
     }
 }
 
-int main(int argc, char** argv){
+int main(int, char**){
     type::Data data;
     {
         Timer t("Chargement des données");

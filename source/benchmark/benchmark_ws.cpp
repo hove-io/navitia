@@ -50,7 +50,6 @@ private:
                  fin_parcours = num_vertices(d.g) + 1;
 
         posix_time::ptime start, end;
-        boost::typed_identity_property_map<edge_t> identity;
 
         etiquette etdebut;
         etdebut.temps = 0;

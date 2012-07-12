@@ -91,7 +91,6 @@ int main(int , char** argv) {
 
     std::cout  << "Recherche du chemin entre : " << data.pt_data.stop_areas.at(atoi(argv[1])).name << " et " << data.pt_data.stop_areas.at(v2).name << " " << get_time(atoi(argv[1]), data, g, map_tc) <<  std::endl;
 
-    boost::typed_identity_property_map<edge_t> identity;
 
 
 
