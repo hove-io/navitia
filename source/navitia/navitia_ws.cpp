@@ -204,7 +204,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData load(RequestData, navitia::type::Data & d){
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
         Configuration * conf = Configuration::get();
-        std::string database = conf->get_as<std::string>("GENERAL", "database", "/home/vlara/navitia/jeu/poitiers/poitiers.nav");
+        std::string database = conf->get_as<std::string>("GENERAL", "database", "IdF.nav");
         LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
         ResponseData rd;
         d.load_mutex.lock();

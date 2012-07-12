@@ -287,8 +287,10 @@ Path TimeDependent::makePath(type::idx_t arr) {
         arrival = preds[arrival];
     }
     std::reverse(result.items.begin(), result.items.end());
-
-    result.duration = (86400 * (result.items.back().day - result.items.front().day)) + result.items.back().time - result.items.front().time;
+    if(result.items.size() > 0)
+        result.duration = (86400 * (result.items.back().day - result.items.front().day)) + result.items.back().time - result.items.front().time;
+    else
+        result.duration = 0;
     return result;
 }
 
