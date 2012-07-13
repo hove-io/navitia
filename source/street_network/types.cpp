@@ -38,7 +38,7 @@ struct distance_visitor : public boost::dijkstra_visitor<> {
     double max_distance;
     const std::vector<float> & distances;
     distance_visitor(float max_distance, const std::vector<float> & distances) : max_distance(max_distance), distances(distances){}
-    void finish_vertex(vertex_t u, Graph){
+    void finish_vertex(vertex_t u, const Graph&){
         if(distances[u] > max_distance)
             throw DestinationFound();
     }
