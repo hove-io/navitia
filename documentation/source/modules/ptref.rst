@@ -26,7 +26,7 @@ avec :
 
 * *object_source* ={object_name}
 
-  * object_name : le nom de l'objet "table" type stop_points, StopArea, ...
+  * object_name : le nom de l'objet "table" type stop_points, stop_areas, ...
 
 * *search_condition* ={object_name.column_name OPERATOR {Value | object_name.column_name}} [,...n]
 
@@ -35,7 +35,7 @@ avec :
   * OPERATOR : l'opérateur logique.
 
 Opérateurs logiques de PTReferential
-**************
+******************************************
 
 Les opérateurs acceptés par le module PTReferential sont : 
  * **=**  : Opérateur égal
@@ -74,7 +74,7 @@ Module utilisé
 **************
 
 Fonctions internes 
-**************
+*******************
 
 UseCase
 **************
@@ -82,7 +82,7 @@ UseCase
 Limitation
 ----------------------
 
-le module ne permet pas de répondre à des requêtes avec plusieures objets dans la clause "FROM".
+* Le module ne permet pas de répondre à des requêtes avec plusieures objets dans la clause **FROM**.
 
 Exemple d'utilisation
 ---------------------
@@ -90,6 +90,7 @@ Exemple d'utilisation
 dans l'exemple, nous supposons que nous avons deux objets **stop_areas** et **stop_points** dont la structure et les données de chaqu'un sont:
 
  * stop_areas
+
 +---------------------------+------------------------+
 |   external_code           |        name            |
 +===========================+========================+
@@ -103,6 +104,7 @@ dans l'exemple, nous supposons que nous avons deux objets **stop_areas** et **st
 +---------------------------+------------------------+
 
  * stop_points 
+
 +---------------------------+------------------------+------------------------+
 |   external_code           |         name           |        stop_area_idx   |
 +===========================+========================+========================+
