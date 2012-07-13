@@ -154,6 +154,7 @@ private :
     void dijkstra(vertex_t start, std::vector<float> & distances, std::vector<vertex_t> & predecessors, Visitor visitor){
         boost::two_bit_color_map<> color(boost::num_vertices(this->graph));
         boost::dijkstra_shortest_paths_no_init(this->graph, start, &predecessors[0], &distances[0],
+
                                                boost::get(&Edge::length, this->graph), // weigth map
                                                boost::identity_property_map(),
                                                std::less<float>(), boost::closed_plus<float>(),
@@ -161,6 +162,7 @@ private :
                                                visitor,
                                                color
                                                );
+
     }
 };
 
@@ -190,39 +192,39 @@ struct ProjectionData {
 
 /** Permet de construire un graphe de manière simple
 
-  C'est essentiellement destiné aux tests unitaires
+    C'est essentiellement destiné aux tests unitaires
   */
- struct GraphBuilder{
-     /// Graphe que l'on veut construire
-     StreetNetwork & street_network;
+struct GraphBuilder{
+    /// Graphe que l'on veut construire
+    StreetNetwork & street_network;
 
-     /// Associe une chaine de caractères à un nœud
-     std::map<std::string, vertex_t> vertex_map;
+    /// Associe une chaine de caractères à un nœud
+    std::map<std::string, vertex_t> vertex_map;
 
-     /// Le constructeur : on précise sur quel graphe on va construire
-     GraphBuilder(StreetNetwork & street_network) : street_network(street_network){}
+    /// Le constructeur : on précise sur quel graphe on va construire
+    GraphBuilder(StreetNetwork & street_network) : street_network(street_network){}
 
-     /// Ajoute un nœud, s'il existe déjà, les informations sont mises à jour
-     GraphBuilder & add_vertex(std::string node_name, float x, float y);
+    /// Ajoute un nœud, s'il existe déjà, les informations sont mises à jour
+    GraphBuilder & add_vertex(std::string node_name, float x, float y);
 
-     /// Ajoute un arc. Si un nœud n'existe pas, il est créé automatiquement
-     /// Si la longueur n'est pas précisée, il s'agit de la longueur à vol d'oiseau
-     GraphBuilder & add_edge(std::string source_name, std::string target_name, float length = -1);
+    /// Ajoute un arc. Si un nœud n'existe pas, il est créé automatiquement
+    /// Si la longueur n'est pas précisée, il s'agit de la longueur à vol d'oiseau
+    GraphBuilder & add_edge(std::string source_name, std::string target_name, float length = -1);
 
-     /// Surchage de la création de nœud pour plus de confort
-     GraphBuilder & operator()(std::string node_name, float x, float y){ return add_vertex(node_name, x, y);}
+    /// Surchage de la création de nœud pour plus de confort
+    GraphBuilder & operator()(std::string node_name, float x, float y){ return add_vertex(node_name, x, y);}
 
-     /// Surchage de la création d'arc pour plus de confort
-     GraphBuilder & operator()(std::string source_name, std::string target_name, float length = -1){ return add_edge(source_name, target_name, length);}
+    /// Surchage de la création d'arc pour plus de confort
+    GraphBuilder & operator()(std::string source_name, std::string target_name, float length = -1){ return add_edge(source_name, target_name, length);}
 
-     /// Retourne le nœud demandé, jette une exception si on ne trouve pas
-     vertex_t get(const std::string & node_name);
+    /// Retourne le nœud demandé, jette une exception si on ne trouve pas
+    vertex_t get(const std::string & node_name);
 
-     /// Retourne l'arc demandé, jette une exception si on ne trouve pas
-     edge_t get(const std::string & source_name, const std::string & target_name);
- };
+    /// Retourne l'arc demandé, jette une exception si on ne trouve pas
+    edge_t get(const std::string & source_name, const std::string & target_name);
+};
 
- /** Projette un point sur un segment
+/** Projette un point sur un segment
 
    Retourne les coordonnées projetées et la distance au segment
 
@@ -230,6 +232,6 @@ struct ProjectionData {
 
    http://paulbourke.net/geometry/pointline/
    */
- std::pair<type::GeographicalCoord, float> project(type::GeographicalCoord point, type::GeographicalCoord segment_start, type::GeographicalCoord segment_end);
+std::pair<type::GeographicalCoord, float> project(type::GeographicalCoord point, type::GeographicalCoord segment_start, type::GeographicalCoord segment_end);
 
 }} //namespace navitia::streetnetwork

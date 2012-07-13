@@ -11,14 +11,14 @@
 
 
 Worker::Worker(Pool &){
-    register_api("query", boost::bind(&Worker::handle, this, _1, _2), "traite les requétes");
+    register_api("/", boost::bind(&Worker::handle, this, _1, _2), "traite les requétes");
     register_api("firstletter", boost::bind(&Worker::handle, this, _1, _2), "traite les requètes");
     register_api("streetnetwork", boost::bind(&Worker::handle, this, _1, _2), "traite les requètes");
+    register_api("planner", boost::bind(&Worker::handle, this, _1, _2), "planne les requêtes");
     register_api("load", boost::bind(&Worker::load, this, _1, _2), "traite les requétes");
     register_api("register", boost::bind(&Worker::register_navitia, this, _1, _2), "ajout d'un NAViTiA au pool");
     register_api("status", boost::bind(&Worker::status, this, _1, _2), "status");
     register_api("unregister", boost::bind(&Worker::unregister_navitia, this, _1, _2), "suppression d'un NAViTiA du pool");
-
 }
 
 
@@ -46,7 +46,7 @@ webservice::ResponseData Worker::register_navitia(webservice::RequestData& reque
     }
 
     //TODO valider l'url
-    pool.add_navitia(new Navitia(request.params["url"], thread));
+    pool.add_navitia(std::make_shared<Navitia>(request.params["url"], thread));
 
     return status(request, pool);
 }
@@ -76,7 +76,7 @@ webservice::ResponseData Worker::handle(webservice::RequestData& request, Pool& 
 
 webservice::ResponseData Worker::load(webservice::RequestData& request, Pool& pool){
     //TODO gestion de la desactivation
-    BOOST_FOREACH(Navitia* nav, pool.navitia_list){
+    BOOST_FOREACH(auto nav, pool.navitia_list){
         try{
             nav->load();
         }catch(RequestException& ex){
@@ -99,7 +99,7 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
     do{
         ok = true;
         nb_try++;
-        Navitia* nav = pool.next();
+        auto nav = pool.next();
         try{
             res = nav->query(request.path.substr(request.path.find_last_of('/')) + "?" + request.raw_params);
             pool.release_navitia(nav);
@@ -112,7 +112,7 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
             response.status_code = ex.code;
             continue;
         }
-        std::unique_ptr<google::protobuf::Message> resp = create_pb(request);
+        std::unique_ptr<google::protobuf::Message> resp = create_pb();
         if(resp->ParseFromString(res.second)){
             /*if(resp->has_error()){
                 ok = false;

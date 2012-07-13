@@ -128,7 +128,7 @@ navitia::type::ValidityPattern * decalage_pam(navitia::type::ValidityPattern &vp
     return vpr;
 }
 
-void calculer_AR(navitia::type::Data &data, NW &g, map_routes_t &map_routes) {
+void calculer_AR(navitia::type::Data &data, NW &, map_routes_t &map_routes) {
     map_routes_t::iterator i_toadd;
 
     std::vector<navitia::type::Route>::iterator i_route1, i_route2;
@@ -168,7 +168,7 @@ void calculer_AR(navitia::type::Data &data, NW &g, map_routes_t &map_routes) {
 }
 
 
-bool correspondance_valide(idx_t tav, idx_t tdv, bool pam, NW &g, navitia::type::Data &data, map_routes_t & map_routes, map_tc_t map_tc) {
+bool correspondance_valide(idx_t, idx_t tdv, bool pam, NW &, navitia::type::Data &data, map_routes_t & map_routes, map_tc_t map_tc) {
     bool retour;
     int min_corresp = 5*60, max_corresp = 2*3600; //Temps minimal de correspondance en secondes
     retour = (data.pt_data.stop_times.at(get_idx(tdv, data, map_tc)).departure_time - data.pt_data.stop_times.at(get_idx(tdv, data, map_tc)).arrival_time + (pam*86400)) > min_corresp;
@@ -184,7 +184,6 @@ bool correspondance_valide(idx_t tav, idx_t tdv, bool pam, NW &g, navitia::type:
 
 void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc, map_tc_t &map_td) {
     vertex_t tav, tdv, tcv, rpv;
-    bool bo;
     int min_corresp = 2 * 60;
     navitia::type::ValidityPattern vptemp;
 
@@ -263,11 +262,11 @@ void charger_graph(navitia::type::Data &data, NW &g, map_tc_t &map_tc, map_tc_t 
             if((itc != sa.second.end()) && ((data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time  + min_corresp% 86400) <= (get_time(*itc, data, g, map_tc) % 86400))) {
                 if(!edge(get_ta_idx(get_idx(tc, data, map_tc), data), *itc, g).second)
                     add_edge(get_ta_idx(get_idx(tc, data, map_tc), data), *itc,
-                             EdgeDesc(0, (data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time %86400) - data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).departure_time,  is_passe_minuit(get_ta_idx(get_idx(tc, data, map_tc), data), *itc, data, g, map_tc)), g);
+                             EdgeDesc(-1, (data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time %86400) - data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).departure_time,  is_passe_minuit(get_ta_idx(get_idx(tc, data, map_tc), data), *itc, data, g, map_tc)), g);
             } else {
                 if(!edge(get_ta_idx(get_idx(tc, data, map_tc), data), *itc, g).second)
                     add_edge(get_ta_idx(get_idx(tc, data, map_tc), data), *sa.second.begin(),
-                             EdgeDesc(0, (86400 - data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).departure_time % 86400) + data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time %86400, is_passe_minuit(get_ta_idx(get_idx(tc, data, map_tc), data),  *sa.second.begin(), data, g, map_tc)), g);
+                             EdgeDesc(-1, (86400 - data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).departure_time % 86400) + data.pt_data.stop_times.at(get_idx(tc, data, map_tc)).arrival_time %86400, is_passe_minuit(get_ta_idx(get_idx(tc, data, map_tc), data),  *sa.second.begin(), data, g, map_tc)), g);
             }
 
 //            //Si > 86400 je relie au premier tc possible avec le temps % 86400
@@ -432,16 +431,16 @@ etiquette combine_simple::operator ()(etiquette debut, EdgeDesc ed) const {
         else
             retour.date_arrivee = debut.date_arrivee + 1;
 
-        if(ed.temps ==0) {
+        if(ed.validity_pattern == -1 || ed.temps == 0) {
             retour.heure_arrivee = debut.heure_arrivee;
             return retour;
         } else {
             if(data.pt_data.validity_patterns.at(ed.validity_pattern).check(retour.date_arrivee)) {
-                retour.heure_arrivee  =debut.heure_arrivee + ed.temps;
+                retour.heure_arrivee  = debut.heure_arrivee + ed.temps;
                 return retour;
             }
             else
-                return retour;
+                return etiquette::max();
         }
 
     }

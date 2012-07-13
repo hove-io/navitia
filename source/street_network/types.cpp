@@ -38,7 +38,7 @@ struct distance_visitor : public boost::dijkstra_visitor<> {
     double max_distance;
     const std::vector<float> & distances;
     distance_visitor(float max_distance, const std::vector<float> & distances) : max_distance(max_distance), distances(distances){}
-    void finish_vertex(vertex_t u, Graph){
+    void finish_vertex(vertex_t u, const Graph&){
         if(distances[u] > max_distance)
             throw DestinationFound();
     }
@@ -106,7 +106,7 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
         }
         reverse_path.push_back(best_destination);
 
-        // On reparcourre tout dans le bon ordre
+        // On reparcourt tout dans le bon ordre
         nt::idx_t last_way =  type::invalid_idx;
         PathItem path_item;
         p.coordinates.push_back(graph[reverse_path.back()].coord);
@@ -165,7 +165,7 @@ Path StreetNetwork::compute(const type::GeographicalCoord & start_coord, const t
     return p;
 }
 
-std::vector< std::pair<idx_t, double> > StreetNetwork::find_nearest(const type::GeographicalCoord & start_coord, const ProximityList<idx_t> & pl, double radius){
+std::vector< std::pair<idx_t, double> > StreetNetwork::find_nearest(const type::GeographicalCoord & start_coord, const ProximityList<idx_t> & pl, double radius) {
     ProjectionData start(start_coord, *this);
     // Tableau des prédécesseurs de chaque nœuds
     // si pred[v] == v, c'est soit qu'il n'y a pas de chemin possible, soit c'est l'origine

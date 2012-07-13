@@ -165,7 +165,7 @@ struct dominates {
     }
 };
 
-bool Bag::merge(Bag_route &bagr, navitia::type::Data & data) {
+bool Bag::merge(Bag_route &bagr, navitia::type::Data &) {
     bool test = false;
 
 

@@ -25,10 +25,10 @@ void Astar::build_graph() {
 
         boost::tie(ae, new_edge) = boost::add_edge(stop_point.stop_area_idx, stop_point.idx + stop_point_offset, a_graph);
         if(new_edge)
-            weightmap[ae] = 60;
+            weightmap[ae] = 0;
         boost::tie(ae, new_edge) = boost::add_edge(stop_point.idx + stop_point_offset, stop_point.stop_area_idx, a_graph);
         if(new_edge)
-            weightmap[ae] = 60;
+            weightmap[ae] = 0;
     }
 
     // 2. On relie les route_points aux stop points
@@ -38,10 +38,10 @@ void Astar::build_graph() {
 
         boost::tie(ae, new_edge) = boost::add_edge(route_point.stop_point_idx, route_point.idx + route_point_offset, a_graph);
         if(new_edge)
-            weightmap[ae] = 60;
+            weightmap[ae] = 0;
         boost::tie(ae, new_edge) = boost::add_edge(route_point.idx + route_point_offset, route_point.stop_point_idx, a_graph);
         if(new_edge)
-            weightmap[ae] = 60;
+            weightmap[ae] = 0;
     }
 
     // 3.On met sur les arcs, entre les route points de stop areas différents, le temps minimal
@@ -52,7 +52,7 @@ void Astar::build_graph() {
         BOOST_FOREACH(auto stid, vj.stop_time_list) {
             route_point_arrivee = data.stop_times.at(stid).route_point_idx + route_point_offset;
             if(prec_stid != -1) {
-                if(route_point_depart > (route_point_offset + data.route_points.size())) {
+                if(route_point_depart > (route_point_offset + data.route_points.size()) || route_point_depart < route_point_offset) {
                     std::cout << "Bug" << std::endl;
                     exit(1);
                 }
@@ -60,7 +60,8 @@ void Astar::build_graph() {
                 bool new_edge;
 
                 boost::tie(ae, new_edge) = boost::add_edge(route_point_arrivee, route_point_depart, a_graph);
-                unsigned int duration = data.stop_times.at(prec_stid).arrival_time - data.stop_times.at(stid).arrival_time;
+                BOOST_ASSERT((data.stop_times.at(stid).arrival_time - data.stop_times.at(prec_stid).departure_time)>=0);
+                unsigned int duration = data.stop_times.at(stid).arrival_time - data.stop_times.at(prec_stid).departure_time;
                 if(new_edge){
                     weightmap[ae] = duration;
                 } else {
@@ -87,9 +88,6 @@ void Astar::build_heuristic(vertex_t destination){
     else
         std::cout << "C'est pas normal là !" << std::endl;*/
     // on travaille sur le graphe inverse : pour la destination on veut savoir le temps minimal pour l'atteindre depuis tous les nœuds
-
-    std::cout << "destination"  << destination << " graph size : " << (data.stop_areas.size()+data.stop_points.size()) << std::endl;
-
     boost::dijkstra_shortest_paths(this->a_graph, destination,
                                    boost::distance_map(&min_time[0])
             );

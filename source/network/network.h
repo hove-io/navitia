@@ -81,14 +81,14 @@ public:
 /// Descripteur d'arête
 class EdgeDesc {
 public:
-    uint16_t validity_pattern;      /// Validity Pattern de l'arête
+    int16_t validity_pattern;      /// Validity Pattern de l'arête
     uint16_t temps;                 /// Temps sur l'arc
     bool is_pam;                    /// Vrai si l'arête est un passe minuit, faux sinon
-    EdgeDesc() :validity_pattern(0), temps(0), is_pam(false){}
-    EdgeDesc(uint16_t validity_pattern) : validity_pattern(validity_pattern), temps(0), is_pam(false){}
-    EdgeDesc(uint16_t validity_pattern, bool is_pam) : validity_pattern(validity_pattern), temps(0), is_pam(is_pam){}
-    EdgeDesc(uint16_t validity_pattern, uint16_t temps) : validity_pattern(validity_pattern), temps(temps){}
-    EdgeDesc(uint16_t validity_pattern, uint16_t temps, bool is_pam) : validity_pattern(validity_pattern), temps(temps), is_pam(is_pam){}
+    EdgeDesc() :validity_pattern(-1), temps(0), is_pam(false){}
+    EdgeDesc(int16_t validity_pattern) : validity_pattern(validity_pattern), temps(0), is_pam(false){}
+    EdgeDesc(int16_t validity_pattern, bool is_pam) : validity_pattern(validity_pattern), temps(0), is_pam(is_pam){}
+    EdgeDesc(int16_t validity_pattern, uint16_t temps) : validity_pattern(validity_pattern), temps(temps){}
+    EdgeDesc(int16_t validity_pattern, uint16_t temps, bool is_pam) : validity_pattern(validity_pattern), temps(temps), is_pam(is_pam){}
 
 
     std::ostream &operator<<( std::ostream &out) {
@@ -159,8 +159,8 @@ node_type get_n_type(unsigned int idx, navitia::type::Data &data);
 /// Fonction déterminant si une arête est un passe minuit ou non
 bool is_passe_minuit(uint32_t debut, uint32_t fin, navitia::type::Data &data, NW &g, map_tc_t &map_tc);
 bool is_passe_minuit(int32_t debut_t, int32_t fin_t);
-/// Retourne le temps associé au noeud passé
-/// Renvoie -1 s'il s'agit d'un SA, SP, RP
+/** Retourne le temps associé au noeud passé
+    Renvoie -1 s'il s'agit d'un SA, SP, RP */
 
 int32_t get_time(unsigned int idx, navitia::type::Data &data, NW &g, map_tc_t &map_tc);
 

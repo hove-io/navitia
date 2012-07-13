@@ -17,8 +17,8 @@ BOOST_AUTO_TEST_CASE(direct){
     auto res = tp.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 0);
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
-    BOOST_CHECK_EQUAL(res.items[0].stop_point_name, "stop1");
-    BOOST_CHECK_EQUAL(res.items[1].stop_point_name, "stop2");
+    BOOST_CHECK_EQUAL(res.items[0].said, 0);
+    BOOST_CHECK_EQUAL(res.items[1].said, 1);
 
 }
 
@@ -31,10 +31,10 @@ BOOST_AUTO_TEST_CASE(change){
     tp.build_graph();
     auto res = tp.compute(d.stop_areas[0].idx, d.stop_areas[4].idx, 7900, 0);
     BOOST_REQUIRE_EQUAL(res.items.size(), 4);
-    BOOST_CHECK_EQUAL(res.items[0].stop_point_name, "stop1");
-    BOOST_CHECK_EQUAL(res.items[1].stop_point_name, "stop2");
-    BOOST_CHECK_EQUAL(res.items[2].stop_point_name, "stop2");
-    BOOST_CHECK_EQUAL(res.items[3].stop_point_name, "stop5");
+    BOOST_CHECK_EQUAL(res.items[0].said, 0);
+    BOOST_CHECK_EQUAL(res.items[1].said, 1);
+    BOOST_CHECK_EQUAL(res.items[2].said, 1);
+    BOOST_CHECK_EQUAL(res.items[3].said, 4);
 }
 
 BOOST_AUTO_TEST_CASE(passe_minuit){
@@ -46,10 +46,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     tp.build_graph();
     auto res = tp.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0);
     BOOST_REQUIRE_EQUAL(res.items.size(), 4);
-    BOOST_CHECK_EQUAL(res.items[0].stop_point_name, "stop1");
-    BOOST_CHECK_EQUAL(res.items[1].stop_point_name, "stop2");
-    BOOST_CHECK_EQUAL(res.items[2].stop_point_name, "stop2");
-    BOOST_CHECK_EQUAL(res.items[3].stop_point_name, "stop3");
+    BOOST_CHECK_EQUAL(res.items[0].said, 0);
+    BOOST_CHECK_EQUAL(res.items[1].said, 1);
+    BOOST_CHECK_EQUAL(res.items[2].said, 1);
+    BOOST_CHECK_EQUAL(res.items[3].said, 2);
     BOOST_CHECK_EQUAL(res.items[0].day, 0);
     BOOST_CHECK_EQUAL(res.items[3].day, 1);
 }

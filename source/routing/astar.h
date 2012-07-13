@@ -59,6 +59,8 @@ private:
   vertex_t m_goal;
 };
 
+
+
 }}}
 
 

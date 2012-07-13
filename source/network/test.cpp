@@ -6,6 +6,7 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <valgrind/callgrind.h>
+#include "utils/timer.h"
 
 using namespace network;
 
@@ -39,7 +40,10 @@ struct label_name {
 int main(int , char** argv) {
     navitia::type::Data data;
     std::cout << "Debut chargement des données ... " << std::flush;
-    data.load_lz4("/home/vlara/navitia/jeu/poitiers/poitiers.nav");
+    {
+        Timer t("Chargement des données");
+        data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.nav");
+    }
     std::cout << " Fin chargement des données" << std::endl;
 
     std::cout << "Nombre de stop areas : " << data.pt_data.stop_areas.size() << std::endl;
@@ -50,16 +54,18 @@ int main(int , char** argv) {
     std::cout << "Taille data : " << sizeof(data) << std::endl;
 
     std::cout << "Création et chargement du graph ..." << std::flush;
+    NW g(data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + data.pt_data.stop_times.size() * 2);
+    map_tc_t map_tc, map_td;
 
     boost::posix_time::ptime start, end;
 
+    {
+        Timer t("Chargement du graphe");
+        charger_graph(data, g, map_tc, map_td);
+        std::cout << " Fin de création et chargement du graph " << std::endl;
+    }
 
-    NW g(data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + data.pt_data.stop_times.size() * 2);
-    map_tc_t map_tc, map_td;
-    start = boost::posix_time::microsec_clock::local_time();
-    charger_graph(data, g, map_tc, map_td);
-    end = boost::posix_time::microsec_clock::local_time();
-    std::cout << " Fin de création et chargement du graph " << (end-start).total_milliseconds() << std::endl;
+
 
 
 
@@ -72,7 +78,7 @@ int main(int , char** argv) {
 
     vertex_t v1, v2;
 
-//    std::cout << "v1 : " << atoi(argv[1]) << " v2 " <<  atoi(argv[2]) << std::endl;
+    std::cout << "v1 : " << atoi(argv[1]) << " v2 " <<  atoi(argv[2]) << std::endl;
 
 
     v2 = atoi(argv[2]);
@@ -85,7 +91,6 @@ int main(int , char** argv) {
 
     std::cout  << "Recherche du chemin entre : " << data.pt_data.stop_areas.at(atoi(argv[1])).name << " et " << data.pt_data.stop_areas.at(v2).name << " " << get_time(atoi(argv[1]), data, g, map_tc) <<  std::endl;
 
-    boost::typed_identity_property_map<edge_t> identity;
 
 
 
@@ -110,49 +115,51 @@ int main(int , char** argv) {
                                        );
 
     } catch(found_goal fg) { v2 = fg.v; }
-    end = boost::posix_time::microsec_clock::local_time();
-    CALLGRIND_STOP_INSTRUMENTATION;
-    CALLGRIND_DUMP_STATS;
+//    end = boost::posix_time::microsec_clock::local_time();
+//    CALLGRIND_STOP_INSTRUMENTATION;
+//    CALLGRIND_DUMP_STATS;
 
     if(predecessors[v2] == v2) {
         std::cout << "Pas de chemin trouve" << std::endl;
     } else {
-        std::cout << "Chemin trouve en " << (end-start).total_milliseconds() << std::endl;
-
-        for(vertex_t v = v2; (v!=v1); v = predecessors[v]) {
-            if(get_n_type(v, data) == TD || get_n_type(v, data) == TA) {
-                std::cout << get_n_type(v,data) << " " << get_time(v, data, g, map_tc) << " "
-                          << data.pt_data.stop_areas.at(data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).stop_point_idx).stop_area_idx).name << " ";
-                std::cout << data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).stop_point_idx).stop_area_idx;
-                std::cout << " " << data.pt_data.stop_times.at(get_idx(v, data, map_tc)).arrival_time;
-                std::cout << " " << data.pt_data.lines.at(data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).route_idx).line_idx).name;
-                std::cout << " t : " << distances[v].heure_arrivee << " d : " << distances[v].date_arrivee << " " << data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).route_idx
-                          << " vj : " << data.pt_data.stop_times.at(get_idx(v, data,map_tc)).vehicle_journey_idx << std::endl;
-            }
-        }
+        std::cout << "J'arrive à " << get_time(v2, data, g, map_tc) << std::endl;
     }
+//        std::cout << "Chemin trouve en " << (end-start).total_milliseconds() << std::endl;
 
-    end = boost::posix_time::microsec_clock::local_time();
-    CALLGRIND_STOP_INSTRUMENTATION;
-    CALLGRIND_DUMP_STATS;
+//        for(vertex_t v = v2; (v!=v1); v = predecessors[v]) {
+//            if(get_n_type(v, data) == TD || get_n_type(v, data) == TA) {
+//                std::cout << get_n_type(v,data) << " " << get_time(v, data, g, map_tc) << " "
+//                          << data.pt_data.stop_areas.at(data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).stop_point_idx).stop_area_idx).name << " ";
+//                std::cout << data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).stop_point_idx).stop_area_idx;
+//                std::cout << " " << data.pt_data.stop_times.at(get_idx(v, data, map_tc)).arrival_time;
+//                std::cout << " " << data.pt_data.lines.at(data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).route_idx).line_idx).name;
+//                std::cout << " t : " << distances[v].heure_arrivee << " d : " << distances[v].date_arrivee << " " << data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).route_idx
+//                          << " vj : " << data.pt_data.stop_times.at(get_idx(v, data,map_tc)).vehicle_journey_idx << std::endl;
+//            }
+//        }
+//    }
 
-    if(predecessors[v2] == v2) {
-        std::cout << "Pas de chemin trouve" << std::endl;
-    } else {
-        std::cout << "Chemin trouve en " << (end-start).total_milliseconds() << std::endl;
+//    end = boost::posix_time::microsec_clock::local_time();
+//    CALLGRIND_STOP_INSTRUMENTATION;
+//    CALLGRIND_DUMP_STATS;
 
-        for(vertex_t v = v2; (v!=v1); v = predecessors[v]) {
-            if(get_n_type(v, data) == TD || get_n_type(v, data) == TA) {
-                std::cout << get_n_type(v,data) << " " << get_time(v, data, g, map_tc) << " "
-                          << data.pt_data.stop_areas.at(data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).stop_point_idx).stop_area_idx).name << " ";
-                std::cout << data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).stop_point_idx).stop_area_idx;
-                std::cout << " " << data.pt_data.stop_times.at(get_idx(v, data, map_tc)).arrival_time;
-                std::cout << " " << data.pt_data.lines.at(data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).route_idx).line_idx).name;
-                std::cout << " t : " << distances[v].heure_arrivee << " d : " << distances[v].date_arrivee << " " << data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).route_idx
-                          << " vj : " << data.pt_data.stop_times.at(get_idx(v, data,map_tc)).vehicle_journey_idx << std::endl;
-            }
-        }
-    }
+//    if(predecessors[v2] == v2) {
+//        std::cout << "Pas de chemin trouve" << std::endl;
+//    } else {
+//        std::cout << "Chemin trouve en " << (end-start).total_milliseconds() << std::endl;
+
+//        for(vertex_t v = v2; (v!=v1); v = predecessors[v]) {
+//            if(get_n_type(v, data) == TD || get_n_type(v, data) == TA) {
+//                std::cout << get_n_type(v,data) << " " << get_time(v, data, g, map_tc) << " "
+//                          << data.pt_data.stop_areas.at(data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).stop_point_idx).stop_area_idx).name << " ";
+//                std::cout << data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).stop_point_idx).stop_area_idx;
+//                std::cout << " " << data.pt_data.stop_times.at(get_idx(v, data, map_tc)).arrival_time;
+//                std::cout << " " << data.pt_data.lines.at(data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).route_idx).line_idx).name;
+//                std::cout << " t : " << distances[v].heure_arrivee << " d : " << distances[v].date_arrivee << " " << data.pt_data.route_points.at(data.pt_data.stop_times.at(get_idx(v, data, map_tc)).route_point_idx).route_idx
+//                          << " vj : " << data.pt_data.stop_times.at(get_idx(v, data,map_tc)).vehicle_journey_idx << std::endl;
+//            }
+//        }
+//    }
 
 //    etiquette etdebut;
 //    etdebut.temps = 0;

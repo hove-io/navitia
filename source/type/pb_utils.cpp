@@ -48,10 +48,15 @@ std::string pb2xml(const google::protobuf::Message* response){
     return buffer.str();
 }
 
+void indent(std::stringstream& buffer, int depth){
+    for (int i = 0; i < depth; ++i) {
+        buffer << "    ";
+    }
+}
+
 
 std::string pb2json(const google::protobuf::Message* response, int depth){
     std::stringstream buffer;
-    if(depth == 1) buffer.width(5);
     buffer << "{";
 
     const google::protobuf::Reflection* reflection = response->GetReflection();
@@ -65,7 +70,10 @@ std::string pb2json(const google::protobuf::Message* response, int depth){
         } else {
             buffer << ", ";
         }
-        if(depth == 1) buffer << "\n      ";
+        if(depth > 0){ 
+            buffer << "\n";
+            indent(buffer, depth);
+        }
         if(field->is_repeated()) {
             buffer << "\"" << field->name() << "\": [";
             if(depth == 0) buffer << "\n";
@@ -104,28 +112,23 @@ std::string pb2json(const google::protobuf::Message* response, int depth){
             case google::protobuf::FieldDescriptor::TYPE_MESSAGE:
                 buffer << pb2json(&reflection->GetMessage(*response, field), depth + 1);
                 break;
+            case google::protobuf::FieldDescriptor::TYPE_ENUM:
+                buffer << "\"" << reflection->GetEnum(*response, field)->name() << "\"";
+                break;
             default:
                 buffer << "Other !, " ;
             }
         }
     }
-    if(depth == 1) buffer << "\n    }";
-    else buffer << "}";
+    if(depth > 0){
+        buffer << "\n";
+        indent(buffer, depth-1);
+    }
+    buffer << "}";
     return buffer.str();
 }
 
 
-std::unique_ptr<google::protobuf::Message> create_pb(const webservice::RequestData& request){
-    return create_pb(request.api);
-}
-
-std::unique_ptr<google::protobuf::Message> create_pb(const std::string & api){
-    if(api == "firstletter"){
-        return std::unique_ptr<google::protobuf::Message>(new pbnavitia::FirstLetter());
-    }else if(api == "streetnetwork"){
-        return std::unique_ptr<google::protobuf::Message>(new pbnavitia::StreetNetwork());
-    }else if(api == "query"){
-        return std::unique_ptr<google::protobuf::Message>(new pbnavitia::PTReferential());
-    }
-    throw std::exception();
+std::unique_ptr<google::protobuf::Message> create_pb(){
+    return std::unique_ptr<google::protobuf::Message>(new pbnavitia::Response());
 }

@@ -2,26 +2,33 @@
 #include <iostream>
 #include "utils/configuration.h"
 #include <log4cplus/logger.h>
-#include <log4cplus/configurator.h>
 #include <curl/curl.h>
 #include <boost/foreach.hpp>
+#include <utils/logger.h>
 
 Pool::Pool(){
+    init_logger();
 	Configuration * conf = Configuration::get();
     std::string initFileName = conf->get_string("path") + conf->get_string("application") + ".ini";
-
-	log4cplus::PropertyConfigurator::doConfigure(LOG4CPLUS_TEXT(initFileName));
+    init_logger(initFileName);
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "chargement de la configuration");
 
     conf->load_ini(initFileName);
 
 	this->nb_threads = conf->get_as<int>("GENERAL","NbThread", 4);
-    //@TODO géré l'enregistrement des NAVitIA depuis le fichiers de conf => définir un format potable
-
-    navitia_list.push_back(new Navitia("http://localhost/n1/", 8));
     std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
 
+    int i = 0;
+    std::string section_name = std::string("NAVITIA_") + boost::lexical_cast<std::string>(i); 
+
+    while(conf->has_section(section_name)){
+        std::string url = conf->get_as<std::string>(section_name, "url", "");
+        int nb_thread = conf->get_as<int>(section_name, "thread", 8);
+        add_navitia(std::make_shared<Navitia>(url, nb_thread));       
+        i++;
+        section_name = std::string("NAVITIA_") + boost::lexical_cast<std::string>(i); 
+    }
 
     //Initialisation de curl, cette methode n'est pas THREADSAFE
     if(curl_global_init(CURL_GLOBAL_NOTHING) != 0){
@@ -30,7 +37,7 @@ Pool::Pool(){
 }
 
 
-void Pool::add_navitia(Navitia* navitia){
+void Pool::add_navitia(std::shared_ptr<Navitia> navitia){
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "ajout du navitia " + navitia->url);
     mutex.lock();
@@ -43,22 +50,15 @@ void Pool::remove_navitia(const Navitia& navitia){
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "suppression du navitia" + navitia.url);
     mutex.lock();
-    std::deque<Navitia*>::iterator it = std::find_if(navitia_list.begin(), navitia_list.end(), Comparer(navitia));
+    auto it = std::find_if(navitia_list.begin(), navitia_list.end(), Comparer(navitia));
     if(it == navitia_list.end()){
         mutex.unlock();
         LOG4CPLUS_DEBUG(logger, "navitia : " + navitia.url + " introuvable");
         return;
     }
-    const Navitia* nav = *it;
     navitia_list.erase(it);
     std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
     mutex.unlock();
-    while(nav->current_thread > 0){
-        LOG4CPLUS_DEBUG(logger, "attente avant suppression de: " + navitia.url);
-        usleep(2);
-    }
-    delete nav;
-    //utilisé un thread pour détruire le navitia quand celui ci ne serat plus utilisé?
 }
 
 void Pool::check_desactivated_navitia(){
@@ -66,7 +66,7 @@ void Pool::check_desactivated_navitia(){
     int now = time(NULL);
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
-    BOOST_FOREACH(Navitia* nav, navitia_list){
+    BOOST_FOREACH(auto nav, navitia_list){
         if(!nav->enable && nav->reactivate_at < now){
             nav->reactivate();
             LOG4CPLUS_DEBUG(logger, "réactivation de " + nav->url);

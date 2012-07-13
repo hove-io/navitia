@@ -23,7 +23,7 @@ void benchmark(routing::timedependent::TimeDependent & td, type::Data & data, in
     }
 }
 
-int main(int argc, char** argv){
+int main(int, char**){
     type::Data data;
     {
         Timer t("Chargement des données");
@@ -41,9 +41,20 @@ int main(int argc, char** argv){
     {
         Timer t("Constuction du graphe");
         td.build_graph();
-        td.astar_graph.build_heuristic(data.pt_data.stop_areas[1142].idx + data.pt_data.route_points.size());
+
+//        td.build_heuristic(data.pt_data.stop_areas[142].idx);
+//        td.compute_astar(data.pt_data.stop_areas[1], data.pt_data.stop_areas[142], 28800, 2);
         std::cout << "Num nodes: " <<  boost::num_vertices(td.graph) << ", num edges: " << boost::num_edges(td.graph) << std::endl;
     }
+
+    {
+        Timer t("Calcul itinéraire");
+        std::cout << data.pt_data.stop_areas.at(312).name << " à " << data.pt_data.stop_areas.at(566).name << std::endl;
+        std::cout << td.makeItineraire(td.compute(14796, 2460, 72000, 7));
+    }
+
+
+
 
 
     {
@@ -99,9 +110,9 @@ int main(int argc, char** argv){
             std::cout << s.stop_point_name << " " << s.time << " " << s.day << std::endl;
         }*/
 
-        int runs;
-        if(argc == 2) runs = atoi(argv[1]);
-        else runs = 100;
-        benchmark(td, data, runs);
+//        int runs;
+//        if(argc == 2) runs = atoi(argv[1]);
+//        else runs = 100;
+//        benchmark(td, data, runs);
     }
 }

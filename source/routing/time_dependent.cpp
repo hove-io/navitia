@@ -3,6 +3,7 @@
 #include <boost/graph/astar_search.hpp>
 #include <boost/graph/reverse_graph.hpp>
 #include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
 #include "utils/timer.h"
 namespace navitia { namespace routing { namespace timedependent {
 
@@ -50,7 +51,7 @@ TimeDependent::TimeDependent(const type::PT_Data & data) : data(data),
        graph(data.route_points.size() + data.stop_areas.size() + data.stop_points.size()),
        astar_graph(data),
        stop_area_offset(0),
-       stop_point_offset(data.stop_areas.size()),
+       stop_point_offset(stop_area_offset + data.stop_areas.size()),
        route_point_offset(stop_point_offset + data.stop_points.size()),
        preds(boost::num_vertices(graph)),
        distance(boost::num_vertices(graph)),
@@ -59,7 +60,8 @@ TimeDependent::TimeDependent(const type::PT_Data & data) : data(data),
     BOOST_ASSERT(boost::num_vertices(this->graph) == route_point_offset + data.route_points.size());
     std::cout <<  3*data.route_points.size() - data.routes.size() + 2*data.stop_points.size() << std::endl;
     //BOOST_ASSERT(boost::num_edges(this->graph) == 3*data.route_points.size() - data.vehicle_journeys.size() + 2*data.stop_points.size() );
-    }
+   }
+
 
 void  TimeDependent::build_graph(){
     // 1. On rajoute un arc pour chaque segment de route
@@ -122,6 +124,9 @@ void  TimeDependent::build_graph(){
     }
 
 
+}
+void TimeDependent::build_heuristic(uint destination) {
+    astar_graph.build_heuristic(destination);
 }
 
 DateTime TimeTable::eval(DateTime departure, const type::PT_Data &data) const{
@@ -194,11 +199,11 @@ struct edge_less{
 };
 
 bool operator==(const PathItem & a, const PathItem & b){
-    return a.stop_point_name == b.stop_point_name && a.time == b.time && a.day == b.day;
+    return a.said == b.said && a.time == b.time && a.day == b.day;
 }
 
 std::ostream & operator<<(std::ostream & os, const PathItem & b){
-    os << b.stop_point_name << " " << b.day << " " << b.time;
+    os << b.said << " " << b.day << " " << b.time;
     return os;
 }
 
@@ -220,42 +225,17 @@ Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day)
                                        );
     } catch(found_goal){}
 
-    Path result;
-
-
-    int count = 1;
-    BOOST_FOREACH(auto v, boost::vertices(this->graph)){
-        if(preds[v] != v)
-            count++;
-    }
-
-    result.percent_visited = 100*count/boost::num_vertices(this->graph);
-
-
-    vertex_t arrival = arr + stop_area_offset;
-    while(preds[arrival] != arrival){
-        if(arrival >= this->route_point_offset){
-            const type::StopPoint & sp = data.stop_points[data.route_points[arrival-route_point_offset].stop_point_idx];
-            PathItem item;
-            item.stop_point_name = sp.name;
-            item.day = distance[arrival].date;
-            item.time = distance[arrival].hour;
-            result.items.push_back(item);
-        }
-        arrival = preds[arrival];
-    }
-    std::reverse(result.items.begin(), result.items.end());
-    return result;
+    return makePath(arr + stop_area_offset);
 }
 
 
-std::vector<routing::PathItem> TimeDependent::compute_astar(const type::StopArea &dep, const type::StopArea &arr, int hour, int day){
+Path TimeDependent::compute_astar(type::idx_t dep, type::idx_t arr, int hour, int day){
     DateTime start_time;
     start_time.date = day;
     start_time.hour = hour;
 
-    vertex_t departure = dep.idx + stop_area_offset;
-    vertex_t arrival = arr.idx + stop_area_offset;
+    vertex_t departure = dep + stop_area_offset;
+    vertex_t arrival = arr + stop_area_offset;
 
 //    astar_graph.build_heuristic(arrival);
 
@@ -273,27 +253,44 @@ std::vector<routing::PathItem> TimeDependent::compute_astar(const type::StopArea
             );
     } catch(navitia::routing::astar::found_goal){}
 
-    std::vector<routing::PathItem> result;
+    return makePath(arrival + stop_area_offset);
+}
+
+
+Path TimeDependent::makePath(type::idx_t arr) {
+    Path result;
+
 
     int count = 1;
     BOOST_FOREACH(auto v, boost::vertices(this->graph)){
         if(preds[v] != v)
             count++;
     }
-    std::cout << "A* : " << 100*count/boost::num_vertices(this->graph) << "%  ";
 
+    result.percent_visited = 100 * count/boost::num_vertices(this->graph);
+
+
+    vertex_t arrival = arr;
+    int precsaid = -1;
     while(preds[arrival] != arrival){
-        if(arrival < data.route_points.size()){
-            const type::StopPoint & sp = data.stop_points[data.route_points[arrival].stop_point_idx];
-            PathItem item;
-            item.stop_point_name = sp.name;
-            item.day = distance[arrival].date;
-            item.time = distance[arrival].hour;
-            result.push_back(item);
+        if(arrival >= route_point_offset){
+            const type::StopPoint & sp = data.stop_points[data.route_points[arrival - route_point_offset].stop_point_idx];
+
+            PathItem item(sp.stop_area_idx, distance[arrival].hour, distance[arrival].date,
+                          data.routes.at(data.route_points.at(arrival - route_point_offset).route_idx).line_idx);
+
+            result.items.push_back(item);
+            if(precsaid == sp.stop_area_idx)
+                ++result.nb_changes;
+            precsaid = sp.stop_area_idx;
         }
         arrival = preds[arrival];
     }
-    std::reverse(result.begin(), result.end());
+    std::reverse(result.items.begin(), result.items.end());
+    if(result.items.size() > 0)
+        result.duration = (86400 * (result.items.back().day - result.items.front().day)) + result.items.back().time - result.items.front().time;
+    else
+        result.duration = 0;
     return result;
 }
 
