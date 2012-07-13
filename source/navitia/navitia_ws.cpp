@@ -33,9 +33,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
                 data.load_mutex.unlock_shared();
             }
         }
-        private:
-            Locker(const Locker&);
-            Locker& operator=(const Locker&);
+    private:
+        Locker(const Locker&);
+        Locker& operator=(const Locker&);
 
     };
 
@@ -48,20 +48,20 @@ class Worker : public BaseWorker<navitia::type::Data> {
             pbnavitia::FirstLetterItem* item = pb_fl.add_items();
             google::protobuf::Message* child = NULL;
             switch(type){
-                case nt::eStopArea:
-                    child = item->mutable_stop_area();
-                    navitia::fill_pb_object<nt::eStopArea>(idx, data, child, 2);
-                    item->set_name(data.pt_data.stop_areas[idx].name);
-                    item->set_uri(nt::EntryPoint::get_uri(data.pt_data.stop_areas[idx]));
-                    break;
-                case nt::eCity:
-                    child = item->mutable_city();
-                    navitia::fill_pb_object<nt::eCity>(idx, data, child);
-                    item->set_name(data.pt_data.cities[idx].name);
-                    item->set_uri(nt::EntryPoint::get_uri(data.pt_data.cities[idx]));
-                    break;
-                default:
-                    break;
+            case nt::eStopArea:
+                child = item->mutable_stop_area();
+                navitia::fill_pb_object<nt::eStopArea>(idx, data, child, 2);
+                item->set_name(data.pt_data.stop_areas[idx].name);
+                item->set_uri(nt::EntryPoint::get_uri(data.pt_data.stop_areas[idx]));
+                break;
+            case nt::eCity:
+                child = item->mutable_city();
+                navitia::fill_pb_object<nt::eCity>(idx, data, child);
+                item->set_name(data.pt_data.cities[idx].name);
+                item->set_uri(nt::EntryPoint::get_uri(data.pt_data.cities[idx]));
+                break;
+            default:
+                break;
             }
         }
     }
@@ -211,9 +211,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
         d.load_mutex.lock();
         d.loaded = true;
         d.load_lz4(database);
+        d.build_proximity_list();
         d.load_mutex.unlock();
         calculateur = new navitia::routing::raptor::RAPTOR(d);
-//        calculateur->build_graph();
+        //        calculateur->build_graph();
         rd.response << "loaded!";
         rd.content_type = "text/html";
         rd.status_code = 200;
@@ -302,13 +303,21 @@ class Worker : public BaseWorker<navitia::type::Data> {
             pb_response.SerializeToOstream(&rd.response);
             return rd;
         }
-
-        int departure_idx = boost::get<int>(request.parsed_params["departure"].value);
-        int arrival_idx = boost::get<int>(request.parsed_params["destination"].value);
+        navitia::routing::Path path;
         int time = boost::get<int>(request.parsed_params["time"].value);
         int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
+        if(request.parsed_params.count("departure") ==1) {
+            int departure_idx = boost::get<int>(request.parsed_params["departure"].value);
+            int arrival_idx = boost::get<int>(request.parsed_params["destination"].value);
+            path = calculateur->compute(departure_idx, arrival_idx, time, date);
+        } else {
+            double departure_lat = boost::get<double>(request.parsed_params["departure_lat"].value);
+            double departure_lon = boost::get<double>(request.parsed_params["departure_lon"].value);
+            double arrival_lat = boost::get<double>(request.parsed_params["destination_lat"].value);
+            double arrival_lon = boost::get<double>(request.parsed_params["destination_lon"].value);
 
-        navitia::routing::Path path = calculateur->compute(departure_idx, arrival_idx, time, date);
+            path = calculateur->compute(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
+        }
         navitia::routing::Path itineraire = calculateur->makeItineraire(path);
 
         create_pb_froute(itineraire, d, *pb_response.mutable_planner()->mutable_feuilleroute());
@@ -319,7 +328,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         return rd;
     }
 
-    public:
+public:
     /** Constructeur par défaut
       *
       * On y enregistre toutes les api qu'on souhaite exposer
@@ -348,8 +357,13 @@ class Worker : public BaseWorker<navitia::type::Data> {
         add_param("proximitylist", "filter", "Type à rechercher", ApiParameter::STRING, false, default_params);
 
         register_api("planner", boost::bind(&Worker::planner, this, _1, _2), "Calcul d'itinéraire en Transport en Commun");
-        add_param("planner", "departure", "Point de départ", ApiParameter::INT, true);
-        add_param("planner", "destination", "Point d'arrivée", ApiParameter::INT, true);
+        add_param("planner", "departure", "Point de départ", ApiParameter::INT, false);
+        add_param("planner", "destination", "Point d'arrivée", ApiParameter::INT, false);
+        add_param("planner", "departure_lat", "Latitude de départ", ApiParameter::DOUBLE, false);
+        add_param("planner", "departure_lon", "Longitude de départ", ApiParameter::DOUBLE, false);
+        add_param("planner", "destination_lat", "Latitude d'arrivée", ApiParameter::DOUBLE, false);
+        add_param("planner", "destination_lon", "Longitude d'arrivée", ApiParameter::DOUBLE, false);
+
         add_param("planner", "time", "Heure de début de l'itinéraire", ApiParameter::TIME, true);
         add_param("planner", "date", "Date de début de l'itinéraire", ApiParameter::DATE, true);
 
@@ -363,6 +377,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
         delete calculateur;
     }
 };
+
+
 
 MAKE_WEBSERVICE(navitia::type::Data, Worker)
 

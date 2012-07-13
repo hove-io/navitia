@@ -13,8 +13,8 @@ int main(int, char **) {
         data.build_proximity_list();
     }
 
-    int depart = 147;
-    int arrivee = 246;
+    int depart = 13587;
+    int arrivee = 2460;
     std::cout << "Recherche de chemin entre " << data.pt_data.stop_areas.at(depart).name << " et " << data.pt_data.stop_areas.at(arrivee).name << std::endl;
 
 
@@ -47,10 +47,12 @@ int main(int, char **) {
 //        routing::raptor::map_int_pint_t bests;
 //        bests[depart] = navitia::routing::raptor::type_retour(-1, navitia::routing::DateTime(7, 72000));
 //        std::cout << raptor.compute(bests, arrivee);
-//    }
+//    }/planner?departure_lat=48.867483087514856&departure_lon=2.3305474316803103&destination_lat=48.84850904718449&destination_lon=2.349430179055217&time=28800&date=20120211
 
     {
         Timer t("RAPTOR");
-        std::cout << raptor.compute(data.pt_data.stop_areas.at(13587).coord, 500, data.pt_data.stop_areas.at(2460).coord, 500, 28800, 7);
+        std::cout << data.pt_data.stop_areas.at(13587).coord << data.pt_data.stop_areas.at(2460).coord << std::endl;
+
+        std::cout << raptor.compute(navitia::type::GeographicalCoord(2.3305474316803103, 48.867483087514856), 500, navitia::type::GeographicalCoord(2.349430179055217, 48.84850904718449), 500, 28800, 7);
     }
 }

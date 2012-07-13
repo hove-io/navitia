@@ -489,8 +489,10 @@ Path RAPTOR::compute(const type::GeographicalCoord & departure, double radius, i
         Timer t("Recherche des stations de départ");
 
         typedef std::vector< std::pair<idx_t, double> > retour;
-        retour prox = (retour) (data.street_network.find_nearest(departure, data.pt_data.stop_area_proximity_list, radius));
-
+        retour prox;
+        try {
+        prox = (retour) (data.street_network.find_nearest(departure, data.pt_data.stop_area_proximity_list, radius));
+        } catch(NotFound) {return Path();}
         BOOST_FOREACH(auto item, prox) {
             int temps = departure_hour + (item.second / 80);
             int day;
@@ -509,13 +511,17 @@ Path RAPTOR::compute(const type::GeographicalCoord & departure, double radius, i
 }
 
 Path RAPTOR::compute(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
-             , int departure_hour, int departure_day) {
+                     , int departure_hour, int departure_day) {
+    std::cout << "Raptor Geo geo depart :" << departure  << " "<< radius_depart <<  " arrivee " << destination << " " << radius_destination <<" " << departure_hour << " " << departure_day <<  std::endl;
     map_int_pint_t bests, destinations;
     {
         Timer t("Recherche des stations de départ");
 
         typedef std::vector< std::pair<idx_t, double> > retour;
-        retour prox = (retour) (data.street_network.find_nearest(departure, data.pt_data.stop_area_proximity_list, radius_depart));
+        retour prox;
+        try {
+            prox = (retour) (data.street_network.find_nearest(departure, data.pt_data.stop_area_proximity_list, radius_depart));
+        } catch(NotFound) {std::cout << "Not found 1 " << std::endl;return Path();}
 
         BOOST_FOREACH(auto item, prox) {
             int temps = departure_hour + (item.second / 80);
@@ -533,13 +539,17 @@ Path RAPTOR::compute(const type::GeographicalCoord & departure, double radius_de
         Timer t("Recherche des stations de destinations");
 
         typedef std::vector< std::pair<idx_t, double> > retour;
-        retour prox = (retour) (data.street_network.find_nearest(destination, data.pt_data.stop_area_proximity_list, radius_destination));
-
+        retour prox;
+        try {
+            prox = (retour) (data.street_network.find_nearest(destination, data.pt_data.stop_area_proximity_list, radius_destination));
+        } catch(NotFound) {std::cout << "Not found 1 " << std::endl;return Path();}
         BOOST_FOREACH(auto item, prox) {
             destinations[item.first] = type_retour((int)(item.second/80));
         }
     }
-    return compute(bests, destinations);
+    Path result = compute(bests, destinations);
+    std::cout << "Taille reponse :  " << result.items.size();
+    return result;
 }
 
 
