@@ -17,13 +17,38 @@ size_t hash_value(T t) {
 struct type_retour {
     int stid;
     DateTime dt;
-    type_retour(int stid, DateTime dt) : stid(stid), dt(dt) {}
-    type_retour() : stid(-1), dt() {}
+    int dist_to_dest;
 
-    bool operator<(type_retour r2) const { return this->dt < r2.dt;}
+    type_retour(int stid, DateTime dt, int dist_to_dest) : stid(stid), dt(dt), dist_to_dest(dist_to_dest) {}
+    type_retour(int stid, DateTime dt) : stid(stid), dt(dt), dist_to_dest(0) {}
+    type_retour(unsigned int dist_to_dest) : stid(-1), dt(), dist_to_dest(dist_to_dest) {}
+    type_retour() : stid(-1), dt(), dist_to_dest(0) {}
+
+    bool operator<(type_retour r2) const { return this->dt + this->dist_to_dest < r2.dt + dist_to_dest;}
 
     bool operator==(type_retour r2) const { return this->stid == r2.stid;}
     bool operator!=(type_retour r2) const { return !(this->stid == r2.stid);}
+};
+
+struct best_dest {
+    typedef std::pair<unsigned int, int> idx_dist;
+
+    std::map<unsigned int, type_retour> map_date_time;
+    type_retour best_now;
+
+    void ajouter_destination(unsigned int said, type_retour &t) { map_date_time[said] = t;}
+
+    void ajouter_best(unsigned int said, type_retour t) {
+        if(map_date_time.find(said) != map_date_time.end()) {
+            map_date_time[said] = t;
+            if(t < best_now) {
+                best_now = t;
+            }
+        }
+    }
+
+
+
 };
 
 
@@ -115,16 +140,18 @@ struct label {
 
 struct RAPTOR : public AbstractRouter
 {
-    const navitia::type::Data &data;
+    navitia::type::Data &data;
 
 
-    RAPTOR(const navitia::type::Data &data);
+    RAPTOR(navitia::type::Data &data);
     Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
 
 
-    Path compute(const type::GeographicalCoord departure, double radius, idx_t destination_idx, int departure_hour, int departure_day);
+    Path compute(const type::GeographicalCoord & departure, double radius, idx_t destination_idx, int departure_hour, int departure_day);
+    Path compute(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
+                 , int departure_hour, int departure_day);
 
-    Path compute(map_int_pint_t bests_, idx_t destination_idx);
+    Path compute(map_int_pint_t departs, map_int_pint_t destinations);
 
     std::pair<unsigned int, bool> earliest_trip(unsigned int route, unsigned int stop_area, map_retour_t &retour, unsigned int count);
     std::pair<unsigned int, bool> earliest_trip(unsigned int route, unsigned int stop_area, int time, int day);

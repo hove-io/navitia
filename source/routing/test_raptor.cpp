@@ -51,6 +51,6 @@ int main(int, char **) {
 
     {
         Timer t("RAPTOR");
-        std::cout << raptor.compute(data.pt_data.stop_areas.at(13587).coord, 500, 2460, 28800, 7);
+        std::cout << raptor.compute(data.pt_data.stop_areas.at(13587).coord, 500, data.pt_data.stop_areas.at(2460).coord, 500, 28800, 7);
     }
 }

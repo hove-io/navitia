@@ -165,7 +165,7 @@ Path StreetNetwork::compute(const type::GeographicalCoord & start_coord, const t
     return p;
 }
 
-std::vector< std::pair<idx_t, double> > StreetNetwork::find_nearest(const type::GeographicalCoord & start_coord, const ProximityList<idx_t> & pl, double radius){
+std::vector< std::pair<idx_t, double> > StreetNetwork::find_nearest(const type::GeographicalCoord & start_coord, const ProximityList<idx_t> & pl, double radius) {
     ProjectionData start(start_coord, *this);
     // Tableau des prédécesseurs de chaque nœuds
     // si pred[v] == v, c'est soit qu'il n'y a pas de chemin possible, soit c'est l'origine
