@@ -52,6 +52,7 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart){
     st->arrival_time = arrivee;
     st->departure_time = depart;
     st->vehicle_journey = vj;
+    st->order = vj->stop_time_list.size();
     vj->stop_time_list.push_back(st);
 
     return *this;
@@ -94,5 +95,7 @@ navitia::type::PT_Data builder::build() {
     data.transform(result);
     return result;
 }
+
+
 
 }

@@ -9,7 +9,7 @@ add_executable(test_time_expanded time_expanded_test.cpp)
 target_link_libraries(test_time_expanded routing)
 
 add_executable(testraptor test_raptor.cpp)
-target_link_libraries(testraptor routing)
+target_link_libraries(testraptor routing connectors)
 
 add_executable(testbench test_benchmark.cpp)
 target_link_libraries(testbench routing)

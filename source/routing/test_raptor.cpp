@@ -2,6 +2,7 @@
 #include "type/data.h"
 #include "utils/timer.h"
 #include "boost/date_time.hpp"
+#include "naviMake/build_helper.h"
 using namespace navitia;
 
 int main(int, char **) {
@@ -13,23 +14,23 @@ int main(int, char **) {
         data.build_proximity_list();
     }
 
-    int depart = 13587;
-    int arrivee = 2460;
-    std::cout << "Recherche de chemin entre " << data.pt_data.stop_areas.at(depart).name << " et " << data.pt_data.stop_areas.at(arrivee).name << std::endl;
+//    int depart = 13587;
+//    int arrivee = 2460;
+//    std::cout << "Recherche de chemin entre " << data.pt_data.stop_areas.at(depart).name << " et " << data.pt_data.stop_areas.at(arrivee).name << std::endl;
 
 
 
-//    BOOST_FOREACH(navitia::type::VehicleJourney vj, data.pt_data.vehicle_journeys) {
-//        unsigned int precstid = data.pt_data.stop_times.size() + 1;
-//        BOOST_FOREACH(unsigned int stid, vj.stop_time_list){
-//            if(precstid != (data.pt_data.stop_times.size() + 1)) {
-//                if(data.pt_data.stop_times.at(precstid).arrival_time > data.pt_data.stop_times.at(stid).arrival_time ||
-//                   data.pt_data.stop_times.at(precstid).departure_time > data.pt_data.stop_times.at(stid).departure_time )
-//                    std::cout <<"Bug de données" << std::endl;
-//            }
-//            precstid =  stid;
-//        }
-//    }
+////    BOOST_FOREACH(navitia::type::VehicleJourney vj, data.pt_data.vehicle_journeys) {
+////        unsigned int precstid = data.pt_data.stop_times.size() + 1;
+////        BOOST_FOREACH(unsigned int stid, vj.stop_time_list){
+////            if(precstid != (data.pt_data.stop_times.size() + 1)) {
+////                if(data.pt_data.stop_times.at(precstid).arrival_time > data.pt_data.stop_times.at(stid).arrival_time ||
+////                   data.pt_data.stop_times.at(precstid).departure_time > data.pt_data.stop_times.at(stid).departure_time )
+////                    std::cout <<"Bug de données" << std::endl;
+////            }
+////            precstid =  stid;
+////        }
+////    }
 
     routing::raptor::RAPTOR raptor(data);
 //    {
@@ -55,4 +56,6 @@ int main(int, char **) {
 
         std::cout << raptor.compute(navitia::type::GeographicalCoord(2.3305474316803103, 48.867483087514856), 500, navitia::type::GeographicalCoord(2.349430179055217, 48.84850904718449), 500, 28800, 7);
     }
+
+
 }
