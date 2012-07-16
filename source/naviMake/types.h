@@ -9,7 +9,7 @@
 
 namespace nt = navitia::type;
 
-namespace navimake{namespace types{
+namespace navimake{ namespace types{
 
 typedef unsigned int idx_t;
 

@@ -86,6 +86,20 @@ SA builder::sa(const std::string &name, double x, double y){
     return SA(*this, name, x, y);
 }
 
+void builder::connection(const std::string & name1, const std::string & name2, float length) {
+    types::Connection * connexion = new types::Connection();
+    if(sps.count(name1) == 0 || sps.count(name2) == 0)
+        return ;
+    connexion->departure_stop_point = (*(sps.find(name1))).second;
+    connexion->destination_stop_point = (*(sps.find(name2))).second;
+
+    connexion->connection_kind = types::Connection::LinkConnection;
+    connexion->duration = length;
+
+    data.connections.push_back(connexion);
+
+}
+
 navitia::type::PT_Data builder::build() {
     navitia::type::PT_Data result;
     connectors::build_routes(data);
@@ -95,6 +109,7 @@ navitia::type::PT_Data builder::build() {
     data.transform(result);
     return result;
 }
+
 
 
 
