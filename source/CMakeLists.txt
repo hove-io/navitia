@@ -70,6 +70,7 @@ add_subdirectory(street_network)
 add_subdirectory(proximity_list)
 add_subdirectory(network)
 add_subdirectory(navitia)
+add_subdirectory(vptranslator)
 
 #on génére le fichier config.h
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
