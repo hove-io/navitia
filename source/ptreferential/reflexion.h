@@ -7,6 +7,23 @@
 namespace navitia{ namespace ptref {
 typedef boost::variant<std::string, int>  col_t;
 
+/// Gestion des erreurs
+struct PTRefException : public std::exception{
+    // Constructeur de l'exception: msg représente le message, FunctionName représente la fonction
+    //  qui a provoquée l'exception et FileName  le nom du fichier
+    PTRefException(const std::string msg, std::string FunctionName, std::string FileName){
+        this->msg = msg+", Fonction: ["+FunctionName+"], Fichier: ["+FileName+"]";
+    }
+    virtual ~PTRefException() throw(){}
+
+    // Récupération du message
+    virtual const char* what() const throw(){
+        return this->msg.c_str();
+    }
+private:
+    std::string msg;
+};
+
 /// Exception levée lorsqu'on demande un membre qu'on ne connait pas
 struct unknown_member{};
 struct bad_type{};
