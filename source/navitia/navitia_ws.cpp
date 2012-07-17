@@ -25,20 +25,88 @@ class Worker : public BaseWorker<navitia::type::Data> {
     struct Locker{
         /// indique si l'acquisition du verrou a réussi
         bool locked;
-        nt::Data& data;
-        Locker(navitia::type::Data& data) : data(data) { locked = data.load_mutex.try_lock_shared();}
+        nt::Data* data;
+        
+        ///construit un locker par défaut qui lock rien.
+        Locker() : locked(false), data(NULL){}
+
+        /**
+         * @param exclusive défini si c'est un lock exclusif ou pas
+         *
+         *
+         */
+        Locker(navitia::type::Data& data, bool exclusive = false) : data(&data), exclusive(exclusive) {
+            if(exclusive){
+                this->data->load_mutex.lock();
+                locked = true;
+            }else{
+                locked = this->data->load_mutex.try_lock_shared();
+            }
+        }
 
         ~Locker() {
             if(locked){
-                data.load_mutex.unlock_shared();
+                if(exclusive){
+                    data->load_mutex.unlock();
+                }else{
+                    data->load_mutex.unlock_shared();
+                }
             }
         }
+
+        /**
+         * move constructor 
+         */
+        Locker(Locker&& other) : locked(other.locked), data(other.data), exclusive(other.exclusive){
+            other.locked = false;
+        }
+
     private:
+        /// on désactive le constructeur par copie
         Locker(const Locker&);
+        /// on l'opérateur d'affectation par copie
         Locker& operator=(const Locker&);
 
+        bool exclusive;
     };
-
+    
+    /**
+     * Vérifie la validité des paramétres, charge les données si elles ne le sont pas, 
+     * et gére le cas des données en cours de chargement
+     *
+     * Retourne le Locker associé à la requéte, si il est bien vérouillé, le traitement peux continuer
+     */
+    Locker check_and_init(RequestData & request, navitia::type::Data & d, pbnavitia::API requested_api, pbnavitia::Response& pb_response, ResponseData& rd) {
+        pb_response.set_requested_api(requested_api);
+        if(!request.params_are_valid){
+            rd.status_code = 500;
+            rd.content_type = "application/octet-stream";
+            pb_response.set_info("invalid argument");
+            pb_response.SerializeToOstream(&rd.response);
+            return Locker();
+        }
+        if(!d.loaded){
+            try{
+                this->load(d);
+            }catch(...){
+                rd.status_code = 500;
+                rd.content_type = "application/octet-stream";
+                pb_response.set_error("error while loading data");
+                pb_response.SerializeToOstream(&rd.response);
+                return Locker();
+            }
+        }
+        Locker locker(d);
+        if(!locker.locked){
+            //on est en cours de chargement
+            rd.status_code = 500;
+            rd.content_type = "application/octet-stream";
+            pb_response.set_error("loading");
+            pb_response.SerializeToOstream(&rd.response);
+            return Locker();
+        }
+        return locker;
+    }
 
     /**
      * se charge de remplir l'objet protocolbuffer firstletter passé en paramètre
@@ -96,26 +164,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData firstletter(RequestData& request, navitia::type::Data & d){
         ResponseData rd;
         pbnavitia::Response pb_response;
-        pb_response.set_requested_api(pbnavitia::FIRSTLETTER);
-
-        if(!request.params_are_valid){
-            rd.status_code = 500;
-            rd.content_type = "application/octet-stream";
-            pb_response.set_error("invalid argument");
-            pb_response.SerializeToOstream(&rd.response);
-            return rd;
-        }
-
-        if(!d.loaded){
-            this->load(request, d);
-        }
-        Locker locker(d);
+        Locker locker(check_and_init(request, d, pbnavitia::FIRSTLETTER, pb_response, rd));
         if(!locker.locked){
-            //on est en cours de chargement
-            rd.status_code = 500;
-            rd.content_type = "application/octet-stream";
-            pb_response.set_error("loading");
-            pb_response.SerializeToOstream(&rd.response);
             return rd;
         }
 
@@ -148,24 +198,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData streetnetwork(RequestData & request, navitia::type::Data & d){
         ResponseData rd;
         pbnavitia::Response pb_response;
-        pb_response.set_requested_api(pbnavitia::STREET_NETWORK);
-        if(!request.params_are_valid){
-            rd.status_code = 500;
-            rd.content_type = "application/octet-stream";
-            pb_response.set_error("invalid argument");
-            pb_response.SerializeToOstream(&rd.response);
-            return rd;
-        }
-        if(!d.loaded){
-            this->load(request, d);
-        }
-        Locker locker(d);
+        Locker locker(check_and_init(request, d, pbnavitia::STREET_NETWORK, pb_response, rd));
         if(!locker.locked){
-            //on est en cours de chargement
-            rd.status_code = 500;
-            rd.content_type = "application/octet-stream";
-            pb_response.set_error("loading");
-            pb_response.SerializeToOstream(&rd.response);
             return rd;
         }
 
@@ -203,21 +237,40 @@ class Worker : public BaseWorker<navitia::type::Data> {
         return rd;
     }
 
+    void load(navitia::type::Data & data){
+        Locker lock(data, true);
+        try{
+            log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+            Configuration * conf = Configuration::get();
+            std::string database = conf->get_as<std::string>("GENERAL", "database", "IdF.nav");
+            LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
+            data.loaded = true;
+            data.load_lz4(database);
+            data.build_proximity_list();
+            calculateur = new navitia::routing::raptor::RAPTOR(data);
+        }catch(...){
+            data.loaded = false;
+            throw;
+        }
+        
+    }
+
     ResponseData load(RequestData, navitia::type::Data & d){
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-        Configuration * conf = Configuration::get();
-        std::string database = conf->get_as<std::string>("GENERAL", "database", "IdF.nav");
-        LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
+        pbnavitia::Response pb_response;
+        pb_response.set_requested_api(pbnavitia::LOAD);
         ResponseData rd;
-        d.load_mutex.lock();
-        d.loaded = true;
-        d.load_lz4(database);
-        d.build_proximity_list();
-        d.load_mutex.unlock();
-        calculateur = new navitia::routing::raptor::RAPTOR(d);
-        //        calculateur->build_graph();
-        rd.response << "loaded!";
-        rd.content_type = "text/html";
+        rd.content_type = "application/octet-stream";
+        try{
+            load(d);
+        }catch(...){
+            pb_response.set_error("Erreur durant le chargement");
+            rd.status_code = 500;
+            pb_response.SerializeToOstream(&rd.response);               
+            return rd;
+        }
+        pb_response.set_info("loaded!");
+        pb_response.SerializeToOstream(&rd.response);               
         rd.status_code = 200;
         LOG4CPLUS_INFO(logger, "Chargement fini");
         return rd;
@@ -234,7 +287,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     void create_pb_froute(navitia::routing::Path & path, const nt::Data & data, pbnavitia::FeuilleRoute &solution) {
         solution.set_nbchanges(path.nb_changes);
         solution.set_duree(path.duration);
-        int i =0;
+        int i = 0;
         pbnavitia::Etape * etape;
         BOOST_FOREACH(navitia::routing::PathItem item, path.items) {
             if(i%2 == 0) {
@@ -284,26 +337,11 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData planner(RequestData & request, navitia::type::Data & d) {
         ResponseData rd;
         pbnavitia::Response pb_response;
-        pb_response.set_requested_api(pbnavitia::PLANNER);
-        if(!request.params_are_valid){
-            rd.status_code = 500;
-            rd.content_type = "application/octet-stream";
-            pb_response.set_error("invalid argument");
-            pb_response.SerializeToOstream(&rd.response);
-            return rd;
-        }
-        if(!d.loaded){
-            this->load(request, d);
-        }
-        Locker locker(d);
+        Locker locker(check_and_init(request, d, pbnavitia::PLANNER, pb_response, rd));
         if(!locker.locked){
-            //on est en cours de chargement
-            rd.status_code = 500;
-            rd.content_type = "application/octet-stream";
-            pb_response.set_error("loading");
-            pb_response.SerializeToOstream(&rd.response);
             return rd;
         }
+
         navitia::routing::Path path;
         int time = boost::get<int>(request.parsed_params["time"].value);
         int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
