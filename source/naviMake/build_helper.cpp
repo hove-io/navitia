@@ -104,6 +104,7 @@ navitia::type::PT_Data builder::build() {
     navitia::type::PT_Data result;
     connectors::build_routes(data);
     connectors::build_route_points(data);
+
     data.clean();
     data.sort();
     data.transform(result);

@@ -3,30 +3,46 @@ namespace navitia { namespace routing { namespace raptor{
 
 RAPTOR::RAPTOR(navitia::type::Data &data) : data(data)
 {
+    //Construction de la liste des marche à pied
+    BOOST_FOREACH(navitia::type::Connection connection, data.pt_data.connections) {
+        foot_path[connection.departure_stop_point_idx].push_back(connection.idx);
+    }
 }
+
+std::pair<unsigned int, bool> RAPTOR::earliest_trip(unsigned int route, unsigned int stop_area, map_int_pint_t &best, unsigned int count){
+    if(best.count(stop_area) == 0)
+        return std::pair<unsigned int, bool>(-1, false);
+
+    if(count > 1) {
+        if((best[stop_area].dt + 2*60).date > best[stop_area].dt.date)
+            return std::make_pair(earliest_trip(route, stop_area, best[stop_area].dt + 2*60).first, true);
+        else
+            return earliest_trip(route, stop_area, best[stop_area].dt + 2*60);
+    } else
+        return earliest_trip(route, stop_area, best[stop_area].dt);
+}
+
 
 std::pair<unsigned int, bool> RAPTOR::earliest_trip(unsigned int route, unsigned int stop_area, map_retour_t &retour, unsigned int count){
     if(retour[count - 1].count(stop_area) == 0)
         return std::pair<unsigned int, bool>(-1, false);
-    int time = retour[count -1][stop_area].dt.hour;
 
-
-    if(count > 1)
-        time += 2*60;
-
-    unsigned int day = retour[count -1][stop_area].dt.date;
-
-    return earliest_trip(route, stop_area, time, day);
+    if(count > 1) {
+        if((retour[count-1][stop_area].dt + 2*60).date > retour[count-1][stop_area].dt.date)
+            return std::make_pair(earliest_trip(route, stop_area, retour[count-1][stop_area].dt + 2*60).first, true);
+        else
+            return earliest_trip(route, stop_area, retour[count-1][stop_area].dt + 2*60);
+    } else
+        return earliest_trip(route, stop_area, retour[count-1][stop_area].dt);
 }
 
 
-
-std::pair<unsigned int, bool> RAPTOR::earliest_trip(unsigned int route, unsigned int stop_area, int time, int day){
+std::pair<unsigned int, bool> RAPTOR::earliest_trip(unsigned int route, unsigned int stop_area, DateTime dt){
 
     bool pam = false;
-    if(time > 86400) {
-        time = time %86400;
-        ++day;
+    if(dt.hour > 86400) {
+        dt.hour = dt.hour %86400;
+        ++dt.date;
         pam = true;
     }
 
@@ -36,22 +52,22 @@ std::pair<unsigned int, bool> RAPTOR::earliest_trip(unsigned int route, unsigned
 
     for(auto it = std::lower_bound(data.pt_data.route_points[rp_id].vehicle_journey_list.begin(),
                                    data.pt_data.route_points[rp_id].vehicle_journey_list.end(),
-                                   time, compare_rp(data.pt_data.route_points.at(rp_id), data));
+                                   dt.hour, compare_rp(data.pt_data.route_points.at(rp_id), data));
         it != data.pt_data.route_points[rp_id].vehicle_journey_list.end(); ++it) {
         navitia::type::ValidityPattern vp = data.pt_data.validity_patterns[data.pt_data.vehicle_journeys[*it].validity_pattern_idx];
 
-        if(vp.check(day)) {
+        if(vp.check(dt.date)) {
             return std::pair<unsigned int, bool>(*it, pam);
         }
     }
-    ++day;
+    ++dt.date;
 
     for(auto  it = std::lower_bound(data.pt_data.route_points[rp_id].vehicle_journey_list.begin(),
                                     data.pt_data.route_points[rp_id].vehicle_journey_list.end(),
                                     0, compare_rp(data.pt_data.route_points[rp_id], data));
         it != data.pt_data.route_points[rp_id].vehicle_journey_list.end(); ++it) {
         navitia::type::ValidityPattern vp = data.pt_data.validity_patterns[data.pt_data.vehicle_journeys[*it].validity_pattern_idx];
-        if(vp.check(day)) {
+        if(vp.check(dt.date)) {
             return std::pair<unsigned int, bool>(*it, true);
         }
     }
@@ -280,7 +296,7 @@ bool RAPTOR::Bag_route::merge(Bag &bag, unsigned int order) {
     bool pam;
 
     BOOST_FOREACH(label lbl, bag.labels) {
-        std::tie(etemp, pam) = raptor->earliest_trip(route, said, lbl[heure], lbl[jour]);
+        std::tie(etemp, pam) = raptor->earliest_trip(route, said, DateTime(lbl[jour], lbl[heure]));
         if(etemp != -1) {
             label lbl_temp(temps_trajet, lbl[temps_trajet]);
             lbl_temp.ajouter_critere(heure, raptor->data.pt_data.stop_times.at(raptor->data.pt_data.vehicle_journeys.at(etemp).stop_time_list.at(order)).arrival_time);
@@ -340,7 +356,9 @@ Path RAPTOR::compute(map_int_pint_t departs, map_int_pint_t destinations) {
 
     BOOST_FOREACH(auto item, departs) {
         retour[0][item.first] = item.second;
+        best[item.first] = item.second;
         marked_stop.push_back(item.first);
+
     }
 
     best_dest b_dest;
@@ -371,7 +389,7 @@ Path RAPTOR::compute(map_int_pint_t departs, map_int_pint_t destinations) {
                 //Si on peut arriver plus tôt à l'arrêt en passant par une autre route
                 if(retour[count-1].count(said) > 0)  {
                     if(retour[count-1][said].dt <= DateTime(working_date, temps_depart)){
-                        std::tie(et_temp, pam) = earliest_trip(route, said, retour, count);
+                        std::tie(et_temp, pam) = earliest_trip(route, said, best, count);
                         if(et_temp >=0) {
                             t = et_temp;
                             working_date = retour[count -1][said].dt.date;
@@ -397,12 +415,28 @@ Path RAPTOR::compute(map_int_pint_t departs, map_int_pint_t destinations) {
                         retour[count][said]  = type_retour(stid, DateTime(working_date, data.pt_data.stop_times[stid].arrival_time%86400));
                         best[said] = type_retour(stid, DateTime(working_date, data.pt_data.stop_times[stid].arrival_time%86400));
                         b_dest.ajouter_best(said, type_retour(stid, DateTime(working_date, data.pt_data.stop_times[stid].arrival_time%86400)));
-                        if(std::find(marked_stop.begin(), marked_stop.end(), said) == marked_stop.end())
+                        if(std::find(marked_stop.begin(), marked_stop.end(), said) == marked_stop.end()) {
                             marked_stop.push_back(said);
+                        }
                     }
                 }
             }
         }
+
+        BOOST_FOREACH(auto stop_p, marked_stop) {
+            auto it_fp = foot_path.find(stop_p);
+            if(it_fp != foot_path.end()) {
+                BOOST_FOREACH(auto connection_idx, (*it_fp).second) {
+                    unsigned int saiddest = data.pt_data.stop_points.at(data.pt_data.connections[connection_idx].destination_stop_point_idx).stop_area_idx;
+                    best[saiddest] = std::min(best[saiddest], type_retour(stop_p, best[stop_p].dt + data.pt_data.connections[connection_idx].duration, connection));
+                    retour[count][saiddest] = std::min(retour[count][saiddest], type_retour(stop_p, best[stop_p].dt + data.pt_data.connections[connection_idx].duration, connection));
+                    b_dest.ajouter_best(saiddest, type_retour(stop_p, DateTime(best[stop_p].dt + data.pt_data.connections[connection_idx].duration), connection));
+                    marked_stop.push_back(saiddest);
+                }
+            }
+        }
+
+
         ++count;
     }
 
@@ -450,16 +484,22 @@ Path RAPTOR::compute(map_int_pint_t departs, map_int_pint_t destinations) {
                                             data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(retour[countb][current_said].stid).route_point_idx).route_idx).line_idx));
 
             precretour = retour[countb][current_said];
-            st = data.pt_data.stop_times.at(retour[countb][current_said].stid);
-            current_said = data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(st.vehicle_journey_idx).stop_time_list.at(st.order -1)).route_point_idx).stop_point_idx).stop_area_idx;
+            if(retour[countb][current_said].type == vj) {
+                st = data.pt_data.stop_times.at(retour[countb][current_said].stid);
+                current_said = data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(st.vehicle_journey_idx).stop_time_list.at(st.order -1)).route_point_idx).stop_point_idx).stop_area_idx;
+            } else {
+                current_said = retour[countb][current_said].stid;
+                st = data.pt_data.stop_times.at(best[current_said].stid);
+            }
+
 
             BOOST_FOREACH(auto item, departs) {
                 stop = stop || (item.first == (int)current_said);
             }
         }
         result.items.push_back(PathItem(current_said,
-                                        retour[countb][current_said].dt.hour, retour[countb][current_said].dt.date,
-                                        data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(retour[countb][current_said].stid).route_point_idx).route_idx).line_idx));
+                                        best[current_said].dt.hour, best[current_said].dt.date,
+                                        data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(st.idx).route_point_idx).route_idx).line_idx));
 
 
         std::reverse(result.items.begin(), result.items.end());

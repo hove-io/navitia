@@ -54,6 +54,7 @@ struct DateTime {
 
     DateTime() : date(std::numeric_limits<int>::max()), hour(std::numeric_limits<int>::max()){}
     DateTime(int date, int hour) : date(date), hour(hour) {}
+    DateTime(const DateTime & dt) : date(dt.date), hour(dt.hour) {}
 
     bool operator<(DateTime other) const {
         if(this->date == other.date)
