@@ -39,11 +39,12 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     };
 
+
     /**
      * se charge de remplir l'objet protocolbuffer firstletter passé en paramètre
      *
      */
-    void create_pb(const std::vector<nt::idx_t>& result, const nt::Type_e type, const nt::Data& data, pbnavitia::FirstLetter& pb_fl){
+    void create_pb_firstletter(const std::vector<nt::idx_t>& result, const nt::Type_e type, const nt::Data& data, pbnavitia::FirstLetter& pb_fl){
         BOOST_FOREACH(nt::idx_t idx, result){
             pbnavitia::FirstLetterItem* item = pb_fl.add_items();
             google::protobuf::Message* child = NULL;
@@ -132,7 +133,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
                     result = d.pt_data.city_first_letter.find(name); break;
                 default: break;
                 }
-                create_pb(result, type, d, *pb);
+                create_pb_firstletter(result, type, d, *pb);
             }
             //pb_response.set_firstletter(pb);
             pb_response.SerializeToOstream(&rd.response);
