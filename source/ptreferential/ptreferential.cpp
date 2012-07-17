@@ -19,7 +19,7 @@ using namespace navitia::ptref;
 
 namespace qi = boost::spirit::qi;
 
-
+// colonne d'un objet
 struct Column {
     Type_e table;
     std::string column;
@@ -31,6 +31,7 @@ BOOST_FUSION_ADAPT_STRUCT(
     (std::string, column)
 )
 
+// clause where
 struct WhereClause{
     Column col;
     Operator_e op;
@@ -43,10 +44,13 @@ BOOST_FUSION_ADAPT_STRUCT(
     (Operator_e, op)
     (std::string, value)
 )
-
+// Requête
 struct Request {
+    // les colonnes sélectionnées : dans SELECT
     std::vector<Column> columns;
+    // l'objet utilisé pour la sélection : dans FROM
     Type_e requested_type;
+    // les conditions de sélection : clause WHERE
     std::vector<WhereClause> clauses;
 };
 
@@ -71,7 +75,8 @@ BOOST_FUSION_ADAPT_STRUCT(
     qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
 
     select_r() : select_r::base_type(request) {
-        txt %= qi::lexeme[+(qi::alnum|'_'|'|'|':')]; // Match du texte
+        txt %= qi::lexeme[+(qi::alnum|'_'|'|'|':'|'-')]; // Match du texte
+
 
         table =   qi::string("stop_areas")[qi::_val = eStopArea]
                 | qi::string("stop_points")[qi::_val = eStopPoint]
@@ -116,7 +121,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 namespace navitia{ namespace ptref{
 
-
+// vérification d'une clause WHERE
 template<class T>
 WhereWrapper<T> build_clause(std::vector<WhereClause> clauses) {
     WhereWrapper<T> wh(new BaseWhere<T>());
@@ -129,7 +134,7 @@ WhereWrapper<T> build_clause(std::vector<WhereClause> clauses) {
             wh = wh && WHERE(ptr_external_code<T>(), clause.op, clause.value);
         else if(clause.col.column == "name")
             wh = wh && WHERE(ptr_name<T>(), clause.op, clause.value);
-    }
+        }
     return wh;
 }
 
@@ -140,9 +145,10 @@ void set_value(google::protobuf::Message* message, const T& object, const std::s
     const google::protobuf::Descriptor* descriptor = message->GetDescriptor();
     const google::protobuf::FieldDescriptor* field_descriptor = descriptor->FindFieldByName(column);
 
-    std::cout << column << std::endl;
+    //std::cout << column << std::endl;
     if(field_descriptor == NULL){
-        throw unknown_member();
+        //throw unknown_member();
+        throw PTRefException("Le paramètre field_descriptor est indéfinit","set_value", "ptreferential.cpp");
     }
 
     if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_STRING){
@@ -150,20 +156,20 @@ void set_value(google::protobuf::Message* message, const T& object, const std::s
     }else if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
         reflection->SetInt32(message, field_descriptor, boost::get<int>(get_value(object, column)));
     }else{
-        throw bad_type();
+        //throw bad_type();
+        throw PTRefException("Le paramètre field_descriptor->type est indéfinit","set_value", "ptreferential.cpp");
     }
 }
 
 
 pbnavitia::PTReferential extract_data(PT_Data & data, const Request & r, std::vector<idx_t> & rows) {
-    pbnavitia::PTReferential pb_response;
-
+    pbnavitia::PTReferential pb_response;    
     //on reconstruit
     std::map<Type_e, std::vector<std::string> > columns_map;
     BOOST_FOREACH(const Column & col, r.columns){
         columns_map[col.table].push_back(col.column);
     }
-
+ try{
     BOOST_FOREACH(idx_t row, rows){
         // "stop_area"
         //pbnavitia::PTReferential * pb_row = pb_response.add_item();
@@ -223,6 +229,11 @@ pbnavitia::PTReferential extract_data(PT_Data & data, const Request & r, std::ve
             }
         }
     }
+    } catch(navitia::ptref::PTRefException &e){
+        pb_response.set_error(e.what());
+    }catch(...){
+        pb_response.set_error("PTReferential: Impossible d'extraire la réponse ");
+    }
     return pb_response;
 }
 
@@ -255,13 +266,26 @@ google::protobuf::Message* add_item(google::protobuf::Message* message, const st
 
 
 google::protobuf::Message* get_message(pbnavitia::PTReferential * row, Type_e type){
+
     const google::protobuf::Reflection * reflection = row->GetReflection();
     const google::protobuf::Descriptor* descriptor = row->GetDescriptor();
     std::string field = static_data::get()->getListNameByType(type);
     const google::protobuf::FieldDescriptor* field_descriptor = descriptor->FindFieldByName(field);
+    google::protobuf::Message* message;
+    if (reflection == NULL){
+        throw PTRefException("Le paramètre reflection est indéfinit","get_message", "ptreferential.cpp");
+    }else{
+        if (field_descriptor == NULL){
+            throw PTRefException("Le paramètre field_descriptor est indéfinit","get_message", "ptreferential.cpp");
+        }else{
+            message = reflection->AddMessage(row, field_descriptor);
+        }
+    }
 
-    google::protobuf::Message* message = reflection->AddMessage(row, field_descriptor);
+    //google::protobuf::Message* message = reflection->AddMessage(row, field_descriptor);
     return message;
+
+
 }
 
 template<Type_e E>
@@ -315,6 +339,8 @@ pbnavitia::PTReferential query(std::string request, PT_Data & data){
     Request r;
     pbnavitia::PTReferential pb_response;
     select_r<std::string::iterator> s;
+
+    // récupération des colonnes sélectionnées, les objets utilisés et les colonnes dans la clause WHERE
     if (qi::phrase_parse(begin, request.end(), s, qi::space, r))
     {
         if(begin != request.end()) {
@@ -323,8 +349,11 @@ pbnavitia::PTReferential query(std::string request, PT_Data & data){
             return pb_response;
         }
     }
-    else
+    else{                
         pb_response.set_error("PTReferential : Impossible de parser la requête");
+        return pb_response;
+    }
+
 
 
     std::cout << "Requested Type: " << static_data::get()->captionByType(r.requested_type) << std::endl;
@@ -367,7 +396,6 @@ pbnavitia::PTReferential query(std::string request, PT_Data & data){
         std::set_intersection(final_indexes.begin(), final_indexes.end(), indexes.begin(), indexes.end(), it);
         final_indexes = tmp_indexes;
     }
-
 
     return extract_data(data, r, final_indexes);
 }
