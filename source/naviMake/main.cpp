@@ -13,7 +13,7 @@ namespace pt = boost::posix_time;
 
 int main(int argc, char * argv[])
 {
-    std::string type, input, output, date, topo_path, outputsn;
+    std::string type, input, output, date, topo_path;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
@@ -21,8 +21,7 @@ int main(int argc, char * argv[])
         ("date,d", po::value<std::string>(&date), "Date de début")
         ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
         ("topo", po::value<std::string>(&topo_path), "Repertoire contenant la bd topo")
-        ("output,o", po::value<std::string>(&output)->default_value("data.nav"), "Fichier de sortie")
-        ("outputsn", po::value<std::string>(&outputsn)->default_value("data.sn.nav"), "Fichier de sortie");
+        ("output,o", po::value<std::string>(&output)->default_value("data.nav"), "Fichier de sortie");
 
 
     po::variables_map vm;
