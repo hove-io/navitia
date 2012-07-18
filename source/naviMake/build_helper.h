@@ -37,6 +37,8 @@ struct SA {
     SA & operator()(const std::string & sp_name, double x = 0, double y = 0);
 };
 
+
+
 struct builder{
     std::map<std::string, types::Line *> lines;
     std::map<std::string, types::ValidityPattern *> vps;
@@ -45,6 +47,8 @@ struct builder{
     boost::gregorian::date begin;
 
     Data data;
+    navitia::streetnetwork::StreetNetwork street_network;
+
 
     /// Il faut préciser là date de début des différents validity patterns
     builder(const std::string & date) : begin(boost::gregorian::date_from_iso_string(date)) {}
@@ -54,7 +58,10 @@ struct builder{
 
     /// Crée un nouveau stop area
     SA sa(const std::string & name, double x = 0, double y = 0);
+    SA sa(const std::string & name, navitia::type::GeographicalCoord geo){return sa(name,geo.x, geo.y);}
 
+    /// Crée une connexion
+    void connection(const std::string & name1, const std::string & name2, float length);
     navitia::type::PT_Data build();
 };
 

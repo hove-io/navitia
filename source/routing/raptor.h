@@ -12,17 +12,24 @@ size_t hash_value(T t) {
     return static_cast<size_t>(t);
 }
 
+enum type_idx {
+    vj,
+    connection
+};
 
 
 struct type_retour {
     int stid;
     DateTime dt;
     int dist_to_dest;
+    type_idx type;
 
-    type_retour(int stid, DateTime dt, int dist_to_dest) : stid(stid), dt(dt), dist_to_dest(dist_to_dest) {}
-    type_retour(int stid, DateTime dt) : stid(stid), dt(dt), dist_to_dest(0) {}
-    type_retour(unsigned int dist_to_dest) : stid(-1), dt(), dist_to_dest(dist_to_dest) {}
-    type_retour() : stid(-1), dt(), dist_to_dest(0) {}
+
+    type_retour(int stid, DateTime dt, int dist_to_dest) : stid(stid), dt(dt), dist_to_dest(dist_to_dest), type(vj) {}
+    type_retour(int stid, DateTime dt) : stid(stid), dt(dt), dist_to_dest(0), type(vj){}
+    type_retour(int stid, DateTime dt, type_idx type) : stid(stid), dt(dt), dist_to_dest(0), type(type){}
+    type_retour(unsigned int dist_to_dest) : stid(-1), dt(), dist_to_dest(dist_to_dest), type(vj){}
+    type_retour() : stid(-1), dt(), dist_to_dest(0), type(vj) {}
 
     bool operator<(type_retour r2) const { return this->dt + this->dist_to_dest < r2.dt + dist_to_dest;}
 
@@ -144,6 +151,7 @@ struct RAPTOR : public AbstractRouter
 
 
     RAPTOR(navitia::type::Data &data);
+
     Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
 
 
@@ -154,7 +162,8 @@ struct RAPTOR : public AbstractRouter
     Path compute(map_int_pint_t departs, map_int_pint_t destinations);
 
     std::pair<unsigned int, bool> earliest_trip(unsigned int route, unsigned int stop_area, map_retour_t &retour, unsigned int count);
-    std::pair<unsigned int, bool> earliest_trip(unsigned int route, unsigned int stop_area, int time, int day);
+    std::pair<unsigned int, bool> earliest_trip(unsigned int route, unsigned int stop_area, map_int_pint_t &best, unsigned int count);
+    std::pair<unsigned int, bool> earliest_trip(unsigned int route, unsigned int stop_area, DateTime dt);
     int get_rp_order(const navitia::type::Route &route, unsigned int stop_area);
     int get_rp_order(unsigned int route, unsigned int stop_area);
     int get_rp_id(const type::Route &route, unsigned int stop_area);
@@ -165,6 +174,9 @@ struct RAPTOR : public AbstractRouter
     map_int_int_t make_queue(std::vector<unsigned int> stops) ;
     void McRAPTOR(unsigned int depart, int arrivee, int debut, int date, unsigned int said_via = std::numeric_limits<int>::max());
 
+
+    typedef std::vector<unsigned int> list_connections;
+    std::map<unsigned int, list_connections> foot_path;
 
 
 

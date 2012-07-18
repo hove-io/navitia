@@ -29,6 +29,7 @@ BOOST_AUTO_TEST_CASE(change){
     type::PT_Data d = b.build();
     TimeDependent tp(d);
     tp.build_graph();
+
     auto res = tp.compute(d.stop_areas[0].idx, d.stop_areas[4].idx, 7900, 0);
     BOOST_REQUIRE_EQUAL(res.items.size(), 4);
     BOOST_CHECK_EQUAL(res.items[0].said, 0);
@@ -39,8 +40,8 @@ BOOST_AUTO_TEST_CASE(change){
 
 BOOST_AUTO_TEST_CASE(passe_minuit){
     navimake::builder b("20120614");
-    b.vj("A")("stop1", 23*3600)("stop2", 24*3600 + 10*60);
-    b.vj("B")("stop2", 5*60)("stop3", 20*60);
+    b.vj("A")("stop1", 23*3600)("stop2", 24*3600 + 5*60);
+    b.vj("B")("stop2", 10*60)("stop3", 20*60);
     type::PT_Data d = b.build();
     TimeDependent tp(d);
     tp.build_graph();
