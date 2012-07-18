@@ -79,7 +79,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     Locker check_and_init(RequestData & request, navitia::type::Data & d, pbnavitia::API requested_api, pbnavitia::Response& pb_response, ResponseData& rd) {
         pb_response.set_requested_api(requested_api);
         if(!request.params_are_valid){
-            rd.status_code = 500;
+            rd.status_code = 400;
             rd.content_type = "application/octet-stream";
             pb_response.set_info("invalid argument");
             pb_response.SerializeToOstream(&rd.response);
@@ -99,7 +99,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         Locker locker(d);
         if(!locker.locked){
             //on est en cours de chargement
-            rd.status_code = 500;
+            rd.status_code = 200;
             rd.content_type = "application/octet-stream";
             pb_response.set_error("loading");
             pb_response.SerializeToOstream(&rd.response);

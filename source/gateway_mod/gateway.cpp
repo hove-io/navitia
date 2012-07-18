@@ -112,15 +112,15 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
             response.status_code = ex.code;
             continue;
         }
-        std::unique_ptr<google::protobuf::Message> resp = create_pb();
+        auto resp = create_pb();
         if(resp->ParseFromString(res.second)){
-            /*if(resp->has_error()){
+            if(resp->has_error()){
                 ok = false;
                 nav->on_error();
                 context.str = resp->error();
                 context.service = Context::BAD_RESPONSE;
                 continue;
-            }*/
+            }
             context.pb = std::move(resp);
             context.service = Context::PTREF;
         }else{

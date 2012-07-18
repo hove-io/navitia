@@ -10,4 +10,4 @@ std::string pb2xml(const google::protobuf::Message* response);
 std::string pb2json(const google::protobuf::Message* response, int depth = 0);
 
 /// Construit le message protocol buffer correspondant au nom de l'api
-std::unique_ptr<google::protobuf::Message> create_pb();
+std::unique_ptr<pbnavitia::Response> create_pb();
