@@ -25,7 +25,6 @@ public:
     struct week{
         int week;
         std::bitset<7> week_bs;
-        std::string week_st;
         int count;
         int firstweeknumber;
         int lastweeknumber;

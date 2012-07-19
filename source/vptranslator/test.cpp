@@ -100,4 +100,25 @@ BOOST_AUTO_TEST_CASE(default_test) {
     dayofweek = testtranslation.getnextmonday(testdate, -1);
     BOOST_CHECK_EQUAL(dayofweek, -6);
 
+    testCS="00010111001111001100";
+    testdate= boost::gregorian::date(2012,7,16);
+    response = testtranslation.initcs(testdate, testCS);
+    BOOST_CHECK_EQUAL(response, true);
+    BOOST_CHECK_EQUAL(testtranslation.CS, "101110011110011");
+    testdate = boost::gregorian::date(2012,7,19);
+    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
+
+    testdate = boost::gregorian::date(2012,8,2);
+    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
+
+    testtranslation.splitcs();
+//    0001011
+//    1001111
+//    001100
+
+    BOOST_CHECK_EQUAL(testtranslation.week_map[0].week_bs.to_string(), "0001011");
+    BOOST_CHECK_EQUAL(testtranslation.week_map[1].week_bs.to_string(), "1001111");
+    BOOST_CHECK_EQUAL(testtranslation.week_map[2].week_bs.to_string(), "0011000");
+
+
 }

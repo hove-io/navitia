@@ -18,7 +18,7 @@ bool MakeTranslation::initcs(boost::gregorian::date beginningday, std::string re
       //on recherche le premier jour de validité
       found = requestedcs.find('1');
       startdate = beginningday + boost::gregorian::date_duration(found);
-      CS = requestedcs.substr(startdate.day() - beginningday.day(), enddate.day() - startdate.day() + 1);
+      CS = requestedcs.substr(found, (enddate - startdate).days() + 1);
       return true;
  }
 }
@@ -31,8 +31,25 @@ int MakeTranslation::getnextmonday(boost::gregorian::date datetocompare, short s
     }
 }
 
-
 void MakeTranslation::splitcs(){
-//    startdate.day()
+//    on recherche la position du premier lundi dans la chaine
+    std::string substr;
+    short int weeknumber = 0;
+    //pos represente la position au sein de la condition de service
+    short int pos = getnextmonday(startdate, 1);
+    short int precpos = 0;
 
+    while (precpos < CS.length()){
+    //tant que le prochain lundi est inférieur à enddate, on découpe le régime
+        if(pos < CS.length()){
+            substr = CS.substr(precpos, pos - precpos);
+        } else {
+            substr = "0000000";
+            substr.replace(0, CS.length() - precpos, CS.substr(precpos, CS.length() - precpos));
+        }
+        week_map[weeknumber].week_bs = std::bitset<7>(std::string(substr));
+        weeknumber++;
+        precpos = pos;
+        pos = pos + 7;
+    }
 }
