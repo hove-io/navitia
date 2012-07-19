@@ -1,6 +1,7 @@
 #pragma once
 
 #include "type/type.h"
+#include <list>
 
 
 struct vptranslator
@@ -23,7 +24,8 @@ class MakeTranslation
 {
 public:
     struct week{
-        int week;
+        int weeknumber;
+        boost::gregorian::date startdate;
         std::bitset<7> week_bs;
         int count;
         int firstweeknumber;
@@ -34,7 +36,7 @@ public:
     boost::gregorian::date enddate;
     std::string CS;
     std::map<int, week> week_map;
-
+    std::map<int, week> week_list;
     bool initcs(boost::gregorian::date beginningday, std::string requestedcs);
     void splitcs();
     int getnextmonday(boost::gregorian::date datetocompare, short sens);
