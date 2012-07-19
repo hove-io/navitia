@@ -1,3 +1,4 @@
+#pragma once
 #include "type.h"
 #include "first_letter/first_letter.h"
 #include "proximity_list/proximity_list.h"
@@ -64,7 +65,7 @@ struct PT_Data{
         ar
                 // Les listes de données
                 & validity_patterns & lines & stop_points & stop_areas & stop_times & routes
-                & vehicle_journeys & route_points & mode_types & modes
+                & vehicle_journeys & route_points & mode_types & modes & cities
                 // Les firstLetter
                 & stop_area_first_letter & city_first_letter
                 // Les map d'externalcode
@@ -72,7 +73,8 @@ struct PT_Data{
                 & network_map & mode_map & mode_type_map & city_map & district_map & department_map
                 & company_map & country_map
                 // Les proximity list
-                & stop_area_proximity_list & stop_point_proximity_list & city_proximity_list;
+                & stop_area_proximity_list & stop_point_proximity_list & city_proximity_list
+                & connections;
     }
 
     /** Initialise tous les indexes

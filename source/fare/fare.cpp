@@ -408,7 +408,7 @@ Ticket DateTicket::get_fare(boost::gregorian::date date){
             return dticket.second;
     }
 
-    throw std::string("Impossible de trouver le prix du billet pour la date donnée");
+    throw no_ticket();
 }
 
 DateTicket DateTicket::operator +(DateTicket & other){

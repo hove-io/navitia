@@ -8,6 +8,15 @@ enum NavitiaType {
     SITE = 20;
 }
 
+
+enum API {
+    FIRSTLETTER = 1;
+    PTREFERENTIAL = 2;
+    STREET_NETWORK = 3;
+    PLANNER = 4;	
+    LOAD = 5;
+}
+
 message GeographicalCoord {
     required double x = 1;
     required double y = 2;
@@ -176,27 +185,96 @@ message StreetNetwork {
 }
 
 message Parcours {
-        required int32 id = 1;
-	message Etape {
-                required StopArea descente = 1;
-		required int32 ligne	    = 2;
-	}
+    required int32 id = 1;
+    message Etape {
+        required string descente    = 1;
+        required int32 mode	    = 2;
+        repeated int32 lignes       = 3;
+    }
 	
-        repeated Etape etapes = 2;
+    repeated Etape etapes = 2;
 }
 
 message StopTimeEtape {
-	required StopTime depart  = 1;
-	required StopTime arrivee = 2;
+    required StopTime depart  = 1;
+    required StopTime arrivee = 2;
 }
 
 message Itineraire {
-        required Parcours parcours 	  = 1;
-	repeated StopTimeEtape stop_times = 2;	
+    required int32 parcours 	  = 1;
+    repeated StopTimeEtape stop_times = 2;
 }
 
-message Itineraires {
-    repeated Itineraire itineraires_liste = 1;
+message ReponseDemonstrateur {
+    repeated Parcours Parcours_Liste = 1;
+    repeated Itineraire itineraires_liste  = 2;
+}
+
+message Mode {
+	required string ligne = 1;
+	optional string reseau = 2;
+}
+
+message DateHeure {
+	required int32 date = 1;
+	required int32 heure = 2;
+}
+
+message Geocode {
+	required double x = 1;
+	required double y = 2;
+	optional int32 type = 3;
+}
+
+message Lieu {
+	required string nom = 1;
+	optional Geocode geo = 2;
+}
+
+message PointEtape {
+	required Lieu lieu = 1;
+	required DateHeure date = 2;
+}
+message Etape {
+	required PointEtape depart = 1;
+	required PointEtape arrivee = 2;
+	required Mode mode = 3;
+}
+
+message FeuilleRoute {
+	repeated Etape etapes = 1;
+	required int32 nbchanges = 2;
+	required int32 duree = 3;
+}
+
+message Trajet {
+	required int32 mode = 1;
+	required string ligne = 2;
+	repeated Geocode pas = 3;
+}
+
+message ItineraireDetail {
+	repeated Trajet trajets = 1;
+}
+
+message Planner {
+	required FeuilleRoute feuilleroute = 1;
+	required ItineraireDetail itineraire = 2;
 }
 
 
+message Response{
+    required API requested_api = 1;
+    optional string error = 2;
+
+    optional string info = 3;
+
+    optional FirstLetter firstletter = 4;
+
+    optional PTReferential ptref = 5;
+
+    optional StreetNetwork street_network = 6;
+ 
+    optional Planner planner = 7;	
+
+}

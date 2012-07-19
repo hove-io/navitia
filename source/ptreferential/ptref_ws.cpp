@@ -1,5 +1,4 @@
 #include "baseworker.h"
-#include "configuration.h"
 #include <iostream>
 #include "ptreferential.h"
 
@@ -27,7 +26,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData load(RequestData, navitia::type::Data & d) {
         //attention c'est mal, pas de lock sur data
         ResponseData rd;
-        d.load_flz("data.nav.flz");
+        d.load_lz4("data.nav.flz");
         d.loaded = true;
         rd.response << "loaded!";
         rd.content_type = "text/html";

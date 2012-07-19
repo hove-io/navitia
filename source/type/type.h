@@ -10,11 +10,12 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bimap.hpp>
 #include <boost/mpl/map.hpp>
-
+#include <numeric>
 namespace mpl = boost::mpl;
 
 namespace navitia { namespace type {
 typedef unsigned int idx_t;
+const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
 enum Type_e {eValidityPattern = 0,
     eLine = 1,
     eRoute = 2,
@@ -51,7 +52,7 @@ struct NavitiaHeader{
     std::string id;
     idx_t idx;
     std::string external_code;
-    NavitiaHeader() : idx(0){}
+    NavitiaHeader() : idx(invalid_idx){}
     std::vector<idx_t> get(Type_e, const PT_Data &) const {return std::vector<idx_t>();}
 
 };
@@ -93,26 +94,31 @@ struct GeographicalCoord{
       *
       * Si c'est des coordonnées non degrés, alors on utilise la distance euclidienne
       */
-    double distance_to(const GeographicalCoord & other);
+    double distance_to(const GeographicalCoord & other) const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & x & y;
     }
 
     GeographicalCoord convert_to(const Projection& projection, const Projection& current_projection = Projection()) const;
-
-
 };
+
+std::ostream & operator<<(std::ostream &_os, const GeographicalCoord & coord);
+
+// Deux points sont considérés comme étant égaux s'ils sont du même type de coordonnées
+// et si la distance entre eux est inférieure à 1mm
+bool operator==(const GeographicalCoord & a, const GeographicalCoord & b);
 
 struct Country: public NavitiaHeader, Nameable {
     const static Type_e type = eCountry;
     idx_t main_city_idx;
     std::vector<idx_t> district_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-
         ar & name & main_city_idx & district_list & idx;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+
+    Country() : main_city_idx(invalid_idx) {}
 };
 
 struct District : public NavitiaHeader, Nameable {
@@ -123,6 +129,8 @@ struct District : public NavitiaHeader, Nameable {
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & main_city_idx & country_idx & department_list & idx;
     }
+
+    District() : main_city_idx(invalid_idx), country_idx(invalid_idx) {}
 };
 
 struct Department : public NavitiaHeader, Nameable {
@@ -133,6 +141,8 @@ struct Department : public NavitiaHeader, Nameable {
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & main_city_idx & district_idx & city_list & idx;
     }
+
+    Department() : main_city_idx(invalid_idx), district_idx(invalid_idx) {}
 };
 
 
@@ -153,7 +163,7 @@ struct City : public NavitiaHeader, Nameable {
     std::vector<idx_t> hang_list;
     std::vector<idx_t> odt_list;
 
-    City() : main_city(false), use_main_stop_area_property(false), department_idx(0){}
+    City() : main_city(false), use_main_stop_area_property(false), department_idx(invalid_idx){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & department_idx & coord & idx;
@@ -169,7 +179,7 @@ struct Connection: public NavitiaHeader{
     int duration;
     int max_duration;
 
-    Connection() : departure_stop_point_idx(0), destination_stop_point_idx(0), duration(0),
+    Connection() : departure_stop_point_idx(invalid_idx), destination_stop_point_idx(invalid_idx), duration(0),
         max_duration(0){};
     
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -185,10 +195,10 @@ struct StopArea : public NavitiaHeader, Nameable{
     idx_t city_idx;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & external_code & name & city_idx & coord;
+        ar & id & idx & external_code & name & city_idx & coord & stop_point_list;
     }
 
-    StopArea(): properties(0), city_idx(0){}
+    StopArea(): properties(0), city_idx(invalid_idx){}
 
     std::vector<idx_t> stop_point_list;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -252,6 +262,8 @@ struct Mode : public NavitiaHeader, Nameable{
         ar & id & idx & name & external_code & mode_type_idx & idx;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+
+    Mode() : mode_type_idx(invalid_idx) {}
 };
 
 struct Line : public NavitiaHeader, Nameable {
@@ -274,17 +286,16 @@ struct Line : public NavitiaHeader, Nameable {
     std::vector<idx_t> backward_route;
 
     std::vector<idx_t> impact_list;
-    std::vector<idx_t> validity_pattern_list;
 
     idx_t forward_direction_idx;
     idx_t backward_direction_idx;
 
-    Line(): sort(0), mode_type_idx(0), network_idx(0), forward_direction_idx(0), backward_direction_idx(0){}
+    Line(): sort(0), mode_type_idx(invalid_idx), network_idx(invalid_idx), forward_direction_idx(invalid_idx), backward_direction_idx(invalid_idx){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & external_code & code & forward_name & backward_name & additional_data & color
                 & sort & mode_type_idx & mode_list & company_list & network_idx & forward_direction_idx & backward_direction_idx
-                & impact_list & validity_pattern_list;
+                & impact_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
@@ -296,7 +307,6 @@ struct Route : public NavitiaHeader, Nameable{
     bool is_adapted;
     idx_t line_idx;
     idx_t mode_type_idx;
-    idx_t associated_route_idx;
     
     std::vector<idx_t> route_point_list;
     std::vector<idx_t> freq_route_point_list;
@@ -304,11 +314,12 @@ struct Route : public NavitiaHeader, Nameable{
     std::vector<idx_t> vehicle_journey_list;
     std::vector<idx_t> impact_list;
 
-    Route(): is_frequence(false), is_forward(false), is_adapted(false), line_idx(0), mode_type_idx(0), associated_route_idx(0){};
+
+    Route(): is_frequence(false), is_forward(false), is_adapted(false), line_idx(invalid_idx), mode_type_idx(invalid_idx) {};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & external_code & is_frequence & is_forward & is_adapted & mode_type_idx
-                & line_idx & associated_route_idx & route_point_list & freq_route_point_list & freq_setting_list
+                & line_idx & route_point_list & freq_route_point_list & freq_setting_list
                 & vehicle_journey_list & impact_list;
     }
 
@@ -325,7 +336,7 @@ struct VehicleJourney: public NavitiaHeader, Nameable {
     idx_t validity_pattern_idx;
     std::vector<idx_t> stop_time_list;
 
-    VehicleJourney(): route_idx(0), company_idx(0), mode_idx(0), vehicle_idx(0), is_adapted(false), validity_pattern_idx(0), stop_time_list(){}
+    VehicleJourney(): route_idx(invalid_idx), company_idx(invalid_idx), mode_idx(invalid_idx), vehicle_idx(invalid_idx), is_adapted(false), validity_pattern_idx(invalid_idx) {}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & is_adapted & validity_pattern_idx & idx & stop_time_list;
     }
@@ -361,12 +372,13 @@ struct RoutePoint : public NavitiaHeader{
     idx_t stop_point_idx;
 
     std::vector<idx_t> impact_list;
+    std::vector<idx_t> vehicle_journey_list;
 
-    RoutePoint() : order(0), main_stop_point(false), fare_section(0), route_idx(0), stop_point_idx(0){}
+    RoutePoint() : order(0), main_stop_point(false), fare_section(0), route_idx(invalid_idx), stop_point_idx(invalid_idx){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & id & idx & external_code & order & main_stop_point & fare_section & route_idx 
-                & stop_point_idx & impact_list;
+                & stop_point_idx & impact_list & order & vehicle_journey_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
@@ -379,7 +391,7 @@ public:
     std::bitset<366> days;
     boost::gregorian::date beginning_date;
     idx_t idx;
-    ValidityPattern() : idx(0) {}
+    ValidityPattern() : idx(invalid_idx) {}
     ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date), idx(0){}
     int slide(boost::gregorian::date day);
     void add(boost::gregorian::date day);
@@ -416,7 +428,7 @@ struct StopPoint : public NavitiaHeader, Nameable{
         ar & external_code & name & stop_area_idx & mode_idx & coord & fare_zone & idx & route_point_list;
     }
 
-    StopPoint(): fare_zone(0),  stop_area_idx(0), city_idx(0), mode_idx(0), network_idx(0){}
+    StopPoint(): fare_zone(0),  stop_area_idx(invalid_idx), city_idx(invalid_idx), mode_idx(invalid_idx), network_idx(invalid_idx){}
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -433,12 +445,12 @@ struct StopTime: public NavitiaHeader{
     int zone;
 
 
-    StopTime(): arrival_time(0), departure_time(0), vehicle_journey_idx(0), route_point_idx(0), order(0), 
+    StopTime(): arrival_time(0), departure_time(0), vehicle_journey_idx(invalid_idx), route_point_idx(invalid_idx), order(0),
         ODT(false), zone(0){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
             ar & arrival_time & departure_time & vehicle_journey_idx & route_point_idx & order & ODT & zone 
-                & idx & id & external_code;
+                & idx & id & external_code ;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 

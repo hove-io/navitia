@@ -7,7 +7,7 @@ using namespace navimake::types;
 
 bool ValidityPattern::is_valid(int duration){
     if(duration < 0){
-        std::cerr << "La date est avant le début de période" << std::endl;
+        std::cerr << "La date est avant le début de période " << beginning_date << " " << duration <<  std::endl;
         return false;
     }
     else if(duration > 366){
@@ -81,7 +81,7 @@ bool Line::operator<(const Line& other) const {
 
 bool Route::operator<(const Route& other) const {
     if(this->line == other.line){
-        return this->name < other.name;
+        return this->external_code <  other.external_code;
     }else{
         return *(this->line) < *(other.line);
     }
@@ -93,6 +93,7 @@ bool RoutePoint::operator<(const RoutePoint& other) const {
     }else{
         return *(this->route) < *(other.route);
     }
+
 }
 
 
@@ -139,7 +140,12 @@ bool ValidityPattern::operator <(const ValidityPattern &other) const {
 bool Connection::operator<(const Connection& other) const{
     return *(this->departure_stop_point) < *(other.departure_stop_point);
 }
+bool StopTime::operator<(const StopTime& other) const {
 
+    return this->route_point->route < other.route_point->route
+            || ((this->route_point->route == other.route_point->route) && (this->vehicle_journey< other.vehicle_journey
+            || ((this->vehicle_journey == other.vehicle_journey) && (this->order< other.order))));
+}
 
 navitia::type::StopArea StopArea::Transformer::operator()(const StopArea& stop_area){
     navitia::type::StopArea sa;
@@ -192,6 +198,7 @@ nt::StopPoint StopPoint::Transformer::operator()(const StopPoint& stop_point){
     
     if(stop_point.stop_area != NULL)
         nt_stop_point.stop_area_idx = stop_point.stop_area->idx;
+
 
     if(stop_point.mode != NULL)
         nt_stop_point.mode_idx = stop_point.mode->idx;
@@ -349,6 +356,7 @@ nt::VehicleJourney VehicleJourney::Transformer::operator()(const VehicleJourney&
 
     if(vj.validity_pattern != NULL)
         nt_vj.validity_pattern_idx = vj.validity_pattern->idx;
+
     return nt_vj;
 }
 nt::ValidityPattern ValidityPattern::Transformer::operator()(const ValidityPattern& vp){

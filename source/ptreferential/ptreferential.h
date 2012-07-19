@@ -37,13 +37,17 @@ google::protobuf::Message* get_message(pbnavitia::PTReferential * row, Type_e ty
 
 /// Exécute une requête sur les données Data
 /// Retourne une matrice 2D de chaînes de caractères
-pbnavitia::PTReferential query(std::string request, navitia::type::PT_Data & data);
+pbnavitia::PTReferential query(std::string request, type::PT_Data & data);
 
+/// Exporte le message protocol buffer au format texte
 std::string pb2txt(const google::protobuf::Message* response);
-std::string pb2xml(pbnavitia::PTReferential& response);
 
-
+/// Trouve le chemin d'un type de données à un autre
+/// Par exemple StopArea → StopPoint → RoutePoint
 std::vector<Type_e> find_path(Type_e source);
+
+/// À parti d'un élément, on veut retrouver tous ceux de destination
+std::vector<type::idx_t> get(Type_e source, Type_e destination, type::idx_t source_idx, type::PT_Data & data);
 
 
 google::protobuf::Message* add_item(google::protobuf::Message* message, const std::string& table);

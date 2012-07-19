@@ -24,7 +24,7 @@ La qualité des données qui alimentent le système impacte l’ensemble de la c
 Interfaces
 **********
 
-Les articulations présentés dans le schéma du chapitre 'Organisation des modules_' s’articulent 
+Les modules présentés dans le schéma du chapitre 'Organisation des modules'_ s’articulent 
 autour d’interfaces techniques standardisées http/XML (tous les modules sont des web-services REST). 
 Sur ces standards, la suite NAViTiA définie son propre langage d’échange afin d’échanger les informations entre les différents modules et avec 
 les applications tierces. Ce langage d’échange est nommé "interface d’échange NAViTiA".
@@ -91,5 +91,5 @@ Flux entre les services
 Les modules FUSiO, NAViTiA et Alerte-Trafic sont hébergés par Canal TP. Leur mise à disposition est donc géré par Canal TP et transparente pour l’utilisateur.
 Si l’application média n’est pas hébergée par Canal TP, il faut vérifier :
 
-* L’application qui interroge le hub NAViTiA doit avoir accès à tout le domaine http://*.navitia.com
+* L’application qui interroge le hub NAViTiA doit avoir accès à tout le domaine 'http://*.navitia.com'
 * La mise en œuvre d’une intégration spécifique du site de fabrication manuelle des informations perturbées (module Alerte-trafic/site de création des messages) nécessite un accès à NAViTiA-SIV.

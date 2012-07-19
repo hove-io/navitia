@@ -20,7 +20,7 @@ int main(int argc, char * argv[])
         ("type,t", po::value<std::string>(&type), "Type du format d'entrée [fusio, gtfs]")
         ("date,d", po::value<std::string>(&date), "Date de début")
         ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
-        ("topo", po::value<std::string>(&topo_path)->default_value(""), "Repertoire contenant la bd topo")
+        ("topo", po::value<std::string>(&topo_path), "Repertoire contenant la bd topo")
         ("output,o", po::value<std::string>(&output)->default_value("data.nav"), "Fichier de sortie")
         ("outputsn", po::value<std::string>(&outputsn)->default_value("data.sn.nav"), "Fichier de sortie");
 
@@ -39,27 +39,36 @@ int main(int argc, char * argv[])
     pt::ptime start, end;
     int read, clean, sort, transform, save, first_letter, sn;
 
-//    navimake::connectors::BDTopoParser topo_parser(topo_path);
+    navimake::Data data; // Structure temporaire
+    navitia::type::Data nav_data; // Structure définitive
 
-    navimake::Data data;
-    {
-        start = pt::microsec_clock::local_time();
-        if(type == "fusio") {
-            navimake::connectors::CsvFusio connector(input, date);
-            connector.fill(data);
-        }
-        else if(type == "gtfs") {
-            navimake::connectors::GtfsParser connector(input, date);
-            connector.fill(data);
-            //gtfs ne contient pas le référentiel des villes, on le charges depuis la BDTOPO
-            //topo_parser.load_city(data);
-        }
-        else {
-            std::cout << desc << "\n";
-            return 1;
-        }
-        read = (pt::microsec_clock::local_time() - start).total_milliseconds();
+    // Est-ce que l'on charge la carto ?
+    start = pt::microsec_clock::local_time();
+    if(vm.count("topo")){
+        navimake::connectors::BDTopoParser topo_parser(topo_path);
+        //gtfs ne contient pas le référentiel des villes, on le charges depuis la BDTOPO
+        topo_parser.load_city(data);
+        topo_parser.load_streetnetwork(nav_data.street_network);
+        nav_data.set_cities(); // Assigne les villes aux voiries du filaire
     }
+    sn = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+
+    start = pt::microsec_clock::local_time();
+    if(type == "fusio") {
+        navimake::connectors::CsvFusio connector(input, date);
+        connector.fill(data);
+    }
+    else if(type == "gtfs") {
+        navimake::connectors::GtfsParser connector(input, date);
+        connector.fill(data);
+    }
+    else {
+        std::cout << desc << "\n";
+        return 1;
+    }
+    read = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
 
     std::cout << "line: " << data.lines.size() << std::endl;
     std::cout << "route: " << data.routes.size() << std::endl;
@@ -73,33 +82,26 @@ int main(int argc, char * argv[])
     std::cout << "modes: " << data.modes.size() << std::endl;
     std::cout << "validity pattern : " << data.validity_patterns.size() << std::endl;
 
-
     start = pt::microsec_clock::local_time();
     data.clean();
     clean = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
     start = pt::microsec_clock::local_time();
     data.sort();
     sort = (pt::microsec_clock::local_time() - start).total_milliseconds();
-
-    navitia::type::Data nav_data;
 
     start = pt::microsec_clock::local_time();
     data.transform(nav_data.pt_data);
     transform = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
-    //street network => temporaire
-    start = pt::microsec_clock::local_time();
-//    topo_parser.load_streetnetwork(nav_data.street_network);
-//    nav_data.build_proximity_list();
-//    nav_data.set_cities(); // Assigne les villes aux voiries du filaire
-    sn = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     start = pt::microsec_clock::local_time();
     nav_data.build_first_letter();
     first_letter = (pt::microsec_clock::local_time() - start).total_milliseconds();
+    std::cout <<"Debut sauvegarde ..." << std::endl;
     start = pt::microsec_clock::local_time();
-    nav_data.save_flz(output);
-//    nav_data.street_network.save_flz(outputsn);
+
+    nav_data.lz4(output);
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     std::cout << "temps de traitement" << std::endl;

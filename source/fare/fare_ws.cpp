@@ -2,7 +2,7 @@
 /** Exemple de webservice : il affiche le nombre de requêtes traitées par le webservice et par le thread courant */
 
 #include "baseworker.h"
-#include "configuration.h"
+#include "utils/configuration.h"
 #include "fare.h"
 #include <iostream>
 #include <fstream>

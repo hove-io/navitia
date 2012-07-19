@@ -9,7 +9,7 @@
 
 namespace nt = navitia::type;
 
-namespace navimake{namespace types{
+namespace navimake{ namespace types{
 
 typedef unsigned int idx_t;
 
@@ -250,11 +250,13 @@ struct VehicleJourney: public TransmodelHeader, Nameable{
     Route* route;
     Company* company;
     Mode* mode;
+    Line * tmp_line; // N'est pas à remplir obligatoirement
     //Vehicle* vehicle;
     bool is_adapted;
 
     ValidityPattern* validity_pattern;
-    std::vector<StopTime*> stop_time_list;
+    std::vector<StopTime*> stop_time_list; // N'est pas à remplir obligatoirement
+    StopTime * first_stop_time;
 
     struct Transformer{
         inline navitia::type::VehicleJourney operator()(const VehicleJourney* vj){return this->operator()(*vj);}
@@ -307,7 +309,7 @@ private:
 public:
     boost::gregorian::date beginning_date;
     ValidityPattern(){}
-    ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date){}
+    ValidityPattern(boost::gregorian::date beginning_date, const std::string & vp = "") : days(vp), beginning_date(beginning_date){}
     void add(boost::gregorian::date day);
     void add(int day);
     void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
@@ -354,6 +356,7 @@ struct StopTime: public TransmodelHeader {
     int departure_time; ///< En secondes depuis minuit
     VehicleJourney* vehicle_journey;
     RoutePoint* route_point;
+    StopPoint * tmp_stop_point;// ne pas remplir obligatoirement
     int order;
     bool ODT;
     int zone;
@@ -367,7 +370,7 @@ struct StopTime: public TransmodelHeader {
         ODT(false), zone(0){}
 
 
-    bool operator<(const StopTime& other){return this->departure_time < other.departure_time;}
+    bool operator<(const StopTime& other) const;
 };
 
 }}//end namespace navimake::types

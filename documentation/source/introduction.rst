@@ -105,13 +105,13 @@ Ce module est chargé de la diffusion de l’information de l’offre en transpo
 .. warning::
    Pour la mise en place de statistiques métiers (observatoire des demandes de déplacement), une description détaillée des besoins doit être fournie à Canal TP.
 
-Pour tout complément de description, voir le document de référence NAViTiA-SIV "NAViTiA_Document de référence.doc".
+Les chapitres suivant décrivent l'intégralité des fonctions de ce module.
 
 Diffusion vers les médias
 *************************
 
-Média intégré EZ-Publish
-++++++++++++++++++++++++
+Média intégré Canal TP
+++++++++++++++++++++++
 
 Cette intégration « type » permet de diffuser l’information sur différents médias :
 
@@ -120,7 +120,7 @@ Cette intégration « type » permet de diffuser l’information sur différents
 * Site mobile
 * ...
 
-Le module EZ-Publish permet également de gérer l’ensemble du contenu des rubriques annexe au module NAViTiA-SIV : 
+L'intégration proposée par Canal TP permet également de gérer l’ensemble du contenu des rubriques annexes au hub NAViTiA : 
 information touristique, information sur les tarifs, sur les points de ventes...
 
 Développement d’un média spécifique
@@ -134,4 +134,4 @@ Le développement d’une application de mise en forme spécifique permet de red
 * Site internet spécifique.
 
 Le développement d’une interface spécifique doit suivre les préconisations décries 
-dans le document d’intégration "NAViTiA_Manuel_Integration" et être suivie dans le cadre d’un "projet d’intégration NAViTiA" par Canal TP.
+dans la suite de cette documentation et être suivie dans le cadre d’un "projet d’intégration NAViTiA" par Canal TP.

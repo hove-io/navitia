@@ -40,7 +40,7 @@ void navisu::menuAction(QAction * action){
         try{
             filename = QFileDialog::getOpenFileName(this, "Ouvrir un fichier de données NAViTiA2");
             ui->statusbar->showMessage("Loading " + filename + "...");
-            d.load_flz(filename.toStdString());
+            d.load_lz4(filename.toStdString());
             ui->statusbar->showMessage("Loading done " + filename);
         }catch(std::exception e){
             QErrorMessage * err = new QErrorMessage(this);

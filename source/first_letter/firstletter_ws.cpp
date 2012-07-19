@@ -1,5 +1,4 @@
 #include "baseworker.h"
-#include "configuration.h"
 #include <iostream>
 #include "type/data.h"
 #include "type/type.pb.h"
@@ -86,10 +85,14 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData firstletter(RequestData& request, navitia::type::Data & d){
         ResponseData rd;
 
+        pbnavitia::Response pb_response;
+        pb_response.set_requested_api(pbnavitia::FIRSTLETTER);
+
         if(!request.params_are_valid){
             rd.status_code = 500;
-            rd.content_type = "text/plain";
-            rd.response << "invalid argument";
+            rd.content_type = "application/octet-stream";
+            pb_response.set_error("invalid argument");
+            pb_response.SerializeToOstream(&rd.response);
             return rd;
         }
 
@@ -100,8 +103,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
         if(!locker.locked){
             //on est en cours de chargement
             rd.status_code = 500;
-            rd.content_type = "text/plain";
-            rd.response << "loading";
+            rd.content_type = "application/octet-stream";
+            pb_response.set_error("loading");
+            pb_response.SerializeToOstream(&rd.response);
             return rd;
         }
 
@@ -110,7 +114,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         name = boost::get<std::string>(request.parsed_params["name"].value);
         std::vector<nt::idx_t> result;
         try{
-            pbnavitia::FirstLetter pb;
+            pbnavitia::FirstLetter* pb = pb_response.mutable_firstletter();
             BOOST_FOREACH(nt::Type_e type, filter){
                 switch(type){
                 case nt::eStopArea:
@@ -119,9 +123,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
                     result = d.pt_data.city_first_letter.find(name);break;
                 default: break;
                 }
-                create_pb(result, type, d, pb);
+                create_pb(result, type, d, *pb);
             }
-            pb.SerializeToOstream(&rd.response);
+            pb_response.SerializeToOstream(&rd.response);
             rd.content_type = "application/octet-stream";
             rd.status_code = 200;
         }catch(...){
@@ -132,10 +136,14 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     
     ResponseData load(RequestData, navitia::type::Data & d){
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+        Configuration * conf = Configuration::get();
+        std::string database = conf->get_as<std::string>("GENERAL", "database", "data.flz");
+        LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
         ResponseData rd;
         d.load_mutex.lock();
         d.loaded = true;
-        d.load_flz("/home/tristram/idf.flz");
+        d.load_lz4(database);
         d.load_mutex.unlock();
         rd.response << "loaded!";
         rd.content_type = "text/html";

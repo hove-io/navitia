@@ -20,9 +20,13 @@ int main(int argc, char** argv){
                  "  / /_/ / / / / ___/ _ \\/ /_/ _ \\/ ___/ _ \\/ __ \\/ __/ / __ `/ /\n"
                  " / ____/ / / / /  /  __/ __/  __/ /  /  __/ / / / /_/ / /_/ / /\n"
                  "/_/     /_/ /_/   \\___/_/  \\___/_/   \\___/_/ /_/\\__/_/\\__,_/_/\n\n";
+    if(argc != 2) {
+        std::cout << "Utilisation : " << argv[0] << " base_de_données" << std::endl;
+        return 1;
+    }
     std::cout << "Chargement des données..." << std::flush;
     Data d;
-    d.load_flz("idf_flz.nav");
+    d.load_lz4(argv[1]);
     std::cout << " effectué" << std::endl << std::endl;
 
     std::cout
@@ -33,7 +37,7 @@ int main(int argc, char** argv){
             << "    Nombre d'horaires : " << d.pt_data.stop_times.size() << std::endl << std::endl;
 
 
-    if(argc == 1) {
+    if(argc == 2) {
         static char *line_read = (char *)NULL;
         for(;;){
             if (line_read)
@@ -62,7 +66,7 @@ int main(int argc, char** argv){
 
         }
     }
-    else if (argc == 2){
+    else if (argc == 3){
         pbnavitia::PTReferential result = navitia::ptref::query(argv[1], d.pt_data);
         std::cout << "octets généré en protocol buffer: " << result.ByteSize() << std::endl;
         std::cout << navitia::ptref::pb2txt(&result);

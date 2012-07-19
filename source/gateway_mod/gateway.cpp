@@ -11,14 +11,14 @@
 
 
 Worker::Worker(Pool &){
-    register_api("query", boost::bind(&Worker::handle, this, _1, _2), "traite les requétes");
+    register_api("/", boost::bind(&Worker::handle, this, _1, _2), "traite les requétes");
     register_api("firstletter", boost::bind(&Worker::handle, this, _1, _2), "traite les requètes");
     register_api("streetnetwork", boost::bind(&Worker::handle, this, _1, _2), "traite les requètes");
+    register_api("planner", boost::bind(&Worker::handle, this, _1, _2), "planne les requêtes");
     register_api("load", boost::bind(&Worker::load, this, _1, _2), "traite les requétes");
     register_api("register", boost::bind(&Worker::register_navitia, this, _1, _2), "ajout d'un NAViTiA au pool");
     register_api("status", boost::bind(&Worker::status, this, _1, _2), "status");
     register_api("unregister", boost::bind(&Worker::unregister_navitia, this, _1, _2), "suppression d'un NAViTiA du pool");
-
 }
 
 
@@ -41,11 +41,12 @@ webservice::ResponseData Worker::register_navitia(webservice::RequestData& reque
     }
     auto it = request.params.find("thread");
     if(it != request.params.end()){
+        //@TODO: std::lexical_cast
         thread = atoi(it->second.c_str());
     }
 
     //TODO valider l'url
-    pool.add_navitia(new Navitia(request.params["url"], thread));
+    pool.add_navitia(std::make_shared<Navitia>(request.params["url"], thread));
 
     return status(request, pool);
 }
@@ -75,12 +76,13 @@ webservice::ResponseData Worker::handle(webservice::RequestData& request, Pool& 
 
 webservice::ResponseData Worker::load(webservice::RequestData& request, Pool& pool){
     //TODO gestion de la desactivation
-    BOOST_FOREACH(Navitia* nav, pool.navitia_list){
+    BOOST_FOREACH(auto nav, pool.navitia_list){
         try{
             nav->load();
         }catch(RequestException& ex){
             if(ex.timeout){
                 //le rechargement est trop long, rien de dramatique, on enchaine
+                // ==> euh si, ca serait balot d'avoir tous les moteurs qui load en meme temps
                 continue;
             }
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -97,7 +99,7 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
     do{
         ok = true;
         nb_try++;
-        Navitia* nav = pool.next();
+        auto nav = pool.next();
         try{
             res = nav->query(request.path.substr(request.path.find_last_of('/')) + "?" + request.raw_params);
             pool.release_navitia(nav);
@@ -110,15 +112,15 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
             response.status_code = ex.code;
             continue;
         }
-        std::unique_ptr<google::protobuf::Message> resp = create_pb(request);
+        auto resp = create_pb();
         if(resp->ParseFromString(res.second)){
-            /*if(resp->has_error()){
+            if(resp->has_error()){
                 ok = false;
                 nav->on_error();
                 context.str = resp->error();
                 context.service = Context::BAD_RESPONSE;
                 continue;
-            }*/
+            }
             context.pb = std::move(resp);
             context.service = Context::PTREF;
         }else{
