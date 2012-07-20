@@ -26,8 +26,7 @@ struct McRAPTOR : navitia::routing::raptor::communRAPTOR {
         label_visitor_t &label_vistor;
         dominates(label_template &best, label_visitor_t &label_vistor) : best(best), label_vistor(label_vistor) {}
         bool operator()(const label_template &lbl) {
-
-            return !label_vistor.dominated_by(best, lbl);
+            return label_vistor.dominated_by(lbl, best);
         }
     };
 
@@ -105,7 +104,7 @@ struct McRAPTOR : navitia::routing::raptor::communRAPTOR {
 
 
     struct bags_t {
-        std::list<unsigned int> destinations;
+        std::vector<unsigned int> destinations;
         McRAPTOR * raptor;
         boost::unordered_map<std::pair<unsigned int, unsigned int>, Bag> bags;
         boost::unordered_map<int, Best_Bag>best_bags;
@@ -114,7 +113,7 @@ struct McRAPTOR : navitia::routing::raptor::communRAPTOR {
 
         bags_t() : destinations() {}
 
-        bags_t(unsigned int p, std::list<unsigned int>destinations, McRAPTOR * raptor) : destinations(destinations), raptor(raptor) {
+        bags_t(unsigned int p, std::vector<unsigned int>destinations, McRAPTOR * raptor) : destinations(destinations), raptor(raptor) {
             for(unsigned int i = 0; i < p; ++i) {
                 best_bags.insert(std::make_pair(i, Best_Bag(raptor, i)));
             }
@@ -122,7 +121,7 @@ struct McRAPTOR : navitia::routing::raptor::communRAPTOR {
             best_bag_dest.raptor = raptor;
         }
 
-        void init(unsigned int p, std::list<unsigned int>destinations_, McRAPTOR * raptor_) {
+        void init(unsigned int p, std::vector<unsigned int>destinations_, McRAPTOR * raptor_) {
             destinations = destinations_;
             raptor = raptor_;
             for(unsigned int i = 0; i < p; ++i) {
@@ -159,7 +158,7 @@ struct McRAPTOR : navitia::routing::raptor::communRAPTOR {
         BOOST_FOREACH(auto depart, departs_) {
             departs[depart.first] = label_template(depart.second);
         }
-        std::list<unsigned int> destinations;
+        std::vector<unsigned int> destinations;
 
         BOOST_FOREACH(auto destination, destinations_) {
             destinations.push_back(destination.first);
@@ -167,8 +166,8 @@ struct McRAPTOR : navitia::routing::raptor::communRAPTOR {
         return compute_raptor(departs, destinations);
     }
 
-    std::vector<Path> compute_raptor_all(map_int_T departs, std::list<unsigned int> destinations);
-    Path compute_raptor(map_int_T departs, std::list<unsigned int> destinations);
+    std::vector<Path> compute_raptor_all(map_int_T departs, std::vector<unsigned int> destinations);
+    Path compute_raptor(map_int_T departs, std::vector<unsigned int> destinations);
 
 
 };

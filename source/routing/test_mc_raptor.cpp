@@ -63,16 +63,16 @@ struct DateTimeCritereVisitor {
 int main(int, char **) {
 
     navitia::type::Data d;
-    d.load_lz4("/home/vlara/navitia/jeu/poitiers/poitiers.nav");
+//    d.load_lz4("/home/vlara/navitia/jeu/poitiers/poitiers.nav");
 
-//    navimake::builder b("20120614");
-//    b.vj("A")("stop1", 23*3600)("stop2", 24*3600 + 5*60);
-//    b.vj("B")("stop2", 10*60)("stop3", 20*60);
-//    d.pt_data = b.build();
+    navimake::builder b("20120614");
+    b.vj("A")("stop1", 8000)("stop2", 8100)("stop3", 8200);
+    b.vj("B")("stop4", 8000)("stop2", 8200)("stop5", 8300);
+    d.pt_data = b.build();
 
 
     raptor::mcraptor::McRAPTOR<DateTimeCritere, DateTimeCritereVisitor> dtraptor(d, DateTimeCritereVisitor(d));
-    dtraptor.compute(0, 2, 8*3600, 10);
+    dtraptor.compute(0, 4, 7900, 0);
 
 
 }
