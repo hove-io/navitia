@@ -150,5 +150,51 @@ BOOST_AUTO_TEST_CASE(default_test) {
     testdate = boost::gregorian::date(2012,7,16);
     BOOST_CHECK_EQUAL(testtranslation.week_map[2].startdate, testdate);
 
+    testtranslation.translate();
 
+    MakeTranslation::target targetresponse;
+    for(std::map<int, MakeTranslation::target>::iterator it = testtranslation.target_map.begin(); it!= testtranslation.target_map.end(); it++) {
+        targetresponse = it->second;
+        std::cout << targetresponse.week_bs.to_string()<<std::endl;
+        for(std::vector<boost::gregorian::date>::iterator it2 = targetresponse.periodlist.begin(); it2!= targetresponse.periodlist.end(); it2++) {
+            std::cout << *it2 <<std::endl;;
+        }
+
+        testCS="111111100000001111111";
+        testdate= boost::gregorian::date(2012,7,2);
+        response = testtranslation.initcs(testdate, testCS);
+        BOOST_CHECK_EQUAL(response, true);
+        BOOST_CHECK_EQUAL(testtranslation.CS, "111111100000001111111");
+        testdate = boost::gregorian::date(2012,7,2);
+        BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
+
+        testdate = boost::gregorian::date(2012,7,22);
+        BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
+
+        //test de la decoupe de la condition de service
+        testtranslation.splitcs();
+        BOOST_CHECK_EQUAL(testtranslation.week_map[0].week_bs.to_string(), "1111111");
+        testdate = boost::gregorian::date(2012,7,2);
+        BOOST_CHECK_EQUAL(testtranslation.week_map[0].startdate, testdate);
+
+        BOOST_CHECK_EQUAL(testtranslation.week_map[1].week_bs.to_string(), "0000000");
+        testdate = boost::gregorian::date(2012,7,9);
+        BOOST_CHECK_EQUAL(testtranslation.week_map[1].startdate, testdate);
+
+        BOOST_CHECK_EQUAL(testtranslation.week_map[2].week_bs.to_string(), "1111111");
+        testdate = boost::gregorian::date(2012,7,16);
+        BOOST_CHECK_EQUAL(testtranslation.week_map[2].startdate, testdate);
+
+        testtranslation.translate();
+
+        MakeTranslation::target targetresponse;
+
+        for(std::map<int, MakeTranslation::target>::iterator it = testtranslation.target_map.begin(); it!= testtranslation.target_map.end(); it++) {
+            targetresponse = it->second;
+            std::cout<<std::endl<< targetresponse.week_bs.to_string()<<std::endl;
+            for(std::vector<boost::gregorian::date>::iterator it2 = targetresponse.periodlist.begin(); it2!= targetresponse.periodlist.end(); it2++) {
+                std::cout << *it2 <<std::endl;;
+            }
+        }
+    }
 }

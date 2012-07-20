@@ -37,6 +37,7 @@ int MakeTranslation::getnextmonday(boost::gregorian::date datetocompare, short s
 }
 
 void MakeTranslation::splitcs(){
+    target_map.clear();
 //    on recherche la position du premier lundi dans la chaine
     std::string substr;
     short int weeknumber = 0;
@@ -49,21 +50,24 @@ void MakeTranslation::splitcs(){
     //tant que le prochain lundi est inférieur à enddate, on découpe le régime
         if(pos < CS.length()){
             substr = CS.substr(precpos, pos - precpos);
-//            weekstartdate = weekstartdate + boost::gregorian::date_duration(pos);
         } else {
             substr = "0000000";
             substr.replace(0, CS.length() - precpos, CS.substr(precpos, CS.length() - precpos));
-//            weekstartdate = weekstartdate + boost::gregorian::date_duration(CS.length() - precpos);
         };
         week_map[weeknumber].startdate = weekstartdate;
         //initialisation du bitset
         week_map[weeknumber].week_bs = std::bitset<7>(std::string(substr));
-        std::map<int, week>::iterator it;
-        it = week_list.find(week_map[weeknumber].week_bs.to_ulong());
-        if (it != week_list.end()){
+        std::map<int, target>::iterator it;
+        it = target_map.find(week_map[weeknumber].week_bs.to_ulong());
+        if (it != target_map.end()){
             it->second.count++;
+            it->second.lastweeknumber = weeknumber;
         } else {
-            week_list[week_map[weeknumber].week_bs.to_ulong()] = week_map[weeknumber];
+            target& response = target_map[week_map[weeknumber].week_bs.to_ulong()];
+            response.week_bs = week_map[weeknumber].week_bs;
+            response.firstweeknumber = weeknumber;
+            response.used = false;
+            response.count = 1;
         };
 
         weekstartdate = weekstartdate + boost::gregorian::date_duration(pos - precpos);
@@ -71,4 +75,43 @@ void MakeTranslation::splitcs(){
         precpos = pos;
         pos = pos + 7;
     }
+}
+
+int MakeTranslation::getbesttarget(){
+    short int maxcount = 0;
+    int result= -1;
+
+    for(std::map<int, target>::iterator it=target_map.begin(); it!= target_map.end(); it++) {
+        if (!it->second.used && (it->second.count > maxcount)){
+            result = it->first;
+            maxcount = it->second.count;
+        };
+    }
+    return result;
+}
+
+
+void MakeTranslation::translate(){
+    int weekindice = -1;
+    int targetkey = getbesttarget();
+    boost::gregorian::date_duration shift(6);
+    while (targetkey >= 0){
+        target& response = target_map[targetkey];
+        for(std::map<int, week>::iterator it=week_map.begin(); it!= week_map.end(); it++) {
+            if (it->second.week_bs.to_ulong() == response.week_bs.to_ulong()){
+                if (weekindice != -1){
+                    response.periodlist.erase(response.periodlist.end());
+                    response.periodlist.push_back(it->second.startdate + shift);
+                } else {
+                    response.periodlist.push_back(it->second.startdate);
+                    response.periodlist.push_back(it->second.startdate + shift);
+                }
+                weekindice = it->first;
+            } else {
+                weekindice = -1;
+            }
+        }
+        response.used = true;
+        targetkey = getbesttarget();
+   }
 }
