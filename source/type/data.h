@@ -6,6 +6,7 @@
 #include "utils/logger.h"
 #include "utils/configuration.h"
 #include "boost/utility.hpp"
+#include "meta_data.h"
 
 namespace navitia { namespace type {
 
@@ -22,6 +23,8 @@ public:
     int nb_threads; //< Nombre de threads. IMPORTANT ! Sans cette variable, ça ne compile pas
     unsigned int version; //< Numéro de version des données chargées
     bool loaded; //< Est-ce que lse données ont été chargées
+
+    MetaData meta;
 
     // Référentiels de données
 

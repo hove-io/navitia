@@ -2,7 +2,7 @@
 #include <string>
 #include <boost/variant.hpp>
 #include <boost/utility/enable_if.hpp>
-#include <iostream>
+#include "utils/backtrace.h"
 
 namespace navitia{ namespace ptref {
 typedef boost::variant<std::string, int>  col_t;
@@ -11,16 +11,18 @@ typedef boost::variant<std::string, int>  col_t;
 struct PTRefException : public std::exception{
     // Constructeur de l'exception: msg représente le message, FunctionName représente la fonction
     //  qui a provoquée l'exception et FileName  le nom du fichier
-    PTRefException(const std::string msg, std::string FunctionName, std::string FileName){
-        this->msg = msg+", Fonction: ["+FunctionName+"], Fichier: ["+FileName+"]";
+    PTRefException(const std::string& msg): trace(10){
+        this->msg = msg + trace.get_BackTrace();
     }
     virtual ~PTRefException() throw(){}
 
     // Récupération du message
     virtual const char* what() const throw(){
-        return this->msg.c_str();
+        return (this->msg).c_str();
     }
-private:
+private:    
+    BackTrace trace;
+    // message d'erreur
     std::string msg;
 };
 

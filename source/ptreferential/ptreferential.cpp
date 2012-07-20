@@ -148,7 +148,7 @@ void set_value(google::protobuf::Message* message, const T& object, const std::s
     //std::cout << column << std::endl;
     if(field_descriptor == NULL){
         //throw unknown_member();
-        throw PTRefException("Le paramètre field_descriptor est indéfinit","set_value", "ptreferential.cpp");
+        throw PTRefException("Le paramètre field_descriptor est indéfinit");
     }
 
     if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_STRING){
@@ -157,7 +157,7 @@ void set_value(google::protobuf::Message* message, const T& object, const std::s
         reflection->SetInt32(message, field_descriptor, boost::get<int>(get_value(object, column)));
     }else{
         //throw bad_type();
-        throw PTRefException("Le paramètre field_descriptor->type est indéfinit","set_value", "ptreferential.cpp");
+        throw PTRefException("Le paramètre field_descriptor->type est indéfinit");
     }
 }
 
@@ -273,10 +273,10 @@ google::protobuf::Message* get_message(pbnavitia::PTReferential * row, Type_e ty
     const google::protobuf::FieldDescriptor* field_descriptor = descriptor->FindFieldByName(field);
     google::protobuf::Message* message;
     if (reflection == NULL){
-        throw PTRefException("Le paramètre reflection est indéfinit","get_message", "ptreferential.cpp");
+        throw PTRefException("Le paramètre reflection est indéfinit");
     }else{
         if (field_descriptor == NULL){
-            throw PTRefException("Le paramètre field_descriptor est indéfinit","get_message", "ptreferential.cpp");
+            throw PTRefException("Le paramètre field_descriptor est indéfinit");
         }else{
             message = reflection->AddMessage(row, field_descriptor);
         }
