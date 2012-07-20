@@ -1,4 +1,4 @@
-FIND_PACKAGE(Boost 1.40.0 COMPONENTS program_options REQUIRED)
+FIND_PACKAGE(Boost 1.40.0 COMPONENTS program_options filesystem system REQUIRED)
 
 SET(SOURCE_LIB
         connectors.cpp 
