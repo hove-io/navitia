@@ -10,9 +10,10 @@ using namespace navitia::routing;
 struct DateTimeCritere : public raptor::mcraptor::label_parent<DateTime> {
 
 
-    DateTimeCritere() : label_parent<DateTime>(){}
+    DateTimeCritere() : raptor::mcraptor::label_parent<DateTime>(){}
 
-    DateTimeCritere(const DateTimeCritere & dt)  : label_parent<DateTime>(dt) {}
+
+    DateTimeCritere(const DateTimeCritere & dt)  : raptor::mcraptor::label_parent<DateTime>(dt) {}
 
     DateTimeCritere(raptor::type_retour t) {
         dt = t.dt;
