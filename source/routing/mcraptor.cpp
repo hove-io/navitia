@@ -84,7 +84,9 @@ std::vector<Path> McRAPTOR<label_template, label_visitor>::compute_raptor_all(st
     for(unsigned int i=0; i<count; ++i) {
         for(unsigned int j=0; j<destinations.size();++j) {
             if(!this->label_vistor.dominated_by(bags[std::make_pair(i,j)].best, bags.best_bags[j].best)) {
-                std::cout << "Arrivéé à " << j << " à " << bags[std::make_pair(i,j)].best.dt << " avec " << i << " correspondaces "<< std::endl;
+                std::cout << "Arrivée à " << j << " à " << bags[std::make_pair(i,j)].best.dt << " avec " << i << " correspondaces "<< std::endl;
+            } else {
+                std::cout << "Arrivée dominée  à " << j << " à " << bags[std::make_pair(i,j)].best.dt << " avec " << i << " correspondaces "<< std::endl;
             }
         }
     }
@@ -163,6 +165,8 @@ bool McRAPTOR<label_template, label_visitor>::Bag::ajouter_label(label_template 
         test = !this->raptor->label_vistor.dominated_by(lbl, this->best);
         if(test) {
             this->labels.push_back(lbl);
+            this->raptor->label_vistor.keepthebest(lbl, this->best);
+            std::cout << "Best " << this->best.dt << std::endl;
         }
 
         this->bp.ajouter_label(lbl);
