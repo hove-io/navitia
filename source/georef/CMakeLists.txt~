@@ -1,0 +1,6 @@
+SET(LOADER_SRC georef.cpp 
+            georef.h
+)
+
+add_library(georef ${LOADER_SRC})
+add_subdirectory(tests)
