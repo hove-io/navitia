@@ -8,15 +8,15 @@ struct FootPathCritere : public raptor::mcraptor::label_parent {
     int distodest;
     int footpathlength;
 
-    FootPathCritere() : raptor::mcraptor::label_parent(){}
+    FootPathCritere() : raptor::mcraptor::label_parent(), distodest(std::numeric_limits<int>::max()), footpathlength(std::numeric_limits<int>::max()){}
 
 
-    FootPathCritere(const FootPathCritere & dt)  : raptor::mcraptor::label_parent(dt) {}
+    FootPathCritere(const FootPathCritere & fpc)  : raptor::mcraptor::label_parent(fpc), distodest(fpc.distodest), footpathlength(fpc.footpathlength) {}
 
     FootPathCritere(raptor::type_retour t) {
-        dt = t.dt;
-        distodest = t.dist_to_dest;
-        footpathlength = distodest;
+        this->dt = t.dt;
+        this->distodest = t.dist_to_dest;
+        this->footpathlength = t.dist_to_dep;
     }
 
     bool dominated_by(const FootPathCritere &lbl) const {
@@ -24,9 +24,10 @@ struct FootPathCritere : public raptor::mcraptor::label_parent {
     }
 
     void update(DateTime &v, int stid) {
-        dt = v + distodest;
-        dt.normalize();
-        stid = stid;
+        this->dt = v + distodest;
+        this->dt.normalize();
+        this->stid = stid;
+
     }
 
     void ajouterfootpath(int duration) {
@@ -35,8 +36,13 @@ struct FootPathCritere : public raptor::mcraptor::label_parent {
         footpathlength += duration;
     }
 
-};
 
+
+};
+std::ostream& operator<<( std::ostream &out, FootPathCritere const& fpc ) {
+    out << fpc.dt << " footpath length : " <<  fpc.footpathlength;
+    return out;
+}
 struct FootPathCritereVisitor {
     navitia::type::Data &d;
 
@@ -71,28 +77,29 @@ int main(int, char **) {
     navitia::streetnetwork::GraphBuilder bsn(d.street_network);
 
     navitia::type::GeographicalCoord A(0,0);
-    navitia::type::GeographicalCoord B(10,10);
-    navitia::type::GeographicalCoord C(-10,-10);
-    navitia::type::GeographicalCoord Z(20,0);
+    navitia::type::GeographicalCoord B(0.0010,0.0010);
+    navitia::type::GeographicalCoord C(0.0010,-0.0010);
+    navitia::type::GeographicalCoord Z(0.0020,0);
 
-    bsn("A", 0,0)("B", 10,10)("C", -10,-10)("Z", 20,0);
-    bsn("A", "B")("B", "A")("A", "C")("C", "A")("C", "Z")("Z", "C");
-
-
-
+    bsn("A", A)("B", B)("C", C)("Z", Z);
+    bsn("A", "A");
 
     navimake::builder b("20120614");
+    b.sa("A", A);
     b.sa("B", B);
     b.sa("C", C);
     b.sa("Z", Z);
-    b.vj("t1")("B", 8*3600 + 60*20)("Z", 8*3600 + 30*60);
-    b.vj("t2")("C", 8*3600 + 60*10)("Z", 9*3600 + 30*60);
+    b.vj("t1")("A", 8*3600 + 60*5)("B", 8*3600 + 10*60);
+    b.vj("t2")("C", 8*3600 + 60*30)("Z", 8*3600 + 45*60);
+    b.vj("t3")("A", 8*3600 + 60*10)("Z", 9*3600 + 45*60);
+
+    b.connection("B", "C", 10);
     d.pt_data = b.build();
     d.build_proximity_list();
 
 
     raptor::mcraptor::McRAPTOR<FootPathCritere, FootPathCritereVisitor> dtraptor(d, FootPathCritereVisitor(d));
-    dtraptor.compute(navitia::type::GeographicalCoord(0,0), 500000, navitia::type::GeographicalCoord(10,0), 500000, 7*3600, 0);
+    dtraptor.compute(navitia::type::GeographicalCoord(0,0), 500000, navitia::type::GeographicalCoord(0.0020,0), 500000, 7*3600, 0);
 
 
 }

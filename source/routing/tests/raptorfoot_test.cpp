@@ -13,7 +13,7 @@ using namespace routing::raptor;
 
 /**
   *
-  *            10 minutes de marche  B(8h20)
+  *            9 de marche  B(8h20)
   *           ______________________x_____________
   *          /                                    \
   *         /                                      \
@@ -22,7 +22,7 @@ using namespace routing::raptor;
   *        \                                        / Z(9h30)
   *         \                                      /
   *          \______________________x_____________/
-  *           1 minute de marche    C(8h10)
+  *           1  de marche    C(8h10)
   *
   *
   *     Je veux remonter 2 solutions : 1) Depart de B(8h20), arrivée en Z à 8h30, 10 minutes de marche
@@ -33,13 +33,17 @@ BOOST_AUTO_TEST_CASE(marche_depart) {
     navitia::streetnetwork::StreetNetwork sn;
     navitia::streetnetwork::GraphBuilder bsn(sn);
 
-    navitia::type::GeographicalCoord A(0,0, false);
-    navitia::type::GeographicalCoord B(10,10, false);
-    navitia::type::GeographicalCoord C(-10,-10, false);
-    navitia::type::GeographicalCoord Z(20,0, false);
+    navitia::type::GeographicalCoord A(0,0);
+    navitia::type::GeographicalCoord B(0.005,0.005);
+    navitia::type::GeographicalCoord C(-0.001,-0.001);
+    navitia::type::GeographicalCoord D(0.005,0.0010);
 
-    bsn("A", A)("B", B)("C", C)("Z", Z);
-    bsn("A", "B", 5*(10/60))("A", "C", 5*(1/60));
+    navitia::type::GeographicalCoord Z(0.0020,0);
+
+    bsn("A", A)("B", B)("C", C)("D",D)("Z", Z);
+    bsn("A", "B")("B", "A")("A", "C")("C", "A")("A", "D")("D","A")("Z", "Z");
+
+
 
 
     navimake::builder b("20120614");

@@ -98,7 +98,6 @@ struct ProximityList
         double median_distance = coord.distance_to(median->coord);
         if(median_distance <= distance)
             result.push_back(std::make_pair(median->element, median->coord));
-
         // Si la distance mediane est inférieure à la limite, on regarde des deux cotés
         // Cependant il faut regarder la distance projetée
 
