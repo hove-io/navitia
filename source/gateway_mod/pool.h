@@ -15,6 +15,7 @@ class Pool{
          *
          */
         struct Sorter{
+            //operator <
             bool operator()(const std::shared_ptr<Navitia> a, const std::shared_ptr<Navitia> b){
                 //on favorise celui qui a le moins d'erreurs
                 if(!a->enable){
@@ -24,9 +25,9 @@ class Pool{
                 }
                 //si le nombre d'erreurs est identique, on favorise le moins chargé
                 if(a->unused_thread == b->unused_thread){
-                    return a->last_request_at > b->last_request_at;
+                return (a->last_request_at < b->last_request_at);
                 }else{
-                    return a->unused_thread > b->unused_thread;
+                    return (a->unused_thread > b->unused_thread);
                 }
             }
         };
@@ -45,7 +46,7 @@ class Pool{
         
         int nb_threads;
         ///liste des instances navitia trié sous la forme d'un tas
-        std::deque<std::shared_ptr<Navitia>> navitia_list;
+        std::vector<std::shared_ptr<Navitia>> navitia_list;
 
         Pool();
         
@@ -63,10 +64,10 @@ class Pool{
          */
         inline std::shared_ptr<Navitia> next(){
             boost::lock_guard<boost::shared_mutex> lock(mutex);
+            auto nav = navitia_list.front();
             std::pop_heap(navitia_list.begin(), navitia_list.end(), Sorter());
-            auto nav = navitia_list.back();
             nav->use();
-            std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
+            std::push_heap(navitia_list.begin(), navitia_list.end(), Sorter());
 
             return nav;
         }

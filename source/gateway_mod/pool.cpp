@@ -5,6 +5,7 @@
 #include <curl/curl.h>
 #include <boost/foreach.hpp>
 #include <utils/logger.h>
+#include <assert.h>
 
 Pool::Pool(){
     init_logger();
@@ -66,7 +67,10 @@ void Pool::check_desactivated_navitia(){
     int now = time(NULL);
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
+    //@TODO gros lock pas beau
+    boost::lock_guard<boost::shared_mutex> lock(mutex);
     BOOST_FOREACH(auto nav, navitia_list){
+        assert(nav.get() != NULL);
         if(!nav->enable && nav->reactivate_at < now){
             nav->reactivate();
             LOG4CPLUS_DEBUG(logger, "réactivation de " + nav->url);
@@ -74,7 +78,7 @@ void Pool::check_desactivated_navitia(){
 
         if(nav->nb_errors > 0 && nav->enable && nav->next_decrement < now){
             nav->decrement_error();
-            LOG4CPLUS_DEBUG(logger, "reset des erreurs de " + nav->url);
+            LOG4CPLUS_INFO(logger, "reset des erreurs de " + nav->url);
         }
     }
 }

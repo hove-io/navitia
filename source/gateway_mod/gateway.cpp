@@ -46,7 +46,9 @@ webservice::ResponseData Worker::register_navitia(webservice::RequestData& reque
     }
 
     //TODO valider l'url
-    pool.add_navitia(std::make_shared<Navitia>(request.params["url"], thread));
+    auto nav = std::make_shared<Navitia>(request.params["url"], thread);
+    assert(nav.get() != NULL);
+    pool.add_navitia(nav);
 
     return status(request, pool);
 }
@@ -76,15 +78,12 @@ webservice::ResponseData Worker::handle(webservice::RequestData& request, Pool& 
 
 webservice::ResponseData Worker::load(webservice::RequestData& request, Pool& pool){
     //TODO gestion de la desactivation
+    // threadsafe?
     BOOST_FOREACH(auto nav, pool.navitia_list){
         try{
             nav->load();
+            //@TODO gérer le timeout
         }catch(RequestException& ex){
-            if(ex.timeout){
-                //le rechargement est trop long, rien de dramatique, on enchaine
-                // ==> euh si, ca serait balot d'avoir tous les moteurs qui load en meme temps
-                continue;
-            }
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
             LOG4CPLUS_WARN(logger, "le rechargement de " + nav->url + " à echouer");
         }
@@ -93,7 +92,8 @@ webservice::ResponseData Worker::load(webservice::RequestData& request, Pool& po
 }
 
 void Dispatcher::operator()(webservice::RequestData& request, webservice::ResponseData& response, Pool& pool, Context& context){
-    std::pair<int, std::string> res;
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    Response nav_response;
     int nb_try = 0;
     bool ok = true;
     do{
@@ -101,19 +101,19 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
         nb_try++;
         auto nav = pool.next();
         try{
-            res = nav->query(request.path.substr(request.path.find_last_of('/')) + "?" + request.raw_params);
+            nav_response = nav->query(request.path.substr(request.path.find_last_of('/')) + "?" + request.raw_params);
             pool.release_navitia(nav);
         }catch(RequestException& ex){
             ok = false;
             nav->on_error();
-            log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-            LOG4CPLUS_WARN(logger, "la requétes a échouer");
+            LOG4CPLUS_WARN(logger, "la requétes a échoué");
             pool.release_navitia(nav);
-            response.status_code = ex.code;
+            response.status_code = 500;
+            context.service = Context::BAD_RESPONSE;
             continue;
         }
         auto resp = create_pb();
-        if(resp->ParseFromString(res.second)){
+        if(resp->ParseFromString(nav_response.body)){
             if(resp->has_error()){
                 ok = false;
                 nav->on_error();
@@ -122,15 +122,14 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
                 continue;
             }
             context.pb = std::move(resp);
-            context.service = Context::PTREF;
+            context.service = Context::QUERY;
         }else{
             ok = false;
             nav->on_error();
-            log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
             LOG4CPLUS_WARN(logger, "erreur de chargement du protobuf");
-            context.str = res.second;
+            context.str = nav_response.body;
             context.service = Context::BAD_RESPONSE;
-            response.status_code = res.first;
+            response.status_code = nav_response.code;
         }
     }while(!ok && nb_try < 4);
 }
