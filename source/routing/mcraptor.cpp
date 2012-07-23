@@ -10,6 +10,7 @@ Path McRAPTOR<label_template, label_visitor>::compute_raptor(std::unordered_map<
 template<typename label_template, typename label_visitor>
 std::vector<Path> McRAPTOR<label_template, label_visitor>::compute_raptor_all(std::unordered_map<int, label_template> departs, std::vector<unsigned int> destinations) {
 
+    std::cout << "Taille depart : " << departs.size() << " taille destinations : " << destinations.size() << std::endl;
     bags.init(data.pt_data.stop_areas.size(), destinations, this);
 
     std::vector<unsigned int> marked_stop;

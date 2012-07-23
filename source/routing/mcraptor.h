@@ -3,7 +3,6 @@
 #include "boost/variant.hpp"
 namespace navitia { namespace routing { namespace raptor { namespace mcraptor {
 
-template<typename value_t>
 struct label_parent {
     int vjid;
     int stid;

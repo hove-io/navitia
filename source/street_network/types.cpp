@@ -180,7 +180,6 @@ std::vector< std::pair<idx_t, double> > StreetNetwork::find_nearest(const type::
     try{
         this->dijkstra(start.vertices[0], dists, preds, distance_visitor(radius, dists));
     }catch(DestinationFound){}
-
     dists[start.vertices[1]] = start.distances[1];
     try{
         this->dijkstra(start.vertices[0], dists, preds, distance_visitor(radius, dists));
@@ -190,6 +189,7 @@ std::vector< std::pair<idx_t, double> > StreetNetwork::find_nearest(const type::
     // On trouve tous les élements à moins radius mètres en vol d'oiseau
     std::vector< std::pair<idx_t, type::GeographicalCoord> > elements = pl.find_within(start_coord, radius);
 
+    std::cout << "elements : " << elements.size() << std::endl;
     // À chaque fois on regarde la distance réelle en suivant le filaire de voirie
     BOOST_FOREACH(auto element, elements){
         ProjectionData current(element.second, *this);

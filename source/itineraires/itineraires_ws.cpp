@@ -21,7 +21,7 @@ struct Data2{
         Configuration * conf = Configuration::get();
         std::cout << "Je suis l'executable " << conf->get_string("application") <<std::endl;
         std::cout << "Je réside dans le path " << conf->get_string("path") <<std::endl;
-        data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.nav");
+        data.load_lz4("/home/vlara/navitia/jeu/poitiers/poitiers.nav");
         std::cout << "Chargement des données effectué" << std::endl;
         std::cout << "Nb route points : " << data.pt_data.route_points.size() << std::endl;
         g = NW(data.pt_data.stop_areas.size() + data.pt_data.stop_points.size() + data.pt_data.route_points.size() + (data.pt_data.stop_times.size()*2));

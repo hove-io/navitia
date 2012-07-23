@@ -42,6 +42,7 @@ struct best_dest {
 
     std::map<unsigned int, type_retour> map_date_time;
     type_retour best_now;
+    unsigned int best_now_said;
 
     void ajouter_destination(unsigned int said, type_retour &t) { map_date_time[said] = t;}
 
@@ -50,6 +51,7 @@ struct best_dest {
             map_date_time[said] = t;
             if(t < best_now) {
                 best_now = t;
+                best_now_said = said;
             }
         }
     }

@@ -7,7 +7,7 @@ namespace navitia { namespace routing {
 DateTime operator+(DateTime dt, int seconds) {
     if(!(dt == DateTime::infinity())){
         dt.hour += seconds;
-        //dt.normalize();
+        dt.normalize();
     }
     return dt;
 }
