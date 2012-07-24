@@ -18,7 +18,6 @@ Pool::Pool(){
     conf->load_ini(initFileName);
 
 	this->nb_threads = conf->get_as<int>("GENERAL","NbThread", 4);
-    std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
 
     int i = 0;
     std::string section_name = std::string("NAVITIA_") + boost::lexical_cast<std::string>(i); 
@@ -43,7 +42,7 @@ void Pool::add_navitia(std::shared_ptr<Navitia> navitia){
     LOG4CPLUS_DEBUG(logger, "ajout du navitia " + navitia->url);
     mutex.lock();
     navitia_list.push_back(navitia);
-    std::push_heap(navitia_list.begin(), navitia_list.end(), Sorter());
+    std::sort(navitia_list.begin(), navitia_list.end(), Sorter());
     mutex.unlock();
 }
 
@@ -58,7 +57,7 @@ void Pool::remove_navitia(const Navitia& navitia){
         return;
     }
     navitia_list.erase(it);
-    std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
+    std::sort(navitia_list.begin(), navitia_list.end(), Sorter());
     mutex.unlock();
 }
 
@@ -81,4 +80,5 @@ void Pool::check_desactivated_navitia(){
             LOG4CPLUS_INFO(logger, "reset des erreurs de " + nav->url);
         }
     }
+    std::sort(navitia_list.begin(), navitia_list.end(), Sorter());
 }

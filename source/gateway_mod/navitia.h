@@ -71,11 +71,6 @@ class Navitia {
 
         Response query(const std::string& request);
         
-
-        ~Navitia(){
-            std::cout << "desctructeur navitia" << std::endl;
-        }
-
         /// la comparaison s'effectue uniquement sur l'url
         bool operator==(const Navitia& other){
             return this->url == other.url;

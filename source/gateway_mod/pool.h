@@ -25,7 +25,7 @@ class Pool{
                 }
                 //si le nombre d'erreurs est identique, on favorise le moins chargé
                 if(a->unused_thread == b->unused_thread){
-                return (a->last_request_at < b->last_request_at);
+                    return (a->last_request_at > b->last_request_at);
                 }else{
                     return (a->unused_thread > b->unused_thread);
                 }
@@ -54,7 +54,7 @@ class Pool{
         inline void release_navitia(std::shared_ptr<Navitia> navitia){
             navitia->release();
             mutex.lock();
-            std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
+            std::sort(navitia_list.begin(), navitia_list.end(), Sorter());
             mutex.unlock();
         }
     
@@ -65,9 +65,8 @@ class Pool{
         inline std::shared_ptr<Navitia> next(){
             boost::lock_guard<boost::shared_mutex> lock(mutex);
             auto nav = navitia_list.front();
-            std::pop_heap(navitia_list.begin(), navitia_list.end(), Sorter());
             nav->use();
-            std::push_heap(navitia_list.begin(), navitia_list.end(), Sorter());
+            std::sort(navitia_list.begin(), navitia_list.end(), Sorter());
 
             return nav;
         }
