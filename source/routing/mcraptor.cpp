@@ -36,7 +36,6 @@ std::vector<Path> McRAPTOR<label_template, label_visitor>::compute_raptor_all(st
             //On traverse chaque route r en  partant de p
             for(unsigned int i = get_rp_order(route, p); i < data.pt_data.routes[route].route_point_list.size(); ++i) {
                 unsigned int said = get_sa_rp(i, route);
-                std::cout << data.pt_data.stop_areas.at(said).name << " " << route <<  std::endl;
                 Br.update(i);
 
                 if(bags[std::make_pair(count, said)].merge(Br)) {
@@ -50,19 +49,23 @@ std::vector<Path> McRAPTOR<label_template, label_visitor>::compute_raptor_all(st
             }
         }
 
-        BOOST_FOREACH(auto stop_p, marked_stop) {
-            auto it_fp = foot_path.find(stop_p);
-            if(it_fp != foot_path.end()) {
-                BOOST_FOREACH(auto connection_idx, (*it_fp).second) {
-                    unsigned int saiddest = data.pt_data.stop_points.at(data.pt_data.connections[connection_idx].destination_stop_point_idx).stop_area_idx;
-                    Bag bag_temp = bags[std::make_pair(count, stop_p)];
-                    BOOST_FOREACH(label_template &lbl, bag_temp.labels) {
-                        lbl.ajouterfootpath(data.pt_data.connections[connection_idx].duration);
-                        marked_stop.push_back(saiddest);
+        BOOST_FOREACH(auto stop_area, marked_stop) {
+            BOOST_FOREACH(auto stop_p, data.pt_data.stop_areas.at(stop_area).stop_point_list) {
+                auto it_fp = foot_path.find(stop_p);
+                if(it_fp != foot_path.end()) {
+                    BOOST_FOREACH(auto connection_idx, (*it_fp).second) {
+                        unsigned int saiddest = data.pt_data.stop_points.at(data.pt_data.connections[connection_idx].destination_stop_point_idx).stop_area_idx;
+                        Bag bag_temp = bags[std::make_pair(count, stop_p)];
+                        BOOST_FOREACH(label_template &lbl, bag_temp.labels) {
+                            lbl.ajouterfootpath(data.pt_data.connections[connection_idx].duration);
+                            marked_stop.push_back(saiddest);
+                        }
+                        bags[std::make_pair(count, saiddest)].merge(bag_temp);
                     }
-                    bags[std::make_pair(count, saiddest)].merge(bag_temp);
                 }
             }
+
+
         }
         ++count;
     }

@@ -384,7 +384,6 @@ Path communRAPTOR::compute(const type::GeographicalCoord & departure, double rad
                 day = departure_day;
             }
             departs[item.first] = type_retour(-1, DateTime(day, temps), 0, (item.second / 80));
-//            departs[item.first].dist_to_dep = item.second / 80;
         }
     }
     {
