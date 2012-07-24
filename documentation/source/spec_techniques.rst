@@ -1,5 +1,5 @@
-Spécifications techniques
-=========================
+Spécifications générales
+========================
 
 .. toctree::
    :maxdepth: 2

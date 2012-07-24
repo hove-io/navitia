@@ -1,9 +1,8 @@
-Spécifications techniques
+Spécifications générales
 =========================
 
 .. toctree::
    :maxdepth: 2
    
-   implem_type
    spec_techniques
  
