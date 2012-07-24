@@ -30,11 +30,11 @@ int main(int, char **) {
 ////            }
 ////            precstid =  stid;
 ////        }
-////    }http://127.0.0.1/planner?format=json&departure_lat=48.814382864698004&departure_lon=2.3909722232801727&destination_lat=48.905635260133856&destination_lon=2.3315773997188716&time=28800&date=20120511
+////    }http://127.0.0.1/planner?format=json&departure_lat=48.80039471738876&departure_lon=2.1296571179927253&destination_lat=48.93228737752789&destination_lon=2.4949524490283004&time=28800&date=20120511
     routing::raptor::RAPTOR raptor(data);
     {
         Timer t("Calcul raptor");
-        routing::Path result = raptor.makeItineraire(raptor.compute(type::GeographicalCoord(2.390972, 48.81438), 300, type::GeographicalCoord(2.33157, 48.905635), 300, 8*3600, 7));
+        routing::Path result = raptor.makeItineraire(raptor.compute(type::GeographicalCoord(2.1296571, 48.800394717), 300, type::GeographicalCoord(2.49495, 48.932287), 300, 8*3600, 7));
         std::cout << result;
     }
 

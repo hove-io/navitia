@@ -220,13 +220,13 @@ BOOST_AUTO_TEST_CASE(marche_depart_fin) {
     navitia::streetnetwork::StreetNetwork sn;
     navitia::streetnetwork::GraphBuilder bsn(sn);
 
-    navitia::type::GeographicalCoord A(0,0, false);
-    navitia::type::GeographicalCoord B(10,10, false);
-    navitia::type::GeographicalCoord C(10,-10, false);
-    navitia::type::GeographicalCoord Z(20,0, false);
+    navitia::type::GeographicalCoord A(0,0);
+    navitia::type::GeographicalCoord B(0.005, 0.005);
+    navitia::type::GeographicalCoord C(-0.001, -0.001);
+    navitia::type::GeographicalCoord Z(0.002, 0.002);
 
     bsn("A", A)("B", B)("C", C)("Z", Z);
-    bsn("A", "B", 5*(5/60))("C", "Z", 5*(5/60));
+    bsn("A", "B")("B", "A")("C", "Z")("Z", "C")("Z", "Z");
 
     navimake::builder b("20120614");
     b.sa("A", A);

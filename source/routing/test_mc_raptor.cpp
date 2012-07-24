@@ -86,33 +86,25 @@ int main(int, char **) {
     navitia::streetnetwork::GraphBuilder bsn(d.street_network);
 
     navitia::type::GeographicalCoord A(0,0);
-    navitia::type::GeographicalCoord B(0.0050,0.0050);
-    navitia::type::GeographicalCoord C(0.020,0.010);
-    navitia::type::GeographicalCoord D(0.030,0.010, false);
-    navitia::type::GeographicalCoord E(0.000100,-0.00010, false);
+    navitia::type::GeographicalCoord B(0.005,0.005);
+    navitia::type::GeographicalCoord Z(0.0020,0);
 
-    navitia::type::GeographicalCoord Z(0.0040,0, false);
-
-    bsn("A", A)("B", B)("C", C)("D", D)("E", E)("Z", Z);
-    bsn("A", "B")("B","A")("A", "E")("E", "A")("C","C")("D","D")("Z","Z");
+    bsn("A", A)("B", B)("Z", Z);
+    bsn("B", "Z")("Z", "B")("A", "A")("B", "B")("Z", "Z");
 
 
     navimake::builder b("20120614");
+    b.sa("A", A);
     b.sa("B", B);
-    b.sa("C", C);
-    b.sa("D", D);
-    b.sa("E", E);
     b.sa("Z", Z);
-    b.vj("t1")("B", 8*3600 + 60*10)("C", 8*3600 + 15*60);
-    b.vj("t2")("D", 8*3600 + 60*30)("Z", 8*3600 + 45*60);
-    b.vj("t3")("E", 8*3600 + 60*10)("Z", 9*3600 + 30*60);
-    b.connection("C", "D", 10);
+    b.vj("t1")("A", 8*3600 + 60*5)("B", 8*3600 + 20*60);
+    b.vj("t2")("A", 8*3600 + 60*10)("Z", 9*3600 + 30*60);
 
     d.pt_data = b.build();
     d.build_proximity_list();
 
-    std::cout << "Distance A à B" << A.distance_to(B) <<std::endl;
+    std::cout << "Distance Z à Z" << Z.distance_to(Z) <<std::endl;
 
     raptor::mcraptor::McRAPTOR<FootPathCritere, FootPathCritereVisitor> dtraptor(d, FootPathCritereVisitor(d));
-    dtraptor.compute(A, 10000, Z, 1000, 7*3600, 0);
+    dtraptor.compute(A, 10000, Z, 5000, 7*3600, 0);
 }

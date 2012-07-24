@@ -264,16 +264,16 @@ Path RAPTOR::makePath(map_retour_t retour, map_int_pint_t best, map_int_pint_t d
     type_retour precretour = retour[countb][destination_idx];
     bool stop = false;
     while(!stop) {
-        if(retour.count((countb-1)) > 0) {
+        if(retour[countb].count(current_said) == 0) {
+            int heure = data.pt_data.stop_times.at(precretour.stid).departure_time;
+            int date = precretour.dt.date;
+            std::string line = data.pt_data.lines.at(data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(precretour.stid).route_point_idx).route_idx).line_idx).name;
+            result.items.push_back(PathItem(current_said, heure, date,
+                                            data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(precretour.stid).route_point_idx).route_idx).line_idx));
+            --countb;
+        } else if(retour.count((countb-1)) > 0) {
             if(retour[(countb-1)].count(current_said) > 0) {
-                if(retour[countb].count(current_said) == 0) {
-                    int heure = data.pt_data.stop_times.at(precretour.stid).departure_time;
-                    int date = precretour.dt.date;
-                    std::string line = data.pt_data.lines.at(data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(precretour.stid).route_point_idx).route_idx).line_idx).name;
-                    result.items.push_back(PathItem(current_said, heure, date,
-                                                    data.pt_data.routes.at(data.pt_data.route_points.at(data.pt_data.stop_times.at(precretour.stid).route_point_idx).route_idx).line_idx));
-                    --countb;
-                } else if(retour[(countb-1)].at(current_said).dt < retour[countb].at(current_said).dt /*||
+                if(retour[(countb-1)].at(current_said).dt < retour[countb].at(current_said).dt /*||
                         best.at(current_said).dt < retour[countb].at(current_said).dt*/) {
                     int heure = data.pt_data.stop_times.at(precretour.stid).departure_time;
                     int date = precretour.dt.date;
@@ -361,10 +361,9 @@ Path communRAPTOR::compute(const type::GeographicalCoord & departure, double rad
 
 Path communRAPTOR::compute(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
                            , int departure_hour, int departure_day) {
-    std::cout << "Raptor Geo geo depart :" << departure  << " "<< radius_depart <<  " arrivee " << destination << " " << radius_destination <<" " << departure_hour << " " << departure_day <<  std::endl;
+    std::cout << "Raptor Geo geo depaart :" << departure  << " "<< radius_depart <<  " arrivee " << destination << " " << radius_destination <<" " << departure_hour << " " << departure_day <<  std::endl;
     map_int_pint_t departs, destinations;
-    {
-        Timer t("Recherche des stations de départ");
+
 
         typedef std::vector< std::pair<idx_t, double> > retour;
         retour prox;
@@ -385,20 +384,16 @@ Path communRAPTOR::compute(const type::GeographicalCoord & departure, double rad
             }
             departs[item.first] = type_retour(-1, DateTime(day, temps), 0, (item.second / 80));
         }
-    }
-    {
-        Timer t("Recherche des stations de destinations");
 
-        typedef std::vector< std::pair<idx_t, double> > retour;
-        retour prox;
+
+        prox.clear();
         try {
             prox = (retour) (data.street_network.find_nearest(destination, data.pt_data.stop_area_proximity_list, radius_destination));
         } catch(NotFound) {std::cout << "Not found 2 " << std::endl;return Path();}
         BOOST_FOREACH(auto item, prox) {
             destinations[item.first] = type_retour((int)(item.second/80));
-            std::cout << "Destination : " << destinations[item.first].dist_to_dest << " " << item.second << " " << item.first << std::endl;
         }
-    }
+        std::cout << "Nb stations departs : " << departs.size() << " destinations : " << destinations.size() << std::endl;
 
     Path result = compute_raptor(departs, destinations);
     std::cout << "Taille reponse :  " << result.items.size();
