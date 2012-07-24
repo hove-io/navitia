@@ -22,14 +22,17 @@ struct type_retour {
     int stid;
     DateTime dt;
     int dist_to_dest;
+    int dist_to_dep;
     type_idx type;
 
 
-    type_retour(int stid, DateTime dt, int dist_to_dest) : stid(stid), dt(dt), dist_to_dest(dist_to_dest), type(vj) {}
-    type_retour(int stid, DateTime dt) : stid(stid), dt(dt), dist_to_dest(0), type(vj){}
-    type_retour(int stid, DateTime dt, type_idx type) : stid(stid), dt(dt), dist_to_dest(0), type(type){}
-    type_retour(unsigned int dist_to_dest) : stid(-1), dt(), dist_to_dest(dist_to_dest), type(vj){}
-    type_retour() : stid(-1), dt(), dist_to_dest(0), type(vj) {}
+    type_retour(int stid, DateTime dt, int dist_to_dest) : stid(stid), dt(dt), dist_to_dest(dist_to_dest), dist_to_dep(0), type(vj) {}
+    type_retour(int stid, DateTime dt, int dist_to_dest, int dist_to_dep) : stid(stid), dt(dt), dist_to_dest(dist_to_dest), dist_to_dep(dist_to_dep), type(vj) {}
+
+    type_retour(int stid, DateTime dt) : stid(stid), dt(dt), dist_to_dest(0), dist_to_dep(0), type(vj){}
+    type_retour(int stid, DateTime dt, type_idx type) : stid(stid), dt(dt), dist_to_dest(0), dist_to_dep(0), type(type){}
+    type_retour(unsigned int dist_to_dest) : stid(-1), dt(), dist_to_dest(dist_to_dest), dist_to_dep(0), type(vj){}
+    type_retour() : stid(-1), dt(), dist_to_dest(0), dist_to_dep(0), type(vj) {}
 
     bool operator<(type_retour r2) const { return this->dt + this->dist_to_dest < r2.dt + dist_to_dest;}
 
@@ -42,6 +45,7 @@ struct best_dest {
 
     std::map<unsigned int, type_retour> map_date_time;
     type_retour best_now;
+    unsigned int best_now_said;
 
     void ajouter_destination(unsigned int said, type_retour &t) { map_date_time[said] = t;}
 
@@ -50,6 +54,7 @@ struct best_dest {
             map_date_time[said] = t;
             if(t < best_now) {
                 best_now = t;
+                best_now_said = said;
             }
         }
     }
@@ -117,6 +122,7 @@ struct RAPTOR : public communRAPTOR {
 
     RAPTOR(navitia::type::Data &data) : communRAPTOR(data){}
     Path compute_raptor(map_int_pint_t departs, map_int_pint_t destinations);
+    Path makePath(map_retour_t retour, map_int_pint_t best, map_int_pint_t departs, unsigned int destination_idx, unsigned int count);
 };
 
 

@@ -1,14 +1,14 @@
 #include "mcraptor.h"
 namespace navitia { namespace routing { namespace raptor { namespace mcraptor {
 
-template<typename label_template, typename label_visitor>
-Path McRAPTOR<label_template, label_visitor>::compute_raptor(std::unordered_map<int, label_template> departs, std::list<unsigned int> destinations) {
-    return compute_raptor_all(departs, destinations).front();
-}
+//template<typename label_template, typename label_visitor>
+//Path McRAPTOR<label_template, label_visitor>::compute_raptor(map_int_pint_t departs, map_int_pint_t destinations) {
+//    return compute_raptor_all(departs, destinations).front();
+//}
 
 /// Implémentation de RAPTOR pour du multicritères
 template<typename label_template, typename label_visitor>
-std::vector<Path> McRAPTOR<label_template, label_visitor>::compute_raptor_all(std::unordered_map<int, label_template> departs, std::list<unsigned int> destinations) {
+std::vector<Path> McRAPTOR<label_template, label_visitor>::compute_raptor_all(std::unordered_map<int, label_template> departs, std::unordered_map<int, label_template> destinations) {
 
     bags.init(data.pt_data.stop_areas.size(), destinations, this);
 
@@ -19,7 +19,6 @@ std::vector<Path> McRAPTOR<label_template, label_visitor>::compute_raptor_all(st
         bags[std::make_pair(0, depart.first)].ajouter_label(depart.second);
         marked_stop.push_back(depart.first);
     }
-
     //Pour tous les k
     map_int_int_t Q;
     unsigned int count = 1;
@@ -50,43 +49,45 @@ std::vector<Path> McRAPTOR<label_template, label_visitor>::compute_raptor_all(st
             }
         }
 
-        BOOST_FOREACH(auto stop_p, marked_stop) {
-            auto it_fp = foot_path.find(stop_p);
-            if(it_fp != foot_path.end()) {
-                BOOST_FOREACH(auto connection_idx, (*it_fp).second) {
-                    unsigned int saiddest = data.pt_data.stop_points.at(data.pt_data.connections[connection_idx].destination_stop_point_idx).stop_area_idx;
-                    Bag bag_temp = bags[std::make_pair(count, stop_p)];
-                    BOOST_FOREACH(label_template &lbl, bag_temp.labels) {
-                        lbl.ajouterfootpath(data.pt_data.connections[connection_idx].duration);
+        BOOST_FOREACH(auto stop_area, marked_stop) {
+            BOOST_FOREACH(auto stop_p, data.pt_data.stop_areas.at(stop_area).stop_point_list) {
+                auto it_fp = foot_path.find(stop_p);
+                if(it_fp != foot_path.end()) {
+                    BOOST_FOREACH(auto connection_idx, (*it_fp).second) {
+                        unsigned int saiddest = data.pt_data.stop_points.at(data.pt_data.connections[connection_idx].destination_stop_point_idx).stop_area_idx;
+                        Bag bag_temp = bags[std::make_pair(count, stop_p)];
+                        BOOST_FOREACH(label_template &lbl, bag_temp.labels) {
+                            lbl.ajouterfootpath(data.pt_data.connections[connection_idx].duration);
+                            marked_stop.push_back(saiddest);
+                        }
+                        bags[std::make_pair(count, saiddest)].merge(bag_temp);
                     }
-                    bags[std::make_pair(count, saiddest)].merge(bag_temp);
                 }
             }
+
+
         }
-
-
-
-        std::cout  << " count : " << count << " " << Q.size() << " " << bags.best_bag_dest.best.dt << " " <<data.pt_data.stop_areas.size() << " "  << data.pt_data.stop_points.size() << std::endl;
-
         ++count;
     }
 
-    BOOST_FOREACH(auto destination, destinations)
-            std::cout << destination << " " <<  bags.best_bags[destination].best.dt << std::endl;
 
     std::vector<Path> result;
     result.push_back(Path());
 
     std::cout << " fin calcule ! " << std::endl;
-//    bool stop = false;
-//    int countdebut = 0;
+    //    bool stop = false;
+    //    int countdebut = 0;
 
-    for(unsigned int i=0; i<count; ++i) {
-        for(unsigned int j=0; j<destinations.size();++j) {
-            if(!this->label_vistor.dominated_by(bags[std::make_pair(i,j)].best, bags.best_bags[j].best)) {
-                std::cout << "Arrivée à " << j << " à " << bags[std::make_pair(i,j)].best.dt << " avec " << i << " correspondaces "<< std::endl;
+    for(unsigned int i=1; i<count; ++i) {
+        BOOST_FOREACH(auto item, destinations) {
+            if(!this->label_vistor.dominated_by(bags[std::make_pair(i,item.first)].best, bags.best_bags[item.first].best)) {
+                BOOST_FOREACH(auto fpc, bags[std::make_pair(i,item.first)].labels) {
+                    std::cout << "Label : " << fpc << " count(" << i << ")" << " destination : " << data.pt_data.stop_areas.at(item.first).name  << std::endl;
+                }
+
+                //                std::cout << "Arrivée à " << destinations[j] << " à " << bags[std::make_pair(i,destinations[j])].best.dt << " avec " << i << " correspondaces "<< std::endl;
             } else {
-                std::cout << "Arrivée dominée  à " << j << " à " << bags[std::make_pair(i,j)].best.dt << " avec " << i << " correspondaces "<< std::endl;
+                std::cout << "Arrivée dominée  à " << item.first << " à " << bags[std::make_pair(i,item.first)].best.dt << " avec " << (i-1) << " correspondances "<< std::endl;
             }
         }
     }
@@ -134,7 +135,7 @@ bool McRAPTOR<label_template, label_visitor>::Bag::merge(McRAPTOR<label_template
 
 
 template<typename label_template, typename label_visitor>
-bool McRAPTOR<label_template, label_visitor>::Bag_route::ajouter_label(label_template lbl) {
+bool McRAPTOR<label_template, label_visitor>::Bag_route::ajouter_label(label_template &lbl) {
     bool test = !this->raptor->label_vistor.dominated_by(lbl, this->best);
 
     if(test) {
@@ -143,14 +144,13 @@ bool McRAPTOR<label_template, label_visitor>::Bag_route::ajouter_label(label_tem
     return test;
 }
 
-
 template<typename label_template, typename label_visitor>
-bool McRAPTOR<label_template, label_visitor>::Best_Bag::ajouter_label(label_template lbl) {
+bool McRAPTOR<label_template, label_visitor>::Best_Bag::ajouter_label(label_template &lbl) {
     bool test = !this->raptor->label_vistor.dominated_by(lbl, this->best);
     if(test) {
-        this->labels.push_back(lbl);
         if(said != -1)
             this->raptor->bags.ajouter_label_dest(lbl, said);
+        this->labels.push_back(lbl);
         this->raptor->label_vistor.keepthebest(lbl, this->best);
     }
     return test;
@@ -158,18 +158,18 @@ bool McRAPTOR<label_template, label_visitor>::Best_Bag::ajouter_label(label_temp
 
 
 template<typename label_template, typename label_visitor>
-bool McRAPTOR<label_template, label_visitor>::Bag::ajouter_label(label_template lbl) {
+bool McRAPTOR<label_template, label_visitor>::Bag::ajouter_label(label_template &lbl) {
     bool test = false;
 
-    if(!this->raptor->label_vistor.dominated_by(lbl, this->bp.best) && !this->raptor->label_vistor.dominated_by(lbl, this->raptor->bags.best_bag_dest.best)) {
+
+    if(!this->raptor->label_vistor.dominated_by(lbl, this->bp.best)/* && !this->raptor->label_vistor.dominated_by(lbl, this->raptor->bags.best_bag_dest.best)*/) {
+        this->bp.ajouter_label(lbl);
         test = !this->raptor->label_vistor.dominated_by(lbl, this->best);
+
         if(test) {
             this->labels.push_back(lbl);
             this->raptor->label_vistor.keepthebest(lbl, this->best);
-            std::cout << "Best " << this->best.dt << std::endl;
         }
-
-        this->bp.ajouter_label(lbl);
     }
     return test;
 }
@@ -179,9 +179,9 @@ void McRAPTOR<label_template, label_visitor>::Bag_route::update(unsigned int ord
     this->best = label_template();
 
     for(auto iter = this->labels.begin(); iter != this->labels.end(); ++iter) {
-        if((*iter).stid != -1) {
+        if((*iter).vjid != -1) {
             this->raptor->label_vistor.update(order, *iter);
-            //            this->raptor->label_vistor.keepthebest(this->best, *iter);
+            this->raptor->label_vistor.keepthebest(this->best, *iter);
         }
     }
 }
@@ -197,9 +197,10 @@ bool McRAPTOR<label_template, label_visitor>::Bag_route::merge(McRAPTOR<label_te
     BOOST_FOREACH(auto lbl, bag.labels) {
         std::tie(etemp, pam) = this->raptor->earliest_trip(this->route, said, lbl.dt);
         if(etemp != -1) {
-            label_template lbl_temp;
+            label_template lbl_temp(lbl);
             lbl_temp.vjid = etemp;
-            lbl_temp.dt = lbl.dt;
+            lbl_temp.stid = this->raptor->data.pt_data.vehicle_journeys.at(etemp).stop_time_list.at(order);
+            lbl_temp.dt = DateTime(lbl.dt.date, this->raptor->data.pt_data.stop_times.at(lbl_temp.stid).arrival_time);
             if(pam)
                 ++lbl_temp.dt.date;
             test = test || ajouter_label(lbl_temp);
