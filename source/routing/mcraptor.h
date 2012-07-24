@@ -15,6 +15,7 @@ struct label_parent {
 
 template<typename label_template, typename label_visitor_t>
 struct McRAPTOR : navitia::routing::raptor::communRAPTOR {
+    typedef std::unordered_map<int, label_template> map_int_T;
 
     label_visitor_t label_vistor;
 
@@ -58,7 +59,7 @@ struct McRAPTOR : navitia::routing::raptor::communRAPTOR {
             return labels[i] = label_template();
         }
 
-        virtual bool ajouter_label(label_template lbl) = 0;
+        virtual bool ajouter_label(label_template &lbl) = 0;
     };
 
     //Forward declaration
@@ -70,7 +71,7 @@ struct McRAPTOR : navitia::routing::raptor::communRAPTOR {
         Best_Bag() {}
         Best_Bag(const Best_Bag & bb) : Parent_Bag(bb), said(bb.said) {}
         Best_Bag(McRAPTOR * raptor, unsigned int said) : Parent_Bag(raptor), said(said) {}
-        bool ajouter_label(label_template lbl);
+        bool ajouter_label(label_template &lbl);
 
     };
 
@@ -84,7 +85,7 @@ struct McRAPTOR : navitia::routing::raptor::communRAPTOR {
 
 
 
-        bool ajouter_label(label_template lbl);
+        bool ajouter_label(label_template &lbl);
         bool merge(Bag_route &bagr);
         bool merge(Bag &bagr);
     };
@@ -96,14 +97,14 @@ struct McRAPTOR : navitia::routing::raptor::communRAPTOR {
         Bag_route(McRAPTOR * raptor) : Parent_Bag(raptor)  {}
         Bag_route(McRAPTOR * raptor, unsigned int route) : Parent_Bag(raptor), route(route) {}
 
-        bool ajouter_label(label_template lbl) ;
+        bool ajouter_label(label_template &lbl) ;
         void update(unsigned int order) ;
         bool merge(Bag &bagr, unsigned int order) ;
     };
 
 
     struct bags_t {
-        std::vector<unsigned int> destinations;
+        map_int_T destinations;
         McRAPTOR * raptor;
         boost::unordered_map<std::pair<unsigned int, unsigned int>, Bag> bags;
         boost::unordered_map<int, Best_Bag>best_bags;
@@ -120,7 +121,8 @@ struct McRAPTOR : navitia::routing::raptor::communRAPTOR {
             best_bag_dest.raptor = raptor;
         }
 
-        void init(unsigned int p, std::vector<unsigned int>destinations_, McRAPTOR * raptor_) {
+        void init(unsigned int p, map_int_T destinations_, McRAPTOR * raptor_) {
+
             destinations = destinations_;
             raptor = raptor_;
             for(unsigned int i = 0; i < p; ++i) {
@@ -142,8 +144,9 @@ struct McRAPTOR : navitia::routing::raptor::communRAPTOR {
                 return (*iter).second;
             }
         }
-        void ajouter_label_dest(label_template lbl, unsigned int destination) {
-            if(std::count(destinations.begin(), destinations.end(), destination) > 0) {
+        void ajouter_label_dest(label_template &lbl, unsigned int destination) {
+            if(destinations.count(destination) > 0) {
+                this->raptor->label_vistor.updateDestination(destinations[destination], lbl);
                 best_bag_dest.ajouter_label(lbl);
             }
         }
@@ -151,22 +154,20 @@ struct McRAPTOR : navitia::routing::raptor::communRAPTOR {
     };
     bags_t bags;
 
-    typedef std::unordered_map<int, label_template> map_int_T;
     Path compute_raptor(map_int_pint_t departs_, map_int_pint_t destinations_) {
-        map_int_T departs;
+        map_int_T departs, destinations;
         BOOST_FOREACH(auto depart, departs_) {
             departs[depart.first] = label_template(depart.second);
         }
-        std::vector<unsigned int> destinations;
 
         BOOST_FOREACH(auto destination, destinations_) {
-            destinations.push_back(destination.first);
+            destinations[destination.first] = label_template(destination.second);
         }
-        return compute_raptor(departs, destinations);
+        return compute_raptor_all(departs, destinations).front();
     }
 
-    std::vector<Path> compute_raptor_all(map_int_T departs, std::vector<unsigned int> destinations);
-    Path compute_raptor(map_int_T departs, std::vector<unsigned int> destinations);
+    std::vector<Path> compute_raptor_all(map_int_T departs, map_int_T destinations);
+//    Path compute_raptor(map_int_T departs, std::vector<unsigned int> destinations);
 
 
 };

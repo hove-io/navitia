@@ -397,6 +397,7 @@ Path communRAPTOR::compute(const type::GeographicalCoord & departure, double rad
         } catch(NotFound) {std::cout << "Not found 2 " << std::endl;return Path();}
         BOOST_FOREACH(auto item, prox) {
             destinations[item.first] = type_retour((int)(item.second/80));
+            std::cout << "Destination : " << destinations[item.first].dist_to_dest << " " << item.second << " " << item.first << std::endl;
         }
     }
 

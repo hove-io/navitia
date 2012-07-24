@@ -81,12 +81,13 @@ BOOST_AUTO_TEST_CASE(marche_milieu) {
     navitia::streetnetwork::StreetNetwork sn;
     navitia::streetnetwork::GraphBuilder bsn(sn);
 
-    navitia::type::GeographicalCoord A(0,0, false);
-    navitia::type::GeographicalCoord B(10,10, false);
-    navitia::type::GeographicalCoord C(10,-10, false);
-    navitia::type::GeographicalCoord Z(20,0, false);
+    navitia::type::GeographicalCoord A(0,0);
+    navitia::type::GeographicalCoord B(0.0020,0.0020);
+    navitia::type::GeographicalCoord C(0.0010, 0.0010);
+    navitia::type::GeographicalCoord Z(0.0020,0);
 
     bsn("A", A)("B", B)("C", C)("Z", Z);
+    bsn("A", "A")("C", "C")("B", "B")("Z", "Z");
 
     navimake::builder b("20120614");
     b.sa("A", A);
@@ -98,6 +99,7 @@ BOOST_AUTO_TEST_CASE(marche_milieu) {
     b.vj("t3")("A", 8*3600 + 60*10)("Z", 9*3600 + 45*60);
 
     b.connection("B", "C", 10);
+
 
 
 }
@@ -129,10 +131,9 @@ BOOST_AUTO_TEST_CASE(marche_fin) {
 
     navitia::type::GeographicalCoord A(0,0, false);
     navitia::type::GeographicalCoord B(10,10, false);
-    navitia::type::GeographicalCoord C(10,-10, false);
     navitia::type::GeographicalCoord Z(20,0, false);
 
-    bsn("A", A)("B", B)("C", C)("Z", Z);
+    bsn("A", A)("B", B)("Z", Z);
     bsn("B", "Z", 5*(10/60));
 
 

@@ -17,6 +17,8 @@ struct FootPathCritere : public raptor::mcraptor::label_parent {
         this->dt = t.dt;
         this->distodest = t.dist_to_dest;
         this->footpathlength = t.dist_to_dep;
+        if(this->distodest  > 0)
+            std::cout << " dist to dest " << this->distodest << std::endl;
     }
 
     bool dominated_by(const FootPathCritere &lbl) const {
@@ -26,8 +28,10 @@ struct FootPathCritere : public raptor::mcraptor::label_parent {
     void update(DateTime &v, int stid) {
         this->dt = v + distodest;
         this->dt.normalize();
+        if(this->distodest > 0)
+            std::cout << " foot path length : " << this->footpathlength << " " << this->distodest;
+        this->footpathlength = this->distodest;
         this->stid = stid;
-
     }
 
     void ajouterfootpath(int duration) {
@@ -66,6 +70,10 @@ struct FootPathCritereVisitor {
         if(lbl.footpathlength < lbl2.footpathlength)
             lbl2.footpathlength = lbl.footpathlength;
     }
+
+    void updateDestination(const FootPathCritere destination, FootPathCritere & lbl) {
+        lbl.footpathlength = destination.distodest;
+    }
 };
 
 
@@ -77,29 +85,23 @@ int main(int, char **) {
     navitia::streetnetwork::GraphBuilder bsn(d.street_network);
 
     navitia::type::GeographicalCoord A(0,0);
-    navitia::type::GeographicalCoord B(0.0010,0.0010);
-    navitia::type::GeographicalCoord C(0.0010,-0.0010);
+    navitia::type::GeographicalCoord B(0.005,0.005);
     navitia::type::GeographicalCoord Z(0.0020,0);
 
-    bsn("A", A)("B", B)("C", C)("Z", Z);
-    bsn("A", "A");
+    bsn("A", A)("B", B)("Z", Z);
+    bsn("B", "Z")("A", "A")("B", "B")("Z", "Z");
+
 
     navimake::builder b("20120614");
-    b.sa("A", A);
     b.sa("B", B);
-    b.sa("C", C);
     b.sa("Z", Z);
-    b.vj("t1")("A", 8*3600 + 60*5)("B", 8*3600 + 10*60);
-    b.vj("t2")("C", 8*3600 + 60*30)("Z", 8*3600 + 45*60);
-    b.vj("t3")("A", 8*3600 + 60*10)("Z", 9*3600 + 45*60);
-
-    b.connection("B", "C", 10);
+    b.vj("t1")("A", 8*3600 + 60*5)("B", 8*3600 + 20*60);
+    b.vj("t2")("A", 8*3600 + 60*10)("Z", 9*3600 + 30*60);
     d.pt_data = b.build();
     d.build_proximity_list();
 
+    std::cout << "Distance " << Z.distance_to(B) << std::endl;
 
     raptor::mcraptor::McRAPTOR<FootPathCritere, FootPathCritereVisitor> dtraptor(d, FootPathCritereVisitor(d));
-    dtraptor.compute(navitia::type::GeographicalCoord(0,0), 500000, navitia::type::GeographicalCoord(0.0020,0), 500000, 7*3600, 0);
-
-
+    dtraptor.compute(navitia::type::GeographicalCoord(0,0), 500000, navitia::type::GeographicalCoord(0.0020,0), 1000, 7*3600, 0);
 }
