@@ -65,7 +65,7 @@ webservice::ResponseData Worker::unregister_navitia(webservice::RequestData& req
 }
 
 webservice::ResponseData Worker::handle(webservice::RequestData& request, Pool& pool){
-    //pool.check_desactivated_navitia();
+    pool.check_desactivated_navitia();
     webservice::ResponseData rd;
     Context context;
     dispatcher(request, rd, pool, context);
@@ -104,7 +104,7 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
         }catch(RequestException& ex){
             ok = false;
             nav->on_error();
-            LOG4CPLUS_WARN(logger, "la requétes a échoué");
+            LOG4CPLUS_WARN(logger, "la requéte a échoué");
             pool.release_navitia(nav);
             response.status_code = 500;
             context.service = Context::BAD_RESPONSE;
