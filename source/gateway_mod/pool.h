@@ -1,6 +1,6 @@
 #pragma once
 
-#include <deque>
+#include <vector>
 #include <boost/thread/shared_mutex.hpp>
 #include "navitia.h"
 
