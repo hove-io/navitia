@@ -50,6 +50,7 @@ public:
     int getnextmonday(boost::gregorian::date datetocompare, short sens);
     int getbesttarget();
     void translate();
+    void bounddrawdown();
     MakeTranslation();
 };
 

@@ -90,6 +90,50 @@ int MakeTranslation::getbesttarget(){
     return result;
 }
 
+void MakeTranslation::bounddrawdown(){
+    if(week_map.size() > 1){
+        // la condition de service ne débute pas un lundi, on a rabattre la borne inférieure sur la semaine consécutive
+        week startweek = week_map[0];
+        long int startweekkey = startweek.week_bs.to_ulong();
+        if (startweek.startdate.day_of_week() != boost::date_time::Monday){
+        //on récupere la première semaine complète afin d'inclure la borne basse à cette semaine
+            week firstweek = week_map[1];
+           //on ne garde que la partie commune aux 2 semaines
+            int weeklength = getnextmonday(startweek.startdate, 1);
+            //gestion des ET
+            std::bitset<7> exception = firstweek.week_bs;
+            exception.flip() &= startweek.week_bs;
+            target& responsefw = target_map[firstweek.week_bs.to_ulong()];
+
+            if(exception.any()){
+                for(int it=0; it!= weeklength; it++) {
+                    if(exception[it]){
+                        responsefw.andlist.push_back(startweek.startdate + boost::gregorian::date_duration(weeklength - it -1));
+                    }
+                }
+            }
+            //gestion des SAUF
+            startweek.week_bs ^= firstweek.week_bs;
+            exception &= startweek.week_bs;
+            exception ^= startweek.week_bs;
+
+            if(exception.any()){
+                for(int it=0; it!= weeklength; it++) {
+                    if(exception[it]){
+                        responsefw.exceptlist.push_back(startweek.startdate + boost::gregorian::date_duration(it));
+                    }
+                }
+            }
+            //gestion des periodes
+            target& responsesw = target_map[startweekkey];
+            responsefw.periodlist[0] = responsesw.periodlist[0];
+            std::cout << "target map avant" << target_map.size() << std::endl;
+            target_map.erase(startweekkey);
+            std::cout << "target map apres" << target_map.size() << std::endl;
+        }
+    }
+}
+
 
 void MakeTranslation::translate(){
     int weekindice = -1;
@@ -106,12 +150,13 @@ void MakeTranslation::translate(){
                     response.periodlist.push_back(it->second.startdate);
                     response.periodlist.push_back(it->second.startdate + shift);
                 }
-                weekindice = it->first;
+                weekindice = 1;
             } else {
                 weekindice = -1;
             }
         }
         response.used = true;
         targetkey = getbesttarget();
+        weekindice = -1;
    }
 }
