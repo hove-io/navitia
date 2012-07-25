@@ -41,14 +41,11 @@ webservice::ResponseData Worker::register_navitia(webservice::RequestData& reque
     }
     auto it = request.params.find("thread");
     if(it != request.params.end()){
-        //@TODO: std::lexical_cast
-        thread = atoi(it->second.c_str());
+        thread = boost::lexical_cast<int>(it->second);
     }
 
     //TODO valider l'url
-    auto nav = std::make_shared<Navitia>(request.params["url"], thread);
-    assert(nav.get() != NULL);
-    pool.add_navitia(nav);
+    pool.add_navitia(new Navitia(request.params["url"], thread));
 
     return status(request, pool);
 }
@@ -68,7 +65,7 @@ webservice::ResponseData Worker::unregister_navitia(webservice::RequestData& req
 }
 
 webservice::ResponseData Worker::handle(webservice::RequestData& request, Pool& pool){
-    pool.check_desactivated_navitia();
+    //pool.check_desactivated_navitia();
     webservice::ResponseData rd;
     Context context;
     dispatcher(request, rd, pool, context);
@@ -101,6 +98,7 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
         nb_try++;
         auto nav = pool.next();
         try{
+            //@TODO reload
             nav_response = nav->query(request.path.substr(request.path.find_last_of('/')) + "?" + request.raw_params);
             pool.release_navitia(nav);
         }catch(RequestException& ex){
