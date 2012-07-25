@@ -13,7 +13,7 @@ using namespace routing::raptor;
 
 /**
   *
-  *            10 minutes de marche  B(8h20)
+  *            9 de marche  B(8h20)
   *           ______________________x_____________
   *          /                                    \
   *         /                                      \
@@ -22,7 +22,7 @@ using namespace routing::raptor;
   *        \                                        / Z(9h30)
   *         \                                      /
   *          \______________________x_____________/
-  *           1 minute de marche    C(8h10)
+  *           1  de marche    C(8h10)
   *
   *
   *     Je veux remonter 2 solutions : 1) Depart de B(8h20), arrivée en Z à 8h30, 10 minutes de marche
@@ -33,13 +33,17 @@ BOOST_AUTO_TEST_CASE(marche_depart) {
     navitia::streetnetwork::StreetNetwork sn;
     navitia::streetnetwork::GraphBuilder bsn(sn);
 
-    navitia::type::GeographicalCoord A(0,0, false);
-    navitia::type::GeographicalCoord B(10,10, false);
-    navitia::type::GeographicalCoord C(-10,-10, false);
-    navitia::type::GeographicalCoord Z(20,0, false);
+    navitia::type::GeographicalCoord A(0,0);
+    navitia::type::GeographicalCoord B(0.005,0.005);
+    navitia::type::GeographicalCoord C(-0.001,-0.001);
+    navitia::type::GeographicalCoord D(0.005,0.0010);
 
-    bsn("A", A)("B", B)("C", C)("Z", Z);
-    bsn("A", "B", 5*(10/60))("A", "C", 5*(1/60));
+    navitia::type::GeographicalCoord Z(0.0020,0);
+
+    bsn("A", A)("B", B)("C", C)("D",D)("Z", Z);
+    bsn("A", "B")("B", "A")("A", "C")("C", "A")("A", "D")("D","A")("Z", "Z");
+
+
 
 
     navimake::builder b("20120614");
@@ -77,12 +81,13 @@ BOOST_AUTO_TEST_CASE(marche_milieu) {
     navitia::streetnetwork::StreetNetwork sn;
     navitia::streetnetwork::GraphBuilder bsn(sn);
 
-    navitia::type::GeographicalCoord A(0,0, false);
-    navitia::type::GeographicalCoord B(10,10, false);
-    navitia::type::GeographicalCoord C(10,-10, false);
-    navitia::type::GeographicalCoord Z(20,0, false);
+    navitia::type::GeographicalCoord A(0,0);
+    navitia::type::GeographicalCoord B(0.0020,0.0020);
+    navitia::type::GeographicalCoord C(0.0010, 0.0010);
+    navitia::type::GeographicalCoord Z(0.0020,0);
 
     bsn("A", A)("B", B)("C", C)("Z", Z);
+    bsn("A", "A")("C", "C")("B", "B")("Z", "Z");
 
     navimake::builder b("20120614");
     b.sa("A", A);
@@ -94,6 +99,7 @@ BOOST_AUTO_TEST_CASE(marche_milieu) {
     b.vj("t3")("A", 8*3600 + 60*10)("Z", 9*3600 + 45*60);
 
     b.connection("B", "C", 10);
+
 
 
 }
@@ -123,18 +129,17 @@ BOOST_AUTO_TEST_CASE(marche_fin) {
     navitia::streetnetwork::StreetNetwork sn;
     navitia::streetnetwork::GraphBuilder bsn(sn);
 
-    navitia::type::GeographicalCoord A(0,0, false);
-    navitia::type::GeographicalCoord B(10,10, false);
-    navitia::type::GeographicalCoord C(10,-10, false);
-    navitia::type::GeographicalCoord Z(20,0, false);
+    navitia::type::GeographicalCoord A(0,0);
+    navitia::type::GeographicalCoord B(0.005,0.005);
+    navitia::type::GeographicalCoord Z(0.0020,0);
 
-    bsn("A", A)("B", B)("C", C)("Z", Z);
-    bsn("B", "Z", 5*(10/60));
+    bsn("A", A)("B", B)("Z", Z);
+    bsn("B", "Z")("A", "A")("B", "B")("Z", "Z");
 
 
     navimake::builder b("20120614");
+    b.sa("A", A);
     b.sa("B", B);
-    b.sa("C", C);
     b.sa("Z", Z);
     b.vj("t1")("A", 8*3600 + 60*5)("B", 8*3600 + 20*60);
     b.vj("t2")("A", 8*3600 + 60*10)("Z", 9*3600 + 30*60);
@@ -148,13 +153,13 @@ BOOST_AUTO_TEST_CASE(marche_fin) {
   *
   *                                          C(8h15)            D(8h30)
   *                                           x__________________x____________
-  *            5min de marche      B(8h10)   /  10min de marche               \
+  *            9min de marche      B(8h10)   /  10min de marche               \
   *          _____________________x_________/                                  \
   *         /                                                                   \ Z(8h45)
   * A(8h)x /                                                                     x
   *        \                                                                     /Z(9h45)
   *         \_____________________x ____________________________________________/
-  *            1min de marche    E(8h10)
+  *            0min de marche    E(8h10)
   *
   * Je veux remonter deux solutions : 1) Départ de B(8h10), arrivée en Z(8h45), temps de marche : 15 minutes
   *                                   2) Départ de E(8h10), arrivee en Z(9h45), temps de marche : 1 minute
@@ -165,16 +170,16 @@ BOOST_AUTO_TEST_CASE(marche_depart_milieu) {
     navitia::streetnetwork::StreetNetwork sn;
     navitia::streetnetwork::GraphBuilder bsn(sn);
 
-    navitia::type::GeographicalCoord A(0,0, false);
-    navitia::type::GeographicalCoord B(10,10, false);
-    navitia::type::GeographicalCoord C(20,10, false);
-    navitia::type::GeographicalCoord D(30,10, false);
-    navitia::type::GeographicalCoord E(10,-10, false);
+    navitia::type::GeographicalCoord A(0,0);
+    navitia::type::GeographicalCoord B(0.0050,0.0050);
+    navitia::type::GeographicalCoord C(0.020,0.010);
+    navitia::type::GeographicalCoord D(0.030,0.010, false);
+    navitia::type::GeographicalCoord E(0.000100,-0.00010, false);
 
-    navitia::type::GeographicalCoord Z(40,0, false);
+    navitia::type::GeographicalCoord Z(0.0040,0, false);
 
     bsn("A", A)("B", B)("C", C)("D", D)("E", E)("Z", Z);
-    bsn("A", "B", 5*(5/60))("A", "E", 5*(1/60));
+    bsn("A", "B")("B","A")("A", "E")("E", "A")("C","C")("D","D")("Z","Z");
 
 
     navimake::builder b("20120614");
@@ -183,10 +188,9 @@ BOOST_AUTO_TEST_CASE(marche_depart_milieu) {
     b.sa("D", D);
     b.sa("E", E);
     b.sa("Z", Z);
-    b.vj("t1")("A", 8*3600 + 60*10)("B", 8*3600 + 15*60);
+    b.vj("t1")("B", 8*3600 + 60*10)("C", 8*3600 + 15*60);
     b.vj("t2")("D", 8*3600 + 60*30)("Z", 8*3600 + 45*60);
     b.vj("t3")("E", 8*3600 + 60*10)("Z", 9*3600 + 30*60);
-
     b.connection("C", "D", 10);
 
 }
@@ -216,13 +220,13 @@ BOOST_AUTO_TEST_CASE(marche_depart_fin) {
     navitia::streetnetwork::StreetNetwork sn;
     navitia::streetnetwork::GraphBuilder bsn(sn);
 
-    navitia::type::GeographicalCoord A(0,0, false);
-    navitia::type::GeographicalCoord B(10,10, false);
-    navitia::type::GeographicalCoord C(10,-10, false);
-    navitia::type::GeographicalCoord Z(20,0, false);
+    navitia::type::GeographicalCoord A(0,0);
+    navitia::type::GeographicalCoord B(0.005, 0.005);
+    navitia::type::GeographicalCoord C(-0.001, -0.001);
+    navitia::type::GeographicalCoord Z(0.002, 0.002);
 
     bsn("A", A)("B", B)("C", C)("Z", Z);
-    bsn("A", "B", 5*(5/60))("C", "Z", 5*(5/60));
+    bsn("A", "B")("B", "A")("C", "Z")("Z", "C")("Z", "Z");
 
     navimake::builder b("20120614");
     b.sa("A", A);

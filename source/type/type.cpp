@@ -11,6 +11,7 @@ namespace navitia { namespace type {
 
 bool ValidityPattern::is_valid(int duration){
     if(duration < 0){
+
         std::cerr << "La date est avant le début de période(" << beginning_date << ")" << std::endl;
         return false;
     }

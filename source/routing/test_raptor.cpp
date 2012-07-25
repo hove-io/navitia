@@ -9,7 +9,7 @@ int main(int, char **) {
     type::Data data;
     {
         Timer t("Chargement des données");
-        data.load_lz4("/home/vlara/navitia/jeu/poitiers/poitiers.nav");
+        data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.nav");
 
         data.build_proximity_list();
     }
@@ -30,12 +30,11 @@ int main(int, char **) {
 ////            }
 ////            precstid =  stid;
 ////        }
-////    }
-
+////    }http://127.0.0.1/planner?format=json&departure_lat=48.80039471738876&departure_lon=2.1296571179927253&destination_lat=48.93228737752789&destination_lon=2.4949524490283004&time=28800&date=20120511
     routing::raptor::RAPTOR raptor(data);
     {
         Timer t("Calcul raptor");
-        routing::Path result = raptor.makeItineraire(raptor.compute(depart, arrivee, 8*3600, 10));
+        routing::Path result = raptor.makeItineraire(raptor.compute(type::GeographicalCoord(2.1296571, 48.800394717), 300, type::GeographicalCoord(2.49495, 48.932287), 300, 8*3600, 7));
         std::cout << result;
     }
 

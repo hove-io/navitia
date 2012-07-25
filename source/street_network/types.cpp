@@ -180,7 +180,6 @@ std::vector< std::pair<idx_t, double> > StreetNetwork::find_nearest(const type::
     try{
         this->dijkstra(start.vertices[0], dists, preds, distance_visitor(radius, dists));
     }catch(DestinationFound){}
-
     dists[start.vertices[1]] = start.distances[1];
     try{
         this->dijkstra(start.vertices[0], dists, preds, distance_visitor(radius, dists));

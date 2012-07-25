@@ -54,7 +54,7 @@ namespace webservice {
                 try{
                 // L'heure est au format 945 et on veut récupérer le nombre de secondes depuis minuit
                     int time = boost::lexical_cast<int>(value);
-                    param.value = (time / 100) * 60 + (time % 60);
+                    param.value = (time / 100) * 3600 + (time % 60);
                 }catch(boost::bad_lexical_cast){param.valid_value = false;}
                 break;
             case ApiParameter::DATETIME:

@@ -14,6 +14,7 @@ Table des matières :
 
    introduction
    pre_requis
+   implem_type
    hub_navitia
    dev
    

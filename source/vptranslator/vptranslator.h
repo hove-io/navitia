@@ -27,19 +27,30 @@ public:
         int weeknumber;
         boost::gregorian::date startdate;
         std::bitset<7> week_bs;
+    };
+
+    struct target{
+        std::bitset<7> week_bs;
+        bool used;
         int count;
         int firstweeknumber;
         int lastweeknumber;
+        std::vector<boost::gregorian::date> periodlist;
+        std::vector<boost::gregorian::date> andlist;
+        std::vector<boost::gregorian::date> exceptlist;
     };
 
     boost::gregorian::date startdate;
     boost::gregorian::date enddate;
     std::string CS;
     std::map<int, week> week_map;
-    std::map<int, week> week_list;
+    std::map<int, target> target_map;
     bool initcs(boost::gregorian::date beginningday, std::string requestedcs);
     void splitcs();
     int getnextmonday(boost::gregorian::date datetocompare, short sens);
+    int getbesttarget();
+    void translate();
+    void bounddrawdown();
     MakeTranslation();
 };
 
