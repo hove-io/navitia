@@ -113,17 +113,17 @@ BOOST_AUTO_TEST_CASE(default_test) {
 
     //test de la decoupe de la condition de service
     testtranslation.splitcs();
-    BOOST_CHECK_EQUAL(testtranslation.week_map[0].week_bs.to_string(), "0001011");
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "0001011");
     testdate = boost::gregorian::date(2012,7,19);
-    BOOST_CHECK_EQUAL(testtranslation.week_map[0].startdate, testdate);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
 
-    BOOST_CHECK_EQUAL(testtranslation.week_map[1].week_bs.to_string(), "1001111");
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].week_bs.to_string(), "1001111");
     testdate = boost::gregorian::date(2012,7,23);
-    BOOST_CHECK_EQUAL(testtranslation.week_map[1].startdate, testdate);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].startdate, testdate);
 
-    BOOST_CHECK_EQUAL(testtranslation.week_map[2].week_bs.to_string(), "0011000");
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].week_bs.to_string(), "0011000");
     testdate = boost::gregorian::date(2012,7,30);
-    BOOST_CHECK_EQUAL(testtranslation.week_map[2].startdate, testdate);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].startdate, testdate);
 
     testCS="111111111111111111111";
     testdate= boost::gregorian::date(2012,7,2);
@@ -138,17 +138,17 @@ BOOST_AUTO_TEST_CASE(default_test) {
 
     //test de la decoupe de la condition de service
     testtranslation.splitcs();
-    BOOST_CHECK_EQUAL(testtranslation.week_map[0].week_bs.to_string(), "1111111");
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "1111111");
     testdate = boost::gregorian::date(2012,7,2);
-    BOOST_CHECK_EQUAL(testtranslation.week_map[0].startdate, testdate);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
 
-    BOOST_CHECK_EQUAL(testtranslation.week_map[1].week_bs.to_string(), "1111111");
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].week_bs.to_string(), "1111111");
     testdate = boost::gregorian::date(2012,7,9);
-    BOOST_CHECK_EQUAL(testtranslation.week_map[1].startdate, testdate);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].startdate, testdate);
 
-    BOOST_CHECK_EQUAL(testtranslation.week_map[2].week_bs.to_string(), "1111111");
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].week_bs.to_string(), "1111111");
     testdate = boost::gregorian::date(2012,7,16);
-    BOOST_CHECK_EQUAL(testtranslation.week_map[2].startdate, testdate);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].startdate, testdate);
 
     testtranslation.translate();
 
@@ -175,17 +175,17 @@ BOOST_AUTO_TEST_CASE(default_test) {
 
     //test de la decoupe de la condition de service
     testtranslation.splitcs();
-    BOOST_CHECK_EQUAL(testtranslation.week_map[0].week_bs.to_string(), "0111111");
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "0111111");
     testdate = boost::gregorian::date(2012,7,3);
-    BOOST_CHECK_EQUAL(testtranslation.week_map[0].startdate, testdate);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
 
-    BOOST_CHECK_EQUAL(testtranslation.week_map[1].week_bs.to_string(), "0000000");
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].week_bs.to_string(), "0000000");
     testdate = boost::gregorian::date(2012,7,9);
-    BOOST_CHECK_EQUAL(testtranslation.week_map[1].startdate, testdate);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].startdate, testdate);
 
-    BOOST_CHECK_EQUAL(testtranslation.week_map[2].week_bs.to_string(), "1111111");
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].week_bs.to_string(), "1111111");
     testdate = boost::gregorian::date(2012,7,16);
-    BOOST_CHECK_EQUAL(testtranslation.week_map[2].startdate, testdate);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].startdate, testdate);
 
     testtranslation.translate();
 
@@ -214,17 +214,17 @@ BOOST_AUTO_TEST_CASE(default_test) {
 
     //test de la decoupe de la condition de service
     testtranslation.splitcs();
-    BOOST_CHECK_EQUAL(testtranslation.week_map[0].week_bs.to_string(), "0011011");
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "0011011");
     testdate = boost::gregorian::date(2012,7,4);
-    BOOST_CHECK_EQUAL(testtranslation.week_map[0].startdate, testdate);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
 
-    BOOST_CHECK_EQUAL(testtranslation.week_map[1].week_bs.to_string(), "1111101");
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].week_bs.to_string(), "1111101");
     testdate = boost::gregorian::date(2012,7,9);
-    BOOST_CHECK_EQUAL(testtranslation.week_map[1].startdate, testdate);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].startdate, testdate);
 
-//    BOOST_CHECK_EQUAL(testtranslation.week_map[2].week_bs.to_string(), "1111111");
+//    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].week_bs.to_string(), "1111111");
 //    testdate = boost::gregorian::date(2012,7,16);
-//    BOOST_CHECK_EQUAL(testtranslation.week_map[2].startdate, testdate);
+//    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].startdate, testdate);
 
     std::cout << "nouveau test : " <<std::endl;
     testtranslation.translate();

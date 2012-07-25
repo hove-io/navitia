@@ -43,7 +43,7 @@ public:
     boost::gregorian::date startdate;
     boost::gregorian::date enddate;
     std::string CS;
-    std::map<int, week> week_map;
+    std::vector<week> week_vector;
     std::map<int, target> target_map;
     bool initcs(boost::gregorian::date beginningday, std::string requestedcs);
     void splitcs();
