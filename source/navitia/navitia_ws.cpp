@@ -16,7 +16,7 @@ namespace nt = navitia::type;
 
 class Worker : public BaseWorker<navitia::type::Data> {
 
-    navitia::routing::raptor::RAPTOR *calculateur;
+    std::unique_ptr<navitia::routing::raptor::RAPTOR> calculateur;
 
     /**
      * structure permettant de simuler un finaly afin
@@ -247,7 +247,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
             data.loaded = true;
             data.load_lz4(database);
             data.build_proximity_list();
-            calculateur = new navitia::routing::raptor::RAPTOR(data);
+            calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(data));
         }catch(...){
             data.loaded = false;
             throw;
@@ -372,7 +372,7 @@ public:
       *
       * On y enregistre toutes les api qu'on souhaite exposer
       */
-    Worker(navitia::type::Data & ) : calculateur(NULL) {
+    Worker(navitia::type::Data & ){
         register_api("streetnetwork", boost::bind(&Worker::streetnetwork, this, _1, _2), "Calcul d'itinéraire piéton");
         add_param("streetnetwork", "startlon", "Longitude en degrés", ApiParameter::DOUBLE, true);
         add_param("streetnetwork", "startlat", "Latitude en degrés", ApiParameter::DOUBLE, true);
@@ -412,9 +412,6 @@ public:
         add_default_api();
     }
 
-    ~Worker() {
-        delete calculateur;
-    }
 };
 
 
