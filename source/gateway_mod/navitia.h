@@ -5,6 +5,8 @@
  * représente une instance NAViTiA
  */
 
+namespace navitia{ namespace gateway{
+
 struct RequestException : public std::exception{
     enum ErrorType{
         TIMEOUT,
@@ -85,3 +87,6 @@ class Navitia {
         void reactivate();
         void decrement_error();
 };
+
+
+}}

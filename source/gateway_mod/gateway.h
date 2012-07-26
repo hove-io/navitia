@@ -6,12 +6,9 @@
 #include "pool.h"
 #include "interface.h"
 
-class Dispatcher{
-    public:
-    void operator()(webservice::RequestData& request, webservice::ResponseData& response, Pool& pool, Context& context);
-    private:
+namespace navitia{ namespace gateway{
 
-};
+void dispatcher(webservice::RequestData& request, webservice::ResponseData& response, Pool& pool, Context& context);
 
 class Worker : public webservice::BaseWorker<Pool> {
 
@@ -22,11 +19,10 @@ class Worker : public webservice::BaseWorker<Pool> {
     webservice::ResponseData load(webservice::RequestData& request, Pool& pool);
     
     
-    Dispatcher dispatcher;
-
     public:    
     Worker(Pool &);
 };
 
+}}
 
 

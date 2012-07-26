@@ -7,6 +7,7 @@
 #include <log4cplus/logger.h>
 #include <boost/format.hpp>
 
+namespace navitia{ namespace gateway{
 
 Response::Response() : code(0){}
 Response::Response(int code) : code(code){}
@@ -89,3 +90,5 @@ void Navitia::decrement_error(){
         this->next_decrement = time(NULL) + 60;
     }
 }
+
+}}

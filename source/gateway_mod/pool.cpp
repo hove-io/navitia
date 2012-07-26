@@ -7,6 +7,8 @@
 #include <utils/logger.h>
 #include <assert.h>
 
+namespace navitia{ namespace gateway{
+
 Pool::Pool(){
     init_logger();
 	Configuration * conf = Configuration::get();
@@ -25,7 +27,7 @@ Pool::Pool(){
     while(conf->has_section(section_name)){
         std::string url = conf->get_as<std::string>(section_name, "url", "");
         int nb_thread = conf->get_as<int>(section_name, "thread", 8);
-        add_navitia(new Navitia(url, nb_thread));       
+        add_navitia( std::make_shared<Navitia>(url, nb_thread));       
         i++;
         section_name = std::string("NAVITIA_") + boost::lexical_cast<std::string>(i); 
     }
@@ -36,8 +38,12 @@ Pool::Pool(){
     }
 }
 
+Pool::Pool(Pool& other) : nb_threads(other.nb_threads){
+    boost::lock_guard<boost::shared_mutex> lock(other.mutex);
+    navitia_list = other.navitia_list;
+}
 
-void Pool::add_navitia(Navitia* navitia){
+void Pool::add_navitia(std::shared_ptr<Navitia> navitia){
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "ajout du navitia " + navitia->url);
     boost::lock_guard<boost::shared_mutex> lock(mutex);
@@ -78,3 +84,5 @@ void Pool::check_desactivated_navitia(){
     }
     std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
 }
+
+}}

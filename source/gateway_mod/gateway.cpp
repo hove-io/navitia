@@ -10,6 +10,8 @@
 #include "type/pb_utils.h"
 
 
+namespace navitia{ namespace gateway{
+
 Worker::Worker(Pool &){
     register_api("/", boost::bind(&Worker::handle, this, _1, _2), "traite les requétes");
     register_api("firstletter", boost::bind(&Worker::handle, this, _1, _2), "traite les requètes");
@@ -45,7 +47,7 @@ webservice::ResponseData Worker::register_navitia(webservice::RequestData& reque
     }
 
     //TODO valider l'url
-    pool.add_navitia(new Navitia(request.params["url"], thread));
+    pool.add_navitia( std::make_shared<Navitia>(request.params["url"], thread));
 
     return status(request, pool);
 }
@@ -88,7 +90,7 @@ webservice::ResponseData Worker::load(webservice::RequestData& request, Pool& po
     return this->status(request, pool);
 }
 
-void Dispatcher::operator()(webservice::RequestData& request, webservice::ResponseData& response, Pool& pool, Context& context){
+void dispatcher(webservice::RequestData& request, webservice::ResponseData& response, Pool& pool, Context& context){
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     Response nav_response;
     int nb_try = 0;
@@ -132,4 +134,6 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
     }while(!ok && nb_try < 4);
 }
 
-MAKE_WEBSERVICE(Pool, Worker)
+}}
+
+MAKE_WEBSERVICE(navitia::gateway::Pool, navitia::gateway::Worker)
