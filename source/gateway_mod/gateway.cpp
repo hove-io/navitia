@@ -75,9 +75,10 @@ webservice::ResponseData Worker::handle(webservice::RequestData& request, Pool& 
     return rd;
 }
 
-webservice::ResponseData Worker::load(webservice::RequestData& request, Pool& pool){
+webservice::ResponseData Worker::load(webservice::RequestData& request, Pool pool){
     //TODO gestion de la desactivation
-    // threadsafe?
+    //Pool est passé par copie pour gérer les problémes de multithread,
+    //de cette facon, on à pas a locker tous le pool le temps du rechargement
     BOOST_FOREACH(auto nav, pool.navitia_list){
         try{
             nav->load();
