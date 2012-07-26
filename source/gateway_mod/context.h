@@ -3,7 +3,7 @@
 #include <memory>
 #include "type/type.pb.h"
 
-
+namespace navitia{ namespace gateway{
 
 /**
  * Classe servant a transmettre des données entre les différents modules de la gateway
@@ -29,3 +29,5 @@ struct Context {
 
     Context() : service(UNKNOWN){}
 };
+
+}}

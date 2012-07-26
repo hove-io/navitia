@@ -7,12 +7,20 @@
 #include <log4cplus/logger.h>
 #include <boost/format.hpp>
 
+namespace navitia{ namespace gateway{
 
-Response::Response() : code(0){}
-Response::Response(int code) : code(code){}
-Response::Response(const std::string& body, int code) : code(code), body(body){}
+NavitiaResponse::NavitiaResponse() : code(0){}
+NavitiaResponse::NavitiaResponse(int code) : code(code){}
+NavitiaResponse::NavitiaResponse(const std::string& body, int code) : code(code), body(body){}
 
-Response Navitia::query(const std::string& request){
+bool NavitiaResponse::loading() const{
+    if(this->code == 503){
+        return true;
+    }
+    return false;
+}
+
+NavitiaResponse Navitia::query(const std::string& request){
     std::stringstream ss;
     curlpp::Easy curl_request;
     
@@ -29,7 +37,7 @@ Response Navitia::query(const std::string& request){
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
             LOG4CPLUS_WARN(logger, boost::format("réponse %d depuis %s") % response_code % req);
         }
-            Response response(ss.str(), response_code);
+            NavitiaResponse response(ss.str(), response_code);
             response.content_type = curlpp::infos::ContentType::get(curl_request);
             return response;
     }catch(curlpp::LibcurlRuntimeError& e){
@@ -89,3 +97,5 @@ void Navitia::decrement_error(){
         this->next_decrement = time(NULL) + 60;
     }
 }
+
+}}

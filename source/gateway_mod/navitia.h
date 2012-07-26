@@ -5,6 +5,8 @@
  * représente une instance NAViTiA
  */
 
+namespace navitia{ namespace gateway{
+
 struct RequestException : public std::exception{
     enum ErrorType{
         TIMEOUT,
@@ -23,15 +25,16 @@ struct RequestException : public std::exception{
 };
 
 
-struct Response{
+struct NavitiaResponse{
     int code;
     std::string body;
     std::string content_type;
 
-    Response();
-    Response(int code);
-    Response(const std::string& body, int code);
+    NavitiaResponse();
+    NavitiaResponse(int code);
+    NavitiaResponse(const std::string& body, int code);
 
+    bool loading() const;
 };
 
 class Navitia {
@@ -69,7 +72,7 @@ class Navitia {
 
         Navitia(const Navitia& nav) : url(nav.url), unused_thread(nav.unused_thread), last_request_at(0), current_thread(0), nb_errors(0), last_errors_at(0), enable(true), reactivate_at(0), next_decrement(0){}
 
-        Response query(const std::string& request);
+        NavitiaResponse query(const std::string& request);
         
         /// la comparaison s'effectue uniquement sur l'url
         bool operator==(const Navitia& other){
@@ -85,3 +88,6 @@ class Navitia {
         void reactivate();
         void decrement_error();
 };
+
+
+}}

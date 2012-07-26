@@ -84,7 +84,7 @@ namespace webservice {
     }
 
     template<class Data, class Worker>
-    void run_cli(int argc, char** argv, Data & d){
+    int run_cli(int argc, char** argv, Data & d){
         Worker w(d);       
 
         if(argc == 1) {
@@ -106,7 +106,7 @@ namespace webservice {
                     if( strcmp(line_read, "exit") == 0 || strcmp(line_read, "quit") == 0)
                     {
                         std::cout << "\n Bye! See you soon!" << std::endl;
-                        exit(0);
+                        return 0;
                     }
                     add_history (line_read);
                     std::cout << w.run_query(line_read, d);
@@ -116,9 +116,11 @@ namespace webservice {
         }
         else if (argc == 2){
             std::cout << w.run_query(argv[1], d);
+            return 0;
         }
         else {
             std::cout << "Il faut exactement zéro ou un paramètre" << std::endl;
+            return 1;
         }
     }
 }

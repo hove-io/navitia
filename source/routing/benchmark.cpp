@@ -192,6 +192,7 @@ void benchmark::computeBench_ra() {
         ++count;
         std::cout << count << std::flush;
         Timer t;
+        std::cout << "Raptor de " << entry[0] << " -> " << entry[1] << " à " << entry[2] << " le " << entry[3] << std::endl;
         Path result = raptor.compute(entry[0], entry[1], entry[2], entry[3]);
         int temps = t.ms();
         file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.duration << ","

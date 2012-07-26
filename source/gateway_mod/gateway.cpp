@@ -10,6 +10,8 @@
 #include "type/pb_utils.h"
 
 
+namespace navitia{ namespace gateway{
+
 Worker::Worker(Pool &){
     register_api("/", boost::bind(&Worker::handle, this, _1, _2), "traite les requétes");
     register_api("firstletter", boost::bind(&Worker::handle, this, _1, _2), "traite les requètes");
@@ -45,7 +47,7 @@ webservice::ResponseData Worker::register_navitia(webservice::RequestData& reque
     }
 
     //TODO valider l'url
-    pool.add_navitia(new Navitia(request.params["url"], thread));
+    pool.add_navitia( std::make_shared<Navitia>(request.params["url"], thread));
 
     return status(request, pool);
 }
@@ -73,9 +75,10 @@ webservice::ResponseData Worker::handle(webservice::RequestData& request, Pool& 
     return rd;
 }
 
-webservice::ResponseData Worker::load(webservice::RequestData& request, Pool& pool){
+webservice::ResponseData Worker::load(webservice::RequestData& request, Pool pool){
     //TODO gestion de la desactivation
-    // threadsafe?
+    //Pool est passé par copie pour gérer les problémes de multithread,
+    //de cette facon, on à pas a locker tous le pool le temps du rechargement
     BOOST_FOREACH(auto nav, pool.navitia_list){
         try{
             nav->load();
@@ -88,9 +91,9 @@ webservice::ResponseData Worker::load(webservice::RequestData& request, Pool& po
     return this->status(request, pool);
 }
 
-void Dispatcher::operator()(webservice::RequestData& request, webservice::ResponseData& response, Pool& pool, Context& context){
+void dispatcher(webservice::RequestData& request, webservice::ResponseData& response, Pool& pool, Context& context){
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    Response nav_response;
+    NavitiaResponse nav_response;
     int nb_try = 0;
     bool ok = true;
     do{
@@ -101,6 +104,10 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
             //@TODO reload
             nav_response = nav->query(request.path.substr(request.path.find_last_of('/')) + "?" + request.raw_params);
             pool.release_navitia(nav);
+            if(nav_response.loading()){
+                ok = false;
+                continue;
+            }
         }catch(RequestException& ex){
             ok = false;
             nav->on_error();
@@ -132,4 +139,6 @@ void Dispatcher::operator()(webservice::RequestData& request, webservice::Respon
     }while(!ok && nb_try < 4);
 }
 
-MAKE_WEBSERVICE(Pool, Worker)
+}}
+
+MAKE_WEBSERVICE(navitia::gateway::Pool, navitia::gateway::Worker)
