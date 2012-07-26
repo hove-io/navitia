@@ -93,7 +93,7 @@ webservice::ResponseData Worker::load(webservice::RequestData& request, Pool poo
 
 void dispatcher(webservice::RequestData& request, webservice::ResponseData& response, Pool& pool, Context& context){
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    Response nav_response;
+    NavitiaResponse nav_response;
     int nb_try = 0;
     bool ok = true;
     do{
@@ -104,6 +104,10 @@ void dispatcher(webservice::RequestData& request, webservice::ResponseData& resp
             //@TODO reload
             nav_response = nav->query(request.path.substr(request.path.find_last_of('/')) + "?" + request.raw_params);
             pool.release_navitia(nav);
+            if(nav_response.loading()){
+                ok = false;
+                continue;
+            }
         }catch(RequestException& ex){
             ok = false;
             nav->on_error();

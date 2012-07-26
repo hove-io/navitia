@@ -25,15 +25,16 @@ struct RequestException : public std::exception{
 };
 
 
-struct Response{
+struct NavitiaResponse{
     int code;
     std::string body;
     std::string content_type;
 
-    Response();
-    Response(int code);
-    Response(const std::string& body, int code);
+    NavitiaResponse();
+    NavitiaResponse(int code);
+    NavitiaResponse(const std::string& body, int code);
 
+    bool loading() const;
 };
 
 class Navitia {
