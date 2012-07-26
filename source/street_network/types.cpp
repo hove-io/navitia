@@ -296,6 +296,7 @@ GraphBuilder & GraphBuilder::add_edge(std::string source_name, std::string targe
     edge.length = length >= 0? length : 0;
 
     boost::add_edge(source, target, edge, this->street_network.graph);
+    boost::add_edge(target, source, edge, this->street_network.graph);
 
     return *this;
 }
