@@ -188,5 +188,24 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_fin){
     BOOST_CHECK_EQUAL(res.items[2].time, 8200+10*60);
 }
 
+BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
+    navimake::builder b("20120614");
+    b.vj("A")("stop1", 8000)("stop2", 8200);
+    b.vj("B")("stop3", 10)("stop4",20);
+    b.connection("stop2", "stop3", 10*60);
 
+    type::Data data;
+    data.pt_data = b.build();
+    RAPTOR raptor(data);
+
+    type::PT_Data d = data.pt_data;
+
+
+    auto res = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 7900, 0);
+    std::cout << res << std::endl;
+    BOOST_REQUIRE_EQUAL(res.items.size(), 5);
+    BOOST_CHECK_EQUAL(res.items[4].said, 3);
+    BOOST_CHECK_EQUAL(res.items[4].time, 20);
+    BOOST_CHECK_EQUAL(res.items[4].day, 1);
+}
 
