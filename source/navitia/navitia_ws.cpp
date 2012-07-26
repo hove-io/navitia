@@ -99,7 +99,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         Locker locker(d);
         if(!locker.locked){
             //on est en cours de chargement
-            rd.status_code = 200;
+            rd.status_code = 503;
             rd.content_type = "application/octet-stream";
             pb_response.set_error("loading");
             pb_response.SerializeToOstream(&rd.response);
