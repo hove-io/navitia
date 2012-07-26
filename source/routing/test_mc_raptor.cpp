@@ -85,9 +85,9 @@ int main(int, char **) {
 
     navitia::streetnetwork::GraphBuilder bsn(d.street_network);
 
-    navitia::type::GeographicalCoord A(0,0);
-    navitia::type::GeographicalCoord B(0.005,0.005);
-    navitia::type::GeographicalCoord Z(0.0020,0);
+    navitia::type::GeographicalCoord A(0,0, false);
+    navitia::type::GeographicalCoord B(0.005,0.005,false);
+    navitia::type::GeographicalCoord Z(0.0020,0, false);
 
     bsn("A", A)("B", B)("Z", Z);
     bsn("B", "Z")("Z", "B")("A", "A")("B", "B")("Z", "Z");
@@ -104,6 +104,8 @@ int main(int, char **) {
     d.build_proximity_list();
 
     std::cout << "Distance Z à Z" << Z.distance_to(Z) <<std::endl;
+    std::cout << "Distance A à Z" << A.distance_to(Z) <<std::endl;
+    std::cout << "Distance B à Z" << B.distance_to(Z) <<std::endl;
 
     raptor::mcraptor::McRAPTOR<FootPathCritere, FootPathCritereVisitor> dtraptor(d, FootPathCritereVisitor(d));
     dtraptor.compute(A, 10000, Z, 5000, 7*3600, 0);
