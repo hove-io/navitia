@@ -1,8 +1,10 @@
 #pragma once
 
-#include <deque>
+#include <vector>
 #include <boost/thread/shared_mutex.hpp>
 #include "navitia.h"
+
+namespace navitia{ namespace gateway{
 
 class Pool{
     protected:
@@ -15,19 +17,21 @@ class Pool{
          *
          */
         struct Sorter{
-            bool operator()(const std::shared_ptr<Navitia> a, const std::shared_ptr<Navitia> b){
+            //operator <
+            bool operator()(std::shared_ptr<Navitia> a, std::shared_ptr<Navitia> b){
                 //on favorise celui qui a le moins d'erreurs
+                bool result;
                 if(!a->enable){
-                    return true;
+                    result = false;//true;
                 }else if(!b->enable){
-                    return false;
-                }
+                    result = true;//false;
+                }else if(a->unused_thread == b->unused_thread){
                 //si le nombre d'erreurs est identique, on favorise le moins chargé
-                if(a->unused_thread == b->unused_thread){
-                    return a->last_request_at > b->last_request_at;
+                    result = (a->last_request_at < b->last_request_at);
                 }else{
-                    return a->unused_thread > b->unused_thread;
+                    result = (a->unused_thread < b->unused_thread);
                 }
+                return result;
             }
         };
         
@@ -45,9 +49,11 @@ class Pool{
         
         int nb_threads;
         ///liste des instances navitia trié sous la forme d'un tas
-        std::deque<std::shared_ptr<Navitia>> navitia_list;
+        std::vector<std::shared_ptr<Navitia>> navitia_list;
 
         Pool();
+
+        Pool(Pool& other);
         
         /// assure la libération du navitia, et retris la liste
         inline void release_navitia(std::shared_ptr<Navitia> navitia){
@@ -63,8 +69,7 @@ class Pool{
          */
         inline std::shared_ptr<Navitia> next(){
             boost::lock_guard<boost::shared_mutex> lock(mutex);
-            std::pop_heap(navitia_list.begin(), navitia_list.end(), Sorter());
-            auto nav = navitia_list.back();
+            auto nav = navitia_list.front();
             nav->use();
             std::make_heap(navitia_list.begin(), navitia_list.end(), Sorter());
 
@@ -76,3 +81,5 @@ class Pool{
         void check_desactivated_navitia();
 
 };
+
+}}

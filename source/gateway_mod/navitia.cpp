@@ -7,9 +7,14 @@
 #include <log4cplus/logger.h>
 #include <boost/format.hpp>
 
-std::pair<int, std::string> Navitia::query(const std::string& request){
+namespace navitia{ namespace gateway{
+
+Response::Response() : code(0){}
+Response::Response(int code) : code(code){}
+Response::Response(const std::string& body, int code) : code(code), body(body){}
+
+Response Navitia::query(const std::string& request){
     std::stringstream ss;
-    std::stringstream response;
     curlpp::Easy curl_request;
     
     curl_request.setOpt(curlpp::options::WriteStream(&ss));
@@ -21,27 +26,26 @@ std::pair<int, std::string> Navitia::query(const std::string& request){
     try{
         curl_request.perform();
         long response_code = curlpp::infos::ResponseCode::get(curl_request);
-        if(response_code >= 200 && response_code < 300){
-            //tous va bien, on renvoie le flux
-            return std::make_pair(response_code, ss.str());
-        }else{
+        if(response_code < 200 || response_code >= 300){
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
             LOG4CPLUS_WARN(logger, boost::format("réponse %d depuis %s") % response_code % req);
-            throw RequestException(ss.str(), response_code);
         }
+            Response response(ss.str(), response_code);
+            response.content_type = curlpp::infos::ContentType::get(curl_request);
+            return response;
     }catch(curlpp::LibcurlRuntimeError& e){
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
         LOG4CPLUS_WARN(logger, boost::format("exception depuis %s -- Curl Reason: %s -- Curl Code: %d") % req % e.what() % e.whatCode());
 
         if(e.whatCode() == CURLE_OPERATION_TIMEDOUT){
-            throw RequestException(true);
+            throw RequestException(RequestException::TIMEOUT);
         }
-        throw RequestException("", 500);
+        throw RequestException();
 
     }catch(curlpp::RuntimeError& e){
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
         LOG4CPLUS_WARN(logger, e.what() + std::string(" - ") + req);
-        throw RequestException("", 500);
+        throw RequestException();
     }
 }
 
@@ -86,3 +90,5 @@ void Navitia::decrement_error(){
         this->next_decrement = time(NULL) + 60;
     }
 }
+
+}}
