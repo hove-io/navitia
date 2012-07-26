@@ -14,8 +14,8 @@ int main(int, char **) {
         data.build_proximity_list();
     }
 
-    int depart = 0;
-    int arrivee = 2;
+//    int depart = 0;
+//    int arrivee = 2;
 //    std::cout << "Recherche de chemin entre " << data.pt_data.stop_areas.at(depart).name << " et " << data.pt_data.stop_areas.at(arrivee).name << std::endl;
 
 
@@ -34,10 +34,12 @@ int main(int, char **) {
     routing::raptor::RAPTOR raptor(data);
     {
         Timer t("Calcul raptor");
-        routing::Path result = raptor.makeItineraire(raptor.compute(type::GeographicalCoord(2.1296571, 48.800394717), 300, type::GeographicalCoord(2.49495, 48.932287), 300, 8*3600, 7));
+//        routing::Path result = raptor.makeItineraire(raptor.compute(type::GeographicalCoord(2.1296571, 48.800394717), 300, type::GeographicalCoord(2.49495, 48.932287), 300, 8*3600, 7));
+        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
         std::cout << result;
     }
 
+//    std::cout << "Je suis ici ! " << std::endl;
 
 //    {
 //        Timer t("Calcul raptor");/*
@@ -56,16 +58,18 @@ int main(int, char **) {
 //        std::cout << raptor.compute(navitia::type::GeographicalCoord(2.3305474316803103, 48.867483087514856), 500, navitia::type::GeographicalCoord(2.349430179055217, 48.84850904718449), 500, 28800, 7);
 //    }
 
+
 //    navimake::builder b("20120614");
-//    b.vj("A")("stop1", 8000)("stop2", 8200);
-//    b.vj("B")("stop3", 9000)("stop4", 9200);
-//    b.connection("stop2", "stop3", 10*60);
+//    b.vj("A")("stop1", 23*3600)("stop2", 24*3600 + 5*60);
+//    b.vj("B")("stop2", 10*60)("stop3", 20*60);
 //    type::Data data;
 //    data.pt_data =  b.build();
 //    routing::raptor::RAPTOR raptor(data);
 
 //    type::PT_Data d = data.pt_data;
 
-//    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7500, 0);
-//    std::cout << res;
+//    auto res = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 22*3600, 0);
+//    std::cout << res << std::endl;
+
+
 }
