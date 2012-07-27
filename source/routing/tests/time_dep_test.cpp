@@ -55,6 +55,23 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     BOOST_CHECK_EQUAL(res.items[3].day, 1);
 }
 
+BOOST_AUTO_TEST_CASE(passe_minuit_fail){
+    navimake::builder b("20120614");
+    b.vj("A")("stop1", 23*3600)("stop2", 24*3600 + 10*60);
+    b.vj("B")("stop2", 5*60)("stop3", 20*60);
+    type::PT_Data d = b.build();
+    TimeDependent tp(d);
+    tp.build_graph();
+    auto res = tp.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 4);
+    BOOST_CHECK_EQUAL(res.items[0].said, 0);
+    BOOST_CHECK_EQUAL(res.items[1].said, 1);
+    BOOST_CHECK_EQUAL(res.items[2].said, 1);
+    BOOST_CHECK_EQUAL(res.items[3].said, 2);
+    BOOST_CHECK_EQUAL(res.items[0].day, 0);
+    BOOST_CHECK_EQUAL(res.items[3].day, 2);
+}
+
 BOOST_AUTO_TEST_CASE(validity_pattern){
     navimake::builder b("20120614");
     b.vj("A", "0")("stop1", 8000)("stop2", 8200);
