@@ -36,23 +36,33 @@ class Worker : public BaseWorker<navitia::type::Data> {
      * se charge de remplir l'objet protocolbuffer firstletter passé en paramètre
      *
      */
-    void create_pb(const std::vector<nt::idx_t>& result, const nt::Type_e type, const nt::Data& data, pbnavitia::FirstLetter& pb_fl){
-        BOOST_FOREACH(nt::idx_t idx, result){
+    void create_pb(const std::vector<FirstLetter<nt::idx_t>::fl_quality>& result, const nt::Type_e type, const nt::Data& data, pbnavitia::FirstLetter& pb_fl){
+        BOOST_FOREACH(auto result_item, result){
             pbnavitia::FirstLetterItem* item = pb_fl.add_items();
             google::protobuf::Message* child = NULL;
             switch(type){
                 case nt::eStopArea:
                     child = item->mutable_stop_area();
-                    navitia::fill_pb_object<nt::eStopArea>(idx, data, child, 2);
-                    item->set_name(data.pt_data.stop_areas[idx].name);
-                    item->set_uri(nt::EntryPoint::get_uri(data.pt_data.stop_areas[idx]));
+                    navitia::fill_pb_object<nt::eStopArea>(result_item.idx, data, child, 2);
+                    item->set_name(data.pt_data.stop_areas[result_item.idx].name);
+                    item->set_uri(nt::EntryPoint::get_uri(data.pt_data.stop_areas[result_item.idx]));
+                    item->set_quality(result_item.quality);
                     break;
                 case nt::eCity:
                     child = item->mutable_city();
-                    navitia::fill_pb_object<nt::eCity>(idx, data, child);
-                    item->set_name(data.pt_data.cities[idx].name);
-                    item->set_uri(nt::EntryPoint::get_uri(data.pt_data.cities[idx]));
+                    navitia::fill_pb_object<nt::eCity>(result_item.idx, data, child);
+                    item->set_name(data.pt_data.cities[result_item.idx].name);
+                    item->set_uri(nt::EntryPoint::get_uri(data.pt_data.cities[result_item.idx]));
+                    item->set_quality(result_item.quality);
                     break;
+                case nt::eStopPoint:
+                    child = item->mutable_stop_point();
+                    navitia::fill_pb_object<nt::eStopPoint>(result_item.idx, data, child, 2);
+                    item->set_name(data.pt_data.stop_points[result_item.idx].name);
+                    item->set_uri(nt::EntryPoint::get_uri(data.pt_data.stop_points[result_item.idx]));
+                    item->set_quality(result_item.quality);
+                    break;
+
                 default:
                     break;
             }
@@ -67,6 +77,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         if(filter.empty()){//on utilise la valeur par défaut si pas de paramètre
             result.push_back(nt::eStopArea);
             result.push_back(nt::eCity);
+            result.push_back(nt::eStopPoint);
             return result;
         }
 
@@ -107,15 +118,19 @@ class Worker : public BaseWorker<navitia::type::Data> {
         std::string name;
         std::vector<nt::Type_e> filter = parse_param_filter(request.params["filter"]);
         name = boost::get<std::string>(request.parsed_params["name"].value);
-        std::vector<nt::idx_t> result;
+        std::vector<FirstLetter<nt::idx_t>::fl_quality> result;
         try{
             pbnavitia::FirstLetter pb;
             BOOST_FOREACH(nt::Type_e type, filter){
                 switch(type){
                 case nt::eStopArea:
-                    result = d.pt_data.stop_area_first_letter.find(name);break;
+                    result = d.pt_data.stop_area_first_letter.find_complete(name);break;
+                case nt::eStopPoint:
+
+                    result = d.pt_data.stop_point_first_letter.find_complete(name);
+                    break;
                 case nt::eCity:
-                    result = d.pt_data.city_first_letter.find(name);break;
+                    result = d.pt_data.city_first_letter.find_complete(name);break;
                 default: break;
                 }
                 create_pb(result, type, d, pb);
@@ -155,8 +170,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
         register_api("firstletter", boost::bind(&Worker::firstletter, this, _1, _2), "Api firstletter");
         add_param("firstletter", "name", "valeur recherché", ApiParameter::STRING, true);
         std::vector<RequestParameter::Parameter_variant> options;
-        options.push_back("stop_areas");
-        options.push_back("cities");
+        options.push_back("stop_area");
+        options.push_back("city");
+        options.push_back("stop_point");
         add_param("firstletter", "filter", "type à rechercher", ApiParameter::STRING, false, options);
 
         register_api("load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
