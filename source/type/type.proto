@@ -165,6 +165,7 @@ message FirstLetterItem {
     optional StopArea stop_area = 6;
     optional Site site = 7;
     optional string uri = 8;
+    optional StopPoint stop_point = 9;
 }
 
 message FirstLetter {
