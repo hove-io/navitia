@@ -6,20 +6,12 @@
 
 /*using namespace navitia::type;*/
 
-
-BOOST_AUTO_TEST_CASE(default_test) {
+BOOST_AUTO_TEST_CASE(decoupage_borne) {
     boost::gregorian::date testdate;
     std::string testCS;
     bool response;
     int dayofweek;
     MakeTranslation testtranslation;
-
-
-    testCS ="0000000000";
-    testdate = boost::gregorian::date(2012,7,16);
-    response = testtranslation.initcs(testdate, testCS);
-    BOOST_CHECK_EQUAL(response, false);
-
     testCS="0001011100";
     testdate= boost::gregorian::date(2012,7,16);
     response = testtranslation.initcs(testdate, testCS);
@@ -99,10 +91,110 @@ BOOST_AUTO_TEST_CASE(default_test) {
     testdate = boost::gregorian::date(2012,7,29); //dimanche
     dayofweek = testtranslation.getnextmonday(testdate, -1);
     BOOST_CHECK_EQUAL(dayofweek, -6);
+}
+
+BOOST_AUTO_TEST_CASE(default_test) {
+    boost::gregorian::date testdate;
+    std::string testCS;
+    bool response;
+    MakeTranslation testtranslation;
+
+    testCS ="0000000000";
+    testdate = boost::gregorian::date(2012,7,16);
+    response = testtranslation.initcs(testdate, testCS);
+    testtranslation.translate();
+    testtranslation.bounddrawdown();
+    BOOST_CHECK_EQUAL(response, false);
+
+    testCS="000000000010000";
+    testdate= boost::gregorian::date(2012,7,2);
+    response = testtranslation.initcs(testdate, testCS);
+    //test de la decoupe de la condition de service
+    testtranslation.splitcs();
+    testtranslation.translate();
+    testtranslation.bounddrawdown();
+
+    BOOST_CHECK_EQUAL(response, true);
+    BOOST_CHECK_EQUAL(testtranslation.CS, "1");
+    testdate = boost::gregorian::date(2012,7,12);
+    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
+    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
+
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "0001000");
+    testdate = boost::gregorian::date(2012,7,12);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
+
+    //test au limite : lundi
+    testCS="000000010000";
+    testdate= boost::gregorian::date(2012,7,2);
+    response = testtranslation.initcs(testdate, testCS);
+    //test de la decoupe de la condition de service
+    testtranslation.splitcs();
+    testtranslation.translate();
+    testtranslation.bounddrawdown();
+
+    BOOST_CHECK_EQUAL(response, true);
+    BOOST_CHECK_EQUAL(testtranslation.CS, "1");
+    testdate = boost::gregorian::date(2012,7,9);
+    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
+    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
+
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "1000000");
+    testdate = boost::gregorian::date(2012,7,9);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
+
+    //test au limite : dimanche
+    testCS="000000100000";
+    testdate= boost::gregorian::date(2012,7,2);
+    response = testtranslation.initcs(testdate, testCS);
+    //test de la decoupe de la condition de service
+    testtranslation.splitcs();
+    testtranslation.translate();
+    testtranslation.bounddrawdown();
+
+    BOOST_CHECK_EQUAL(response, true);
+    BOOST_CHECK_EQUAL(testtranslation.CS, "1");
+    testdate = boost::gregorian::date(2012,7,8);
+    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
+    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
+
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "0000001");
+    testdate = boost::gregorian::date(2012,7,8);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
+
+
+    testCS="000000000011110";
+    testdate= boost::gregorian::date(2012,7,2);
+    response = testtranslation.initcs(testdate, testCS);
+    //test de la decoupe de la condition de service
+    testtranslation.splitcs();
+    testtranslation.translate();
+    testtranslation.bounddrawdown();
+
+    BOOST_CHECK_EQUAL(response, true);
+    BOOST_CHECK_EQUAL(testtranslation.CS, "1111");
+    testdate = boost::gregorian::date(2012,7,12);
+    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
+    testdate = boost::gregorian::date(2012,7,15);
+    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
+
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "0001111");
+    testdate = boost::gregorian::date(2012,7,12);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
+
+
+
+
+
 
     testCS="00010111001111001100";
     testdate= boost::gregorian::date(2012,7,16);
     response = testtranslation.initcs(testdate, testCS);
+    //test de la decoupe de la condition de service
+    testtranslation.splitcs();
+    testtranslation.translate();
+    testtranslation.bounddrawdown();
+
     BOOST_CHECK_EQUAL(response, true);
     BOOST_CHECK_EQUAL(testtranslation.CS, "101110011110011");
     testdate = boost::gregorian::date(2012,7,19);
@@ -111,8 +203,6 @@ BOOST_AUTO_TEST_CASE(default_test) {
     testdate = boost::gregorian::date(2012,8,2);
     BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
 
-    //test de la decoupe de la condition de service
-    testtranslation.splitcs();
     BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "0001011");
     testdate = boost::gregorian::date(2012,7,19);
     BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
@@ -138,6 +228,9 @@ BOOST_AUTO_TEST_CASE(default_test) {
 
     //test de la decoupe de la condition de service
     testtranslation.splitcs();
+    testtranslation.translate();
+    testtranslation.bounddrawdown();
+
     BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "1111111");
     testdate = boost::gregorian::date(2012,7,2);
     BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
@@ -150,7 +243,6 @@ BOOST_AUTO_TEST_CASE(default_test) {
     testdate = boost::gregorian::date(2012,7,16);
     BOOST_CHECK_EQUAL(testtranslation.week_vector[2].startdate, testdate);
 
-    testtranslation.translate();
 
     MakeTranslation::target targetresponse;
 //    for(std::map<int, MakeTranslation::target>::iterator it = testtranslation.target_map.begin(); it!= testtranslation.target_map.end(); it++) {
@@ -160,21 +252,22 @@ BOOST_AUTO_TEST_CASE(default_test) {
 //            std::cout << *it2 <<std::endl;;
 //        }
 //    }
-    testtranslation.bounddrawdown();
 
     testCS="011111100000001111111";
     testdate= boost::gregorian::date(2012,7,2);
     response = testtranslation.initcs(testdate, testCS);
+    //test de la decoupe de la condition de service
+    testtranslation.splitcs();
+    testtranslation.translate();
+    testtranslation.bounddrawdown();
+
     BOOST_CHECK_EQUAL(response, true);
     BOOST_CHECK_EQUAL(testtranslation.CS, "11111100000001111111");
     testdate = boost::gregorian::date(2012,7,3);
     BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
-
     testdate = boost::gregorian::date(2012,7,22);
     BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
 
-    //test de la decoupe de la condition de service
-    testtranslation.splitcs();
     BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "0111111");
     testdate = boost::gregorian::date(2012,7,3);
     BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
@@ -187,8 +280,6 @@ BOOST_AUTO_TEST_CASE(default_test) {
     testdate = boost::gregorian::date(2012,7,16);
     BOOST_CHECK_EQUAL(testtranslation.week_vector[2].startdate, testdate);
 
-    testtranslation.translate();
-
 
 //    for(std::map<int, MakeTranslation::target>::iterator it = testtranslation.target_map.begin(); it!= testtranslation.target_map.end(); it++) {
 //        targetresponse = it->second;
@@ -197,41 +288,44 @@ BOOST_AUTO_TEST_CASE(default_test) {
 //            std::cout << *it2 <<std::endl;
 //        }
 //    }
-    testtranslation.bounddrawdown();
+//    testtranslation.bounddrawdown();
 
 
 
-    testCS="001101111111011111111";
+    testCS="0011011101110111011000";
     testdate= boost::gregorian::date(2012,7,2);
     response = testtranslation.initcs(testdate, testCS);
+    //test de la decoupe de la condition de service
+    testtranslation.splitcs();//0011011  1011101  101100  0
+    testtranslation.translate();
+    testtranslation.bounddrawdown();
+
     BOOST_CHECK_EQUAL(response, true);
-    BOOST_CHECK_EQUAL(testtranslation.CS, "1101111111011111111");
+    BOOST_CHECK_EQUAL(testtranslation.CS, "11011101110111011");
     testdate = boost::gregorian::date(2012,7,4);
     BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
 
-    testdate = boost::gregorian::date(2012,7,22);
+    testdate = boost::gregorian::date(2012,7,20);
     BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
 
-    //test de la decoupe de la condition de service
-    testtranslation.splitcs();
     BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "0011011");
     testdate = boost::gregorian::date(2012,7,4);
     BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
 
-    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].week_bs.to_string(), "1111101");
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[1].week_bs.to_string(), "1011101");
     testdate = boost::gregorian::date(2012,7,9);
     BOOST_CHECK_EQUAL(testtranslation.week_vector[1].startdate, testdate);
 
-//    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].week_bs.to_string(), "1111111");
-//    testdate = boost::gregorian::date(2012,7,16);
-//    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].startdate, testdate);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].week_bs.to_string(), "1101100");
+    testdate = boost::gregorian::date(2012,7,16);
+    BOOST_CHECK_EQUAL(testtranslation.week_vector[2].startdate, testdate);
 
     std::cout << "nouveau test : " <<std::endl;
-    testtranslation.translate();
-    testtranslation.bounddrawdown();
 
 //et le 07/jul
+//et le 17/jul
 //sauf  06/jul
+//sauf  18/jul
     for(std::map<int, MakeTranslation::target>::iterator it = testtranslation.target_map.begin(); it!= testtranslation.target_map.end(); it++) {
         targetresponse = it->second;
         std::cout<<std::endl<< targetresponse.week_bs.to_string()<<std::endl;
