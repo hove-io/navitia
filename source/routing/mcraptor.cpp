@@ -24,7 +24,7 @@ std::vector<Path> McRAPTOR<label_template, label_visitor>::compute_raptor_all(st
     unsigned int count = 1;
 
     unsigned int count_marked_stop = 0;
-    while(((Q.size() > 0) && (count < 5)) || count == 1) {
+    while(((Q.size() > 0) ) || count == 1) {
         //On intialise la queue
         Q = this->make_queue(marked_stop);
         marked_stop.clear();

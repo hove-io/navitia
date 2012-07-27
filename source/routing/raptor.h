@@ -38,6 +38,7 @@ struct type_retour {
     type_retour() : stid(-1), said_emarquement(-1), dt(), dist_to_dest(0), dist_to_dep(0), type(vj) {}
 
     bool operator<(type_retour r2) const { return this->dt + this->dist_to_dest < r2.dt + dist_to_dest;}
+    bool operator>(type_retour r2) const { return this->dt + this->dist_to_dest > r2.dt + dist_to_dest;}
 
     bool operator==(type_retour r2) const { return this->stid == r2.stid;}
     bool operator!=(type_retour r2) const { return !(this->stid == r2.stid);}
@@ -62,7 +63,20 @@ struct best_dest {
         }
     }
 
+    void ajouter_best_reverse(unsigned int said, type_retour t) {
+        if(map_date_time.find(said) != map_date_time.end()) {
+            map_date_time[said] = t;
+            if(t > best_now) {
+                best_now = t;
+                best_now_said = said;
+            }
+        }
+    }
 
+    void reverse() {
+        best_now.dt.date = std::numeric_limits<int>::min();
+        best_now.dt.hour = std::numeric_limits<int>::min();
+    }
 
 };
 
@@ -95,9 +109,14 @@ struct communRAPTOR : public AbstractRouter
 
 
 
+
+
     std::pair<unsigned int, bool> earliest_trip(unsigned int route, unsigned int stop_area, map_retour_t &retour, unsigned int count);
     std::pair<unsigned int, bool> earliest_trip(unsigned int route, unsigned int stop_area, map_int_pint_t &best, unsigned int count);
     std::pair<unsigned int, bool> earliest_trip(unsigned int route, unsigned int stop_area, DateTime dt);
+    std::pair<unsigned int, bool> tardiest_trip(unsigned int route, unsigned int stop_area, map_retour_t &retour, unsigned int count);
+    std::pair<unsigned int, bool> tardiest_trip(unsigned int route, unsigned int stop_area, map_int_pint_t &best, unsigned int count);
+    std::pair<unsigned int, bool> tardiest_trip(unsigned int route, unsigned int stop_area, DateTime dt);
     int get_rp_order(const navitia::type::Route &route, unsigned int stop_area);
     int get_rp_order(unsigned int route, unsigned int stop_area);
     int get_rp_id(const type::Route &route, unsigned int stop_area);
@@ -119,12 +138,36 @@ struct communRAPTOR : public AbstractRouter
             return (data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vj1).stop_time_list.at(rp.order)).departure_time %86400) < time;
         }
     };
+
+    struct compare_rp_reverse {
+        const navitia::type::RoutePoint & rp;
+        const navitia::type::Data &data;
+        compare_rp_reverse(const navitia::type::RoutePoint & rp, const navitia::type::Data &data) : rp(rp), data(data) {}
+
+        bool operator ()(unsigned int time, int vj1) {
+            return (data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vj1).stop_time_list.at(rp.order)).departure_time %86400) < time;
+        }
+    };
+
 };
 
-struct RAPTOR : public communRAPTOR {
-
-    RAPTOR(navitia::type::Data &data) : communRAPTOR(data){}
+struct monoRAPTOR : public communRAPTOR {
+    monoRAPTOR(navitia::type::Data &data) : communRAPTOR(data){}
     Path compute_raptor(map_int_pint_t departs, map_int_pint_t destinations);
+    virtual void boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count) = 0;
+    virtual Path makePath(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, unsigned int destination_idx, unsigned int count) = 0;
+};
+
+struct RAPTOR : public monoRAPTOR {
+    RAPTOR(navitia::type::Data &data) : monoRAPTOR(data){}
+    void boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count);
+    Path makePath(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, unsigned int destination_idx, unsigned int count);
+
+};
+
+struct reverseRAPTOR : public monoRAPTOR {
+    reverseRAPTOR(navitia::type::Data &data) : monoRAPTOR(data){}
+    void boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count);
     Path makePath(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, unsigned int destination_idx, unsigned int count);
 };
 
