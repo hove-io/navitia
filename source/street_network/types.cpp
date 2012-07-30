@@ -45,7 +45,7 @@ void StreetNetwork::init(std::vector<float> &distances, std::vector<vertex_t> &p
 
 Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<double> start_zeros, std::vector<double> dest_zeros) {
     if(starts.size() == 0 || destinations.size() == 0)
-        throw NotFound();
+        throw proximitylist::NotFound();
 
     if(start_zeros.size() != starts.size())
         start_zeros.assign(starts.size(), 0);
@@ -119,7 +119,7 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
         if(reverse_path.size() > 1)
             p.path_items.push_back(path_item);
     } else {
-        throw NotFound();
+        throw proximitylist::NotFound();
     }
 
     return p;
@@ -155,7 +155,7 @@ Path StreetNetwork::compute(const type::GeographicalCoord & start_coord, const t
     return p;
 }
 
-std::vector< std::pair<idx_t, double> > StreetNetwork::find_nearest(const type::GeographicalCoord & start_coord, const ProximityList<idx_t> & pl, double radius) {
+std::vector< std::pair<idx_t, double> > StreetNetwork::find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<idx_t> & pl, double radius) {
     ProjectionData start(start_coord, *this);
     // Tableau des prédécesseurs de chaque nœuds
     // si pred[v] == v, c'est soit qu'il n'y a pas de chemin possible, soit c'est l'origine
@@ -217,7 +217,7 @@ edge_t StreetNetwork::nearest_edge(const type::GeographicalCoord & coordinates) 
         }
     }
     if(!found)
-        throw NotFound();
+        throw proximitylist::NotFound();
     else
         return best;
 }
@@ -272,7 +272,7 @@ edge_t GraphBuilder::get(const std::string &source_name, const std::string &targ
     edge_t e;
     bool b;
     boost::tie(e,b) =  boost::edge(source, target, this->street_network.graph);
-    if(!b) throw NotFound();
+    if(!b) throw proximitylist::NotFound();
     else return e;
 }
 
