@@ -52,4 +52,24 @@ void fill_pb_object<nt::eStopArea>(nt::idx_t idx, const nt::Data& data, google::
     }
 }
 
+/**
+ * spécialisation de fill_pb_object pour les StopArea
+ *
+ */
+template<>
+void fill_pb_object<nt::eStopPoint>(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int max_depth){
+    pbnavitia::StopPoint* stop_point = dynamic_cast<pbnavitia::StopPoint*>(message);
+    nt::StopPoint sp = data.pt_data.stop_points.at(idx);
+    stop_point->set_id(sp.id);
+    stop_point->set_idx(sp.idx);
+    stop_point->set_external_code(sp.external_code);
+    stop_point->set_name(sp.name);
+    stop_point->mutable_coord()->set_x(sp.coord.x);
+    stop_point->mutable_coord()->set_y(sp.coord.y);
+    if(max_depth > 0){
+        try{
+            fill_pb_object<nt::eCity>(sp.city_idx, data, stop_point->mutable_child()->add_city_list(), max_depth-1);
+        }catch(std::out_of_range e){}
+    }
+}
 }//namespace navitia

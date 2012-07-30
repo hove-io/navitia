@@ -297,7 +297,12 @@ void GtfsParser::parse_transfers(Data & data) {
         }
         nblines++;
         connection->connection_kind = nm::Connection::LinkConnection;
-        connection->duration = boost::lexical_cast<int>(elts[time_c]);
+        try{
+            connection->duration = boost::lexical_cast<int>(elts[time_c]);
+        } catch (...) {
+            connection->duration = 120;
+        }
+
         data.connections.push_back(connection);
     }
 

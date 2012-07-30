@@ -33,6 +33,7 @@ struct PT_Data{
     // First letter
     FirstLetter<idx_t> stop_area_first_letter;
     FirstLetter<idx_t> city_first_letter;
+    FirstLetter<idx_t> stop_point_first_letter;
 
     // Proximity list
     ProximityList<idx_t> stop_area_proximity_list;
@@ -67,7 +68,7 @@ struct PT_Data{
                 & validity_patterns & lines & stop_points & stop_areas & stop_times & routes
                 & vehicle_journeys & route_points & mode_types & modes & cities
                 // Les firstLetter
-                & stop_area_first_letter & city_first_letter
+                & stop_area_first_letter & city_first_letter & stop_point_first_letter
                 // Les map d'externalcode
                 & line_map & route_map & vehicle_journey_map & stop_area_map & stop_point_map
                 & network_map & mode_map & mode_type_map & city_map & district_map & department_map

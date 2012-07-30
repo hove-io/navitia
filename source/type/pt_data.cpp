@@ -107,6 +107,16 @@ void PT_Data::build_first_letter(){
 
     this->stop_area_first_letter.build();
 
+    BOOST_FOREACH(StopPoint sp, this->stop_points){
+        if(sp.city_idx < this->cities.size())
+            this->stop_point_first_letter.add_string(sp.name + " " + cities[sp.city_idx].name, sp.idx);
+        else
+            this->stop_point_first_letter.add_string(sp.name, sp.idx);
+    }
+
+    this->stop_point_first_letter.build();
+
+
     BOOST_FOREACH(City city, cities){
         this->city_first_letter.add_string(city.name, city.idx);
     }
