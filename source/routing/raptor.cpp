@@ -5,7 +5,6 @@ communRAPTOR::communRAPTOR(navitia::type::Data &data) : data(data)
 {
     //Construction de la liste des marche à pied
     BOOST_FOREACH(navitia::type::Connection connection, data.pt_data.connections) {
-        std::cout << "Foot path au départ : " << connection.departure_stop_point_idx  << " -> " << connection.destination_stop_point_idx << std::endl;
         foot_path[connection.departure_stop_point_idx].push_back(connection.idx);
     }
 }
@@ -281,11 +280,12 @@ void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &
                 if(retour[count-1].count(said) > 0)  {
                     if(retour[count-1][said].dt <= DateTime(working_date, temps_depart)){
                         std::tie(et_temp, pam) = earliest_trip(route, said, retour, count);
-                        if(et_temp >=0) {
+                        if((et_temp >=0) && (et_temp != t)) {
 
                             t = et_temp;
                             working_date = retour[count -1][said].dt.date;
                             stid = data.pt_data.vehicle_journeys[t].stop_time_list[i];
+                            embarquement = said;
                             if(pam || data.pt_data.stop_times.at(stid).arrival_time > 86400)
                                 ++working_date;
                         }
@@ -389,6 +389,7 @@ void reverseRAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_ret
                             t = et_temp;
                             working_date = retour[count -1][said].dt.date;
                             stid = data.pt_data.vehicle_journeys[t].stop_time_list[i];
+                            embarquement = said;
                             if(pam /*|| data.pt_data.stop_times.at(stid).arrival_time > 86400*/)
                                 --working_date;
                         }
