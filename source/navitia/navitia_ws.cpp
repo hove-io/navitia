@@ -295,8 +295,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
         }
         navitia::routing::Path itineraire = calculateur->makeItineraire(path);
 
-        create_pb_froute(itineraire, d, *pb_response.mutable_planner()->mutable_feuilleroute());
-        create_pb_itineraire(path, d, *pb_response.mutable_planner()->mutable_itineraire());
+        pbnavitia::Planning * planning = pb_response.mutable_planner()->add_planning();
+        create_pb_froute(itineraire, d, *planning->mutable_feuilleroute());
+        create_pb_itineraire(path, d, *planning->mutable_itineraire());
         pb_response.SerializeToOstream(&rd.response);
         rd.content_type = "application/octet-stream";
         rd.status_code = 200;

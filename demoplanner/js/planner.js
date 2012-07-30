@@ -6,7 +6,7 @@ var depart_arrivee = {
 };
 
 function aff_data(data) {
-    planner = data.planner;
+    planner = data.planner.planning[0];
     map.removeAllPolylines();
     map.removeAllMarkers();
     var arraypolys = new Array();
