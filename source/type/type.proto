@@ -15,6 +15,7 @@ enum API {
     STREET_NETWORK = 3;
     PLANNER = 4;	
     LOAD = 5;
+    PROXIMITYLIST = 6;
 }
 
 message GeographicalCoord {
@@ -174,6 +175,23 @@ message FirstLetter {
     repeated string bad_word_list = 3;
 }
 
+message ProximityListItem {
+    optional string name = 1;
+    optional NavitiaType type = 2;
+    optional int32 distance = 3;
+    optional Way way = 4;
+    optional City city = 5;
+    optional StopArea stop_area = 6;
+    optional Site site = 7;
+    optional string uri = 8;
+    optional StopPoint stop_point = 9;
+}
+
+message ProximityList {
+    repeated ProximityListItem items = 1;
+}
+
+
 message PathItem {
     optional string name = 1;
     optional double length = 2;
@@ -278,4 +296,5 @@ message Response{
  
     optional Planner planner = 7;	
 
+    optional ProximityList proximitylist = 8;
 }

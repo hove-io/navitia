@@ -1,10 +1,12 @@
 #pragma once
 
 #include "type/type.h"
-using navitia::type::GeographicalCoord;
 #include <vector>
 #include <cmath>
 
+namespace navitia { namespace proximitylist {
+
+using type::GeographicalCoord;
 struct NotFound : public std::exception{};
 
 /** Définit un indexe spatial qui permet de retrouver les n éléments les plus proches
@@ -187,3 +189,5 @@ struct ProximityList
     }
 
 };
+
+}} // namespace navitia::proximitylist

@@ -5,6 +5,8 @@
 namespace navitia { namespace routing {
 using type::idx_t;
 
+struct NotFound{};
+
 /** Étape d'un itinéraire*/
 struct PathItem{
     unsigned int said;

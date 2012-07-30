@@ -7,6 +7,7 @@
 #include "routing/routing.h"
 #include "routing/raptor.h"
 #include "first_letter/firstletter_api.h"
+#include "proximity_list/proximitylist_api.h"
 #include <boost/tokenizer.hpp>
 #include "utils/locker.h"
 
@@ -189,8 +190,30 @@ class Worker : public BaseWorker<navitia::type::Data> {
         return rd;
     }
 
-    ResponseData proximitylist(RequestData & , navitia::type::Data & ){
+    ResponseData proximitylist(RequestData & request, navitia::type::Data &data){
+        pbnavitia::Response pb_response;
         ResponseData rd;
+        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::FIRSTLETTER, pb_response, rd));
+        if(!locker.locked){
+            return rd;
+        }
+
+        navitia::type::GeographicalCoord coord(boost::get<double>(request.parsed_params["lat"].value),
+                                               boost::get<double>(request.parsed_params["lon"].value));
+        double distance = 500;
+        if(request.parsed_params.find("dist") != request.parsed_params.end())
+            distance = boost::get<double>(request.parsed_params["dist"].value);
+
+        std::vector<nt::Type_e> filter = parse_param_filter(request.params["filter"]);
+
+        try{
+            pb_response = navitia::proximitylist::find(coord, distance, filter, data);
+            pb_response.SerializeToOstream(&rd.response);
+            rd.content_type = "application/octet-stream";
+            rd.status_code = 200;
+        }catch(...){
+            rd.status_code = 500;
+        }
         return rd;
     }
 
@@ -302,7 +325,7 @@ public:
         register_api("proximitylist", boost::bind(&Worker::proximitylist, this, _1, _2), "Liste des objets à proxmité");
         add_param("proximitylist", "lon", "Longitude en degrés", ApiParameter::DOUBLE, true);
         add_param("proximitylist", "lat", "Latitude en degrés", ApiParameter::DOUBLE, true);
-        add_param("proximitylist", "dist", "Distance maximale, 100m par défaut", ApiParameter::DOUBLE, false);
+        add_param("proximitylist", "dist", "Distance maximale, 500m par défaut", ApiParameter::DOUBLE, false);
         std::vector<RequestParameter::Parameter_variant> default_params;
         default_params.push_back("stop_areas");
         default_params.push_back("stop_name");
