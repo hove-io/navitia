@@ -56,7 +56,7 @@ struct FirstLetter
     std::map<T, int> word_count;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & vec_map &word_count;
+        ar & vec_map & word_count;
     }
 
     // Méthodes permettant de construire l'indexe
