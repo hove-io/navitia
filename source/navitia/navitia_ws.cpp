@@ -6,6 +6,7 @@
 #include "type/pb_converter.h"
 #include "routing/routing.h"
 #include "routing/raptor.h"
+#include "first_letter/firstletter_api.h"
 #include <boost/tokenizer.hpp>
 
 using namespace webservice;
@@ -108,34 +109,6 @@ class Worker : public BaseWorker<navitia::type::Data> {
         return locker;
     }
 
-    /**
-     * se charge de remplir l'objet protocolbuffer firstletter passé en paramètre
-     *
-     */
-    void create_pb_firstletter(const std::vector<nt::idx_t>& result, const nt::Type_e type, const nt::Data& data, pbnavitia::FirstLetter& pb_fl){
-        BOOST_FOREACH(nt::idx_t idx, result){
-            pbnavitia::FirstLetterItem* item = pb_fl.add_items();
-            google::protobuf::Message* child = NULL;
-            switch(type){
-            case nt::eStopArea:
-                child = item->mutable_stop_area();
-                navitia::fill_pb_object<nt::eStopArea>(idx, data, child, 2);
-                item->set_name(data.pt_data.stop_areas[idx].name);
-                item->set_uri(nt::EntryPoint::get_uri(data.pt_data.stop_areas[idx]));
-                break;
-            case nt::eCity:
-                child = item->mutable_city();
-                navitia::fill_pb_object<nt::eCity>(idx, data, child);
-                item->set_name(data.pt_data.cities[idx].name);
-                item->set_uri(nt::EntryPoint::get_uri(data.pt_data.cities[idx]));
-                break;
-            default:
-                break;
-            }
-        }
-    }
-
-
 
 
     /**
@@ -161,10 +134,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
         return result;
     }
 
-    ResponseData firstletter(RequestData& request, navitia::type::Data & d){
+    ResponseData firstletter(RequestData& request, navitia::type::Data &data){
         ResponseData rd;
         pbnavitia::Response pb_response;
-        Locker locker(check_and_init(request, d, pbnavitia::FIRSTLETTER, pb_response, rd));
+        Locker locker(check_and_init(request, data, pbnavitia::FIRSTLETTER, pb_response, rd));
         if(!locker.locked){
             return rd;
         }
@@ -172,20 +145,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
         std::string name;
         std::vector<nt::Type_e> filter = parse_param_filter(request.params["filter"]);
         name = boost::get<std::string>(request.parsed_params["name"].value);
-        std::vector<nt::idx_t> result;
+
         try{
-            pbnavitia::FirstLetter* pb = pb_response.mutable_firstletter();
-            BOOST_FOREACH(nt::Type_e type, filter){
-                switch(type){
-                case nt::eStopArea:
-                    result = d.pt_data.stop_area_first_letter.find(name); break;
-                case nt::eCity:
-                    result = d.pt_data.city_first_letter.find(name); break;
-                default: break;
-                }
-                create_pb_firstletter(result, type, d, *pb);
-            }
-            //pb_response.set_firstletter(pb);
+            pb_response = navitia::firstletter::firstletter(name, filter, data);
             pb_response.SerializeToOstream(&rd.response);
             rd.content_type = "application/octet-stream";
             rd.status_code = 200;

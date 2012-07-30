@@ -13,6 +13,7 @@ SET(TYPES_SRC
     pt_data.cpp
     to_proto.cpp
     pb_utils.cpp
+    pb_converter.cpp
 )
 add_library(types ${TYPES_SRC})
 target_link_libraries(types ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} proj streetnetwork utils)

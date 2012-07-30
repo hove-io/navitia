@@ -280,7 +280,7 @@ GraphBuilder & GraphBuilder::add_vertex(std::string node_name, float x, float y)
     return *this;
 }
 
-GraphBuilder & GraphBuilder::add_edge(std::string source_name, std::string target_name, float length){
+GraphBuilder & GraphBuilder::add_edge(std::string source_name, std::string target_name, float length, bool bidirectionnal){
     vertex_t source, target;
     auto it = this->vertex_map.find(source_name);
     if(it == this->vertex_map.end())
@@ -296,7 +296,8 @@ GraphBuilder & GraphBuilder::add_edge(std::string source_name, std::string targe
     edge.length = length >= 0? length : 0;
 
     boost::add_edge(source, target, edge, this->street_network.graph);
-    boost::add_edge(target, source, edge, this->street_network.graph);
+    if(bidirectionnal)
+        boost::add_edge(target, source, edge, this->street_network.graph);
 
     return *this;
 }

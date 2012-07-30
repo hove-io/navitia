@@ -12,6 +12,7 @@
 #include<unordered_map>
 
 namespace pt = boost::posix_time;
+using namespace navitia::firstletter;
 
 BOOST_AUTO_TEST_CASE(parse_state_test){
     FirstLetter<unsigned int> fl;

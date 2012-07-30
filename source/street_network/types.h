@@ -95,7 +95,7 @@ struct StreetNetwork {
     std::vector<Way> ways;
 
     /// Indexe sur les noms de voirie
-    FirstLetter<unsigned int> fl;
+    firstletter::FirstLetter<unsigned int> fl;
 
     /// Indexe
     ProximityList<vertex_t> pl;
@@ -209,7 +209,7 @@ struct GraphBuilder{
 
     /// Ajoute un arc. Si un nœud n'existe pas, il est créé automatiquement
     /// Si la longueur n'est pas précisée, il s'agit de la longueur à vol d'oiseau
-    GraphBuilder & add_edge(std::string source_name, std::string target_name, float length = -1);
+    GraphBuilder & add_edge(std::string source_name, std::string target_name, float length = -1, bool bidirectionnal = false);
 
     /// Surchage de la création de nœud pour plus de confort
     GraphBuilder & operator()(std::string node_name, float x, float y){ return add_vertex(node_name, x, y);}
@@ -218,7 +218,9 @@ struct GraphBuilder{
     GraphBuilder & operator()(std::string node_name, navitia::type::GeographicalCoord geo){ return add_vertex(node_name, geo.x, geo.y);}
 
     /// Surchage de la création d'arc pour plus de confort
-    GraphBuilder & operator()(std::string source_name, std::string target_name, float length = -1){ return add_edge(source_name, target_name, length);}
+    GraphBuilder & operator()(std::string source_name, std::string target_name, float length = -1, bool bidirectionnal = false){
+        return add_edge(source_name, target_name, length, bidirectionnal);
+    }
 
     /// Retourne le nœud demandé, jette une exception si on ne trouve pas
     vertex_t get(const std::string & node_name);

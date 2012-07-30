@@ -31,9 +31,9 @@ struct PT_Data{
 
 
     // First letter
-    FirstLetter<idx_t> stop_area_first_letter;
-    FirstLetter<idx_t> city_first_letter;
-    FirstLetter<idx_t> stop_point_first_letter;
+    firstletter::FirstLetter<idx_t> stop_area_first_letter;
+    firstletter::FirstLetter<idx_t> city_first_letter;
+    firstletter::FirstLetter<idx_t> stop_point_first_letter;
 
     // Proximity list
     ProximityList<idx_t> stop_area_proximity_list;
