@@ -222,7 +222,7 @@ Path monoRAPTOR::compute_raptor(map_int_pint_t departs, map_int_pint_t destinati
 
     if(b_dest.best_now != type_retour()) {
         unsigned int destination_idx = b_dest.best_now_said;
-        return makePath(retour, best, departs, destination_idx, count);
+        return makeBestPath(retour, best, departs, destination_idx, count);
     }
     Path result;
     return result;
@@ -340,7 +340,7 @@ void reverseRAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_ret
     bool pam;
     b_dest.reverse();
 
-//    std::cout << "retour 0 1 " << retour.at(0).at(1).dt << std::endl;
+    //    std::cout << "retour 0 1 " << retour.at(0).at(1).dt << std::endl;
     while(((Q.size() > 0) /*& (count < 10)*/) || count == 1) {
 
         Q = make_queue(marked_stop);
@@ -435,17 +435,42 @@ void reverseRAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_ret
 
 }
 
-Path RAPTOR::makePath(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, unsigned int destination_idx, unsigned int count) {
-    Path result;
-    unsigned int current_said = destination_idx;
+
+Path monoRAPTOR::makeBestPath(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, unsigned int destination_idx, unsigned int count) {
     unsigned int countb = 1;
     for(;countb<=count;++countb) {
-        if(retour.at(countb).count(current_said) > 0) {
-            if(retour.at(countb).at(current_said).stid == best.at(current_said).stid) {
+        if(retour.at(countb).count(destination_idx) > 0) {
+            if(retour.at(countb).at(destination_idx).stid == best.at(destination_idx).stid) {
                 break;
             }
         }
     }
+
+    return makePath(retour, best, departs, destination_idx, countb);
+}
+
+std::vector<Path> RAPTOR::makePathes(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, best_dest &b_dest, unsigned int count) {
+    std::vector<Path> result;
+
+    for(unsigned int i=1;i<count;++i) {
+        BOOST_FOREACH(auto dest, b_dest.map_date_time) {
+            if(retour.count(i) > 0) {
+                if(retour.at(i).count(dest.first) > 0) {
+                    if(retour.at(i).at(dest.first) != type_retour()) {
+                        result.push_back(makePath(retour, best, departs, dest.first, i));
+                    }
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+Path RAPTOR::makePath(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, unsigned int destination_idx, unsigned int countb) {
+    Path result;
+    unsigned int current_said = destination_idx;
+
     type_retour r = retour.at(countb).at(current_said);
     DateTime workingDate = r.dt;
     navitia::type::StopTime current_st, prec_st;
@@ -530,17 +555,10 @@ Path RAPTOR::makePath(const map_retour_t &retour, const map_int_pint_t &best, ma
 }
 
 
-Path reverseRAPTOR::makePath(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, unsigned int destination_idx, unsigned int count) {
+Path reverseRAPTOR::makePath(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, unsigned int destination_idx, unsigned int countb) {
     Path result;
     unsigned int current_said = destination_idx;
-    unsigned int countb = 1;
-    for(;countb<=count;++countb) {
-        if(retour.at(countb).count(current_said) > 0) {
-            if(retour.at(countb).at(current_said).stid == best.at(current_said).stid) {
-                break;
-            }
-        }
-    }
+
     type_retour r = retour.at(countb).at(current_said);
     DateTime workingDate = r.dt;
     navitia::type::StopTime current_st, prec_st;

@@ -258,11 +258,14 @@ message ItineraireDetail {
 	repeated Trajet trajets = 1;
 }
 
-message Planner {
+message Planning {
 	required FeuilleRoute feuilleroute = 1;
 	required ItineraireDetail itineraire = 2;
 }
 
+message Planner {
+	repeated Planning planning = 1;
+}
 
 message Response{
     required API requested_api = 1;
