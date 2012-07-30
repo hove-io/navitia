@@ -94,8 +94,14 @@ struct DateTime {
 
     void normalize(){
         if(date > 300) std::cout << "on normalise l'infini..." << std::endl;
-        this->date += this->hour / (24*3600);
-        this->hour = hour % (24*3600);
+        if(this->hour < 0) {
+            --this->date;
+            this->hour = hour+ (24*3600);
+        } else {
+
+            this->date += this->hour / (24*3600);
+            this->hour = hour % (24*3600);
+        }
     }
 
     bool operator==(DateTime other) {

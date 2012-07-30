@@ -5,6 +5,7 @@ communRAPTOR::communRAPTOR(navitia::type::Data &data) : data(data)
 {
     //Construction de la liste des marche à pied
     BOOST_FOREACH(navitia::type::Connection connection, data.pt_data.connections) {
+        std::cout << "Foot path au départ : " << connection.departure_stop_point_idx  << " -> " << connection.destination_stop_point_idx << std::endl;
         foot_path[connection.departure_stop_point_idx].push_back(connection.idx);
     }
 }
@@ -402,10 +403,12 @@ void reverseRAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_ret
         std::vector<unsigned int> marked_stop_copy;
         marked_stop_copy = marked_stop;
         BOOST_FOREACH(auto stop_area, marked_stop_copy) {
+            std::cout << "J'inspecte : " << stop_area << std::endl;
             BOOST_FOREACH(auto stop_p, data.pt_data.stop_areas.at(stop_area).stop_point_list) {
                 auto it_fp = foot_path.find(stop_p);
                 if(it_fp != foot_path.end()) {
                     BOOST_FOREACH(auto connection_idx, (*it_fp).second) {
+                        std::cout << "trouve : " << stop_area << std::endl;
 
                         unsigned int saiddest = data.pt_data.stop_points.at(data.pt_data.connections[connection_idx].destination_stop_point_idx).stop_area_idx;
 

@@ -61,20 +61,17 @@ int main(int, char **) {
 
     navimake::builder b("20120614");
 
-    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
-    b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
-    b.vj("C")("stop3", 9500,9550)("stop4", 9600,9650);
+    b.vj("A")("stop1", 8000)("stop2", 8200);
+    b.vj("B")("stop3", 10)("stop4",20);
+    b.connection("stop2", "stop3", 10*60);
+    b.connection("stop3", "stop2", 10*60);
 
-    b.vj("D")("stop5", 80000,80050)("stop6", 82000,82500);
-    b.connection("stop2", "stop5", 10*60);
-
-    b.connection("stop5", "stop3", 10*60);
     type::Data data;
     data.pt_data =  b.build();
-    routing::raptor::RAPTOR raptor(data);
+    routing::raptor::reverseRAPTOR raptor(data);
 
 
-    auto res = raptor.compute(data.pt_data.stop_areas[0].idx, data.pt_data.stop_areas[3].idx, 7900, 0);
+    auto res = raptor.compute(data.pt_data.stop_areas.at(3).idx, data.pt_data.stop_areas.at(0).idx, 60, 1);
     std::cout << res << std::endl;
 
 
