@@ -110,12 +110,6 @@ struct StreetNetwork {
     /** Construit l'indexe spatial */
     void build_proximity_list();
 
-    void save(const std::string & filename);
-    void load(const std::string & filename);
-
-    void load_flz(const std::string & filename);
-    void save_flz(const std::string & filename);
-
     /** Calcule le meilleur itinéraire entre deux listes de nœuds
      *
      * Le paramètre zeros indique la distances (en mètres) de chaque nœud de départ. Il faut qu'il y ait autant d'éléments que dans starts

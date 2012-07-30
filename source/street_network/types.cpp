@@ -2,17 +2,7 @@
 
 #include <boost/foreach.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
-
-#include <boost/iostreams/filtering_streambuf.hpp>
-
 #include <fstream>
-#include "fastlz_filter/filter.h"
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include "third_party/eos_portable_archive/portable_iarchive.hpp"
-#include "third_party/eos_portable_archive/portable_oarchive.hpp"
-
-#include <iostream>
 #include <unordered_map>
 
 namespace pt = boost::posix_time;
@@ -232,36 +222,6 @@ edge_t StreetNetwork::nearest_edge(const type::GeographicalCoord & coordinates) 
         return best;
 }
 
-
-void StreetNetwork::save(const std::string & filename) {
-    std::ofstream ofs(filename.c_str());
-    boost::archive::text_oarchive oa(ofs);
-    oa << *this;
-}
-
-void StreetNetwork::load(const std::string & filename) {
-    std::ifstream ifs(filename.c_str());
-    boost::archive::text_iarchive ia(ifs);
-    ia >> *this;
-}
-
-void StreetNetwork::load_flz(const std::string & filename) {
-    std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
-    boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
-    in.push(FastLZDecompressor(2048*500),8192*500, 8192*500);
-    in.push(ifs);
-    eos::portable_iarchive ia(in);
-    ia >> *this;
-}
-
-void StreetNetwork::save_flz(const std::string & filename) {
-    std::ofstream ofs(filename.c_str(),std::ios::out|std::ios::binary|std::ios::trunc);
-    boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
-    out.push(FastLZCompressor(2048*500), 1024*500, 1024*500);
-    out.push(ofs);
-    eos::portable_oarchive oa(out);
-    oa << *this;
-}
 
 GraphBuilder & GraphBuilder::add_vertex(std::string node_name, float x, float y){
     auto it = this->vertex_map.find(node_name);
