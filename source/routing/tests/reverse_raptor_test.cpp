@@ -14,11 +14,11 @@ BOOST_AUTO_TEST_CASE(direct){
     b.vj("A")("stop1", 8000, 8050)("stop2", 8100,8150);
     type::Data data;
     data.pt_data =  b.build();
-    RAPTOR raptor(data);
+    reverseRAPTOR raptor(data);
 
     type::PT_Data d = data.pt_data;
 
-    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 0);
+    auto res = raptor.compute(d.stop_areas[1].idx, d.stop_areas[0].idx, 8200, 0);
 
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
@@ -37,11 +37,11 @@ BOOST_AUTO_TEST_CASE(change){
     b.vj("B")("stop4", 8000, 8050)("stop2", 8200,8250)("stop5", 8300,8350);
     type::Data data;
     data.pt_data =  b.build();
-    RAPTOR raptor(data);
+    reverseRAPTOR raptor(data);
 
     type::PT_Data d = data.pt_data;
 
-    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[4].idx, 7900, 0);
+    auto res = raptor.compute(d.stop_areas[4].idx, d.stop_areas[0].idx, 8500, 0);
     BOOST_REQUIRE_EQUAL(res.items.size(), 4);
     BOOST_CHECK_EQUAL(res.items[0].said, 0);
     BOOST_CHECK_EQUAL(res.items[1].said, 1);
@@ -63,11 +63,11 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     b.vj("B")("stop2", 10*60)("stop3", 20*60);
     type::Data data;
     data.pt_data =  b.build();
-    RAPTOR raptor(data);
+    reverseRAPTOR raptor(data);
 
     type::PT_Data d = data.pt_data;
 
-    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0);
+    auto res = raptor.compute(d.stop_areas[2].idx, d.stop_areas[0].idx, 30*60, 1);
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 4);
     BOOST_CHECK_EQUAL(res.items[0].said, 0);
@@ -84,15 +84,15 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
     b.vj("B", "1")("stop1", 9000)("stop2", 9200);
     type::Data data;
     data.pt_data =  b.build();
-    RAPTOR raptor(data);
+    reverseRAPTOR raptor(data);
 
     type::PT_Data d = data.pt_data;
 
-    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 0);
+    auto res = raptor.compute(d.stop_areas[1].idx, d.stop_areas[0].idx, 9300, 0);
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[1].time, 9200);
 
-    res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 1);
+    res = raptor.compute(d.stop_areas[1].idx, d.stop_areas[0].idx, 9300, 1);
     BOOST_REQUIRE_EQUAL(res.items.size(), 0);
 }
 
@@ -105,15 +105,16 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
     b.connection("stop3", "stop2", 10*60);
     type::Data data;
     data.pt_data = b.build();
-    RAPTOR raptor(data);
+    reverseRAPTOR raptor(data);
 
     type::PT_Data d = data.pt_data;
 
 
 
-    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7900, 0);
+    auto res = raptor.compute(d.stop_areas[3].idx, d.stop_areas[0].idx, 9300, 0);
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 5);
+    BOOST_CHECK_EQUAL(res.items[0].time, 8050);
     BOOST_CHECK_EQUAL(res.items[4].time, 9200);
 }
 
@@ -127,56 +128,41 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_trcky){
     b.connection("stop3", "stop2", 1*60);
     type::Data data;
     data.pt_data = b.build();
-    RAPTOR raptor(data);
+    reverseRAPTOR raptor(data);
 
     type::PT_Data d = data.pt_data;
 
 
 
-    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7900, 0);
-    BOOST_REQUIRE_EQUAL(res.items.size(), 6);
-    BOOST_CHECK_EQUAL(res.items[5].time, 9200);
+    auto res = raptor.compute(d.stop_areas[3].idx, d.stop_areas[0].idx, 9300, 0);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 4);
+    BOOST_CHECK_EQUAL(res.items[0].time, 8050);
+    BOOST_CHECK_EQUAL(res.items[3].time, 9200);
 }
 
-
-BOOST_AUTO_TEST_CASE(marche_a_pied_fin){
-    navimake::builder b("20120614");
-    b.vj("A")("stop1", 8000)("stop2", 8200);
-    b.vj("B")("stop3", 30000)("stop4",40000);
-    b.connection("stop2", "stop3", 10*60);
-
-    type::Data data;
-    data.pt_data = b.build();
-    RAPTOR raptor(data);
-
-    type::PT_Data d = data.pt_data;
-
-
-    auto res = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 7900, 0);
-
-    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
-    BOOST_CHECK_EQUAL(res.items[2].said, 2);
-    BOOST_CHECK_EQUAL(res.items[2].time, 8200+10*60);
-}
 
 BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
     navimake::builder b("20120614");
-    b.vj("A")("stop1", 8000)("stop2", 23*3600+59*60);
-    b.vj("B")("stop3", 2*3600)("stop4",2*3600+20);
+    b.vj("A")("stop1", 8000)("stop2", 8200);
+    b.vj("B")("stop3", 10)("stop4",20);
     b.connection("stop2", "stop3", 10*60);
-
+    b.connection("stop3", "stop2", 10*60);
     type::Data data;
     data.pt_data = b.build();
-    RAPTOR raptor(data);
+    reverseRAPTOR raptor(data);
 
     type::PT_Data d = data.pt_data;
 
 
-    auto res = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 7900, 0);
+    auto res = raptor.compute(d.stop_areas.at(3).idx, d.stop_areas.at(0).idx, 30, 1);
     std::cout << res << std::endl;
     BOOST_REQUIRE_EQUAL(res.items.size(), 5);
     BOOST_CHECK_EQUAL(res.items[4].said, 3);
-    BOOST_CHECK_EQUAL(res.items[4].time, 2*3600+20);
+    BOOST_CHECK_EQUAL(res.items[4].time, 20);
     BOOST_CHECK_EQUAL(res.items[4].day, 1);
+    BOOST_CHECK_EQUAL(res.items[0].said, 0);
+    BOOST_CHECK_EQUAL(res.items[0].time, 8000);
+    BOOST_CHECK_EQUAL(res.items[0].day, 0);
 }
+
 

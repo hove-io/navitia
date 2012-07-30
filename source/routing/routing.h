@@ -63,7 +63,19 @@ struct DateTime {
     }
 
 
+    bool operator>(DateTime other) const {
+        if(this->date == other.date)
+            return hour > other.hour;
+        else
+            return this->date > other.date;
+    }
 
+    bool operator>=(DateTime other) const {
+        if(this->date == other.date)
+            return hour >= other.hour;
+        else
+            return this->date > other.date;
+    }
 
     bool operator<=(DateTime other) const {
         if(this->date == other.date)
@@ -76,10 +88,20 @@ struct DateTime {
         return DateTime();
     }
 
+    static DateTime minimity() {
+        return DateTime(std::numeric_limits<int>::min(), std::numeric_limits<int>::min());
+    }
+
     void normalize(){
         if(date > 300) std::cout << "on normalise l'infini..." << std::endl;
-        this->date += this->hour / (24*3600);
-        this->hour = hour % (24*3600);
+        if(this->hour < 0) {
+            --this->date;
+            this->hour = hour+ (24*3600);
+        } else {
+
+            this->date += this->hour / (24*3600);
+            this->hour = hour % (24*3600);
+        }
     }
 
     bool operator==(DateTime other) {
@@ -94,6 +116,7 @@ struct DateTime {
 std::ostream & operator<<(std::ostream & os, const DateTime & dt);
 
 DateTime operator+(DateTime dt, int seconds);
+DateTime operator-(DateTime dt, int seconds);
 
 /** Représente un horaire associé à un validity pattern
  *

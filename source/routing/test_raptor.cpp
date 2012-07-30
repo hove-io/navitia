@@ -6,13 +6,13 @@
 using namespace navitia;
 
 int main(int, char **) {
-    type::Data data;
-    {
-        Timer t("Chargement des données");
-        data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.nav");
+//    type::Data data;
+//    {
+//        Timer t("Chargement des données");
+//        data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.nav");
 
-        data.build_proximity_list();
-    }
+//        data.build_proximity_list();
+//    }
 
 //    int depart = 0;
 //    int arrivee = 2;
@@ -31,13 +31,13 @@ int main(int, char **) {
 ////            precstid =  stid;
 ////        }
 ////    }http://127.0.0.1/planner?format=json&departure_lat=48.80039471738876&departure_lon=2.1296571179927253&destination_lat=48.93228737752789&destination_lon=2.4949524490283004&time=28800&date=20120511
-    routing::raptor::RAPTOR raptor(data);
-    {
-        Timer t("Calcul raptor");
-//        routing::Path result = raptor.makeItineraire(raptor.compute(type::GeographicalCoord(2.1296571, 48.800394717), 300, type::GeographicalCoord(2.49495, 48.932287), 300, 8*3600, 7));
-        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
-        std::cout << result;
-    }
+//    routing::raptor::RAPTOR raptor(data);
+//    {
+//        Timer t("Calcul raptor");
+////        routing::Path result = raptor.makeItineraire(raptor.compute(type::GeographicalCoord(2.1296571, 48.800394717), 300, type::GeographicalCoord(2.49495, 48.932287), 300, 8*3600, 7));
+//        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
+//        std::cout << result;
+//    }
 
 //    std::cout << "Je suis ici ! " << std::endl;
 
@@ -59,17 +59,20 @@ int main(int, char **) {
 //    }
 
 
-//    navimake::builder b("20120614");
-//    b.vj("A")("stop1", 23*3600)("stop2", 24*3600 + 5*60);
-//    b.vj("B")("stop2", 10*60)("stop3", 20*60);
-//    type::Data data;
-//    data.pt_data =  b.build();
-//    routing::raptor::RAPTOR raptor(data);
+    navimake::builder b("20120614");
 
-//    type::PT_Data d = data.pt_data;
+    b.vj("A")("stop1", 8000)("stop2", 8200);
+    b.vj("B")("stop3", 10)("stop4",20);
+    b.connection("stop2", "stop3", 10*60);
+    b.connection("stop3", "stop2", 10*60);
 
-//    auto res = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 22*3600, 0);
-//    std::cout << res << std::endl;
+    type::Data data;
+    data.pt_data =  b.build();
+    routing::raptor::reverseRAPTOR raptor(data);
+
+
+    auto res = raptor.compute(data.pt_data.stop_areas.at(3).idx, data.pt_data.stop_areas.at(0).idx, 60, 1);
+    std::cout << res << std::endl;
 
 
 }

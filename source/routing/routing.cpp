@@ -5,8 +5,16 @@ namespace navitia { namespace routing {
 
 
 DateTime operator+(DateTime dt, int seconds) {
-    if(!(dt == DateTime::infinity())){
+    if(!(dt == DateTime::infinity()) && !(dt == DateTime::minimity())){
         dt.hour += seconds;
+        dt.normalize();
+    }
+    return dt;
+}
+
+DateTime operator-(DateTime dt, int seconds) {
+    if(!(dt == DateTime::infinity()) && !(dt == DateTime::minimity())){
+        dt.hour -= seconds;
         dt.normalize();
     }
     return dt;
