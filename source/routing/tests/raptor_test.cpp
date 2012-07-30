@@ -118,33 +118,6 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
 }
 
 
-BOOST_AUTO_TEST_CASE(deux_marche_a_pied_milieu){
-    navimake::builder b("20120614");
-    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
-    b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
-    b.vj("B")("stop3", 9500,9550)("stop4", 9600,9650);
-
-    b.vj("C")("stop1", 80000,80050)("stop5", 82000,82500);
-    b.connection("stop2", "stop5", 10*60);
-    b.connection("stop5", "stop2", 10*60);
-
-    b.connection("stop5", "stop3", 10*60);
-    b.connection("stop3", "stop5", 10*60);
-
-    type::Data data;
-    data.pt_data = b.build();
-    RAPTOR raptor(data);
-
-    type::PT_Data d = data.pt_data;
-
-
-
-    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7900, 0);
-    std::cout << res;
-    BOOST_REQUIRE_EQUAL(res.items.size(), 6);
-    BOOST_CHECK_EQUAL(res.items[5].time, 9600);
-}
-
 
 BOOST_AUTO_TEST_CASE(marche_a_pied_trcky){
     navimake::builder b("20120614");
@@ -161,8 +134,6 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_trcky){
 
 
     auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7900, 0);
-
-    std::cout << res << std::endl;
     BOOST_REQUIRE_EQUAL(res.items.size(), 6);
     BOOST_CHECK_EQUAL(res.items[5].time, 9200);
 }
