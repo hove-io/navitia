@@ -25,15 +25,27 @@ function aff_data(data) {
             marker = new mxn.Marker(new mxn.LatLonPoint(planner.feuilleroute.etapes[i].arrivee.lieu.geo.y, planner.feuilleroute.etapes[i].arrivee.lieu.geo.x));
             map.addMarker(marker);
             marker.openBubble();
+            $("#details").html("");
+            $("#details").append($('<br>'));
+            $("#details").append("Depart à " +planner.feuilleroute.etapes[i].depart.date.heure+" le : "+planner.feuilleroute.etapes[i].depart.date.date+" de "+ planner.feuilleroute.etapes[i].depart.lieu.nom+" avec la ligne : " +planner.feuilleroute.etapes[i].mode.ligne);
+            $("#details").append($('<br>'));
+            $("#details").append(" arrivée à : "+planner.feuilleroute.etapes[i].arrivee.date.heure+" le : "+planner.feuilleroute.etapes[i].arrivee.date.date);
+            $("#details").append($("<br>"));
+
         } else {
             marker = new mxn.Marker(new mxn.LatLonPoint(planner.feuilleroute.etapes[i].arrivee.lieu.geo.y, planner.feuilleroute.etapes[i].arrivee.lieu.geo.x));
             marker.setInfoBubble("Depart arrivee");
 
 
             map.addMarker(marker);
+            $("#details").append("Depart à " +planner.feuilleroute.etapes[i].depart.date.heure+" le : "+planner.feuilleroute.etapes[i].depart.date.date+" de "+ planner.feuilleroute.etapes[i].depart.lieu.nom+" avec la ligne : " +planner.feuilleroute.etapes[i].mode.ligne);
+            $("#details").append($('<br>'));
+            $("#details").append(" arrivée à : "+planner.feuilleroute.etapes[i].arrivee.date.heure+" le : "+planner.feuilleroute.etapes[i].arrivee.date.date);
+            $("#details").append($("<br>"));
         }
 
     }
+
 
     for(i=0;i<planner.itineraire.trajets.length;i++) {
 
@@ -50,7 +62,7 @@ function aff_data(data) {
 function planner() {
 
 
-    $.getJSON("../planner?format=json&departure="+$("#departure").val()+"&destination="+$("#destination").val()+"&time="+$("#time").val()+"&date="+$("#date").val(),
+    $.getJSON("../planner?format=json&departure="+$("#departure").val()+"&destination="+$("#destination").val()+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val(),
               aff_data
               );
 }
@@ -67,7 +79,7 @@ function clickmap(event_name, event_source, event_args) {
         depart_arrivee.arrivee.lon = p.lon;
         $("#infos").text("Calcul en cours ... ");
         $.getJSON("../planner?format=json&departure_lat="+depart_arrivee.depart.lat+"&departure_lon="+depart_arrivee.depart.lon+
-                  "&destination_lat="+depart_arrivee.arrivee.lat+"&destination_lon="+depart_arrivee.arrivee.lon+"&time="+$("#time").val()+"&date="+$("#date").val(),
+                  "&destination_lat="+depart_arrivee.arrivee.lat+"&destination_lon="+depart_arrivee.arrivee.lon+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val(),
                   aff_data
                   );
         depart_arrivee.depart.lat = -1;

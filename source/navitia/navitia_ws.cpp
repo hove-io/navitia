@@ -8,6 +8,7 @@
 #include "routing/raptor.h"
 #include "first_letter/firstletter_api.h"
 #include <boost/tokenizer.hpp>
+#include "utils/locker.h"
 
 using namespace webservice;
 
@@ -19,57 +20,6 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     std::unique_ptr<navitia::routing::raptor::RAPTOR> calculateur;
 
-    /**
-     * structure permettant de simuler un finaly afin
-     * de délocké le mutex en sortant de la fonction appelante
-     */
-    struct Locker{
-        /// indique si l'acquisition du verrou a réussi
-        bool locked;
-        nt::Data* data;
-        
-        ///construit un locker par défaut qui lock rien.
-        Locker() : locked(false), data(NULL){}
-
-        /**
-         * @param exclusive défini si c'est un lock exclusif ou pas
-         *
-         *
-         */
-        Locker(navitia::type::Data& data, bool exclusive = false) : data(&data), exclusive(exclusive) {
-            if(exclusive){
-                this->data->load_mutex.lock();
-                locked = true;
-            }else{
-                locked = this->data->load_mutex.try_lock_shared();
-            }
-        }
-
-        ~Locker() {
-            if(locked){
-                if(exclusive){
-                    data->load_mutex.unlock();
-                }else{
-                    data->load_mutex.unlock_shared();
-                }
-            }
-        }
-
-        /**
-         * move constructor 
-         */
-        Locker(Locker&& other) : locked(other.locked), data(other.data), exclusive(other.exclusive){
-            other.locked = false;
-        }
-
-    private:
-        /// on désactive le constructeur par copie
-        Locker(const Locker&);
-        /// on l'opérateur d'affectation par copie
-        Locker& operator=(const Locker&);
-
-        bool exclusive;
-    };
     
     /**
      * Vérifie la validité des paramétres, charge les données si elles ne le sont pas, 
@@ -77,14 +27,15 @@ class Worker : public BaseWorker<navitia::type::Data> {
      *
      * Retourne le Locker associé à la requéte, si il est bien vérouillé, le traitement peux continuer
      */
-    Locker check_and_init(RequestData & request, navitia::type::Data & d, pbnavitia::API requested_api, pbnavitia::Response& pb_response, ResponseData& rd) {
+    navitia::utils::Locker check_and_init(RequestData & request, navitia::type::Data & d,
+            pbnavitia::API requested_api, pbnavitia::Response& pb_response, ResponseData& rd) {
         pb_response.set_requested_api(requested_api);
         if(!request.params_are_valid){
             rd.status_code = 400;
             rd.content_type = "application/octet-stream";
             pb_response.set_info("invalid argument");
             pb_response.SerializeToOstream(&rd.response);
-            return Locker();
+            return navitia::utils::Locker();
         }
         if(!d.loaded){
             try{
@@ -94,17 +45,17 @@ class Worker : public BaseWorker<navitia::type::Data> {
                 rd.content_type = "application/octet-stream";
                 pb_response.set_error("error while loading data");
                 pb_response.SerializeToOstream(&rd.response);
-                return Locker();
+                return navitia::utils::Locker();
             }
         }
-        Locker locker(d);
+        navitia::utils::Locker locker(d);
         if(!locker.locked){
             //on est en cours de chargement
             rd.status_code = 503;
             rd.content_type = "application/octet-stream";
             pb_response.set_error("loading");
             pb_response.SerializeToOstream(&rd.response);
-            return Locker();
+            return navitia::utils::Locker();
         }
         return locker;
     }
@@ -137,7 +88,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData firstletter(RequestData& request, navitia::type::Data &data){
         ResponseData rd;
         pbnavitia::Response pb_response;
-        Locker locker(check_and_init(request, data, pbnavitia::FIRSTLETTER, pb_response, rd));
+        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::FIRSTLETTER, pb_response, rd));
         if(!locker.locked){
             return rd;
         }
@@ -160,7 +111,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData streetnetwork(RequestData & request, navitia::type::Data & d){
         ResponseData rd;
         pbnavitia::Response pb_response;
-        Locker locker(check_and_init(request, d, pbnavitia::STREET_NETWORK, pb_response, rd));
+        navitia::utils::Locker locker(check_and_init(request, d, pbnavitia::STREET_NETWORK, pb_response, rd));
         if(!locker.locked){
             return rd;
         }
@@ -200,7 +151,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     }
 
     void load(navitia::type::Data & data){
-        Locker lock(data, true);
+        navitia::utils::Locker lock(data, true);
         try{
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
             Configuration * conf = Configuration::get();
@@ -299,7 +250,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData planner(RequestData & request, navitia::type::Data & d) {
         ResponseData rd;
         pbnavitia::Response pb_response;
-        Locker locker(check_and_init(request, d, pbnavitia::PLANNER, pb_response, rd));
+        navitia::utils::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, pb_response, rd));
         if(!locker.locked){
             return rd;
         }
