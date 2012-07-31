@@ -278,26 +278,31 @@ class Worker : public BaseWorker<navitia::type::Data> {
             return rd;
         }
 
-        navitia::routing::Path path;
+//        navitia::routing::Path path;
         int time = boost::get<int>(request.parsed_params["time"].value);
         int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
-        if(request.parsed_params.count("departure") ==1) {
-            int departure_idx = boost::get<int>(request.parsed_params["departure"].value);
-            int arrival_idx = boost::get<int>(request.parsed_params["destination"].value);
-            path = calculateur->compute(departure_idx, arrival_idx, time, date);
-        } else {
+//        if(request.parsed_params.count("departure") ==1) {
+//            int departure_idx = boost::get<int>(request.parsed_params["departure"].value);
+//            int arrival_idx = boost::get<int>(request.parsed_params["destination"].value);
+//            path = calculateur->compute(departure_idx, arrival_idx, time, date);
+//        } else {
             double departure_lat = boost::get<double>(request.parsed_params["departure_lat"].value);
             double departure_lon = boost::get<double>(request.parsed_params["departure_lon"].value);
             double arrival_lat = boost::get<double>(request.parsed_params["destination_lat"].value);
             double arrival_lon = boost::get<double>(request.parsed_params["destination_lon"].value);
 
-            path = calculateur->compute(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
-        }
-        navitia::routing::Path itineraire = calculateur->makeItineraire(path);
+            std::vector<navitia::routing::Path> pathes = calculateur->compute_all(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
+//        }
 
-        pbnavitia::Planning * planning = pb_response.mutable_planner()->add_planning();
-        create_pb_froute(itineraire, d, *planning->mutable_feuilleroute());
-        create_pb_itineraire(path, d, *planning->mutable_itineraire());
+            std::cout << "Nb itineraires : " << pathes.size() << std::endl;
+
+        BOOST_FOREACH(auto path, pathes) {
+            navitia::routing::Path itineraire = calculateur->makeItineraire(path);
+            pbnavitia::Planning * planning = pb_response.mutable_planner()->add_planning();
+            create_pb_froute(itineraire, d, *planning->mutable_feuilleroute());
+            create_pb_itineraire(path, d, *planning->mutable_itineraire());
+        }
+
         pb_response.SerializeToOstream(&rd.response);
         rd.content_type = "application/octet-stream";
         rd.status_code = 200;
