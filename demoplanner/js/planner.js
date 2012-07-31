@@ -10,8 +10,8 @@ var planner;
 
 var destination_idx = -1;
 var departure_idx = -1;
-var debut_requete;
-var fin_requete;
+var debut_requete = -1;
+var fin_requete = -1;
 
 function aff_planning(idPlanning) {
 
@@ -87,6 +87,7 @@ function aff_data(data) {
 function planner() {
 
     if((departure_idx !== -1) && (destination_idx !== -1)) {
+        debut_requete = new Date().getTime();
         $.getJSON("../planner?format=json&departure="+departure_idx+"&destination="+destination_idx+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val(),
                   aff_data
                   );
