@@ -240,8 +240,8 @@ void GtfsParser::parse_stops(Data & data) {
 }
 
 void GtfsParser::parse_transfers(Data & data) {
-    std::cout << "On parse : " << (path + "transfers.txt").c_str() << std::endl;
-    std::fstream ifile((path + "transfers.txt").c_str());
+    std::cout << "On parse : " << (path + "/transfers.txt").c_str() << std::endl;
+    std::fstream ifile((path + "/transfers.txt").c_str());
     remove_bom(ifile);
     std::string line;
 
@@ -312,8 +312,8 @@ void GtfsParser::parse_transfers(Data & data) {
 void GtfsParser::parse_calendar(Data & data) {
     data.validity_patterns.reserve(10000);
 
-    std::cout << "On parse : " << (path + "calendar.txt").c_str() << std::endl;
-    std::fstream ifile((path + "calendar.txt").c_str());
+    std::cout << "On parse : " << (path + "/calendar.txt").c_str() << std::endl;
+    std::fstream ifile((path + "/calendar.txt").c_str());
     remove_bom(ifile);
     std::string line;
 
@@ -598,7 +598,7 @@ void GtfsParser::parse_trips(Data & data) {
                     vj->route = 0;
                     vj->tmp_line = line;
                     vj->mode = itm->second;
-                    vj_map[vj->name] = vj;
+                    vj_map[vj->external_code] = vj;
                     data.vehicle_journeys.push_back(vj);
                 }
                 else {
@@ -741,7 +741,7 @@ void GtfsParser::parse_stop_times(Data & data) {
         boost::algorithm::trim(elts[stop_c]);
         auto stop_it = stop_map.find(elts[stop_c]);
         if(vj_it == vj_map.end()) {
-            std::cerr << "Impossible de trouver le vehicle_journey " << elts[id_c] << std::endl;
+            std::cerr << "Impossible de trouver le vehicle_journey " << elts[id_c] <<   std::endl;
         }
         else if(stop_it == stop_map.end()){
             std::cerr << "Impossible de trouver le StopPoint " << elts[stop_c] << "!"<< std::endl;
