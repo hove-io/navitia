@@ -169,6 +169,7 @@ struct RAPTOR : public monoRAPTOR {
     std::vector<Path> compute_all(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
                                , int departure_hour, int departure_day);
     std::vector<Path> compute_all(map_int_pint_t departs, map_int_pint_t destinations);
+    std::vector<Path> compute_all(navitia::type::EntryPoint departure, navitia::type::EntryPoint destination, int departure_hour, int departure_day) ;
 };
 
 struct reverseRAPTOR : public monoRAPTOR {

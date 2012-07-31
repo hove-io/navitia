@@ -683,6 +683,27 @@ Path communRAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int depar
     return compute_raptor(departs, destinations);
 }
 
+std::vector<Path> RAPTOR::compute_all(navitia::type::EntryPoint departure, navitia::type::EntryPoint destination, int departure_hour, int departure_day) {
+    map_int_pint_t departs, destinations;
+
+    auto it_departure = data.pt_data.stop_area_map.find(departure.external_code),
+         it_destination = data.pt_data.stop_area_map.find(destination.external_code);
+    std::cout << "dep ext : " << departure.external_code << " " << data.pt_data.stop_area_map.size() << " " << data.pt_data.stop_areas.size() << std::endl;
+    std::cout << "dest ext : " << destination.external_code << std::endl;
+
+    if(it_departure == data.pt_data.stop_area_map.end() || it_destination == data.pt_data.stop_area_map.end()) {
+        std::vector<Path> r;
+        return r;
+    }
+
+    std::cout << "Depart de " << data.pt_data.stop_areas.at((*it_departure).second).name << " " << (*it_departure).second << std::endl;
+    std::cout << "Destination " << data.pt_data.stop_areas.at((*it_destination).second).name << " " << (*it_destination).second << std::endl;
+
+    departs[(*it_departure).second] = type_retour(-1, DateTime(departure_day, departure_hour), 0, 0);
+    destinations[(*it_destination).second] = type_retour();
+    return compute_all(departs, destinations);
+}
+
 Path communRAPTOR::compute(const type::GeographicalCoord & departure, double radius, idx_t destination_idx, int departure_hour, int departure_day) {
     map_int_pint_t bests, destinations;
     {
@@ -756,7 +777,7 @@ Path communRAPTOR::compute(const type::GeographicalCoord & departure, double rad
 }
 
 std::vector<Path> RAPTOR::compute_all(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
-                           , int departure_hour, int departure_day) {
+                                      , int departure_hour, int departure_day) {
     map_int_pint_t departs, destinations;
 
     trouverGeo(departure, radius_depart, destination, radius_destination, departure_hour, departure_day, departs, destinations);

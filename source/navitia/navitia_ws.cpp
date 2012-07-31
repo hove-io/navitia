@@ -278,21 +278,21 @@ class Worker : public BaseWorker<navitia::type::Data> {
             return rd;
         }
 
-//        navitia::routing::Path path;
+        std::vector<navitia::routing::Path> pathes;
         int time = boost::get<int>(request.parsed_params["time"].value);
         int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
-//        if(request.parsed_params.count("departure") ==1) {
-//            int departure_idx = boost::get<int>(request.parsed_params["departure"].value);
-//            int arrival_idx = boost::get<int>(request.parsed_params["destination"].value);
-//            path = calculateur->compute(departure_idx, arrival_idx, time, date);
-//        } else {
+        if(request.parsed_params.count("departure") ==1) {
+            navitia::type::EntryPoint departure(boost::get<std::string>(request.parsed_params["departure"].value));
+            navitia::type::EntryPoint destination(boost::get<std::string>(request.parsed_params["destination"].value));
+            pathes = calculateur->compute_all(departure, destination, time, 7);
+        } else {
             double departure_lat = boost::get<double>(request.parsed_params["departure_lat"].value);
             double departure_lon = boost::get<double>(request.parsed_params["departure_lon"].value);
             double arrival_lat = boost::get<double>(request.parsed_params["destination_lat"].value);
             double arrival_lon = boost::get<double>(request.parsed_params["destination_lon"].value);
 
-            std::vector<navitia::routing::Path> pathes = calculateur->compute_all(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
-//        }
+            pathes = calculateur->compute_all(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
+        }
 
             std::cout << "Nb itineraires : " << pathes.size() << std::endl;
 
@@ -338,8 +338,8 @@ public:
         add_param("proximitylist", "filter", "Type à rechercher", ApiParameter::STRING, false, default_params);
 
         register_api("planner", boost::bind(&Worker::planner, this, _1, _2), "Calcul d'itinéraire en Transport en Commun");
-        add_param("planner", "departure", "Point de départ", ApiParameter::INT, false);
-        add_param("planner", "destination", "Point d'arrivée", ApiParameter::INT, false);
+        add_param("planner", "departure", "Point de départ", ApiParameter::STRING, false);
+        add_param("planner", "destination", "Point d'arrivée", ApiParameter::STRING, false);
         add_param("planner", "departure_lat", "Latitude de départ", ApiParameter::DOUBLE, false);
         add_param("planner", "departure_lon", "Longitude de départ", ApiParameter::DOUBLE, false);
         add_param("planner", "destination_lat", "Latitude d'arrivée", ApiParameter::DOUBLE, false);
