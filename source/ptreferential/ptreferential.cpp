@@ -162,8 +162,10 @@ void set_value(google::protobuf::Message* message, const T& object, const std::s
 }
 
 
-pbnavitia::PTReferential extract_data(PT_Data & data, const Request & r, std::vector<idx_t> & rows) {
-    pbnavitia::PTReferential pb_response;    
+pbnavitia::Response extract_data(PT_Data & data, const Request & r, std::vector<idx_t> & rows) {
+    pbnavitia::Response result;
+    result.set_requested_api(pbnavitia::PTREFERENTIAL);
+    pbnavitia::PTReferential * pb_response = result.mutable_ptref();
     //on reconstruit
     std::map<Type_e, std::vector<std::string> > columns_map;
     BOOST_FOREACH(const Column & col, r.columns){
@@ -173,7 +175,7 @@ pbnavitia::PTReferential extract_data(PT_Data & data, const Request & r, std::ve
     BOOST_FOREACH(idx_t row, rows){
         // "stop_area"
         //pbnavitia::PTReferential * pb_row = pb_response.add_item();
-       google::protobuf::Message* pb_message = get_message(&pb_response, r.requested_type);
+       google::protobuf::Message* pb_message = get_message(pb_response, r.requested_type);
         std::pair<Type_e, std::vector<std::string> > col;
         std::vector<Type_e> all_paths = find_path(r.requested_type);
         BOOST_FOREACH(col, columns_map){
@@ -230,11 +232,11 @@ pbnavitia::PTReferential extract_data(PT_Data & data, const Request & r, std::ve
         }
     }
     } catch(navitia::ptref::PTRefException &e){
-        pb_response.set_error(e.what());
+        pb_response->set_error(e.what());
     }catch(...){
-        pb_response.set_error("PTReferential: Impossible d'extraire la réponse ");
+        pb_response->set_error("PTReferential: Impossible d'extraire la réponse ");
     }
-    return pb_response;
+    return result;
 }
 
 google::protobuf::Message* add_item(google::protobuf::Message* message, const std::string& table){
@@ -334,10 +336,12 @@ std::vector<idx_t> get(Type_e source, Type_e destination, idx_t source_idx, PT_D
 
 
 
-pbnavitia::PTReferential query(std::string request, PT_Data & data){
+pbnavitia::Response query(std::string request, PT_Data & data){
     std::string::iterator begin = request.begin();
     Request r;
-    pbnavitia::PTReferential pb_response;
+    pbnavitia::Response pb_response;
+    pb_response.set_requested_api(pbnavitia::PTREFERENTIAL);
+    pbnavitia::PTReferential * pb_ptref = pb_response.mutable_ptref();
     select_r<std::string::iterator> s;
 
     // récupération des colonnes sélectionnées, les objets utilisés et les colonnes dans la clause WHERE
@@ -345,12 +349,12 @@ pbnavitia::PTReferential query(std::string request, PT_Data & data){
     {
         if(begin != request.end()) {
             std::string unparsed(begin, request.end());
-            pb_response.set_error("PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + unparsed + "<<");
+            pb_ptref->set_error("PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + unparsed + "<<");
             return pb_response;
         }
     }
     else{                
-        pb_response.set_error("PTReferential : Impossible de parser la requête");
+        pb_ptref->set_error("PTReferential : Impossible de parser la requête");
         return pb_response;
     }
 
@@ -399,43 +403,6 @@ pbnavitia::PTReferential query(std::string request, PT_Data & data){
 
     return extract_data(data, r, final_indexes);
 }
-
-
-std::string pb2txt(const google::protobuf::Message * response){
-    std::stringstream buffer;
-
-    const google::protobuf::Reflection* reflection = response->GetReflection();
-    std::vector<const google::protobuf::FieldDescriptor*> field_list;
-    reflection->ListFields(*response, &field_list);
-
-    BOOST_FOREACH(const google::protobuf::FieldDescriptor* field, field_list){
-        if(field->is_repeated()) {
-            buffer << field->name() << " : [";
-            for(int i=0; i < reflection->FieldSize(*response, field); ++i){
-                buffer << pb2txt(&reflection->GetRepeatedMessage(*response, field, i)) << " ,";
-            }
-            buffer << "]\n";
-        }
-        else if(reflection->HasField(*response, field)){
-            buffer << field->name() << " = ";
-            if(field->type() == google::protobuf::FieldDescriptor::TYPE_STRING){
-                buffer << reflection->GetString(*response, field) << "; ";
-            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
-                buffer << reflection->GetInt32(*response, field) << "; ";
-            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE){
-                buffer << "\n\t" << pb2txt(&reflection->GetMessage(*response, field)) << "\n";
-            }else {
-                buffer << "type unkown; ";
-            }
-        }
-
-        buffer << std::endl;
-
-
-    }
-    return buffer.str();
-}
-
 
 
 }} // navitia::ptref

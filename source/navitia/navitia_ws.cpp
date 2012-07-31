@@ -8,6 +8,7 @@
 #include "routing/raptor.h"
 #include "first_letter/firstletter_api.h"
 #include "proximity_list/proximitylist_api.h"
+#include "ptreferential/ptreferential.h"
 #include <boost/tokenizer.hpp>
 #include "utils/locker.h"
 
@@ -94,9 +95,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
             return rd;
         }
 
-        std::string name;
         std::vector<nt::Type_e> filter = parse_param_filter(request.params["filter"]);
-        name = boost::get<std::string>(request.parsed_params["name"].value);
+        std::string name = boost::get<std::string>(request.parsed_params["name"].value);
 
         try{
             pb_response = navitia::firstletter::firstletter(name, filter, data);
@@ -193,7 +193,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData proximitylist(RequestData & request, navitia::type::Data &data){
         pbnavitia::Response pb_response;
         ResponseData rd;
-        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::FIRSTLETTER, pb_response, rd));
+        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::PROXIMITYLIST, pb_response, rd));
         if(!locker.locked){
             return rd;
         }
@@ -304,6 +304,27 @@ class Worker : public BaseWorker<navitia::type::Data> {
         return rd;
     }
 
+    ResponseData ptref(RequestData & request, navitia::type::Data &data){
+        ResponseData rd;
+
+        pbnavitia::Response pb_response;
+        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::PTREFERENTIAL, pb_response, rd));
+        if(!locker.locked){
+            return rd;
+        }
+        try {
+            std::string q = boost::get<std::string>(request.parsed_params["q"].value);
+            pb_response = navitia::ptref::query(q, data.pt_data);
+            pb_response.SerializeToOstream(&rd.response);
+            rd.content_type = "application/octet-stream";
+            rd.status_code = 200;
+        }catch(...){
+            rd.status_code = 500;
+        }
+
+        return rd;
+    }
+
 public:
     /** Constructeur par défaut
       *
@@ -345,6 +366,8 @@ public:
 
         register_api("load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
 
+        register_api("ptref", boost::bind(&Worker::ptref, this, _1, _2), "Exploration du référentiel de transports en commun");
+        add_param("ptref", "q", "Requête", ApiParameter::STRING, true);
 
         add_default_api();
     }
