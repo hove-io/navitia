@@ -198,8 +198,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
             return rd;
         }
 
-        navitia::type::GeographicalCoord coord(boost::get<double>(request.parsed_params["lat"].value),
-                                               boost::get<double>(request.parsed_params["lon"].value));
+        navitia::type::GeographicalCoord coord(boost::get<double>(request.parsed_params["lon"].value),
+                                               boost::get<double>(request.parsed_params["lat"].value));
         double distance = 500;
         if(request.parsed_params.find("dist") != request.parsed_params.end())
             distance = boost::get<double>(request.parsed_params["dist"].value);
