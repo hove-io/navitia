@@ -118,8 +118,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
             return rd;
         }
 
-        nt::GeographicalCoord origin(boost::get<double>(request.parsed_params["startlon"].value), boost::get<double>(request.parsed_params["startlat"].value));
-        nt::GeographicalCoord destination(boost::get<double>(request.parsed_params["destlon"].value), boost::get<double>(request.parsed_params["destlat"].value));
+        nt::GeographicalCoord origin(boost::get<double>(request.parsed_params["startlon"].value), boost::get<double>(request.parsed_params["startlat"].value), true);
+        nt::GeographicalCoord destination(boost::get<double>(request.parsed_params["destlon"].value), boost::get<double>(request.parsed_params["destlat"].value), true);
 
         pb_response = navitia::streetnetwork::street_network(origin, destination, data);
         pb_response.SerializeToOstream(&rd.response);
