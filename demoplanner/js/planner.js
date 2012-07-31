@@ -1,4 +1,4 @@
-var map;  
+var map;
 
 var depart_arrivee = {
     depart :  { lat : -1, lon : -1},
@@ -6,6 +6,10 @@ var depart_arrivee = {
 };
 
 var planner;
+
+
+var destination_idx = -1;
+var departure_idx = -1;
 
 function aff_planning(idPlanning) {
 
@@ -78,18 +82,21 @@ function aff_data(data) {
 
 function planner() {
 
-
-    $.getJSON("../planner?format=json&departure="+$("#departure").val()+"&destination="+$("#destination").val()+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val(),
-              aff_data
-              );
+    if((departure_idx !== -1) && (destination_idx !== -1)) {
+        $.getJSON("../planner?format=json&departure="+departure_idx+"&destination="+destination_idx+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val(),
+                  aff_data
+                  );
+    } else {
+        alert("Selectionnez une ville");
+    }
 }
 
 function clickmap(event_name, event_source, event_args) {
     var p = event_args.location;
 
     if(depart_arrivee.depart.lat === -1) {
-         depart_arrivee.depart.lat = p.lat;
-         depart_arrivee.depart.lon = p.lon;
+        depart_arrivee.depart.lat = p.lat;
+        depart_arrivee.depart.lon = p.lon;
         $("#infos").text("Choisissez maitenant une destination");
     } else {
         depart_arrivee.arrivee.lat = p.lat;
@@ -115,3 +122,70 @@ window.onload= function() {
             map.click.addHandler(clickmap);
             $("#go").click(planner);
         }
+
+$(function() {
+      $( "#departure" ).autocomplete({
+                                                source: function( request, response ) {
+                                                            $.ajax({
+                                                                       url: "http://127.0.0.1/firstletter",
+                                                                       dataType: "json",
+                                                                       data: {
+                                                                           format : "json",
+                                                                           name: request.term,
+                                                                       },
+                                                                       success: function( data ) {
+                                                                                    response( $.map( data.firstletter.items, function( item ) {
+                                                                                                            return {
+                                                                                                                label: item.name,
+                                                                                                                value: item.uri
+                                                                                                            }
+                                                                                                    }));
+                                                                                }
+                                                                   });
+                                                        },
+                                                minLength: 2,
+                                                select: function( event, ui ) {
+                                                            departure_idx = ui.item.value;
+                                                        },
+                                                open: function() {
+                                                          $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
+                                                      },
+                                                close: function() {
+                                                           $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+                                                       }
+                                            });
+
+      $( "#destination" ).autocomplete({
+                                                source: function( request, response ) {
+                                                            $.ajax({
+                                                                       url: "http://127.0.0.1/firstletter",
+                                                                       dataType: "json",
+                                                                       data: {
+                                                                           format : "json",
+                                                                           name: request.term,
+                                                                       },
+                                                                       success: function( data ) {
+                                                                                    response( $.map( data.firstletter.items, function( item ) {
+                                                                                                            return {
+                                                                                                                label: item.name,
+                                                                                                                value: item.uri
+                                                                                                            }
+
+
+                                                                                                    }));
+                                                                                }
+                                                                   });
+                                                        },
+                                                minLength: 2,
+                                                select: function( event, ui ) {
+                                                            destination_idx = ui.item.value;
+                                                        },
+                                                open: function() {
+                                                          $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
+                                                      },
+                                                close: function() {
+                                                           $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+                                                       }
+                                            });
+
+  });
