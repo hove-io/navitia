@@ -1,7 +1,8 @@
 <html>
 <head>
 	<title>Démo Planner</title>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js"></script>
 	<script src="http://openlayers.org/api/OpenLayers.js"></script>
 	<script src="https://raw.github.com/mapstraction/mxn/master/source/mxn.js?(openlayers)" type="text/javascript"></script>
 	<script src="js/planner.js"></script>
@@ -9,8 +10,8 @@
 
 <body>
 
-<input type="text" name="departure" id="departure" value="100"/>
-<input type="text" name="destination" id="destination" value="120"/>
+<input type="text" name="departure" id="departure" />
+<input type="text" name="destination" id="destination" />
 <input type="text" name="timeheure" id="timeheure" value="08" size="2"/>
 <input type="text" name="timemin" id="timemin" value="00" size="2"/>
 <input type="text" name="date" id="date" value="20120511"/>
@@ -24,5 +25,7 @@
 </div>
 <br>
 <div id="details" style="float:left; width:450px;"></div>
+
+<hr/>
 </body>
 </html>

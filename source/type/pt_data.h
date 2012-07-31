@@ -108,6 +108,34 @@ struct PT_Data{
       */
     template<class Type> std::vector<Type> & get();
 
+//    struct NotFound;
+//    template<class Type> Type get(EntryPoint entrypoint){
+//        ExtCodeMap ext_map;
+//        std::vector<Type> vector;
+//        switch(entrypoint.type) {
+//        case navitia::type::eCity : ext_map = city_map; vector = cities; break;
+//        case navitia::type::eCompany  : ext_map = company_map; vector = companies; break;
+//        case navitia::type::eCountry : ext_map = country_map ; vector = countries; break;
+//        case navitia::type::eDepartment : ext_map = department_map;  vector = departments;break;
+//        case navitia::type::eLine : ext_map = line_map; vector = lines; break;
+//        case navitia::type::eMode : ext_map = mode_map;  vector = modes;break;
+//        case navitia::type::eModeType : ext_map =  mode_type_map;  vector = mode_types;break;
+//        case navitia::type::eNetwork : ext_map = network_map;  vector = networks;break;
+//        case navitia::type::eRoute : ext_map = route_map;  vector = routes;break;
+//        case navitia::type::eStopArea : ext_map = stop_area_map;  vector = stop_areas;break;
+//        case navitia::type::eStopPoint : ext_map = stop_point_map;  vector = stop_points;break;
+//        case navitia::type::eVehicleJourney : ext_map = vehicle_journey_map;  vector = vehicle_journeys;break;
+//        default: throw NotFound();
+//        }
+//        auto it = ext_map.find(entrypoint.external_code);
+//        if(it == ext_map.end())
+//            throw NotFound();
+//        if(*it > vector.size())
+//            throw NotFound();
+//        return vector.at(*it);
+//    }
+
+
 
     /** Étant donné une liste d'indexes pointant vers source,
       * retourne une liste d'indexes pointant vers target
@@ -136,6 +164,9 @@ struct PT_Data{
       * Concrètement, on a un tableau avec des éléments allant de 0 à (n-1) où n est le nombre d'éléments
       */
     std::vector<idx_t> get_all_index(Type_e type);
+
+
+
 };
 
 }}
