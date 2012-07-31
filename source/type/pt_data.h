@@ -36,9 +36,9 @@ struct PT_Data{
     firstletter::FirstLetter<idx_t> stop_point_first_letter;
 
     // Proximity list
-    ProximityList<idx_t> stop_area_proximity_list;
-    ProximityList<idx_t> stop_point_proximity_list;
-    ProximityList<idx_t> city_proximity_list;
+    proximitylist::ProximityList<idx_t> stop_area_proximity_list;
+    proximitylist::ProximityList<idx_t> stop_point_proximity_list;
+    proximitylist::ProximityList<idx_t> city_proximity_list;
 
     // Maps pour external code
     // À refléchir si un hash_map ne serait pas mieux ; pas forcément en lecture car hasher une chaîne c'est plus long que comparer

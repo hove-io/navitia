@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(nearest_segment){
     c.x = -10; c.y = 1;
     BOOST_CHECK(sn.nearest_edge(c) == b.get("b", "o"));
     c.x = 50; c.y = 10;
-    BOOST_CHECK_THROW(sn.nearest_edge(c), NotFound);
+    BOOST_CHECK_THROW(sn.nearest_edge(c), navitia::proximitylist::NotFound);
 }
 
 // Est-ce que le calcul de plusieurs nœuds vers plusieurs nœuds fonctionne
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(compute_route_n_n){
     // On lève une exception s'il n'y a pas d'itinéraire
     starts = {b.get("e")};
     dests = {b.get("a")};
-    BOOST_CHECK_THROW(sn.compute(starts, dests), NotFound);
+    BOOST_CHECK_THROW(sn.compute(starts, dests), navitia::proximitylist::NotFound);
 
     // Cas où le nœud de départ et d'arrivée sont confondus
     starts = {b.get("a")};
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
 
     GeographicalCoord c1(50,10,false);
     GeographicalCoord c2(350,20,false);
-    ProximityList<idx_t> pl;
+    navitia::proximitylist::ProximityList<idx_t> pl;
     pl.add(c1, 1);
     pl.add(c2, 2);
     pl.build();

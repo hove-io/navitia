@@ -98,7 +98,7 @@ struct StreetNetwork {
     firstletter::FirstLetter<unsigned int> fl;
 
     /// Indexe
-    ProximityList<vertex_t> pl;
+    proximitylist::ProximityList<vertex_t> pl;
 
     /// Graphe pour effectuer le calcul d'itinéraire
     Graph graph;
@@ -131,7 +131,7 @@ struct StreetNetwork {
      *
      * Retourne tous les idx atteignables dans ce rayon, ainsi que la distance en suivant le filaire de voirie
      **/
-    std::vector< std::pair<type::idx_t, double> > find_nearest(const type::GeographicalCoord & start_coord, const ProximityList<type::idx_t> & pl, double radius);
+    std::vector< std::pair<type::idx_t, double> > find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius);
 
 private :
     /** Initialise les structures nécessaires à dijkstra

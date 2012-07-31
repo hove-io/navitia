@@ -127,12 +127,17 @@ void PT_Data::build_proximity_list() {
     BOOST_FOREACH(City city, this->cities){
         this->city_proximity_list.add(city.coord, city.idx);
     }
+    this->city_proximity_list.build();
+
     BOOST_FOREACH(StopArea stop_area, this->stop_areas){
         this->stop_area_proximity_list.add(stop_area.coord, stop_area.idx);
     }
+    this->stop_area_proximity_list.build();
+
     BOOST_FOREACH(StopPoint stop_point, this->stop_points){
         this->stop_point_proximity_list.add(stop_point.coord, stop_point.idx);
     }
+    this->stop_point_proximity_list.build();
 }
 
 void PT_Data::build_external_code() {

@@ -6,6 +6,7 @@
 #include "proximity_list/proximity_list.h"
 
 using namespace navitia::type;
+using namespace navitia::proximitylist;
 
 BOOST_AUTO_TEST_CASE(distances_euclidiennes) {
     GeographicalCoord a(0,0, false);

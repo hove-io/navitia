@@ -8,6 +8,14 @@ bool MakeTranslation::week::operator!=(week i2){
     return (i2.weeknumber != weeknumber);
 }
 
+bool MakeTranslation::target::operator<(target i2) const {
+    return (i2.count < count);
+}
+
+bool MakeTranslation::target::operator!=(target i2) const {
+    return (i2.week_ulong != week_ulong);
+}
+
 MakeTranslation::MakeTranslation(){
 }
 
@@ -77,17 +85,18 @@ void MakeTranslation::splitcs(){
         std::map<int, target>::iterator it;
         it = target_map.find(currentweek.week_bs.to_ulong());
         if (it != target_map.end()){
-            it->second.count++;
+            ++it->second.count;
             it->second.lastweeknumber = weeknumber;
         } else {
             target& response = target_map[currentweek.week_bs.to_ulong()];
             response.week_bs = week_vector[weeknumber].week_bs;
+            response.week_ulong = response.week_bs.to_ulong();
             response.firstweeknumber = weeknumber;
             response.count = 1;
         };
 
         weekstartdate = weekstartdate + boost::gregorian::date_duration(pos - precpos);
-        weeknumber++;
+        ++weeknumber;
         precpos = pos;
         pos = pos + 7;
     }
@@ -96,7 +105,7 @@ void MakeTranslation::splitcs(){
 
 //calcul des exception ET
 //on essaye d'inserer le bitset b2 dans b1
-std::bitset<7> MakeTranslation::getandpattern(std::bitset<7>& b1, std::bitset<7>& b2){
+std::bitset<7> MakeTranslation::getandpattern(std::bitset<7> &b1, std::bitset<7> &b2){
     std::bitset<7> dest = b1;
 //    std::bitset<7> src = b2;
     std::bitset<7> result = dest.flip() &= b2;
@@ -106,7 +115,7 @@ std::bitset<7> MakeTranslation::getandpattern(std::bitset<7>& b1, std::bitset<7>
 
 //calcul des exception OU
 //on essaye d'inserer le bitset b2 dans b1
-std::bitset<7> MakeTranslation::getexceptpattern(std::bitset<7>& b1, std::bitset<7>& b2){
+std::bitset<7> MakeTranslation::getexceptpattern(std::bitset<7> &b1, std::bitset<7> &b2){
     std::bitset<7> dest = b1;
     std::bitset<7> result;
     result = (dest ^= b2 ) &= b1;
@@ -129,7 +138,7 @@ void MakeTranslation::bounddrawdown(){
             std::bitset<7> exception =getandpattern(firstweek.week_bs, startweek.week_bs);
 
             if(exception.any()){
-                for(int it=0; it!= weeklength; it++) {
+                for(int it=0; it!= weeklength; ++it) {
                     if(exception[it]){
                         responsefw.andlist.push_back(startweek.startdate + boost::gregorian::date_duration(weeklength - it -1));
                     }
@@ -139,7 +148,7 @@ void MakeTranslation::bounddrawdown(){
             exception = getexceptpattern(firstweek.week_bs, startweek.week_bs);
 
             if(exception.any()){
-                for(int it=0; it!= weeklength; it++) {
+                for(int it=0; it!= weeklength; ++it) {
                     if(exception[it]){
                         responsefw.exceptlist.push_back(startweek.startdate + boost::gregorian::date_duration(weeklength - it -1));
                     }
@@ -185,12 +194,105 @@ void MakeTranslation::bounddrawdown(){
     }
 }
 
+std::vector<MakeTranslation::target>::iterator MakeTranslation::getbesthost(std::vector<target> &targetvector, const target &targetsrc){
+    unsigned int distance = UINT_MAX;
+    std::vector<target>::iterator result = targetvector.end();
+    for(std::vector<target>::iterator it=targetvector.begin(); it!= targetvector.end(); ++it) {
+        target targetdst= *it;
+        unsigned int currentdistance = levenshtein_distance(targetdst.week_bs, targetsrc.week_bs);
+        if ((targetdst != targetsrc) && (currentdistance < distance)){
+            result = it;
+            distance= currentdistance;
+        }
+    }
+    return result;
+}
+
+bool sortTargetbyCountAsc (MakeTranslation::target i,MakeTranslation::target j){
+    return (i.count < j.count);
+}
+
+void MakeTranslation::mergetarget(MakeTranslation::target &targetsrc, MakeTranslation::target &targetdst){
+    //gestion des ET  last = dest
+    std::bitset<7> andpattern =getandpattern(targetdst.week_bs, targetsrc.week_bs);
+    std::bitset<7> exceptpattern = getexceptpattern(targetdst.week_bs, targetsrc.week_bs);
+
+    target &mapdst= target_map[targetdst.week_ulong];
+    //gestion des periodes
+    boost::gregorian::date_duration shift(1);
+    target &mapsrc= target_map[targetsrc.week_ulong];
+    for(std::vector<boost::gregorian::date>::iterator itsrc=mapsrc.periodlist.begin(); itsrc!= mapsrc.periodlist.end(); ++itsrc) {
+        //si la date est pair on est un lundi
+        if ((itsrc - mapsrc.periodlist.begin()) % 2 ==0){
+            if(andpattern.any() || exceptpattern.any()){
+                for(int it=6; it!=0; --it) {
+                    //gestion des ET
+                    if(andpattern[it]){
+                        mapdst.andlist.push_back(*itsrc + boost::gregorian::date_duration(7 - it -1));
+                    }
+                    //gestion des SAUF
+                    if(exceptpattern[it]){
+                        mapdst.exceptlist.push_back(*itsrc + boost::gregorian::date_duration(7 - it -1));
+                    }
+                }
+            }
+            //gestion début de semaine
+            std::vector<boost::gregorian::date>::iterator itdst=find(mapdst.periodlist.begin(), mapdst.periodlist.end(), *itsrc - shift);
+            if ( itdst== mapdst.periodlist.end()){
+                mapdst.periodlist.push_back(*itsrc);
+            } else {
+                mapdst.periodlist.erase(itdst);
+            }
+
+        } else {
+        //si la date est impair on est un dimanche
+            //gestion fin de semaine
+            std::vector<boost::gregorian::date>::iterator itdst=find(mapdst.periodlist.begin(), mapdst.periodlist.end(), *itsrc + shift);
+            if ( itdst== mapdst.periodlist.end()){
+                mapdst.periodlist.push_back(*itsrc);
+            } else {
+                mapdst.periodlist.erase(itdst);
+            }
+        }
+
+    }
+    target_map.erase(targetsrc.week_ulong);
+
+}
+
+void MakeTranslation::targetdrawdown(){
+//ISO Navitia1
+    if (target_map.size() > 2){
+//    if (target_map.size() > 4){
+        //on va essayer de fusionner les cibles entre elles
+        //on cree un vector de pointeur sur une copie des elements du target_map
+        std::vector<target> targetvector;
+        for(std::map<int, target>::iterator it=target_map.begin(); it!= target_map.end(); ++it) {
+            targetvector.push_back(it->second);
+        }
+        std::sort(targetvector.begin(), targetvector.end(), sortTargetbyCountAsc);
+        //parcours de la liste du count le + petit au plus grand
+//        for(std::vector<target>::iterator itsrc=targetvector.begin(); itsrc!= targetvector.end(); ++itsrc) {
+//          target targetsrc = *itsrc;
+        for(unsigned i =0; i < targetvector.size() - 1; ++i) {
+            target targetsrc = targetvector[i];
+            //on cherche la target la plus proche via un levenshtein et on les fusionne
+            std::vector<target>::iterator itdst= getbesthost(targetvector, targetsrc);
+            if(itdst != targetvector.end()){
+                target targetdst = *itdst;
+                mergetarget(targetsrc, targetdst);
+            }
+        }
+    }
+}
+
+
 void MakeTranslation::translate(){
     int weekindice = -1;
     boost::gregorian::date_duration shift(6);
-    for(std::vector<week>::iterator it=week_vector.begin(); it!= week_vector.end(); it++) {
+    for(std::vector<week>::iterator it=week_vector.begin(); it!= week_vector.end(); ++it) {
         week weekit = *it;
-        for(std::map<int, target>::iterator it=target_map.begin(); it!= target_map.end(); it++) {
+        for(std::map<int, target>::iterator it=target_map.begin(); it!= target_map.end(); ++it) {
             target& response = it->second;
             if (weekit.week_bs == response.week_bs){
                 if (weekindice != -1){
