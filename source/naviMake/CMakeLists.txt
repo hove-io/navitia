@@ -14,9 +14,9 @@ SET(SOURCE_NAVIMAKE
 )
 
 add_library(connectors ${SOURCE_LIB})
-target_link_libraries(connectors ${Boost_LIBRARIES} types utils)
+target_link_libraries(connectors ${Boost_LIBRARIES} data)
 
 add_executable (navimake ${SOURCE_NAVIMAKE})
-target_link_libraries(navimake ${Boost_LIBRARIES} connectors utils)
+target_link_libraries(navimake ${Boost_LIBRARIES} connectors)
 
 add_subdirectory(tests)
