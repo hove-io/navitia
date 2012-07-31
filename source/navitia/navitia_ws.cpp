@@ -7,7 +7,9 @@
 #include "routing/routing.h"
 #include "routing/raptor.h"
 #include "first_letter/firstletter_api.h"
+#include "street_network/street_network_api.h"
 #include "proximity_list/proximitylist_api.h"
+#include "ptreferential/ptreferential.h"
 #include <boost/tokenizer.hpp>
 #include "utils/locker.h"
 
@@ -94,9 +96,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
             return rd;
         }
 
-        std::string name;
         std::vector<nt::Type_e> filter = parse_param_filter(request.params["filter"]);
-        name = boost::get<std::string>(request.parsed_params["name"].value);
+        std::string name = boost::get<std::string>(request.parsed_params["name"].value);
 
         try{
             pb_response = navitia::firstletter::firstletter(name, filter, data);
@@ -109,41 +110,18 @@ class Worker : public BaseWorker<navitia::type::Data> {
         return rd;
     }
 
-    ResponseData streetnetwork(RequestData & request, navitia::type::Data & d){
+    ResponseData streetnetwork(RequestData & request, navitia::type::Data & data){
         ResponseData rd;
         pbnavitia::Response pb_response;
-        navitia::utils::Locker locker(check_and_init(request, d, pbnavitia::STREET_NETWORK, pb_response, rd));
+        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::STREET_NETWORK, pb_response, rd));
         if(!locker.locked){
             return rd;
         }
 
-        double startlon = boost::get<double>(request.parsed_params["startlon"].value);
-        double startlat = boost::get<double>(request.parsed_params["startlat"].value);
-        double destlon = boost::get<double>(request.parsed_params["destlon"].value);
-        double destlat = boost::get<double>(request.parsed_params["destlat"].value);
+        nt::GeographicalCoord origin(boost::get<double>(request.parsed_params["startlon"].value), boost::get<double>(request.parsed_params["startlat"].value), true);
+        nt::GeographicalCoord destination(boost::get<double>(request.parsed_params["destlon"].value), boost::get<double>(request.parsed_params["destlat"].value), true);
 
-        std::vector<navitia::streetnetwork::vertex_t> start = {d.street_network.pl.find_nearest(startlon, startlat)};
-        std::vector<navitia::streetnetwork::vertex_t> dest = {d.street_network.pl.find_nearest(destlon, destlat)};
-        navitia::streetnetwork::Path path = d.street_network.compute(start, dest);
-
-        pbnavitia::StreetNetwork* sn = pb_response.mutable_street_network();
-        sn->set_length(path.length);
-        BOOST_FOREACH(auto item, path.path_items){
-            if(item.way_idx < d.street_network.ways.size()){
-                pbnavitia::PathItem * path_item = sn->add_path_item_list();
-                path_item->set_name(d.street_network.ways[item.way_idx].name);
-                path_item->set_length(item.length);
-            }else{
-                std::cout << "Way étrange : " << item.way_idx << std::endl;
-            }
-
-        }
-
-        BOOST_FOREACH(auto coord, path.coordinates){
-            pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinate_list();
-            pb_coord->set_x(coord.x);
-            pb_coord->set_y(coord.y);
-        }
+        pb_response = navitia::streetnetwork::street_network(origin, destination, data);
         pb_response.SerializeToOstream(&rd.response);
         rd.content_type = "application/octet-stream";
         rd.status_code = 200;
@@ -193,7 +171,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData proximitylist(RequestData & request, navitia::type::Data &data){
         pbnavitia::Response pb_response;
         ResponseData rd;
-        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::FIRSTLETTER, pb_response, rd));
+        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::PROXIMITYLIST, pb_response, rd));
         if(!locker.locked){
             return rd;
         }
@@ -309,6 +287,27 @@ class Worker : public BaseWorker<navitia::type::Data> {
         return rd;
     }
 
+    ResponseData ptref(RequestData & request, navitia::type::Data &data){
+        ResponseData rd;
+
+        pbnavitia::Response pb_response;
+        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::PTREFERENTIAL, pb_response, rd));
+        if(!locker.locked){
+            return rd;
+        }
+        try {
+            std::string q = boost::get<std::string>(request.parsed_params["q"].value);
+            pb_response = navitia::ptref::query(q, data.pt_data);
+            pb_response.SerializeToOstream(&rd.response);
+            rd.content_type = "application/octet-stream";
+            rd.status_code = 200;
+        }catch(...){
+            rd.status_code = 500;
+        }
+
+        return rd;
+    }
+
 public:
     /** Constructeur par défaut
       *
@@ -350,6 +349,8 @@ public:
 
         register_api("load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
 
+        register_api("ptref", boost::bind(&Worker::ptref, this, _1, _2), "Exploration du référentiel de transports en commun");
+        add_param("ptref", "q", "Requête", ApiParameter::STRING, true);
 
         add_default_api();
     }

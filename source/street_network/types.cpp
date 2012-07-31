@@ -17,7 +17,7 @@ struct DestinationFound{};
 struct target_visitor : public boost::dijkstra_visitor<> {
     const std::vector<vertex_t> & destinations;
     target_visitor(const std::vector<vertex_t> & destinations) : destinations(destinations){}
-    void finish_vertex(vertex_t u, Graph){
+    void finish_vertex(vertex_t u, const Graph&){
         if(std::find(destinations.begin(), destinations.end(), u) != destinations.end())
             throw DestinationFound();
     }
@@ -43,7 +43,7 @@ void StreetNetwork::init(std::vector<float> &distances, std::vector<vertex_t> &p
         predecessors[i] = i;
 }
 
-Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<double> start_zeros, std::vector<double> dest_zeros) {
+Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<double> start_zeros, std::vector<double> dest_zeros) const {
     if(starts.size() == 0 || destinations.size() == 0)
         throw proximitylist::NotFound();
 
@@ -139,7 +139,7 @@ ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const Stre
     this->distances = {projected.distance_to(vertex1_coord), projected.distance_to(vertex2_coord)};
 }
 
-Path StreetNetwork::compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord){
+Path StreetNetwork::compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord) const{
     ProjectionData start(start_coord, *this);
     ProjectionData dest(dest_coord, *this);
 
