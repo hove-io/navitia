@@ -9,6 +9,7 @@
 #include "first_letter/firstletter_api.h"
 #include "street_network/street_network_api.h"
 #include "proximity_list/proximitylist_api.h"
+#include "ptreferential/ptreferential.h"
 #include <boost/tokenizer.hpp>
 #include "utils/locker.h"
 
@@ -95,9 +96,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
             return rd;
         }
 
-        std::string name;
         std::vector<nt::Type_e> filter = parse_param_filter(request.params["filter"]);
-        name = boost::get<std::string>(request.parsed_params["name"].value);
+        std::string name = boost::get<std::string>(request.parsed_params["name"].value);
 
         try{
             pb_response = navitia::firstletter::firstletter(name, filter, data);
@@ -171,13 +171,13 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData proximitylist(RequestData & request, navitia::type::Data &data){
         pbnavitia::Response pb_response;
         ResponseData rd;
-        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::FIRSTLETTER, pb_response, rd));
+        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::PROXIMITYLIST, pb_response, rd));
         if(!locker.locked){
             return rd;
         }
 
-        navitia::type::GeographicalCoord coord(boost::get<double>(request.parsed_params["lat"].value),
-                                               boost::get<double>(request.parsed_params["lon"].value));
+        navitia::type::GeographicalCoord coord(boost::get<double>(request.parsed_params["lon"].value),
+                                               boost::get<double>(request.parsed_params["lat"].value));
         double distance = 500;
         if(request.parsed_params.find("dist") != request.parsed_params.end())
             distance = boost::get<double>(request.parsed_params["dist"].value);
@@ -256,29 +256,55 @@ class Worker : public BaseWorker<navitia::type::Data> {
             return rd;
         }
 
-        navitia::routing::Path path;
+//        navitia::routing::Path path;
         int time = boost::get<int>(request.parsed_params["time"].value);
         int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
-        if(request.parsed_params.count("departure") ==1) {
-            int departure_idx = boost::get<int>(request.parsed_params["departure"].value);
-            int arrival_idx = boost::get<int>(request.parsed_params["destination"].value);
-            path = calculateur->compute(departure_idx, arrival_idx, time, date);
-        } else {
+//        if(request.parsed_params.count("departure") ==1) {
+//            int departure_idx = boost::get<int>(request.parsed_params["departure"].value);
+//            int arrival_idx = boost::get<int>(request.parsed_params["destination"].value);
+//            path = calculateur->compute(departure_idx, arrival_idx, time, date);
+//        } else {
             double departure_lat = boost::get<double>(request.parsed_params["departure_lat"].value);
             double departure_lon = boost::get<double>(request.parsed_params["departure_lon"].value);
             double arrival_lat = boost::get<double>(request.parsed_params["destination_lat"].value);
             double arrival_lon = boost::get<double>(request.parsed_params["destination_lon"].value);
 
-            path = calculateur->compute(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
-        }
-        navitia::routing::Path itineraire = calculateur->makeItineraire(path);
+            std::vector<navitia::routing::Path> pathes = calculateur->compute_all(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
+//        }
 
-        pbnavitia::Planning * planning = pb_response.mutable_planner()->add_planning();
-        create_pb_froute(itineraire, d, *planning->mutable_feuilleroute());
-        create_pb_itineraire(path, d, *planning->mutable_itineraire());
+            std::cout << "Nb itineraires : " << pathes.size() << std::endl;
+
+        BOOST_FOREACH(auto path, pathes) {
+            navitia::routing::Path itineraire = calculateur->makeItineraire(path);
+            pbnavitia::Planning * planning = pb_response.mutable_planner()->add_planning();
+            create_pb_froute(itineraire, d, *planning->mutable_feuilleroute());
+            create_pb_itineraire(path, d, *planning->mutable_itineraire());
+        }
+
         pb_response.SerializeToOstream(&rd.response);
         rd.content_type = "application/octet-stream";
         rd.status_code = 200;
+        return rd;
+    }
+
+    ResponseData ptref(RequestData & request, navitia::type::Data &data){
+        ResponseData rd;
+
+        pbnavitia::Response pb_response;
+        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::PTREFERENTIAL, pb_response, rd));
+        if(!locker.locked){
+            return rd;
+        }
+        try {
+            std::string q = boost::get<std::string>(request.parsed_params["q"].value);
+            pb_response = navitia::ptref::query(q, data.pt_data);
+            pb_response.SerializeToOstream(&rd.response);
+            rd.content_type = "application/octet-stream";
+            rd.status_code = 200;
+        }catch(...){
+            rd.status_code = 500;
+        }
+
         return rd;
     }
 
@@ -323,6 +349,8 @@ public:
 
         register_api("load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
 
+        register_api("ptref", boost::bind(&Worker::ptref, this, _1, _2), "Exploration du référentiel de transports en commun");
+        add_param("ptref", "q", "Requête", ApiParameter::STRING, true);
 
         add_default_api();
     }

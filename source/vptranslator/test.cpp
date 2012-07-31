@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(default_test) {
     testdate = boost::gregorian::date(2012,7,16);
     BOOST_CHECK_EQUAL(testtranslation.week_vector[2].startdate, testdate);
 
-    std::cout << "nouveau test : " <<std::endl;
+    std::cout <<std::endl<< "debut test : ";
 
 //et le 07/jul
 //et le 17/jul
@@ -342,4 +342,48 @@ BOOST_AUTO_TEST_CASE(default_test) {
             std::cout << *it4 <<std::endl;
         }
     }
+    std::cout << "fin test : " <<std::endl;
+
+    //0001100
+    //1101100   //lundi 02/07/2012
+    //1100100
+    //1101100
+    //1111100
+    //1100000
+
+    //000110011011001100100110110011111001100000
+    testCS="000110011011001100100110110011111001100000";
+    testdate= boost::gregorian::date(2012,6,25);
+
+    response = testtranslation.initcs(testdate, testCS);
+    testtranslation.splitcs();
+    testtranslation.translate();
+    testtranslation.bounddrawdown();
+    testtranslation.targetdrawdown();
+
+    BOOST_CHECK_EQUAL(response, true);
+    BOOST_CHECK_EQUAL(testtranslation.CS, "1100110110011001001101100111110011");
+    testdate = boost::gregorian::date(2012,6,28);
+    BOOST_CHECK_EQUAL(testtranslation.startdate, testdate);
+
+    testdate = boost::gregorian::date(2012,7,31);
+    BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
+    std::cout <<std::endl<< "debut test : ";
+    for(std::map<int, MakeTranslation::target>::iterator it = testtranslation.target_map.begin(); it!= testtranslation.target_map.end(); it++) {
+        targetresponse = it->second;
+        std::cout<<std::endl<< targetresponse.week_bs.to_string()<<std::endl;
+        std::cout << "liste des periodes : " <<std::endl;
+        for(std::vector<boost::gregorian::date>::iterator it2 = targetresponse.periodlist.begin(); it2!= targetresponse.periodlist.end(); it2++) {
+            std::cout << *it2 <<std::endl;
+        }
+        std::cout << "liste des ET : " <<std::endl;
+        for(std::vector<boost::gregorian::date>::iterator it3 = targetresponse.andlist.begin(); it3!= targetresponse.andlist.end(); it3++) {
+            std::cout << *it3 <<std::endl;
+        }
+        std::cout << "liste des SAUF: " <<std::endl;
+        for(std::vector<boost::gregorian::date>::iterator it4 = targetresponse.exceptlist.begin(); it4!= targetresponse.exceptlist.end(); it4++) {
+            std::cout << *it4 <<std::endl;
+        }
+    }
+    std::cout << "fin test : " <<std::endl;
 }
