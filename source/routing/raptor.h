@@ -107,7 +107,8 @@ struct communRAPTOR : public AbstractRouter
     Path compute(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
                  , int departure_hour, int departure_day);
 
-
+    void trouverGeo(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination,
+                    int departure_hour, int departure_day, map_int_pint_t &departs, map_int_pint_t &destinations);
 
 
 
@@ -165,6 +166,9 @@ struct RAPTOR : public monoRAPTOR {
     Path makePath(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, unsigned int destination_idx, unsigned int countb);
     std::vector<Path> makePathes(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, best_dest &b_dest, unsigned int count);
 
+    std::vector<Path> compute_all(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
+                               , int departure_hour, int departure_day);
+    std::vector<Path> compute_all(map_int_pint_t departs, map_int_pint_t destinations);
 };
 
 struct reverseRAPTOR : public monoRAPTOR {

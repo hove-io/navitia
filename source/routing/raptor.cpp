@@ -229,6 +229,39 @@ Path monoRAPTOR::compute_raptor(map_int_pint_t departs, map_int_pint_t destinati
 }
 
 
+std::vector<Path> RAPTOR::compute_all(map_int_pint_t departs, map_int_pint_t destinations) {
+    map_retour_t retour;
+    map_int_pint_t best;
+    std::vector<unsigned int> marked_stop;
+
+
+    BOOST_FOREACH(auto item, departs) {
+        retour[0][item.first] = item.second;
+        best[item.first] = item.second;
+        marked_stop.push_back(item.first);
+    }
+
+    best_dest b_dest;
+
+    BOOST_FOREACH(auto item, destinations) {
+        b_dest.ajouter_destination(item.first, item.second);
+    }
+
+    unsigned int count = 1;
+
+
+    boucleRAPTOR(marked_stop, retour, best, b_dest, count);
+
+
+
+    if(b_dest.best_now != type_retour()) {
+        unsigned int destination_idx = b_dest.best_now_said;
+        return makePathes(retour, best, departs, b_dest, count);
+    }
+    std::vector<Path> result;
+    return result;
+}
+
 void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count) {
     map_int_int_t Q;
 
@@ -677,18 +710,15 @@ Path communRAPTOR::compute(const type::GeographicalCoord & departure, double rad
     return compute_raptor(bests, destinations);
 }
 
-Path communRAPTOR::compute(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
-                           , int departure_hour, int departure_day) {
-    std::cout << "Raptor Geo geo depaart :" << departure  << " "<< radius_depart <<  " arrivee " << destination << " " << radius_destination <<" " << departure_hour << " " << departure_day <<  std::endl;
-    map_int_pint_t departs, destinations;
-
-
+void communRAPTOR::trouverGeo(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination,
+                              int departure_hour, int departure_day, map_int_pint_t &departs, map_int_pint_t &destinations) {
     typedef std::vector< std::pair<idx_t, double> > retour;
+
     retour prox;
 
     try {
         prox = (retour) (data.street_network.find_nearest(departure, data.pt_data.stop_area_proximity_list, radius_depart));
-    } catch(NotFound) {std::cout << "Not found 1 " << std::endl; return Path();}
+    } catch(NotFound) {std::cout << "Not found 1 " << std::endl; return ;}
 
 
     BOOST_FOREACH(auto item, prox) {
@@ -707,16 +737,33 @@ Path communRAPTOR::compute(const type::GeographicalCoord & departure, double rad
     prox.clear();
     try {
         prox = (retour) (data.street_network.find_nearest(destination, data.pt_data.stop_area_proximity_list, radius_destination));
-    } catch(NotFound) {std::cout << "Not found 2 " << std::endl;return Path();}
+    } catch(NotFound) {std::cout << "Not found 2 " << std::endl;return ;}
     BOOST_FOREACH(auto item, prox) {
-        std::cout << item.first << " " << item.second << std::endl;
         destinations[item.first] = type_retour((int)(item.second/80));
     }
+}
+
+Path communRAPTOR::compute(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
+                           , int departure_hour, int departure_day) {
+    map_int_pint_t departs, destinations;
+
+    trouverGeo(departure, radius_depart, destination, radius_destination, departure_hour, departure_day, departs, destinations);
+
     std::cout << "Nb stations departs : " << departs.size() << " destinations : " << destinations.size() << std::endl;
 
     Path result = compute_raptor(departs, destinations);
-    std::cout << "Taille reponse :  " << result.items.size();
     return result;
+}
+
+std::vector<Path> RAPTOR::compute_all(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
+                           , int departure_hour, int departure_day) {
+    map_int_pint_t departs, destinations;
+
+    trouverGeo(departure, radius_depart, destination, radius_destination, departure_hour, departure_day, departs, destinations);
+
+    std::cout << "Nb stations departs : " << departs.size() << " destinations : " << destinations.size() << std::endl;
+
+    return compute_all(departs, destinations);
 }
 
 

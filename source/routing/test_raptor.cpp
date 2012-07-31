@@ -34,11 +34,14 @@ int main(int, char **) {
     routing::raptor::RAPTOR raptor(data);
     {
         Timer t("Calcul raptor");
-        routing::Path result = raptor.compute(type::GeographicalCoord(2.40041, 48.8421), 300, type::GeographicalCoord(2.29364, 48.8713), 300, 8*3600, 7);
-        std::cout << result << std::endl << std::endl;
+        std::vector<routing::Path> result = raptor.compute_all(type::GeographicalCoord(2.40041, 48.8421), 300, type::GeographicalCoord(2.29364, 48.8713), 300, 8*3600, 7);
 
-        std::cout << raptor.makeItineraire(result);
-//        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
+        BOOST_FOREACH(auto pouet, result) {
+        std::cout << pouet << std::endl << std::endl;
+
+        std::cout << raptor.makeItineraire(pouet);
+        }
+        //        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
     }
 
 //    std::cout << "Je suis ici ! " << std::endl;
