@@ -17,7 +17,7 @@ struct DestinationFound{};
 struct target_visitor : public boost::dijkstra_visitor<> {
     const std::vector<vertex_t> & destinations;
     target_visitor(const std::vector<vertex_t> & destinations) : destinations(destinations){}
-    void finish_vertex(vertex_t u, Graph){
+    void finish_vertex(vertex_t u, const Graph&){
         if(std::find(destinations.begin(), destinations.end(), u) != destinations.end())
             throw DestinationFound();
     }
