@@ -115,10 +115,10 @@ struct StreetNetwork {
      * Le paramètre zeros indique la distances (en mètres) de chaque nœud de départ. Il faut qu'il y ait autant d'éléments que dans starts
      * Si la taille ne correspond pas, on considère une distance de 0
      */
-    Path compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<double> start_zeros = std::vector<double>(), std::vector<double> dest_zeros = std::vector<double>());
+    Path compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<double> start_zeros = std::vector<double>(), std::vector<double> dest_zeros = std::vector<double>()) const;
 
     /// Calcule le meilleur itinéraire entre deux coordonnées
-    Path compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord);
+    Path compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord) const;
 
     /** Retourne l'arc (segment) le plus proche
       *
@@ -145,7 +145,7 @@ private :
      * Attention !!! Modifie distances et predecessors
      **/
     template<class Visitor>
-    void dijkstra(vertex_t start, std::vector<float> & distances, std::vector<vertex_t> & predecessors, Visitor visitor){
+    void dijkstra(vertex_t start, std::vector<float> & distances, std::vector<vertex_t> & predecessors, Visitor visitor) const{
         boost::two_bit_color_map<> color(boost::num_vertices(this->graph));
         boost::dijkstra_shortest_paths_no_init(this->graph, start, &predecessors[0], &distances[0],
 
