@@ -10,6 +10,8 @@ var planner;
 
 var destination_idx = -1;
 var departure_idx = -1;
+var debut_requete;
+var fin_requete;
 
 function aff_planning(idPlanning) {
 
@@ -67,6 +69,7 @@ function aff_planning(idPlanning) {
 }
 
 function aff_data(data) {
+    fin_requete = new Date().getTime();
     planner = data.planner.planning;
 
 
@@ -77,6 +80,7 @@ function aff_data(data) {
 
     aff_planning(0);
 
+    $("#details").append("timer : "+(fin_requete - debut_requete));
 
 }
 
@@ -102,6 +106,7 @@ function clickmap(event_name, event_source, event_args) {
         depart_arrivee.arrivee.lat = p.lat;
         depart_arrivee.arrivee.lon = p.lon;
         $("#infos").text("Calcul en cours ... ");
+        debut_requete = new Date().getTime();
         $.getJSON("../planner?format=json&departure_lat="+depart_arrivee.depart.lat+"&departure_lon="+depart_arrivee.depart.lon+
                   "&destination_lat="+depart_arrivee.arrivee.lat+"&destination_lon="+depart_arrivee.arrivee.lon+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val(),
                   aff_data
