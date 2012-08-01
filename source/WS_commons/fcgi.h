@@ -105,7 +105,7 @@ namespace webservice {
                 {
                     if( strcmp(line_read, "exit") == 0 || strcmp(line_read, "quit") == 0)
                     {
-                        std::cout << "\n Bye! See you soon!" << std::endl;
+                        std::cout << "\n Bye! Have a nice trip! À la mode de Caen ! :)" << std::endl;
                         return 0;
                     }
                     add_history (line_read);
