@@ -80,7 +80,7 @@ function aff_data(data) {
 
     aff_planning(0);
 
-    $("#details").append("timer : "+(fin_requete - debut_requete));
+     $("#details").append("timer : "+(fin_requete - debut_requete));
 
 }
 
