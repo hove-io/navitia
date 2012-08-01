@@ -36,7 +36,7 @@ std::ostream & operator<<(std::ostream & os, const Path & path) {
     return os;
 }
 
-Path AbstractRouter::makeItineraire(const Path &path) {
+Path makeItineraire(const Path &path) {
     Path result;
     result.duration = path.duration;
     result.nb_changes = path.nb_changes;

@@ -50,7 +50,7 @@ int main(int, char**){
     {
         Timer t("Calcul itinéraire");
         std::cout << data.pt_data.stop_areas.at(312).name << " à " << data.pt_data.stop_areas.at(566).name << std::endl;
-        std::cout << td.makeItineraire(td.compute(14796, 2460, 72000, 7));
+        std::cout << makeItineraire(td.compute(14796, 2460, 72000, 7));
     }
 
 

@@ -6,6 +6,8 @@
 #include "type/pb_converter.h"
 #include "routing/routing.h"
 #include "routing/raptor.h"
+#include "routing/raptor_api.h"
+
 #include "first_letter/firstletter_api.h"
 #include "street_network/street_network_api.h"
 #include "proximity_list/proximitylist_api.h"
@@ -25,13 +27,13 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     
     /**
-     * Vérifie la validité des paramétres, charge les données si elles ne le sont pas, 
+     * Vérifie la validité des paramétres, charge les données si elles ne le sont pas,
      * et gére le cas des données en cours de chargement
      *
      * Retourne le Locker associé à la requéte, si il est bien vérouillé, le traitement peux continuer
      */
     navitia::utils::Locker check_and_init(RequestData & request, navitia::type::Data & d,
-            pbnavitia::API requested_api, pbnavitia::Response& pb_response, ResponseData& rd) {
+                                          pbnavitia::API requested_api, pbnavitia::Response& pb_response, ResponseData& rd) {
         pb_response.set_requested_api(requested_api);
         if(!request.params_are_valid){
             rd.status_code = 400;
@@ -158,11 +160,11 @@ class Worker : public BaseWorker<navitia::type::Data> {
         }catch(...){
             pb_response.set_error("Erreur durant le chargement");
             rd.status_code = 500;
-            pb_response.SerializeToOstream(&rd.response);               
+            pb_response.SerializeToOstream(&rd.response);
             return rd;
         }
         pb_response.set_info("loaded!");
-        pb_response.SerializeToOstream(&rd.response);               
+        pb_response.SerializeToOstream(&rd.response);
         rd.status_code = 200;
         LOG4CPLUS_INFO(logger, "Chargement fini");
         return rd;
@@ -195,57 +197,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         return rd;
     }
 
-    /**
-     *  se charge de remplir l'objet protocolbuffer solution passé en paramètre
-    */
-    void create_pb_froute(navitia::routing::Path & path, const nt::Data & data, pbnavitia::FeuilleRoute &solution) {
-        solution.set_nbchanges(path.nb_changes);
-        solution.set_duree(path.duration);
-        int i = 0;
-        pbnavitia::Etape * etape;
-        BOOST_FOREACH(navitia::routing::PathItem item, path.items) {
-            if(i%2 == 0) {
-                etape = solution.add_etapes();
-                etape->mutable_mode()->set_ligne(data.pt_data.lines.at(item.line_idx).name);
-                etape->mutable_depart()->mutable_lieu()->mutable_geo()->set_x(data.pt_data.stop_areas.at(item.said).coord.x);
-                etape->mutable_depart()->mutable_lieu()->mutable_geo()->set_y(data.pt_data.stop_areas.at(item.said).coord.y);
-                etape->mutable_depart()->mutable_lieu()->set_nom(data.pt_data.stop_areas.at(item.said).name);
-                etape->mutable_depart()->mutable_date()->set_date(item.day);
-                etape->mutable_depart()->mutable_date()->set_heure(item.time);
-            } else {
-                etape->mutable_arrivee()->mutable_lieu()->mutable_geo()->set_x(data.pt_data.stop_areas.at(item.said).coord.x);
-                etape->mutable_arrivee()->mutable_lieu()->mutable_geo()->set_y(data.pt_data.stop_areas.at(item.said).coord.y);
-                etape->mutable_arrivee()->mutable_lieu()->set_nom(data.pt_data.stop_areas.at(item.said).name);
-                etape->mutable_arrivee()->mutable_date()->set_date(item.day);
-                etape->mutable_arrivee()->mutable_date()->set_heure(item.time);
-            }
 
-            ++i;
-        }
-
-    }
-
-    void create_pb_itineraire(navitia::routing::Path &path, const nt::Data & data, pbnavitia::ItineraireDetail &itineraire) {
-        if(path.items.size() > 0) {
-            pbnavitia::Trajet * trajet = itineraire.add_trajets();
-            trajet->set_mode(0);
-            trajet->set_ligne("");
-
-            unsigned int precsaid = std::numeric_limits<unsigned int>::max();
-            BOOST_FOREACH(navitia::routing::PathItem item, path.items) {
-                if(item.said == precsaid) {
-                    trajet = itineraire.add_trajets();
-                    trajet->set_mode(0);
-                    trajet->set_ligne("");
-                }
-                pbnavitia::Geocode * geo = trajet->add_pas();
-                geo->set_x(data.pt_data.stop_areas.at(item.said).coord.x);
-                geo->set_y(data.pt_data.stop_areas.at(item.said).coord.y);
-                precsaid = item.said;
-
-            }
-        }
-    }
 
 
     ResponseData planner(RequestData & request, navitia::type::Data & d) {
@@ -272,14 +224,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
             pathes = calculateur->compute_all(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
         }
 
-            std::cout << "Nb itineraires : " << pathes.size() << std::endl;
+        std::cout << "Nb itineraires : " << pathes.size() << std::endl;
 
-        BOOST_FOREACH(auto path, pathes) {
-            navitia::routing::Path itineraire = calculateur->makeItineraire(path);
-            pbnavitia::Planning * planning = pb_response.mutable_planner()->add_planning();
-            create_pb_froute(itineraire, d, *planning->mutable_feuilleroute());
-            create_pb_itineraire(path, d, *planning->mutable_itineraire());
-        }
+        pb_response = navitia::routing::raptor::make_response(pathes, d);
 
         pb_response.SerializeToOstream(&rd.response);
         rd.content_type = "application/octet-stream";

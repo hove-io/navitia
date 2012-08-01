@@ -39,7 +39,7 @@ int main(int, char **) {
         BOOST_FOREACH(auto pouet, result) {
         std::cout << pouet << std::endl << std::endl;
 
-        std::cout << raptor.makeItineraire(pouet);
+        std::cout << makeItineraire(pouet);
         }
         //        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
     }
