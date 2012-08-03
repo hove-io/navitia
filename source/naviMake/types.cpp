@@ -147,6 +147,12 @@ bool StopTime::operator<(const StopTime& other) const {
             || ((this->vehicle_journey == other.vehicle_journey) && (this->order< other.order))));
 }
 
+
+
+bool Department::operator <(const Department & other) const {
+    return this->district < other.district || ((this->district == other.district) && (this->name < other.name));
+}
+
 navitia::type::StopArea StopArea::Transformer::operator()(const StopArea& stop_area){
     navitia::type::StopArea sa;
     sa.id = stop_area.id;
@@ -253,9 +259,36 @@ nt::City City::Transformer::operator()(const City& city){
     nt_city.main_city = city.main_city;
     if(city.department != NULL)
         nt_city.department_idx = city.department->idx;
-
+    else
+        nt_city.department_idx = nt::invalid_idx;
     
     return nt_city;
+}
+
+nt::Department Department::Transformer::operator()(const Department& department){
+    navitia::type::Department nt_department;
+    nt_department.id = department.id;
+    nt_department.idx = department.idx;
+    nt_department.external_code = department.external_code;
+    nt_department.name = department.name;
+
+    if(department.district != NULL)
+        nt_department.district_idx = department.district->idx;
+    else
+        nt_department.district_idx = nt::invalid_idx;
+
+    return nt_department;
+}
+
+
+nt::District District::Transformer::operator()(const District& district){
+    navitia::type::District nt_district;
+    nt_district.id = district.id;
+    nt_district.idx = district.idx;
+    nt_district.external_code = district.external_code;
+    nt_district.name = district.name;
+
+    return nt_district;
 }
 
 nt::Network Network::Transformer::operator()(const Network& network){

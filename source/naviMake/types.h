@@ -62,13 +62,23 @@ struct District: public TransmodelHeader, Nameable{
     Country* country;
 
     bool operator<(const District& other) const;
+
+    struct Transformer{
+        inline navitia::type::District operator()(const District* district){return this->operator()(*district);}
+        navitia::type::District operator()(const District& district);
+    };
 };
 
 struct Department: public TransmodelHeader, Nameable{
     City* main_city;
-    District district;
+    District *district;
 
     bool operator<(const Department& other) const;
+
+    struct Transformer{
+        inline navitia::type::Department operator()(const Department* department){return this->operator()(*department);}
+        navitia::type::Department operator()(const Department& department);
+    };
 };
 
 

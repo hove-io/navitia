@@ -3,6 +3,9 @@
 #include "utils/timer.h"
 #include "boost/date_time.hpp"
 #include "naviMake/build_helper.h"
+
+#include <valgrind/callgrind.h>
+
 using namespace navitia;
 
 int main(int, char **) {
@@ -34,7 +37,10 @@ int main(int, char **) {
     routing::raptor::RAPTOR raptor(data);
     {
         Timer t("Calcul raptor");
+        CALLGRIND_START_INSTRUMENTATION;
         std::vector<routing::Path> result = raptor.compute_all(type::GeographicalCoord(2.40041, 48.8421), 300, type::GeographicalCoord(2.29364, 48.8713), 300, 8*3600, 7);
+        CALLGRIND_STOP_INSTRUMENTATION;
+        CALLGRIND_DUMP_STATS;
 
         BOOST_FOREACH(auto pouet, result) {
         std::cout << pouet << std::endl << std::endl;

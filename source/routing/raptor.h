@@ -129,6 +129,7 @@ struct communRAPTOR : public AbstractRouter
 
     typedef std::vector<unsigned int> list_connections;
     std::map<unsigned int, list_connections> foot_path;
+    std::map<unsigned int, map_int_int_t> map_sa_r;
 
     struct compare_rp {
         const navitia::type::RoutePoint & rp;
@@ -152,6 +153,8 @@ struct communRAPTOR : public AbstractRouter
 
 };
 
+struct departureNotFound {};
+struct destinationNotFound {};
 struct monoRAPTOR : public communRAPTOR {
     monoRAPTOR(navitia::type::Data &data) : communRAPTOR(data){}
     Path compute_raptor(map_int_pint_t departs, map_int_pint_t destinations);

@@ -34,7 +34,8 @@ enum Type_e {eValidityPattern = 0,
     eCompany = 15,
     eVehicle = 16,
     eCountry = 17,
-    eUnknown = 18
+    eUnknown = 18,
+    eWay = 19
 };
 struct PT_Data;
 template<class T> std::string T::* name_getter(){return &T::name;}
