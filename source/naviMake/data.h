@@ -27,6 +27,8 @@ public:
     std::vector<navimake::types::StopTime*> stops; //OK
     std::vector<navimake::types::Connection*> connections; //OK
     std::vector<navimake::types::RoutePoint*> route_points; //OK
+    std::vector<navimake::types::District*> districts; //OK
+    std::vector<navimake::types::Department*> departments; //OK
     std::vector<navimake::types::ValidityPattern*> validity_patterns;
 
 
@@ -161,6 +163,12 @@ public:
         }
         BOOST_FOREACH(navimake::types::Connection* connection, connections){
             delete connection;
+        }
+        BOOST_FOREACH(auto district, districts){
+            delete district;
+        }
+        BOOST_FOREACH(auto department, departments){
+            delete department;
         }
         BOOST_FOREACH(navimake::types::ValidityPattern* validity_pattern, validity_patterns){
             delete validity_pattern;

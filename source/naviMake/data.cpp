@@ -45,6 +45,13 @@ void Data::sort(){
 
     std::sort(validity_patterns.begin(), validity_patterns.end(), Less<navimake::types::ValidityPattern>());
     std::for_each(validity_patterns.begin(), validity_patterns.end(), Indexer<navimake::types::ValidityPattern>());
+
+    std::sort(departments.begin(), departments.end(), Less<navimake::types::Department>());
+    std::for_each(departments.begin(), departments.end(), Indexer<navimake::types::Department>());
+
+    std::sort(districts.begin(), districts.end(), Less<navimake::types::District>());
+    std::for_each(districts.begin(), districts.end(), Indexer<navimake::types::District>());
+
 }
 
 
@@ -93,6 +100,11 @@ void Data::transform(navitia::type::PT_Data& data){
     data.validity_patterns.resize(this->validity_patterns.size());
     std::transform(this->validity_patterns.begin(), this->validity_patterns.end(), data.validity_patterns.begin(), navimake::types::ValidityPattern::Transformer());
 
+    data.districts.resize(this->districts.size());
+    std::transform(this->districts.begin(), this->districts.end(), data.districts.begin(), navimake::types::District::Transformer());
+
+    data.departments.resize(this->departments.size());
+    std::transform(this->departments.begin(), this->departments.end(), data.departments.begin(), navimake::types::Department::Transformer());
     build_relations(data);
 
 }

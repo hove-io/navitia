@@ -48,8 +48,11 @@ std::pair<unsigned int, bool> communRAPTOR::earliest_trip(unsigned int route, un
     }
 
     int rp_id = get_rp_id(route, stop_area);
-    if(rp_id == -1)
+    if(rp_id == -1) {
+        std::cout << "Erreur ! " << std::endl;
+        exit(1);
         return std::pair<unsigned int, bool>(-1, false);
+    }
 
     for(auto it = std::lower_bound(data.pt_data.route_points[rp_id].vehicle_journey_list.begin(),
                                    data.pt_data.route_points[rp_id].vehicle_journey_list.end(),
@@ -150,9 +153,11 @@ int communRAPTOR::get_rp_id(unsigned int route, unsigned int stop_area) {
 }
 
 int communRAPTOR::get_rp_id(const navitia::type::Route &route, unsigned int stop_area) {
-    for(unsigned int i = 0; i < route.route_point_list.size();++i)
-        if(data.pt_data.stop_points[data.pt_data.route_points[route.route_point_list[i]].stop_point_idx].stop_area_idx == stop_area)
+    for(unsigned int i = 0; i < route.route_point_list.size();++i) {
+        if(data.pt_data.stop_points[data.pt_data.route_points[route.route_point_list[i]].stop_point_idx].stop_area_idx == stop_area) {
             return route.route_point_list[i];
+        }
+    }
     return -1;
 }
 
@@ -162,8 +167,9 @@ int communRAPTOR::get_rp_order(unsigned int route, unsigned int stop_area) {
 
 int communRAPTOR::get_rp_order(const navitia::type::Route &route, unsigned int stop_area) {
     for(unsigned int i = 0; i < route.route_point_list.size();++i)
-        if(data.pt_data.stop_points[data.pt_data.route_points[route.route_point_list[i]].stop_point_idx].stop_area_idx== stop_area)
+        if(data.pt_data.stop_points.at(data.pt_data.route_points.at(route.route_point_list.at(i)).stop_point_idx).stop_area_idx == stop_area) {
             return i;
+        }
     return -1;
 }
 
@@ -185,6 +191,8 @@ map_int_int_t communRAPTOR::make_queue(std::vector<unsigned int> stops) {
                 if(retour.count(data.pt_data.route_points[rp].route_idx) == 0 ||
                         data.pt_data.route_points[rp].order < get_rp_order(data.pt_data.route_points[rp].route_idx, retour[data.pt_data.route_points[rp].route_idx]))
                     retour[data.pt_data.route_points[rp].route_idx] = said;
+                if(said == 12901)
+                    std::cout << "route : " <<data.pt_data.route_points[rp].route_idx << std::endl;
             }
         }
     }

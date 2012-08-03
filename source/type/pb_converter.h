@@ -34,4 +34,12 @@ void fill_pb_object<type::eStopArea>(type::idx_t idx, const type::Data &data, go
  */
 template<>
 void fill_pb_object<type::eStopPoint>(type::idx_t idx, const type::Data &data, google::protobuf::Message* message, int max_depth);
+
+
+/**
+ * spécialisation de fill_pb_object pour les Ways
+ *
+ */
+template<>
+void fill_pb_object<type::eWay>(type::idx_t idx, const type::Data &data, google::protobuf::Message* message, int max_depth);
 }//namespace navitia

@@ -7,6 +7,7 @@ SET(SOURCE_LIB
         gtfs_parser.cpp
         bdtopo_parser.cpp
         build_helper.cpp
+        firstletterparser.cpp
 )
 
 SET(SOURCE_NAVIMAKE
@@ -18,5 +19,9 @@ target_link_libraries(connectors ${Boost_LIBRARIES} data)
 
 add_executable (navimake ${SOURCE_NAVIMAKE})
 target_link_libraries(navimake ${Boost_LIBRARIES} connectors)
+
+add_executable (navimake_fl main_firstletter.cpp)
+target_link_libraries(navimake_fl ${Boost_LIBRARIES} connectors)
+
 
 add_subdirectory(tests)

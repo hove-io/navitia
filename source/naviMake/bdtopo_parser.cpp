@@ -27,7 +27,7 @@ void BDTopoParser::load_city(navimake::Data& data){
     size_t name = cols["NOM"];
     size_t insee = cols["CODE_INSEE"];
     
-    for(reader.next(); !reader.eof() ;row = reader.next()){
+    for(row = reader.next(); !reader.eof() ;row = reader.next()){
         if(row.size() < 2)
             continue;
         navimake::types::City* city = new navimake::types::City();
