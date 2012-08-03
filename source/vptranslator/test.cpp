@@ -102,6 +102,7 @@ BOOST_AUTO_TEST_CASE(default_test) {
     testCS ="0000000000";
     testdate = boost::gregorian::date(2012,7,16);
     response = testtranslation.initcs(testdate, testCS);
+    testtranslation.splitcs();
     testtranslation.translate();
     testtranslation.bounddrawdown();
     BOOST_CHECK_EQUAL(response, false);
@@ -132,6 +133,7 @@ BOOST_AUTO_TEST_CASE(default_test) {
     testtranslation.splitcs();
     testtranslation.translate();
     testtranslation.bounddrawdown();
+    testtranslation.targetdrawdown();
 
     BOOST_CHECK_EQUAL(response, true);
     BOOST_CHECK_EQUAL(testtranslation.CS, "1");
@@ -151,6 +153,7 @@ BOOST_AUTO_TEST_CASE(default_test) {
     testtranslation.splitcs();
     testtranslation.translate();
     testtranslation.bounddrawdown();
+    testtranslation.targetdrawdown();
 
     BOOST_CHECK_EQUAL(response, true);
     BOOST_CHECK_EQUAL(testtranslation.CS, "1");
@@ -170,6 +173,7 @@ BOOST_AUTO_TEST_CASE(default_test) {
     testtranslation.splitcs();
     testtranslation.translate();
     testtranslation.bounddrawdown();
+    testtranslation.targetdrawdown();
 
     BOOST_CHECK_EQUAL(response, true);
     BOOST_CHECK_EQUAL(testtranslation.CS, "1111");
@@ -182,11 +186,6 @@ BOOST_AUTO_TEST_CASE(default_test) {
     testdate = boost::gregorian::date(2012,7,12);
     BOOST_CHECK_EQUAL(testtranslation.week_vector[0].startdate, testdate);
 
-
-
-
-
-
     testCS="00010111001111001100";
     testdate= boost::gregorian::date(2012,7,16);
     response = testtranslation.initcs(testdate, testCS);
@@ -194,6 +193,7 @@ BOOST_AUTO_TEST_CASE(default_test) {
     testtranslation.splitcs();
     testtranslation.translate();
     testtranslation.bounddrawdown();
+    testtranslation.targetdrawdown();
 
     BOOST_CHECK_EQUAL(response, true);
     BOOST_CHECK_EQUAL(testtranslation.CS, "101110011110011");
@@ -230,6 +230,7 @@ BOOST_AUTO_TEST_CASE(default_test) {
     testtranslation.splitcs();
     testtranslation.translate();
     testtranslation.bounddrawdown();
+    testtranslation.targetdrawdown();
 
     BOOST_CHECK_EQUAL(testtranslation.week_vector[0].week_bs.to_string(), "1111111");
     testdate = boost::gregorian::date(2012,7,2);
@@ -260,6 +261,7 @@ BOOST_AUTO_TEST_CASE(default_test) {
     testtranslation.splitcs();
     testtranslation.translate();
     testtranslation.bounddrawdown();
+    testtranslation.targetdrawdown();
 
     BOOST_CHECK_EQUAL(response, true);
     BOOST_CHECK_EQUAL(testtranslation.CS, "11111100000001111111");
@@ -299,6 +301,7 @@ BOOST_AUTO_TEST_CASE(default_test) {
     testtranslation.splitcs();//0011011  1011101  101100  0
     testtranslation.translate();
     testtranslation.bounddrawdown();
+    testtranslation.targetdrawdown();
 
     BOOST_CHECK_EQUAL(response, true);
     BOOST_CHECK_EQUAL(testtranslation.CS, "11011101110111011");
@@ -320,29 +323,65 @@ BOOST_AUTO_TEST_CASE(default_test) {
     testdate = boost::gregorian::date(2012,7,16);
     BOOST_CHECK_EQUAL(testtranslation.week_vector[2].startdate, testdate);
 
-    std::cout <<std::endl<< "debut test : ";
+//    std::cout <<std::endl<< "debut test : ";
 
 //et le 07/jul
 //et le 17/jul
 //sauf  06/jul
 //sauf  18/jul
-    for(std::map<int, MakeTranslation::target>::iterator it = testtranslation.target_map.begin(); it!= testtranslation.target_map.end(); it++) {
-        targetresponse = it->second;
-        std::cout<<std::endl<< targetresponse.week_bs.to_string()<<std::endl;
-        std::cout << "liste des periodes : " <<std::endl;
-        for(std::vector<boost::gregorian::date>::iterator it2 = targetresponse.periodlist.begin(); it2!= targetresponse.periodlist.end(); it2++) {
-            std::cout << *it2 <<std::endl;
-        }
-        std::cout << "liste des ET : " <<std::endl;
-        for(std::vector<boost::gregorian::date>::iterator it3 = targetresponse.andlist.begin(); it3!= targetresponse.andlist.end(); it3++) {
-            std::cout << *it3 <<std::endl;
-        }
-        std::cout << "liste des SAUF: " <<std::endl;
-        for(std::vector<boost::gregorian::date>::iterator it4 = targetresponse.exceptlist.begin(); it4!= targetresponse.exceptlist.end(); it4++) {
-            std::cout << *it4 <<std::endl;
-        }
-    }
-    std::cout << "fin test : " <<std::endl;
+    BOOST_CHECK_EQUAL(testtranslation.target_map.size(), 1);
+    std::bitset<7> test_bitset("1011101");
+    std::map<int, MakeTranslation::target>::iterator it= testtranslation.target_map.find(test_bitset.to_ulong());
+    BOOST_CHECK_MESSAGE(it != testtranslation.target_map.end(), "Erreur MAP 1011101 non trouve");
+    //test periode
+    BOOST_CHECK_EQUAL(it->second.periodlist.size(), 2);
+    testdate = boost::gregorian::date(2012,7,4);
+    std::vector<boost::gregorian::date>::iterator itdst=find(it->second.periodlist.begin(), it->second.periodlist.end(), testdate);
+    BOOST_CHECK_MESSAGE(itdst != it->second.periodlist.end(), "periode ne debute pas le 04/07/2012");
+
+    testdate = boost::gregorian::date(2012,7,20);
+    itdst=find(it->second.periodlist.begin(), it->second.periodlist.end(), testdate);
+    BOOST_CHECK_MESSAGE(itdst != it->second.periodlist.end(), "periode ne finit pas le 20/07/2012");
+
+    //test exception ET
+    BOOST_CHECK_EQUAL(it->second.andlist.size(), 2);
+    testdate = boost::gregorian::date(2012,7,7);
+    itdst=find(it->second.andlist.begin(), it->second.andlist.end(), testdate);
+    BOOST_CHECK_MESSAGE(itdst != it->second.andlist.end(), "l'exception ET le 07/07/2012 non presente");
+
+    testdate = boost::gregorian::date(2012,7,17);
+    itdst=find(it->second.andlist.begin(), it->second.andlist.end(), testdate);
+    BOOST_CHECK_MESSAGE(itdst != it->second.andlist.end(), "l'exception ET le 17/07/2012 non presente");
+
+    //test exception SAUF
+    BOOST_CHECK_EQUAL(it->second.exceptlist.size(), 2);
+    testdate = boost::gregorian::date(2012,7,6);
+    itdst=find(it->second.exceptlist.begin(), it->second.exceptlist.end(), testdate);
+    BOOST_CHECK_MESSAGE(itdst != it->second.exceptlist.end(), "l'exception SAUF le 06/07/2012 non presente");
+
+    testdate = boost::gregorian::date(2012,7,18);
+    itdst=find(it->second.exceptlist.begin(), it->second.exceptlist.end(), testdate);
+    BOOST_CHECK_MESSAGE(itdst != it->second.exceptlist.end(), "l'exception SAUF le 18/07/2012 non presente");
+
+    //test console
+
+//    for(std::map<int, MakeTranslation::target>::iterator it = testtranslation.target_map.begin(); it!= testtranslation.target_map.end(); it++) {
+//        targetresponse = it->second;
+//        std::cout<<std::endl<< targetresponse.week_bs.to_string()<<std::endl;
+//        std::cout << "liste des periodes : " <<std::endl;
+//        for(std::vector<boost::gregorian::date>::iterator it2 = targetresponse.periodlist.begin(); it2!= targetresponse.periodlist.end(); it2++) {
+//            std::cout << *it2 <<std::endl;
+//        }
+//        std::cout << "liste des ET : " <<std::endl;
+//        for(std::vector<boost::gregorian::date>::iterator it3 = targetresponse.andlist.begin(); it3!= targetresponse.andlist.end(); it3++) {
+//            std::cout << *it3 <<std::endl;
+//        }
+//        std::cout << "liste des SAUF: " <<std::endl;
+//        for(std::vector<boost::gregorian::date>::iterator it4 = targetresponse.exceptlist.begin(); it4!= targetresponse.exceptlist.end(); it4++) {
+//            std::cout << *it4 <<std::endl;
+//        }
+//    }
+//    std::cout << "fin test : " <<std::endl;
 
     //0001100
     //1101100   //lundi 02/07/2012
@@ -368,22 +407,50 @@ BOOST_AUTO_TEST_CASE(default_test) {
 
     testdate = boost::gregorian::date(2012,7,31);
     BOOST_CHECK_EQUAL(testtranslation.enddate, testdate);
-    std::cout <<std::endl<< "debut test : ";
-    for(std::map<int, MakeTranslation::target>::iterator it = testtranslation.target_map.begin(); it!= testtranslation.target_map.end(); it++) {
-        targetresponse = it->second;
-        std::cout<<std::endl<< targetresponse.week_bs.to_string()<<std::endl;
-        std::cout << "liste des periodes : " <<std::endl;
-        for(std::vector<boost::gregorian::date>::iterator it2 = targetresponse.periodlist.begin(); it2!= targetresponse.periodlist.end(); it2++) {
-            std::cout << *it2 <<std::endl;
-        }
-        std::cout << "liste des ET : " <<std::endl;
-        for(std::vector<boost::gregorian::date>::iterator it3 = targetresponse.andlist.begin(); it3!= targetresponse.andlist.end(); it3++) {
-            std::cout << *it3 <<std::endl;
-        }
-        std::cout << "liste des SAUF: " <<std::endl;
-        for(std::vector<boost::gregorian::date>::iterator it4 = targetresponse.exceptlist.begin(); it4!= targetresponse.exceptlist.end(); it4++) {
-            std::cout << *it4 <<std::endl;
-        }
-    }
-    std::cout << "fin test : " <<std::endl;
+
+    BOOST_CHECK_EQUAL(testtranslation.target_map.size(), 1);
+    std::bitset<7> test_bitset2("1101100");
+    it= testtranslation.target_map.find(test_bitset2.to_ulong());
+    BOOST_CHECK_MESSAGE(it != testtranslation.target_map.end(), "Erreur MAP 1101100 non trouve");
+    //test periode
+    BOOST_CHECK_EQUAL(it->second.periodlist.size(), 2);
+    testdate = boost::gregorian::date(2012,6,28);
+    itdst=find(it->second.periodlist.begin(), it->second.periodlist.end(), testdate);
+    BOOST_CHECK_MESSAGE(itdst != it->second.periodlist.end(), "periode ne debute pas le 28/06/2012");
+
+    testdate = boost::gregorian::date(2012,7,31);
+    itdst=find(it->second.periodlist.begin(), it->second.periodlist.end(), testdate);
+    BOOST_CHECK_MESSAGE(itdst != it->second.periodlist.end(), "periode ne finit pas le 31/07/2012");
+
+    //test exception ET
+    BOOST_CHECK_EQUAL(it->second.andlist.size(), 1);
+    testdate = boost::gregorian::date(2012,7,25);
+    itdst=find(it->second.andlist.begin(), it->second.andlist.end(), testdate);
+    BOOST_CHECK_MESSAGE(itdst != it->second.andlist.end(), "l'exception ET le 25/07/2012 non presente");
+
+    //test exception SAUF
+    BOOST_CHECK_EQUAL(it->second.exceptlist.size(), 1);
+    testdate = boost::gregorian::date(2012,7,12);
+    itdst=find(it->second.exceptlist.begin(), it->second.exceptlist.end(), testdate);
+    BOOST_CHECK_MESSAGE(itdst != it->second.exceptlist.end(), "l'exception SAUF le 12/07/2012 non presente");
+
+    //test console
+//    std::cout <<std::endl<< "debut test : ";
+//    for(std::map<int, MakeTranslation::target>::iterator it = testtranslation.target_map.begin(); it!= testtranslation.target_map.end(); it++) {
+//        targetresponse = it->second;
+//        std::cout<<std::endl<< targetresponse.week_bs.to_string()<<std::endl;
+//        std::cout << "liste des periodes : " <<std::endl;
+//        for(std::vector<boost::gregorian::date>::iterator it2 = targetresponse.periodlist.begin(); it2!= targetresponse.periodlist.end(); it2++) {
+//            std::cout << *it2 <<std::endl;
+//        }
+//        std::cout << "liste des ET : " <<std::endl;
+//        for(std::vector<boost::gregorian::date>::iterator it3 = targetresponse.andlist.begin(); it3!= targetresponse.andlist.end(); it3++) {
+//            std::cout << *it3 <<std::endl;
+//        }
+//        std::cout << "liste des SAUF: " <<std::endl;
+//        for(std::vector<boost::gregorian::date>::iterator it4 = targetresponse.exceptlist.begin(); it4!= targetresponse.exceptlist.end(); it4++) {
+//            std::cout << *it4 <<std::endl;
+//        }
+//    }
+//    std::cout << "fin test : " <<std::endl;
 }
