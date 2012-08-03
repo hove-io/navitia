@@ -25,7 +25,9 @@ bool MakeTranslation::initcs(boost::gregorian::date beginningday, std::string re
   found = requestedcs.find_last_of('1');
   //on recherche le dernier jour de validité de la condition de service
   if(found==std::string::npos){
-    return false;
+      startdate = beginningday;
+      enddate = beginningday;
+      return false;
   } else {
       enddate = beginningday + boost::gregorian::date_duration(found);
       //on recherche le premier jour de validité
@@ -82,8 +84,7 @@ void MakeTranslation::splitcs(){
         currentweek.week_bs = std::bitset<7>(std::string(substr));
         week_vector.push_back(currentweek);
 
-        std::map<int, target>::iterator it;
-        it = target_map.find(currentweek.week_bs.to_ulong());
+        std::map<int, target>::iterator it = target_map.find(currentweek.week_bs.to_ulong());
         if (it != target_map.end()){
             ++it->second.count;
             it->second.lastweeknumber = weeknumber;
@@ -257,7 +258,6 @@ void MakeTranslation::mergetarget(MakeTranslation::target &targetsrc, MakeTransl
 
     }
     target_map.erase(targetsrc.week_ulong);
-
 }
 
 void MakeTranslation::targetdrawdown(){
