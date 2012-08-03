@@ -23,7 +23,6 @@ void fill_pb_object<nt::eCity>(nt::idx_t idx, const nt::Data& data, google::prot
     nt::City city_n = data.pt_data.cities.at(idx);
     city->set_id(city_n.id);
     city->set_id(city_n.id);
-    city->set_idx(city_n.idx);
     city->set_external_code(city_n.external_code);
     city->set_name(city_n.name);
     city->mutable_coord()->set_x(city_n.coord.x);
@@ -39,7 +38,6 @@ void fill_pb_object<nt::eStopArea>(nt::idx_t idx, const nt::Data& data, google::
     pbnavitia::StopArea* stop_area = dynamic_cast<pbnavitia::StopArea*>(message);
     nt::StopArea sa = data.pt_data.stop_areas.at(idx);
     stop_area->set_id(sa.id);
-    stop_area->set_idx(sa.idx);
     stop_area->set_external_code(sa.external_code);
     stop_area->set_name(sa.name);
     stop_area->mutable_coord()->set_x(sa.coord.x);
@@ -60,7 +58,6 @@ void fill_pb_object<nt::eStopPoint>(nt::idx_t idx, const nt::Data& data, google:
     pbnavitia::StopPoint* stop_point = dynamic_cast<pbnavitia::StopPoint*>(message);
     nt::StopPoint sp = data.pt_data.stop_points.at(idx);
     stop_point->set_id(sp.id);
-    stop_point->set_idx(sp.idx);
     stop_point->set_external_code(sp.external_code);
     stop_point->set_name(sp.name);
     stop_point->mutable_coord()->set_x(sp.coord.x);
