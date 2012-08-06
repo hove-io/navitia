@@ -33,12 +33,12 @@ int main(int, char **) {
 ////            }
 ////            precstid =  stid;
 ////        }
-////    }http://127.0.0.1/planner?format=json&departure_lat=48.80039471738876&departure_lon=2.1296571179927253&destination_lat=48.93228737752789&destination_lon=2.4949524490283004&time=28800&date=20120511
+////    }http://127.0.0.1/planner?format=json&departure_lat=48.83325683847677&departure_lon=2.3362122558927108&destination_lat=48.85675460307892&destination_lon=2.356639955325683&time=0800&date=20120511
     routing::raptor::RAPTOR raptor(data);
     {
         Timer t("Calcul raptor");
         CALLGRIND_START_INSTRUMENTATION;
-        std::vector<routing::Path> result = raptor.compute_all(type::GeographicalCoord(2.40041, 48.8421), 300, type::GeographicalCoord(2.29364, 48.8713), 300, 8*3600, 7);
+        std::vector<routing::Path> result = raptor.compute_all(type::GeographicalCoord(2.3362122558927108, 48.83325683847677), 300, type::GeographicalCoord(2.356639955325683, 48.85675460307892), 300, 8*3600, 7);
         CALLGRIND_STOP_INSTRUMENTATION;
         CALLGRIND_DUMP_STATS;
 

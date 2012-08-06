@@ -522,6 +522,7 @@ Path RAPTOR::makePath(const map_retour_t &retour, const map_int_pint_t &best, ma
         stop = stop || (item.first == (int)current_said);
     }
 
+    result.nb_changes = countb - 1;
     while(!stop) {
         bool debut = false, footpath = false;
 
@@ -561,15 +562,14 @@ Path RAPTOR::makePath(const map_retour_t &retour, const map_int_pint_t &best, ma
             current_said = data.pt_data.stop_points.at(data.pt_data.route_points.at(current_st.route_point_idx).stop_point_idx).stop_area_idx;
             if(said_embarquement == (int)current_said) {
                 --countb;
-                ++ result.nb_changes;
                 said_embarquement = -1;
                 result.items.push_back(PathItem(current_said, current_st.departure_time, workingDate.date,
                                                 data.pt_data.routes.at(data.pt_data.route_points.at(current_st.route_point_idx).route_idx).line_idx));
             } else {
                 result.items.push_back(PathItem(current_said, workingDate.hour, workingDate.date,
                                                 data.pt_data.routes.at(data.pt_data.route_points.at(current_st.route_point_idx).route_idx).line_idx));
+
             }
-            //            std::cout << result << std::endl;
 
         }
 
