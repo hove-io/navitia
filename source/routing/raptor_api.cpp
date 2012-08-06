@@ -15,9 +15,6 @@ void create_pb_froute(navitia::routing::Path & path, const nt::Data & data, pbna
 
 
     BOOST_FOREACH(navitia::routing::PathItem item, path.items) {
-        std::cout << "item : " << item.day << " " << item.time << " " << item.said << " " << item.line_idx << std::endl;
-    }
-    BOOST_FOREACH(navitia::routing::PathItem item, path.items) {
         if(i%2 == 0) {
             etape = solution.add_etapes();
             if(item.line_idx  < data.pt_data.lines.size())
