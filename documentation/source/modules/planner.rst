@@ -396,7 +396,7 @@ On peut donc spécifier les durées de correspondances suivantes
 
 +---------------+----------------------+--------+--------------------------------------+
 |Correspondance | Type                 | Durée  | Commentaire                          |
-+---------------+----------------------+--------+--------------------------------------+
++===============+======================+========+======================================+
 |A'             |Intra point d'arrêt   |        |Dans les données, cette information   |
 |               |(StopPointConnection) | 2 min. |peut par exemple être spécifiée comme | 
 |               |                      |        |une correspondance entre A' et A'     |
@@ -494,15 +494,15 @@ n'a pas optimisé l'heure de départ du calcul aller.
   :foreground: #FF6600
   :scale: 75%
 
-arrêt               Arret A --> arret B --> arret C
-temps de corr        5min         8h
-heure                7h00        9h00        17h00
+"arrêt"               "Arret A" --> "arret B" --> "arret C"
+"temps de corr"        "5min"         "8h"
+"heure"                "7h00"        "9h00"        "17h00"
 
 * on élimine ce trajet, alors que avec un calcul en sens retour
 
-arrêt               Arret A --> arret B  -->  arret C
-temps de corr        5min        3h
-heure                12h00      14h00        17h00
+"arrêt"               "Arret A" --> "arret B"  -->  "arret C"
+"temps de corr"        "5min"        "3h"
+"heure"                "12h00"      "14h00"        "17h00"
 
 L'itinéraire est correct.
 
