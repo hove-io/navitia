@@ -53,9 +53,7 @@ pbnavitia::Response firstletter(const std::string &name, const std::vector<nt::T
 
     std::vector<FirstLetter<nt::idx_t>::fl_quality> result;
     pbnavitia::FirstLetter* pb = pb_response.mutable_firstletter();
-    std::vector<nt::Type_e> debug;
-    debug.push_back(nt::eWay);
-    BOOST_FOREACH(nt::Type_e type, debug){
+    BOOST_FOREACH(nt::Type_e type, filter){
         switch(type){
         case nt::eStopArea:
             result = d.pt_data.stop_area_first_letter.find_complete(name);
