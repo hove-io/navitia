@@ -489,20 +489,35 @@ n'a pas optimisé l'heure de départ du calcul aller.
 
 * Si on fait le test en sens aller (arrivée au plus tôt)
 
-.. aafig::
-  :textual:
-  :foreground: #FF6600
-  :scale: 75%
-
-"arrêt"               "Arret A" --> "arret B" --> "arret C"
-"temps de corr"        "5min"         "8h"
-"heure"                "7h00"        "9h00"        "17h00"
++----------+-----------+----------------+
+|Arrêt     |Heure      |Durée de corresp|
++==========+===========+================+
+|A départ  |07h00      |                |
++----------+-----------+----------------+
+|B arrivée |09h00      |                |
++----------+-----------+----------------+
+|    Correspondance en B : 6 heures     |
++----------+-----------+----------------+
+|B départ  |15h00      |                |
++----------+-----------+----------------+
+|C arrivée |17h00      |                |
++----------+-----------+----------------+
 
 * on élimine ce trajet, alors que avec un calcul en sens retour
 
-"arrêt"               "Arret A" --> "arret B"  -->  "arret C"
-"temps de corr"        "5min"        "3h"
-"heure"                "12h00"      "14h00"        "17h00"
++----------+-----------+----------------+
+|Arrêt     |Heure      |Durée de corresp|
++==========+===========+================+
+|A départ  |12h00      |                |
++----------+-----------+----------------+
+|B arrivée |14h00      |                |
++----------+-----------+----------------+
+|    Correspondance en B : 1 heure      |
++----------+-----------+----------------+
+|B départ  |15h00      |                |
++----------+-----------+----------------+
+|C arrivée |17h00      |                |
++----------+-----------+----------------+
 
 L'itinéraire est correct.
 
