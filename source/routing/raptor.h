@@ -142,12 +142,14 @@ struct communRAPTOR : public AbstractRouter
     };
 
     struct compare_rp_reverse {
-        const navitia::type::RoutePoint & rp;
+        const int order;
         const navitia::type::Data &data;
-        compare_rp_reverse(const navitia::type::RoutePoint & rp, const navitia::type::Data &data) : rp(rp), data(data) {}
+        compare_rp_reverse(const int order, const navitia::type::Data &data) : order(order), data(data) {}
 
         bool operator ()(unsigned int vj1, int time) {
-            return (data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vj1).stop_time_list.at(rp.order)).arrival_time %86400) > time;
+            int debug = data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vj1).stop_time_list.at(order)).arrival_time %86400;
+            bool testdebug = (data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vj1).stop_time_list.at(order)).arrival_time %86400) > time;
+            return (data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vj1).stop_time_list.at(order)).arrival_time %86400) > time;
         }
     };
 

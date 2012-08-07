@@ -374,12 +374,13 @@ struct RoutePoint : public NavitiaHeader{
 
     std::vector<idx_t> impact_list;
     std::vector<idx_t> vehicle_journey_list;
+    std::vector<idx_t> vehicle_journey_list_arrival;
 
     RoutePoint() : order(0), main_stop_point(false), fare_section(0), route_idx(invalid_idx), stop_point_idx(invalid_idx){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & id & idx & external_code & order & main_stop_point & fare_section & route_idx 
-                & stop_point_idx & impact_list & order & vehicle_journey_list;
+                & stop_point_idx & impact_list & order & vehicle_journey_list & vehicle_journey_list_arrival;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };

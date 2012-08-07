@@ -76,6 +76,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
 
     auto res = raptor.compute(d.stop_areas[2].idx, d.stop_areas[0].idx, 30*60, 1);
 
+
     BOOST_REQUIRE_EQUAL(res.items.size(), 4);
     BOOST_CHECK_EQUAL(res.items[0].said, 0);
     BOOST_CHECK_EQUAL(res.items[1].said, 1);

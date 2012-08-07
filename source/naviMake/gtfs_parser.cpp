@@ -694,6 +694,7 @@ void build_route_points(Data & data){
         }
 
     }
+
     std::cout << "Nombre de route points : " << data.route_points.size() << std::endl;
 }
 

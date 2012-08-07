@@ -96,6 +96,24 @@ public:
         }
     };
 
+    // sort qui fait out of range
+    struct sort_vehicle_journey_list_rp_arrival {
+        const navitia::type::PT_Data & data;
+        unsigned int order;
+        sort_vehicle_journey_list_rp_arrival(const navitia::type::PT_Data & data, unsigned int order) : data(data), order(order){}
+
+        bool operator ()(navitia::type::idx_t i, navitia::type::idx_t j) const {
+            if((data.vehicle_journeys.at(i).stop_time_list.size() > 0) && (data.vehicle_journeys.at(j).stop_time_list.size() > 0)) {
+                navitia::type::idx_t i_stop_time_idx =  data.vehicle_journeys.at(i).stop_time_list.at(order);
+                navitia::type::idx_t j_stop_time_idx =  data.vehicle_journeys.at(j).stop_time_list.at(order);
+                unsigned int dt1 = data.stop_times.at(i_stop_time_idx).arrival_time % 86400;
+                unsigned int dt2 = data.stop_times.at(j_stop_time_idx).arrival_time % 86400;
+                return dt1 < dt2;
+            } else
+                return false;
+        }
+    };
+
     struct sort_route_points_list {
         const navitia::type::PT_Data & data;
         sort_route_points_list(const navitia::type::PT_Data & data) : data(data){}
