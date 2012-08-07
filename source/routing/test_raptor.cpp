@@ -9,13 +9,13 @@
 using namespace navitia;
 
 int main(int, char **) {
-    type::Data data;
-    {
-        Timer t("Chargement des données");
-        data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.nav");
+//    type::Data data;
+//    {
+//        Timer t("Chargement des données");
+//        data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.nav");
 
-        data.build_proximity_list();
-    }
+//        data.build_proximity_list();
+//    }
 
 //    int depart = 0;
 //    int arrivee = 2;
@@ -34,21 +34,21 @@ int main(int, char **) {
 ////            precstid =  stid;
 ////        }
 ////    }planner?format=json&departure_lat=48.83947126194525&departure_lon=2.3949204340949115&destination_lat=48.8757255182949&destination_lon=2.3257409141666066&time=0800&date=20120511
-    routing::raptor::RAPTOR raptor(data);
-    {
-        Timer t("Calcul raptor");
-        CALLGRIND_START_INSTRUMENTATION;
-        std::vector<routing::Path> result = raptor.compute_all(type::GeographicalCoord(2.3949204340949115, 48.83947126194525), 300, type::GeographicalCoord(2.325740914166606, 48.8757255182949), 300, 8*3600, 7);
-        CALLGRIND_STOP_INSTRUMENTATION;
-        CALLGRIND_DUMP_STATS;
+//    routing::raptor::RAPTOR raptor(data);
+//    {
+//        Timer t("Calcul raptor");
+//        CALLGRIND_START_INSTRUMENTATION;
+//        std::vector<routing::Path> result = raptor.compute_all(type::GeographicalCoord(2.3949204340949115, 48.83947126194525), 300, type::GeographicalCoord(2.325740914166606, 48.8757255182949), 300, 8*3600, 7);
+//        CALLGRIND_STOP_INSTRUMENTATION;
+//        CALLGRIND_DUMP_STATS;
 
-        BOOST_FOREACH(auto pouet, result) {
-        std::cout << pouet << std::endl << std::endl;
+//        BOOST_FOREACH(auto pouet, result) {
+//        std::cout << pouet << std::endl << std::endl;
 
-        std::cout << makeItineraire(pouet);
-        }
-        //        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
-    }
+//        std::cout << makeItineraire(pouet);
+//        }
+//        //        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
+//    }
 
 //    std::cout << "Je suis ici ! " << std::endl;
 
@@ -70,20 +70,30 @@ int main(int, char **) {
 //    }
 
 
-//    navimake::builder b("20120614");
+    navimake::builder b("20120614");
+    b.vj("A", "0")("stop1", 8000)("stop2", 8200);
+    b.vj("B", "1001")("stop1", 9000)("stop2", 9200);
+    type::Data data;
+    data.pt_data =  b.build();
+    routing::raptor::reverseRAPTOR raptor(data);
 
-//    b.vj("A")("stop1", 8000)("stop2", 8200);
-//    b.vj("B")("stop3", 10)("stop4",20);
-//    b.connection("stop2", "stop3", 10*60);
-//    b.connection("stop3", "stop2", 10*60);
+    type::PT_Data d = data.pt_data;
 
-//    type::Data data;
-//    data.pt_data =  b.build();
-//    routing::raptor::reverseRAPTOR raptor(data);
+    std::cout << "Test : " << data.pt_data.validity_patterns.at(0).check(0) << std::endl;
+    std::cout << "Test : " << data.pt_data.validity_patterns.at(0).check(1) << std::endl;
+    std::cout << "Test : " << data.pt_data.validity_patterns.at(1).check(0) << std::endl;
+    std::cout << "Test : " << data.pt_data.validity_patterns.at(1).check(1) << std::endl;
+    std::cout << "Test : " << data.pt_data.validity_patterns.at(1).check(2) << std::endl;
+    std::cout << "Test : " << data.pt_data.validity_patterns.at(1).check(3) << std::endl;
 
-
-//    auto res = raptor.compute(data.pt_data.stop_areas.at(3).idx, data.pt_data.stop_areas.at(0).idx, 60, 1);
-//    std::cout << res << std::endl;
+    auto res = raptor.compute(d.stop_areas[1].idx, d.stop_areas[0].idx, 9300, 0);
+    std::cout << res << std::endl;
+    res = raptor.compute(d.stop_areas[1].idx, d.stop_areas[0].idx, 9300, 1);
+    std::cout << res << std::endl;
+    res = raptor.compute(d.stop_areas[1].idx, d.stop_areas[0].idx, 9300, 2);
+    std::cout << res << std::endl;
+    res = raptor.compute(d.stop_areas[1].idx, d.stop_areas[0].idx, 9300, 3);
+    std::cout << res << std::endl;
 
 
 }

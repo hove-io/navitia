@@ -146,8 +146,8 @@ struct communRAPTOR : public AbstractRouter
         const navitia::type::Data &data;
         compare_rp_reverse(const navitia::type::RoutePoint & rp, const navitia::type::Data &data) : rp(rp), data(data) {}
 
-        bool operator ()(unsigned int time, int vj1) {
-            return (data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vj1).stop_time_list.at(rp.order)).departure_time %86400) < time;
+        bool operator ()(unsigned int vj1, int time) {
+            return (data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vj1).stop_time_list.at(rp.order)).arrival_time %86400) > time;
         }
     };
 
@@ -161,18 +161,17 @@ struct monoRAPTOR : public communRAPTOR {
     virtual void boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count) = 0;
     virtual Path makePath(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, unsigned int destination_idx, unsigned int count) = 0;
     Path makeBestPath(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, unsigned int destination_idx, unsigned int count);
+    std::vector<Path> makePathes(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, best_dest &b_dest, unsigned int count);
+    std::vector<Path> compute_all(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
+                               , int departure_hour, int departure_day);
+    std::vector<Path> compute_all(map_int_pint_t departs, map_int_pint_t destinations);
+    std::vector<Path> compute_all(navitia::type::EntryPoint departure, navitia::type::EntryPoint destination, int departure_hour, int departure_day) ;
 };
 
 struct RAPTOR : public monoRAPTOR {
     RAPTOR(navitia::type::Data &data) : monoRAPTOR(data){}
     void boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count);
     Path makePath(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, unsigned int destination_idx, unsigned int countb);
-    std::vector<Path> makePathes(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, best_dest &b_dest, unsigned int count);
-    std::vector<Path> compute_all(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
-                               , int departure_hour, int departure_day);
-    std::vector<Path> compute_all(map_int_pint_t departs, map_int_pint_t destinations);
-    std::vector<Path> compute_all(navitia::type::EntryPoint departure, navitia::type::EntryPoint destination, int departure_hour, int departure_day) ;
-
 
 };
 
