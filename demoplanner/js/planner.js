@@ -73,6 +73,7 @@ function aff_data(data) {
     planner = data.planner.planning;
 
 
+    $("#infos").text("");
     $("div#listecontainer ul").empty();
     for(i=0;i<planner.length;++i) {
         $("div#listecontainer ul").append($("<li><a href=\"#\" onclick=\"javascript:aff_planning("+i+");\">Itineraire "+(i+1)+"</a></li>"));
@@ -88,9 +89,17 @@ function planner() {
 
     if((departure_idx !== -1) && (destination_idx !== -1)) {
         debut_requete = new Date().getTime();
-        $.getJSON("../planner?format=json&departure="+departure_idx+"&destination="+destination_idx+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val(),
-                  aff_data
-                  );
+        if($("#typeitineraire option:selected'").val() === "apres") {
+            $.getJSON("../planner?format=json&departure="+departure_idx+"&destination="+destination_idx+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val(),
+                      aff_data
+                      );
+        } else {
+            $.getJSON("../plannerreverse?format=json&departure="+departure_idx+"&destination="+destination_idx+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val(),
+                      aff_data
+                      );
+        }
+
+
     } else {
         alert("Selectionnez une ville");
     }
@@ -102,16 +111,26 @@ function clickmap(event_name, event_source, event_args) {
     if(depart_arrivee.depart.lat === -1) {
         depart_arrivee.depart.lat = p.lat;
         depart_arrivee.depart.lon = p.lon;
-        $("#infos").text("Choisissez maitenant une destination");
+        $("#infos").text("Choisissez maintenant une destination");
     } else {
         depart_arrivee.arrivee.lat = p.lat;
         depart_arrivee.arrivee.lon = p.lon;
         $("#infos").text("Calcul en cours ... ");
         debut_requete = new Date().getTime();
-        $.getJSON("../planner?format=json&departure_lat="+depart_arrivee.depart.lat+"&departure_lon="+depart_arrivee.depart.lon+
-                  "&destination_lat="+depart_arrivee.arrivee.lat+"&destination_lon="+depart_arrivee.arrivee.lon+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val(),
-                  aff_data
-                  );
+
+        if($("#typeitineraire option:selected'").val() === "apres") {
+            $.getJSON("../planner?format=json&departure_lat="+depart_arrivee.depart.lat+"&departure_lon="+depart_arrivee.depart.lon+
+                      "&destination_lat="+depart_arrivee.arrivee.lat+"&destination_lon="+depart_arrivee.arrivee.lon+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val(),
+                      aff_data
+                      );
+        } else{
+            $.getJSON("../plannerreverse?format=json&departure_lat="+depart_arrivee.depart.lat+"&departure_lon="+depart_arrivee.depart.lon+
+                      "&destination_lat="+depart_arrivee.arrivee.lat+"&destination_lon="+depart_arrivee.arrivee.lon+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val(),
+                      aff_data
+                      );
+        }
+
+
         depart_arrivee.depart.lat = -1;
     }
 

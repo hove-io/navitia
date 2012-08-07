@@ -12,10 +12,15 @@ void create_pb_froute(navitia::routing::Path & path, const nt::Data & data, pbna
     solution.set_duree(path.duration);
     int i = 0;
     pbnavitia::Etape * etape;
+
+
     BOOST_FOREACH(navitia::routing::PathItem item, path.items) {
         if(i%2 == 0) {
             etape = solution.add_etapes();
-            etape->mutable_mode()->set_ligne(data.pt_data.lines.at(item.line_idx).name);
+            if(item.line_idx  < data.pt_data.lines.size())
+                etape->mutable_mode()->set_ligne(data.pt_data.lines.at(item.line_idx).name);
+            else
+                etape->mutable_mode()->set_ligne("marche a pied");
             etape->mutable_depart()->mutable_lieu()->mutable_geo()->set_x(data.pt_data.stop_areas.at(item.said).coord.x);
             etape->mutable_depart()->mutable_lieu()->mutable_geo()->set_y(data.pt_data.stop_areas.at(item.said).coord.y);
             etape->mutable_depart()->mutable_lieu()->set_nom(data.pt_data.stop_areas.at(item.said).name);

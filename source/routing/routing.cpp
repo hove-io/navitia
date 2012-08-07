@@ -48,7 +48,7 @@ Path makeItineraire(const Path &path) {
         bool eviterpremier = false;
         BOOST_FOREACH(PathItem item, path.items) {
             if(eviterpremier) {
-            if(precitem.said == item.said) {
+            if(precitem.line_idx != item.line_idx) {
                 result.items.push_back(PathItem(precitem.said, precitem.time, precitem.day, precitem.line_idx));
                 result.items.push_back(PathItem(item.said, item.time, item.day, item.line_idx));
 

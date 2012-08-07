@@ -18,6 +18,7 @@ Worker::Worker(Pool &){
     register_api("proximitylist", boost::bind(&Worker::handle, this, _1, _2), "traite les requètes");
     register_api("streetnetwork", boost::bind(&Worker::handle, this, _1, _2), "traite les requètes");
     register_api("planner", boost::bind(&Worker::handle, this, _1, _2), "planne les requêtes");
+    register_api("plannerreverse", boost::bind(&Worker::handle, this, _1, _2), "planne les requêtes pour arriver avant");
     register_api("load", boost::bind(&Worker::load, this, _1, _2), "traite les requétes");
     register_api("register", boost::bind(&Worker::register_navitia, this, _1, _2), "ajout d'un NAViTiA au pool");
     register_api("status", boost::bind(&Worker::status, this, _1, _2), "status");

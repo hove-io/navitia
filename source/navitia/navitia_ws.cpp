@@ -24,7 +24,7 @@ namespace nt = navitia::type;
 class Worker : public BaseWorker<navitia::type::Data> {
 
     std::unique_ptr<navitia::routing::raptor::RAPTOR> calculateur;
-
+    std::unique_ptr<navitia::routing::raptor::reverseRAPTOR> calculateur_reverse;
     
     /**
      * Vérifie la validité des paramétres, charge les données si elles ne le sont pas,
@@ -142,6 +142,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
             data.load_lz4(database);
             data.build_proximity_list();
             calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(data));
+            calculateur_reverse = std::unique_ptr<navitia::routing::raptor::reverseRAPTOR>(new navitia::routing::raptor::reverseRAPTOR(data));
         }catch(...){
             data.loaded = false;
             throw;
@@ -234,6 +235,41 @@ class Worker : public BaseWorker<navitia::type::Data> {
         return rd;
     }
 
+
+    ResponseData plannerreverse(RequestData & request, navitia::type::Data & d) {
+        ResponseData rd;
+        pbnavitia::Response pb_response;
+        navitia::utils::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, pb_response, rd));
+        if(!locker.locked){
+            return rd;
+        }
+
+        std::vector<navitia::routing::Path> pathes;
+        int time = boost::get<int>(request.parsed_params["time"].value);
+        int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
+        if(request.parsed_params.count("departure") ==1) {
+            navitia::type::EntryPoint departure(boost::get<std::string>(request.parsed_params["departure"].value));
+            navitia::type::EntryPoint destination(boost::get<std::string>(request.parsed_params["destination"].value));
+            pathes = calculateur_reverse->compute_all(departure, destination, time, 7);
+        } else {
+            double departure_lat = boost::get<double>(request.parsed_params["departure_lat"].value);
+            double departure_lon = boost::get<double>(request.parsed_params["departure_lon"].value);
+            double arrival_lat = boost::get<double>(request.parsed_params["destination_lat"].value);
+            double arrival_lon = boost::get<double>(request.parsed_params["destination_lon"].value);
+
+            pathes = calculateur_reverse->compute_all(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
+        }
+
+        std::cout << "Nb itineraires : " << pathes.size() << std::endl;
+
+        pb_response = navitia::routing::raptor::make_response(pathes, d);
+
+        pb_response.SerializeToOstream(&rd.response);
+        rd.content_type = "application/octet-stream";
+        rd.status_code = 200;
+        return rd;
+    }
+
     ResponseData ptref(RequestData & request, navitia::type::Data &data){
         ResponseData rd;
 
@@ -269,10 +305,7 @@ public:
 
         register_api("firstletter", boost::bind(&Worker::firstletter, this, _1, _2), "Retrouve les objets dont le nom commence par certaines lettres");
         add_param("firstletter", "name", "Valeur recherchée", ApiParameter::STRING, true);
-        std::vector<RequestParameter::Parameter_variant> params;
-        params.push_back("stop_areas");
-        params.push_back("cities");
-        add_param("firstletter", "filter", "Type à rechercher", ApiParameter::STRING, false, params);
+        add_param("firstletter", "filter", "Type à rechercher", ApiParameter::STRING, false);
 
         register_api("proximitylist", boost::bind(&Worker::proximitylist, this, _1, _2), "Liste des objets à proxmité");
         add_param("proximitylist", "lon", "Longitude en degrés", ApiParameter::DOUBLE, true);
@@ -293,6 +326,17 @@ public:
 
         add_param("planner", "time", "Heure de début de l'itinéraire", ApiParameter::TIME, true);
         add_param("planner", "date", "Date de début de l'itinéraire", ApiParameter::DATE, true);
+
+        register_api("plannerreverse", boost::bind(&Worker::plannerreverse, this, _1, _2), "Calcul d'itinéraire en Transport en Commun, avec une arrivée avant");
+        add_param("plannerreverse", "departure", "Point de départ", ApiParameter::STRING, false);
+        add_param("plannerreverse", "destination", "Point d'arrivée", ApiParameter::STRING, false);
+        add_param("plannerreverse", "departure_lat", "Latitude de départ", ApiParameter::DOUBLE, false);
+        add_param("plannerreverse", "departure_lon", "Longitude de départ", ApiParameter::DOUBLE, false);
+        add_param("plannerreverse", "destination_lat", "Latitude d'arrivée", ApiParameter::DOUBLE, false);
+        add_param("plannerreverse", "destination_lon", "Longitude d'arrivée", ApiParameter::DOUBLE, false);
+
+        add_param("plannerreverse", "time", "Heure de fin de l'itinéraire", ApiParameter::TIME, true);
+        add_param("plannerreverse", "date", "Date de fin de l'itinéraire", ApiParameter::DATE, true);
 
         register_api("load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
 

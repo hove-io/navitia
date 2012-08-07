@@ -70,6 +70,19 @@ namespace webservice
         std::map<std::string, ApiMetadata> api_metadata;
     
     public:
+
+        /**
+         * method appelé juste avant l'appel de l'api séléctionné
+         * il faut surcharger cette methode dans le worker pour ajouter des traitements
+         */
+        virtual void pre_compute(webservice::RequestData&, Data& ){}
+        /**
+         * method appelé juste aprés l'appel de l'api séléctionné
+         * il faut surcharger cette methode dans le worker pour ajouter des traitements
+         */
+        virtual void post_compute(webservice::RequestData&, webservice::ResponseData&){}
+
+
         /** Fonction appelée lorsqu'une requête appelle
       *
       * Cette fonction dispatche ensuite à la bonne en fonction de l'appel
@@ -123,8 +136,10 @@ namespace webservice
                 api_metadata[api].check_manadatory_parameters(request);
 
                 boost::posix_time::ptime start(boost::posix_time::microsec_clock::local_time());
+                pre_compute(request, d);
                 ResponseData resp = apis[api](request, d);
                 resp.api = api;
+                post_compute(request, resp);
                 //@TODO not threadsafe
                 int duration = (boost::posix_time::microsec_clock::local_time() - start).total_milliseconds();
                 static_data().means[api](duration);
