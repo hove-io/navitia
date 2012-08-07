@@ -120,11 +120,6 @@ void FirstletterParser::load_address(navitia::type::Data &nav_data) {
                 way.city_idx = nav_data.pt_data.city_map.at(row[left_city]);
             }else if(nav_data.pt_data.city_map.find(row[rigth_city]) != nav_data.pt_data.city_map.end()){
                 way.city_idx = nav_data.pt_data.city_map.at(row[rigth_city]);
-            }else{
-                std::cout << "city not found: " << row[rigth_city] << " " << row[left_city] << std::endl;
-            }
-            if(way.city_idx > 50000){
-                std::cout << "oula"  << std::endl;
             }
             way.idx = idx;
             nav_data.street_network.ways.push_back(way);
