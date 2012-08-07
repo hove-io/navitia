@@ -9,6 +9,7 @@
 struct SectionKey;
 struct Ticket {
     enum ticket_type {FlatFare, GraduatedFare, ODFare, None};
+    std::string key;
     std::string caption;
     int value;
     std::string comment;
@@ -16,8 +17,8 @@ struct Ticket {
     std::vector<SectionKey> sections;
 
     Ticket() : value(0), type(None) {}
-    Ticket(const std::string & caption, int value, const std::string & comment, ticket_type type = FlatFare) :
-        caption(caption), value(value), comment(comment), type(type){}
+    Ticket(const std::string & key, const std::string & caption, int value, const std::string & comment, ticket_type type = FlatFare) :
+        key(key), caption(caption), value(value), comment(comment), type(type){}
 };
 
 /// Définit un billet pour une période données
@@ -57,6 +58,9 @@ struct State {
     /// Réseau utilisé
     std::string network;
 
+    /// Ticket utilisé
+    std::string ticket;
+
     State() {}
 
     bool operator==(const State & other) const {
@@ -68,7 +72,7 @@ struct State {
     }
 
     std::string concat() const {
-        return mode + zone + stop_area + line + network;
+        return mode + zone + stop_area + line + network + ticket;
     }
 };
 
@@ -210,6 +214,9 @@ struct Fare {
     /// Effectue la recherche du meilleur tarif
     /// Retourne une liste de billets à acheter
     std::vector<Ticket> compute(const std::vector<std::string> & section_keys);
+
+    /// Charge le fichier d'OD générique
+    void load_od(const std::string & filename);
 
     /// Charge le fichier d'OD du stif
     void load_od_stif(const std::string & filename);
