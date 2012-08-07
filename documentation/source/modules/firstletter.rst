@@ -14,7 +14,7 @@ Fonctionnement général
 
 Lors d'une requête utilisateur, il saisit une chaîne de charactères telle que « 20 bd ponia par ». La requête
 est découpée *tokens* correspondant à chaque mot. Ensuite l'algorithme cherche parmi l'ensemble des objets ceux
-dont le nom contient des mots qui commence par ces tokens.
+dont le nom contient des mots qui commencent par ces tokens.
 
 Une note est associée à chaque résultat afin de retourner le résultat le plus pertinent.
 
