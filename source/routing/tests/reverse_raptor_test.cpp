@@ -11,7 +11,9 @@ using namespace routing::raptor;
 
 BOOST_AUTO_TEST_CASE(direct){
     navimake::builder b("20120614");
-    b.vj("A")("stop1", 8000, 8050)("stop2", 8100,8150);
+    b.vj("A")("stop1", 7000, 7050)("stop2", 7100,7150);
+    b.vj("B")("stop1", 8000, 8050)("stop2", 8100,8150);
+    b.vj("C")("stop1", 9000, 9050)("stop2", 9100,9150);
     type::Data data;
     data.pt_data =  b.build();
     reverseRAPTOR raptor(data);
@@ -19,7 +21,6 @@ BOOST_AUTO_TEST_CASE(direct){
     type::PT_Data d = data.pt_data;
 
     auto res = raptor.compute(d.stop_areas[1].idx, d.stop_areas[0].idx, 8200, 0);
-
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[0].said, 0);
@@ -33,8 +34,14 @@ BOOST_AUTO_TEST_CASE(direct){
 
 BOOST_AUTO_TEST_CASE(change){
     navimake::builder b("20120614");
-    b.vj("A")("stop1", 8000, 8050)("stop2", 8100, 8150)("stop3", 8200, 8250);
-    b.vj("B")("stop4", 8000, 8050)("stop2", 8200,8250)("stop5", 8300,8350);
+    b.vj("A")("stop1", 7000, 7050)("stop2", 7100, 7150)("stop3", 7200, 7250);
+    b.vj("B")("stop1", 8000, 8050)("stop2", 8100, 8150)("stop3", 8200, 8250);
+    b.vj("C")("stop1", 9000, 9050)("stop2", 9100, 9150)("stop3", 9200, 9250);
+    b.vj("H")("stop1", 24*3600 + 9000, 24*3600 + 9050)("stop2", 24*3600 + 9100, 24*3600 + 9150)("stop3", 24*3600 + 9200, 24*3600 + 9250);
+    b.vj("D")("stop4", 7000, 7050)("stop2", 7200, 7250)("stop5", 7300, 7350);
+    b.vj("E")("stop4", 8000, 8050)("stop2", 8200, 8250)("stop5", 8300, 8350);
+    b.vj("F")("stop4", 9000, 9050)("stop2", 9200, 9250)("stop5", 9300, 9350);
+    b.vj("G")("stop4", 24*3600 + 9000, 24*3600 + 9050)("stop2", 24*3600 + 9200, 24*3600 + 9250)("stop5", 24*3600 + 9300, 24*3600 + 9350);
     type::Data data;
     data.pt_data =  b.build();
     reverseRAPTOR raptor(data);
@@ -81,7 +88,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
 BOOST_AUTO_TEST_CASE(validity_pattern){
     navimake::builder b("20120614");
     b.vj("A", "0")("stop1", 8000)("stop2", 8200);
-    b.vj("B", "1")("stop1", 9000)("stop2", 9200);
+    b.vj("B", "1001")("stop1", 9000)("stop2", 9200);
     type::Data data;
     data.pt_data =  b.build();
     reverseRAPTOR raptor(data);
@@ -92,7 +99,7 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[1].time, 9200);
 
-    res = raptor.compute(d.stop_areas[1].idx, d.stop_areas[0].idx, 9300, 1);
+    res = raptor.compute(d.stop_areas[1].idx, d.stop_areas[0].idx, 9300, 2);
     BOOST_REQUIRE_EQUAL(res.items.size(), 0);
 }
 

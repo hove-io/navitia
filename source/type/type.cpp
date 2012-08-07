@@ -140,7 +140,8 @@ static_data * static_data::get() {
                 (eDepartment, "department")
                 (eCompany, "company")
                 (eVehicle, "vehicle")
-                (eCountry, "country");
+                (eCountry, "country")
+                (eWay, "way");
     }
     return instance;
 }
