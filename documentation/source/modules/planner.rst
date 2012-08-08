@@ -35,12 +35,14 @@ Départ depuis un nuage de point d'arrêt
 ---------------------------------------
 
 Plusieurs points de départ possibles 
+
 * Avec un horaire associé à chacun de ces points d'arrêt si sens=1
 * Attention au départ depuis une commune, à gérer en amont du moteur pour le choix des arrêts
 
 Arrivée à un nuage de point d'arrêt
 -----------------------------------
 Plusieurs points de destination possibles
+
 * Avec un horaire associé à chacun de ces points d'arrêt si sens=-1
 * Attention à la destination vers une commune, à gérer en amont du moteur pour le choix des arrêts
 
@@ -52,7 +54,7 @@ Calendriers de circulation
 La gestion des calendriers est indispensable
 
   * elle permet de n'utiliser que les circulations effectivement actives à la date demandée
-  * elle permet de fournir exactement les circulations à empreintée lors de la gestion des itinéraires passe-minuit
+  * elle permet de fournir exactement les circulations à empreinter lors de la gestion des itinéraires passe-minuit
 
 Typologie des horaires
 ----------------------
@@ -76,6 +78,7 @@ Typologie des horaires
     Il est nécessaire d'indiquer l'heure d'arrivée aux voyageurs qui descendent et l'heure de départ aux voyageurs qui montent à cette gare.
   * Ces horaires sont utilisés à chaque correspondance (descente, correspondance, montée)
 
+
 Passe-minuit
 ------------
 
@@ -95,14 +98,16 @@ Sens de la recherche
 * 1 pour **partir après**
 
         La demande se fait avec un départ après l'heure demandée. 
-        Cette demande est typique d'une recherche sur le prochain départ d'un itinéraire. 
+        Cette demande est typique d'une recherche sur le prochain départ d'un itinéraire.
+ 
         *Exemple : prochain départ pour le retour du client à son domicile.*
 
 * -1 pour **arrivée avant**
 
         La demande se fait avec une arrivée avant l'heure demandée. 
         Cette demande est typique d'une recherche d'itinéraire anticipée.
-        Exemple : le client cherche à arriver avant 9h à son travail
+
+        *Exemple : le client cherche à arriver avant 9h à son travail.*
 
 
 
@@ -122,7 +127,9 @@ Il propose l'itinéraire qui permet d'arriver au plus tôt à destination.
       * On choisit la solution qui maximise les temps de correspondance
         afin d'assurer les correspondances au mieux
 
-* Cet itinéraire servira de référence lors de l'application des filtres de solution
+* Cet itinéraire servira de **référence** lors de la validation de la pertinence
+  des itinéraires sur les critères de calcul "Moins de correspondance" et
+  "Moins de marche à pied"
 
 
 Critères de calcul "Moins de correspondance"
@@ -141,7 +148,8 @@ Il propose l'itinéraire qui minimise le nombre de correspondance pour une reche
       * On choisit la solution qui maximise les temps de correspondance
         afin d'assurer les correspondances au mieux
 
-* Filtré si la réponse ne respecte pas les règles de présentation par rapport au critère 1
+* Filtré si la réponse ne respecte pas les règles de présentation par rapport au 
+  critère "Arrivée au plus tôt"
 
   * 30=1x+15 > si Tcritère 1 < 30 minutes, alors Tcritère 2 < Tcritère 1 + 15
   * 60=1x+30 > si Tcritère 1 < 60 minutes, alors Tcritère 2 < Tcritère 1 + 30
@@ -163,6 +171,14 @@ pour une recherche donnée (O/D, date, heure de départ ou d'arrivée).
 
       * On choisit la solution qui maximise les temps de correspondances
         afin d'assurer les correspondances au mieux
+
+
+* Filtré si la réponse ne respecte pas les règles de présentation par rapport au 
+  critère "Arrivée au plus tôt"
+
+  * 30=1x+15 > si Tcritère 1 < 30 minutes, alors Tcritère 2 < Tcritère 1 + 15
+  * 60=1x+30 > si Tcritère 1 < 60 minutes, alors Tcritère 2 < Tcritère 1 + 30
+  * @=1.5x+0 > sinon Tcritère 2 < 1,5 x Tcritère 1
 
 **Remarque : Humanisation du critère "moins de marche à pied"**
 
@@ -308,10 +324,13 @@ Gestion des temps de correspondance intra-point d'arrêt
 Pour chaque point d'arrêt, on peut spécifier la durée de correspondance 
 à utiliser par le moteur. 
 
-*NB* : il est possible de spécifier un temps de correspondance différent 
+**Remarque: gestion des temps d'attente**
+ 
+Il est possible de spécifier un temps de correspondance différent 
 pour chaque point d'arrêt (il ne s'agit pas d'un paramètre global).
 Cette durée correspond à la notion de "tolérance d'exécution" 
 par rapport à l'heure théorique prévue. 
+
 Une durée de 0 minute peut se justifier dans des conditions bien précises, 
 par exemple dans le cas d'une correspondance garantie sur un pôle 
 où tous les mobiles s'attendent avant de partir.
@@ -319,7 +338,7 @@ où tous les mobiles s'attendent avant de partir.
 Attention, spécifier une durée de 0 minute sans justification particulière 
 peut entraîner des réponses incohérentes de la part du moteur de calcul. 
 La correspondance n'étant pas pénalisée, le système pourra proposer 
-des correspondances non réalisables (phénomène du "saute de bus en bus")
+des correspondances non réalisables (phénomène du "saute-mouton de bus en bus")
 
 
 
@@ -333,8 +352,10 @@ Une correspondance inter-point d'arrêt se décompose en deux temps :
 * Le temps de la correspondance inter-point d'arrêt 
   qui correspond au temps nécessaire pour passer d'un point d'arrêt 
   donné à un autre point d'arrêt. 
-  Il s'agit du temps "d'exécution de la correspondance". 
-  *NB* : seul ce temps est comptabilisé dans le temps de marche à pied.
+  Il s'agit du temps "d'exécution de la correspondance".
+ 
+  **Remarque** : seul ce temps est comptabilisé dans le temps de marche à pied.
+
 * Le temps de la correspondance intra-point d'arrêt 
   qui correspond à la "tolérance d'exécution" décrite au chapitre précédent. 
   Il est identique au temps de correspondance intra-point d'arrêt 
@@ -351,16 +372,16 @@ ci-dessus correspondent respectivement à :
 Le principe est d'effectuer d'abord la correspondance à proprement parler 
 *LinkConnection* puis le temps d'attente éventuel *StopPointConnection*.
 
-*NB*:
+**Remarque: gestion de la marche à pied**
 
-* Il est possible de spécifier un temps de correspondance différent 
-  pour chaque couple "point d'arrêt origine" vers "point d'arrêt destination":
-  il ne s'agit pas d'un paramètre global.
-* Prise en compte de la vitesse de marche à pied afin de faire varier 
-  la durée de la liaison *LinkConnection* uniquement.
-* Prise en compte de l'accessibilité de la correspondance (gestion UFR) 
-  en utilisant les mêmes propriétés que celles définit 
-  pour l'accessibilité des poitns d'arrêts
+  * Il est possible de spécifier un temps de correspondance différent 
+    pour chaque couple "point d'arrêt origine" vers "point d'arrêt destination":
+    il ne s'agit pas d'un paramètre global.
+  * Prise en compte de la vitesse de marche à pied afin de faire varier 
+    la durée de la liaison *LinkConnection* uniquement.
+  * Prise en compte de l'accessibilité de la correspondance (gestion UFR) 
+    en utilisant les mêmes propriétés que celles définies
+    pour l'accessibilité des points d'arrêts
 
 Résumé sur les correspondances
 ------------------------------
@@ -375,20 +396,20 @@ On peut donc spécifier les durées de correspondances suivantes
 
 +---------------+----------------------+--------+--------------------------------------+
 |Correspondance | Type                 | Durée  | Commentaire                          |
++===============+======================+========+======================================+
+|A'             |Intra point d'arrêt   |        |Dans les données, cette information   |
+|               |(StopPointConnection) | 2 min. |peut par exemple être spécifiée comme | 
+|               |                      |        |une correspondance entre A' et A'     |
+|               |                      |        |(correspondance vers lui-même)        |
 +---------------+----------------------+--------+--------------------------------------+
-|A'             | Intra point d'arrêt  |        | Dans les données, cette information  |
-|               |(StopPointConnection) | 2 min. | peut par exemple être spécifiée comme| 
-|               |                      |        | une correspondance entre A' et A'    |
-|               |                      |        | (correspondance vers lui-même)       |
-+---------------+----------------------+--------+--------------------------------------+
-|A''            | Intra point d'arrêt  |        | Correspondance garantie              |
+|A''            |Intra point d'arrêt   |        |Correspondance garantie               |
 |               |(StopPointConnection) | 0 min. |                                      |
 +---------------+----------------------+--------+--------------------------------------+
-|A' > A''       | Intra zone d'arrêt   |        |                                      | 
-|               | (LinkConnection)     | 3 min. |                                      |
+|A' > A''       |Intra zone d'arrêt    |        |                                      | 
+|               |(LinkConnection)      | 3 min. |                                      |
 +---------------+----------------------+--------+--------------------------------------+
-|A'' > A'       | Intra zone d'arrêt   |        |Escalator pour                        |
-|               | (LinkConnection)     | 2 min. | accélérer la correspondance          |
+|A'' > A'       |Intra zone d'arrêt    |        |Escalator pour                        |
+|               |(LinkConnection)      | 2 min. |accélérer la correspondance           |
 +---------------+----------------------+--------+--------------------------------------+
 
 * Lors d'une correspondance en A' (pas de changement de point d'arrêt), 
@@ -452,28 +473,53 @@ sur un itinéraire (tronc commun) alors
 Durée minimum de correspondance
 -------------------------------
 
-Définie par StopPoint
-A faire évoluer si possible vers une durée minimum en fonction de l'heure:
+Définie par StopPoint. A faire évoluer si possible vers une durée minimum en fonction de l'heure:
 *correspondances assurées le matin à 07h30 et le soir à 17h30*
 
 Durée maximum de correspondance
 -------------------------------
 
-Prise en compte que sur le calcul retour dans Ariane car il n'est pas possible de faire le test 
-sur le sens aller.
+Permet d'éliminer les itinéraires faisant attendre 5h en gare 
+entre le dernier train du soir et le premier train du lendemain 
+sur un itinéraire passe-minuit.
+
+La problématique est prise en compte sur le calcul retour de l'algorithme Ariane 
+car il n'est pas possible de faire le test tant que le calcul retour 
+n'a pas optimisé l'heure de départ du calcul aller.
 
 * Si on fait le test en sens aller (arrivée au plus tôt)
 
-              arrêt               Arret A -> arret B  ->  arret C -> arret D
-             temps de corr                5min        5min        8h
-              heure                7h00       8h00          9h00      17h00
++----------+-----------+----------------+
+|Arrêt     |Heure      |Durée de corresp|
++==========+===========+================+
+|A départ  |07h00      |                |
++----------+-----------+----------------+
+|B arrivée |09h00      |                |
++----------+-----------+----------------+
+|  Corresp |           |   6 heures     |
++----------+-----------+----------------+
+|B départ  |15h00      |                |
++----------+-----------+----------------+
+|C arrivée |17h00      |                |
++----------+-----------+----------------+
 
 * on élimine ce trajet, alors que avec un calcul en sens retour
 
-              arrêt               Arret A -> arret B  ->  arret C -> arret D
-             temps de corr                5min        5min        3h
-              heure                12h00      13h00        14h00      17h00
++----------+-----------+----------------+
+|Arrêt     |Heure      |Durée de corresp|
++==========+===========+================+
+|A départ  |12h00      |                |
++----------+-----------+----------------+
+|B arrivée |14h00      |                |
++----------+-----------+----------------+
+|  Corresp |           |   1 heure      |
++----------+-----------+----------------+
+|B départ  |15h00      |                |
++----------+-----------+----------------+
+|C arrivée |17h00      |                |
++----------+-----------+----------------+
 
+L'itinéraire est correct.
 
 Gestion des montées/descentes interdites
 ****************************************
@@ -572,24 +618,14 @@ Ce fonctionnement est automatique et géré à la binarisation.
 .. image:: ../_static/InegalitesTriangulaires.png
 
 
-Sert à contourner l'anomalie suivante:
+Cette gestion permet également de contourner l'anomalie suivante:
 
-.. aafig::
-  :textual:
-  :foreground: #80CB66
-  :scale: 75%
+* Dans le bus, on arriva en A à Ta, la MAP vers B met à jour B à Tbmap.
+* Arrivé en B à Tb, on a Tb > à Tbmap
 
-                                    "B'"
-                                    /
-                                   / "MAP n'"
-          "Bus" ----> "A" --- "3'" -------> "B" ----------> "C"
-                        \______"MAP 1'"_____/
-       
-
-On est dans le bus:
-Arrivé en A à Ta, la MAP vers B met à jour B à Tbmap
-Arrivé en B à Tb, on a Tb > à Tbmap car la MAP se fait en 1' quand le bus met 3'
-Donc on ne met pas non plus à jour la correspondance vers B'
+  * En effet la MAP se fait en 1' quand le bus met 3'
+  * Conséquence: on ne met pas non plus à jour la correspondance vers B'
+  * On perd une correspondance interessante.
 
 
 Prolongement de service

@@ -25,6 +25,8 @@ struct Data{
             fares.init(conf->ini["files"]["grammar"], conf->ini["files"]["prices"]);
             if(conf->ini["files"]["stif"] != "")
                 fares.load_od_stif(conf->ini["files"]["stif"]);
+            if(conf->ini["files"]["od"] != "")
+                fares.load_od(conf->ini["files"]["od"]);
         }catch(std::exception e){
             boost::posix_time::ptime date(boost::posix_time::microsec_clock::local_time());
             std::ofstream f(conf->get_string("path") + "error.log", std::ios_base::app);

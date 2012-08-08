@@ -305,10 +305,7 @@ public:
 
         register_api("firstletter", boost::bind(&Worker::firstletter, this, _1, _2), "Retrouve les objets dont le nom commence par certaines lettres");
         add_param("firstletter", "name", "Valeur recherchée", ApiParameter::STRING, true);
-        std::vector<RequestParameter::Parameter_variant> params;
-        params.push_back("stop_areas");
-        params.push_back("cities");
-        add_param("firstletter", "filter", "Type à rechercher", ApiParameter::STRING, false, params);
+        add_param("firstletter", "filter", "Type à rechercher", ApiParameter::STRING, false);
 
         register_api("proximitylist", boost::bind(&Worker::proximitylist, this, _1, _2), "Liste des objets à proxmité");
         add_param("proximitylist", "lon", "Longitude en degrés", ApiParameter::DOUBLE, true);

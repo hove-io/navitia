@@ -70,7 +70,7 @@ struct Way{
 
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & idx & name & city & edges;
+        ar & idx & name & city & edges & city_idx;
     }
 };
 

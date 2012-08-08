@@ -66,6 +66,7 @@ void fill_pb_object<nt::eStopPoint>(nt::idx_t idx, const nt::Data& data, google:
         try{
             fill_pb_object<nt::eCity>(sp.city_idx, data, stop_point->mutable_child()->add_city_list(), max_depth-1);
         }catch(std::out_of_range e){}
+        
     }
 }
 
@@ -79,13 +80,16 @@ template<>
 void fill_pb_object<nt::eWay>(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int max_depth){
     pbnavitia::Way* way = dynamic_cast<pbnavitia::Way*>(message);
     navitia::streetnetwork::Way w = data.street_network.ways.at(idx);
-    way->set_name(w.name);/*
-    stop_point->mutable_coord()->set_x(sp.coord.x);
-    stop_point->mutable_coord()->set_y(sp.coord.y);
+    way->set_name(w.name);
+    /*stop_point->mutable_coord()->set_x(sp.coord.x);
+    stop_point->mutable_coord()->set_y(sp.coord.y);*/
     if(max_depth > 0){
         try{
-            fill_pb_object<nt::eCity>(sp.city_idx, data, stop_point->mutable_child()->add_city_list(), max_depth-1);
-        }catch(std::out_of_range e){}
-    }*/
+            fill_pb_object<nt::eCity>(w.city_idx, data, way->mutable_child()->add_city_list(), max_depth-1);
+        }catch(std::out_of_range e){
+            std::cout << w.city_idx << std::endl;
+        }
+        
+    }
 }
 }//namespace navitia

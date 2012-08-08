@@ -167,7 +167,7 @@ struct City : public NavitiaHeader, Nameable {
     City() : main_city(false), use_main_stop_area_property(false), department_idx(invalid_idx){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & department_idx & coord & idx;
+        ar & name & department_idx & coord & idx & external_code & main_postal_code & main_city;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
