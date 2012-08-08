@@ -196,7 +196,7 @@ void Data::build_relations(navitia::type::PT_Data &data){
         routepoint.vehicle_journey_list = data.routes.at(routepoint.route_idx).vehicle_journey_list;
         routepoint.vehicle_journey_list_arrival = data.routes.at(routepoint.route_idx).vehicle_journey_list;
         std::sort(routepoint.vehicle_journey_list.begin(), routepoint.vehicle_journey_list.end(), sort_vehicle_journey_list_rp(data, routepoint.order));
-        std::sort(routepoint.vehicle_journey_list.begin(), routepoint.vehicle_journey_list.end(), sort_vehicle_journey_list_rp_arrival(data, routepoint.order));
+        std::sort(routepoint.vehicle_journey_list_arrival.begin(), routepoint.vehicle_journey_list_arrival.end(), sort_vehicle_journey_list_rp_arrival(data, routepoint.order));
 
     }
 

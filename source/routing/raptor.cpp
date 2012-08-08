@@ -122,14 +122,24 @@ std::pair<unsigned int, bool> communRAPTOR::tardiest_trip(unsigned int route, un
     if(rp_id == -1)
         return std::pair<unsigned int, bool>(-1, false);
 
+    auto itdebug = data.pt_data.route_points[rp_id].vehicle_journey_list_arrival.rend();
     for(auto it = std::lower_bound(data.pt_data.route_points[rp_id].vehicle_journey_list_arrival.rbegin(),
                                    data.pt_data.route_points[rp_id].vehicle_journey_list_arrival.rend(),
                                    dt.hour, compare_rp_reverse(data.pt_data.route_points.at(rp_id).order, data));
         it != data.pt_data.route_points[rp_id].vehicle_journey_list_arrival.rend(); ++it) {
-
+        if(itdebug == data.pt_data.route_points[rp_id].vehicle_journey_list_arrival.rend())
+            itdebug = it;
         navitia::type::ValidityPattern vp = data.pt_data.validity_patterns[data.pt_data.vehicle_journeys[*it].validity_pattern_idx];
-        if(vp.check(dt.date) && data.pt_data.stop_times.at(data.pt_data.vehicle_journeys[*it].stop_time_list.at(data.pt_data.route_points.at(rp_id).order)).arrival_time %86400 < dt.hour ) {
-            return std::pair<unsigned int, bool>(*it, pam);
+        if(vp.check(dt.date)) {/*
+            if(data.pt_data.stop_times.at(data.pt_data.vehicle_journeys[*it].stop_time_list.at(data.pt_data.route_points.at(rp_id).order)).arrival_time %86400 <= dt.hour)*/
+                return std::pair<unsigned int, bool>(*it, pam);
+//            else {
+//                std::cout << "Route point : " << rp_id << " " << data.pt_data.stop_times.at(data.pt_data.vehicle_journeys[*itdebug].stop_time_list.at(data.pt_data.route_points.at(rp_id).order)).arrival_time
+//                          << " " << *itdebug << " " << data.pt_data.stop_times.at(data.pt_data.vehicle_journeys[*it].stop_time_list.at(data.pt_data.route_points.at(rp_id).order)).arrival_time << " " << *it
+//                          << " " << dt.hour <<  std::endl;
+//                exit(1);
+//            }
+
         }
     }
     --dt.date;

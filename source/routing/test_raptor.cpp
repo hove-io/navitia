@@ -34,30 +34,42 @@ int main(int, char **) {
 ////            precstid =  stid;
 ////        }
 ////    }plannerreverse?format=json&departure_lat=48.83192652572024&departure_lon=2.355914323083246&destination_lat=48.873944716692286&destination_lon=2.34836122413323&time=1000&date=20120511
-    std::cout << "size : " << data.pt_data.route_points.at(10).vehicle_journey_list_arrival.size() << " "
-              << data.pt_data.route_points.at(10).vehicle_journey_list.size()   << std::endl;
-    routing::raptor::reverseRAPTOR raptor(data);
-    {
-        Timer t("Calcul raptor");
-        CALLGRIND_START_INSTRUMENTATION;
-        std::vector<routing::Path> result = raptor.compute_all(type::GeographicalCoord(2.355914323083246, 48.83192652572024), 300, type::GeographicalCoord(2.34836122413323, 48.873944716692286), 300, 8*3600, 7);
-        CALLGRIND_STOP_INSTRUMENTATION;
-        CALLGRIND_DUMP_STATS;
+//    std::cout << "size : " << data.pt_data.route_points.at(10).vehicle_journey_list_arrival.size() << " "
+//              << data.pt_data.route_points.at(10).vehicle_journey_list.size()   << std::endl;
+//    routing::raptor::reverseRAPTOR raptor(data);
+//    {
+//        Timer t("Calcul raptor");
+//        CALLGRIND_START_INSTRUMENTATION;
+//        std::vector<routing::Path> result = raptor.compute_all(type::GeographicalCoord(2.355914323083246, 48.83192652572024), 300, type::GeographicalCoord(2.34836122413323, 48.873944716692286), 300, 8*3600, 7);
+//        CALLGRIND_STOP_INSTRUMENTATION;
+//        CALLGRIND_DUMP_STATS;
 
-        BOOST_FOREACH(auto pouet, result) {
-        std::cout << pouet << std::endl << std::endl;
+//        BOOST_FOREACH(auto pouet, result) {
+//        std::cout << pouet << std::endl << std::endl;
 
-        std::cout << makeItineraire(pouet);
-        }
-        //        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
+//        std::cout << makeItineraire(pouet);
+//        }
+//        //        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
+//    }
+
+
+    BOOST_FOREACH(auto vj_idx, data.pt_data.route_points.at(168339).vehicle_journey_list_arrival) {
+        std::cout << "arrival " << data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vj_idx).stop_time_list.at(data.pt_data.route_points.at(168339).order)).arrival_time
+                  << " departure " <<    data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vj_idx).stop_time_list.at(data.pt_data.route_points.at(168339).order)).departure_time
+                  << std::endl;
     }
 
+    BOOST_FOREACH(auto rp, data.pt_data.route_points) {
+        int prec_temps = -1;
 
-//    BOOST_FOREACH(auto vj_idx, data.pt_data.route_points.at(194941).vehicle_journey_list) {
-//        std::cout << "arrival " << data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vj_idx).stop_time_list.at(data.pt_data.route_points.at(194941).order)).arrival_time
-//                  << " departure " <<    data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vj_idx).stop_time_list.at(data.pt_data.route_points.at(194941).order)).departure_time
-//                  << std::endl;
-//    }
+        BOOST_FOREACH(auto vjidx, rp.vehicle_journey_list_arrival) {
+            if(prec_temps != -1 && (prec_temps >(data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vjidx).stop_time_list.at(rp.order)).arrival_time % 86400))) {
+                std::cout << "Erreur : rp " << rp.idx << " vj " << vjidx << " prec " << prec_temps << " " << data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vjidx).stop_time_list.at(rp.order)).arrival_time  << std::endl;
+
+            }
+            prec_temps = data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vjidx).stop_time_list.at(rp.order)).arrival_time %86400;
+        }
+    }
 
 //    std::cout << "Je suis ici ! " << std::endl;
 
