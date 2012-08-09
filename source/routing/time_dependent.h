@@ -31,6 +31,9 @@ struct TimeTable {
      */
     DateTime eval(DateTime departure, const type::PT_Data & data) const;
 
+    /** Retourne le premier départ possible à une heure donnée */
+    DateTime first_departure(DateTime departure, const type::PT_Data & data) const;
+
     /** Plus courte durée possible de faire */
     int min_duration() const;
 
@@ -83,7 +86,6 @@ struct TimeDependent : public AbstractRouter{
     Graph graph;
     navitia::routing::astar::Astar astar_graph;
 
-    size_t stop_area_offset;
     size_t stop_point_offset;
     size_t route_point_offset;
 
@@ -110,6 +112,10 @@ struct TimeDependent : public AbstractRouter{
     Path compute_astar(type::idx_t dep, type::idx_t arr, int hour, int day);
 
     Path makePath(type::idx_t arr);
+
+    bool is_stop_area(vertex_t vertex) const;
+    bool is_stop_point(vertex_t vertex) const;
+    bool is_route_point(vertex_t vertex) const;
 };
 
 }}}

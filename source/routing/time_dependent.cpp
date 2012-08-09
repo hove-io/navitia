@@ -14,14 +14,8 @@ public:
 
   // Estimation de l'heure d'arrivée. Cette heure doit est sous-estimée
   DateTime operator()(Vertex u){
-      Vertex a = u;
-      /*if(a > td.stop_area_offset)
-          a -= td.stop_area_offset;
-      else
-          a = td.data.route_points[a].stop_point_idx;*/
-      //BOOST_ASSERT(td.distance[u] == DateTime::infinity());
       DateTime result;
-      result.hour = td.astar_graph.min_time.at(a);
+      result.hour = td.astar_graph.min_time.at(u);
       result.date = -1;
       return result;
   }
@@ -50,8 +44,7 @@ TimeDependent::TimeDependent(const type::PT_Data & data) : data(data),
        // On crée un nœud par route point, deux par stopArea, deux par stopPoint
        graph(data.route_points.size() + data.stop_areas.size() + data.stop_points.size()),
        astar_graph(data),
-       stop_area_offset(0),
-       stop_point_offset(stop_area_offset + data.stop_areas.size()),
+       stop_point_offset(data.stop_areas.size()),
        route_point_offset(stop_point_offset + data.stop_points.size()),
        preds(boost::num_vertices(graph)),
        distance(boost::num_vertices(graph)),
@@ -73,8 +66,8 @@ void  TimeDependent::build_graph(){
 
     // 2. On relie les stoppoints aux stop_areas
     BOOST_FOREACH(type::StopPoint stop_point, data.stop_points){
-        boost::add_edge(stop_point.stop_area_idx + stop_area_offset, stop_point.idx + stop_point_offset, Edge(60), graph);
-        boost::add_edge(stop_point.idx + stop_point_offset, stop_point.stop_area_idx + stop_area_offset, Edge(60), graph);
+        boost::add_edge(stop_point.stop_area_idx, stop_point.idx + stop_point_offset, Edge(60), graph);
+        boost::add_edge(stop_point.idx + stop_point_offset, stop_point.stop_area_idx, Edge(60), graph);
     }
 
 
@@ -141,8 +134,7 @@ DateTime TimeTable::eval(DateTime departure, const type::PT_Data &data) const{
     // Todo : optimiser par dichotomie car les time_tables sont triées par heure de départ
     BOOST_FOREACH(auto pair, this->time_table){
         ValidityPatternTime dep = pair.first;
-        if(dep.vp_idx == type::invalid_idx)
-            std::cout << "CRAPY CRAP" << std::endl;
+
         type::ValidityPattern vp = data.validity_patterns[dep.vp_idx];
         // On garde la première date du lendemain si jamais on ne trouve rien
         if(next_day == DateTime::infinity() && vp.check(departure.date + 1)){
@@ -155,6 +147,38 @@ DateTime TimeTable::eval(DateTime departure, const type::PT_Data &data) const{
             DateTime result;
             result.hour = pair.second.hour;
             result.date = departure.date;            
+           // result.normalize();
+
+            return result;
+        }
+    }
+    return next_day;
+}
+
+DateTime TimeTable::first_departure(DateTime departure, const type::PT_Data &data) const{
+    if(departure == DateTime::infinity())
+        return departure;
+
+    if(this->constant_duration >= 0)
+        return departure;
+
+    DateTime next_day;
+    // Todo : optimiser par dichotomie car les time_tables sont triées par heure de départ
+    BOOST_FOREACH(auto pair, this->time_table){
+        ValidityPatternTime dep = pair.first;
+
+        type::ValidityPattern vp = data.validity_patterns[dep.vp_idx];
+        // On garde la première date du lendemain si jamais on ne trouve rien
+        if(next_day == DateTime::infinity() && vp.check(departure.date + 1)){
+            next_day.date = departure.date + 1;
+            next_day.hour = pair.second.hour;
+        }
+
+        // Aha ! on a trouvé le premier départ le bon jour !
+        if(dep.hour >= departure.hour && vp.check(departure.date)){
+            DateTime result;
+            result.hour = pair.second.hour;
+            result.date = departure.date;
            // result.normalize();
 
             return result;
@@ -213,7 +237,7 @@ Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day)
     start_time.hour = hour;
 
     try{
-        boost::dijkstra_shortest_paths(this->graph, dep + stop_area_offset,
+        boost::dijkstra_shortest_paths(this->graph, dep,
                                        boost::distance_map(&distance[0])
                                        .predecessor_map(&preds[0])
                                        .weight_map(boost::get(&Edge::t, graph))
@@ -221,11 +245,11 @@ Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day)
                                        .distance_inf(DateTime::infinity())
                                        .distance_zero(start_time)
                                        .distance_compare(edge_less())
-                                       .visitor(goal_visitor(arr + stop_area_offset))
+                                       .visitor(goal_visitor(arr))
                                        );
     } catch(found_goal){}
 
-    return makePath(arr + stop_area_offset);
+    return makePath(arr);
 }
 
 
@@ -234,13 +258,10 @@ Path TimeDependent::compute_astar(type::idx_t dep, type::idx_t arr, int hour, in
     start_time.date = day;
     start_time.hour = hour;
 
-    vertex_t departure = dep + stop_area_offset;
-    vertex_t arrival = arr + stop_area_offset;
-
 //    astar_graph.build_heuristic(arrival);
 
     try{
-        boost::astar_search(this->graph, departure, distance_heuristic(*this),
+        boost::astar_search(this->graph, dep, distance_heuristic(*this),
                             boost::distance_map(&distance[0])
                             .predecessor_map(&preds[0])
                             .weight_map(boost::get(&Edge::t, graph))
@@ -248,14 +269,25 @@ Path TimeDependent::compute_astar(type::idx_t dep, type::idx_t arr, int hour, in
                             .distance_inf(DateTime::infinity())
                             .distance_zero(start_time)
                             .distance_compare(edge_less())
-                            .visitor(navitia::routing::astar::astar_goal_visitor(arrival))
+                            .visitor(navitia::routing::astar::astar_goal_visitor(arr))
                             .rank_map(&astar_dist[0])
             );
     } catch(navitia::routing::astar::found_goal){}
 
-    return makePath(arrival + stop_area_offset);
+    return makePath(arr);
 }
 
+bool TimeDependent::is_stop_area(vertex_t vertex) const {
+    return vertex < stop_point_offset;
+}
+
+bool TimeDependent::is_stop_point(vertex_t vertex) const {
+    return vertex >= stop_point_offset && vertex < route_point_offset;
+}
+
+bool TimeDependent::is_route_point(vertex_t vertex) const {
+    return vertex >= route_point_offset;
+}
 
 Path TimeDependent::makePath(type::idx_t arr) {
     Path result;
@@ -273,7 +305,7 @@ Path TimeDependent::makePath(type::idx_t arr) {
     vertex_t arrival = arr;
     int precsaid = -1;
     while(preds[arrival] != arrival){
-        if(arrival >= route_point_offset){
+        if(is_route_point(arrival)){
             const type::StopPoint & sp = data.stop_points[data.route_points[arrival - route_point_offset].stop_point_idx];
 
             PathItem item(sp.stop_area_idx, distance[arrival].hour, distance[arrival].date,
@@ -283,7 +315,12 @@ Path TimeDependent::makePath(type::idx_t arr) {
             if(precsaid == sp.stop_area_idx)
                 ++result.nb_changes;
             precsaid = sp.stop_area_idx;
-        } else if((arrival >= stop_point_offset) && (arrival < route_point_offset) && (preds[arrival] >= stop_point_offset) && (preds[arrival] < route_point_offset)) {
+            if(is_route_point(preds[arrival])){
+                edge_t e = boost::edge(preds[arrival], arrival, this->graph).first;
+                DateTime dt = distance[preds[arrival]];
+                distance[preds[arrival]] = graph[e].t.first_departure(dt, this->data);
+            }
+        } else if(this->is_stop_point(arrival) && this->is_stop_point(preds[arrival])) {
             const type::StopPoint & sp = data.stop_points[arrival - stop_point_offset];
 
             PathItem item(sp.stop_area_idx, distance[arrival].hour, distance[arrival].date,
