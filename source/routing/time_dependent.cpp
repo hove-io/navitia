@@ -283,7 +283,16 @@ Path TimeDependent::makePath(type::idx_t arr) {
             if(precsaid == sp.stop_area_idx)
                 ++result.nb_changes;
             precsaid = sp.stop_area_idx;
+        } else if((arrival >= stop_point_offset) && (arrival < route_point_offset) && (preds[arrival] >= stop_point_offset) && (preds[arrival] < route_point_offset)) {
+            const type::StopPoint & sp = data.stop_points[arrival - stop_point_offset];
+
+            PathItem item(sp.stop_area_idx, distance[arrival].hour, distance[arrival].date,
+                          data.lines.size());
+            result.items.push_back(item);
+
         }
+
+
         arrival = preds[arrival];
     }
     std::reverse(result.items.begin(), result.items.end());
