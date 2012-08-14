@@ -19,7 +19,7 @@ enum type_idx {
 
 
 struct type_retour {
-    int stid;
+    unsigned int stid;
     int said_emarquement;
     DateTime dt;
     int dist_to_dest;
@@ -40,8 +40,8 @@ struct type_retour {
     bool operator<(type_retour r2) const { return this->dt + this->dist_to_dest < r2.dt + dist_to_dest;}
     bool operator>(type_retour r2) const { return this->dt + this->dist_to_dest > r2.dt + dist_to_dest;}
 
-    bool operator==(type_retour r2) const { return this->stid == r2.stid;}
-    bool operator!=(type_retour r2) const { return !(this->stid == r2.stid);}
+    bool operator==(type_retour r2) const { return this->stid == r2.stid && this->dt.hour == r2.dt.hour && this->dt.date == r2.dt.date; }
+    bool operator!=(type_retour r2) const { return this->stid != r2.stid || this->dt.hour != r2.dt.hour || this->dt.date != r2.dt.date;}
 };
 
 struct best_dest {

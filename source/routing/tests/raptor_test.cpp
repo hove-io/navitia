@@ -175,8 +175,8 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_trcky){
 
 
     auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7900, 0);
-    BOOST_REQUIRE_EQUAL(res.items.size(), 6);
-    BOOST_CHECK_EQUAL(res.items[5].arrival.hour, 9200);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 4);
+    BOOST_CHECK_EQUAL(res.items[3].arrival.hour, 9200);
 }
 
 
