@@ -76,7 +76,7 @@ void  TimeDependent::build_graph(){
         // Deux minutes de battement à l'arrivée
         boost::add_edge(route_point.stop_point_idx + stop_point_offset, route_point.idx + route_point_offset, Edge(120), graph);
         // 0 à l'arrivée
-        boost::add_edge(route_point.idx + route_point_offset, route_point.stop_point_idx + stop_point_offset, Edge(1), graph);
+        boost::add_edge(route_point.idx + route_point_offset, route_point.stop_point_idx + stop_point_offset, Edge(0), graph);
     }
 
     // 4. On rajoute les horaires
@@ -222,12 +222,12 @@ struct edge_less{
     bool operator ()(const TimeTable&, DateTime) const{return false;}
 };
 
-bool operator==(const PathItem & a, const PathItem & b){
-    return a.said == b.said && a.time == b.time && a.day == b.day;
+bool operator==(const PathItem & a, const PathItem & b) {
+    return a.said == b.said && a.arrival == b.arrival && a.departure == b.departure;
 }
 
 std::ostream & operator<<(std::ostream & os, const PathItem & b){
-    os << b.said << " " << b.day << " " << b.time;
+    os << b.said << " " << b.arrival;
     return os;
 }
 
@@ -308,22 +308,25 @@ Path TimeDependent::makePath(type::idx_t arr) {
         if(is_route_point(arrival)){
             const type::StopPoint & sp = data.stop_points[data.route_points[arrival - route_point_offset].stop_point_idx];
 
-            PathItem item(sp.stop_area_idx, distance[arrival].hour, distance[arrival].date,
-                          data.routes.at(data.route_points.at(arrival - route_point_offset).route_idx).line_idx);
+            DateTime arrival_date = distance[arrival];
+            DateTime departure_date;
+            if(is_route_point(preds[arrival])){
+                edge_t e = boost::edge(preds[arrival], arrival, this->graph).first;
+                DateTime dt = distance[preds[arrival]];
+                departure_date = graph[e].t.first_departure(dt, this->data);
+            }
+            PathItem item(sp.stop_area_idx, arrival_date, departure_date,
+                          data.routes.at(data.route_points.at(arrival - route_point_offset).route_idx).line_idx,
+                          data.route_points.at(arrival - route_point_offset).route_idx);
 
             result.items.push_back(item);
             if(precsaid == sp.stop_area_idx)
                 ++result.nb_changes;
             precsaid = sp.stop_area_idx;
-            if(is_route_point(preds[arrival])){
-                edge_t e = boost::edge(preds[arrival], arrival, this->graph).first;
-                DateTime dt = distance[preds[arrival]];
-                distance[preds[arrival]] = graph[e].t.first_departure(dt, this->data);
-            }
         } else if(this->is_stop_point(arrival) && this->is_stop_point(preds[arrival])) {
             const type::StopPoint & sp = data.stop_points[arrival - stop_point_offset];
 
-            PathItem item(sp.stop_area_idx, distance[arrival].hour, distance[arrival].date,
+            PathItem item(sp.stop_area_idx, distance[arrival], distance[arrival],
                           data.lines.size());
             result.items.push_back(item);
 
@@ -334,7 +337,7 @@ Path TimeDependent::makePath(type::idx_t arr) {
     }
     std::reverse(result.items.begin(), result.items.end());
     if(result.items.size() > 0)
-        result.duration = (86400 * (result.items.back().day - result.items.front().day)) + result.items.back().time - result.items.front().time;
+        result.duration = result.items.back().arrival - result.items.front().departure;
     else
         result.duration = 0;
     return result;

@@ -7,38 +7,6 @@ using type::idx_t;
 
 struct NotFound{};
 
-/** Étape d'un itinéraire*/
-struct PathItem{
-    unsigned int said;
-    int time;
-    int day;
-    unsigned int line_idx;
-
-    PathItem() : said(0), time(-1), day(-1), line_idx(0) {}
-    PathItem(unsigned int said, int time, int day) : said(said), time(time), day(day), line_idx(0) {}
-    PathItem(unsigned int said, int time, int day, unsigned int line_idx) : said(said), time(time), day(day), line_idx(line_idx) {}
-};
-
-/** Un itinéraire complet */
-struct Path {
-    int duration;
-    int nb_changes;
-    int percent_visited;
-    std::vector<PathItem> items;
-
-    Path() : duration(0), nb_changes(0), percent_visited(0) {}
-};
-
-
-
-bool operator==(const PathItem & a, const PathItem & b);
-std::ostream & operator<<(std::ostream & os, const PathItem & b);
-std::ostream & operator<<(std::ostream & os, const Path & path);
-/** Classe abstraite que tous les calculateurs doivent implémenter */
-struct AbstractRouter {
-    virtual Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day) = 0;
-};
-
 
 /** On se crée une structure qui représente une date et heure
  *
@@ -94,7 +62,7 @@ struct DateTime {
     }
 
     void normalize(){
-        if(date > 300) std::cout << "on normalise l'infini..." << std::endl;
+        if(date > 366) std::cout << "on normalise l'infini..." << std::endl;
         if(this->hour < 0) {
             --this->date;
             this->hour = hour+ (24*3600);
@@ -105,7 +73,7 @@ struct DateTime {
         }
     }
 
-    bool operator==(DateTime other) {
+    bool operator==(DateTime other) const {
         return this->hour == other.hour && this->date == other.date;
     }
 
@@ -136,6 +104,39 @@ struct ValidityPatternTime {
     ValidityPatternTime(int vp_idx, int hour) : vp_idx(vp_idx), hour(hour){}
 };
 
+
+/** Étape d'un itinéraire*/
+struct PathItem{
+    type::idx_t said;
+    DateTime arrival;
+    DateTime departure;
+    type::idx_t line_idx;
+    type::idx_t route_idx;
+    type::idx_t vj_idx;
+
+    PathItem(type::idx_t said = type::invalid_idx , DateTime arrival = DateTime::infinity(), DateTime departure = DateTime::infinity(),
+             type::idx_t line_idx = type::invalid_idx, type::idx_t = type::invalid_idx, type::idx_t vj_idx = type::invalid_idx) :
+        said(said), arrival(arrival), departure(departure), line_idx(line_idx), route_idx(route_idx), vj_idx(vj_idx) {}
+};
+
+/** Un itinéraire complet */
+struct Path {
+    int duration;
+    int nb_changes;
+    int percent_visited;
+    std::vector<PathItem> items;
+
+    Path() : duration(0), nb_changes(0), percent_visited(0) {}
+};
+
+bool operator==(const PathItem & a, const PathItem & b);
+std::ostream & operator<<(std::ostream & os, const PathItem & b);
+std::ostream & operator<<(std::ostream & os, const Path & path);
+
+/** Classe abstraite que tous les calculateurs doivent implémenter */
+struct AbstractRouter {
+    virtual Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day) = 0;
+};
 
 Path makeItineraire(const Path &path);
 

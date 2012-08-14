@@ -31,7 +31,7 @@ std::ostream & operator<<(std::ostream & os, const Path & path) {
        << path.percent_visited << "% visited" << std::endl;
 
     BOOST_FOREACH(PathItem item, path.items) {
-        os  << item.said << " à " << item.time << " le " << item.day << " avec "  << item.line_idx <<std::endl;
+        os  << item.said << " à " << item.arrival.hour << " le " << item.arrival.date << " avec "  << item.line_idx <<std::endl;
     }
     return os;
 }
@@ -43,14 +43,14 @@ Path makeItineraire(const Path &path) {
     result.percent_visited = path.percent_visited;
 
     if(path.items.size() > 0) {
-        result.items.push_back(PathItem(path.items.front().said, path.items.front().time, path.items.front().day, path.items.front().line_idx));
+        result.items.push_back(PathItem(path.items.front().said, path.items.front().arrival, path.items.front().departure, path.items.front().line_idx));
         PathItem precitem = result.items.front();
         bool eviterpremier = false;
         BOOST_FOREACH(PathItem item, path.items) {
             if(eviterpremier) {
             if(precitem.line_idx != item.line_idx) {
-                result.items.push_back(PathItem(precitem.said, precitem.time, precitem.day, precitem.line_idx));
-                result.items.push_back(PathItem(item.said, item.time, item.day, item.line_idx));
+                result.items.push_back(PathItem(precitem.said, precitem.arrival,  precitem.departure, precitem.line_idx));
+                result.items.push_back(PathItem(item.said, item.arrival, item.departure, item.line_idx));
 
             }
             } else {
@@ -58,7 +58,7 @@ Path makeItineraire(const Path &path) {
             }
             precitem = item;
         }
-        result.items.push_back(PathItem(path.items.back().said, path.items.back().time, path.items.back().day, path.items.back().line_idx));
+        result.items.push_back(PathItem(path.items.back().said, path.items.back().arrival, path.items.back().departure, path.items.back().line_idx));
 //        std::reverse(result.items.begin(), result.items.end());
 
     }
