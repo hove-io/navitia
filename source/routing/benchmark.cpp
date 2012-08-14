@@ -36,7 +36,7 @@ void benchmark::generate_input(int fday, int sday) {
         inputdatas.push_back(vectorint());
         inputdatas.back().push_back(a);inputdatas.back().push_back(b);inputdatas.back().push_back(0);inputdatas.back().push_back(fday);
         inputdatas.push_back(vectorint());
-        inputdatas.back().push_back(a);inputdatas.back().push_back(b);inputdatas.back().push_back(28000);inputdatas.back().push_back(fday);
+        inputdatas.back().push_back(a);inputdatas.back().push_back(b);inputdatas.back().push_back(28800);inputdatas.back().push_back(fday);
         inputdatas.push_back(vectorint());
         inputdatas.back().push_back(a);inputdatas.back().push_back(b);inputdatas.back().push_back(72000);inputdatas.back().push_back(fday);
         inputdatas.push_back(vectorint());
@@ -44,7 +44,7 @@ void benchmark::generate_input(int fday, int sday) {
         inputdatas.push_back(vectorint());
         inputdatas.back().push_back(a);inputdatas.back().push_back(b);inputdatas.back().push_back(0);inputdatas.back().push_back(sday);
         inputdatas.push_back(vectorint());
-        inputdatas.back().push_back(a);inputdatas.back().push_back(b);inputdatas.back().push_back(28000);inputdatas.back().push_back(sday);
+        inputdatas.back().push_back(a);inputdatas.back().push_back(b);inputdatas.back().push_back(28800);inputdatas.back().push_back(sday);
         inputdatas.push_back(vectorint());
         inputdatas.back().push_back(a);inputdatas.back().push_back(b);inputdatas.back().push_back(72000);inputdatas.back().push_back(sday);
         inputdatas.push_back(vectorint());
@@ -79,29 +79,29 @@ void benchmark::load_input() {
 
 void benchmark::computeBench() {
     Timer tg("Timer General");
-    std::cout << std::endl << "Lancement TimeDepedent" << std::endl;
-    {
-        Timer t("Benchmark TimeDependent");
-        computeBench_td();
+//    std::cout << std::endl << "Lancement TimeDepedent" << std::endl;
+//    {
+//        Timer t("Benchmark TimeDependent");
+//        computeBench_td();
 
-    }
-    std::cout << std::endl << "Lancement TimeDepedent Astar" << std::endl;
+//    }
+//    std::cout << std::endl << "Lancement TimeDepedent Astar" << std::endl;
 
-    {
-        Timer t("Benchmark TimeDependent Astar");
-        computeBench_tda();
-    }
-    std::cout << std::endl << "Lancement TimeExpanded" << std::endl;
+//    {
+//        Timer t("Benchmark TimeDependent Astar");
+//        computeBench_tda();
+//    }
+//    std::cout << std::endl << "Lancement TimeExpanded" << std::endl;
 
-    {
-        Timer t("Benchmark TimeExpanded");
-        computeBench_te();
-    }
-    std::cout << std::endl << "Lancement TimeExpanded Astar" << std::endl;
-    {
-        Timer t("Benchmark TimeExpanded Astar");
-        computeBench_tea();
-    }
+//    {
+//        Timer t("Benchmark TimeExpanded");
+//        computeBench_te();
+//    }
+//    std::cout << std::endl << "Lancement TimeExpanded Astar" << std::endl;
+//    {
+//        Timer t("Benchmark TimeExpanded Astar");
+//        computeBench_tea();
+//    }
     std::cout << std::endl << "Lancement RAPTOR" << std::endl;
 
     {
@@ -121,8 +121,12 @@ void benchmark::computeBench_td() {
         Timer t;
         Path result = td.compute(entry[0], entry[1], entry[2], entry[3]);
         int temps = t.ms();
-        file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.duration << ","
-             << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
+        if(result.items.size() > 0)
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour <<"," << result.duration << ","
+                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
+        else
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << -1 <<"," << result.duration << ","
+                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
     }
     std::cout << std::endl << std::endl;
     file.close();
@@ -140,8 +144,12 @@ void benchmark::computeBench_tda() {
         td.build_heuristic(entry[1]);
         Path result = td.compute_astar(entry[0], entry[1], entry[2], entry[3]);
         int temps = t.ms();
-        file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.duration << ","
-             << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
+        if(result.items.size() > 0)
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour <<"," << result.duration << ","
+                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
+        else
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << -1 <<"," << result.duration << ","
+                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
     }
     std::cout << std::endl << std::endl;
 
@@ -158,8 +166,12 @@ void benchmark::computeBench_te() {
         Timer t;
         Path result = te.compute(entry[0], entry[1], entry[2], entry[3]);
         int temps = t.ms();
-        file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.duration << ","
-             << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
+        if(result.items.size() > 0)
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour <<"," << result.duration << ","
+                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
+        else
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << -1 <<"," << result.duration << ","
+                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
     }
     std::cout << std::endl << std::endl;
     file.close();
@@ -177,8 +189,12 @@ void benchmark::computeBench_tea() {
         te.build_heuristic(entry[1]);
         Path result = te.compute_astar(entry[0], entry[1], entry[2], entry[3]);
         int temps = t.ms();
-        file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.duration << ","
-             << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
+        if(result.items.size() > 0)
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour <<"," << result.duration << ","
+                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
+        else
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << -1 <<"," << result.duration << ","
+                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
     }
     std::cout << std::endl << std::endl;
     file.close();
@@ -192,11 +208,14 @@ void benchmark::computeBench_ra() {
         ++count;
         std::cout << count << std::flush;
         Timer t;
-        std::cout << "Raptor de " << entry[0] << " -> " << entry[1] << " à " << entry[2] << " le " << entry[3] << std::endl;
         Path result = raptor.compute(entry[0], entry[1], entry[2], entry[3]);
         int temps = t.ms();
-        file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.duration << ","
-             << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
+        if(result.items.size() > 0)
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour <<"," << result.duration << ","
+                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
+        else
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << -1 <<"," << result.duration << ","
+                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
     }
     std::cout << count << std::endl << std::endl;
     file.close();
