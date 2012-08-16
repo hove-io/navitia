@@ -19,7 +19,7 @@ using namespace navitia::ptref;
 
 namespace qi = boost::spirit::qi;
 
-
+// colonne d'un objet
 struct Column {
     Type_e table;
     std::string column;
@@ -31,6 +31,7 @@ BOOST_FUSION_ADAPT_STRUCT(
     (std::string, column)
 )
 
+// clause where
 struct WhereClause{
     Column col;
     Operator_e op;
@@ -43,10 +44,13 @@ BOOST_FUSION_ADAPT_STRUCT(
     (Operator_e, op)
     (std::string, value)
 )
-
+// Requête
 struct Request {
+    // les colonnes sélectionnées : dans SELECT
     std::vector<Column> columns;
+    // l'objet utilisé pour la sélection : dans FROM
     Type_e requested_type;
+    // les conditions de sélection : clause WHERE
     std::vector<WhereClause> clauses;
 };
 
@@ -71,7 +75,8 @@ BOOST_FUSION_ADAPT_STRUCT(
     qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
 
     select_r() : select_r::base_type(request) {
-        txt %= qi::lexeme[+(qi::alnum|'_'|'|'|':')]; // Match du texte
+        txt %= qi::lexeme[+(qi::alnum|'_'|'|'|':'|'-')]; // Match du texte
+
 
         table =   qi::string("stop_areas")[qi::_val = eStopArea]
                 | qi::string("stop_points")[qi::_val = eStopPoint]
@@ -116,7 +121,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 namespace navitia{ namespace ptref{
 
-
+// vérification d'une clause WHERE
 template<class T>
 WhereWrapper<T> build_clause(std::vector<WhereClause> clauses) {
     WhereWrapper<T> wh(new BaseWhere<T>());
@@ -129,7 +134,7 @@ WhereWrapper<T> build_clause(std::vector<WhereClause> clauses) {
             wh = wh && WHERE(ptr_external_code<T>(), clause.op, clause.value);
         else if(clause.col.column == "name")
             wh = wh && WHERE(ptr_name<T>(), clause.op, clause.value);
-    }
+        }
     return wh;
 }
 
@@ -140,9 +145,10 @@ void set_value(google::protobuf::Message* message, const T& object, const std::s
     const google::protobuf::Descriptor* descriptor = message->GetDescriptor();
     const google::protobuf::FieldDescriptor* field_descriptor = descriptor->FindFieldByName(column);
 
-    std::cout << column << std::endl;
+    //std::cout << column << std::endl;
     if(field_descriptor == NULL){
-        throw unknown_member();
+        //throw unknown_member();
+        throw PTRefException("Le paramètre field_descriptor est indéfinit");
     }
 
     if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_STRING){
@@ -150,24 +156,26 @@ void set_value(google::protobuf::Message* message, const T& object, const std::s
     }else if(field_descriptor->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
         reflection->SetInt32(message, field_descriptor, boost::get<int>(get_value(object, column)));
     }else{
-        throw bad_type();
+        //throw bad_type();
+        throw PTRefException("Le paramètre field_descriptor->type est indéfinit");
     }
 }
 
 
-pbnavitia::PTReferential extract_data(PT_Data & data, const Request & r, std::vector<idx_t> & rows) {
-    pbnavitia::PTReferential pb_response;
-
+pbnavitia::Response extract_data(PT_Data & data, const Request & r, std::vector<idx_t> & rows) {
+    pbnavitia::Response result;
+    result.set_requested_api(pbnavitia::PTREFERENTIAL);
+    pbnavitia::PTReferential * pb_response = result.mutable_ptref();
     //on reconstruit
     std::map<Type_e, std::vector<std::string> > columns_map;
     BOOST_FOREACH(const Column & col, r.columns){
         columns_map[col.table].push_back(col.column);
     }
-
+ try{
     BOOST_FOREACH(idx_t row, rows){
         // "stop_area"
         //pbnavitia::PTReferential * pb_row = pb_response.add_item();
-       google::protobuf::Message* pb_message = get_message(&pb_response, r.requested_type);
+       google::protobuf::Message* pb_message = get_message(pb_response, r.requested_type);
         std::pair<Type_e, std::vector<std::string> > col;
         std::vector<Type_e> all_paths = find_path(r.requested_type);
         BOOST_FOREACH(col, columns_map){
@@ -223,7 +231,12 @@ pbnavitia::PTReferential extract_data(PT_Data & data, const Request & r, std::ve
             }
         }
     }
-    return pb_response;
+    } catch(navitia::ptref::PTRefException &e){
+        pb_response->set_error(e.what());
+    }catch(...){
+        pb_response->set_error("PTReferential: Impossible d'extraire la réponse ");
+    }
+    return result;
 }
 
 google::protobuf::Message* add_item(google::protobuf::Message* message, const std::string& table){
@@ -255,13 +268,26 @@ google::protobuf::Message* add_item(google::protobuf::Message* message, const st
 
 
 google::protobuf::Message* get_message(pbnavitia::PTReferential * row, Type_e type){
+
     const google::protobuf::Reflection * reflection = row->GetReflection();
     const google::protobuf::Descriptor* descriptor = row->GetDescriptor();
     std::string field = static_data::get()->getListNameByType(type);
     const google::protobuf::FieldDescriptor* field_descriptor = descriptor->FindFieldByName(field);
+    google::protobuf::Message* message;
+    if (reflection == NULL){
+        throw PTRefException("Le paramètre reflection est indéfinit");
+    }else{
+        if (field_descriptor == NULL){
+            throw PTRefException("Le paramètre field_descriptor est indéfinit");
+        }else{
+            message = reflection->AddMessage(row, field_descriptor);
+        }
+    }
 
-    google::protobuf::Message* message = reflection->AddMessage(row, field_descriptor);
+    //google::protobuf::Message* message = reflection->AddMessage(row, field_descriptor);
     return message;
+
+
 }
 
 template<Type_e E>
@@ -281,8 +307,8 @@ std::vector<idx_t> get_indexes(std::vector<WhereClause> clauses,  Type_e request
     if(clauses.size() == 0)
         return indexes;
 
-    std::vector<Type_e> path = find_path(requested_type);
     Type_e current = clauses[0].col.table;
+    std::vector<Type_e> path = find_path(requested_type);
     while(path[current] != current){
         indexes = d.get_target_by_source(current, path[current], indexes);
         std::cout << static_data::get()->captionByType(current) << " -> " << static_data::get()->captionByType(path[current]) << std::endl;
@@ -291,21 +317,47 @@ std::vector<idx_t> get_indexes(std::vector<WhereClause> clauses,  Type_e request
     return indexes;
 }
 
-pbnavitia::PTReferential query(std::string request, PT_Data & data){
+std::vector<idx_t> get(Type_e source, Type_e destination, idx_t source_idx, PT_Data & d){
+    std::vector<Type_e> tree = find_path(source);
+    std::vector<Type_e> path;
+
+    Type_e current = destination;
+    while(tree[current] != current){
+        path.push_back(current);
+    }
+
+    std::vector<idx_t> indexes = d.get_target_by_one_source(source, path[source], source_idx);
+    for(size_t i = path.size() - 1; i > 0; --i){
+        indexes = d.get_target_by_source(path[i], path[i-1], indexes);
+    }
+
+    return indexes;
+}
+
+
+
+pbnavitia::Response query(std::string request, PT_Data & data){
     std::string::iterator begin = request.begin();
     Request r;
-    pbnavitia::PTReferential pb_response;
+    pbnavitia::Response pb_response;
+    pb_response.set_requested_api(pbnavitia::PTREFERENTIAL);
+    pbnavitia::PTReferential * pb_ptref = pb_response.mutable_ptref();
     select_r<std::string::iterator> s;
+
+    // récupération des colonnes sélectionnées, les objets utilisés et les colonnes dans la clause WHERE
     if (qi::phrase_parse(begin, request.end(), s, qi::space, r))
     {
         if(begin != request.end()) {
             std::string unparsed(begin, request.end());
-            pb_response.set_error("PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + unparsed + "<<");
+            pb_ptref->set_error("PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + unparsed + "<<");
             return pb_response;
         }
     }
-    else
-        pb_response.set_error("PTReferential : Impossible de parser la requête");
+    else{                
+        pb_ptref->set_error("PTReferential : Impossible de parser la requête");
+        return pb_response;
+    }
+
 
 
     std::cout << "Requested Type: " << static_data::get()->captionByType(r.requested_type) << std::endl;
@@ -349,46 +401,8 @@ pbnavitia::PTReferential query(std::string request, PT_Data & data){
         final_indexes = tmp_indexes;
     }
 
-
     return extract_data(data, r, final_indexes);
 }
-
-
-std::string pb2txt(const google::protobuf::Message * response){
-    std::stringstream buffer;
-
-    const google::protobuf::Reflection* reflection = response->GetReflection();
-    std::vector<const google::protobuf::FieldDescriptor*> field_list;
-    reflection->ListFields(*response, &field_list);
-
-    BOOST_FOREACH(const google::protobuf::FieldDescriptor* field, field_list){
-        if(field->is_repeated()) {
-            buffer << field->name() << " : [";
-            for(int i=0; i < reflection->FieldSize(*response, field); ++i){
-                buffer << pb2txt(&reflection->GetRepeatedMessage(*response, field, i)) << " ,";
-            }
-            buffer << "]\n";
-        }
-        else if(reflection->HasField(*response, field)){
-            buffer << field->name() << " = ";
-            if(field->type() == google::protobuf::FieldDescriptor::TYPE_STRING){
-                buffer << reflection->GetString(*response, field) << "; ";
-            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_INT32){
-                buffer << reflection->GetInt32(*response, field) << "; ";
-            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE){
-                buffer << "\n\t" << pb2txt(&reflection->GetMessage(*response, field)) << "\n";
-            }else {
-                buffer << "type unkown; ";
-            }
-        }
-
-        buffer << std::endl;
-
-
-    }
-    return buffer.str();
-}
-
 
 
 }} // navitia::ptref

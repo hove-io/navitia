@@ -5,20 +5,37 @@
  * représente une instance NAViTiA
  */
 
+namespace navitia{ namespace gateway{
+
 struct RequestException : public std::exception{
-    std::string body;
-    int code;
+    enum ErrorType{
+        TIMEOUT,
+        UNKOWN
+    };
 
-    bool timeout;
+    ErrorType error_type;
 
-    RequestException(): code(0), timeout(false){};
-    RequestException(const std::string& body, int code): body(body),  code(code), timeout(false){};
-    RequestException(bool timeout): code(0), timeout(timeout){};
+    RequestException() : error_type(UNKOWN) {} 
+    RequestException(ErrorType error_type) : error_type(error_type){}
     
+
+
     //destructeur pour faire plaisir a gcc
     ~RequestException() throw(){}
 };
 
+
+struct NavitiaResponse{
+    int code;
+    std::string body;
+    std::string content_type;
+
+    NavitiaResponse();
+    NavitiaResponse(int code);
+    NavitiaResponse(const std::string& body, int code);
+
+    bool loading() const;
+};
 
 class Navitia {
     public:
@@ -55,7 +72,7 @@ class Navitia {
 
         Navitia(const Navitia& nav) : url(nav.url), unused_thread(nav.unused_thread), last_request_at(0), current_thread(0), nb_errors(0), last_errors_at(0), enable(true), reactivate_at(0), next_decrement(0){}
 
-        std::pair<int, std::string> query(const std::string& request);
+        NavitiaResponse query(const std::string& request);
         
         /// la comparaison s'effectue uniquement sur l'url
         bool operator==(const Navitia& other){
@@ -71,3 +88,6 @@ class Navitia {
         void reactivate();
         void decrement_error();
 };
+
+
+}}

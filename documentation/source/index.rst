@@ -14,8 +14,8 @@ Table des matières :
 
    introduction
    pre_requis
-   archi_fonctionnelle
    implem_type
-   spec_techniques
+   hub_navitia
    dev
+   
 

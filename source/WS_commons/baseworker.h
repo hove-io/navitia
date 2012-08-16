@@ -70,6 +70,19 @@ namespace webservice
         std::map<std::string, ApiMetadata> api_metadata;
     
     public:
+
+        /**
+         * method appelé juste avant l'appel de l'api séléctionné
+         * il faut surcharger cette methode dans le worker pour ajouter des traitements
+         */
+        virtual void pre_compute(webservice::RequestData&, Data& ){}
+        /**
+         * method appelé juste aprés l'appel de l'api séléctionné
+         * il faut surcharger cette methode dans le worker pour ajouter des traitements
+         */
+        virtual void post_compute(webservice::RequestData&, webservice::ResponseData&){}
+
+
         /** Fonction appelée lorsqu'une requête appelle
       *
       * Cette fonction dispatche ensuite à la bonne en fonction de l'appel
@@ -82,6 +95,7 @@ namespace webservice
             decode(raw_params);
             decode(request.data);
             std::vector<std::string> tokens;
+
             boost::algorithm::split(tokens, raw_params, boost::algorithm::is_any_of("&"));
             BOOST_FOREACH(std::string token, tokens) {
                 std::vector<std::string> elts;
@@ -119,10 +133,13 @@ namespace webservice
             }else{
                 
                 api_metadata[api].parse_parameters(request);
+                api_metadata[api].check_manadatory_parameters(request);
 
                 boost::posix_time::ptime start(boost::posix_time::microsec_clock::local_time());
+                pre_compute(request, d);
                 ResponseData resp = apis[api](request, d);
                 resp.api = api;
+                post_compute(request, resp);
                 //@TODO not threadsafe
                 int duration = (boost::posix_time::microsec_clock::local_time() - start).total_milliseconds();
                 static_data().means[api](duration);
@@ -315,14 +332,18 @@ namespace webservice
                 query.path = request.substr(0, pos);
                 query.raw_params = request.substr(pos+1);
             }
-            auto response = operator()(query, d);
+            auto response = dispatch(query, d);
             std::string json_resp;
-            try{
-                auto pb = create_pb(response.api);
-                pb->ParseFromString(response.response.str());
-                json_resp = pb2json(pb.get());
-                result << "Taille protobuf : " << (response.response.str().size()/1024) << "ko, taille json : " << json_resp.size()/1024 <<  "ko" << std::endl;
-            } catch(...){
+            if(response.content_type == "application/octet-stream"){
+                try{
+                    auto pb = create_pb();
+                    pb->ParseFromIstream(&response.response);
+                    json_resp = pb2json(pb.get());
+                    result << "Taille protobuf : " << (response.response.str().size()/1024) << "ko, taille json : " << json_resp.size()/1024 <<  "ko" << std::endl;
+                } catch(...){
+                    json_resp = response.response.str();
+                }
+            }else{
                 json_resp = response.response.str();
             }
 

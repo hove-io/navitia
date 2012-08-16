@@ -98,9 +98,20 @@ html_theme = 'default'
 # documentation.
 html_theme_options = {
 #        'sidebarbgcolor' : '#ff6600',
+#        'sidebartextcolor' : '#ffffff',
 #        'relbarbgcolor' : '#ff6600',
 #        'sidebarlinkcolor' : '#FFBB99',
-        'headtextcolor': '#ff6600'
+#        'headtextcolor': '#ff6600'
+
+# Si la charte Canal TP reste orange, on peut mettre ça:
+        'sidebarbgcolor' : '#ffEEDD',
+        'sidebartextcolor' : '#BB4400',
+        'sidebarlinkcolor' : '#DD5500',
+        'relbarbgcolor' : '#ff6600',
+        'headbgcolor': '#ffEEDD',
+        'headtextcolor' : '#994400',
+        'linkcolor' : '#994400',
+        'visitedlinkcolor' : '#994400'
         }
 
 # Add any paths that contain custom themes here, relative to this directory.

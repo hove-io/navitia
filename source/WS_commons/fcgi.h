@@ -1,5 +1,5 @@
 #pragma once
-#include <configuration.h>
+#include "utils/configuration.h"
 #include <fcgiapp.h>
 namespace webservice {typedef FCGX_Request RequestHandle; /**< Handle de la requête*/}
 
@@ -84,8 +84,7 @@ namespace webservice {
     }
 
     template<class Data, class Worker>
-    void run_cli(int argc, char** argv){
-        Data d;
+    int run_cli(int argc, char** argv, Data & d){
         Worker w(d);       
 
         if(argc == 1) {
@@ -106,8 +105,8 @@ namespace webservice {
                 {
                     if( strcmp(line_read, "exit") == 0 || strcmp(line_read, "quit") == 0)
                     {
-                        std::cout << "\n Bye! See you soon!" << std::endl;
-                        exit(0);
+                        std::cout << "\n Bye! Have a nice trip! À la mode de Caen ! :)" << std::endl;
+                        return 0;
                     }
                     add_history (line_read);
                     std::cout << w.run_query(line_read, d);
@@ -117,9 +116,11 @@ namespace webservice {
         }
         else if (argc == 2){
             std::cout << w.run_query(argv[1], d);
+            return 0;
         }
         else {
             std::cout << "Il faut exactement zéro ou un paramètre" << std::endl;
+            return 1;
         }
     }
 }
@@ -132,7 +133,7 @@ namespace webservice {
     char buf[256];\
     if(getcwd(buf, 256)) conf->set_string("path",std::string(buf) + "/"); else conf->set_string("path", "unknown");\
     webservice::ThreadPool<Data, Worker> tp;\
-    if(!webservice::run_fcgi()) webservice::run_cli<Data, Worker>(argc, argv);\
+    if(!webservice::run_fcgi()) webservice::run_cli<Data, Worker>(argc, argv, tp.get_data());\
     tp.stop();\
     return 0;\
 }

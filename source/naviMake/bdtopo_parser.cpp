@@ -27,7 +27,7 @@ void BDTopoParser::load_city(navimake::Data& data){
     size_t name = cols["NOM"];
     size_t insee = cols["CODE_INSEE"];
     
-    for(reader.next(); !reader.eof() ;row = reader.next()){
+    for(row = reader.next(); !reader.eof() ;row = reader.next()){
         if(row.size() < 2)
             continue;
         navimake::types::City* city = new navimake::types::City();
@@ -67,7 +67,7 @@ void BDTopoParser::load_streetnetwork(ns::StreetNetwork & street_network){
 
     std::unordered_map<std::string, vertex_t> vertex_map;
     std::unordered_map<std::string, Way> way_map;
-    for(reader.next(); !reader.eof() ;row = reader.next()){
+    for(row = reader.next(); !reader.eof() ;row = reader.next()){
         vertex_t source, target;
 
         auto it = vertex_map.find(row[x1] + row[y1]);
@@ -90,11 +90,11 @@ void BDTopoParser::load_streetnetwork(ns::StreetNetwork & street_network){
         if(it == vertex_map.end()){
             Vertex v;
             try{
-                v.coord = navitia::type::GeographicalCoord(boost::lexical_cast<double>(row[x1]),
-                                                           boost::lexical_cast<double>(row[y1]),
+                v.coord = navitia::type::GeographicalCoord(boost::lexical_cast<double>(row[x2]),
+                                                           boost::lexical_cast<double>(row[y2]),
                                                            proj_lambert2e);
             } catch(...){
-                std::cout << "coord : " << row[x1] << ";" << row[y1] << std::endl;
+                std::cout << "coord : " << row[x2] << ";" << row[y2] << std::endl;
             }
             target = vertex_map[row[x2] + row[y2]] = boost::add_vertex(v, street_network.graph);
         }

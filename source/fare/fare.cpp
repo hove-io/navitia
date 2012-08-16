@@ -72,6 +72,10 @@ State parse_state(const std::string & state_str){
             if(state.network != "") throw invalid_key();
             state.network = cond.value;
         }
+        else if(cond.key == "ticket"){
+            if(state.ticket != "") throw invalid_key();
+            state.ticket = cond.value;
+        }
         else{
             throw invalid_key();
         }
@@ -207,17 +211,27 @@ Label next_label(Label label, Ticket ticket, const SectionKey & section){
             label.start_time = section.start_time;
             label.stop_area = section.start_stop_area;
         }
+        if(label.tickets.size() == 0)
+            throw("Problème interne");
         label.tickets.back().sections.push_back(section);
     }
     label.current_type = ticket.type;
     return label;
 }
 
-template<class T>
-bool valid(const State & state, T t){
-    if((state.mode != "" && !boost::iequals(state.mode, t.mode)) ||
-       (state.network != "" && !boost::iequals(state.network, t.network)) ||
-       (state.line != "" && !boost::iequals(state.line, t.line)) )
+bool valid(const State & state, SectionKey section){
+    if((state.mode != "" && !boost::iequals(state.mode, section.mode)) ||
+       (state.network != "" && !boost::iequals(state.network, section.network)) ||
+       (state.line != "" && !boost::iequals(state.line, section.line)) )
+        return false;
+    return true;
+}
+
+bool valid(const State & state, Label label){
+    if((state.mode != "" && !boost::iequals(state.mode, label.mode)) ||
+       (state.network != "" && !boost::iequals(state.network, label.network)) ||
+       (state.line != "" && !boost::iequals(state.line, label.line))  ||
+       (state.ticket != "" && !boost::iequals(state.ticket, label.tickets.back().caption)) )
         return false;
     return true;
 }
@@ -320,7 +334,7 @@ std::vector<Ticket> Fare::compute(const std::vector<std::string> & section_keys)
      for(row=reader.next();  !reader.eof(); row = reader.next()) {
          // La structure du csv est : clef;date_debut;date_fin;prix;libellé
          fare_map[row.at(0)].add(row.at(1), row.at(2),
-                              Ticket(row.at(4), boost::lexical_cast<int>(row.at(3)), row.at(5)) );
+                              Ticket(row.at(0), row.at(4), boost::lexical_cast<int>(row.at(3)), row.at(5)) );
      }
  }
 
@@ -408,7 +422,7 @@ Ticket DateTicket::get_fare(boost::gregorian::date date){
             return dticket.second;
     }
 
-    throw std::string("Impossible de trouver le prix du billet pour la date donnée");
+    throw no_ticket();
 }
 
 DateTicket DateTicket::operator +(DateTicket & other){
@@ -445,6 +459,10 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
             int nb_changes = boost::lexical_cast<int>(cond.value);
             result &= compare(label.nb_changes, nb_changes, cond.comparaison);
         }
+        else if(cond.key == "ticket" && label.tickets.size() > 0) {
+            Logger() << label.tickets.back().key << " " << cond.value;
+            result &= compare(label.tickets.back().key, cond.value, cond.comparaison);
+        }
     }
     BOOST_FOREACH(Condition cond, this->end_conditions)
     {
@@ -460,6 +478,32 @@ bool Transition::valid(const SectionKey & section, const Label & label) const
         }
     }
     return result;
+}
+
+void Fare::load_od(const std::string & filename){
+    CsvReader reader(filename);
+    std::vector<std::string> row;
+    reader.next(); //en-tête
+
+    int count = 0;
+    for(row=reader.next(); !reader.eof(); row = reader.next()) {
+        std::string start_saec = boost::algorithm::trim_copy(row[0]);
+        boost::algorithm::to_lower(start_saec);
+        std::string dest_saec = boost::algorithm::trim_copy(row[2]);
+        boost::algorithm::to_lower(dest_saec);
+
+
+        std::vector<std::string> price_keys;
+        std::string price_key = boost::algorithm::trim_copy(row[4]);
+        price_keys.push_back(price_key);
+
+
+        OD_key start = OD_key(OD_key::StopArea, start_saec);
+        OD_key dest = OD_key(OD_key::StopArea, dest_saec);
+        od_tickets[start][dest] = price_keys;
+        count++;
+    }
+    Logger() << "Nombre de tarifs OD : " << count;
 }
 
 void Fare::load_od_stif(const std::string & filename){

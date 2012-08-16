@@ -4,3 +4,7 @@ release
 Doc
 qtcreator-build
 ui_mainwindow.h
+documentation/build
+*.swp
+source/CMakeLists.txt.user
+tags

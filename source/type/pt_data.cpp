@@ -107,6 +107,16 @@ void PT_Data::build_first_letter(){
 
     this->stop_area_first_letter.build();
 
+    BOOST_FOREACH(StopPoint sp, this->stop_points){
+        if(sp.city_idx < this->cities.size())
+            this->stop_point_first_letter.add_string(sp.name + " " + cities[sp.city_idx].name, sp.idx);
+        else
+            this->stop_point_first_letter.add_string(sp.name, sp.idx);
+    }
+
+    this->stop_point_first_letter.build();
+
+
     BOOST_FOREACH(City city, cities){
         this->city_first_letter.add_string(city.name, city.idx);
     }
@@ -117,12 +127,17 @@ void PT_Data::build_proximity_list() {
     BOOST_FOREACH(City city, this->cities){
         this->city_proximity_list.add(city.coord, city.idx);
     }
+    this->city_proximity_list.build();
+
     BOOST_FOREACH(StopArea stop_area, this->stop_areas){
         this->stop_area_proximity_list.add(stop_area.coord, stop_area.idx);
     }
+    this->stop_area_proximity_list.build();
+
     BOOST_FOREACH(StopPoint stop_point, this->stop_points){
         this->stop_point_proximity_list.add(stop_point.coord, stop_point.idx);
     }
+    this->stop_point_proximity_list.build();
 }
 
 void PT_Data::build_external_code() {

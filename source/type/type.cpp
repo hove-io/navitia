@@ -11,6 +11,7 @@ namespace navitia { namespace type {
 
 bool ValidityPattern::is_valid(int duration){
     if(duration < 0){
+
         std::cerr << "La date est avant le début de période(" << beginning_date << ")" << std::endl;
         return false;
     }
@@ -93,7 +94,9 @@ GeographicalCoord GeographicalCoord::convert_to(const Projection& projection, co
     return GeographicalCoord(x, y);
 }
 
-double GeographicalCoord::distance_to(const GeographicalCoord &other){
+double GeographicalCoord::distance_to(const GeographicalCoord &other) const{
+    if(!degrees)
+        return ::sqrt(::pow(x - other.x, 2)+ ::pow(y-other.y, 2));
     static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
     double longitudeArc = (this->x - other.x) * DEG_TO_RAD;
     double latitudeArc  = (this->y - other.y) * DEG_TO_RAD;
@@ -103,6 +106,15 @@ double GeographicalCoord::distance_to(const GeographicalCoord &other){
     lontitudeH *= lontitudeH;
     double tmp = cos(this->y*DEG_TO_RAD) * cos(other.y*DEG_TO_RAD);
     return EARTH_RADIUS_IN_METERS * 2.0 * asin(sqrt(latitudeH + tmp*lontitudeH));
+}
+
+bool operator==(const GeographicalCoord & a, const GeographicalCoord & b){
+    return a.degrees == b.degrees && a.distance_to(b) < 1e-3; // soit 1mm
+}
+
+std::ostream & operator<<(std::ostream & os, const GeographicalCoord & coord){
+    os << coord.x << ";" << coord.y;
+    return os;
 }
 
 static_data * static_data::instance = 0;
@@ -128,7 +140,8 @@ static_data * static_data::get() {
                 (eDepartment, "department")
                 (eCompany, "company")
                 (eVehicle, "vehicle")
-                (eCountry, "country");
+                (eCountry, "country")
+                (eWay, "way");
     }
     return instance;
 }

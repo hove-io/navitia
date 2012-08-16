@@ -24,8 +24,15 @@ La qualité des données qui alimentent le système impacte l’ensemble de la c
 Interfaces
 **********
 
-Les modules présentés dans le schéma du chapitre 'Architecture fonctionnelle <archi_fonctionnelle.html>'_ s’articulent 
-autour d’interfaces techniques standardisées http/XML (tous les modules sont des web-services REST). 
+Les modules présentés dans le schéma du chapitre 'Architecture logicielle <introduction.html>'_ s’articulent 
+autour d’interfaces techniques standardisées 
+
+* http/XML
+* http/JSON
+* http/ProtocolBuffer
+
+Tous les modules sont des web-services REST.
+
 Sur ces standards, la suite NAViTiA définie son propre langage d’échange afin d’échanger les informations entre les différents modules et avec 
 les applications tierces. Ce langage d’échange est nommé "interface d’échange NAViTiA".
 
@@ -47,7 +54,7 @@ les éventuelles nouvelles fonctionnalités proposées par toute nouvelle versio
 restent invisibles tant que la version d’interface ne permet pas leur utilisation. Ainsi :
 
 .. warning::
-   La mise en place des informations perturbations dans la chaine NAViTiA nécessite une Version d’interface 1.11 au minimum sur les API concernées
+   La mise en place des informations perturbations dans la chaine NAViTiA nécessite une Version d’interface 2 au minimum sur les API concernées
 
 Ouverture de compte
 *******************
@@ -58,9 +65,9 @@ Le projet type de mise en place d’une solution technique NAViTiA (hors mise en
 
   * Définition des formats d’alimentation :
   
-    * Utilisation du format d’échange standard NAViTiA.
-    * Utilisation du format d’échange standard TRIDENT CHOUETTE.
+    * Utilisation du format d’échange standard Neptune (TRIDENT).
     * Utilisation du format d’échange GoogleTransit.
+    * Utilisation du format d’échange standard NAViTiA.
     * Etude d’un connecteur spécifique si besoin.
 
   * Choix de la couverture géographique des adresses (filaire de voirie)
@@ -93,4 +100,3 @@ Si l’application média n’est pas hébergée par Canal TP, il faut vérifier
 
 * L’application qui interroge le hub NAViTiA doit avoir accès à tout le domaine http://\*.navitia.com
 * La mise en œuvre d’une intégration spécifique du site de fabrication manuelle des informations perturbées (module Alerte-trafic/site de création des messages) nécessite un accès à NAViTiA-SIV.
-

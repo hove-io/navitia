@@ -7,7 +7,7 @@ using namespace navimake::types;
 
 bool ValidityPattern::is_valid(int duration){
     if(duration < 0){
-        std::cerr << "La date est avant le début de période" << std::endl;
+        std::cerr << "La date est avant le début de période " << beginning_date << " " << duration <<  std::endl;
         return false;
     }
     else if(duration > 366){
@@ -81,7 +81,7 @@ bool Line::operator<(const Line& other) const {
 
 bool Route::operator<(const Route& other) const {
     if(this->line == other.line){
-        return this->name < other.name;
+        return this->external_code <  other.external_code;
     }else{
         return *(this->line) < *(other.line);
     }
@@ -93,6 +93,7 @@ bool RoutePoint::operator<(const RoutePoint& other) const {
     }else{
         return *(this->route) < *(other.route);
     }
+
 }
 
 
@@ -139,7 +140,18 @@ bool ValidityPattern::operator <(const ValidityPattern &other) const {
 bool Connection::operator<(const Connection& other) const{
     return *(this->departure_stop_point) < *(other.departure_stop_point);
 }
+bool StopTime::operator<(const StopTime& other) const {
 
+    return this->route_point->route < other.route_point->route
+            || ((this->route_point->route == other.route_point->route) && (this->vehicle_journey< other.vehicle_journey
+            || ((this->vehicle_journey == other.vehicle_journey) && (this->order< other.order))));
+}
+
+
+
+bool Department::operator <(const Department & other) const {
+    return this->district < other.district || ((this->district == other.district) && (this->name < other.name));
+}
 
 navitia::type::StopArea StopArea::Transformer::operator()(const StopArea& stop_area){
     navitia::type::StopArea sa;
@@ -192,6 +204,7 @@ nt::StopPoint StopPoint::Transformer::operator()(const StopPoint& stop_point){
     
     if(stop_point.stop_area != NULL)
         nt_stop_point.stop_area_idx = stop_point.stop_area->idx;
+
 
     if(stop_point.mode != NULL)
         nt_stop_point.mode_idx = stop_point.mode->idx;
@@ -246,9 +259,36 @@ nt::City City::Transformer::operator()(const City& city){
     nt_city.main_city = city.main_city;
     if(city.department != NULL)
         nt_city.department_idx = city.department->idx;
-
+    else
+        nt_city.department_idx = nt::invalid_idx;
     
     return nt_city;
+}
+
+nt::Department Department::Transformer::operator()(const Department& department){
+    navitia::type::Department nt_department;
+    nt_department.id = department.id;
+    nt_department.idx = department.idx;
+    nt_department.external_code = department.external_code;
+    nt_department.name = department.name;
+
+    if(department.district != NULL)
+        nt_department.district_idx = department.district->idx;
+    else
+        nt_department.district_idx = nt::invalid_idx;
+
+    return nt_department;
+}
+
+
+nt::District District::Transformer::operator()(const District& district){
+    navitia::type::District nt_district;
+    nt_district.id = district.id;
+    nt_district.idx = district.idx;
+    nt_district.external_code = district.external_code;
+    nt_district.name = district.name;
+
+    return nt_district;
 }
 
 nt::Network Network::Transformer::operator()(const Network& network){
@@ -349,6 +389,7 @@ nt::VehicleJourney VehicleJourney::Transformer::operator()(const VehicleJourney&
 
     if(vj.validity_pattern != NULL)
         nt_vj.validity_pattern_idx = vj.validity_pattern->idx;
+
     return nt_vj;
 }
 nt::ValidityPattern ValidityPattern::Transformer::operator()(const ValidityPattern& vp){

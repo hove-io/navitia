@@ -5,6 +5,7 @@
 #include <boost/test/unit_test.hpp>
 #include <string>
 #include "config.h"
+#include "naviMake/build_helper.h"
 
 const std::string gtfs_path = "/navimake/gtfs";
 
@@ -15,13 +16,13 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     parser.fill(data);
 
     BOOST_CHECK_EQUAL(data.lines.size(), 2);
-    BOOST_CHECK_EQUAL(data.routes.size(), 8);
+    BOOST_CHECK_EQUAL(data.routes.size(), 3);
     BOOST_CHECK_EQUAL(data.stop_areas.size(), 6);
     BOOST_CHECK_EQUAL(data.stop_points.size(), 11);
     BOOST_CHECK_EQUAL(data.vehicle_journeys.size(), 8);
     BOOST_CHECK_EQUAL(data.stops.size(), 32);
     BOOST_CHECK_EQUAL(data.connections.size(), 0);
-    BOOST_CHECK_EQUAL(data.route_points.size(), 8);
+    BOOST_CHECK_EQUAL(data.route_points.size(), 12);
 
 
     navimake::types::Line* line = data.lines[0];

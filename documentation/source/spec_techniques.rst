@@ -1,9 +1,10 @@
-Spécifications techniques
-=========================
+Spécifications générales
+========================
 
 .. toctree::
    :maxdepth: 2
-
+   
+   modules/introduction
    modules/line_schedule
    modules/event
    modules/fare
@@ -12,9 +13,11 @@ Spécifications techniques
    modules/line_schedule
    modules/metadata
    modules/phonetic
-   modules/planer
-   modules/planer2
+   modules/planner
+   modules/planner2
    modules/ptref
    modules/streetnetwork
    modules/vptranslate
+
+   modules/gateway
  
