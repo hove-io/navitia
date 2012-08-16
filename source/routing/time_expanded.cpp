@@ -394,7 +394,7 @@ Path TimeExpanded::makePath(idx_t departure_idx, idx_t destination_idx) {
 
     while(predecessors[destination_idx] != destination_idx){
         if(destination_idx < tc_offset && destination_idx >= ta_offset){
-            PathItem item(get_saidx(destination_idx), distances[destination_idx].hour, distances[destination_idx].date,
+            PathItem item(get_saidx(destination_idx), distances[destination_idx], distances[destination_idx],
                           data.routes.at(data.vehicle_journeys.at(data.stop_times.at(get_idx(destination_idx)).vehicle_journey_idx).route_idx).line_idx);
             result.items.push_back(item);
         }
