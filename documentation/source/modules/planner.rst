@@ -22,7 +22,7 @@ Il est :
   NAViTiA détermine le meilleur trajet possible compte tenu des paramètres suivants (liste non exhaustive) 
 
 L'algorithme sur lequel il repose est nommé Ariane. 
-Celui-ci calcul le meilleur trajet possible compte tenu des données présentés dans les chapitres suivants
+Celui-ci calcule le meilleur trajet possible compte tenu des données présentés dans les chapitres suivants.
 
 Points de départ et de destination
 **********************************
@@ -667,16 +667,25 @@ Désactivation d'objet
 ---------------------
 
 Il est possible de désactiver l'utilisation de certains objets dans l'algorithme afin de ne pas les proposer dans les solutions.
-L'exemple le plus simple est le choix des modes pour le voyageur (pa d'utilisation des bus dans Paris par exemple)
+L'exemple le plus simple est le choix des modes pour le voyageur (pas d'utilisation des bus dans Paris par exemple)
 
 PLusieurs types d'objets peuvent être désactivés simultanéments. Les différents types d'objets désactivables sont les suivants:
 
 * Désactivation de *n* modes
+* Désactivation de *n* réseaux
+* Désactivation de *n* groupes de lignes
 * Désactivation de *n* ligne 
 * Désactivation de *n* parcours
 * Désactivation de *n* circulation
 * Désactivation de *n* zone d'arrêt
 * Désactivation de *n* point d'arrêt
+
+La gestion des bus scolaire est particulière. En effet, il est possible de lancer un calcul d'itinéraire qui:
+
+* Tient compte de l'ensemble des véhicules (scolaire ou non scolaire)
+* Ne tient compte que des véhicules non scolaires
+* Ne tient compte que des véhicules scolaires (pour forcer une recherche d'itinéraire avec une "carte scolaire" par exemple)
+
 
 Limitation du nombre de correspondance
 --------------------------------------
@@ -687,5 +696,8 @@ Ainsi:
 * si n=0: force la recherche de trajet en direct
 * si n=1 ne proposera pas de trajet en plus d'1 correspondance, même si certains itinéraires en 2 correspondances sont nettement plus rapide
 * ...
+
+Lignes TAD (transport à la demande ou transport flexible)
+*********************************************************
 
 
