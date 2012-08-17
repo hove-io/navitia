@@ -68,6 +68,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     type::PT_Data d = data.pt_data;
 
     auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0);
+    std::cout << res << std::endl;
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 4);
     BOOST_CHECK_EQUAL(res.items[0].said, 0);
@@ -80,7 +81,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
 
 BOOST_AUTO_TEST_CASE(passe_minuit_2){
     navimake::builder b("20120614");
-    b.vj("A")("stop1", 23*3600)("stop2", 24*3600 + 5*60);
+    b.vj("A")("stop1", 23*3600)("stop2", 23*3600 + 59*60);
     b.vj("B")("stop4", 23*3600 + 10*60)("stop2", 10*60)("stop3", 20*60);
     type::Data data;
     data.pt_data =  b.build();
@@ -89,6 +90,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2){
     type::PT_Data d = data.pt_data;
 
     auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0);
+
+    std::cout << res << std::endl;
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 4);
     BOOST_CHECK_EQUAL(res.items[0].said, 0);
@@ -173,8 +176,8 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_trcky){
     type::PT_Data d = data.pt_data;
 
 
-
     auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7900, 0);
+
     BOOST_REQUIRE_EQUAL(res.items.size(), 4);
     BOOST_CHECK_EQUAL(res.items[3].arrival.hour, 9200);
 }
@@ -214,7 +217,6 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
 
 
     auto res = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 7900, 0);
-    std::cout << res << std::endl;
     BOOST_REQUIRE_EQUAL(res.items.size(), 5);
     BOOST_CHECK_EQUAL(res.items[4].said, 3);
     BOOST_CHECK_EQUAL(res.items[4].arrival.hour, 2*3600+20);

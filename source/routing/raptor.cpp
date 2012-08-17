@@ -1,7 +1,7 @@
 #include "raptor.h"
 namespace navitia { namespace routing { namespace raptor {
 
-communRAPTOR::communRAPTOR(navitia::type::Data &data) : data(data)
+communRAPTOR::communRAPTOR(navitia::type::Data &data) : data(data), cp(data)
 {
     //Construction de la liste des marche à pied
     BOOST_FOREACH(navitia::type::Connection connection, data.pt_data.connections) {
@@ -9,85 +9,62 @@ communRAPTOR::communRAPTOR(navitia::type::Data &data) : data(data)
     }
 }
 
-std::pair<unsigned int, bool> communRAPTOR::earliest_trip(unsigned int route, unsigned int order, map_int_pint_t &best, unsigned int count){
+std::pair<navitia::type::idx_t, bool> communRAPTOR::earliest_trip(unsigned int route, unsigned int order, map_int_pint_t &best, unsigned int count, navitia::type::idx_t vjidx){
     const unsigned int stop_area = data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.routes.at(route).route_point_list.at(order)).stop_point_idx).stop_area_idx;
-    if(best.count(stop_area) == 0)
-        return std::pair<unsigned int, bool>(-1, false);
 
     if(count > 1) {
         if((best[stop_area].dt + 2*60).date > best[stop_area].dt.date)
-            return std::make_pair(earliest_trip(route, order, best[stop_area].dt + 2*60).first, true);
+            return std::pair<navitia::type::idx_t, bool>(earliest_trip(route, order, best[stop_area].dt + 2*60, vjidx).first, true);
         else {
-            return earliest_trip(route, order, best[stop_area].dt + 2*60);
+            return earliest_trip(route, order, best[stop_area].dt + 2*60, vjidx);
         }
     } else
-        return earliest_trip(route, order, best[stop_area].dt);
+        return earliest_trip(route, order, best[stop_area].dt, vjidx);
 }
 
 
-std::pair<unsigned int, bool> communRAPTOR::earliest_trip(unsigned int route, unsigned int order, map_retour_t &retour, unsigned int count){
-    const unsigned int stop_area = data.pt_data.stop_points.at(data.pt_data.route_points.at(data.pt_data.routes.at(route).route_point_list.at(order)).stop_point_idx).stop_area_idx;
-    if(retour[count - 1].count(stop_area) == 0)
-        return std::pair<unsigned int, bool>(-1, false);
-
+std::pair<navitia::type::idx_t, bool> communRAPTOR::earliest_trip(unsigned int route, unsigned int order, const type_retour &retour, unsigned int count, navitia::type::idx_t vjidx){
     int temps_correspondance = 0;
-    if(count > 1 && retour[count -1][stop_area].stid != navitia::type::invalid_idx) {
-        if(data.pt_data.route_points.at(data.pt_data.stop_times.at(retour[count -1][stop_area].stid).route_point_idx).route_idx != route) {
+    if(count > 1 && retour.stid != navitia::type::invalid_idx) {
+        if(data.pt_data.route_points[data.pt_data.stop_times[retour.stid].route_point_idx].route_idx != route) {
             temps_correspondance = 2 * 60;
         }
     }
+    DateTime dtTemp = retour.dt + temps_correspondance;
 
     if(count > 1) {
-        if((retour[count-1][stop_area].dt + temps_correspondance).date > retour[count-1][stop_area].dt.date)
-            return std::make_pair(earliest_trip(route, order, retour[count-1][stop_area].dt + temps_correspondance).first, true);
+        if(dtTemp.date > retour.dt.date)
+            return std::pair<navitia::type::idx_t, bool>(earliest_trip(route, order, dtTemp, vjidx).first, true);
         else
-            return earliest_trip(route, order, retour[count-1][stop_area].dt + temps_correspondance);
+            return earliest_trip(route, order, dtTemp, vjidx);
     } else
-        return earliest_trip(route, order, retour[count-1][stop_area].dt);
+        return earliest_trip(route, order, retour.dt, vjidx);
 }
 
 
-std::pair<unsigned int, bool> communRAPTOR::earliest_trip(unsigned int route, unsigned int order, DateTime dt){
-
-    bool pam = false;
-    if(dt.hour > 86400) {
-        dt.hour = dt.hour %86400;
-        ++dt.date;
-        pam = true;
-    }
-    int rp_id = data.pt_data.routes.at(route).route_point_list.at(order);
-
-    if(rp_id == -1) {
-        std::cout << "Erreur ! " << std::endl;
-        exit(1);
-        return std::pair<unsigned int, bool>(-1, false);
-    }
+std::pair<navitia::type::idx_t, bool>  communRAPTOR::earliest_trip(unsigned int route, unsigned int order, DateTime dt, navitia::type::idx_t vjidx){
+    const auto & vjlist = data.pt_data.route_points[data.pt_data.routes[route].route_point_list[order]].vehicle_journey_list;
+    cp.order = order;
+    const auto lowerb = std::lower_bound(vjlist.begin(), vjlist.end(), dt.hour, cp);
 
 
+    for(auto it = lowerb;  it != vjlist.end(); ++it) {
+        const auto & vj = data.pt_data.vehicle_journeys[*it];
 
-    for(auto it = std::lower_bound(data.pt_data.route_points[rp_id].vehicle_journey_list.begin(),
-                                  data.pt_data.route_points[rp_id].vehicle_journey_list.end(),
-                                  dt.hour, compare_rp(order, data));
-        it != data.pt_data.route_points[rp_id].vehicle_journey_list.end(); ++it) {
-        navitia::type::ValidityPattern vp = data.pt_data.validity_patterns[data.pt_data.vehicle_journeys[*it].validity_pattern_idx];
-
-        if(vp.check(dt.date)) {
-            return std::pair<unsigned int, bool>(*it, pam);
+        if(vj.idx == vjidx || data.pt_data.validity_patterns[vj.validity_pattern_idx].check(dt.date)) {
+            return std::pair<navitia::type::idx_t, bool>(*it, false);
         }
     }
     ++dt.date;
 
 
-    for(auto  it = std::lower_bound(data.pt_data.route_points[rp_id].vehicle_journey_list.begin(),
-                                    data.pt_data.route_points[rp_id].vehicle_journey_list.end(),
-                                    0, compare_rp(order, data));
-        it != data.pt_data.route_points[rp_id].vehicle_journey_list.end(); ++it) {
-        navitia::type::ValidityPattern vp = data.pt_data.validity_patterns[data.pt_data.vehicle_journeys[*it].validity_pattern_idx];
-        if(vp.check(dt.date)) {
-            return std::pair<unsigned int, bool>(*it, true);
+    for(auto  it = vjlist.begin(); it != lowerb; ++it) {
+
+        if(data.pt_data.validity_patterns[data.pt_data.vehicle_journeys[*it].validity_pattern_idx].check(dt.date)) {
+            return std::pair<navitia::type::idx_t, bool>(*it, true);
         }
     }
-    return std::pair<unsigned int, bool>(-1, false);
+    return std::pair<navitia::type::idx_t, bool>(navitia::type::invalid_idx, false);
 }
 
 
@@ -129,13 +106,13 @@ std::pair<unsigned int, bool> communRAPTOR::tardiest_trip(unsigned int route, un
         pam = true;    BOOST_FOREACH(navitia::type::Route route, data.pt_data.routes) {
             if(route.line_idx == 9807) {
                 BOOST_FOREACH(unsigned int rpidx, route.route_point_list) {
-    //                if(data.pt_data.stop_points.at(data.pt_data.route_points.at(rpidx).stop_point_idx).stop_area_idx == 6344){
-                        BOOST_FOREACH(unsigned int vjidx, data.pt_data.route_points.at(rpidx).vehicle_journey_list) {
-                            std::cout <<data.pt_data.stop_points.at(data.pt_data.route_points.at(rpidx).stop_point_idx).stop_area_idx
-                                     << " " << data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vjidx).stop_time_list.at(data.pt_data.route_points.at(rpidx).order)).departure_time
-                                     << " " << data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vjidx).stop_time_list.at(data.pt_data.route_points.at(rpidx).order)).arrival_time  << std::endl;
-                        }
-    //                }
+                    //                if(data.pt_data.stop_points.at(data.pt_data.route_points.at(rpidx).stop_point_idx).stop_area_idx == 6344){
+                    BOOST_FOREACH(unsigned int vjidx, data.pt_data.route_points.at(rpidx).vehicle_journey_list) {
+                        std::cout <<data.pt_data.stop_points.at(data.pt_data.route_points.at(rpidx).stop_point_idx).stop_area_idx
+                                 << " " << data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vjidx).stop_time_list.at(data.pt_data.route_points.at(rpidx).order)).departure_time
+                                 << " " << data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vjidx).stop_time_list.at(data.pt_data.route_points.at(rpidx).order)).arrival_time  << std::endl;
+                    }
+                    //                }
                 }
             }
         }
@@ -215,7 +192,12 @@ int communRAPTOR::get_sa_rp(unsigned int order, int route) {
     return data.pt_data.stop_points[data.pt_data.route_points[data.pt_data.routes[route].route_point_list[order]].stop_point_idx].stop_area_idx;
 }
 
-
+int communRAPTOR::get_temps_depart(navitia::type::idx_t t, int order) {
+    if(t == navitia::type::invalid_idx)
+        return std::numeric_limits<int>::max();
+    else
+        return data.pt_data.stop_times[data.pt_data.vehicle_journeys[t].stop_time_list[order]].departure_time;
+}
 
 
 
@@ -237,22 +219,21 @@ map_int_int_t communRAPTOR::make_queue(std::vector<unsigned int> stops) {
 }
 
 
-map_int_pairint_t communRAPTOR::make_queue2(std::vector<unsigned int> stops) {
-    map_int_pairint_t retour;
-    map_int_int_t::iterator it;
+queue_t communRAPTOR::make_queue2(std::vector<unsigned int> stops) {
+    queue_t retour;
+
     BOOST_FOREACH(unsigned int said, stops) {
         BOOST_FOREACH(unsigned int spid, data.pt_data.stop_areas[said].stop_point_list) {
             BOOST_FOREACH(unsigned int rp, data.pt_data.stop_points[spid].route_point_list) {
-                if(retour.count(data.pt_data.route_points[rp].route_idx) == 0 ||
-                        data.pt_data.route_points[rp].order < retour[data.pt_data.route_points[rp].route_idx].second)
-                    retour[data.pt_data.route_points[rp].route_idx] = pair_int(said, data.pt_data.route_points[rp].order);
+                if(retour.find(data.pt_data.route_points[rp].route_idx) == retour.end() ||
+                        data.pt_data.route_points[rp].order < retour[data.pt_data.route_points[rp].route_idx])
+                    retour[data.pt_data.route_points[rp].route_idx] = data.pt_data.route_points[rp].order;
             }
         }
     }
 
     return retour;
 }
-
 
 
 
@@ -323,146 +304,89 @@ std::vector<Path> monoRAPTOR::compute_all(map_int_pint_t departs, map_int_pint_t
     return result;
 }
 
-void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count) {
-    map_int_pairint_t Q;
-
-    int et_temp ;
-
-    int t, stid, said;
-    unsigned int route, p;
-    bool pam;
-
+void RAPTOR::marcheapied(std::vector<unsigned int> & marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int count) {
     std::vector<unsigned int> marked_stop_copy;
     marked_stop_copy = marked_stop;
     BOOST_FOREACH(auto stop_area, marked_stop_copy) {
         BOOST_FOREACH(auto stop_p, data.pt_data.stop_areas.at(stop_area).stop_point_list) {
-            auto it_fp = foot_path.find(stop_p);
-            if(it_fp != foot_path.end()) {
-                BOOST_FOREACH(auto connection_idx, (*it_fp).second) {
-
-                    unsigned int saiddest = data.pt_data.stop_points.at(data.pt_data.connections[connection_idx].destination_stop_point_idx).stop_area_idx;
-                    if(best.find(saiddest) == best.end()) {
-                        best[saiddest] = type_retour(navitia::type::invalid_idx, stop_area, DateTime(retour[0][stop_area].dt + data.pt_data.connections[connection_idx].duration), connection);
-                        retour[0][saiddest] = type_retour(navitia::type::invalid_idx, stop_area, DateTime(retour[0][stop_area].dt + data.pt_data.connections[connection_idx].duration), connection);
-                    } else {
-                        if(best[saiddest].dt > DateTime(retour[0][stop_area].dt + data.pt_data.connections[connection_idx].duration)) {
-                            best[saiddest] = type_retour(navitia::type::invalid_idx, stop_area, DateTime(retour[0][stop_area].dt + data.pt_data.connections[connection_idx].duration), connection);
-                            retour[0][saiddest] = type_retour(navitia::type::invalid_idx, stop_area, DateTime(retour[0][stop_area].dt + data.pt_data.connections[connection_idx].duration), connection);
-                        }
-                    }
-                    b_dest.ajouter_best(saiddest, type_retour(navitia::type::invalid_idx, stop_area, DateTime(retour[0][stop_area].dt + data.pt_data.connections[connection_idx].duration), connection));
-
+            BOOST_FOREACH(auto connection_idx, foot_path[stop_p]) {
+                const unsigned int saiddest = data.pt_data.stop_points.at(data.pt_data.connections[connection_idx].destination_stop_point_idx).stop_area_idx;
+                const type_retour & retour_temp = retour[count][stop_area];
+                const DateTime dtTemp = retour_temp.dt + data.pt_data.connections[connection_idx].duration;
+                if(best[saiddest].dt > dtTemp) {
+                    const type_retour nRetour = type_retour(navitia::type::invalid_idx, stop_area, dtTemp, connection);
+                    best[saiddest] = nRetour;
+                    retour[count][saiddest] = nRetour;
+                    b_dest.ajouter_best(saiddest, nRetour);
                     marked_stop.push_back(saiddest);
-
                 }
             }
         }
     }
+}
 
-    while(((Q.size() > 0) /*& (count < 10)*/) || count == 1) {
+void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count) {
+    queue_t Q;
 
+
+    unsigned int t, said;
+    unsigned int route;
+
+    marcheapied(marked_stop, retour, best, b_dest, 0);
+
+    int nbboucle = 0;
+    while(Q.size() > 0 || count == 1) {
         Q = make_queue2(marked_stop);
         marked_stop.clear();
 
-        BOOST_FOREACH(map_int_pairint_t::value_type vq, Q) {
+        BOOST_FOREACH(queue_t::value_type vq, Q) {
             route = vq.first;
-            p = vq.second.first;
-            t = -1;
-            int temps_depart = retour[count - 1][p].dt.hour;
-            int working_date = retour[count - 1][p].dt.date;
-            int prev_temps = temps_depart;
-            stid = -1;
-            int embarquement = p;
+            t = navitia::type::invalid_idx;
+            DateTime workingDt;
+            int embarquement;
 
-
-
-
-            for(unsigned int i = vq.second.second; i < data.pt_data.routes[route].route_point_list.size(); ++i) {
+            for(unsigned int i = vq.second; i < data.pt_data.routes[route].route_point_list.size(); ++i) {
+                ++nbboucle;
                 said = get_sa_rp(i, route);
-                if(t != -1) {
-
-
-                    stid = data.pt_data.vehicle_journeys[t].stop_time_list[i];
-                    temps_depart = data.pt_data.stop_times[stid].departure_time%86400;
-
-                    //Passe minuit
-                    if(prev_temps > (data.pt_data.stop_times[stid].arrival_time%86400))
-                        ++working_date;
-
-
+                if(t != navitia::type::invalid_idx) {
+                    const navitia::type::idx_t stid = data.pt_data.vehicle_journeys[t].stop_time_list[i];
+                    workingDt.update(data.pt_data.stop_times[stid].arrival_time%86400);
                     //On stocke, et on marque pour explorer par la suite
-
-
-                    if(DateTime(working_date,data.pt_data.stop_times[stid].arrival_time%86400) < std::min(best[said].dt, b_dest.best_now.dt)) {
-
-                        retour[count][said]  = type_retour(stid, embarquement, DateTime(working_date, data.pt_data.stop_times[stid].arrival_time%86400));
-                        best[said] = type_retour(stid, DateTime(working_date, data.pt_data.stop_times[stid].arrival_time%86400));
-                        b_dest.ajouter_best(said, type_retour(stid, DateTime(working_date, data.pt_data.stop_times[stid].arrival_time%86400)));
-
-                        if(std::find(marked_stop.begin(), marked_stop.end(), said) == marked_stop.end()) {
-                            marked_stop.push_back(said);
-                        }
+                    if(workingDt < std::min(best[said].dt, b_dest.best_now.dt)) {
+                        const type_retour retour_temp = type_retour(stid, embarquement, workingDt);
+                        retour[count][said] = retour_temp;
+                        best[said]          = retour_temp;
+                        b_dest.ajouter_best(said, retour_temp);
+                        marked_stop.push_back(said);
                     }
                 }
 
-                //Si on peut arriver plus tôt à l'arrêt en passant par une autre route
-                if(retour[count-1].count(said) > 0)  {
-                    if(retour[count-1][said].dt <= DateTime(working_date, temps_depart)){
-
-                        std::tie(et_temp, pam) = earliest_trip(route, i, retour, count);
-                        if((et_temp >=0)/* && (et_temp != t)*/) {
-
-                            t = et_temp;
-                            working_date = retour[count-1][said].dt.date;
-                            stid = data.pt_data.vehicle_journeys[t].stop_time_list[i];
-
-                            embarquement = said;
-
-
-                            if(pam || (data.pt_data.stop_times.at(stid).arrival_time > 86400 && (temps_depart%86400)!=0))
-                                ++working_date;
+                //Si on peut arriver plus tôt à l'arrêt en passant par une autre rout
+                const type_retour & retour_temp = retour[count-1][said];
+                if(retour_temp.dt.date != std::numeric_limits<int>::max() &&
+                        (retour_temp.dt.date < workingDt.date ||
+                         (retour_temp.dt.date == workingDt.date && retour_temp.dt.hour <= get_temps_depart(t,i)))) {
+                    navitia::type::idx_t et_temp;
+                    bool pam;
+                    std::tie(et_temp, pam) = earliest_trip(route, i, retour_temp, count, t);
+                    if(et_temp != navitia::type::invalid_idx) {
+                        t = et_temp;
+                        workingDt = retour_temp.dt;
+                        embarquement = said;
+                        if(pam) {
+                            ++workingDt.date;
+                            workingDt.hour = data.pt_data.stop_times[data.pt_data.vehicle_journeys[t].stop_time_list[i]].departure_time % 86400;
                         }
-                    }
-                }
-                if(stid != -1)
-                    prev_temps = data.pt_data.stop_times[stid].arrival_time % 86400;
-            }
-        }
-
-
-        std::vector<unsigned int> marked_stop_copy;
-        marked_stop_copy = marked_stop;
-        BOOST_FOREACH(auto stop_area, marked_stop_copy) {
-            BOOST_FOREACH(auto stop_p, data.pt_data.stop_areas.at(stop_area).stop_point_list) {
-                auto it_fp = foot_path.find(stop_p);
-                if(it_fp != foot_path.end()) {
-                    BOOST_FOREACH(auto connection_idx, (*it_fp).second) {
-
-                        unsigned int saiddest = data.pt_data.stop_points.at(data.pt_data.connections[connection_idx].destination_stop_point_idx).stop_area_idx;
-
-                        if(best.count(saiddest) > 0)
-                            best[saiddest] = std::min(best[saiddest], type_retour(navitia::type::invalid_idx, stop_area, DateTime(retour[count][stop_area].dt + data.pt_data.connections[connection_idx].duration), connection));
-                        else
-                            best[saiddest] = type_retour(navitia::type::invalid_idx, stop_area, DateTime(retour[count][stop_area].dt + data.pt_data.connections[connection_idx].duration), connection);
-                        if(retour[count].count(saiddest) > 0)
-                            retour[count][saiddest] = std::min(retour[count][saiddest], type_retour(navitia::type::invalid_idx, stop_area, DateTime(retour[count][stop_area].dt + data.pt_data.connections[connection_idx].duration), connection));
-                        else
-                            retour[count][saiddest] = type_retour(navitia::type::invalid_idx, stop_area, DateTime(retour[count][stop_area].dt + data.pt_data.connections[connection_idx].duration), connection);
-                        b_dest.ajouter_best(saiddest, type_retour(navitia::type::invalid_idx, stop_area, DateTime(retour[count][stop_area].dt + data.pt_data.connections[connection_idx].duration), connection));
-                        marked_stop.push_back(saiddest);
-
                     }
                 }
             }
         }
-
-
+        marcheapied(marked_stop, retour, best, b_dest, count);
 
         ++count;
     }
 
-
-
+//    std::cout << "Nombre de tours de boucle : " << nbboucle << " Nombre de SA : " <<data.pt_data.stop_areas.size() << " count : "  << count << std::endl;
 }
 
 

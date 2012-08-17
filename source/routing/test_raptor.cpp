@@ -38,20 +38,20 @@ int main(int, char **) {
     ////    }plannerreverse?format=json&departure_lat=48.83192652572024&departure_lon=2.355914323083246&destination_lat=48.873944716692286&destination_lon=2.34836122413323&time=1000&date=20120511
     //    std::cout << "size : " << data.pt_data.route_points.at(10).vehicle_journey_list_arrival.size() << " "
     //              << data.pt_data.route_points.at(10).vehicle_journey_list.size()   << std::endl;
-//    routing::raptor::RAPTOR raptor(data);
-//    {
-//        Timer t("Calcul raptor");
-//        auto result = raptor.compute(12344, 51, 28800, 0);
-//        std::cout << result << std::endl;
-//        std::cout << makeItineraire(result);
+    routing::raptor::RAPTOR raptor(data);
+    {
+        Timer t("Calcul raptor");
+        auto result = raptor.compute(14796, 2460, 72000, 0);
+        std::cout << result << std::endl;
+        std::cout << makeItineraire(result);
 
-//        //        BOOST_FOREACH(auto pouet, result) {
-//        //        std::cout << pouet << std::endl << std::endl;
+        //        BOOST_FOREACH(auto pouet, result) {
+        //        std::cout << pouet << std::endl << std::endl;
 
-//        //        std::cout << makeItineraire(pouet);
-//        //        }
-//        //        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
-//    }
+        //        std::cout << makeItineraire(pouet);
+        //        }
+        //        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
+    }
 
 //    BOOST_FOREACH(unsigned int spidx, data.pt_data.stop_areas.at(3849).stop_point_list) {
 //        BOOST_FOREACH(unsigned int rpidx, data.pt_data.stop_points.at(spidx).route_point_list) {
@@ -95,10 +95,16 @@ int main(int, char **) {
     //        std::cout << raptor.compute(navitia::type::GeographicalCoord(2.3305474316803103, 48.867483087514856), 500, navitia::type::GeographicalCoord(2.349430179055217, 48.84850904718449), 500, 28800, 7);
     //    }
 
+//    navimake::builder b("20120614");
+//    b.vj("A")("stop1", 8000, 8050)("stop2", 8100,8150);
+//    type::Data data;
+//    data.pt_data =  b.build();
+//    routing::raptor::RAPTOR raptor(data);
 
+//    type::PT_Data d = data.pt_data;
 
+//    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 0);
 
-
-    std::cout << res << std::endl;
+//    std::cout << res << std::endl;
 
 }

@@ -79,12 +79,12 @@ void benchmark::load_input() {
 
 void benchmark::computeBench() {
     Timer tg("Timer General");
-//    std::cout << std::endl << "Lancement TimeDepedent" << std::endl;
-//    {
-//        Timer t("Benchmark TimeDependent");
-//        computeBench_td();
+    std::cout << std::endl << "Lancement TimeDepedent" << std::endl;
+    {
+        Timer t("Benchmark TimeDependent");
+        computeBench_td();
 
-//    }
+    }
 //    std::cout << std::endl << "Lancement TimeDepedent Astar" << std::endl;
 
 //    {
@@ -217,7 +217,8 @@ void benchmark::computeBench_ra() {
             file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << -1 <<"," << result.duration << ","
                  << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
     }
-    std::cout << count << std::endl << std::endl;
+    std::cout << std::endl << std::endl;
+
     file.close();
 }
 
