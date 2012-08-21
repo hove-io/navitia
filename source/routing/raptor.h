@@ -111,6 +111,7 @@ struct communRAPTOR : public AbstractRouter
             return (data.pt_data.stop_times[data.pt_data.vehicle_journeys[vj1].stop_time_list[order]].departure_time %86400) < time;
         }
     };
+
     navitia::type::Data &data;
     compare_rp cp;
     communRAPTOR(navitia::type::Data &data);
@@ -125,9 +126,9 @@ struct communRAPTOR : public AbstractRouter
 
 
 
-    std::pair<navitia::type::idx_t, bool>  earliest_trip(unsigned int route, unsigned int order, const type_retour &retour, unsigned int count, type::idx_t vjidx);
-    std::pair<navitia::type::idx_t, bool>  earliest_trip(unsigned int route, unsigned int order, map_int_pint_t &best, unsigned int count, type::idx_t vjidx);
-    std::pair<navitia::type::idx_t, bool>  earliest_trip(unsigned int route, unsigned int order, DateTime dt, type::idx_t vjidx);
+    std::pair<navitia::type::idx_t, bool>  earliest_trip(unsigned int route, unsigned int order, const type_retour &retour, unsigned int count);
+    std::pair<navitia::type::idx_t, bool>  earliest_trip(unsigned int route, unsigned int order, map_int_pint_t &best, unsigned int count);
+    std::pair<navitia::type::idx_t, bool>  earliest_trip(unsigned int route, unsigned int order, DateTime dt);
     std::pair<unsigned int, bool> tardiest_trip(unsigned int route, unsigned int stop_area, map_retour_t &retour, unsigned int count);
     std::pair<unsigned int, bool> tardiest_trip(unsigned int route, unsigned int stop_area, map_int_pint_t &best, unsigned int count);
     std::pair<unsigned int, bool> tardiest_trip(unsigned int route, unsigned int stop_area, DateTime dt);
@@ -136,18 +137,29 @@ struct communRAPTOR : public AbstractRouter
     int get_rp_id(const type::Route &route, unsigned int stop_area);
     int get_rp_id(unsigned int route, unsigned int stop_area);
     int get_sa_rp(unsigned int order, int route);
-    int get_temps_depart(navitia::type::idx_t t, int order);
-
+    inline int get_temps_depart(navitia::type::idx_t t, int order) {
+        if(t == navitia::type::invalid_idx)
+            return std::numeric_limits<int>::max();
+        else
+            return data.pt_data.stop_times[data.pt_data.vehicle_journeys[t].stop_time_list[order]].departure_time%86400;
+    }
 
     map_int_int_t make_queue(std::vector<unsigned int> stops) ;
     queue_t make_queue2(std::vector<unsigned int> stops) ;
 
 
+    struct Route_t {
+        int nbTrips, nbStops;
+        navitia::type::idx_t firstStopTime, idx;
+        std::vector<navitia::type::idx_t> first_orderVj;
+    };
+
     typedef std::vector<unsigned int> list_connections;
     std::map<unsigned int, list_connections> foot_path;
-    std::map<unsigned int, map_int_int_t> map_sa_r;
-
-
+    std::vector<Route_t> routes;
+    std::vector<navitia::type::StopTime> stopTimes;
+    typedef std::map<navitia::type::idx_t, uint16_t> route_order;
+    std::vector<route_order> auPlustot;
 
     struct compare_rp_reverse {
         const int order;
@@ -158,6 +170,10 @@ struct communRAPTOR : public AbstractRouter
             return (data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vj1).stop_time_list.at(order)).arrival_time %86400) > time;
         }
     };
+    inline int get_stop_time_idx(int routeIdx, int orderVj, int order) {
+        return data.pt_data.vehicle_journeys[data.pt_data.route_points[data.pt_data.routes[routeIdx].route_point_list[order]].vehicle_journey_list[orderVj]].stop_time_list[order];
+    }
+
 
 };
 
