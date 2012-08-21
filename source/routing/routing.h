@@ -47,6 +47,7 @@ struct DateTime {
     }
 
     bool operator<=(DateTime other) const {
+        other.normalize();
         if(this->date == other.date)
             return hour <= other.hour;
         else
@@ -79,6 +80,13 @@ struct DateTime {
 
     int operator-(DateTime other) {
         return (this->date - other.date) * 86400 + this->hour - other.hour;
+    }
+
+    void update(int hour) {
+        if(this->hour > hour) {
+            ++ this->date;
+        }
+        this->hour = hour%86400;
     }
 };
 

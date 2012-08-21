@@ -3,6 +3,7 @@
 #include "utils/timer.h"
 #include "boost/date_time.hpp"
 #include "naviMake/build_helper.h"
+#include <boost/algorithm/string.hpp>
 
 #include <valgrind/callgrind.h>
 
@@ -18,6 +19,20 @@ int main(int, char **) {
     }
 
 
+
+
+    int placeMemoire = 0;
+
+    BOOST_FOREACH(navitia::type::StopTime st, data.pt_data.stop_times) {
+        navitia::type::StopArea & sa = data.pt_data.stop_areas[data.pt_data.stop_points[data.pt_data.route_points[st.route_point_idx].stop_point_idx].stop_area_idx];
+
+        BOOST_FOREACH(navitia::type::idx_t spidx, sa.stop_point_list) {
+            navitia::type::StopPoint sp = data.pt_data.stop_points[spidx];
+
+            placeMemoire+=sp.route_point_list.size() -1;
+        }
+    }
+    std::cout << "Place memoire necessaire :" << placeMemoire*sizeof(int32_t) << std::endl;
 
     //    int depart = 0;
     //    int arrivee = 2;
@@ -38,12 +53,13 @@ int main(int, char **) {
     ////    }plannerreverse?format=json&departure_lat=48.83192652572024&departure_lon=2.355914323083246&destination_lat=48.873944716692286&destination_lon=2.34836122413323&time=1000&date=20120511
     //    std::cout << "size : " << data.pt_data.route_points.at(10).vehicle_journey_list_arrival.size() << " "
     //              << data.pt_data.route_points.at(10).vehicle_journey_list.size()   << std::endl;
-//    routing::raptor::RAPTOR raptor(data);
+
+    routing::raptor::RAPTOR raptor(data);
 //    {
 //        Timer t("Calcul raptor");
-//        auto result = raptor.compute(12344, 51, 28800, 0);
+//        auto result = raptor.compute(16482, 16483, 28800, 0);
 //        std::cout << result << std::endl;
-//        std::cout << makeItineraire(result);
+////        std::cout << makeItineraire(result);
 
 //        //        BOOST_FOREACH(auto pouet, result) {
 //        //        std::cout << pouet << std::endl << std::endl;
@@ -94,11 +110,17 @@ int main(int, char **) {
 
     //        std::cout << raptor.compute(navitia::type::GeographicalCoord(2.3305474316803103, 48.867483087514856), 500, navitia::type::GeographicalCoord(2.349430179055217, 48.84850904718449), 500, 28800, 7);
     //    }
+//    navimake::builder b("20120614");
+//    b.vj("B")("stop4", 23*3600 + 10*60)("stop2", 10*60)("stop3", 20*60);
+//    b.vj("A")("stop1", 23*3600)("stop2", 23*3600 + 59*60);
+//    type::Data data;
+//    data.pt_data =  b.build();
+//    navitia::routing::raptor::RAPTOR raptor(data);
 
+//    type::PT_Data d = data.pt_data;
 
+//    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0);
+//    std::cout << res << std::endl;
 
-
-
-    std::cout << res << std::endl;
 
 }
