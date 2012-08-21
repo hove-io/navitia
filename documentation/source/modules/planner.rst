@@ -557,47 +557,53 @@ Certains horaires ne sont accessibles qu'en montée ou en descente, quelque soit
 
 *Exemple le plus typique: l'horaire terminus n'a pas d'heure de départ*
  
-
-Gestion de l'accessibilité
+Itinéraire et accessibilité 
 **************************
 
-NAViTiA traite les critères d'accessibilité Utilisateur de Fauteuil Roulant (UFR) comme une combinaison de plusieurs critères binaires :
+Gestion des propriétés d’accessibilité sur les objets de transport
+------------------------------------------------------------------
 
-* Accessibilité UFR des points d'arrêt (une station de métro doit proposer un ascenseur par exemple).
+Les propriétés d’accessibilité sont appliquées directement sur les objets mis en œuvre.
+Ainsi, chaque véhicule utilisé porte les critères d’accessibilité qui lui sont propre (possibilité d'embarquer un vélo, accès facilité aux fauteuils roulant...).
+
+* Liste des critères d’accessibilité des véhicules
+
+  * Accès UFR (MIPAccess)
+  * Embarquement vélo (BikeAccepted)
+  * Air conditionné (AirConditioned)
+  * Annonces visuelles adaptées aux malentendants (VisualAnnouncement)
+  * Annonces sonores adaptées aux malvoyants (AudibleAnnouncement)
+  * Accompagnement à bord (AppropriateEscort)
+  * Signalisation adaptée déficience cognitive (AppropriateSignage)
+  * Bus scolaire (SchoolVehicle)
+
+* Liste des critères d’accessibilité des points d’arrêt
+
+  * Point d’arrêt abrité (Sheltered)
+  * Accès UFR (MIPAccess)
+  * Accès complet par escalier mécanique (Elevator)
+  * Accès complet par ascenseur (Escalator)
+  * Embarquement vélo (BikeAccepted)
+  * Parking vélo (BikeDepot)
+  * Annonces visuelles adaptées aux malentendants (VisualAnnouncement)
+  * Annonces sonores adaptées aux malvoyants (AudibleAnnouncement)
+  * Accompagnement à bord (AppropriateEscort)
+  * Signalisation adaptée déficience cognitive (AppropriateSignage)
+
+Exemple d’utilisation sur le cas de l’accessibilité UFR
+-------------------------------------------------------
+
+NAViTiA traite les critères d’accessibilité Utilisateur de Fauteuil Roulant (UFR) comme une combinaison de plusieurs critères binaires :
+
+* Accessibilité UFR des points d’arrêt (une station de métro doit proposer un ascenseur par exemple).
 * Accessibilité du mobile (les rames de métro doivent avoir un espace prévu pour les UFR).
-* Accessibilité des correspondances.
+* Accessibilité des correspondances
 
 Il est également possible :
 
-* De faire varier la vitesse de marche à pied pour l'ensemble du calcul d'itinéraire.
-* D'utiliser les critères binaires pour définir différents types de Personnes à Mobilité Réduite (PMR).
+* De faire varier la vitesse de marche à pied pour l’ensemble du calcul d’itinéraire.
+* D’utiliser les critères binaires pour définir différents types de Personnes à Mobilité Réduite (PMR).
 
-
-Gestion de l'accessibilité des véhicules
-----------------------------------------
-
-* MIPAccess
-* BikeAccepted
-* AirConditioned
-* VisualAnnouncement
-* AudibleAnnouncement
-* AppropriateEscort
-* AppropriateSignage
-* SchoolVehicle
-
-Gestion de l'équipement des points d'arrêt et des correspondances
------------------------------------------------------------------
-
-* Sheltered //Abribus
-* MIPAccess
-* Elevator
-* Escalator
-* BikeAccepted
-* BikeDepot
-* VisualAnnouncement
-* AudibleAnnouncement
-* AppropriateEscort
-* AppropriateSignage
 
 Inégalitées triangulaire
 ************************
