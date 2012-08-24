@@ -140,7 +140,7 @@ struct Department : public NavitiaHeader, Nameable {
     idx_t district_idx;
     std::vector<idx_t> city_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & main_city_idx & district_idx & city_list & idx;
+        ar & name & main_city_idx & district_idx & city_list & idx & id;
     }
 
     Department() : main_city_idx(invalid_idx), district_idx(invalid_idx) {}
@@ -167,7 +167,7 @@ struct City : public NavitiaHeader, Nameable {
     City() : main_city(false), use_main_stop_area_property(false), department_idx(invalid_idx){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & department_idx & coord & idx & external_code & main_postal_code & main_city;
+        ar & name & department_idx & coord & idx & external_code & main_postal_code & main_city & id;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
