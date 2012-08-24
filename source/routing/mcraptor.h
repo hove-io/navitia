@@ -154,7 +154,7 @@ struct McRAPTOR : navitia::routing::raptor::communRAPTOR {
     };
     bags_t bags;
 
-    Path compute_raptor(map_int_pint_t departs_, map_int_pint_t destinations_) {
+    Path compute_raptor(vector_idxretour departs_, vector_idxretour destinations_) {
         map_int_T departs, destinations;
         BOOST_FOREACH(auto depart, departs_) {
             departs[depart.first] = label_template(depart.second);

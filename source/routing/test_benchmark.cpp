@@ -2,7 +2,7 @@
 
 int main(int , char **) {
 
-        navitia::routing::benchmark::benchmark b("wap", "/home/vlara/navitia/jeu/IdF/IdF.nav");
+        navitia::routing::benchmark::benchmark b("wap", "/home/vlara/navitia/jeu/IdF/IdF.lz4");
 
 
     {

@@ -20,6 +20,9 @@ struct DateTime {
     int date;
     int hour;
 
+    static DateTime inf;
+    static DateTime min;
+
     DateTime() : date(std::numeric_limits<int>::max()), hour(std::numeric_limits<int>::max()){}
     DateTime(int date, int hour) : date(date), hour(hour) {}
     DateTime(const DateTime & dt) : date(dt.date), hour(dt.hour) {}
@@ -92,9 +95,21 @@ struct DateTime {
 
 std::ostream & operator<<(std::ostream & os, const DateTime & dt);
 
-DateTime operator+(DateTime dt, int seconds);
-DateTime operator-(DateTime dt, int seconds);
+inline DateTime operator+(DateTime dt, int seconds) {
+    if(!(dt == DateTime::inf) && !(dt == DateTime::min)){
+        dt.hour += seconds;
+        dt.normalize();
+    }
+    return dt;
+}
 
+inline DateTime operator-(DateTime dt, int seconds) {
+    if(!(dt == DateTime::inf) && !(dt == DateTime::min)){
+        dt.hour -= seconds;
+        dt.normalize();
+    }
+    return dt;
+}
 /** Représente un horaire associé à un validity pattern
  *
  * Il s'agit donc des horaires théoriques
@@ -123,7 +138,7 @@ struct PathItem{
     type::idx_t vj_idx;
 
     PathItem(type::idx_t said = type::invalid_idx , DateTime arrival = DateTime::infinity(), DateTime departure = DateTime::infinity(),
-             type::idx_t line_idx = type::invalid_idx, type::idx_t = type::invalid_idx, type::idx_t vj_idx = type::invalid_idx) :
+             type::idx_t line_idx = type::invalid_idx, type::idx_t route_idx = type::invalid_idx, type::idx_t vj_idx = type::invalid_idx) :
         said(said), arrival(arrival), departure(departure), line_idx(line_idx), route_idx(route_idx), vj_idx(vj_idx) {}
 };
 

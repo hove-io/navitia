@@ -4,7 +4,8 @@
 #include "routing.h"
 #include "utils/timer.h"
 #include <unordered_map>
-
+#include "boost/dynamic_bitset.hpp"
+#include <google/dense_hash_map>
 namespace navitia { namespace routing { namespace raptor{
 
 template<class T>
@@ -14,7 +15,8 @@ size_t hash_value(T t) {
 
 enum type_idx {
     vj,
-    connection
+    connection,
+    uninitialized
 };
 
 
@@ -35,7 +37,7 @@ struct type_retour {
 
     type_retour(int stid, int said_emarquement, DateTime dt, type_idx type) : stid(stid), said_emarquement(said_emarquement), dt(dt), dist_to_dest(0), dist_to_dep(0), type(type){}
     type_retour(unsigned int dist_to_dest) : stid(-1), said_emarquement(-1), dt(), dist_to_dest(dist_to_dest), dist_to_dep(0), type(vj){}
-    type_retour() : stid(-1), said_emarquement(-1), dt(), dist_to_dest(0), dist_to_dep(0), type(vj) {}
+    type_retour() : stid(-1), said_emarquement(-1), dt(), dist_to_dest(0), dist_to_dep(0), type(uninitialized) {}
 
     bool operator<(type_retour r2) const { return this->dt + this->dist_to_dest < r2.dt + dist_to_dest;}
     bool operator>(type_retour r2) const { return this->dt + this->dist_to_dest > r2.dt + dist_to_dest;}
@@ -84,13 +86,18 @@ struct best_dest {
 
 
 typedef std::pair<int, int> pair_int;
-typedef std::unordered_map<int, int> map_int_int_t;
-typedef std::unordered_map<int, type_retour> map_int_pint_t;
-typedef std::unordered_map<int, pair_int> map_int_pairint_t;
-typedef std::unordered_map<navitia::type::idx_t, int> queue_t;
+
+typedef google::dense_hash_map<int, int> map_int_int_t;
+typedef std::vector<type_retour> map_int_pint_t;
+typedef std::pair<navitia::type::idx_t, int> pair_idx_int;
+//typedef google::dense_hash_map<navitia::type::idx_t, int> queue_t;
+typedef std::vector<int> queue_t;
 
 
-typedef std::unordered_map<unsigned int, map_int_pint_t> map_retour_t;
+
+//typedef std::unordered_map<unsigned int, map_int_pint_t> map_retour_t;
+typedef std::vector<map_int_pint_t> map_retour_t;
+
 //typedef std::pair<map_retour_t, map_best_t> pair_retour_t;
 
 
@@ -102,6 +109,11 @@ typedef std::unordered_map<unsigned int, map_int_pint_t> map_retour_t;
 
 struct communRAPTOR : public AbstractRouter
 {
+    typedef std::vector<navitia::type::idx_t> vector_idx;
+    typedef std::vector<pair_int> vector_pairint;
+    typedef std::vector<unsigned int> list_connections;
+    typedef std::pair<navitia::type::idx_t, type_retour> idx_retour;
+    typedef std::vector<idx_retour> vector_idxretour;
     struct compare_rp {
         unsigned int order;
         const navitia::type::Data &data;
@@ -112,54 +124,22 @@ struct communRAPTOR : public AbstractRouter
         }
     };
 
-    navitia::type::Data &data;
-    compare_rp cp;
-    communRAPTOR(navitia::type::Data &data);
-    virtual Path compute_raptor(map_int_pint_t departs, map_int_pint_t destinations) = 0;
-    Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
-    Path compute(const type::GeographicalCoord & departure, double radius, idx_t destination_idx, int departure_hour, int departure_day);
-    Path compute(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
-                 , int departure_hour, int departure_day);
-
-    void trouverGeo(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination,
-                    int departure_hour, int departure_day, map_int_pint_t &departs, map_int_pint_t &destinations);
-
-
-
-    std::pair<navitia::type::idx_t, bool>  earliest_trip(unsigned int route, unsigned int order, const type_retour &retour, unsigned int count);
-    std::pair<navitia::type::idx_t, bool>  earliest_trip(unsigned int route, unsigned int order, map_int_pint_t &best, unsigned int count);
-    std::pair<navitia::type::idx_t, bool>  earliest_trip(unsigned int route, unsigned int order, DateTime dt);
-    std::pair<unsigned int, bool> tardiest_trip(unsigned int route, unsigned int stop_area, map_retour_t &retour, unsigned int count);
-    std::pair<unsigned int, bool> tardiest_trip(unsigned int route, unsigned int stop_area, map_int_pint_t &best, unsigned int count);
-    std::pair<unsigned int, bool> tardiest_trip(unsigned int route, unsigned int stop_area, DateTime dt);
-    int get_rp_order(const navitia::type::Route &route, unsigned int stop_area);
-    int get_rp_order(unsigned int route, unsigned int stop_area);
-    int get_rp_id(const type::Route &route, unsigned int stop_area);
-    int get_rp_id(unsigned int route, unsigned int stop_area);
-    int get_sa_rp(unsigned int order, int route);
-    inline int get_temps_depart(navitia::type::idx_t t, int order) {
-        if(t == navitia::type::invalid_idx)
-            return std::numeric_limits<int>::max();
-        else
-            return data.pt_data.stop_times[data.pt_data.vehicle_journeys[t].stop_time_list[order]].departure_time%86400;
-    }
-
-    map_int_int_t make_queue(std::vector<unsigned int> stops) ;
-    queue_t make_queue2(std::vector<unsigned int> stops) ;
-
 
     struct Route_t {
         int nbTrips, nbStops;
         navitia::type::idx_t firstStopTime, idx;
-        std::vector<navitia::type::idx_t> first_orderVj;
+        navitia::type::ValidityPattern vp;
     };
 
-    typedef std::vector<unsigned int> list_connections;
-    std::map<unsigned int, list_connections> foot_path;
-    std::vector<Route_t> routes;
-    std::vector<navitia::type::StopTime> stopTimes;
-    typedef std::map<navitia::type::idx_t, uint16_t> route_order;
-    std::vector<route_order> auPlustot;
+    struct StopTime_t {
+        int departure_time, arrival_time;
+        navitia::type::idx_t idx;
+
+        StopTime_t() : departure_time(std::numeric_limits<int32_t>::max()), arrival_time(std::numeric_limits<int32_t>::max()), idx(navitia::type::invalid_idx) {}
+        StopTime_t(navitia::type::StopTime & st) : departure_time(st.departure_time), arrival_time(st.arrival_time), idx(st.idx) {}
+    };
+
+
 
     struct compare_rp_reverse {
         const int order;
@@ -170,10 +150,58 @@ struct communRAPTOR : public AbstractRouter
             return (data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(vj1).stop_time_list.at(order)).arrival_time %86400) > time;
         }
     };
-    inline int get_stop_time_idx(int routeIdx, int orderVj, int order) {
-        return data.pt_data.vehicle_journeys[data.pt_data.route_points[data.pt_data.routes[routeIdx].route_point_list[order]].vehicle_journey_list[orderVj]].stop_time_list[order];
-    }
 
+    navitia::type::Data &data;
+    compare_rp cp;
+    google::dense_hash_map<unsigned int, list_connections> foot_path;
+    std::vector<Route_t> routes;
+    std::vector<StopTime_t> stopTimes;
+    std::vector<vector_pairint> sa_routeorder;
+    communRAPTOR(navitia::type::Data &data);
+
+    virtual Path compute_raptor(vector_idxretour departs, vector_idxretour destinations) = 0;
+    Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
+    Path compute(const type::GeographicalCoord & departure, double radius, idx_t destination_idx, int departure_hour, int departure_day);
+    Path compute(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
+                 , int departure_hour, int departure_day);
+
+    void trouverGeo(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination,
+                    int departure_hour, int departure_day, map_int_pint_t &departs, map_int_pint_t &destinations);
+
+    void trouverGeo(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination,
+                    int departure_hour, int departure_day, vector_idxretour &departs, vector_idxretour &destinations);
+
+
+
+    std::pair<int, bool>  earliest_trip(unsigned int route, unsigned int order, const type_retour &retour, unsigned int count, int orderVj);
+    std::pair<int, bool>  earliest_trip(unsigned int route, unsigned int order, map_int_pint_t &best, unsigned int count, int orderVj);
+    std::pair<int, bool>  earliest_trip(unsigned int route, unsigned int order, DateTime dt, int orderVj);
+    std::pair<unsigned int, bool> tardiest_trip(unsigned int route, unsigned int stop_area, map_retour_t &retour, unsigned int count);
+    std::pair<unsigned int, bool> tardiest_trip(unsigned int route, unsigned int stop_area, map_int_pint_t &best, unsigned int count);
+    std::pair<unsigned int, bool> tardiest_trip(unsigned int route, unsigned int stop_area, DateTime dt);
+    int get_rp_order(const navitia::type::Route &route, unsigned int stop_area);
+    int get_rp_order(unsigned int route, unsigned int stop_area);
+    int get_rp_id(const type::Route &route, unsigned int stop_area);
+    int get_rp_id(unsigned int route, unsigned int stop_area);
+
+
+
+    map_int_int_t make_queue(std::vector<unsigned int> stops) ;
+    queue_t make_queue2(std::vector<unsigned int> &stops);
+
+
+    inline int get_stop_time_idx(int routeIdx, int orderVj, int order) {
+        return routes[routeIdx].firstStopTime + (orderVj * routes[routeIdx].nbStops) + order;
+    }
+    inline int get_temps_depart(int route, int orderVj, int order) {
+        if(orderVj == -1)
+            return std::numeric_limits<int>::max();
+        else
+            return stopTimes[get_stop_time_idx(route, orderVj, order)].departure_time % 86400;
+    }
+    inline int get_sa_rp(unsigned int order, int route) {
+        return data.pt_data.stop_points[data.pt_data.route_points[data.pt_data.routes[routes[route].idx].route_point_list[order]].stop_point_idx].stop_area_idx;
+    }
 
 };
 
@@ -181,104 +209,34 @@ struct departureNotFound {};
 struct destinationNotFound {};
 struct monoRAPTOR : public communRAPTOR {
     monoRAPTOR(navitia::type::Data &data) : communRAPTOR(data){}
-    Path compute_raptor(map_int_pint_t departs, map_int_pint_t destinations);
+    Path compute_raptor(vector_idxretour departs, vector_idxretour destinations);
     virtual void boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count) = 0;
-    virtual Path makePath(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, unsigned int destination_idx, unsigned int count) = 0;
-    Path makeBestPath(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, unsigned int destination_idx, unsigned int count);
-    std::vector<Path> makePathes(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, best_dest &b_dest, unsigned int count);
+    virtual Path makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count) = 0;
+    Path makeBestPath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count);
+    std::vector<Path> makePathes(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, best_dest &b_dest, unsigned int count);
     std::vector<Path> compute_all(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
                                , int departure_hour, int departure_day);
-    std::vector<Path> compute_all(map_int_pint_t departs, map_int_pint_t destinations);
+    std::vector<Path> compute_all(vector_idxretour departs, vector_idxretour destinations);
     std::vector<Path> compute_all(navitia::type::EntryPoint departure, navitia::type::EntryPoint destination, int departure_hour, int departure_day) ;
+
+
 };
 
 struct RAPTOR : public monoRAPTOR {
+
     RAPTOR(navitia::type::Data &data) : monoRAPTOR(data){}
     void boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count);
-    Path makePath(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, unsigned int destination_idx, unsigned int countb);
-    void marcheapied(std::vector<unsigned int> & marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int count);
-
+    Path makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb);
+    void marcheapied(boost::dynamic_bitset<> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int count);
+    void setRoutesValides(boost::dynamic_bitset<> & routesValides, std::vector<unsigned int> &marked_stop, map_retour_t &retour);
+    void make_queue3(boost::dynamic_bitset<> &stops, boost::dynamic_bitset<> & routesValides, queue_t &Q);
 };
 
 struct reverseRAPTOR : public monoRAPTOR {
     reverseRAPTOR(navitia::type::Data &data) : monoRAPTOR(data){}
     void boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count);
-    Path makePath(const map_retour_t &retour, const map_int_pint_t &best, map_int_pint_t departs, unsigned int destination_idx, unsigned int countb);
+    Path makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb);
 };
 
-
-
-
-
-//struct FpRAPTOR {
-//    std::vector<Bag> bags;
-
-//    void earliest_trip();
-//    void update();
-//    void compute();
-
-//    struct label : public label_v {
-
-//        boost::unordered_map<critere, int> criteres;
-//        int stid;
-
-//        label() : criteres() {
-//            criteres[temps_trajet] = std::numeric_limits<int>::max();
-//            criteres[via] = std::numeric_limits<int>::max();
-//            criteres[jour] = std::numeric_limits<int>::max();
-//            criteres[heure] = std::numeric_limits<int>::max();
-//            stid = -1;
-//        }
-//        label(critere crit, int value) : criteres() {
-//            criteres[temps_trajet] = std::numeric_limits<int>::max();
-//            criteres[via] = std::numeric_limits<int>::max();
-//            criteres[jour] = std::numeric_limits<int>::max();
-//            criteres[heure] = std::numeric_limits<int>::max();
-//            stid = -1;
-
-//            criteres[crit] = value; }
-
-//        label& ajouter_critere(critere crit, int value) {
-//            criteres[crit] = value;
-//            return *this;
-//        }
-
-//        int& operator[](critere crit) {return criteres[crit];}
-
-//        int operator[](critere const crit) const {return criteres.at(crit);}
-
-//        bool operator<(const label &lbl) const {
-//            BOOST_FOREACH(auto p_crit, this->criteres) {
-//                if(p_crit.first != via) {
-//                    if(lbl.criteres.at(p_crit.first) >= this->criteres.at(p_crit.first))
-//                        return false;
-//                }
-//                else {
-//                    if(lbl.criteres.at(p_crit.first) <= this->criteres.at(p_crit.first))
-//                        return false;
-//                }
-
-//            }
-//            return true;
-//        }
-//        std::ostream& operator<<(std::ostream& out) {
-//            out << this->criteres[temps_trajet] << " " << this->criteres[jour] << " " << this->criteres[heure];
-//            return out;
-//        }
-
-//        bool dominated_by(label lbl) {
-//            return ((this->criteres[temps_trajet] >= lbl[temps_trajet])
-//                    && ((this->criteres[jour] > lbl[jour]) || (this->criteres[jour] == lbl[jour] && this->criteres[heure]%86400 >= lbl[heure]%86400) ))
-//                    || (this->criteres[via] > lbl[via]);
-//        }
-
-//        bool dominates(label lbl) {
-//            return this->criteres[temps_trajet] < lbl[temps_trajet] && ((this->criteres[jour] < lbl[jour]) ||((this->criteres[jour] == lbl[jour]) && (this->criteres[heure] < lbl[heure])));
-//        }
-
-
-//    };
-
-//};
 
 }}}
