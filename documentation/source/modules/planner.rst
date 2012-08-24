@@ -21,8 +21,7 @@ Il est :
   et de tableau des prochains départs, et calcule des itinéraires de contournement pour éviter l'ensemble des perturbations.
   NAViTiA détermine le meilleur trajet possible compte tenu des paramètres suivants (liste non exhaustive) 
 
-L'algorithme sur lequel il repose est nommé Ariane. 
-Celui-ci calcule le meilleur trajet possible compte tenu des données présentés dans les chapitres suivants.
+NAViTiA calcule le meilleur trajet possible compte tenu des données présentés dans les chapitres suivants, et selon les critères de calcul et l'algorithme demandé.
 
 Points de départ et de destination
 **********************************
@@ -82,15 +81,14 @@ Typologie des horaires
 Passe-minuit
 ------------
 
+A préciser: gestion des points suivants:
+
 * Circulation passe-minuit
 * Arrêt passe-minuit (arrivée en gare à 23h59, départ à 00h01 le lendemain)
 * Correspondance avec une circulation du lendemain
 * Correspondance le lendemain avec une circulation partie la veille
 * La gestion des calendriers doit suivre le passe-minuit (calendrier de circulation sur l'horaire)
 
-
-Critères de recherche
-*********************
 
 Sens de la recherche
 --------------------
@@ -111,8 +109,11 @@ Sens de la recherche
 
 
 
-Critères de calcul "Arrivée au plus tôt"
-----------------------------------------
+Algorithmes de recherche
+************************
+
+Calcul "Arrivée au plus tôt"
+----------------------------
 
 Il propose l'itinéraire qui permet d'arriver au plus tôt à destination.
 
@@ -132,8 +133,8 @@ Il propose l'itinéraire qui permet d'arriver au plus tôt à destination.
   "Moins de marche à pied"
 
 
-Critères de calcul "Moins de correspondance"
---------------------------------------------
+Calcul "Moins de correspondance"
+--------------------------------
                   
 Il propose l'itinéraire qui minimise le nombre de correspondance pour une recherche donnée (O/D, date, heure de départ ou d'arrivée).
 
@@ -155,8 +156,8 @@ Il propose l'itinéraire qui minimise le nombre de correspondance pour une reche
   * 60=1x+30 > si Tcritère 1 < 60 minutes, alors Tcritère 2 < Tcritère 1 + 30
   * @=1.5x+0 > sinon Tcritère 2 < 1,5 x Tcritère 1
 
-Critères de calcul "Moins de marche à pied"
--------------------------------------------
+Calcul "Moins de marche à pied"
+-------------------------------
 
 Il propose l'itinéraire qui minimise le temps de marche à pied, (pas nécessairement le nombre de marche à pied dans une solution) 
 pour une recherche donnée (O/D, date, heure de départ ou d'arrivée).
@@ -217,7 +218,7 @@ Optimisations des résultats
 Minimisation du temps d'attente
 -------------------------------
 
-**Cas simple** : minimisation du temps d'attente sur le trajet global
+**Cas simple** : optimisation du temps de trajet
 
 L'algorithme permet d'obtenir l'arrivée au plus tôt. 
 Ci-dessous, le trajet de A à C utilise le train T1 suivi du train T3 pour un départ demandé à h0.
@@ -235,14 +236,13 @@ En effet sur ce deuxième trajet, le voyageur :
 * attend moins longtemps sa correspondance en B,
 * et arrive à la même heure. 
 
-Ariane proposera donc cette deuxième solution.
-Ariane propose donc des solutions dans lesquelles les temps d'attente des voyageurs sont optimisés.
+L'algorithme proposera donc cette deuxième solution, dans laquelle le temps d'attente des voyageurs est optimal.
 
 
 **Cas composé** : optimisation du temps d'attente sur les correspondances
 
 Dans le cas suivant, tous les trajets possibles offrent la même durée totale de trajet. 
-Toutefois, Ariane proposera au voyageur d'utiliser la première circulation T2 pour attendre C. 
+Toutefois, l'algorithme proposera au voyageur d'utiliser la première circulation T2 pour attendre C. 
 
 Ce cas est commun lors d'un trajet interurbain via une commune multi-gare. 
 Ainsi pour un trajet de Caen vers Reims, par exemple, il est nécessaire :
@@ -253,7 +253,7 @@ Ainsi pour un trajet de Caen vers Reims, par exemple, il est nécessaire :
 
 .. image:: ../_static/MinimisationTempsAttenteC.png
 
-Ariane proposera bien la solution usuelle dessinée en gras.
+L'algorithme proposera bien la solution usuelle dessinée en gras.
 Ce type de trajet peut être généralisé à tout trajet qui mixe faible et forte fréquence d'offre transport.
 
 Minimisation du nombre de correspondance
@@ -265,7 +265,7 @@ afin de limiter le nombre de correspondances (pour des mêmes heures de départ 
 
 .. image:: ../_static/MinimisationNumCorr.png
 
-Ariane optimise donc le nombre de correspondance, même sur des itinéraires 
+L'algorithme optimise donc le nombre de correspondance, même sur des itinéraires 
 à durée de trajet global et à heure de départ et heure d'arrivée égaux.
 
 Gestion des sous-chemin non optimaux
@@ -279,12 +279,12 @@ le train direct peut alors parfois doubler l'omnibus:
 
 Dans le cas suivant d'un trajet avec correspondance(s) 
 et pour une recherche de l'itinéraire "le plus rapide", 
-Ariane proposera l'itinéraire T1+T2 :
+L'algorithme proposera l'itinéraire T1+T2 :
 
 .. image:: ../_static/SousCheminOptimauxB.png
 
 Dans le cas d'une recherche de l'itinéraire avec le "moins de correspondance", 
-Ariane proposera bien sûr le train T0 (voir schéma ci-dessus).
+L'algorithme proposera bien sûr le train T0 (voir schéma ci-dessus).
 
 Gestion des correspondances
 ***************************
@@ -483,9 +483,9 @@ Permet d'éliminer les itinéraires faisant attendre 5h en gare
 entre le dernier train du soir et le premier train du lendemain 
 sur un itinéraire passe-minuit.
 
-La problématique est prise en compte sur le calcul retour de l'algorithme Ariane 
-car il n'est pas possible de faire le test tant que le calcul retour 
-n'a pas optimisé l'heure de départ du calcul aller.
+La problématique est prise en compte sur le calcul retour de l'algorithme
+(optimisation ddu temps de trajet). En effet il n'est pas possible 
+de faire le test tant que le calcul retour n'a pas optimisé l'heure de départ du calcul aller.
 
 * Si on fait le test en sens aller (arrivée au plus tôt)
 
@@ -527,8 +527,8 @@ Gestion des montées/descentes interdites
 Interdiction de Trafic Local (ITL)
 ----------------------------------
 
-L'algorithme Ariane gère de façon intrinsèque les interdictions de trafic local (ITL). 
-Il utilisera les informations d'ITL de façon conjoncturelle au cours de la recherche afin de proposer la meilleure solution.
+Les différents algorithmes gèrent de façon intrinsèque les interdictions de trafic local (ITL). 
+Ils utilisent les informations d'ITL de façon conjoncturelle au cours de la recherche afin de proposer la meilleure solution.
 En effet, le voyageur peut ou ne peut pas descendre à un arrêt en fonction de l'arrêt où il est monté.
 Les ITL sont configurables par circulation.
 
@@ -547,7 +547,7 @@ Le trajet le plus rapide consiste à
 * et rejoindre à pied G
 
 cependant la *descente est interdite en E si l'on vient de C et D*.
-Le trajet proposé par Ariane sera donc A vers E puis correspondance en E vers Y puis marche à pied vers G.
+Le trajet proposé sera donc A vers E puis correspondance en E vers Y puis marche à pied vers G.
 
 
 Montée/descentes interdites
@@ -557,47 +557,53 @@ Certains horaires ne sont accessibles qu'en montée ou en descente, quelque soit
 
 *Exemple le plus typique: l'horaire terminus n'a pas d'heure de départ*
  
-
-Gestion de l'accessibilité
+Itinéraire et accessibilité 
 **************************
 
-NAViTiA traite les critères d'accessibilité Utilisateur de Fauteuil Roulant (UFR) comme une combinaison de plusieurs critères binaires :
+Gestion des propriétés d’accessibilité sur les objets de transport
+------------------------------------------------------------------
 
-* Accessibilité UFR des points d'arrêt (une station de métro doit proposer un ascenseur par exemple).
+Les propriétés d’accessibilité sont appliquées directement sur les objets mis en œuvre.
+Ainsi, chaque véhicule utilisé porte les critères d’accessibilité qui lui sont propre (possibilité d'embarquer un vélo, accès facilité aux fauteuils roulant...).
+
+* Liste des critères d’accessibilité des véhicules
+
+  * Accès UFR (MIPAccess)
+  * Embarquement vélo (BikeAccepted)
+  * Air conditionné (AirConditioned)
+  * Annonces visuelles adaptées aux malentendants (VisualAnnouncement)
+  * Annonces sonores adaptées aux malvoyants (AudibleAnnouncement)
+  * Accompagnement à bord (AppropriateEscort)
+  * Signalisation adaptée déficience cognitive (AppropriateSignage)
+  * Bus scolaire (SchoolVehicle)
+
+* Liste des critères d’accessibilité des points d’arrêt
+
+  * Point d’arrêt abrité (Sheltered)
+  * Accès UFR (MIPAccess)
+  * Accès complet par escalier mécanique (Elevator)
+  * Accès complet par ascenseur (Escalator)
+  * Embarquement vélo (BikeAccepted)
+  * Parking vélo (BikeDepot)
+  * Annonces visuelles adaptées aux malentendants (VisualAnnouncement)
+  * Annonces sonores adaptées aux malvoyants (AudibleAnnouncement)
+  * Accompagnement à bord (AppropriateEscort)
+  * Signalisation adaptée déficience cognitive (AppropriateSignage)
+
+Exemple d’utilisation sur le cas de l’accessibilité UFR
+-------------------------------------------------------
+
+NAViTiA traite les critères d’accessibilité Utilisateur de Fauteuil Roulant (UFR) comme une combinaison de plusieurs critères binaires :
+
+* Accessibilité UFR des points d’arrêt (une station de métro doit proposer un ascenseur par exemple).
 * Accessibilité du mobile (les rames de métro doivent avoir un espace prévu pour les UFR).
-* Accessibilité des correspondances.
+* Accessibilité des correspondances
 
 Il est également possible :
 
-* De faire varier la vitesse de marche à pied pour l'ensemble du calcul d'itinéraire.
-* D'utiliser les critères binaires pour définir différents types de Personnes à Mobilité Réduite (PMR).
+* De faire varier la vitesse de marche à pied pour l’ensemble du calcul d’itinéraire.
+* D’utiliser les critères binaires pour définir différents types de Personnes à Mobilité Réduite (PMR).
 
-
-Gestion de l'accessibilité des véhicules
-----------------------------------------
-
-* MIPAccess
-* BikeAccepted
-* AirConditioned
-* VisualAnnouncement
-* AudibleAnnouncement
-* AppropriateEscort
-* AppropriateSignage
-* SchoolVehicle
-
-Gestion de l'équipement des points d'arrêt et des correspondances
------------------------------------------------------------------
-
-* Sheltered //Abribus
-* MIPAccess
-* Elevator
-* Escalator
-* BikeAccepted
-* BikeDepot
-* VisualAnnouncement
-* AudibleAnnouncement
-* AppropriateEscort
-* AppropriateSignage
 
 Inégalitées triangulaire
 ************************

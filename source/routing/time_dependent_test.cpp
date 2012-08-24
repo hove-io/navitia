@@ -49,9 +49,9 @@ int main(int, char**){
 
     {
         Timer t("Calcul itinéraire");
-        std::cout << data.pt_data.stop_areas.at(12344).name << " à " << data.pt_data.stop_areas.at(12344).external_code  << std::endl;
-        std::cout << data.pt_data.stop_areas.at(51).name << " à " << data.pt_data.stop_areas.at(51).external_code  << std::endl;
-        auto result = td.compute(216, 13202, 72000, 0);
+        std::cout << data.pt_data.stop_areas.at(14796).name << " à " << data.pt_data.stop_areas.at(14796).external_code  << std::endl;
+        std::cout << data.pt_data.stop_areas.at(2460).name << " à " << data.pt_data.stop_areas.at(2460).external_code  << std::endl;
+        auto result = td.compute(14796, 2460, 72000, 0);
         std::cout << result;
         std::cout << makeItineraire(result);
     }

@@ -15,8 +15,6 @@ target_link_libraries(testraptor routing connectors)
 add_executable(testbench test_benchmark.cpp)
 target_link_libraries(testbench routing)
 
-add_executable(testmcraptor test_mc_raptor.cpp)
-target_link_libraries(testmcraptor routing connectors)
 
 add_executable(testartemis test_artemis.cpp)
 target_link_libraries(testartemis routing connectors)

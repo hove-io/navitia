@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
-
+#include <boost/foreach.hpp>
 
 #include <random>
 #include "utils/timer.h"
@@ -83,9 +83,9 @@ std::string find(const std::vector<Departement> & departements, double lon, doub
     GEOSCoordSeq_setX(s, 0, lon);
     GEOSCoordSeq_setY(s, 0, lat);
     GEOSGeometry *p = GEOSGeom_createPoint(s);
-    for(auto& d : departements) {
+    BOOST_FOREACH(auto& d, departements) {
         if(GEOSContains(d.geom.geom, p)) {
-            for(auto& c : d.communes){
+            BOOST_FOREACH(auto& c, d.communes){
                 if(GEOSContains(c.geom.geom, p)) {
                     GEOSGeom_destroy(p);
                     return c.name;
@@ -146,7 +146,7 @@ int main(int argc, char**) {
         c.insee = line[3];
         c.geom.geom = GEOSWKTReader_read(wkt_reader, line[0].c_str());
         std::string code_dep = line[15];
-        for(Departement & dep : departements){
+        BOOST_FOREACH(Departement & dep, departements){
             if(dep.code == code_dep){
                 dep.communes.push_back(c);
                 break;
@@ -155,14 +155,9 @@ int main(int argc, char**) {
         line = reader.next();
     }
     
-  /*  std::cout << "Tri des communes" << std::endl;
-    std::sort(communes.begin(), communes.end(), [](const Commune & a, const Commune & b){return a.population > b.population;});
-*/
     std::cout << "Fini!" << std::endl;
 
-    for(auto d: departements){
-        std::cout << d.name << " " << d.communes.size() << std::endl;
-    }
+
     // Si on a pas d'arguments on lance des benchs
     if(argc == 1) {
         Timer t("Benchs retrouvailles");
