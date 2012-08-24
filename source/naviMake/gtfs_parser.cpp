@@ -680,6 +680,7 @@ void build_route_points(Data & data){
             if(route_point_it == route_point_map.end()) {
                 route_point = new nm::RoutePoint();
                 route_point->route = vj->route;
+                route_point->route->route_point_list.push_back(route_point);
                 route_point->stop_point = stop_time->tmp_stop_point;
                 route_point_map[route_point_extcode] = route_point;
                 route_point->order = stop_seq;

@@ -24,7 +24,6 @@ void Data::sort(){
     std::sort(routes.begin(), routes.end(), Less<navimake::types::Route>());
     std::for_each(routes.begin(), routes.end(), Indexer<navimake::types::Route>());
 
-
     std::sort(stops.begin(), stops.end(), Less<navimake::types::StopTime>());
     std::for_each(stops.begin(), stops.end(), Indexer<navimake::types::StopTime>());
 
@@ -56,6 +55,66 @@ void Data::sort(){
 
 
 void Data::clean(){
+
+    std::set<std::string> toErase;
+
+    typedef std::vector<navimake::types::VehicleJourney *> vjs;
+    std::unordered_map<std::string, vjs> route_vj;
+    for(auto it = vehicle_journeys.begin(); it != vehicle_journeys.end(); ++it) {
+        route_vj[(*it)->route->external_code].push_back((*it));
+    }
+
+    for(auto it1 = route_vj.begin(); it1 != route_vj.end(); ++it1) {
+
+        for(auto vj1 = it1->second.begin(); vj1 != it1->second.end(); ++vj1) {
+
+            for(auto vj2 = (vj1+1); vj2 != it1->second.end(); ++vj2) {
+                if(((*vj1)->validity_pattern->days & (*vj2)->validity_pattern->days).any()) {
+                    navimake::types::VehicleJourney *vjs1, *vjs2;
+                    if((*vj1)->stop_time_list.front()->departure_time <= (*vj2)->stop_time_list.front()->departure_time) {
+                        vjs1 = *vj1;
+                        vjs2 = *vj2;
+                    }
+                    else {
+                        vjs1 = *vj2;
+                        vjs2 = *vj1;
+                    }
+                    for(auto rp = (*vj1)->route->route_point_list.begin(); rp != (*vj1)->route->route_point_list.end();++rp) {
+                        if(vjs1->stop_time_list.at((*rp)->order)->departure_time > vjs2->stop_time_list.at((*rp)->order)->departure_time) {
+                            toErase.insert((*vj2)->external_code);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    std::set<int> erasest;
+
+    for(auto stit = stops.begin(); stit != stops.end(); ++stit) {
+        auto it = toErase.find((*stit)->vehicle_journey->external_code);
+        if(it != toErase.end()) {
+            erasest.insert(distance(stops.begin(), stit));
+        }
+    }
+
+    for(auto it = erasest.rbegin(); it != erasest.rend(); ++it)
+        stops.erase(stops.begin()+*it);
+    erasest.clear();
+
+    for(auto vjit = vehicle_journeys.begin(); vjit != vehicle_journeys.end(); ++vjit) {
+        auto it = toErase.find((*vjit)->external_code);
+        if(it != toErase.end()) {
+            erasest.insert(distance(vehicle_journeys.begin(), vjit));
+        }
+    }
+
+    for(auto it = erasest.rbegin(); it != erasest.rend(); ++it)
+        vehicle_journeys.erase(vehicle_journeys.begin()+*it);
+
+    std::cout << "J'ai supprimé " << toErase.size() << "vehicle journey pour cause de dépassement dans le clean" << std::endl;
+
 }
 
 
@@ -156,8 +215,8 @@ void Data::build_relations(navitia::type::PT_Data &data){
     //BOOST_FOREACH(navitia::type::Connection & connection, data.connections){}
 
     BOOST_FOREACH(navitia::type::RoutePoint & route_point, data.route_points){
-            data.routes.at(route_point.route_idx).route_point_list.push_back(route_point.idx);
-            data.stop_points.at(route_point.stop_point_idx).route_point_list.push_back(route_point.idx);
+        data.routes.at(route_point.route_idx).route_point_list.push_back(route_point.idx);
+        data.stop_points.at(route_point.stop_point_idx).route_point_list.push_back(route_point.idx);
     }
 
     BOOST_FOREACH(navitia::type::StopTime & st, data.stop_times){
@@ -189,16 +248,12 @@ void Data::build_relations(navitia::type::PT_Data &data){
     }
 
     BOOST_FOREACH(navitia::type::Route & route, data.routes){
-         std::sort(route.vehicle_journey_list.begin(), route.vehicle_journey_list.end(), sort_vehicle_journey_list(data));
+        std::sort(route.vehicle_journey_list.begin(), route.vehicle_journey_list.end(), sort_vehicle_journey_list(data));
     }
 
-    BOOST_FOREACH(navitia::type::RoutePoint & routepoint, data.route_points) {
-        routepoint.vehicle_journey_list = data.routes.at(routepoint.route_idx).vehicle_journey_list;
-        routepoint.vehicle_journey_list_arrival = data.routes.at(routepoint.route_idx).vehicle_journey_list;
-        std::sort(routepoint.vehicle_journey_list.begin(), routepoint.vehicle_journey_list.end(), sort_vehicle_journey_list_rp(data, routepoint.order));
-        std::sort(routepoint.vehicle_journey_list_arrival.begin(), routepoint.vehicle_journey_list_arrival.end(), sort_vehicle_journey_list_rp_arrival(data, routepoint.order));
 
-    }
+
+
 
 
 

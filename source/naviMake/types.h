@@ -245,6 +245,7 @@ struct Route : public TransmodelHeader, Nameable{
     bool is_adapted;
     Line* line;
     Mode* mode;   
+    std::vector<RoutePoint*> route_point_list;
 
     struct Transformer{
         inline navitia::type::Route operator()(const Route* route){return this->operator()(*route);}
@@ -314,9 +315,9 @@ struct RoutePoint : public TransmodelHeader, Nameable{
 
 struct ValidityPattern: public TransmodelHeader {
 private:
-    std::bitset<366> days;
     bool is_valid(int duration);
 public:
+    std::bitset<366> days;
     boost::gregorian::date beginning_date;
     ValidityPattern(){}
     ValidityPattern(boost::gregorian::date beginning_date, const std::string & vp = "") : days(vp), beginning_date(beginning_date){}
