@@ -2,23 +2,8 @@
 
 namespace navitia { namespace routing {
 
-
-
-DateTime operator+(DateTime dt, int seconds) {
-    if(!(dt == DateTime::infinity()) && !(dt == DateTime::minimity())){
-        dt.hour += seconds;
-        dt.normalize();
-    }
-    return dt;
-}
-
-DateTime operator-(DateTime dt, int seconds) {
-    if(!(dt == DateTime::infinity()) && !(dt == DateTime::minimity())){
-        dt.hour -= seconds;
-        dt.normalize();
-    }
-    return dt;
-}
+DateTime DateTime::inf = DateTime::infinity();
+DateTime DateTime::min = DateTime::minimity();
 
 std::ostream & operator<<(std::ostream & os, const DateTime & dt){
     os << "D=" << dt.date << " " << dt.hour/(3600) << ":" << (dt.hour%3600)/60;

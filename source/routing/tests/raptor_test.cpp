@@ -264,3 +264,4 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
     BOOST_CHECK_EQUAL(res.items[6].arrival.hour, 4500);
 
 }
+

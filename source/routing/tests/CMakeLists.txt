@@ -20,13 +20,13 @@ target_link_libraries(raptor_test ${Boost_LIBRARIES} routing connectors)
 ADD_TEST(raptor ${EXECUTABLE_OUTPUT_PATH}/raptor_test --report_level=no)
 
 
-SET(SOURCE_TE
-    time_exp_test.cpp
-)
-add_executable(time_expanded_test ${SOURCE_TE})
-target_link_libraries(time_expanded_test ${Boost_LIBRARIES} routing connectors)
+#SET(SOURCE_TE
+#    time_exp_test.cpp
+#)
+#add_executable(time_expanded_test ${SOURCE_TE})
+#target_link_libraries(time_expanded_test ${Boost_LIBRARIES} routing connectors)
 
-ADD_TEST(time_expanded ${EXECUTABLE_OUTPUT_PATH}/time_expanded_test --report_level=no)
+#ADD_TEST(time_expanded ${EXECUTABLE_OUTPUT_PATH}/time_expanded_test --report_level=no)
 
 SET(SOURCE_ReR
     reverse_raptor_test.cpp
