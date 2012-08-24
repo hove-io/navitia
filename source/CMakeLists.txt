@@ -75,6 +75,7 @@ add_subdirectory(utils)
 add_subdirectory(lz4_filter)
 add_subdirectory(routing)
 add_subdirectory(georef)
+add_subdirectory(universalgw)
 
 #on génére le fichier config.h
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
