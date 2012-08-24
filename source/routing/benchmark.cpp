@@ -1,5 +1,6 @@
 #include "benchmark.h"
 #include <valgrind/callgrind.h>
+#include <boost/progress.hpp>
 namespace navitia { namespace routing { namespace benchmark {
 
 void benchmark::generate_input() {
@@ -79,12 +80,12 @@ void benchmark::load_input() {
 
 void benchmark::computeBench() {
     Timer tg("Timer General");
-//    std::cout << std::endl << "Lancement TimeDepedent" << std::endl;
-//    {
-//        Timer t("Benchmark TimeDependent");
-//        computeBench_td();
+    std::cout << std::endl << "Lancement TimeDepedent" << std::endl;
+    {
+        Timer t("Benchmark TimeDependent");
+        computeBench_td();
 
-//    }
+    }
 //    std::cout << std::endl << "Lancement TimeDepedent Astar" << std::endl;
 
 //    {
@@ -118,10 +119,10 @@ void benchmark::computeBench_td() {
     td.build_graph();
     std::fstream file(path+"/td", std::ios::out );
 
-    int count = 0;
+    boost::progress_display show_progress(inputdatas.size());
     BOOST_FOREACH(auto entry, inputdatas) {
-        ++count;
-        std::cout << count << std::flush;
+        //std::cout << count << std::flush;
+        ++show_progress;
         Timer t;
         Path result = td.compute(entry[0], entry[1], entry[2], entry[3]);
         int temps = t.ms();

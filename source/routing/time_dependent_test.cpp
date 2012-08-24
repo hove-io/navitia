@@ -1,6 +1,7 @@
 #include "time_dependent.h"
 #include "type/data.h"
 #include "utils/timer.h"
+#include <valgrind/callgrind.h>
 #include <time.h>
 using namespace navitia;
 
@@ -27,7 +28,7 @@ int main(int, char**){
     type::Data data;
     {
         Timer t("Chargement des données");
-        data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.nav");
+        data.load_lz4("IdF.lz4");
         std::cout << "Num RoutePoints : " << data.pt_data.route_points.size() << std::endl;
         int count = 0;
         BOOST_FOREACH(auto sp, data.pt_data.stop_points){
@@ -51,7 +52,9 @@ int main(int, char**){
         Timer t("Calcul itinéraire");
         std::cout << data.pt_data.stop_areas.at(14796).name << " à " << data.pt_data.stop_areas.at(14796).external_code  << std::endl;
         std::cout << data.pt_data.stop_areas.at(2460).name << " à " << data.pt_data.stop_areas.at(2460).external_code  << std::endl;
+        CALLGRIND_START_INSTRUMENTATION;
         auto result = td.compute(14796, 2460, 72000, 0);
+        CALLGRIND_STOP_INSTRUMENTATION;
         std::cout << result;
         std::cout << makeItineraire(result);
     }

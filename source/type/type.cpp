@@ -9,7 +9,7 @@
 
 namespace navitia { namespace type {
 
-bool ValidityPattern::is_valid(int duration){
+bool ValidityPattern::is_valid(int duration) const {
     if(duration < 0){
 
         std::cerr << "La date est avant le début de période(" << beginning_date << ")" << std::endl;
@@ -22,7 +22,7 @@ bool ValidityPattern::is_valid(int duration){
     return true;
 }
 
-int ValidityPattern::slide(boost::gregorian::date day) {
+int ValidityPattern::slide(boost::gregorian::date day) const {
     return (day - beginning_date).days();
 }
 
@@ -50,12 +50,12 @@ std::string ValidityPattern::str() const {
     return days.to_string();
 }
 
-bool ValidityPattern::check(boost::gregorian::date day) {
+bool ValidityPattern::check(boost::gregorian::date day) const {
     long duration = slide(day);
     return ValidityPattern::check(duration);
 }
 
-bool ValidityPattern::check(int day) {
+bool ValidityPattern::check(int day) const {
     if(is_valid(day))
         return days[day] == 1;
     else

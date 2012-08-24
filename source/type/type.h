@@ -388,14 +388,14 @@ struct RoutePoint : public NavitiaHeader{
 struct ValidityPattern : public NavitiaHeader {
     const static Type_e type = eValidityPattern;
 private:
-    bool is_valid(int duration);
+    bool is_valid(int duration) const;
 public:
     std::bitset<366> days;
     boost::gregorian::date beginning_date;
     idx_t idx;
     ValidityPattern() : idx(invalid_idx) {}
     ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date), idx(0){}
-    int slide(boost::gregorian::date day);
+    int slide(boost::gregorian::date day) const;
     void add(boost::gregorian::date day);
     void add(int day);
     void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
@@ -406,8 +406,8 @@ public:
         ar & beginning_date & days & idx;
     }
 
-    bool check(boost::gregorian::date day);
-    bool check(int day);
+    bool check(boost::gregorian::date day) const;
+    bool check(int day) const;
     //void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
 };
 
