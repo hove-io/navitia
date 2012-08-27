@@ -24,10 +24,10 @@ BOOST_AUTO_TEST_CASE(direct){
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[0].said, 0);
     BOOST_CHECK_EQUAL(res.items[1].said, 1);
-    BOOST_CHECK_EQUAL(res.items[0].departure.hour, 8050);
-    BOOST_CHECK_EQUAL(res.items[1].arrival.hour, 8100);
-    BOOST_CHECK_EQUAL(res.items[0].departure.date, 0);
-    BOOST_CHECK_EQUAL(res.items[1].arrival.date, 0);
+    BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8050);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8100);
+    BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 0);
 
 }
 
@@ -47,14 +47,14 @@ BOOST_AUTO_TEST_CASE(change){
     BOOST_CHECK_EQUAL(res.items[1].said, 1);
     BOOST_CHECK_EQUAL(res.items[2].said, 1);
     BOOST_CHECK_EQUAL(res.items[3].said, 4);
-    BOOST_CHECK_EQUAL(res.items[0].departure.hour, 8050);
-    BOOST_CHECK_EQUAL(res.items[1].arrival.hour, 8100);
-    BOOST_CHECK_EQUAL(res.items[2].departure.hour, 8250);
-    BOOST_CHECK_EQUAL(res.items[3].arrival.hour, 8300);
-    BOOST_CHECK_EQUAL(res.items[0].arrival.date, 0);
-    BOOST_CHECK_EQUAL(res.items[1].arrival.date, 0);
-    BOOST_CHECK_EQUAL(res.items[2].arrival.date, 0);
-    BOOST_CHECK_EQUAL(res.items[3].arrival.date, 0);
+    BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8050);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8100);
+    BOOST_CHECK_EQUAL(res.items[2].departure.hour(), 8250);
+    BOOST_CHECK_EQUAL(res.items[3].arrival.hour(), 8300);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[2].arrival.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[3].arrival.date(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(passe_minuit){
@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     BOOST_CHECK_EQUAL(res.items[1].said, 1);
     BOOST_CHECK_EQUAL(res.items[2].said, 1);
     BOOST_CHECK_EQUAL(res.items[3].said, 2);
-    BOOST_CHECK_EQUAL(res.items[0].departure.date, 0);
-    BOOST_CHECK_EQUAL(res.items[3].arrival.date, 1);
+    BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[3].arrival.date(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(passe_minuit_2){
@@ -98,8 +98,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2){
     BOOST_CHECK_EQUAL(res.items[1].said, 1);
     BOOST_CHECK_EQUAL(res.items[2].said, 1);
     BOOST_CHECK_EQUAL(res.items[3].said, 2);
-    BOOST_CHECK_EQUAL(res.items[0].departure.date, 0);
-    BOOST_CHECK_EQUAL(res.items[3].arrival.date, 1);
+    BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[3].arrival.date(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(passe_minuit_interne){
@@ -117,9 +117,9 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
     BOOST_CHECK_EQUAL(res.items[0].said, 0);
     BOOST_CHECK_EQUAL(res.items[1].said, 1);
     BOOST_CHECK_EQUAL(res.items[2].said, 2);
-    BOOST_CHECK_EQUAL(res.items[0].arrival.date, 0);
-    BOOST_CHECK_EQUAL(res.items[1].departure.date, 0);
-    BOOST_CHECK_EQUAL(res.items[2].arrival.date, 1);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[1].departure.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[2].arrival.date(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(validity_pattern){
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
     auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 0);
     std::cout << res << std::endl;
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
-    BOOST_CHECK_EQUAL(res.items[1].arrival.hour, 9200);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 9200);
 
     res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 1);
     BOOST_REQUIRE_EQUAL(res.items.size(), 0);
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
     auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7900, 0);
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 5);
-    BOOST_CHECK_EQUAL(res.items[4].arrival.hour, 9200);
+    BOOST_CHECK_EQUAL(res.items[4].arrival.hour(), 9200);
 }
 
 
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_trcky){
     auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7900, 0);
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 4);
-    BOOST_CHECK_EQUAL(res.items[3].arrival.hour, 9200);
+    BOOST_CHECK_EQUAL(res.items[3].arrival.hour(), 9200);
 }
 
 
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_fin){
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 3);
     BOOST_CHECK_EQUAL(res.items[2].said, 2);
-    BOOST_CHECK_EQUAL(res.items[2].arrival.hour, 8200+10*60);
+    BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 8200+10*60);
 }
 
 BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
@@ -221,8 +221,8 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
     auto res = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 7900, 0);
     BOOST_REQUIRE_EQUAL(res.items.size(), 5);
     BOOST_CHECK_EQUAL(res.items[4].said, 3);
-    BOOST_CHECK_EQUAL(res.items[4].arrival.hour, 2*3600+20);
-    BOOST_CHECK_EQUAL(res.items[4].arrival.date, 1);
+    BOOST_CHECK_EQUAL(res.items[4].arrival.hour(), 2*3600+20);
+    BOOST_CHECK_EQUAL(res.items[4].arrival.date(), 1);
 }
 
 
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_debut) {
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 3);
     BOOST_CHECK_EQUAL(res.items[2].said, 3);
-    BOOST_CHECK_EQUAL(res.items[2].arrival.hour, 40000);
+    BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 40000);
 }
 
 BOOST_AUTO_TEST_CASE(test_rattrapage) {
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 7);
     BOOST_CHECK_EQUAL(res.items[6].said, 3);
-    BOOST_CHECK_EQUAL(res.items[6].arrival.hour, 4500);
+    BOOST_CHECK_EQUAL(res.items[6].arrival.hour(), 4500);
 
 }
 

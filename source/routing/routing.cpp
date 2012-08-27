@@ -6,7 +6,7 @@ DateTime DateTime::inf = DateTime::infinity();
 DateTime DateTime::min = DateTime::minimity();
 
 std::ostream & operator<<(std::ostream & os, const DateTime & dt){
-    os << "D=" << dt.date << " " << dt.hour/(3600) << ":" << (dt.hour%3600)/60;
+    os << "D=" << dt.date() << " " << dt.hour()/(3600) << ":" << (dt.hour()%3600)/60;
     return os;
 }
 
@@ -16,7 +16,7 @@ std::ostream & operator<<(std::ostream & os, const Path & path) {
        << path.percent_visited << "% visited" << std::endl;
 
     BOOST_FOREACH(PathItem item, path.items) {
-        os  << item.said << " à " << item.arrival.hour << " le " << item.arrival.date << " avec "  << item.line_idx <<std::endl;
+        os  << item.said << " à " << item.arrival.hour() << " le " << item.arrival.date() << " avec "  << item.line_idx <<std::endl;
     }
     return os;
 }

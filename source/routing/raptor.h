@@ -39,11 +39,16 @@ struct type_retour {
     type_retour(unsigned int dist_to_dest) : stid(-1), said_emarquement(-1), dt(), dist_to_dest(dist_to_dest), dist_to_dep(0), type(vj){}
     type_retour() : stid(-1), said_emarquement(-1), dt(), dist_to_dest(0), dist_to_dep(0), type(uninitialized) {}
 
-    bool operator<(type_retour r2) const { return this->dt + this->dist_to_dest < r2.dt + dist_to_dest;}
-    bool operator>(type_retour r2) const { return this->dt + this->dist_to_dest > r2.dt + dist_to_dest;}
-
-    bool operator==(type_retour r2) const { return this->stid == r2.stid && this->dt.hour == r2.dt.hour && this->dt.date == r2.dt.date; }
-    bool operator!=(type_retour r2) const { return this->stid != r2.stid || this->dt.hour != r2.dt.hour || this->dt.date != r2.dt.date;}
+    bool operator<(type_retour r2) const {
+        if(r2.dt == DateTime::inf)
+            return true;
+        else if(this->dt == DateTime::inf)
+            return false;
+        else
+            return this->dt + this->dist_to_dest < r2.dt + dist_to_dest;
+    }
+    bool operator==(type_retour r2) const { return this->stid == r2.stid && this->dt == r2.dt; }
+    bool operator!=(type_retour r2) const { return this->stid != r2.stid || this->dt != r2.dt;}
 };
 
 struct best_dest {
@@ -70,7 +75,7 @@ struct best_dest {
     void ajouter_best_reverse(unsigned int said, type_retour t) {
         if(map_date_time.find(said) != map_date_time.end()) {
             map_date_time[said] = t;
-            if(t > best_now) {
+            if(best_now < t) {
                 best_now = t;
                 best_now_said = said;
             }
@@ -78,8 +83,7 @@ struct best_dest {
     }
 
     void reverse() {
-        best_now.dt.date = std::numeric_limits<int>::min();
-        best_now.dt.hour = std::numeric_limits<int>::min();
+        best_now.dt = DateTime::min;
     }
 
 };

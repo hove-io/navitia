@@ -127,7 +127,7 @@ void benchmark::computeBench_td() {
         Path result = td.compute(entry[0], entry[1], entry[2], entry[3]);
         int temps = t.ms();
         if(result.items.size() > 0)
-            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour <<"," << result.duration << ","
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour() <<"," << result.duration << ","
                  << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
         else
             file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << -1 <<"," << result.duration << ","
@@ -150,7 +150,7 @@ void benchmark::computeBench_tda() {
         Path result = td.compute_astar(entry[0], entry[1], entry[2], entry[3]);
         int temps = t.ms();
         if(result.items.size() > 0)
-            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour <<"," << result.duration << ","
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour() <<"," << result.duration << ","
                  << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
         else
             file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << -1 <<"," << result.duration << ","
@@ -217,7 +217,7 @@ void benchmark::computeBench_ra() {
         Path result = raptor.compute(entry[0], entry[1], entry[2], entry[3]);
         int temps = t.ms();
         if(result.items.size() > 0)
-            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour <<"," << result.duration << ","
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour() <<"," << result.duration << ","
                  << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
         else
             file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << -1 <<"," << result.duration << ","

@@ -14,10 +14,7 @@ public:
 
   // Estimation de l'heure d'arrivée. Cette heure doit est sous-estimée
   DateTime operator()(Vertex u){
-      DateTime result;
-      result.hour = td.astar_graph.min_time.at(u);
-      result.date = -1;
-      return result;
+      return DateTime(0xFFF, td.astar_graph.min_time.at(u));
   }
 private:
   const TimeDependent & td;
@@ -131,20 +128,20 @@ DateTime TimeTable::eval(const DateTime & departure, const type::PT_Data &data) 
         return departure + constant_duration;
 
     // On cherche le prochain départ le jour même par dichotomie
-    auto it = std::lower_bound(time_table.begin(), time_table.end(), departure.hour,
+    auto it = std::lower_bound(time_table.begin(), time_table.end(), departure.hour(),
                                [](const std::pair<ValidityPatternTime, ValidityPatternTime> & a, int hour){return a.first.hour < hour;});
     for(; it != time_table.end(); ++it){
         const type::ValidityPattern & vp = data.validity_patterns[it->first.vp_idx];
-        if(it->first.hour >= departure.hour && vp.check(departure.date)){
-           return DateTime(departure.date, it->second.hour);
+        if(it->first.hour >= departure.hour() && vp.check(departure.date())){
+            return DateTime(departure.date(), it->second.hour);
         }
     }
 
     // Zut ! on a rien trouvé le jour même, on regarde le lendemain au plus tôt
     for(auto it = this->time_table.begin(); it != time_table.end(); ++it){
         const type::ValidityPattern & vp = data.validity_patterns[it->first.vp_idx];
-        if(vp.check(departure.date + 1)){
-            return DateTime(departure.date + 1, it->second.hour);
+        if(vp.check(departure.date() + 1)){
+            return DateTime(departure.date() + 1, it->second.hour);
         }
     }
 
@@ -153,7 +150,7 @@ DateTime TimeTable::eval(const DateTime & departure, const type::PT_Data &data) 
 }
 
 DateTime TimeTable::first_departure(DateTime departure, const type::PT_Data &data) const{
-    if(departure == DateTime::infinity())
+    if(departure == DateTime::inf)
         return departure;
 
     if(this->constant_duration >= 0)
@@ -184,8 +181,7 @@ struct Combine{
         return t.eval(dt, data);
     }
     DateTime operator()(DateTime dt, const DateTime & t) const {
-        BOOST_ASSERT(t.date == -1);
-        dt.hour += t.hour;
+        dt.increment(t.hour());
         return dt;
     }
 };
@@ -207,9 +203,7 @@ std::ostream & operator<<(std::ostream & os, const PathItem & b){
 }
 
 Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day){
-    DateTime start_time;
-    start_time.date = day;
-    start_time.hour = hour;
+    DateTime start_time(day, hour);
 
     try{
         boost::dijkstra_shortest_paths(this->graph, dep,
@@ -229,9 +223,7 @@ Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day)
 
 
 Path TimeDependent::compute_astar(type::idx_t dep, type::idx_t arr, int hour, int day){
-    DateTime start_time;
-    start_time.date = day;
-    start_time.hour = hour;
+    DateTime start_time(day, hour);
 
 //    astar_graph.build_heuristic(arrival);
 
