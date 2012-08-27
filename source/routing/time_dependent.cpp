@@ -123,32 +123,33 @@ void TimeDependent::build_heuristic(uint destination) {
 }
 
 DateTime TimeTable::eval(const DateTime & departure, const type::PT_Data &data) const{
-    BOOST_ASSERT(departure.date >= 0);
     if(departure == DateTime::inf)
         return departure;
 
+    // Si on a des durée constantes, c'est simple à trouver
     if(this->constant_duration >= 0)
         return departure + constant_duration;
 
-    DateTime next_day;
-    // Todo : optimiser par dichotomie car les time_tables sont triées par heure de départ
-    //BOOST_FOREACH(auto pair, this->time_table){
+    // On cherche le prochain départ le jour même par dichotomie
     auto it = std::lower_bound(time_table.begin(), time_table.end(), departure.hour,
                                [](const std::pair<ValidityPatternTime, ValidityPatternTime> & a, int hour){return a.first.hour < hour;});
     for(; it != time_table.end(); ++it){
-        // Aha ! on a trouvé le premier départ le bon jour !
-        if(it->first.hour >= departure.hour && data.validity_patterns[it->first.vp_idx].check(departure.date)){
+        const type::ValidityPattern & vp = data.validity_patterns[it->first.vp_idx];
+        if(it->first.hour >= departure.hour && vp.check(departure.date)){
            return DateTime(departure.date, it->second.hour);
         }
     }
 
-    //BOOST_FOREACH(auto pair, this->time_table){
+    // Zut ! on a rien trouvé le jour même, on regarde le lendemain au plus tôt
     for(auto it = this->time_table.begin(); it != time_table.end(); ++it){
-        if(data.validity_patterns[it->first.vp_idx].check(departure.date + 1    )){
+        const type::ValidityPattern & vp = data.validity_patterns[it->first.vp_idx];
+        if(vp.check(departure.date + 1)){
             return DateTime(departure.date + 1, it->second.hour);
         }
     }
-    return next_day;
+
+    // Bon, on en fait cet arc n'est jamais utilisable
+    return DateTime::inf;
 }
 
 DateTime TimeTable::first_departure(DateTime departure, const type::PT_Data &data) const{
