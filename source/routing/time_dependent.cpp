@@ -122,37 +122,34 @@ void TimeDependent::build_heuristic(uint destination) {
     astar_graph.build_heuristic(destination);
 }
 
-DateTime TimeTable::eval(DateTime departure, const type::PT_Data &data) const{
-    BOOST_ASSERT(departure.date >= 0);
-    if(departure == DateTime::infinity())
+DateTime TimeTable::eval(const DateTime & departure, const type::PT_Data &data) const{
+    if(departure == DateTime::inf)
         return departure;
 
+    // Si on a des durée constantes, c'est simple à trouver
     if(this->constant_duration >= 0)
         return departure + constant_duration;
 
-    DateTime next_day;
-    // Todo : optimiser par dichotomie car les time_tables sont triées par heure de départ
-    BOOST_FOREACH(auto pair, this->time_table){
-        ValidityPatternTime dep = pair.first;
-
-        type::ValidityPattern vp = data.validity_patterns[dep.vp_idx];
-        // On garde la première date du lendemain si jamais on ne trouve rien
-        if(next_day == DateTime::infinity() && vp.check(departure.date + 1)){
-            next_day.date = departure.date + 1;
-            next_day.hour = pair.second.hour;
-        }
-
-        // Aha ! on a trouvé le premier départ le bon jour !
-        if(dep.hour >= departure.hour && vp.check(departure.date)){
-            DateTime result;
-            result.hour = pair.second.hour;
-            result.date = departure.date;            
-           // result.normalize();
-
-            return result;
+    // On cherche le prochain départ le jour même par dichotomie
+    auto it = std::lower_bound(time_table.begin(), time_table.end(), departure.hour,
+                               [](const std::pair<ValidityPatternTime, ValidityPatternTime> & a, int hour){return a.first.hour < hour;});
+    for(; it != time_table.end(); ++it){
+        const type::ValidityPattern & vp = data.validity_patterns[it->first.vp_idx];
+        if(it->first.hour >= departure.hour && vp.check(departure.date)){
+           return DateTime(departure.date, it->second.hour);
         }
     }
-    return next_day;
+
+    // Zut ! on a rien trouvé le jour même, on regarde le lendemain au plus tôt
+    for(auto it = this->time_table.begin(); it != time_table.end(); ++it){
+        const type::ValidityPattern & vp = data.validity_patterns[it->first.vp_idx];
+        if(vp.check(departure.date + 1)){
+            return DateTime(departure.date + 1, it->second.hour);
+        }
+    }
+
+    // Bon, on en fait cet arc n'est jamais utilisable
+    return DateTime::inf;
 }
 
 DateTime TimeTable::first_departure(DateTime departure, const type::PT_Data &data) const{
@@ -162,29 +159,7 @@ DateTime TimeTable::first_departure(DateTime departure, const type::PT_Data &dat
     if(this->constant_duration >= 0)
         return departure;
 
-    DateTime next_day;
-    // Todo : optimiser par dichotomie car les time_tables sont triées par heure de départ
-    BOOST_FOREACH(auto pair, this->time_table){
-        ValidityPatternTime dep = pair.first;
-
-        type::ValidityPattern vp = data.validity_patterns[dep.vp_idx];
-        // On garde la première date du lendemain si jamais on ne trouve rien
-        if(next_day == DateTime::infinity() && vp.check(departure.date + 1)){
-            next_day.date = departure.date + 1;
-            next_day.hour = pair.second.hour;
-        }
-
-        // Aha ! on a trouvé le premier départ le bon jour !
-        if(dep.hour >= departure.hour && vp.check(departure.date)){
-            DateTime result;
-            result.hour = pair.second.hour;
-            result.date = departure.date;
-           // result.normalize();
-
-            return result;
-        }
-    }
-    return next_day;
+    return eval(departure, data);
 }
 
 int TimeTable::min_duration() const {

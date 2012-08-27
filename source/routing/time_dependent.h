@@ -29,7 +29,7 @@ struct TimeTable {
      *
      * Prend en compte le passe-minuit
      */
-    DateTime eval(DateTime departure, const type::PT_Data & data) const;
+    DateTime eval(const DateTime &departure, const type::PT_Data & data) const;
 
     /** Retourne le premier départ possible à une heure donnée */
     DateTime first_departure(DateTime departure, const type::PT_Data & data) const;
