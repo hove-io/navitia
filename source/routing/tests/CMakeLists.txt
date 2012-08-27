@@ -31,7 +31,12 @@ ADD_TEST(raptor ${EXECUTABLE_OUTPUT_PATH}/raptor_test --report_level=no)
 SET(SOURCE_ReR
     reverse_raptor_test.cpp
 )
-add_executable(reverse_raptor_test ${SOURCE_ReR})
-target_link_libraries(reverse_raptor_test ${Boost_LIBRARIES} routing connectors )
 
-ADD_TEST(reverse_raptor ${EXECUTABLE_OUTPUT_PATH}/reverse_raptor_test --report_level=no)
+add_executable(datetime datetime.cpp)
+target_link_libraries(datetime ${Boost_LIBRARIES})
+ADD_TEST(datetime ${EXECUTABLE_OUTPUT_PATH}/datetime --report_level=no)
+
+#add_executable(reverse_raptor_test ${SOURCE_ReR})
+#target_link_libraries(reverse_raptor_test ${Boost_LIBRARIES} routing connectors )
+
+#ADD_TEST(reverse_raptor ${EXECUTABLE_OUTPUT_PATH}/reverse_raptor_test --report_level=no)

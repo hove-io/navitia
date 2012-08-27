@@ -16,45 +16,40 @@ struct NotFound{};
  * On utilise cette structure pendant le calcul d'itinéaire
  */
 struct DateTime {
-    // TODO : on pourrait optimiser la conso mémoire en utilisant 8 bits pour la date, et 24 pour l'heure ;)
-    int date;
-    int hour;
+
+    /** Mesdames, Messieurs, votre attention s'il vous plaît
+     * Pour des raisons de micro-optimisation, la date et l'heure sont codés sur un seul entier
+     * Les 12 bits les plus forts codent les jours
+     * Les 20 bits plus faibles codent l'heure
+     *
+     */
+private:
+    uint32_t datetime;
+    const static uint32_t hour_mask = 0x000FFFFF;
+    const static char date_offset = 20;
+
+public:
+    uint32_t hour() const {
+        return datetime & hour_mask;
+    }
+
+    uint32_t date() const {
+        return datetime >> date_offset;
+    }
 
     static DateTime inf;
     static DateTime min;
 
-    DateTime() : date(std::numeric_limits<int>::max()), hour(std::numeric_limits<int>::max()){}
-    DateTime(int date, int hour) : date(date), hour(hour) {}
-    DateTime(const DateTime & dt) : date(dt.date), hour(dt.hour) {}
+    DateTime() : datetime(std::numeric_limits<uint32_t>::max()){}
+    DateTime(int date, int hour) : datetime((date << date_offset) + hour) {}
+    DateTime(const DateTime & dt) : datetime(dt.datetime) {}
 
     bool operator<(DateTime other) const {
-        if(this->date == other.date)
-            return hour < other.hour;
-        else
-            return this->date < other.date;
-    }
-
-
-    bool operator>(DateTime other) const {
-        if(this->date == other.date)
-            return hour > other.hour;
-        else
-            return this->date > other.date;
-    }
-
-    bool operator>=(DateTime other) const {
-        if(this->date == other.date)
-            return hour >= other.hour;
-        else
-            return this->date > other.date;
+        return this->datetime < other.datetime;
     }
 
     bool operator<=(DateTime other) const {
-        other.normalize();
-        if(this->date == other.date)
-            return hour <= other.hour;
-        else
-            return this->date < other.date;
+        return this->datetime <= other.datetime;
     }
 
     static DateTime infinity() {
@@ -62,54 +57,69 @@ struct DateTime {
     }
 
     static DateTime minimity() {
-        return DateTime(std::numeric_limits<int>::min(), std::numeric_limits<int>::min());
+        return DateTime(0,0);
     }
 
     void normalize(){
-        if(date > 366) std::cout << "on normalise l'infini..." << std::endl;
-        if(this->hour < 0) {
-            --this->date;
-            this->hour = hour+ (24*3600);
-        } else {
-
-            this->date += this->hour / (24*3600);
-            this->hour = hour % (24*3600);
+        uint32_t hour = this->hour();
+        if(hour > 24*3600) {
+            *this = DateTime(this->date() + 1, hour % (24*3600));
         }
     }
 
     bool operator==(DateTime other) const {
-        return this->hour == other.hour && this->date == other.date;
+        return this->datetime == other.datetime;
     }
 
-    int operator-(DateTime other) {
-        return (this->date - other.date) * 86400 + this->hour - other.hour;
+    bool operator!=(DateTime other) const {
+        return this->datetime != other.datetime;
     }
 
-    void update(int hour) {
-        if(this->hour > hour) {
-            ++ this->date;
+
+    uint32_t operator-(DateTime other) {
+        return this->datetime - other.datetime;
+    }
+
+    void update(uint32_t hour) {
+        int date = this->date();
+        if(this->hour() > hour) {
+            ++date;
         }
-        this->hour = hour%86400;
+        this->datetime = (date << date_offset) + hour;
+    }
+
+    void increment(uint32_t secs){
+        datetime += secs;
+        this->normalize();
+    }
+
+    void date_decrement(){
+        datetime -= 1 << date_offset;
+    }
+
+    void date_increment(){
+        datetime += 1 << date_offset;
+    }
+
+    inline DateTime operator-(int seconds) {
+        if(!(*this == DateTime::inf) && !(*this == DateTime::min)){
+            datetime -= seconds;
+            normalize();
+        }
+        return *this;
     }
 };
 
-std::ostream & operator<<(std::ostream & os, const DateTime & dt);
 
 inline DateTime operator+(DateTime dt, int seconds) {
-    if(!(dt == DateTime::inf) && !(dt == DateTime::min)){
-        dt.hour += seconds;
-        dt.normalize();
-    }
+    dt.increment(seconds);
     return dt;
 }
 
-inline DateTime operator-(DateTime dt, int seconds) {
-    if(!(dt == DateTime::inf) && !(dt == DateTime::min)){
-        dt.hour -= seconds;
-        dt.normalize();
-    }
-    return dt;
-}
+std::ostream & operator<<(std::ostream & os, const DateTime & dt);
+
+
+
 /** Représente un horaire associé à un validity pattern
  *
  * Il s'agit donc des horaires théoriques
