@@ -135,7 +135,7 @@ struct communRAPTOR : public AbstractRouter
         navitia::type::idx_t idx;
 
         StopTime_t() : departure_time(std::numeric_limits<int32_t>::max()), arrival_time(std::numeric_limits<int32_t>::max()), idx(navitia::type::invalid_idx) {}
-        StopTime_t(navitia::type::StopTime & st) : departure_time(st.departure_time), arrival_time(st.arrival_time), idx(st.idx) {}
+        StopTime_t(navitia::type::StopTime & st) : departure_time(st.departure_time%86400), arrival_time(st.arrival_time%86400), idx(st.idx) {}
     };
 
     struct Connection_t {
@@ -185,7 +185,7 @@ struct communRAPTOR : public AbstractRouter
                     int departure_hour, int departure_day, vector_idxretour &departs, vector_idxretour &destinations);
 
 
-    inline std::pair<int, bool>  earliest_trip(const Route_t &route, unsigned int order, DateTime dt, int orderVj);
+    std::pair<int, bool> earliest_trip(const Route_t &route, unsigned int order, DateTime dt, int orderVj);
     std::pair<unsigned int, bool> tardiest_trip(unsigned int route, unsigned int stop_area, map_retour_t &retour, unsigned int count);
     std::pair<unsigned int, bool> tardiest_trip(unsigned int route, unsigned int stop_area, map_int_pint_t &best, unsigned int count);
     std::pair<unsigned int, bool> tardiest_trip(unsigned int route, unsigned int stop_area, DateTime dt);

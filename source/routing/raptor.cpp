@@ -167,28 +167,24 @@ std::pair<int, bool>  communRAPTOR::earliest_trip(const Route_t & route, unsigne
             upper = (orderVj<0)? route.nbTrips:orderVj+1, count = upper,
             first = 0;
 
-    //Recherche dichotomique du premier trip partant après dt.hour
-    while (count>0) {
-        it = first; step=count/2; it+=step;
-        if (stopTimes[route.firstStopTime + order + it*route.nbStops].departure_time%86400 < dt.hour) {
-            first=++it; count-=step+1;
+    if(route.vp.check(dt.date)) {
+        //Recherche dichotomique du premier trip partant après dt.hour
+        while (count>0) {
+            it = first; step=count/2; it+=step;
+            if (stopTimes[route.firstStopTime + order + it*route.nbStops].departure_time < dt.hour) {
+                first=++it; count-=step+1;
+            }
+            else count=step;
         }
-        else count=step;
-    }
 
-    //On recherche après le premier trip compatible avec la date dt.date
-    for(int i = first; i < upper; ++i)  {
-        if(route.vp.check(dt.date)) {
-            return std::pair<int, bool>(i, false);
-        }
+        if(first != upper)
+            return std::pair<int, bool>(first, false);
     }
 
     //Si on en a pas trouvé, on cherche le lendemain
     ++ dt.date;
-    for(int i = 0; i < route.nbTrips; ++i)  {
-        if(route.vp.check(dt.date)) {
-            return std::pair<int, bool>(i, true);
-        }
+    if(route.vp.check(dt.date)) {
+        return std::pair<int, bool>(0, true);
     }
 
     //Cette route ne comporte aucun trip compatible
@@ -363,6 +359,9 @@ void RAPTOR::make_queue3(boost::dynamic_bitset<> &stops, boost::dynamic_bitset<>
 
         stops.set(spid, false);
     }
+
+
+
 }
 
 
@@ -506,7 +505,7 @@ void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &
     int nbboucle = 0;
     //    Q.resize(routes.size());
 
-    while(marked_sp.any()/* && count < 7*/) {
+    while(marked_sp.any() /*&& count < 7*/) {
         retour.push_back(map_int_pint_t());
         retour.back().resize(data.pt_data.stop_points.size());
         make_queue3(marked_sp, routesValides, Q);
@@ -521,7 +520,7 @@ void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &
                 int spid = data.pt_data.route_points[data.pt_data.routes[route_.idx].route_point_list[i]].stop_point_idx;
                 if(t >= 0) {
                     const StopTime_t & st = stopTimes[get_stop_time_idx(route_, t, i)];
-                    workingDt.update(st.arrival_time%86400);
+                    workingDt.update(st.arrival_time);
                     //On stocke, et on marque pour explorer par la suite
                     if(workingDt < std::min(best[spid].dt, b_dest.best_now.dt)) {
                         const type_retour retour_temp = type_retour(st.idx, embarquement, workingDt);
