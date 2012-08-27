@@ -130,15 +130,16 @@ DateTime TimeTable::eval(const DateTime & departure, const type::PT_Data &data) 
     // On cherche le prochain départ le jour même par dichotomie
     auto it = std::lower_bound(time_table.begin(), time_table.end(), departure.hour(),
                                [](const std::pair<ValidityPatternTime, ValidityPatternTime> & a, int hour){return a.first.hour < hour;});
-    for(; it != time_table.end(); ++it){
+    auto end = time_table.end();
+    for(; it != end; ++it){
         const type::ValidityPattern & vp = data.validity_patterns[it->first.vp_idx];
-        if(it->first.hour >= departure.hour() && vp.check(departure.date())){
+        if(vp.check(departure.date())){
             return DateTime(departure.date(), it->second.hour);
         }
     }
 
     // Zut ! on a rien trouvé le jour même, on regarde le lendemain au plus tôt
-    for(auto it = this->time_table.begin(); it != time_table.end(); ++it){
+    for(auto it = this->time_table.begin(); it != end; ++it){
         const type::ValidityPattern & vp = data.validity_patterns[it->first.vp_idx];
         if(vp.check(departure.date() + 1)){
             return DateTime(departure.date() + 1, it->second.hour);
