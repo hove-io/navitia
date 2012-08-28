@@ -1,6 +1,7 @@
 #include "benchmark.h"
-#include <valgrind/callgrind.h>
+
 #include <boost/progress.hpp>
+
 namespace navitia { namespace routing { namespace benchmark {
 
 void benchmark::generate_input() {
@@ -107,11 +108,7 @@ void benchmark::computeBench() {
 
     {
         Timer t("Benchmark RAPTOR");
-
-        CALLGRIND_START_INSTRUMENTATION;
         computeBench_ra();
-
-        CALLGRIND_STOP_INSTRUMENTATION;
     }
 }
 void benchmark::computeBench_td() {
