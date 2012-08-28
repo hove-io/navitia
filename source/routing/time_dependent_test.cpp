@@ -1,7 +1,6 @@
 #include "time_dependent.h"
 #include "type/data.h"
 #include "utils/timer.h"
-#include <valgrind/callgrind.h>
 #include <time.h>
 using namespace navitia;
 
@@ -52,9 +51,7 @@ int main(int, char**){
         Timer t("Calcul itinéraire");
         std::cout << data.pt_data.stop_areas.at(14796).name << " à " << data.pt_data.stop_areas.at(14796).external_code  << std::endl;
         std::cout << data.pt_data.stop_areas.at(2460).name << " à " << data.pt_data.stop_areas.at(2460).external_code  << std::endl;
-        CALLGRIND_START_INSTRUMENTATION;
         auto result = td.compute(14796, 2460, 72000, 0);
-        CALLGRIND_STOP_INSTRUMENTATION;
         std::cout << result;
         std::cout << makeItineraire(result);
     }
