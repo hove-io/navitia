@@ -14,6 +14,7 @@
 #include "ptreferential/ptreferential.h"
 #include <boost/tokenizer.hpp>
 #include "utils/locker.h"
+#include "interface/renderer.h"
 
 using namespace webservice;
 
@@ -26,6 +27,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     std::unique_ptr<navitia::routing::raptor::RAPTOR> calculateur;
     std::unique_ptr<navitia::routing::raptor::reverseRAPTOR> calculateur_reverse;
     
+    pbnavitia::Response pb_response;
     /**
      * Vérifie la validité des paramétres, charge les données si elles ne le sont pas,
      * et gére le cas des données en cours de chargement
@@ -33,13 +35,12 @@ class Worker : public BaseWorker<navitia::type::Data> {
      * Retourne le Locker associé à la requéte, si il est bien vérouillé, le traitement peux continuer
      */
     navitia::utils::Locker check_and_init(RequestData & request, navitia::type::Data & d,
-                                          pbnavitia::API requested_api, pbnavitia::Response& pb_response, ResponseData& rd) {
+                                          pbnavitia::API requested_api, ResponseData& rd) {
         pb_response.set_requested_api(requested_api);
         if(!request.params_are_valid){
             rd.status_code = 400;
             rd.content_type = "application/octet-stream";
             pb_response.set_info("invalid argument");
-            pb_response.SerializeToOstream(&rd.response);
             return navitia::utils::Locker();
         }
         if(!d.loaded){
@@ -49,7 +50,6 @@ class Worker : public BaseWorker<navitia::type::Data> {
                 rd.status_code = 500;
                 rd.content_type = "application/octet-stream";
                 pb_response.set_error("error while loading data");
-                pb_response.SerializeToOstream(&rd.response);
                 return navitia::utils::Locker();
             }
         }
@@ -59,13 +59,20 @@ class Worker : public BaseWorker<navitia::type::Data> {
             rd.status_code = 503;
             rd.content_type = "application/octet-stream";
             pb_response.set_error("loading");
-            pb_response.SerializeToOstream(&rd.response);
             return navitia::utils::Locker();
         }
         return locker;
     }
+    
+    ///netoyage pour le traitement
+    virtual void pre_compute(webservice::RequestData&, nt::Data&){
+        pb_response.Clear();
+    }
 
-
+    ///gestion du format de sortie
+    virtual void post_compute(webservice::RequestData& request, webservice::ResponseData& response){
+        navitia::render(request, response, pb_response);
+    }
 
     /**
      * méthode qui parse le paramètre filter afin de retourner une liste de Type_e
@@ -92,8 +99,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData firstletter(RequestData& request, navitia::type::Data &data){
         ResponseData rd;
-        pbnavitia::Response pb_response;
-        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::FIRSTLETTER, pb_response, rd));
+        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::FIRSTLETTER, rd));
         if(!locker.locked){
             return rd;
         }
@@ -103,8 +109,6 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
         try{
             pb_response = navitia::firstletter::firstletter(name, filter, data);
-            pb_response.SerializeToOstream(&rd.response);
-            rd.content_type = "application/octet-stream";
             rd.status_code = 200;
         }catch(...){
             rd.status_code = 500;
@@ -114,8 +118,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData streetnetwork(RequestData & request, navitia::type::Data & data){
         ResponseData rd;
-        pbnavitia::Response pb_response;
-        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::STREET_NETWORK, pb_response, rd));
+        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::STREET_NETWORK, rd));
         if(!locker.locked){
             return rd;
         }
@@ -124,8 +127,6 @@ class Worker : public BaseWorker<navitia::type::Data> {
         nt::GeographicalCoord destination(boost::get<double>(request.parsed_params["destlon"].value), boost::get<double>(request.parsed_params["destlat"].value), true);
 
         pb_response = navitia::streetnetwork::street_network(origin, destination, data);
-        pb_response.SerializeToOstream(&rd.response);
-        rd.content_type = "application/octet-stream";
         rd.status_code = 200;
 
         return rd;
@@ -152,29 +153,24 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData load(RequestData, navitia::type::Data & d){
         log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-        pbnavitia::Response pb_response;
         pb_response.set_requested_api(pbnavitia::LOAD);
         ResponseData rd;
-        rd.content_type = "application/octet-stream";
         try{
             load(d);
         }catch(...){
             pb_response.set_error("Erreur durant le chargement");
             rd.status_code = 500;
-            pb_response.SerializeToOstream(&rd.response);
             return rd;
         }
         pb_response.set_info("loaded!");
-        pb_response.SerializeToOstream(&rd.response);
         rd.status_code = 200;
         LOG4CPLUS_INFO(logger, "Chargement fini");
         return rd;
     }
 
     ResponseData proximitylist(RequestData & request, navitia::type::Data &data){
-        pbnavitia::Response pb_response;
         ResponseData rd;
-        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::PROXIMITYLIST, pb_response, rd));
+        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::PROXIMITYLIST, rd));
         if(!locker.locked){
             return rd;
         }
@@ -189,8 +185,6 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
         try{
             pb_response = navitia::proximitylist::find(coord, distance, filter, data);
-            pb_response.SerializeToOstream(&rd.response);
-            rd.content_type = "application/octet-stream";
             rd.status_code = 200;
         }catch(...){
             rd.status_code = 500;
@@ -203,8 +197,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData planner(RequestData & request, navitia::type::Data & d) {
         ResponseData rd;
-        pbnavitia::Response pb_response;
-        navitia::utils::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, pb_response, rd));
+        navitia::utils::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, rd));
         if(!locker.locked){
             return rd;
         }
@@ -229,8 +222,6 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
         pb_response = navitia::routing::raptor::make_response(pathes, d);
 
-        pb_response.SerializeToOstream(&rd.response);
-        rd.content_type = "application/octet-stream";
         rd.status_code = 200;
         return rd;
     }
@@ -238,8 +229,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData plannerreverse(RequestData & request, navitia::type::Data & d) {
         ResponseData rd;
-        pbnavitia::Response pb_response;
-        navitia::utils::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, pb_response, rd));
+        navitia::utils::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, rd));
         if(!locker.locked){
             return rd;
         }
@@ -264,8 +254,6 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
         pb_response = navitia::routing::raptor::make_response(pathes, d);
 
-        pb_response.SerializeToOstream(&rd.response);
-        rd.content_type = "application/octet-stream";
         rd.status_code = 200;
         return rd;
     }
@@ -273,16 +261,13 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData ptref(RequestData & request, navitia::type::Data &data){
         ResponseData rd;
 
-        pbnavitia::Response pb_response;
-        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::PTREFERENTIAL, pb_response, rd));
+        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::PTREFERENTIAL, rd));
         if(!locker.locked){
             return rd;
         }
         try {
             std::string q = boost::get<std::string>(request.parsed_params["q"].value);
             pb_response = navitia::ptref::query(q, data.pt_data);
-            pb_response.SerializeToOstream(&rd.response);
-            rd.content_type = "application/octet-stream";
             rd.status_code = 200;
         }catch(...){
             rd.status_code = 500;
