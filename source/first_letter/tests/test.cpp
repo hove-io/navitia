@@ -120,15 +120,16 @@ BOOST_AUTO_TEST_CASE(parse_state_nb_found_test){
 
         auto res = fl.find_partial("rue jean");
         BOOST_REQUIRE_EQUAL(res.size(), 4);
-        BOOST_REQUIRE_EQUAL(res.at(0).idx, 5);
-        BOOST_REQUIRE_EQUAL(res.at(1).idx, 1);
-        BOOST_REQUIRE_EQUAL(res.at(2).idx, 0);
-        BOOST_REQUIRE_EQUAL(res.at(3).idx, 2);
+        BOOST_CHECK_EQUAL(res.at(0).idx, 5);
+        BOOST_CHECK_EQUAL(res.at(1).idx, 1);
+        //Ils on la même qualité, l'ordre est donc indéterminé
+        BOOST_CHECK(res.at(2).idx == 0 || res.at(2).idx == 2);
+        BOOST_CHECK(res.at(3).idx == 0 || res.at(3).idx == 2);
 
-        BOOST_REQUIRE_EQUAL(res.at(0).quality, 66);
-        BOOST_REQUIRE_EQUAL(res.at(1).quality, 50);
-        BOOST_REQUIRE_EQUAL(res.at(2).quality, 33);
-        BOOST_REQUIRE_EQUAL(res.at(3).quality, 33);
+        BOOST_CHECK_EQUAL(res.at(0).quality, 66);
+        BOOST_CHECK_EQUAL(res.at(1).quality, 50);
+        BOOST_CHECK_EQUAL(res.at(2).quality, 33);
+        BOOST_CHECK_EQUAL(res.at(3).quality, 33);
     }
 
 /*
