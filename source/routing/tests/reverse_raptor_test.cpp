@@ -105,26 +105,26 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
 }
 
 
-//BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
-//    navimake::builder b("20120614");
-//    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
-//    b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
-//    b.connection("stop2", "stop3", 10*60);
-//    b.connection("stop3", "stop2", 10*60);
-//    type::Data data;
-//    data.pt_data = b.build();
-//    reverseRAPTOR raptor(data);
+BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
+    navimake::builder b("20120614");
+    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
+    b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
+    b.connection("stop2", "stop3", 10*60);
+    b.connection("stop3", "stop2", 10*60);
+    type::Data data;
+    data.pt_data = b.build();
+    reverseRAPTOR raptor(data);
 
-//    type::PT_Data d = data.pt_data;
+    type::PT_Data d = data.pt_data;
 
 
 
-//    auto res = raptor.compute(d.stop_areas[3].idx, d.stop_areas[0].idx, 9300, 0);
+    auto res = raptor.compute(d.stop_areas[3].idx, d.stop_areas[0].idx, 9300, 0);
 
-//    BOOST_REQUIRE_EQUAL(res.items.size(), 5);
-//    BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8050);
-//    BOOST_CHECK_EQUAL(res.items[4].arrival.hour(), 9200);
-//}
+    BOOST_REQUIRE_EQUAL(res.items.size(), 5);
+    BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8050);
+    BOOST_CHECK_EQUAL(res.items[4].arrival.hour(), 9200);
+}
 
 
 
