@@ -171,9 +171,11 @@ struct communRAPTOR : public AbstractRouter
     compare_rp cp;
 //    google::dense_hash_map<unsigned int, list_connections> foot_path;
     std::vector<Connection_t> foot_path;
+    std::vector<Connection_t> foot_path_reverse;
     std::vector<Route_t> routes;
     std::vector<StopTime_t> stopTimes;
     std::vector<pair_int> footpath_index;
+    std::vector<pair_int> footpathreverse_index;
     std::vector<pair_int> sp_indexrouteorder;
     std::vector<pair_int> sp_routeorder;
 //    std::vector<vector_pairint> sp_routeorder;

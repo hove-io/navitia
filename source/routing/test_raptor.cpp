@@ -119,11 +119,11 @@ int main(int, char **) {
     b.connection("stop3", "stop2", 10*60);
     type::Data data;
     data.pt_data =  b.build();
-    navitia::routing::raptor::RAPTOR raptor(data);
+    navitia::routing::raptor::reverseRAPTOR raptor(data);
 
     type::PT_Data d = data.pt_data;
 
-    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7900, 0);
+    auto res = raptor.compute(d.stop_areas[3].idx, d.stop_areas[0].idx, 9300, 0);
     std::cout << res << std::endl;
 
 

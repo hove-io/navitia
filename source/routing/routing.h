@@ -100,6 +100,17 @@ public:
 
     }
 
+    void updatereverse(int32_t hour) {
+        int date = this->date();
+        if(this->hour() < hour) {
+            --date;
+            this->datetime = (date << date_offset) + hour;
+        } else {
+            this->datetime -= (this->hour() - hour);
+        }
+
+    }
+
     void increment(uint32_t secs){
         datetime += secs;
         this->normalize();

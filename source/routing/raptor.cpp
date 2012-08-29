@@ -5,10 +5,12 @@ communRAPTOR::communRAPTOR(navitia::type::Data &data) : data(data), cp(data)
 {
     //Construction de la liste des marche à pied à partir des connections renseignées
     Timer t;
-    std::vector<list_connections> footpath_temp;
+    std::vector<list_connections> footpath_temp, footpathreverse_temp;
     footpath_temp.resize(data.pt_data.stop_points.size());
+    footpathreverse_temp.resize(data.pt_data.stop_points.size());
     BOOST_FOREACH(navitia::type::Connection connection, data.pt_data.connections) {
         footpath_temp[connection.departure_stop_point_idx].push_back(Connection_t(connection.departure_stop_point_idx, connection.destination_stop_point_idx, connection.idx, connection.duration));
+        footpathreverse_temp[connection.destination_stop_point_idx].push_back(Connection_t(connection.departure_stop_point_idx, connection.destination_stop_point_idx, connection.idx, connection.duration));
     }
 
     //On rajoute des connexions entre les stops points d'un même stop area si elles n'existent pas
@@ -17,6 +19,7 @@ communRAPTOR::communRAPTOR(navitia::type::Data &data) : data(data), cp(data)
 
         navitia::type::StopArea sa = data.pt_data.stop_areas.at(sp.stop_area_idx);
         footpath_index[sp.idx].first = foot_path.size();
+
         int size = footpath_temp[sp.idx].size();
         foot_path.insert(foot_path.end(), footpath_temp[sp.idx].begin(), footpath_temp[sp.idx].end());
 
@@ -40,6 +43,37 @@ communRAPTOR::communRAPTOR(navitia::type::Data &data) : data(data), cp(data)
             }
         }
         footpath_index[sp.idx].second = size;
+    }
+
+    footpathreverse_index.resize(data.pt_data.stop_points.size());
+    BOOST_FOREACH(navitia::type::StopPoint sp, data.pt_data.stop_points) {
+
+        navitia::type::StopArea sa = data.pt_data.stop_areas.at(sp.stop_area_idx);
+        footpathreverse_index[sp.idx].first = foot_path_reverse.size();
+
+        int size = footpathreverse_temp[sp.idx].size();
+        foot_path_reverse.insert(foot_path_reverse.end(), footpathreverse_temp[sp.idx].begin(), footpathreverse_temp[sp.idx].end());
+
+
+
+        BOOST_FOREACH(navitia::type::idx_t spidx, sa.stop_point_list) {
+
+            if(sp.idx != spidx) {
+                bool find = false;
+                BOOST_FOREACH(Connection_t connection, footpathreverse_temp[sp.idx]) {
+                    if(connection.destination_sp == spidx) {
+                        find = true;
+                        break;
+                    }
+                }
+                if(!find) {
+                    foot_path_reverse.push_back(Connection_t(sp.idx, spidx, 2*60));
+                    ++size;
+                }
+
+            }
+        }
+        footpathreverse_index[sp.idx].second = size;
     }
 
 
@@ -258,16 +292,16 @@ void RAPTOR::marcheapied(/*std::vector<unsigned int>*/boost::dynamic_bitset<> & 
 
 
 void reverseRAPTOR::marcheapied(boost::dynamic_bitset<> & marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int count) {
-    auto it = foot_path.begin();
+    auto it = foot_path_reverse.begin();
     int last = 0;
     for(auto stop_point= marked_stop.find_first(); stop_point != marked_stop.npos; stop_point = marked_stop.find_next(stop_point)) {
-        const auto & index = footpath_index[stop_point];
+        const auto & index = footpathreverse_index[stop_point];
         advance(it, index.first - last);
         const auto end = it + index.second;
         for(; it != end; ++it) {
             const type_retour & retour_temp = retour[count][stop_point];
             const DateTime dtTemp = retour_temp.dt - (*it).duration;
-            if(dtTemp > best[(*it).destination_sp].dt) {
+            if(dtTemp > best[(*it).departure_sp].dt) {
                 const type_retour nRetour = type_retour(navitia::type::invalid_idx, stop_point, dtTemp, connection);
                 best[(*it).departure_sp] = nRetour;
                 retour[count][(*it).departure_sp] = nRetour;
@@ -509,7 +543,7 @@ void reverseRAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_ret
 
                 if(t >= 0) {
                     const StopTime_t & st = stopTimes[get_stop_time_idx(route, t, i)];
-                    workingDt.update(st.arrival_time);
+                    workingDt.updatereverse(st.arrival_time);
                     //On stocke, et on marque pour explorer par la suite
                     if(workingDt > std::max(best[spid].dt, b_dest.best_now.dt)) {
                         const type_retour retour_temp = type_retour(st.idx, embarquement, workingDt);
@@ -531,7 +565,7 @@ void reverseRAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_ret
                     if(t >=0) {
                         workingDt = retour[count -1][spid].dt;
                         embarquement = spid;
-                        workingDt.update(get_temps_depart(route, t,i));
+                        workingDt.updatereverse(get_temps_depart(route, t,i));
                     }
                 }
             }
