@@ -5,9 +5,9 @@ namespace webservice {typedef FCGX_Request RequestHandle; /**< Handle de la requ
 
 #include <csignal>
 #include "data_structures.h"
-#include "type/pb_utils.h"
 #include <readline/readline.h>
 #include <readline/history.h>
+
 namespace webservice {
     /// Gère la requête (lecture des paramètres)
     template<class Worker, class Data> void request_parser(RequestHandle* handle, Worker & w, Data & data){

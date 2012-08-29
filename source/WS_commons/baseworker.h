@@ -333,23 +333,10 @@ namespace webservice
                 query.raw_params = request.substr(pos+1);
             }
             auto response = dispatch(query, d);
-            std::string json_resp;
-            if(response.content_type == "application/octet-stream"){
-                try{
-                    auto pb = create_pb();
-                    pb->ParseFromIstream(&response.response);
-                    json_resp = pb2json(pb.get());
-                    result << "Taille protobuf : " << (response.response.str().size()/1024) << "ko, taille json : " << json_resp.size()/1024 <<  "ko" << std::endl;
-                } catch(...){
-                    json_resp = response.response.str();
-                }
-            }else{
-                json_resp = response.response.str();
-            }
 
             auto end = std::chrono::high_resolution_clock::now();
             result << "Durée d'exécution : " << std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count() << "ms" << std::endl;
-            result << json_resp << std::endl;
+            result << response.response.str() << std::endl;
             return result.str();
         }
     };

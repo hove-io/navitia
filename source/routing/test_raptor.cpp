@@ -5,8 +5,6 @@
 #include "naviMake/build_helper.h"
 #include <boost/algorithm/string.hpp>
 
-#include <valgrind/callgrind.h>
-
 using namespace navitia;
 
 int main(int, char **) {
@@ -54,6 +52,7 @@ int main(int, char **) {
     //    std::cout << "size : " << data.pt_data.route_points.at(10).vehicle_journey_list_arrival.size() << " "
     //              << data.pt_data.route_points.at(10).vehicle_journey_list.size()   << std::endl;
 
+<<<<<<< HEAD
 //    routing::raptor::RAPTOR raptor(data);
 //    {
 //        Timer t("Calcul raptor");
@@ -70,6 +69,22 @@ int main(int, char **) {
 //        //        }
 //        //        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
 //    }
+=======
+    routing::raptor::RAPTOR raptor(data);
+    {
+        Timer t("Calcul raptor");
+        auto result = raptor.compute(16482, 16483, 28800, 0);
+        std::cout << result << std::endl;
+//        std::cout << makeItineraire(result);
+
+        //        BOOST_FOREACH(auto pouet, result) {
+        //        std::cout << pouet << std::endl << std::endl;
+
+        //        std::cout << makeItineraire(pouet);
+        //        }
+        //        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
+    }
+>>>>>>> e443aa2fd45b60ce8dcef987828ce2d34e6df8b0
 
 //    BOOST_FOREACH(unsigned int spidx, data.pt_data.stop_areas.at(3849).stop_point_list) {
 //        BOOST_FOREACH(unsigned int rpidx, data.pt_data.stop_points.at(spidx).route_point_list) {

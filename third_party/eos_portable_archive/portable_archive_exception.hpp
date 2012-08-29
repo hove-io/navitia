@@ -1,3 +1,17 @@
+/*****************************************************************************/
+/**
+ * \file portable_archive_exception.hpp
+ * \brief Provides error handling and constants.
+ * \author christian.pfligersdorffer@gmx.at
+ *
+ * Portable archive exceptions derive from the boost archive exceptions
+ * and add failure causes specific to the portable binary usecase.
+ *
+ * Additionally this header serves as common include for important
+ * constants or typedefs.
+ */
+/****************************************************************************/
+
 #pragma once
 
 #include <boost/lexical_cast.hpp>
