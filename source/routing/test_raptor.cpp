@@ -120,11 +120,11 @@ int main(int, char **) {
     b.connection("stop3", "stop2", 10*60);
     type::Data data;
     data.pt_data =  b.build();
-    navitia::routing::raptor::reverseRAPTOR raptor(data);
+    navitia::routing::raptor::RAPTOR raptor(data);
 
     type::PT_Data d = data.pt_data;
 
-    auto res = raptor.compute(d.stop_areas.at(3).idx, d.stop_areas.at(0).idx, 30, 1);
+    auto res = raptor.compute_reverse(d.stop_areas.at(3).idx, d.stop_areas.at(0).idx, 30, 1);
     std::cout << res << std::endl;
 
 

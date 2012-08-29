@@ -25,7 +25,6 @@ namespace nt = navitia::type;
 class Worker : public BaseWorker<navitia::type::Data> {
 
     std::unique_ptr<navitia::routing::raptor::RAPTOR> calculateur;
-    std::unique_ptr<navitia::routing::raptor::reverseRAPTOR> calculateur_reverse;
     
     pbnavitia::Response pb_response;
     /**
@@ -143,7 +142,6 @@ class Worker : public BaseWorker<navitia::type::Data> {
             data.load_lz4(database);
             data.build_proximity_list();
             calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(data));
-            calculateur_reverse = std::unique_ptr<navitia::routing::raptor::reverseRAPTOR>(new navitia::routing::raptor::reverseRAPTOR(data));
         }catch(...){
             data.loaded = false;
             throw;
@@ -240,14 +238,14 @@ class Worker : public BaseWorker<navitia::type::Data> {
         if(request.parsed_params.count("departure") ==1) {
             navitia::type::EntryPoint departure(boost::get<std::string>(request.parsed_params["departure"].value));
             navitia::type::EntryPoint destination(boost::get<std::string>(request.parsed_params["destination"].value));
-            pathes = calculateur_reverse->compute_all(departure, destination, time, 7);
+            pathes = calculateur->compute_all(departure, destination, time, 7);
         } else {
             double departure_lat = boost::get<double>(request.parsed_params["departure_lat"].value);
             double departure_lon = boost::get<double>(request.parsed_params["departure_lon"].value);
             double arrival_lat = boost::get<double>(request.parsed_params["destination_lat"].value);
             double arrival_lon = boost::get<double>(request.parsed_params["destination_lon"].value);
 
-            pathes = calculateur_reverse->compute_all(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
+            pathes = calculateur->compute_all(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
         }
 
         std::cout << "Nb itineraires : " << pathes.size() << std::endl;

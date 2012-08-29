@@ -211,7 +211,7 @@ void RAPTOR::make_queue(boost::dynamic_bitset<> &stops, boost::dynamic_bitset<> 
     }
 }
 
-void reverseRAPTOR::make_queue(boost::dynamic_bitset<> &stops, boost::dynamic_bitset<> & routesValides, queue_t &Q) {
+void RAPTOR::make_queuereverse(boost::dynamic_bitset<> &stops, boost::dynamic_bitset<> & routesValides, queue_t &Q) {
     Q.assign(routes.size(), std::numeric_limits<int>::min());
 
     auto it = sp_routeorder.begin();
@@ -257,7 +257,7 @@ void RAPTOR::marcheapied(/*std::vector<unsigned int>*/boost::dynamic_bitset<> & 
 }
 
 
-void reverseRAPTOR::marcheapied(boost::dynamic_bitset<> & marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int count) {
+void RAPTOR::marcheapiedreverse(boost::dynamic_bitset<> & marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int count) {
     auto it = foot_path.begin();
     int last = 0;
     for(auto stop_point= marked_stop.find_first(); stop_point != marked_stop.npos; stop_point = marked_stop.find_next(stop_point)) {
@@ -279,7 +279,7 @@ void reverseRAPTOR::marcheapied(boost::dynamic_bitset<> & marked_stop, map_retou
     }
 }
 
-Path monoRAPTOR::compute_raptor(vector_idxretour departs, vector_idxretour destinations) {
+Path RAPTOR::compute_raptor(vector_idxretour departs, vector_idxretour destinations) {
     map_retour_t retour;
     map_int_pint_t best;
     best.resize(data.pt_data.stop_points.size());
@@ -305,16 +305,6 @@ Path monoRAPTOR::compute_raptor(vector_idxretour departs, vector_idxretour desti
 
 
     boucleRAPTOR(marked_stop, retour, best, b_dest, count);
-    //    std::cout << "Fin boucle : " << std::flush << data.pt_data.vehicle_journeys[data.pt_data.stop_times[retour[1][17389].stid].vehicle_journey_idx].route_idx << std::endl;
-
-    //    BOOST_FOREACH(auto item1, retour) {
-    //        std::cout << "Count : " << item1.first << std::endl;
-
-    //        BOOST_FOREACH(auto item2, item1.second) {
-    //            std::cout << "Stop area : " << item2.first << " : "  << item2.second.dt.date << " " << item2.second.dt.hour << " " << item2.second.stid << std::endl;
-    //        }
-    //    }
-
 
     if(b_dest.best_now.type != uninitialized) {
         unsigned int destination_idx = b_dest.best_now_spid;
@@ -324,8 +314,42 @@ Path monoRAPTOR::compute_raptor(vector_idxretour departs, vector_idxretour desti
     return result;
 }
 
+Path RAPTOR::compute_raptor_reverse(vector_idxretour departs, vector_idxretour destinations) {
+    map_retour_t retour;
+    map_int_pint_t best;
+    best.resize(data.pt_data.stop_points.size());
+    //    best.reserve(sizeof(type_retour) * data.pt_data.stop_areas.size());
+    std::vector<unsigned int> marked_stop;
 
-std::vector<Path> monoRAPTOR::compute_all(vector_idxretour departs, vector_idxretour destinations) {
+
+    retour.push_back(map_int_pint_t());
+    retour.back().resize(data.pt_data.stop_points.size());
+    BOOST_FOREACH(auto item, departs) {
+        retour.back()[item.first] = item.second;
+        best[item.first] = item.second;
+        marked_stop.push_back(item.first);
+    }
+
+    best_dest b_dest;
+
+    BOOST_FOREACH(auto item, destinations) {
+        b_dest.ajouter_destination(item.first, item.second);
+    }
+
+    unsigned int count = 1;
+
+
+    boucleRAPTORreverse(marked_stop, retour, best, b_dest, count);
+
+    if(b_dest.best_now.type != uninitialized) {
+        unsigned int destination_idx = b_dest.best_now_spid;
+        return makeBestPathreverse(retour, best, departs, destination_idx, count);
+    }
+    Path result;
+    return result;
+}
+
+std::vector<Path> RAPTOR::compute_all(vector_idxretour departs, vector_idxretour destinations) {
     map_retour_t retour;
     map_int_pint_t best;
     std::vector<unsigned int> marked_stop;
@@ -380,7 +404,7 @@ void RAPTOR::setRoutesValides(boost::dynamic_bitset<> &routesValides, std::vecto
 
 }
 
-void reverseRAPTOR::setRoutesValides(boost::dynamic_bitset<> &routesValides, std::vector<unsigned int> &marked_stop, map_retour_t &retour) {
+void RAPTOR::setRoutesValidesreverse(boost::dynamic_bitset<> &routesValides, std::vector<unsigned int> &marked_stop, map_retour_t &retour) {
 
     //On cherche la premiere date
     uint32_t date = std::numeric_limits<uint32_t>::min();
@@ -471,7 +495,7 @@ void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &
 }
 
 
-void reverseRAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count) {
+void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count) {
     queue_t Q;
 
 
@@ -484,9 +508,9 @@ void reverseRAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_ret
         marked_sp.set(said);
     }
 
-    setRoutesValides(routesValides, marked_stop, retour);
+    setRoutesValidesreverse(routesValides, marked_stop, retour);
 
-    marcheapied(marked_sp, retour, best, b_dest, 0);
+    marcheapiedreverse(marked_sp, retour, best, b_dest, 0);
 
     b_dest.reverse();
     for(unsigned int i = 0; i < best.size(); ++i)
@@ -496,8 +520,8 @@ void reverseRAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_ret
     bool end = false;
     while(!end) {
         end = true;
-        retour.push_back(retour_constant);
-        make_queue(marked_sp, routesValides, Q);
+        retour.push_back(retour_constant_reverse);
+        make_queuereverse(marked_sp, routesValides, Q);
         routeidx = 0;
         BOOST_FOREACH(queue_t::value_type vq, Q) {
             t = -1;
@@ -524,26 +548,26 @@ void reverseRAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_ret
                 //Si on peut arriver plus tôt à l'arrêt en passant par une autre route
                 const type_retour & retour_temp = retour[count-1][spid];
                 if((retour_temp.type != uninitialized) &&
-                        (((retour_temp.dt.hour() >= get_temps_depart(route, t, i)) && (retour_temp.dt.date() == workingDt.date()) ) ||
+                        (((retour_temp.dt.hour() >= get_temps_departreverse(route, t, i)) && (retour_temp.dt.date() == workingDt.date()) ) ||
                          ((retour_temp.dt.date() > workingDt.date()) ))) {
                     t = tardiest_trip(route, i, retour_temp.dt, t);
                     if(t >=0) {
-                        workingDt = retour[count -1][spid].dt;
+                        workingDt = retour[count - 1][spid].dt;
                         embarquement = spid;
-                        workingDt.updatereverse(get_temps_depart(route, t,i));
+                        workingDt.updatereverse(get_temps_departreverse(route, t,i));
                     }
                 }
             }
             ++routeidx;
         }
-        marcheapied(marked_sp, retour, best, b_dest, count);
+        marcheapiedreverse(marked_sp, retour, best, b_dest, count);
         ++count;
 
     }
 }
 
 
-Path monoRAPTOR::makeBestPath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count) {
+Path RAPTOR::makeBestPath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count) {
     unsigned int countb = 1;
     for(;countb<=count;++countb) {
         if(retour[countb][destination_idx].type != uninitialized) {
@@ -556,7 +580,20 @@ Path monoRAPTOR::makeBestPath(map_retour_t &retour, map_int_pint_t &best, vector
     return makePath(retour, best, departs, destination_idx, countb);
 }
 
-std::vector<Path> monoRAPTOR::makePathes(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, best_dest &b_dest, unsigned int count) {
+Path RAPTOR::makeBestPathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count) {
+    unsigned int countb = 1;
+    for(;countb<=count;++countb) {
+        if(retour[countb][destination_idx].type != uninitialized) {
+            if((retour[countb][destination_idx].stid == best[destination_idx].stid) && (retour[countb][destination_idx].dt == best[destination_idx].dt)) {
+                break;
+            }
+        }
+    }
+
+    return makePathreverse(retour, best, departs, destination_idx, countb);
+}
+
+std::vector<Path> RAPTOR::makePathes(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, best_dest &b_dest, unsigned int count) {
     std::vector<Path> result;
 
     for(unsigned int i=1;i<count;++i) {
@@ -647,7 +684,7 @@ Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxreto
 }
 
 
-Path reverseRAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb) {
+Path RAPTOR::makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb) {
     Path result;
     unsigned int current_said = destination_idx;
 
@@ -733,7 +770,18 @@ Path communRAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int depar
     return compute_raptor(departs, destinations);
 }
 
-std::vector<Path> monoRAPTOR::compute_all(navitia::type::EntryPoint departure, navitia::type::EntryPoint destination, int departure_hour, int departure_day) {
+Path communRAPTOR::compute_reverse(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day) {
+    vector_idxretour departs, destinations;
+
+    BOOST_FOREACH(navitia::type::idx_t spidx, data.pt_data.stop_areas[departure_idx].stop_point_list)
+            departs.push_back(std::make_pair(spidx, type_retour(-1, DateTime(departure_day, departure_hour))));
+
+    BOOST_FOREACH(navitia::type::idx_t spidx, data.pt_data.stop_areas[destination_idx].stop_point_list)
+            destinations.push_back(std::make_pair(spidx, type_retour()));
+    return compute_raptor_reverse(departs, destinations);
+}
+
+std::vector<Path> RAPTOR::compute_all(navitia::type::EntryPoint departure, navitia::type::EntryPoint destination, int departure_hour, int departure_day) {
     vector_idxretour departs, destinations;
 
     auto it_departure = data.pt_data.stop_area_map.find(departure.external_code),
@@ -859,7 +907,7 @@ Path communRAPTOR::compute(const type::GeographicalCoord & departure, double rad
     return result;
 }
 
-std::vector<Path> monoRAPTOR::compute_all(const type::GeographicalCoord & /*departure*/, double /*radius_depart*/, const type::GeographicalCoord & /*destination*/, double /*radius_destination*/
+std::vector<Path> RAPTOR::compute_all(const type::GeographicalCoord & /*departure*/, double /*radius_depart*/, const type::GeographicalCoord & /*destination*/, double /*radius_destination*/
                                           , int /*departure_hour*/, int /*departure_day*/) {
     vector_idxretour departs, destinations;
 
