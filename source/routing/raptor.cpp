@@ -301,7 +301,7 @@ void reverseRAPTOR::marcheapied(boost::dynamic_bitset<> & marked_stop, map_retou
         for(; it != end; ++it) {
             const type_retour & retour_temp = retour[count][stop_point];
             const DateTime dtTemp = retour_temp.dt - (*it).duration;
-            if(dtTemp > best[(*it).departure_sp].dt) {
+            if(dtTemp > best[(*it).destination_sp].dt) {
                 const type_retour nRetour = type_retour(navitia::type::invalid_idx, stop_point, dtTemp, connection);
                 best[(*it).departure_sp] = nRetour;
                 retour[count][(*it).departure_sp] = nRetour;

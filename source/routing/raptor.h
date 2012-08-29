@@ -223,8 +223,6 @@ struct monoRAPTOR : public communRAPTOR {
     std::vector<Path> compute_all(vector_idxretour departs, vector_idxretour destinations);
     std::vector<Path> compute_all(navitia::type::EntryPoint departure, navitia::type::EntryPoint destination, int departure_hour, int departure_day);
 
-    virtual void make_queue(boost::dynamic_bitset<> &stops, boost::dynamic_bitset<> & routesValides, queue_t &Q) = 0;
-
 };
 
 struct RAPTOR : public monoRAPTOR {

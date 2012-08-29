@@ -123,11 +123,11 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
 }
 
 BOOST_AUTO_TEST_CASE(validity_pattern){
-    navimake::builder bb("20120614");
-    bb.vj("D", "0")("stop1", 8000)("stop2", 8200);
-    bb.vj("C", "1")("stop1", 9000)("stop2", 9200);
+    navimake::builder b("20120614");
+    b.vj("D", "0")("stop1", 8000)("stop2", 8200);
+    b.vj("C", "1")("stop1", 9000)("stop2", 9200);
     type::Data data;
-    data.pt_data =  bb.build();
+    data.pt_data =  b.build();
     RAPTOR raptor(data);
 
     type::PT_Data d = data.pt_data;
