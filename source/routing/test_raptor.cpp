@@ -114,8 +114,8 @@ int main(int, char **) {
     //        std::cout << raptor.compute(navitia::type::GeographicalCoord(2.3305474316803103, 48.867483087514856), 500, navitia::type::GeographicalCoord(2.349430179055217, 48.84850904718449), 500, 28800, 7);
     //    }
     navimake::builder b("20120614");
-    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
-    b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
+    b.vj("A")("stop1", 8000)("stop2", 8200);
+    b.vj("B")("stop3", 10)("stop4",20);
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
     type::Data data;
@@ -124,7 +124,7 @@ int main(int, char **) {
 
     type::PT_Data d = data.pt_data;
 
-    auto res = raptor.compute(d.stop_areas[3].idx, d.stop_areas[0].idx, 9300, 0);
+    auto res = raptor.compute(d.stop_areas.at(3).idx, d.stop_areas.at(0).idx, 30, 1);
     std::cout << res << std::endl;
 
 
