@@ -1,3 +1,4 @@
+#include "config.h"
 #include <iostream>
 #include <boost/foreach.hpp>
 
@@ -23,12 +24,20 @@ int main(int argc, char * argv[])
         ("date,d", po::value<std::string>(&date), "Date de début")
         ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
         ("topo", po::value<std::string>(&topo_path), "Repertoire contenant la bd topo")
-        ("output,o", po::value<std::string>(&output)->default_value("data.nav"), "Fichier de sortie");
+        ("output,o", po::value<std::string>(&output)->default_value("data.nav"), "Fichier de sortie")
+        ("version,v", "Affiche la version");
 
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
+
+    if(vm.count("version")){
+        std::cout << argv[0] << " V" << NAVITIA_VERSION_MAJOR << ".";
+        std::cout << NAVITIA_VERSION_MINOR << "." << NAVITIA_VERSION_PATCH;
+        std::cout << " " << NAVITIA_BUILD_TYPE << std::endl;
+        return 0;
+    }
 
     if(vm.count("help") || !vm.count("input") || !vm.count("type")) {
         std::cout << desc <<  "\n";

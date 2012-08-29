@@ -33,6 +33,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
     SET(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAG} --coverage -g")
     SET(CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     SET(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libstdc++  -ferror-limit=10 -pthread")
     SET(CMAKE_C_FLAGS "-ferror-limit=10 -I/usr/local/include/c++/v1 -pthread")
@@ -48,6 +49,9 @@ CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
 FIND_PACKAGE(Boost 1.40.0 REQUIRED)
 
 
+SET(NAVITIA_VERSION_MAJOR 0)
+SET(NAVITIA_VERSION_MINOR 1)
+SET(NAVITIA_VERSION_PATCH dev)
 
 #ajout a l'include path le repertoirre de compilation, pour géré le config.h
 include_directories (${CMAKE_CURRENT_BINARY_DIR}
@@ -82,3 +86,8 @@ add_subdirectory(universalgw)
 
 #on génére le fichier config.h
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
+SET(CPACK_PACKAGE_VERSION_MAJOR ${NAVITIA_VERSION_MAJOR})
+SET(CPACK_PACKAGE_VERSION_MINOR ${NAVITIA_VERSION_MINOR})
+SET(CPACK_PACKAGE_VERSION_PATCH ${NAVITIA_VERSION_PATCH})
+SET(CPACK_GENERATOR TGZ)
+INCLUDE(CPack)
