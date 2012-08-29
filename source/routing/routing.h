@@ -52,6 +52,14 @@ public:
         return this->datetime <= other.datetime;
     }
 
+    bool operator>(DateTime other) const {
+        return (this->datetime > other.datetime) && (other.datetime != std::numeric_limits<uint32_t>::max());
+    }
+
+    bool operator>=(DateTime other) const {
+        return this->datetime >= other.datetime;
+    }
+
     static DateTime infinity() {
         return DateTime();
     }
@@ -84,8 +92,22 @@ public:
         int date = this->date();
         if(this->hour() > hour) {
             ++date;
+            this->datetime = (date << date_offset) + hour;
+        } else {
+            this->datetime += (hour - this->hour());
         }
-        this->datetime = (date << date_offset) + hour;
+
+    }
+
+    void updatereverse(uint32_t hour) {
+        int date = this->date();
+        if(this->hour() < hour) {
+            --date;
+            this->datetime = (date << date_offset) + hour;
+        } else {
+            this->datetime -= (this->hour() - hour);
+        }
+
     }
 
     void increment(uint32_t secs){
@@ -110,15 +132,18 @@ public:
     void date_increment(){
         datetime += 1 << date_offset;
     }
+
+
 };
 
-inline DateTime operator-(DateTime dt, int seconds) {
-    dt.decrement(seconds);
-    return dt;
-}
 
 inline DateTime operator+(DateTime dt, int seconds) {
     dt.increment(seconds);
+    return dt;
+}
+
+inline DateTime operator-(DateTime dt, int seconds) {
+    dt.decrement(seconds);
     return dt;
 }
 
