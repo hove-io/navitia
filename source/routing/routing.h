@@ -29,11 +29,11 @@ private:
     const static char date_offset = 20;
 
 public:
-    int32_t hour() const {
+    uint32_t hour() const {
         return datetime & hour_mask;
     }
 
-    int32_t date() const {
+    uint32_t date() const {
         return datetime >> date_offset;
     }
 
@@ -43,7 +43,6 @@ public:
     DateTime() : datetime(std::numeric_limits<uint32_t>::max()){}
     DateTime(int date, int hour) : datetime((date << date_offset) + hour) {}
     DateTime(const DateTime & dt) : datetime(dt.datetime) {}
-
 
     bool operator<(DateTime other) const {
         return this->datetime < other.datetime;
@@ -89,7 +88,7 @@ public:
         return this->datetime - other.datetime;
     }
 
-    void update(int32_t hour) {
+    void update(uint32_t hour) {
         int date = this->date();
         if(this->hour() > hour) {
             ++date;
@@ -100,7 +99,7 @@ public:
 
     }
 
-    void updatereverse(int32_t hour) {
+    void updatereverse(uint32_t hour) {
         int date = this->date();
         if(this->hour() < hour) {
             --date;
@@ -117,8 +116,13 @@ public:
     }
 
     void decrement(uint32_t secs){
-        datetime -= secs;
-        this->normalize();
+        uint32_t hour = this->hour();
+        if(hour < secs){
+            hour = hour + 24*3600 - secs;
+            *this = DateTime(this->date() - 1, hour);
+        } else {
+            *this = DateTime(this->date(), hour - secs);
+        }
     }
 
     void date_decrement(){

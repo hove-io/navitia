@@ -64,24 +64,13 @@ int main(int, char **) {
 //        //        BOOST_FOREACH(auto pouet, result) {
 //        //        std::cout << pouet << std::endl << std::endl;
 
-//        //        std::cout << makeItineraire(pouet);
-//        //        }
-//        //        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
-//    }
-//    routing::raptor::RAPTOR raptor(data);
-//    {
-//        Timer t("Calcul raptor");
-//        auto result = raptor.compute(16482, 16483, 28800, 0);
-//        std::cout << result << std::endl;
-////        std::cout << makeItineraire(result);
+    //        //        BOOST_FOREACH(auto pouet, result) {
+    //        //        std::cout << pouet << std::endl << std::endl;
 
-//        //        BOOST_FOREACH(auto pouet, result) {
-//        //        std::cout << pouet << std::endl << std::endl;
-
-//        //        std::cout << makeItineraire(pouet);
-//        //        }
-//        //        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
-//    }
+    //        //        std::cout << makeItineraire(pouet);
+    //        //        }
+    //        //        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
+    //    }
 
 //    BOOST_FOREACH(unsigned int spidx, data.pt_data.stop_areas.at(3849).stop_point_list) {
 //        BOOST_FOREACH(unsigned int rpidx, data.pt_data.stop_points.at(spidx).route_point_list) {
