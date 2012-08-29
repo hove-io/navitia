@@ -45,3 +45,13 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     BOOST_CHECK_EQUAL(d.date(), 11);
     BOOST_CHECK_EQUAL(d.hour(), 9);
 }
+
+BOOST_AUTO_TEST_CASE(decrement){
+    DateTime d(2, 100);
+    d.decrement(50);
+    BOOST_CHECK_EQUAL(d.date(), 2);
+    BOOST_CHECK_EQUAL(d.hour(), 50);
+    d.decrement(100);
+    BOOST_CHECK_EQUAL(d.date(), 1);
+    BOOST_CHECK_EQUAL(d.hour(), 24*3600 - 50);
+}

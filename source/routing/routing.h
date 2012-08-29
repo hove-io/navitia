@@ -93,6 +93,16 @@ public:
         this->normalize();
     }
 
+    void decrement(uint32_t secs){
+        uint32_t hour = this->hour();
+        if(hour < secs){
+            hour = hour + 24*3600 - secs;
+            *this = DateTime(this->date() - 1, hour);
+        } else {
+            *this = DateTime(this->date(), hour - secs);
+        }
+    }
+
     void date_decrement(){
         datetime -= 1 << date_offset;
     }
@@ -100,16 +110,12 @@ public:
     void date_increment(){
         datetime += 1 << date_offset;
     }
-
-    inline DateTime operator-(int seconds) {
-        if(!(*this == DateTime::inf) && !(*this == DateTime::min)){
-            datetime -= seconds;
-            normalize();
-        }
-        return *this;
-    }
 };
 
+inline DateTime operator-(DateTime dt, int seconds) {
+    dt.decrement(seconds);
+    return dt;
+}
 
 inline DateTime operator+(DateTime dt, int seconds) {
     dt.increment(seconds);
