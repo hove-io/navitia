@@ -1,5 +1,5 @@
 #include "renderer.h"
-#include "type/pb_utils.h"
+#include "pb_utils.h"
 #include "gateway_mod/context.h"
 #include "gateway_mod/pool.h"
 #include "WS_commons/data_structures.h"
@@ -22,15 +22,15 @@ void render(webservice::RequestData& request, webservice::ResponseData& response
 
 
 void render(webservice::RequestData& request, webservice::ResponseData& response, pbnavitia::Response& pb){
-    if(request.params["format"] == "json"){
-        response.response << pb2json(&pb, 0);
-        response.content_type = "text/json";
+    if(request.params["format"] == "pb"){
+        pb.SerializeToOstream(&response.response);
+        response.content_type = "application/octet-stream";
     }else if(request.params["format"] == "xml"){
         response.response << pb2xml(&pb);
         response.content_type = "text/xml";
     }else{
-        pb.SerializeToOstream(&response.response);
-        response.content_type = "application/octet-stream";
+        response.response << pb2json(&pb, 0);
+        response.content_type = "text/json";
     }
 }
 

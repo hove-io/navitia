@@ -9,7 +9,6 @@ SET(TYPES_SRC
     type.cpp
     ${PROTO_SRCS}
     to_proto.cpp
-    pb_utils.cpp
     pb_converter.cpp
 )
 add_library(types ${TYPES_SRC})
