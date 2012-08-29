@@ -399,7 +399,7 @@ std::vector<Path> monoRAPTOR::compute_all(vector_idxretour departs, vector_idxre
 void RAPTOR::setRoutesValides(boost::dynamic_bitset<> &routesValides, std::vector<unsigned int> &marked_stop, map_retour_t &retour) {
 
     //On cherche la premiere date
-    int date = std::numeric_limits<int>::max();
+    uint32_t date = std::numeric_limits<uint32_t>::max();
     BOOST_FOREACH(unsigned int said, marked_stop) {
         if(retour[0][said].dt.date() < date)
             date = retour[0][said].dt.date();
@@ -417,7 +417,7 @@ void RAPTOR::setRoutesValides(boost::dynamic_bitset<> &routesValides, std::vecto
 void reverseRAPTOR::setRoutesValides(boost::dynamic_bitset<> &routesValides, std::vector<unsigned int> &marked_stop, map_retour_t &retour) {
 
     //On cherche la premiere date
-    int date = std::numeric_limits<int>::min();
+    uint32_t date = std::numeric_limits<uint32_t>::min();
     BOOST_FOREACH(unsigned int said, marked_stop) {
         if(retour[0][said].dt.date() > date)
             date = retour[0][said].dt.date();
@@ -557,7 +557,7 @@ void reverseRAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_ret
 
                 //Si on peut arriver plus tôt à l'arrêt en passant par une autre route
                 const type_retour & retour_temp = retour[count-1][spid];
-
+                std::cout << get_temps_depart(route, t, i) << std::endl;
                 if((retour_temp.type != uninitialized) &&
                         (((retour_temp.dt.hour() >= get_temps_depart(route, t, i)) && (retour_temp.dt.date() == workingDt.date()) ) ||
                          ((retour_temp.dt.date() > workingDt.date()) ))) {

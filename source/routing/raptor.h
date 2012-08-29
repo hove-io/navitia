@@ -135,10 +135,10 @@ struct communRAPTOR : public AbstractRouter
     };
 
     struct StopTime_t {
-        int departure_time, arrival_time;
+        uint32_t departure_time, arrival_time;
         navitia::type::idx_t idx;
 
-        StopTime_t() : departure_time(std::numeric_limits<int32_t>::max()), arrival_time(std::numeric_limits<int32_t>::max()), idx(navitia::type::invalid_idx) {}
+        StopTime_t() : departure_time(std::numeric_limits<uint32_t>::max()), arrival_time(std::numeric_limits<uint32_t>::max()), idx(navitia::type::invalid_idx) {}
         StopTime_t(navitia::type::StopTime & st) : departure_time(st.departure_time%86400), arrival_time(st.arrival_time%86400), idx(st.idx) {}
     };
 
@@ -231,9 +231,9 @@ struct RAPTOR : public monoRAPTOR {
     Path makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb);
     void marcheapied(boost::dynamic_bitset<> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int count);
     void setRoutesValides(boost::dynamic_bitset<> & routesValides, std::vector<unsigned int> &marked_stop, map_retour_t &retour);
-    inline int get_temps_depart(const Route_t & route, int orderVj, int order) {
+    inline uint32_t get_temps_depart(const Route_t & route, int orderVj, int order) {
         if(orderVj == -1)
-            return std::numeric_limits<int>::max();
+            return std::numeric_limits<uint32_t>::max();
         else
             return stopTimes[get_stop_time_idx(route, orderVj, order)].departure_time % 86400;
     }
@@ -241,15 +241,19 @@ struct RAPTOR : public monoRAPTOR {
 };
 
 struct reverseRAPTOR : public monoRAPTOR {
-    reverseRAPTOR(navitia::type::Data &data) : monoRAPTOR(data){}
+    reverseRAPTOR(navitia::type::Data &data) : monoRAPTOR(data){
+        BOOST_FOREACH(auto r, retour_constant) {
+            r.dt = DateTime::inf;
+        }
+    }
     void boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count);
     Path makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb);
     void marcheapied(boost::dynamic_bitset<> & marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int count);
     void setRoutesValides(boost::dynamic_bitset<> &routesValides, std::vector<unsigned int> &marked_stop, map_retour_t &retour);
 
-    inline int get_temps_depart(const Route_t & route, int orderVj, int order) {
+    inline uint32_t get_temps_depart(const Route_t & route, int orderVj, int order) {
         if(orderVj == -1)
-            return std::numeric_limits<int>::min();
+            return std::numeric_limits<uint32_t>::min();
         else
             return stopTimes[get_stop_time_idx(route, orderVj, order)].departure_time % 86400;
     }
