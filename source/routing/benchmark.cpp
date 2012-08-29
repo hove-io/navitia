@@ -17,7 +17,7 @@ void benchmark::generate_input(int fday, int sday) {
     boost::variate_generator<boost::mt19937&, boost::uniform_int<> > gen(rng, sa);
 
     std::fstream file(path+"/inputcsv", std::ios::out );
-    for(int i = 0; i < 125 ; ++i) {
+    for(int i = 0; i < 125; ++i) {
         int a = gen();
         int b = gen();
         while(b == a ) {

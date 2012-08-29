@@ -56,10 +56,8 @@ bool ValidityPattern::check(boost::gregorian::date day) const {
 }
 
 bool ValidityPattern::check(int day) const {
-    if(is_valid(day))
-        return days[day] == 1;
-    else
-        return false;
+//    BOOST_ASSERT(is_valid(day));
+    return days[day];
 }
 
 GeographicalCoord::GeographicalCoord(double x, double y, const Projection& projection) : x(x), y(y){

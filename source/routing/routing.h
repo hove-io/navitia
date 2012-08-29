@@ -29,11 +29,11 @@ private:
     const static char date_offset = 20;
 
 public:
-    uint32_t hour() const {
+    int32_t hour() const {
         return datetime & hour_mask;
     }
 
-    uint32_t date() const {
+    int32_t date() const {
         return datetime >> date_offset;
     }
 
@@ -44,12 +44,21 @@ public:
     DateTime(int date, int hour) : datetime((date << date_offset) + hour) {}
     DateTime(const DateTime & dt) : datetime(dt.datetime) {}
 
+
     bool operator<(DateTime other) const {
         return this->datetime < other.datetime;
     }
 
     bool operator<=(DateTime other) const {
         return this->datetime <= other.datetime;
+    }
+
+    bool operator>(DateTime other) const {
+        return (this->datetime > other.datetime) && (other.datetime != std::numeric_limits<uint32_t>::max());
+    }
+
+    bool operator>=(DateTime other) const {
+        return this->datetime >= other.datetime;
     }
 
     static DateTime infinity() {
@@ -80,16 +89,24 @@ public:
         return this->datetime - other.datetime;
     }
 
-    void update(uint32_t hour) {
+    void update(int32_t hour) {
         int date = this->date();
         if(this->hour() > hour) {
             ++date;
+            this->datetime = (date << date_offset) + hour;
+        } else {
+            this->datetime += (hour - this->hour());
         }
-        this->datetime = (date << date_offset) + hour;
+
     }
 
     void increment(uint32_t secs){
         datetime += secs;
+        this->normalize();
+    }
+
+    void decrement(uint32_t secs){
+        datetime -= secs;
         this->normalize();
     }
 
@@ -101,18 +118,17 @@ public:
         datetime += 1 << date_offset;
     }
 
-    inline DateTime operator-(int seconds) {
-        if(!(*this == DateTime::inf) && !(*this == DateTime::min)){
-            datetime -= seconds;
-            normalize();
-        }
-        return *this;
-    }
+
 };
 
 
 inline DateTime operator+(DateTime dt, int seconds) {
     dt.increment(seconds);
+    return dt;
+}
+
+inline DateTime operator-(DateTime dt, int seconds) {
+    dt.decrement(seconds);
     return dt;
 }
 
