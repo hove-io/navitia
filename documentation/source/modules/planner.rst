@@ -53,7 +53,7 @@ Calendriers de circulation
 La gestion des calendriers est indispensable
 
   * elle permet de n'utiliser que les circulations effectivement actives à la date demandée
-  * elle permet de fournir exactement les circulations à empreinter lors de la gestion des itinéraires passe-minuit
+  * elle permet de fournir exactement les circulations à emprunter lors de la gestion des itinéraires passe-minuit
 
 Typologie des horaires
 ----------------------
