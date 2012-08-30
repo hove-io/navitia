@@ -12,6 +12,8 @@
 #include "third_party/eos_portable_archive/portable_oarchive.hpp"
 #include "lz4_filter/filter.h"
 
+namespace pt = boost::posix_time;
+
 namespace navitia { namespace type {
 
 void Data::set_cities(){
@@ -19,7 +21,7 @@ void Data::set_cities(){
         auto city_it = pt_data.city_map.find(way.city);
         if(city_it != pt_data.city_map.end()){
             way.city_idx = city_it->second;
-        }else {
+        }else{
             way.city_idx = invalid_idx;
         }
     }
@@ -32,9 +34,22 @@ void Data::save(const std::string & filename) {
 }
 
 void Data::load(const std::string & filename) {
-    std::ifstream ifs(filename.c_str());
-    boost::archive::text_iarchive ia(ifs);
-    ia >> *this;
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    try{
+        last_load_at = pt::microsec_clock::local_time();
+        std::ifstream ifs(filename.c_str());
+        boost::archive::text_iarchive ia(ifs);
+        ia >> *this;
+        last_load = true;
+    }catch(std::exception& ex){
+        LOG4CPLUS_ERROR(logger, boost::format("le chargement des données à échoué: %s") % ex.what());
+        last_load = false;
+        throw;
+    }catch(...){
+        LOG4CPLUS_ERROR(logger, "le chargement des données à échoué");
+        last_load = false;
+        throw;
+    }
 }
 
 void Data::save_bin(const std::string & filename) {
@@ -44,18 +59,44 @@ void Data::save_bin(const std::string & filename) {
 }
 
 void Data::load_bin(const std::string & filename) {
-    std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
-    boost::archive::binary_iarchive ia(ifs);
-    ia >> *this;
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    try{
+        last_load_at = pt::microsec_clock::local_time();
+        std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
+        boost::archive::binary_iarchive ia(ifs);
+        ia >> *this;
+        last_load = true;
+    }catch(std::exception& ex){
+        LOG4CPLUS_ERROR(logger, boost::format("le chargement des données à échoué: %s") % ex.what());
+        last_load = false;
+        throw;
+    }catch(...){
+        LOG4CPLUS_ERROR(logger, "le chargement des données à échoué");
+        last_load = false;
+        throw;
+    }
 }
 
 void Data::load_lz4(const std::string & filename) {
-    std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
-    boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
-    in.push(LZ4Decompressor(2048*500),8192*500, 8192*500);
-    in.push(ifs);
-    eos::portable_iarchive ia(in);
-    ia >> *this;
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    try{
+        last_load_at = pt::microsec_clock::local_time();
+        std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
+        in.push(LZ4Decompressor(2048*500),8192*500, 8192*500);
+        in.push(ifs);
+        eos::portable_iarchive ia(in);
+        ia >> *this;
+        last_load = true;
+    }catch(std::exception& ex){
+        LOG4CPLUS_ERROR(logger, boost::format("le chargement des données à échoué: %s") % ex.what());
+        last_load = false;
+        throw;
+    }catch(...){
+        LOG4CPLUS_ERROR(logger, "le chargement des données à échoué");
+        last_load = false;
+        throw;
+    }
 }
 
 void Data::lz4(const std::string & filename) {
