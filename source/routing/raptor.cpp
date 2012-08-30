@@ -461,7 +461,7 @@ void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &
                 int spid = data.pt_data.route_points[data.pt_data.routes[route.idx].route_point_list[i]].stop_point_idx;
                 if(t >= 0) {
                     const StopTime_t & st = stopTimes[get_stop_time_idx(route, t, i)];
-                    workingDt.update(st.arrival_time);
+                    workingDt.update(st.arrival_time%86400);
                     //On stocke, et on marque pour explorer par la suite
                     if(workingDt < std::min(best[spid].dt, b_dest.best_now.dt)) {
                         const type_retour retour_temp = type_retour(st.idx, embarquement, workingDt);
@@ -484,7 +484,7 @@ void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &
                         t = etemp;
                         workingDt = retour_temp.dt;
                         embarquement = spid;
-                        workingDt.update(get_temps_depart(route, t,i));
+                        workingDt.update(get_temps_depart(route, t,i)%86400);
                     }
                 }
             }
@@ -497,7 +497,7 @@ void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &
 }
 
 
-void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count) {
+void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count, unsigned int maxCount) {
     queue_t Q;
 
 
@@ -520,9 +520,10 @@ void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop, map_ret
 
     //    std::cout << "retour 0 1 " << retour.at(0).at(1).dt << std::endl;
     bool end = false;
-    while(!end) {
+    while(!end || ((maxCount != std::numeric_limits<unsigned int>::max()) && (count <= maxCount) )) {
         end = true;
-        retour.push_back(retour_constant_reverse);
+        if(retour.size() == count)
+            retour.push_back(retour_constant_reverse);
         make_queuereverse(marked_sp, routesValides, Q);
         routeidx = 0;
         BOOST_FOREACH(queue_t::value_type vq, Q) {
@@ -636,16 +637,17 @@ Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxreto
                 workingDate = r.dt;
                 debut = true;
             }
-        } else {
-            if(spid_embarquement == -1) {
+        } else if(retour[countb][current_spid].type == connection) {
+//            if(spid_embarquement == -1) {
                 r = retour[countb][current_spid];
                 workingDate = r.dt;
                 workingDate.normalize();
-                result.items.push_back(PathItem(current_spid, workingDate, workingDate));
+                result.items.push_back(PathItem(data.pt_data.stop_points[current_spid].stop_area_idx, workingDate, workingDate));
                 current_spid = r.said_emarquement;
+                result.items.push_back(PathItem(data.pt_data.stop_points[current_spid].stop_area_idx, workingDate, workingDate));
                 spid_embarquement = -1;
                 footpath = true;
-            }
+//            }
         }
 
         if(!footpath) {
@@ -661,7 +663,7 @@ Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxreto
                 --countb;
                 spid_embarquement = -1;
             }
-            result.items.push_back(PathItem(current_spid, DateTime(workingDate.date(), current_st.arrival_time), DateTime(workingDate.date(), current_st.departure_time),
+            result.items.push_back(PathItem(data.pt_data.stop_points[current_spid].stop_area_idx, DateTime(workingDate.date(), current_st.arrival_time), DateTime(workingDate.date(), current_st.departure_time),
                                             data.pt_data.routes.at(data.pt_data.route_points.at(current_st.route_point_idx).route_idx).line_idx, data.pt_data.route_points.at(current_st.route_point_idx).route_idx, current_st.vehicle_journey_idx));
 
         }
