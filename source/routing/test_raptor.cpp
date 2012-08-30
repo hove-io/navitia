@@ -4,6 +4,7 @@
 #include "boost/date_time.hpp"
 #include "naviMake/build_helper.h"
 #include <boost/algorithm/string.hpp>
+#include <valgrind/callgrind.h>
 
 using namespace navitia;
 
@@ -55,9 +56,9 @@ int main(int, char **) {
     routing::raptor::RAPTOR raptor(data);
     {
         Timer t("Calcul raptor");
-//        CALLGRIND_START_INSTRUMENTATION;
+        CALLGRIND_START_INSTRUMENTATION;
         auto result = raptor.compute(11908, 14491, 0, 0);
-//        CALLGRIND_STOP_INSTRUMENTATION;
+        CALLGRIND_STOP_INSTRUMENTATION;
         std::cout << result << std::endl;
 //        std::cout << makeItineraire(result);
 

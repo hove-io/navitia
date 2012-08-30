@@ -90,6 +90,8 @@ public:
 
     void update(uint32_t hour) {
         int date = this->date();
+        if(hour > 86400)
+            hour -= 86400;
         if(this->hour() > hour) {
             ++date;
             this->datetime = (date << date_offset) + hour;

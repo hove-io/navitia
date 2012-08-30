@@ -461,7 +461,7 @@ void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &
                 int spid = data.pt_data.route_points[data.pt_data.routes[route.idx].route_point_list[i]].stop_point_idx;
                 if(t >= 0) {
                     const StopTime_t & st = stopTimes[get_stop_time_idx(route, t, i)];
-                    workingDt.update(st.arrival_time%86400);
+                    workingDt.update(st.arrival_time);
                     //On stocke, et on marque pour explorer par la suite
                     if(workingDt < std::min(best[spid].dt, b_dest.best_now.dt)) {
                         const type_retour retour_temp = type_retour(st.idx, embarquement, workingDt);
@@ -484,7 +484,7 @@ void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &
                         t = etemp;
                         workingDt = retour_temp.dt;
                         embarquement = spid;
-                        workingDt.update(get_temps_depart(route, t,i)%86400);
+                        workingDt.update(get_temps_depart(route, t,i));
                     }
                 }
             }
@@ -682,7 +682,7 @@ Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxreto
             ++count_visites;
         }
     }
-    result.percent_visited = 100*count_visites / data.pt_data.stop_areas.size();
+    result.percent_visited = 100*count_visites / data.pt_data.stop_points.size();
 
     return result;
 }
