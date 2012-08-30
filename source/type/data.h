@@ -7,6 +7,7 @@
 #include "utils/configuration.h"
 #include "boost/utility.hpp"
 #include "meta_data.h"
+#include <boost/format.hpp>
 
 namespace navitia { namespace type {
 
@@ -47,20 +48,24 @@ public:
     boost::shared_mutex load_mutex;
 
     friend class boost::serialization::access;
+    
+    bool last_load;
+    boost::posix_time::ptime last_load_at;
+
     public:
 
     /// Constructeur de data, définit le nombre de threads, charge les données
-    Data() : nb_threads(8), loaded(false){
+    Data() : nb_threads(8), loaded(false), last_load(true){
         if(Configuration::is_instanciated()){
             init_logger();
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-            LOG4CPLUS_INFO(logger, "Chargement de l'application");
+            LOG4CPLUS_TRACE(logger, "Chargement de l'application");
             Configuration * conf = Configuration::get();
             nb_threads = conf->get_as<int>("GENERAL", "nb_threads", 1);
             std::string conf_file = conf->get_string("path") + conf->get_string("application") + ".ini";
-            LOG4CPLUS_INFO(logger, "On tente de charger le fichier de configuration pour les logs : " + conf_file);
+            LOG4CPLUS_TRACE(logger, "On tente de charger le fichier de configuration pour les logs : " + conf_file);
             init_logger(conf_file);
-            LOG4CPLUS_INFO(logger, "On tente de charger le fichier de configuration général : " + conf_file);
+            LOG4CPLUS_TRACE(logger, "On tente de charger le fichier de configuration général : " + conf_file);
             conf->load_ini(conf_file);
         }
     }
@@ -72,7 +77,9 @@ public:
     template<class Archive> void serialize(Archive & ar, const unsigned int version) {
         this->version = version;
         if(this->version != data_version){
-            std::cerr << "Attention le fichier de données est à la version " << version << " (version actuelle : " << data_version << ")" << std::endl;
+            log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+            unsigned int v = data_version;//sinon ca link pas...
+            LOG4CPLUS_WARN(logger, boost::format("Attention le fichier de données est à la version %u (version actuelle : %d)") % version % v);
         }
 
         ar & pt_data & street_network & meta;
