@@ -75,7 +75,7 @@ public:
             std::cerr << "Attention le fichier de données est à la version " << version << " (version actuelle : " << data_version << ")" << std::endl;
         }
 
-        ar & pt_data & street_network;
+        ar & pt_data & street_network & meta;
     }
 
     /** Sauvegarde la structure de fichier au format texte

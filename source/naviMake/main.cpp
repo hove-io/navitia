@@ -33,9 +33,7 @@ int main(int argc, char * argv[])
     po::notify(vm);
 
     if(vm.count("version")){
-        std::cout << argv[0] << " V" << NAVITIA_VERSION_MAJOR << ".";
-        std::cout << NAVITIA_VERSION_MINOR << "." << NAVITIA_VERSION_PATCH;
-        std::cout << " " << NAVITIA_BUILD_TYPE << std::endl;
+        std::cout << argv[0] << " V" << NAVITIA_VERSION << " " << NAVITIA_BUILD_TYPE << std::endl;
         return 0;
     }
 
