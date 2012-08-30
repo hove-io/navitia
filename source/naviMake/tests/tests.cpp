@@ -12,7 +12,7 @@ const std::string gtfs_path = "/navimake/gtfs";
 
 BOOST_AUTO_TEST_CASE(parse_gtfs){
     navimake::Data data;
-    navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path, "20110101");
+    navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
     parser.fill(data);
 
     BOOST_CHECK_EQUAL(data.lines.size(), 2);

@@ -33,13 +33,11 @@ int time_to_int(const std::string & time) {
     return result;
 }
 
-GtfsParser::GtfsParser(const std::string & path, const std::string & start) :
-    path(path),
-    start(boost::gregorian::from_undelimited_string(start)) {
-    std::cout << "Date de début : " << this->start << std::endl;
-}
+GtfsParser::GtfsParser(const std::string & path) : 
+    path(path), production_date(boost::gregorian::date(), boost::gregorian::date()){}
 
 void GtfsParser::fill(Data & data){
+    production_date = find_production_date();
     fill_mode_types(data);
     parse_stops(data);
     parse_calendar(data);
@@ -375,7 +373,7 @@ void GtfsParser::parse_calendar(Data & data) {
             week[6] = (elts[saturday_c] == "1");
             week[0] = (elts[sunday_c] == "1");
 
-            vp = new nm::ValidityPattern(start);
+            vp = new nm::ValidityPattern(production_date.begin());
 
 
             for(unsigned int i = 0; i<366;++i)
@@ -442,7 +440,7 @@ void GtfsParser::parse_calendar_dates(Data & data){
         nm::ValidityPattern * vp;
         boost::unordered_map<std::string, nm::ValidityPattern*>::iterator it= vp_map.find(elts[id_c]);
         if(it == vp_map.end()){
-            vp = new nm::ValidityPattern(start);
+            vp = new nm::ValidityPattern(production_date.begin());
             vp_map[elts[id_c]] = vp;
             data.validity_patterns.push_back(vp);
         }
@@ -764,6 +762,54 @@ void GtfsParser::parse_stop_times(Data & data) {
         }
     }
     std::cout << "Nombre d'horaires : " << data.stops.size() << std::endl;
+}
+
+boost::gregorian::date_period GtfsParser::find_production_date() {
+    std::fstream ifile((path + "/calendar.txt").c_str());
+    remove_bom(ifile);
+    std::string line;
+
+    if(!getline(ifile, line)){
+        std::cerr << "Impossible d'ouvrir le fichier calendar.txt" << std::endl;
+        throw std::exception();
+    }
+    
+    boost::gregorian::date start_date(boost::gregorian::max_date_time), end_date(boost::gregorian::min_date_time);
+
+    boost::trim(line);
+    Tokenizer tok_header(line);
+    std::vector<std::string> elts(tok_header.begin(), tok_header.end());
+    int start_date_c = -1, end_date_c = -1;
+    for(size_t i = 0; i < elts.size(); i++) {
+        if (elts[i] == "start_date")
+            start_date_c = i;
+        else if (elts[i] == "end_date")
+            end_date_c = i;
+    }
+    if(start_date_c == -1 || end_date_c == -1){
+        std::cerr << "Il manque au moins une colonne dans calendar.txt" << std::endl;
+        throw std::exception();
+    }
+
+    while(getline(ifile, line)) {
+        boost::trim(line);
+        Tokenizer tok(line);
+        elts.assign(tok.begin(), tok.end());
+
+        boost::gregorian::date current_start_date = boost::gregorian::from_undelimited_string(elts[start_date_c]);
+        boost::gregorian::date current_end_date = boost::gregorian::from_undelimited_string(elts[end_date_c]);
+
+        if(current_start_date < start_date){
+            start_date = current_start_date;
+        }
+        if(current_end_date > end_date){
+            end_date = current_end_date; 
+        }
+    }
+
+    std::cout << "date de production: ";
+    std::cout <<boost::gregorian::to_simple_string(start_date) << " - " << boost::gregorian::to_simple_string(end_date) << std::endl;
+    return boost::gregorian::date_period(start_date, end_date);
 }
 
 }}
