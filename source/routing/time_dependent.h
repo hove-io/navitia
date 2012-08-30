@@ -1,16 +1,10 @@
 #pragma once
 
 #include "routing.h"
-#include "astar.h"
 #include "type/data.h"
 #include <boost/graph/adjacency_list.hpp>
 
 namespace navitia { namespace routing {  namespace timedependent {
-
-
-/// Un nœud représente un RoutePoint
-struct Vertex {
-};
 
 /// Propriété des arcs : ils contiennent une grille horaire ou un horaire constant
 struct TimeTable {
@@ -50,21 +44,16 @@ struct Edge {
   *
   * Les arcs sortants et la liste des nœuds sont représentés par des vecteurs
   * les arcs sont orientés
-  * les propriétés des nœuds et arcs sont les classes définies précédemment
+  * les propriétés des arcs sont les classes définies précédemment
+  * Les nœuds n'ont pas de propriété
   */
-typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, Vertex, Edge> Graph;
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, boost::no_property, Edge> Graph;
 
 /// Représentation d'un nœud dans le graphe
 typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
 
 /// Représentation d'un arc dans le graphe
 typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
-
-/// Type Itérateur sur les nœuds du graphe
-typedef boost::graph_traits<Graph>::vertex_iterator vertex_iterator;
-
-/// Type itérateur sur les arcs du graphe
-typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
 
 /** Représentation du réseau de transport en commun de type « type-dependent »
  *
@@ -89,10 +78,6 @@ struct TimeDependent : public AbstractRouter{
     /// Génère le graphe sur le quel sera fait le calcul
     void build_graph();
 
-    /// Génère le graphe astar
-    void build_heuristic(uint destination);
-
-
     /** Calcule un itinéraire entre deux stop area
      *
      * hour correspond à
@@ -100,11 +85,12 @@ struct TimeDependent : public AbstractRouter{
      */
     Path compute(type::idx_t dep, type::idx_t arr, int hour, int day);
 
+    /** Construit le chemin à retourner à partir du résultat du Dijkstra */
     Path makePath(type::idx_t arr);
 
-    bool is_stop_area(vertex_t vertex) const;
-    bool is_stop_point(vertex_t vertex) const;
-    bool is_route_point(vertex_t vertex) const;
+    bool is_stop_area(vertex_t vertex) const {return vertex < stop_point_offset;}
+    bool is_stop_point(vertex_t vertex) const {return vertex >= stop_point_offset && vertex < route_point_offset;}
+    bool is_route_point(vertex_t vertex) const {return vertex >= route_point_offset;}
 };
 
 }}}

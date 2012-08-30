@@ -1,10 +1,7 @@
 #include "time_dependent.h"
 #include <boost/graph/dijkstra_shortest_paths.hpp>
-#include <boost/graph/astar_search.hpp>
-#include <boost/graph/reverse_graph.hpp>
 #include <boost/foreach.hpp>
-#include <boost/lexical_cast.hpp>
-#include "utils/timer.h"
+
 namespace navitia { namespace routing { namespace timedependent {
 
 struct found_goal{};
@@ -157,14 +154,6 @@ struct edge_less{
     bool operator ()(const TimeTable&, DateTime) const{return false;}
 };
 
-bool operator==(const PathItem & a, const PathItem & b) {
-    return a.said == b.said && a.arrival == b.arrival && a.departure == b.departure;
-}
-
-std::ostream & operator<<(std::ostream & os, const PathItem & b){
-    os << b.said << " " << b.arrival;
-    return os;
-}
 
 Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day){
     DateTime start_time(day, hour);
@@ -186,21 +175,8 @@ Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day)
 }
 
 
-bool TimeDependent::is_stop_area(vertex_t vertex) const {
-    return vertex < stop_point_offset;
-}
-
-bool TimeDependent::is_stop_point(vertex_t vertex) const {
-    return vertex >= stop_point_offset && vertex < route_point_offset;
-}
-
-bool TimeDependent::is_route_point(vertex_t vertex) const {
-    return vertex >= route_point_offset;
-}
-
 Path TimeDependent::makePath(type::idx_t arr) {
     Path result;
-
 
     int count = 1;
     BOOST_FOREACH(auto v, boost::vertices(this->graph)){
@@ -209,7 +185,6 @@ Path TimeDependent::makePath(type::idx_t arr) {
     }
 
     result.percent_visited = 100 * count/boost::num_vertices(this->graph);
-
 
     vertex_t arrival = arr;
     type::idx_t precsaid = type::invalid_idx;
