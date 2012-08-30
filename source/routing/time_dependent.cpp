@@ -7,20 +7,6 @@
 #include "utils/timer.h"
 namespace navitia { namespace routing { namespace timedependent {
 
-class distance_heuristic : public boost::astar_heuristic<Graph, DateTime>
-{
-public:
-  distance_heuristic(const TimeDependent & td) : td(td){}
-
-  // Estimation de l'heure d'arrivée. Cette heure doit est sous-estimée
-  DateTime operator()(Vertex u){
-      return DateTime(0xFFF, td.astar_graph.min_time.at(u));
-  }
-private:
-  const TimeDependent & td;
-};
-
-
 struct found_goal{};
 
 class goal_visitor : public boost::default_dijkstra_visitor
@@ -40,12 +26,10 @@ private:
 TimeDependent::TimeDependent(const type::Data & global_data) : data(global_data.pt_data),
        // On crée un nœud par route point, deux par stopArea, deux par stopPoint
        graph(data.route_points.size() + data.stop_areas.size() + data.stop_points.size()),
-       astar_graph(data),
        stop_point_offset(data.stop_areas.size()),
        route_point_offset(stop_point_offset + data.stop_points.size()),
        preds(boost::num_vertices(graph)),
-       distance(boost::num_vertices(graph)),
-       astar_dist(boost::num_vertices(graph))
+       distance(boost::num_vertices(graph))
    {
     this->build_graph();
    }
@@ -108,14 +92,9 @@ void  TimeDependent::build_graph(){
     // 5. On trie les horaires de chaque arc et on garde le temps le plus court pour l'heuristique A*
     BOOST_FOREACH(edge_t e, boost::edges(graph)){
         std::sort(graph[e].t.time_table.begin(), graph[e].t.time_table.end());
-        graph[e].min_duration = graph[e].t.min_duration();
     }
-
-
 }
-void TimeDependent::build_heuristic(uint destination) {
-    astar_graph.build_heuristic(destination);
-}
+
 
 DateTime TimeTable::eval(const DateTime & departure, const type::PT_Data &data) const{
     if(departure == DateTime::inf)
@@ -158,20 +137,6 @@ DateTime TimeTable::first_departure(DateTime departure, const type::PT_Data &dat
     return eval(departure, data);
 }
 
-int TimeTable::min_duration() const {
-    if(constant_duration >= 0)
-        return constant_duration;
-
-    int result = std::numeric_limits<int>::max();
-    BOOST_FOREACH(auto pair, this->time_table){
-        if(pair.second.hour < pair.first.hour)
-            std::cout << pair.first.hour << " " << pair.first.vp_idx << " → " << pair.second.hour << " " << pair.second.vp_idx << std::endl;
-        if(pair.second.hour - pair.first.hour < result)
-            result = pair.second.hour - pair.first.hour;
-    }
-    BOOST_ASSERT(result >= 0);
-    return result;
-}
 
 struct Combine{
     const type::PT_Data & data;
@@ -221,28 +186,6 @@ Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day)
 }
 
 
-Path TimeDependent::compute_astar(type::idx_t dep, type::idx_t arr, int hour, int day){
-    DateTime start_time(day, hour);
-
-//    astar_graph.build_heuristic(arrival);
-
-    try{
-        boost::astar_search(this->graph, dep, distance_heuristic(*this),
-                            boost::distance_map(&distance[0])
-                            .predecessor_map(&preds[0])
-                            .weight_map(boost::get(&Edge::t, graph))
-                            .distance_combine(Combine(this->data))
-                            .distance_inf(DateTime::infinity())
-                            .distance_zero(start_time)
-                            .distance_compare(edge_less())
-                            .visitor(navitia::routing::astar::astar_goal_visitor(arr))
-                            .rank_map(&astar_dist[0])
-            );
-    } catch(navitia::routing::astar::found_goal){}
-
-    return makePath(arr);
-}
-
 bool TimeDependent::is_stop_area(vertex_t vertex) const {
     return vertex < stop_point_offset;
 }
@@ -269,7 +212,7 @@ Path TimeDependent::makePath(type::idx_t arr) {
 
 
     vertex_t arrival = arr;
-    int precsaid = -1;
+    type::idx_t precsaid = type::invalid_idx;
     while(preds[arrival] != arrival){
         if(is_route_point(arrival)){
             const type::StopPoint & sp = data.stop_points[data.route_points[arrival - route_point_offset].stop_point_idx];
