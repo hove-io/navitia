@@ -16,6 +16,7 @@ enum API {
     PLANNER = 4;	
     LOAD = 5;
     PROXIMITYLIST = 6;
+    STATUS = 7;
 }
 
 message GeographicalCoord {
@@ -272,6 +273,23 @@ message Planner {
 	repeated Planning planning = 1;
 }
 
+message Status{
+    required string publication_date = 1;
+    required string start_production_date = 2;
+    required string end_production_date = 3;
+
+    optional int32 data_version = 4;
+    optional string navimake_version = 5;
+    optional string navitia_version = 6;
+
+    repeated string data_sources = 7;
+
+    optional string last_load_at = 8;
+
+    optional bool last_load_status = 9;
+    optional bool loaded = 10;
+}
+
 message Response{
     required API requested_api = 1;
     optional string error = 2;
@@ -287,4 +305,6 @@ message Response{
     optional Planner planner = 7;	
 
     optional ProximityList proximitylist = 8;
+
+    optional Status status = 9;
 }

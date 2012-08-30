@@ -21,6 +21,8 @@ using namespace webservice;
 
 namespace nt = navitia::type;
 
+namespace pt = boost::posix_time;
+namespace bg = boost::gregorian;
 
 
 class Worker : public BaseWorker<navitia::type::Data> {
@@ -193,6 +195,33 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
 
 
+    ResponseData status(RequestData &, navitia::type::Data & data) {
+        ResponseData rd;
+        navitia::utils::Locker lock(data);
+        if(!lock.locked){
+            return rd;
+        }
+
+        pbnavitia::Status* status = pb_response.mutable_status();
+        status->set_publication_date(pt::to_iso_string(data.meta.publication_date));
+        status->set_start_production_date(bg::to_iso_string(data.meta.production_date.begin()));
+        status->set_end_production_date(bg::to_iso_string(data.meta.production_date.end()));
+
+        for(auto data_sources: data.meta.data_sources){
+            status->add_data_sources(data_sources);
+        }
+        status->set_data_version(data.version);
+        status->set_navimake_version(data.meta.navimake_version);
+        status->set_navitia_version(NAVITIA_VERSION);
+
+        status->set_loaded(data.loaded);
+        status->set_last_load_status(data.last_load);
+        status->set_last_load_at(pt::to_iso_string(data.last_load_at));
+
+        rd.status_code = 200;
+        return rd;
+    }
+
 
     ResponseData planner(RequestData & request, navitia::type::Data & d) {
         ResponseData rd;
@@ -204,7 +233,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         std::vector<navitia::routing::Path> pathes;
         int time = boost::get<int>(request.parsed_params["time"].value);
         int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
-        if(request.parsed_params.count("departure") ==1) {
+        if(request.parsed_params.count("departure") == 1) {
             navitia::type::EntryPoint departure(boost::get<std::string>(request.parsed_params["departure"].value));
             navitia::type::EntryPoint destination(boost::get<std::string>(request.parsed_params["destination"].value));
             pathes = calculateur->compute_all(departure, destination, time, 7);
@@ -323,6 +352,7 @@ public:
         add_param("plannerreverse", "date", "Date de fin de l'itinéraire", ApiParameter::DATE, true);
 
         register_api("load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
+        register_api("status", boost::bind(&Worker::status, this, _1, _2), "Api de monitoring");
 
         register_api("ptref", boost::bind(&Worker::ptref, this, _1, _2), "Exploration du référentiel de transports en commun");
         add_param("ptref", "q", "Requête", ApiParameter::STRING, true);
