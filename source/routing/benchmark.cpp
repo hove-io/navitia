@@ -112,7 +112,7 @@ void benchmark::computeBench() {
     }
 }
 void benchmark::computeBench_td() {
-    routing::timedependent::TimeDependent td(data.pt_data);
+    routing::timedependent::TimeDependent td(data);
     td.build_graph();
     std::fstream file(path+"/td", std::ios::out );
 
@@ -133,29 +133,7 @@ void benchmark::computeBench_td() {
     std::cout << std::endl << std::endl;
     file.close();
 }
-void benchmark::computeBench_tda() {
-    routing::timedependent::TimeDependent td(data.pt_data);
-    td.build_graph();
-    std::fstream file(path+"/tda", std::ios::out );
 
-    int count = 0;
-    BOOST_FOREACH(auto entry, inputdatas) {
-        ++count;
-        std::cout << count << std::flush;
-        Timer t;
-        td.build_heuristic(entry[1]);
-        Path result = td.compute_astar(entry[0], entry[1], entry[2], entry[3]);
-        int temps = t.ms();
-        if(result.items.size() > 0)
-            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour() <<"," << result.duration << ","
-                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
-        else
-            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << -1 <<"," << result.duration << ","
-                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
-    }
-    std::cout << std::endl << std::endl;
-
-}
 void benchmark::computeBench_te() {
 //    routing::timeexpanded::TimeExpanded te(data.pt_data);
 //    te.build_graph();

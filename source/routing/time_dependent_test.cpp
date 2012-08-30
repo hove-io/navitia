@@ -37,10 +37,10 @@ int main(int, char**){
         std::cout << count << " stop points avec un seul route point sur " << data.pt_data.stop_points.size() << std::endl;
     }
 
-    routing::timedependent::TimeDependent td(data.pt_data);
+    routing::timedependent::TimeDependent td(data);
     {
         Timer t("Constuction du graphe");
-        td.build_graph();
+
 
 //        td.build_heuristic(data.pt_data.stop_areas[142].idx);
 //        td.compute_astar(data.pt_data.stop_areas[1], data.pt_data.stop_areas[142], 28800, 2);

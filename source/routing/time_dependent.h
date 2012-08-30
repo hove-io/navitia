@@ -2,7 +2,7 @@
 
 #include "routing.h"
 #include "astar.h"
-#include "type/pt_data.h"
+#include "type/data.h"
 #include <boost/graph/adjacency_list.hpp>
 
 namespace navitia { namespace routing {  namespace timedependent {
@@ -34,17 +34,11 @@ struct TimeTable {
     /** Retourne le premier départ possible à une heure donnée */
     DateTime first_departure(DateTime departure, const type::PT_Data & data) const;
 
-    /** Plus courte durée possible de faire */
-    int min_duration() const;
-
     TimeTable() : constant_duration(-1){}
     TimeTable(int constant_duration) : constant_duration(constant_duration){}
 };
 
 struct Edge {
-    /// Correspond à la meilleure durée possible. On s'en sert pour avoir une borne inférieure de temps
-    uint min_duration;
-
     TimeTable t;
     Edge() : t(-1) {}
     Edge(int duration) : t(duration){}
@@ -84,16 +78,13 @@ struct TimeDependent : public AbstractRouter{
 
     const type::PT_Data & data;
     Graph graph;
-    navitia::routing::astar::Astar astar_graph;
 
     size_t stop_point_offset;
     size_t route_point_offset;
 
     std::vector<vertex_t> preds;
     std::vector<DateTime> distance;
-    std::vector<DateTime> astar_dist;
-
-    TimeDependent(const type::PT_Data & data);
+    TimeDependent(const type::Data & global_data);
 
     /// Génère le graphe sur le quel sera fait le calcul
     void build_graph();
@@ -108,8 +99,6 @@ struct TimeDependent : public AbstractRouter{
      * day correspond au jour de circulation au départ
      */
     Path compute(type::idx_t dep, type::idx_t arr, int hour, int day);
-
-    Path compute_astar(type::idx_t dep, type::idx_t arr, int hour, int day);
 
     Path makePath(type::idx_t arr);
 

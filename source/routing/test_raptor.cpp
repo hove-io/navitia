@@ -12,7 +12,7 @@ int main(int, char **) {
     type::Data data;
     {
         Timer t("Chargement des données");
-        data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.lz4");
+        data.load_lz4("IdF.lz4");
 
         data.build_proximity_list();
     }
