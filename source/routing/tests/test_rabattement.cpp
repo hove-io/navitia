@@ -40,23 +40,24 @@ BOOST_AUTO_TEST_CASE(change){
     b.vj("B")("stop1", 20, 25)("stop2", 30,35);
     b.vj("C")("stop1", 30, 35)("stop2", 40,45);
 
-    b.vj("D")("stop2", 260, 265)("stop3", 270,275);
-    b.vj("D")("stop2", 270, 275)("stop3", 280,285);
+    b.vj("D")("stop2", 1260, 1265)("stop3", 1270,1275);
+    b.vj("E")("stop2", 1270, 1275)("stop3", 1280,1285);
     type::Data data;
     data.pt_data =  b.build();
     RAPTOR raptor(data);
+    type::PT_Data d = data.pt_data;
 
-    auto res = raptor.compute_rabattement(d.stop_areas[1].idx, d.stop_areas[0].idx, 8200, 0);
+    auto res = raptor.compute_rabattement(d.stop_areas[0].idx, d.stop_areas[2].idx, 0, 0);
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 4);
     BOOST_CHECK_EQUAL(res.items[0].said, 0);
     BOOST_CHECK_EQUAL(res.items[1].said, 1);
     BOOST_CHECK_EQUAL(res.items[2].said, 1);
-    BOOST_CHECK_EQUAL(res.items[3].said, 4);
+    BOOST_CHECK_EQUAL(res.items[3].said, 2);
     BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 35);
     BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 40);
-    BOOST_CHECK_EQUAL(res.items[2].departure.hour(), 260);
-    BOOST_CHECK_EQUAL(res.items[3].arrival.hour(), 275);
+    BOOST_CHECK_EQUAL(res.items[2].departure.hour(), 1265);
+    BOOST_CHECK_EQUAL(res.items[3].arrival.hour(), 1270);
     BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
     BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 0);
     BOOST_CHECK_EQUAL(res.items[2].arrival.date(), 0);

@@ -52,7 +52,7 @@ struct type_retour {
 };
 
 struct best_dest {
-    typedef std::pair<unsigned int, int> idx_dist;
+//    typedef std::pair<unsigned int, int> idx_dist;
 
     std::map<unsigned int, type_retour> map_date_time;
     type_retour best_now;
@@ -80,6 +80,12 @@ struct best_dest {
                 best_now_spid = said;
             }
         }
+    }
+
+    void reinit() {
+        map_date_time.clear();
+        best_now = type_retour();
+        best_now_spid = 0;
     }
 
     void reverse() {
@@ -181,8 +187,10 @@ struct communRAPTOR : public AbstractRouter
 
     virtual Path compute_raptor(vector_idxretour departs, vector_idxretour destinations) = 0;
     virtual Path compute_raptor_reverse(vector_idxretour departs, vector_idxretour destinations) = 0;
+    virtual Path compute_raptor_rabattement(vector_idxretour departs, vector_idxretour destinations) = 0;
     Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
     Path compute_reverse(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
+    Path compute_rabattement(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
     Path compute(const type::GeographicalCoord & departure, double radius, idx_t destination_idx, int departure_hour, int departure_day);
     Path compute(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
                  , int departure_hour, int departure_day);
@@ -220,6 +228,7 @@ struct RAPTOR : public communRAPTOR {
 
     Path compute_raptor(vector_idxretour departs, vector_idxretour destinations);
     Path compute_raptor_reverse(vector_idxretour departs, vector_idxretour destinations);
+    Path compute_raptor_rabattement(vector_idxretour departs, vector_idxretour destinations);
 
 
     Path makeBestPath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count);
@@ -230,7 +239,7 @@ struct RAPTOR : public communRAPTOR {
     std::vector<Path> compute_all(vector_idxretour departs, vector_idxretour destinations);
     std::vector<Path> compute_all(navitia::type::EntryPoint departure, navitia::type::EntryPoint destination, int departure_hour, int departure_day);
 
-    void boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count, unsigned int maxCount = std::numeric_limits<unsigned int>::max());
+    void boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count);
     Path makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb);
     void marcheapied(boost::dynamic_bitset<> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int count);
     void setRoutesValides(boost::dynamic_bitset<> & routesValides, std::vector<unsigned int> &marked_stop, map_retour_t &retour);
@@ -242,7 +251,7 @@ struct RAPTOR : public communRAPTOR {
     }
     void make_queue(boost::dynamic_bitset<> &stops, boost::dynamic_bitset<> & routesValides, queue_t &Q);
 
-    void boucleRAPTORreverse(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count, unsigned int maxCount = std::numeric_limits<unsigned int>::max());
+    void boucleRAPTORreverse(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count);
     Path makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb);
     void marcheapiedreverse(boost::dynamic_bitset<> & marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int count);
     void setRoutesValidesreverse(boost::dynamic_bitset<> &routesValides, std::vector<unsigned int> &marked_stop, map_retour_t &retour);
