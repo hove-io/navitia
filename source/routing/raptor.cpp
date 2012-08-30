@@ -431,7 +431,7 @@ void RAPTOR::setRoutesValidesreverse(boost::dynamic_bitset<> &routesValides, std
 
 
 
-void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count) {
+void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count, unsigned int maxCount) {
     queue_t Q;
     unsigned int routeidx;
     int t;
@@ -446,9 +446,10 @@ void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &
 
     marcheapied(marked_sp, retour, best, b_dest, 0);
 
-    while(!end) {
+    while(!end || ((maxCount != std::numeric_limits<unsigned int>::max()) && (count <= maxCount) )) {
         end = true;
-        retour.push_back(retour_constant);
+        if(retour.size() == count)
+            retour.push_back(retour_constant);
         make_queue(marked_sp, routesValides, Q);
         routeidx = 0;
         BOOST_FOREACH(queue_t::value_type vq, Q) {
@@ -477,9 +478,10 @@ void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &
                 if((retour_temp.type != uninitialized) &&
                         (((retour_temp.dt.hour() <= get_temps_depart(route, t, i)) && (retour_temp.dt.date() == workingDt.date()) ) ||
                          ((retour_temp.dt.date() < workingDt.date()) ))) {
-                    t  = earliest_trip(route, i, retour_temp.dt, t);
+                    int etemp = earliest_trip(route, i, retour_temp.dt, t);
                     //                    std::tie(t, pam) = earliest_trip(route, i, retour_temp.dt, t);
-                    if(t >= 0) {
+                    if(etemp >= 0 && etemp != t) {
+                        t = etemp;
                         workingDt = retour_temp.dt;
                         embarquement = spid;
                         workingDt.update(get_temps_depart(route, t,i));

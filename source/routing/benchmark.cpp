@@ -81,12 +81,12 @@ void benchmark::load_input() {
 
 void benchmark::computeBench() {
     Timer tg("Timer General");
-//    std::cout << std::endl << "Lancement TimeDepedent" << std::endl;
-//    {
-//        Timer t("Benchmark TimeDependent");
-//        computeBench_td();
+    std::cout << std::endl << "Lancement TimeDepedent" << std::endl;
+    {
+        Timer t("Benchmark TimeDependent");
+        computeBench_td();
 
-//    }
+    }
 //    std::cout << std::endl << "Lancement TimeDepedent Astar" << std::endl;
 
 //    {

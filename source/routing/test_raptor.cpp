@@ -4,17 +4,18 @@
 #include "boost/date_time.hpp"
 #include "naviMake/build_helper.h"
 #include <boost/algorithm/string.hpp>
+#include <valgrind/callgrind.h>
 
 using namespace navitia;
 
 int main(int, char **) {
-//    type::Data data;
-//    {
-//        Timer t("Chargement des données");
-//        data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.lz4");
+    type::Data data;
+    {
+        Timer t("Chargement des données");
+        data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.lz4");
 
-//        data.build_proximity_list();
-//    }
+        data.build_proximity_list();
+    }
 
 
 
@@ -52,25 +53,25 @@ int main(int, char **) {
     //    std::cout << "size : " << data.pt_data.route_points.at(10).vehicle_journey_list_arrival.size() << " "
     //              << data.pt_data.route_points.at(10).vehicle_journey_list.size()   << std::endl;
 
-//    routing::raptor::RAPTOR raptor(data);
-//    {
-//        Timer t("Calcul raptor");
-//        CALLGRIND_START_INSTRUMENTATION;
-//        auto result = raptor.compute(16482, 16483, 28800, 0);
-//        CALLGRIND_STOP_INSTRUMENTATION;
-//        std::cout << result << std::endl;
-////        std::cout << makeItineraire(result);
+    routing::raptor::RAPTOR raptor(data);
+    {
+        Timer t("Calcul raptor");
+        CALLGRIND_START_INSTRUMENTATION;
+        auto result = raptor.compute(11908, 14491, 0, 0);
+        CALLGRIND_STOP_INSTRUMENTATION;
+        std::cout << result << std::endl;
+//        std::cout << makeItineraire(result);
 
-//        //        BOOST_FOREACH(auto pouet, result) {
-//        //        std::cout << pouet << std::endl << std::endl;
+        //        BOOST_FOREACH(auto pouet, result) {
+        //        std::cout << pouet << std::endl << std::endl;
 
-    //        //        BOOST_FOREACH(auto pouet, result) {
-    //        //        std::cout << pouet << std::endl << std::endl;
+            //        BOOST_FOREACH(auto pouet, result) {
+            //        std::cout << pouet << std::endl << std::endl;
 
-    //        //        std::cout << makeItineraire(pouet);
-    //        //        }
-    //        //        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
-    //    }
+            //        std::cout << makeItineraire(pouet);
+            //        }
+            //        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
+        }
 
 //    BOOST_FOREACH(unsigned int spidx, data.pt_data.stop_areas.at(3849).stop_point_list) {
 //        BOOST_FOREACH(unsigned int rpidx, data.pt_data.stop_points.at(spidx).route_point_list) {
@@ -113,19 +114,19 @@ int main(int, char **) {
 
     //        std::cout << raptor.compute(navitia::type::GeographicalCoord(2.3305474316803103, 48.867483087514856), 500, navitia::type::GeographicalCoord(2.349430179055217, 48.84850904718449), 500, 28800, 7);
     //    }
-    navimake::builder b("20120614");
-    b.vj("A")("stop1", 8000)("stop2", 8200);
-    b.vj("B")("stop3", 10)("stop4",20);
-    b.connection("stop2", "stop3", 10*60);
-    b.connection("stop3", "stop2", 10*60);
-    type::Data data;
-    data.pt_data =  b.build();
-    navitia::routing::raptor::RAPTOR raptor(data);
+//    navimake::builder b("20120614");
+//    b.vj("A")("stop1", 8000)("stop2", 8200);
+//    b.vj("B")("stop3", 10)("stop4",20);
+//    b.connection("stop2", "stop3", 10*60);
+//    b.connection("stop3", "stop2", 10*60);
+//    type::Data data;
+//    data.pt_data =  b.build();
+//    navitia::routing::raptor::RAPTOR raptor(data);
 
-    type::PT_Data d = data.pt_data;
+//    type::PT_Data d = data.pt_data;
 
-    auto res = raptor.compute_reverse(d.stop_areas.at(3).idx, d.stop_areas.at(0).idx, 30, 1);
-    std::cout << res << std::endl;
+//    auto res = raptor.compute_reverse(d.stop_areas.at(3).idx, d.stop_areas.at(0).idx, 30, 1);
+//    std::cout << res << std::endl;
 
 
 }
