@@ -54,6 +54,7 @@ int main(int argc, char * argv[])
     //@TODO définir la date de validé en fonction des données
     auto tmp_date = boost::gregorian::from_undelimited_string(date);
     nav_data.meta.production_date = boost::gregorian::date_period(tmp_date, tmp_date + boost::gregorian::years(1));
+    nav_data.meta.publication_date = pt::microsec_clock::local_time();
     
     // Est-ce que l'on charge la carto ?
     start = pt::microsec_clock::local_time();
