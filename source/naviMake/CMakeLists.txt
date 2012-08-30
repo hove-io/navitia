@@ -32,3 +32,5 @@ add_executable (osm2nav osm2nav.cpp)
 target_link_libraries(osm2nav data ${GEOS} ${OSMPBF})
 
 add_subdirectory(tests)
+
+INSTALL_TARGETS(/navimake navimake)

@@ -159,8 +159,8 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
 
     auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7900, 0);
 
-    BOOST_REQUIRE_EQUAL(res.items.size(), 5);
-    BOOST_CHECK_EQUAL(res.items[4].arrival.hour(), 9200);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 6);
+    BOOST_CHECK_EQUAL(res.items[5].arrival.hour(), 9200);
 }
 
 
@@ -180,8 +180,8 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_trcky){
 
     auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7900, 0);
 
-    BOOST_REQUIRE_EQUAL(res.items.size(), 4);
-    BOOST_CHECK_EQUAL(res.items[3].arrival.hour(), 9200);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 7);
+    BOOST_CHECK_EQUAL(res.items[6].arrival.hour(), 9200);
 }
 
 
@@ -200,9 +200,9 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_fin){
 
     auto res = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 7900, 0);
 
-    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
-    BOOST_CHECK_EQUAL(res.items[2].said, 2);
-    BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 8200+10*60);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 4);
+    BOOST_CHECK_EQUAL(res.items[3].said, 2);
+    BOOST_CHECK_EQUAL(res.items[3].arrival.hour(), 8200+10*60);
 }
 
 BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
@@ -219,10 +219,10 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
 
 
     auto res = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 7900, 0);
-    BOOST_REQUIRE_EQUAL(res.items.size(), 5);
-    BOOST_CHECK_EQUAL(res.items[4].said, 3);
-    BOOST_CHECK_EQUAL(res.items[4].arrival.hour(), 2*3600+20);
-    BOOST_CHECK_EQUAL(res.items[4].arrival.date(), 1);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 6);
+    BOOST_CHECK_EQUAL(res.items[5].said, 3);
+    BOOST_CHECK_EQUAL(res.items[5].arrival.hour(), 2*3600+20);
+    BOOST_CHECK_EQUAL(res.items[5].arrival.date(), 1);
 }
 
 
@@ -242,9 +242,9 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_debut) {
     auto res = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 7900, 0);
 
 
-    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
-    BOOST_CHECK_EQUAL(res.items[2].said, 3);
-    BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 40000);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 4);
+    BOOST_CHECK_EQUAL(res.items[3].said, 3);
+    BOOST_CHECK_EQUAL(res.items[3].arrival.hour(), 40000);
 }
 
 BOOST_AUTO_TEST_CASE(test_rattrapage) {
