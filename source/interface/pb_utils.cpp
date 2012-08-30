@@ -16,7 +16,19 @@ std::string pb2xml(const google::protobuf::Message* response){
         if(field->is_repeated()) {
             child_buffer << "<" << field->name() << ">";
             for(int i=0; i < reflection->FieldSize(*response, field); ++i){
-                child_buffer << pb2xml(&reflection->GetRepeatedMessage(*response, field, i));
+                switch(field->type()) {
+                case google::protobuf::FieldDescriptor::TYPE_MESSAGE:
+                    child_buffer << pb2xml(&reflection->GetRepeatedMessage(*response, field, i));
+                    break;
+                case google::protobuf::FieldDescriptor::TYPE_INT32:
+                    child_buffer << "<item>" << reflection->GetRepeatedInt32(*response, field, i) << "</item>";
+                    break;
+                case google::protobuf::FieldDescriptor::TYPE_STRING:
+                    child_buffer << "<item>" << reflection->GetRepeatedString(*response, field, i) << "</item>";
+                    break;
+                default:
+                    child_buffer << "other" ;
+                }
             }
             child_buffer << "</" << field->name() << ">";
         }
@@ -32,6 +44,9 @@ std::string pb2xml(const google::protobuf::Message* response){
                 buffer << reflection->GetDouble(*response, field) << "\" ";
             }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_MESSAGE){
                 child_buffer << pb2xml(&reflection->GetMessage(*response, field));
+            }else if(field->type() == google::protobuf::FieldDescriptor::TYPE_BOOL){
+                buffer << field->name() << "=\"";
+                buffer << reflection->GetBool(*response, field) << "\" ";
             }else {
                 buffer << field->name() << "=\"";
                 buffer << "type unkown\" ";
@@ -85,7 +100,10 @@ std::string pb2json(const google::protobuf::Message* response, int depth){
                 case google::protobuf::FieldDescriptor::TYPE_INT32:
                     buffer << reflection->GetRepeatedInt32(*response, field, i);
                     break;
-                 default:
+                case google::protobuf::FieldDescriptor::TYPE_STRING:
+                    buffer << "\"" << reflection->GetRepeatedString(*response, field, i) << "\"";
+                    break;
+                default:
                     buffer << "other" ;
                 }
 
@@ -114,6 +132,9 @@ std::string pb2json(const google::protobuf::Message* response, int depth){
                 break;
             case google::protobuf::FieldDescriptor::TYPE_ENUM:
                 buffer << "\"" << reflection->GetEnum(*response, field)->name() << "\"";
+                break;
+            case google::protobuf::FieldDescriptor::TYPE_BOOL:
+                buffer << "\"" << boost::lexical_cast<std::string>(reflection->GetBool(*response, field)) << "\"";
                 break;
             default:
                 buffer << "Other !, " ;
