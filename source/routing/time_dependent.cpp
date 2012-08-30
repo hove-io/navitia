@@ -37,7 +37,7 @@ private:
 };
 
 
-TimeDependent::TimeDependent(const type::PT_Data & data) : data(data),
+TimeDependent::TimeDependent(const type::Data & global_data) : data(global_data.pt_data),
        // On crée un nœud par route point, deux par stopArea, deux par stopPoint
        graph(data.route_points.size() + data.stop_areas.size() + data.stop_points.size()),
        astar_graph(data),
@@ -47,9 +47,7 @@ TimeDependent::TimeDependent(const type::PT_Data & data) : data(data),
        distance(boost::num_vertices(graph)),
        astar_dist(boost::num_vertices(graph))
    {
-    BOOST_ASSERT(boost::num_vertices(this->graph) == route_point_offset + data.route_points.size());
-    std::cout <<  3*data.route_points.size() - data.routes.size() + 2*data.stop_points.size() << std::endl;
-    //BOOST_ASSERT(boost::num_edges(this->graph) == 3*data.route_points.size() - data.vehicle_journeys.size() + 2*data.stop_points.size() );
+    this->build_graph();
    }
 
 

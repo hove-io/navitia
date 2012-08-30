@@ -112,7 +112,7 @@ void benchmark::computeBench() {
     }
 }
 void benchmark::computeBench_td() {
-    routing::timedependent::TimeDependent td(data.pt_data);
+    routing::timedependent::TimeDependent td(data);
     td.build_graph();
     std::fstream file(path+"/td", std::ios::out );
 
@@ -134,7 +134,7 @@ void benchmark::computeBench_td() {
     file.close();
 }
 void benchmark::computeBench_tda() {
-    routing::timedependent::TimeDependent td(data.pt_data);
+    routing::timedependent::TimeDependent td(data);
     td.build_graph();
     std::fstream file(path+"/tda", std::ios::out );
 

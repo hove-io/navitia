@@ -2,7 +2,7 @@
 
 #include "routing.h"
 #include "astar.h"
-#include "type/pt_data.h"
+#include "type/data.h"
 #include <boost/graph/adjacency_list.hpp>
 
 namespace navitia { namespace routing {  namespace timedependent {
@@ -93,7 +93,7 @@ struct TimeDependent : public AbstractRouter{
     std::vector<DateTime> distance;
     std::vector<DateTime> astar_dist;
 
-    TimeDependent(const type::PT_Data & data);
+    TimeDependent(const type::Data & global_data);
 
     /// Génère le graphe sur le quel sera fait le calcul
     void build_graph();

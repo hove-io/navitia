@@ -5,6 +5,7 @@
 #include "naviMake/build_helper.h"
 #include <boost/algorithm/string.hpp>
 #include <valgrind/callgrind.h>
+#include "routing/time_dependent.h"
 
 using namespace navitia;
 
@@ -12,7 +13,7 @@ int main(int, char **) {
     type::Data data;
     {
         Timer t("Chargement des données");
-        data.load_lz4("/home/vlara/navitia/jeu/IdF/IdF.lz4");
+        data.load_lz4("IdF.lz4");
 
         data.build_proximity_list();
     }
@@ -53,12 +54,33 @@ int main(int, char **) {
     //    std::cout << "size : " << data.pt_data.route_points.at(10).vehicle_journey_list_arrival.size() << " "
     //              << data.pt_data.route_points.at(10).vehicle_journey_list.size()   << std::endl;
 
-    routing::raptor::RAPTOR raptor(data);
     {
+        routing::raptor::RAPTOR raptor(data);
         Timer t("Calcul raptor");
         CALLGRIND_START_INSTRUMENTATION;
-        auto result = raptor.compute(11908, 14491, 0, 0);
+        auto result = raptor.compute(12618,2273,0,0);
         CALLGRIND_STOP_INSTRUMENTATION;
+        std::cout << result << std::endl;
+//        std::cout << makeItineraire(result);
+
+        //        BOOST_FOREACH(auto pouet, result) {
+        //        std::cout << pouet << std::endl << std::endl;
+
+            //        BOOST_FOREACH(auto pouet, result) {
+            //        std::cout << pouet << std::endl << std::endl;
+
+            //        std::cout << makeItineraire(pouet);
+            //        }
+            //        routing::Path result = raptor.compute(11484, 5596, 28800, 7);
+        }
+
+    {
+        routing::timedependent::TimeDependent td(data);
+        td.build_graph();
+        Timer t("Calcul time dep");
+
+        auto result = td.compute(12618,2273,0,0);
+
         std::cout << result << std::endl;
 //        std::cout << makeItineraire(result);
 
