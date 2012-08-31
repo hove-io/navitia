@@ -33,7 +33,6 @@ struct Result {
     }
 };
 
-
 int main(int argc, char** argv){
     po::options_description desc("Options de l'outil de benchmark");
     std::vector<std::string> algos;
