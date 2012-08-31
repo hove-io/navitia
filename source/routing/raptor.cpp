@@ -625,6 +625,7 @@ void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop, map_ret
                          ((retour_temp.dt.date() > workingDt.date()) ))) {
                     int etemp = tardiest_trip(route, i, retour_temp.dt, t);
                     if(etemp >=0 && t!=etemp) {
+                        t = etemp;
                         workingDt = retour[count - 1][spid].dt;
                         embarquement = spid;
                         //                        workingDt.updatereverse(get_temps_departreverse(route, t,i));
