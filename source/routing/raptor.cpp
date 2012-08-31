@@ -674,13 +674,16 @@ std::vector<Path> RAPTOR::makePathes(map_retour_t &retour, map_int_pint_t &best,
     std::vector<Path> result;
 
     for(unsigned int i=1;i<count;++i) {
+        DateTime dt;
+        int spid = std::numeric_limits<int>::max();
         BOOST_FOREACH(auto dest, b_dest.map_date_time) {
-            if(retour[i][dest.first] != type_retour()) {
-                result.push_back(makePath(retour, best, departs, dest.first, i));
+            if(retour[i][dest.first] != type_retour() && dest.second.dt < dt) {
+                dt = dest.second.dt;
+                spid = dest.first;
             }
-
-
         }
+        if(spid != std::numeric_limits<int>::max())
+            result.push_back(makePath(retour, best, departs, spid, i));
     }
 
     return result;
