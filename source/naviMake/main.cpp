@@ -51,9 +51,6 @@ int main(int argc, char * argv[])
     navitia::type::Data nav_data; // Structure définitive
 
 
-    //@TODO définir la date de validé en fonction des données
-    auto tmp_date = boost::gregorian::from_undelimited_string(date);
-    nav_data.meta.production_date = boost::gregorian::date_period(tmp_date, tmp_date + boost::gregorian::years(1));
     nav_data.meta.publication_date = pt::microsec_clock::local_time();
     
     // Est-ce que l'on charge la carto ?
@@ -75,12 +72,13 @@ int main(int argc, char * argv[])
     nav_data.meta.data_sources.push_back(boost::filesystem::absolute(input).native());
 
     if(type == "fusio") {
-        navimake::connectors::CsvFusio connector(input, date);
+        navimake::connectors::CsvFusio connector(input);
         connector.fill(data);
     }
     else if(type == "gtfs") {
-        navimake::connectors::GtfsParser connector(input, date);
+        navimake::connectors::GtfsParser connector(input);
         connector.fill(data);
+        nav_data.meta.production_date = connector.production_date;
     }
     else {
         std::cout << desc << "\n";

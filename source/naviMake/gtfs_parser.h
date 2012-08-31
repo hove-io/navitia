@@ -14,7 +14,6 @@ namespace navimake{ namespace connectors{
 class GtfsParser {
 private:
     std::string path;///< Chemin vers les fichiers
-    boost::gregorian::date start;///< Premier jour où les données sont valables
 
     // Plusieurs maps pour savoir à quel position est quel objet identifié par son ID GTFS
     boost::unordered_map<std::string, navimake::types::ModeType*> mode_type_map;
@@ -26,11 +25,13 @@ private:
     boost::unordered_map<std::string, navimake::types::Mode*> mode_map;
 
 public:
+    boost::gregorian::date_period production_date;///<Période de validité des données
+
     /// Constructeur qui prend en paramètre le chemin vers les fichiers
-    GtfsParser(const std::string & path, const std::string & start_date);
+    GtfsParser(const std::string & path);
 
     /// Constructeur d'une instance vide
-    GtfsParser() {}
+    GtfsParser() : production_date(boost::gregorian::date(), boost::gregorian::date()) {}
 
     /// Remplis la structure passée en paramètre
     void fill(navimake::Data& data);
@@ -65,6 +66,9 @@ public:
     /// Parse le fichier trips.txt
     /// Contient les VehicleJourney
     void parse_trips(Data & data);
+    //
+    ///parse le fichier calendar.txt afin de trouver la période de validité des données
+    boost::gregorian::date_period find_production_date();
 };
 
 /// Construit les routes en retrouvant les paterns à partir des VJ
