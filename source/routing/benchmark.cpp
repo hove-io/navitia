@@ -1,210 +1,151 @@
-#include "benchmark.h"
-
+#include "time_dependent.h"
+#include "raptor.h"
+#include "type/data.h"
+#include "utils/timer.h"
+#include <boost/program_options.hpp>
 #include <boost/progress.hpp>
+#include <random>
+#include <fstream>
 
-namespace navitia { namespace routing { namespace benchmark {
+using namespace navitia;
+using namespace routing;
+namespace po = boost::program_options;
 
-void benchmark::generate_input() {
-    int fday = 7;
-    if(data.pt_data.validity_patterns.front().beginning_date.day_of_week().as_number() == 6)
-        generate_input(fday, 8);
-    else
-        generate_input(fday, 13 - data.pt_data.validity_patterns.front().beginning_date.day_of_week().as_number());
-}
+struct PathDemand {
+    type::idx_t start;
+    type::idx_t target;
+    unsigned int date;
+    unsigned int hour;
+};
 
-void benchmark::generate_input(int fday, int sday) {
-    boost::mt19937 rng;
-    boost::uniform_int<> sa(0,data.pt_data.stop_areas.size());
-    boost::variate_generator<boost::mt19937&, boost::uniform_int<> > gen(rng, sa);
+struct Result {
+    int duration;
+    int visited;
+    int time;
+    int arrival;
+    int nb_changes;
 
-    std::fstream file(path+"/inputcsv", std::ios::out );
-    for(int i = 0; i < 125; ++i) {
-        int a = gen();
-        int b = gen();
-        while(b == a ) {
-            b = gen();
-        }
-
-        file << a << "," << b << "," << 0 << "," << fday << "\n";
-        file << a << "," << b << "," << 28800 << "," << fday << "\n";
-        file << a << "," << b << "," << 72000 << "," << fday << "\n";
-        file << a << "," << b << "," << 86000 << "," << fday << "\n";
-
-        file << a << "," << b << "," << 0 << "," <<  sday << "\n";
-        file << a << "," << b << "," << 28800 << "," << sday << "\n";
-        file << a << "," << b << "," << 72000 << "," << sday << "\n";
-        file << a << "," << b << "," << 86000 << "," << sday << "\n";
-
-        inputdatas.push_back(vectorint());
-        inputdatas.back().push_back(a);inputdatas.back().push_back(b);inputdatas.back().push_back(0);inputdatas.back().push_back(fday);
-        inputdatas.push_back(vectorint());
-        inputdatas.back().push_back(a);inputdatas.back().push_back(b);inputdatas.back().push_back(28800);inputdatas.back().push_back(fday);
-        inputdatas.push_back(vectorint());
-        inputdatas.back().push_back(a);inputdatas.back().push_back(b);inputdatas.back().push_back(72000);inputdatas.back().push_back(fday);
-        inputdatas.push_back(vectorint());
-        inputdatas.back().push_back(a);inputdatas.back().push_back(b);inputdatas.back().push_back(86000);inputdatas.back().push_back(fday);
-        inputdatas.push_back(vectorint());
-        inputdatas.back().push_back(a);inputdatas.back().push_back(b);inputdatas.back().push_back(0);inputdatas.back().push_back(sday);
-        inputdatas.push_back(vectorint());
-        inputdatas.back().push_back(a);inputdatas.back().push_back(b);inputdatas.back().push_back(28800);inputdatas.back().push_back(sday);
-        inputdatas.push_back(vectorint());
-        inputdatas.back().push_back(a);inputdatas.back().push_back(b);inputdatas.back().push_back(72000);inputdatas.back().push_back(sday);
-        inputdatas.push_back(vectorint());
-        inputdatas.back().push_back(a);inputdatas.back().push_back(b);inputdatas.back().push_back(86000);inputdatas.back().push_back(sday);
-
+    Result(Path path) : duration(path.duration), visited(path.percent_visited), nb_changes(path.nb_changes) {
+        if(path.items.size() > 0)
+            arrival = path.items.back().arrival.hour();
+        else
+            arrival = -1;
     }
-    file.close();
-}
+};
 
-void benchmark::load_input() {
-    typedef boost::tokenizer<boost::char_separator<char> >
-            tokenizer;
-    boost::char_separator<char> sep(",");
 
-    std::fstream file(path+"/inputcsv", std::ios::in );
+int main(int argc, char** argv){
+    po::options_description desc("Options de l'outil de benchmark");
+    std::vector<std::string> algos;
+    std::string file, output;
+    int iterations;
+    desc.add_options()
+            ("help", "Affiche l'aide")
+            ("algo,a", po::value<decltype(algos)>(&algos), "Algorithme(s) à utiliser : raptor, time_dep")
+            ("interations,i", po::value<int>(&iterations)->default_value(100), "Nombre d'itérations (10 calculs par itération)")
+            ("file,f", po::value<std::string>(&file)->default_value("data.nav.lz4"), "Données en entrée")
+            ("output,o", po::value<std::string>(&output)->default_value("benchmark.csv"), "Fichier de sortie");
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);
 
-    if(file) {
-        std::string line;
-        while(std::getline(file, line)) {
-            tokenizer tokens(line, sep);
-            inputdatas.push_back(vectorint());
-            for(tokenizer::iterator tok_iter = tokens.begin();
-                tok_iter != tokens.end(); ++tok_iter) {
-                inputdatas.back().push_back(boost::lexical_cast<int>(*tok_iter));
+    if (vm.count("help")) {
+        std::cout << desc << std::endl;
+        return 1;
+    }
+
+    type::Data data;
+    {
+        Timer t("Charegement des données : " + file);
+        data.load_lz4(file);
+    }
+
+    // Génération des instances
+    std::random_device rd;
+    std::mt19937 rng(rd());
+    std::uniform_int_distribution<> gen(0,data.pt_data.stop_areas.size());
+
+    std::vector<PathDemand> demands;
+    for(int i = 0; i < iterations; ++i) {
+        std::vector<unsigned int> hours{0, 28800, 36000, 72000, 86000};
+        std::vector<unsigned int> days{7};
+        if(data.pt_data.validity_patterns.front().beginning_date.day_of_week().as_number() == 6)
+            days.push_back(8);
+        else
+            days.push_back(13);
+
+        PathDemand demand;
+        demand.start = gen(rng);
+        demand.target = gen(rng);
+        while(demand.start == demand.target) {
+            demand.target = gen(rng);
+        }
+        for(auto day : days) {
+            for(auto hour : hours) {
+                demand.date = day;
+                demand.hour = hour;
+                demands.push_back(demand);
             }
         }
-    } else {
-        std::cout << "Erreur à l'ouverture " << std::endl;
     }
 
-}
+    // Calculs des itinéraires
+    std::map<std::string, std::vector<Result> > results;
+    for(auto algo : algos){
+        AbstractRouter * router;
+        if(algo == "raptor"){
+            router = new raptor::RAPTOR(data);
+        } else if(algo == "time_dep"){
+            router = new timedependent::TimeDependent(data);
+        } else {
+            std::cerr << "Algorithme inconnu : " << algo << std::endl;
+            return 1;
+        }
 
-void benchmark::computeBench() {
-    Timer tg("Timer General");
-    std::cout << std::endl << "Lancement TimeDepedent" << std::endl;
-    {
-        Timer t("Benchmark TimeDependent");
-        computeBench_td();
-
+        std::cout << "On lance le benchmark de l'algo " << algo << std::endl;
+        boost::progress_display show_progress(demands.size());
+        Timer t("Calcul avec l'algorithme " + algo);
+        for(auto demand : demands){
+            ++show_progress;
+            Timer t2;
+            Path path = router->compute(demand.start, demand.target, demand.hour, demand.date);
+            Result result(path);
+            result.time = t2.ms();
+            results[algo].push_back(result);
+        }
+        delete router;
     }
-//    std::cout << std::endl << "Lancement TimeDepedent Astar" << std::endl;
 
-//    {
-//        Timer t("Benchmark TimeDependent Astar");
-//        computeBench_tda();
-//    }
-//    std::cout << std::endl << "Lancement TimeExpanded" << std::endl;
-
-//    {
-//        Timer t("Benchmark TimeExpanded");
-//        computeBench_te();
-//    }
-//    std::cout << std::endl << "Lancement TimeExpanded Astar" << std::endl;
-//    {
-//        Timer t("Benchmark TimeExpanded Astar");
-//        computeBench_tea();
-//    }
-    std::cout << std::endl << "Lancement RAPTOR" << std::endl;
-
-    {
-        Timer t("Benchmark RAPTOR");
-        computeBench_ra();
+    Timer ecriture("Écriture du fichier de résultats");
+    std::fstream out_file(output, std::ios::out);
+    out_file << "Start, Target, Day, Hour";
+    for(auto algo : algos){
+        out_file << ", "
+                 << algo << "_arrival, "
+                 << algo << "_duration, "
+                 << algo << "_nb_change, "
+                 << algo << "_visited, "
+                 << algo << "_time";
     }
-}
-void benchmark::computeBench_td() {
-    routing::timedependent::TimeDependent td(data);
-    td.build_graph();
-    std::fstream file(path+"/td", std::ios::out );
+    out_file << "\n";
 
-    boost::progress_display show_progress(inputdatas.size());
-    BOOST_FOREACH(auto entry, inputdatas) {
-        //std::cout << count << std::flush;
-        ++show_progress;
-        Timer t;
-        Path result = td.compute(entry[0], entry[1], entry[2], entry[3]);
-        int temps = t.ms();
-        if(result.items.size() > 0)
-            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour() <<"," << result.duration << ","
-                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
-        else
-            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << -1 <<"," << result.duration << ","
-                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
+    for(size_t i = 0; i < demands.size(); ++i){
+        PathDemand demand = demands[i];
+        out_file << data.pt_data.stop_areas[demand.start].external_code
+                 << ", " << data.pt_data.stop_areas[demand.target].external_code
+                 << ", " << demand.date
+                 << ", " << demand.hour;
+        for(auto algo : algos){
+            out_file << ", "
+                     << results[algo][i].arrival << ", "
+                     << results[algo][i].duration << ", "
+                     << results[algo][i].nb_changes << ", "
+                     << results[algo][i].visited << ", "
+                     << results[algo][i].time;
+        }
+        out_file << "\n";
     }
-    std::cout << std::endl << std::endl;
-    file.close();
+    out_file.close();
 }
 
-void benchmark::computeBench_te() {
-//    routing::timeexpanded::TimeExpanded te(data.pt_data);
-//    te.build_graph();
-//    std::fstream file(path+"/te", std::ios::out );
 
-//    int count = 0;
-//    BOOST_FOREACH(auto entry, inputdatas) {
-//        ++count;
-//        std::cout << count << std::flush;
-//        Timer t;
-//        Path result = te.compute(entry[0], entry[1], entry[2], entry[3]);
-//        int temps = t.ms();
-//        if(result.items.size() > 0)
-//            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour <<"," << result.duration << ","
-//                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
-//        else
-//            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << -1 <<"," << result.duration << ","
-//                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
-//    }
-//    std::cout << std::endl << std::endl;
-//    file.close();
-}
-
-void benchmark::computeBench_tea() {
-//    routing::timeexpanded::TimeExpanded te(data.pt_data);
-//    te.build_graph();
-//    std::fstream file(path+"/tea", std::ios::out );
-
-//    int count = 0;
-//    BOOST_FOREACH(auto entry, inputdatas) {
-//        ++count;
-//        std::cout << count << std::flush;
-//        Timer t;
-//        te.build_heuristic(entry[1]);
-//        Path result = te.compute_astar(entry[0], entry[1], entry[2], entry[3]);
-//        int temps = t.ms();
-//        if(result.items.size() > 0)
-//            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour <<"," << result.duration << ","
-//                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
-//        else
-//            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << -1 <<"," << result.duration << ","
-//                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
-//    }
-//    std::cout << std::endl << std::endl;
-//    file.close();
-}
-void benchmark::computeBench_ra() {
-    routing::raptor::RAPTOR raptor(data);
-    std::fstream file(path+"/ra", std::ios::out );
-
-    int count = 0;
-    BOOST_FOREACH(auto entry, inputdatas) {
-        ++count;
-        std::cout << count <<   std::flush;
-        Timer t;
-        Path result = raptor.compute(entry[0], entry[1], entry[2], entry[3]);
-        int temps = t.ms();
-        if(result.items.size() > 0)
-            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour() <<"," << result.duration << ","
-                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
-        else
-            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << -1 <<"," << result.duration << ","
-                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
-    }
-    std::cout << std::endl << std::endl;
-
-    file.close();
-}
-
-void benchmark::testBench() {}
-
-
-
-}}}
