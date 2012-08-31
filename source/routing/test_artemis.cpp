@@ -34,7 +34,7 @@ int main(int argc, char * argv[]) {
 
     std::string input = std::string(argv[1]);
     std::string date = std::string(argv[2]);
-    navimake::connectors::GtfsParser connector(input, date);
+    navimake::connectors::GtfsParser connector(input);
     connector.fill(data);
     data.clean();
     data.sort();
