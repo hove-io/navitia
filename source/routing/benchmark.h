@@ -40,6 +40,7 @@ struct benchmark
     void computeBench_te();
     void computeBench_tea();
     void computeBench_ra();
+    void computeBench_rab();
     void testBench();
 
 };

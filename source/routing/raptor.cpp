@@ -542,11 +542,12 @@ void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &
                          ((retour_temp.dt.date() < workingDt.date()) ))) {
                     int etemp = earliest_trip(route, i, retour_temp.dt, t);
                     //                    std::tie(t, pam) = earliest_trip(route, i, retour_temp.dt, t);
-                    if(etemp >= 0 && etemp != t) {
+                    if(etemp >= 0 && (etemp < t || t == -1)) {
                         t = etemp;
                         workingDt = retour_temp.dt;
                         embarquement = spid;
                         workingDt.update(get_temps_depart(route, t,i));
+
                     }
                 }
             }
@@ -703,9 +704,9 @@ Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxreto
                 r = retour[countb][current_spid];
                 workingDate = r.dt;
                 workingDate.normalize();
-                result.items.push_back(PathItem(data.pt_data.stop_points[current_spid].stop_area_idx, workingDate, workingDate));
+                result.items.push_back(PathItem(/*data.pt_data.stop_points[*/current_spid/*].stop_area_idx*/, workingDate, workingDate));
                 current_spid = r.said_emarquement;
-                result.items.push_back(PathItem(data.pt_data.stop_points[current_spid].stop_area_idx, workingDate, workingDate));
+                result.items.push_back(PathItem(/*data.pt_data.stop_points[*/r.said_emarquement/*].stop_area_idx*/, workingDate, workingDate));
                 spid_embarquement = -1;
                 footpath = true;
 //            }
@@ -724,7 +725,7 @@ Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxreto
                 --countb;
                 spid_embarquement = -1;
             }
-            result.items.push_back(PathItem(data.pt_data.stop_points[current_spid].stop_area_idx, DateTime(workingDate.date(), current_st.arrival_time), DateTime(workingDate.date(), current_st.departure_time),
+            result.items.push_back(PathItem(/*data.pt_data.stop_points[*/current_spid/*].stop_area_idx*/, DateTime(workingDate.date(), current_st.arrival_time), DateTime(workingDate.date(), current_st.departure_time),
                                             data.pt_data.routes.at(data.pt_data.route_points.at(current_st.route_point_idx).route_idx).line_idx, data.pt_data.route_points.at(current_st.route_point_idx).route_idx, current_st.vehicle_journey_idx));
 
         }
@@ -824,15 +825,42 @@ Path RAPTOR::makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_
 }
 
 
-Path communRAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day) {
+Path communRAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day, senscompute sens) {
     vector_idxretour departs, destinations;
 
-    BOOST_FOREACH(navitia::type::idx_t spidx, data.pt_data.stop_areas[departure_idx].stop_point_list)
-            departs.push_back(std::make_pair(spidx, type_retour(-1, DateTime(departure_day, departure_hour))));
 
-    BOOST_FOREACH(navitia::type::idx_t spidx, data.pt_data.stop_areas[destination_idx].stop_point_list)
-            destinations.push_back(std::make_pair(spidx, type_retour()));
-    return compute_raptor(departs, destinations);
+    switch(sens) {
+    case partirapres:
+        BOOST_FOREACH(navitia::type::idx_t spidx, data.pt_data.stop_areas[departure_idx].stop_point_list)
+                departs.push_back(std::make_pair(spidx, type_retour(-1, DateTime(departure_day, departure_hour))));
+
+        BOOST_FOREACH(navitia::type::idx_t spidx, data.pt_data.stop_areas[destination_idx].stop_point_list)
+                destinations.push_back(std::make_pair(spidx, type_retour()));
+        return compute_raptor(departs, destinations); break;
+    case partirapresrab:
+        BOOST_FOREACH(navitia::type::idx_t spidx, data.pt_data.stop_areas[departure_idx].stop_point_list)
+                departs.push_back(std::make_pair(spidx, type_retour(-1, DateTime(departure_day, departure_hour))));
+
+        BOOST_FOREACH(navitia::type::idx_t spidx, data.pt_data.stop_areas[destination_idx].stop_point_list)
+                destinations.push_back(std::make_pair(spidx, type_retour()));
+        return compute_raptor_rabattement(departs, destinations); break;
+    case arriveravant :
+        BOOST_FOREACH(navitia::type::idx_t spidx, data.pt_data.stop_areas[destination_idx].stop_point_list)
+                departs.push_back(std::make_pair(spidx, type_retour(-1, DateTime(departure_day, departure_hour))));
+
+        BOOST_FOREACH(navitia::type::idx_t spidx, data.pt_data.stop_areas[departure_idx].stop_point_list)
+                destinations.push_back(std::make_pair(spidx, type_retour()));
+        return compute_raptor_reverse(departs, destinations); break;
+
+    default :
+        BOOST_FOREACH(navitia::type::idx_t spidx, data.pt_data.stop_areas[departure_idx].stop_point_list)
+                departs.push_back(std::make_pair(spidx, type_retour(-1, DateTime(departure_day, departure_hour))));
+
+        BOOST_FOREACH(navitia::type::idx_t spidx, data.pt_data.stop_areas[destination_idx].stop_point_list)
+                destinations.push_back(std::make_pair(spidx, type_retour()));
+
+        return compute_raptor(departs, destinations); break;
+    }
 }
 
 Path communRAPTOR::compute_reverse(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day) {

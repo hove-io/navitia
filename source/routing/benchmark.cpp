@@ -81,12 +81,12 @@ void benchmark::load_input() {
 
 void benchmark::computeBench() {
     Timer tg("Timer General");
-    std::cout << std::endl << "Lancement TimeDepedent" << std::endl;
-    {
-        Timer t("Benchmark TimeDependent");
-        computeBench_td();
+//    std::cout << std::endl << "Lancement TimeDepedent" << std::endl;
+//    {
+//        Timer t("Benchmark TimeDependent");
+//        computeBench_td();
 
-    }
+//    }
 //    std::cout << std::endl << "Lancement TimeDepedent Astar" << std::endl;
 
 //    {
@@ -104,11 +104,18 @@ void benchmark::computeBench() {
 //        Timer t("Benchmark TimeExpanded Astar");
 //        computeBench_tea();
 //    }
-    std::cout << std::endl << "Lancement RAPTOR" << std::endl;
+//    std::cout << std::endl << "Lancement RAPTOR" << std::endl;
+
+//    {
+//        Timer t("Benchmark RAPTOR");
+//        computeBench_ra();
+//    }
+
+    std::cout << std::endl << "Lancement RAPTOR rabattement" << std::endl;
 
     {
-        Timer t("Benchmark RAPTOR");
-        computeBench_ra();
+        Timer t("Benchmark RAPTOR rabattement");
+        computeBench_rab();
     }
 }
 void benchmark::computeBench_td() {
@@ -121,7 +128,7 @@ void benchmark::computeBench_td() {
         //std::cout << count << std::flush;
         ++show_progress;
         Timer t;
-        Path result = td.compute(entry[0], entry[1], entry[2], entry[3]);
+        Path result = td.compute(entry[0], entry[1], entry[2], entry[3], partirapres);
         int temps = t.ms();
         if(result.items.size() > 0)
             file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour() <<"," << result.duration << ","
@@ -189,7 +196,30 @@ void benchmark::computeBench_ra() {
         ++count;
         std::cout << count <<   std::flush;
         Timer t;
-        Path result = raptor.compute(entry[0], entry[1], entry[2], entry[3]);
+        Path result = raptor.compute(entry[0], entry[1], entry[2], entry[3], partirapres);
+        int temps = t.ms();
+        if(result.items.size() > 0)
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour() <<"," << result.duration << ","
+                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
+        else
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << -1 <<"," << result.duration << ","
+                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
+    }
+    std::cout << std::endl << std::endl;
+
+    file.close();
+}
+
+void benchmark::computeBench_rab() {
+    routing::raptor::RAPTOR raptor(data);
+    std::fstream file(path+"/ra", std::ios::out );
+
+    int count = 0;
+    BOOST_FOREACH(auto entry, inputdatas) {
+        ++count;
+        std::cout << count <<   std::flush;
+        Timer t;
+        Path result = raptor.compute_rabattement(entry[0], entry[1], entry[2], entry[3]);
         int temps = t.ms();
         if(result.items.size() > 0)
             file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour() <<"," << result.duration << ","

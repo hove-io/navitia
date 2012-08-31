@@ -83,7 +83,7 @@ struct TimeDependent : public AbstractRouter{
      * hour correspond à
      * day correspond au jour de circulation au départ
      */
-    Path compute(type::idx_t dep, type::idx_t arr, int hour, int day);
+    Path compute(type::idx_t dep, type::idx_t arr, int hour, int day, senscompute );
 
     /** Construit le chemin à retourner à partir du résultat du Dijkstra */
     Path makePath(type::idx_t arr);

@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(direct){
 
     type::PT_Data d = data.pt_data;
 
-    auto res = raptor.compute_rabattement(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 0);
+    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 0, routing::partirapresrab);
 
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(change){
     RAPTOR raptor(data);
     type::PT_Data d = data.pt_data;
 
-    auto res = raptor.compute_rabattement(d.stop_areas[0].idx, d.stop_areas[2].idx, 0, 0);
+    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 0, 0, routing::partirapresrab);
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 4);
     BOOST_CHECK_EQUAL(res.items[0].said, 0);
