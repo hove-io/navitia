@@ -111,11 +111,18 @@ void benchmark::computeBench() {
 //        computeBench_ra();
 //    }
 
-    std::cout << std::endl << "Lancement RAPTOR rabattement" << std::endl;
+//    std::cout << std::endl << "Lancement RAPTOR rabattement" << std::endl;
+
+//    {
+//        Timer t("Benchmark RAPTOR rabattement");
+//        computeBench_rab();
+//    }
+
+    std::cout << std::endl << "Lancement RAPTOR reverse" << std::endl;
 
     {
         Timer t("Benchmark RAPTOR rabattement");
-        computeBench_rab();
+        computeBench_re();
     }
 }
 void benchmark::computeBench_td() {
@@ -197,6 +204,29 @@ void benchmark::computeBench_ra() {
         std::cout << count <<   std::flush;
         Timer t;
         Path result = raptor.compute(entry[0], entry[1], entry[2], entry[3], partirapres);
+        int temps = t.ms();
+        if(result.items.size() > 0)
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour() <<"," << result.duration << ","
+                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
+        else
+            file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << -1 <<"," << result.duration << ","
+                 << result.nb_changes << "," << result.percent_visited << "," << temps << std::endl;
+    }
+    std::cout << std::endl << std::endl;
+
+    file.close();
+}
+
+void benchmark::computeBench_re() {
+    routing::raptor::RAPTOR raptor(data);
+    std::fstream file(path+"/ra", std::ios::out );
+
+    int count = 0;
+    BOOST_FOREACH(auto entry, inputdatas) {
+        ++count;
+        std::cout << count <<   std::flush;
+        Timer t;
+        Path result = raptor.compute(entry[0], entry[1], entry[2], entry[3], arriveravant);
         int temps = t.ms();
         if(result.items.size() > 0)
             file << entry[0] << "," << entry[1] << "," << entry[2] << "," << entry[3] << ", " << result.items.back().arrival.hour() <<"," << result.duration << ","

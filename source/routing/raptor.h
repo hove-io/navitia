@@ -188,7 +188,7 @@ struct communRAPTOR : public AbstractRouter
     virtual Path compute_raptor(vector_idxretour departs, vector_idxretour destinations) = 0;
     virtual Path compute_raptor_reverse(vector_idxretour departs, vector_idxretour destinations) = 0;
     virtual Path compute_raptor_rabattement(vector_idxretour departs, vector_idxretour destinations) = 0;
-    Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day, senscompute sens);
+    Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day, senscompute sens = partirapres);
     Path compute_reverse(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
     Path compute_rabattement(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
     Path compute(const type::GeographicalCoord & departure, double radius, idx_t destination_idx, int departure_hour, int departure_day);
