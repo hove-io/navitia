@@ -235,7 +235,7 @@ struct RAPTOR : public communRAPTOR {
     Path makeBestPathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count);
     std::vector<Path> makePathes(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, best_dest &b_dest, unsigned int count);
     std::vector<Path> compute_all(const type::GeographicalCoord & , double , const type::GeographicalCoord & , double
-                               , int , int );
+                               , int departure_hour, int departure_day);
     std::vector<Path> compute_all(vector_idxretour departs, vector_idxretour destinations);
     std::vector<Path> compute_all(navitia::type::EntryPoint departure, navitia::type::EntryPoint destination, int departure_hour, int departure_day);
 

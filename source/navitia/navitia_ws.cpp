@@ -236,13 +236,14 @@ class Worker : public BaseWorker<navitia::type::Data> {
         if(request.parsed_params.count("departure") == 1) {
             navitia::type::EntryPoint departure(boost::get<std::string>(request.parsed_params["departure"].value));
             navitia::type::EntryPoint destination(boost::get<std::string>(request.parsed_params["destination"].value));
+            std::cout << " Calcalteur first letter ! " << std::endl;
             pathes = calculateur->compute_all(departure, destination, time, 7);
         } else {
             double departure_lat = boost::get<double>(request.parsed_params["departure_lat"].value);
             double departure_lon = boost::get<double>(request.parsed_params["departure_lon"].value);
             double arrival_lat = boost::get<double>(request.parsed_params["destination_lat"].value);
             double arrival_lon = boost::get<double>(request.parsed_params["destination_lon"].value);
-
+            std::cout << " Calcalteur geo ! " << std::endl;
             pathes = calculateur->compute_all(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
         }
 

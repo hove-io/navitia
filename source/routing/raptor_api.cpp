@@ -21,15 +21,15 @@ void create_pb_froute(navitia::routing::Path & path, const nt::Data & data, pbna
                 etape->mutable_mode()->set_ligne(data.pt_data.lines.at(item.line_idx).name);
             else
                 etape->mutable_mode()->set_ligne("marche a pied");
-            etape->mutable_depart()->mutable_lieu()->mutable_geo()->set_x(data.pt_data.stop_areas.at(item.said).coord.x);
-            etape->mutable_depart()->mutable_lieu()->mutable_geo()->set_y(data.pt_data.stop_areas.at(item.said).coord.y);
-            etape->mutable_depart()->mutable_lieu()->set_nom(data.pt_data.stop_areas.at(item.said).name);
+            etape->mutable_depart()->mutable_lieu()->mutable_geo()->set_x(data.pt_data.stop_points.at(item.said).coord.x);
+            etape->mutable_depart()->mutable_lieu()->mutable_geo()->set_y(data.pt_data.stop_points.at(item.said).coord.y);
+            etape->mutable_depart()->mutable_lieu()->set_nom(data.pt_data.stop_points.at(item.said).name);
             etape->mutable_depart()->mutable_date()->set_date(item.departure.date());
             etape->mutable_depart()->mutable_date()->set_heure(item.departure.hour());
         } else {
-            etape->mutable_arrivee()->mutable_lieu()->mutable_geo()->set_x(data.pt_data.stop_areas.at(item.said).coord.x);
-            etape->mutable_arrivee()->mutable_lieu()->mutable_geo()->set_y(data.pt_data.stop_areas.at(item.said).coord.y);
-            etape->mutable_arrivee()->mutable_lieu()->set_nom(data.pt_data.stop_areas.at(item.said).name);
+            etape->mutable_arrivee()->mutable_lieu()->mutable_geo()->set_x(data.pt_data.stop_points.at(item.said).coord.x);
+            etape->mutable_arrivee()->mutable_lieu()->mutable_geo()->set_y(data.pt_data.stop_points.at(item.said).coord.y);
+            etape->mutable_arrivee()->mutable_lieu()->set_nom(data.pt_data.stop_points.at(item.said).name);
             etape->mutable_arrivee()->mutable_date()->set_date(item.arrival.date());
             etape->mutable_arrivee()->mutable_date()->set_heure(item.arrival.hour());
         }
@@ -53,8 +53,8 @@ void create_pb_itineraire(navitia::routing::Path &path, const nt::Data & data, p
                 trajet->set_ligne("");
             }
             pbnavitia::Geocode * geo = trajet->add_pas();
-            geo->set_x(data.pt_data.stop_areas.at(item.said).coord.x);
-            geo->set_y(data.pt_data.stop_areas.at(item.said).coord.y);
+            geo->set_x(data.pt_data.stop_points.at(item.said).coord.x);
+            geo->set_y(data.pt_data.stop_points.at(item.said).coord.y);
             precsaid = item.said;
 
         }
