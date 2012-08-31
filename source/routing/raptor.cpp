@@ -457,12 +457,18 @@ void RAPTOR::setRoutesValides(boost::dynamic_bitset<> &routesValides, std::vecto
             date = retour[0][said].dt.date();
     }
 
-    //On active les routes
-    int i = 0;
-    BOOST_FOREACH(Route_t route, routes) {
-        routesValides.set(i, (route.vp.check(date) || route.vp.check(date+1)));
-        ++i;
+    if(date == std::numeric_limits<uint32_t>::max()) {
+        routesValides.clear();
+    } else {
+        //On active les routes
+        int i = 0;
+        BOOST_FOREACH(Route_t route, routes) {
+            routesValides.set(i, (route.vp.check(date) || route.vp.check(date+1)));
+            ++i;
+        }
     }
+
+
 
 }
 
@@ -482,11 +488,13 @@ void RAPTOR::setRoutesValidesreverse(boost::dynamic_bitset<> &routesValides, std
             routesValides.set(i, (route.vp.check(date) || route.vp.check(date-1)));
             ++i;
         }
-    } else {
+    } else if(date == 0) {
         BOOST_FOREACH(Route_t route, routes) {
             routesValides.set(i, route.vp.check(date));
             ++i;
         }
+    } else {
+        routesValides.clear();
     }
 
 }
@@ -615,11 +623,11 @@ void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop, map_ret
                 if((retour_temp.type != uninitialized) &&
                         (((retour_temp.dt.hour() >= get_temps_departreverse(route, t, i)) && (retour_temp.dt.date() == workingDt.date()) ) ||
                          ((retour_temp.dt.date() > workingDt.date()) ))) {
-                    t = tardiest_trip(route, i, retour_temp.dt, t);
-                    if(t >=0) {
+                    int etemp = tardiest_trip(route, i, retour_temp.dt, t);
+                    if(etemp >=0 && t!=etemp) {
                         workingDt = retour[count - 1][spid].dt;
                         embarquement = spid;
-//                        workingDt.updatereverse(get_temps_departreverse(route, t,i));
+                        //                        workingDt.updatereverse(get_temps_departreverse(route, t,i));
                     }
                 }
             }
@@ -700,16 +708,16 @@ Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxreto
                 debut = true;
             }
         } else if(retour[countb][current_spid].type == connection) {
-//            if(spid_embarquement == -1) {
-                r = retour[countb][current_spid];
-                workingDate = r.dt;
-                workingDate.normalize();
-                result.items.push_back(PathItem(/*data.pt_data.stop_points[*/current_spid/*].stop_area_idx*/, workingDate, workingDate));
-                current_spid = r.said_emarquement;
-                result.items.push_back(PathItem(/*data.pt_data.stop_points[*/r.said_emarquement/*].stop_area_idx*/, workingDate, workingDate));
-                spid_embarquement = -1;
-                footpath = true;
-//            }
+            //            if(spid_embarquement == -1) {
+            r = retour[countb][current_spid];
+            workingDate = r.dt;
+            workingDate.normalize();
+            result.items.push_back(PathItem(/*data.pt_data.stop_points[*/current_spid/*].stop_area_idx*/, workingDate, workingDate));
+            current_spid = r.said_emarquement;
+            result.items.push_back(PathItem(/*data.pt_data.stop_points[*/r.said_emarquement/*].stop_area_idx*/, workingDate, workingDate));
+            spid_embarquement = -1;
+            footpath = true;
+            //            }
         }
 
         if(!footpath) {
@@ -1013,7 +1021,7 @@ Path communRAPTOR::compute(const type::GeographicalCoord & departure, double rad
 }
 
 std::vector<Path> RAPTOR::compute_all(const type::GeographicalCoord & /*departure*/, double /*radius_depart*/, const type::GeographicalCoord & /*destination*/, double /*radius_destination*/
-                                          , int /*departure_hour*/, int /*departure_day*/) {
+                                      , int /*departure_hour*/, int /*departure_day*/) {
     vector_idxretour departs, destinations;
 
     //    trouverGeo(departure, radius_depart, destination, radius_destination, departure_hour, departure_day, departs, destinations);
