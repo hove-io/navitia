@@ -30,7 +30,7 @@ void render(webservice::RequestData& request, webservice::ResponseData& response
         response.content_type = "text/xml";
     }else{
         response.response << pb2json(&pb, 0);
-        response.content_type = "text/json";
+        response.content_type = "application/json";
     }
 }
 
