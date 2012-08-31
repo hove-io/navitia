@@ -155,7 +155,7 @@ struct edge_less{
 };
 
 
-Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day){
+Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day, senscompute /*sens*/){
     DateTime start_time(day, hour);
 
     try{

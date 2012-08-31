@@ -40,3 +40,12 @@ add_executable(reverse_raptor_test ${SOURCE_ReR})
 target_link_libraries(reverse_raptor_test ${Boost_LIBRARIES} routing connectors )
 
 ADD_TEST(reverse_raptor ${EXECUTABLE_OUTPUT_PATH}/reverse_raptor_test --report_level=no)
+
+
+SET(SOURCE_RaR
+    test_rabattement.cpp
+)
+add_executable(rab_raptor_test ${SOURCE_RaR})
+target_link_libraries(rab_raptor_test ${Boost_LIBRARIES} routing connectors )
+
+ADD_TEST(rab_raptor_test ${EXECUTABLE_OUTPUT_PATH}/rab_raptor_test --report_level=no)

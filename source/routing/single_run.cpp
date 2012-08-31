@@ -53,7 +53,7 @@ int main(int argc, char** argv){
             return 1;
         }
 
-        std::cout << "Calcul de " << data.pt_data.stop_areas[start_idx].name << " à " << data.pt_data.stop_areas[start_idx].name << std::endl;
+        std::cout << "Calcul de " << data.pt_data.stop_areas[start_idx].name << " à " << data.pt_data.stop_areas[target_idx].name << std::endl;
 
         for(auto algo : algos){
             std::cout << std::endl;

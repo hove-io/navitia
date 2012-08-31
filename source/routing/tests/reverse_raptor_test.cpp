@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(direct){
 
     type::PT_Data d = data.pt_data;
 
-    auto res = raptor.compute_reverse(d.stop_areas[1].idx, d.stop_areas[0].idx, 8200, 0);
+    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 8200, 0, routing::arriveravant);
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[0].said, 0);
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(change){
 
     type::PT_Data d = data.pt_data;
 
-    auto res = raptor.compute_reverse(d.stop_areas[4].idx, d.stop_areas[0].idx, 8500, 0);
+    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[4].idx, 8500, 0, routing::arriveravant);
     BOOST_REQUIRE_EQUAL(res.items.size(), 4);
     BOOST_CHECK_EQUAL(res.items[0].said, 0);
     BOOST_CHECK_EQUAL(res.items[1].said, 1);
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
 
     type::PT_Data d = data.pt_data;
 
-    auto res = raptor.compute_reverse(d.stop_areas[2].idx, d.stop_areas[0].idx, 30*60, 1);
+    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 30*60, 1, routing::arriveravant);
 
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 4);
@@ -96,11 +96,11 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
 
     type::PT_Data d = data.pt_data;
 
-    auto res = raptor.compute_reverse(d.stop_areas[1].idx, d.stop_areas[0].idx, 9300, 0);
+    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 9300, 0, routing::arriveravant);
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 9200);
 
-    res = raptor.compute(d.stop_areas[1].idx, d.stop_areas[0].idx, 9300, 2);
+    res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 9300, 2, routing::arriveravant);
     BOOST_REQUIRE_EQUAL(res.items.size(), 0);
 }
 
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
 
 
 
-    auto res = raptor.compute_reverse(d.stop_areas[3].idx, d.stop_areas[0].idx, 9300, 0);
+    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 9300, 0, routing::arriveravant);
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 5);
     BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8050);
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_trcky){
 
 
 
-    auto res = raptor.compute_reverse(d.stop_areas[3].idx, d.stop_areas[0].idx, 9300, 0);
+    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 9300, 0, routing::arriveravant);
     BOOST_REQUIRE_EQUAL(res.items.size(), 4);
     BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8050);
     BOOST_CHECK_EQUAL(res.items[3].arrival.hour(), 9200);
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
     type::PT_Data d = data.pt_data;
 
 
-    auto res = raptor.compute_reverse(d.stop_areas.at(3).idx, d.stop_areas.at(0).idx, 30, 1);
+    auto res = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 30, 1, routing::arriveravant);
     std::cout << res << std::endl;
     BOOST_REQUIRE_EQUAL(res.items.size(), 5);
     BOOST_CHECK_EQUAL(res.items[4].said, 3);
