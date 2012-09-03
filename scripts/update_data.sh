@@ -10,6 +10,15 @@ print_help(){
 
 }
 
+md5(){
+    if [ -r $1 ]
+    then
+        echo `md5sum $1 | cut -d' ' -f1`
+    else
+        echo "0"
+    fi
+}
+
 echo $#
 if [ $# -ne 3 ] 
 then
@@ -21,7 +30,17 @@ data_source=$1
 destination=$2
 instance_url=$3
 
-wget -O $destination $data_source
+md5_remote=`curl "$data_source.md5"`
+md5_local=`md5 $destination`
 
-curl "$instance_url/load"
+echo $md5_remote
+echo $md5_local
+
+if [ $md5_local != $md5_remote ]
+then
+
+    wget -O $destination $data_source
+    curl "$instance_url/load"
+
+fi
 
