@@ -145,6 +145,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
             data.load_lz4(database);
             data.build_proximity_list();
             calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(data));
+            LOG4CPLUS_TRACE(logger, "Chargement des donnés fini");
         }catch(...){
             data.loaded = false;
             throw;
