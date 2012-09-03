@@ -6,17 +6,28 @@
 
 namespace navitia { namespace routing {  namespace timedependent {
 
+
+struct TimeTableElement {
+    ValidityPatternTime first;
+    ValidityPatternTime second;
+    type::idx_t vj;
+    TimeTableElement(ValidityPatternTime departure, ValidityPatternTime arrival, type::idx_t vj) : first(departure), second(arrival), vj(vj){}
+    bool operator<(const TimeTableElement & other) const {
+        return first < other.first;
+    }
+};
+
 /// Propriété des arcs : ils contiennent une grille horaire ou un horaire constant
 struct TimeTable {
     /// Parfois on a des durées constantes : correspondance, réseau en fréquence; vaut -1 s'il faut utiliser les horaires
     int constant_duration;
 
     /// Horaires (départ, arrivée) sur l'arc entre deux routePoints
-    std::vector< std::pair<ValidityPatternTime, ValidityPatternTime> > time_table;
+    std::vector<TimeTableElement> time_table;
 
     /// Ajoute un nouvel horaire à l'arc
-    void add(ValidityPatternTime departure, ValidityPatternTime arrival){
-        time_table.push_back(std::make_pair(departure, arrival));
+    void add(ValidityPatternTime departure, ValidityPatternTime arrival, type::idx_t vj){
+        time_table.push_back(TimeTableElement(departure, arrival, vj));
     }
 
     /** Évalue la prochaine arrivée possible étant donnée une heure d'arrivée
@@ -26,7 +37,7 @@ struct TimeTable {
     DateTime eval(const DateTime &departure, const type::PT_Data & data) const;
 
     /** Retourne le premier départ possible à une heure donnée */
-    DateTime first_departure(DateTime departure, const type::PT_Data & data) const;
+    std::pair<DateTime, type::idx_t> first_departure(DateTime departure, const type::PT_Data & data) const;
 
     TimeTable() : constant_duration(-1){}
     TimeTable(int constant_duration) : constant_duration(constant_duration){}
@@ -35,7 +46,7 @@ struct TimeTable {
 struct Edge {
     TimeTable t;
     Edge() : t(-1) {}
-    Edge(int duration) : t(duration){}
+    Edge(int duration) : t(duration) {}
 };
 
 // Plein de typedefs pour nous simpfilier un peu la vie

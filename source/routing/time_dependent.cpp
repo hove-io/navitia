@@ -69,8 +69,7 @@ void  TimeDependent::build_graph(){
             bool b;
             edge_t e;
             boost::tie(e, b) = boost::edge(stop1.route_point_idx + route_point_offset, stop2.route_point_idx + route_point_offset, graph);
-            BOOST_ASSERT(b);
-            graph[e].t.add(vpt1, vpt2);
+            graph[e].t.add(vpt1, vpt2, vj.idx);
         }
     }
 
@@ -103,7 +102,7 @@ DateTime TimeTable::eval(const DateTime & departure, const type::PT_Data &data) 
 
     // On cherche le prochain départ le jour même par dichotomie
     auto it = std::lower_bound(time_table.begin(), time_table.end(), departure.hour(),
-                               [](const std::pair<ValidityPatternTime, ValidityPatternTime> & a, int hour){return a.first.hour < hour;});
+                               [](const TimeTableElement & a, int hour){return a.first.hour < hour;});
     auto end = time_table.end();
     for(; it != end; ++it){
         const type::ValidityPattern & vp = data.validity_patterns[it->first.vp_idx];
@@ -124,14 +123,35 @@ DateTime TimeTable::eval(const DateTime & departure, const type::PT_Data &data) 
     return DateTime::inf;
 }
 
-DateTime TimeTable::first_departure(DateTime departure, const type::PT_Data &data) const{
+std::pair<DateTime, type::idx_t> TimeTable::first_departure(DateTime departure, const type::PT_Data &data) const{
     if(departure == DateTime::inf)
-        return departure;
+        return std::make_pair(departure, type::invalid_idx);
 
     if(this->constant_duration >= 0)
-        return departure;
+        return std::make_pair(departure, type::invalid_idx);
 
-    return eval(departure, data);
+
+    // On cherche le prochain départ le jour même par dichotomie
+    auto it = std::lower_bound(time_table.begin(), time_table.end(), departure.hour(),
+                               [](const TimeTableElement & a, int hour){return a.first.hour < hour;});
+    auto end = time_table.end();
+    for(; it != end; ++it){
+        const type::ValidityPattern & vp = data.validity_patterns[it->first.vp_idx];
+        if(vp.check(departure.date())){
+            return std::make_pair(DateTime(departure.date(), it->first.hour), it->vj);
+        }
+    }
+
+    // Zut ! on a rien trouvé le jour même, on regarde le lendemain au plus tôt
+    for(auto it = this->time_table.begin(); it != end; ++it){
+        const type::ValidityPattern & vp = data.validity_patterns[it->first.vp_idx];
+        if(vp.check(departure.date() + 1)){
+            return std::make_pair(DateTime(departure.date() + 1, it->first.hour), it->vj);
+        }
+    }
+
+    // Bon, on en fait cet arc n'est jamais utilisable
+    return std::make_pair(DateTime::inf, type::invalid_idx);
 }
 
 
@@ -183,43 +203,62 @@ Path TimeDependent::makePath(type::idx_t arr) {
         if(preds[v] != v)
             count++;
     }
-
     result.percent_visited = 100 * count/boost::num_vertices(this->graph);
 
+    std::vector<vertex_t> path;
     vertex_t arrival = arr;
-    type::idx_t precsaid = type::invalid_idx;
     while(preds[arrival] != arrival){
-        if(is_route_point(arrival)){
-            const type::StopPoint & sp = data.stop_points[data.route_points[arrival - route_point_offset].stop_point_idx];
-
-            DateTime arrival_date = distance[arrival];
-            DateTime departure_date;
-            if(is_route_point(preds[arrival])){
-                edge_t e = boost::edge(preds[arrival], arrival, this->graph).first;
-                DateTime dt = distance[preds[arrival]];
-                departure_date = graph[e].t.first_departure(dt, this->data);
-            }
-            PathItem item(sp.stop_area_idx, arrival_date, departure_date,
-                          data.routes.at(data.route_points.at(arrival - route_point_offset).route_idx).line_idx,
-                          data.route_points.at(arrival - route_point_offset).route_idx);
-
-            result.items.push_back(item);
-            if(precsaid == sp.stop_area_idx)
-                ++result.nb_changes;
-            precsaid = sp.stop_area_idx;
-        } else if(this->is_stop_point(arrival) && this->is_stop_point(preds[arrival])) {
-            const type::StopPoint & sp = data.stop_points[arrival - stop_point_offset];
-
-            PathItem item(sp.stop_area_idx, distance[arrival], distance[arrival],
-                          data.lines.size());
-            result.items.push_back(item);
-
-        }
-
-
+        path.push_back(arrival);
         arrival = preds[arrival];
     }
-    std::reverse(result.items.begin(), result.items.end());
+    std::reverse(path.begin(), path.end());
+
+    PathItem item;
+    bool first = true;
+    for(size_t i = 1; i < path.size(); ++i){
+        vertex_t u = path[i-1];
+        vertex_t v = path[i];
+
+        // On commence un segment TC
+        if(!is_route_point(u) && is_route_point(v)){
+            first = true;
+            item = PathItem();
+            item.type = public_transport;
+            item.stop_points.push_back(data.route_points[v - route_point_offset].stop_point_idx);
+        }
+
+        // On finit un segment TC
+        else if(is_route_point(u) && !is_route_point(v)){
+            item.arrival = distance[u];
+            result.items.push_back(item);
+        }
+
+        // On a une correspondance
+        else if(this->is_stop_point(u) && this->is_stop_point(v)) {
+            const type::StopPoint & source = data.stop_points[preds[u] - stop_point_offset];
+            const type::StopPoint & target = data.stop_points[u - stop_point_offset];
+
+            item = PathItem();
+            item.departure = distance[u];
+            item.arrival = distance[v];
+            item.type = walking;
+            item.stop_points.push_back(source.idx);
+            item.stop_points.push_back(target.idx);
+            result.items.push_back(item);
+        }
+
+        // On est au milieu d'un segment TC
+        if(is_route_point(u) && is_route_point(v)){
+            if(first){
+                edge_t e = boost::edge(u, v, this->graph).first;
+                boost::tie(item.departure, item.vj_idx) = graph[e].t.first_departure(distance[u], this->data);
+                first = false;
+            }
+            item.stop_points.push_back(data.route_points[v - route_point_offset].stop_point_idx);
+        }
+    }
+
+
     if(result.items.size() > 0)
         result.duration = result.items.back().arrival - result.items.front().departure;
     else

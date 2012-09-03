@@ -69,7 +69,9 @@ int main(int argc, char** argv){
 
             Timer t("Calcul avec l'algorithme " + algo);
             Path res = router->compute(start_idx, target_idx, hour, date);
-            std::cout << res << std::endl;
+            //std::cout << res << std::endl;
+            for(auto item : res.items)
+                std::cout << item.print(data.pt_data) << std::endl;
             delete router;
         }
         return 0;
