@@ -767,24 +767,24 @@ Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxreto
 
 Path RAPTOR::makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb) {
     Path result;
-    unsigned int current_said = destination_idx;
+    unsigned int current_spid = destination_idx;
 
-    type_retour r = retour[countb][current_said];
+    type_retour r = retour[countb][current_spid];
     DateTime workingDate = r.dt;
     navitia::type::StopTime current_st, prec_st;
     int said_embarquement = -1;
 
     bool stop = false;
     BOOST_FOREACH(auto item, departs) {
-        stop = stop || (item.first == (int)current_said);
+        stop = stop || (item.first == (int)current_spid);
     }
 
     while(!stop) {
         bool debut = false, footpath = false;
 
-        if(retour[countb][current_said].type == vj) {
+        if(retour[countb][current_spid].type == vj) {
             if(said_embarquement == -1) {
-                r = retour[countb][current_said];
+                r = retour[countb][current_spid];
                 said_embarquement = r.said_emarquement;
                 current_st = data.pt_data.stop_times.at(r.stid);
                 workingDate = r.dt;
@@ -792,11 +792,11 @@ Path RAPTOR::makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_
             }
         } else {
             if(said_embarquement == -1) {
-                r = retour[countb][current_said];
+                r = retour[countb][current_spid];
                 workingDate = r.dt;
                 workingDate.normalize();
-                result.items.push_back(PathItem(current_said, workingDate, workingDate));
-                current_said = r.said_emarquement;
+                result.items.push_back(PathItem(current_spid, workingDate, workingDate));
+                current_spid = r.said_emarquement;
                 said_embarquement = -1;
                 footpath = true;
             }
@@ -810,18 +810,18 @@ Path RAPTOR::makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_
                     workingDate.date_decrement();
                 workingDate = DateTime(workingDate.date(), current_st.arrival_time);
             }
-            current_said = data.pt_data.stop_points.at(data.pt_data.route_points.at(current_st.route_point_idx).stop_point_idx).stop_area_idx;
-            if(said_embarquement == (int)current_said) {
+            current_spid = data.pt_data.route_points.at(current_st.route_point_idx).stop_point_idx;
+            if(said_embarquement == (int)current_spid) {
                 --countb;
                 ++ result.nb_changes;
                 said_embarquement = -1;
             }
-            result.items.push_back(PathItem(current_said, DateTime(workingDate.date(), current_st.arrival_time), DateTime(workingDate.date(), current_st.departure_time),
+            result.items.push_back(PathItem(current_spid, DateTime(workingDate.date(), current_st.arrival_time), DateTime(workingDate.date(), current_st.departure_time),
                                             data.pt_data.routes.at(data.pt_data.route_points.at(current_st.route_point_idx).route_idx).line_idx));
         }
 
         BOOST_FOREACH(auto item, departs) {
-            stop = stop || (item.first == (int)current_said);
+            stop = stop || (item.first == (int)current_spid);
         }
     }
 
