@@ -61,8 +61,9 @@ struct best_dest {
     void ajouter_destination(unsigned int spid, type_retour &t) { map_date_time[spid] = t;}
 
     bool ajouter_best(unsigned int spid, type_retour t) {
-        if(map_date_time.find(spid) != map_date_time.end()) {
-            map_date_time[spid] = t;
+        auto it = map_date_time.find(spid);
+        if(it != map_date_time.end()) {
+            it->second = t;
             if(t < best_now) {
                 best_now = t;
                 best_now_spid = spid;
@@ -73,9 +74,10 @@ struct best_dest {
     }
 
     void ajouter_best_reverse(unsigned int said, type_retour t) {
-        if(map_date_time.find(said) != map_date_time.end()) {
-            map_date_time[said] = t;
-            if(best_now < t) {
+        auto it = map_date_time.find(said);
+        if(it != map_date_time.end()) {
+            it->second = t;
+            if(best_now.dt <= t.dt) {
                 best_now = t;
                 best_now_spid = said;
             }
@@ -85,7 +87,7 @@ struct best_dest {
     void reinit() {
         map_date_time.clear();
         best_now = type_retour();
-        best_now_spid = 0;
+        best_now_spid = std::numeric_limits<unsigned int>::max();
     }
 
     void reverse() {
@@ -234,6 +236,8 @@ struct RAPTOR : public communRAPTOR {
     Path makeBestPath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count);
     Path makeBestPathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count);
     std::vector<Path> makePathes(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, best_dest &b_dest, unsigned int count);
+    std::vector<Path> makePathesreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, best_dest &b_dest, unsigned int count);
+
     std::vector<Path> compute_all(const type::GeographicalCoord & , double , const type::GeographicalCoord & , double
                                , int departure_hour, int departure_day);
     std::vector<Path> compute_all(vector_idxretour departs, vector_idxretour destinations);
@@ -257,7 +261,7 @@ struct RAPTOR : public communRAPTOR {
     void setRoutesValidesreverse(boost::dynamic_bitset<> &routesValides, std::vector<unsigned int> &marked_stop, map_retour_t &retour);
     inline uint32_t get_temps_departreverse(const Route_t & route, int orderVj, int order) {
         if(orderVj == -1)
-            return std::numeric_limits<uint32_t>::min();
+            return std::numeric_limits<uint32_t>::max();
         else
             return stopTimes[get_stop_time_idx(route, orderVj, order)].departure_time % 86400;
     }
