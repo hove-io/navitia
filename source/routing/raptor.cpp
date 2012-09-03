@@ -654,7 +654,7 @@ void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop, map_ret
 
 
 Path RAPTOR::makeBestPath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count) {
-    unsigned int countb = 1;
+    unsigned int countb = 0;
     for(;countb<=count;++countb) {
         if(retour[countb][destination_idx].type != uninitialized) {
             if((retour[countb][destination_idx].stid == best[destination_idx].stid) && (retour[countb][destination_idx].dt == best[destination_idx].dt)) {
