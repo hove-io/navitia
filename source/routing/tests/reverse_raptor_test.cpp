@@ -117,6 +117,7 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
     navimake::builder b("20120614");
     b.vj("D", "0")("stop1", 8000)("stop2", 8200);
     b.vj("C", "1")("stop1", 9000)("stop2", 9200);
+    b.vj("D", "0")("stop1", 9500)("stop2", 9700);
     type::Data data;
     data.pt_data =  b.build();
     RAPTOR raptor(data);
@@ -128,9 +129,10 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
     BOOST_REQUIRE_EQUAL(res.items.size(), 1);
     BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 9200);
 
-    // TODO : le test ne passe pas , mais ne devrait pas !
     res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7000, 1, routing::arriveravant);
-    //BOOST_REQUIRE_EQUAL(res.items.size(), 0);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 1);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 9200);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
 }
 
 
