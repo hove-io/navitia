@@ -47,6 +47,25 @@ struct type_retour {
         else
             return this->dt + this->dist_to_dest < r2.dt + dist_to_dest;
     }
+
+    bool operator>(type_retour r2) const {
+        if(r2.dt == DateTime::min)
+            return true;
+        else if(this->dt == DateTime::min)
+            return false;
+        else
+            return this->dt + this->dist_to_dep > r2.dt + dist_to_dep;
+    }
+
+    bool operator>=(type_retour r2) const {
+        if(r2.dt == DateTime::min)
+            return true;
+        else if(this->dt == DateTime::min)
+            return false;
+        else
+            return this->dt - this->dist_to_dep >= r2.dt - dist_to_dep;
+    }
+
     bool operator==(type_retour r2) const { return this->stid == r2.stid && this->dt == r2.dt; }
     bool operator!=(type_retour r2) const { return this->stid != r2.stid || this->dt != r2.dt;}
 };
@@ -77,7 +96,7 @@ struct best_dest {
         auto it = map_date_time.find(said);
         if(it != map_date_time.end()) {
             it->second = t;
-            if(best_now.dt <= t.dt) {
+            if(t >= best_now && t.dt != DateTime::min) {
                 best_now = t;
                 best_now_spid = said;
             }
@@ -179,9 +198,11 @@ struct communRAPTOR : public AbstractRouter
     compare_rp cp;
 //    google::dense_hash_map<unsigned int, list_connections> foot_path;
     std::vector<Connection_t> foot_path;
+    std::vector<Connection_t> foot_pathreverse;
+    std::vector<pair_int> footpath_index;
+    std::vector<pair_int> footpathreverse_index;
     std::vector<Route_t> routes;
     std::vector<StopTime_t> stopTimes;
-    std::vector<pair_int> footpath_index;
     std::vector<pair_int> sp_indexrouteorder;
     std::vector<pair_int> sp_routeorder;
 //    std::vector<vector_pairint> sp_routeorder;
