@@ -244,7 +244,7 @@ struct RAPTOR : public communRAPTOR {
     std::vector<Path> compute_all(navitia::type::EntryPoint departure, navitia::type::EntryPoint destination, int departure_hour, int departure_day);
 
     void boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count);
-    Path makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb);
+    Path makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb, bool reverse = false);
     void marcheapied(boost::dynamic_bitset<> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int count);
     void setRoutesValides(boost::dynamic_bitset<> & routesValides, std::vector<unsigned int> &marked_stop, map_retour_t &retour);
     inline uint32_t get_temps_depart(const Route_t & route, int orderVj, int order) {

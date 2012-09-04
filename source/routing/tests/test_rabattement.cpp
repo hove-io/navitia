@@ -23,14 +23,13 @@ BOOST_AUTO_TEST_CASE(direct){
 
     auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 0, routing::partirapresrab);
 
-
-    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
-    BOOST_CHECK_EQUAL(res.items[0].said, 0);
-    BOOST_CHECK_EQUAL(res.items[1].said, 1);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 1);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 1);
     BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8050);
-    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8100);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 8100);
     BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
-    BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
 
 }
 
@@ -49,17 +48,17 @@ BOOST_AUTO_TEST_CASE(change){
 
     auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 0, 0, routing::partirapresrab);
 
-    BOOST_REQUIRE_EQUAL(res.items.size(), 4);
-    BOOST_CHECK_EQUAL(res.items[0].said, 0);
-    BOOST_CHECK_EQUAL(res.items[1].said, 1);
-    BOOST_CHECK_EQUAL(res.items[2].said, 1);
-    BOOST_CHECK_EQUAL(res.items[3].said, 2);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
     BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 35);
-    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 40);
-    BOOST_CHECK_EQUAL(res.items[2].departure.hour(), 1265);
-    BOOST_CHECK_EQUAL(res.items[3].arrival.hour(), 1270);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 40);
+    BOOST_CHECK_EQUAL(res.items[1].departure.hour(), 1265);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 1270);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
     BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
     BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 0);
-    BOOST_CHECK_EQUAL(res.items[2].arrival.date(), 0);
-    BOOST_CHECK_EQUAL(res.items[3].arrival.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 0);
 }

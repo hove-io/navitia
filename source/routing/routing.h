@@ -178,18 +178,15 @@ enum ItemType {
 
 /** Étape d'un itinéraire*/
 struct PathItem{
-    type::idx_t said;
     DateTime arrival;
     DateTime departure;
-    type::idx_t line_idx;
-    type::idx_t route_idx;
     type::idx_t vj_idx;
     std::vector<type::idx_t> stop_points;
     ItemType type;
 
-    PathItem(type::idx_t said = type::invalid_idx , DateTime arrival = DateTime::infinity(), DateTime departure = DateTime::infinity(),
-             type::idx_t line_idx = type::invalid_idx, type::idx_t route_idx = type::invalid_idx, type::idx_t vj_idx = type::invalid_idx) :
-        said(said), arrival(arrival), departure(departure), line_idx(line_idx), route_idx(route_idx), vj_idx(vj_idx) {}
+    PathItem(DateTime departure = DateTime::infinity(), DateTime arrival = DateTime::infinity(),
+            type::idx_t vj_idx = type::invalid_idx) :
+        arrival(arrival), departure(departure), vj_idx(vj_idx) {}
 
     std::string print(const navitia::type::PT_Data & data) const;
 };
@@ -202,6 +199,12 @@ struct Path {
     std::vector<PathItem> items;
 
     Path() : duration(0), nb_changes(0), percent_visited(0) {}
+
+    void print(const navitia::type::PT_Data & data) const {
+        for(auto item : items)
+            std::cout << item.print(data) << std::endl;
+    }
+
 };
 
 bool operator==(const PathItem & a, const PathItem & b);

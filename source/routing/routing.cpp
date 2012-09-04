@@ -20,7 +20,7 @@ std::ostream & operator<<(std::ostream & os, const Path & path) {
        << path.percent_visited << "% visited" << std::endl;
 
     BOOST_FOREACH(PathItem item, path.items) {
-        os  << item.said << " à " << item.arrival.hour() << " le " << item.arrival.date() << " avec "  << item.line_idx <<std::endl;
+      //  os  << item.said << " à " << item.arrival.hour() << " le " << item.arrival.date() << " avec "  << item.line_idx <<std::endl;
     }
     return os;
 }
@@ -56,7 +56,7 @@ std::string PathItem::print(const navitia::type::PT_Data & data) const {
 
 Path makeItineraire(const Path &path) {
     Path result;
-    result.duration = path.duration;
+  /*  result.duration = path.duration;
     result.nb_changes = path.nb_changes;
     result.percent_visited = path.percent_visited;
 
@@ -79,7 +79,7 @@ Path makeItineraire(const Path &path) {
         result.items.push_back(PathItem(path.items.back().said, path.items.back().arrival, path.items.back().departure, path.items.back().line_idx));
 //        std::reverse(result.items.begin(), result.items.end());
 
-    }
+    }*/
     return result;
 }
 

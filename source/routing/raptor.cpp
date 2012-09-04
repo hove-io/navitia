@@ -655,7 +655,7 @@ void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop, map_ret
 
 Path RAPTOR::makeBestPath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count) {
     unsigned int countb = 0;
-    for(;countb<=count;++countb) {
+    for(;countb<count;++countb) {
         if(retour[countb][destination_idx].type != uninitialized) {
             if((retour[countb][destination_idx].stid == best[destination_idx].stid) && (retour[countb][destination_idx].dt == best[destination_idx].dt)) {
                 break;
@@ -722,78 +722,95 @@ std::vector<Path> RAPTOR::makePathesreverse(map_retour_t &retour, map_int_pint_t
 
 
 
-
-
-
-
-Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb) {
+Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb, bool reverse) {
     Path result;
     unsigned int current_spid = destination_idx;
     type_retour r = retour[countb][current_spid];
     DateTime workingDate = r.dt;
-    navitia::type::StopTime current_st, prec_st;
-    int spid_embarquement = -1;
+    navitia::type::StopTime current_st;
+    navitia::type::idx_t spid_embarquement = navitia::type::invalid_idx;
 
     bool stop = false;
-    BOOST_FOREACH(auto item, departs) {
-        stop = stop || (item.first == (int)current_spid);
+    for(auto item : departs) {
+        stop = stop || item.first == current_spid;
     }
 
     result.nb_changes = countb - 1;
+    PathItem item;
+    // On boucle tant
     while(!stop) {
-        bool debut = false, footpath = false;
 
-        if(retour[countb][current_spid].type == vj) {
-            if(spid_embarquement == -1) {
+        // Est-ce qu'on a une section marche à pied ?
+        if(retour[countb][current_spid].type == connection) {
+            r = retour[countb][current_spid];
+            workingDate = r.dt;
+            workingDate.normalize();
+
+            item = PathItem(retour[countb][r.said_emarquement].dt , workingDate);
+            item.stop_points.push_back(current_spid);
+            item.type = walking;
+            item.stop_points.push_back(r.said_emarquement);
+            result.items.push_back(item);
+
+            spid_embarquement = navitia::type::invalid_idx;
+            current_spid = r.said_emarquement;
+
+        } else { // Sinon c'est un trajet TC
+            // Est-ce que qu'on a affaire à un nouveau trajet ?
+            if(spid_embarquement == navitia::type::invalid_idx) {
                 r = retour[countb][current_spid];
                 spid_embarquement = r.said_emarquement;
                 current_st = data.pt_data.stop_times.at(r.stid);
                 workingDate = r.dt;
-                debut = true;
-            }
-        } else if(retour[countb][current_spid].type == connection) {
-            //            if(spid_embarquement == -1) {
-            r = retour[countb][current_spid];
-            workingDate = r.dt;
-            workingDate.normalize();
-            result.items.push_back(PathItem(/*data.pt_data.stop_points[*/current_spid/*].stop_area_idx*/, workingDate, workingDate));
-            current_spid = r.said_emarquement;
-            result.items.push_back(PathItem(/*data.pt_data.stop_points[*/r.said_emarquement/*].stop_area_idx*/, workingDate, workingDate));
-            spid_embarquement = -1;
-            footpath = true;
-            //            }
-        }
 
-        if(!footpath) {
-            if(!debut) {
-                prec_st = current_st;
-                current_st = data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(current_st.vehicle_journey_idx).stop_time_list.at(current_st.order-1));
-                if(current_st.arrival_time%86400 > prec_st.arrival_time%86400 && prec_st.vehicle_journey_idx!=navitia::type::invalid_idx)
-                    workingDate.date_decrement();
-                workingDate = DateTime(workingDate.date(), current_st.arrival_time);
+                item = PathItem();
+                item.type = public_transport;
+                item.arrival = workingDate;
             }
-            current_spid = /*data.pt_data.stop_points.at(*/data.pt_data.route_points.at(current_st.route_point_idx).stop_point_idx/*).stop_area_idx*/;
-            if(spid_embarquement == (int)current_spid) {
+
+            navitia::type::StopTime prec_st = current_st;
+            current_st = data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(current_st.vehicle_journey_idx).stop_time_list.at(current_st.order-1));
+
+            if(!reverse && current_st.arrival_time%86400 > prec_st.arrival_time%86400 && prec_st.vehicle_journey_idx!=navitia::type::invalid_idx)
+                workingDate.date_decrement();
+            else if(reverse && current_st.arrival_time%86400 < prec_st.arrival_time%86400 && prec_st.vehicle_journey_idx!=navitia::type::invalid_idx)
+                workingDate.date_increment();
+
+            workingDate = DateTime(workingDate.date(), current_st.arrival_time);
+            item.stop_points.push_back(current_spid);
+            item.vj_idx = current_st.vehicle_journey_idx;
+
+            current_spid = data.pt_data.route_points.at(current_st.route_point_idx).stop_point_idx;
+
+            // On a remonté jusqu'à l'embarquement
+            if(spid_embarquement == current_spid) {
+                item.stop_points.push_back(current_spid);
+                item.departure = DateTime(workingDate.date(), current_st.departure_time);
+
+                result.items.push_back(item);
                 --countb;
-                spid_embarquement = -1;
+                spid_embarquement = navitia::type::invalid_idx ;
             }
-            result.items.push_back(PathItem(/*data.pt_data.stop_points[*/current_spid/*].stop_area_idx*/, DateTime(workingDate.date(), current_st.arrival_time), DateTime(workingDate.date(), current_st.departure_time),
-                                            data.pt_data.routes.at(data.pt_data.route_points.at(current_st.route_point_idx).route_idx).line_idx, data.pt_data.route_points.at(current_st.route_point_idx).route_idx, current_st.vehicle_journey_idx));
-
         }
-        BOOST_FOREACH(auto item, departs) {
-            stop = stop || (item.first == (int)current_spid);
+
+        for(auto item : departs) {
+            stop = stop || item.first == current_spid;
         }
     }
-    std::reverse(result.items.begin(), result.items.end());
 
+    if(!reverse){
+        std::reverse(result.items.begin(), result.items.end());
+        for(auto & item : result.items) {
+            std::reverse(item.stop_points.begin(), item.stop_points.end());
+        }
+    }
 
     if(result.items.size() > 0)
         result.duration = result.items.back().arrival - result.items.front().departure;
     else
         result.duration = 0;
     int count_visites = 0;
-    BOOST_FOREACH(auto t, best) {
+    for(auto t: best) {
         if(t.type != uninitialized) {
             ++count_visites;
         }
@@ -805,78 +822,7 @@ Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxreto
 
 
 Path RAPTOR::makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb) {
-    Path result;
-    unsigned int current_spid = destination_idx;
-
-    type_retour r = retour[countb][current_spid];
-    DateTime workingDate = r.dt;
-    navitia::type::StopTime current_st, prec_st;
-    int said_embarquement = -1;
-
-    bool stop = false;
-    BOOST_FOREACH(auto item, departs) {
-        stop = stop || (item.first == (int)current_spid);
-    }
-
-    while(!stop) {
-        bool debut = false, footpath = false;
-
-        if(retour[countb][current_spid].type == vj) {
-            if(said_embarquement == -1) {
-                r = retour[countb][current_spid];
-                said_embarquement = r.said_emarquement;
-                current_st = data.pt_data.stop_times.at(r.stid);
-                workingDate = r.dt;
-                debut = true;
-            }
-        } else {
-            if(said_embarquement == -1) {
-                r = retour[countb][current_spid];
-                workingDate = r.dt;
-                workingDate.normalize();
-                result.items.push_back(PathItem(current_spid, workingDate, workingDate));
-                current_spid = r.said_emarquement;
-                said_embarquement = -1;
-                footpath = true;
-            }
-        }
-
-        if(!footpath) {
-            if(!debut) {
-                prec_st = current_st;
-                current_st = data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(current_st.vehicle_journey_idx).stop_time_list.at(current_st.order+1));
-                if(current_st.arrival_time%86400 < prec_st.arrival_time%86400 && prec_st.vehicle_journey_idx!=navitia::type::invalid_idx)
-                    workingDate.date_decrement();
-                workingDate = DateTime(workingDate.date(), current_st.arrival_time);
-            }
-            current_spid = data.pt_data.route_points.at(current_st.route_point_idx).stop_point_idx;
-            if(said_embarquement == (int)current_spid) {
-                --countb;
-                ++ result.nb_changes;
-                said_embarquement = -1;
-            }
-            result.items.push_back(PathItem(current_spid, DateTime(workingDate.date(), current_st.arrival_time), DateTime(workingDate.date(), current_st.departure_time),
-                                            data.pt_data.routes.at(data.pt_data.route_points.at(current_st.route_point_idx).route_idx).line_idx));
-        }
-
-        BOOST_FOREACH(auto item, departs) {
-            stop = stop || (item.first == (int)current_spid);
-        }
-    }
-
-    if(result.items.size() > 0)
-        result.duration = result.items.back().arrival - result.items.front().departure;
-    else
-        result.duration = 0;
-    int count_visites = 0;
-    BOOST_FOREACH(auto t, best) {
-        if(t.type != uninitialized) {
-            ++count_visites;
-        }
-    }
-    result.percent_visited = 100*count_visites / data.pt_data.stop_areas.size();
-
-    return result;
+    return makePath(retour, best, departs, destination_idx, countb, true);
 }
 
 

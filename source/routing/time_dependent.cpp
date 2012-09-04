@@ -235,8 +235,8 @@ Path TimeDependent::makePath(type::idx_t arr) {
 
         // On a une correspondance
         else if(this->is_stop_point(u) && this->is_stop_point(v)) {
-            const type::StopPoint & source = data.stop_points[preds[u] - stop_point_offset];
-            const type::StopPoint & target = data.stop_points[u - stop_point_offset];
+            const type::StopPoint & source = data.stop_points[u - stop_point_offset];
+            const type::StopPoint & target = data.stop_points[v - stop_point_offset];
 
             item = PathItem();
             item.departure = distance[u];
