@@ -456,43 +456,43 @@ std::vector<Path> RAPTOR::compute_all(vector_idxretour departs, vector_idxretour
 
     boucleRAPTOR(marked_stop, retour, best, b_dest, count);
 
+//    if(b_dest.best_now.type != uninitialized){
+//        result = makePathes(retour, best, departs, b_dest, count);
+//    }
+
+//    for(auto it = best.begin(); it != best.end(); ++it) {
+//        if(it->dt == DateTime::inf)
+//            it->dt = DateTime::min;
+//    }
+
+//    count = 1;
+//    retour.clear();
+//    retour.push_back(map_int_pint_t());
+//    retour.back().resize(data.pt_data.stop_points.size());
+//    marked_stop.clear();
+//    b_dest.reinit();
+//    b_dest.reverse();
+//    BOOST_FOREACH(auto item, departs) {
+//        b_dest.ajouter_destination(item.first, item.second);
+//        if(best[item.first].dt != DateTime::inf) {
+//            b_dest.ajouter_best_reverse(item.first, best[item.first]);
+//        } else
+//            b_dest.ajouter_best_reverse(item.first, item.second);
+
+//    }
+
+//    BOOST_FOREACH(auto item, destinations) {
+//        retour.back()[item.first] = best[item.first];
+//        marked_stop.push_back(item.first);
+//    }
+
+
+//    boucleRAPTORreverse(marked_stop, retour, best, b_dest, count);
+
+
+
     if(b_dest.best_now.type != uninitialized){
-        result = makePathes(retour, best, departs, b_dest, count);
-    }
-
-    for(auto it = best.begin(); it != best.end(); ++it) {
-        if(it->dt == DateTime::inf)
-            it->dt = DateTime::min;
-    }
-
-    count = 1;
-    retour.clear();
-    retour.push_back(map_int_pint_t());
-    retour.back().resize(data.pt_data.stop_points.size());
-    marked_stop.clear();
-    b_dest.reinit();
-    b_dest.reverse();
-    BOOST_FOREACH(auto item, departs) {
-        b_dest.ajouter_destination(item.first, item.second);
-        if(best[item.first].dt != DateTime::inf) {
-            b_dest.ajouter_best_reverse(item.first, best[item.first]);
-        } else
-            b_dest.ajouter_best_reverse(item.first, item.second);
-
-    }
-
-    BOOST_FOREACH(auto item, destinations) {
-        retour.back()[item.first] = best[item.first];
-        marked_stop.push_back(item.first);
-    }
-
-
-    boucleRAPTORreverse(marked_stop, retour, best, b_dest, count);
-
-
-
-    if(b_dest.best_now.type != uninitialized){
-        auto temp = makePathesreverse(retour, best, destinations, b_dest, count);
+        auto temp = makePathes/*reverse*/(retour, best, departs/*destinations*/, b_dest, count);
         result.insert(result.end(), temp.begin(), temp.end());
     }
 
@@ -515,7 +515,7 @@ void RAPTOR::setRoutesValides(boost::dynamic_bitset<> &routesValides, std::vecto
     } else {
         //On active les routes
         int i = 0;
-        BOOST_FOREACH(Route_t route, routes) {
+        for(const Route_t & route : routes) {
             routesValides.set(i, (route.vp.check(date) || route.vp.check(date+1)));
             ++i;
         }
@@ -537,12 +537,12 @@ void RAPTOR::setRoutesValidesreverse(boost::dynamic_bitset<> &routesValides, std
     //On active les routes
     int i = 0;
     if(date > 0) {
-        BOOST_FOREACH(Route_t route, routes) {
+        for(const Route_t & route : routes) {
             routesValides.set(i, (route.vp.check(date) || route.vp.check(date-1)));
             ++i;
         }
     } else if(date == 0) {
-        BOOST_FOREACH(Route_t route, routes) {
+        for(const Route_t & route : routes) {
             routesValides.set(i, route.vp.check(date));
             ++i;
         }
@@ -575,7 +575,7 @@ void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &
         retour.push_back(retour_constant);
         make_queue(marked_sp, routesValides, Q);
         routeidx = 0;
-        BOOST_FOREACH(queue_t::value_type vq, Q) {
+        for(queue_t::value_type vq : Q) {
             t = -1;
             DateTime workingDt;
             int embarquement = -1;
