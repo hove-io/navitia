@@ -8,7 +8,6 @@ PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS type.proto)
 SET(TYPES_SRC
     type.cpp
     ${PROTO_SRCS}
-    to_proto.cpp
     pb_converter.cpp
 )
 add_library(types ${TYPES_SRC})
