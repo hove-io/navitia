@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
 //    BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 9200);
 
     // TODO : le test ne passe pas , mais ne devrait pas !
-    res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7000, 1, routing::arriveravant);
+    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7000, 1, routing::arriveravant);
     //BOOST_REQUIRE_EQUAL(res.items.size(), 0);
 }
 
