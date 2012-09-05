@@ -84,6 +84,8 @@ add_subdirectory(routing)
 add_subdirectory(georef)
 add_subdirectory(universalgw)
 
+add_subdirectory(scripts)
+
 #on génére le fichier config.h
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 SET(CPACK_PACKAGE_VERSION_MAJOR ${NAVITIA_VERSION_MAJOR})

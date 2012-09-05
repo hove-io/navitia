@@ -222,10 +222,6 @@ struct AbstractRouter {
     virtual Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day, senscompute sens = partirapres) = 0;
 };
 
-Path makeItineraire(const Path &path);
-
-
-
 }}
 
 

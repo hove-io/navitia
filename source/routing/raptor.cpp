@@ -404,7 +404,8 @@ std::vector<Path> RAPTOR::compute_all(vector_idxretour departs, vector_idxretour
 
     count = 1;
     retour.clear();
-    retour.push_back(retour_constant_reverse);
+    retour.push_back(map_int_pint_t());
+    retour.back().resize(data.pt_data.stop_points.size());
     marked_stop.clear();
     b_dest.reinit();
     b_dest.reverse();
@@ -446,7 +447,7 @@ void RAPTOR::setRoutesValides(boost::dynamic_bitset<> &routesValides, std::vecto
     } else {
         //On active les routes
         int i = 0;
-        BOOST_FOREACH(Route_t &route, routes) {
+        BOOST_FOREACH(Route_t route, routes) {
             routesValides.set(i, (route.vp.check(date) || route.vp.check(date+1)));
             ++i;
         }
@@ -468,12 +469,12 @@ void RAPTOR::setRoutesValidesreverse(boost::dynamic_bitset<> &routesValides, std
     //On active les routes
     int i = 0;
     if(date > 0) {
-        BOOST_FOREACH(Route_t &route, routes) {
+        BOOST_FOREACH(Route_t route, routes) {
             routesValides.set(i, (route.vp.check(date) || route.vp.check(date-1)));
             ++i;
         }
     } else if(date == 0) {
-        BOOST_FOREACH(Route_t &route, routes) {
+        BOOST_FOREACH(Route_t route, routes) {
             routesValides.set(i, route.vp.check(date));
             ++i;
         }

@@ -191,86 +191,26 @@ message StreetNetwork {
     repeated GeographicalCoord coordinate_list = 3;
 }
 
-message Parcours {
-    required int32 id = 1;
-    message Etape {
-        required string descente    = 1;
-        required int32 mode	    = 2;
-        repeated int32 lignes       = 3;
-    }
-	
-    repeated Etape etapes = 2;
+message PTPathItem {
+    optional int32 departure_hour = 1;
+    optional int32 departure_date = 2;
+    optional int32 arrival_hour = 3;
+    optional int32 arrival_date = 4;
+    optional string type = 5;
+    optional string line_name = 6;
+    optional StopArea departure = 7;
+    optional StopArea arrival = 8;
+    repeated StopPoint stop_points = 9;
 }
 
-message StopTimeEtape {
-    required StopTime depart  = 1;
-    required StopTime arrivee = 2;
-}
-
-message Itineraire {
-    required int32 parcours 	  = 1;
-    repeated StopTimeEtape stop_times = 2;
-}
-
-message ReponseDemonstrateur {
-    repeated Parcours Parcours_Liste = 1;
-    repeated Itineraire itineraires_liste  = 2;
-}
-
-message Mode {
-	required string ligne = 1;
-	optional string reseau = 2;
-}
-
-message DateHeure {
-	required int32 date = 1;
-	required int32 heure = 2;
-}
-
-message Geocode {
-	required double x = 1;
-	required double y = 2;
-	optional int32 type = 3;
-}
-
-message Lieu {
-	required string nom = 1;
-	optional Geocode geo = 2;
-}
-
-message PointEtape {
-	required Lieu lieu = 1;
-	required DateHeure date = 2;
-}
-message Etape {
-	required PointEtape depart = 1;
-	required PointEtape arrivee = 2;
-	required Mode mode = 3;
-}
-
-message FeuilleRoute {
-	repeated Etape etapes = 1;
-	required int32 nbchanges = 2;
-	required int32 duree = 3;
-}
-
-message Trajet {
-	required int32 mode = 1;
-	required string ligne = 2;
-	repeated Geocode pas = 3;
-}
-
-message ItineraireDetail {
-	repeated Trajet trajets = 1;
-}
-
-message Planning {
-	required FeuilleRoute feuilleroute = 1;
-	required ItineraireDetail itineraire = 2;
+message PTPath {
+    optional int32 duration = 1;
+    optional int32 nb_changes = 2;
+    repeated PTPathItem items = 3;
 }
 
 message Planner {
-	repeated Planning planning = 1;
+	repeated PTPath path = 1;
 }
 
 message Status{
