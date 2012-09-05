@@ -75,30 +75,30 @@ struct best_dest {
 
     std::map<unsigned int, type_retour> map_date_time;
     type_retour best_now;
-    unsigned int best_now_spid;
+    unsigned int best_now_rpid;
 
     void ajouter_destination(unsigned int spid, type_retour &t) { map_date_time[spid] = t;}
 
-    bool ajouter_best(unsigned int spid, type_retour t) {
-        auto it = map_date_time.find(spid);
+    bool ajouter_best(unsigned int rpid, type_retour t) {
+        auto it = map_date_time.find(rpid);
         if(it != map_date_time.end()) {
             it->second = t;
             if(t < best_now) {
                 best_now = t;
-                best_now_spid = spid;
+                best_now_rpid = rpid;
             }
             return true;
         }
         return false;
     }
 
-    void ajouter_best_reverse(unsigned int said, type_retour t) {
-        auto it = map_date_time.find(said);
+    void ajouter_best_reverse(unsigned int rpid, type_retour t) {
+        auto it = map_date_time.find(rpid);
         if(it != map_date_time.end()) {
             it->second = t;
             if(t >= best_now && t.dt != DateTime::min) {
                 best_now = t;
-                best_now_spid = said;
+                best_now_rpid = rpid;
             }
         }
     }
@@ -106,7 +106,7 @@ struct best_dest {
     void reinit() {
         map_date_time.clear();
         best_now = type_retour();
-        best_now_spid = std::numeric_limits<unsigned int>::max();
+        best_now_rpid = std::numeric_limits<unsigned int>::max();
     }
 
     void reverse() {
@@ -170,17 +170,20 @@ struct communRAPTOR : public AbstractRouter
     };
 
     struct Connection_t {
-        navitia::type::idx_t departure_sp, destination_sp, connection_idx;
+        navitia::type::idx_t departure_rp, destination_rp, connection_idx;
         int duration;
 
-        Connection_t(navitia::type::idx_t departure_sp, navitia::type::idx_t destination_sp, navitia::type::idx_t connection_idx, int duration) :
-            departure_sp(departure_sp), destination_sp(destination_sp), connection_idx(connection_idx), duration(duration) {}
+        Connection_t(navitia::type::idx_t departure_rp, navitia::type::idx_t destination_rp, navitia::type::idx_t connection_idx, int duration) :
+            departure_rp(departure_rp), destination_rp(destination_rp), connection_idx(connection_idx), duration(duration) {}
 
-        Connection_t(navitia::type::idx_t departure_sp, navitia::type::idx_t destination_sp, int duration) :
-            departure_sp(departure_sp), destination_sp(destination_sp), connection_idx(navitia::type::invalid_idx), duration(duration) {}
+        Connection_t(navitia::type::idx_t departure_rp, navitia::type::idx_t destination_rp, int duration) :
+            departure_rp(departure_rp), destination_rp(destination_rp), connection_idx(navitia::type::invalid_idx), duration(duration) {}
+
+        Connection_t() :
+            departure_rp(navitia::type::invalid_idx), destination_rp(navitia::type::invalid_idx), connection_idx(navitia::type::invalid_idx), duration(0) {}
     };
 
-    typedef std::vector<Connection_t> list_connections;
+    typedef std::map<navitia::type::idx_t, Connection_t> list_connections;
 
 
 
@@ -198,13 +201,11 @@ struct communRAPTOR : public AbstractRouter
     compare_rp cp;
 //    google::dense_hash_map<unsigned int, list_connections> foot_path;
     std::vector<Connection_t> foot_path;
-    std::vector<Connection_t> foot_pathreverse;
     std::vector<pair_int> footpath_index;
-    std::vector<pair_int> footpathreverse_index;
     std::vector<Route_t> routes;
     std::vector<StopTime_t> stopTimes;
-    std::vector<pair_int> sp_indexrouteorder;
-    std::vector<pair_int> sp_routeorder;
+//    std::vector<pair_int> rp_indexrouteorder;
+//    std::vector<pair_int> rp_routeorder;
 //    std::vector<vector_pairint> sp_routeorder;
     communRAPTOR(navitia::type::Data &data);
 
@@ -243,7 +244,7 @@ struct destinationNotFound {};
 struct RAPTOR : public communRAPTOR {
     map_int_pint_t retour_constant;
     map_int_pint_t retour_constant_reverse;
-    RAPTOR(navitia::type::Data &data) : communRAPTOR(data), retour_constant(data.pt_data.stop_points.size()), retour_constant_reverse(data.pt_data.stop_points.size()){
+    RAPTOR(navitia::type::Data &data) : communRAPTOR(data), retour_constant(data.pt_data.route_points.size()), retour_constant_reverse(data.pt_data.route_points.size()){
         BOOST_FOREACH(auto r, retour_constant_reverse) {
             r.dt = DateTime::inf;
         }
