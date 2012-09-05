@@ -5,74 +5,41 @@ communRAPTOR::communRAPTOR(navitia::type::Data &data) : data(data), cp(data)
 {
     //Construction de la liste des marche à pied à partir des connections renseignées
     Timer t;
-    std::vector<list_connections> footpath_temp, footpathreverse_temp;
+    std::vector<list_connections> footpath_temp;
     footpath_temp.resize(data.pt_data.route_points.size());
-    footpathreverse_temp.resize(data.pt_data.route_points.size());
     BOOST_FOREACH(navitia::type::Connection connection, data.pt_data.connections) {
-        for(navitia::type::idx_t rpidx : data.pt_data.stop_points[connection.departure_stop_point_idx].route_point_list) {
-            footpath_temp[rpidx].push_back(Connection_t(connection.departure_stop_point_idx, connection.destination_stop_point_idx, connection.idx, connection.duration));
-        }
-        for(navitia::type::idx_t rpidx : data.pt_data.stop_points[connection.destination_stop_point_idx].route_point_list) {
-            footpathreverse_temp[rpidx].push_back(Connection_t(connection.departure_stop_point_idx, connection.destination_stop_point_idx, connection.idx, connection.duration));
+        for(navitia::type::idx_t rpidxdeparture : data.pt_data.stop_points[connection.departure_stop_point_idx].route_point_list) {
+            for(navitia::type::idx_t rpidxdestination : data.pt_data.stop_points[connection.destination_stop_point_idx].route_point_list) {
+                footpath_temp[rpidxdeparture][rpidxdestination] = Connection_t(rpidxdeparture, rpidxdestination, connection.idx, connection.duration);
+                footpath_temp[rpidxdestination][rpidxdeparture] = Connection_t(rpidxdestination, rpidxdeparture, connection.idx, connection.duration);
+            }
         }
     }
 
     //On rajoute des connexions entre les stops points d'un même stop area si elles n'existent pas
     footpath_index.resize(data.pt_data.route_points.size());
-    footpathreverse_index.resize(data.pt_data.route_points.size());
     BOOST_FOREACH(navitia::type::RoutePoint rp, data.pt_data.route_points) {
-
         navitia::type::StopArea sa = data.pt_data.stop_areas[data.pt_data.stop_points[rp.stop_point_idx].stop_area_idx];
         footpath_index[rp.idx].first = foot_path.size();
-        footpathreverse_index[rp.idx].first = foot_pathreverse.size();
 
         int size = 0;
-        int sizereverse = 0;
-        for(Connection_t conn : footpath_temp[rp.idx]) {
-            for(navitia::type::idx_t rp2idx : data.pt_data.stop_points[conn.destination_rp].route_point_list) {
-                foot_path.push_back(Connection_t(rp.idx, rp2idx, conn.connection_idx, conn.duration));
-                ++size;
-            }
-        }
-
-        for(Connection_t conn : footpathreverse_temp[rp.idx]) {
-            for(navitia::type::idx_t rp2idx : data.pt_data.stop_points[conn.departure_rp].route_point_list) {
-                foot_pathreverse.push_back(Connection_t(rp2idx, rp.idx, conn.connection_idx, conn.duration));
-                ++sizereverse;
-            }
+        for(auto conn : footpath_temp[rp.idx]) {
+            foot_path.push_back(conn.second);
+            ++size;
         }
 
         BOOST_FOREACH(navitia::type::idx_t spidx, sa.stop_point_list) {
             navitia::type::StopPoint sp = data.pt_data.stop_points[spidx];
             for(navitia::type::idx_t rpidx : sp.route_point_list) {
                 if(rp.idx != rpidx) {
-                    bool find = false;
-                    BOOST_FOREACH(Connection_t connection, footpath_temp[rp.idx]) {
-                        if(connection.destination_rp == rpidx) {
-                            find = true;
-                            break;
-                        }
-                    }
-                    if(!find) {
+                    if(footpath_temp[rp.idx].find(rpidx) == footpath_temp[rp.idx].end()) {
                         foot_path.push_back(Connection_t(rp.idx, rpidx, 2*60));
                         ++size;
                     }
-                    BOOST_FOREACH(Connection_t connection, footpathreverse_temp[rp.idx]) {
-                        if(connection.departure_rp == rpidx) {
-                            find = true;
-                            break;
-                        }
-                    }
-                    if(!find) {
-                        foot_pathreverse.push_back(Connection_t(rpidx, rp.idx, 2*60));
-                        ++sizereverse;
-                    }
-
                 }
             }
         }
         footpath_index[rp.idx].second = size;
-        footpathreverse_index[rp.idx].second = sizereverse;
     }
 
     std::cout << "Chargement des foot paths : " << t.ms() << std::endl;
@@ -243,24 +210,22 @@ void RAPTOR::marcheapied(/*std::vector<unsigned int>*/boost::dynamic_bitset<> & 
 
 
 void RAPTOR::marcheapiedreverse(boost::dynamic_bitset<> & marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int count) {
-    auto it = foot_pathreverse.begin();
+    auto it = foot_path.begin();
     int last = 0;
     for(auto route_point= marked_stop.find_first(); route_point != marked_stop.npos; route_point = marked_stop.find_next(route_point)) {
-        const auto & index = footpathreverse_index[route_point];
+        const auto & index = footpath_index[route_point];
         advance(it, index.first - last);
         const auto end = it + index.second;
         for(; it != end; ++it) {
-            const type_retour & retour_temp = retour[count][route_point];
-            const DateTime dtTemp = retour_temp.dt - (*it).duration;
-            if(route_point != (*it).departure_rp) {
-                if(dtTemp > best[(*it).departure_rp].dt) {
+            if(route_point != (*it).destination_rp) {
+                const type_retour & retour_temp = retour[count][route_point];
+                const DateTime dtTemp = retour_temp.dt - (*it).duration;
+                if(dtTemp > best[(*it).destination_rp].dt) {
                     const type_retour nRetour = type_retour(navitia::type::invalid_idx, route_point, dtTemp, connection);
-                    best[(*it).departure_rp] = nRetour;
-                    retour[count][(*it).departure_rp] = nRetour;
-                    b_dest.ajouter_best_reverse((*it).departure_rp, nRetour);
-                    marked_stop.set((*it).departure_rp);
-                } else if(dtTemp == best[(*it).departure_rp].dt) {
-                    marked_stop.set((*it).departure_rp);
+                    best[(*it).destination_rp] = nRetour;
+                    retour[count][(*it).destination_rp] = nRetour;
+                    b_dest.ajouter_best_reverse((*it).destination_rp, nRetour);
+                    marked_stop.set((*it).destination_rp);
                 }
             }
         }

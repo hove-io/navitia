@@ -178,9 +178,12 @@ struct communRAPTOR : public AbstractRouter
 
         Connection_t(navitia::type::idx_t departure_rp, navitia::type::idx_t destination_rp, int duration) :
             departure_rp(departure_rp), destination_rp(destination_rp), connection_idx(navitia::type::invalid_idx), duration(duration) {}
+
+        Connection_t() :
+            departure_rp(navitia::type::invalid_idx), destination_rp(navitia::type::invalid_idx), connection_idx(navitia::type::invalid_idx), duration(0) {}
     };
 
-    typedef std::vector<Connection_t> list_connections;
+    typedef std::map<navitia::type::idx_t, Connection_t> list_connections;
 
 
 
@@ -198,9 +201,7 @@ struct communRAPTOR : public AbstractRouter
     compare_rp cp;
 //    google::dense_hash_map<unsigned int, list_connections> foot_path;
     std::vector<Connection_t> foot_path;
-    std::vector<Connection_t> foot_pathreverse;
     std::vector<pair_int> footpath_index;
-    std::vector<pair_int> footpathreverse_index;
     std::vector<Route_t> routes;
     std::vector<StopTime_t> stopTimes;
 //    std::vector<pair_int> rp_indexrouteorder;
