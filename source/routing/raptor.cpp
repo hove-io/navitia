@@ -24,8 +24,10 @@ communRAPTOR::communRAPTOR(navitia::type::Data &data) : data(data), cp(data)
 
         int size = 0;
         for(auto conn : footpath_temp[rp.idx]) {
-            foot_path.push_back(conn.second);
-            ++size;
+            if(conn.second.duration > 0) {
+                foot_path.push_back(conn.second);
+                ++size;
+            }
         }
 
         BOOST_FOREACH(navitia::type::idx_t spidx, sa.stop_point_list) {
@@ -212,7 +214,7 @@ void RAPTOR::marcheapied(/*std::vector<unsigned int>*/boost::dynamic_bitset<> & 
 void RAPTOR::marcheapiedreverse(boost::dynamic_bitset<> & marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int count) {
     auto it = foot_path.begin();
     int last = 0;
-    for(auto route_point= marked_stop.find_first(); route_point != marked_stop.npos; route_point = marked_stop.find_next(route_point)) {
+    for(auto route_point = marked_stop.find_first(); route_point != marked_stop.npos; route_point = marked_stop.find_next(route_point)) {
         const auto & index = footpath_index[route_point];
         advance(it, index.first - last);
         const auto end = it + index.second;
@@ -225,6 +227,8 @@ void RAPTOR::marcheapiedreverse(boost::dynamic_bitset<> & marked_stop, map_retou
                     best[(*it).destination_rp] = nRetour;
                     retour[count][(*it).destination_rp] = nRetour;
                     b_dest.ajouter_best_reverse((*it).destination_rp, nRetour);
+                    marked_stop.set((*it).destination_rp);
+                } else if(dtTemp == best[(*it).destination_rp].dt) {
                     marked_stop.set((*it).destination_rp);
                 }
             }
@@ -405,12 +409,7 @@ std::vector<Path> RAPTOR::compute_all(vector_idxretour departs, vector_idxretour
     b_dest.reinit();
     b_dest.reverse();
     BOOST_FOREACH(auto item, departs) {
-        b_dest.ajouter_destination(item.first, item.second);
-        if(best[item.first].dt != DateTime::inf) {
-            b_dest.ajouter_best_reverse(item.first, best[item.first]);
-        } else
-            b_dest.ajouter_best_reverse(item.first, item.second);
-
+        b_dest.ajouter_best_reverse(item.first, item.second);
     }
 
     BOOST_FOREACH(auto item, destinations) {

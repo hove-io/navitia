@@ -245,7 +245,7 @@ struct RAPTOR : public communRAPTOR {
     map_int_pint_t retour_constant;
     map_int_pint_t retour_constant_reverse;
     RAPTOR(navitia::type::Data &data) : communRAPTOR(data), retour_constant(data.pt_data.route_points.size()), retour_constant_reverse(data.pt_data.route_points.size()){
-        BOOST_FOREACH(auto r, retour_constant_reverse) {
+        for(auto &r : retour_constant_reverse) {
             r.dt = DateTime::inf;
         }
     }
