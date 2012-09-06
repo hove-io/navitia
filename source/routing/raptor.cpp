@@ -783,6 +783,11 @@ Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxreto
                     item.vj_idx = current_st.vehicle_journey_idx;
 
                     current_rpid = current_st.route_point_idx;
+                    for(auto item : departs) {
+                        stop = stop || item.first == current_rpid;
+                    }
+                    if(stop)
+                        break;
                 }
                 item.stop_points.push_back(data.pt_data.route_points[current_rpid].stop_point_idx);
 
