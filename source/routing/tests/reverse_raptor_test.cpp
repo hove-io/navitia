@@ -162,13 +162,12 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_fin){
     RAPTOR raptor(data);
     type::PT_Data d = data.pt_data;
 
-    auto res = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 9000, 0, routing::arriveravant);
-
+    auto res = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 8200+10*60, 0, routing::arriveravant);
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
     BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 8200);
-    BOOST_CHECK_GE(res.items[1].departure.hour(), 8200);
-    BOOST_CHECK_GE(res.items[1].arrival.hour(), 8200+10*60);
+    BOOST_CHECK_EQUAL(res.items[1].departure.hour(), 8200);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8200+10*60);
 }
 
 BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
@@ -176,10 +175,6 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
     b.vj("A")("stop1", 8000)("stop2", 23*3600+59*60);
     b.vj("B")("stop3", 2*3600)("stop4",2*3600+20);
     b.connection("stop2", "stop3", 10*60);
-    //    std::cout << res << std::endl;
-    //    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
-    //    BOOST_CHECK_EQUAL(res.items[2].said, 2);
-    //    BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 8200+10*60);
     type::Data data;
     data.pt_data = b.build();
     RAPTOR raptor(data);

@@ -38,6 +38,7 @@ struct type_retour {
     type_retour(int stid, int said_emarquement, DateTime dt, type_idx type) : stid(stid), said_emarquement(said_emarquement), dt(dt), dist_to_dest(0), dist_to_dep(0), type(type){}
     type_retour(unsigned int dist_to_dest) : stid(-1), said_emarquement(-1), dt(), dist_to_dest(dist_to_dest), dist_to_dep(0), type(vj){}
     type_retour() : stid(-1), said_emarquement(-1), dt(), dist_to_dest(0), dist_to_dep(0), type(uninitialized) {}
+    type_retour(const type_retour & t) : stid(t.stid), said_emarquement(t.said_emarquement), dt(t.dt), dist_to_dest(t.dist_to_dest), dist_to_dep(t.dist_to_dep), type(t.type) {}
 
     bool operator<(type_retour r2) const {
         if(r2.dt == DateTime::inf)
@@ -96,7 +97,7 @@ struct best_dest {
         auto it = map_date_time.find(rpid);
         if(it != map_date_time.end()) {
             it->second = t;
-            if(t >= best_now && t.dt != DateTime::min) {
+            if(t > best_now && t.dt != DateTime::min) {
                 best_now = t;
                 best_now_rpid = rpid;
             }
@@ -246,6 +247,10 @@ struct RAPTOR : public communRAPTOR {
     map_int_pint_t retour_constant_reverse;
     RAPTOR(navitia::type::Data &data) : communRAPTOR(data), retour_constant(data.pt_data.route_points.size()), retour_constant_reverse(data.pt_data.route_points.size()){
         for(auto &r : retour_constant_reverse) {
+            r.dt = DateTime::min;
+        }
+
+        for(auto &r : retour_constant) {
             r.dt = DateTime::inf;
         }
     }
@@ -281,13 +286,13 @@ struct RAPTOR : public communRAPTOR {
     Path makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb);
     void marcheapiedreverse(boost::dynamic_bitset<> & marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int count);
     void setRoutesValidesreverse(boost::dynamic_bitset<> &routesValides, std::vector<unsigned int> &marked_stop, map_retour_t &retour);
-    inline uint32_t get_temps_departreverse(const Route_t & route, int orderVj, int order) {
+    inline uint32_t get_temps_arrivee(const Route_t & route, int orderVj, int order) {
         if(orderVj == -1)
             return std::numeric_limits<uint32_t>::max();
         else
-            return stopTimes[get_stop_time_idx(route, orderVj, order)].departure_time % 86400;
+            return stopTimes[get_stop_time_idx(route, orderVj, order)].arrival_time % 86400;
     }
-    void make_queuereverse(boost::dynamic_bitset<> &stops, boost::dynamic_bitset<> & routesValides, queue_t &Q);
+    void make_queuereverse(const boost::dynamic_bitset<> &stops, const boost::dynamic_bitset<> & routesValides, queue_t &Q);
 };
 
 
