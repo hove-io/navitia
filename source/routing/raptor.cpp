@@ -396,7 +396,6 @@ std::vector<Path> RAPTOR::compute_all(vector_idxretour departs, vector_idxretour
     boucleRAPTOR(marked_stop, retour, best, b_dest, count);
 
 
-    int debugroutid = data.pt_data.route_points[b_dest.best_now_rpid].route_idx;
     if(b_dest.best_now.type != uninitialized) {
         auto temp = makePathes(retour, best, departs, b_dest, count);
         result.insert(result.begin(), temp.begin(), temp.end());
@@ -549,7 +548,7 @@ void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &
                         (((retour_temp.dt.hour() <= get_temps_depart(route, t, i)) && (retour_temp.dt.date() == workingDt.date()) ) ||
                          ((retour_temp.dt.date() < workingDt.date()) ))) {
                     int etemp = earliest_trip(route, i, retour_temp.dt, t);
-                    if(etemp >= 0 && (etemp < t || t == -1)) {
+                    if(etemp >= 0 && t!=etemp) {
                         t = etemp;
                         workingDt = retour_temp.dt;
                         embarquement = rpid;
@@ -742,6 +741,7 @@ Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxreto
                 item = PathItem(retour[countb][r.said_emarquement].dt, workingDate);
             else
                 item = PathItem(workingDate, retour[countb][r.said_emarquement].dt);
+            int debugsaid = data.pt_data.stop_points[data.pt_data.route_points[current_rpid].stop_point_idx].stop_area_idx ;
             item.stop_points.push_back(data.pt_data.route_points[current_rpid].stop_point_idx);
             item.type = walking;
             item.stop_points.push_back(data.pt_data.route_points[r.said_emarquement].stop_point_idx);
@@ -765,27 +765,25 @@ Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxreto
                     item.arrival = workingDate;
                 else
                     item.departure = DateTime(workingDate.date(), current_st.departure_time);
-            }
 
-            navitia::type::StopTime prec_st = current_st;
-            if(!reverse)
-                current_st = data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(current_st.vehicle_journey_idx).stop_time_list.at(current_st.order-1));
-            else
-                current_st = data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(current_st.vehicle_journey_idx).stop_time_list.at(current_st.order+1));
+                while(spid_embarquement != current_rpid) {
+                    navitia::type::StopTime prec_st = current_st;
+                    if(!reverse)
+                        current_st = data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(current_st.vehicle_journey_idx).stop_time_list.at(current_st.order-1));
+                    else
+                        current_st = data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(current_st.vehicle_journey_idx).stop_time_list.at(current_st.order+1));
 
-            if(!reverse && current_st.arrival_time%86400 > prec_st.arrival_time%86400 && prec_st.vehicle_journey_idx!=navitia::type::invalid_idx)
-                workingDate.date_decrement();
-            else if(reverse && current_st.arrival_time%86400 < prec_st.arrival_time%86400 && prec_st.vehicle_journey_idx!=navitia::type::invalid_idx)
-                workingDate.date_increment();
+                    if(!reverse && current_st.arrival_time%86400 > prec_st.arrival_time%86400 && prec_st.vehicle_journey_idx!=navitia::type::invalid_idx)
+                        workingDate.date_decrement();
+                    else if(reverse && current_st.arrival_time%86400 < prec_st.arrival_time%86400 && prec_st.vehicle_journey_idx!=navitia::type::invalid_idx)
+                        workingDate.date_increment();
 
-            workingDate = DateTime(workingDate.date(), current_st.arrival_time);
-            item.stop_points.push_back(data.pt_data.route_points[current_rpid].stop_point_idx);
-            item.vj_idx = current_st.vehicle_journey_idx;
+                    workingDate = DateTime(workingDate.date(), current_st.arrival_time);
+                    item.stop_points.push_back(data.pt_data.route_points[current_rpid].stop_point_idx);
+                    item.vj_idx = current_st.vehicle_journey_idx;
 
-            current_rpid = current_st.route_point_idx;
-
-            // On a remonté jusqu'à l'embarquement
-            if(spid_embarquement == current_rpid) {
+                    current_rpid = current_st.route_point_idx;
+                }
                 item.stop_points.push_back(data.pt_data.route_points[current_rpid].stop_point_idx);
 
                 if(!reverse)
@@ -796,6 +794,7 @@ Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxreto
                 result.items.push_back(item);
                 --countb;
                 spid_embarquement = navitia::type::invalid_idx ;
+
             }
         }
 

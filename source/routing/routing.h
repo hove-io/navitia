@@ -210,6 +210,20 @@ struct Path {
 bool operator==(const PathItem & a, const PathItem & b);
 std::ostream & operator<<(std::ostream & os, const Path & path);
 
+class Verification {
+
+public :
+    navitia::type::PT_Data data;
+    Verification( navitia::type::PT_Data data) : data(data) {}
+
+    bool verif(Path path);
+    bool croissance(Path path);
+    bool vj_valides(Path path);
+    bool appartenance_rp(Path path);
+    bool check_correspondances(Path path);
+
+};
+
 /** Classe abstraite que tous les calculateurs doivent implémenter */
 
 enum senscompute {

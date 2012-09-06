@@ -15,6 +15,7 @@ int main(int argc, char** argv){
     std::vector<std::string> algos;
     std::string start, target;
     unsigned int date, hour;
+    bool verif = true;
     std::string file;
     desc.add_options()
             ("help", "Affiche l'aide")
@@ -55,8 +56,8 @@ int main(int argc, char** argv){
             return 1;
         }
 
-        std::cout << "Calcul de " << data.pt_data.stop_areas[start_idx].name << " à " << data.pt_data.stop_areas[target_idx].name << std::endl;
-
+        std::cout << "Calcul de " << data.pt_data.stop_areas[start_idx].name << "(" << start_idx << ")"<< " à " << data.pt_data.stop_areas[target_idx].name  << "(" << target_idx << ")"<<  std::endl;
+        Verification verification(data.pt_data);
         for(auto algo : algos){
             std::cout << std::endl;
             AbstractRouter * router;
@@ -74,8 +75,13 @@ int main(int argc, char** argv){
             Path res = router->compute(start_idx, target_idx, hour, date);
             CALLGRIND_STOP_INSTRUMENTATION;
             //std::cout << res << std::endl;
-            for(auto item : res.items)
+            for(auto item : res.items) {
                 std::cout << item.print(data.pt_data) << std::endl;
+            }
+
+            if(verif) {
+                verification.verif(res);
+            }
             delete router;
         }
         return 0;
