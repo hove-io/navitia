@@ -40,17 +40,17 @@ BOOST_AUTO_TEST_CASE(change){
     type::PT_Data d = data.pt_data;
 
     auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[4].idx, 9900, 0, routing::arriveravant);
-    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[0], 1);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], 4);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 4);
     BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8050);
     BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 8100);
-    BOOST_CHECK_EQUAL(res.items[2].departure.hour(), 9250);
-    BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 9300);
+    BOOST_CHECK_EQUAL(res.items[1].departure.hour(), 9250);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 9300);
     BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
-    BOOST_CHECK_EQUAL(res.items[2].arrival.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(passe_minuit){
@@ -63,13 +63,13 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     type::PT_Data d = data.pt_data;
 
     auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 1, routing::arriveravant);
-    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[0], 1);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], 2);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
     BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
-    BOOST_CHECK_EQUAL(res.items[2].arrival.date(), 1);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(passe_minuit_2){
@@ -84,13 +84,13 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2){
     auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 1, routing::arriveravant);
 
 
-    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[0], 1);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], 2);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
     BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
-    BOOST_CHECK_EQUAL(res.items[2].arrival.date(), 1);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(passe_minuit_interne){
