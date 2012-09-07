@@ -164,6 +164,7 @@ struct Edge {
 };
 
 void PT_Data::build_connections() {
+    stop_point_connections.resize(stop_points.size());
     for(Connection conn : this->connections){
         const StopPoint & dep = this->stop_points[conn.departure_stop_point_idx];
         const StopPoint & arr = this->stop_points[conn.destination_stop_point_idx];

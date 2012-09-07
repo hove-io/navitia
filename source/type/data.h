@@ -121,8 +121,6 @@ public:
 
     /** Construit l'indexe ProximityList */
     void build_proximity_list();
-
-
 };
 
 
