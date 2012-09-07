@@ -554,8 +554,11 @@ void RAPTOR::boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &
                 if((retour_temp.type != uninitialized) &&
                         (((retour_temp.dt.hour() <= get_temps_depart(route, t, i)) && (retour_temp.dt.date() == workingDt.date()) ) ||
                          ((retour_temp.dt.date() < workingDt.date()) ))) {
+                    DateTime dt =  retour_temp.dt;
+                    if(retour_temp.type == vj)
+                        dt = dt + 120;
 
-                    int etemp = earliest_trip(route, i, retour_temp.dt);
+                    int etemp = earliest_trip(route, i, dt);
 
                     if(etemp >= 0) {
                         t = etemp;
@@ -852,7 +855,7 @@ Path communRAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int depar
 
     case partirapresrab:
         for(navitia::type::idx_t spidx : data.pt_data.stop_areas[departure_idx].stop_point_list) {
-            departs.push_back(std::make_pair(spidx, type_retour(-1, DateTime(departure_day, departure_hour))));
+            departs.push_back(std::make_pair(spidx, type_retour(-1, DateTime(departure_day, departure_hour), depart)));
         }
 
 
@@ -862,7 +865,7 @@ Path communRAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int depar
         return compute_raptor_rabattement(departs, destinations); break;
     case arriveravant :
         for(navitia::type::idx_t spidx : data.pt_data.stop_areas[destination_idx].stop_point_list) {
-            departs.push_back(std::make_pair(spidx, type_retour(-1, DateTime(departure_day, departure_hour))));
+            departs.push_back(std::make_pair(spidx, type_retour(-1, DateTime(departure_day, departure_hour), depart)));
         }
 
 
@@ -873,7 +876,7 @@ Path communRAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int depar
         return compute_raptor_reverse(departs, destinations); break;
     default :
         for(navitia::type::idx_t spidx : data.pt_data.stop_areas[departure_idx].stop_point_list) {
-            departs.push_back(std::make_pair(spidx, type_retour(-1, DateTime(departure_day, departure_hour))));
+            departs.push_back(std::make_pair(spidx, type_retour(-1, DateTime(departure_day, departure_hour), depart)));
         }
 
 
@@ -905,7 +908,7 @@ Path communRAPTOR::compute_rabattement(idx_t departure_idx, idx_t destination_id
     vector_idxretour departs, destinations;
 
     BOOST_FOREACH(navitia::type::idx_t spidx, data.pt_data.stop_areas[departure_idx].stop_point_list) {
-        departs.push_back(std::make_pair(spidx, type_retour(-1, DateTime(departure_day, departure_hour))));
+        departs.push_back(std::make_pair(spidx, type_retour(-1, DateTime(departure_day, departure_hour), depart)));
     }
 
 

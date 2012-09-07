@@ -16,7 +16,8 @@ size_t hash_value(T t) {
 enum type_idx {
     vj,
     connection,
-    uninitialized
+    uninitialized,
+    depart
 };
 
 
@@ -33,6 +34,7 @@ struct type_retour {
     type_retour(int stid, DateTime dt, int dist_to_dest, int dist_to_dep) : stid(stid), said_emarquement(-1), dt(dt), dist_to_dest(dist_to_dest), dist_to_dep(dist_to_dep), type(vj) {}
 
     type_retour(int stid, DateTime dt) : stid(stid), said_emarquement(-1), dt(dt), dist_to_dest(0), dist_to_dep(0), type(vj){}
+    type_retour(int stid, DateTime dt, type_idx type) : stid(stid), said_emarquement(-1), dt(dt), dist_to_dest(0), dist_to_dep(0), type(type){}
     type_retour(int stid, int said_emarquement,DateTime dt) : stid(stid), said_emarquement(said_emarquement), dt(dt), dist_to_dest(0), dist_to_dep(0), type(vj){}
 
     type_retour(int stid, int said_emarquement, DateTime dt, type_idx type) : stid(stid), said_emarquement(said_emarquement), dt(dt), dist_to_dest(0), dist_to_dep(0), type(type){}
