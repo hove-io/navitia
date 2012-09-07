@@ -76,7 +76,7 @@ struct best_dest {
 
     std::map<unsigned int, type_retour> map_date_time;
     type_retour best_now;
-    unsigned int best_now_rpid;
+    unsigned int best_now_spid;
 
     void ajouter_destination(unsigned int spid, type_retour &t) { map_date_time[spid] = t;}
 
@@ -86,7 +86,7 @@ struct best_dest {
             it->second = t;
             if(t < best_now) {
                 best_now = t;
-                best_now_rpid = rpid;
+                best_now_spid = rpid;
             }
             return true;
         }
@@ -99,7 +99,7 @@ struct best_dest {
             it->second = t;
             if(t > best_now && t.dt != DateTime::min) {
                 best_now = t;
-                best_now_rpid = rpid;
+                best_now_spid = rpid;
             }
         }
     }
@@ -107,7 +107,7 @@ struct best_dest {
     void reinit() {
         map_date_time.clear();
         best_now = type_retour();
-        best_now_rpid = std::numeric_limits<unsigned int>::max();
+        best_now_spid = std::numeric_limits<unsigned int>::max();
     }
 
     void reverse() {
@@ -170,21 +170,7 @@ struct communRAPTOR : public AbstractRouter
         StopTime_t(navitia::type::StopTime & st) : departure_time(st.departure_time), arrival_time(st.arrival_time), idx(st.idx) {}
     };
 
-    struct Connection_t {
-        navitia::type::idx_t departure_rp, destination_rp, connection_idx;
-        int duration;
-
-        Connection_t(navitia::type::idx_t departure_rp, navitia::type::idx_t destination_rp, navitia::type::idx_t connection_idx, int duration) :
-            departure_rp(departure_rp), destination_rp(destination_rp), connection_idx(connection_idx), duration(duration) {}
-
-        Connection_t(navitia::type::idx_t departure_rp, navitia::type::idx_t destination_rp, int duration) :
-            departure_rp(departure_rp), destination_rp(destination_rp), connection_idx(navitia::type::invalid_idx), duration(duration) {}
-
-        Connection_t() :
-            departure_rp(navitia::type::invalid_idx), destination_rp(navitia::type::invalid_idx), connection_idx(navitia::type::invalid_idx), duration(0) {}
-    };
-
-    typedef std::map<navitia::type::idx_t, Connection_t> list_connections;
+    typedef std::map<navitia::type::idx_t, navitia::type::Connection> list_connections;
 
 
 
@@ -201,7 +187,7 @@ struct communRAPTOR : public AbstractRouter
     navitia::type::Data &data;
     compare_rp cp;
 //    google::dense_hash_map<unsigned int, list_connections> foot_path;
-    std::vector<Connection_t> foot_path;
+    std::vector<navitia::type::Connection> foot_path;
     std::vector<pair_int> footpath_index;
     std::vector<Route_t> routes;
     std::vector<StopTime_t> stopTimes;
@@ -227,8 +213,8 @@ struct communRAPTOR : public AbstractRouter
                     int departure_hour, int departure_day, vector_idxretour &departs, vector_idxretour &destinations);
 
 
-    int earliest_trip(const Route_t &route, unsigned int order, DateTime dt, int orderVj);
-    int tardiest_trip(const Route_t &route, unsigned int order, DateTime dt, int orderVj);
+    int earliest_trip(const Route_t &route, unsigned int order, DateTime dt);
+    int tardiest_trip(const Route_t &route, unsigned int order, DateTime dt);
 
     inline int get_stop_time_idx(const Route_t & route, int orderVj, int order) {
         return route.firstStopTime + (orderVj * route.nbStops) + order;
@@ -245,7 +231,7 @@ struct destinationNotFound {};
 struct RAPTOR : public communRAPTOR {
     map_int_pint_t retour_constant;
     map_int_pint_t retour_constant_reverse;
-    RAPTOR(navitia::type::Data &data) : communRAPTOR(data), retour_constant(data.pt_data.route_points.size()), retour_constant_reverse(data.pt_data.route_points.size()){
+    RAPTOR(navitia::type::Data &data) : communRAPTOR(data), retour_constant(data.pt_data.stop_points.size()), retour_constant_reverse(data.pt_data.stop_points.size()){
         for(auto &r : retour_constant_reverse) {
             r.dt = DateTime::min;
         }
@@ -272,7 +258,7 @@ struct RAPTOR : public communRAPTOR {
 
     void boucleRAPTOR(std::vector<unsigned int> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int & count);
     Path makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb, bool reverse = false);
-    void marcheapied(boost::dynamic_bitset<> &marked_stop, map_retour_t &retour, map_int_pint_t &best, best_dest &b_dest, unsigned int count);
+    void marcheapied(boost::dynamic_bitset<> &marked_sp, map_int_pint_t &retour, map_int_pint_t &best, best_dest &b_dest);
     void setRoutesValides(boost::dynamic_bitset<> & routesValides, std::vector<unsigned int> &marked_stop, map_retour_t &retour);
     inline uint32_t get_temps_depart(const Route_t & route, int orderVj, int order) {
         if(orderVj == -1)

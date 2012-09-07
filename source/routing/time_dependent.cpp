@@ -185,7 +185,7 @@ Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day,
                                        .weight_map(boost::get(&Edge::t, graph))
                                        .distance_combine(Combine(this->data))
                                        .distance_inf(DateTime::infinity())
-                                       .distance_zero(start_time)
+                                       .distance_zero(start_time-180)
                                        .distance_compare(edge_less())
                                        .visitor(goal_visitor(arr))
                                        );

@@ -82,6 +82,7 @@ int main(int argc, char** argv){
             if(verif) {
                 verification.verif(res);
             }
+            std::cout << std::endl << "______________________________________" << std::endl << std::endl;
             delete router;
         }
         return 0;

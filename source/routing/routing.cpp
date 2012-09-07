@@ -93,21 +93,10 @@ bool Verification::appartenance_rp(Path path) {
         if(item.type == public_transport) {
             navitia::type::VehicleJourney & vj = data.vehicle_journeys[item.vj_idx];
 
-            unsigned int first = 0;
-
-            for(;first < vj.stop_time_list.size(); ++first) {
-                if(data.route_points[data.stop_times[vj.stop_time_list[first]].route_point_idx].stop_point_idx == item.stop_points.front())
-                    break;
-            }
-
-            if(first >=vj.stop_time_list.size()) {
-                std::cout << "le stop point : " << data.stop_points[item.stop_points.front()].name << " ("  << item.stop_points.front() << ") n'appartient pas au vj : " << item.vj_idx << std::endl;
-                return false;
-            }
-
-            for(unsigned int i = 0; i < item.stop_points.size(); ++i) {
-                if(data.route_points[data.stop_times[vj.stop_time_list[first + i]].route_point_idx].stop_point_idx != item.stop_points[i]) {
-                    std::cout << "Le stop point : " << item.stop_points[i] << " n'appartient pas au vj : " << item.vj_idx << std::endl;
+            for(auto spidx : item.stop_points) {
+                if(std::find_if(vj.stop_time_list.begin(), vj.stop_time_list.end(),
+                                [&](int stidx){ return (data.route_points[data.stop_times[stidx].route_point_idx].stop_point_idx == spidx);}) == vj.stop_time_list.end()) {
+                    std::cout << "Le stop point : " << spidx << " n'appartient pas au vj : " << item.vj_idx << std::endl;
                     return false;
                 }
             }
@@ -117,40 +106,61 @@ bool Verification::appartenance_rp(Path path) {
 }
 
 bool Verification::check_correspondances(Path path) {
-    std::vector<std::pair<navitia::type::idx_t, navitia::type::idx_t>> stop_point_list;
+    std::vector<navitia::type::Connection> stop_point_list;
 
+    PathItem precitem;
     for(PathItem item : path.items) {
+        navitia::type::Connection conn;
         if(item.type == walking) {
-            if(data.stop_points[item.stop_points.front()].stop_area_idx != data.stop_points[item.stop_points.back()].stop_area_idx) {
-                stop_point_list.push_back(std::make_pair(item.stop_points.front(), item.stop_points.back()));
+            conn.departure_stop_point_idx = item.stop_points.front();
+            conn.destination_stop_point_idx =  item.stop_points.back();
+            conn.duration = item.arrival - item.departure;
+            stop_point_list.push_back(conn);
+        }
+        if(precitem.arrival != DateTime::inf) {
+            if(precitem.type == public_transport && item.type == public_transport) {
+                conn.departure_stop_point_idx = precitem.stop_points.back();
+                conn.destination_stop_point_idx =  item.stop_points.front();
+                conn.duration = item.departure - precitem.arrival;
+                stop_point_list.push_back(conn);
             }
         }
+
+        precitem = item;
     }
 
     for(navitia::type::Connection conn: data.connections) {
-        auto it = stop_point_list.begin();
 
-        for(;it!= stop_point_list.end(); ++it) {
-            if(conn.departure_stop_point_idx == it->first && conn.destination_stop_point_idx == it->second)
-                break;
-        }
+        auto it = std::find_if(stop_point_list.begin(), stop_point_list.end(),
+                               [&](navitia::type::Connection p){return (p.departure_stop_point_idx == conn.departure_stop_point_idx && p.destination_stop_point_idx == conn.destination_stop_point_idx)
+                               ||(p.destination_stop_point_idx == conn.departure_stop_point_idx && p.departure_stop_point_idx == conn.destination_stop_point_idx);});
 
-        if(it != stop_point_list.end())
+
+    if(it != stop_point_list.end()) {
+        if(it->duration != conn.duration) {
+            std::cout << "Le temps de correspondance de la connection " << data.stop_points[it->departure_stop_point_idx].name << "(" << it->departure_stop_point_idx << ") -> "
+                      << data.stop_points[it->destination_stop_point_idx].name << "(" << it->destination_stop_point_idx << ") ne correspond pas aux données : "
+                      <<  it->duration << " != " <<  conn.duration << std::endl;
+            return false;
+        } else {
             stop_point_list.erase(it);
-
-        if(stop_point_list.size() == 0)
-            return true;
+        }
     }
 
-    for(auto psp : stop_point_list) {
-        std::cout << "La correspondance " << psp.first << " => " << psp.second << " n'existe pas " << std::endl;
+    if(stop_point_list.size() == 0)
+        return true;
+}
+bool toreturn = true;
+for(auto psp : stop_point_list) {
+    if(data.stop_points[psp.departure_stop_point_idx].stop_area_idx != data.stop_points[psp.destination_stop_point_idx].stop_area_idx) {
+        std::cout << "La correspondance " << psp.departure_stop_point_idx << " => " << psp.destination_stop_point_idx << " n'existe pas " << std::endl;
+        toreturn = false;
     }
-    return false;
 
-
-    return true;
+}
+return toreturn;
 }
 
 
 
-}}
+                  }}
