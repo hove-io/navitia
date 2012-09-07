@@ -61,7 +61,7 @@ int main(int argc, char** argv){
 
     // Génération des instances
     std::random_device rd;
-    std::mt19937 rng(rd());
+    std::mt19937 rng(31442);
     std::uniform_int_distribution<> gen(0,data.pt_data.stop_areas.size());
 
     std::vector<PathDemand> demands;
