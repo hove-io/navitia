@@ -173,12 +173,21 @@ struct City : public NavitiaHeader, Nameable {
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
+enum ConnectionType {
+    eStopPointConnection,
+    eStopAreaConnection,
+    eWalkingConnection,
+    eVJConnection,
+    eGuaranteedConnection
+};
+
 struct Connection: public NavitiaHeader{
     const static Type_e type = eConnection;
     idx_t departure_stop_point_idx;
     idx_t destination_stop_point_idx;
     int duration;
     int max_duration;
+    ConnectionType connection_type;
 
     Connection() : departure_stop_point_idx(invalid_idx), destination_stop_point_idx(invalid_idx), duration(0),
         max_duration(0){};

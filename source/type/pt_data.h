@@ -29,6 +29,7 @@ struct PT_Data{
     std::vector<Vehicle> vehicles;
     std::vector<Country> countries;
 
+    std::vector<std::vector<Connection> > stop_point_connections;
 
     // First letter
     firstletter::FirstLetter<idx_t> stop_area_first_letter;
@@ -75,7 +76,7 @@ struct PT_Data{
                 & company_map & country_map
                 // Les proximity list
                 & stop_area_proximity_list & stop_point_proximity_list & city_proximity_list
-                & connections;
+                & connections & stop_point_connections;
     }
 
     /** Initialise tous les indexes
@@ -166,6 +167,20 @@ struct PT_Data{
     std::vector<idx_t> get_all_index(Type_e type);
 
 
+    /** Construit une nouvelle structure de correspondance */
+    void build_connections();
+
+    /** Retourne la correspondance entre deux route point
+     *
+     * Cela peut varier pour les correspondances garanties ou les prolongements de service
+     * Dans le cas normal, il s'agit juste du temps de sécurité
+    */
+    Connection route_point_connection(idx_t, idx_t){
+        Connection result;
+        result.duration = 120;
+        result.connection_type = eStopPointConnection;
+        return result;
+    }
 
 };
 

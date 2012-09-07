@@ -156,4 +156,23 @@ void PT_Data::build_external_code() {
     BOOST_FOREACH(Country country, this->countries){country_map[country.external_code] = country.idx;}
 }
 
+struct Edge {
+    uint16_t duration;
+    ConnectionType type;
+    Edge(uint16_t duration,  ConnectionType type) : duration(duration), type(type) {}
+    Edge() {}
+};
+
+void PT_Data::build_connections() {
+    for(Connection conn : this->connections){
+        const StopPoint & dep = this->stop_points[conn.departure_stop_point_idx];
+        const StopPoint & arr = this->stop_points[conn.destination_stop_point_idx];
+        if(dep.stop_area_idx == arr.stop_area_idx)
+            conn.connection_type = eStopAreaConnection;
+        else
+            conn.connection_type = eWalkingConnection;
+        stop_point_connections[dep.idx].push_back(conn);
+    }
+}
+
 }}

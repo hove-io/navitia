@@ -6,6 +6,8 @@
 #include "gtfs_parser.h"
 #include "bdtopo_parser.h"
 
+#include "utils/timer.h"
+
 #include <fstream>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/program_options.hpp>
@@ -116,6 +118,8 @@ int main(int argc, char * argv[])
     nav_data.build_first_letter();
     nav_data.build_proximity_list();
     nav_data.build_external_code();
+    std::cout << "On va construire les correspondances" << std::endl;
+    {Timer t("Construction des correspondances");  nav_data.pt_data.build_connections();}
     first_letter = (pt::microsec_clock::local_time() - start).total_milliseconds();
     std::cout <<"Debut sauvegarde ..." << std::endl;
     start = pt::microsec_clock::local_time();
