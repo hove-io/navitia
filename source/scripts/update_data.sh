@@ -30,7 +30,12 @@ data_source=$1
 destination=$2
 instance_url=$3
 
-md5_remote=`curl "$data_source.md5"`
+if [ -r "$data_source.md5" ]
+then
+    md5_remote=`cat "$data_source.md5"`
+else
+    md5_remote=`curl "$data_source.md5"`
+fi
 md5_local=`md5 $destination`
 
 echo $md5_remote
@@ -39,7 +44,12 @@ echo $md5_local
 if [ $md5_local != $md5_remote ]
 then
 
-    wget -O $destination $data_source
+    if [ -r $data_source ]
+    then
+        cp $data_source $destination
+    else
+        wget -O $destination $data_source
+    fi
     curl "$instance_url/load"
 
 fi
