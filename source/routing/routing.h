@@ -213,8 +213,8 @@ std::ostream & operator<<(std::ostream & os, const Path & path);
 class Verification {
 
 public :
-    navitia::type::PT_Data data;
-    Verification( navitia::type::PT_Data data) : data(data) {}
+    const navitia::type::PT_Data & data;
+    Verification(const navitia::type::PT_Data & data) : data(data) {}
 
     bool verif(Path path);
     bool croissance(Path path);

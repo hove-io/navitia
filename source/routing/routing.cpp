@@ -91,7 +91,7 @@ bool Verification::appartenance_rp(Path path) {
     for(PathItem item : path.items) {
 
         if(item.type == public_transport) {
-            navitia::type::VehicleJourney & vj = data.vehicle_journeys[item.vj_idx];
+            const navitia::type::VehicleJourney & vj = data.vehicle_journeys[item.vj_idx];
 
             for(auto spidx : item.stop_points) {
                 if(std::find_if(vj.stop_time_list.begin(), vj.stop_time_list.end(),
