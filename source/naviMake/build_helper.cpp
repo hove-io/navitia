@@ -108,6 +108,7 @@ navitia::type::PT_Data builder::build() {
     data.clean();
     data.sort();
     data.transform(result);
+
     return result;
 }
 

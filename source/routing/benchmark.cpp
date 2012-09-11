@@ -92,7 +92,8 @@ int main(int argc, char** argv){
     std::map<std::string, std::vector<Result> > results;
     for(auto algo : algos){
         AbstractRouter * router;
-        if(algo == "raptor"){
+        if(algo == "raptor"){        
+            data.build_raptor();
             router = new raptor::RAPTOR(data);
         } else if(algo == "time_dep"){
             router = new timedependent::TimeDependent(data);

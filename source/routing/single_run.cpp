@@ -62,6 +62,7 @@ int main(int argc, char** argv){
             std::cout << std::endl;
             AbstractRouter * router;
             if(algo == "raptor"){
+                data.build_raptor();
                 router = new raptor::RAPTOR(data);
             } else if(algo == "time_dep"){
                 router = new timedependent::TimeDependent(data);

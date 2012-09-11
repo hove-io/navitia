@@ -130,4 +130,8 @@ void Data::build_first_letter(){
     this->street_network.fl.build();
 }
 
+void Data::build_raptor() {
+    dataRaptor.load(this->pt_data);
+}
+
 }} //namespace navitia::type

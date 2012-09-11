@@ -417,6 +417,8 @@ public:
 
     bool check(boost::gregorian::date day) const;
     bool check(int day) const;
+    bool check2(int day) const;
+    bool uncheck2(int day) const;
     //void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
 };
 

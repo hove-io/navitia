@@ -15,6 +15,7 @@ BOOST_AUTO_TEST_CASE(direct){
     b.vj("A")("stop1", 8000, 8050)("stop2", 8100,8150);
     type::Data data;
     data.pt_data =  b.build();
+    data.build_raptor();
     RAPTOR raptor(data);
 
     type::PT_Data d = data.pt_data;
@@ -36,6 +37,7 @@ BOOST_AUTO_TEST_CASE(change){
     b.vj("B")("stop4", 9000, 8050)("stop2", 9200, 9250)("stop5", 9300,9350);
     type::Data data;
     data.pt_data =  b.build();
+    data.build_raptor();
     RAPTOR raptor(data);
     type::PT_Data d = data.pt_data;
 
@@ -59,6 +61,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     b.vj("B")("stop2", 10*60)("stop3", 20*60);
     type::Data data;
     data.pt_data =  b.build();
+    data.build_raptor();
     RAPTOR raptor(data);
     type::PT_Data d = data.pt_data;
 
@@ -78,6 +81,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2){
     b.vj("B")("stop4", 23*3600 + 10*60)("stop2", 10*60)("stop3", 20*60);
     type::Data data;
     data.pt_data =  b.build();
+    data.build_raptor();
     RAPTOR raptor(data);
     type::PT_Data d = data.pt_data;
 
@@ -98,6 +102,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
     b.vj("A")("stop1", 23*3600)("stop2", 23*3600 + 30*60, 24*3600 + 30*60)("stop3", 24*40+3600);
     type::Data data;
     data.pt_data =  b.build();
+    data.build_raptor();
     RAPTOR raptor(data);
 
     type::PT_Data d = data.pt_data;
@@ -118,8 +123,8 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
     b.vj("C", "1")("stop1", 9000)("stop2", 9200);
     type::Data data;
     data.pt_data =  b.build();
+    data.build_raptor();
     RAPTOR raptor(data);
-
     type::PT_Data d = data.pt_data;
 
 //    auto res = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 17900, 0, routing::arriveravant);
@@ -141,6 +146,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
     b.connection("stop3", "stop2", 10*60);
     type::Data data;
     data.pt_data = b.build();
+    data.build_raptor();
     RAPTOR raptor(data);
     type::PT_Data d = data.pt_data;
 
@@ -159,6 +165,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_fin){
 
     type::Data data;
     data.pt_data = b.build();
+    data.build_raptor();
     RAPTOR raptor(data);
     type::PT_Data d = data.pt_data;
 
@@ -177,6 +184,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
     b.connection("stop2", "stop3", 10*60);
     type::Data data;
     data.pt_data = b.build();
+    data.build_raptor();
     RAPTOR raptor(data);
     type::PT_Data d = data.pt_data;
 
@@ -196,6 +204,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_debut) {
 
     type::Data data;
     data.pt_data = b.build();
+    data.build_raptor();
     RAPTOR raptor(data);
     type::PT_Data d = data.pt_data;
 

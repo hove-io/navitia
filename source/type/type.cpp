@@ -2,7 +2,7 @@
 #include <iostream>
 #include <boost/assign.hpp>
 #include <boost/foreach.hpp>
-#include "data.h"
+#include "pt_data.h"
 #include <proj_api.h>
 #include <stdint.h>
 
@@ -59,6 +59,17 @@ bool ValidityPattern::check(int day) const {
 //    BOOST_ASSERT(is_valid(day));
     return days[day];
 }
+
+bool ValidityPattern::check2(int day) const {
+//    BOOST_ASSERT(is_valid(day));
+    return days[day] || days[day+1];
+}
+
+bool ValidityPattern::uncheck2(int day) const {
+//    BOOST_ASSERT(is_valid(day));
+    return !days[day] && !days[day+1];
+}
+
 
 GeographicalCoord::GeographicalCoord(double x, double y, const Projection& projection) : x(x), y(y){
     GeographicalCoord tmp_coord = this->convert_to(Projection(), projection);
