@@ -1,4 +1,4 @@
-SET(ROUTING_SRC routing.cpp astar.cpp time_dependent.cpp raptor.cpp raptor_api.cpp)
+SET(ROUTING_SRC routing.cpp astar.cpp time_dependent.cpp raptor.cpp raptor_api.cpp static_raptor.cpp)
 
 add_library(routing ${ROUTING_SRC})
 target_link_libraries(routing types data)

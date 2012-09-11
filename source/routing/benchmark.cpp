@@ -1,5 +1,6 @@
 #include "time_dependent.h"
 #include "raptor.h"
+#include "static_raptor.h"
 #include "type/data.h"
 #include "utils/timer.h"
 #include <boost/program_options.hpp>
@@ -7,6 +8,7 @@
 #include <random>
 #include <fstream>
 
+#include "valgrind/callgrind.h"
 using namespace navitia;
 using namespace routing;
 namespace po = boost::program_options;
@@ -96,6 +98,8 @@ int main(int argc, char** argv){
             router = new raptor::RAPTOR(data);
         } else if(algo == "time_dep"){
             router = new timedependent::TimeDependent(data);
+        } else if(algo == "static"){
+            router = new StaticRaptor(data);
         } else {
             std::cerr << "Algorithme inconnu : " << algo << std::endl;
             return 1;
