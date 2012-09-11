@@ -62,7 +62,7 @@ struct builder{
 
     /// Crée une connexion
     void connection(const std::string & name1, const std::string & name2, float length);
-    navitia::type::PT_Data build();
+    void build(navitia::type::PT_Data & pt_data);
 };
 
 }

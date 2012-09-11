@@ -7,7 +7,7 @@
 
 namespace navitia { namespace type {
 
-struct PT_Data{
+struct PT_Data : boost::noncopyable{
     std::vector<ValidityPattern> validity_patterns;
     std::vector<Line> lines;
     std::vector<Route> routes;
