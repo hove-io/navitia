@@ -8,6 +8,7 @@
 #include <fstream>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/format.hpp>
+#include <boost/foreach.hpp>
 using namespace webservice;
 
 /** Structure de données globale au webservice

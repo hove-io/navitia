@@ -1,6 +1,5 @@
 #include "data_structures.h"
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 
 namespace webservice {
 
@@ -82,7 +81,7 @@ namespace webservice {
 
                     }
                 }else{
-                    BOOST_FOREACH(std::string str, boost::get<std::vector<std::string> >(param.value)){
+                    for(std::string str : boost::get<std::vector<std::string> >(param.value)){
                         if(std::find(api_param->second.accepted_values.begin(), api_param->second.accepted_values.end(),RequestParameter::Parameter_variant(str))
                                 == api_param->second.accepted_values.end()){
                             param.valid_value = false;
@@ -98,8 +97,7 @@ namespace webservice {
     }
 
     void ApiMetadata::check_manadatory_parameters(RequestData& request) {
-        std::pair<std::string, ApiParameter> p;
-        BOOST_FOREACH(p, this->params){
+        for(std::pair<std::string, ApiParameter> p : this->params){
             // On a un paramètre obligatoire et qui n'est pas renseigné
             if(p.second.mandatory && request.params.find(p.first) == request.params.end()){
                 request.missing_params.push_back(p.first);
@@ -108,9 +106,8 @@ namespace webservice {
         }
     }
 
-    void ApiMetadata::parse_parameters(RequestData& request){
-        std::pair<std::string, std::string> p;
-        BOOST_FOREACH(p, request.params){
+    void ApiMetadata::parse_parameters(RequestData& request){       
+        for(std::pair<std::string, std::string> p : request.params){
             webservice::RequestParameter param = this->convert_parameter(p.first, p.second);
             request.parsed_params[p.first] = param;
             request.params_are_valid &= param.valid_value;
@@ -120,7 +117,7 @@ namespace webservice {
 
 template<>
 void PrintParameterVisitor::operator()(const std::vector<std::string> & vec) const{
-    BOOST_FOREACH(std::string str, vec){
+    for(const std::string & str : vec){
         stream << str;
     }
 }

@@ -18,6 +18,7 @@ SET(DATA_SRC
     ${PROTO_SRCS}
     ${CMAKE_SOURCE_DIR}/../third_party/lz4/lz4.c
     pt_data.cpp
+    locker.cpp
 )
 
 add_library(data ${DATA_SRC})

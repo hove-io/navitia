@@ -328,8 +328,8 @@ int main(int argc, char** argv) {
                         }
 
                         if(ways_idx.size() > 0 ){
-                            BOOST_FOREACH(auto idx, ways_idx) {
-                                BOOST_FOREACH(auto node, global_ways[idx].nodes){
+                            for(auto idx : ways_idx) {
+                                for(auto node : global_ways[idx].nodes){
                                     anodes.push_back(node);
                                 }
                             }
@@ -383,7 +383,7 @@ int main(int argc, char** argv) {
     std::cout << "    Admin : " << admins.size() << std::endl;
 
     // On recolle les structures administratives aux rues
-    BOOST_FOREACH(Way & way, ways) {
+    for(Way & way : ways) {
         for(size_t i = 0; i < admins.size(); ++i) {
             if(admins[i].geom != nullptr && way.geom != nullptr && GEOSContains(admins[i].geom, way.geom)) {
                 way.admin.push_back(i);
@@ -404,7 +404,7 @@ int main(int argc, char** argv) {
     int city_idx = 0;
 
     std::cout << "Remplissage des structures administratives" << std::endl;
-    BOOST_FOREACH(Admin admin, admins){
+    for(const Admin & admin : admins){
         if(admin.level == 6)   {
             navitia::type::Department dep;
             dep.name = admin.name;
@@ -424,11 +424,11 @@ int main(int argc, char** argv) {
     }
 
     std::cout << "Remplissage des rues" << std::endl;
-    BOOST_FOREACH(Way osm_way, ways){
+    for(const Way & osm_way : ways){
         navitia::streetnetwork::Way w;
         w.name = osm_way.name;
-        BOOST_FOREACH(auto admin_idx, osm_way.admin){
-            BOOST_FOREACH(auto city, data.pt_data.cities) {
+        for(auto admin_idx : osm_way.admin){
+            for(auto city : data.pt_data.cities) {
                 if(city.id == boost::lexical_cast<std::string>(admins[admin_idx].id)) {
                     w.city_idx = city.idx;
                 }

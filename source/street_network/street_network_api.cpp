@@ -9,7 +9,7 @@ namespace navitia { namespace streetnetwork {
 
     void create_pb(const Path& path, const navitia::type::Data& data, pbnavitia::StreetNetwork& sn){
         sn.set_length(path.length);
-        BOOST_FOREACH(auto item, path.path_items){
+        for(auto item : path.path_items){
             if(item.way_idx < data.street_network.ways.size()){
                 pbnavitia::PathItem * path_item = sn.add_path_item_list();
                 path_item->set_name(data.street_network.ways[item.way_idx].name);
@@ -19,7 +19,7 @@ namespace navitia { namespace streetnetwork {
             }
 
         }
-        BOOST_FOREACH(auto coord, path.coordinates){
+        for(auto coord : path.coordinates){
             pbnavitia::GeographicalCoord * pb_coord = sn.add_coordinate_list();
             pb_coord->set_x(coord.x);
             pb_coord->set_y(coord.y);

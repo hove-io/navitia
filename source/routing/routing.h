@@ -208,7 +208,6 @@ struct Path {
 };
 
 bool operator==(const PathItem & a, const PathItem & b);
-std::ostream & operator<<(std::ostream & os, const Path & path);
 
 class Verification {
 

@@ -9,14 +9,15 @@
 #include <boost/serialization/vector.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bimap.hpp>
-#include <boost/mpl/map.hpp>
-#include <numeric>
+
 namespace mpl = boost::mpl;
 
 namespace navitia { namespace type {
 typedef unsigned int idx_t;
 const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
-enum Type_e {eValidityPattern = 0,
+
+enum class Type_e {
+    eValidityPattern = 0,
     eLine = 1,
     eRoute = 2,
     eVehicleJourney = 3,
@@ -111,7 +112,7 @@ std::ostream & operator<<(std::ostream &_os, const GeographicalCoord & coord);
 bool operator==(const GeographicalCoord & a, const GeographicalCoord & b);
 
 struct Country: public NavitiaHeader, Nameable {
-    const static Type_e type = eCountry;
+    const static Type_e type = Type_e::eCountry;
     idx_t main_city_idx;
     std::vector<idx_t> district_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -123,7 +124,7 @@ struct Country: public NavitiaHeader, Nameable {
 };
 
 struct District : public NavitiaHeader, Nameable {
-    const static Type_e type = eDistrict;
+    const static Type_e type = Type_e::eDistrict;
     idx_t main_city_idx;
     idx_t country_idx;
     std::vector<idx_t> department_list;
@@ -135,7 +136,7 @@ struct District : public NavitiaHeader, Nameable {
 };
 
 struct Department : public NavitiaHeader, Nameable {
-    const static Type_e type = eDepartment;
+    const static Type_e type = Type_e::eDepartment;
     idx_t main_city_idx;
     idx_t district_idx;
     std::vector<idx_t> city_list;
@@ -148,7 +149,7 @@ struct Department : public NavitiaHeader, Nameable {
 
 
 struct City : public NavitiaHeader, Nameable {
-    const static Type_e type = eCity;
+    const static Type_e type = Type_e::eCity;
     std::string main_postal_code;
     bool main_city;
     bool use_main_stop_area_property;
@@ -182,7 +183,7 @@ enum ConnectionType {
 };
 
 struct Connection: public NavitiaHeader{
-    const static Type_e type = eConnection;
+    const static Type_e type = Type_e::eConnection;
     idx_t departure_stop_point_idx;
     idx_t destination_stop_point_idx;
     int duration;
@@ -198,7 +199,7 @@ struct Connection: public NavitiaHeader{
 };
 
 struct StopArea : public NavitiaHeader, Nameable{
-    const static Type_e type = eStopArea;
+    const static Type_e type = Type_e::eStopArea;
     GeographicalCoord coord;
     int properties;
     std::string additional_data;
@@ -217,7 +218,7 @@ struct StopArea : public NavitiaHeader, Nameable{
 };
 
 struct Network : public NavitiaHeader, Nameable{
-    const static Type_e type = eNetwork;
+    const static Type_e type = Type_e::eNetwork;
     std::string address_name;
     std::string address_number;
     std::string address_type_name;
@@ -237,7 +238,7 @@ struct Network : public NavitiaHeader, Nameable{
 };
 
 struct Company : public NavitiaHeader, Nameable{
-    const static Type_e type = eCompany;
+    const static Type_e type = Type_e::eCompany;
     std::string address_name;
     std::string address_number;
     std::string address_type_name;
@@ -256,7 +257,7 @@ struct Company : public NavitiaHeader, Nameable{
 };
 
 struct ModeType : public NavitiaHeader, Nameable{
-    const static Type_e type = eModeType;
+    const static Type_e type = Type_e::eModeType;
     std::vector<idx_t> mode_list;
     std::vector<idx_t> line_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -266,7 +267,7 @@ struct ModeType : public NavitiaHeader, Nameable{
 };
 
 struct Mode : public NavitiaHeader, Nameable{
-    const static Type_e type = eMode;
+    const static Type_e type = Type_e::eMode;
     idx_t mode_type_idx;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & external_code & mode_type_idx & idx;
@@ -277,7 +278,7 @@ struct Mode : public NavitiaHeader, Nameable{
 };
 
 struct Line : public NavitiaHeader, Nameable {
-    const static Type_e type = eLine;
+    const static Type_e type = Type_e::eLine;
     std::string code;
     std::string forward_name;
     std::string backward_name;
@@ -311,7 +312,7 @@ struct Line : public NavitiaHeader, Nameable {
 };
 
 struct Route : public NavitiaHeader, Nameable{
-    const static Type_e type = eRoute;
+    const static Type_e type = Type_e::eRoute;
     bool is_frequence;
     bool is_forward;
     bool is_adapted;
@@ -339,7 +340,7 @@ struct Route : public NavitiaHeader, Nameable{
 };
 
 struct VehicleJourney: public NavitiaHeader, Nameable {
-    const static Type_e type = eVehicleJourney;
+    const static Type_e type = Type_e::eVehicleJourney;
     idx_t route_idx;
     idx_t company_idx;
     idx_t mode_idx;
@@ -356,7 +357,7 @@ struct VehicleJourney: public NavitiaHeader, Nameable {
 };
 
 struct Vehicle: public NavitiaHeader, Nameable {
-    const static Type_e type = eVehicle;
+    const static Type_e type = Type_e::eVehicle;
 };
 
 struct Equipement : public NavitiaHeader {
@@ -376,7 +377,7 @@ struct Equipement : public NavitiaHeader {
 };
 
 struct RoutePoint : public NavitiaHeader{
-    const static Type_e type = eRoutePoint;
+    const static Type_e type = Type_e::eRoutePoint;
     int order;
     bool main_stop_point;
     int fare_section;
@@ -395,7 +396,7 @@ struct RoutePoint : public NavitiaHeader{
 };
 
 struct ValidityPattern : public NavitiaHeader {
-    const static Type_e type = eValidityPattern;
+    const static Type_e type = Type_e::eValidityPattern;
 private:
     bool is_valid(int duration) const;
 public:
@@ -421,7 +422,7 @@ public:
 };
 
 struct StopPoint : public NavitiaHeader, Nameable{
-    const static Type_e type = eStopPoint;
+    const static Type_e type = Type_e::eStopPoint;
     GeographicalCoord coord;
     int fare_zone;
 
@@ -446,7 +447,7 @@ struct StopPoint : public NavitiaHeader, Nameable{
 };
 
 struct StopTime: public NavitiaHeader{
-    const static Type_e type = eStopTime;
+    const static Type_e type = Type_e::eStopTime;
     int arrival_time; ///< En secondes depuis minuit
     int departure_time; ///< En secondes depuis minuit
     size_t vehicle_journey_idx;
@@ -480,29 +481,6 @@ public:
     boost::bimap<Type_e, std::string> types_string;
 };
 
-/** Correspondance entre les enums de type et les classes
-  *
-  *  L'utilisation des mpl::int_ est nécessaire car on ne peut pas passer d'énum de base (c'est naze)
-  */
-typedef boost::mpl::map< mpl::pair<mpl::int_<eValidityPattern>, ValidityPattern>,
-                         mpl::pair<mpl::int_<eLine>, Line>,
-                         mpl::pair<mpl::int_<eRoute>, Route>,
-                         mpl::pair<mpl::int_<eVehicleJourney>, VehicleJourney>,
-                         mpl::pair<mpl::int_<eStopPoint>, StopPoint>,
-                         mpl::pair<mpl::int_<eStopArea>, StopArea>,
-                         mpl::pair<mpl::int_<eStopTime>, StopTime>,
-                         mpl::pair<mpl::int_<eNetwork>, Network>,
-                         mpl::pair<mpl::int_<eMode>, Mode>,
-                         mpl::pair<mpl::int_<eModeType>, ModeType>,
-                         mpl::pair<mpl::int_<eCity>, City>,
-                         mpl::pair<mpl::int_<eConnection>, Connection>,
-                         mpl::pair<mpl::int_<eRoutePoint>, RoutePoint>,
-                         mpl::pair<mpl::int_<eDistrict>, District>,
-                         mpl::pair<mpl::int_<eDepartment>, Department>,
-                         mpl::pair<mpl::int_<eCompany>, Company>,
-                         mpl::pair<mpl::int_<eVehicle>, Vehicle>,
-                         mpl::pair<mpl::int_<eCountry>, Country>
-                      > enum_type_map;
 
 /** Type pour gérer le polymorphisme en entrée de l'API
   *
@@ -524,7 +502,7 @@ struct EntryPoint {
     EntryPoint(const std::string & uri){
         size_t pos = uri.find(":");
         if(pos == std::string::npos)
-            type = eUnknown;
+            type = Type_e::eUnknown;
         else {
             type = static_data::get()->typeByCaption(uri.substr(0,pos));
             external_code = uri.substr(pos+1);

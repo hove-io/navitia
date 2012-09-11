@@ -78,24 +78,24 @@ BOOST_FUSION_ADAPT_STRUCT(
         txt %= qi::lexeme[+(qi::alnum|'_'|'|'|':'|'-')]; // Match du texte
 
 
-        table =   qi::string("stop_areas")[qi::_val = eStopArea]
-                | qi::string("stop_points")[qi::_val = eStopPoint]
-                | qi::string("lines")[qi::_val = eLine]
-                | qi::string("routes")[qi::_val = eRoute]
-                | qi::string("validity_patterns")[qi::_val = eValidityPattern]
-                | qi::string("vehicle_journeys")[qi::_val = eVehicleJourney]
-                | qi::string("stop_times")[qi::_val = eStopTime]
-                | qi::string("networks")[qi::_val = eNetwork]
-                | qi::string("modes")[qi::_val = eMode]
-                | qi::string("mode_types")[qi::_val = eModeType]
-                | qi::string("cities")[qi::_val = eCity]
-                | qi::string("connections")[qi::_val = eConnection]
-                | qi::string("route_points")[qi::_val = eRoutePoint]
-                | qi::string("districts")[qi::_val = eDistrict]
-                | qi::string("departments")[qi::_val = eDepartment]
-                | qi::string("companies")[qi::_val = eCompany]
-                | qi::string("vehicles")[qi::_val = eVehicle]
-                | qi::string("countries")[qi::_val = eCountry];
+        table =   qi::string("stop_areas")[qi::_val = Type_e::eStopArea]
+                | qi::string("stop_points")[qi::_val = Type_e::eStopPoint]
+                | qi::string("lines")[qi::_val = Type_e::eLine]
+                | qi::string("routes")[qi::_val = Type_e::eRoute]
+                | qi::string("validity_patterns")[qi::_val = Type_e::eValidityPattern]
+                | qi::string("vehicle_journeys")[qi::_val = Type_e::eVehicleJourney]
+                | qi::string("stop_times")[qi::_val = Type_e::eStopTime]
+                | qi::string("networks")[qi::_val = Type_e::eNetwork]
+                | qi::string("modes")[qi::_val = Type_e::eMode]
+                | qi::string("mode_types")[qi::_val = Type_e::eModeType]
+                | qi::string("cities")[qi::_val = Type_e::eCity]
+                | qi::string("connections")[qi::_val = Type_e::eConnection]
+                | qi::string("route_points")[qi::_val = Type_e::eRoutePoint]
+                | qi::string("districts")[qi::_val = Type_e::eDistrict]
+                | qi::string("departments")[qi::_val = Type_e::eDepartment]
+                | qi::string("companies")[qi::_val = Type_e::eCompany]
+                | qi::string("vehicles")[qi::_val = Type_e::eVehicle]
+                | qi::string("countries")[qi::_val = Type_e::eCountry];
 
         bin_op =  qi::string("<=")[qi::_val = LEQ]
                 | qi::string(">=")[qi::_val = GEQ]
@@ -182,11 +182,11 @@ pbnavitia::Response extract_data(PT_Data & data, const Request & r, std::vector<
             std::vector<Type_e> path;
             Type_e current = col.first;
             path.push_back(current);
-            if(all_paths[current] == current && current != r.requested_type)
+            if(all_paths[static_cast<int>(current)] == current && current != r.requested_type)
                 std::cerr << "Impossible de trouver un chemin de " << static_data::get()->captionByType(r.requested_type)
                     << "->" << static_data::get()->captionByType(current) << std::endl;
-            while(all_paths[current] != current){
-                current = all_paths[current];
+            while(all_paths[static_cast<int>(current)] != current){
+                current = all_paths[static_cast<int>(current)];
                 path.push_back(current);
             }
 
@@ -207,25 +207,26 @@ pbnavitia::Response extract_data(PT_Data & data, const Request & r, std::vector<
                 }
                 BOOST_FOREACH(std::string column_name, col.second){
                     switch(col.first){
-                        case eLine: set_value(item, data.lines.at(idx), column_name); break;
-                        case eValidityPattern: set_value(item, data.validity_patterns.at(idx), column_name); break;
-                        case eRoute: set_value(item, data.routes.at(idx), column_name); break;
-                        case eVehicleJourney: set_value(item, data.vehicle_journeys.at(idx), column_name); break;
-                        case eStopPoint: set_value(item, data.stop_points.at(idx), column_name); break;
-                        case eStopArea: set_value(item, data.stop_areas.at(idx), column_name); break;
-                        case eStopTime: set_value(item, data.stop_times.at(idx), column_name); break;
-                        case eNetwork: set_value(item, data.networks.at(idx), column_name); break;
-                        case eMode: set_value(item, data.modes.at(idx), column_name); break;
-                        case eModeType: set_value(item, data.mode_types.at(idx), column_name); break;
-                        case eCity: set_value(item, data.cities.at(idx), column_name); break;
-                        case eConnection: set_value(item, data.connections.at(idx), column_name); break;
-                        case eRoutePoint: set_value(item, data.route_points.at(idx), column_name); break;
-                        case eDistrict: set_value(item, data.districts.at(idx), column_name); break;
-                        case eDepartment: set_value(item, data.departments.at(idx), column_name); break;
-                        case eCompany: set_value(item, data.companies.at(idx), column_name); break;
-                        case eVehicle: set_value(item, data.vehicles.at(idx), column_name); break;
-                        case eCountry: set_value(item, data.countries.at(idx), column_name); break;
-                        case eUnknown: break;
+                        case Type_e::eLine: set_value(item, data.lines.at(idx), column_name); break;
+                        case Type_e::eValidityPattern: set_value(item, data.validity_patterns.at(idx), column_name); break;
+                        case Type_e::eRoute: set_value(item, data.routes.at(idx), column_name); break;
+                        case Type_e::eVehicleJourney: set_value(item, data.vehicle_journeys.at(idx), column_name); break;
+                        case Type_e::eStopPoint: set_value(item, data.stop_points.at(idx), column_name); break;
+                        case Type_e::eStopArea: set_value(item, data.stop_areas.at(idx), column_name); break;
+                        case Type_e::eStopTime: set_value(item, data.stop_times.at(idx), column_name); break;
+                        case Type_e::eNetwork: set_value(item, data.networks.at(idx), column_name); break;
+                        case Type_e::eMode: set_value(item, data.modes.at(idx), column_name); break;
+                        case Type_e::eModeType: set_value(item, data.mode_types.at(idx), column_name); break;
+                        case Type_e::eCity: set_value(item, data.cities.at(idx), column_name); break;
+                        case Type_e::eConnection: set_value(item, data.connections.at(idx), column_name); break;
+                        case Type_e::eRoutePoint: set_value(item, data.route_points.at(idx), column_name); break;
+                        case Type_e::eDistrict: set_value(item, data.districts.at(idx), column_name); break;
+                        case Type_e::eDepartment: set_value(item, data.departments.at(idx), column_name); break;
+                        case Type_e::eCompany: set_value(item, data.companies.at(idx), column_name); break;
+                        case Type_e::eVehicle: set_value(item, data.vehicles.at(idx), column_name); break;
+                        case Type_e::eCountry: set_value(item, data.countries.at(idx), column_name); break;
+                        case Type_e::eWay: break;
+                        case Type_e::eUnknown: break;
                     }
                 }
             }
@@ -290,11 +291,11 @@ google::protobuf::Message* get_message(pbnavitia::PTReferential * row, Type_e ty
 
 }
 
-template<Type_e E>
+template<typename T>
 std::vector<idx_t> get_indexes(std::vector<WhereClause> clauses,  Type_e requested_type, PT_Data & d)
 {
-    typedef typename boost::mpl::at<enum_type_map, boost::mpl::int_<E> >::type T;
-    auto data = d.get_data<E>();
+    //typedef typename boost::mpl::at<enum_type_map, boost::mpl::int_<E> >::type T;
+    auto data = d.get_data<T>();
 
     Index<T> filtered(data, build_clause<T>(clauses));
     auto offsets = filtered.get_offsets();
@@ -309,10 +310,11 @@ std::vector<idx_t> get_indexes(std::vector<WhereClause> clauses,  Type_e request
 
     Type_e current = clauses[0].col.table;
     std::vector<Type_e> path = find_path(requested_type);
-    while(path[current] != current){
-        indexes = d.get_target_by_source(current, path[current], indexes);
-        std::cout << static_data::get()->captionByType(current) << " -> " << static_data::get()->captionByType(path[current]) << std::endl;
-        current = path[current];
+    Type_e prev = path[static_cast<int>(current)];
+    while(prev != current){
+        indexes = d.get_target_by_source(current, prev, indexes);
+        std::cout << static_data::get()->captionByType(current) << " -> " << static_data::get()->captionByType(prev) << std::endl;
+        current = prev;
     }
     return indexes;
 }
@@ -322,11 +324,11 @@ std::vector<idx_t> get(Type_e source, Type_e destination, idx_t source_idx, PT_D
     std::vector<Type_e> path;
 
     Type_e current = destination;
-    while(tree[current] != current){
+    while(tree[static_cast<int>(current)] != current){
         path.push_back(current);
     }
 
-    std::vector<idx_t> indexes = d.get_target_by_one_source(source, path[source], source_idx);
+    std::vector<idx_t> indexes = d.get_target_by_one_source(source, path[static_cast<int>(source)], source_idx);
     for(size_t i = path.size() - 1; i > 0; --i){
         indexes = d.get_target_by_source(path[i], path[i-1], indexes);
     }
@@ -374,25 +376,26 @@ pbnavitia::Response query(std::string request, PT_Data & data){
     std::vector<idx_t> indexes;
     BOOST_FOREACH(type_clauses, clauses){
         switch(type_clauses.first){
-        case eLine: indexes = get_indexes<eLine>(type_clauses.second, r.requested_type,data); break;
-        case eValidityPattern: indexes = get_indexes<eValidityPattern>(type_clauses.second, r.requested_type, data); break;
-        case eRoute: indexes = get_indexes<eRoute>(type_clauses.second, r.requested_type, data); break;
-        case eVehicleJourney: indexes = get_indexes<eVehicleJourney>(type_clauses.second, r.requested_type, data); break;
-        case eStopPoint: indexes = get_indexes<eStopPoint>(type_clauses.second, r.requested_type, data); break;
-        case eStopArea: indexes = get_indexes<eStopArea>(type_clauses.second, r.requested_type, data); break;
-        case eStopTime: indexes = get_indexes<eStopTime>(type_clauses.second, r.requested_type, data); break;
-        case eNetwork: indexes = get_indexes<eNetwork>(type_clauses.second, r.requested_type, data); break;
-        case eMode: indexes = get_indexes<eMode>(type_clauses.second, r.requested_type, data); break;
-        case eModeType: indexes = get_indexes<eModeType>(type_clauses.second, r.requested_type, data); break;
-        case eCity: indexes = get_indexes<eCity>(type_clauses.second, r.requested_type, data); break;
-        case eConnection: indexes = get_indexes<eConnection>(type_clauses.second, r.requested_type, data); break;
-        case eRoutePoint: indexes = get_indexes<eRoutePoint>(type_clauses.second, r.requested_type, data); break;
-        case eDistrict: indexes = get_indexes<eDistrict>(type_clauses.second, r.requested_type, data); break;
-        case eDepartment: indexes = get_indexes<eDepartment>(type_clauses.second, r.requested_type, data); break;
-        case eCompany: indexes = get_indexes<eCompany>(type_clauses.second, r.requested_type, data); break;
-        case eVehicle: indexes = get_indexes<eVehicle>(type_clauses.second, r.requested_type, data); break;
-        case eCountry: indexes = get_indexes<eCountry>(type_clauses.second, r.requested_type, data); break;
-        case eUnknown: break;
+        case Type_e::eLine: indexes = get_indexes<Line>(type_clauses.second, r.requested_type,data); break;
+        case Type_e::eValidityPattern: indexes = get_indexes<ValidityPattern>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eRoute: indexes = get_indexes<Route>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eVehicleJourney: indexes = get_indexes<VehicleJourney>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eStopPoint: indexes = get_indexes<StopPoint>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eStopArea: indexes = get_indexes<StopArea>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eStopTime: indexes = get_indexes<StopTime>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eNetwork: indexes = get_indexes<Network>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eMode: indexes = get_indexes<Mode>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eModeType: indexes = get_indexes<ModeType>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eCity: indexes = get_indexes<City>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eConnection: indexes = get_indexes<Connection>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eRoutePoint: indexes = get_indexes<RoutePoint>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eDistrict: indexes = get_indexes<District>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eDepartment: indexes = get_indexes<Department>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eCompany: indexes = get_indexes<Company>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eVehicle: indexes = get_indexes<Vehicle>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eCountry: indexes = get_indexes<Country>(type_clauses.second, r.requested_type, data); break;
+        case Type_e::eWay: break;
+        case Type_e::eUnknown: break;
         }
         // Attention ! les structures doivent être triées !
         std::vector<idx_t> tmp_indexes;

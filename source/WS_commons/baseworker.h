@@ -6,7 +6,6 @@
 #include <boost/bind.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <vector>
 #include <chrono>
 #include <boost/accumulators/accumulators.hpp>
@@ -97,7 +96,7 @@ namespace webservice
             std::vector<std::string> tokens;
 
             boost::algorithm::split(tokens, raw_params, boost::algorithm::is_any_of("&"));
-            BOOST_FOREACH(std::string token, tokens) {
+            for(std::string token : tokens) {
                 std::vector<std::string> elts;
                 boost::algorithm::split(elts, token, boost::algorithm::is_any_of("="));
                 if(elts.size() == 1 && elts[0] != "")
@@ -108,7 +107,7 @@ namespace webservice
 
             std::vector<std::string> tokens2;
             boost::algorithm::split(tokens2, request.data, boost::algorithm::is_any_of("&"));
-            BOOST_FOREACH(std::string token, tokens2) {
+            for(std::string token : tokens2) {
                 size_t pos = token.find("=");
                 if(pos != std::string::npos && token != "")
                     request.params[boost::algorithm::to_lower_copy(token.substr(0, pos))] = token.substr(pos +1);
@@ -198,12 +197,12 @@ namespace webservice
             rd.status_code = 200;
             rd.response << "<html><head><title>Liste des API</title></head><body>\n"
                     << "<h1>Liste des APIs</h1>\n";
-            BOOST_FOREACH(auto api, api_metadata){
+            for(auto api : api_metadata){
                 rd.response << "<h2>" << api.first << "</h2>\n"
                         << "<h3>Description</h3><p>" << api.second.description << "</p>\n"
                         << "<h3>Paramètres</h3><table border=1>"
                         << "<tr><th>Paramètre</th><th>Type</th><th>Description</th><th>Obligatoire</th></tr>\n";
-                BOOST_FOREACH(auto param, api.second.params){
+                for(auto param : api.second.params){
                     std::string type_caption;
                     switch(param.second.type){
                     case ApiParameter::STRING: type_caption = "Chaîne de caractères"; break;
@@ -231,7 +230,7 @@ namespace webservice
             rd.status_code = 200;
             rd.response << "<html><head><title>Statistiques</title></head><body>\n"
                     << "<h1>Statistiques</h1>";
-            BOOST_FOREACH(auto api, apis) {
+            for(auto api : apis) {
                 rd.response << "<h2>" << api.first << "</h2>\n"
                         << "<p>Temps moyen (ms) : " << mean(static_data().means[api.first]) << "<br/>\n"
                         << "Temps max d'appel (ms) : " << (max)(static_data().means[api.first]) << "<br/>\n"
@@ -266,8 +265,7 @@ namespace webservice
             rd.response << "<h2> Paramètres obligatoires </h2>"
                         << "<ul>";
 
-            std::pair<std::string, ApiParameter> ap;
-            BOOST_FOREACH(ap, api_metadata[api].params){
+            for(std::pair<std::string, ApiParameter> ap : api_metadata[api].params){
                 rd.response << "<li><b>" << ap.first << "</b> : ";
                 if(ap.second.mandatory){
                     if(request.params.find(ap.first) == request.params.end())
@@ -282,8 +280,7 @@ namespace webservice
                         << "<table border=\"1\">"
                         << "<tr><td>nom</td><td>validité</td><td>valeur parsé</td><td>valeur originel</td></tr>";
 
-            std::pair<std::string, std::string> sp;
-            BOOST_FOREACH(sp, request.params){
+            for(std::pair<std::string, std::string> sp : request.params){
                 if(sp.first != "api"){
                     RequestParameter rp = api_metadata[api].convert_parameter(sp.first, sp.second);
                     rd.response << "<tr><td>" << sp.first << "</td>";

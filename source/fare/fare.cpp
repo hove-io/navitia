@@ -9,6 +9,16 @@
 #include <boost/spirit/include/phoenix_operator.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <boost/fusion/include/adapt_struct.hpp>
+/// Wrapper pour pouvoir parser une condition en une seule fois avec boost::spirit::qi
+BOOST_FUSION_ADAPT_STRUCT(
+    Condition,
+    (std::string, key)
+    (Comp_e, comparaison)
+    (std::string, value)
+)
+
+
 // Oui... le debug c'est à la porcasse, par flemme de devoir compiler log4cpp sous windows
 //#define DEBUG
 
@@ -40,7 +50,7 @@ std::vector<Condition> parse_conditions(const std::string & conditions){
     std::vector<Condition> ret;
     std::vector<std::string> string_vec;
     boost::algorithm::split(string_vec, conditions, boost::algorithm::is_any_of("&"));
-    BOOST_FOREACH(const std::string & cond_str, string_vec){
+    for(const std::string & cond_str : string_vec){
         ret.push_back(parse_condition(cond_str));
     }
     return ret;

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "utils/csv.h"
-#include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 
@@ -226,10 +224,3 @@ struct Fare {
 };
 
 
-/// Wrapper pour pouvoir parser une condition en une seule fois avec boost::spirit::qi
-BOOST_FUSION_ADAPT_STRUCT(
-    Condition,
-    (std::string, key)
-    (Comp_e, comparaison)
-    (std::string, value)
-)

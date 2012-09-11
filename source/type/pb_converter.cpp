@@ -18,7 +18,7 @@ template<nt::Type_e type>
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int max_depth = 0){throw std::exception();}
 
 template<>
-void fill_pb_object<nt::eCity>(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int){
+void fill_pb_object<nt::Type_e::eCity>(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int){
     pbnavitia::City* city = dynamic_cast<pbnavitia::City*>(message);
     nt::City city_n = data.pt_data.cities.at(idx);
     city->set_id(city_n.id);
@@ -34,7 +34,7 @@ void fill_pb_object<nt::eCity>(nt::idx_t idx, const nt::Data& data, google::prot
  *
  */
 template<>
-void fill_pb_object<nt::eStopArea>(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int max_depth){
+void fill_pb_object<nt::Type_e::eStopArea>(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int max_depth){
     pbnavitia::StopArea* stop_area = dynamic_cast<pbnavitia::StopArea*>(message);
     nt::StopArea sa = data.pt_data.stop_areas.at(idx);
     stop_area->set_id(sa.id);
@@ -44,7 +44,7 @@ void fill_pb_object<nt::eStopArea>(nt::idx_t idx, const nt::Data& data, google::
     stop_area->mutable_coord()->set_y(sa.coord.y);
     if(max_depth > 0){
         try{
-            fill_pb_object<nt::eCity>(sa.city_idx, data, stop_area->mutable_child()->add_city_list(), max_depth-1);
+            fill_pb_object<nt::Type_e::eCity>(sa.city_idx, data, stop_area->mutable_child()->add_city_list(), max_depth-1);
         }catch(std::out_of_range e){}
     }
 }
@@ -54,7 +54,7 @@ void fill_pb_object<nt::eStopArea>(nt::idx_t idx, const nt::Data& data, google::
  *
  */
 template<>
-void fill_pb_object<nt::eStopPoint>(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int max_depth){
+void fill_pb_object<nt::Type_e::eStopPoint>(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int max_depth){
     pbnavitia::StopPoint* stop_point = dynamic_cast<pbnavitia::StopPoint*>(message);
     nt::StopPoint sp = data.pt_data.stop_points.at(idx);
     stop_point->set_id(sp.id);
@@ -64,20 +64,18 @@ void fill_pb_object<nt::eStopPoint>(nt::idx_t idx, const nt::Data& data, google:
     stop_point->mutable_coord()->set_y(sp.coord.y);
     if(max_depth > 0){
         try{
-            fill_pb_object<nt::eCity>(sp.city_idx, data, stop_point->mutable_child()->add_city_list(), max_depth-1);
+            fill_pb_object<nt::Type_e::eCity>(sp.city_idx, data, stop_point->mutable_child()->add_city_list(), max_depth-1);
         }catch(std::out_of_range e){}
         
     }
 }
-
-
 
 /**
  * spécialisation de fill_pb_object pour les Way
  *
  */
 template<>
-void fill_pb_object<nt::eWay>(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int max_depth){
+void fill_pb_object<nt::Type_e::eWay>(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int max_depth){
     pbnavitia::Way* way = dynamic_cast<pbnavitia::Way*>(message);
     navitia::streetnetwork::Way w = data.street_network.ways.at(idx);
     way->set_name(w.name);
@@ -85,7 +83,7 @@ void fill_pb_object<nt::eWay>(nt::idx_t idx, const nt::Data& data, google::proto
     stop_point->mutable_coord()->set_y(sp.coord.y);*/
     if(max_depth > 0){
         try{
-            fill_pb_object<nt::eCity>(w.city_idx, data, way->mutable_child()->add_city_list(), max_depth-1);
+            fill_pb_object<nt::Type_e::eCity>(w.city_idx, data, way->mutable_child()->add_city_list(), max_depth-1);
         }catch(std::out_of_range e){
             std::cout << w.city_idx << std::endl;
         }

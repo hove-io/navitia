@@ -1,7 +1,7 @@
 #include "locker.h"
 #include "type/data.h"
 
-namespace navitia{ namespace utils{
+namespace navitia{ namespace type {
     Locker::Locker() : locked(false), data(NULL){}
 
     Locker::Locker(navitia::type::Data& data, bool) : data(&data), exclusive(exclusive) {

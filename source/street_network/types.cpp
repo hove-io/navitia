@@ -1,12 +1,9 @@
 #include "types.h"
 
 #include <boost/foreach.hpp>
-#include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <fstream>
 #include <unordered_map>
 
-namespace pt = boost::posix_time;
-using navitia::type::City;
 using navitia::type::idx_t;
 namespace navitia{ namespace streetnetwork{
 
@@ -180,7 +177,7 @@ std::vector< std::pair<idx_t, double> > StreetNetwork::find_nearest(const type::
     std::vector< std::pair<idx_t, type::GeographicalCoord> > elements = pl.find_within(start_coord, radius);
 
     // À chaque fois on regarde la distance réelle en suivant le filaire de voirie
-    BOOST_FOREACH(auto element, elements){
+    for(auto element : elements){
         ProjectionData current(element.second, *this);
         size_t best = dists[current.vertices[0]] < dists[current.vertices[1]] ? 0 : 1;
 

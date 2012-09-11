@@ -1,7 +1,6 @@
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/foreach.hpp>
 #include <fstream>
 #include <iostream>
 
@@ -14,7 +13,7 @@ typedef boost::tokenizer<boost::char_separator<char> > my_tok;
 
 
 unsigned int getSaIdxFromName(std::string name, navitia::type::PT_Data &pt_data) {
-    BOOST_FOREACH(navitia::type::StopArea sa, pt_data.stop_areas) {
+    for(const navitia::type::StopArea &sa : pt_data.stop_areas) {
         if(sa.name == name)
             return sa.idx;
     }
@@ -26,8 +25,6 @@ int main(int argc, char * argv[]) {
         std::cout << "Mauvais nombre d'arguments " << std::endl;
         exit(1);
     }
-
-
 
     navimake::Data data; // Structure temporaire
     navitia::type::Data nav_data; // Structure définitive
@@ -111,7 +108,6 @@ int main(int argc, char * argv[]) {
         std::cout << "Request " << nameSA1 << " -> " << nameSA2 << " le " << ddate << " a " << dtime << std::endl;
 
         auto result = raptor.compute(getSaIdxFromName(nameSA1, nav_data.pt_data), getSaIdxFromName(nameSA2, nav_data.pt_data), dtime, nav_data.pt_data.validity_patterns.front().slide(boost::gregorian::from_undelimited_string(ddate)), navitia::routing::partirapres);
-        std::cout << result << std::endl;
     }
 
 

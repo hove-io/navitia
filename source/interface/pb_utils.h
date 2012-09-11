@@ -1,7 +1,6 @@
 #pragma once
-#include <string>
 #include "type/type.pb.h"
-#include "WS_commons/data_structures.h"
+#include <memory>
 
 /// Crée une version XML d'un message protocol buffer
 std::string pb2xml(const google::protobuf::Message* response);

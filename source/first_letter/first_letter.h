@@ -1,5 +1,4 @@
 #pragma once
-#include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/serialization/serialization.hpp>
@@ -69,7 +68,7 @@ struct FirstLetter
         int count = 0;
         boost::to_lower(str);
         boost::tokenizer<> tokens(str);
-        BOOST_FOREACH(auto token, tokens){
+        for(auto token: tokens){
             map[token].insert(position);
             count++;
         }
@@ -82,7 +81,7 @@ struct FirstLetter
       */
     void build(){
         vec_map.reserve(map.size());
-        BOOST_FOREACH(auto key_val, map){
+        for(auto key_val: map){
             vec_map.push_back(std::make_pair(key_val.first, std::vector<T>(key_val.second.begin(), key_val.second.end())));
         }
     }
@@ -136,7 +135,7 @@ struct FirstLetter
             for(++token_it; token_it != tokens.end(); ++token_it){
                 std::vector<T> new_result;
                 std::sort(result.begin(), result.end());                
-                BOOST_FOREACH(auto i,match(*token_it)){
+                for(auto i : match(*token_it)){
                     // Binary search fait une recherche dichotomique pour savoir si l'élément i existe
                     // S'il existe dans les deux cas, on le garde
                     if(binary_search(result.begin(), result.end(), i)){
@@ -206,7 +205,7 @@ struct FirstLetter
             }
 
             //remplir le tableau temp_result avec le résultat de qualité.
-            BOOST_FOREACH(auto pair, fl_result){
+            for(auto pair : fl_result){
                 quality.idx = pair.first;
                 quality.nb_found = pair.second.nb_found;
                 quality.quality = calc_quality(quality);
@@ -230,7 +229,7 @@ struct FirstLetter
         // Créer un vector de réponse:
         std::vector<fl_quality> vec_quality;
 
-        BOOST_FOREACH(auto i, index_result){
+        for(auto i : index_result){
             quality.idx = i;
             quality.nb_found = wordCount;
             quality.quality = calc_quality(quality);
@@ -246,7 +245,7 @@ struct FirstLetter
     /** pour chaque mot trouvé dans la liste des mots il faut incrémenter la propriété : nb_found*/
     /** Utilisé que pour une recherche partielle */
     void add_word_quality(std::unordered_map<T, fl_quality> & fl_result, const std::vector<T> &found) const{
-        BOOST_FOREACH(auto i, found){
+        for(auto i : found){
             fl_result[i].nb_found++;
 
         }

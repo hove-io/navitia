@@ -24,18 +24,18 @@ pbnavitia::Response make_response(std::vector<navitia::routing::Path> paths, con
                 pb_item->set_type("Public Transport");
             else
                 pb_item->set_type("Walking");
-            if(item.type == public_transport && item.vj_idx != navitia::type::invalid_idx){
-                const navitia::type::VehicleJourney & vj = d.pt_data.vehicle_journeys[item.vj_idx];
-                const navitia::type::Route & route = d.pt_data.routes[vj.route_idx];
-                const navitia::type::Line & line = d.pt_data.lines[route.line_idx];
+            if(item.type == public_transport && item.vj_idx != type::invalid_idx){
+                const type::VehicleJourney & vj = d.pt_data.vehicle_journeys[item.vj_idx];
+                const type::Route & route = d.pt_data.routes[vj.route_idx];
+                const type::Line & line = d.pt_data.lines[route.line_idx];
                 pb_item->set_line_name(line.name);
             }
             for(navitia::type::idx_t stop_point : item.stop_points){
-                fill_pb_object<navitia::type::eStopPoint>(stop_point, d, pb_item->add_stop_points());
+                fill_pb_object<type::Type_e::eStopPoint>(stop_point, d, pb_item->add_stop_points());
             }
             if(item.stop_points.size() >= 2) {
-                fill_pb_object<navitia::type::eStopArea>(d.pt_data.stop_points[item.stop_points.front()].stop_area_idx, d, pb_item->mutable_departure());
-                fill_pb_object<navitia::type::eStopArea>(d.pt_data.stop_points[item.stop_points.back()].stop_area_idx, d, pb_item->mutable_arrival());
+                fill_pb_object<type::Type_e::eStopArea>(d.pt_data.stop_points[item.stop_points.front()].stop_area_idx, d, pb_item->mutable_departure());
+                fill_pb_object<type::Type_e::eStopArea>(d.pt_data.stop_points[item.stop_points.back()].stop_area_idx, d, pb_item->mutable_arrival());
             }
 
         }

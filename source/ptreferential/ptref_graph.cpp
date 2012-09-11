@@ -37,75 +37,75 @@ struct Jointures {
     Graph g;
 
     Jointures() {
-        vertex_map[eValidityPattern] = boost::add_vertex(eValidityPattern, g);
-        vertex_map[eLine] = boost::add_vertex(eLine, g);
-        vertex_map[eRoute] = boost::add_vertex(eRoute, g);
-        vertex_map[eVehicleJourney] = boost::add_vertex(eVehicleJourney, g);
-        vertex_map[eStopPoint] = boost::add_vertex(eStopPoint, g);
-        vertex_map[eStopArea] = boost::add_vertex(eStopArea, g);
-        vertex_map[eStopTime] = boost::add_vertex(eStopTime, g);
-        vertex_map[eNetwork] = boost::add_vertex(eNetwork, g);
-        vertex_map[eMode] = boost::add_vertex(eMode, g);
-        vertex_map[eModeType] = boost::add_vertex(eModeType, g);
-        vertex_map[eCity] = boost::add_vertex(eCity, g);
-        vertex_map[eConnection] = boost::add_vertex(eConnection, g);
-        vertex_map[eRoutePoint] = boost::add_vertex(eRoutePoint, g);
-        vertex_map[eDistrict] = boost::add_vertex(eDistrict, g);
-        vertex_map[eCompany] = boost::add_vertex(eCompany, g);
-        vertex_map[eVehicle] = boost::add_vertex(eVehicle, g);
-        vertex_map[eCountry] = boost::add_vertex(eCountry, g);
+        vertex_map[Type_e::eValidityPattern] = boost::add_vertex(Type_e::eValidityPattern, g);
+        vertex_map[Type_e::eLine] = boost::add_vertex(Type_e::eLine, g);
+        vertex_map[Type_e::eRoute] = boost::add_vertex(Type_e::eRoute, g);
+        vertex_map[Type_e::eVehicleJourney] = boost::add_vertex(Type_e::eVehicleJourney, g);
+        vertex_map[Type_e::eStopPoint] = boost::add_vertex(Type_e::eStopPoint, g);
+        vertex_map[Type_e::eStopArea] = boost::add_vertex(Type_e::eStopArea, g);
+        vertex_map[Type_e::eStopTime] = boost::add_vertex(Type_e::eStopTime, g);
+        vertex_map[Type_e::eNetwork] = boost::add_vertex(Type_e::eNetwork, g);
+        vertex_map[Type_e::eMode] = boost::add_vertex(Type_e::eMode, g);
+        vertex_map[Type_e::eModeType] = boost::add_vertex(Type_e::eModeType, g);
+        vertex_map[Type_e::eCity] = boost::add_vertex(Type_e::eCity, g);
+        vertex_map[Type_e::eConnection] = boost::add_vertex(Type_e::eConnection, g);
+        vertex_map[Type_e::eRoutePoint] = boost::add_vertex(Type_e::eRoutePoint, g);
+        vertex_map[Type_e::eDistrict] = boost::add_vertex(Type_e::eDistrict, g);
+        vertex_map[Type_e::eCompany] = boost::add_vertex(Type_e::eCompany, g);
+        vertex_map[Type_e::eVehicle] = boost::add_vertex(Type_e::eVehicle, g);
+        vertex_map[Type_e::eCountry] = boost::add_vertex(Type_e::eCountry, g);
 
-        boost::add_edge(vertex_map[eDistrict], vertex_map[eCountry], g);
+        boost::add_edge(vertex_map[Type_e::eDistrict], vertex_map[Type_e::eCountry], g);
 
-        boost::add_edge(vertex_map[eStopArea], vertex_map[eCity], g);
-        boost::add_edge(vertex_map[eDepartment], vertex_map[eCity], g);
+        boost::add_edge(vertex_map[Type_e::eStopArea], vertex_map[Type_e::eCity], g);
+        boost::add_edge(vertex_map[Type_e::eDepartment], vertex_map[Type_e::eCity], g);
 
-        boost::add_edge(vertex_map[eStopPoint], vertex_map[eStopArea], g);
-        boost::add_edge(vertex_map[eCity], vertex_map[eStopArea], g);
+        boost::add_edge(vertex_map[Type_e::eStopPoint], vertex_map[Type_e::eStopArea], g);
+        boost::add_edge(vertex_map[Type_e::eCity], vertex_map[Type_e::eStopArea], g);
 
-        boost::add_edge(vertex_map[eLine], vertex_map[eNetwork], g);
+        boost::add_edge(vertex_map[Type_e::eLine], vertex_map[Type_e::eNetwork], g);
 
-        boost::add_edge(vertex_map[eLine], vertex_map[eCompany], g);
+        boost::add_edge(vertex_map[Type_e::eLine], vertex_map[Type_e::eCompany], g);
 
-        boost::add_edge(vertex_map[eLine], vertex_map[eModeType], g);
-        boost::add_edge(vertex_map[eMode], vertex_map[eModeType], g);
+        boost::add_edge(vertex_map[Type_e::eLine], vertex_map[Type_e::eModeType], g);
+        boost::add_edge(vertex_map[Type_e::eMode], vertex_map[Type_e::eModeType], g);
 
-        boost::add_edge(vertex_map[eModeType], vertex_map[eMode], g);
+        boost::add_edge(vertex_map[Type_e::eModeType], vertex_map[Type_e::eMode], g);
 
-        boost::add_edge(vertex_map[eModeType], vertex_map[eLine], g);
-        boost::add_edge(vertex_map[eMode], vertex_map[eLine], g);
-        boost::add_edge(vertex_map[eCompany], vertex_map[eLine], g);
-        boost::add_edge(vertex_map[eNetwork], vertex_map[eLine], g);
-        boost::add_edge(vertex_map[eRoute], vertex_map[eLine], g);
+        boost::add_edge(vertex_map[Type_e::eModeType], vertex_map[Type_e::eLine], g);
+        boost::add_edge(vertex_map[Type_e::eMode], vertex_map[Type_e::eLine], g);
+        boost::add_edge(vertex_map[Type_e::eCompany], vertex_map[Type_e::eLine], g);
+        boost::add_edge(vertex_map[Type_e::eNetwork], vertex_map[Type_e::eLine], g);
+        boost::add_edge(vertex_map[Type_e::eRoute], vertex_map[Type_e::eLine], g);
 
-        boost::add_edge(vertex_map[eLine], vertex_map[eRoute], g);
-        boost::add_edge(vertex_map[eModeType], vertex_map[eRoute], g);
-        boost::add_edge(vertex_map[eRoutePoint], vertex_map[eRoute], g);
-        boost::add_edge(vertex_map[eVehicleJourney], vertex_map[eRoute], g);
+        boost::add_edge(vertex_map[Type_e::eLine], vertex_map[Type_e::eRoute], g);
+        boost::add_edge(vertex_map[Type_e::eModeType], vertex_map[Type_e::eRoute], g);
+        boost::add_edge(vertex_map[Type_e::eRoutePoint], vertex_map[Type_e::eRoute], g);
+        boost::add_edge(vertex_map[Type_e::eVehicleJourney], vertex_map[Type_e::eRoute], g);
 
-        boost::add_edge(vertex_map[eRoute], vertex_map[eVehicleJourney], g);
-        boost::add_edge(vertex_map[eCompany], vertex_map[eVehicleJourney], g);
-        boost::add_edge(vertex_map[eMode], vertex_map[eVehicleJourney], g);
-        boost::add_edge(vertex_map[eVehicle], vertex_map[eVehicleJourney], g);
-        boost::add_edge(vertex_map[eValidityPattern], vertex_map[eVehicleJourney], g);
+        boost::add_edge(vertex_map[Type_e::eRoute], vertex_map[Type_e::eVehicleJourney], g);
+        boost::add_edge(vertex_map[Type_e::eCompany], vertex_map[Type_e::eVehicleJourney], g);
+        boost::add_edge(vertex_map[Type_e::eMode], vertex_map[Type_e::eVehicleJourney], g);
+        boost::add_edge(vertex_map[Type_e::eVehicle], vertex_map[Type_e::eVehicleJourney], g);
+        boost::add_edge(vertex_map[Type_e::eValidityPattern], vertex_map[Type_e::eVehicleJourney], g);
 
-        boost::add_edge(vertex_map[eRoute], vertex_map[eRoutePoint], g);
-        boost::add_edge(vertex_map[eStopPoint], vertex_map[eRoutePoint], g);
+        boost::add_edge(vertex_map[Type_e::eRoute], vertex_map[Type_e::eRoutePoint], g);
+        boost::add_edge(vertex_map[Type_e::eStopPoint], vertex_map[Type_e::eRoutePoint], g);
 
-        boost::add_edge(vertex_map[eStopArea], vertex_map[eStopPoint], g);
-        boost::add_edge(vertex_map[eCity], vertex_map[eStopPoint], g);
-        boost::add_edge(vertex_map[eMode], vertex_map[eStopPoint], g);
-        boost::add_edge(vertex_map[eNetwork], vertex_map[eStopPoint], g);
+        boost::add_edge(vertex_map[Type_e::eStopArea], vertex_map[Type_e::eStopPoint], g);
+        boost::add_edge(vertex_map[Type_e::eCity], vertex_map[Type_e::eStopPoint], g);
+        boost::add_edge(vertex_map[Type_e::eMode], vertex_map[Type_e::eStopPoint], g);
+        boost::add_edge(vertex_map[Type_e::eNetwork], vertex_map[Type_e::eStopPoint], g);
 
-        boost::add_edge(vertex_map[eVehicle], vertex_map[eStopTime], g);
-        boost::add_edge(vertex_map[eStopPoint], vertex_map[eStopTime], g);
+        boost::add_edge(vertex_map[Type_e::eVehicle], vertex_map[Type_e::eStopTime], g);
+        boost::add_edge(vertex_map[Type_e::eStopPoint], vertex_map[Type_e::eStopTime], g);
     }
 };
 
 std::vector<Type_e> find_path(Type_e source) {
     Jointures j;
     std::vector<vertex_t> predecessors(boost::num_vertices(j.g));
-    boost::dijkstra_shortest_paths(j.g, source,
+    boost::dijkstra_shortest_paths(j.g, j.vertex_map[source],
                                    boost::predecessor_map(&predecessors[0]).
                                    weight_map(boost::get(&Edge::weight, j.g)));
 

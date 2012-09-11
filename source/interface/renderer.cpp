@@ -37,7 +37,7 @@ void render(webservice::RequestData& request, webservice::ResponseData& response
 //on recopie le pool, de cette facon le vecteur de pointeur n'est pas modifié pendant l'execution
 void render_status(webservice::RequestData&, webservice::ResponseData& response, navitia::gateway::Context&, navitia::gateway::Pool pool){
     response.response << "<GatewayStatus><NavitiaList Count=\"" << pool.navitia_list.size() << "\">";
-    BOOST_FOREACH(auto nav, pool.navitia_list){
+    for(auto nav : pool.navitia_list){
         response.response << "<Navitia unusedThread=\"" << nav->unused_thread << "\" currentRequest=\"";
         response.response << nav->current_thread <<  "\">" << nav->url << "</Navitia>";
     }

@@ -19,21 +19,21 @@ template<type::Type_e type>
 void fill_pb_object(type::idx_t idx, const type::Data &data, google::protobuf::Message* message, int max_depth = 0);
 
 template<>
-void fill_pb_object<type::eCity>(type::idx_t idx, const type::Data &data, google::protobuf::Message* message, int);
+void fill_pb_object<type::Type_e::eCity>(type::idx_t idx, const type::Data &data, google::protobuf::Message* message, int);
 
 /**
  * spécialisation de fill_pb_object pour les StopArea
  *
  */
 template<>
-void fill_pb_object<type::eStopArea>(type::idx_t idx, const type::Data &data, google::protobuf::Message* message, int max_depth);
+void fill_pb_object<type::Type_e::eStopArea>(type::idx_t idx, const type::Data &data, google::protobuf::Message* message, int max_depth);
 
 /**
  * spécialisation de fill_pb_object pour les StopPoint
  *
  */
 template<>
-void fill_pb_object<type::eStopPoint>(type::idx_t idx, const type::Data &data, google::protobuf::Message* message, int max_depth);
+void fill_pb_object<type::Type_e::eStopPoint>(type::idx_t idx, const type::Data &data, google::protobuf::Message* message, int max_depth);
 
 
 /**
@@ -41,5 +41,5 @@ void fill_pb_object<type::eStopPoint>(type::idx_t idx, const type::Data &data, g
  *
  */
 template<>
-void fill_pb_object<type::eWay>(type::idx_t idx, const type::Data &data, google::protobuf::Message* message, int max_depth);
+void fill_pb_object<type::Type_e::eWay>(type::idx_t idx, const type::Data &data, google::protobuf::Message* message, int max_depth);
 }//namespace navitia

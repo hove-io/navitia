@@ -4,4 +4,4 @@ target_link_libraries(proximity_list_test ${Boost_LIBRARIES} proj types)
 ADD_TEST(test_proximity_list ${EXECUTABLE_OUTPUT_PATH}/proximity_list_test --report_level=no)
 
 add_library(proximitylist proximity_list.h proximitylist_api.cpp)
-target_link_libraries(proximitylist types)
+target_link_libraries(proximitylist utils)

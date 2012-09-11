@@ -1,7 +1,7 @@
 #include "pb_utils.h"
 #include <google/protobuf/descriptor.h>
-#include <boost/foreach.hpp>
-
+#include <boost/lexical_cast.hpp>
+#include <sstream>
 
 std::string pb2xml(const google::protobuf::Message* response){
     std::stringstream buffer;
@@ -12,7 +12,7 @@ std::string pb2xml(const google::protobuf::Message* response){
     std::vector<const google::protobuf::FieldDescriptor*> field_list;
     reflection->ListFields(*response, &field_list);
     buffer << "<" << descriptor->name() << " ";
-    BOOST_FOREACH(const google::protobuf::FieldDescriptor* field, field_list){
+    for(const google::protobuf::FieldDescriptor* field : field_list){
         if(field->is_repeated()) {
             child_buffer << "<" << field->name() << ">";
             for(int i=0; i < reflection->FieldSize(*response, field); ++i){
@@ -79,7 +79,7 @@ std::string pb2json(const google::protobuf::Message* response, int depth){
     reflection->ListFields(*response, &field_list);
 
     bool is_first = true;
-    BOOST_FOREACH(const google::protobuf::FieldDescriptor* field, field_list){
+    for(const google::protobuf::FieldDescriptor* field : field_list){
         if(is_first){
             is_first = false;
         } else {

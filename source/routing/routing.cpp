@@ -14,16 +14,6 @@ std::ostream & operator<<(std::ostream & os, const DateTime & dt){
     return os;
 }
 
-std::ostream & operator<<(std::ostream & os, const Path & path) {
-    os << "Nombre de correspondances : " << path.nb_changes << std::endl
-       << "Durée totale : " << path.duration << std::endl
-       << path.percent_visited << "% visited" << std::endl;
-
-    BOOST_FOREACH(PathItem item, path.items) {
-        //  os  << item.said << " à " << item.arrival.hour() << " le " << item.arrival.date() << " avec "  << item.line_idx <<std::endl;
-    }
-    return os;
-}
 
 std::string PathItem::print(const navitia::type::PT_Data & data) const {
     std::stringstream ss;

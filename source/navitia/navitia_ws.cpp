@@ -14,7 +14,7 @@
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential.h"
 #include <boost/tokenizer.hpp>
-#include "utils/locker.h"
+#include "type/locker.h"
 #include "interface/renderer.h"
 
 using namespace webservice;
@@ -36,14 +36,14 @@ class Worker : public BaseWorker<navitia::type::Data> {
      *
      * Retourne le Locker associé à la requéte, si il est bien vérouillé, le traitement peux continuer
      */
-    navitia::utils::Locker check_and_init(RequestData & request, navitia::type::Data & d,
+    nt::Locker check_and_init(RequestData & request, navitia::type::Data & d,
                                           pbnavitia::API requested_api, ResponseData& rd) {
         pb_response.set_requested_api(requested_api);
         if(!request.params_are_valid){
             rd.status_code = 400;
             rd.content_type = "application/octet-stream";
             pb_response.set_info("invalid argument");
-            return navitia::utils::Locker();
+            return nt::Locker();
         }
         if(!d.loaded){
             try{
@@ -52,16 +52,16 @@ class Worker : public BaseWorker<navitia::type::Data> {
                 rd.status_code = 500;
                 rd.content_type = "application/octet-stream";
                 pb_response.set_error("error while loading data");
-                return navitia::utils::Locker();
+                return nt::Locker();
             }
         }
-        navitia::utils::Locker locker(d);
+        nt::Locker locker(d);
         if(!locker.locked){
             //on est en cours de chargement
             rd.status_code = 503;
             rd.content_type = "application/octet-stream";
             pb_response.set_error("loading");
-            return navitia::utils::Locker();
+            return nt::Locker();
         }
         return locker;
     }
@@ -82,8 +82,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
     std::vector<nt::Type_e> parse_param_filter(const std::string& filter){
         std::vector<nt::Type_e> result;
         if(filter.empty()){//on utilise la valeur par défaut si pas de paramètre
-            result.push_back(nt::eStopArea);
-            result.push_back(nt::eCity);
+            result.push_back(nt::Type_e::eStopArea);
+            result.push_back(nt::Type_e::eCity);
             return result;
         }
 
@@ -101,7 +101,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData firstletter(RequestData& request, navitia::type::Data &data){
         ResponseData rd;
-        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::FIRSTLETTER, rd));
+        nt::Locker locker(check_and_init(request, data, pbnavitia::FIRSTLETTER, rd));
         if(!locker.locked){
             return rd;
         }
@@ -120,7 +120,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData streetnetwork(RequestData & request, navitia::type::Data & data){
         ResponseData rd;
-        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::STREET_NETWORK, rd));
+        nt::Locker locker(check_and_init(request, data, pbnavitia::STREET_NETWORK, rd));
         if(!locker.locked){
             return rd;
         }
@@ -135,7 +135,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     }
 
     void load(navitia::type::Data & data){
-        navitia::utils::Locker lock(data, true);
+        nt::Locker lock(data, true);
         try{
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
             Configuration * conf = Configuration::get();
@@ -172,7 +172,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData proximitylist(RequestData & request, navitia::type::Data &data){
         ResponseData rd;
-        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::PROXIMITYLIST, rd));
+        nt::Locker locker(check_and_init(request, data, pbnavitia::PROXIMITYLIST, rd));
         if(!locker.locked){
             return rd;
         }
@@ -198,7 +198,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData status(RequestData &, navitia::type::Data & data) {
         ResponseData rd;
-        navitia::utils::Locker lock(data);
+        nt::Locker lock(data);
         if(!lock.locked){
             return rd;
         }
@@ -226,14 +226,14 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData planner(RequestData & request, navitia::type::Data & d) {
         ResponseData rd;
-        navitia::utils::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, rd));
+        nt::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, rd));
         if(!locker.locked){
             return rd;
         }
 
         std::vector<navitia::routing::Path> pathes;
         int time = boost::get<int>(request.parsed_params["time"].value);
-        int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
+        //int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
         if(request.parsed_params.count("departure") == 1) {
             navitia::type::EntryPoint departure(boost::get<std::string>(request.parsed_params["departure"].value));
             navitia::type::EntryPoint destination(boost::get<std::string>(request.parsed_params["destination"].value));
@@ -259,14 +259,14 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData plannerreverse(RequestData & request, navitia::type::Data & d) {
         ResponseData rd;
-        navitia::utils::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, rd));
+        nt::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, rd));
         if(!locker.locked){
             return rd;
         }
 
         std::vector<navitia::routing::Path> pathes;
         int time = boost::get<int>(request.parsed_params["time"].value);
-        int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
+        //int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
         if(request.parsed_params.count("departure") ==1) {
             navitia::type::EntryPoint departure(boost::get<std::string>(request.parsed_params["departure"].value));
             navitia::type::EntryPoint destination(boost::get<std::string>(request.parsed_params["destination"].value));
@@ -291,7 +291,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData ptref(RequestData & request, navitia::type::Data &data){
         ResponseData rd;
 
-        navitia::utils::Locker locker(check_and_init(request, data, pbnavitia::PTREFERENTIAL, rd));
+        nt::Locker locker(check_and_init(request, data, pbnavitia::PTREFERENTIAL, rd));
         if(!locker.locked){
             return rd;
         }

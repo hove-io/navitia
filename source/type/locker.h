@@ -2,9 +2,7 @@
 
 namespace navitia{ namespace type{
     class Data;
-}}
 
-namespace navitia{ namespace utils{
     /**
      * structure permettant de simuler un finaly afin
      * de délocké le mutex en sortant de la fonction appelante

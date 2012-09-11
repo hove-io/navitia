@@ -19,7 +19,7 @@ Astar::Astar(const type::PT_Data & data) : data(data),
 void Astar::build_graph() {
     auto weightmap = boost::get(boost::edge_weight, a_graph);
     // 1. On relie les stoppoints aux stop_areas
-    BOOST_FOREACH(type::StopPoint stop_point, data.stop_points){
+    for(const type::StopPoint &stop_point : data.stop_points){
         as_edge_t ae;
         bool new_edge;
 
@@ -32,7 +32,7 @@ void Astar::build_graph() {
     }
 
     // 2. On relie les route_points aux stop points
-    BOOST_FOREACH(type::RoutePoint route_point, data.route_points) {
+    for(const type::RoutePoint &route_point: data.route_points) {
         as_edge_t ae;
         bool new_edge;
 
@@ -45,11 +45,11 @@ void Astar::build_graph() {
     }
 
     // 3.On met sur les arcs, entre les route points de stop areas différents, le temps minimal
-    BOOST_FOREACH(auto vj, data.vehicle_journeys) {
+    for(const auto vj: data.vehicle_journeys) {
         int prec_stid = -1;
         unsigned int route_point_depart = route_point_offset + data.route_points.size() + 1,
                      route_point_arrivee;
-        BOOST_FOREACH(auto stid, vj.stop_time_list) {
+        for(const auto stid: vj.stop_time_list) {
             route_point_arrivee = data.stop_times.at(stid).route_point_idx + route_point_offset;
             if(prec_stid != -1) {
                 if(route_point_depart > (route_point_offset + data.route_points.size()) || route_point_depart < route_point_offset) {
@@ -73,13 +73,6 @@ void Astar::build_graph() {
         }
     }
 
-    BOOST_FOREACH(auto vertex, boost::vertices(a_graph)) {
-        BOOST_FOREACH(auto edge, boost::out_edges(vertex, a_graph)) {
-           /* std::cout << "Weigth : " << */weightmap[edge];
-        }
-        if(boost::out_edges(vertex, a_graph).first == boost::out_edges(vertex, a_graph).second)
-            std::cout << "Probleme ?" << std::endl;
-    }
 }
 
 void Astar::build_heuristic(vertex_t destination){

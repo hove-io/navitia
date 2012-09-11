@@ -9,7 +9,6 @@ class RequestHandle;
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
-#include <boost/foreach.hpp>
 
 #ifdef WIN32
 #include <windows.h>

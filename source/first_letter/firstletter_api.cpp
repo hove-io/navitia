@@ -12,30 +12,30 @@ void create_pb(const std::vector<FirstLetter<nt::idx_t>::fl_quality>& result, co
         pbnavitia::FirstLetterItem* item = pb_fl.add_items();
         google::protobuf::Message* child = NULL;
         switch(type){
-            case nt::eStopArea:
+            case nt::Type_e::eStopArea:
                 child = item->mutable_stop_area();
-                fill_pb_object<nt::eStopArea>(result_item.idx, data, child, 2);
+                fill_pb_object<nt::Type_e::eStopArea>(result_item.idx, data, child, 2);
                 item->set_name(data.pt_data.stop_areas[result_item.idx].name);
                 item->set_uri(nt::EntryPoint::get_uri(data.pt_data.stop_areas[result_item.idx]));
                 item->set_quality(result_item.quality);
                 break;
-            case nt::eCity:
+            case nt::Type_e::eCity:
                 child = item->mutable_city();
-                fill_pb_object<nt::eCity>(result_item.idx, data, child);
+                fill_pb_object<nt::Type_e::eCity>(result_item.idx, data, child);
                 item->set_name(data.pt_data.cities[result_item.idx].name);
                 item->set_uri(nt::EntryPoint::get_uri(data.pt_data.cities[result_item.idx]));
                 item->set_quality(result_item.quality);
                 break;
-            case nt::eStopPoint:
+            case nt::Type_e::eStopPoint:
                 child = item->mutable_stop_point();
-                fill_pb_object<nt::eStopPoint>(result_item.idx, data, child, 2);
+                fill_pb_object<nt::Type_e::eStopPoint>(result_item.idx, data, child, 2);
                 item->set_name(data.pt_data.stop_points[result_item.idx].name);
                 item->set_uri(nt::EntryPoint::get_uri(data.pt_data.stop_points[result_item.idx]));
                 item->set_quality(result_item.quality);
                 break;
-        case nt::eWay:
+        case nt::Type_e::eWay:
             child = item->mutable_way();
-            fill_pb_object<nt::eWay>(result_item.idx, data, child, 2);
+            fill_pb_object<nt::Type_e::eWay>(result_item.idx, data, child, 2);
             item->set_name(data.street_network.ways[result_item.idx].name);
 //            item->set_uri(nt::EntryPoint::get_uri(data.pt_data.stop_points[result_item.idx]));
             item->set_quality(result_item.quality);
@@ -55,16 +55,16 @@ pbnavitia::Response firstletter(const std::string &name, const std::vector<nt::T
     pbnavitia::FirstLetter* pb = pb_response.mutable_firstletter();
     BOOST_FOREACH(nt::Type_e type, filter){
         switch(type){
-        case nt::eStopArea:
+        case nt::Type_e::eStopArea:
             result = d.pt_data.stop_area_first_letter.find_complete(name);
             break;
-        case nt::eStopPoint:
+        case nt::Type_e::eStopPoint:
             result = d.pt_data.stop_point_first_letter.find_complete(name);
             break;
-        case nt::eCity:
+        case nt::Type_e::eCity:
             result = d.pt_data.city_first_letter.find_complete(name);
             break;
-        case nt::eWay:
+        case nt::Type_e::eWay:
             result = d.street_network.fl.find_complete(name);
             break;
         default: break;
