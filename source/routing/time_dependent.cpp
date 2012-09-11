@@ -176,7 +176,7 @@ struct edge_less{
 
 
 Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day, senscompute /*sens*/){
-    DateTime start_time(day, hour);
+    DateTime start_time(day, hour - 180);
 
     try{
         boost::dijkstra_shortest_paths(this->graph, dep,

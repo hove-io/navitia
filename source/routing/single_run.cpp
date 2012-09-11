@@ -1,10 +1,11 @@
 #include "time_dependent.h"
 #include "raptor.h"
+//#include "static_raptor.h"
 #include "type/data.h"
 #include "utils/timer.h"
 #include <boost/program_options.hpp>
 
-#include <valgrind/callgrind.h>
+//#include <valgrind/callgrind.h>
 
 using namespace navitia;
 using namespace routing;
@@ -15,7 +16,7 @@ int main(int argc, char** argv){
     std::vector<std::string> algos;
     std::string start, target;
     unsigned int date, hour;
-    bool verif = true;
+    bool verif;
     std::string file;
     desc.add_options()
             ("help", "Affiche l'aide")
@@ -24,7 +25,8 @@ int main(int argc, char** argv){
             ("target,t", po::value<std::string>(&target), "ExternalCode du stopArea d'arrivée")
             ("date,d", po::value<unsigned int>(&date)->default_value(0), "Indexe de date")
             ("hour,h", po::value<unsigned int>(&hour)->default_value(8*3600), "Heure en secondes depuis minuit")
-            ("file,f", po::value<std::string>(&file)->default_value("data.nav.lz4"));
+            ("file,f", po::value<std::string>(&file)->default_value("data.nav.lz4"))
+            ("verif,v", po::value<bool>(&verif)->default_value(false), "Vérifier la cohérence des itinéraires");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -66,16 +68,18 @@ int main(int argc, char** argv){
                 router = new raptor::RAPTOR(data);
             } else if(algo == "time_dep"){
                 router = new timedependent::TimeDependent(data);
+       //     } else if(algo == "static"){
+       //         router = new StaticRaptor(data);
             } else {
                 std::cerr << "Algorithme inconnu : " << algo << std::endl;
                 return 1;
             }
 
             Timer t("Calcul avec l'algorithme " + algo);
-            CALLGRIND_START_INSTRUMENTATION;
+//            CALLGRIND_START_INSTRUMENTATION;
             Path res = router->compute(start_idx, target_idx, hour, date);
-            CALLGRIND_STOP_INSTRUMENTATION;
-            //std::cout << res << std::endl;
+//            CALLGRIND_STOP_INSTRUMENTATION;
+
             for(auto item : res.items) {
                 std::cout << item.print(data.pt_data) << std::endl;
             }

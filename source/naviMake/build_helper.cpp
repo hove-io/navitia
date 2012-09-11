@@ -100,16 +100,14 @@ void builder::connection(const std::string & name1, const std::string & name2, f
 
 }
 
-navitia::type::PT_Data builder::build() {
+ void builder::build(navitia::type::PT_Data & pt_data) {
     navitia::type::PT_Data result;
     connectors::build_routes(data);
     connectors::build_route_points(data);
 
     data.clean();
     data.sort();
-    data.transform(result);
-
-    return result;
+    data.transform(pt_data);
 }
 
 
