@@ -22,5 +22,5 @@ SET(DATA_SRC
 )
 
 add_library(data ${DATA_SRC})
-target_link_libraries(data ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} types streetnetwork)
+target_link_libraries(data ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} types streetnetwork routing)
 

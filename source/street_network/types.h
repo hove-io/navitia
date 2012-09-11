@@ -124,14 +124,14 @@ struct StreetNetwork {
       *
       * Pour le trouver, on cherche le nœud le plus proche, puis pour chaque arc adjacent, on garde le plus proche
       * Ce n'est donc pas optimal, mais pour améliorer ça, il faudrait indexer des segments, ou ratisser plus large
-      */
+     */
     edge_t nearest_edge(const type::GeographicalCoord & coordinates) const;
 
     /** On définit les coordonnées de départ, un proximitylist et un rayon
      *
      * Retourne tous les idx atteignables dans ce rayon, ainsi que la distance en suivant le filaire de voirie
      **/
-    std::vector< std::pair<type::idx_t, double> > find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius);
+    std::vector< std::pair<type::idx_t, double> > find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius) const;
 
 private :
     /** Initialise les structures nécessaires à dijkstra

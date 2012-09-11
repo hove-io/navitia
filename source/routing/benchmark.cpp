@@ -1,6 +1,6 @@
 #include "time_dependent.h"
 #include "raptor.h"
-#include "static_raptor.h"
+//#include "static_raptor.h"
 #include "type/data.h"
 #include "utils/timer.h"
 #include <boost/program_options.hpp>
@@ -94,12 +94,13 @@ int main(int argc, char** argv){
     std::map<std::string, std::vector<Result> > results;
     for(auto algo : algos){
         AbstractRouter * router;
-        if(algo == "raptor"){
+        if(algo == "raptor"){        
+            data.build_raptor();
             router = new raptor::RAPTOR(data);
         } else if(algo == "time_dep"){
             router = new timedependent::TimeDependent(data);
-        } else if(algo == "static"){
-            router = new StaticRaptor(data);
+    //    } else if(algo == "static"){
+    //        router = new StaticRaptor(data);
         } else {
             std::cerr << "Algorithme inconnu : " << algo << std::endl;
             return 1;

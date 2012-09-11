@@ -8,6 +8,7 @@
 #include "boost/utility.hpp"
 #include "meta_data.h"
 #include <boost/format.hpp>
+#include "routing/dataraptor.h"
 
 namespace navitia { namespace type {
 
@@ -40,6 +41,9 @@ public:
 
     /// streetnetwork
     navitia::streetnetwork::StreetNetwork street_network;
+
+    /// Données précalculées pour le raptor
+    routing::raptor::dataRAPTOR dataRaptor;
 
     /// Fixe les villes des voiries du filaire
     void set_cities();
@@ -121,6 +125,14 @@ public:
 
     /** Construit l'indexe ProximityList */
     void build_proximity_list();
+
+    /** Construit les données raptor */
+    void build_raptor();
+
+
+
+
+
 };
 
 
