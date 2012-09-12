@@ -28,7 +28,9 @@ namespace bg = boost::gregorian;
 class Worker : public BaseWorker<navitia::type::Data> {
 
     std::unique_ptr<navitia::routing::raptor::RAPTOR> calculateur;
-    
+
+    log4cplus::Logger logger;
+
     pbnavitia::Response pb_response;
     /**
      * Vérifie la validité des paramétres, charge les données si elles ne le sont pas,
@@ -37,7 +39,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
      * Retourne le Locker associé à la requéte, si il est bien vérouillé, le traitement peux continuer
      */
     nt::Locker check_and_init(RequestData & request, navitia::type::Data & d,
-                                          pbnavitia::API requested_api, ResponseData& rd) {
+            pbnavitia::API requested_api, ResponseData& rd) {
+
         pb_response.set_requested_api(requested_api);
         if(!request.params_are_valid){
             rd.status_code = 400;
@@ -65,7 +68,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         }
         return locker;
     }
-    
+
     ///netoyage pour le traitement
     virtual void pre_compute(webservice::RequestData&, nt::Data&){
         pb_response.Clear();
@@ -101,43 +104,62 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData firstletter(RequestData& request, navitia::type::Data &data){
         ResponseData rd;
-        nt::Locker locker(check_and_init(request, data, pbnavitia::FIRSTLETTER, rd));
-        if(!locker.locked){
-            return rd;
-        }
-
-        std::vector<nt::Type_e> filter = parse_param_filter(request.params["filter"]);
-        std::string name = boost::get<std::string>(request.parsed_params["name"].value);
-
+#ifndef DEBUG
         try{
-            pb_response = navitia::firstletter::firstletter(name, filter, data);
-            rd.status_code = 200;
+#endif
+            nt::Locker locker(check_and_init(request, data, pbnavitia::FIRSTLETTER, rd));
+            if(!locker.locked){
+                return rd;
+            }
+
+            std::vector<nt::Type_e> filter = parse_param_filter(request.params["filter"]);
+            std::string name = boost::get<std::string>(request.parsed_params["name"].value);
+
+            try{
+                pb_response = navitia::firstletter::firstletter(name, filter, data);
+                rd.status_code = 200;
+            }catch(...){
+                rd.status_code = 500;
+            }
+#ifndef DEBUG
+        }catch(std::exception& e){
+            LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
         }catch(...){
-            rd.status_code = 500;
+            LOG4CPLUS_FATAL(logger, "Erreur inconnue");
         }
+#endif
         return rd;
     }
 
     ResponseData streetnetwork(RequestData & request, navitia::type::Data & data){
         ResponseData rd;
-        nt::Locker locker(check_and_init(request, data, pbnavitia::STREET_NETWORK, rd));
-        if(!locker.locked){
-            return rd;
+#ifndef DEBUG
+        try{
+#endif
+            nt::Locker locker(check_and_init(request, data, pbnavitia::STREET_NETWORK, rd));
+            if(!locker.locked){
+                return rd;
+            }
+
+            nt::GeographicalCoord origin(boost::get<double>(request.parsed_params["startlon"].value), boost::get<double>(request.parsed_params["startlat"].value), true);
+            nt::GeographicalCoord destination(boost::get<double>(request.parsed_params["destlon"].value), boost::get<double>(request.parsed_params["destlat"].value), true);
+
+            pb_response = navitia::streetnetwork::street_network(origin, destination, data);
+            rd.status_code = 200;
+
+#ifndef DEBUG
+        }catch(std::exception& e){
+            LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+        }catch(...){
+            LOG4CPLUS_FATAL(logger, "Erreur inconnue");
         }
-
-        nt::GeographicalCoord origin(boost::get<double>(request.parsed_params["startlon"].value), boost::get<double>(request.parsed_params["startlat"].value), true);
-        nt::GeographicalCoord destination(boost::get<double>(request.parsed_params["destlon"].value), boost::get<double>(request.parsed_params["destlat"].value), true);
-
-        pb_response = navitia::streetnetwork::street_network(origin, destination, data);
-        rd.status_code = 200;
-
+#endif
         return rd;
     }
 
     void load(navitia::type::Data & data){
         nt::Locker lock(data, true);
         try{
-            log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
             Configuration * conf = Configuration::get();
             std::string database = conf->get_as<std::string>("GENERAL", "database", "IdF.nav");
             LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
@@ -151,11 +173,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
             data.loaded = false;
             throw;
         }
-        
+
     }
 
     ResponseData load(RequestData, navitia::type::Data & d){
-        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
         pb_response.set_requested_api(pbnavitia::LOAD);
         ResponseData rd;
         try{
@@ -173,25 +194,35 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData proximitylist(RequestData & request, navitia::type::Data &data){
         ResponseData rd;
-        nt::Locker locker(check_and_init(request, data, pbnavitia::PROXIMITYLIST, rd));
-        if(!locker.locked){
-            return rd;
-        }
-
-        navitia::type::GeographicalCoord coord(boost::get<double>(request.parsed_params["lon"].value),
-                                               boost::get<double>(request.parsed_params["lat"].value));
-        double distance = 500;
-        if(request.parsed_params.find("dist") != request.parsed_params.end())
-            distance = boost::get<double>(request.parsed_params["dist"].value);
-
-        std::vector<nt::Type_e> filter = parse_param_filter(request.params["filter"]);
-
+#ifndef DEBUG
         try{
-            pb_response = navitia::proximitylist::find(coord, distance, filter, data);
-            rd.status_code = 200;
+#endif
+            nt::Locker locker(check_and_init(request, data, pbnavitia::PROXIMITYLIST, rd));
+            if(!locker.locked){
+                return rd;
+            }
+
+            navitia::type::GeographicalCoord coord(boost::get<double>(request.parsed_params["lon"].value),
+                    boost::get<double>(request.parsed_params["lat"].value));
+            double distance = 500;
+            if(request.parsed_params.find("dist") != request.parsed_params.end())
+                distance = boost::get<double>(request.parsed_params["dist"].value);
+
+            std::vector<nt::Type_e> filter = parse_param_filter(request.params["filter"]);
+
+            try{
+                pb_response = navitia::proximitylist::find(coord, distance, filter, data);
+                rd.status_code = 200;
+            }catch(...){
+                rd.status_code = 500;
+            }
+#ifndef DEBUG
+        }catch(std::exception& e){
+            LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
         }catch(...){
-            rd.status_code = 500;
+            LOG4CPLUS_FATAL(logger, "Erreur inconnue");
         }
+#endif
         return rd;
     }
 
@@ -199,120 +230,163 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ResponseData status(RequestData &, navitia::type::Data & data) {
         ResponseData rd;
-        nt::Locker lock(data);
-        if(!lock.locked){
-            return rd;
+#ifndef DEBUG
+        try{
+#endif
+            nt::Locker lock(data);
+            if(!lock.locked){
+                return rd;
+            }
+
+            pbnavitia::Status* status = pb_response.mutable_status();
+            status->set_publication_date(pt::to_iso_string(data.meta.publication_date));
+            status->set_start_production_date(bg::to_iso_string(data.meta.production_date.begin()));
+            status->set_end_production_date(bg::to_iso_string(data.meta.production_date.end()));
+
+            for(auto data_sources: data.meta.data_sources){
+                status->add_data_sources(data_sources);
+            }
+            status->set_data_version(data.version);
+            status->set_navimake_version(data.meta.navimake_version);
+            status->set_navitia_version(NAVITIA_VERSION);
+
+            status->set_loaded(data.loaded);
+            status->set_last_load_status(data.last_load);
+            status->set_last_load_at(pt::to_iso_string(data.last_load_at));
+
+            rd.status_code = 200;
+#ifndef DEBUG
+        }catch(std::exception& e){
+            LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+        }catch(...){
+            LOG4CPLUS_FATAL(logger, "Erreur inconnue");
         }
-
-        pbnavitia::Status* status = pb_response.mutable_status();
-        status->set_publication_date(pt::to_iso_string(data.meta.publication_date));
-        status->set_start_production_date(bg::to_iso_string(data.meta.production_date.begin()));
-        status->set_end_production_date(bg::to_iso_string(data.meta.production_date.end()));
-
-        for(auto data_sources: data.meta.data_sources){
-            status->add_data_sources(data_sources);
-        }
-        status->set_data_version(data.version);
-        status->set_navimake_version(data.meta.navimake_version);
-        status->set_navitia_version(NAVITIA_VERSION);
-
-        status->set_loaded(data.loaded);
-        status->set_last_load_status(data.last_load);
-        status->set_last_load_at(pt::to_iso_string(data.last_load_at));
-
-        rd.status_code = 200;
+#endif
         return rd;
     }
 
 
     ResponseData planner(RequestData & request, navitia::type::Data & d) {
         ResponseData rd;
-        nt::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, rd));
-        if(!locker.locked){
-            return rd;
+#ifndef DEBUG
+        try{
+#endif
+            nt::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, rd));
+            if(!locker.locked){
+                return rd;
+            }
+
+            std::vector<navitia::routing::Path> pathes;
+            int time = boost::get<int>(request.parsed_params["time"].value);
+            //int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
+            if(request.parsed_params.count("departure") == 1) {
+                navitia::type::EntryPoint departure(boost::get<std::string>(request.parsed_params["departure"].value));
+                navitia::type::EntryPoint destination(boost::get<std::string>(request.parsed_params["destination"].value));
+                std::cout << " Calcalteur first letter ! " << std::endl;
+                pathes = calculateur->compute_all(departure, destination, time, 7);
+            } else {
+                double departure_lat = boost::get<double>(request.parsed_params["departure_lat"].value);
+                double departure_lon = boost::get<double>(request.parsed_params["departure_lon"].value);
+                double arrival_lat = boost::get<double>(request.parsed_params["destination_lat"].value);
+                double arrival_lon = boost::get<double>(request.parsed_params["destination_lon"].value);
+                std::cout << " Calcalteur geo ! " << std::endl;
+                pathes = calculateur->compute_all(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
+            }
+
+            std::cout << "Nb itineraires : " << pathes.size() << std::endl;
+
+            pb_response = navitia::routing::raptor::make_response(pathes, d);
+
+            rd.status_code = 200;
+#ifndef DEBUG
+        }catch(std::exception& e){
+            LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+        }catch(...){
+            LOG4CPLUS_FATAL(logger, "Erreur inconnue");
         }
-
-        std::vector<navitia::routing::Path> pathes;
-        int time = boost::get<int>(request.parsed_params["time"].value);
-        //int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
-        if(request.parsed_params.count("departure") == 1) {
-            navitia::type::EntryPoint departure(boost::get<std::string>(request.parsed_params["departure"].value));
-            navitia::type::EntryPoint destination(boost::get<std::string>(request.parsed_params["destination"].value));
-            std::cout << " Calcalteur first letter ! " << std::endl;
-            pathes = calculateur->compute_all(departure, destination, time, 7);
-        } else {
-            double departure_lat = boost::get<double>(request.parsed_params["departure_lat"].value);
-            double departure_lon = boost::get<double>(request.parsed_params["departure_lon"].value);
-            double arrival_lat = boost::get<double>(request.parsed_params["destination_lat"].value);
-            double arrival_lon = boost::get<double>(request.parsed_params["destination_lon"].value);
-            std::cout << " Calcalteur geo ! " << std::endl;
-            pathes = calculateur->compute_all(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
-        }
-
-        std::cout << "Nb itineraires : " << pathes.size() << std::endl;
-
-        pb_response = navitia::routing::raptor::make_response(pathes, d);
-
-        rd.status_code = 200;
+#endif
         return rd;
     }
 
 
     ResponseData plannerreverse(RequestData & request, navitia::type::Data & d) {
         ResponseData rd;
-        nt::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, rd));
-        if(!locker.locked){
-            return rd;
+#ifndef DEBUG
+        try{
+#endif
+            nt::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, rd));
+            if(!locker.locked){
+                return rd;
+            }
+
+            std::vector<navitia::routing::Path> pathes;
+            int time = boost::get<int>(request.parsed_params["time"].value);
+            //int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
+            if(request.parsed_params.count("departure") == 1) {
+                navitia::type::EntryPoint departure(boost::get<std::string>(request.parsed_params["departure"].value));
+                navitia::type::EntryPoint destination(boost::get<std::string>(request.parsed_params["destination"].value));
+                pathes = calculateur->compute_all(departure, destination, time, 7);
+            } else {
+                double departure_lat = boost::get<double>(request.parsed_params["departure_lat"].value);
+                double departure_lon = boost::get<double>(request.parsed_params["departure_lon"].value);
+                double arrival_lat = boost::get<double>(request.parsed_params["destination_lat"].value);
+                double arrival_lon = boost::get<double>(request.parsed_params["destination_lon"].value);
+
+                pathes = calculateur->compute_all(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
+            }
+
+            std::cout << "Nb itineraires : " << pathes.size() << std::endl;
+
+            pb_response = navitia::routing::raptor::make_response(pathes, d);
+
+            rd.status_code = 200;
+#ifndef DEBUG
+        }catch(std::exception& e){
+            LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+        }catch(...){
+            LOG4CPLUS_FATAL(logger, "Erreur inconnue");
         }
-
-        std::vector<navitia::routing::Path> pathes;
-        int time = boost::get<int>(request.parsed_params["time"].value);
-        //int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
-        if(request.parsed_params.count("departure") ==1) {
-            navitia::type::EntryPoint departure(boost::get<std::string>(request.parsed_params["departure"].value));
-            navitia::type::EntryPoint destination(boost::get<std::string>(request.parsed_params["destination"].value));
-            pathes = calculateur->compute_all(departure, destination, time, 7);
-        } else {
-            double departure_lat = boost::get<double>(request.parsed_params["departure_lat"].value);
-            double departure_lon = boost::get<double>(request.parsed_params["departure_lon"].value);
-            double arrival_lat = boost::get<double>(request.parsed_params["destination_lat"].value);
-            double arrival_lon = boost::get<double>(request.parsed_params["destination_lon"].value);
-
-            pathes = calculateur->compute_all(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
-        }
-
-        std::cout << "Nb itineraires : " << pathes.size() << std::endl;
-
-        pb_response = navitia::routing::raptor::make_response(pathes, d);
-
-        rd.status_code = 200;
+#endif
         return rd;
     }
 
     ResponseData ptref(RequestData & request, navitia::type::Data &data){
         ResponseData rd;
 
-        nt::Locker locker(check_and_init(request, data, pbnavitia::PTREFERENTIAL, rd));
-        if(!locker.locked){
-            return rd;
-        }
-        try {
-            std::string q = boost::get<std::string>(request.parsed_params["q"].value);
-            pb_response = navitia::ptref::query(q, data.pt_data);
-            rd.status_code = 200;
-        }catch(...){
-            rd.status_code = 500;
-        }
+#ifndef DEBUG
+        try{
+#endif
+            nt::Locker locker(check_and_init(request, data, pbnavitia::PTREFERENTIAL, rd));
+            if(!locker.locked){
+                return rd;
+            }
+            try {
+                std::string q = boost::get<std::string>(request.parsed_params["q"].value);
+                pb_response = navitia::ptref::query(q, data.pt_data);
+                rd.status_code = 200;
+            }catch(...){
+                rd.status_code = 500;
+            }
 
+#ifndef DEBUG
+        }catch(std::exception& e){
+            LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+        }catch(...){
+            LOG4CPLUS_FATAL(logger, "Erreur inconnue");
+        }
+#endif
         return rd;
     }
 
-public:
+    public:
     /** Constructeur par défaut
-      *
-      * On y enregistre toutes les api qu'on souhaite exposer
-      */
+     *
+     * On y enregistre toutes les api qu'on souhaite exposer
+     */
     Worker(navitia::type::Data & ){
+        logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+
+
         register_api("streetnetwork", boost::bind(&Worker::streetnetwork, this, _1, _2), "Calcul d'itinéraire piéton");
         add_param("streetnetwork", "startlon", "Longitude en degrés", ApiParameter::DOUBLE, true);
         add_param("streetnetwork", "startlat", "Latitude en degrés", ApiParameter::DOUBLE, true);

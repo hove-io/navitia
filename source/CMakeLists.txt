@@ -39,6 +39,8 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     SET(CMAKE_C_FLAGS "-ferror-limit=10 -I/usr/local/include/c++/v1 -pthread")
 endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1")
+
 
 #gestion des fixtures pour les test unitaire
 SET(FIXTURES_DIR ${CMAKE_SOURCE_DIR}/../fixtures/)
