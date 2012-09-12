@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_fin){
     data.build_raptor();
     RAPTOR raptor(data);
 
-    type::PT_Data & d = data.pt_data;
+//    type::PT_Data & d = data.pt_data;
 
 //    TODO : ça ne passe pas…
 //    auto res = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 7900, 0, routing::partirapresrab);
