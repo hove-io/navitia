@@ -1,10 +1,77 @@
 #include "raptor.h"
 namespace navitia { namespace routing { namespace raptor {
 
+
+
+int RAPTOR::earliest_trip(const dataRAPTOR::Route_t & route, unsigned int order, DateTime dt) const {
+    int it, step,
+            upper = route.nbTrips, count = upper,
+            first = 0;
+
+    if(data.pt_data.validity_patterns[route.vp].check(dt.date())) {
+        //Recherche dichotomique du premier trip partant après dt.hour
+        while (count>0) {
+            it = first; step=count/2; it+=step;
+            if (data.dataRaptor.stopTimes[route.firstStopTime + order + it*route.nbStops].departure_time < dt.hour()) {
+                first=++it; count-=step+1;
+            }
+            else count=step;
+        }
+
+        if(first != upper)
+            return first;
+    }
+
+    //Si on en a pas trouvé, on cherche le lendemain
+    dt.date_increment();
+    if(data.pt_data.validity_patterns[route.vp].check(dt.date())) {
+        return 0;
+    }
+
+    //Cette route ne comporte aucun trip compatible
+    return -1;
+}
+
+
+int RAPTOR::tardiest_trip(const dataRAPTOR::Route_t & route, unsigned int order, DateTime dt) const{
+    int current_trip/*, step*/,
+            upper =  route.nbTrips/*, count = upper*/,
+            first = 0;
+
+    if(data.pt_data.validity_patterns[route.vp].check(dt.date())) {
+        //Recherche dichotomique du premier trip avant après dt.hour
+        current_trip = upper;
+        while ((upper - first) >1) {
+            current_trip = first + (upper - first) / 2;
+            int current_stop_time = route.firstStopTime + order + current_trip*route.nbStops;
+            if (data.dataRaptor.stopTimes[current_stop_time].arrival_time > dt.hour()) {
+                upper = current_trip;
+            }
+            else first = current_trip;
+        }
+        if(data.dataRaptor.stopTimes[route.firstStopTime + order + first*route.nbStops].arrival_time > dt.hour())
+            --first;
+
+        if(first != upper && first >= 0)
+            return first;
+    }
+
+    //Si on en a pas trouvé, on cherche le lendemain
+    dt.date_decrement();
+    if(data.pt_data.validity_patterns[route.vp].check(dt.date())) {
+        return route.nbTrips - 1;
+    }
+
+    //Cette route ne comporte aucun trip compatible
+    return -1;
+}
+
+
+
 void RAPTOR::make_queue() {
     Q.assign(data.dataRaptor.routes.size(), std::numeric_limits<int>::max());
 
-    auto it = sp_routeorder.begin();
+    auto it = data.dataRaptor.sp_routeorder_const.begin();
     int last = 0, last_index = 0;
     auto it_index = data.dataRaptor.sp_indexrouteorder.begin();
     for(auto stop = marked_sp.find_first(); stop != marked_sp.npos; stop = marked_sp.find_next(stop)) {
@@ -15,7 +82,7 @@ void RAPTOR::make_queue() {
         last = it_index->first + it_index->second;
         const auto end = it+it_index->second;
         for(; it!=end; ++it) {
-            if((Q[it->first] > it->second))
+            if(vp_valides.test(data.dataRaptor.routes[it->first].vp) && (Q[it->first] > it->second))
                 Q[it->first] = it->second;
         }
     }
@@ -26,7 +93,7 @@ void RAPTOR::make_queue() {
 
 void RAPTOR::make_queuereverse() {
     Q.assign(data.dataRaptor.routes.size(), std::numeric_limits<int>::min());
-    auto it = sp_routeorder.begin();
+    auto it = data.dataRaptor.sp_routeorder_const_reverse.begin();
     int last = 0, last_index = 0;
     auto it_index = data.dataRaptor.sp_indexrouteorder_reverse.begin();
     for(auto stop = marked_sp.find_first(); stop != marked_sp.npos; stop = marked_sp.find_next(stop)) {
@@ -37,7 +104,7 @@ void RAPTOR::make_queuereverse() {
         last = it_index->first + it_index->second;
         const auto end = it+it_index->second;
         for(; it!=end; ++it) {
-            if((Q[it->first] < it->second))
+            if(vp_valides.test(data.dataRaptor.routes[it->first].vp) && (Q[it->first] < it->second))
                 Q[it->first] = it->second;
         }
     }
@@ -111,7 +178,7 @@ Path RAPTOR::compute_raptor(vector_idxretour departs, vector_idxretour destinati
     retour.clear();
     retour.push_back(data.dataRaptor.retour_constant);
     for(auto & item : departs) {
-        retour.back()[item.first] = item.second;
+        retour[0][item.first] = item.second;
         best[item.first] = item.second;
         marked_stop.push_back(item.first);
     }
@@ -121,6 +188,8 @@ Path RAPTOR::compute_raptor(vector_idxretour departs, vector_idxretour destinati
         b_dest.ajouter_destination(item.first, item.second);
     }
 
+//    setRoutesValides(marked_stop);
+    setVPValides(marked_stop);
     boucleRAPTOR(marked_stop);
 
     if(b_dest.best_now.type != uninitialized) {
@@ -143,7 +212,7 @@ Path RAPTOR::compute_raptor_reverse(vector_idxretour departs, vector_idxretour d
     retour.clear();
     retour.push_back(data.dataRaptor.retour_constant_reverse);
     for(auto & item : departs) {
-        retour.back()[item.first] = item.second;
+        retour[0][item.first] = item.second;
         best[item.first] = item.second;
         marked_stop.push_back(item.first);
     }
@@ -152,6 +221,8 @@ Path RAPTOR::compute_raptor_reverse(vector_idxretour departs, vector_idxretour d
         b_dest.ajouter_destination(item.first, item.second);
     }
 
+//    setRoutesValidesreverse(marked_stop);
+    setVPValidesreverse(marked_stop);
     boucleRAPTORreverse(marked_stop);
 
     if(b_dest.best_now.type != uninitialized) {
@@ -174,7 +245,7 @@ Path RAPTOR::compute_raptor_rabattement(vector_idxretour departs, vector_idxreto
     best.assign(data.pt_data.stop_points.size(), type_retour());
     b_dest.reinit();
     for(auto & item : departs) {
-        retour.back()[item.first] = item.second;
+        retour[0][item.first] = item.second;
         best[item.first] = item.second;
         marked_stop.push_back(item.first);
     }
@@ -184,13 +255,14 @@ Path RAPTOR::compute_raptor_rabattement(vector_idxretour departs, vector_idxreto
     }
 
 
-
+//    setRoutesValides(marked_stop);
+    setVPValides(marked_stop);
     boucleRAPTOR(marked_stop);
 
     if(b_dest.best_now.type != uninitialized) {
         retour.clear();
         retour.push_back(data.dataRaptor.retour_constant_reverse);
-        retour.back()[b_dest.best_now_spid] = type_retour(-1, b_dest.best_now.dt, 0);
+        retour[0][b_dest.best_now_spid] = type_retour(-1, b_dest.best_now.dt, 0);
         marked_stop.clear();
         marked_stop.push_back(b_dest.best_now_spid);
         b_dest.reinit();
@@ -232,7 +304,7 @@ std::vector<Path> RAPTOR::compute_all(vector_idxretour departs, vector_idxretour
     best.assign(data.pt_data.stop_points.size(), type_retour());
     b_dest.reinit();
     for(auto item : departs) {
-        retour.back()[item.first] = item.second;
+        retour[0][item.first] = item.second;
         best[item.first] = item.second;
         marked_stop.push_back(item.first);
     }
@@ -244,6 +316,8 @@ std::vector<Path> RAPTOR::compute_all(vector_idxretour departs, vector_idxretour
 
     count = 1;
 
+//    setRoutesValides(marked_stop);
+    setVPValides(marked_stop);
     boucleRAPTOR(marked_stop);
 
 
@@ -264,7 +338,7 @@ std::vector<Path> RAPTOR::compute_all(vector_idxretour departs, vector_idxretour
     retour.push_back(data.dataRaptor.retour_constant_reverse);
     marked_stop.clear();
 
-    retour.back()[b_dest.best_now_spid] = b_dest.best_now;
+    retour[0][b_dest.best_now_spid] = b_dest.best_now;
     best[b_dest.best_now_spid] = b_dest.best_now;
     marked_stop.push_back(b_dest.best_now_spid);
 
@@ -293,7 +367,25 @@ std::vector<Path> RAPTOR::compute_all(vector_idxretour departs, vector_idxretour
     return result;
 }
 
+void RAPTOR::setVPValides(const std::vector<unsigned int> &marked_stop) {
+    //On cherche la premiere date
+    DateTime dt = DateTime::inf;
+    for(unsigned int spid : marked_stop) {
+        if(retour[0][spid].dt < dt)
+            dt = retour[0][spid].dt;
+    }
+    uint32_t date = dt.date();
+    if(dt.date() == std::numeric_limits<uint32_t>::max()) {
+        for(auto pair : data.dataRaptor.sp_routeorder_const)
+            sp_routeorder.push_back(std::make_pair(pair.first, std::numeric_limits<int>::max()));
+    } else {
 
+        for(auto vp : data.pt_data.validity_patterns) {
+            auto debug = vp.check2(date);
+            vp_valides.set(vp.idx, vp.check2(date));
+        }
+    }
+}
 
 void RAPTOR::setRoutesValides(const std::vector<unsigned int> &marked_stop) {
 
@@ -306,14 +398,22 @@ void RAPTOR::setRoutesValides(const std::vector<unsigned int> &marked_stop) {
 
     uint32_t date = dt.date();
     if(date == std::numeric_limits<uint32_t>::max()) {
-        for(auto pair : data.dataRaptor.sp_routeorder_const)
-            sp_routeorder.push_back(std::make_pair(pair.first, std::numeric_limits<int>::max()));
+        for(auto vp : data.pt_data.validity_patterns) {
+            vp_valides.set(vp.idx, false);
+        }
     } else {
+        //On cherche les vp valides
+        boost::dynamic_bitset<> vp_valides(data.pt_data.validity_patterns.size());
+
+        for(auto vp : data.pt_data.validity_patterns) {
+            vp_valides.set(vp.idx, vp.check2(date));
+        }
+
         //On active les routes
         sp_routeorder = data.dataRaptor.sp_routeorder_const;
         for(auto & pair : sp_routeorder) {
             const auto & route = data.dataRaptor.routes[pair.first];
-            if(route.vp.uncheck2(date)) {
+            if(!vp_valides.test(route.vp)) {
                 pair.second = std::numeric_limits<uint32_t>::max();
             }
         }
@@ -321,6 +421,51 @@ void RAPTOR::setRoutesValides(const std::vector<unsigned int> &marked_stop) {
 }
 
 void RAPTOR::setRoutesValidesreverse(std::vector<unsigned int> &marked_stop) {
+    //On cherche la premiere date
+    DateTime dt = DateTime::min;
+    for(unsigned int spid : marked_stop) {
+        if(retour[0][spid].dt > dt)
+            dt = retour[0][spid].dt;
+    }
+
+    uint32_t date = dt.date();
+    if(date > 0) {
+        //On cherche les vp valides
+        boost::dynamic_bitset<> vp_valides(data.pt_data.validity_patterns.size());
+
+        for(auto vp : data.pt_data.validity_patterns) {
+            vp_valides.set(vp.idx, vp.check2(date-1));
+        }
+
+        for(auto & pair : sp_routeorder) {
+            const auto & route = data.dataRaptor.routes[pair.first];
+            if(!vp_valides.test(route.vp)) {
+                pair.second = std::numeric_limits<uint32_t>::max();
+            }
+        }
+    } else if(date == 0) {
+
+
+        //On cherche les vp valides
+        boost::dynamic_bitset<> vp_valides(data.pt_data.validity_patterns.size());
+
+        for(auto vp : data.pt_data.validity_patterns) {
+            vp_valides.set(vp.idx, vp.check(date));
+        }
+
+        for(auto & pair : sp_routeorder) {
+            const auto & route = data.dataRaptor.routes[pair.first];
+            if(!vp_valides.test(route.vp)) {
+                pair.second = std::numeric_limits<uint32_t>::max();
+            }
+        }
+    } else {
+        for(auto pair : data.dataRaptor.sp_routeorder_const)
+            sp_routeorder.push_back(std::make_pair(pair.first, std::numeric_limits<int>::max()));
+    }
+}
+
+void RAPTOR::setVPValidesreverse(std::vector<unsigned int> &marked_stop) {
 
     //On cherche la premiere date
     DateTime dt = DateTime::min;
@@ -333,22 +478,27 @@ void RAPTOR::setRoutesValidesreverse(std::vector<unsigned int> &marked_stop) {
     //On active les routes
     sp_routeorder = data.dataRaptor.sp_routeorder_const_reverse;
     if(date > 0) {
-        for(auto & pair : sp_routeorder) {
-            const auto & route = data.dataRaptor.routes[pair.first];
-            if(route.vp.uncheck2(date-1)) {
-                pair.second = std::numeric_limits<uint32_t>::max();
-            }
-        }
+        //On cherche les vp valides
+        for(auto vp : data.pt_data.validity_patterns) {
+            vp_valides.set(vp.idx, vp.check2(date-1));
+       }
     } else if(date == 0) {
+        //On cherche les vp valides
+
+        for(auto vp : data.pt_data.validity_patterns) {
+            vp_valides.set(vp.idx, vp.check(date));
+        }
+
         for(auto & pair : sp_routeorder) {
             const auto & route = data.dataRaptor.routes[pair.first];
-            if(!route.vp.check(date)) {
+            if(!vp_valides.test(route.vp)) {
                 pair.second = std::numeric_limits<uint32_t>::max();
             }
         }
     } else {
-        for(auto pair : data.dataRaptor.sp_routeorder_const)
-            sp_routeorder.push_back(std::make_pair(pair.first, std::numeric_limits<int>::max()));
+        for(auto vp : data.pt_data.validity_patterns) {
+            vp_valides.set(vp.idx, false);
+        }
     }
 }
 
@@ -364,7 +514,6 @@ void RAPTOR::boucleRAPTOR(const std::vector<unsigned int> &marked_stop) {
     for(auto said : marked_stop) {
         marked_sp.set(said, true);
     }
-    setRoutesValides(marked_stop);
 
 
     marcheapied();
@@ -407,7 +556,7 @@ void RAPTOR::boucleRAPTOR(const std::vector<unsigned int> &marked_stop) {
                     if(retour_temp.type == vj)
                         dt = dt + 120;
 
-                    int etemp = data.dataRaptor.earliest_trip(route, i, dt);
+                    int etemp = earliest_trip(route, i, dt);
 
                     if(etemp >= 0) {
                         t = etemp;
@@ -435,7 +584,6 @@ void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop) {
     }
 
     count = 0;
-    setRoutesValidesreverse(marked_stop);
 
     marcheapiedreverse(0);
 
@@ -462,7 +610,7 @@ void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop) {
                     //On stocke, et on marque pour explorer par la suite
                     if(workingDt > std::max(best[spid].dt, b_dest.best_now.dt)) {
                         const type_retour retour_temp = type_retour(st.idx, embarquement, workingDt);
-                        retour.back()[spid] = retour_temp;
+                        retour[count][spid] = retour_temp;
                         best[spid]          = retour_temp;
                         b_dest.ajouter_best_reverse(spid, retour_temp);
                         marked_sp.set(spid);
@@ -477,7 +625,7 @@ void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop) {
                         ( (temps_arrivee == std::numeric_limits<uint32_t>::max()) ||
                           ((retour_temp.dt.hour() >= temps_arrivee) && (retour_temp.dt.date() == workingDt.date()) ) ||
                           ((retour_temp.dt.date() > workingDt.date()) ))) {
-                    int etemp = data.dataRaptor.tardiest_trip(route, i, retour_temp.dt);
+                    int etemp = tardiest_trip(route, i, retour_temp.dt);
                     if(etemp >=0 && t!=etemp) {
                         t = etemp;
                         workingDt = retour_temp.dt;
