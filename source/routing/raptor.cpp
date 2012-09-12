@@ -815,7 +815,7 @@ vector_idxretour RAPTOR::trouverGeo(const type::GeographicalCoord & departure, c
     retour_prox prox;
     try {
         prox = (retour_prox) (data.street_network.find_nearest(departure, data.pt_data.stop_point_proximity_list, radius_depart));
-    } catch(NotFound) {std::cout << "Not found 1 " << std::endl; return toReturn;}
+    } catch(navitia::proximitylist::NotFound) {std::cout << "Not found 1 " << std::endl; return toReturn;}
 
 
     for(auto item : prox) {
@@ -840,7 +840,7 @@ vector_idxretour RAPTOR::trouverGeo2(const type::GeographicalCoord & departure, 
     retour_prox prox;
     try {
         prox = (retour_prox) (data.street_network.find_nearest(departure, data.pt_data.stop_point_proximity_list, radius_depart));
-    } catch(NotFound) {std::cout << "Not found 1 " << std::endl; return toReturn;}
+    } catch(navitia::proximitylist::NotFound) {std::cout << "Not found 1 " << std::endl; return toReturn;}
 
 
     for(auto item : prox) {
