@@ -250,6 +250,8 @@ std::vector<Path> RAPTOR::compute_all(vector_idxretour departs, vector_idxretour
     if(b_dest.best_now.type != uninitialized) {
         auto temp = makePathes(retour, best, departs, b_dest, count);
         result.insert(result.begin(), temp.begin(), temp.end());
+    } else {
+        return result;
     }
 
     for(auto & it : best) {
@@ -711,7 +713,7 @@ Path RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_h
         }
 
         return compute_raptor_reverse(departs, destinations); break;
-    default :
+    case partirapres:
         for(navitia::type::idx_t spidx : data.pt_data.stop_areas[departure_idx].stop_point_list) {
             departs.push_back(std::make_pair(spidx, type_retour(-1, DateTime(departure_day, departure_hour), depart)));
         }
@@ -720,8 +722,18 @@ Path RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_h
         for(navitia::type::idx_t spidx : data.pt_data.stop_areas[destination_idx].stop_point_list) {
             destinations.push_back(std::make_pair(spidx, type_retour()));
         }
-        return compute_raptor(departs, destinations); break;
+        return compute_raptor(departs, destinations);
+        break;
     }
+    for(navitia::type::idx_t spidx : data.pt_data.stop_areas[departure_idx].stop_point_list) {
+        departs.push_back(std::make_pair(spidx, type_retour(-1, DateTime(departure_day, departure_hour), depart)));
+    }
+
+
+    for(navitia::type::idx_t spidx : data.pt_data.stop_areas[destination_idx].stop_point_list) {
+        destinations.push_back(std::make_pair(spidx, type_retour()));
+    }
+    return compute_raptor(departs, destinations);
 }
 
 Path RAPTOR::compute_reverse(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day) {
@@ -815,7 +827,7 @@ vector_idxretour RAPTOR::trouverGeo(const type::GeographicalCoord & departure, c
     retour_prox prox;
     try {
         prox = (retour_prox) (data.street_network.find_nearest(departure, data.pt_data.stop_point_proximity_list, radius_depart));
-    } catch(NotFound) {std::cout << "Not found 1 " << std::endl; return toReturn;}
+    } catch(navitia::proximitylist::NotFound) {std::cout << "Not found 1 " << std::endl; return toReturn;}
 
 
     for(auto item : prox) {
@@ -840,7 +852,7 @@ vector_idxretour RAPTOR::trouverGeo2(const type::GeographicalCoord & departure, 
     retour_prox prox;
     try {
         prox = (retour_prox) (data.street_network.find_nearest(departure, data.pt_data.stop_point_proximity_list, radius_depart));
-    } catch(NotFound) {std::cout << "Not found 1 " << std::endl; return toReturn;}
+    } catch(navitia::proximitylist::NotFound) {std::cout << "Not found 1 " << std::endl; return toReturn;}
 
 
     for(auto item : prox) {
@@ -873,6 +885,9 @@ std::vector<Path> RAPTOR::compute_all(const type::GeographicalCoord & departure,
     destinations = trouverGeo2(destination, radius_destination);
 
     std::cout << "Nb stations departs : " << departs.size() << " destinations : " << destinations.size() << std::endl;
+
+    if(departs.size() == 0 || destinations.size() == 0)
+        return std::vector<Path>();
 
     return compute_all(departs, destinations);
 }
