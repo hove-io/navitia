@@ -1,2 +1,4 @@
-add_executable (vivendi vivendi.cpp)
-target_link_libraries(vivendi geos_c utils)
+FIND_PACKAGE(WS_Commons)
+
+MAKE_WS(vivendi vivendi.cpp LIBS geos_c utils curl)
+
