@@ -124,8 +124,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
 #ifndef DEBUG
         }catch(std::exception& e){
             LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+            rd.status_code = 500;
         }catch(...){
             LOG4CPLUS_FATAL(logger, "Erreur inconnue");
+            rd.status_code = 500;
         }
 #endif
         return rd;
@@ -150,8 +152,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
 #ifndef DEBUG
         }catch(std::exception& e){
             LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+            rd.status_code = 500;
         }catch(...){
             LOG4CPLUS_FATAL(logger, "Erreur inconnue");
+            rd.status_code = 500;
         }
 #endif
         return rd;
@@ -219,8 +223,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
 #ifndef DEBUG
         }catch(std::exception& e){
             LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+            rd.status_code = 500;
         }catch(...){
             LOG4CPLUS_FATAL(logger, "Erreur inconnue");
+            rd.status_code = 500;
         }
 #endif
         return rd;
@@ -258,8 +264,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
 #ifndef DEBUG
         }catch(std::exception& e){
             LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+            rd.status_code = 500;
         }catch(...){
             LOG4CPLUS_FATAL(logger, "Erreur inconnue");
+            rd.status_code = 500;
         }
 #endif
         return rd;
@@ -343,8 +351,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
 #ifndef DEBUG
         }catch(std::exception& e){
             LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+            rd.status_code = 500;
         }catch(...){
             LOG4CPLUS_FATAL(logger, "Erreur inconnue");
+            rd.status_code = 500;
         }
 #endif
         return rd;
@@ -371,8 +381,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
 #ifndef DEBUG
         }catch(std::exception& e){
             LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+            rd.status_code = 500;
         }catch(...){
             LOG4CPLUS_FATAL(logger, "Erreur inconnue");
+            rd.status_code = 500;
         }
 #endif
         return rd;
