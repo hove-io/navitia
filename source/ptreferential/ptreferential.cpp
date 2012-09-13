@@ -224,9 +224,8 @@ pbnavitia::Response extract_data(PT_Data & data, const Request & r, std::vector<
                         case Type_e::eDepartment: set_value(item, data.departments.at(idx), column_name); break;
                         case Type_e::eCompany: set_value(item, data.companies.at(idx), column_name); break;
                         case Type_e::eVehicle: set_value(item, data.vehicles.at(idx), column_name); break;
-                        case Type_e::eCountry: set_value(item, data.countries.at(idx), column_name); break;
-                        case Type_e::eWay: break;
-                        case Type_e::eUnknown: break;
+                        case Type_e::eCountry: set_value(item, data.countries.at(idx), column_name); break;                        
+                        default: break;
                     }
                 }
             }
@@ -394,8 +393,7 @@ pbnavitia::Response query(std::string request, PT_Data & data){
         case Type_e::eCompany: indexes = get_indexes<Company>(type_clauses.second, r.requested_type, data); break;
         case Type_e::eVehicle: indexes = get_indexes<Vehicle>(type_clauses.second, r.requested_type, data); break;
         case Type_e::eCountry: indexes = get_indexes<Country>(type_clauses.second, r.requested_type, data); break;
-        case Type_e::eWay: break;
-        case Type_e::eUnknown: break;
+        default: break;
         }
         // Attention ! les structures doivent être triées !
         std::vector<idx_t> tmp_indexes;

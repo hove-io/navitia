@@ -47,8 +47,7 @@ std::vector<idx_t> PT_Data::get_target_by_one_source(Type_e source, Type_e targe
         case Type_e::eConnection: result = connections[source_idx].get(target, *this); break;
         case Type_e::eCountry: result = countries[source_idx].get(target, *this); break;
         case Type_e::eRoutePoint: result = route_points[source_idx].get(target, *this); break;
-        case Type_e::eWay: break;
-        case Type_e::eUnknown: break;
+        default: break;
     }
     return result;
 }
@@ -74,8 +73,7 @@ std::vector<idx_t> PT_Data::get_all_index(Type_e type){
     case Type_e::eCompany: num_elements = companies.size(); break;
     case Type_e::eVehicle: num_elements = vehicles.size(); break;
     case Type_e::eCountry: num_elements = countries.size(); break;
-    case Type_e::eWay: break;
-    case Type_e::eUnknown:  break;
+    default:  break;
     }
     std::vector<idx_t> indexes(num_elements);
     for(size_t i=0; i < num_elements; i++)

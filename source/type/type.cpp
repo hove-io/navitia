@@ -148,7 +148,8 @@ static_data * static_data::get() {
                 (Type_e::eCompany, "company")
                 (Type_e::eVehicle, "vehicle")
                 (Type_e::eCountry, "country")
-                (Type_e::eWay, "way");
+                (Type_e::eWay, "way")
+                (Type_e::eCoord, "coord");
     }
     return instance;
 }

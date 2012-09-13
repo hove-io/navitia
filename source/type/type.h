@@ -36,7 +36,8 @@ enum class Type_e {
     eVehicle = 16,
     eCountry = 17,
     eUnknown = 18,
-    eWay = 19
+    eWay = 19,
+    eCoord = 20
 };
 struct PT_Data;
 template<class T> std::string T::* name_getter(){return &T::name;}
@@ -493,6 +494,7 @@ public:
 struct EntryPoint {
     Type_e type;//< Le type de l'objet
     std::string external_code; //< Le code externe de l'objet
+    GeographicalCoord coordinates; //< coordonnées du point d'entrée
 
     /// Retourne une string unique à parti de n'importe quel objet
     template<class T>
@@ -501,13 +503,12 @@ struct EntryPoint {
     }
 
     /// Construit le type à partir d'une chaîne
-    EntryPoint(const std::string & uri){
+    EntryPoint(const std::string & uri) : external_code(uri){
         size_t pos = uri.find(":");
         if(pos == std::string::npos)
             type = Type_e::eUnknown;
         else {
             type = static_data::get()->typeByCaption(uri.substr(0,pos));
-            external_code = uri.substr(pos+1);
         }
     }
 
