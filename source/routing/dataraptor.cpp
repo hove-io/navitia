@@ -78,7 +78,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
                     r.idx = route.idx;
                     r.nbStops = route.route_point_list.size();
                     r.nbTrips = vec.second.size();
-                    r.vp = data.validity_patterns[vec.first];
+                    r.vp = data.validity_patterns[vec.first].idx;
                     r.firstStopTime = stopTimes.size();
                     for(auto vjidx : vec.second) {
                         for(navitia::type::idx_t stidx : data.vehicle_journeys[vjidx].stop_time_list) {
@@ -135,72 +135,9 @@ void dataRAPTOR::load(const type::PT_Data &data)
 
 
     std::cout << "Nb data stop times : " << data.stop_times.size() << " stopTimes : " << stopTimes.size()
-              << " nb foot path : " << foot_path.size() << " Nombre de stop points : " << data.stop_points.size() <<  std::endl;
+              << " nb foot path : " << foot_path.size() << " Nombre de stop points : " << data.stop_points.size() << "nb vp : " << data.validity_patterns.size() << " nb routes " << routes.size() <<  std::endl;
 
 }
 
-
-int dataRAPTOR::earliest_trip(const Route_t & route, unsigned int order, DateTime dt) const {
-    int it, step,
-            upper = route.nbTrips, count = upper,
-            first = 0;
-
-    if(route.vp.check(dt.date())) {
-        //Recherche dichotomique du premier trip partant après dt.hour
-        while (count>0) {
-            it = first; step=count/2; it+=step;
-            if (stopTimes[route.firstStopTime + order + it*route.nbStops].departure_time < dt.hour()) {
-                first=++it; count-=step+1;
-            }
-            else count=step;
-        }
-
-        if(first != upper)
-            return first;
-    }
-
-    //Si on en a pas trouvé, on cherche le lendemain
-    dt.date_increment();
-    if(route.vp.check(dt.date())) {
-        return 0;
-    }
-
-    //Cette route ne comporte aucun trip compatible
-    return -1;
-}
-
-
-int dataRAPTOR::tardiest_trip(const Route_t & route, unsigned int order, DateTime dt) const{
-    int current_trip/*, step*/,
-            upper =  route.nbTrips/*, count = upper*/,
-            first = 0;
-
-    if(route.vp.check(dt.date())) {
-        //Recherche dichotomique du premier trip avant après dt.hour
-        current_trip = upper;
-        while ((upper - first) >1) {
-            current_trip = first + (upper - first) / 2;
-            int current_stop_time = route.firstStopTime + order + current_trip*route.nbStops;
-            if (stopTimes[current_stop_time].arrival_time > dt.hour()) {
-                upper = current_trip;
-            }
-            else first = current_trip;
-        }
-        if(stopTimes[route.firstStopTime + order + first*route.nbStops].arrival_time > dt.hour())
-            --first;
-
-        if(first != upper && first >= 0)
-            return first;
-    }
-
-    //Si on en a pas trouvé, on cherche le lendemain
-    dt.date_decrement();
-    if(route.vp.check(dt.date())) {
-        return route.nbTrips - 1;
-    }
-
-    //Cette route ne comporte aucun trip compatible
-    return -1;
-}
 
 }}}

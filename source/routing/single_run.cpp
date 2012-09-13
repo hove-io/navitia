@@ -5,7 +5,7 @@
 #include "utils/timer.h"
 #include <boost/program_options.hpp>
 
-//#include <valgrind/callgrind.h>
+#include <valgrind/callgrind.h>
 
 using namespace navitia;
 using namespace routing;
@@ -76,9 +76,9 @@ int main(int argc, char** argv){
             }
 
             Timer t("Calcul avec l'algorithme " + algo);
-//            CALLGRIND_START_INSTRUMENTATION;
+            CALLGRIND_START_INSTRUMENTATION;
             Path res = router->compute(start_idx, target_idx, hour, date);
-//            CALLGRIND_STOP_INSTRUMENTATION;
+            CALLGRIND_STOP_INSTRUMENTATION;
 
             for(auto item : res.items) {
                 std::cout << item.print(data.pt_data) << std::endl;
