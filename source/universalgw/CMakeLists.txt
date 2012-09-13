@@ -1,6 +1,6 @@
 FIND_PACKAGE(WS_Commons)
 
-MAKE_WS(vivendi vivendi.cpp LIBS geos_c utils curl)
+MAKE_WS(vivendi vivendi.cpp LIBS geos_c utils curl types)
 
 
 INSTALL_TARGETS(/vivendi vivendi)

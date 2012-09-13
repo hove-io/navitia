@@ -2,6 +2,7 @@
 #include "data_structures.h"
 #include "utils/logger.h"
 #include "utils/csv.h"
+#include "type/type.h"
 
 #include <curl/curl.h>
 #include <geos_c.h>
@@ -269,13 +270,11 @@ struct Worker : public BaseWorker<Data> {
             return rd;
         }
 
-        double departure_lat = boost::get<double>(req.parsed_params["departure_lat"].value);
-        double departure_lon = boost::get<double>(req.parsed_params["departure_lon"].value);
-        double arrival_lat = boost::get<double>(req.parsed_params["destination_lat"].value);
-        double arrival_lon = boost::get<double>(req.parsed_params["destination_lon"].value);
+        navitia::type::EntryPoint departure(boost::get<std::string>(req.parsed_params["departure"].value));
+        navitia::type::EntryPoint destination(boost::get<std::string>(req.parsed_params["destination"].value));
 
-        std::string insee_departure = find(d.departements, departure_lon, departure_lat);
-        std::string insee_destination = find(d.departements, arrival_lon, arrival_lat);
+        std::string insee_departure = find(d.departements, departure.coordinates.x, departure.coordinates.y);
+        std::string insee_destination = find(d.departements, destination.coordinates.x, destination.coordinates.y);
 
         if(insee_departure.empty() || insee_destination.empty()){
             if(insee_departure.empty())
@@ -368,10 +367,8 @@ struct Worker : public BaseWorker<Data> {
     Worker(Data &) {
         logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
         register_api("planner",boost::bind(&Worker::planner, this, _1, _2), "Effectue un calcul d'itinéraire entre deux coordonnées");
-        add_param("planner", "departure_lat", "Latitude de départ", ApiParameter::DOUBLE, true);
-        add_param("planner", "departure_lon", "Longitude de départ", ApiParameter::DOUBLE, true);
-        add_param("planner", "destination_lat", "Latitude d'arrivée", ApiParameter::DOUBLE, true);
-        add_param("planner", "destination_lon", "Longitude d'arrivée", ApiParameter::DOUBLE, true);
+        add_param("planner", "departure", "EntryPoint (coordonnées) de départ", ApiParameter::STRING, true);
+        add_param("planner", "destination", "EntryPoint (coordonnées) de destination", ApiParameter::STRING, true);
 
         register_api("status",boost::bind(&Worker::status, this, _1, _2), "Informations sur les données chargées");
 
