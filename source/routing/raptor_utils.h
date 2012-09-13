@@ -67,42 +67,49 @@ struct best_dest {
     std::unordered_map<unsigned int, type_retour> map_date_time;
     type_retour best_now;
     unsigned int best_now_spid;
+    unsigned int count;
 
     void ajouter_destination(unsigned int spid, const type_retour &t) { map_date_time[spid] = t;}
 
-    bool ajouter_best(unsigned int rpid, const type_retour &t) {
+    bool ajouter_best(unsigned int rpid, const type_retour &t, int cnt) {
         auto it = map_date_time.find(rpid);
         if(it != map_date_time.end()) {
             it->second = t;
             if(t < best_now) {
                 best_now = t;
                 best_now_spid = rpid;
+                count = cnt;
             }
             return true;
         }
         return false;
     }
 
-    void ajouter_best_reverse(unsigned int rpid, const type_retour &t) {
+    bool ajouter_best_reverse(unsigned int rpid, const type_retour &t, int cnt) {
         auto it = map_date_time.find(rpid);
         if(it != map_date_time.end()) {
             it->second = t;
             if(t > best_now && t.dt != DateTime::min) {
                 best_now = t;
                 best_now_spid = rpid;
+                count = cnt;
             }
+            return true;
         }
+        return false;
     }
 
     void reinit() {
         map_date_time.clear();
         best_now = type_retour();
         best_now_spid = std::numeric_limits<unsigned int>::max();
+        count = 0;
     }
 
     void reverse() {
         best_now.dt = DateTime::min;
     }
+
 
 };
 

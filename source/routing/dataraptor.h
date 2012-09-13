@@ -11,7 +11,7 @@ struct dataRAPTOR {
     struct Route_t {
         int nbTrips, nbStops;
         navitia::type::idx_t firstStopTime, idx;
-        navitia::type::ValidityPattern vp;
+        navitia::type::idx_t vp;
     };
 
     struct StopTime_t {
@@ -34,10 +34,8 @@ struct dataRAPTOR {
     map_int_pint_t retour_constant;
     map_int_pint_t retour_constant_reverse;
 
-    dataRAPTOR() {}
+    dataRAPTOR()  {}
     void load(const navitia::type::PT_Data &data);
-    int tardiest_trip(const Route_t &route, unsigned int order, DateTime dt) const;
-    int earliest_trip(const Route_t &route, unsigned int order, DateTime dt) const;
 
 
     inline int get_stop_time_idx(const Route_t & route, int orderVj, int order) const{

@@ -283,7 +283,6 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
 
     type::PT_Data & d = data.pt_data;
     auto res = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 1900, 0, routing::partirapresrab);
-
     BOOST_REQUIRE_EQUAL(res.items.size(), 3);
     BOOST_CHECK_EQUAL(res.items[2].stop_points[1], 3);
     BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 4500);
