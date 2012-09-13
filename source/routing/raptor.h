@@ -63,6 +63,9 @@ struct RAPTOR : public AbstractRouter
                                   , int departure_hour, int departure_day);
     std::vector<Path> compute_all(vector_idxretour departs, vector_idxretour destinations);
     std::vector<Path> compute_all(navitia::type::EntryPoint departure, navitia::type::EntryPoint destination, int departure_hour, int departure_day);
+    std::vector<Path> compute_reverse_all(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
+                                          , int departure_hour, int departure_day);
+    std::vector<Path> compute_reverse_all(vector_idxretour departs, vector_idxretour destinations);
 
     int tardiest_trip(const dataRAPTOR::Route_t &route, unsigned int order, DateTime dt) const;
     int earliest_trip(const dataRAPTOR::Route_t &route, unsigned int order, DateTime dt) const;

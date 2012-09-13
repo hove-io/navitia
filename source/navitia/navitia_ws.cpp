@@ -335,7 +335,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
                 double arrival_lat = boost::get<double>(request.parsed_params["destination_lat"].value);
                 double arrival_lon = boost::get<double>(request.parsed_params["destination_lon"].value);
 
-                pathes = calculateur->compute_all(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
+                pathes = calculateur->compute_reverse_all(navitia::type::GeographicalCoord(departure_lon, departure_lat), 300, navitia::type::GeographicalCoord(arrival_lon, arrival_lat), 300, time, 7);
             }
 
             std::cout << "Nb itineraires : " << pathes.size() << std::endl;
