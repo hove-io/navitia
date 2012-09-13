@@ -268,9 +268,6 @@ Path RAPTOR::compute_raptor_rabattement(vector_idxretour departs, vector_idxreto
         b_dest.reverse();
         for(auto & item : departs) {
             b_dest.ajouter_destination(item.first, item.second);
-            if(best[item.first].type != uninitialized) {
-                b_dest.ajouter_best_reverse(item.first, best[item.first], count);
-            }
         }
 
         best.assign(data.pt_data.stop_points.size(), min);
@@ -392,9 +389,8 @@ std::vector<Path> RAPTOR::compute_all(vector_idxretour departs, vector_idxretour
      if(b_dest.best_now.type != uninitialized){
          auto temp = makePathes(retour, best, destinations, b_dest, count);
          result.insert(result.end(), temp.begin(), temp.end());
-         return result;
      }
-
+     return result;
  }
 
 void RAPTOR::setVPValides(const std::vector<unsigned int> &marked_stop) {
