@@ -43,9 +43,6 @@ struct RAPTOR : public AbstractRouter
     Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day, senscompute sens = partirapres);
     Path compute_reverse(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
     Path compute_rabattement(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
-    Path compute(const type::GeographicalCoord & departure, double radius, idx_t destination_idx, int departure_hour, int departure_day);
-    Path compute(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
-                 , int departure_hour, int departure_day);
 
     Path compute_raptor(vector_idxretour departs, vector_idxretour destinations);
     Path compute_raptor_reverse(vector_idxretour departs, vector_idxretour destinations);
@@ -62,7 +59,7 @@ struct RAPTOR : public AbstractRouter
     std::vector<Path> compute_all(const type::GeographicalCoord & , double , const type::GeographicalCoord & , double
                                   , int departure_hour, int departure_day);
     std::vector<Path> compute_all(vector_idxretour departs, vector_idxretour destinations);
-    std::vector<Path> compute_all(navitia::type::EntryPoint departure, navitia::type::EntryPoint destination, int departure_hour, int departure_day);
+    std::vector<Path> compute_all(navitia::type::EntryPoint departure, navitia::type::EntryPoint destination, int departure_hour, int departure_day, senscompute sens);
     std::vector<Path> compute_reverse_all(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
                                           , int departure_hour, int departure_day);
     std::vector<Path> compute_reverse_all(vector_idxretour departs, vector_idxretour destinations);
@@ -86,7 +83,6 @@ struct RAPTOR : public AbstractRouter
 
 
     vector_idxretour trouverGeo(const type::GeographicalCoord & departure, const double radius_depart,  const int departure_hour, const int departure_day) const;
-    vector_idxretour trouverGeo2(const type::GeographicalCoord & departure, const double radius_depart) const;
 
 };
 
