@@ -89,15 +89,11 @@ function planner() {
 
     if((departure_idx !== -1) && (destination_idx !== -1)) {
         debut_requete = new Date().getTime();
-        if($("#typeitineraire option:selected'").val() === "apres") {
-            $.getJSON("../planner?format=json&departure="+departure_idx+"&destination="+destination_idx+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val(),
-                    aff_data
-                    );
-        } else {
-            $.getJSON("../plannerreverse?format=json&departure="+departure_idx+"&destination="+destination_idx+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val(),
-                    aff_data
-                    );
-        }
+        $.getJSON("../planner?format=json&departure="+departure_idx+"&destination="+destination_idx+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val()
+                  +"&sens="+$("#typeitineraire option:selected'").val(),
+                  aff_data
+                  );
+
 
 
     } else {
@@ -118,17 +114,11 @@ function clickmap(event_name, event_source, event_args) {
         $("#infos").text("Calcul en cours ... ");
         debut_requete = new Date().getTime();
 
-        if($("#typeitineraire option:selected'").val() === "apres") {
-            $.getJSON("../planner?format=json&departure_lat="+depart_arrivee.depart.lat+"&departure_lon="+depart_arrivee.depart.lon+
-                    "&destination_lat="+depart_arrivee.arrivee.lat+"&destination_lon="+depart_arrivee.arrivee.lon+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val(),
-                    aff_data
-                    );
-        } else{
-            $.getJSON("../plannerreverse?format=json&departure_lat="+depart_arrivee.depart.lat+"&departure_lon="+depart_arrivee.depart.lon+
-                    "&destination_lat="+depart_arrivee.arrivee.lat+"&destination_lon="+depart_arrivee.arrivee.lon+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val(),
-                    aff_data
-                    );
-        }
+        $.getJSON("../planner?format=json&departure_lat="+depart_arrivee.depart.lat+"&departure_lon="+depart_arrivee.depart.lon+
+                  "&destination_lat="+depart_arrivee.arrivee.lat+"&destination_lon="+depart_arrivee.arrivee.lon+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val()
+                  +"&sens="+  $("#typeitineraire option:selected'").val(),
+                  aff_data
+                  );
 
 
         depart_arrivee.depart.lat = -1;
@@ -140,77 +130,77 @@ function clickmap(event_name, event_source, event_args) {
 
 window.onload= function() {
 
-    map = new mxn.Mapstraction('mapdiv', 'openlayers');
+            map = new mxn.Mapstraction('mapdiv', 'openlayers');
 
-    var latlon = new mxn.LatLonPoint(48.866667, 2.333333);
-    map.setCenterAndZoom(latlon, 13);
-    map.click.addHandler(clickmap);
-    $("#go").click(planner);
-}
+            var latlon = new mxn.LatLonPoint(48.866667, 2.333333);
+            map.setCenterAndZoom(latlon, 13);
+            map.click.addHandler(clickmap);
+            $("#go").click(planner);
+        }
 
 $(function() {
-    $( "#departure" ).autocomplete({
-        source: function( request, response ) {
-            $.ajax({
-                url: "http://127.0.0.1/firstletter",
-            dataType: "json",
-            data: {
-                format : "json",
-            name: request.term,
-            },
-            success: function( data ) {
-                response( $.map( data.firstletter.items, function( item ) {
-                    return {
-                        label: item.name,
-                value: item.uri
-                    }
-                }));
-            }
-            });
-        },
-    minLength: 2,
-    select: function( event, ui ) {
-        departure_idx = ui.item.value;
-    },
-    open: function() {
-        $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
-    },
-    close: function() {
-        $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
-    }
-    });
+      $( "#departure" ).autocomplete({
+                                         source: function( request, response ) {
+                                                     $.ajax({
+                                                                url: "http://127.0.0.1/firstletter",
+                                                                dataType: "json",
+                                                                data: {
+                                                                    format : "json",
+                                                                    name: request.term,
+                                                                },
+                                                                success: function( data ) {
+                                                                             response( $.map( data.firstletter.items, function( item ) {
+                                                                                                 return {
+                                                                                                     label: item.name,
+                                                                                                     value: item.uri
+                                                                                                 }
+                                                                                             }));
+                                                                         }
+                                                            });
+                                                 },
+                                         minLength: 2,
+                                         select: function( event, ui ) {
+                                                     departure_idx = ui.item.value;
+                                                 },
+                                         open: function() {
+                                                   $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
+                                               },
+                                         close: function() {
+                                                    $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+                                                }
+                                     });
 
-    $( "#destination" ).autocomplete({
-        source: function( request, response ) {
-            $.ajax({
-                url: "http://127.0.0.1/firstletter",
-                dataType: "json",
-                data: {
-                    format : "json",
-                name: request.term,
-                },
-                success: function( data ) {
-                    response( $.map( data.firstletter.items, function( item ) {
-                        return {
-                            label: item.name,
-                    value: item.uri
-                        }
+      $( "#destination" ).autocomplete({
+                                           source: function( request, response ) {
+                                                       $.ajax({
+                                                                  url: "http://127.0.0.1/firstletter",
+                                                                  dataType: "json",
+                                                                  data: {
+                                                                      format : "json",
+                                                                      name: request.term,
+                                                                  },
+                                                                  success: function( data ) {
+                                                                               response( $.map( data.firstletter.items, function( item ) {
+                                                                                                   return {
+                                                                                                       label: item.name,
+                                                                                                       value: item.uri
+                                                                                                   }
 
 
-                    }));
-                }
-            });
-        },
-            minLength: 2,
-            select: function( event, ui ) {
-                destination_idx = ui.item.value;
-            },
-            open: function() {
-                $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
-            },
-            close: function() {
-                $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
-            }
-    });
+                                                                                               }));
+                                                                           }
+                                                              });
+                                                   },
+                                           minLength: 2,
+                                           select: function( event, ui ) {
+                                                       destination_idx = ui.item.value;
+                                                   },
+                                           open: function() {
+                                                     $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
+                                                 },
+                                           close: function() {
+                                                      $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+                                                  }
+                                       });
 
-});
+  });
