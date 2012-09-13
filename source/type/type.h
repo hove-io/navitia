@@ -512,6 +512,8 @@ struct EntryPoint {
         }
     }
 
+    EntryPoint() : type(Type_e::eUnknown), external_code("") {}
+
 };
 
 } } //namespace navitia::type
