@@ -228,7 +228,8 @@ public :
 enum senscompute {
     partirapres,
     arriveravant,
-    partirapresrab
+    partirapresrab,
+    inconnu
 };
 
 struct AbstractRouter {
