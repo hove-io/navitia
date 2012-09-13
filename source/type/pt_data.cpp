@@ -2,14 +2,6 @@
 
 namespace navitia{namespace type {
 
-
-template<> std::vector<StopPoint> & PT_Data::get() {return stop_points;}
-template<> std::vector<StopArea> & PT_Data::get() {return stop_areas;}
-template<> std::vector<VehicleJourney> & PT_Data::get() {return vehicle_journeys;}
-template<> std::vector<Line> & PT_Data::get() {return lines;}
-template<> std::vector<ValidityPattern> & PT_Data::get() {return validity_patterns;}
-template<> std::vector<Route> & PT_Data::get() {return routes;}
-
 std::vector<idx_t> PT_Data::get_target_by_source(Type_e source, Type_e target, std::vector<idx_t> source_idx){
     std::vector<idx_t> result;
     result.reserve(source_idx.size());
@@ -145,19 +137,19 @@ void PT_Data::build_proximity_list() {
 }
 
 void PT_Data::build_external_code() {
-    for(const Line &line : this->lines){line_map[line.external_code] = line.idx;}
-    for(const Route &route : this->routes){route_map[route.external_code] = route.idx;}
-    for(const VehicleJourney &vj : this->vehicle_journeys){vehicle_journey_map[vj.external_code] = vj.idx;}
-    for(const StopArea &sa : this->stop_areas){stop_area_map[sa.external_code] = sa.idx;}
-    for(const StopPoint &sp : this->stop_points){stop_point_map[sp.external_code] = sp.idx;}
-    for(const Network &network : this->networks){network_map[network.external_code] = network.idx;}
-    for(const Mode &mode : this->modes){mode_map[mode.external_code] = mode.idx;}
-    for(const ModeType &mode_type : this->mode_types){mode_type_map[mode_type.external_code] = mode_type.idx;}
-    for(const City &city : this->cities){city_map[city.external_code] = city.idx;}
-    for(const District &district : this->districts){district_map[district.external_code] = district.idx;}
-    for(const Department &department : this->departments){department_map[department.external_code] = department.idx;}
-    for(const Company &company : this->companies){company_map[company.external_code] = company.idx;}
-    for(const Country &country : this->countries){country_map[country.external_code] = country.idx;}
+    normalize_extcode<Line>(line_map);
+    normalize_extcode<Route>(route_map);
+    normalize_extcode<VehicleJourney>(vehicle_journey_map);
+    normalize_extcode<StopArea>(stop_area_map);
+    normalize_extcode<StopPoint>(stop_point_map);
+    normalize_extcode<Network>(network_map);
+    normalize_extcode<Mode>(mode_map);
+    normalize_extcode<ModeType>(mode_type_map);
+    normalize_extcode<City>(city_map);
+    normalize_extcode<District>(district_map);
+    normalize_extcode<Department>(department_map);
+    normalize_extcode<Company>(company_map);
+    normalize_extcode<Country>(country_map);
 }
 
 struct Edge {

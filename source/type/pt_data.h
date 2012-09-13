@@ -103,39 +103,16 @@ struct PT_Data : boost::noncopyable{
         return find(attribute, std::string(str));
     }
 
-    /** Retourne le conteneur associé au type
-      *
-      * Cette fonction est surtout utilisée en interne
-      */
-    template<class Type> std::vector<Type> & get();
 
-//    struct NotFound;
-//    template<class Type> Type get(EntryPoint entrypoint){
-//        ExtCodeMap ext_map;
-//        std::vector<Type> vector;
-//        switch(entrypoint.type) {
-//        case navitia::type::eCity : ext_map = city_map; vector = cities; break;
-//        case navitia::type::eCompany  : ext_map = company_map; vector = companies; break;
-//        case navitia::type::eCountry : ext_map = country_map ; vector = countries; break;
-//        case navitia::type::eDepartment : ext_map = department_map;  vector = departments;break;
-//        case navitia::type::eLine : ext_map = line_map; vector = lines; break;
-//        case navitia::type::eMode : ext_map = mode_map;  vector = modes;break;
-//        case navitia::type::eModeType : ext_map =  mode_type_map;  vector = mode_types;break;
-//        case navitia::type::eNetwork : ext_map = network_map;  vector = networks;break;
-//        case navitia::type::eRoute : ext_map = route_map;  vector = routes;break;
-//        case navitia::type::eStopArea : ext_map = stop_area_map;  vector = stop_areas;break;
-//        case navitia::type::eStopPoint : ext_map = stop_point_map;  vector = stop_points;break;
-//        case navitia::type::eVehicleJourney : ext_map = vehicle_journey_map;  vector = vehicle_journeys;break;
-//        default: throw NotFound();
-//        }
-//        auto it = ext_map.find(entrypoint.external_code);
-//        if(it == ext_map.end())
-//            throw NotFound();
-//        if(*it > vector.size())
-//            throw NotFound();
-//        return vector.at(*it);
-//    }
-
+    /// Prefixe le type à l'external_code
+    template<typename T>
+    void normalize_extcode(std::map<std::string, idx_t> map){
+        std::string prefix = static_data::get()->captionByType(T::type);
+        for(auto & element : this->get_data<T>()){
+            element.external_code = prefix + ":" + element.external_code;
+            map[element.external_code] = element.idx;
+        }
+    }
 
 
     /** Étant donné une liste d'indexes pointant vers source,

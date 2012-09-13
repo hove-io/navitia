@@ -71,6 +71,9 @@ public:
     boost::gregorian::date_period find_production_date();
 };
 
+/// Normalise les external code des stop_point et stop_areas
+void normalize_extcodes(Data & data);
+
 /// Construit les routes en retrouvant les paterns à partir des VJ
 void build_routes(Data & data);
 

@@ -46,6 +46,7 @@ void GtfsParser::fill(Data & data){
     parse_trips(data);
     parse_transfers(data);
     parse_stop_times(data);
+    normalize_extcodes(data);
     build_routes(data);
     build_route_points(data);
 }
@@ -623,6 +624,15 @@ bool same_route(nm::VehicleJourney * vj1, nm::VehicleJourney * vj2){
             return false;
         }
     return true;
+}
+
+void normalize_extcodes(Data & data){
+    for(nm::StopArea * sa : data.stop_areas){
+        boost::algorithm::replace_first(sa->external_code, "StopArea:", "");
+    }
+    for(nm::StopPoint * sp : data.stop_points){
+        boost::algorithm::replace_first(sp->external_code, "StopPoint:", "");
+    }
 }
 
 void build_routes(Data & data){
