@@ -257,7 +257,7 @@ struct Worker : public BaseWorker<Data> {
 
 
     /** Api qui compte le nombre de fois qu'elle a été appelée */
-    ResponseData planner(RequestData req, Data & d) {
+    ResponseData planner(RequestData req, const Data & d) {
 
 
         ResponseData rd;
@@ -296,26 +296,26 @@ struct Worker : public BaseWorker<Data> {
             return rd;
         }
 
-        if(d.insee_key[insee_departure] != d.insee_key[insee_destination]){
-            rd.response << "Le départ et l'arrivée ne sont pas dans la même zone : " << d.insee_key[insee_departure] << " et " << d.insee_key[insee_destination];
+        if(d.insee_key.at(insee_departure) != d.insee_key.at(insee_destination)){
+            rd.response << "Le départ et l'arrivée ne sont pas dans la même zone : " << d.insee_key.at(insee_departure) << " et " << d.insee_key.at(insee_destination);
             return rd;
         }
 
-        if(d.insee_key[insee_departure].empty()){
+        if(d.insee_key.at(insee_departure).empty()){
             rd.response << "Les communes ne sont pas couvertes";
             return rd;
         }
 
-        if(d.key_url.find(d.insee_key[insee_departure]) == d.key_url.end()){
+        if(d.key_url.find(d.insee_key.at(insee_departure)) == d.key_url.end()){
             rd.status_code = 500;
-            rd.response << "Pas d'URL associée à la clef : " << d.insee_key[insee_departure];
+            rd.response << "Pas d'URL associée à la clef : " << d.insee_key.at(insee_departure);
             return rd;
         }
 
-        int pos = req.path.find_last_of('/');
+        size_t pos = req.path.find_last_of('/');
         if(pos == std::string::npos)
             pos = 0;
-        std::string url = d.key_url[d.insee_key[insee_departure]] + req.path.substr(0) + "?" + req.raw_params;
+        std::string url = d.key_url.at(d.insee_key.at(insee_departure)) + req.path.substr(0) + "?" + req.raw_params;
 
 
         CURL *handle = curl_easy_init();
@@ -342,6 +342,23 @@ struct Worker : public BaseWorker<Data> {
     }
 
 
+    ResponseData status(RequestData, const Data & data){
+        ResponseData rd;
+        rd.status_code = 200;
+        rd.content_type = "application/json";
+
+        int nb_communes = 0;
+        for(const Departement & dep : data.departements){
+            nb_communes += dep.communes.size();
+        }
+
+        rd.response << "{ \"status\": {\n"
+                    << "    \"nb_departments\" : \"" << data.departements.size() << "\",\n"
+                    << "    \"nb_communes\": \"" << nb_communes << "\",\n"
+                    << "    \"nb_urls\": \"" << data.key_url.size() << "\"\n"
+                    << "}";
+        return rd;
+    }
 
     public:
     /** Constructeur par défaut
@@ -355,6 +372,9 @@ struct Worker : public BaseWorker<Data> {
         add_param("planner", "departure_lon", "Longitude de départ", ApiParameter::DOUBLE, true);
         add_param("planner", "destination_lat", "Latitude d'arrivée", ApiParameter::DOUBLE, true);
         add_param("planner", "destination_lon", "Longitude d'arrivée", ApiParameter::DOUBLE, true);
+
+        register_api("status",boost::bind(&Worker::status, this, _1, _2), "Informations sur les données chargées");
+
         add_default_api();
     }
 };
