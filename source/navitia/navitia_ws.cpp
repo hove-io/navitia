@@ -115,17 +115,16 @@ class Worker : public BaseWorker<navitia::type::Data> {
             std::vector<nt::Type_e> filter = parse_param_filter(request.params["filter"]);
             std::string name = boost::get<std::string>(request.parsed_params["name"].value);
 
-            try{
-                pb_response = navitia::firstletter::firstletter(name, filter, data);
-                rd.status_code = 200;
-            }catch(...){
-                rd.status_code = 500;
-            }
+            pb_response = navitia::firstletter::firstletter(name, filter, data);
+            rd.status_code = 200;
+
 #ifndef DEBUG
         }catch(std::exception& e){
             LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+            rd.status_code = 500;
         }catch(...){
             LOG4CPLUS_FATAL(logger, "Erreur inconnue");
+            rd.status_code = 500;
         }
 #endif
         return rd;
@@ -150,8 +149,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
 #ifndef DEBUG
         }catch(std::exception& e){
             LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+            rd.status_code = 500;
         }catch(...){
             LOG4CPLUS_FATAL(logger, "Erreur inconnue");
+            rd.status_code = 500;
         }
 #endif
         return rd;
@@ -171,6 +172,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
             LOG4CPLUS_TRACE(logger, "Chargement des donnés fini");
         }catch(...){
             data.loaded = false;
+            LOG4CPLUS_ERROR(logger, "erreur durant le chargement des données");
             throw;
         }
 
@@ -210,17 +212,16 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
             std::vector<nt::Type_e> filter = parse_param_filter(request.params["filter"]);
 
-            try{
-                pb_response = navitia::proximitylist::find(coord, distance, filter, data);
-                rd.status_code = 200;
-            }catch(...){
-                rd.status_code = 500;
-            }
+            pb_response = navitia::proximitylist::find(coord, distance, filter, data);
+            rd.status_code = 200;
+
 #ifndef DEBUG
         }catch(std::exception& e){
             LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+            rd.status_code = 500;
         }catch(...){
             LOG4CPLUS_FATAL(logger, "Erreur inconnue");
+            rd.status_code = 500;
         }
 #endif
         return rd;
@@ -258,8 +259,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
 #ifndef DEBUG
         }catch(std::exception& e){
             LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+            rd.status_code = 500;
         }catch(...){
             LOG4CPLUS_FATAL(logger, "Erreur inconnue");
+            rd.status_code = 500;
         }
 #endif
         return rd;
@@ -343,8 +346,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
 #ifndef DEBUG
         }catch(std::exception& e){
             LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+            rd.status_code = 500;
         }catch(...){
             LOG4CPLUS_FATAL(logger, "Erreur inconnue");
+            rd.status_code = 500;
         }
 #endif
         return rd;
@@ -360,19 +365,18 @@ class Worker : public BaseWorker<navitia::type::Data> {
             if(!locker.locked){
                 return rd;
             }
-            try {
-                std::string q = boost::get<std::string>(request.parsed_params["q"].value);
-                pb_response = navitia::ptref::query(q, data.pt_data);
-                rd.status_code = 200;
-            }catch(...){
-                rd.status_code = 500;
-            }
+
+            std::string q = boost::get<std::string>(request.parsed_params["q"].value);
+            pb_response = navitia::ptref::query(q, data.pt_data);
+            rd.status_code = 200;
 
 #ifndef DEBUG
         }catch(std::exception& e){
             LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+            rd.status_code = 500;
         }catch(...){
             LOG4CPLUS_FATAL(logger, "Erreur inconnue");
+            rd.status_code = 500;
         }
 #endif
         return rd;
