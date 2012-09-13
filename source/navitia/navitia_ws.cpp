@@ -282,24 +282,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
             std::vector<navitia::routing::Path> pathes;
             int time = boost::get<int>(request.parsed_params["time"].value);
             //int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
-            navitia::type::EntryPoint departure, destination;
-            if(request.parsed_params.count("departure") == 1) {
-                departure = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["departure"].value));
-            } else {
-                double departure_lat = boost::get<double>(request.parsed_params["departure_lat"].value);
-                double departure_lon = boost::get<double>(request.parsed_params["departure_lon"].value);
-                departure.type = navitia::type::Type_e::eCoord;
-                departure.coordinates = navitia::type::GeographicalCoord(departure_lon, departure_lat);
-            }
+            navitia::type::EntryPoint departure = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["departure"].value));
+            navitia::type::EntryPoint destination = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["destination"].value));
 
-            if(request.parsed_params.count("destination") == 1) {
-                destination = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["destination"].value));
-            } else {
-                double arrival_lat = boost::get<double>(request.parsed_params["destination_lat"].value);
-                double arrival_lon = boost::get<double>(request.parsed_params["destination_lon"].value);
-                destination.type = navitia::type::Type_e::eCoord;
-                destination.coordinates = navitia::type::GeographicalCoord(arrival_lon, arrival_lat);
-            }
             navitia::routing::senscompute sens = navitia::routing::inconnu;
             if(boost::get<std::string>(request.parsed_params["sens"].value) == "apres")
                 sens = navitia::routing::partirapres;
@@ -378,13 +363,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
         add_param("proximitylist", "filter", "Type à rechercher", ApiParameter::STRING, false, default_params);
 
         register_api("planner", boost::bind(&Worker::planner, this, _1, _2), "Calcul d'itinéraire en Transport en Commun");
-        add_param("planner", "departure", "Point de départ", ApiParameter::STRING, false);
-        add_param("planner", "destination", "Point d'arrivée", ApiParameter::STRING, false);
-        add_param("planner", "departure_lat", "Latitude de départ", ApiParameter::DOUBLE, false);
-        add_param("planner", "departure_lon", "Longitude de départ", ApiParameter::DOUBLE, false);
-        add_param("planner", "destination_lat", "Latitude d'arrivée", ApiParameter::DOUBLE, false);
-        add_param("planner", "destination_lon", "Longitude d'arrivée", ApiParameter::DOUBLE, false);
-
+        add_param("planner", "departure", "Point de départ", ApiParameter::STRING, true);
+        add_param("planner", "destination", "Point d'arrivée", ApiParameter::STRING, true);
         add_param("planner", "time", "Heure de début de l'itinéraire", ApiParameter::TIME, true);
         add_param("planner", "date", "Date de début de l'itinéraire", ApiParameter::DATE, true);
 
