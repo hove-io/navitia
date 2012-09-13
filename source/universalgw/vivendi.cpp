@@ -274,8 +274,8 @@ struct Worker : public BaseWorker<Data> {
         double arrival_lat = boost::get<double>(req.parsed_params["destination_lat"].value);
         double arrival_lon = boost::get<double>(req.parsed_params["destination_lon"].value);
 
-        std::string insee_departure = find(d.departements, departure_lat, departure_lon);
-        std::string insee_destination = find(d.departements, arrival_lat, arrival_lon);
+        std::string insee_departure = find(d.departements, departure_lon, departure_lat);
+        std::string insee_destination = find(d.departements, arrival_lon, arrival_lat);
 
         if(insee_departure.empty() || insee_destination.empty()){
             if(insee_departure.empty())
