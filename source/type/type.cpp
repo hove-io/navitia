@@ -315,4 +315,26 @@ std::vector<idx_t> StopTime::get(Type_e type, const PT_Data &) const {
     }
     return result;
 }
+
+EntryPoint::EntryPoint(const std::string &uri) : external_code(uri) {
+       size_t pos = uri.find(":");
+       if(pos == std::string::npos)
+           type = Type_e::eUnknown;
+       else {
+           type = static_data::get()->typeByCaption(uri.substr(0,pos));
+       }
+
+       if(type == Type_e::eCoord){
+           size_t pos2 = uri.find(":", pos+1);
+           try{
+               if(pos2 != std::string::npos) {
+                   this->coordinates.x = boost::lexical_cast<double>(uri.substr(pos+1, pos2 - pos - 1));
+                   this->coordinates.y = boost::lexical_cast<double>(uri.substr(pos2+1));
+               }
+           }catch(boost::bad_lexical_cast){
+               this->coordinates.x = 0;
+               this->coordinates.y = 0;
+           }
+       }
+   }
 }} //namespace navitia::type

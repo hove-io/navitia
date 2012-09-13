@@ -15,12 +15,15 @@ target_link_libraries(types ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${PROJ}  util
 
 SET(DATA_SRC
     data.cpp
-    ${PROTO_SRCS}
     ${CMAKE_SOURCE_DIR}/../third_party/lz4/lz4.c
     pt_data.cpp
     locker.cpp
 )
 
 add_library(data ${DATA_SRC})
-target_link_libraries(data ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} types streetnetwork routing)
+target_link_libraries(data ${Boost_LIBRARIES} types streetnetwork routing)
 
+FIND_PACKAGE(Boost 1.40.0 COMPONENTS unit_test_framework  REQUIRED)
+add_executable(type_test tests/test.cpp)
+target_link_libraries(type_test ${Boost_LIBRARIES} proj types)
+ADD_TEST(type_test ${EXECUTABLE_OUTPUT_PATH}/type_test --report_level=no)

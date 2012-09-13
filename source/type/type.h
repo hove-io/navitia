@@ -503,14 +503,7 @@ struct EntryPoint {
     }
 
     /// Construit le type à partir d'une chaîne
-    EntryPoint(const std::string & uri) : external_code(uri){
-        size_t pos = uri.find(":");
-        if(pos == std::string::npos)
-            type = Type_e::eUnknown;
-        else {
-            type = static_data::get()->typeByCaption(uri.substr(0,pos));
-        }
-    }
+    EntryPoint(const std::string & uri);
 
     EntryPoint() : type(Type_e::eUnknown), external_code("") {}
 
