@@ -5,11 +5,11 @@
 namespace navitia { namespace routing { namespace raptor {
 
 
-pbnavitia::Response make_response(std::vector<navitia::routing::Path> paths, const nt::Data & d) {
+pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths, const nt::Data & d) {
     pbnavitia::Response pb_response;
     pb_response.set_requested_api(pbnavitia::PLANNER);
 
-    for(Path & path : paths) {
+    for(Path path : paths) {
         //navitia::routing::Path itineraire = navitia::routing::makeItineraire(path);
         pbnavitia::PTPath * pb_path = pb_response.mutable_planner()->add_path();
         pb_path->set_duration(path.duration);
@@ -44,12 +44,22 @@ pbnavitia::Response make_response(std::vector<navitia::routing::Path> paths, con
     return pb_response;
 }
 
-void checkDateTime(int time, boost::gregorian::date date, boost::gregorian::date_period period) {
-    if(time < 0 || time > 86400)
-        throw badTime();
+bool checkTime(const int time) {
+    return !(time < 0 || time > 86400);
+}
 
-    if(!period.contains(date))
-        throw badDate();
+pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &departure, const type::EntryPoint &destination, const int time, const boost::gregorian::date &date, const navitia::routing::senscompute sens) {
+    pbnavitia::Response response;
+    if(!raptor.data.meta.production_date.contains(date)) {
+        response.set_error("Date not in the production period");
+        return response;
+    }
+
+
+    response = navitia::routing::raptor::make_pathes(raptor.compute_all(departure, destination, time, (date - raptor.data.meta.production_date.begin()).days(), sens), raptor.data);
+
+
+    return response;
 }
 
 }}}
