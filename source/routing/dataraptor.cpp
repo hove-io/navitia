@@ -119,13 +119,21 @@ void dataRAPTOR::load(const type::PT_Data &data)
 
         }
 
+        std::vector<pair_int> tmp;
         for(auto it : temp) {
-            sp_routeorder_const.push_back(it);
+            tmp.push_back(it);
         }
+        std::sort(tmp.begin(), tmp.end(), [&](pair_int p1, pair_int p2){return routes[p1.first].vp < routes[p2.first].vp;});
+        sp_routeorder_const.insert(sp_routeorder_const.end(), tmp.begin(), tmp.end());
+
+
+        tmp.clear();
 
         for(auto it : temp_reverse) {
-            sp_routeorder_const_reverse.push_back(it);
+            tmp.push_back(it);
         }
+        std::sort(tmp.begin(), tmp.end(), [&](pair_int p1, pair_int p2){return routes[p1.first].vp < routes[p2.first].vp;});
+        sp_routeorder_const_reverse.insert(sp_routeorder_const_reverse.end(), tmp.begin(), tmp.end());
 
         temp_index.second = sp_routeorder_const.size() - temp_index.first;
         temp_index_reverse.second = sp_routeorder_const_reverse.size() - temp_index_reverse.first;

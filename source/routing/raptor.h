@@ -28,14 +28,12 @@ struct RAPTOR : public AbstractRouter
     map_int_pint_t best;
     best_dest b_dest;
     unsigned int count;
-    std::vector<pair_int> sp_routeorder;
     boost::dynamic_bitset<> marked_sp;
     boost::dynamic_bitset<> vp_valides;
     queue_t Q;
 
     //Constructeur
-    RAPTOR(const navitia::type::Data &data) :  data(data), best(data.pt_data.stop_points.size()), sp_routeorder(data.dataRaptor.sp_routeorder_const.size())
-      , marked_sp(data.pt_data.stop_points.size()), vp_valides(data.pt_data.validity_patterns.size()), Q(data.dataRaptor.routes.size()) {
+    RAPTOR(const navitia::type::Data &data) :  data(data), best(data.pt_data.stop_points.size()), marked_sp(data.pt_data.stop_points.size()), vp_valides(data.pt_data.validity_patterns.size()), Q(data.dataRaptor.routes.size()) {
         retour.assign(20, data.dataRaptor.retour_constant);
     }
 
@@ -65,14 +63,12 @@ struct RAPTOR : public AbstractRouter
     void boucleRAPTOR(const std::vector<unsigned int> &marked_stop);
     Path makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb, bool reverse = false);
     void marcheapied();
-    void setRoutesValides(const std::vector<unsigned int> &marked_stop);
     void setVPValides(const std::vector<unsigned int> &marked_stop);
     void make_queue();
 
     void boucleRAPTORreverse(std::vector<unsigned int> &marked_stop);
     Path makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb);
     void marcheapiedreverse(unsigned int count);
-    void setRoutesValidesreverse(std::vector<unsigned int> &marked_stop);
     void setVPValidesreverse(std::vector<unsigned int> &marked_stop);
     void make_queuereverse();
 
