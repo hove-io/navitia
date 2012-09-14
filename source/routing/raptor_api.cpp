@@ -44,4 +44,12 @@ pbnavitia::Response make_response(std::vector<navitia::routing::Path> paths, con
     return pb_response;
 }
 
+void checkDateTime(int time, boost::gregorian::date date, boost::gregorian::date_period period) {
+    if(time < 0 || time > 86400)
+        throw badTime();
+
+    if(!period.contains(date))
+        throw badDate();
+}
+
 }}}

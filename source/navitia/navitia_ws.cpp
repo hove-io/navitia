@@ -281,7 +281,20 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
             std::vector<navitia::routing::Path> pathes;
             int time = boost::get<int>(request.parsed_params["time"].value);
-            //int date = d.pt_data.validity_patterns.front().slide(boost::get<boost::gregorian::date>(request.parsed_params["date"].value));
+            auto date = boost::get<boost::gregorian::date>(request.parsed_params["date"].value);
+
+            try {
+                navitia::routing::raptor::checkDateTime(time, date, d.meta.production_date);
+            } catch(navitia::routing::raptor::badTime) {
+                pb_response.set_error("Temps non valide");
+                rd.status_code = 400;
+                return rd;
+            } catch(navitia::routing::raptor::badDate) {
+                pb_response.set_error("Date non valide");
+                rd.status_code = 400;
+                return rd;
+            }
+
             navitia::type::EntryPoint departure = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["departure"].value));
             navitia::type::EntryPoint destination = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["destination"].value));
 
@@ -292,7 +305,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
             else if(boost::get<std::string>(request.parsed_params["sens"].value) == "avant")
                 sens = navitia::routing::arriveravant;
 
-            pathes = calculateur->compute_all(departure, destination, time, 7, sens);
+            pathes = calculateur->compute_all(departure, destination, time, (date - d.meta.production_date.begin()).days(), sens);
 
             pb_response = navitia::routing::raptor::make_response(pathes, d);
 
