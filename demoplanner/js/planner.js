@@ -114,8 +114,8 @@ function clickmap(event_name, event_source, event_args) {
         $("#infos").text("Calcul en cours ... ");
         debut_requete = new Date().getTime();
 
-        $.getJSON("../planner?format=json&departure_lat="+depart_arrivee.depart.lat+"&departure_lon="+depart_arrivee.depart.lon+
-                  "&destination_lat="+depart_arrivee.arrivee.lat+"&destination_lon="+depart_arrivee.arrivee.lon+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val()
+        $.getJSON("../planner?format=json&departure=coord:"+depart_arrivee.depart.lon+":"+depart_arrivee.depart.lat+
+                  "&destination=coord:"+depart_arrivee.arrivee.lon+":"+depart_arrivee.arrivee.lat+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val()
                   +"&sens="+  $("#typeitineraire option:selected'").val(),
                   aff_data
                   );
