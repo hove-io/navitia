@@ -44,12 +44,7 @@ struct RAPTOR : public AbstractRouter
     Path compute_reverse(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
     Path compute_rabattement(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
 
-    Path compute_raptor(vector_idxretour departs, vector_idxretour destinations);
-    Path compute_raptor_reverse(vector_idxretour departs, vector_idxretour destinations);
-    Path compute_raptor_rabattement(vector_idxretour departs, vector_idxretour destinations);
-
-
-
+    Path compute_raptor(vector_idxretour departs, vector_idxretour destinations, senscompute sens);
 
     Path makeBestPath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count);
     Path makeBestPathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count);

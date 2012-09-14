@@ -229,6 +229,7 @@ enum senscompute {
     partirapres,
     arriveravant,
     partirapresrab,
+    arriveravantrab,
     inconnu
 };
 
