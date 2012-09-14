@@ -65,12 +65,12 @@ public:
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
             LOG4CPLUS_TRACE(logger, "Chargement de l'application");
             Configuration * conf = Configuration::get();
-            nb_threads = conf->get_as<int>("GENERAL", "nb_threads", 1);
             std::string conf_file = conf->get_string("path") + conf->get_string("application") + ".ini";
             LOG4CPLUS_TRACE(logger, "On tente de charger le fichier de configuration pour les logs : " + conf_file);
             init_logger(conf_file);
             LOG4CPLUS_TRACE(logger, "On tente de charger le fichier de configuration général : " + conf_file);
             conf->load_ini(conf_file);
+            nb_threads = conf->get_as<int>("GENERAL", "nb_threads", 1);
         }
     }
 
