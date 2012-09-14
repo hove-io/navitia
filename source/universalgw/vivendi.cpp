@@ -25,18 +25,19 @@ using namespace webservice;
 struct Geometry {
     GEOSGeometry * geom;
 
+
     Geometry() : geom(nullptr) {}
 
-    Geometry(const Geometry & other) {
-        if(other.geom != nullptr)
-            this->geom = GEOSGeom_clone(other.geom);
-        else
-            this->geom = nullptr;
-    }
 
     Geometry(Geometry && other) {
         this->geom = other.geom;
         other.geom = nullptr;
+    }
+
+
+    ~Geometry() {
+        if(geom != nullptr)
+            GEOSGeom_destroy(geom);
     }
 
     Geometry & operator=(const Geometry & other){
@@ -50,10 +51,14 @@ struct Geometry {
         return *this;
     }
 
-    ~Geometry() {
-        if(geom != nullptr)
-            GEOSGeom_destroy(geom);
+    Geometry(const Geometry & other) {
+        if(other.geom != nullptr)
+            this->geom = GEOSGeom_clone(other.geom);
+        else
+            this->geom = nullptr;
     }
+
+
 };
 
 struct Commune {
@@ -92,9 +97,10 @@ struct Data {
     std::map<std::string, std::string> insee_key;
     std::map<std::string, std::string> key_url;
     log4cplus::Logger logger;
+    GEOSContextHandle_t geos_handle;
 
     bool load_departements(const std::string & file_name){
-        GEOSWKTReader * wkt_reader = GEOSWKTReader_create();
+        GEOSWKTReader * wkt_reader = GEOSWKTReader_create_r(geos_handle);
         CsvReader reader_dep(file_name, ',');
 
         std::vector<std::string> line = reader_dep.next();
@@ -115,16 +121,16 @@ struct Data {
             Departement dep;
             dep.code = line[2];
             dep.name = line[3];
-            dep.geom.geom = GEOSWKTReader_read(wkt_reader, line[0].c_str());
+            dep.geom.geom = GEOSWKTReader_read_r(geos_handle, wkt_reader, line[0].c_str());
             departements.push_back(std::move(dep));
             line = reader_dep.next();
         }
-        GEOSWKTReader_destroy(wkt_reader);
+        GEOSWKTReader_destroy_r(geos_handle, wkt_reader);
         return true;
     }
 
     bool load_communes(const std::string & file_name){
-        GEOSWKTReader * wkt_reader = GEOSWKTReader_create();
+        GEOSWKTReader * wkt_reader = GEOSWKTReader_create_r(geos_handle);
         CsvReader reader(file_name, ',');
         std::vector<std::string> line = reader.next();
         if(line.size() != 19){
@@ -137,7 +143,7 @@ struct Data {
             c.name = line[4];
             c.population = boost::lexical_cast<float>(boost::trim_copy(line[12])) * 1000;
             c.insee = line[3];
-            c.geom.geom = GEOSWKTReader_read(wkt_reader, line[0].c_str());
+            c.geom.geom = GEOSWKTReader_read_r(geos_handle, wkt_reader, line[0].c_str());
             std::string code_dep = line[15];
             for(Departement & dep : departements){
                 if(dep.code == code_dep){
@@ -147,6 +153,7 @@ struct Data {
             }
             line = reader.next();
         }
+        GEOSWKTReader_destroy_r(geos_handle, wkt_reader);
         return true;
     }
 
@@ -182,6 +189,7 @@ struct Data {
 
     Data() : nb_threads(8){
         if(Configuration::is_instanciated()){
+            geos_handle = initGEOS_r(NULL, NULL);
             init_logger();
             bool ok = true;
 
@@ -229,6 +237,10 @@ struct Data {
             LOG4CPLUS_DEBUG(logger, "Initialisation OK");
         }
 
+    }
+
+    ~Data(){
+        finishGEOS_r(geos_handle);
     }
 };
 
