@@ -186,14 +186,16 @@ struct Data {
             bool ok = true;
 
             logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-            LOG4CPLUS_TRACE(logger, "Chargement de l'application");
+            LOG4CPLUS_DEBUG(logger, "Chargement de l'application");
             Configuration * conf = Configuration::get();
-            nb_threads = conf->get_as<int>("GENERAL", "nb_threads", 1);
             std::string conf_file = conf->get_string("path") + conf->get_string("application") + ".ini";
-            LOG4CPLUS_TRACE(logger, "On tente de charger le fichier de configuration pour les logs : " + conf_file);
+            LOG4CPLUS_DEBUG(logger, "On tente de charger le fichier de configuration pour les logs : " + conf_file);
             init_logger(conf_file);
-            LOG4CPLUS_TRACE(logger, "On tente de charger le fichier de configuration général : " + conf_file);
+            LOG4CPLUS_DEBUG(logger, "On tente de charger le fichier de configuration général : " + conf_file);
             conf->load_ini(conf_file);
+
+            nb_threads = conf->get_as<int>("GENERAL", "nb_threads", 1);
+            LOG4CPLUS_TRACE(logger, std::string("nb_threads =  ") + boost::lexical_cast<std::string>(nb_threads));
 
             if(curl_global_init(CURL_GLOBAL_NOTHING) != 0){
                 LOG4CPLUS_FATAL(logger, "erreurs lors de l'initialisation de CURL");
@@ -223,6 +225,8 @@ struct Data {
                 LOG4CPLUS_FATAL(logger, "Il y a eu un problème de chargement des données. J'abandonne");
                 exit(1);
             }
+
+            LOG4CPLUS_DEBUG(logger, "Initialisation OK");
         }
 
     }
@@ -237,22 +241,24 @@ size_t curl_callback( char *ptr, size_t size, size_t nmemb, void *userdata){
 struct Worker : public BaseWorker<Data> {
     log4cplus::Logger logger;
 
+    GEOSContextHandle_t geos_handle;
+
     std::string find(const std::vector<Departement> & departements, double lon, double lat) {
-        GEOSCoordSequence *s = GEOSCoordSeq_create(1, 2);
-        GEOSCoordSeq_setX(s, 0, lon);
-        GEOSCoordSeq_setY(s, 0, lat);
-        GEOSGeometry *p = GEOSGeom_createPoint(s);
+        GEOSCoordSequence *s = GEOSCoordSeq_create_r(geos_handle, 1, 2);
+        GEOSCoordSeq_setX_r(geos_handle, s, 0, lon);
+        GEOSCoordSeq_setY_r(geos_handle, s, 0, lat);
+        GEOSGeometry *p = GEOSGeom_createPoint_r(geos_handle, s);
         for(auto &d : departements) {
-            if(GEOSContains(d.geom.geom, p)) {
+            if(GEOSContains_r(geos_handle, d.geom.geom, p)) {
                 for(auto & c : d.communes){
-                    if(GEOSContains(c.geom.geom, p)) {
-                        GEOSGeom_destroy(p);
+                    if(GEOSContains_r(geos_handle, c.geom.geom, p)) {
+                        GEOSGeom_destroy_r(geos_handle, p);
                         return c.insee;
                     }
                 }
             }
         }
-        GEOSGeom_destroy(p);
+        GEOSGeom_destroy_r(geos_handle, p);
         return "";
     }
 
@@ -355,7 +361,7 @@ struct Worker : public BaseWorker<Data> {
                     << "    \"nb_departments\" : \"" << data.departements.size() << "\",\n"
                     << "    \"nb_communes\": \"" << nb_communes << "\",\n"
                     << "    \"nb_urls\": \"" << data.key_url.size() << "\"\n"
-                    << "}";
+                    << "}}";
         return rd;
     }
 
@@ -365,6 +371,9 @@ struct Worker : public BaseWorker<Data> {
       * On y enregistre toutes les api qu'on souhaite exposer
       */
     Worker(Data &) {
+        //@TODO: passer des fonctions de log
+        geos_handle = initGEOS_r(NULL, NULL);
+
         logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
         register_api("planner",boost::bind(&Worker::planner, this, _1, _2), "Effectue un calcul d'itinéraire entre deux coordonnées");
         add_param("planner", "departure", "EntryPoint (coordonnées) de départ", ApiParameter::STRING, true);
@@ -373,6 +382,10 @@ struct Worker : public BaseWorker<Data> {
         register_api("status",boost::bind(&Worker::status, this, _1, _2), "Informations sur les données chargées");
 
         add_default_api();
+    }
+
+    ~Worker(){
+        finishGEOS_r(geos_handle);
     }
 };
 
