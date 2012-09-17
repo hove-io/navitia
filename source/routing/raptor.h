@@ -42,34 +42,34 @@ struct RAPTOR : public AbstractRouter
     Path compute_reverse(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
     Path compute_rabattement(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
 
-    Path compute_raptor(vector_idxretour departs, vector_idxretour destinations, senscompute sens);
+    Path compute_raptor(vector_idxretour &departs, vector_idxretour &destinations, const senscompute sens);
 
-    Path makeBestPath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count);
-    Path makeBestPathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count);
-    std::vector<Path> makePathes(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, best_dest &b_dest, unsigned int count);
-    std::vector<Path> makePathesreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, best_dest &b_dest, unsigned int count);
+    Path makeBestPath(const vector_idxretour &departs, const unsigned int destination_idx, unsigned int count);
+    Path makeBestPathreverse(const vector_idxretour &departs, const unsigned int destination_idx, unsigned int count);
+    std::vector<Path> makePathes(const vector_idxretour &departs, const best_dest &b_dest, unsigned int count);
+    std::vector<Path> makePathesreverse(const vector_idxretour &departs, const best_dest &b_dest, unsigned int count);
 
     std::vector<Path> compute_all(const type::GeographicalCoord & , double , const type::GeographicalCoord & , double
                                   , int departure_hour, int departure_day);
-    std::vector<Path> compute_all(vector_idxretour departs, vector_idxretour destinations);
+    std::vector<Path> compute_all(const vector_idxretour &departs, const vector_idxretour &destinations);
     std::vector<Path> compute_all(navitia::type::EntryPoint departure, navitia::type::EntryPoint destination, int departure_hour, int departure_day, senscompute sens);
     std::vector<Path> compute_reverse_all(const type::GeographicalCoord & departure, double radius_depart, const type::GeographicalCoord & destination, double radius_destination
                                           , int departure_hour, int departure_day);
-    std::vector<Path> compute_reverse_all(vector_idxretour departs, vector_idxretour destinations);
+    std::vector<Path> compute_reverse_all(const vector_idxretour &departs, const vector_idxretour &destinations);
 
     int tardiest_trip(const dataRAPTOR::Route_t &route, unsigned int order, DateTime dt) const;
     int earliest_trip(const dataRAPTOR::Route_t &route, unsigned int order, DateTime dt) const;
 
     void boucleRAPTOR(const std::vector<unsigned int> &marked_stop);
-    Path makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb, bool reverse = false);
+    Path makePath(const vector_idxretour &departs, const unsigned int destination_idx, unsigned int countb, const bool reverse = false);
     void marcheapied();
     void setVPValides(const std::vector<unsigned int> &marked_stop);
     void make_queue();
 
     void boucleRAPTORreverse(std::vector<unsigned int> &marked_stop);
-    Path makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb);
-    void marcheapiedreverse(unsigned int count);
-    void setVPValidesreverse(std::vector<unsigned int> &marked_stop);
+    Path makePathreverse(const vector_idxretour &departs, const unsigned int destination_idx, unsigned int countb);
+    void marcheapiedreverse();
+    void setVPValidesreverse(const std::vector<unsigned int> &marked_stop);
     void make_queuereverse();
 
 
