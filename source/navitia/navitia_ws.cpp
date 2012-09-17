@@ -27,11 +27,15 @@ namespace bg = boost::gregorian;
 
 class Worker : public BaseWorker<navitia::type::Data> {
 
+    
+
     std::unique_ptr<navitia::routing::raptor::RAPTOR> calculateur;
 
     log4cplus::Logger logger;
 
     pbnavitia::Response pb_response;
+    boost::posix_time::ptime last_load_at;
+
     /**
      * Vérifie la validité des paramétres, charge les données si elles ne le sont pas,
      * et gére le cas des données en cours de chargement
@@ -278,8 +282,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
             if(!locker.locked){
                 return rd;
             }
-            if(!calculateur){
+            if(d.last_load_at != this->last_load_at || !calculateur){
                 calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(d));
+                this->last_load_at = d.last_load_at;
 
                 LOG4CPLUS_INFO(logger, "instanciation du calculateur");
             }
