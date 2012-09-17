@@ -127,9 +127,9 @@ std::ostream & operator<<(std::ostream & os, const GeographicalCoord & coord){
 static_data * static_data::instance = 0;
 static_data * static_data::get() {
     if (instance == 0) {
-        instance = new static_data();
+        static_data* temp = new static_data();
 
-        boost::assign::insert(instance->types_string)
+        boost::assign::insert(temp->types_string)
                 (Type_e::eValidityPattern, "validity_pattern")
                 (Type_e::eLine, "line")
                 (Type_e::eRoute, "route")
@@ -150,6 +150,9 @@ static_data * static_data::get() {
                 (Type_e::eCountry, "country")
                 (Type_e::eWay, "way")
                 (Type_e::eCoord, "coord");
+
+        instance = temp;
+
     }
     return instance;
 }
