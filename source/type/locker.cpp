@@ -4,7 +4,7 @@
 namespace navitia{ namespace type {
     Locker::Locker() : locked(false), data(NULL){}
 
-    Locker::Locker(navitia::type::Data& data, bool) : data(&data), exclusive(exclusive) {
+    Locker::Locker(navitia::type::Data& data, bool exclusive) : data(&data), exclusive(exclusive) {
         if(exclusive){
             this->data->load_mutex.lock();
             locked = true;

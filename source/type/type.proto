@@ -228,6 +228,8 @@ message Status{
 
     optional bool last_load_status = 9;
     optional bool loaded = 10;
+
+    optional int32 nb_threads = 11;
 }
 
 message Response{

@@ -877,7 +877,7 @@ std::vector<Path> RAPTOR::compute_all(navitia::type::EntryPoint departure, navit
 
     }
 
-    std::cout << "Nombre de départs : " << departs.size() << " destinations : " << destinations.size() << std::endl;
+ //   std::cout << "Nombre de départs : " << departs.size() << " destinations : " << destinations.size() << std::endl;
     if(sens == partirapres)
         return compute_all(departs, destinations);
     else

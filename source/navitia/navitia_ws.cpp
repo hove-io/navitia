@@ -168,7 +168,6 @@ class Worker : public BaseWorker<navitia::type::Data> {
             data.load_lz4(database);
             data.build_proximity_list();
             data.build_raptor();
-            calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(data));
             LOG4CPLUS_TRACE(logger, "Chargement des donnés fini");
         }catch(...){
             data.loaded = false;
@@ -254,6 +253,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
             status->set_loaded(data.loaded);
             status->set_last_load_status(data.last_load);
             status->set_last_load_at(pt::to_iso_string(data.last_load_at));
+            status->set_nb_threads(data.nb_threads);
 
             rd.status_code = 200;
 #ifndef DEBUG
@@ -277,6 +277,11 @@ class Worker : public BaseWorker<navitia::type::Data> {
             nt::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, rd));
             if(!locker.locked){
                 return rd;
+            }
+            if(!calculateur){
+                calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(d));
+
+                LOG4CPLUS_INFO(logger, "instanciation du calculateur");
             }
 
             std::vector<navitia::routing::Path> pathes;
