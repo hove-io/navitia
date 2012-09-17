@@ -106,7 +106,7 @@ struct PT_Data : boost::noncopyable{
 
     /// Prefixe le type à l'external_code
     template<typename T>
-    void normalize_extcode(std::map<std::string, idx_t> map){
+    void normalize_extcode(std::map<std::string, idx_t> & map){
         std::string prefix = static_data::get()->captionByType(T::type);
         for(auto & element : this->get_data<T>()){
             element.external_code = prefix + ":" + element.external_code;
