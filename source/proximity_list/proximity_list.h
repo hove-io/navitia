@@ -86,7 +86,7 @@ struct ProximityList
 
     /// Retourne tous les éléments dans un rayon de x mètres
     std::vector< std::pair<T, GeographicalCoord> > find_within(GeographicalCoord coord, double distance ) const {
-        return find_within(coord, items.begin(), items.end(), distance, true);
+        return find_within(coord, items.begin(), items.end(), distance*distance, true);
     }
 
     /// Retourne l'élément les élements dans un espace restreint à moins d'une certaine distance
@@ -97,7 +97,7 @@ struct ProximityList
 
         // On trouve l'éléement au milieu
         const_iterator median = get_median(begin, end);
-        double median_distance = coord.distance_to(median->coord);
+        double median_distance = coord.approx_sqr_distance(median->coord);
         if(median_distance <= distance)
             result.push_back(std::make_pair(median->element, median->coord));
         // Si la distance mediane est inférieure à la limite, on regarde des deux cotés
@@ -106,7 +106,7 @@ struct ProximityList
         GeographicalCoord projected = coord;
         if(along_x) projected.x = coord.x;
         else projected.y = coord.y;
-        double projected_distance = projected.distance_to(coord);
+        double projected_distance = projected.approx_sqr_distance(coord);
 
         if(projected_distance <= distance){
             auto left = find_within(coord, begin, median, distance, !along_x);
@@ -145,7 +145,7 @@ struct ProximityList
     std::pair<T, double> find_nearest(GeographicalCoord coord, const_iterator begin, const_iterator end, bool along_x) const {
         if(end - begin == 0) throw NotFound();
         if(end - begin == 1)
-            return std::make_pair(begin->element, coord.distance_to(begin->coord));
+            return std::make_pair(begin->element, coord.approx_sqr_distance(begin->coord));
 
         const_iterator median = get_median(begin, end);
 
@@ -166,7 +166,7 @@ struct ProximityList
         if(along_x) projected.y = coord.y;
         else projected.y = coord.y;
 
-        bool other_half = coord.distance_to(projected) < best.second;
+        bool other_half = coord.approx_sqr_distance(projected) < best.second;
 
         std::pair<T, double> other_best;
         if(other_half){
