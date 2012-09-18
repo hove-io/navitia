@@ -25,6 +25,8 @@ using namespace webservice;
 struct Geometry {
     GEOSGeometry * geom;
 
+    boost::mutex mutex;
+
 
     Geometry() : geom(nullptr) {}
 
@@ -32,6 +34,19 @@ struct Geometry {
     Geometry(Geometry && other) {
         this->geom = other.geom;
         other.geom = nullptr;
+    }
+    /**
+     *@param handle handle utilisé par GEOS pour le multi thread
+     *
+     */
+    bool contains(GEOSContextHandle_t handle, Geometry& other){
+        boost::lock_guard<boost::mutex> lock(mutex);
+        boost::lock_guard<boost::mutex> lock_other(other.mutex);
+        char res = GEOSContains_r(handle, this->geom, other.geom);
+        if(res == 2){
+            throw std::exception();
+        }
+        return res;
     }
 
 
@@ -147,7 +162,7 @@ struct Data {
             std::string code_dep = line[15];
             for(Departement & dep : departements){
                 if(dep.code == code_dep){
-                    dep.communes.push_back(c);
+                    dep.communes.push_back(std::move(c));
                     break;
                 }
             }
@@ -255,28 +270,26 @@ struct Worker : public BaseWorker<Data> {
 
     GEOSContextHandle_t geos_handle;
 
-    std::string find(const std::vector<Departement> & departements, double lon, double lat) {
+    std::string find(std::vector<Departement> & departements, double lon, double lat) {
         GEOSCoordSequence *s = GEOSCoordSeq_create_r(geos_handle, 1, 2);
         GEOSCoordSeq_setX_r(geos_handle, s, 0, lon);
         GEOSCoordSeq_setY_r(geos_handle, s, 0, lat);
-        GEOSGeometry *p = GEOSGeom_createPoint_r(geos_handle, s);
+        Geometry p;
+        p.geom = GEOSGeom_createPoint_r(geos_handle, s);
         for(auto &d : departements) {
-            if(GEOSContains_r(geos_handle, d.geom.geom, p)) {
-                for(auto & c : d.communes){
-                    if(GEOSContains_r(geos_handle, c.geom.geom, p)) {
-                        GEOSGeom_destroy_r(geos_handle, p);
+            if(d.geom.contains(geos_handle, p)) {
+                for(auto &c : d.communes){
+                    if(c.geom.contains(geos_handle, p)) {
                         return c.insee;
                     }
                 }
             }
         }
-        GEOSGeom_destroy_r(geos_handle, p);
         return "";
     }
 
 
-    /** Api qui compte le nombre de fois qu'elle a été appelée */
-    ResponseData planner(RequestData req, const Data & d) {
+    ResponseData planner(RequestData req, Data & d) {
 
 
         ResponseData rd;
