@@ -84,6 +84,16 @@ BOOST_AUTO_TEST_CASE(distances_grand_cercle)
     BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
     BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
 }
+
+BOOST_AUTO_TEST_CASE(approx_distance){
+    GeographicalCoord nantes(-1.57, 47.22);
+    GeographicalCoord paris(2.36, 48.85);
+    BOOST_CHECK_CLOSE(nantes.distance_to(paris), ::sqrt(nantes.approx_sqr_distance(paris)), 0.02);
+    BOOST_CHECK_CLOSE(paris.distance_to(nantes), ::sqrt(paris.approx_sqr_distance(nantes)), 0.02);
+    BOOST_CHECK_CLOSE(nantes.distance_to(paris), ::sqrt(paris.approx_sqr_distance(nantes)), 0.02);
+    BOOST_CHECK_CLOSE(paris.distance_to(nantes), ::sqrt(nantes.approx_sqr_distance(paris)), 0.02);
+}
+
 BOOST_AUTO_TEST_CASE(find_nearest){
     typedef std::pair<unsigned int, GeographicalCoord> p;
     ProximityList<unsigned int> pl;

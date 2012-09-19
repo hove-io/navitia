@@ -99,6 +99,9 @@ struct GeographicalCoord{
       */
     double distance_to(const GeographicalCoord & other) const;
 
+    /** Calcule la distance au carré grand arc entre deux points de manière approchée */
+    double approx_sqr_distance(const GeographicalCoord &other) const;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & x & y;
     }
