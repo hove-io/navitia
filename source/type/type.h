@@ -100,7 +100,16 @@ struct GeographicalCoord{
     double distance_to(const GeographicalCoord & other) const;
 
     /** Calcule la distance au carré grand arc entre deux points de manière approchée */
-    double approx_sqr_distance(const GeographicalCoord &other) const;
+    double approx_sqr_distance(const GeographicalCoord &other, double coslat) const{
+
+        if(!degrees)
+            return ::pow(x - other.x, 2)+ ::pow(y-other.y, 2);
+        static const double EARTH_RADIUS_IN_METERS_SQUARE = 40612548751652.183023;
+        double latitudeArc = (this->y - other.y) * 0.0174532925199432958;
+        double longitudeArc = (this->x - other.x) * 0.0174532925199432958;
+        double tmp = coslat * longitudeArc;
+        return EARTH_RADIUS_IN_METERS_SQUARE * (latitudeArc*latitudeArc + tmp*tmp);
+    }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & x & y;
