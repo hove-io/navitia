@@ -115,17 +115,6 @@ double GeographicalCoord::distance_to(const GeographicalCoord &other) const{
     return EARTH_RADIUS_IN_METERS * 2.0 * asin(sqrt(latitudeH + tmp*lontitudeH));
 }
 
-double GeographicalCoord::approx_sqr_distance(const GeographicalCoord &other) const{
-    if(!degrees)
-        return ::pow(x - other.x, 2)+ ::pow(y-other.y, 2);
-    static const double EARTH_RADIUS_IN_METERS_SQUARE = 40612548751652.183023;
-    double latitudeArc = (this->y - other.y) * DEG_TO_RAD;
-    double longitudeArc = (this->x - other.x) * DEG_TO_RAD;
-    double meanLat = 0.5 * (this->y + other.y) * DEG_TO_RAD;
-    double tmp = cos(meanLat) * longitudeArc;
-    return EARTH_RADIUS_IN_METERS_SQUARE * (latitudeArc*latitudeArc + tmp*tmp);
-}
-
 bool operator==(const GeographicalCoord & a, const GeographicalCoord & b){
     return a.degrees == b.degrees && a.distance_to(b) < 1e-3; // soit 1mm
 }

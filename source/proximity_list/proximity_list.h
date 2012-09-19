@@ -13,20 +13,15 @@ struct NotFound : public std::exception{};
  *
  * Le template T est le type que l'on souhaite indexer (typiquement un Idx). L'élément sera copié.
  * On rajoute des élements itérativements et on appelle build pour construire l'indexe.
- * L'implémentation est un k-d tree http://en.wikipedia.org/wiki/K-d_tree.
- * L'arbre stocké dans un seul vector pour des raisons de mémoire et performance
+ * L'implémentation est un bête tableau trié par X.
+ * On cherche les bornes inf/sup selon X, puis on itère sur les données et on garde les bonnes
  */
-template<class Item>
-bool along_x_comp(const Item & a, const Item & b){return a.coord.x < b.coord.x;}
-template<class Item>
-bool along_y_comp(const Item & a, const Item & b){return a.coord.y < b.coord.y;}
 
 template<class T>
 struct ProximityList
 {
     /// Élement que l'on garde dans le vector 
-    struct Item
-    {
+    struct Item {
         GeographicalCoord coord;
         T element;
         Item(){}
@@ -34,14 +29,10 @@ struct ProximityList
         template<class Archive> void serialize(Archive & ar, const unsigned int) {
             ar & coord & element;
         }
-
     };
 
     /// Contient toutes les coordonnées de manière à trouver rapidement
     std::vector<Item> items;
-
-    typedef typename std::vector<Item>::iterator iterator;
-    typedef typename std::vector<Item>::const_iterator const_iterator;
 
     /// Rajoute un nouvel élément. Attention, il faut appeler build avant de pouvoir utiliser la structure
     void add(GeographicalCoord coord, T element){
@@ -50,79 +41,27 @@ struct ProximityList
 
     /// Construit l'indexe
     void build(){
-        build(items.begin(), items.end(), true);
-    }
-
-    /// Calcule l'élément median, version const
-    const_iterator get_median(const_iterator begin, const_iterator end) const {
-        int offset = (end - begin)/2;
-        return begin + offset;
-    }
-
-    /// Calcule l'élément median, version mutable
-    iterator get_median(iterator begin, iterator end){
-        int offset = (end - begin)/2;
-        return begin + offset;
-    }
-
-    /** Construit l'indexe partiellement, sur une dimension
-      * On découpe récursivement l'espace en deux de manière à ce que les éléments à gauche soient plus petits
-      * que l'élément médian, et que les éléments à droite soient plus grand
-      */
-    void build(iterator begin, iterator end, bool along_x){
-        if(end - begin <= 1) return;
-
-        // On trie selon la bonne dimension
-        if(along_x)
-            std::sort(begin, end, along_x_comp<Item>);
-        else
-            std::sort(begin, end, along_y_comp<Item>);
-
-        // On récupére l'élément médian
-        iterator median = get_median(begin, end);
-        build(begin, median, !along_x);
-        build(median + 1, end, !along_x);
+        std::sort(items.begin(), items.end(), [](const Item & a, const Item & b){return a.coord.x < b.coord.x;});
     }
 
     /// Retourne tous les éléments dans un rayon de x mètres
     std::vector< std::pair<T, GeographicalCoord> > find_within(GeographicalCoord coord, double distance ) const {
-        return find_within(coord, items.begin(), items.end(), distance*distance, true);
-    }
-
-    /// Retourne l'élément les élements dans un espace restreint à moins d'une certaine distance
-    std::vector< std::pair<T, GeographicalCoord> > find_within(GeographicalCoord coord, const_iterator begin, const_iterator end, double distance, bool along_x) const {
-        std::vector< std::pair<T, GeographicalCoord> > result;
-        if(end == begin)
-            return result;
-
-        // On trouve l'éléement au milieu
-        const_iterator median = get_median(begin, end);
-        double median_distance = coord.approx_sqr_distance(median->coord);
-        if(median_distance <= distance)
-            result.push_back(std::make_pair(median->element, median->coord));
-        // Si la distance mediane est inférieure à la limite, on regarde des deux cotés
-        // Cependant il faut regarder la distance projetée
-
-        GeographicalCoord projected = coord;
-        if(along_x) projected.x = coord.x;
-        else projected.y = coord.y;
-        double projected_distance = projected.approx_sqr_distance(coord);
-
-        if(projected_distance <= distance){
-            auto left = find_within(coord, begin, median, distance, !along_x);
-            result.insert(result.end(), left.begin(), left.end());
-            auto right = find_within(coord, median+1, end, distance, !along_x);
-            result.insert(result.end(), right.begin(), right.end());
-        } else { // Sinon regarde que du côté qui nous intéresse
-            // On détermine de quel côté de l'élément médian on regarde
-            bool left;
-            if(along_x) left = coord.x < median->coord.x;
-            else left = coord.y < median->coord.y;
-            std::vector< std::pair<T, GeographicalCoord> > tmp;
-            if(left) tmp = find_within(coord, begin, median, distance, !along_x);
-            else tmp = find_within(coord, median+1, end, distance, !along_x);
-            result.insert(result.end(), tmp.begin(), tmp.end());
+        double distance_degree = distance;
+        double coslat = 1;
+        if(coord.degrees){
+            double DEG_TO_RAD = 0.0174532925199432958;
+            coslat = ::cos(coord.y * DEG_TO_RAD);
+            distance_degree = distance / 111320;
         }
+        auto begin = std::lower_bound(items.begin(), items.end(), coord, [distance_degree,coslat](const Item & i, const GeographicalCoord & coord){return i.coord.x < coord.x - coslat * distance_degree;});
+        auto end = std::upper_bound(items.begin(), items.end(), coord, [distance_degree,coslat](const GeographicalCoord &coord, const Item & i){return coord.x + distance_degree * coslat < i.coord.x ;});
+        std::vector< std::pair<T, GeographicalCoord> > result;
+        double max_dist = distance * distance;
+        for(; begin != end; ++begin){
+            if(begin->coord.approx_sqr_distance(coord, coslat) <= max_dist)
+                result.push_back(std::make_pair(begin->element, begin->coord));
+        }
+        std::sort(result.begin(), result.end(), [&coord, &coslat](const std::pair<T, GeographicalCoord> & a, const std::pair<T, GeographicalCoord> & b){return a.second.approx_sqr_distance(coord, coslat) < b.second.approx_sqr_distance(coord, coslat);});
         return result;
     }
 
@@ -138,47 +77,20 @@ struct ProximityList
 
     /// Retourne l'élément le plus proche dans tout l'indexe
     T find_nearest(GeographicalCoord coord) const {
-        return find_nearest(coord, items.begin(), items.end(), true).first;
+        if(items.size() == 0) throw NotFound();
+        auto nearest_x = std::lower_bound(items.begin(), items.end(), coord, [](const Item & i, const GeographicalCoord & coord){return i.coord.x < coord.x;});
+
+        double max_dist;
+        if(nearest_x == items.end())
+            max_dist = items.back().coord.distance_to(coord);
+        else
+            max_dist = nearest_x->coord.distance_to(coord);
+
+        auto res = find_within(coord, max_dist);
+        return res.front().first;
+        //return find_nearest(coord, items.begin(), items.end(), true).first;
     }
 
-    /// Retourne l'élément le plus proche dans un espace restreint et sa distance à la cible
-    std::pair<T, double> find_nearest(GeographicalCoord coord, const_iterator begin, const_iterator end, bool along_x) const {
-        if(end - begin == 0) throw NotFound();
-        if(end - begin == 1)
-            return std::make_pair(begin->element, coord.approx_sqr_distance(begin->coord));
-
-        const_iterator median = get_median(begin, end);
-
-        // On détermine de quel côté de l'élément médian on regarde
-        bool left;
-        if(along_x) left = coord.x < median->coord.x;
-        else left = coord.y < median->coord.y;
-
-        // On cherche récursivement dans la moitié le meilleur élément
-        std::pair<T, double> best;
-        if(left) best = find_nearest(coord, begin, median, !along_x);
-        else best = find_nearest(coord, median, end, !along_x);
-
-        // On regarde si de l'autre côté ça peut être plus intéressant
-        // Pour que ce soit plus intéressant, il faut que la meilleur distance soit supérieure
-        // à la projection du median suivant le bon axe
-        GeographicalCoord projected = median->coord;
-        if(along_x) projected.y = coord.y;
-        else projected.y = coord.y;
-
-        bool other_half = coord.approx_sqr_distance(projected) < best.second;
-
-        std::pair<T, double> other_best;
-        if(other_half){
-            if(!left) other_best = find_nearest(coord, begin, median, !along_x);
-            else other_best = find_nearest(coord, median, end, !along_x);
-
-            // On ne garde que le meilleur des deux
-            if(other_best.second < best.second)
-                best = other_best;
-        }
-        return best;
-    }
 
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
       *

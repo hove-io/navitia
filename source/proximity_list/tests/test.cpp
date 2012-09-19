@@ -86,12 +86,13 @@ BOOST_AUTO_TEST_CASE(distances_grand_cercle)
 }
 
 BOOST_AUTO_TEST_CASE(approx_distance){
-    GeographicalCoord nantes(-1.57, 47.22);
-    GeographicalCoord paris(2.36, 48.85);
-    BOOST_CHECK_CLOSE(nantes.distance_to(paris), ::sqrt(nantes.approx_sqr_distance(paris)), 0.02);
-    BOOST_CHECK_CLOSE(paris.distance_to(nantes), ::sqrt(paris.approx_sqr_distance(nantes)), 0.02);
-    BOOST_CHECK_CLOSE(nantes.distance_to(paris), ::sqrt(paris.approx_sqr_distance(nantes)), 0.02);
-    BOOST_CHECK_CLOSE(paris.distance_to(nantes), ::sqrt(nantes.approx_sqr_distance(paris)), 0.02);
+    GeographicalCoord canaltp(2.3921, 48.8296);
+    GeographicalCoord tour_eiffel(2.29447,48.85834);
+    double coslat = ::cos(canaltp.y * 0.0174532925199432958);
+    BOOST_CHECK_CLOSE(canaltp.distance_to(tour_eiffel), ::sqrt(canaltp.approx_sqr_distance(tour_eiffel, coslat)), 1);
+    BOOST_CHECK_CLOSE(tour_eiffel.distance_to(canaltp), ::sqrt(tour_eiffel.approx_sqr_distance(canaltp, coslat)), 1);
+    BOOST_CHECK_CLOSE(canaltp.distance_to(tour_eiffel), ::sqrt(tour_eiffel.approx_sqr_distance(canaltp, coslat)), 1);
+    BOOST_CHECK_CLOSE(tour_eiffel.distance_to(canaltp), ::sqrt(canaltp.approx_sqr_distance(tour_eiffel, coslat)), 1);
 }
 
 BOOST_AUTO_TEST_CASE(find_nearest){
@@ -112,7 +113,7 @@ BOOST_AUTO_TEST_CASE(find_nearest){
     
     pl.build();
 
-    std::vector<unsigned int> expected {1,2,4,6,5,3};
+    std::vector<unsigned int> expected {1,4,2,6,5,3};
     for(size_t i=0; i < expected.size(); ++i)
         BOOST_CHECK_EQUAL(pl.items[i].element, expected[i]);
 
