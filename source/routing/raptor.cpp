@@ -538,7 +538,7 @@ void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop) {
                     const auto & st = data.dataRaptor.stopTimes[data.dataRaptor.get_stop_time_idx(route, t, i)];
                     workingDt.updatereverse(st.departure_time);
                     //On stocke, et on marque pour explorer par la suite
-                    if(workingDt >= std::max(best[spid].dt, b_dest.best_now.dt)) {
+                    if(workingDt > std::max(best[spid].dt, b_dest.best_now.dt)) {
                         const type_retour retour_temp = type_retour(st.idx, embarquement, workingDt);
                         retour[count][spid] = retour_temp;
                         best[spid]          = retour_temp;
@@ -561,8 +561,8 @@ void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop) {
                     if(etemp >=0 && t!=etemp) {
                         if(t!=etemp) {
                             embarquement = spid;
+                            t = etemp;
                         }
-                        t = etemp;
                         workingDt = retour_temp.dt;
                     }
                 }
@@ -596,7 +596,7 @@ Path RAPTOR::makeBestPathreverse(map_retour_t &retour, map_int_pint_t &best, vec
 std::vector<Path> RAPTOR::makePathes(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, best_dest &b_dest, unsigned int count) {
     std::vector<Path> result;
 
-    for(unsigned int i=1;i<count;++i) {
+    for(unsigned int i=1;i<=count;++i) {
         DateTime dt;
         int spid = std::numeric_limits<int>::max();
         for(auto dest : b_dest.map_date_time) {
@@ -614,7 +614,7 @@ std::vector<Path> RAPTOR::makePathes(map_retour_t &retour, map_int_pint_t &best,
 std::vector<Path> RAPTOR::makePathesreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, best_dest &b_dest, unsigned int count) {
     std::vector<Path> result;
 
-    for(unsigned int i=1;i<count;++i) {
+    for(unsigned int i=1;i<=count;++i) {
         DateTime dt;
         int spid = std::numeric_limits<int>::max();
         for(auto dest : b_dest.map_date_time) {
@@ -754,7 +754,7 @@ Path RAPTOR::makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_
 }
 
 
-Path RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day, senscompute sens) {
+std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day, senscompute sens) {
     vector_idxretour departs, destinations;
 
     for(navitia::type::idx_t spidx : data.pt_data.stop_areas[departure_idx].stop_point_list) {
@@ -765,14 +765,10 @@ Path RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_h
         destinations.push_back(std::make_pair(spidx, type_retour(navitia::type::invalid_idx, DateTime(departure_day, departure_hour), depart)));
     }
 
-    return compute_raptor(departs, destinations, sens);
-
-//    if(sens == partirapres)
-//        return compute_raptor(departs, destinations);
-//    else if(sens == arriveravant)
-//        return compute_raptor_reverse(departs, destinations);
-//    else
-//        return compute_raptor_rabattement(departs, destinations);
+    if(sens == partirapres || sens == partirapresrab)
+        return compute_all(departs, destinations);
+    else
+        return compute_reverse_all(departs, destinations);
 }
 
 Path RAPTOR::compute_reverse(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day) {

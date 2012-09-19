@@ -108,6 +108,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     data.clean();
     data.sort();
     data.transform(pt_data);
+    pt_data.build_external_code();
 }
 
 

@@ -18,7 +18,6 @@ typedef std::vector<pair_int> vector_pairint;
 typedef std::pair<navitia::type::idx_t, type_retour> idx_retour;
 typedef std::vector<idx_retour> vector_idxretour;
 
-
 struct RAPTOR : public AbstractRouter
 {
     const navitia::type::Data & data;
@@ -38,7 +37,7 @@ struct RAPTOR : public AbstractRouter
     }
 
 
-    Path compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day, senscompute sens = partirapres);
+    std::vector<Path> compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day, senscompute sens = partirapres);
     Path compute_reverse(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
     Path compute_rabattement(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
 
