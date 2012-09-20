@@ -175,7 +175,7 @@ struct edge_less{
 };
 
 
-Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day, senscompute /*sens*/){
+std::vector<Path> TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day, senscompute /*sens*/){
     DateTime start_time(day, hour - 180);
 
     try{
@@ -191,7 +191,7 @@ Path TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day,
                                        );
     } catch(found_goal){}
 
-    return makePath(arr);
+    return {makePath(arr)};
 }
 
 

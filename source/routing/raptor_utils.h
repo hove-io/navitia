@@ -71,13 +71,15 @@ struct best_dest {
 
     void ajouter_destination(unsigned int spid, const type_retour &t) { map_date_time[spid] = t;}
 
-    bool ajouter_best(unsigned int rpid, const type_retour &t, int cnt) {
-        auto it = map_date_time.find(rpid);
+    bool is_dest(unsigned int spid) {return map_date_time.find(spid) != map_date_time.end();}
+
+    bool ajouter_best(unsigned int spid, const type_retour &t, int cnt) {
+        auto it = map_date_time.find(spid);
         if(it != map_date_time.end()) {
             it->second = t;
             if(t < best_now) {
                 best_now = t;
-                best_now_spid = rpid;
+                best_now_spid = spid;
                 count = cnt;
             }
             return true;
@@ -85,13 +87,13 @@ struct best_dest {
         return false;
     }
 
-    bool ajouter_best_reverse(unsigned int rpid, const type_retour &t, int cnt) {
-        auto it = map_date_time.find(rpid);
+    bool ajouter_best_reverse(unsigned int spid, const type_retour &t, int cnt) {
+        auto it = map_date_time.find(spid);
         if(it != map_date_time.end()) {
             it->second = t;
             if(t > best_now && t.dt != DateTime::min) {
                 best_now = t;
-                best_now_spid = rpid;
+                best_now_spid = spid;
                 count = cnt;
             }
             return true;

@@ -77,7 +77,7 @@ int main(int argc, char** argv){
 
             Timer t("Calcul avec l'algorithme " + algo);
             CALLGRIND_START_INSTRUMENTATION;
-            Path res = router->compute(start_idx, target_idx, hour, date);
+            Path res = router->compute(start_idx, target_idx, hour, date)[0];
             CALLGRIND_STOP_INSTRUMENTATION;
 
             for(auto item : res.items) {
