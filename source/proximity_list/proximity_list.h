@@ -51,7 +51,7 @@ struct ProximityList
         if(coord.degrees){
             double DEG_TO_RAD = 0.0174532925199432958;
             coslat = ::cos(coord.y * DEG_TO_RAD);
-            distance_degree = distance / 111320;
+            distance_degree = distance / 111320; // Nombre de mètres dans un ° à l'Équateur
         }
         auto begin = std::lower_bound(items.begin(), items.end(), coord, [distance_degree,coslat](const Item & i, const GeographicalCoord & coord){return i.coord.x < coord.x - coslat * distance_degree;});
         auto end = std::upper_bound(items.begin(), items.end(), coord, [distance_degree,coslat](const GeographicalCoord &coord, const Item & i){return coord.x + distance_degree * coslat < i.coord.x ;});
@@ -80,15 +80,36 @@ struct ProximityList
         if(items.size() == 0) throw NotFound();
         auto nearest_x = std::lower_bound(items.begin(), items.end(), coord, [](const Item & i, const GeographicalCoord & coord){return i.coord.x < coord.x;});
 
-        double max_dist;
-        if(nearest_x == items.end())
-            max_dist = items.back().coord.distance_to(coord);
-        else
-            max_dist = nearest_x->coord.distance_to(coord);
+        double best_dist;
+        T best_item;
+        if(nearest_x == items.end()){
+            best_dist = items.back().coord.distance_to(coord);
+            best_item = items.back().element;
+        }
+        else {
+            best_dist = nearest_x->coord.distance_to(coord);
+            best_item = nearest_x->element;
+        }
 
-        auto res = find_within(coord, max_dist);
-        return res.front().first;
-        //return find_nearest(coord, items.begin(), items.end(), true).first;
+        double coslat = 1;
+        double dist_degrees = best_dist;
+        if(coord.degrees){
+            double DEG_TO_RAD = 0.0174532925199432958;
+            coslat = ::cos(coord.y * DEG_TO_RAD);
+            dist_degrees = best_dist / 111320; // Nombre de mètres dans un ° à l'Équateur
+        }
+        auto begin = std::lower_bound(items.begin(), items.end(), coord, [dist_degrees,coslat](const Item & i, const GeographicalCoord & coord){return i.coord.x < coord.x - coslat * dist_degrees;});
+        auto end = std::upper_bound(items.begin(), items.end(), coord, [dist_degrees,coslat](const GeographicalCoord &coord, const Item & i){return coord.x + dist_degrees * coslat < i.coord.x ;});
+
+        best_dist = best_dist * best_dist;
+        for(; begin != end; ++begin){
+            double current_dist = begin->coord.approx_sqr_distance(coord, coslat);
+            if(current_dist < best_dist) {
+                best_item = begin->element;
+                best_dist = current_dist;
+            }
+        }
+        return best_item;
     }
 
 
