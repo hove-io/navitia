@@ -81,7 +81,7 @@ Typologie des horaires
 Passe-minuit
 ------------
 
-A préciser: gestion des points suivants:
+À préciser: gestion des points suivants:
 
 * Circulation passe-minuit
 * Arrêt passe-minuit (arrivée en gare à 23h59, départ à 00h01 le lendemain)

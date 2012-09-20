@@ -5,7 +5,6 @@ Spécifications générales
    :maxdepth: 2
    
    modules/introduction
-   modules/line_schedule
    modules/event
    modules/fare
    modules/firstletter
@@ -20,4 +19,5 @@ Spécifications générales
    modules/vptranslate
 
    modules/gateway
+   modules/alimentation_en_donnees
 

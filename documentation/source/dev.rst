@@ -80,7 +80,7 @@ Le test d'égalité c'est `==` et non pas `=` comme en Delphi.
   if(a=1) // a=1 vaut 1, donc le test est toujours vrais
   if(a=0) // a=0 vaut 0, donc le test est toujours faux
 
-Éviter d'utiliser des fonction C. Par exemple faire . Cela d'autant plus important pour les accès systèmes (fichiers, réseau) où cela peut entraîner des fuites de mémoire ::
+Éviter d'utiliser des fonctions C. Par exemple faire . Cela d'autant plus important pour les accès systèmes (fichiers, réseau) où cela peut entraîner des fuites de mémoire ::
 
   if(str == "hello") // Bien
   if(strcmp(str.c_str(), “Hello”)==0) // pas bien

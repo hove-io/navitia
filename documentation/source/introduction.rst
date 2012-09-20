@@ -133,5 +133,5 @@ Le développement d’une application de mise en forme spécifique permet de red
 * Widget.
 * Site internet spécifique.
 
-Le développement d’une interface spécifique doit suivre les préconisations décries 
+Le développement d’une interface spécifique doit suivre les préconisations décrites 
 dans la suite de cette documentation et être suivie dans le cadre d’un "projet d’intégration NAViTiA" par Canal TP.
