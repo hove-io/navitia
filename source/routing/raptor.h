@@ -38,10 +38,10 @@ struct RAPTOR : public AbstractRouter
 
 
     std::vector<Path> compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day, senscompute sens = partirapres);
-    Path compute_reverse(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
-    Path compute_rabattement(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
+//    Path compute_reverse(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
+//    Path compute_rabattement(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day);
 
-    Path compute_raptor(vector_idxretour departs, vector_idxretour destinations, senscompute sens);
+//    Path compute_raptor(vector_idxretour departs, vector_idxretour destinations, senscompute sens);
 
     Path makeBestPath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count);
     Path makeBestPathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count);
@@ -67,7 +67,7 @@ struct RAPTOR : public AbstractRouter
 
     void boucleRAPTORreverse(std::vector<unsigned int> &marked_stop);
     Path makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb);
-    void marcheapiedreverse(unsigned int count);
+    void marcheapiedreverse();
     void setVPValidesreverse(std::vector<unsigned int> &marked_stop);
     void make_queuereverse();
 

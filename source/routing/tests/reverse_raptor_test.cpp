@@ -125,7 +125,6 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
 
     auto res = res1.back();
 
-    res.print(d);
     BOOST_REQUIRE_EQUAL(res.items.size(), 1);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
