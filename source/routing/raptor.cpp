@@ -336,8 +336,6 @@ void RAPTOR::setVPValidesreverse(std::vector<unsigned int> &marked_stop) {
 
 
 void RAPTOR::boucleRAPTOR(const std::vector<unsigned int> &marked_stop) {
-    unsigned int routeidx;
-    int t;
     bool end = false;
     count = 0;
 
@@ -414,9 +412,6 @@ void RAPTOR::boucleRAPTOR(const std::vector<unsigned int> &marked_stop) {
 
 
 void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop) {
-    unsigned int routeidx;
-    int t;
-
     marked_sp.reset();
     for(auto rpid : marked_stop) {
         marked_sp.set(rpid);
@@ -424,7 +419,7 @@ void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop) {
 
     count = 0;
 
-    marcheapiedreverse(0);
+    marcheapiedreverse();
 
 
 
@@ -435,9 +430,9 @@ void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop) {
         if(count == retour.size())
             retour.push_back(data.dataRaptor.retour_constant_reverse);
         make_queuereverse();
-        routeidx = 0;
+        unsigned int routeidx = 0;
         for(queue_t::value_type vq : Q) {
-            t = -1;
+            int t = -1;
             DateTime workingDt = DateTime::min;
             int embarquement = navitia::type::invalid_idx;
             const auto & route = data.dataRaptor.routes[routeidx];
