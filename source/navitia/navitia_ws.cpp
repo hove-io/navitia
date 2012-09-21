@@ -1,34 +1,29 @@
 #include "config.h"
 #include "baseworker.h"
 #include "utils/configuration.h"
-#include <iostream>
 #include "type/data.h"
 #include "type/type.pb.h"
 #include "type/pb_converter.h"
-#include "routing/routing.h"
-#include "routing/raptor.h"
-#include "routing/raptor_api.h"
+#include "interface/renderer.h"
+#include "type/locker.h"
 
+#include "routing/raptor_api.h"
 #include "first_letter/firstletter_api.h"
 #include "street_network/street_network_api.h"
-#include "street_network/types.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential.h"
+
 #include <boost/tokenizer.hpp>
-#include "type/locker.h"
-#include "interface/renderer.h"
+#include <iostream>
+#include <gperftools/profiler.h>
 
 using namespace webservice;
 
 namespace nt = navitia::type;
-
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
 
-
-class Worker : public BaseWorker<navitia::type::Data> {
-
-    
+class Worker : public BaseWorker<navitia::type::Data> {  
 
     std::unique_ptr<navitia::routing::raptor::RAPTOR> calculateur;
     std::unique_ptr<navitia::streetnetwork::StreetNetworkWorker> street_network_worker;
@@ -175,6 +170,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
             data.build_proximity_list();
             data.build_raptor();
             LOG4CPLUS_TRACE(logger, "Chargement des donnés fini");
+//            ProfilerStart("navitia.prof");
         }catch(...){
             data.loaded = false;
             LOG4CPLUS_ERROR(logger, "erreur durant le chargement des données");

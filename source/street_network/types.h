@@ -125,7 +125,7 @@ struct StreetNetwork {
       * Pour le trouver, on cherche le nœud le plus proche, puis pour chaque arc adjacent, on garde le plus proche
       * Ce n'est donc pas optimal, mais pour améliorer ça, il faudrait indexer des segments, ou ratisser plus large
      */
-    edge_t nearest_edge(const type::GeographicalCoord & coordinates) const;
+    edge_t nearest_edge(const type::GeographicalCoord &coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
 
     /** Initialise les structures nécessaires à dijkstra
      *
@@ -176,7 +176,7 @@ struct ProjectionData {
     double target_distance;
 
     /// Initialise la structure à partir d'une coordonnée et d'un graphe sur lequel on projette
-    ProjectionData(const type::GeographicalCoord & coord, const StreetNetwork &sn);
+    ProjectionData(const type::GeographicalCoord & coord, const StreetNetwork &sn, const proximitylist::ProximityList<vertex_t> &prox);
 };
 
 /** Permet de construire un graphe de manière simple
