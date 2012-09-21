@@ -567,23 +567,23 @@ Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxreto
             workingDate.normalize();
 
             if(!reverse)
-                item = PathItem(retour[countb][r.said_emarquement].dt, workingDate);
+                item = PathItem(retour[countb][r.spid_emarquement].dt, workingDate);
             else
-                item = PathItem(workingDate, retour[countb][r.said_emarquement].dt);
+                item = PathItem(workingDate, retour[countb][r.spid_emarquement].dt);
 
             item.stop_points.push_back(current_spid);
             item.type = walking;
-            item.stop_points.push_back(r.said_emarquement);
+            item.stop_points.push_back(r.spid_emarquement);
             result.items.push_back(item);
 
             spid_embarquement = navitia::type::invalid_idx;
-            current_spid = r.said_emarquement;
+            current_spid = r.spid_emarquement;
 
         } else { // Sinon c'est un trajet TC
             // Est-ce que qu'on a affaire à un nouveau trajet ?
             if(spid_embarquement == navitia::type::invalid_idx) {
                 r = retour[countb][current_spid];
-                spid_embarquement = r.said_emarquement;
+                spid_embarquement = r.spid_emarquement;
                 current_st = data.pt_data.stop_times.at(r.stid);
                 workingDate = r.dt;
 
@@ -682,114 +682,30 @@ std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, in
         return compute_reverse_all(departs, destinations);
 }
 
-std::vector<Path> RAPTOR::compute_all(navitia::type::EntryPoint departure, navitia::type::EntryPoint destination, int departure_hour, int departure_day, senscompute sens) {
-    vector_idxretour departs, destinations;
-
-    DateTime dt_depart(departure_day, departure_hour);
-    //Gestion des départs
-    switch(departure.type) {
-    case navitia::type::Type_e::eStopArea:
-    {
-        auto it_departure = data.pt_data.stop_area_map.find(departure.external_code);
-        if(it_departure == data.pt_data.stop_area_map.end()) {
-            return std::vector<Path>();
-        } else {
-            for(auto spidx : data.pt_data.stop_areas[it_departure->second].stop_point_list) {
-                departs.push_back(std::make_pair(spidx, type_retour(navitia::type::invalid_idx, dt_depart, 0)));
-            }
-        }
-    }
-        break;
-    case type::Type_e::eStopPoint:
-    {
-        auto it_departure = data.pt_data.stop_point_map.find(departure.external_code);
-        if(it_departure == data.pt_data.stop_point_map.end()) {
-            return std::vector<Path>();
-        } else {
-            departs.push_back(std::make_pair(data.pt_data.stop_points[it_departure->second].idx, type_retour(navitia::type::invalid_idx, DateTime(departure_day, departure_hour),0)));
-        }
-    }
-        break;
-    case type::Type_e::eCoord:
-
-        departs = trouverGeo(departure.coordinates, 300, departure_hour, departure_day);
-        break;
-    default:
-       return std::vector<Path>();
-    }
-
-    //Gestion des arrivées
-    switch(destination.type) {
-    case navitia::type::Type_e::eStopArea:
-    {
-        auto it_destination = data.pt_data.stop_area_map.find(destination.external_code);
-        if(it_destination == data.pt_data.stop_area_map.end()) {
-            return std::vector<Path>();
-        } else {
-            for(auto spidx : data.pt_data.stop_areas[it_destination->second].stop_point_list) {
-                destinations.push_back(std::make_pair(spidx, type_retour(navitia::type::invalid_idx, dt_depart, 0)));
-            }
-        }
-     }
-        break;
-    case type::Type_e::eStopPoint:
-    {
-        auto it_destination =data.pt_data.stop_point_map.find(destination.external_code);
-        if(it_destination == data.pt_data.stop_point_map.end()) {
-            return std::vector<Path>();
-        } else {
-            destinations.push_back(std::make_pair(data.pt_data.stop_points[it_destination->second].idx, type_retour(navitia::type::invalid_idx, DateTime(departure_day, departure_hour),0)));
-        }
-
-    }
-        break;
-    case type::Type_e::eCoord:
-        destinations = trouverGeo(destination.coordinates, 300, departure_hour, departure_day);
-        break;
-    default:
-        return std::vector<Path>();
-
-    }
-
-    if(departs.size() == 0)
-        return std::vector<Path>();
-
-    if(destinations.size() == 0)
-        return std::vector<Path>();
-
- //   std::cout << "Nombre de départs : " << departs.size() << " destinations : " << destinations.size() << std::endl;
-    if(sens == partirapres)
-        return compute_all(departs, destinations);
-    else
-        return compute_reverse_all(departs, destinations);
-}
-
-
-vector_idxretour RAPTOR::trouverGeo(const type::GeographicalCoord & departure, const double radius_depart,  const int departure_hour, const int departure_day) const{
-    typedef std::vector< std::pair<idx_t, double> >   retour_prox;
-
-    vector_idxretour toReturn;
-    retour_prox prox;
-    try {
-        prox = (retour_prox) (data.street_network.find_nearest(departure, data.pt_data.stop_point_proximity_list, radius_depart));
-    } catch(navitia::proximitylist::NotFound) {std::cout << "Not found 1 " << std::endl; return toReturn;}
-
-
-    for(auto item : prox) {
-        int temps = departure_hour + (item.second / 80);
-        int day;
+vector_idxretour to_idxretour(std::vector<std::pair<type::idx_t, double> > elements, int hour, int day){
+    vector_idxretour result;
+    for(auto item : elements) {
+        int temps = hour + (item.second / 80);
+        int jour;
         if(temps > 86400) {
             temps = temps % 86400;
-            day = departure_day + 1;
+            jour = day + 1;
         } else {
-            day = departure_day;
+            jour = day;
         }
-        toReturn.push_back(std::make_pair(item.first, type_retour(navitia::type::invalid_idx, DateTime(day, temps), 0, (item.second / 80))));
+        result.push_back(std::make_pair(item.first, type_retour(navitia::type::invalid_idx, DateTime(jour, temps), 0, (item.second / 80))));
     }
-
-    return toReturn;
+    return result;
 }
 
+
+std::vector<Path> RAPTOR::compute_all(std::vector<std::pair<type::idx_t, double> > departures, std::vector<std::pair<type::idx_t, double> >destinations, int hour, int day, senscompute sens) {
+ //   std::cout << "Nombre de départs : " << departs.size() << " destinations : " << destinations.size() << std::endl;
+    if(sens == partirapres)
+        return compute_all(to_idxretour(departures, hour, day), to_idxretour(destinations, hour, day));
+    else
+        return compute_reverse_all(to_idxretour(departures, hour, day), to_idxretour(destinations, hour, day));
+}
 
 
 }}}

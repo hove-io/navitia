@@ -11,6 +11,7 @@
 
 #include "first_letter/firstletter_api.h"
 #include "street_network/street_network_api.h"
+#include "street_network/types.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential.h"
 #include <boost/tokenizer.hpp>
@@ -30,6 +31,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     
 
     std::unique_ptr<navitia::routing::raptor::RAPTOR> calculateur;
+    std::unique_ptr<navitia::streetnetwork::StreetNetworkWorker> street_network_worker;
 
     log4cplus::Logger logger;
 
@@ -284,6 +286,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
             }
             if(d.last_load_at != this->last_load_at || !calculateur){
                 calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(d));
+                street_network_worker = std::unique_ptr<navitia::streetnetwork::StreetNetworkWorker>(new navitia::streetnetwork::StreetNetworkWorker(d.street_network));
                 this->last_load_at = d.last_load_at;
 
                 LOG4CPLUS_INFO(logger, "instanciation du calculateur");
@@ -312,7 +315,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
                 sens = navitia::routing::arriveravant;
 
 
-            pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, time, date, sens);
+            pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, time, date, sens, *street_network_worker);
 
             rd.status_code = 200;
 #ifndef DEBUG
