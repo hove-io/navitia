@@ -112,7 +112,12 @@ int main(int argc, char** argv){
         for(auto demand : demands){
             ++show_progress;
             Timer t2;
-            Path path = router->compute(demand.start, demand.target, demand.hour, demand.date)[0];
+            auto res = router->compute(demand.start, demand.target, demand.hour, demand.date);
+            Path path;
+            if(res.size() > 0) {
+                path = res[0];
+            }
+
             Result result(path);
             result.time = t2.ms();
             results[algo].push_back(result);

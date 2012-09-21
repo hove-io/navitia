@@ -16,6 +16,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
     }
     //Construction de la liste des marche à pied à partir des connections renseignées
 
+    foot_path.clear();
     std::vector<list_connections> footpath_temp;
     footpath_temp.resize(data.stop_points.size());
     for(navitia::type::Connection connection : data.connections) {
@@ -61,6 +62,8 @@ void dataRAPTOR::load(const type::PT_Data &data)
 
     typedef std::unordered_map<navitia::type::idx_t, vector_idx> idx_vector_idx;
     idx_vector_idx ridx_route;
+    stopTimes.clear();
+    routes.clear();
     for(auto & route : data.routes) {
         ridx_route[route.idx] = vector_idx();
         if(route.route_point_list.size() > 0) {
