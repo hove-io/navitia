@@ -296,14 +296,6 @@ class Worker : public BaseWorker<navitia::type::Data> {
             int time = boost::get<int>(request.parsed_params["time"].value);
             auto date = boost::get<boost::gregorian::date>(request.parsed_params["date"].value);
 
-            try {
-                navitia::routing::raptor::checkTime(time);
-            } catch(navitia::routing::raptor::badTime) {
-                pb_response.set_error("Invalid time");
-                rd.status_code = 400;
-                return rd;
-            }
-
             navitia::type::EntryPoint departure = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["departure"].value));
             navitia::type::EntryPoint destination = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["destination"].value));
 
