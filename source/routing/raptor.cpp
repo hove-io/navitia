@@ -132,7 +132,7 @@ void RAPTOR::marcheapied() {
                         best[destination] = nRetour;
                         retour[count][destination] = nRetour;
                         marked_sp.set(destination);
-                    } else if(retour[count - 1][destination].type == uninitialized) {
+                    } else if(count == 0 || retour[count - 1][destination].type == uninitialized) {
                         retour[count][destination] = nRetour;
                     }
                 }
@@ -161,7 +161,7 @@ void RAPTOR::marcheapiedreverse() {
                         best[destination] = nRetour;
                         retour[count][destination] = nRetour;
                         marked_sp.set(destination);
-                    } else if(retour[count - 1][destination].type == uninitialized) {
+                    } else if(count ==_0 || retour[count - 1][destination].type == uninitialized) {
                         retour[count][destination] = nRetour;
                         best[destination] = nRetour;
                     }
