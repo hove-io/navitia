@@ -130,6 +130,7 @@ public:
     void build_raptor();
 
 
+    Data& operator=(Data&& other);
 
 
 

@@ -150,6 +150,8 @@ struct PT_Data : boost::noncopyable{
         return result;
     }
 
+
+    PT_Data& operator=(PT_Data&& other);
 };
 
 }}
