@@ -176,7 +176,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2){
 BOOST_AUTO_TEST_CASE(passe_minuit_3){
     navimake::builder b("20120614");
     b.vj("A")("stop1", 23*3600)("stop2", 24*3600 + 5*60);
-    b.vj("B")("stop1", 0)("stop2", 7);
+    b.vj("B")("stop1", 0)("stop2", 7*60);
+
     b.vj("C")("stop2", 10*60)("stop3", 20*60);
     type::Data data;
     b.build(data.pt_data);
@@ -198,7 +199,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3){
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
     BOOST_CHECK_EQUAL(res.items[0].departure.date(), 1);
     BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 0);
-    BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 7);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 7*60);
     BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 1);
 }
 

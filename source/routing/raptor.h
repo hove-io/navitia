@@ -58,14 +58,14 @@ struct RAPTOR : public AbstractRouter
     void marcheapied();
     void setVPValides(const std::vector<unsigned int> &marked_stop);
     void make_queue();
-    int earliest_trip(const dataRAPTOR::Route_t &route, unsigned int order, DateTime dt) const;
+    int earliest_trip(const dataRAPTOR::Route_t &route, unsigned int order, const DateTime &dt) const;
 
     void boucleRAPTORreverse(std::vector<unsigned int> &marked_stop);
     Path makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb);
     void marcheapiedreverse();
     void setVPValidesreverse(std::vector<unsigned int> &marked_stop);
     void make_queuereverse();
-    int tardiest_trip(const dataRAPTOR::Route_t &route, unsigned int order, DateTime dt) const;
+    int tardiest_trip(const dataRAPTOR::Route_t &route, unsigned int order, const DateTime &dt) const;
 
 
     vector_idxretour trouverGeo(const type::GeographicalCoord & departure, const double radius_depart,  const int departure_hour, const int departure_day) const;

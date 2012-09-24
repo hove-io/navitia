@@ -2,30 +2,35 @@
 namespace navitia { namespace routing { namespace raptor {
 
 
+int RAPTOR::earliest_trip(const dataRAPTOR::Route_t & route, unsigned int order, const DateTime &dt) const {
+    //On cherche le plus petit stop time de la route >= dt.hour()
+    auto begin = data.dataRaptor.stopTimes.begin() + route.firstStopTime + order * route.nbTrips;
+    auto end = begin + route.nbTrips;
 
-int RAPTOR::earliest_trip(const dataRAPTOR::Route_t & route, unsigned int order, DateTime dt) const {
-    int it, step,
-            upper = route.nbTrips, count = upper,
-            first = 0;
+    std::vector<dataRAPTOR::StopTime_t> debug(begin, end);
+    auto it = std::lower_bound(begin, end, dt.hour(),
+                               [](dataRAPTOR::StopTime_t st, uint32_t hour){
+                               return st.departure_time < hour;});
 
-    if(data.pt_data.validity_patterns[route.vp].check(dt.date())) {
-        //Recherche dichotomique du premier trip partant après dt.hour
-        while (count>0) {
-            it = first; step=count/2; it+=step;
-            if (data.dataRaptor.stopTimes[route.firstStopTime + order + it*route.nbStops].departure_time < dt.hour()) {
-                first=++it; count-=step+1;
-            }
-            else count=step;
-        }
-
-        if(first != upper)
-            return first;
+    //On renvoie le premier trip valide
+    for(; it != end; ++it) {
+        //Cas normal
+        if(it->departure_time <= 86400 && data.pt_data.validity_patterns[route.vp].check(dt.date()))
+            return it - begin;
+        //C'est que le trajet est un passe minuit, son validity pattern est donc valable la veille
+        if(it->departure_time > 86400 && dt.date() > 0 && data.pt_data.validity_patterns[route.vp].check(dt.date() - 1))
+            return it - begin;
     }
 
     //Si on en a pas trouvé, on cherche le lendemain
-    dt.date_increment();
-    if(data.pt_data.validity_patterns[route.vp].check(dt.date())) {
-        return 0;
+//    dt.update(0);
+    for(it = begin; it != end; ++it) {
+        //Cas normal
+        if(it->departure_time <= 86400 && data.pt_data.validity_patterns[route.vp].check(dt.date() + 1))
+            return it - begin;
+        //C'est que le trajet est un passe minuit, son validity pattern est donc valable la veille
+        if(it->departure_time > 86400 && dt.date() > 0 && data.pt_data.validity_patterns[route.vp].check(dt.date()))
+            return it - begin;
     }
 
     //Cette route ne comporte aucun trip compatible
@@ -33,34 +38,41 @@ int RAPTOR::earliest_trip(const dataRAPTOR::Route_t & route, unsigned int order,
 }
 
 
-int RAPTOR::tardiest_trip(const dataRAPTOR::Route_t & route, unsigned int order, DateTime dt) const{
-    int current_trip/*, step*/,
-            upper =  route.nbTrips/*, count = upper*/,
-            first = 0;
+int RAPTOR::tardiest_trip(const dataRAPTOR::Route_t & route, unsigned int order, const DateTime &dt) const{
+    //On cherche le plus grand stop time de la route <= dt.hour()
+    const auto begin = data.dataRaptor.stopTimes.rbegin() + (data.dataRaptor.stopTimes.size() - route.firstStopTime) - ((order+1) * route.nbTrips);
+    const auto end = begin + route.nbTrips;
 
-    if(data.pt_data.validity_patterns[route.vp].check(dt.date())) {
-        //Recherche dichotomique du premier trip avant après dt.hour
-        current_trip = upper;
-        while ((upper - first) >1) {
-            current_trip = first + (upper - first) / 2;
-            int current_stop_time = route.firstStopTime + order + current_trip*route.nbStops;
-            if (data.dataRaptor.stopTimes[current_stop_time].arrival_time > dt.hour()) {
-                upper = current_trip;
-            }
-            else first = current_trip;
+    std::vector<dataRAPTOR::StopTime_t> debug(begin, end);
+    auto it = std::lower_bound(begin, end, dt.hour(),
+                               [](dataRAPTOR::StopTime_t st, uint32_t hour){
+                               return st.arrival_time > hour;}
+                                        );
+
+    //On renvoie le premier trip valide
+    for(; it != end; ++it) {
+        //Cas normal
+        if(it->arrival_time <= 86400 && data.pt_data.validity_patterns[route.vp].check(dt.date()))
+            return route.nbTrips - (it - begin) - 1;
+        //C'est que le trajet est un passe minuit, son validity pattern est donc valable la veille
+        if(it->arrival_time > 86400 && dt.date() > 0 &&  data.pt_data.validity_patterns[route.vp].check(dt.date() - 1))
+            return route.nbTrips - (it - begin) - 1;
+    }
+
+
+    //Si on en a pas trouvé, on cherche la veille
+    if(dt.date() > 0) {
+//        dt.updatereverse(86399);
+        for(it = begin; it != end; ++it) {
+            //Cas normal
+            if(it->arrival_time <= 86400 && data.pt_data.validity_patterns[route.vp].check(dt.date()))
+                return route.nbTrips - (it - begin) - 1;
+            //C'est que le trajet est un passe minuit, son validity pattern est donc valable la veille
+            if(it->arrival_time > 86400 && dt.date() > 0  && data.pt_data.validity_patterns[route.vp].check(dt.date()-1))
+                return route.nbTrips - (it - begin) - 1;
         }
-        if(data.dataRaptor.stopTimes[route.firstStopTime + order + first*route.nbStops].arrival_time > dt.hour())
-            --first;
-
-        if(first != upper && first >= 0)
-            return first;
     }
 
-    //Si on en a pas trouvé, on cherche le lendemain
-    dt.date_decrement();
-    if(data.pt_data.validity_patterns[route.vp].check(dt.date())) {
-        return route.nbTrips - 1;
-    }
 
     //Cette route ne comporte aucun trip compatible
     return -1;
@@ -132,7 +144,7 @@ void RAPTOR::marcheapied() {
                         best[destination] = nRetour;
                         retour[count][destination] = nRetour;
                         marked_sp.set(destination);
-                    } else if(retour[count - 1][destination].type == uninitialized) {
+                    } else if(count == 0 || retour[count - 1][destination].type == uninitialized) {
                         retour[count][destination] = nRetour;
                     }
                 }
@@ -161,7 +173,7 @@ void RAPTOR::marcheapiedreverse() {
                         best[destination] = nRetour;
                         retour[count][destination] = nRetour;
                         marked_sp.set(destination);
-                    } else if(retour[count - 1][destination].type == uninitialized) {
+                    } else if(count == 0 || retour[count - 1][destination].type == uninitialized) {
                         retour[count][destination] = nRetour;
                         best[destination] = nRetour;
                     }
@@ -195,15 +207,18 @@ std::vector<Path> RAPTOR::compute_all(vector_idxretour departs, vector_idxretour
     setVPValides(marked_stop);
     boucleRAPTOR(marked_stop);
 
+    auto debugdate = b_dest.best_now.dt.date();
+
     if(b_dest.best_now.type == uninitialized) {
         return result;
     } /*else {
-        auto temp = makePathesreverse(retour, best, destinations, b_dest, count);
+        auto temp = makePathes(retour, best, departs, b_dest, count);
         result.insert(result.end(), temp.begin(), temp.end());
     }*/
 
     retour.assign(20, data.dataRaptor.retour_constant_reverse);
     retour[0][b_dest.best_now_spid] = b_dest.best_now;
+    retour[0][b_dest.best_now_spid].type = depart;
     if(retour[0][b_dest.best_now_spid].type == vj) {
         retour[0][b_dest.best_now_spid].dt.update(data.pt_data.stop_times[b_dest.best_now.stid].departure_time);
     }
@@ -262,6 +277,7 @@ std::vector<Path> RAPTOR::compute_all(vector_idxretour departs, vector_idxretour
 
      retour.assign(20, data.dataRaptor.retour_constant);
      retour[0][b_dest.best_now_spid] = b_dest.best_now;
+     retour[0][b_dest.best_now_spid].type = depart;
      best.assign(data.dataRaptor.retour_constant.begin(), data.dataRaptor.retour_constant.end());
      best[b_dest.best_now_spid] = b_dest.best_now;
      marked_stop.clear();
@@ -393,9 +409,11 @@ void RAPTOR::boucleRAPTOR(const std::vector<unsigned int> &marked_stop) {
 
                     int etemp = earliest_trip(route, i, dt);
                     if(etemp >= 0) {
-                        t = etemp;
-                        workingDt = retour_temp.dt;
-                        embarquement = spid;
+                        if(t != etemp) {
+                            t = etemp;
+                            embarquement = spid;
+                        }
+                        workingDt = dt;
                         workingDt.update(data.dataRaptor.get_temps_depart(route, t,i));
                     }
                 }
@@ -416,9 +434,6 @@ void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop) {
     count = 0;
 
     marcheapiedreverse();
-
-
-
     bool end = false;
     while(!end) {
         ++count;
@@ -437,7 +452,7 @@ void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop) {
 
                 if(t >= 0) {
                     const auto & st = data.dataRaptor.stopTimes[data.dataRaptor.get_stop_time_idx(route, t, i)];
-                    workingDt.updatereverse(st.departure_time);
+                    workingDt.updatereverse(st.departure_time);;
                     //On stocke, et on marque pour explorer par la suite
                     auto & max = std::max(best[spid].dt, b_dest.best_now.dt);
 
@@ -461,19 +476,19 @@ void RAPTOR::boucleRAPTORreverse(std::vector<unsigned int> &marked_stop) {
                 if((retour_temp.type != uninitialized) &&
                    ( ( temps_arrivee == std::numeric_limits<uint32_t>::max()) ||
                      ( retour_temp.dt >= DateTime(workingDt.date(), temps_arrivee)) )) {
-                    int etemp = tardiest_trip(route, i, retour_temp.dt);
+                    DateTime dt = retour_temp.dt;
+                    int etemp = tardiest_trip(route, i, dt);
                     if(etemp >=0 && t!=etemp) {
                         if(t!=etemp) {
                             embarquement = spid;
                             t = etemp;
                         }
-                        workingDt = retour_temp.dt;
+                        workingDt = dt;
+                        workingDt.updatereverse(data.dataRaptor.get_temps_arrivee(route, t, i));
                     }
                 }
             }
             ++routeidx;
-
-
         }
         marcheapiedreverse();
     }
