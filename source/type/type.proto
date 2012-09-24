@@ -191,26 +191,55 @@ message StreetNetwork {
     repeated GeographicalCoord coordinate_list = 3;
 }
 
-message PTPathItem {
-    optional int32 departure_hour = 1;
-    optional int32 departure_date = 2;
-    optional int32 arrival_hour = 3;
-    optional int32 arrival_date = 4;
-    optional string type = 5;
-    optional string line_name = 6;
-    optional StopArea departure = 7;
-    optional StopArea arrival = 8;
-    repeated StopPoint stop_points = 9;
+enum SectionType {
+    PUBLIC_TRANSPORT = 1;
+    HIT_THE_ROAD = 2;
+    WAITING = 3;
+    TRANSFER = 4;
 }
 
-message PTPath {
+message Section {
+    optional string departure_date_time = 1;
+    optional string arrival_date_time = 2;
+    optional SectionType type = 5;
+    optional PlaceMark origin = 7;
+    optional PlaceMark destination = 8;
+
+// Si c'est du TC
+    repeated StopPoint stop_points = 9;
+
+// Si c'est du routier
+
+// Si c'est de l'attente
+
+    optional polyline;
+}
+
+message Journey {
     optional int32 duration = 1;
-    optional int32 nb_changes = 2;
-    repeated PTPathItem items = 3;
+    optional int32 nb_transfers = 2;
+    repeated Section sections = 3;
+    optional string departure_date_time = 4;
+    optional string arrival_date_time = 5;
+    optional string call_before = 6;
+    optional string call_after = 7;
+}
+
+enum ResponseType {
+    ITINERARY_FOUND = 1;
+    DATE_OUT_OF_BOUNDS = 2;
+    NO_DEPARTURE_POINT = 3;
+    NO_DESTINATION_POINT = 4;
+    NO_DEPARTURE_NOR_DESTINATION_POINT = 5;
+    NO_VIA_POINT = 6;
+    NO_SOLUTION = 7;
+    CONNECTION_LIMITATION = 8;
+    DURATION_LIMITATION = 9;
 }
 
 message Planner {
-	repeated PTPath path = 1;
+	repeated Journey journeys = 1;
+        optional response_type = 2;
 }
 
 message Status{
