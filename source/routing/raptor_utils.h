@@ -11,24 +11,24 @@ enum type_idx {
 };
 struct type_retour {
     unsigned int stid;
-    int said_emarquement;
+    int spid_emarquement;
     DateTime dt;
     int dist_to_dest;
     int dist_to_dep;
     type_idx type;
 
 
-    type_retour(int stid, DateTime dt, int dist_to_dest) : stid(stid), said_emarquement(-1), dt(dt), dist_to_dest(dist_to_dest), dist_to_dep(0), type(vj) {}
-    type_retour(int stid, DateTime dt, int dist_to_dest, int dist_to_dep) : stid(stid), said_emarquement(-1), dt(dt), dist_to_dest(dist_to_dest), dist_to_dep(dist_to_dep), type(vj) {}
+    type_retour(int stid, DateTime dt, int dist_to_dest) : stid(stid), spid_emarquement(-1), dt(dt), dist_to_dest(dist_to_dest), dist_to_dep(0), type(vj) {}
+    type_retour(int stid, DateTime dt, int dist_to_dest, int dist_to_dep) : stid(stid), spid_emarquement(-1), dt(dt), dist_to_dest(dist_to_dest), dist_to_dep(dist_to_dep), type(vj) {}
 
-    type_retour(int stid, DateTime dt) : stid(stid), said_emarquement(-1), dt(dt), dist_to_dest(0), dist_to_dep(0), type(vj){}
-    type_retour(int stid, DateTime dt, type_idx type) : stid(stid), said_emarquement(-1), dt(dt), dist_to_dest(0), dist_to_dep(0), type(type){}
-    type_retour(int stid, int said_emarquement,DateTime dt) : stid(stid), said_emarquement(said_emarquement), dt(dt), dist_to_dest(0), dist_to_dep(0), type(vj){}
+    type_retour(int stid, DateTime dt) : stid(stid), spid_emarquement(-1), dt(dt), dist_to_dest(0), dist_to_dep(0), type(vj){}
+    type_retour(int stid, DateTime dt, type_idx type) : stid(stid), spid_emarquement(-1), dt(dt), dist_to_dest(0), dist_to_dep(0), type(type){}
+    type_retour(int stid, int said_emarquement,DateTime dt) : stid(stid), spid_emarquement(said_emarquement), dt(dt), dist_to_dest(0), dist_to_dep(0), type(vj){}
 
-    type_retour(int stid, int said_emarquement, DateTime dt, type_idx type) : stid(stid), said_emarquement(said_emarquement), dt(dt), dist_to_dest(0), dist_to_dep(0), type(type){}
-    type_retour(unsigned int dist_to_dest) : stid(-1), said_emarquement(-1), dt(), dist_to_dest(dist_to_dest), dist_to_dep(0), type(vj){}
-    type_retour() : stid(-1), said_emarquement(-1), dt(), dist_to_dest(0), dist_to_dep(0), type(uninitialized) {}
-    type_retour(const type_retour & t) : stid(t.stid), said_emarquement(t.said_emarquement), dt(t.dt), dist_to_dest(t.dist_to_dest), dist_to_dep(t.dist_to_dep), type(t.type) {}
+    type_retour(int stid, int said_emarquement, DateTime dt, type_idx type) : stid(stid), spid_emarquement(said_emarquement), dt(dt), dist_to_dest(0), dist_to_dep(0), type(type){}
+    type_retour(unsigned int dist_to_dest) : stid(-1), spid_emarquement(-1), dt(), dist_to_dest(dist_to_dest), dist_to_dep(0), type(vj){}
+    type_retour() : stid(-1), spid_emarquement(-1), dt(), dist_to_dest(0), dist_to_dep(0), type(uninitialized) {}
+    type_retour(const type_retour & t) : stid(t.stid), spid_emarquement(t.spid_emarquement), dt(t.dt), dist_to_dest(t.dist_to_dest), dist_to_dep(t.dist_to_dep), type(t.type) {}
 
     bool operator<(type_retour r2) const {
         if(r2.dt == DateTime::inf)

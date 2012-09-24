@@ -103,9 +103,18 @@ struct StreetNetwork {
     /// Graphe pour effectuer le calcul d'itinéraire
     Graph graph;
 
-    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+    template<class Archive> void save(Archive & ar, const unsigned int) const {
         ar & ways & graph & fl & pl;
     }
+
+    template<class Archive> void load(Archive & ar, const unsigned int) {
+        // La désérialisation d'une boost adjacency list ne vide pas le graphe
+        // On avait donc une fuite de mémoire
+        graph.clear();
+        ar & ways & graph & fl & pl;
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
 
     /** Construit l'indexe spatial */
     void build_proximity_list();
@@ -125,15 +134,9 @@ struct StreetNetwork {
       * Pour le trouver, on cherche le nœud le plus proche, puis pour chaque arc adjacent, on garde le plus proche
       * Ce n'est donc pas optimal, mais pour améliorer ça, il faudrait indexer des segments, ou ratisser plus large
      */
-    edge_t nearest_edge(const type::GeographicalCoord & coordinates) const;
+    edge_t nearest_edge(const type::GeographicalCoord &coordinates) const;
+    edge_t nearest_edge(const type::GeographicalCoord &coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
 
-    /** On définit les coordonnées de départ, un proximitylist et un rayon
-     *
-     * Retourne tous les idx atteignables dans ce rayon, ainsi que la distance en suivant le filaire de voirie
-     **/
-    std::vector< std::pair<type::idx_t, double> > find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius) const;
-
-private :
     /** Initialise les structures nécessaires à dijkstra
      *
      * Attention !!! Modifie distances et predecessors
@@ -169,7 +172,8 @@ private :
   */
 struct ProjectionData {
     /// deux nœuds possibles (les extrémités du segment où a été projeté la coordonnée)
-    std::vector<vertex_t> vertices;
+    vertex_t source;
+    vertex_t target;
 
     /// Segment sur lequel a été projeté la coordonnée
     edge_t edge;
@@ -178,10 +182,11 @@ struct ProjectionData {
     type::GeographicalCoord projected;
 
     /// Distance entre le projeté et les nœuds du segment
-    std::vector<double> distances;
+    double source_distance;
+    double target_distance;
 
     /// Initialise la structure à partir d'une coordonnée et d'un graphe sur lequel on projette
-    ProjectionData(const type::GeographicalCoord & coord, const StreetNetwork &sn);
+    ProjectionData(const type::GeographicalCoord & coord, const StreetNetwork &sn, const proximitylist::ProximityList<vertex_t> &prox);
 };
 
 /** Permet de construire un graphe de manière simple
@@ -226,11 +231,33 @@ struct GraphBuilder{
 /** Projette un point sur un segment
 
    Retourne les coordonnées projetées et la distance au segment
-
    Si le point projeté tombe en dehors du segment, alors ça tombe sur le nœud le plus proche
-
    http://paulbourke.net/geometry/pointline/
    */
 std::pair<type::GeographicalCoord, float> project(type::GeographicalCoord point, type::GeographicalCoord segment_start, type::GeographicalCoord segment_end);
+
+/** Structures avec toutes les données écriture pour streetnetwork */
+struct StreetNetworkWorker {
+public:
+    StreetNetworkWorker(const StreetNetwork & street_network);
+
+    /** On définit les coordonnées de départ, un proximitylist et un rayon
+     *
+     * Retourne tous les idx atteignables dans ce rayon, ainsi que la distance en suivant le filaire de voirie
+     **/
+    std::vector< std::pair<type::idx_t, double> > find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius);
+
+private:
+    const StreetNetwork & street_network;
+
+    /// Tableau des distances utilisé par Dijkstra
+    std::vector<float> distances;
+
+    /// Tableau des prédécesseurs utilisé par Dijkstra
+    std::vector<vertex_t> predecessors;
+
+    /// Associe chaque idx_t aux données de projection sur le filaire associées
+    std::map<type::idx_t, ProjectionData> idx_projection;
+};
 
 }} //namespace navitia::streetnetwork

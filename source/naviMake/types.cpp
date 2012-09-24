@@ -329,9 +329,7 @@ nt::Route Route::Transformer::operator()(const Route& route){
 
 nt::StopTime StopTime::Transformer::operator()(const StopTime& stop){
     nt::StopTime nt_stop;
-    nt_stop.id = stop.id;
     nt_stop.idx = stop.idx;
-    nt_stop.external_code = stop.external_code;
     nt_stop.arrival_time = stop.arrival_time;
     nt_stop.departure_time = stop.departure_time;
     nt_stop.order = stop.order;

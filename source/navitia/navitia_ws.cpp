@@ -1,35 +1,32 @@
 #include "config.h"
 #include "baseworker.h"
 #include "utils/configuration.h"
-#include <iostream>
 #include "type/data.h"
 #include "type/type.pb.h"
 #include "type/pb_converter.h"
-#include "routing/routing.h"
-#include "routing/raptor.h"
-#include "routing/raptor_api.h"
+#include "interface/renderer.h"
+#include "type/locker.h"
 
+#include "routing/raptor_api.h"
 #include "first_letter/firstletter_api.h"
 #include "street_network/street_network_api.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential.h"
+
 #include <boost/tokenizer.hpp>
-#include "type/locker.h"
-#include "interface/renderer.h"
+#include <iostream>
+#include <gperftools/profiler.h>
 
 using namespace webservice;
 
 namespace nt = navitia::type;
-
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
 
-
-class Worker : public BaseWorker<navitia::type::Data> {
-
-    
+class Worker : public BaseWorker<navitia::type::Data> {  
 
     std::unique_ptr<navitia::routing::raptor::RAPTOR> calculateur;
+    std::unique_ptr<navitia::streetnetwork::StreetNetworkWorker> street_network_worker;
 
     log4cplus::Logger logger;
 
@@ -177,6 +174,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
             LOG4CPLUS_TRACE(logger, "déplacement de data");
             d = std::move(data);
             LOG4CPLUS_TRACE(logger, "Chargement des donnés fini");
+//            ProfilerStart("navitia.prof");
         }catch(...){
             d.loaded = false;
             LOG4CPLUS_ERROR(logger, "erreur durant le chargement des données");
@@ -290,6 +288,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
             }
             if(d.last_load_at != this->last_load_at || !calculateur){
                 calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(d));
+                street_network_worker = std::unique_ptr<navitia::streetnetwork::StreetNetworkWorker>(new navitia::streetnetwork::StreetNetworkWorker(d.street_network));
                 this->last_load_at = d.last_load_at;
 
                 LOG4CPLUS_INFO(logger, "instanciation du calculateur");
@@ -298,14 +297,6 @@ class Worker : public BaseWorker<navitia::type::Data> {
             std::vector<navitia::routing::Path> pathes;
             int time = boost::get<int>(request.parsed_params["time"].value);
             auto date = boost::get<boost::gregorian::date>(request.parsed_params["date"].value);
-
-            try {
-                navitia::routing::raptor::checkTime(time);
-            } catch(navitia::routing::raptor::badTime) {
-                pb_response.set_error("Invalid time");
-                rd.status_code = 400;
-                return rd;
-            }
 
             navitia::type::EntryPoint departure = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["departure"].value));
             navitia::type::EntryPoint destination = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["destination"].value));
@@ -318,7 +309,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
                 sens = navitia::routing::arriveravant;
 
 
-            pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, time, date, sens);
+            pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, time, date, sens, *street_network_worker);
 
             rd.status_code = 200;
 #ifndef DEBUG

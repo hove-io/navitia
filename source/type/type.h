@@ -461,26 +461,23 @@ struct StopPoint : public NavitiaHeader, Nameable{
 
 };
 
-struct StopTime: public NavitiaHeader{
-    const static Type_e type = Type_e::eStopTime;
-    int arrival_time; ///< En secondes depuis minuit
-    int departure_time; ///< En secondes depuis minuit
-    size_t vehicle_journey_idx;
-    size_t route_point_idx;
-    int order;
+struct StopTime {
+    idx_t idx;
+    uint32_t arrival_time; ///< En secondes depuis minuit
+    uint32_t departure_time; ///< En secondes depuis minuit
+    idx_t vehicle_journey_idx;
+    idx_t route_point_idx;
+    uint16_t order;
+    uint16_t zone;
     bool ODT;
-    int zone;
 
 
     StopTime(): arrival_time(0), departure_time(0), vehicle_journey_idx(invalid_idx), route_point_idx(invalid_idx), order(0),
-        ODT(false), zone(0){}
+        zone(0), ODT(false){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-            ar & arrival_time & departure_time & vehicle_journey_idx & route_point_idx & order & ODT & zone 
-                & idx & id & external_code ;
+            ar & arrival_time & departure_time & vehicle_journey_idx & route_point_idx & order & ODT & zone & idx;
     }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-
 };
 
 

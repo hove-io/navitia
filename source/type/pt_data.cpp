@@ -79,7 +79,6 @@ std::vector<idx_t> PT_Data::get_target_by_one_source(Type_e source, Type_e targe
         case Type_e::eVehicleJourney: result = vehicle_journeys[source_idx].get(target, *this); break;
         case Type_e::eStopPoint: result = stop_points[source_idx].get(target, *this); break;
         case Type_e::eStopArea: result = stop_areas[source_idx].get(target, *this); break;
-        case Type_e::eStopTime: result = stop_times[source_idx].get(target, *this); break;
         case Type_e::eNetwork: result = networks[source_idx].get(target, *this); break;
         case Type_e::eMode: result = modes[source_idx].get(target, *this); break;
         case Type_e::eModeType: result = mode_types[source_idx].get(target, *this); break;

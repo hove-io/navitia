@@ -362,7 +362,8 @@ struct StopPoint : public TransmodelHeader, Nameable{
 
 };
 
-struct StopTime: public TransmodelHeader {
+struct StopTime {
+    int idx;
     int arrival_time; ///< En secondes depuis minuit
     int departure_time; ///< En secondes depuis minuit
     VehicleJourney* vehicle_journey;

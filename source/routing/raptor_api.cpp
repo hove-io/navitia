@@ -1,5 +1,4 @@
 #include "raptor_api.h"
-#include "routing.h"
 #include "type/pb_converter.h"
 
 namespace navitia { namespace routing { namespace raptor {
@@ -44,22 +43,88 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
     return pb_response;
 }
 
-bool checkTime(const int time) {
-    return !(time < 0 || time > 86400);
+std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPoint &ep, const type::Data & data, streetnetwork::StreetNetworkWorker & worker){
+    std::vector<std::pair<type::idx_t, double> > result;
+
+    switch(ep.type) {
+    case navitia::type::Type_e::eStopArea:
+    {
+        auto it = data.pt_data.stop_area_map.find(ep.external_code);
+        if(it!= data.pt_data.stop_area_map.end()) {
+            for(auto spidx : data.pt_data.stop_areas[it->second].stop_point_list) {
+                result.push_back(std::make_pair(spidx, 0));
+            }
+        }
+    } break;
+    case type::Type_e::eStopPoint: {
+        auto it = data.pt_data.stop_point_map.find(ep.external_code);
+        if(it != data.pt_data.stop_point_map.end()){
+            result.push_back(std::make_pair(data.pt_data.stop_points[it->second].idx, 0));
+        }
+    } break;
+    case type::Type_e::eCoord: {
+        result = worker.find_nearest(ep.coordinates, data.pt_data.stop_point_proximity_list, 300);
+    } break;
+    default: break;
+    }
+    return result;
 }
 
-pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &departure, const type::EntryPoint &destination, const int time, const boost::gregorian::date &date, const navitia::routing::senscompute sens) {
+vector_idxretour to_idxretour(std::vector<std::pair<type::idx_t, double> > elements, int hour, int day){
+    vector_idxretour result;
+    for(auto item : elements) {
+        int temps = hour + (item.second / 80);
+        int jour;
+        if(temps > 86400) {
+            temps = temps % 86400;
+            jour = day + 1;
+        } else {
+            jour = day;
+        }
+        result.push_back(std::make_pair(item.first, type_retour(navitia::type::invalid_idx, DateTime(jour, temps), 0, (item.second / 80))));
+    }
+    return result;
+}
+
+
+pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &departure, const type::EntryPoint &destination, int time, const boost::gregorian::date &date, const senscompute sens, streetnetwork::StreetNetworkWorker & worker) {
     pbnavitia::Response response;
+    if(time < 0 || time > 24*3600){
+        response.set_error("Invalid hour");
+        return response;
+    }
+
+    int day = (date - raptor.data.meta.production_date.begin()).days();
+    if(day < 0 || day > raptor.data.meta.production_date.length().days()){
+        response.set_error("Invalid date");
+        return response;
+    }
+
     if(!raptor.data.meta.production_date.contains(date)) {
         response.set_error("Date not in the production period");
         return response;
     }
 
+    auto departures = get_stop_points(departure, raptor.data, worker);
+    if(departures.size() == 0){
+        response.set_error("Departure point not found");
+        return response;
+    }
 
-    response = navitia::routing::raptor::make_pathes(raptor.compute_all(departure, destination, time, (date - raptor.data.meta.production_date.begin()).days(), sens), raptor.data);
+    auto destinations = get_stop_points(destination, raptor.data, worker);
+    if(destinations.size() == 0){
+        response.set_error("Destination point not found");
+        return response;
+    }
 
+    std::vector<Path> result;
 
-    return response;
+    if(sens == partirapres)
+        result = raptor.compute_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day));
+    else
+        result = raptor.compute_reverse_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day));
+
+    return make_pathes(result, raptor.data);
 }
 
 }}}

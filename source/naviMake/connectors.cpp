@@ -309,14 +309,12 @@ void CsvFusio::fill_stops(navimake::Data& data){
         }
         if(counter != 0){
             navimake::types::StopTime* stop = new navimake::types::StopTime();
-            stop->id = row.at(0);
             stop->zone = boost::lexical_cast<int>(row.at(1));
 
             stop->arrival_time = boost::lexical_cast<int>(row.at(2));
             stop->departure_time = boost::lexical_cast<int>(row.at(3));
 
             stop->order = boost::lexical_cast<int>(row.at(8));
-
 
             std::string vehicle_journey_id = row.at(4);
             stop->vehicle_journey = this->find(vehicle_journey_map, vehicle_journey_id);
