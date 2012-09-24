@@ -2,6 +2,59 @@
 
 namespace navitia{namespace type {
 
+
+PT_Data& PT_Data::operator=(PT_Data&& other){
+    validity_patterns = other.validity_patterns;
+    lines = other.lines;
+    routes = other.routes;
+    vehicle_journeys = other.vehicle_journeys;
+    stop_points = other.stop_points;
+    stop_areas = other.stop_areas;
+    stop_times = other.stop_times;
+
+    networks = other.networks;
+    modes = other.modes;
+    mode_types = other.mode_types;
+    cities = other.cities;
+    connections = other.connections;
+    route_points = other.route_points;
+
+    districts = other.districts;
+    departments = other.departments;
+    companies = other.companies;
+    vehicles = other.vehicles;
+    countries = other.countries;
+
+    stop_point_connections = other.stop_point_connections;
+
+    // First letter
+    stop_area_first_letter = other.stop_area_first_letter;
+    city_first_letter = other.city_first_letter;
+    stop_point_first_letter = other.stop_point_first_letter;
+
+    // Proximity list
+    stop_area_proximity_list = other.stop_area_proximity_list;
+    stop_point_proximity_list = other.stop_point_proximity_list;
+    city_proximity_list = other.city_proximity_list;
+
+    line_map = other.line_map;
+    route_map = other.route_map;
+    vehicle_journey_map = other.vehicle_journey_map;
+    stop_area_map = other.stop_area_map;
+    stop_point_map = other.stop_point_map;
+    network_map = other.network_map;
+    mode_map = other.mode_map;
+    mode_type_map = other.mode_type_map;
+    city_map = other.city_map;
+    district_map = other.district_map;
+    department_map = other.department_map;
+    company_map = other.company_map;
+    country_map = other.country_map;
+
+    return *this;
+}
+
+
 std::vector<idx_t> PT_Data::get_target_by_source(Type_e source, Type_e target, std::vector<idx_t> source_idx){
     std::vector<idx_t> result;
     result.reserve(source_idx.size());
@@ -26,7 +79,6 @@ std::vector<idx_t> PT_Data::get_target_by_one_source(Type_e source, Type_e targe
         case Type_e::eVehicleJourney: result = vehicle_journeys[source_idx].get(target, *this); break;
         case Type_e::eStopPoint: result = stop_points[source_idx].get(target, *this); break;
         case Type_e::eStopArea: result = stop_areas[source_idx].get(target, *this); break;
-        case Type_e::eStopTime: result = stop_times[source_idx].get(target, *this); break;
         case Type_e::eNetwork: result = networks[source_idx].get(target, *this); break;
         case Type_e::eMode: result = modes[source_idx].get(target, *this); break;
         case Type_e::eModeType: result = mode_types[source_idx].get(target, *this); break;

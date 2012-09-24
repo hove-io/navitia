@@ -309,16 +309,6 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data &) const {
 }
 
 
-std::vector<idx_t> StopTime::get(Type_e type, const PT_Data &) const {
-    std::vector<idx_t> result;
-    switch(type) {
-    case Type_e::eVehicle: result.push_back(vehicle_journey_idx); break;
-    case Type_e::eRoutePoint: result.push_back(route_point_idx); break;
-    default: break;
-    }
-    return result;
-}
-
 EntryPoint::EntryPoint(const std::string &uri) : external_code(uri) {
        size_t pos = uri.find(":");
        if(pos == std::string::npos)

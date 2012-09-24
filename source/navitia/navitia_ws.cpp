@@ -159,9 +159,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
         return rd;
     }
 
-    void load(navitia::type::Data & data){
-        nt::Locker lock(data, true);
+    void load(navitia::type::Data & d){
         try{
+            navitia::type::Data data;
             Configuration * conf = Configuration::get();
             std::string database = conf->get_as<std::string>("GENERAL", "database", "IdF.nav");
             LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
@@ -169,10 +169,14 @@ class Worker : public BaseWorker<navitia::type::Data> {
             data.load_lz4(database);
             data.build_proximity_list();
             data.build_raptor();
+            LOG4CPLUS_TRACE(logger, "acquisition du lock");
+            nt::Locker lock(d, true);
+            LOG4CPLUS_TRACE(logger, "déplacement de data");
+            d = std::move(data);
             LOG4CPLUS_TRACE(logger, "Chargement des donnés fini");
 //            ProfilerStart("navitia.prof");
         }catch(...){
-            data.loaded = false;
+            d.loaded = false;
             LOG4CPLUS_ERROR(logger, "erreur durant le chargement des données");
             throw;
         }
@@ -235,8 +239,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
 #ifndef DEBUG
         try{
 #endif
+
             nt::Locker lock(data);
             if(!lock.locked){
+                rd.status_code = 503;
                 return rd;
             }
 

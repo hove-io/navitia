@@ -9,7 +9,8 @@ namespace navitia{ namespace type {
             this->data->load_mutex.lock();
             locked = true;
         }else{
-            locked = this->data->load_mutex.try_lock_shared();
+            this->data->load_mutex.lock_shared();
+            locked = true;
         }
     }
 
