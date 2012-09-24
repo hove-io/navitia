@@ -16,6 +16,22 @@ namespace pt = boost::posix_time;
 
 namespace navitia { namespace type {
 
+Data& Data::operator=(Data&& other){
+    version = other.version;
+    loaded = other.loaded;
+    meta = other.meta;
+    Alias_List = other.Alias_List;
+    pt_data = std::move(other.pt_data);
+    street_network = other.street_network;
+    dataRaptor = other.dataRaptor;
+    last_load = other.last_load;
+    last_load_at = other.last_load_at;
+
+    return *this;
+}
+
+
+
 void Data::set_cities(){
     BOOST_FOREACH(navitia::streetnetwork::Way way, street_network.ways){
         auto city_it = pt_data.city_map.find(way.city);

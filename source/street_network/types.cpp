@@ -122,8 +122,8 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
     return p;
 }
 
-ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const StreetNetwork & sn){
-    this->edge = sn.nearest_edge(coord);
+ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const StreetNetwork & sn, const proximitylist::ProximityList<vertex_t> &prox){
+    this->edge = sn.nearest_edge(coord, prox);
     // On cherche les coordonnées des extrémités de ce segment
     vertex_t vertex1 = boost::source(edge, sn.graph);
     vertex_t vertex2 = boost::target(edge, sn.graph);
@@ -132,15 +132,21 @@ ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const Stre
     // On projette le nœud sur le segment
     this->projected = project(coord, vertex1_coord, vertex2_coord).first;
     // On calcule la distance « initiale » déjà parcourue avant d'atteindre ces extrémité d'où on effectue le calcul d'itinéraire
-    this->vertices = {vertex1, vertex2};
-    this->distances = {projected.distance_to(vertex1_coord), projected.distance_to(vertex2_coord)};
+    this->source = vertex1;
+    this->target = vertex2;
+    this->source_distance = projected.distance_to(vertex1_coord);
+    this->target_distance = projected.distance_to(vertex2_coord);
 }
 
-Path StreetNetwork::compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord) const{
-    ProjectionData start(start_coord, *this);
-    ProjectionData dest(dest_coord, *this);
 
-    Path p = compute(start.vertices, dest.vertices, start.distances, dest.distances);
+Path StreetNetwork::compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord) const{
+    ProjectionData start(start_coord, *this, this->pl);
+    ProjectionData dest(dest_coord, *this, this->pl);
+
+    Path p = compute({start.source, start.target},
+                     {dest.source, dest.target},
+                     {start.source_distance, start.target_distance},
+                     {dest.source_distance, dest.target_distance});
 
     // On rajoute les bouts de coordonnées manquants à partir et vers le projeté de respectivement le départ et l'arrivée
     std::vector<type::GeographicalCoord> coords = {start.projected};
@@ -152,25 +158,30 @@ Path StreetNetwork::compute(const type::GeographicalCoord & start_coord, const t
     return p;
 }
 
-std::vector< std::pair<idx_t, double> > StreetNetwork::find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<idx_t> & pl, double radius) const {
-    ProjectionData start(start_coord, *this);
-    // Tableau des prédécesseurs de chaque nœuds
-    // si pred[v] == v, c'est soit qu'il n'y a pas de chemin possible, soit c'est l'origine
-    std::vector<vertex_t> preds;
+StreetNetworkWorker::StreetNetworkWorker(const StreetNetwork &street_network) :
+    street_network(street_network)
+{}
 
-    // Tableau des distances des nœuds à l'origine, par défaut à l'infini
-    std::vector<float> dists;
-    this->init(dists, preds);
+std::vector< std::pair<idx_t, double> > StreetNetworkWorker::find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<idx_t> & pl, double radius) {
+    ProjectionData start(start_coord, this->street_network, this->street_network.pl);
+    street_network.init(this->distances, this->predecessors);
 
     // On lance un dijkstra depuis les deux nœuds de départ
-    dists[start.vertices[0]] = start.distances[0];
+    distances[start.source] = start.source_distance;
     try{
-        this->dijkstra(start.vertices[0], dists, preds, distance_visitor(radius, dists));
+        street_network.dijkstra(start.source, distances, predecessors, distance_visitor(radius, distances));
     }catch(DestinationFound){}
-    dists[start.vertices[1]] = start.distances[1];
+    distances[start.target] = start.target_distance;
     try{
-        this->dijkstra(start.vertices[0], dists, preds, distance_visitor(radius, dists));
+        street_network.dijkstra(start.target, distances, predecessors, distance_visitor(radius, distances));
     }catch(DestinationFound){}
+
+    proximitylist::ProximityList<vertex_t> temp_pl;
+    for(vertex_t u = 0; u < predecessors.size(); ++u){
+        if(predecessors[u] != u)
+            temp_pl.add(this->street_network.graph[u].coord, u);
+    }
+    temp_pl.build();
 
     std::vector< std::pair<idx_t, double> > result;
     // On trouve tous les élements à moins radius mètres en vol d'oiseau
@@ -178,11 +189,19 @@ std::vector< std::pair<idx_t, double> > StreetNetwork::find_nearest(const type::
 
     // À chaque fois on regarde la distance réelle en suivant le filaire de voirie
     for(auto element : elements){
-        ProjectionData current(element.second, *this);
-        size_t best = dists[current.vertices[0]] < dists[current.vertices[1]] ? 0 : 1;
+        ProjectionData current(element.second, this->street_network, temp_pl);
+        vertex_t best;
+        double best_distance;
+        if(distances[current.source] < distances[current.target]){
+            best = current.source;
+            best_distance = current.source_distance + distances[best];
+        } else {
+            best = current.target;
+            best_distance = current.target_distance + distances[best];
+        }
 
-        if(dists[current.vertices[best]] < radius){
-            result.push_back(std::make_pair(element.first, dists[current.vertices[best]] + current.distances[best]));
+        if(best_distance < radius){
+            result.push_back(std::make_pair(element.first, best_distance));
         }
     }
     return result;
@@ -196,7 +215,11 @@ void StreetNetwork::build_proximity_list(){
 }
 
 edge_t StreetNetwork::nearest_edge(const type::GeographicalCoord & coordinates) const {
-    vertex_t u = pl.find_nearest(coordinates);
+    return this->nearest_edge(coordinates, this->pl);
+}
+
+edge_t StreetNetwork::nearest_edge(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const {
+    vertex_t u = prox.find_nearest(coordinates);
     type::GeographicalCoord coord_u, coord_v;
     coord_u = this->graph[u].coord;
     float dist = std::numeric_limits<float>::max();

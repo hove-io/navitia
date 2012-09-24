@@ -271,15 +271,17 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
 
     GeographicalCoord o(0,0,false);
 
-    auto res = sn.find_nearest(o, pl, 10);
+    StreetNetworkWorker w(sn);
+
+    auto res = w.find_nearest(o, pl, 10);
     BOOST_CHECK_EQUAL(res.size(), 0);
 
-    res = sn.find_nearest(o, pl, 100);
+    res = w.find_nearest(o, pl, 100);
     BOOST_CHECK_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].first , 1);
     BOOST_CHECK_CLOSE(res[0].second, 50, 1);
 
-    res = sn.find_nearest(o, pl, 1000);
+    res = w.find_nearest(o, pl, 1000);
     std::sort(res.begin(), res.end());
     BOOST_CHECK_EQUAL(res.size(), 2);
     BOOST_CHECK_EQUAL(res[0].first , 1);

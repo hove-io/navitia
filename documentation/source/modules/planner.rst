@@ -558,7 +558,7 @@ Certains horaires ne sont accessibles qu'en montée ou en descente, quelque soit
 *Exemple le plus typique: l'horaire terminus n'a pas d'heure de départ*
  
 Itinéraire et accessibilité 
-**************************
+***************************
 
 Gestion des propriétés d’accessibilité sur les objets de transport
 ------------------------------------------------------------------
@@ -693,8 +693,11 @@ La gestion des bus scolaire est particulière. En effet, il est possible de lanc
 * Ne tient compte que des véhicules scolaires (pour forcer une recherche d'itinéraire avec une "carte scolaire" par exemple)
 
 
+Limitations de recherche
+------------------------
+
 Limitation du nombre de correspondance
---------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Il est possible de limiter l'algorithme aux itinéraires en *n* correspondances.
 Ainsi:
@@ -702,6 +705,14 @@ Ainsi:
 * si n=0: force la recherche de trajet en direct
 * si n=1 ne proposera pas de trajet en plus d'1 correspondance, même si certains itinéraires en 2 correspondances sont nettement plus rapide
 * ...
+
+Limitation du temps de trajet
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Il est possible de limiter l'algorithme sur une durée de trajet maximale
+Ainsi:
+
+* si MaxDuration=1200: force la recherche de trajet en moins d'une heure (1200 secondes)
+
 
 Lignes TAD (transport à la demande ou transport flexible)
 *********************************************************
