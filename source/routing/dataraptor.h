@@ -39,7 +39,7 @@ struct dataRAPTOR {
 
 
     inline int get_stop_time_idx(const Route_t & route, int orderVj, int order) const{
-        return route.firstStopTime + (orderVj * route.nbStops) + order;
+        return route.firstStopTime + (order * route.nbTrips) + orderVj;
     }
     inline uint32_t get_temps_arrivee(const Route_t & route, int orderVj, int order) const{
         if(orderVj == -1)

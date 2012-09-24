@@ -83,12 +83,18 @@ void dataRAPTOR::load(const type::PT_Data &data)
                     r.nbTrips = vec.second.size();
                     r.vp = data.validity_patterns[vec.first].idx;
                     r.firstStopTime = stopTimes.size();
-                    for(auto vjidx : vec.second) {
-                        for(navitia::type::idx_t stidx : data.vehicle_journeys[vjidx].stop_time_list) {
-                            StopTime_t st =  data.stop_times[stidx];
+                    for(unsigned int order = 0; order < route.route_point_list.size(); ++order) {
+                        for(auto vjidx : vec.second) {
+                            StopTime_t st =  data.stop_times[data.vehicle_journeys[vjidx].stop_time_list[order]];
                             stopTimes.push_back(st);
                         }
                     }
+//                    for(auto vjidx : vec.second) {
+//                        for(navitia::type::idx_t stidx : data.vehicle_journeys[vjidx].stop_time_list) {
+//                            StopTime_t st =  data.stop_times[stidx];
+//                            stopTimes.push_back(st);
+//                        }
+//                    }
                     ridx_route[route.idx].push_back(routes.size());
                     routes.push_back(r);
                 }
