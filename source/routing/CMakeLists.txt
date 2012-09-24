@@ -1,4 +1,4 @@
-SET(ROUTING_SRC routing.cpp astar.cpp time_dependent.cpp raptor.cpp raptor_api.cpp )
+SET(ROUTING_SRC routing.cpp time_dependent.cpp raptor.cpp raptor_api.cpp )
 
 add_library(dataraptor raptor_utils.h dataraptor.cpp)
 target_link_libraries(dataraptor types data)
