@@ -60,12 +60,18 @@ bool ValidityPattern::check(int day) const {
 
 bool ValidityPattern::check2(int day) const {
 //    BOOST_ASSERT(is_valid(day));
-    return days[day] || days[day+1];
+    if(day == 0)
+        return days[day] || days[day+1];
+    else if(day > 0)
+        return days[day-1] || days[day] || days[day+1];
 }
 
 bool ValidityPattern::uncheck2(int day) const {
 //    BOOST_ASSERT(is_valid(day));
-    return !days[day] && !days[day+1];
+    if(day == 0)
+        return !days[day] && !days[day+1];
+    else if(day > 0)
+        return !days[day-1] && !days[day] && !days[day+1];
 }
 
 
