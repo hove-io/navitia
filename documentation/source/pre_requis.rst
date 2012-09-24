@@ -1,8 +1,11 @@
 Pré-requis
 ==========
 
+Organisation du projet
+**********************
+
 Administration des données
-**************************
+--------------------------
 
 La qualité des données qui alimentent le système impacte l’ensemble de la chaine. Il convient donc de procéder aux actions suivantes :
 
@@ -21,43 +24,8 @@ La qualité des données qui alimentent le système impacte l’ensemble de la c
   * Informations complémentaires conforment au message client.
 
 
-Interfaces
-**********
-
-Les modules présentés dans le schéma du chapitre 'Architecture logicielle <introduction.html>'_ s’articulent 
-autour d’interfaces techniques standardisées 
-
-* http/XML
-* http/JSON
-* http/ProtocolBuffer
-
-Tous les modules sont des web-services REST.
-
-Sur ces standards, la suite NAViTiA définie son propre langage d’échange afin d’échanger les informations entre les différents modules et avec 
-les applications tierces. Ce langage d’échange est nommé "interface d’échange NAViTiA".
-
-Cependant, afin d’assurer la compatibilité entre toute nouvelle version de la suite NAViTiA 
-et les systèmes qui l’utilisent (média, application tierce…), il est possible de faire évoluer 
-les différents modules sans modifier l’interface d’échange utilisée. 
-Ainsi la mise en place d’une nouvelle version corrective NAViTiA est réalisable sans risques 
-de perturbations sur les systèmes tiers qui composent votre système. 
-
-* La suite NAViTiA est caractérisée par le numéro de version de ses modules.
-* La mise en œuvre d’un système reposant sur la suite NAViTiA est caractérisée par la version d’interface d’échange sur laquelle le système repose.
-
-.. warning::
-   La mise en place d’un système NAViTiA complet nécessite une mise en cohérence de la version des modules qui le compose.
-
-**Remarque**
-
-les éventuelles nouvelles fonctionnalités proposées par toute nouvelle version de la suite NAViTiA 
-restent invisibles tant que la version d’interface ne permet pas leur utilisation. Ainsi :
-
-.. warning::
-   La mise en place des informations perturbations dans la chaine NAViTiA nécessite une Version d’interface 2 au minimum sur les API concernées
-
-Ouverture de compte
-*******************
+Mise en oeuvre de la plateforme
+-------------------------------
 
 Le projet type de mise en place d’une solution technique NAViTiA (hors mise en place de médias spécifiques) nécessitera :
 
@@ -87,9 +55,49 @@ Le projet type de mise en place d’une solution technique NAViTiA (hors mise en
 
   * Définition des regroupements de média pour la traçabilité des statistiques
   * Choix de la valeur des paramètres mis à disposition des internautes (vitesse de marche à pied, distance d'accroche...)
-  
 
 * Media de référence pour qualifier les données
+
+
+
+Interfaces
+**********
+
+Les modules présentés dans le schéma du chapitre 'Architecture logicielle <introduction.html>'_ s’articulent 
+autour d’interfaces techniques standardisées 
+
+* http/XML
+* http/JSON
+* http/ProtocolBuffer
+
+Tous les modules sont des web-services REST.
+
+Sur ces standards, la suite NAViTiA définie son propre langage d’échange afin d’échanger les informations entre les différents modules et avec 
+les applications tierces. Ce langage d’échange est nommé "interface d’échange NAViTiA".
+
+Cependant, afin d’assurer la compatibilité entre toute nouvelle version de la suite NAViTiA 
+et les systèmes qui l’utilisent (média, application tierce…), il est possible de faire évoluer 
+les différents modules sans modifier l’interface d’échange utilisée. 
+Ainsi la mise en place d’une nouvelle version corrective NAViTiA est réalisable sans risques 
+de perturbations sur les systèmes tiers qui composent votre système. 
+
+* La suite NAViTiA est caractérisée par le numéro de version de ses modules.
+* La mise en œuvre d’une fonction reposant sur la suite NAViTiA est caractérisée par la version d’interface d’échange utilisée.
+
+.. warning::
+   La mise en place d’un système NAViTiA complet nécessite une mise en cohérence de la version des modules qui le compose.
+
+
+.. warning::
+   La version d'interface étant spécifiée à chaque appel, il est possible de faire évoluer un site avec une nouvelle fonctionnalité sans modifier les fonctions déjà en place.
+
+**Remarque**
+
+les éventuelles nouvelles fonctionnalités proposées par toute nouvelle version de la suite NAViTiA 
+restent invisibles tant que la version d’interface ne permet pas leur utilisation. Ainsi :
+
+.. warning::
+   La mise en place des informations perturbations dans la chaine NAViTiA nécessite une Version d’interface 2 au minimum sur les API concernées
 
 
 Flux entre les services
