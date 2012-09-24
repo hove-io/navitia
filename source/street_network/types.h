@@ -103,9 +103,18 @@ struct StreetNetwork {
     /// Graphe pour effectuer le calcul d'itinéraire
     Graph graph;
 
-    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+    template<class Archive> void save(Archive & ar, const unsigned int) const {
         ar & ways & graph & fl & pl;
     }
+
+    template<class Archive> void load(Archive & ar, const unsigned int) {
+        // La désérialisation d'une boost adjacency list ne vide pas le graphe
+        // On avait donc une fuite de mémoire
+        graph.clear();
+        ar & ways & graph & fl & pl;
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
 
     /** Construit l'indexe spatial */
     void build_proximity_list();
