@@ -558,7 +558,7 @@ Certains horaires ne sont accessibles qu'en montée ou en descente, quelque soit
 *Exemple le plus typique: l'horaire terminus n'a pas d'heure de départ*
  
 Itinéraire et accessibilité 
-**************************
+***************************
 
 Gestion des propriétés d’accessibilité sur les objets de transport
 ------------------------------------------------------------------
