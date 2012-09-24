@@ -134,6 +134,7 @@ struct StreetNetwork {
       * Pour le trouver, on cherche le nœud le plus proche, puis pour chaque arc adjacent, on garde le plus proche
       * Ce n'est donc pas optimal, mais pour améliorer ça, il faudrait indexer des segments, ou ratisser plus large
      */
+    edge_t nearest_edge(const type::GeographicalCoord &coordinates) const;
     edge_t nearest_edge(const type::GeographicalCoord &coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
 
     /** Initialise les structures nécessaires à dijkstra

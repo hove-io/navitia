@@ -214,6 +214,10 @@ void StreetNetwork::build_proximity_list(){
     pl.build();
 }
 
+edge_t StreetNetwork::nearest_edge(const type::GeographicalCoord & coordinates) const {
+    return this->nearest_edge(coordinates, this->pl);
+}
+
 edge_t StreetNetwork::nearest_edge(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const {
     vertex_t u = prox.find_nearest(coordinates);
     type::GeographicalCoord coord_u, coord_v;
