@@ -5,7 +5,6 @@
 #include "utils/timer.h"
 #include <unordered_map>
 #include "boost/dynamic_bitset.hpp"
-#include <google/dense_hash_map>
 #include "routing/raptor_utils.h"
 #include "routing/dataraptor.h"
 
