@@ -37,16 +37,16 @@ struct dataRAPTOR {
         return route.firstStopTime + (order * route.nbTrips) + orderVj;
     }
     inline uint32_t get_arrival_time(const Route_t & route, int orderVj, int order) const{
-        if(orderVj == -1)
+        if(orderVj < 0)
             return std::numeric_limits<uint32_t>::max();
         else
-            return arrival_times[get_stop_time_order(route, orderVj, order)] % 86400;
+            return arrival_times[get_stop_time_order(route, orderVj, order)];
     }
     inline uint32_t get_departure_time(const Route_t & route, int orderVj, int order) const{
-        if(orderVj == -1)
+        if(orderVj < 0)
             return std::numeric_limits<uint32_t>::max();
         else
-            return departure_times[get_stop_time_order(route, orderVj, order)] % 86400;
+            return departure_times[get_stop_time_order(route, orderVj, order)];
     }
 };
 
