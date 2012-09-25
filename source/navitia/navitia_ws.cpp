@@ -15,7 +15,6 @@
 
 #include <boost/tokenizer.hpp>
 #include <iostream>
-#include <gperftools/profiler.h>
 
 using namespace webservice;
 
