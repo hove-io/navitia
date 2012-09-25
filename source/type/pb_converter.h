@@ -42,4 +42,7 @@ void fill_pb_object<type::Type_e::eStopPoint>(type::idx_t idx, const type::Data 
  */
 template<>
 void fill_pb_object<type::Type_e::eWay>(type::idx_t idx, const type::Data &data, google::protobuf::Message* message, int max_depth);
+
+template<>
+void fill_pb_object<type::Type_e::eLine>(type::idx_t idx, const type::Data &data, google::protobuf::Message* message, int max_depth);
 }//namespace navitia

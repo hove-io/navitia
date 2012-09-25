@@ -9,32 +9,32 @@ namespace navitia { namespace proximitylist {
 void create_pb(const std::vector<std::pair<type::idx_t, type::GeographicalCoord> >& result, const nt::Type_e type, const nt::Data& data, pbnavitia::ProximityList& pb_pl,type::GeographicalCoord coord){
     for(auto result_item : result){
         pbnavitia::ProximityListItem* item = pb_pl.add_items();
-        google::protobuf::Message* child = NULL;
+        pbnavitia::PlaceMark* place_mark = item->mutable_object();
         switch(type){
-            case nt::Type_e::eStopArea:
-                child = item->mutable_stop_area();
-                fill_pb_object<nt::Type_e::eStopArea>(result_item.first, data, child, 2);
-                item->set_name(data.pt_data.stop_areas[result_item.first].name);
-                item->set_uri(nt::EntryPoint::get_uri(data.pt_data.stop_areas[result_item.first]));
-                item->set_distance(coord.distance_to(result_item.second));
-                break;
-            case nt::Type_e::eCity:
-                child = item->mutable_city();
-                fill_pb_object<nt::Type_e::eCity>(result_item.first, data, child);
-                item->set_name(data.pt_data.cities[result_item.first].name);
-                item->set_uri(nt::EntryPoint::get_uri(data.pt_data.cities[result_item.first]));
-                item->set_distance(coord.distance_to(result_item.second));
-                break;
-            case nt::Type_e::eStopPoint:
-                child = item->mutable_stop_point();
-                fill_pb_object<nt::Type_e::eStopPoint>(result_item.first, data, child, 2);
-                item->set_name(data.pt_data.stop_points[result_item.first].name);
-                item->set_uri(nt::EntryPoint::get_uri(data.pt_data.stop_points[result_item.first]));
-                item->set_distance(coord.distance_to(result_item.second));
-                break;
+        case nt::Type_e::eStopArea:
+            place_mark->set_type(pbnavitia::STOPAREA);
+            fill_pb_object<nt::Type_e::eStopArea>(result_item.first, data, place_mark->mutable_stop_area(), 2);
+            item->set_name(data.pt_data.stop_areas[result_item.first].name);
+            item->set_uri(data.pt_data.stop_areas[result_item.first].external_code);
+            item->set_distance(coord.distance_to(result_item.second));
+            break;
+        case nt::Type_e::eCity:
+            place_mark->set_type(pbnavitia::CITY);
+            fill_pb_object<nt::Type_e::eCity>(result_item.first, data, place_mark->mutable_city());
+            item->set_name(data.pt_data.cities[result_item.first].name);
+            item->set_uri(data.pt_data.cities[result_item.first].external_code);
+            item->set_distance(coord.distance_to(result_item.second));
+            break;
+        case nt::Type_e::eStopPoint:
+            place_mark->set_type(pbnavitia::STOPPOINT);
+            fill_pb_object<nt::Type_e::eStopPoint>(result_item.first, data, place_mark->mutable_stop_point(), 2);
+            item->set_name(data.pt_data.stop_points[result_item.first].name);
+            item->set_uri(data.pt_data.stop_points[result_item.first].external_code);
+            item->set_distance(coord.distance_to(result_item.second));
+            break;
 
-            default:
-                break;
+        default:
+            break;
         }
     }
 }

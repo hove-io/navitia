@@ -44,7 +44,7 @@ void fill_pb_object<nt::Type_e::eStopArea>(nt::idx_t idx, const nt::Data& data, 
     stop_area->mutable_coord()->set_y(sa.coord.y);
     if(max_depth > 0){
         try{
-            fill_pb_object<nt::Type_e::eCity>(sa.city_idx, data, stop_area->mutable_child()->add_city_list(), max_depth-1);
+            fill_pb_object<nt::Type_e::eCity>(sa.city_idx, data, stop_area->mutable_child()->add_city(), max_depth-1);
         }catch(std::out_of_range e){}
     }
 }
@@ -64,7 +64,7 @@ void fill_pb_object<nt::Type_e::eStopPoint>(nt::idx_t idx, const nt::Data& data,
     stop_point->mutable_coord()->set_y(sp.coord.y);
     if(max_depth > 0){
         try{
-            fill_pb_object<nt::Type_e::eCity>(sp.city_idx, data, stop_point->mutable_child()->add_city_list(), max_depth-1);
+            fill_pb_object<nt::Type_e::eCity>(sp.city_idx, data, stop_point->mutable_child()->add_city(), max_depth-1);
         }catch(std::out_of_range e){}
         
     }
@@ -83,11 +83,22 @@ void fill_pb_object<nt::Type_e::eWay>(nt::idx_t idx, const nt::Data& data, googl
     stop_point->mutable_coord()->set_y(sp.coord.y);*/
     if(max_depth > 0){
         try{
-            fill_pb_object<nt::Type_e::eCity>(w.city_idx, data, way->mutable_child()->add_city_list(), max_depth-1);
+            fill_pb_object<nt::Type_e::eCity>(w.city_idx, data, way->mutable_child()->add_city(), max_depth-1);
         }catch(std::out_of_range e){
             std::cout << w.city_idx << std::endl;
         }
         
     }
 }
+template<>
+void fill_pb_object<nt::Type_e::eLine>(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int max_depth){
+    pbnavitia::Line* line = dynamic_cast<pbnavitia::Line*>(message);
+    navitia::type::Line l = data.pt_data.lines.at(idx);
+    line->set_forward_name(l.forward_name);
+    line->set_backward_name(l.backward_name);
+    line->set_code(l.code);
+    line->set_color(l.color);
+    line->set_name(l.name);
+}
+
 }//namespace navitia

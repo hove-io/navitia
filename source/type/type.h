@@ -505,12 +505,6 @@ struct EntryPoint {
     std::string external_code; //< Le code externe de l'objet
     GeographicalCoord coordinates; //< coordonnées du point d'entrée
 
-    /// Retourne une string unique à parti de n'importe quel objet
-    template<class T>
-    static std::string get_uri(T t){
-        return static_data::get()->captionByType(T::type) + ":" + t.external_code;
-    }
-
     /// Construit le type à partir d'une chaîne
     EntryPoint(const std::string & uri);
 

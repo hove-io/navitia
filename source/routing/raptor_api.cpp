@@ -1,8 +1,13 @@
 #include "raptor_api.h"
 #include "type/pb_converter.h"
-
+#include "boost/date_time/posix_time/posix_time.hpp"
 namespace navitia { namespace routing { namespace raptor {
 
+std::string iso_string(const nt::Data & d, int date, int hour){
+    boost::posix_time::ptime date_time(d.meta.production_date.begin() + boost::gregorian::days(date));
+    date_time += boost::posix_time::seconds(hour);
+    return boost::posix_time::to_iso_extended_string(date_time);
+}
 
 pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths, const nt::Data & d) {
     pbnavitia::Response pb_response;
@@ -10,31 +15,33 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
 
     for(Path path : paths) {
         //navitia::routing::Path itineraire = navitia::routing::makeItineraire(path);
-        pbnavitia::PTPath * pb_path = pb_response.mutable_planner()->add_path();
-        pb_path->set_duration(path.duration);
-        pb_path->set_nb_changes(path.nb_changes);
+        pbnavitia::Journey * pb_journey = pb_response.mutable_planner()->add_journey();
+        pb_journey->set_duration(path.duration);
+        pb_journey->set_nb_transfers(path.nb_changes);
         for(PathItem & item : path.items){
-            pbnavitia::PTPathItem * pb_item = pb_path->add_items();
-            pb_item->set_arrival_date(item.arrival.date());
-            pb_item->set_arrival_hour(item.arrival.hour());
-            pb_item->set_departure_date(item.departure.date());
-            pb_item->set_departure_hour(item.departure.hour());
+            pbnavitia::Section * pb_section = pb_journey->add_section();
+            pb_section->set_arrival_date_time(iso_string(d, item.arrival.date(), item.arrival.hour()));
+            pb_section->set_departure_date_time(iso_string(d, item.departure.date(), item.departure.hour()));
             if(item.type == public_transport)
-                pb_item->set_type("Public Transport");
+                pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
             else
-                pb_item->set_type("Walking");
+                pb_section->set_type(pbnavitia::TRANSFER);
             if(item.type == public_transport && item.vj_idx != type::invalid_idx){
                 const type::VehicleJourney & vj = d.pt_data.vehicle_journeys[item.vj_idx];
                 const type::Route & route = d.pt_data.routes[vj.route_idx];
                 const type::Line & line = d.pt_data.lines[route.line_idx];
-                pb_item->set_line_name(line.name);
+                fill_pb_object<type::Type_e::eLine>(line.idx, d, pb_section->mutable_line());
             }
             for(navitia::type::idx_t stop_point : item.stop_points){
-                fill_pb_object<type::Type_e::eStopPoint>(stop_point, d, pb_item->add_stop_points());
+                fill_pb_object<type::Type_e::eStopPoint>(stop_point, d, pb_section->add_stop_point());
             }
             if(item.stop_points.size() >= 2) {
-                fill_pb_object<type::Type_e::eStopArea>(d.pt_data.stop_points[item.stop_points.front()].stop_area_idx, d, pb_item->mutable_departure());
-                fill_pb_object<type::Type_e::eStopArea>(d.pt_data.stop_points[item.stop_points.back()].stop_area_idx, d, pb_item->mutable_arrival());
+                pbnavitia::PlaceMark * origin_place_mark = pb_section->mutable_origin();
+                origin_place_mark->set_type(pbnavitia::STOPAREA);
+                fill_pb_object<type::Type_e::eStopArea>(d.pt_data.stop_points[item.stop_points.front()].stop_area_idx, d, origin_place_mark->mutable_stop_area());
+                pbnavitia::PlaceMark * destination_place_mark = pb_section->mutable_destination();
+                destination_place_mark->set_type(pbnavitia::STOPAREA);
+                fill_pb_object<type::Type_e::eStopArea>(d.pt_data.stop_points[item.stop_points.back()].stop_area_idx, d, destination_place_mark->mutable_stop_area());
             }
 
         }

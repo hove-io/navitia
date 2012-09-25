@@ -1,6 +1,7 @@
 package pbnavitia;
 
 enum NavitiaType {
+    STOPPOINT = 4;
     STOPAREA = 5;
     CITY = 10;
     COUNTRY = 17;
@@ -126,18 +127,18 @@ message Segment {
 }
 
 message PTReferential {
-    repeated Country country_list =1;
-    repeated StopArea stop_area_list = 2;
-    repeated StopPoint stop_point_list = 3;
-    repeated Line line_list = 4;
-    repeated Route route_list = 5;
-    repeated StopTime stop_time_list = 6;
-    repeated VehicleJourney vehicle_journey_list = 7;
-    repeated RoutePoint route_point_list = 11;
-    repeated Way way_list = 12;
-    repeated City city_list = 13;
-    repeated Site site_list = 14;
-    repeated Segment segment_list = 15;
+    repeated Country country =1;
+    repeated StopArea stop_area = 2;
+    repeated StopPoint stop_point = 3;
+    repeated Line line = 4;
+    repeated Route route = 5;
+    repeated StopTime stop_time = 6;
+    repeated VehicleJourney vehicle_journey = 7;
+    repeated RoutePoint route_point = 11;
+    repeated Way way = 12;
+    repeated City city = 13;
+    repeated Site site = 14;
+    repeated Segment segment = 15;
 
 
     optional string error = 8;
@@ -145,34 +146,33 @@ message PTReferential {
     optional string info = 10;
 }
 
+message PlaceMark {
+    optional NavitiaType type = 1;
+    optional Way way = 2;
+    optional City city = 3;
+    optional StopArea stop_area = 4;
+    optional Site site = 5;
+    optional StopPoint stop_point = 6;
+}
+
 message FirstLetterItem {
     optional string name = 1;
-    optional NavitiaType type = 2;
-    optional int32 quality = 3;
-    optional Way way = 4;
-    optional City city = 5;
-    optional StopArea stop_area = 6;
-    optional Site site = 7;
-    optional string uri = 8;
-    optional StopPoint stop_point = 9;
+    optional int32 quality = 2;
+    optional string uri = 3;
+    optional PlaceMark object = 4;
 }
 
 message FirstLetter {
     repeated FirstLetterItem items = 1;
-    repeated string ignored_word_list = 2;
-    repeated string bad_word_list = 3;
+    repeated string ignored_word = 2;
+    repeated string bad_word = 3;
 }
 
 message ProximityListItem {
     optional string name = 1;
-    optional NavitiaType type = 2;
-    optional int32 distance = 3;
-    optional Way way = 4;
-    optional City city = 5;
-    optional StopArea stop_area = 6;
-    optional Site site = 7;
-    optional string uri = 8;
-    optional StopPoint stop_point = 9;
+    optional int32 distance = 2;
+    optional string uri = 3;
+    optional PlaceMark object = 4;
 }
 
 message ProximityList {
@@ -187,8 +187,8 @@ message PathItem {
 
 message StreetNetwork {
     optional double length = 1;
-    repeated PathItem path_item_list = 2;
-    repeated GeographicalCoord coordinate_list = 3;
+    repeated PathItem path_item = 2;
+    repeated GeographicalCoord coordinate = 3;
 }
 
 enum SectionType {
@@ -201,24 +201,30 @@ enum SectionType {
 message Section {
     optional string departure_date_time = 1;
     optional string arrival_date_time = 2;
-    optional SectionType type = 5;
-    optional PlaceMark origin = 7;
-    optional PlaceMark destination = 8;
+    optional SectionType type = 3;
+    optional PlaceMark origin = 4;
+    optional PlaceMark destination = 5;
 
 // Si c'est du TC
-    repeated StopPoint stop_points = 9;
+    repeated StopPoint stop_point = 6;
+    optional string mode = 7;
+    optional Line line = 8;
+    optional string code = 9;
+    optional string headsign = 10;
 
 // Si c'est du routier
+    optional StreetNetwork street_network = 11;
 
-// Si c'est de l'attente
+// Si c'est de l'attente il n'y a rien
 
-    optional polyline;
+// Dans tous les cas
+    optional string polyline = 12;
 }
 
 message Journey {
     optional int32 duration = 1;
     optional int32 nb_transfers = 2;
-    repeated Section sections = 3;
+    repeated Section section = 3;
     optional string departure_date_time = 4;
     optional string arrival_date_time = 5;
     optional string call_before = 6;
@@ -238,8 +244,8 @@ enum ResponseType {
 }
 
 message Planner {
-	repeated Journey journeys = 1;
-        optional response_type = 2;
+	repeated Journey journey = 1;
+    optional ResponseType response_type = 2;
 }
 
 message Status{

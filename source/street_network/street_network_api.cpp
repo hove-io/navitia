@@ -11,7 +11,7 @@ namespace navitia { namespace streetnetwork {
         sn.set_length(path.length);
         for(auto item : path.path_items){
             if(item.way_idx < data.street_network.ways.size()){
-                pbnavitia::PathItem * path_item = sn.add_path_item_list();
+                pbnavitia::PathItem * path_item = sn.add_path_item();
                 path_item->set_name(data.street_network.ways[item.way_idx].name);
                 path_item->set_length(item.length);
             }else{
@@ -20,7 +20,7 @@ namespace navitia { namespace streetnetwork {
 
         }
         for(auto coord : path.coordinates){
-            pbnavitia::GeographicalCoord * pb_coord = sn.add_coordinate_list();
+            pbnavitia::GeographicalCoord * pb_coord = sn.add_coordinate();
             pb_coord->set_x(coord.x);
             pb_coord->set_y(coord.y);
         }
