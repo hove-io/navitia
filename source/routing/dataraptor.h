@@ -14,14 +14,6 @@ struct dataRAPTOR {
         navitia::type::idx_t vp;
     };
 
-    struct StopTime_t {
-        uint32_t departure_time, arrival_time;
-        navitia::type::idx_t idx;
-
-        StopTime_t() : departure_time(std::numeric_limits<uint32_t>::max()), arrival_time(std::numeric_limits<uint32_t>::max()), idx(navitia::type::invalid_idx) {}
-        StopTime_t(const navitia::type::StopTime & st) : departure_time(st.departure_time), arrival_time(st.arrival_time), idx(st.idx) {}
-    };
-
     //Données statiques
     std::vector<navitia::type::Connection> foot_path;
     std::vector<pair_int> footpath_index;
