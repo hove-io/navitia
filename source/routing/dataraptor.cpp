@@ -62,7 +62,9 @@ void dataRAPTOR::load(const type::PT_Data &data)
 
     typedef std::unordered_map<navitia::type::idx_t, vector_idx> idx_vector_idx;
     idx_vector_idx ridx_route;
-    stopTimes.clear();
+    
+    arrival_times.clear();
+    departure_times.clear();
     routes.clear();
     for(auto & route : data.routes) {
         ridx_route[route.idx] = vector_idx();
@@ -82,12 +84,19 @@ void dataRAPTOR::load(const type::PT_Data &data)
                     r.nbStops = route.route_point_list.size();
                     r.nbTrips = vec.second.size();
                     r.vp = data.validity_patterns[vec.first].idx;
-                    r.firstStopTime = stopTimes.size();
-                    for(auto vjidx : vec.second) {
-                        for(navitia::type::idx_t stidx : data.vehicle_journeys[vjidx].stop_time_list) {
-                            StopTime_t st =  data.stop_times[stidx];
-                            stopTimes.push_back(st);
+                    r.firstStopTime = arrival_times.size();
+     
+                    for(unsigned int order = 0; order < route.route_point_list.size(); ++order) {
+                        for(auto vjidx : vec.second) {
+                            departure_times.push_back(data.stop_times[data.vehicle_journeys[vjidx].stop_time_list[order]].departure_time);
+                            st_idx_forward.push_back((data.stop_times[data.vehicle_journeys[vjidx].stop_time_list[order]].idx));
                         }
+                        for(auto rit = vec.second.rbegin(); rit != vec.second.rend(); ++rit) {
+                            arrival_times.push_back(data.stop_times[data.vehicle_journeys[*rit].stop_time_list[order]].arrival_time);
+                            st_idx_backward.push_back((data.stop_times[data.vehicle_journeys[*rit].stop_time_list[order]].idx));
+
+                        }
+
                     }
                     ridx_route[route.idx].push_back(routes.size());
                     routes.push_back(r);
@@ -145,7 +154,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
     }
 
 
-    std::cout << "Nb data stop times : " << data.stop_times.size() << " stopTimes : " << stopTimes.size()
+    std::cout << "Nb data stop times : " << data.stop_times.size() << " stopTimes : " << arrival_times.size()
               << " nb foot path : " << foot_path.size() << " Nombre de stop points : " << data.stop_points.size() << "nb vp : " << data.validity_patterns.size() << " nb routes " << routes.size() <<  std::endl;
 
 }

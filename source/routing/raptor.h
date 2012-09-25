@@ -51,19 +51,22 @@ struct RAPTOR : public AbstractRouter
     std::vector<Path> compute_reverse_all(vector_idxretour departs, vector_idxretour destinations);
 
 
+
     void boucleRAPTOR(const std::vector<unsigned int> &marked_stop);
     Path makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb, bool reverse = false);
     void marcheapied();
     void setVPValides(const std::vector<unsigned int> &marked_stop);
     void make_queue();
-    int earliest_trip(const dataRAPTOR::Route_t &route, unsigned int order, DateTime dt) const;
+    int earliest_trip(const dataRAPTOR::Route_t & route, unsigned int order, const DateTime &dt) ;
 
     void boucleRAPTORreverse(std::vector<unsigned int> &marked_stop);
     Path makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb);
     void marcheapiedreverse();
     void setVPValidesreverse(std::vector<unsigned int> &marked_stop);
     void make_queuereverse();
-    int tardiest_trip(const dataRAPTOR::Route_t &route, unsigned int order, DateTime dt) const;
+    int tardiest_trip(const dataRAPTOR::Route_t & route, unsigned int order, const DateTime &dt) const;
+
+
 };
 
 

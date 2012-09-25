@@ -103,9 +103,16 @@ public:
 
     void updatereverse(uint32_t hour) {
         int date = this->date();
+        if(hour > 86400)
+            hour -= 86400;
         if(this->hour() < hour) {
-            --date;
-            this->datetime = (date << date_offset) + hour;
+            if(date > 0) {
+                --date;
+                this->datetime = (date << date_offset) + hour;
+            } else {
+                this->datetime = 0;
+            }
+
         } else {
             this->datetime -= (this->hour() - hour);
         }
