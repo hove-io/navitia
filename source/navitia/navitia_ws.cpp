@@ -294,10 +294,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
             }
 
             std::vector<navitia::routing::Path> pathes;
-            int time = boost::get<int>(request.parsed_params["time"].value);
-            auto date = boost::get<boost::gregorian::date>(request.parsed_params["date"].value);
+            auto datetime = boost::get<boost::posix_time::ptime>(request.parsed_params["datetime"].value);
 
-            navitia::type::EntryPoint departure = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["departure"].value));
+            navitia::type::EntryPoint departure = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["origin"].value));
             navitia::type::EntryPoint destination = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["destination"].value));
 
             navitia::routing::senscompute sens = navitia::routing::inconnu;
@@ -307,8 +306,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
             else if(boost::get<std::string>(request.parsed_params["sens"].value) == "avant")
                 sens = navitia::routing::arriveravant;
 
-
-            pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, time, date, sens, *street_network_worker);
+            pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, datetime, sens, *street_network_worker);
 
             rd.status_code = 200;
 #ifndef DEBUG
@@ -377,10 +375,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
         add_param("proximitylist", "filter", "Type à rechercher", ApiParameter::STRING, false, default_params);
 
         register_api("planner", boost::bind(&Worker::planner, this, _1, _2), "Calcul d'itinéraire en Transport en Commun");
-        add_param("planner", "departure", "Point de départ", ApiParameter::STRING, true);
+        add_param("planner", "origin", "Point de départ", ApiParameter::STRING, true);
         add_param("planner", "destination", "Point d'arrivée", ApiParameter::STRING, true);
-        add_param("planner", "time", "Heure de début de l'itinéraire", ApiParameter::TIME, true);
-        add_param("planner", "date", "Date de début de l'itinéraire", ApiParameter::DATE, true);
+        add_param("planner", "datetime", "Date et heure de début de l'itinéraire, au format ISO", ApiParameter::DATETIME, true);
 
         add_param("planner", "sens", "Sens du calcul", ApiParameter::STRING, true);
 

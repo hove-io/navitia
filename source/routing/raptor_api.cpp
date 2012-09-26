@@ -94,25 +94,15 @@ vector_idxretour to_idxretour(std::vector<std::pair<type::idx_t, double> > eleme
 }
 
 
-pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &departure, const type::EntryPoint &destination, int time, const boost::gregorian::date &date, const senscompute sens, streetnetwork::StreetNetworkWorker & worker) {
+pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin, const type::EntryPoint &destination, const boost::posix_time::ptime &datetime, const senscompute sens, streetnetwork::StreetNetworkWorker & worker) {
     pbnavitia::Response response;
-    if(time < 0 || time > 24*3600){
-        response.set_error("Invalid hour");
-        return response;
-    }
 
-    int day = (date - raptor.data.meta.production_date.begin()).days();
-    if(day < 0 || day > raptor.data.meta.production_date.length().days()){
-        response.set_error("Invalid date");
-        return response;
-    }
-
-    if(!raptor.data.meta.production_date.contains(date)) {
+    if(!raptor.data.meta.production_date.contains(datetime.date())) {
         response.set_error("Date not in the production period");
         return response;
     }
 
-    auto departures = get_stop_points(departure, raptor.data, worker);
+    auto departures = get_stop_points(origin, raptor.data, worker);
     if(departures.size() == 0){
         response.set_error("Departure point not found");
         return response;
@@ -125,6 +115,9 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &depart
     }
 
     std::vector<Path> result;
+
+    int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
+    int time = datetime.time_of_day().total_seconds();
 
     if(sens == partirapres)
         result = raptor.compute_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day));
