@@ -14,28 +14,28 @@ void create_pb(const std::vector<FirstLetter<nt::idx_t>::fl_quality>& result, co
         switch(type){
         case nt::Type_e::eStopArea:
             place_mark->set_type(pbnavitia::STOPAREA);
-            fill_pb_object<nt::Type_e::eStopArea>(result_item.idx, data, place_mark->mutable_stop_area(), 2);
+            fill_pb_object(result_item.idx, data, place_mark->mutable_stop_area(), 2);
             item->set_name(data.pt_data.stop_areas[result_item.idx].name);
             item->set_uri(data.pt_data.stop_areas[result_item.idx].external_code);
             item->set_quality(result_item.quality);
             break;
         case nt::Type_e::eCity:
             place_mark->set_type(pbnavitia::CITY);
-            fill_pb_object<nt::Type_e::eCity>(result_item.idx, data, place_mark->mutable_city());
+            fill_pb_object(result_item.idx, data, place_mark->mutable_city());
             item->set_name(data.pt_data.cities[result_item.idx].name);
             item->set_uri(data.pt_data.cities[result_item.idx].external_code);
             item->set_quality(result_item.quality);
             break;
         case nt::Type_e::eStopPoint:
             place_mark->set_type(pbnavitia::STOPPOINT);
-            fill_pb_object<nt::Type_e::eStopPoint>(result_item.idx, data, place_mark->mutable_stop_point(), 2);
+            fill_pb_object(result_item.idx, data, place_mark->mutable_stop_point(), 2);
             item->set_name(data.pt_data.stop_points[result_item.idx].name);
             item->set_uri(data.pt_data.stop_points[result_item.idx].external_code);
             item->set_quality(result_item.quality);
             break;
         case nt::Type_e::eWay:
             place_mark->set_type(pbnavitia::WAY);
-            fill_pb_object<nt::Type_e::eWay>(result_item.idx, data, place_mark->mutable_way(), 2);
+            fill_pb_object(result_item.idx, data, place_mark->mutable_way(), 2);
             item->set_name(data.street_network.ways[result_item.idx].name);
             item->set_quality(result_item.quality);
             break;

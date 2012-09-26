@@ -30,18 +30,18 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                 const type::VehicleJourney & vj = d.pt_data.vehicle_journeys[item.vj_idx];
                 const type::Route & route = d.pt_data.routes[vj.route_idx];
                 const type::Line & line = d.pt_data.lines[route.line_idx];
-                fill_pb_object<type::Type_e::eLine>(line.idx, d, pb_section->mutable_line());
+                fill_pb_object(line.idx, d, pb_section->mutable_line());
             }
             for(navitia::type::idx_t stop_point : item.stop_points){
-                fill_pb_object<type::Type_e::eStopPoint>(stop_point, d, pb_section->add_stop_point());
+                fill_pb_object(stop_point, d, pb_section->add_stop_point());
             }
             if(item.stop_points.size() >= 2) {
                 pbnavitia::PlaceMark * origin_place_mark = pb_section->mutable_origin();
                 origin_place_mark->set_type(pbnavitia::STOPAREA);
-                fill_pb_object<type::Type_e::eStopArea>(d.pt_data.stop_points[item.stop_points.front()].stop_area_idx, d, origin_place_mark->mutable_stop_area());
+                fill_pb_object(d.pt_data.stop_points[item.stop_points.front()].stop_area_idx, d, origin_place_mark->mutable_stop_area());
                 pbnavitia::PlaceMark * destination_place_mark = pb_section->mutable_destination();
                 destination_place_mark->set_type(pbnavitia::STOPAREA);
-                fill_pb_object<type::Type_e::eStopArea>(d.pt_data.stop_points[item.stop_points.back()].stop_area_idx, d, destination_place_mark->mutable_stop_area());
+                fill_pb_object(d.pt_data.stop_points[item.stop_points.back()].stop_area_idx, d, destination_place_mark->mutable_stop_area());
             }
 
         }
