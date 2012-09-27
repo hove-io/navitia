@@ -76,7 +76,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ///gestion du format de sortie
     virtual void post_compute(webservice::RequestData& request, webservice::ResponseData& response){
-        navitia::render(request, response, pb_response);
+        if(pb_response.IsInitialized()){
+            navitia::render(request, response, pb_response);
+        }
     }
 
     /**
@@ -239,6 +241,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         try{
 #endif
 
+            pb_response.set_requested_api(pbnavitia::STATUS);
             nt::Locker lock(data);
             if(!lock.locked){
                 rd.status_code = 503;
