@@ -90,7 +90,7 @@ std::string pb2json(const google::protobuf::Message* response, int depth){
             indent(buffer, depth);
         }
         if(field->is_repeated()) {
-            buffer << "\"" << field->name() << "\": [";
+            buffer << "\"" << field->name() << "_list\": [";
             if(depth == 0) buffer << "\n";
             for(int i=0; i < reflection->FieldSize(*response, field); ++i){
                 switch(field->type()) {
