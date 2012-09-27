@@ -76,7 +76,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ///gestion du format de sortie
     virtual void post_compute(webservice::RequestData& request, webservice::ResponseData& response){
-        navitia::render(request, response, pb_response);
+        if(pb_response.IsInitialized()){
+            navitia::render(request, response, pb_response);
+        }
     }
 
     /**
@@ -239,6 +241,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         try{
 #endif
 
+            pb_response.set_requested_api(pbnavitia::STATUS);
             nt::Locker lock(data);
             if(!lock.locked){
                 rd.status_code = 503;
@@ -415,13 +418,13 @@ class Worker : public BaseWorker<navitia::type::Data> {
         add_param("journeys", "origin", "Point de départ", ApiParameter::STRING, true);
         add_param("journeys", "destination", "Point d'arrivée", ApiParameter::STRING, true);
         add_param("journeys", "datetime", "Date et heure de début de l'itinéraire, au format ISO", ApiParameter::DATETIME, true);
-        add_param("journeys", "clockwise", "Sens du calcul ; si 1 on veut partir après l'heure indiquée, si 0, on veut arriver avant [par défaut 1]", ApiParameter::STRING, false);
+        add_param("journeys", "clockwise", "Sens du calcul ; si 1 on veut partir après l'heure indiquée, si 0, on veut arriver avant [par défaut 1]", ApiParameter::BOOLEAN, false);
 
         register_api("journeysarray", boost::bind(&Worker::journeysarray, this, _1, _2), "Calcul d'itinéraire multimodal avec plusieurs heures de départ");
         add_param("journeysarray", "origin", "Point de départ", ApiParameter::STRING, true);
         add_param("journeysarray", "destination", "Point d'arrivée", ApiParameter::STRING, true);
         add_param("journeysarray", "datetime[]", "Tableau de dates-heure de début de l'itinéraire, au format ISO", ApiParameter::STRINGLIST, true);
-        add_param("journeysarray", "clockwise", "Sens du calcul ; si 1 on veut partir après l'heure indiquée, si 0, on veut arriver avant [par défaut 1]", ApiParameter::STRING, false);
+        add_param("journeysarray", "clockwise", "Sens du calcul ; si 1 on veut partir après l'heure indiquée, si 0, on veut arriver avant [par défaut 1]", ApiParameter::BOOLEAN, false);
 
         register_api("load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
         register_api("status", boost::bind(&Worker::status, this, _1, _2), "Api de monitoring");
