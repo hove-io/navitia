@@ -7,6 +7,7 @@ namespace webservice {typedef FCGX_Request RequestHandle; /**< Handle de la requ
 #include "data_structures.h"
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <algorithm>
 
 namespace webservice {
     /// Gère la requête (lecture des paramètres)
@@ -15,7 +16,7 @@ namespace webservice {
         RequestData request_data;
         char *contentLength = FCGX_GetParam("CONTENT_LENGTH", handle->envp);
         if (contentLength != NULL)
-            len = strtol(contentLength, NULL, 10);
+            len = std::min(strtol(contentLength, NULL, 10), 1024*10L);
 
         if(len > 0) {
             char * tmp_str = new char[len + 1];
