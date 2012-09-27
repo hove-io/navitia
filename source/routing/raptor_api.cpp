@@ -93,7 +93,9 @@ vector_idxretour to_idxretour(std::vector<std::pair<type::idx_t, double> > eleme
 }
 
 
-pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin, const type::EntryPoint &destination, const boost::posix_time::ptime &datetime, bool clockwise, streetnetwork::StreetNetworkWorker & worker) {
+pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin, const type::EntryPoint &destination,
+                                  const boost::posix_time::ptime &datetime, bool clockwise,
+                                  streetnetwork::StreetNetworkWorker & worker) {
     pbnavitia::Response response;
 
     if(!raptor.data.meta.production_date.contains(datetime.date())) {
@@ -127,7 +129,9 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
 }
 
 
-pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin, const type::EntryPoint &destination, const std::vector<std::string> &datetimes_str, bool clockwise, streetnetwork::StreetNetworkWorker & worker) {
+pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin, const type::EntryPoint &destination,
+                                  const std::vector<std::string> &datetimes_str, bool clockwise,
+                                  streetnetwork::StreetNetworkWorker & worker) {
     pbnavitia::Response response;
 
     std::vector<boost::posix_time::ptime> datetimes;
@@ -145,6 +149,12 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
             return response;
         }
     }
+    if(clockwise)
+        std::sort(datetimes.begin(), datetimes.end(), 
+                  [](boost::posix_time::ptime dt1, boost::posix_time::ptime dt2){return dt1 > dt2;});
+    else
+        std::sort(datetimes.begin(), datetimes.end(), 
+                  [](boost::posix_time::ptime dt1, boost::posix_time::ptime dt2){return dt1 < dt2;});
 
     auto departures = get_stop_points(origin, raptor.data, worker);
     if(departures.size() == 0){
@@ -159,17 +169,24 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
     }
 
     std::vector<Path> result;
+
+    DateTime borne;
+    if(!clockwise)
+        borne = DateTime::min;
+
     for(boost::posix_time::ptime datetime : datetimes){
         std::vector<Path> tmp;
         int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
         int time = datetime.time_of_day().total_seconds();
 
         if(clockwise)
-            tmp = raptor.compute_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day));
+            tmp = raptor.compute_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day), borne);
         else
-            tmp = raptor.compute_reverse_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day));
-        if(tmp.size() > 0)
-            result.push_back(tmp.front());
+            tmp = raptor.compute_reverse_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day), borne);
+        if(tmp.size() > 0) {
+            result.push_back(tmp.back());
+            borne = tmp.back().items.back().arrival;
+        }
         else
             result.push_back(Path());
     }
