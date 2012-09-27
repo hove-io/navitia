@@ -22,10 +22,10 @@ void render(webservice::RequestData& request, webservice::ResponseData& response
 
 
 void render(webservice::RequestData& request, webservice::ResponseData& response, pbnavitia::Response& pb){
-    if(request.params["format"] == "pb"){
+    if(boost::get<std::string>(request.parsed_params["format"].value) == "pb"){
         pb.SerializeToOstream(&response.response);
         response.content_type = "application/octet-stream";
-    }else if(request.params["format"] == "xml"){
+    }else if(boost::get<std::string>(request.parsed_params["format"].value) == "xml"){
         response.response << pb2xml(&pb);
         response.content_type = "text/xml";
     }else{

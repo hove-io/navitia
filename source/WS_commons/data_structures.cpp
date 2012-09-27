@@ -67,9 +67,7 @@ namespace webservice {
                 else param.valid_value = false;
                 break;
             case ApiParameter::STRINGLIST:
-                std::vector<std::string> strings;
-                boost::algorithm::split(strings, value, boost::is_any_of(";"));
-                param.value = strings;
+                param.value = value;
                 break;
             }
 
@@ -108,9 +106,20 @@ namespace webservice {
 
     void ApiMetadata::parse_parameters(RequestData& request){       
         for(std::pair<std::string, std::string> p : request.params){
-            webservice::RequestParameter param = this->convert_parameter(p.first, p.second);
-            request.parsed_params[p.first] = param;
-            request.params_are_valid &= param.valid_value;
+            // Traitement spécifique lorsqu'on a une liste de paramètres
+            if(params.find(p.first) != params.end() && params[p.first].type == ApiParameter::STRINGLIST){
+                std::cout << p.second << std::endl;
+                // Si c'est le premier élément, on crée un vecteur
+                if(request.parsed_params.find(p.first) == request.parsed_params.end()){
+                    request.parsed_params[p.first].value = std::vector<std::string>{p.second};
+                } else {
+                    boost::get<std::vector<std::string>>(request.parsed_params[p.first].value).push_back(p.second);
+                }
+            } else {
+                webservice::RequestParameter param = this->convert_parameter(p.first, p.second);
+                request.parsed_params[p.first] = param;
+                request.params_are_valid &= param.valid_value;
+            }
         }
     }
 

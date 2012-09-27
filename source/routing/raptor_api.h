@@ -9,7 +9,13 @@ pbnavitia::Response make_response(RAPTOR &raptor,
                                   const type::EntryPoint &origin,
                                   const type::EntryPoint &destination,
                                   const boost::posix_time::ptime &datetime,
-                                  const senscompute sens,
+                                  bool clockwise,
                                   streetnetwork::StreetNetworkWorker & worker);
 
+pbnavitia::Response make_response(RAPTOR &raptor,
+                                  const type::EntryPoint &origin,
+                                  const type::EntryPoint &destination,
+                                  const std::vector<std::string> &datetimes,
+                                  bool clockwise,
+                                  streetnetwork::StreetNetworkWorker & worker);
 }}}
