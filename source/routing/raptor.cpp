@@ -649,8 +649,8 @@ namespace navitia { namespace routing { namespace raptor {
 
 
     std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
-                                      int departure_day, senscompute sens) {
-        if(sens == partirapres || sens == partirapresrab)
+                                      int departure_day, bool clockwise) {
+        if(clockwise)
             return compute(departure_idx, destination_idx, departure_hour, departure_day, DateTime::inf, sens);
         else
             return compute(departure_idx, destination_idx, departure_hour, departure_day, DateTime::min, sens);
@@ -658,7 +658,7 @@ namespace navitia { namespace routing { namespace raptor {
     }
 
     std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
-                                      int departure_day, DateTime borne, senscompute sens) {
+                                      int departure_day, DateTime borne, bool clockwise) {
     
         vector_idxretour departs, destinations;
 
@@ -672,12 +672,11 @@ namespace navitia { namespace routing { namespace raptor {
             destinations.push_back(std::make_pair(spidx, r));
         }
 
-        if(sens == partirapres || sens == partirapresrab)
+        if(clockwise)
             return compute_all(departs, destinations, borne);
         else
             return compute_reverse_all(departs, destinations, borne);
 
 
     }
-
 }}}

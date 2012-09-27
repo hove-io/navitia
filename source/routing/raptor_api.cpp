@@ -14,7 +14,6 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
     pb_response.set_requested_api(pbnavitia::PLANNER);
 
     for(Path path : paths) {
-        //navitia::routing::Path itineraire = navitia::routing::makeItineraire(path);
         pbnavitia::Journey * pb_journey = pb_response.mutable_planner()->add_journey();
         pb_journey->set_duration(path.duration);
         pb_journey->set_nb_transfers(path.nb_changes);
@@ -94,7 +93,7 @@ vector_idxretour to_idxretour(std::vector<std::pair<type::idx_t, double> > eleme
 }
 
 
-pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin, const type::EntryPoint &destination, const boost::posix_time::ptime &datetime, const senscompute sens, streetnetwork::StreetNetworkWorker & worker) {
+pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin, const type::EntryPoint &destination, const boost::posix_time::ptime &datetime, bool clockwise, streetnetwork::StreetNetworkWorker & worker) {
     pbnavitia::Response response;
 
     if(!raptor.data.meta.production_date.contains(datetime.date())) {
@@ -119,12 +118,63 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
     int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
     int time = datetime.time_of_day().total_seconds();
 
-    if(sens == partirapres)
+    if(clockwise)
         result = raptor.compute_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day));
     else
         result = raptor.compute_reverse_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day));
 
     return make_pathes(result, raptor.data);
 }
+
+
+pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin, const type::EntryPoint &destination, const std::vector<std::string> &datetimes_str, bool clockwise, streetnetwork::StreetNetworkWorker & worker) {
+    pbnavitia::Response response;
+
+    std::vector<boost::posix_time::ptime> datetimes;
+    for(std::string datetime: datetimes_str){
+        try {
+            boost::posix_time::ptime ptime;
+            ptime = boost::posix_time::from_iso_string(datetime);
+            if(!raptor.data.meta.production_date.contains(ptime.date())) {
+                response.set_error("Date not in the production period");
+                return response;
+            }
+            datetimes.push_back(ptime);
+        } catch(...){
+            response.set_error("Impossible to parse date " + datetime);
+            return response;
+        }
+    }
+
+    auto departures = get_stop_points(origin, raptor.data, worker);
+    if(departures.size() == 0){
+        response.set_error("Departure point not found");
+        return response;
+    }
+
+    auto destinations = get_stop_points(destination, raptor.data, worker);
+    if(destinations.size() == 0){
+        response.set_error("Destination point not found");
+        return response;
+    }
+
+    std::vector<Path> result;
+    for(boost::posix_time::ptime datetime : datetimes){
+        std::vector<Path> tmp;
+        int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
+        int time = datetime.time_of_day().total_seconds();
+
+        if(clockwise)
+            tmp = raptor.compute_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day));
+        else
+            tmp = raptor.compute_reverse_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day));
+        if(tmp.size() > 0)
+            result.push_back(tmp.front());
+        else
+            result.push_back(Path());
+    }
+    return make_pathes(result, raptor.data);
+}
+
 
 }}}

@@ -107,7 +107,7 @@ int main(int argc, char * argv[]) {
 
         std::cout << "Request " << nameSA1 << " -> " << nameSA2 << " le " << ddate << " a " << dtime << std::endl;
 
-        auto result = raptor.compute(getSaIdxFromName(nameSA1, nav_data.pt_data), getSaIdxFromName(nameSA2, nav_data.pt_data), dtime, nav_data.pt_data.validity_patterns.front().slide(boost::gregorian::from_undelimited_string(ddate)), navitia::routing::partirapres)[0];
+        auto result = raptor.compute(getSaIdxFromName(nameSA1, nav_data.pt_data), getSaIdxFromName(nameSA2, nav_data.pt_data), dtime, nav_data.pt_data.validity_patterns.front().slide(boost::gregorian::from_undelimited_string(ddate)))[0];
     }
 
 

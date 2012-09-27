@@ -112,7 +112,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
                 return rd;
             }
 
-            std::vector<nt::Type_e> filter = parse_param_filter(request.params["filter"]);
+            std::vector<nt::Type_e> filter = parse_param_filter(boost::get<std::string>(request.parsed_params["filter"].value));
             std::string name = boost::get<std::string>(request.parsed_params["name"].value);
 
             pb_response = navitia::firstletter::firstletter(name, filter, data);
@@ -214,7 +214,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
             if(request.parsed_params.find("dist") != request.parsed_params.end())
                 distance = boost::get<double>(request.parsed_params["dist"].value);
 
-            std::vector<nt::Type_e> filter = parse_param_filter(request.params["filter"]);
+            std::vector<nt::Type_e> filter = parse_param_filter(boost::get<std::string>(request.parsed_params["filter"].value));
 
             pb_response = navitia::proximitylist::find(coord, distance, filter, data);
             rd.status_code = 200;
@@ -276,7 +276,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     }
 
 
-    ResponseData planner(RequestData & request, navitia::type::Data & d) {
+    ResponseData journeys(RequestData & request, navitia::type::Data & d) {
         ResponseData rd;
 #ifndef DEBUG
         try{
@@ -293,20 +293,16 @@ class Worker : public BaseWorker<navitia::type::Data> {
                 LOG4CPLUS_INFO(logger, "instanciation du calculateur");
             }
 
-            std::vector<navitia::routing::Path> pathes;
             auto datetime = boost::get<boost::posix_time::ptime>(request.parsed_params["datetime"].value);
 
             navitia::type::EntryPoint departure = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["origin"].value));
             navitia::type::EntryPoint destination = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["destination"].value));
 
-            navitia::routing::senscompute sens = navitia::routing::inconnu;
-            if(boost::get<std::string>(request.parsed_params["sens"].value) == "apres")
-                sens = navitia::routing::partirapres;
+            bool clockwise = true;
+            if(request.parsed_params.find("clockwise") != request.parsed_params.end())
+                clockwise = boost::get<bool>(request.parsed_params["clockwise"].value);
 
-            else if(boost::get<std::string>(request.parsed_params["sens"].value) == "avant")
-                sens = navitia::routing::arriveravant;
-
-            pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, datetime, sens, *street_network_worker);
+            pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, datetime, clockwise, *street_network_worker);
 
             rd.status_code = 200;
 #ifndef DEBUG
@@ -318,6 +314,47 @@ class Worker : public BaseWorker<navitia::type::Data> {
 #endif
         return rd;
     }
+
+
+    ResponseData journeysarray(RequestData & request, navitia::type::Data & d) {
+        ResponseData rd;
+#ifndef DEBUG
+        try{
+#endif
+            nt::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, rd));
+            if(!locker.locked){
+                return rd;
+            }
+            if(d.last_load_at != this->last_load_at || !calculateur){
+                calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(d));
+                street_network_worker = std::unique_ptr<navitia::streetnetwork::StreetNetworkWorker>(new navitia::streetnetwork::StreetNetworkWorker(d.street_network));
+                this->last_load_at = d.last_load_at;
+
+                LOG4CPLUS_INFO(logger, "instanciation du calculateur");
+            }
+
+            navitia::type::EntryPoint departure = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["origin"].value));
+            navitia::type::EntryPoint destination = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["destination"].value));
+
+            bool clockwise = true;
+            if(request.parsed_params.find("clockwise") != request.parsed_params.end())
+                clockwise = boost::get<bool>(request.parsed_params["clockwise"].value);
+
+            auto datetimes = boost::get<std::vector<std::string>>(request.parsed_params["datetime[]"].value);
+
+            pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, datetimes, clockwise, *street_network_worker);
+
+            rd.status_code = 200;
+#ifndef DEBUG
+        }catch(std::exception& e){
+            LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
+        }catch(...){
+            LOG4CPLUS_FATAL(logger, "Erreur inconnue");
+        }
+#endif
+        return rd;
+    }
+
 
     ResponseData ptref(RequestData & request, navitia::type::Data &data){
         ResponseData rd;
@@ -374,13 +411,17 @@ class Worker : public BaseWorker<navitia::type::Data> {
         default_params.push_back("stop_name");
         add_param("proximitylist", "filter", "Type à rechercher", ApiParameter::STRING, false, default_params);
 
-        register_api("planner", boost::bind(&Worker::planner, this, _1, _2), "Calcul d'itinéraire en Transport en Commun");
-        add_param("planner", "origin", "Point de départ", ApiParameter::STRING, true);
-        add_param("planner", "destination", "Point d'arrivée", ApiParameter::STRING, true);
-        add_param("planner", "datetime", "Date et heure de début de l'itinéraire, au format ISO", ApiParameter::DATETIME, true);
+        register_api("journeys", boost::bind(&Worker::journeys, this, _1, _2), "Calcul d'itinéraire multimodal");
+        add_param("journeys", "origin", "Point de départ", ApiParameter::STRING, true);
+        add_param("journeys", "destination", "Point d'arrivée", ApiParameter::STRING, true);
+        add_param("journeys", "datetime", "Date et heure de début de l'itinéraire, au format ISO", ApiParameter::DATETIME, true);
+        add_param("journeys", "clockwise", "Sens du calcul ; si 1 on veut partir après l'heure indiquée, si 0, on veut arriver avant [par défaut 1]", ApiParameter::STRING, false);
 
-        add_param("planner", "sens", "Sens du calcul", ApiParameter::STRING, true);
-
+        register_api("journeysarray", boost::bind(&Worker::journeysarray, this, _1, _2), "Calcul d'itinéraire multimodal avec plusieurs heures de départ");
+        add_param("journeysarray", "origin", "Point de départ", ApiParameter::STRING, true);
+        add_param("journeysarray", "destination", "Point d'arrivée", ApiParameter::STRING, true);
+        add_param("journeysarray", "datetime[]", "Tableau de dates-heure de début de l'itinéraire, au format ISO", ApiParameter::STRINGLIST, true);
+        add_param("journeysarray", "clockwise", "Sens du calcul ; si 1 on veut partir après l'heure indiquée, si 0, on veut arriver avant [par défaut 1]", ApiParameter::STRING, false);
 
         register_api("load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
         register_api("status", boost::bind(&Worker::status, this, _1, _2), "Api de monitoring");

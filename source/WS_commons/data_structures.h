@@ -27,7 +27,7 @@ static boost::function<void()> stop_threadpool;
 enum RequestMethod {GET, POST, UNKNOWN};
 
 /// Correspond à l'ensemble des paramètres (clef-valeurs)
-typedef std::map<std::string, std::string> Parameters;
+typedef std::multimap<std::string, std::string> Parameters;
 
 /** Définit le type d'un paramètre REST*/
 struct RequestParameter{

@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(direct){
     type::Data data;
     b.build(data.pt_data);
     TimeDependent tp(data);
-    auto res = tp.compute(data.pt_data.stop_areas[0].idx, data.pt_data.stop_areas[1].idx, 6900, 0, routing::partirapres)[0];
+    auto res = tp.compute(data.pt_data.stop_areas[0].idx, data.pt_data.stop_areas[1].idx, 6900, 0)[0];
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 1);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(change){
     b.build(data.pt_data);
     TimeDependent tp(data);
 
-    auto res = tp.compute(data.pt_data.stop_areas[0].idx, data.pt_data.stop_areas[4].idx, 7900, 0, routing::partirapres)[0];
+    auto res = tp.compute(data.pt_data.stop_areas[0].idx, data.pt_data.stop_areas[4].idx, 7900, 0)[0];
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     b.build(data.pt_data);
     TimeDependent tp(data);
 
-    auto res = tp.compute(data.pt_data.stop_areas[0].idx, data.pt_data.stop_areas[2].idx, 22*3600, 0, routing::partirapres)[0];
+    auto res = tp.compute(data.pt_data.stop_areas[0].idx, data.pt_data.stop_areas[2].idx, 22*3600, 0)[0];
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_fail){
     b.build(data.pt_data);
     TimeDependent tp(data);
 
-    auto res = tp.compute(data.pt_data.stop_areas[0].idx, data.pt_data.stop_areas[2].idx, 22*3600, 0, routing::partirapres)[0];
+    auto res = tp.compute(data.pt_data.stop_areas[0].idx, data.pt_data.stop_areas[2].idx, 22*3600, 0)[0];
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
@@ -84,10 +84,10 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
     b.build(data.pt_data);
     TimeDependent tp(data);
 
-    auto res = tp.compute(data.pt_data.stop_areas[0].idx, data.pt_data.stop_areas[1].idx, 7900, 0, routing::partirapres)[0];
+    auto res = tp.compute(data.pt_data.stop_areas[0].idx, data.pt_data.stop_areas[1].idx, 7900, 0)[0];
     BOOST_REQUIRE_EQUAL(res.items.size(), 1);
     BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 9200);
 
-    res = tp.compute(data.pt_data.stop_areas[0].idx, data.pt_data.stop_areas[1].idx, 7900, 1, routing::partirapres)[0];
+    res = tp.compute(data.pt_data.stop_areas[0].idx, data.pt_data.stop_areas[1].idx, 7900, 1)[0];
     BOOST_REQUIRE_EQUAL(res.items.size(), 0);
 }
