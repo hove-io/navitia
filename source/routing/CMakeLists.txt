@@ -10,7 +10,7 @@ add_executable(single_run single_run.cpp)
 target_link_libraries(single_run routing boost_program_options dataraptor)
 
 add_executable(benchmark benchmark.cpp)
-target_link_libraries(benchmark routing boost_program_options dataraptor profiler)
+target_link_libraries(benchmark routing boost_program_options dataraptor)
 
 add_executable(testartemis test_artemis.cpp)
 target_link_libraries(testartemis routing connectors dataraptor)
