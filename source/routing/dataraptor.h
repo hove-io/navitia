@@ -15,13 +15,19 @@ struct dataRAPTOR {
     };
 
     //Données statiques
+    const static uint32_t NB_MINUTES_MINUIT = 86400;
     std::vector<navitia::type::Connection> foot_path;
     std::vector<pair_int> footpath_index;
     std::vector<Route_t> routes;
     std::vector<uint32_t> arrival_times;
     std::vector<uint32_t> departure_times;
+    std::vector<std::bitset<366>> validity_patterns;
     std::vector<type::idx_t> st_idx_forward;
     std::vector<type::idx_t> st_idx_backward;
+    std::vector<type::idx_t> vp_idx_forward;
+    std::vector<type::idx_t> vp_idx_backward;
+    std::vector<uint32_t> first_stop_time;
+    std::vector<uint32_t> nb_trips;
     std::vector<pair_int> sp_indexrouteorder;
     std::vector<pair_int> sp_routeorder_const;
     std::vector<pair_int> sp_indexrouteorder_reverse;
@@ -33,16 +39,16 @@ struct dataRAPTOR {
     void load(const navitia::type::PT_Data &data);
 
 
-    inline int get_stop_time_order(const Route_t & route, int orderVj, int order) const{
-        return route.firstStopTime + (order * route.nbTrips) + orderVj;
+    inline int get_stop_time_order(const type::Route & route, int orderVj, int order) const{
+        return first_stop_time[route.idx] + (order * nb_trips[route.idx]) + orderVj;
     }
-    inline uint32_t get_arrival_time(const Route_t & route, int orderVj, int order) const{
+    inline uint32_t get_arrival_time(const type::Route & route, int orderVj, int order) const{
         if(orderVj < 0)
             return std::numeric_limits<uint32_t>::max();
         else
             return arrival_times[get_stop_time_order(route, orderVj, order)];
     }
-    inline uint32_t get_departure_time(const Route_t & route, int orderVj, int order) const{
+    inline uint32_t get_departure_time(const type::Route & route, int orderVj, int order) const{
         if(orderVj < 0)
             return std::numeric_limits<uint32_t>::max();
         else

@@ -65,43 +65,78 @@ void dataRAPTOR::load(const type::PT_Data &data)
     
     arrival_times.clear();
     departure_times.clear();
-    routes.clear();
-    for(auto & route : data.routes) {
-        ridx_route[route.idx] = vector_idx();
-        if(route.route_point_list.size() > 0) {
-            idx_vector_idx vp_vj;
-            //Je regroupe entre elles les routes ayant le même validity pattern
-            for(navitia::type::idx_t vjidx : route.vehicle_journey_list) {
-                if(vp_vj.find(data.vehicle_journeys[vjidx].validity_pattern_idx) == vp_vj.end())
-                    vp_vj[data.vehicle_journeys[vjidx].validity_pattern_idx] = vector_idx();
-                vp_vj[data.vehicle_journeys[vjidx].validity_pattern_idx].push_back(vjidx);
+    st_idx_forward.clear();
+    st_idx_backward.clear();
+    first_stop_time.clear();
+    vp_idx_forward.clear();
+    vp_idx_backward.clear();
+
+
+    //On recopie les validity patterns
+    for(auto vp : data.validity_patterns) 
+        validity_patterns.push_back(vp.days);
+
+    for(const type::Route & route : data.routes) {
+        first_stop_time.push_back(arrival_times.size());
+        nb_trips.push_back(route.vehicle_journey_list.size());
+        //        for(type::idx_t rpidx : route.route_point_list) {
+        for(unsigned int i=0; i < route.route_point_list.size(); ++i) {
+            type::idx_t rpidx = route.route_point_list[i];
+            std::vector<type::idx_t> vec_stdix;
+            for(type::idx_t vjidx : route.vehicle_journey_list) {
+                vec_stdix.push_back(data.vehicle_journeys[vjidx].stop_time_list[i]);
             }
-
-            for(idx_vector_idx::value_type vec : vp_vj) {
-                if(vec.second.size() > 0) {
-                    Route_t r;
-                    r.idx = route.idx;
-                    r.nbStops = route.route_point_list.size();
-                    r.nbTrips = vec.second.size();
-                    r.vp = data.validity_patterns[vec.first].idx;
-                    r.firstStopTime = arrival_times.size();
-     
-                    for(unsigned int order = 0; order < route.route_point_list.size(); ++order) {
-                        for(auto vjidx : vec.second) {
-                            departure_times.push_back(data.stop_times[data.vehicle_journeys[vjidx].stop_time_list[order]].departure_time);
-                            st_idx_forward.push_back((data.stop_times[data.vehicle_journeys[vjidx].stop_time_list[order]].idx));
-                        }
-                        for(auto rit = vec.second.rbegin(); rit != vec.second.rend(); ++rit) {
-                            arrival_times.push_back(data.stop_times[data.vehicle_journeys[*rit].stop_time_list[order]].arrival_time);
-                            st_idx_backward.push_back((data.stop_times[data.vehicle_journeys[*rit].stop_time_list[order]].idx));
-
-                        }
-
+            std::sort(vec_stdix.begin(), vec_stdix.end(),
+                      [&](type::idx_t stidx1, type::idx_t stidx2)->bool{
+                        const type::StopTime & st1 = data.stop_times[stidx1];
+                        const type::StopTime & st2 = data.stop_times[stidx2];
+                        return (st1.departure_time % NB_MINUTES_MINUIT == st2.departure_time % NB_MINUTES_MINUIT&& st1.idx < st2.idx) ||
+                               (st1.departure_time % NB_MINUTES_MINUIT < st2.departure_time % NB_MINUTES_MINUIT);});
+            st_idx_forward.insert(st_idx_forward.end(), vec_stdix.begin(), vec_stdix.end());
+            for(auto stidx : vec_stdix) {
+                const auto & st = data.stop_times[stidx];
+                departure_times.push_back(st.departure_time % NB_MINUTES_MINUIT);
+                if(st.departure_time > NB_MINUTES_MINUIT) {
+                    auto vp = data.validity_patterns[data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx].days;
+                    vp >>=1;
+                    auto it = std::find(validity_patterns.begin(), validity_patterns.end(), vp);
+                    if(it == validity_patterns.end()) {
+                        vp_idx_forward.push_back(validity_patterns.size());
+                        validity_patterns.push_back(vp);
+                    } else {
+                        vp_idx_forward.push_back(it - validity_patterns.begin());
                     }
-                    ridx_route[route.idx].push_back(routes.size());
-                    routes.push_back(r);
+                } else {
+                    vp_idx_forward.push_back(data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx);
                 }
             }
+
+            std::sort(vec_stdix.begin(), vec_stdix.end(),
+                  [&](type::idx_t stidx1, type::idx_t stidx2)->bool{
+                        const type::StopTime & st1 = data.stop_times[stidx1];
+                        const type::StopTime & st2 = data.stop_times[stidx2];
+                        return (st1.arrival_time % NB_MINUTES_MINUIT == st2.arrival_time % NB_MINUTES_MINUIT && st1.idx > st2.idx) ||
+                               (st1.arrival_time % NB_MINUTES_MINUIT > st2.arrival_time % NB_MINUTES_MINUIT);});
+
+            st_idx_backward.insert(st_idx_backward.end(), vec_stdix.begin(), vec_stdix.end());
+            for(auto stidx : vec_stdix) {
+                const auto & st = data.stop_times[stidx];
+                arrival_times.push_back(st.arrival_time % NB_MINUTES_MINUIT);
+                if(st.arrival_time > NB_MINUTES_MINUIT) {
+                    auto vp = data.validity_patterns[data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx].days;
+                    vp >>=1;;
+                    auto it = std::find(validity_patterns.begin(), validity_patterns.end(), vp);
+                    if(it == validity_patterns.end()) {
+                        vp_idx_backward.push_back(validity_patterns.size());
+                        validity_patterns.push_back(vp);
+                    } else {
+                        vp_idx_backward.push_back(it - validity_patterns.begin());
+                    }
+                } else {
+                    vp_idx_backward.push_back(data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx);
+                }
+            }
+
         }
     }
 
@@ -114,28 +149,26 @@ void dataRAPTOR::load(const type::PT_Data &data)
         std::map<navitia::type::idx_t, int> temp, temp_reverse;
         for(navitia::type::idx_t idx_rp : sp.route_point_list) {
             auto &rp = data.route_points[idx_rp];
-            for(auto rid : ridx_route[rp.route_idx]) {
-                auto it = temp.find(rid), it_reverse = temp_reverse.find(rid);
-                if(it == temp.end()) {
-                    temp[rid] = rp.order;
-                } else if(temp[rp.route_idx] > rp.order) {
-                    temp[rid] = rp.order;
-                }
-
-                if(it_reverse == temp_reverse.end()) {
-                    temp_reverse[rid] = rp.order;
-                } else if(temp_reverse[rp.route_idx] < rp.order) {
-                    temp_reverse[rid] = rp.order;
-                }
+            //for(auto rid : ridx_route[rp.route_idx]) {
+            auto rid = rp.route_idx;
+            auto it = temp.find(rid), it_reverse = temp_reverse.find(rid);
+            if(it == temp.end()) {
+                temp[rid] = rp.order;
+            } else if(temp[rp.route_idx] > rp.order) {
+                temp[rid] = rp.order;
             }
-
+            if(it_reverse == temp_reverse.end()) {
+                temp_reverse[rid] = rp.order;
+            } else if(temp_reverse[rp.route_idx] < rp.order) {
+                temp_reverse[rid] = rp.order;
+            }
         }
 
         std::vector<pair_int> tmp;
         for(auto it : temp) {
             tmp.push_back(it);
         }
-        std::sort(tmp.begin(), tmp.end(), [&](pair_int p1, pair_int p2){return routes[p1.first].vp < routes[p2.first].vp;});
+        //        std::sort(tmp.begin(), tmp.end(), [&](pair_int p1, pair_int p2){return routes[p1.first].vp < routes[p2.first].vp;});
         sp_routeorder_const.insert(sp_routeorder_const.end(), tmp.begin(), tmp.end());
 
 
@@ -144,7 +177,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
         for(auto it : temp_reverse) {
             tmp.push_back(it);
         }
-        std::sort(tmp.begin(), tmp.end(), [&](pair_int p1, pair_int p2){return routes[p1.first].vp < routes[p2.first].vp;});
+        //        std::sort(tmp.begin(), tmp.end(), [&](pair_int p1, pair_int p2){return routes[p1.first].vp < routes[p2.first].vp;});
         sp_routeorder_const_reverse.insert(sp_routeorder_const_reverse.end(), tmp.begin(), tmp.end());
 
         temp_index.second = sp_routeorder_const.size() - temp_index.first;
@@ -154,10 +187,10 @@ void dataRAPTOR::load(const type::PT_Data &data)
     }
 
 
-    std::cout << "Nb data stop times : " << data.stop_times.size() << " stopTimes : " << arrival_times.size()
-              << " nb foot path : " << foot_path.size() << " Nombre de stop points : " << data.stop_points.size() << "nb vp : " << data.validity_patterns.size() << " nb routes " << routes.size() <<  std::endl;
+     std::cout << "Nb data stop times : " << data.stop_times.size() << " stopTimes : " << arrival_times.size()
+               << " nb foot path : " << foot_path.size() << " Nombre de stop points : " << data.stop_points.size() << "nb vp : " << data.validity_patterns.size() << " nb routes " << routes.size() <<  std::endl;
 
 }
 
 
-}}}
+                  }}}
