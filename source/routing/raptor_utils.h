@@ -91,7 +91,7 @@ struct best_dest {
         auto it = map_date_time.find(spid);
         if(it != map_date_time.end()) {
             it->second = t;
-            if(t > best_now && t.dt != DateTime::min) {
+            if(t >= best_now && t.dt != DateTime::min) {
                 best_now = t;
                 best_now_spid = spid;
                 count = cnt;

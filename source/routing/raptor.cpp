@@ -38,6 +38,13 @@ namespace navitia { namespace routing { namespace raptor {
 
 
 
+
+
+
+
+
+
+
     int RAPTOR::tardiest_trip(const type::Route & route, const unsigned int order, const DateTime &dt) const{
         //On cherche le plus grand stop time de la route <= dt.hour()
         const auto begin = data.dataRaptor.arrival_times.begin() +  
@@ -78,6 +85,12 @@ namespace navitia { namespace routing { namespace raptor {
 
 
 
+
+
+
+
+
+
     void RAPTOR::make_queue() {
         Q.assign(data.pt_data.routes.size(), std::numeric_limits<int>::max());
 
@@ -99,6 +112,12 @@ namespace navitia { namespace routing { namespace raptor {
 
 
 
+
+
+
+
+
+
     void RAPTOR::make_queuereverse() {
         Q.assign(data.pt_data.routes.size(), std::numeric_limits<int>::min());
         auto it = data.dataRaptor.sp_routeorder_const_reverse.begin();
@@ -116,6 +135,15 @@ namespace navitia { namespace routing { namespace raptor {
             marked_sp.flip(stop);
         }
     }
+
+
+
+
+
+
+
+
+
 
     void RAPTOR::marcheapied() {
 
@@ -154,6 +182,12 @@ namespace navitia { namespace routing { namespace raptor {
     }
 
 
+
+
+
+
+
+
     void RAPTOR::marcheapiedreverse() {
         auto it = data.dataRaptor.foot_path.begin();
         int last = 0;
@@ -187,6 +221,12 @@ namespace navitia { namespace routing { namespace raptor {
             last = index.first + index.second;
         }
     }
+
+
+
+
+
+
 
 
     std::vector<Path> RAPTOR::compute_all(vector_idxretour departs, vector_idxretour destinations, DateTime borne) {
@@ -249,13 +289,18 @@ namespace navitia { namespace routing { namespace raptor {
         return result;
     }
 
+
+
+
+
+
     std::vector<Path> RAPTOR::compute_reverse_all(vector_idxretour departs, vector_idxretour destinations, DateTime borne) {
         std::vector<Path> result;
         type_retour min;
         min.dt = DateTime::min;
         best.assign(data.pt_data.stop_points.size(), min);
         b_dest.reinit(borne);
-        b_dest.reverse();
+        //b_dest.reverse();
 
         retour.assign(20, data.dataRaptor.retour_constant_reverse);
         for(auto & item : destinations) {
@@ -299,6 +344,10 @@ namespace navitia { namespace routing { namespace raptor {
         }
         return result;
     }
+
+
+
+
 
     void RAPTOR::set_routes_valides() {
         //On cherche la premiere date
@@ -651,9 +700,9 @@ namespace navitia { namespace routing { namespace raptor {
     std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
                                       int departure_day, bool clockwise) {
         if(clockwise)
-            return compute(departure_idx, destination_idx, departure_hour, departure_day, DateTime::inf, sens);
+            return compute(departure_idx, destination_idx, departure_hour, departure_day, DateTime::inf, clockwise);
         else
-            return compute(departure_idx, destination_idx, departure_hour, departure_day, DateTime::min, sens);
+            return compute(departure_idx, destination_idx, departure_hour, departure_day, DateTime::min, clockwise);
 
     }
 
