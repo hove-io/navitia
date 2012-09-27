@@ -189,12 +189,12 @@ namespace navitia { namespace routing { namespace raptor {
     }
 
 
-    std::vector<Path> RAPTOR::compute_all(vector_idxretour departs, vector_idxretour destinations) {
+    std::vector<Path> RAPTOR::compute_all(vector_idxretour departs, vector_idxretour destinations, DateTime borne) {
         std::vector<Path> result;
 
         retour.assign(20, data.dataRaptor.retour_constant);
         best.assign(data.pt_data.stop_points.size(), type_retour());
-        b_dest.reinit();
+        b_dest.reinit(borne);
         for(auto item : departs) {
             retour[0][item.first] = item.second;
             best[item.first] = item.second;
@@ -249,12 +249,12 @@ namespace navitia { namespace routing { namespace raptor {
         return result;
     }
 
-    std::vector<Path> RAPTOR::compute_reverse_all(vector_idxretour departs, vector_idxretour destinations) {
+    std::vector<Path> RAPTOR::compute_reverse_all(vector_idxretour departs, vector_idxretour destinations, DateTime borne) {
         std::vector<Path> result;
         type_retour min;
         min.dt = DateTime::min;
         best.assign(data.pt_data.stop_points.size(), min);
-        b_dest.reinit();
+        b_dest.reinit(borne);
         b_dest.reverse();
 
         retour.assign(20, data.dataRaptor.retour_constant_reverse);
@@ -362,9 +362,11 @@ namespace navitia { namespace routing { namespace raptor {
                                     end = false;
                                 }
                             } else if(workingDt == min &&
-                                      prec_retour[spid].type == uninitialized &&
-                                      b_dest.is_dest(spid)) {
-                                working_retour[spid] = type_retour(it_st->idx, embarquement, workingDt);
+                                      prec_retour[spid].type == uninitialized) {
+                                auto r = type_retour(it_st->idx, embarquement, workingDt);
+                                if(b_dest.ajouter_best(spid, r, count))
+                                    working_retour[spid] = r;
+
                             }
                         }
 
@@ -436,9 +438,10 @@ namespace navitia { namespace routing { namespace raptor {
                                     end = false;
                                 }
                             } else if(workingDt == max && 
-                                      prec_retour[spid].type == uninitialized &&
-                                      b_dest.is_dest(spid)) {
-                                working_retour[spid] = type_retour(it_st->idx, embarquement, workingDt);
+                                      prec_retour[spid].type == uninitialized) {
+                                auto r = type_retour(it_st->idx, embarquement, workingDt);
+                                if(b_dest.ajouter_best_reverse(spid, r, count))
+                                    working_retour[spid] = r;
                             }
                         }
 
@@ -639,25 +642,42 @@ namespace navitia { namespace routing { namespace raptor {
     }
 
 
-    Path RAPTOR::makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb) {
+    Path RAPTOR::makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs,
+                                 unsigned int destination_idx, unsigned int countb) {
         return makePath(retour, best, departs, destination_idx, countb, true);
     }
 
 
-    std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day, senscompute sens) {
+    std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
+                                      int departure_day, senscompute sens) {
+        if(sens == partirapres || sens == partirapresrab)
+            return compute(departure_idx, destination_idx, departure_hour, departure_day, DateTime::inf, sens);
+        else
+            return compute(departure_idx, destination_idx, departure_hour, departure_day, DateTime::min, sens);
+
+    }
+
+    std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
+                                      int departure_day, DateTime borne, senscompute sens) {
+    
         vector_idxretour departs, destinations;
 
         for(navitia::type::idx_t spidx : data.pt_data.stop_areas[departure_idx].stop_point_list) {
-            departs.push_back(std::make_pair(spidx, type_retour(navitia::type::invalid_idx, DateTime(departure_day, departure_hour), depart)));
+            auto r = type_retour(navitia::type::invalid_idx, DateTime(departure_day, departure_hour), depart);
+            departs.push_back(std::make_pair(spidx, r));
         }
 
         for(navitia::type::idx_t spidx : data.pt_data.stop_areas[destination_idx].stop_point_list) {
-            destinations.push_back(std::make_pair(spidx, type_retour(navitia::type::invalid_idx, DateTime(departure_day, departure_hour), depart)));
+            auto r = type_retour(navitia::type::invalid_idx, DateTime(departure_day, departure_hour), depart);
+            destinations.push_back(std::make_pair(spidx, r));
         }
 
         if(sens == partirapres || sens == partirapresrab)
-            return compute_all(departs, destinations);
+            return compute_all(departs, destinations, borne);
         else
-            return compute_reverse_all(departs, destinations);
+            return compute_reverse_all(departs, destinations, borne);
+
+
     }
+
 }}}
