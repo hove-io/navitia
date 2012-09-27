@@ -190,6 +190,9 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
         else
             result.push_back(Path());
     }
+    if(clockwise)
+        std::reverse(result.begin(), result.end());
+
     return make_pathes(result, raptor.data);
 }
 
