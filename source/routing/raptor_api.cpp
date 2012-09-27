@@ -6,7 +6,7 @@ namespace navitia { namespace routing { namespace raptor {
 std::string iso_string(const nt::Data & d, int date, int hour){
     boost::posix_time::ptime date_time(d.meta.production_date.begin() + boost::gregorian::days(date));
     date_time += boost::posix_time::seconds(hour);
-    return boost::posix_time::to_iso_extended_string(date_time);
+    return boost::posix_time::to_iso_string(date_time);
 }
 
 pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths, const nt::Data & d) {
