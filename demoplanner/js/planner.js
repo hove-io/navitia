@@ -12,21 +12,31 @@ var destination_idx = -1;
 var departure_idx = -1;
 var debut_requete = -1;
 var fin_requete = -1;
+String.prototype.trim = function() {
+    return this.replace(/^\s+|\s+$/g, "");
+};
 
-function format(hour){
+function format(datetime){
+
+    datetime.trim();
+
+    var year = datetime.slice(0, 4);
+    var mounth = datetime.slice(4,6);
+    var day = datetime.slice(6,8);
+    var hour = datetime.slice(9, 13);
     var str = "";
-    var hours = Math.floor(hour / 3600);
-    var mins = (hour % 3600)/60;
-    if(hours < 10) str += "0";
+    var hours = datetime.slice(9,11);
+    var mins = datetime.slice(11,13);
     str += hours + "h";
-    if(mins < 10) str += "0";
     str += mins;
+
+    str += " le " + day + "-" + mounth + "-" + year; 
     return str;
 }
 
 function aff_planning(idPlanning) {
 
-    if(!planner.path[idPlanning].items){
+    if(!planner.journey_list[idPlanning].section_list){
         $("#details").html("Pas d'itinéraire trouvé :'(");
     } else {
         map.removeAllPolylines();
@@ -35,9 +45,10 @@ function aff_planning(idPlanning) {
 
         $("#details").html("<ul>");
 
-        for(i=0;i<planner.path[idPlanning].items.length;i++) {
-            var item = planner.path[idPlanning].items[i];
-            var marker = new mxn.Marker(new mxn.LatLonPoint(item.departure.coord.y, item.departure.x));
+        for(i=0;i<planner.journey_list[idPlanning].section_list.length;i++) {
+            var item = planner.journey_list[idPlanning].section_list[i];
+            var point = new mxn.LatLonPoint(item.origin.stop_area.coord.y, item.origin.stop_area.coord.x);
+            var marker = new mxn.Marker(point);
             if(i==0) {
                 marker.setInfoBubble("Depart");
                 //  marker.openBubble();
@@ -45,15 +56,17 @@ function aff_planning(idPlanning) {
                 marker.setInfoBubble("Depart arrivee");
             }
             map.addMarker(marker);
-            if(item.type == "Walking"){
-                $("details").append("<li>Marche à pied</li>");
+            if(item.type == "PUBLIC_TRANSPORT"){
+                var sa_name = item.origin.stop_area.name;
+                var line_name = item.line.name;
+                $("#details").append("<li>Depart à " + format(item.departure_date_time)+" de "+ sa_name +" avec la ligne : "+ line_name + "</li>");
+                $("#details").append("<li>Arrivée à : "+ format(item.arrival_date_time)+"</li>");
             } else {
-                $("#details").append("<li>Depart à " + format(item.departure_hour) +" le : "+item.departure_date+" de "+ item.departure.name+" avec la ligne : " +item.line_name + "</li>");
-                $("#details").append("<li>Arrivée à : "+ format(item.arrival_hour)+" le : "+item.arrival_date + "</li>");
+                $("details").append("<li>Marche à pied</li>");            
             }
 
-            for(j=0;j<item.stop_points.length;j++) {
-                arraypolys.push(new mxn.LatLonPoint(item.stop_points[j].coord.y, item.stop_points[j].coord.x));
+            for(j=0;j<item.stop_point_list.length;j++) {
+                arraypolys.push(new mxn.LatLonPoint(item.stop_point_list[j].coord.y, item.stop_point_list[j].coord.x));
             }
         }
         $("#details").append("</ul>");
@@ -71,8 +84,8 @@ function aff_data(data) {
 
     $("#infos").text("");
     $("div#listecontainer ul").empty();
-    if(planner.path){
-        for(i=0;i<planner.path.length;++i) {
+    if(planner.journey_list){
+        for(i=0;i<planner.journey_list.length;++i) {
             $("div#listecontainer ul").append($("<li><a href=\"#\" onclick=\"javascript:aff_planning("+i+");\">Itineraire "+(i+1)+"</a></li>"));
         }
     } else {
@@ -89,8 +102,8 @@ function planner() {
 
     if((departure_idx !== -1) && (destination_idx !== -1)) {
         debut_requete = new Date().getTime();
-        $.getJSON("../planner?format=json&departure="+departure_idx+"&destination="+destination_idx+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val()
-                  +"&sens="+$("#typeitineraire option:selected'").val(),
+        $.getJSON("../journeys?format=json&origin="+departure_idx+"&destination="+destination_idx+"&datetime="+$("#date").val()+"T"+$("#timeheure").val()+""+$("#timemin").val()+"&date="+
+                  +"&clockwise="+$("#typeitineraire option:selected'").val(),
                   aff_data
                   );
 
@@ -114,9 +127,9 @@ function clickmap(event_name, event_source, event_args) {
         $("#infos").text("Calcul en cours ... ");
         debut_requete = new Date().getTime();
 
-        $.getJSON("../planner?format=json&departure=coord:"+depart_arrivee.depart.lon+":"+depart_arrivee.depart.lat+
-                  "&destination=coord:"+depart_arrivee.arrivee.lon+":"+depart_arrivee.arrivee.lat+"&time="+$("#timeheure").val()+""+$("#timemin").val()+"&date="+$("#date").val()
-                  +"&sens="+  $("#typeitineraire option:selected'").val(),
+        $.getJSON("../journeys?format=json&origin=coord:"+depart_arrivee.depart.lon+":"+depart_arrivee.depart.lat+
+                  "&destination=coord:"+depart_arrivee.arrivee.lon+":"+depart_arrivee.arrivee.lat+"&datetime="+$("#date").val()
++"T"+$("#timeheure").val()+""+$("#timemin").val()+"&clockwise="+$("#typeitineraire option:selected'").val(),
                   aff_data
                   );
 
@@ -131,12 +144,27 @@ function clickmap(event_name, event_source, event_args) {
 window.onload= function() {
 
             map = new mxn.Mapstraction('mapdiv', 'openlayers');
-
-            var latlon = new mxn.LatLonPoint(48.866667, 2.333333);
-            map.setCenterAndZoom(latlon, 13);
             map.click.addHandler(clickmap);
             $("#go").click(planner);
+            $("#centrer").change(function() {
+                var sels = $("#centrer option:selected");
+                var sel = sels[0].value;
+                centrer(sel);
+            } );
+            centrer("paris");
         }
+
+function centrer(ville) {
+    var villes = {
+                    "paris" : {"x" :48.85341 ,"y": 2.3488, "zoom" : 13},
+                    "lille" : {"x" :50.6367, "y" : 3.0373, "zoom" : 13},
+                    "lyon"  : {"x" :45.74846, "y" : 4.84671, "zoom" : 13}
+                  };
+    
+    var latlon = new mxn.LatLonPoint(villes[ville].x, villes[ville].y);
+    map.setCenterAndZoom(latlon, villes[ville].zoom);
+
+}
 
 $(function() {
       $( "#departure" ).autocomplete({

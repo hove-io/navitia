@@ -114,7 +114,8 @@ void FirstletterParser::load_address(navitia::type::Data &nav_data) {
             continue;
 
         if(ways.find(row[name]+row[left_city]) == ways.end()) {
-            navitia::streetnetwork::Way way;
+            //navitia::streetnetwork::Way way;
+            navitia::georef::Way way;
             way.name = row[name];
             if(nav_data.pt_data.city_map.find(row[left_city]) != nav_data.pt_data.city_map.end()){
                 way.city_idx = nav_data.pt_data.city_map.at(row[left_city]);
@@ -122,7 +123,8 @@ void FirstletterParser::load_address(navitia::type::Data &nav_data) {
                 way.city_idx = nav_data.pt_data.city_map.at(row[rigth_city]);
             }
             way.idx = idx;
-            nav_data.street_network.ways.push_back(way);
+            //nav_data.street_network.ways.push_back(way);
+            nav_data.geo_ref.ways.push_back(way);
             ways[row[name]+row[left_city]] = true;
             ++idx;
 

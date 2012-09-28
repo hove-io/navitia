@@ -23,7 +23,8 @@ class BDTopoParser {
          * Charge les données du filaire de voirie dans un objet Data de NAViTiA /!\
          *
          */
-        void load_streetnetwork(navitia::streetnetwork::StreetNetwork & street_network);
+        //void load_streetnetwork(navitia::streetnetwork::StreetNetwork & street_network);
+        void load_streetnetwork(navitia::georef::GeoRef & street_network);
         
 
     private:

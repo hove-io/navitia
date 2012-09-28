@@ -18,7 +18,8 @@ int main(int, char ** params) {
 
     nav_data.build_first_letter();
 
-    std::cout << "taille fl streetnetwork : " << nav_data.street_network.fl.vec_map.size() << " nb ways : " <<  nav_data.street_network.ways.size() << std::endl;
+    //std::cout << "taille fl streetnetwork : " << nav_data.street_network.fl.vec_map.size() << " nb ways : " <<  nav_data.street_network.ways.size() << std::endl;
+    std::cout << "taille fl streetnetwork : " << nav_data.geo_ref.fl.vec_map.size() << " nb ways : " <<  nav_data.geo_ref.ways.size() << std::endl;
 
     nav_data.lz4(params[2]);
 }

@@ -43,7 +43,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Way * way, int max_depth){
-    navitia::streetnetwork::Way w = data.street_network.ways.at(idx);
+    navitia::georef::Way w = data.geo_ref.ways.at(idx);
     way->set_name(w.name);
     /*stop_point->mutable_coord()->set_x(sp.coord.x);
     stop_point->mutable_coord()->set_y(sp.coord.y);*/
@@ -53,6 +53,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Way * way, i
         }catch(std::out_of_range e){
             std::cout << w.city_idx << std::endl;
         }
+        
     }
 }
 

@@ -5,7 +5,8 @@
 #include <unordered_map>
 
 using navitia::type::idx_t;
-namespace navitia{ namespace streetnetwork{
+//namespace navitia{ namespace streetnetwork{
+namespace navitia{ namespace georef{
 
 // Exception levée dès que l'on trouve une destination
 struct DestinationFound{};
@@ -32,7 +33,8 @@ struct distance_visitor : public boost::dijkstra_visitor<> {
 };
 
 
-void StreetNetwork::init(std::vector<float> &distances, std::vector<vertex_t> &predecessors) const{
+
+void GeoRef::init(std::vector<float> &distances, std::vector<vertex_t> &predecessors) const{
     size_t n = boost::num_vertices(this->graph);
     distances.assign(n, std::numeric_limits<float>::max());
     predecessors.resize(n);
@@ -40,7 +42,8 @@ void StreetNetwork::init(std::vector<float> &distances, std::vector<vertex_t> &p
         predecessors[i] = i;
 }
 
-Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<double> start_zeros, std::vector<double> dest_zeros) const {
+
+Path GeoRef::compute(std::vector<vertex_t> starts, std::vector<vertex_t> destinations, std::vector<double> start_zeros, std::vector<double> dest_zeros) const {
     if(starts.size() == 0 || destinations.size() == 0)
         throw proximitylist::NotFound();
 
@@ -122,7 +125,8 @@ Path StreetNetwork::compute(std::vector<vertex_t> starts, std::vector<vertex_t> 
     return p;
 }
 
-ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const StreetNetwork & sn, const proximitylist::ProximityList<vertex_t> &prox){
+
+ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoRef & sn, const proximitylist::ProximityList<vertex_t> &prox){
     this->edge = sn.nearest_edge(coord, prox);
     // On cherche les coordonnées des extrémités de ce segment
     vertex_t vertex1 = boost::source(edge, sn.graph);
@@ -139,7 +143,8 @@ ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const Stre
 }
 
 
-Path StreetNetwork::compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord) const{
+
+Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord) const{
     ProjectionData start(start_coord, *this, this->pl);
     ProjectionData dest(dest_coord, *this, this->pl);
 
@@ -158,12 +163,20 @@ Path StreetNetwork::compute(const type::GeographicalCoord & start_coord, const t
     return p;
 }
 
-StreetNetworkWorker::StreetNetworkWorker(const StreetNetwork &street_network) :
+
+StreetNetworkWorker::StreetNetworkWorker(const GeoRef &street_network) :
     street_network(street_network)
 {}
 
 std::vector< std::pair<idx_t, double> > StreetNetworkWorker::find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<idx_t> & pl, double radius) {
-    ProjectionData start(start_coord, this->street_network, this->street_network.pl);
+    std::vector< std::pair<idx_t, double> > result;
+
+    ProjectionData start;
+    try{
+        start = ProjectionData(start_coord, this->street_network, this->street_network.pl);
+    }catch(DestinationFound){}
+
+
     street_network.init(this->distances, this->predecessors);
 
     // On lance un dijkstra depuis les deux nœuds de départ
@@ -183,13 +196,23 @@ std::vector< std::pair<idx_t, double> > StreetNetworkWorker::find_nearest(const 
     }
     temp_pl.build();
 
-    std::vector< std::pair<idx_t, double> > result;
     // On trouve tous les élements à moins radius mètres en vol d'oiseau
-    std::vector< std::pair<idx_t, type::GeographicalCoord> > elements = pl.find_within(start_coord, radius);
+    std::vector< std::pair<idx_t, type::GeographicalCoord> > elements;
+    try{
+        elements = pl.find_within(start_coord, radius);
+    }catch(DestinationFound){
+        return result;
+    }
+
 
     // À chaque fois on regarde la distance réelle en suivant le filaire de voirie
     for(auto element : elements){
-        ProjectionData current(element.second, this->street_network, temp_pl);
+
+            ProjectionData current;
+        try{
+            current = ProjectionData(element.second, this->street_network, temp_pl);
+        }catch(DestinationFound){}
+
         vertex_t best;
         double best_distance;
         if(distances[current.source] < distances[current.target]){
@@ -207,18 +230,21 @@ std::vector< std::pair<idx_t, double> > StreetNetworkWorker::find_nearest(const 
     return result;
 }
 
-void StreetNetwork::build_proximity_list(){
+
+void GeoRef::build_proximity_list(){
     BOOST_FOREACH(vertex_t u, boost::vertices(this->graph)){
         pl.add(graph[u].coord, u);
     }
     pl.build();
 }
 
-edge_t StreetNetwork::nearest_edge(const type::GeographicalCoord & coordinates) const {
+
+edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates) const {
     return this->nearest_edge(coordinates, this->pl);
 }
 
-edge_t StreetNetwork::nearest_edge(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const {
+
+edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const {
     vertex_t u = prox.find_nearest(coordinates);
     type::GeographicalCoord coord_u, coord_v;
     coord_u = this->graph[u].coord;

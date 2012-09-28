@@ -10,12 +10,12 @@ pbnavitia::Response make_response(RAPTOR &raptor,
                                   const type::EntryPoint &destination,
                                   const boost::posix_time::ptime &datetime,
                                   bool clockwise,
-                                  streetnetwork::StreetNetworkWorker & worker);
+                                  georef::StreetNetworkWorker & worker);
 
 pbnavitia::Response make_response(RAPTOR &raptor,
                                   const type::EntryPoint &origin,
                                   const type::EntryPoint &destination,
                                   const std::vector<std::string> &datetimes,
                                   bool clockwise,
-                                  streetnetwork::StreetNetworkWorker & worker);
+                                  georef::StreetNetworkWorker & worker);
 }}}

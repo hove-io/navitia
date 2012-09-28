@@ -22,7 +22,8 @@ Data& Data::operator=(Data&& other){
     meta = other.meta;
     Alias_List = other.Alias_List;
     pt_data = std::move(other.pt_data);
-    street_network = other.street_network;
+    //street_network = other.street_network;
+    geo_ref = other.geo_ref;
     dataRaptor = other.dataRaptor;
     last_load = other.last_load;
     last_load_at = other.last_load_at;
@@ -33,7 +34,8 @@ Data& Data::operator=(Data&& other){
 
 
 void Data::set_cities(){
-    BOOST_FOREACH(navitia::streetnetwork::Way way, street_network.ways){
+   // BOOST_FOREACH(navitia::streetnetwork::Way way, street_network.ways){
+     BOOST_FOREACH(navitia::georef::Way way, geo_ref.ways){
         auto city_it = pt_data.city_map.find(way.city);
         if(city_it != pt_data.city_map.end()){
             way.city_idx = city_it->second;
@@ -130,20 +132,25 @@ void Data::build_external_code(){
 
 void Data::build_proximity_list(){
     this->pt_data.build_proximity_list();
-    this->street_network.build_proximity_list();
+    //this->street_network.build_proximity_list();
+    this->geo_ref.build_proximity_list();
 }
 
 
 void Data::build_first_letter(){
     pt_data.build_first_letter();
 
-    BOOST_FOREACH(auto way, street_network.ways){
+    //BOOST_FOREACH(auto way, street_network.ways){
+    BOOST_FOREACH(auto way, geo_ref.ways){
         if(way.city_idx < pt_data.cities.size())
-            street_network.fl.add_string(way.name + " " + pt_data.cities[way.city_idx].name, way.idx);
+            //street_network.fl.add_string(way.name + " " + pt_data.cities[way.city_idx].name, way.idx);
+            geo_ref.fl.add_string(way.name + " " + pt_data.cities[way.city_idx].name, way.idx);
         else
-            street_network.fl.add_string(way.name, way.idx);
+            //street_network.fl.add_string(way.name, way.idx);
+            geo_ref.fl.add_string(way.name, way.idx);
     }
-    this->street_network.fl.build();
+    //this->street_network.fl.build();
+    this->geo_ref.fl.build();
 }
 
 void Data::build_raptor() {
