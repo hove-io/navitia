@@ -72,6 +72,7 @@ void indent(std::stringstream& buffer, int depth){
 
 std::string pb2json(const google::protobuf::Message* response, int depth){
     std::stringstream buffer;
+    buffer.precision(7); // 5 chiffres après la virgule pour la lat (N/S), 6 chiffres pour la lon
     buffer << "{";
 
     const google::protobuf::Reflection* reflection = response->GetReflection();
