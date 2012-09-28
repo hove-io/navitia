@@ -72,7 +72,7 @@ std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPo
         }
     } break;
     case type::Type_e::eCoord: {
-        result = worker.find_nearest(ep.coordinates, data.pt_data.stop_point_proximity_list, 300);
+        result = worker.find_nearest(ep.coordinates, data.pt_data.stop_point_proximity_list, 1000);
     } break;
     default: break;
     }
