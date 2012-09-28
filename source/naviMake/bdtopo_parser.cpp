@@ -70,8 +70,8 @@ void BDTopoParser::load_streetnetwork(ns::GeoRef & street_network){
     size_t n_fin_d = cols["bornefin_d"];
     size_t n_fin_g = cols["bornefin_g"];
 
-    //navitia::type::Projection ("Lambert 2 étendu", "+init=epsg:27572", false);
-    navitia::type::Projection proj_lambert93("Lambert 93", "+init=epsg:2154", false);
+    navitia::type::Projection proj_lambert2e ("Lambert 2 étendu", "+init=epsg:27572", false);
+
 
     std::unordered_map<std::string, vertex_t> vertex_map;
     std::unordered_map<std::string, Way> way_map;
@@ -87,14 +87,9 @@ void BDTopoParser::load_streetnetwork(ns::GeoRef & street_network){
         if(it == vertex_map.end()){
             Vertex v;
             try{
-/*
-                v.coord = navitia::type::GeographicalCoord(boost::lexical_cast<double>(row[x1]),
-                                                           boost::lexical_cast<double>(row[y1]),
-                                                           );
-*/
                 v.coord = navitia::type::GeographicalCoord(str_to_double(row[x1]),
                                                            str_to_double(row[y1]),
-                                                           proj_lambert93);
+                                                           proj_lambert2e);
 
             } catch(...){
                 std::cout << "coord : " << row[x1] << ";" << row[y1] << std::endl;
@@ -108,14 +103,10 @@ void BDTopoParser::load_streetnetwork(ns::GeoRef & street_network){
         if(it == vertex_map.end()){
             Vertex v;
             try{
-/*
                 v.coord = navitia::type::GeographicalCoord(boost::lexical_cast<double>(row[x2]),
                                                            boost::lexical_cast<double>(row[y2]),
                                                            proj_lambert2e);
-*/
-                v.coord = navitia::type::GeographicalCoord(str_to_double(row[x2]),
-                                                           str_to_double(row[y2]),
-                                                           proj_lambert93);
+
             } catch(...){
                 std::cout << "coord : " << row[x2] << ";" << row[y2] << std::endl;
             }
@@ -125,26 +116,11 @@ void BDTopoParser::load_streetnetwork(ns::GeoRef & street_network){
 
         Edge e1, e2;
         try{
-            //e1.length = e2.length = boost::lexical_cast<double>(row[l]);
             e1.length = e2.length = str_to_double(row[l]);
         }catch(...){
             std::cout << "longueur :( " << row[l] << std::endl;
         }
-/*
-        try{
-            e1.start_number = boost::lexical_cast<int>(row[n_deb_d]);
-            e1.end_number = boost::lexical_cast<int>(row[n_fin_d]);
-            e2.start_number = boost::lexical_cast<int>(row[n_deb_g]);
-            e2.end_number = boost::lexical_cast<int>(row[n_fin_g]);
-        }
-        catch(...){
-            e1.start_number = -1;
-            e1.end_number = -1;
-            e2.start_number = -1;
-            e2.end_number = -1;
-            //std::cout << row[n_deb_d] << ", " << row[n_fin_d] << ", " << row[n_deb_g] << ", " << row[n_fin_g] << std::endl;
-        }
-*/
+
         boost::add_edge(source, target, e1, street_network.graph);
         boost::add_edge(target, source, e2, street_network.graph);
 
@@ -155,10 +131,10 @@ void BDTopoParser::load_streetnetwork(ns::GeoRef & street_network){
 
         hn_deb_d.coord = hn_deb_g.coord = navitia::type::GeographicalCoord(str_to_double(row[x1]),
                                                                    str_to_double(row[y1]),
-                                                                   proj_lambert93);
+                                                                   proj_lambert2e);
         hn_fin_d.coord = hn_fin_g.coord = navitia::type::GeographicalCoord(str_to_double(row[x2]),
                                                                    str_to_double(row[y2]),
-                                                                   proj_lambert93);
+                                                                   proj_lambert2e);
 
         std::string way_key;
         if(row[insee].substr(0,2) == "75")
