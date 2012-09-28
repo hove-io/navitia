@@ -13,7 +13,6 @@ Spécifications générales
    modules/metadata
    modules/phonetic
    modules/planner
-   modules/planner2
    modules/ptref
    modules/streetnetwork
    modules/vptranslate

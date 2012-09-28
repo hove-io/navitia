@@ -1,5 +1,5 @@
-Planner2
-========
+Planner_algo
+============
 
 .. toctree::
    :maxdepth: 2
