@@ -1,17 +1,21 @@
 #pragma once
 #include "raptor.h"
 #include "type/type.pb.h"
-#include "boost/date_time/gregorian_calendar.hpp"
+#include "boost/date_time/posix_time/ptime.hpp"
 
 namespace navitia { namespace routing { namespace raptor {
 
 pbnavitia::Response make_response(RAPTOR &raptor,
-                                  const type::EntryPoint &departure,
+                                  const type::EntryPoint &origin,
                                   const type::EntryPoint &destination,
-                                  int time,
-                                  const boost::gregorian::date &date,
-                                  const senscompute sens,
-                                  //streetnetwork::StreetNetworkWorker & worker);
+                                  const boost::posix_time::ptime &datetime,
+                                  bool clockwise,
                                   georef::StreetNetworkWorker & worker);
 
+pbnavitia::Response make_response(RAPTOR &raptor,
+                                  const type::EntryPoint &origin,
+                                  const type::EntryPoint &destination,
+                                  const std::vector<std::string> &datetimes,
+                                  bool clockwise,
+                                  georef::StreetNetworkWorker & worker);
 }}}

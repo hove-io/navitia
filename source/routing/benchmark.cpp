@@ -7,6 +7,7 @@
 #include <boost/progress.hpp>
 #include <random>
 #include <fstream>
+//#include <valgrind/callgrind.h>
 
 using namespace navitia;
 using namespace routing;
@@ -108,10 +109,15 @@ int main(int argc, char** argv){
         std::cout << "On lance le benchmark de l'algo " << algo << std::endl;
         boost::progress_display show_progress(demands.size());
         Timer t("Calcul avec l'algorithme " + algo);
+        //ProfilerStart("bench.prof");
         for(auto demand : demands){
             ++show_progress;
             Timer t2;
+            //CALLGRIND_START_INSTRUMENTATION;
+
             auto res = router->compute(demand.start, demand.target, demand.hour, demand.date);
+            //CALLGRIND_STOP_INSTRUMENTATION;
+
             Path path;
             if(res.size() > 0) {
                 path = res[0];
@@ -121,6 +127,7 @@ int main(int argc, char** argv){
             result.time = t2.ms();
             results[algo].push_back(result);
         }
+        //ProfilerStop();
         delete router;
     }
 

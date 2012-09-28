@@ -77,7 +77,7 @@ struct best_dest {
         auto it = map_date_time.find(spid);
         if(it != map_date_time.end()) {
             it->second = t;
-            if(t < best_now) {
+            if(t.dt <= best_now.dt) {
                 best_now = t;
                 best_now_spid = spid;
                 count = cnt;
@@ -91,7 +91,7 @@ struct best_dest {
         auto it = map_date_time.find(spid);
         if(it != map_date_time.end()) {
             it->second = t;
-            if(t > best_now && t.dt != DateTime::min) {
+            if(t >= best_now && t.dt != DateTime::min) {
                 best_now = t;
                 best_now_spid = spid;
                 count = cnt;
@@ -106,6 +106,11 @@ struct best_dest {
         best_now = type_retour();
         best_now_spid = std::numeric_limits<unsigned int>::max();
         count = 0;
+    }
+
+    void reinit(DateTime borne) {
+        reinit();
+        best_now.dt = borne;
     }
 
     void reverse() {

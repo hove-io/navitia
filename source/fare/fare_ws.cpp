@@ -72,7 +72,8 @@ class Worker : public BaseWorker<Data> {
         time ( &rawtime );
         timeinfo = localtime ( &rawtime );
 
-        if(request.params["safemode"] == "0")
+        auto safemode = request.params.find("safemode");
+        if(safemode != request.params.end() && safemode->second == "0")
             rd.response << "<Hit Ide=\"%d\" "
                         << "Date=\""<< timeinfo->tm_mday << "\" "
                         << "Month=\"" << (timeinfo->tm_mon + 1)<< "\" "

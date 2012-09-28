@@ -100,9 +100,9 @@ namespace webservice
                 std::vector<std::string> elts;
                 boost::algorithm::split(elts, token, boost::algorithm::is_any_of("="));
                 if(elts.size() == 1 && elts[0] != "")
-                    request.params[boost::algorithm::to_lower_copy(elts[0])] = "";
+                    request.params.insert(std::make_pair(boost::algorithm::to_lower_copy(elts[0]), ""));
                 else if(elts.size() >= 2 && elts[0] != "")
-                    request.params[boost::algorithm::to_lower_copy(elts[0])] = elts[1];
+                    request.params.insert(std::make_pair(boost::algorithm::to_lower_copy(elts[0]), elts[1]));
             }
 
             std::vector<std::string> tokens2;
@@ -110,9 +110,9 @@ namespace webservice
             for(std::string token : tokens2) {
                 size_t pos = token.find("=");
                 if(pos != std::string::npos && token != "")
-                    request.params[boost::algorithm::to_lower_copy(token.substr(0, pos))] = token.substr(pos +1);
+                    request.params.insert(std::make_pair(boost::algorithm::to_lower_copy(token.substr(0, pos)), token.substr(pos +1)));
                 else if(token.size() > 0 && token[0] != '=')
-                    request.params[boost::algorithm::to_lower_copy(token)] = "";
+                    request.params.insert(std::make_pair(boost::algorithm::to_lower_copy(token), ""));
             }
             
 
@@ -254,7 +254,7 @@ namespace webservice
                 return rd;
             }
 
-            std::string api = request.params["api"];
+            std::string api = request.params.find("api")->second;
 
             if(apis.find(api) == apis.end()){
                 rd.response << "<p>L'API " << api << " est inconnue"

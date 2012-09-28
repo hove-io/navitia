@@ -90,6 +90,7 @@ public:
 
     void update(uint32_t hour) {
         int date = this->date();
+
         if(hour > 86400)
             hour -= 86400;
         if(this->hour() > hour) {
@@ -231,17 +232,8 @@ public :
 };
 
 /** Classe abstraite que tous les calculateurs doivent implémenter */
-
-enum senscompute {
-    partirapres,
-    arriveravant,
-    partirapresrab,
-    arriveravantrab,
-    inconnu
-};
-
 struct AbstractRouter {
-    virtual std::vector<Path> compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day, senscompute sens = partirapres) = 0;
+    virtual std::vector<Path> compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day, bool clockwise = true) = 0;
 };
 
 }}

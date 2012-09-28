@@ -6,6 +6,7 @@
 #include "routing/raptor.h"
 #include "naviMake/build_helper.h"
 
+
 using namespace navitia;
 using namespace routing::raptor;
 
@@ -19,11 +20,11 @@ BOOST_AUTO_TEST_CASE(direct){
 
     type::PT_Data & d = data.pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 0, routing::partirapres);
+    auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 0);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
-    auto res = res1[0];
+    auto res = res1.back();
     BOOST_REQUIRE_EQUAL(res.items.size(), 1);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
@@ -31,6 +32,40 @@ BOOST_AUTO_TEST_CASE(direct){
     BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 8100);
     BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
     BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 0, routing::DateTime(0, 8200));
+
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+    BOOST_REQUIRE_EQUAL(res.items.size(), 1);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
+    BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8050);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 8100);
+    BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
+
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 0, routing::DateTime(0, 8100));
+
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+    BOOST_REQUIRE_EQUAL(res.items.size(), 1);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
+    BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8050);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 8100);
+    BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
+
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 0, routing::DateTime(0, 8099));
+
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
+
+
 }
 
 BOOST_AUTO_TEST_CASE(change){
@@ -43,7 +78,7 @@ BOOST_AUTO_TEST_CASE(change){
     RAPTOR raptor(data);
     type::PT_Data & d = data.pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[4].idx, 7900, 0, routing::partirapres);
+    auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[4].idx, 7900, 0);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
     auto res = res1[0];
@@ -58,6 +93,42 @@ BOOST_AUTO_TEST_CASE(change){
     BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8300);
     BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
     BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 0);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[4].idx, 7900, 0, routing::DateTime(0,8400));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1[0];
+    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 4);
+    BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8050);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 8100);
+    BOOST_CHECK_EQUAL(res.items[1].departure.hour(), 8250);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8300);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 0);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[4].idx, 7900, 0, routing::DateTime(0, 8300));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1[0];
+    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 4);
+    BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8050);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 8100);
+    BOOST_CHECK_EQUAL(res.items[1].departure.hour(), 8250);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8300);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 0);    
+    
+    
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[4].idx, 7900, 0,routing::DateTime(0, 8299));
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(passe_minuit){
@@ -70,10 +141,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     RAPTOR raptor(data);
     type::PT_Data & d = data.pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0, routing::partirapres);
+    auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
-    auto res = res1[0];
+    auto res = res1.back();
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
@@ -81,6 +152,33 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
     BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
     BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 1);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0, routing ::DateTime(1, 8500));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
+    BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 1);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0, routing::DateTime(1, 20*60));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
+    BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 1);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0, routing::DateTime(1, (20*60)-1));
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(passe_minuit_2){
@@ -93,11 +191,11 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2){
     RAPTOR raptor(data);
     type::PT_Data & d = data.pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0, routing::partirapres);
+    auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
-    auto res = res1[0];
+    auto res = res1.back();
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
@@ -105,11 +203,41 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2){
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
     BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
     BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 1);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0, routing::DateTime(1, 5000));
+
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
+    BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 1);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0, routing::DateTime(1, 20*60));
+
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
+    BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 1);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0, routing::DateTime(1, (20*60)-1));
+
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(passe_minuit_interne){
     navimake::builder b("20120614");
-    b.vj("A")("stop1", 23*3600)("stop2", 23*3600 + 30*60, 24*3600 + 30*60)("stop3", 24*40+3600);
+    b.vj("A")("stop1", 23*3600)("stop2", 23*3600 + 30*60, 24*3600 + 30*60)("stop3", 24*3600 + 40 * 60);
     type::Data data;
     b.build(data.pt_data);
     data.build_raptor();
@@ -117,10 +245,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
 
     type::PT_Data & d = data.pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0, routing::partirapres);
+    auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
-    auto res = res1[0];
+    auto res = res1.back();
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 1);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
@@ -128,6 +256,33 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
     BOOST_CHECK_EQUAL(res.items[0].stop_points[2], 2);
     BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 1);
     BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0, routing::DateTime(1, 3600));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+
+    BOOST_REQUIRE_EQUAL(res.items.size(), 1);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[2], 2);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 1);
+    BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0, routing::DateTime(1, 40*60));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+
+    BOOST_REQUIRE_EQUAL(res.items.size(), 1);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[2], 2);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 1);
+    BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0, routing::DateTime(1, (40*60)-1));
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(validity_pattern){
@@ -141,14 +296,35 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
 
     type::PT_Data & d = data.pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7800, 0, routing::partirapres);
+    auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7800, 0);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+
 
     auto res = res1.back();
     BOOST_REQUIRE_EQUAL(res.items.size(), 1);
     BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 9200);
 
-    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 1, routing::partirapres);
+    
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7800, 0, routing::DateTime(0, 10000));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    res = res1.back();
+    BOOST_REQUIRE_EQUAL(res.items.size(), 1);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 9200);
+
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7800, 0, routing::DateTime(0, 9200));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    res = res1.back();
+    BOOST_REQUIRE_EQUAL(res.items.size(), 1);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 9200);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7800, 0, routing::DateTime(0, 9199));
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
+    
+    
+    
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 1);
     BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
 
@@ -165,13 +341,32 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
     RAPTOR raptor(data);
     type::PT_Data & d = data.pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7900, 0, routing::partirapres);
+    auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7900, 0);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
-    auto res = res1[0];
+    auto res = res1.back();
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 3);
     BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 9200);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7900, 0, routing::DateTime(0,10000));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+
+    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
+    BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 9200);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7900, 0, routing::DateTime(0,9200));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+
+    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
+    BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 9200);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[3].idx, 7900, 0, routing::DateTime(0,9199));
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
 
 
@@ -187,14 +382,35 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_fin){
     RAPTOR raptor(data);
     type::PT_Data & d = data.pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 7900, 0, routing::partirapres);
+    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 7900, 0);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
-    auto res = res1[0];
+    auto res = res1.back();
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
     BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8200+10*60);
+
+    res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 7900, 0, routing::DateTime(0, 9200+10*60));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+
+    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8200+10*60);
+
+    res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 7900, 0, routing::DateTime(0, 8200+10*60));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+
+    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8200+10*60);
+
+    res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 7900, 0, routing::DateTime(0, (8200+10*60)-1));
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
@@ -209,14 +425,35 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
     RAPTOR raptor(data);
     type::PT_Data & d = data.pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 7900, 0, routing::partirapres);
+    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 7900, 0);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
-    auto res = res1[0];
+    auto res = res1.back();
     BOOST_REQUIRE_EQUAL(res.items.size(), 3);
     BOOST_CHECK_EQUAL(res.items[2].stop_points[1], 3);
     BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 2*3600+20);
     BOOST_CHECK_EQUAL(res.items[2].arrival.date(), 1);
+
+    res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 7900, 0, routing::DateTime(1 , (3*3600+20)));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], 3);
+    BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 2*3600+20);
+    BOOST_CHECK_EQUAL(res.items[2].arrival.date(), 1);
+
+    res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 7900, 0, routing::DateTime(1 , (2*3600+20)));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], 3);
+    BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 2*3600+20);
+    BOOST_CHECK_EQUAL(res.items[2].arrival.date(), 1);
+
+    res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 7900, 0, routing::DateTime(1 , (2*3600+20)-1));
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
 
 
@@ -232,7 +469,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_debut) {
     RAPTOR raptor(data);
     type::PT_Data & d = data.pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 7900, 0, routing::partirapres);
+    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 7900, 0);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
     auto res = res1.back();
@@ -240,6 +477,27 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_debut) {
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 3);
     BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 40000);
+
+    res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 7900, 0, routing::DateTime(0, 50000));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+
+    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 3);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 40000);
+
+    res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 7900, 0, routing::DateTime(0, 40000));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+
+    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 3);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 40000);
+
+    res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 7900, 0, routing::DateTime(0, 40000 - 1));
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_rattrapage) {
@@ -253,7 +511,7 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
     RAPTOR raptor(data);
 
     type::PT_Data & d = data.pt_data;
-    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 8*3600 + 15*60, 0, routing::partirapres);
+    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 8*3600 + 15*60, 0);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
@@ -269,6 +527,44 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
     BOOST_CHECK_EQUAL(res.items[2].stop_points[1], 3);
     BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8*3600+20*60);
     BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 8*3600+45*60);
+    
+    res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 8*3600 + 15*60, 0, routing::DateTime(0, (9*3600+45*60)));
+
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+
+
+    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[2], 2);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[0], 2);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], 3);
+    BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8*3600+20*60);
+    BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 8*3600+45*60);
+    
+    res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 8*3600 + 15*60, 0, routing::DateTime(0, (8*3600+45*60)));
+
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res = res1.back();
+
+
+    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
+    BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
+    BOOST_CHECK_EQUAL(res.items[1].stop_points[2], 2);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[0], 2);
+    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], 3);
+    BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8*3600+20*60);
+    BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 8*3600+45*60);
+    
+    res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 8*3600 + 15*60, 0, routing::DateTime(0, (8*3600+45*60)-1));
+
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(pam_veille) {
@@ -282,7 +578,7 @@ BOOST_AUTO_TEST_CASE(pam_veille) {
 
     type::PT_Data & d = data.pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas.at(1).idx, d.stop_areas.at(3).idx, 5*60, 1, routing::partirapres);
+    auto res1 = raptor.compute(d.stop_areas.at(1).idx, d.stop_areas.at(3).idx, 5*60, 1);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 }
