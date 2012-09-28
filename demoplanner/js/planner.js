@@ -144,12 +144,27 @@ function clickmap(event_name, event_source, event_args) {
 window.onload= function() {
 
             map = new mxn.Mapstraction('mapdiv', 'openlayers');
-
-            var latlon = new mxn.LatLonPoint(48.866667, 2.333333);
-            map.setCenterAndZoom(latlon, 13);
             map.click.addHandler(clickmap);
             $("#go").click(planner);
+            $("#centrer").change(function() {
+                var sels = $("#centrer option:selected");
+                var sel = sels[0].value;
+                centrer(sel);
+            } );
+            centrer("paris");
         }
+
+function centrer(ville) {
+    var villes = {
+                    "paris" : {"x" :48.85341 ,"y": 2.3488, "zoom" : 13},
+                    "lille" : {"x" :50.6367, "y" : 3.0373, "zoom" : 13},
+                    "lyon"  : {"x" :45.74846, "y" : 4.84671, "zoom" : 13}
+                  };
+    
+    var latlon = new mxn.LatLonPoint(villes[ville].x, villes[ville].y);
+    map.setCenterAndZoom(latlon, villes[ville].zoom);
+
+}
 
 $(function() {
       $( "#departure" ).autocomplete({
