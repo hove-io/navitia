@@ -36,7 +36,8 @@ void create_pb(const std::vector<FirstLetter<nt::idx_t>::fl_quality>& result, co
         case nt::Type_e::eWay:
             child = item->mutable_way();
             fill_pb_object<nt::Type_e::eWay>(result_item.idx, data, child, 2);
-            item->set_name(data.street_network.ways[result_item.idx].name);
+            //item->set_name(data.street_network.ways[result_item.idx].name);
+            item->set_name(data.geo_ref.ways[result_item.idx].name);
 //            item->set_uri(nt::EntryPoint::get_uri(data.pt_data.stop_points[result_item.idx]));
             item->set_quality(result_item.quality);
             break;
@@ -65,7 +66,8 @@ pbnavitia::Response firstletter(const std::string &name, const std::vector<nt::T
             result = d.pt_data.city_first_letter.find_complete(name);
             break;
         case nt::Type_e::eWay:
-            result = d.street_network.fl.find_complete(name);
+            //result = d.street_network.fl.find_complete(name);
+            result = d.geo_ref.fl.find_complete(name);
             break;
         default: break;
         }

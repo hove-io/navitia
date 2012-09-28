@@ -5,10 +5,12 @@
 
 #include <boost/test/unit_test.hpp>
 
-using namespace navitia::streetnetwork;
+//using namespace navitia::streetnetwork;
+using namespace navitia::georef;
 using namespace boost;
 BOOST_AUTO_TEST_CASE(outil_de_graph) {
-    StreetNetwork sn;
+    //StreetNetwork sn;
+    GeoRef sn;
     GraphBuilder builder(sn);
     Graph & g = sn.graph;
 
@@ -98,7 +100,8 @@ BOOST_AUTO_TEST_CASE(projection) {
 }
 
 BOOST_AUTO_TEST_CASE(nearest_segment){
-    StreetNetwork sn;
+    //StreetNetwork sn;
+    GeoRef sn;
     GraphBuilder b(sn);
 
     /*               a           e
@@ -127,7 +130,8 @@ BOOST_AUTO_TEST_CASE(nearest_segment){
 // Est-ce que le calcul de plusieurs nœuds vers plusieurs nœuds fonctionne
 BOOST_AUTO_TEST_CASE(compute_route_n_n){
     using namespace navitia::type;
-    StreetNetwork sn;
+    //StreetNetwork sn;
+    GeoRef sn;
     GraphBuilder b(sn);
 
     /*               a           e
@@ -163,7 +167,8 @@ BOOST_AUTO_TEST_CASE(compute_route_n_n){
 
 // On teste la prise en compte de la distance initiale au nœud
 BOOST_AUTO_TEST_CASE(compute_zeros){
-    StreetNetwork sn;
+    //StreetNetwork sn;
+    GeoRef sn;
     GraphBuilder b(sn);
     b("a", "o", 1)("b", "o",2);
     std::vector<vertex_t> starts = {b.get("a"), b.get("b")};
@@ -183,7 +188,8 @@ BOOST_AUTO_TEST_CASE(compute_zeros){
 // Est-ce que les indications retournées sont bonnes
 BOOST_AUTO_TEST_CASE(compute_directions){
     using namespace navitia::type;
-    StreetNetwork sn;
+    //StreetNetwork sn;
+    GeoRef sn;
     GraphBuilder b(sn);
     Way w;
     w.name = "Jaures"; sn.ways.push_back(w);
@@ -216,7 +222,8 @@ BOOST_AUTO_TEST_CASE(compute_directions){
 // On teste le calcul d'itinéraire de coordonnées à coordonnées
 BOOST_AUTO_TEST_CASE(compute_coord){
     using namespace navitia::type;
-    StreetNetwork sn;
+    //StreetNetwork sn;
+    GeoRef sn;
     GraphBuilder b(sn);
 
     /*           a+------+b
@@ -250,7 +257,8 @@ BOOST_AUTO_TEST_CASE(compute_coord){
 
 BOOST_AUTO_TEST_CASE(compute_nearest){
     using namespace navitia::type;
-    StreetNetwork sn;
+    //StreetNetwork sn;
+    GeoRef sn;
     GraphBuilder b(sn);
 
     /*       1             2

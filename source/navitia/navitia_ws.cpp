@@ -25,7 +25,8 @@ namespace bg = boost::gregorian;
 class Worker : public BaseWorker<navitia::type::Data> {  
 
     std::unique_ptr<navitia::routing::raptor::RAPTOR> calculateur;
-    std::unique_ptr<navitia::streetnetwork::StreetNetworkWorker> street_network_worker;
+    //std::unique_ptr<navitia::streetnetwork::StreetNetworkWorker> street_network_worker;
+    std::unique_ptr<navitia::georef::StreetNetworkWorker> street_network_worker;
 
     log4cplus::Logger logger;
 
@@ -287,7 +288,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
             }
             if(d.last_load_at != this->last_load_at || !calculateur){
                 calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(d));
-                street_network_worker = std::unique_ptr<navitia::streetnetwork::StreetNetworkWorker>(new navitia::streetnetwork::StreetNetworkWorker(d.street_network));
+                //street_network_worker = std::unique_ptr<navitia::streetnetwork::StreetNetworkWorker>(new navitia::streetnetwork::StreetNetworkWorker(d.street_network));
+                street_network_worker = std::unique_ptr<navitia::georef::StreetNetworkWorker>(new navitia::georef::StreetNetworkWorker(d.geo_ref));
                 this->last_load_at = d.last_load_at;
 
                 LOG4CPLUS_INFO(logger, "instanciation du calculateur");

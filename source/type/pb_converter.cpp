@@ -77,7 +77,8 @@ void fill_pb_object<nt::Type_e::eStopPoint>(nt::idx_t idx, const nt::Data& data,
 template<>
 void fill_pb_object<nt::Type_e::eWay>(nt::idx_t idx, const nt::Data& data, google::protobuf::Message* message, int max_depth){
     pbnavitia::Way* way = dynamic_cast<pbnavitia::Way*>(message);
-    navitia::streetnetwork::Way w = data.street_network.ways.at(idx);
+    //navitia::streetnetwork::Way w = data.street_network.ways.at(idx);
+    navitia::georef::Way w = data.geo_ref.ways.at(idx);
     way->set_name(w.name);
     /*stop_point->mutable_coord()->set_x(sp.coord.x);
     stop_point->mutable_coord()->set_y(sp.coord.y);*/

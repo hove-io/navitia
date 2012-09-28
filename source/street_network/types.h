@@ -12,7 +12,8 @@
 #include <map>
 
 namespace nt = navitia::type;
-namespace navitia { namespace streetnetwork {
+//namespace navitia { namespace streetnetwork {
+namespace navitia { namespace georef {
 
 /** Propriétés Nœud (intersection entre deux routes) */
 struct Vertex {
@@ -24,18 +25,17 @@ struct Vertex {
 };
 
 /** Propriétés des arcs */
+
 struct Edge {
     nt::idx_t way_idx; //< indexe vers le nom de rue
     float length; //< longeur en mètres de l'arc
     bool cyclable; //< est-ce que le segment est accessible à vélo ?
-    int start_number; //< numéro de rue au début du segment
-    int end_number; //< numéro de rue en fin de segment
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & way_idx & length & cyclable & start_number & end_number;
+        ar & way_idx & length & cyclable;// & start_number & end_number;
     }
 
-    Edge() : way_idx(0), length(0), cyclable(false), start_number(-1), end_number(-1){}
+    Edge() : way_idx(0), length(0), cyclable(false){}//, start_number(-1), end_number(-1){}
 };
 
 // Plein de typedefs pour nous simpfilier un peu la vie
@@ -60,19 +60,33 @@ typedef boost::graph_traits<Graph>::vertex_iterator vertex_iterator;
 /// Type itérateur sur les arcs du graphe
 typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
 
+// le numéro de la maison : il représente un point dans la rue, voie
+struct HouseNumber{
+    nt::GeographicalCoord coord;
+    int number;
+    HouseNumber(): number(-1){}
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar & coord & number;
+    }
+};
+
 /** Nommage d'une voie (anciennement "adresse"). Typiquement le nom de rue **/
-struct Way{
+struct Way :public nt::Nameable{
     nt::idx_t idx;
-    std::string name;
+    std::string way_type;
     std::string city;
     nt::idx_t city_idx;
+    std::vector< HouseNumber > house_number_left;
+    std::vector< HouseNumber > house_number_right;
     std::vector< std::pair<vertex_t, vertex_t> > edges;
 
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & idx & name & city & edges & city_idx;
+      ar & idx & name & comment & way_type & city & city_idx & house_number_left & house_number_right & edges;
     }
 };
+
 
 /** Un bout d'itinéraire : un nom de voie et une liste de segments */
 struct PathItem{
@@ -90,7 +104,9 @@ struct Path {
 };
 
 /** Structure contenant tout ce qu'il faut savoir sur le référentiel de voirie */
-struct StreetNetwork {
+//struct StreetNetwork {
+struct GeoRef {
+
     /// Liste des voiries
     std::vector<Way> ways;
 
@@ -134,6 +150,7 @@ struct StreetNetwork {
       * Pour le trouver, on cherche le nœud le plus proche, puis pour chaque arc adjacent, on garde le plus proche
       * Ce n'est donc pas optimal, mais pour améliorer ça, il faudrait indexer des segments, ou ratisser plus large
      */
+
     edge_t nearest_edge(const type::GeographicalCoord &coordinates) const;
     edge_t nearest_edge(const type::GeographicalCoord &coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
 
@@ -186,7 +203,8 @@ struct ProjectionData {
     double target_distance;
 
     /// Initialise la structure à partir d'une coordonnée et d'un graphe sur lequel on projette
-    ProjectionData(const type::GeographicalCoord & coord, const StreetNetwork &sn, const proximitylist::ProximityList<vertex_t> &prox);
+    //ProjectionData(const type::GeographicalCoord & coord, const StreetNetwork &sn, const proximitylist::ProximityList<vertex_t> &prox);
+    ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, const proximitylist::ProximityList<vertex_t> &prox);
 };
 
 /** Permet de construire un graphe de manière simple
@@ -195,13 +213,15 @@ struct ProjectionData {
   */
 struct GraphBuilder{
     /// Graphe que l'on veut construire
-    StreetNetwork & street_network;
+    //StreetNetwork & street_network;
+    GeoRef & street_network;
 
     /// Associe une chaine de caractères à un nœud
     std::map<std::string, vertex_t> vertex_map;
 
     /// Le constructeur : on précise sur quel graphe on va construire
-    GraphBuilder(StreetNetwork & street_network) : street_network(street_network){}
+    //GraphBuilder(StreetNetwork & street_network) : street_network(street_network){}
+    GraphBuilder(GeoRef & street_network) : street_network(street_network){}
 
     /// Ajoute un nœud, s'il existe déjà, les informations sont mises à jour
     GraphBuilder & add_vertex(std::string node_name, float x, float y);
@@ -239,7 +259,8 @@ std::pair<type::GeographicalCoord, float> project(type::GeographicalCoord point,
 /** Structures avec toutes les données écriture pour streetnetwork */
 struct StreetNetworkWorker {
 public:
-    StreetNetworkWorker(const StreetNetwork & street_network);
+    //StreetNetworkWorker(const StreetNetwork & street_network);
+    StreetNetworkWorker(const GeoRef & street_network);
 
     /** On définit les coordonnées de départ, un proximitylist et un rayon
      *
@@ -248,7 +269,8 @@ public:
     std::vector< std::pair<type::idx_t, double> > find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius);
 
 private:
-    const StreetNetwork & street_network;
+    //const StreetNetwork & street_network;
+    const GeoRef & street_network;
 
     /// Tableau des distances utilisé par Dijkstra
     std::vector<float> distances;

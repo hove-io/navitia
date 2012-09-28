@@ -47,7 +47,8 @@ struct builder{
     boost::gregorian::date begin;
 
     Data data;
-    navitia::streetnetwork::StreetNetwork street_network;
+    //navitia::streetnetwork::StreetNetwork street_network;
+    navitia::georef::GeoRef street_network;
 
 
     /// Il faut préciser là date de début des différents validity patterns

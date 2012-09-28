@@ -43,7 +43,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
     return pb_response;
 }
 
-std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPoint &ep, const type::Data & data, streetnetwork::StreetNetworkWorker & worker){
+//std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPoint &ep, const type::Data & data, streetnetwork::StreetNetworkWorker & worker){
+std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPoint &ep, const type::Data & data, georef::StreetNetworkWorker & worker){
     std::vector<std::pair<type::idx_t, double> > result;
 
     switch(ep.type) {
@@ -87,7 +88,8 @@ vector_idxretour to_idxretour(std::vector<std::pair<type::idx_t, double> > eleme
 }
 
 
-pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &departure, const type::EntryPoint &destination, int time, const boost::gregorian::date &date, const senscompute sens, streetnetwork::StreetNetworkWorker & worker) {
+//pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &departure, const type::EntryPoint &destination, int time, const boost::gregorian::date &date, const senscompute sens, streetnetwork::StreetNetworkWorker & worker) {
+pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &departure, const type::EntryPoint &destination, int time, const boost::gregorian::date &date, const senscompute sens, georef::StreetNetworkWorker & worker) {
     pbnavitia::Response response;
     if(time < 0 || time > 24*3600){
         response.set_error("Invalid hour");

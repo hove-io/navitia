@@ -425,7 +425,8 @@ int main(int argc, char** argv) {
 
     std::cout << "Remplissage des rues" << std::endl;
     for(const Way & osm_way : ways){
-        navitia::streetnetwork::Way w;
+        //navitia::streetnetwork::Way w;
+        navitia::georef::Way w;
         w.name = osm_way.name;
         for(auto admin_idx : osm_way.admin){
             for(auto city : data.pt_data.cities) {
@@ -434,7 +435,8 @@ int main(int argc, char** argv) {
                 }
             }
         }
-        data.street_network.ways.push_back(w);
+        //data.street_network.ways.push_back(w);
+        data.geo_ref.ways.push_back(w);
     }
 
     std::cout << "Construction de firstletter" << std::endl;

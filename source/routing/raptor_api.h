@@ -11,6 +11,7 @@ pbnavitia::Response make_response(RAPTOR &raptor,
                                   int time,
                                   const boost::gregorian::date &date,
                                   const senscompute sens,
-                                  streetnetwork::StreetNetworkWorker & worker);
+                                  //streetnetwork::StreetNetworkWorker & worker);
+                                  georef::StreetNetworkWorker & worker);
 
 }}}

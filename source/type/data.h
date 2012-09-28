@@ -40,7 +40,8 @@ public:
     PT_Data pt_data;
 
     /// streetnetwork
-    navitia::streetnetwork::StreetNetwork street_network;
+    //navitia::streetnetwork::StreetNetwork street_network;
+    navitia::georef::GeoRef geo_ref;
 
     /// Données précalculées pour le raptor
     routing::raptor::dataRAPTOR dataRaptor;
@@ -86,7 +87,8 @@ public:
             LOG4CPLUS_WARN(logger, boost::format("Attention le fichier de données est à la version %u (version actuelle : %d)") % version % v);
         }
 
-        ar & pt_data & street_network & meta;
+        //ar & pt_data & street_network & meta;
+        ar & pt_data & geo_ref & meta;
     }
 
     /** Sauvegarde la structure de fichier au format texte
