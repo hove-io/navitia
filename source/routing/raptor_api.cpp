@@ -97,6 +97,7 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
                                   const boost::posix_time::ptime &datetime, bool clockwise,
                                   streetnetwork::StreetNetworkWorker & worker) {
     pbnavitia::Response response;
+    response.set_requested_api(pbnavitia::PLANNER);
 
     if(!raptor.data.meta.production_date.contains(datetime.date())) {
         response.set_error("Date not in the production period");
