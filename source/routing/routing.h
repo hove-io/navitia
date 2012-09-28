@@ -204,6 +204,7 @@ struct Path {
     int duration;
     int nb_changes;
     int percent_visited;
+    boost::posix_time::ptime request_time;
     std::vector<PathItem> items;
 
     Path() : duration(0), nb_changes(0), percent_visited(0) {}
