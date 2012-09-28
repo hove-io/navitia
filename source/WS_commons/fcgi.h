@@ -16,7 +16,7 @@ namespace webservice {
         RequestData request_data;
         char *contentLength = FCGX_GetParam("CONTENT_LENGTH", handle->envp);
         if (contentLength != NULL)
-            len = std::min(strtol(contentLength, NULL, 10), 1024*10L);
+            len = std::min(strtol(contentLength, NULL, 10), 1024*100L);
 
         if(len > 0) {
             char * tmp_str = new char[len + 1];
