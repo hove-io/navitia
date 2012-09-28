@@ -109,17 +109,17 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
     auto departures = get_stop_points(origin, raptor.data, worker);
     auto destinations = get_stop_points(destination, raptor.data, worker);
     if(departures.size() == 0 && destinations.size() == 0){
-        response.mutable_planner()->set_response_type(pbnavitia::NO_DEPARTURE_NOR_DESTINATION_POINT);
+        response.mutable_planner()->set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         return response;
     }
 
     if(departures.size() == 0){
-        response.mutable_planner()->set_response_type(pbnavitia::NO_DEPARTURE_NOR_DESTINATION_POINT);
+        response.mutable_planner()->set_response_type(pbnavitia::NO_ORIGIN_POINT);
         return response;
     }
 
     if(destinations.size() == 0){
-        response.mutable_planner()->set_response_type(pbnavitia::NO_DEPARTURE_POINT);
+        response.mutable_planner()->set_response_type(pbnavitia::NO_DESTINATION_POINT);
         return response;
     }
 
@@ -174,17 +174,17 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
     auto departures = get_stop_points(origin, raptor.data, worker);
     auto destinations = get_stop_points(destination, raptor.data, worker);
     if(departures.size() == 0 && destinations.size() == 0){
-        response.mutable_planner()->set_response_type(pbnavitia::NO_DEPARTURE_NOR_DESTINATION_POINT);
+        response.mutable_planner()->set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         return response;
     }
 
     if(departures.size() == 0){
-        response.mutable_planner()->set_response_type(pbnavitia::NO_DEPARTURE_NOR_DESTINATION_POINT);
+        response.mutable_planner()->set_response_type(pbnavitia::NO_ORIGIN_POINT);
         return response;
     }
 
     if(destinations.size() == 0){
-        response.mutable_planner()->set_response_type(pbnavitia::NO_DEPARTURE_POINT);
+        response.mutable_planner()->set_response_type(pbnavitia::NO_DESTINATION_POINT);
         return response;
     }
 
