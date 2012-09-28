@@ -531,11 +531,20 @@ namespace navitia { namespace routing { namespace raptor {
         return makePath(retour, best, departs, destination_idx, countb);
     }
 
-    Path RAPTOR::makeBestPathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int count) {
+
+
+
+    Path RAPTOR::makeBestPathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs,
+                                     unsigned int destination_idx, unsigned int count) {
         return makePathreverse(retour, best, departs, destination_idx, count);
     }
 
-    std::vector<Path> RAPTOR::makePathes(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, best_dest &b_dest, unsigned int count) {
+
+
+
+
+    std::vector<Path> RAPTOR::makePathes(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs,
+                                         best_dest &b_dest, unsigned int count) {
         std::vector<Path> result;
 
         for(unsigned int i=1;i<=count;++i) {
@@ -553,7 +562,13 @@ namespace navitia { namespace routing { namespace raptor {
 
         return result;
     }
-    std::vector<Path> RAPTOR::makePathesreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, best_dest &b_dest, unsigned int count) {
+
+
+
+
+
+    std::vector<Path> RAPTOR::makePathesreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs,
+                                                best_dest &b_dest, unsigned int count) {
         std::vector<Path> result;
 
         for(unsigned int i=1;i<=count;++i) {
@@ -573,7 +588,13 @@ namespace navitia { namespace routing { namespace raptor {
     }
 
 
-    Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs, unsigned int destination_idx, unsigned int countb, bool reverse) {
+
+
+
+
+
+    Path RAPTOR::makePath(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs,
+                          unsigned int destination_idx, unsigned int countb, bool reverse) {
         Path result;
         unsigned int current_spid = destination_idx;
         type_retour r = retour[countb][current_spid];
@@ -691,10 +712,17 @@ namespace navitia { namespace routing { namespace raptor {
     }
 
 
+
+
+
     Path RAPTOR::makePathreverse(map_retour_t &retour, map_int_pint_t &best, vector_idxretour departs,
                                  unsigned int destination_idx, unsigned int countb) {
         return makePath(retour, best, departs, destination_idx, countb, true);
     }
+
+
+
+
 
 
     std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
@@ -705,6 +733,12 @@ namespace navitia { namespace routing { namespace raptor {
             return compute(departure_idx, destination_idx, departure_hour, departure_day, DateTime::min, clockwise);
 
     }
+
+
+
+
+
+
 
     std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
                                       int departure_day, DateTime borne, bool clockwise) {
