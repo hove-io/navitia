@@ -356,6 +356,12 @@ struct Worker : public BaseWorker<Data> {
         curl_easy_setopt(handle, CURLOPT_WRITEDATA, static_cast<void*>(&rd.response));
         curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, curl_callback);
 
+        if(!req.data.empty()){
+            curl_easy_setopt(handle, CURLOPT_POST, 1);
+            curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, req.data.size());
+            curl_easy_setopt(handle, CURLOPT_POSTFIELDS, req.data.c_str());
+        }
+
         LOG4CPLUS_TRACE(logger, "Execution de la requête : " + url);
         if(curl_easy_perform(handle) != 0){
             LOG4CPLUS_ERROR(logger, "Erreur lors de la requête curl : " + url);
