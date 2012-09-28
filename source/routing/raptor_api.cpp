@@ -13,8 +13,10 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
     pbnavitia::Response pb_response;
     pb_response.set_requested_api(pbnavitia::PLANNER);
 
+    pbnavitia::Planner * planner = pb_response.mutable_planner();
+    planner->set_response_type(pbnavitia::ITINERARY_FOUND);
     for(Path path : paths) {
-        pbnavitia::Journey * pb_journey = pb_response.mutable_planner()->add_journey();
+        pbnavitia::Journey * pb_journey = planner->add_journey();
         pb_journey->set_duration(path.duration);
         pb_journey->set_nb_transfers(path.nb_changes);
         for(PathItem & item : path.items){
@@ -95,21 +97,27 @@ vector_idxretour to_idxretour(std::vector<std::pair<type::idx_t, double> > eleme
 
 pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin, const type::EntryPoint &destination, const boost::posix_time::ptime &datetime, bool clockwise, streetnetwork::StreetNetworkWorker & worker) {
     pbnavitia::Response response;
+    response.set_requested_api(pbnavitia::PLANNER);
 
     if(!raptor.data.meta.production_date.contains(datetime.date())) {
-        response.set_error("Date not in the production period");
+        response.mutable_planner()->set_response_type(pbnavitia::DATE_OUT_OF_BOUNDS);
         return response;
     }
 
     auto departures = get_stop_points(origin, raptor.data, worker);
-    if(departures.size() == 0){
-        response.set_error("Departure point not found");
+    auto destinations = get_stop_points(destination, raptor.data, worker);
+    if(departures.size() == 0 && destinations.size() == 0){
+        response.mutable_planner()->set_response_type(pbnavitia::NO_DEPARTURE_NOR_DESTINATION_POINT);
         return response;
     }
 
-    auto destinations = get_stop_points(destination, raptor.data, worker);
+    if(departures.size() == 0){
+        response.mutable_planner()->set_response_type(pbnavitia::NO_DEPARTURE_NOR_DESTINATION_POINT);
+        return response;
+    }
+
     if(destinations.size() == 0){
-        response.set_error("Destination point not found");
+        response.mutable_planner()->set_response_type(pbnavitia::NO_DEPARTURE_POINT);
         return response;
     }
 
@@ -123,12 +131,18 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
     else
         result = raptor.compute_reverse_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day));
 
+    if(result.size() == 0){
+        response.mutable_planner()->set_response_type(pbnavitia::NO_SOLUTION);
+        return response;
+    }
+
     return make_pathes(result, raptor.data);
 }
 
 
 pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin, const type::EntryPoint &destination, const std::vector<std::string> &datetimes_str, bool clockwise, streetnetwork::StreetNetworkWorker & worker) {
     pbnavitia::Response response;
+    response.set_requested_api(pbnavitia::PLANNER);
 
     std::vector<boost::posix_time::ptime> datetimes;
     for(std::string datetime: datetimes_str){
@@ -136,7 +150,8 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
             boost::posix_time::ptime ptime;
             ptime = boost::posix_time::from_iso_string(datetime);
             if(!raptor.data.meta.production_date.contains(ptime.date())) {
-                response.set_error("Date not in the production period");
+                response.mutable_planner()->set_response_type(pbnavitia::DATE_OUT_OF_BOUNDS);
+                response.set_info("Example of invalid date: " + datetime);
                 return response;
             }
             datetimes.push_back(ptime);
@@ -147,14 +162,19 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
     }
 
     auto departures = get_stop_points(origin, raptor.data, worker);
-    if(departures.size() == 0){
-        response.set_error("Departure point not found");
+    auto destinations = get_stop_points(destination, raptor.data, worker);
+    if(departures.size() == 0 && destinations.size() == 0){
+        response.mutable_planner()->set_response_type(pbnavitia::NO_DEPARTURE_NOR_DESTINATION_POINT);
         return response;
     }
 
-    auto destinations = get_stop_points(destination, raptor.data, worker);
+    if(departures.size() == 0){
+        response.mutable_planner()->set_response_type(pbnavitia::NO_DEPARTURE_NOR_DESTINATION_POINT);
+        return response;
+    }
+
     if(destinations.size() == 0){
-        response.set_error("Destination point not found");
+        response.mutable_planner()->set_response_type(pbnavitia::NO_DEPARTURE_POINT);
         return response;
     }
 
