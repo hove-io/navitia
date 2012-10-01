@@ -224,12 +224,12 @@ message Section {
 message Journey {
     optional int32 duration = 1;
     optional int32 nb_transfers = 2;
-    repeated Section section = 3;
-    optional string departure_date_time = 4;
-    optional string arrival_date_time = 5;
-    optional string call_before = 6;
-    optional string call_after = 7;
-    optional string requested_date_time = 8;
+    optional string departure_date_time = 3;
+    optional string arrival_date_time = 4;
+    optional string requested_date_time = 5;
+    repeated Section section = 6;
+    optional string call_before = 7;
+    optional string call_after = 8;
 }
 
 enum ResponseType {
