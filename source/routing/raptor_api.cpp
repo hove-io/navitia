@@ -19,6 +19,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
         pbnavitia::Journey * pb_journey = planner->add_journey();
         pb_journey->set_duration(path.duration);
         pb_journey->set_nb_transfers(path.nb_changes);
+        pb_journey->set_requested_date_time(boost::posix_time::to_iso_string(path.request_time));
         for(PathItem & item : path.items){
             pbnavitia::Section * pb_section = pb_journey->add_section();
             pb_section->set_arrival_date_time(iso_string(d, item.arrival.date(), item.arrival.hour()));
@@ -71,7 +72,7 @@ std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPo
         }
     } break;
     case type::Type_e::eCoord: {
-        result = worker.find_nearest(ep.coordinates, data.pt_data.stop_point_proximity_list, 300);
+        result = worker.find_nearest(ep.coordinates, data.pt_data.stop_point_proximity_list, 1000);
     } break;
     default: break;
     }
@@ -138,6 +139,8 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
         return response;
     }
 
+    for(Path & path : result)
+        path.request_time = datetime;
     return make_pathes(result, raptor.data);
 }
 
@@ -204,6 +207,7 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
         else
             tmp = raptor.compute_reverse_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day), borne);
         if(tmp.size() > 0) {
+            tmp.back().request_time = datetime;
             result.push_back(tmp.back());
             borne = tmp.back().items.back().arrival;
         }

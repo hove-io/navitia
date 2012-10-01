@@ -229,6 +229,7 @@ message Journey {
     optional string arrival_date_time = 5;
     optional string call_before = 6;
     optional string call_after = 7;
+    optional string requested_date_time = 8;
 }
 
 enum ResponseType {
