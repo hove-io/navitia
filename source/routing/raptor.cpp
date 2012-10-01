@@ -331,26 +331,14 @@ namespace navitia { namespace routing { namespace raptor {
             return result;
         }
 
-
-
-//        retour.assign(20, data.dataRaptor.retour_constant);
-//        retour[0][b_dest.best_now_spid] = b_dest.best_now;
-//        retour[0][b_dest.best_now_spid].type = depart;
-//        best.assign(data.dataRaptor.retour_constant.begin(), data.dataRaptor.retour_constant.end());
-//        best[b_dest.best_now_spid] = b_dest.best_now;
-//        marked_sp.set(b_dest.best_now_spid);
-//        b_dest.reinit();
-
-//        for(auto & item : destinations) {
-//            b_dest.ajouter_destination(item.first, item.second);
-//            best[item.first] = item.second;
-//        }
-
         auto dep = std::make_pair(b_dest.best_now_spid, b_dest.best_now);
         if(dep.second.type == vj)
             dep.second.dt = DateTime(dep.second.dt.date(), data.pt_data.stop_times[b_dest.best_now.stid].arrival_time);
 
-        init({dep}, to_idxretour(destinations, DateTime::inf, true), true, dt_depart);
+
+
+        init({dep}/*to_idxretour(departs, DateTime(b_dest.best_now.dt.date(), data.pt_data.stop_times[b_dest.best_now.stid].arrival_time), false)*/,
+             to_idxretour(destinations, DateTime::inf, false), true, dt_depart);
 
         boucleRAPTOR();
 
@@ -431,7 +419,6 @@ namespace navitia { namespace routing { namespace raptor {
                                 auto r = type_retour(it_st->idx, embarquement, workingDt);
                                 if(b_dest.ajouter_best(spid, r, count))
                                     working_retour[spid] = r;
-
                             }
                         }
 
@@ -439,10 +426,10 @@ namespace navitia { namespace routing { namespace raptor {
                         const type_retour & retour_temp = prec_retour[spid];
                         if((retour_temp.type != uninitialized) &&
                             (t == -1 || retour_temp.dt <= DateTime(workingDt.date(), it_st->departure_time))) {
-                            DateTime dt = retour_temp.dt;
+                                DateTime dt = retour_temp.dt;
 
-                            if(retour_temp.type == vj)
-                                dt = dt + 120;
+//                            if(retour_temp.type == vj)
+//                                dt = dt + 120;
 
                             int etemp = earliest_trip(route, i, dt);
                             if(etemp >= 0) {
