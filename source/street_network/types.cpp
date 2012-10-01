@@ -11,6 +11,11 @@ namespace navitia{ namespace georef{
 // Exception levée dès que l'on trouve une destination
 struct DestinationFound{};
 
+void Way::sort_house_number(){
+    std::sort(house_number_right.begin(),house_number_right.end());
+    std::sort(house_number_left.begin(),house_number_left.end());
+}
+
 // Visiteur qui lève une exception dès qu'une des cibles souhaitées est atteinte
 struct target_visitor : public boost::dijkstra_visitor<> {
     const std::vector<vertex_t> & destinations;
@@ -164,8 +169,8 @@ Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::Ge
 }
 
 
-StreetNetworkWorker::StreetNetworkWorker(const GeoRef &street_network) :
-    street_network(street_network)
+StreetNetworkWorker::StreetNetworkWorker(const GeoRef &geo_ref) :
+    geo_ref(geo_ref)
 {}
 
 std::vector< std::pair<idx_t, double> > StreetNetworkWorker::find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<idx_t> & pl, double radius) {
@@ -173,26 +178,26 @@ std::vector< std::pair<idx_t, double> > StreetNetworkWorker::find_nearest(const 
 
     ProjectionData start;
     try{
-        start = ProjectionData(start_coord, this->street_network, this->street_network.pl);
+        start = ProjectionData(start_coord, this->geo_ref, this->geo_ref.pl);
     }catch(DestinationFound){}
 
 
-    street_network.init(this->distances, this->predecessors);
+    geo_ref.init(this->distances, this->predecessors);
 
     // On lance un dijkstra depuis les deux nœuds de départ
     distances[start.source] = start.source_distance;
     try{
-        street_network.dijkstra(start.source, distances, predecessors, distance_visitor(radius, distances));
+        geo_ref.dijkstra(start.source, distances, predecessors, distance_visitor(radius, distances));
     }catch(DestinationFound){}
     distances[start.target] = start.target_distance;
     try{
-        street_network.dijkstra(start.target, distances, predecessors, distance_visitor(radius, distances));
+        geo_ref.dijkstra(start.target, distances, predecessors, distance_visitor(radius, distances));
     }catch(DestinationFound){}
 
     proximitylist::ProximityList<vertex_t> temp_pl;
     for(vertex_t u = 0; u < predecessors.size(); ++u){
         if(predecessors[u] != u)
-            temp_pl.add(this->street_network.graph[u].coord, u);
+            temp_pl.add(this->geo_ref.graph[u].coord, u);
     }
     temp_pl.build();
 
@@ -210,7 +215,7 @@ std::vector< std::pair<idx_t, double> > StreetNetworkWorker::find_nearest(const 
 
             ProjectionData current;
         try{
-            current = ProjectionData(element.second, this->street_network, temp_pl);
+            current = ProjectionData(element.second, this->geo_ref, temp_pl);
         }catch(DestinationFound){}
 
         vertex_t best;
@@ -274,15 +279,15 @@ GraphBuilder & GraphBuilder::add_vertex(std::string node_name, float x, float y)
     vertex_t v;
     type::GeographicalCoord coord(x,y,false);
     if(it  == this->vertex_map.end()){
-        v = boost::add_vertex(this->street_network.graph);
+        v = boost::add_vertex(this->geo_ref.graph);
         vertex_map[node_name] = v;
     } else {
         v = it->second;
     }
 
-    this->street_network.graph[v].coord = coord;
-    this->street_network.pl.add(coord, v);
-    this->street_network.pl.build();
+    this->geo_ref.graph[v].coord = coord;
+    this->geo_ref.pl.add(coord, v);
+    this->geo_ref.pl.build();
     return *this;
 }
 
@@ -301,9 +306,9 @@ GraphBuilder & GraphBuilder::add_edge(std::string source_name, std::string targe
     Edge edge;
     edge.length = length >= 0? length : 0;
 
-    boost::add_edge(source, target, edge, this->street_network.graph);
+    boost::add_edge(source, target, edge, this->geo_ref.graph);
     if(bidirectionnal)
-        boost::add_edge(target, source, edge, this->street_network.graph);
+        boost::add_edge(target, source, edge, this->geo_ref.graph);
 
     return *this;
 }
@@ -317,7 +322,7 @@ edge_t GraphBuilder::get(const std::string &source_name, const std::string &targ
     vertex_t target = this->get(target_name);
     edge_t e;
     bool b;
-    boost::tie(e,b) =  boost::edge(source, target, this->street_network.graph);
+    boost::tie(e,b) =  boost::edge(source, target, this->geo_ref.graph);
     if(!b) throw proximitylist::NotFound();
     else return e;
 }

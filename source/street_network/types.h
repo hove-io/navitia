@@ -12,7 +12,7 @@
 #include <map>
 
 namespace nt = navitia::type;
-//namespace navitia { namespace streetnetwork {
+
 namespace navitia { namespace georef {
 
 /** Propriétés Nœud (intersection entre deux routes) */
@@ -66,6 +66,9 @@ struct HouseNumber{
     int number;
     HouseNumber(): number(-1){}
 
+    bool operator<(const HouseNumber & other) const{
+        return this->number < other.number;
+    }
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & coord & number;
     }
@@ -81,7 +84,7 @@ struct Way :public nt::Nameable{
     std::vector< HouseNumber > house_number_right;
     std::vector< std::pair<vertex_t, vertex_t> > edges;
 
-
+    void sort_house_number();
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
       ar & idx & name & comment & way_type & city & city_idx & house_number_left & house_number_right & edges;
     }
@@ -104,7 +107,6 @@ struct Path {
 };
 
 /** Structure contenant tout ce qu'il faut savoir sur le référentiel de voirie */
-//struct StreetNetwork {
 struct GeoRef {
 
     /// Liste des voiries
@@ -214,14 +216,14 @@ struct ProjectionData {
 struct GraphBuilder{
     /// Graphe que l'on veut construire
     //StreetNetwork & street_network;
-    GeoRef & street_network;
+    GeoRef & geo_ref;
 
     /// Associe une chaine de caractères à un nœud
     std::map<std::string, vertex_t> vertex_map;
 
     /// Le constructeur : on précise sur quel graphe on va construire
     //GraphBuilder(StreetNetwork & street_network) : street_network(street_network){}
-    GraphBuilder(GeoRef & street_network) : street_network(street_network){}
+    GraphBuilder(GeoRef & geo_ref) : geo_ref(geo_ref){}
 
     /// Ajoute un nœud, s'il existe déjà, les informations sont mises à jour
     GraphBuilder & add_vertex(std::string node_name, float x, float y);
@@ -260,7 +262,7 @@ std::pair<type::GeographicalCoord, float> project(type::GeographicalCoord point,
 struct StreetNetworkWorker {
 public:
     //StreetNetworkWorker(const StreetNetwork & street_network);
-    StreetNetworkWorker(const GeoRef & street_network);
+    StreetNetworkWorker(const GeoRef & geo_ref);
 
     /** On définit les coordonnées de départ, un proximitylist et un rayon
      *
@@ -270,7 +272,7 @@ public:
 
 private:
     //const StreetNetwork & street_network;
-    const GeoRef & street_network;
+    const GeoRef & geo_ref;
 
     /// Tableau des distances utilisé par Dijkstra
     std::vector<float> distances;

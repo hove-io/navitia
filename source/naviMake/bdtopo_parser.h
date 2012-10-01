@@ -24,7 +24,7 @@ class BDTopoParser {
          *
          */
         //void load_streetnetwork(navitia::streetnetwork::StreetNetwork & street_network);
-        void load_streetnetwork(navitia::georef::GeoRef & street_network);
+        void load_georef(navitia::georef::GeoRef & geo_ref);
         
 
     private:
