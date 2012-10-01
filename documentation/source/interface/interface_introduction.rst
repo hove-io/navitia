@@ -57,3 +57,9 @@ NAViTiA peut retourner les codes http suivants:
 Versioning d'interface
 ----------------------
 
+Attention, l'interface de sortie JSON est susceptible d'évoluer en "compatibilité ascendante":
+
+  * Les noeuds décris dans une version d'interface n seront toujours présent sous la même forme dans les versions n+1 (même nom, même "type")
+  * Des nouveaux noeuds sont susceptibles d'apparaitre, qui ne modifient pas la structure de l'interface n
+  * Aucun noeud ne disparait depuis une version n vers une version n+1
+

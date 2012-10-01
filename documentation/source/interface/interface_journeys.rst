@@ -5,7 +5,7 @@ La fonction Journeys est en charge des calculs d'itinéraires multi-modaux, mult
 Cette fonction est exposé sous différentes API de type GET
 
   * journeys: retourne les différents types d'itinéraires pertinents par rapport à une demande
-  * journeyarray: retourne la liste des itinéraires "arrivée au plus tôt" pour une liste d'horaire. Pour chaque horaire, une seule réponse sera fournit, celle-ci pouvant être "pas de solution".
+  * journeysarray: retourne la liste des itinéraires "arrivée au plus tôt" pour une liste d'horaire. Pour chaque horaire, une seule réponse sera fournit, celle-ci pouvant être "pas de solution".
 
 Paramètres d'entrée
 *******************
@@ -52,7 +52,7 @@ Paramètres spécifiques à l'API "Journeys"
 
 
 
-Paramètres spécifiques à l'API "JourneyArray"
+Paramètres spécifiques à l'API "JourneysArray"
 ---------------------------------------------
 
 +-----------------+--------------------------+-------------------------------------+------------------------------------------+
@@ -62,24 +62,57 @@ Paramètres spécifiques à l'API "JourneyArray"
 |                 | paramètre répété n fois  | Le fuseau horaire n’est pas géré    |   20121007T0807&DateTime[]=20121007T0853 |
 +-----------------+--------------------------+-------------------------------------+------------------------------------------+
 
+Exemple d'appel:
+
+http://www.navitia.com/journeysarray?format=json&origin=coord:4.915:45.731&destination=coord:4.825:45.760&datetime[]=20120930T0800&datetime[]=20120930T0900&datetime[]=20120930T1000&clockwise=1#jsonNav_l
+
 
 Format de sortie
 ****************
 
-  :download:'exemple de flux <../_static/example_journeys.json>'
+Itinéraire impossible
+---------------------
 
-  :download:'exemple de flux <../_static/example_journeyarray.json>'
+Les itinéraires sans solutions sont présentés sous la forme suivante:
 
-Transformation/calcul du service
-********************************
+.. image:: ../_static/ex_journey_noresponse.png
+
+La liste des types de non réponse est décrite de façon exhaustive dans le fichier navitia.proto
+
+Réponse au service "journeysarray"
+----------------------------------
+
 
 En sortie, NAViTiA fournit une liste d'objet "Journey" contenant chacun un itinéraire présenté intégralement.
 
 Cet itinéraire combine tous les modes couvert par le NAViTiA sous-jacent, c'est à dire, à minima, le mode piéton.
 
-En fonction du mode utilisé pour chaque étape ("Section") de l'itinéraire, le détail peut être composé d'un détail 
-suivant le filaire de voirie (pour les modes piéton, vélos, véhicule personnel...) 
-ou du détail des arrêts traversé pour les étapes en transport en commun.
+En fonction du mode utilisé pour chaque étape ("section") de l'itinéraire, le détail peut être
+
+  * soit de type "ROAD_NETWORK" ("filaire de voirie", pour les modes piéton, vélos, véhicule personnel...) 
+  * soit de type "PUBLIC_TRANSPORT" ("transport en commun" pour les modes bus, train, avion...) 
+
+La réponse repliée est structurée ainsi:
+
+
+.. image:: ../_static/ex_journey_folded.png
+
+
+Section de transport en commun dépliée:
+
+.. image:: ../_static/ex_journey_publictransport_unfolded.png
+
+
+Section de marche à pied dépliée:
+
+.. image:: ../_static/ex_journey_roadnetwork_unfolded.png
+
+
+Liste des points d'arrêts intermédiaires dépliée:
+
+.. image:: ../_static/ex_journey_stoppointlist_unfolded.png
+
+
 
 Exemple d'utilisation
 *********************
