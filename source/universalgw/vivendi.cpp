@@ -301,10 +301,10 @@ struct Worker : public BaseWorker<Data> {
             return rd;
         }
 
-        navitia::type::EntryPoint departure(boost::get<std::string>(req.parsed_params["departure"].value));
+        navitia::type::EntryPoint origin(boost::get<std::string>(req.parsed_params["origin"].value));
         navitia::type::EntryPoint destination(boost::get<std::string>(req.parsed_params["destination"].value));
 
-        std::string insee_departure = find(d.departements, departure.coordinates.x, departure.coordinates.y);
+        std::string insee_departure = find(d.departements, origin.coordinates.x, origin.coordinates.y);
         std::string insee_destination = find(d.departements, destination.coordinates.x, destination.coordinates.y);
 
         if(insee_departure.empty() || insee_destination.empty()){
@@ -356,6 +356,12 @@ struct Worker : public BaseWorker<Data> {
         curl_easy_setopt(handle, CURLOPT_WRITEDATA, static_cast<void*>(&rd.response));
         curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, curl_callback);
 
+        if(!req.data.empty()){
+            curl_easy_setopt(handle, CURLOPT_POST, 1);
+            curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, req.data.size());
+            curl_easy_setopt(handle, CURLOPT_POSTFIELDS, req.data.c_str());
+        }
+
         LOG4CPLUS_TRACE(logger, "Execution de la requête : " + url);
         if(curl_easy_perform(handle) != 0){
             LOG4CPLUS_ERROR(logger, "Erreur lors de la requête curl : " + url);
@@ -400,9 +406,13 @@ struct Worker : public BaseWorker<Data> {
         geos_handle = initGEOS_r(NULL, NULL);
 
         logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-        register_api("planner",boost::bind(&Worker::planner, this, _1, _2), "Effectue un calcul d'itinéraire entre deux coordonnées");
-        add_param("planner", "departure", "EntryPoint (coordonnées) de départ", ApiParameter::STRING, true);
-        add_param("planner", "destination", "EntryPoint (coordonnées) de destination", ApiParameter::STRING, true);
+        register_api("journeys",boost::bind(&Worker::planner, this, _1, _2), "Effectue un calcul d'itinéraire entre deux coordonnées");
+        add_param("journeys", "origin", "EntryPoint (coordonnées) de départ", ApiParameter::STRING, true);
+        add_param("journeys", "destination", "EntryPoint (coordonnées) de destination", ApiParameter::STRING, true);
+
+        register_api("journeysarray",boost::bind(&Worker::planner, this, _1, _2), "Effectue un calcul d'itinéraire entre deux coordonnées");
+        add_param("journeysarray", "origin", "EntryPoint (coordonnées) de départ", ApiParameter::STRING, true);
+        add_param("journeysarray", "destination", "EntryPoint (coordonnées) de destination", ApiParameter::STRING, true);
 
         register_api("status",boost::bind(&Worker::status, this, _1, _2), "Informations sur les données chargées");
 

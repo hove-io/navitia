@@ -32,9 +32,11 @@ Tous les modules sont des web-services REST.
 * http/JSON
 * http/ProtocolBuffer
 
-Chaque ressource étant proposée en lecture seule, seul les méthodes GET et POST sont implémentées.
+Chaque ressource étant proposée en lecture seule, seul les méthodes GET et POST sont implémentées. 
 
-Codes http gérés:
+Toutefois les méthodes GET sont limités à 2ko, et les méthodes POST à 100ko, il est donc conseillé d'utiliser les méthodes POST sur les longues URI (calcul d'itinéraire en particulier).
+
+NAViTiA peut retourner les codes http suivants:
 
 +-----------+------------------------------------+----------------------------------------------------------------------+
 | Code http | Correspondance                     | Remarque                                                             |
@@ -64,10 +66,7 @@ Codes http gérés:
 +-----------+------------------------------------+----------------------------------------------------------------------+
 | 405       | Method Not Allowed                 | Request content type and method are invalid.                         |
 +-----------+------------------------------------+----------------------------------------------------------------------+
-| 500       | Internal Server Error              | Generally an SQL error.                                              |
-|           |                                    | Examples: the SQL Resource definition query is invalid,              |
-|           |                                    | the request parameters created an invalid SQL statement,             |
-|           |                                    | the request violated a database constraint.                          |
+| 500       | Internal Server Error              | GLobal error                                                         |
 +-----------+------------------------------------+----------------------------------------------------------------------+
 
 .. warning::

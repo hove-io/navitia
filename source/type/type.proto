@@ -229,14 +229,15 @@ message Journey {
     optional string arrival_date_time = 5;
     optional string call_before = 6;
     optional string call_after = 7;
+    optional string requested_date_time = 8;
 }
 
 enum ResponseType {
     ITINERARY_FOUND = 1;
     DATE_OUT_OF_BOUNDS = 2;
-    NO_DEPARTURE_POINT = 3;
+    NO_ORIGIN_POINT = 3;
     NO_DESTINATION_POINT = 4;
-    NO_DEPARTURE_NOR_DESTINATION_POINT = 5;
+    NO_ORIGIN_NOR_DESTINATION_POINT = 5;
     NO_VIA_POINT = 6;
     NO_SOLUTION = 7;
     CONNECTION_LIMITATION = 8;

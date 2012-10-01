@@ -13,10 +13,13 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
     pbnavitia::Response pb_response;
     pb_response.set_requested_api(pbnavitia::PLANNER);
 
+    pbnavitia::Planner * planner = pb_response.mutable_planner();
+    planner->set_response_type(pbnavitia::ITINERARY_FOUND);
     for(Path path : paths) {
-        pbnavitia::Journey * pb_journey = pb_response.mutable_planner()->add_journey();
+        pbnavitia::Journey * pb_journey = planner->add_journey();
         pb_journey->set_duration(path.duration);
         pb_journey->set_nb_transfers(path.nb_changes);
+        pb_journey->set_requested_date_time(boost::posix_time::to_iso_string(path.request_time));
         for(PathItem & item : path.items){
             pbnavitia::Section * pb_section = pb_journey->add_section();
             pb_section->set_arrival_date_time(iso_string(d, item.arrival.date(), item.arrival.hour()));
@@ -69,7 +72,7 @@ std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPo
         }
     } break;
     case type::Type_e::eCoord: {
-        result = worker.find_nearest(ep.coordinates, data.pt_data.stop_point_proximity_list, 300);
+        result = worker.find_nearest(ep.coordinates, data.pt_data.stop_point_proximity_list, 1000);
     } break;
     default: break;
     }
@@ -101,19 +104,24 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
     response.set_requested_api(pbnavitia::PLANNER);
 
     if(!raptor.data.meta.production_date.contains(datetime.date())) {
-        response.set_error("Date not in the production period");
+        response.mutable_planner()->set_response_type(pbnavitia::DATE_OUT_OF_BOUNDS);
         return response;
     }
 
     auto departures = get_stop_points(origin, raptor.data, worker);
-    if(departures.size() == 0){
-        response.set_error("Departure point not found");
+    auto destinations = get_stop_points(destination, raptor.data, worker);
+    if(departures.size() == 0 && destinations.size() == 0){
+        response.mutable_planner()->set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         return response;
     }
 
-    auto destinations = get_stop_points(destination, raptor.data, worker);
+    if(departures.size() == 0){
+        response.mutable_planner()->set_response_type(pbnavitia::NO_ORIGIN_POINT);
+        return response;
+    }
+
     if(destinations.size() == 0){
-        response.set_error("Destination point not found");
+        response.mutable_planner()->set_response_type(pbnavitia::NO_DESTINATION_POINT);
         return response;
     }
 
@@ -127,6 +135,13 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
     else
         result = raptor.compute_reverse_all(departures, destinations, DateTime(day, time));
 
+    if(result.size() == 0){
+        response.mutable_planner()->set_response_type(pbnavitia::NO_SOLUTION);
+        return response;
+    }
+
+    for(Path & path : result)
+        path.request_time = datetime;
     return make_pathes(result, raptor.data);
 }
 
@@ -135,6 +150,7 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
                                   const std::vector<std::string> &datetimes_str, bool clockwise,
                                   georef::StreetNetworkWorker & worker) {
     pbnavitia::Response response;
+    response.set_requested_api(pbnavitia::PLANNER);
 
     std::vector<boost::posix_time::ptime> datetimes;
     for(std::string datetime: datetimes_str){
@@ -142,7 +158,8 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
             boost::posix_time::ptime ptime;
             ptime = boost::posix_time::from_iso_string(datetime);
             if(!raptor.data.meta.production_date.contains(ptime.date())) {
-                response.set_error("Date not in the production period");
+                response.mutable_planner()->set_response_type(pbnavitia::DATE_OUT_OF_BOUNDS);
+                response.set_info("Example of invalid date: " + datetime);
                 return response;
             }
             datetimes.push_back(ptime);
@@ -159,14 +176,19 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
                   [](boost::posix_time::ptime dt1, boost::posix_time::ptime dt2){return dt1 < dt2;});
 
     auto departures = get_stop_points(origin, raptor.data, worker);
-    if(departures.size() == 0){
-        response.set_error("Departure point not found");
+    auto destinations = get_stop_points(destination, raptor.data, worker);
+    if(departures.size() == 0 && destinations.size() == 0){
+        response.mutable_planner()->set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         return response;
     }
 
-    auto destinations = get_stop_points(destination, raptor.data, worker);
+    if(departures.size() == 0){
+        response.mutable_planner()->set_response_type(pbnavitia::NO_ORIGIN_POINT);
+        return response;
+    }
+
     if(destinations.size() == 0){
-        response.set_error("Destination point not found");
+        response.mutable_planner()->set_response_type(pbnavitia::NO_DESTINATION_POINT);
         return response;
     }
 
@@ -186,6 +208,7 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
         else
             tmp = raptor.compute_reverse_all(departures, destinations, DateTime(day, time), borne);
         if(tmp.size() > 0) {
+            tmp.back().request_time = datetime;
             result.push_back(tmp.back());
             borne = tmp.back().items.back().arrival;
         }
