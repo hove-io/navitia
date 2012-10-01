@@ -1,4 +1,0 @@
-Implémentation type
-===================
-
-
