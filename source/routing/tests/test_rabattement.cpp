@@ -336,7 +336,8 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
     RAPTOR raptor(data);
 
     type::PT_Data & d = data.pt_data;
-    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 1900, 0);
+    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 1600, 0);
+
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
     auto res = res1.back();

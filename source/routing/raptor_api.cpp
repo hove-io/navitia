@@ -76,21 +76,22 @@ std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPo
     return result;
 }
 
-vector_idxretour to_idxretour(std::vector<std::pair<type::idx_t, double> > elements, int hour, int day){
-    vector_idxretour result;
-    for(auto item : elements) {
-        int temps = hour + (item.second / 80);
-        int jour;
-        if(temps > 86400) {
-            temps = temps % 86400;
-            jour = day + 1;
-        } else {
-            jour = day;
-        }
-        result.push_back(std::make_pair(item.first, type_retour(navitia::type::invalid_idx, DateTime(jour, temps), 0, (item.second / 80))));
-    }
-    return result;
-}
+/* vector_idxretour to_idxretour(std::vector<std::pair<type::idx_t, double> > elements, int hour, int day){
+ *     vector_idxretour result;
+ *     for(auto item : elements) {
+ *         int temps = hour + (item.second / 80);
+ *         int jour;
+ *         if(temps > 86400) {
+ *             temps = temps % 86400;
+ *             jour = day + 1;
+ *         } else {
+ *             jour = day;
+ *         }
+ *         result.push_back(std::make_pair(item.first, type_retour(navitia::type::invalid_idx, DateTime(jour, temps), 0, (item.second / 80))));
+ *     }
+ *     return result;
+ * }
+ */
 
 
 pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin, const type::EntryPoint &destination,
@@ -122,9 +123,9 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
     int time = datetime.time_of_day().total_seconds();
 
     if(clockwise)
-        result = raptor.compute_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day));
+        result = raptor.compute_all(departures, destinations, DateTime(day, time));
     else
-        result = raptor.compute_reverse_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day));
+        result = raptor.compute_reverse_all(departures, destinations, DateTime(day, time));
 
     return make_pathes(result, raptor.data);
 }
@@ -181,9 +182,9 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
         int time = datetime.time_of_day().total_seconds();
 
         if(clockwise)
-            tmp = raptor.compute_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day), borne);
+            tmp = raptor.compute_all(departures, destinations, DateTime(day, time), borne);
         else
-            tmp = raptor.compute_reverse_all(to_idxretour(departures, time, day), to_idxretour(destinations, time, day), borne);
+            tmp = raptor.compute_reverse_all(departures, destinations, DateTime(day, time), borne);
         if(tmp.size() > 0) {
             result.push_back(tmp.back());
             borne = tmp.back().items.back().arrival;
