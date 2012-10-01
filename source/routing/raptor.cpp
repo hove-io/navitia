@@ -266,6 +266,7 @@ namespace navitia { namespace routing { namespace raptor {
 
         for(auto item : departs) {
             retour[0][item.first] = item.second;
+            retour[0][item.first].type = depart;
             best[item.first] = item.second;
             marked_sp.set(item.first);
         }
@@ -428,8 +429,8 @@ namespace navitia { namespace routing { namespace raptor {
                             (t == -1 || retour_temp.dt <= DateTime(workingDt.date(), it_st->departure_time))) {
                                 DateTime dt = retour_temp.dt;
 
-//                            if(retour_temp.type == vj)
-//                                dt = dt + 120;
+                            if(retour_temp.type == vj)
+                                dt = dt + 120;
 
                             int etemp = earliest_trip(route, i, dt);
                             if(etemp >= 0) {

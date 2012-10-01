@@ -76,12 +76,13 @@ struct best_dest {
     bool ajouter_best(unsigned int spid, const type_retour &t, int cnt) {
         auto it = map_date_time.find(spid);
         if(it != map_date_time.end()) {
-            it->second = t;
-            if(t.dt <= best_now.dt) {
+            if(t.dt + it->second.dist_to_dest <= best_now.dt) {
                 best_now = t;
+                best_now.dt = best_now.dt + it->second.dist_to_dest;
                 best_now_spid = spid;
                 count = cnt;
             }
+            it->second = t;
             return true;
         }
         return false;
