@@ -193,9 +193,10 @@ message StreetNetwork {
 
 enum SectionType {
     PUBLIC_TRANSPORT = 1;
-    HIT_THE_ROAD = 2;
+    ROAD_NETWORK = 2;
     WAITING = 3;
     TRANSFER = 4;
+    BIRD_FLY = 5;
 }
 
 message Section {
@@ -206,11 +207,11 @@ message Section {
     optional PlaceMark destination = 5;
 
 // Si c'est du TC
-    repeated StopPoint stop_point = 6;
-    optional string mode = 7;
-    optional Line line = 8;
-    optional string code = 9;
-    optional string headsign = 10;
+    optional string mode = 6;
+    optional Line line = 7;
+    optional string code = 8;
+    optional string headsign = 9;
+    repeated StopPoint stop_point = 10;
 
 // Si c'est du routier
     optional StreetNetwork street_network = 11;
