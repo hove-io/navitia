@@ -41,9 +41,7 @@ void BDTopoParser::load_city(navimake::Data& data){
 }
 
 
-//void BDTopoParser::load_streetnetwork(ns::StreetNetwork & street_network){
-void BDTopoParser::load_streetnetwork(ns::GeoRef & street_network){
-    //using namespace navitia::streetnetwork;
+void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
     using namespace navitia::georef;
 
     CsvReader reader(path + "/route_adresse.txt");
@@ -72,9 +70,10 @@ void BDTopoParser::load_streetnetwork(ns::GeoRef & street_network){
 
     navitia::type::Projection proj_lambert2e ("Lambert 2 étendu", "+init=epsg:27572", false);
 
-
     std::unordered_map<std::string, vertex_t> vertex_map;
     std::unordered_map<std::string, Way> way_map;
+    std::unordered_map<std::string, HouseNumber> house_number_left_map;
+    std::unordered_map<std::string, HouseNumber> house_number_right_map;
 
     for(row = reader.next(); !reader.eof() ;row = reader.next()){
         vertex_t source, target;
@@ -95,7 +94,7 @@ void BDTopoParser::load_streetnetwork(ns::GeoRef & street_network){
                 std::cout << "coord : " << row[x1] << ";" << row[y1] << std::endl;
             }
 
-            source = vertex_map[row[x1] + row[y1]] = boost::add_vertex(v, street_network.graph);
+            source = vertex_map[row[x1] + row[y1]] = boost::add_vertex(v, geo_ref.graph);
         }
         else source = vertex_map[row[x1] + row[y1]];
 
@@ -110,7 +109,7 @@ void BDTopoParser::load_streetnetwork(ns::GeoRef & street_network){
             } catch(...){
                 std::cout << "coord : " << row[x2] << ";" << row[y2] << std::endl;
             }
-            target = vertex_map[row[x2] + row[y2]] = boost::add_vertex(v, street_network.graph);
+            target = vertex_map[row[x2] + row[y2]] = boost::add_vertex(v, geo_ref.graph);
         }
         else target = vertex_map[row[x2] + row[y2]];
 
@@ -121,12 +120,15 @@ void BDTopoParser::load_streetnetwork(ns::GeoRef & street_network){
             std::cout << "longueur :( " << row[l] << std::endl;
         }
 
-        boost::add_edge(source, target, e1, street_network.graph);
-        boost::add_edge(target, source, e2, street_network.graph);
+        boost::add_edge(source, target, e1, geo_ref.graph);
+        boost::add_edge(target, source, e2, geo_ref.graph);
 
         hn_deb_d.number = str_to_int(row[n_deb_d]);
+
         hn_fin_d.number = str_to_int(row[n_fin_d]);
+
         hn_deb_g.number = str_to_int(row[n_deb_g]);
+
         hn_fin_g.number = str_to_int(row[n_fin_g]);
 
         hn_deb_d.coord = hn_deb_g.coord = navitia::type::GeographicalCoord(str_to_double(row[x1]),
@@ -146,13 +148,39 @@ void BDTopoParser::load_streetnetwork(ns::GeoRef & street_network){
             way_map[way_key].name = row[nom];
             way_map[way_key].city = row[insee];
             way_map[way_key].way_type = row[type];
-            /*  auto city_it = city_map.find(row[insee]);
-                if(city_it != city_map.end()){
-                    way_map[way_key].city_idx = city_map[row[insee]];
-                }*/
         }
 
+        //hn_deb_d
+        std::string hn_key = row[x1] + row[y1] + row[n_deb_d];
+        auto hn = house_number_right_map.find(hn_key);
+        if ((hn == house_number_right_map.end()) && (hn_deb_d.number > 0)){
+            way_map[way_key].house_number_right.push_back(hn_deb_d);
+            house_number_right_map[hn_key]= hn_deb_d;
+        }
 
+        //hn_deb_g
+        hn_key = row[x1] + row[y1] + row[n_deb_g];
+        hn = house_number_left_map.find(hn_key);
+        if ((hn == house_number_left_map.end()) && (hn_deb_g.number > 0)){
+            way_map[way_key].house_number_left.push_back(hn_deb_g);
+            house_number_left_map[hn_key]= hn_deb_g;
+        }
+
+        //hn_fin_d
+        hn_key = row[x2] + row[y2] + row[n_fin_d];
+        hn = house_number_right_map.find(hn_key);
+        if ((hn == house_number_right_map.end()) && (hn_fin_d.number > 0)){
+            way_map[way_key].house_number_right.push_back(hn_fin_d);
+            house_number_right_map[hn_key]= hn_fin_d;
+        }
+
+        //hn_fin_g
+        hn_key = row[x2] + row[y2] + row[n_fin_g];
+        hn = house_number_left_map.find(hn_key);
+        if ((hn == house_number_left_map.end()) && (hn_fin_g.number > 0)){
+            way_map[way_key].house_number_left.push_back(hn_fin_g);
+            house_number_left_map[hn_key]= hn_fin_g;
+        }
 
         way_map[way_key].edges.push_back(std::make_pair(source, target));
         way_map[way_key].edges.push_back(std::make_pair(target, source));
@@ -161,11 +189,12 @@ void BDTopoParser::load_streetnetwork(ns::GeoRef & street_network){
     unsigned int idx=0;
 
     BOOST_FOREACH(auto way, way_map){
-        street_network.ways.push_back(way.second);
-        street_network.ways.back().idx = idx;
-        BOOST_FOREACH(auto node_pair, street_network.ways.back().edges){
-            edge_t e = boost::edge(node_pair.first, node_pair.second, street_network.graph).first;
-            street_network.graph[e].way_idx = idx;
+        way.second.sort_house_number();
+        geo_ref.ways.push_back(way.second);
+        geo_ref.ways.back().idx = idx;        
+        BOOST_FOREACH(auto node_pair, geo_ref.ways.back().edges){
+            edge_t e = boost::edge(node_pair.first, node_pair.second, geo_ref.graph).first;
+            geo_ref.graph[e].way_idx = idx;            
         }
         idx++;
     }
