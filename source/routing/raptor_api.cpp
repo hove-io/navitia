@@ -24,11 +24,11 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
         pb_journey->set_requested_date_time(boost::posix_time::to_iso_string(path.request_time));
 
         // La marche à pied initiale
-       /* pbnavitia::Section * initial_foot_path = pb_journey->add_section();
+        pbnavitia::Section * initial_foot_path = pb_journey->add_section();
         initial_foot_path->set_type(pbnavitia::ROAD_NETWORK);
         georef::Path initial_path = worker.get_path(path.items.front().stop_points.front());
         streetnetwork::create_pb(initial_path, d, initial_foot_path->mutable_street_network());
-*/
+
         // La partie TC et correspondances
         for(PathItem & item : path.items){
             pbnavitia::Section * pb_section = pb_journey->add_section();
@@ -61,12 +61,19 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             }
 
         }
+
+        // La marche à pied finale
+        pbnavitia::Section * final_foot_path = pb_journey->add_section();
+        final_foot_path->set_type(pbnavitia::ROAD_NETWORK);
+        georef::Path final_path = worker.get_path(path.items.back().stop_points.back(), true);
+        streetnetwork::create_pb(final_path, d, final_foot_path->mutable_street_network());
+
     }
 
     return pb_response;
 }
 
-std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPoint &ep, const type::Data & data, georef::StreetNetworkWorker & worker){
+std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPoint &ep, const type::Data & data, georef::StreetNetworkWorker & worker, bool use_second = false){
     std::vector<std::pair<type::idx_t, double> > result;
 
     switch(ep.type) {
@@ -86,7 +93,7 @@ std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPo
         }
     } break;
     case type::Type_e::eCoord: {
-        result = worker.find_nearest(ep.coordinates, data.pt_data.stop_point_proximity_list, 1000);
+        result = worker.find_nearest(ep.coordinates, data.pt_data.stop_point_proximity_list, 1000, use_second);
     } break;
     default: break;
     }
@@ -122,7 +129,7 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
     }
 
     auto departures = get_stop_points(origin, raptor.data, worker);
-    auto destinations = get_stop_points(destination, raptor.data, worker);
+    auto destinations = get_stop_points(destination, raptor.data, worker, true);
     if(departures.size() == 0 && destinations.size() == 0){
         response.mutable_planner()->set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         return response;
@@ -189,7 +196,7 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
                   [](boost::posix_time::ptime dt1, boost::posix_time::ptime dt2){return dt1 < dt2;});
 
     auto departures = get_stop_points(origin, raptor.data, worker);
-    auto destinations = get_stop_points(destination, raptor.data, worker);
+    auto destinations = get_stop_points(destination, raptor.data, worker, true);
     if(departures.size() == 0 && destinations.size() == 0){
         response.mutable_planner()->set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         return response;
