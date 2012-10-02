@@ -63,3 +63,10 @@ Attention, l'interface de sortie JSON est susceptible d'évoluer en "compatibili
   * Des nouveaux noeuds sont susceptibles d'apparaitre, qui ne modifient pas la structure de l'interface n
   * Aucun noeud ne disparait depuis une version n vers une version n+1
 
+Aide en ligne
+-------------
+
+Le service /help permet d'accéder à la liste des services disponibles sur l'application NAViTiA interrogée.
+Il énumère, pour chaque service, l'ensemble des paramètres disponibles.
+http://www.navitia.com/navitia/help
+
