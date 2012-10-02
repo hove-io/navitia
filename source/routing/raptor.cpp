@@ -435,7 +435,8 @@ namespace navitia { namespace routing { namespace raptor {
         if(b_dest.best_now.type == uninitialized) {
             return result;
         }
-
+        auto tmp = makePathesreverse(retour, best, destinations, b_dest, count);
+        result.insert(result.end(), tmp.begin(), tmp.end());
 
         init(to_idxretour(departs, b_dest.best_now.dt, true),
              to_idxretour(destinations, DateTime::inf, false), true, dt_depart);
@@ -748,10 +749,14 @@ namespace navitia { namespace routing { namespace raptor {
                     item = PathItem();
                     item.type = public_transport;
 
-                    if(!reverse)
+                    if(!reverse) {
                         item.arrival = workingDate;
-                    else
+                        item.arrivals.push_back(workingDate);
+                    } 
+                    else {
                         item.departure = DateTime(workingDate.date(), current_st.departure_time);
+                        item.departures.push_back(DateTime(workingDate.date(), current_st.departure_time));
+                    }
 
                     while(spid_embarquement != current_spid) {
                         navitia::type::StopTime prec_st = current_st;
@@ -767,6 +772,8 @@ namespace navitia { namespace routing { namespace raptor {
 
                         workingDate = DateTime(workingDate.date(), current_st.arrival_time);
                         item.stop_points.push_back(current_spid);
+                        item.arrivals.push_back(DateTime(workingDate.date(), current_st.arrival_time));
+                        item.departures.push_back(DateTime(workingDate.date(), current_st.departure_time));
                         item.vj_idx = current_st.vehicle_journey_idx;
 
                         current_spid = data.pt_data.route_points[current_st.route_point_idx].stop_point_idx;
@@ -777,11 +784,16 @@ namespace navitia { namespace routing { namespace raptor {
                             break;
                     }
                     item.stop_points.push_back(current_spid);
+                    
 
-                    if(!reverse)
+                    if(!reverse) {
                         item.departure = DateTime(workingDate.date(), current_st.departure_time);
-                    else
+                        item.departures.push_back(DateTime(workingDate.date(), current_st.departure_time));
+                    }
+                    else {
                         item.arrival = workingDate;
+                        item.arrivals.push_back(workingDate);
+                    }
 
                     result.items.push_back(item);
                     --countb;
@@ -799,6 +811,8 @@ namespace navitia { namespace routing { namespace raptor {
             std::reverse(result.items.begin(), result.items.end());
             for(auto & item : result.items) {
                 std::reverse(item.stop_points.begin(), item.stop_points.end());
+                std::reverse(item.arrivals.begin(), item.arrivals.end());
+                std::reverse(item.departures.begin(), item.departures.end());
             }
         }
 

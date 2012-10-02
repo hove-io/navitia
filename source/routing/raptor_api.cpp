@@ -24,12 +24,10 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
         pb_journey->set_requested_date_time(boost::posix_time::to_iso_string(path.request_time));
 
         // La marche à pied initiale
-        if(path.items.size() > 0 && path.items.front().stop_points.size() > 0){
-            pbnavitia::Section * initial_foot_path = pb_journey->add_section();
-            initial_foot_path->set_type(pbnavitia::ROAD_NETWORK);
-            georef::Path initial_path = worker.get_path(path.items.front().stop_points.front());
-            streetnetwork::create_pb(initial_path, d, initial_foot_path->mutable_street_network());
-        }
+        pbnavitia::Section * initial_foot_path = pb_journey->add_section();
+        initial_foot_path->set_type(pbnavitia::ROAD_NETWORK);
+        georef::Path initial_path = worker.get_path(path.items.front().stop_points.front());
+        streetnetwork::create_pb(initial_path, d, initial_foot_path->mutable_street_network());
 
         // La partie TC et correspondances
         for(PathItem & item : path.items){
@@ -53,6 +51,13 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             for(navitia::type::idx_t stop_point : item.stop_points){
                 fill_pb_object(stop_point, d, pb_section->add_stop_point());
             }
+            
+            for(auto dep_time : item.departures)
+                pb_section->add_departure_date_times(iso_string(d, dep_time.date(), dep_time.hour()));
+
+            for(auto arr_time : item.arrivals)
+                pb_section->add_arrival_date_times(iso_string(d, arr_time.date(), arr_time.hour()));
+
             if(item.stop_points.size() >= 2) {
                 pbnavitia::PlaceMark * origin_place_mark = pb_section->mutable_origin();
                 origin_place_mark->set_type(pbnavitia::STOPAREA);
@@ -65,12 +70,10 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
         }
 
         // La marche à pied finale
-        if(path.items.size() > 0 && path.items.back().stop_points.size() > 0){
-            pbnavitia::Section * final_foot_path = pb_journey->add_section();
-            final_foot_path->set_type(pbnavitia::ROAD_NETWORK);
-            georef::Path final_path = worker.get_path(path.items.back().stop_points.back(), true);
-            streetnetwork::create_pb(final_path, d, final_foot_path->mutable_street_network());
-        }
+        pbnavitia::Section * final_foot_path = pb_journey->add_section();
+        final_foot_path->set_type(pbnavitia::ROAD_NETWORK);
+        georef::Path final_path = worker.get_path(path.items.back().stop_points.back(), true);
+        streetnetwork::create_pb(final_path, d, final_foot_path->mutable_street_network());
 
     }
 
