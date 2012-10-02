@@ -197,7 +197,16 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
     DateTime borne;
     if(!clockwise)
         borne = DateTime::min;
+    else {
+        std::vector<DateTime> dts;
+        for(boost::posix_time::ptime datetime : datetimes){
+            int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
+            int time = datetime.time_of_day().total_seconds();
+            dts.push_back(DateTime(day, time));
+        }
 
+        return make_pathes(raptor.compute_all(departures, destinations, dts, borne), raptor.data);
+    }
     for(boost::posix_time::ptime datetime : datetimes){
         std::vector<Path> tmp;
         int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();

@@ -44,7 +44,7 @@ struct RAPTOR : public AbstractRouter
     vector_idxretour 
     to_idxretour(const std::vector<std::pair<type::idx_t, double> > &elements, const DateTime &dt, bool dep_or_dest);
 
-    void init(vector_idxretour departs, vector_idxretour destinations, bool clockwise, DateTime borne);
+    void init(vector_idxretour departs, vector_idxretour destinations, bool clockwise, DateTime borne, bool reset = true);
 
     std::vector<Path> compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
                               int departure_day, bool clockwise = true);
@@ -68,14 +68,19 @@ struct RAPTOR : public AbstractRouter
                                         unsigned int count);
 
     std::vector<Path> 
-    compute_all(std::vector<std::pair<type::idx_t, double> > departs,
-                        std::vector<std::pair<type::idx_t, double> > destinations,
-                        DateTime dt_depart, DateTime borne = DateTime::inf);
-
+    compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
+                const std::vector<std::pair<type::idx_t, double> > &destinations,
+                const DateTime &dt_depart, const DateTime &borne = DateTime::inf);
+    
     std::vector<Path> 
-    compute_reverse_all(std::vector<std::pair<type::idx_t, double> > departs,
-                                std::vector<std::pair<type::idx_t, double> > destinations,
-                                DateTime dt_depart, DateTime borne = DateTime::min);
+    compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
+                const std::vector<std::pair<type::idx_t, double> > &destinations,
+                std::vector<DateTime> dt_departs, const DateTime &borne);
+    
+    std::vector<Path> 
+    compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
+                        const std::vector<std::pair<type::idx_t, double> > &destinations,
+                        const DateTime &dt_depart, const DateTime &borne = DateTime::min);
 
 
     void set_routes_valides();
