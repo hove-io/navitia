@@ -345,7 +345,7 @@ struct Worker : public BaseWorker<Data> {
         size_t pos = req.path.find_last_of('/');
         if(pos == std::string::npos)
             pos = 0;
-        std::string url = d.key_url.at(d.insee_key.at(insee_departure)) + req.path.substr(0) + "?" + req.raw_params;
+        std::string url = d.key_url.at(d.insee_key.at(insee_departure)) + req.path.substr(pos) + "?" + req.raw_params;
 
 
         CURL *handle = curl_easy_init();
