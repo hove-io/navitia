@@ -64,7 +64,7 @@ struct type_retour {
 struct best_dest {
 //    typedef std::pair<unsigned int, int> idx_dist;
 
-    std::unordered_map<unsigned int, type_retour> map_date_time;
+    std::/*unordered_*/map<unsigned int, type_retour> map_date_time;
     type_retour best_now;
     unsigned int best_now_spid;
     unsigned int count;
@@ -81,9 +81,9 @@ struct best_dest {
                 best_now.dt = best_now.dt + it->second.dist_to_dest;
                 best_now_spid = spid;
                 count = cnt;
+//                it->second = t;
+                return true;
             }
-            it->second = t;
-            return true;
         }
         return false;
     }
@@ -91,14 +91,14 @@ struct best_dest {
     bool ajouter_best_reverse(unsigned int spid, const type_retour &t, int cnt) {
         auto it = map_date_time.find(spid);
         if(it != map_date_time.end()) {
-            if(t.dt != DateTime::min && (t.dt + t.dist_to_dep) >= best_now.dt) {
+            if(t.dt != DateTime::min && (t.dt - t.dist_to_dep) >= best_now.dt) {
                 best_now = t;
-                best_now.dt = best_now.dt + t.dist_to_dep;
+                best_now.dt = best_now.dt - it->second.dist_to_dep;
                 best_now_spid = spid;
                 count = cnt;
+//                it->second = t;
+                return true;
             }
-            it->second = t;
-            return true;
         }
         return false;
     }

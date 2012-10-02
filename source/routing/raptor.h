@@ -76,7 +76,10 @@ struct RAPTOR : public AbstractRouter
     compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                 const std::vector<std::pair<type::idx_t, double> > &destinations,
                 std::vector<DateTime> dt_departs, const DateTime &borne);
-    
+    std::vector<Path> 
+    compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
+                        const std::vector<std::pair<type::idx_t, double> > &destinations,
+                        std::vector<DateTime> dt_departs, const DateTime &borne); 
     std::vector<Path> 
     compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                         const std::vector<std::pair<type::idx_t, double> > &destinations,

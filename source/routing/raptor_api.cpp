@@ -226,7 +226,7 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
             dts.push_back(DateTime(day, time));
         }
 
-        return make_pathes(raptor.compute_all(departures, destinations, dts, borne), raptor.data);
+        return make_pathes(raptor.compute_all(departures, destinations, dts, borne), raptor.data, worker);
     }
     for(boost::posix_time::ptime datetime : datetimes){
         std::vector<Path> tmp;
