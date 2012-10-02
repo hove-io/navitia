@@ -521,6 +521,37 @@ de faire le test tant que le calcul retour n'a pas optimisé l'heure de départ 
 
 L'itinéraire est correct.
 
+Inégalitées triangulaire
+------------------------
+
+NAViTiA gère de façon intrinsèque la succession de plusieurs correspondances. 
+A partir de :
+
+* Une correspondance entre 2 arrêt A et B de durée T1.
+* Une correspondance entre 2 arrêts B et C de durée T2.
+
+NAViTiA peut proposer une correspondance entre A et C 
+si elle est pertinente pour la recherche. 
+Si cette correspondance n'a pas été définie dans les données, 
+NAViTiA applique la somme des durées de correspondance entre A et B et B et C : 
+T3= T1 + T2. 
+Ce fonctionnement est automatique et géré à la binarisation.
+
+.. image:: ../_static/InegalitesTriangulaires.png
+
+
+Cette gestion permet également de contourner l'anomalie suivante:
+
+* Dans le bus, on arriva en A à Ta, la MAP vers B met à jour B à Tbmap.
+* Arrivé en B à Tb, on a Tb > à Tbmap
+
+  * En effet la MAP se fait en 1' quand le bus met 3'
+  * Conséquence: on ne met pas non plus à jour la correspondance vers B'
+  * On perd une correspondance interessante.
+
+
+
+
 Gestion des montées/descentes interdites
 ****************************************
 
@@ -603,35 +634,6 @@ Il est également possible :
 
 * De faire varier la vitesse de marche à pied pour l’ensemble du calcul d’itinéraire.
 * D’utiliser les critères binaires pour définir différents types de Personnes à Mobilité Réduite (PMR).
-
-
-Inégalitées triangulaire
-************************
-
-NAViTiA gère de façon intrinsèque la succession de plusieurs correspondances. 
-A partir de :
-
-* Une correspondance entre 2 arrêt A et B de durée T1.
-* Une correspondance entre 2 arrêts B et C de durée T2.
-
-NAViTiA peut proposer une correspondance entre A et C 
-si elle est pertinente pour la recherche. 
-Si cette correspondance n'a pas été définie dans les données, 
-NAViTiA applique la somme des durées de correspondance entre A et B et B et C : 
-T3= T1 + T2. 
-Ce fonctionnement est automatique et géré à la binarisation.
-
-.. image:: ../_static/InegalitesTriangulaires.png
-
-
-Cette gestion permet également de contourner l'anomalie suivante:
-
-* Dans le bus, on arriva en A à Ta, la MAP vers B met à jour B à Tbmap.
-* Arrivé en B à Tb, on a Tb > à Tbmap
-
-  * En effet la MAP se fait en 1' quand le bus met 3'
-  * Conséquence: on ne met pas non plus à jour la correspondance vers B'
-  * On perd une correspondance interessante.
 
 
 Prolongement de service

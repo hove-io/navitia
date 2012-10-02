@@ -18,53 +18,60 @@ Certains paramètres sont partagés pour toutes les API de calcul d'itinéraire.
 Paramètres généraux
 -------------------
 
-+-----------------+-----------------------------+-------------------------------------+---------------------------------------+
-| Paramètre       | Type                        | Remarque                            | Exemple                               |
-+=================+=============================+=====================================+=======================================+
-| Origin          | Appel par coordonnées:      | Coordonnées en WGS84                | &origin=coord:48.829934:2.391728      |
-|                 |    coord:<lon>:<lat>        | Ne pas confondre lat et lon…        |                                       |
-|                 +-----------------------------+-------------------------------------+---------------------------------------+
-|                 | Appel par code unique:      | Issu du retour d'un appel à la      | &origin=stop_area:TCL-0722            |
-|                 |    URI issue de FirstLetter | fonction FirstLetter                |                                       |
-+-----------------+-----------------------------+-------------------------------------+---------------------------------------+
-| Destination     | Appel par coordonnées:      | Coordonnées en WGS84                | &destination=coord:48.8402:2.3193     |
-|                 |    coord:<lon>:<lat>        | Ne pas confondre lat et lon…        |                                       |
-|                 +-----------------------------+-------------------------------------+---------------------------------------+
-|                 | Appel par code unique:      | Issu du retour d'un appel à la      | &destination=stop_area:5555555        |
-|                 |    URI issue de FirstLetter | fonction FirstLetter                |                                       |
-+-----------------+-----------------------------+-------------------------------------+---------------------------------------+
-| ClockWise       | booléen                     | Itinéraires "partir après"          | &ClockWise=1                          |
-|                 |                             | Si &ClockWise=0, les itinéraires    |                                       |
-|                 |                             | seront du type "arriver avant"      |                                       |
-+-----------------+-----------------------------+-------------------------------------+---------------------------------------+
++-------------+------------------------+-------------------------------------+---------------------------------+
+| Paramètre   | Type                   | Remarque                            | Exemple                         |
++=============+========================+=====================================+=================================+
+| origin      | Appel par coordonnées: | Coordonnées en WGS84                | &origin=coord:48.8299:2.391     |
+|             |    coord:<lon>:<lat>   | Ne pas confondre lat et lon ;-)     |                                 |
+|             +------------------------+-------------------------------------+---------------------------------+
+|             | Appel par code unique  | URI issue du retour d'un appel      | &origin=stop_area:TCL-0722      |
+|             |                        |   à un autre service                |                                 |
+|             |                        |   (firstLetter, ptreferential...)   |                                 |
++-------------+------------------------+-------------------------------------+---------------------------------+
+| destination | Appel par coordonnées: | Coordonnées en WGS84                | &destination=coord:48.840:2.319 |
+|             |    coord:<lon>:<lat>   | Ne pas confondre lat et lon ;-)     |                                 |
+|             +------------------------+-------------------------------------+---------------------------------+
+|             | Appel par code unique  | URI issue du retour d'un appel      | &destination=stop_area:5555555  |
+|             |                        |   à un autre service                |                                 |
+|             |                        |   (firstLetter, ptreferential...)   |                                 |
++-------------+------------------------+-------------------------------------+---------------------------------+
+| clockwise   | booléen                | &ClockWise=1, on veut partir après  | &clockwise=1                    |
+|             |                        |       l'heure indiquée              |                                 |
+|             |                        | &ClockWise=0, on veut arriver avant |                                 |
+|             |                        |       l'heure indiquée              |                                 |
++-------------+------------------------+-------------------------------------+---------------------------------+
 
-
+Les paramètres origin et destination peuvent accueillir au choix une URI issue d'une autre API 
+(par exemple firstletter ou PTReferential) ou des coordonnées au format WGS84. Ces 2 paramètres sont obligatoires sous une de ces 2 formes.
 
 Paramètres spécifiques à l'API "Journeys"
 -----------------------------------------
 
-+-----------------+--------------------------+-------------------------------------+------------------------------------------+
-| Paramètre       | Type                     | Remarque                            | Exemple                                  |
-+=================+==========================+=====================================+==========================================+
-| DateTime        | <yyyymmdd>T<hhmi>        | Horaire demandé                     | &DateTime=20121007T0715                  |
-|                 |                          | Le fuseau horaire n’est pas géré    |                                          |
-+-----------------+--------------------------+-------------------------------------+------------------------------------------+
++-------------+------------------------+-------------------------------------+---------------------------------+
+| Paramètre   | Type                   | Remarque                            | Exemple                         |
++=============+========================+=====================================+=================================+
+| datetime    | <yyyymmdd>T<hhmi>      | Horaire demandé                     | &datetime=20121007T0715         |
+|             |                        | Le fuseau horaire n’est pas géré    |                                 |
++-------------+------------------------+-------------------------------------+---------------------------------+
 
+Exemple d'appel:
 
+http://www.navitia.com/navitia/journeys?format=json&origin=coord:4.915:45.731&destination=coord:4.825:45.760&datetime=20120930T0800&clockwise=1
 
 Paramètres spécifiques à l'API "JourneysArray"
 ---------------------------------------------
 
-+-----------------+--------------------------+-------------------------------------+------------------------------------------+
-| Paramètre       | Type                     | Remarque                            | Exemple                                  |
-+=================+==========================+=====================================+==========================================+
-| DateTime[]      | <yyyymmdd>T<hhmi>        | Liste d’horaires demandés           | &DateTime[]=20121007T0715&DateTime[]=    |
-|                 | paramètre répété n fois  | Le fuseau horaire n’est pas géré    |   20121007T0807&DateTime[]=20121007T0853 |
-+-----------------+--------------------------+-------------------------------------+------------------------------------------+
++-------------+------------------------+--------------------------+--------------------------------------------+
+| Paramètre   | Type                   | Remarque                 | Exemple                                    |
++=============+========================+==========================+============================================+
+| datetime[]  | <yyyymmdd>T<hhmi>      | Liste des horaires       | &datetime[]=20121007T0715&datetime[]=      |
+|             |                        |   demandés. Le fuseau    |   20121007T0807&datetime[]=20121007T0853   |
+|             | paramètre répété n fois|   horaire n’est pas géré |                                            |
++-------------+------------------------+--------------------------+--------------------------------------------+
 
 Exemple d'appel:
 
-http://www.navitia.com/journeysarray?format=json&origin=coord:4.915:45.731&destination=coord:4.825:45.760&datetime[]=20120930T0800&datetime[]=20120930T0900&datetime[]=20120930T1000&clockwise=1#jsonNav_l
+http://www.navitia.com/navitia/journeysarray?format=json&origin=coord:4.915:45.731&destination=coord:4.825:45.760&clockwise=1&datetime[]=20120930T0800&datetime[]=20120930T0900&datetime[]=20120930T1000
 
 
 Format de sortie
@@ -116,3 +123,4 @@ Liste des points d'arrêts intermédiaires dépliée:
 
 Exemple d'utilisation
 *********************
+
