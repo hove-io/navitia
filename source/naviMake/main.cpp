@@ -62,9 +62,8 @@ int main(int argc, char * argv[])
 
         navimake::connectors::BDTopoParser topo_parser(topo_path);
         //gtfs ne contient pas le référentiel des villes, on le charges depuis la BDTOPO
-        topo_parser.load_city(data);
-        //topo_parser.load_streetnetwork(nav_data.street_network);
-        topo_parser.load_streetnetwork(nav_data.geo_ref);
+        topo_parser.load_city(data);        
+        topo_parser.load_georef(nav_data.geo_ref);
         nav_data.set_cities(); // Assigne les villes aux voiries du filaire
     }
     sn = (pt::microsec_clock::local_time() - start).total_milliseconds();

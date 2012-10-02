@@ -14,7 +14,10 @@ double str_to_double(std::string str){
 
 int str_to_int(std::string str){    
     try{
-        return boost::lexical_cast<int>(str);
+        if (str.empty()){
+            return -1;
+        }
+        else{ return boost::lexical_cast<int>(str);}
     } catch(...){
         std::cout << "str_to_int : " << str << std::endl;
         return -1;
