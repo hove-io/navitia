@@ -435,8 +435,7 @@ namespace navitia { namespace routing { namespace raptor {
         if(b_dest.best_now.type == uninitialized) {
             return result;
         }
-        auto tmp = makePathesreverse(retour, best, destinations, b_dest, count);
-        result.insert(result.end(), tmp.begin(), tmp.end());
+
 
         init(to_idxretour(departs, b_dest.best_now.dt, true),
              to_idxretour(destinations, DateTime::inf, false), true, dt_depart);
@@ -658,10 +657,9 @@ namespace navitia { namespace routing { namespace raptor {
             DateTime dt;
             int spid = std::numeric_limits<int>::max();
             for(auto dest : b_dest.map_date_time) {
-                if(retour[i][dest.first].type != uninitialized/* && retour[i][dest.first].dt < dt*/) {
+                if(retour[i][dest.first].type != uninitialized && retour[i][dest.first].dt < dt) {
                     dt = dest.second.dt;
                     spid = dest.first;
-                    result.push_back(makePath(retour, best, departs, spid, i));
                 }
             }
             if(spid != std::numeric_limits<int>::max())
@@ -683,14 +681,13 @@ namespace navitia { namespace routing { namespace raptor {
             DateTime dt = DateTime::min;
             int spid = std::numeric_limits<int>::max();
             for(auto dest : b_dest.map_date_time) {
-                if(retour[i][dest.first].type != uninitialized/* && retour[i][dest.first].dt > dt*/) {
+                if(retour[i][dest.first].type != uninitialized && retour[i][dest.first].dt > dt) {
                     dt = dest.second.dt;
                     spid = dest.first;
-                    result.push_back(makePathreverse(retour, best, departs, spid, i));
                 }
             }
-//            if(spid != std::numeric_limits<int>::max())
-//                result.push_back(makePathreverse(retour, best, departs, spid, i));
+            if(spid != std::numeric_limits<int>::max())
+                result.push_back(makePathreverse(retour, best, departs, spid, i));
         }
 
         return result;
