@@ -24,10 +24,12 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
         pb_journey->set_requested_date_time(boost::posix_time::to_iso_string(path.request_time));
 
         // La marche à pied initiale
-        pbnavitia::Section * initial_foot_path = pb_journey->add_section();
-        initial_foot_path->set_type(pbnavitia::ROAD_NETWORK);
-        georef::Path initial_path = worker.get_path(path.items.front().stop_points.front());
-        streetnetwork::create_pb(initial_path, d, initial_foot_path->mutable_street_network());
+        if(path.items.size() > 0 && path.items.front().stop_points.size() > 0){
+            pbnavitia::Section * initial_foot_path = pb_journey->add_section();
+            initial_foot_path->set_type(pbnavitia::ROAD_NETWORK);
+            georef::Path initial_path = worker.get_path(path.items.front().stop_points.front());
+            streetnetwork::create_pb(initial_path, d, initial_foot_path->mutable_street_network());
+        }
 
         // La partie TC et correspondances
         for(PathItem & item : path.items){
@@ -63,10 +65,12 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
         }
 
         // La marche à pied finale
-        pbnavitia::Section * final_foot_path = pb_journey->add_section();
-        final_foot_path->set_type(pbnavitia::ROAD_NETWORK);
-        georef::Path final_path = worker.get_path(path.items.back().stop_points.back(), true);
-        streetnetwork::create_pb(final_path, d, final_foot_path->mutable_street_network());
+        if(path.items.size() > 0 && path.items.back().stop_points.size() > 0){
+            pbnavitia::Section * final_foot_path = pb_journey->add_section();
+            final_foot_path->set_type(pbnavitia::ROAD_NETWORK);
+            georef::Path final_path = worker.get_path(path.items.back().stop_points.back(), true);
+            streetnetwork::create_pb(final_path, d, final_foot_path->mutable_street_network());
+        }
 
     }
 

@@ -1,5 +1,5 @@
-Planner_algo
-============
+Algorithmes implémentés dans NAViTiA
+====================================
 
 .. toctree::
    :maxdepth: 2
