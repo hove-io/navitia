@@ -203,14 +203,14 @@ message Section {
     optional string departure_date_time = 1;
     optional string arrival_date_time = 2;
     optional SectionType type = 3;
-    optional PlaceMark origin = 4;
-    optional PlaceMark destination = 5;
 
 // Si c'est du TC
-    optional string mode = 6;
-    optional Line line = 7;
-    optional string code = 8;
-    optional string headsign = 9;
+    optional string network = 4;
+    optional string mode = 5;
+    optional string code = 6;
+    optional string headsign = 7;
+    optional string direction = 8;
+    optional Line line = 9;
     repeated StopPoint stop_point = 10;
 
 // Si c'est du routier

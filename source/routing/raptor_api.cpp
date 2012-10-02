@@ -36,31 +36,25 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             pbnavitia::Section * pb_section = pb_journey->add_section();
             pb_section->set_arrival_date_time(iso_string(d, item.arrival.date(), item.arrival.hour()));
             pb_section->set_departure_date_time(iso_string(d, item.departure.date(), item.departure.hour()));
-            if(item.type == public_transport)
+            if(item.type == public_transport){
                 pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
+                if( item.vj_idx != type::invalid_idx){ // TODO : réfléchir si ça peut vraiment arriver
+                    const type::VehicleJourney & vj = d.pt_data.vehicle_journeys[item.vj_idx];
+                    const type::Route & route = d.pt_data.routes[vj.route_idx];
+                    const type::Line & line = d.pt_data.lines[route.line_idx];
+                    pb_section->set_network(d.pt_data.networks[line.network_idx].name );
+                    pb_section->set_mode(d.pt_data.modes[vj.mode_idx].name);
+                    pb_section->set_code(line.code);
+                    pb_section->set_headsign(vj.name);
+                    pb_section->set_direction(route.name);
+                    fill_pb_object(line.idx, d, pb_section->mutable_line());
+                }
+                for(navitia::type::idx_t stop_point : item.stop_points){
+                    fill_pb_object(stop_point, d, pb_section->add_stop_point());
+                }
+            }
             else
                 pb_section->set_type(pbnavitia::TRANSFER);
-            if(item.type == public_transport && item.vj_idx != type::invalid_idx){
-                const type::VehicleJourney & vj = d.pt_data.vehicle_journeys[item.vj_idx];
-                const type::Route & route = d.pt_data.routes[vj.route_idx];
-                const type::Line & line = d.pt_data.lines[route.line_idx];
-                const type::Mode & mode = d.pt_data.modes[vj.mode_idx];
-                fill_pb_object(line.idx, d, pb_section->mutable_line());
-                pb_section->set_mode(mode.name);
-                pb_section->set_code(line.code);
-                pb_section->set_headsign(vj.name);
-            }
-            for(navitia::type::idx_t stop_point : item.stop_points){
-                fill_pb_object(stop_point, d, pb_section->add_stop_point());
-            }
-            if(item.stop_points.size() >= 2) {
-                pbnavitia::PlaceMark * origin_place_mark = pb_section->mutable_origin();
-                origin_place_mark->set_type(pbnavitia::STOPAREA);
-                fill_pb_object(d.pt_data.stop_points[item.stop_points.front()].stop_area_idx, d, origin_place_mark->mutable_stop_area());
-                pbnavitia::PlaceMark * destination_place_mark = pb_section->mutable_destination();
-                destination_place_mark->set_type(pbnavitia::STOPAREA);
-                fill_pb_object(d.pt_data.stop_points[item.stop_points.back()].stop_area_idx, d, destination_place_mark->mutable_stop_area());
-            }
 
         }
 

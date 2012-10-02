@@ -64,6 +64,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line,
     line->set_code(l.code);
     line->set_color(l.color);
     line->set_name(l.name);
+    line->set_external_code(l.external_code);
 }
 
 }//namespace navitia
