@@ -70,8 +70,8 @@ http://www.navitia.com/journeysarray?format=json&origin=coord:4.915:45.731&desti
 Format de sortie
 ****************
 
-Itinéraire impossible
----------------------
+Itinéraire sans solution
+------------------------
 
 Les itinéraires sans solutions sont présentés sous la forme suivante:
 
