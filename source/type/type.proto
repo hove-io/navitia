@@ -200,18 +200,18 @@ enum SectionType {
 }
 
 message Section {
-    optional string departure_date_time = 1;
-    optional string arrival_date_time = 2;
-    optional SectionType type = 3;
+    optional SectionType type = 1;
 
 // Si c'est du TC
-    optional string network = 4;
-    optional string mode = 5;
-    optional string code = 6;
-    optional string headsign = 7;
-    optional string direction = 8;
-    optional Line line = 9;
-    repeated StopPoint stop_point = 10;
+    optional string network = 2;
+    optional string mode = 3;
+    optional string code = 4;
+    optional string headsign = 5;
+    optional string direction = 6;
+    optional Line line = 7;
+    repeated StopPoint stop_point = 8;
+    repeated string departure_date_time = 9;
+    repeated string arrival_date_time = 10;
 
 // Si c'est du routier
     optional StreetNetwork street_network = 11;
@@ -220,8 +220,6 @@ message Section {
 
 // Dans tous les cas
     optional string polyline = 12;
-    repeated string departure_date_times = 13;
-    repeated string arrival_date_times = 14;
 
 }
 
