@@ -108,7 +108,6 @@ namespace webservice {
         for(std::pair<std::string, std::string> p : request.params){
             // Traitement spécifique lorsqu'on a une liste de paramètres
             if(params.find(p.first) != params.end() && params[p.first].type == ApiParameter::STRINGLIST){
-                std::cout << p.second << std::endl;
                 // Si c'est le premier élément, on crée un vecteur
                 if(request.parsed_params.find(p.first) == request.parsed_params.end()){
                     request.parsed_params[p.first].value = std::vector<std::string>{p.second};

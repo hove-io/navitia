@@ -220,6 +220,9 @@ message Section {
 
 // Dans tous les cas
     optional string polyline = 12;
+    repeated string departure_date_times = 13;
+    repeated string arrival_date_times = 14;
+
 }
 
 message Journey {

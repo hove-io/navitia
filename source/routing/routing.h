@@ -188,13 +188,20 @@ enum ItemType {
 struct PathItem{
     DateTime arrival;
     DateTime departure;
+    std::vector<DateTime> arrivals;
+    std::vector<DateTime> departures;
     type::idx_t vj_idx;
     std::vector<type::idx_t> stop_points;
     ItemType type;
 
     PathItem(DateTime departure = DateTime::infinity(), DateTime arrival = DateTime::infinity(),
             type::idx_t vj_idx = type::invalid_idx) :
-        arrival(arrival), departure(departure), vj_idx(vj_idx) {}
+        arrival(arrival), departure(departure), vj_idx(vj_idx) {
+            if(departure != DateTime::inf)
+                departures.push_back(departure);
+            if(arrival != DateTime::inf)
+                arrivals.push_back(arrival);
+        }
 
     std::string print(const navitia::type::PT_Data & data) const;
 };
