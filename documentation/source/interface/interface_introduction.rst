@@ -66,7 +66,18 @@ Attention, l'interface de sortie JSON est susceptible d'évoluer en "compatibili
 Aide en ligne
 -------------
 
+Help
+~~~~
+
 Le service /help permet d'accéder à la liste des services disponibles sur l'application NAViTiA interrogée.
 Il énumère, pour chaque service, l'ensemble des paramètres disponibles.
 http://www.navitia.com/navitia/help
+
+Analyse
+~~~~~~~
+
+Le service /analyze permet d'analyser la forme des paramètres fournit pour un service (API) donné.
+Par exemple, pour analyser une requête au service "journeys", il suffit d'appeler le service "analyze" en ajoutant le paramètre "&api=journeys" et l'ensemble des paramètres renseignés pour le service "journeys":
+
+http://www.navitia.com/navitia/analyze?api=journeys&format=json&origin=coord:4.915:45.731&destination=coord:4.825:45.760&datetime=20120930T0800&clockwise=1
 
