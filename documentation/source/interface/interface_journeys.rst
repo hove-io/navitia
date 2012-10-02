@@ -59,7 +59,7 @@ Exemple d'appel:
 http://www.navitia.com/navitia/journeys?format=json&origin=coord:4.915:45.731&destination=coord:4.825:45.760&datetime=20120930T0800&clockwise=1
 
 Paramètres spécifiques à l'API "JourneysArray"
----------------------------------------------
+----------------------------------------------
 
 +-------------+------------------------+--------------------------+--------------------------------------------+
 | Paramètre   | Type                   | Remarque                 | Exemple                                    |
@@ -98,6 +98,8 @@ En fonction du mode utilisé pour chaque étape ("section") de l'itinéraire, le
 
   * soit de type "ROAD_NETWORK" ("filaire de voirie", pour les modes piéton, vélos, véhicule personnel...) 
   * soit de type "PUBLIC_TRANSPORT" ("transport en commun" pour les modes bus, train, avion...) 
+  * soit de type "TRANSFERT" ("transport en commun" pour les modes bus, train, avion...) 
+
 
 La réponse repliée est structurée ainsi:
 
