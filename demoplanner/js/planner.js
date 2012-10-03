@@ -41,39 +41,37 @@ function aff_planning(idPlanning) {
     } else {
         map.removeAllPolylines();
         map.removeAllMarkers();
-        var arraypolys = new Array();
 
-        $("#details").html("<ul>");
-
-        for(i=0;i<planner.journey_list[idPlanning].section_list.length;i++) {
+        var feuille = "<ul>";
+        for(i=0;i < planner.journey_list[idPlanning].section_list.length; i++) {
             var item = planner.journey_list[idPlanning].section_list[i];
-            var point = new mxn.LatLonPoint(item.origin.stop_area.coord.y, item.origin.stop_area.coord.x);
-            var marker = new mxn.Marker(point);
-            if(i==0) {
-                marker.setInfoBubble("Depart");
-                //  marker.openBubble();
-            } else {
-                marker.setInfoBubble("Depart arrivee");
-            }
-            map.addMarker(marker);
-            if(item.type == "PUBLIC_TRANSPORT"){
-                var sa_name = item.origin.stop_area.name;
-                var line_name = item.line.name;
-                $("#details").append("<li>Depart à " + format(item.departure_date_time)+" de "+ sa_name +" avec la ligne : "+ line_name + "</li>");
-                $("#details").append("<li>Arrivée à : "+ format(item.arrival_date_time)+"</li>");
-            } else {
-                $("details").append("<li>Marche à pied</li>");            
-            }
+            if(item.type === "PUBLIC_TRANSPORT"){
+                var arraypolys = new Array();
+                feuille += "<li>Trajet en " + item.mode + " " + item.code + " vers " + item.direction + "</li>";
+                feuille += "<ul>";
 
-            for(j=0;j<item.stop_point_list.length;j++) {
-                arraypolys.push(new mxn.LatLonPoint(item.stop_point_list[j].coord.y, item.stop_point_list[j].coord.x));
+                for(j=0; j < item.stop_point_list.length; j++) {
+                    feuille += "<li>" + item.stop_point_list[j].name + " " + item.departure_date_time_list[j] + " " + item.arrival_date_time_list[j] + "</li>";
+                    arraypolys.push(new mxn.LatLonPoint(item.stop_point_list[j].coord.y, item.stop_point_list[j].coord.x));
+                }
+                feuille += "</ul>";
+                var myPoly = new mxn.Polyline(arraypolys);
+                myPoly.setWidth(5);
+                map.addPolyline(myPoly);
+
+            } else if(item.type === "ROAD_NETWORK") {
+                feuille += "<li>Marche à pied sur " + item.street_network.length +" mètres</li>"; 
+                var arraypolys = new Array();
+                for(j=0 ; j < item.street_network.coordinate_list.length; j++){
+                    arraypolys.push(new mxn.LatLonPoint(item.street_network.coordinate_list[j].y, item.street_network.coordinate_list[j].x));
+                }
+                var myPoly = new mxn.Polyline(arraypolys);
+                myPoly.setWidth(2);
+                map.addPolyline(myPoly);
             }
         }
-        $("#details").append("</ul>");
-
-        var myPoly = new mxn.Polyline(arraypolys);
-        myPoly.setWidth(5);
-        map.addPolyline(myPoly);
+        feuille += "</ul>";
+        $("#details").html(feuille);
     }
 }
 
@@ -103,9 +101,9 @@ function planner() {
     if((departure_idx !== -1) && (destination_idx !== -1)) {
         debut_requete = new Date().getTime();
         $.getJSON("../journeys?format=json&origin="+departure_idx+"&destination="+destination_idx+"&datetime="+$("#date").val()+"T"+$("#timeheure").val()+""+$("#timemin").val()+"&date="+
-                  +"&clockwise="+$("#typeitineraire option:selected'").val(),
-                  aff_data
-                  );
+                +"&clockwise="+$("#typeitineraire option:selected'").val(),
+                aff_data
+                );
 
 
 
@@ -128,10 +126,10 @@ function clickmap(event_name, event_source, event_args) {
         debut_requete = new Date().getTime();
 
         $.getJSON("../journeys?format=json&origin=coord:"+depart_arrivee.depart.lon+":"+depart_arrivee.depart.lat+
-                  "&destination=coord:"+depart_arrivee.arrivee.lon+":"+depart_arrivee.arrivee.lat+"&datetime="+$("#date").val()
-+"T"+$("#timeheure").val()+""+$("#timemin").val()+"&clockwise="+$("#typeitineraire option:selected'").val(),
-                  aff_data
-                  );
+                "&destination=coord:"+depart_arrivee.arrivee.lon+":"+depart_arrivee.arrivee.lat+"&datetime="+$("#date").val()
+                +"T"+$("#timeheure").val()+""+$("#timemin").val()+"&clockwise="+$("#typeitineraire option:selected'").val(),
+                aff_data
+                );
 
 
         depart_arrivee.depart.lat = -1;
@@ -143,92 +141,92 @@ function clickmap(event_name, event_source, event_args) {
 
 window.onload= function() {
 
-            map = new mxn.Mapstraction('mapdiv', 'openlayers');
-            map.click.addHandler(clickmap);
-            $("#go").click(planner);
-            $("#centrer").change(function() {
-                var sels = $("#centrer option:selected");
-                var sel = sels[0].value;
-                centrer(sel);
-            } );
-            centrer("paris");
-        }
+    map = new mxn.Mapstraction('mapdiv', 'openlayers');
+    map.click.addHandler(clickmap);
+    $("#go").click(planner);
+    $("#centrer").change(function() {
+        var sels = $("#centrer option:selected");
+        var sel = sels[0].value;
+        centrer(sel);
+    } );
+    centrer("paris");
+}
 
 function centrer(ville) {
     var villes = {
-                    "paris" : {"x" :48.85341 ,"y": 2.3488, "zoom" : 13},
-                    "lille" : {"x" :50.6367, "y" : 3.0373, "zoom" : 13},
-                    "lyon"  : {"x" :45.74846, "y" : 4.84671, "zoom" : 13}
-                  };
-    
+        "paris" : {"x" :48.85341 ,"y": 2.3488, "zoom" : 13},
+        "lille" : {"x" :50.6367, "y" : 3.0373, "zoom" : 13},
+        "lyon"  : {"x" :45.74846, "y" : 4.84671, "zoom" : 13}
+    };
+
     var latlon = new mxn.LatLonPoint(villes[ville].x, villes[ville].y);
     map.setCenterAndZoom(latlon, villes[ville].zoom);
 
 }
 
 $(function() {
-      $( "#departure" ).autocomplete({
-                                         source: function( request, response ) {
-                                                     $.ajax({
-                                                                url: "http://127.0.0.1/firstletter",
-                                                                dataType: "json",
-                                                                data: {
-                                                                    format : "json",
-                                                                    name: request.term,
-                                                                },
-                                                                success: function( data ) {
-                                                                             response( $.map( data.firstletter.items, function( item ) {
-                                                                                                 return {
-                                                                                                     label: item.name,
-                                                                                                     value: item.uri
-                                                                                                 }
-                                                                                             }));
-                                                                         }
-                                                            });
-                                                 },
-                                         minLength: 2,
-                                         select: function( event, ui ) {
-                                                     departure_idx = ui.item.value;
-                                                 },
-                                         open: function() {
-                                                   $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
-                                               },
-                                         close: function() {
-                                                    $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
-                                                }
-                                     });
+    $( "#departure" ).autocomplete({
+        source: function( request, response ) {
+            $.ajax({
+                url: "http://127.0.0.1/firstletter",
+            dataType: "json",
+            data: {
+                format : "json",
+            name: request.term,
+            },
+            success: function( data ) {
+                response( $.map( data.firstletter.items, function( item ) {
+                    return {
+                        label: item.name,
+                value: item.uri
+                    }
+                }));
+            }
+            });
+        },
+    minLength: 2,
+    select: function( event, ui ) {
+        departure_idx = ui.item.value;
+    },
+    open: function() {
+        $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
+    },
+    close: function() {
+        $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+    }
+    });
 
-      $( "#destination" ).autocomplete({
-                                           source: function( request, response ) {
-                                                       $.ajax({
-                                                                  url: "http://127.0.0.1/firstletter",
-                                                                  dataType: "json",
-                                                                  data: {
-                                                                      format : "json",
-                                                                      name: request.term,
-                                                                  },
-                                                                  success: function( data ) {
-                                                                               response( $.map( data.firstletter.items, function( item ) {
-                                                                                                   return {
-                                                                                                       label: item.name,
-                                                                                                       value: item.uri
-                                                                                                   }
+    $( "#destination" ).autocomplete({
+        source: function( request, response ) {
+            $.ajax({
+                url: "http://127.0.0.1/firstletter",
+                dataType: "json",
+                data: {
+                    format : "json",
+                name: request.term,
+                },
+                success: function( data ) {
+                    response( $.map( data.firstletter.items, function( item ) {
+                        return {
+                            label: item.name,
+                    value: item.uri
+                        }
 
 
-                                                                                               }));
-                                                                           }
-                                                              });
-                                                   },
-                                           minLength: 2,
-                                           select: function( event, ui ) {
-                                                       destination_idx = ui.item.value;
-                                                   },
-                                           open: function() {
-                                                     $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
-                                                 },
-                                           close: function() {
-                                                      $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
-                                                  }
-                                       });
+                    }));
+                }
+            });
+        },
+            minLength: 2,
+            select: function( event, ui ) {
+                destination_idx = ui.item.value;
+            },
+            open: function() {
+                $( this ).removeClass( "ui-corner-all" ).addClass( "ui-corner-top" );
+            },
+            close: function() {
+                $( this ).removeClass( "ui-corner-top" ).addClass( "ui-corner-all" );
+            }
+    });
 
-  });
+});

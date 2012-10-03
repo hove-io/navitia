@@ -183,6 +183,9 @@ struct GeoRef {
                                                );
 
     }
+
+    /// Reconstruit un itinéraire à partir de la destination et la liste des prédécesseurs
+    Path build_path(vertex_t best_destination, std::vector<vertex_t> preds) const;
 };
 
 
@@ -271,20 +274,34 @@ public:
      *
      * Retourne tous les idx atteignables dans ce rayon, ainsi que la distance en suivant le filaire de voirie
      **/
-    std::vector< std::pair<type::idx_t, double> > find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius);
+    std::vector< std::pair<type::idx_t, double> > find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius, bool use_second=false);
+
+    /// Reconstruit l'itinéraire piéton à partir de l'idx
+    Path get_path(type::idx_t idx, bool use_second = false);
 
 private:
     //const StreetNetwork & street_network;
     const GeoRef & geo_ref;
 
+    std::vector< std::pair<type::idx_t, double> > find_nearest(const ProjectionData & start,
+                                                               double radius,
+                                                               const std::vector< std::pair<type::idx_t, type::GeographicalCoord> > & elements,
+                                                               std::vector<float> & dist,
+                                                               std::vector<vertex_t> & preds,
+                                                               std::map<type::idx_t, ProjectionData> & idx_proj);
+
+    // Les données sont doublées pour garder les données au départ et à l'arrivée
     /// Tableau des distances utilisé par Dijkstra
     std::vector<float> distances;
+    std::vector<float> distances2;
 
     /// Tableau des prédécesseurs utilisé par Dijkstra
     std::vector<vertex_t> predecessors;
+    std::vector<vertex_t> predecessors2;
 
     /// Associe chaque idx_t aux données de projection sur le filaire associées
     std::map<type::idx_t, ProjectionData> idx_projection;
+    std::map<type::idx_t, ProjectionData> idx_projection2;
 };
 
 }} //namespace navitia::streetnetwork

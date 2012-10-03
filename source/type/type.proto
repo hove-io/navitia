@@ -193,24 +193,25 @@ message StreetNetwork {
 
 enum SectionType {
     PUBLIC_TRANSPORT = 1;
-    HIT_THE_ROAD = 2;
+    ROAD_NETWORK = 2;
     WAITING = 3;
     TRANSFER = 4;
+    BIRD_FLY = 5;
 }
 
 message Section {
-    optional string departure_date_time = 1;
-    optional string arrival_date_time = 2;
-    optional SectionType type = 3;
-    optional PlaceMark origin = 4;
-    optional PlaceMark destination = 5;
+    optional SectionType type = 1;
 
 // Si c'est du TC
-    repeated StopPoint stop_point = 6;
-    optional string mode = 7;
-    optional Line line = 8;
-    optional string code = 9;
-    optional string headsign = 10;
+    optional string network = 2;
+    optional string mode = 3;
+    optional string code = 4;
+    optional string headsign = 5;
+    optional string direction = 6;
+    optional Line line = 7;
+    repeated StopPoint stop_point = 8;
+    repeated string departure_date_time = 9;
+    repeated string arrival_date_time = 10;
 
 // Si c'est du routier
     optional StreetNetwork street_network = 11;
@@ -219,17 +220,18 @@ message Section {
 
 // Dans tous les cas
     optional string polyline = 12;
+
 }
 
 message Journey {
     optional int32 duration = 1;
     optional int32 nb_transfers = 2;
-    repeated Section section = 3;
-    optional string departure_date_time = 4;
-    optional string arrival_date_time = 5;
-    optional string call_before = 6;
-    optional string call_after = 7;
-    optional string requested_date_time = 8;
+    optional string departure_date_time = 3;
+    optional string arrival_date_time = 4;
+    optional string requested_date_time = 5;
+    repeated Section section = 6;
+    optional string call_before = 7;
+    optional string call_after = 8;
 }
 
 enum ResponseType {

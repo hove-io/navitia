@@ -667,6 +667,13 @@ void build_routes(Data & data){
             }
         }
     }
+
+    for(nm::Route *route : data.routes){
+        if(! route->route_point_list.empty()){
+            nm::RoutePoint * last = route->route_point_list.back();
+            route->name = last->stop_point->stop_area->name;
+        }
+    }
     std::cout << "Nombre de routes : " << data.routes.size() << std::endl;
     std::cout << std::endl;
 }
