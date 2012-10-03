@@ -23,6 +23,7 @@ private:
     boost::unordered_map<std::string, navimake::types::ValidityPattern*> vp_map;
     boost::unordered_map<std::string, navimake::types::VehicleJourney*> vj_map;
     boost::unordered_map<std::string, navimake::types::Mode*> mode_map;
+    boost::unordered_map<std::string, navimake::types::Network*> agency_map;
 
 public:
     boost::gregorian::date_period production_date;///<Période de validité des données
@@ -33,14 +34,17 @@ public:
     /// Constructeur d'une instance vide
     GtfsParser() : production_date(boost::gregorian::date(), boost::gregorian::date()) {}
 
-    /// Remplis la structure passée en paramètre
+    /// Remplit la structure passée en paramètre
     void fill(navimake::Data& data);
 
-    /// Remplis les modes types
+    /// Remplit les modes types
     void fill_mode_types(Data & data);
 
+    /// Parse le fichier des agency, on s'en sert pour remplir les network
+    void parse_agency(Data & data);
+
     /// Parse le fichier calendar.txt
-    /// Remplis les validity_patterns par période
+    /// Remplit les validity_patterns par période
     void parse_calendar(Data & data);
 
     /// Parse le fichier calendar_dates.txt
