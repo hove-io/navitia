@@ -72,8 +72,8 @@ void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
 
     std::unordered_map<std::string, vertex_t> vertex_map;
     std::unordered_map<std::string, Way> way_map;
-    std::unordered_map<std::string, HouseNumber> house_number_left_map;
-    std::unordered_map<std::string, HouseNumber> house_number_right_map;
+    std::unordered_map<int, HouseNumber> house_number_left_map;
+    std::unordered_map<int, HouseNumber> house_number_right_map;
 
     for(row = reader.next(); !reader.eof() ;row = reader.next()){
         vertex_t source, target;
@@ -150,36 +150,36 @@ void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
             way_map[way_key].way_type = row[type];
         }
 
-        //hn_deb_d
-        std::string hn_key = row[x1] + row[y1] + row[n_deb_d];
-        auto hn = house_number_right_map.find(hn_key);
+         //hn_deb_d
+        //std::string hn_key = row[x1] + row[y1] + row[n_deb_d];
+        auto hn = house_number_right_map.find(hn_deb_d.number);
         if ((hn == house_number_right_map.end()) && (hn_deb_d.number > 0)){
             way_map[way_key].house_number_right.push_back(hn_deb_d);
-            house_number_right_map[hn_key]= hn_deb_d;
+            house_number_right_map[hn_deb_d.number]= hn_deb_d;
         }
 
         //hn_deb_g
-        hn_key = row[x1] + row[y1] + row[n_deb_g];
-        hn = house_number_left_map.find(hn_key);
+        //hn_key = row[x1] + row[y1] + row[n_deb_g];
+        hn = house_number_left_map.find(hn_deb_g.number);
         if ((hn == house_number_left_map.end()) && (hn_deb_g.number > 0)){
             way_map[way_key].house_number_left.push_back(hn_deb_g);
-            house_number_left_map[hn_key]= hn_deb_g;
+            house_number_left_map[hn_deb_g.number]= hn_deb_g;
         }
 
         //hn_fin_d
-        hn_key = row[x2] + row[y2] + row[n_fin_d];
-        hn = house_number_right_map.find(hn_key);
+        //hn_key = row[x2] + row[y2] + row[n_fin_d];
+        hn = house_number_right_map.find(hn_fin_d.number);
         if ((hn == house_number_right_map.end()) && (hn_fin_d.number > 0)){
             way_map[way_key].house_number_right.push_back(hn_fin_d);
-            house_number_right_map[hn_key]= hn_fin_d;
+            house_number_right_map[hn_fin_d.number]= hn_fin_d;
         }
 
         //hn_fin_g
-        hn_key = row[x2] + row[y2] + row[n_fin_g];
-        hn = house_number_left_map.find(hn_key);
+        //hn_key = row[x2] + row[y2] + row[n_fin_g];
+        hn = house_number_left_map.find(hn_fin_g.number);
         if ((hn == house_number_left_map.end()) && (hn_fin_g.number > 0)){
             way_map[way_key].house_number_left.push_back(hn_fin_g);
-            house_number_left_map[hn_key]= hn_fin_g;
+            house_number_left_map[hn_fin_g.number]= hn_fin_g;
         }
 
         way_map[way_key].edges.push_back(std::make_pair(source, target));
