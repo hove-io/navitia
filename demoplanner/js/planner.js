@@ -42,34 +42,25 @@ function aff_planning(idPlanning) {
         map.removeAllPolylines();
         map.removeAllMarkers();
 
-        $("#details").html("<ul>");
-
-        for(i=0;i<planner.journey_list[idPlanning].section_list.length;i++) {
+        var feuille = "<ul>";
+        for(i=0;i < planner.journey_list[idPlanning].section_list.length; i++) {
             var item = planner.journey_list[idPlanning].section_list[i];
             if(item.type === "PUBLIC_TRANSPORT"){
-                var point = new mxn.LatLonPoint(item.origin.stop_area.coord.y, item.origin.stop_area.coord.x);
-                var marker = new mxn.Marker(point);
-                map.addMarker(marker);
-                if(i==0) {
-                    marker.setInfoBubble("Depart");
-                    //  marker.openBubble();
-                } else {
-                    marker.setInfoBubble("Depart arrivee");
-                }
-                var sa_name = item.origin.stop_area.name;
-                var line_name = item.line.name;
-                $("#details").append("<li>Depart à " + format(item.departure_date_time)+" de "+ sa_name +" avec la ligne : "+ line_name + "</li>");
-                $("#details").append("<li>Arrivée à : "+ format(item.arrival_date_time)+"</li>");
                 var arraypolys = new Array();
-                for(j=0;j<item.stop_point_list.length;j++) {
+                feuille += "<li>Trajet en " + item.mode + " " + item.code + " vers " + item.direction + "</li>";
+                feuille += "<ul>";
+
+                for(j=0; j < item.stop_point_list.length; j++) {
+                    feuille += "<li>" + item.stop_point_list[j].name + " " + item.departure_date_time_list[j] + " " + item.arrival_date_time_list[j] + "</li>";
                     arraypolys.push(new mxn.LatLonPoint(item.stop_point_list[j].coord.y, item.stop_point_list[j].coord.x));
                 }
+                feuille += "</ul>";
                 var myPoly = new mxn.Polyline(arraypolys);
                 myPoly.setWidth(5);
                 map.addPolyline(myPoly);
 
             } else if(item.type === "ROAD_NETWORK") {
-                $("details").append("<li>Marche à pied sur " + item.street_network.length +" mètres</li>");            
+                feuille += "<li>Marche à pied sur " + item.street_network.length +" mètres</li>"; 
                 var arraypolys = new Array();
                 for(j=0 ; j < item.street_network.coordinate_list.length; j++){
                     arraypolys.push(new mxn.LatLonPoint(item.street_network.coordinate_list[j].y, item.street_network.coordinate_list[j].x));
@@ -78,10 +69,9 @@ function aff_planning(idPlanning) {
                 myPoly.setWidth(2);
                 map.addPolyline(myPoly);
             }
-
         }
-        $("#details").append("</ul>");
-
+        feuille += "</ul>";
+        $("#details").html(feuille);
     }
 }
 

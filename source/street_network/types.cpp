@@ -5,15 +5,84 @@
 #include <unordered_map>
 
 using navitia::type::idx_t;
-//namespace navitia{ namespace streetnetwork{
+
 namespace navitia{ namespace georef{
 
 // Exception levée dès que l'on trouve une destination
 struct DestinationFound{};
 
 void Way::sort_house_number(){
-    std::sort(house_number_right.begin(),house_number_right.end());
-    std::sort(house_number_left.begin(),house_number_left.end());
+    std::sort(this->house_number_right.begin(),this->house_number_right.end());
+    std::sort(this->house_number_left.begin(),this->house_number_left.end());
+}
+
+nt::GeographicalCoord Way::nearest_geographical_coord(int number){
+    nt::GeographicalCoord to_return;    
+    HouseNumber hn_upper, hn_lower;
+    if (number % 2 == 0){ // pair
+        for(auto it=this->house_number_right.begin(); it != this->house_number_right.end(); ++it){
+            if ((*it).number  < number){
+                hn_lower = (*it);
+            }else {
+                hn_upper = (*it);
+                break;
+            }
+        }
+    }else{
+        for(auto it=this->house_number_left.begin(); it != this->house_number_left.end(); ++it){
+            if ((*it).number  < number){
+                hn_lower = (*it);
+            }else {
+                hn_upper = (*it);
+                break;
+            }
+        }
+    }
+    // l'extrapolation à faire :
+
+    return to_return;
+}
+
+nt::GeographicalCoord Way::get_geographicalCoord_by_number(int number){
+    nt::GeographicalCoord to_return;
+    if (number % 2 == 0){ // Pair
+        if (this->house_number_right.size() > 0){
+            if (this->house_number_right.back().number <= number){
+                to_return = this->house_number_right.back().coord;
+            }else{
+                if (this->house_number_right.front().number >= number){
+                    to_return = this->house_number_right.front().coord;
+                }else{
+                    for(auto it=this->house_number_right.begin(); it != this->house_number_right.end(); ++it){
+                        if ((*it).number  == number){
+                            return (*it).coord;
+                        }
+                    }
+                    // Dans le cas où on ne trouve pas le numéro
+                    to_return = nearest_geographical_coord(number);
+                }
+            }
+        }
+    }else{ // Impair
+        if (this->house_number_left.size() > 0){
+            if (this->house_number_left.back().number <= number){
+                to_return = this->house_number_left.back().coord;
+            }else{
+                if (this->house_number_left.front().number >= number){
+                    to_return = this->house_number_left.front().coord;
+                }else{
+                    for(auto it=this->house_number_left.begin(); it != this->house_number_left.end(); ++it){
+                        if ((*it).number  == number){
+                            return (*it).coord;
+                        }
+                    }
+                    // Dans le cas où on ne trouve pas le numéro
+                    to_return = nearest_geographical_coord(number);
+                }
+            }
+        }
+    }    
+    return to_return;
 }
 
 // Visiteur qui lève une exception dès qu'une des cibles souhaitées est atteinte

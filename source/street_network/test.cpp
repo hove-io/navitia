@@ -297,3 +297,43 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     BOOST_CHECK_EQUAL(res[1].first , 2);
     BOOST_CHECK_CLOSE(res[1].second, 350, 1);
 }
+
+// Récupérer les cordonnées d'un numéro :
+
+BOOST_AUTO_TEST_CASE(coord_housenumber){
+    navitia::georef::Way way;
+    navitia::georef::HouseNumber hn;
+
+    /*
+rue canoville
+(1,1)       (1,7)       (1,10)       (1,18)
+2           8           16           22
+      */
+    way.name="canoville";
+    way.way_type="rue";
+    hn.coord.x=1.0;
+    hn.coord.y=1.0;
+    hn.number = 2;
+    way.house_number_right.push_back(hn);
+
+    hn.coord.x=1.0;
+    hn.coord.y=7.0;
+    hn.number = 8;
+    way.house_number_right.push_back(hn);
+
+    hn.coord.x=1.0;
+    hn.coord.y=10.0;
+    hn.number = 16;
+    way.house_number_right.push_back(hn);
+
+    hn.coord.x=1.0;
+    hn.coord.y=18.0;
+    hn.number = 22;
+    way.house_number_right.push_back(hn);
+
+    way.sort_house_number();
+    nt::GeographicalCoord to_return = way.get_geographicalCoord_by_number(10);
+    if (to_return.x ==0)
+        to_return.x =0;
+
+}

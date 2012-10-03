@@ -69,6 +69,7 @@ struct HouseNumber{
     bool operator<(const HouseNumber & other) const{
         return this->number < other.number;
     }
+
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & coord & number;
     }
@@ -85,6 +86,8 @@ struct Way :public nt::Nameable{
     std::vector< std::pair<vertex_t, vertex_t> > edges;
 
     void sort_house_number();
+    nt::GeographicalCoord get_geographicalCoord_by_number(int);
+    nt::GeographicalCoord nearest_geographical_coord(int);    
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
       ar & idx & name & comment & way_type & city & city_idx & house_number_left & house_number_right & edges;
     }
