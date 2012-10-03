@@ -8,11 +8,13 @@ void dataRAPTOR::load(const type::PT_Data &data)
     retour_constant_reverse.resize(data.stop_points.size());
 
     for(auto &r : retour_constant_reverse) {
-        r.dt = DateTime::min;
+        r.arrival = DateTime::min;
+        r.departure = DateTime::min;
     }
 
     for(auto &r : retour_constant) {
-        r.dt = DateTime::inf;
+        r.arrival = DateTime::inf;
+        r.departure = DateTime::inf;
     }
     //Construction de la liste des marche à pied à partir des connections renseignées
 

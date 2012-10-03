@@ -11,77 +11,59 @@ enum type_idx {
 };
 struct type_retour {
     unsigned int stid;
-    int spid_emarquement;
-    DateTime dt;
-    int dist_to_dest;
-    int dist_to_dep;
+    int spid_embarquement;
+    DateTime arrival, departure;
     type_idx type;
 
+    type_retour(const DateTime & arrival, const DateTime & departure) : stid(navitia::type::invalid_idx),
+        spid_embarquement(navitia::type::invalid_idx), arrival(arrival), departure(departure), type(depart) {}
 
-    type_retour(int stid, DateTime dt, int dist_to_dest) : stid(stid), spid_emarquement(-1), dt(dt), dist_to_dest(dist_to_dest), dist_to_dep(0), type(vj) {}
-    type_retour(int stid, DateTime dt, int dist_to_dest, int dist_to_dep) : stid(stid), spid_emarquement(-1), dt(dt), dist_to_dest(dist_to_dest), dist_to_dep(dist_to_dep), type(vj) {}
-
-    type_retour(int stid, DateTime dt) : stid(stid), spid_emarquement(-1), dt(dt), dist_to_dest(0), dist_to_dep(0), type(vj){}
-    type_retour(int stid, DateTime dt, type_idx type) : stid(stid), spid_emarquement(-1), dt(dt), dist_to_dest(0), dist_to_dep(0), type(type){}
-    type_retour(int stid, int said_emarquement,DateTime dt) : stid(stid), spid_emarquement(said_emarquement), dt(dt), dist_to_dest(0), dist_to_dep(0), type(vj){}
-
-    type_retour(int stid, int said_emarquement, DateTime dt, type_idx type) : stid(stid), spid_emarquement(said_emarquement), dt(dt), dist_to_dest(0), dist_to_dep(0), type(type){}
-    type_retour(unsigned int dist_to_dest) : stid(-1), spid_emarquement(-1), dt(), dist_to_dest(dist_to_dest), dist_to_dep(0), type(vj){}
-    type_retour() : stid(-1), spid_emarquement(-1), dt(), dist_to_dest(0), dist_to_dep(0), type(uninitialized) {}
-    type_retour(const type_retour & t) : stid(t.stid), spid_emarquement(t.spid_emarquement), dt(t.dt), dist_to_dest(t.dist_to_dest), dist_to_dep(t.dist_to_dep), type(t.type) {}
-
-    bool operator<(type_retour r2) const {
-        if(r2.dt == DateTime::inf)
-            return true;
-        else if(this->dt == DateTime::inf)
-            return false;
-        else
-            return this->dt + this->dist_to_dest < r2.dt + dist_to_dest;
+    type_retour(const type::StopTime & st, const DateTime & date, int embarquement, bool clockwise) : stid(st.idx), spid_embarquement(embarquement),
+        type(vj) {
+        if(clockwise) {
+            arrival = date;
+            departure = arrival;
+            departure.update(st.departure_time);
+        } else {
+            departure = date;
+            arrival = departure;
+            arrival.updatereverse(st.arrival_time);
+        }
+        departure.normalize();
+        arrival.normalize();
     }
 
-    bool operator>(type_retour r2) const {
-        if(r2.dt == DateTime::min)
-            return true;
-        else if(this->dt == DateTime::min)
-            return false;
-        else
-            return this->dt + this->dist_to_dep > r2.dt + dist_to_dep;
-    }
+    type_retour(const DateTime & arrival, const DateTime & departure, int embarquement) : stid(navitia::type::invalid_idx),
+        spid_embarquement(embarquement), arrival(arrival), departure(departure), type(connection) {}
 
-    bool operator>=(type_retour r2) const {
-        if(r2.dt == DateTime::min)
-            return true;
-        else if(this->dt == DateTime::min)
-            return false;
-        else
-            return this->dt - this->dist_to_dep >= r2.dt - dist_to_dep;
-    }
+    type_retour() : stid(-1), spid_embarquement(-1), arrival(), departure(DateTime::min), type(uninitialized) {}
+    type_retour(const type_retour & t) : stid(t.stid), spid_embarquement(t.spid_embarquement), arrival(t.arrival),
+        departure(departure), type(t.type) {}
 
-    bool operator==(type_retour r2) const { return this->stid == r2.stid && this->dt == r2.dt; }
-    bool operator!=(type_retour r2) const { return this->stid != r2.stid || this->dt != r2.dt;}
 };
 
 struct best_dest {
 //    typedef std::pair<unsigned int, int> idx_dist;
 
-    std::/*unordered_*/map<unsigned int, type_retour> map_date_time;
+    std::/*unordered_*/map<unsigned int, std::pair<int, int>> map_date_time;
     type_retour best_now;
     unsigned int best_now_spid;
     unsigned int count;
 
-    void ajouter_destination(unsigned int spid, const type_retour &t) { map_date_time[spid] = t;}
+    void ajouter_destination(unsigned int spid, const int dist_to_dep, const int dist_to_dest) { 
+        map_date_time[spid] = std::make_pair(dist_to_dep, dist_to_dest);
+    }
 
-    bool is_dest(unsigned int spid) {return map_date_time.find(spid) != map_date_time.end();}
+    bool is_dest(unsigned int spid) const {return map_date_time.find(spid) != map_date_time.end();}
 
     bool ajouter_best(unsigned int spid, const type_retour &t, int cnt) {
         auto it = map_date_time.find(spid);
         if(it != map_date_time.end()) {
-            if(t.dt + it->second.dist_to_dest <= best_now.dt) {
+            if(t.arrival + it->second.second <= best_now.arrival) {
                 best_now = t;
-                best_now.dt = best_now.dt + it->second.dist_to_dest;
+                best_now.arrival = best_now.arrival + it->second.second;
                 best_now_spid = spid;
                 count = cnt;
-//                it->second = t;
                 return true;
             }
         }
@@ -91,12 +73,11 @@ struct best_dest {
     bool ajouter_best_reverse(unsigned int spid, const type_retour &t, int cnt) {
         auto it = map_date_time.find(spid);
         if(it != map_date_time.end()) {
-            if(t.dt != DateTime::min && (t.dt - t.dist_to_dep) >= best_now.dt) {
+            if(t.departure != DateTime::min && (t.departure - it->second.first) >= best_now.departure) {
                 best_now = t;
-                best_now.dt = best_now.dt - it->second.dist_to_dep;
+                best_now.departure = best_now.departure - it->second.first;
                 best_now_spid = spid;
                 count = cnt;
-//                it->second = t;
                 return true;
             }
         }
@@ -110,13 +91,16 @@ struct best_dest {
         count = 0;
     }
 
-    void reinit(DateTime borne) {
+    void reinit(const DateTime &borne, const bool clockwise) {
         reinit();
-        best_now.dt = borne;
+        if(clockwise)
+            best_now.arrival = borne;
+        else
+            best_now.departure = borne;
     }
 
     void reverse() {
-        best_now.dt = DateTime::min;
+        best_now.departure = DateTime::min;
     }
 
 

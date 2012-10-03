@@ -246,6 +246,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
     type::PT_Data & d = data.pt_data;
 
     auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0);
+
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
     auto res = res1.back();
@@ -389,16 +390,16 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_fin){
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
-    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8200+10*60);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8200);
 
-    res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 7900, 0, routing::DateTime(0, 9200+10*60));
+    res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 7900, 0, routing::DateTime(0, 9200));
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
     res = res1.back();
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
-    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8200+10*60);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8200);
 
     res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 7900, 0, routing::DateTime(0, 8200+10*60));
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
@@ -407,7 +408,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_fin){
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
-    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8200+10*60);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8200);
 
     res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 7900, 0, routing::DateTime(0, (8200+10*60)-1));
     BOOST_REQUIRE_EQUAL(res1.size(), 0);
@@ -514,6 +515,11 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
     auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 8*3600 + 15*60, 0);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    for(auto r : res1) {
+        std::cout << std::endl << std::endl << "Itineraire " << std::endl;
+        r.print(d);
+    }
 
     auto res = res1.back();
 
