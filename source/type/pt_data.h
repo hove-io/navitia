@@ -150,8 +150,16 @@ struct PT_Data : boost::noncopyable{
         return result;
     }
 
-
     PT_Data& operator=(PT_Data&& other);
+
+    int connection_duration(idx_t origin_route_point, idx_t destination_route_point){
+        const RoutePoint & origin = route_points[origin_route_point];
+        const RoutePoint & destination = route_points[destination_route_point];
+        if(origin.stop_point_idx == destination.stop_point_idx)
+            return 120;
+        else
+            return 180;
+    }
 };
 
 }}

@@ -204,12 +204,6 @@ void PT_Data::build_external_code() {
     normalize_extcode<Country>(country_map);
 }
 
-struct Edge {
-    uint16_t duration;
-    ConnectionType type;
-    Edge(uint16_t duration,  ConnectionType type) : duration(duration), type(type) {}
-    Edge() {}
-};
 
 void PT_Data::build_connections() {
     stop_point_connections.resize(stop_points.size());
