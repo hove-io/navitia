@@ -71,7 +71,7 @@ bool Line::operator<(const Line& other) const {
         return false;
     }
     if(this->mode_type == other.mode_type){
-        return this->name < other.name;
+        return this->external_code < other.external_code;
     }else{
         return *(this->mode_type) < *(other.mode_type);
     }
