@@ -390,7 +390,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_fin){
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
-    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8200);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8200 + 60*10);
 
     res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 7900, 0, routing::DateTime(0, 9200));
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
@@ -399,7 +399,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_fin){
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
-    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8200);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8200 + 60*10);
 
     res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 7900, 0, routing::DateTime(0, 8200+10*60));
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_fin){
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 2);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
-    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8200);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8200 + 60*10);
 
     res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 7900, 0, routing::DateTime(0, (8200+10*60)-1));
     BOOST_REQUIRE_EQUAL(res1.size(), 0);
@@ -462,6 +462,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_debut) {
     navimake::builder b("20120614");
     b.vj("A")("stop1", 8000)("stop20", 8200);
     b.vj("B")("stop2", 30000)("stop3",40000);
+    b.vj("C")("stop2", 7900 + (10*60)/80 - 1)("stop3", 8500);
     b.connection("stop1", "stop2", 10*60);
 
     type::Data data;
@@ -515,11 +516,6 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
     auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 8*3600 + 15*60, 0);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
-
-    for(auto r : res1) {
-        std::cout << std::endl << std::endl << "Itineraire " << std::endl;
-        r.print(d);
-    }
 
     auto res = res1.back();
 

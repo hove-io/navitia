@@ -75,6 +75,7 @@ struct RAPTOR : public AbstractRouter
 
 
     void set_routes_valides(const DateTime & dtDepart);
+    int min_time_to_wait(navitia::type::idx_t rp1, navitia::type::idx_t rp2);   
 
     void boucleRAPTOR();
     Path makePath(std::vector<std::pair<type::idx_t, double> > departs,
