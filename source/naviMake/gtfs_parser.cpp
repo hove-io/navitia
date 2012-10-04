@@ -39,6 +39,7 @@ GtfsParser::GtfsParser(const std::string & path) :
 void GtfsParser::fill(Data & data){
     production_date = find_production_date();
     fill_mode_types(data);
+    parse_agency(data);
     parse_stops(data);
     parse_calendar(data);
     parse_calendar_dates(data);
@@ -120,6 +121,39 @@ void GtfsParser::fill_mode_types(Data & data) {
     }
 
 
+}
+
+void GtfsParser::parse_agency(Data & data){
+    std::cout << "On parse : " << (path + "/agency.txt").c_str() << std::endl;
+    std::fstream ifile((path + "/agency.txt").c_str());
+    remove_bom(ifile);
+    std::string line;
+    if(!getline(ifile, line)) {
+        std::cerr << "Impossible d'ouvrir agency.txt" << std::endl;
+        return;
+    }
+    int id_c = -1, name_c = -1;
+    boost::trim(line);
+    Tokenizer tok_header(line);
+    std::vector<std::string> elts(tok_header.begin(), tok_header.end());
+    for(size_t i = 0; i < elts.size(); i++){
+        if(elts[i] == "agency_id")
+            id_c = i;
+        else if(elts[i] == "agency_name")
+            name_c = i;
+    }
+
+
+    while(getline(ifile, line)) {
+        boost::trim(line);
+        Tokenizer tok(line);
+        elts.assign(tok.begin(), tok.end());
+        nm::Network * network = new nm::Network();
+        network->external_code = elts[id_c];
+        network->name = elts[name_c];
+        data.networks.push_back(network);
+        agency_map[network->external_code] = network;
+    }
 }
 
 void GtfsParser::parse_stops(Data & data) {
@@ -475,7 +509,7 @@ void GtfsParser:: parse_routes(Data & data){
     boost::trim(line);
     Tokenizer tok_header(line);
     std::vector<std::string> elts(tok_header.begin(), tok_header.end());
-    int id_c = -1, short_name_c = -1, long_name_c = -1, type_c = -1, color_c = -1;
+    int id_c = -1, short_name_c = -1, long_name_c = -1, type_c = -1, color_c = -1, agency_c = -1;
     for(size_t i = 0; i < elts.size(); i++){
         if (elts[i] == "route_id")
             id_c = i;
@@ -487,6 +521,8 @@ void GtfsParser:: parse_routes(Data & data){
             type_c = i;
         else if(elts[i] == "route_color")
             color_c = i;
+        else if(elts[i] == "agency_id")
+            agency_c = i;
     }
     if(id_c == -1 || short_name_c == -1 || long_name_c == -1 || type_c == -1 || color_c == -1) {
         std::cerr << "Il manque au moins une colonne dans routes.txt" << std::endl;
@@ -509,6 +545,11 @@ void GtfsParser:: parse_routes(Data & data){
             boost::unordered_map<std::string, nm::ModeType*>::iterator it= mode_type_map.find(elts[type_c]);
             if(it != mode_type_map.end())
                 line->mode_type = it->second;
+
+            auto agency_it = agency_map.find(elts[agency_c]);
+            if(agency_it != agency_map.end())
+                line->network = agency_it->second;
+
 
             line_map[elts[id_c]] = line;
             data.lines.push_back(line);
@@ -591,7 +632,7 @@ void GtfsParser::parse_trips(Data & data) {
                 boost::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(elts[trip_c]);
                 if(vj_it == vj_map.end()) {
                     nm::VehicleJourney * vj = new nm::VehicleJourney();
-                    vj->name = elts[trip_c];
+                    vj->name = elts[headsign_c];
                     vj->external_code = elts[trip_c];
                     vj->validity_pattern = vp_xx;
                     vj->route = 0;
@@ -667,13 +708,6 @@ void build_routes(Data & data){
             }
         }
     }
-
-    for(nm::Route *route : data.routes){
-        if(! route->route_point_list.empty()){
-            nm::RoutePoint * last = route->route_point_list.back();
-            route->name = last->stop_point->stop_area->name;
-        }
-    }
     std::cout << "Nombre de routes : " << data.routes.size() << std::endl;
     std::cout << std::endl;
 }
@@ -711,6 +745,12 @@ void build_route_points(Data & data){
 
     }
 
+    for(nm::Route *route : data.routes){
+        if(! route->route_point_list.empty()){
+            nm::RoutePoint * last = route->route_point_list.back();
+            route->name = last->stop_point->stop_area->name;
+        }
+    }
     std::cout << "Nombre de route points : " << data.route_points.size() << std::endl;
 }
 
@@ -728,7 +768,7 @@ void GtfsParser::parse_stop_times(Data & data) {
     boost::trim(line);
     Tokenizer tok_header(line);
     std::vector<std::string> elts(tok_header.begin(), tok_header.end());
-    int id_c = -1, arrival_c = -1, departure_c = -1, stop_c = -1, stop_seq_c = -1;
+    int id_c = -1, arrival_c = -1, departure_c = -1, stop_c = -1, stop_seq_c = -1, pickup_c = -1, drop_off_c = -1;
     for(size_t i = 0; i < elts.size(); i++){
         if (elts[i] == "trip_id")
             id_c = i;
@@ -740,9 +780,13 @@ void GtfsParser::parse_stop_times(Data & data) {
             stop_c = i;
         else if (elts[i] == "stop_sequence")
             stop_seq_c = i;
+        else if (elts[i] == "pickup_type")
+            pickup_c = i;
+        else if (elts[i] == "drop_off_type")
+            drop_off_c = i;
     }
 
-    if(id_c == -1 || arrival_c == -1 || departure_c == -1 || stop_c == -1 || stop_seq_c == -1){
+    if(id_c == -1 || arrival_c == -1 || departure_c == -1 || stop_c == -1 || stop_seq_c == -1 || pickup_c == -1 || drop_off_c == -1){
         std::cerr << "Il manque au moins une colonne dans stop_times.txt" << std::endl;
         return;
     }
@@ -771,7 +815,7 @@ void GtfsParser::parse_stop_times(Data & data) {
             //stop_time->route_point = route_point;
             stop_time->order = boost::lexical_cast<int>(elts[stop_seq_c]);
             stop_time->vehicle_journey = vj_it->second;
-            stop_time->ODT = 0;//(elts[pickup_c] == "2" && elts[drop_c] == "2");
+            stop_time->ODT = (elts[pickup_c] == "2" && elts[drop_off_c] == "2");
             stop_time->zone = 0; // à définir selon pickup_type ou drop_off_type = 10
             stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
             data.stops.push_back(stop_time);

@@ -462,6 +462,10 @@ struct StopPoint : public NavitiaHeader, Nameable{
 };
 
 struct StopTime {
+    static const uint8_t PICK_UP = 0;
+    static const uint8_t DROP_OFF = 1;
+    static const uint8_t ODT = 2;
+
     idx_t idx;
     uint32_t arrival_time; ///< En secondes depuis minuit
     uint32_t departure_time; ///< En secondes depuis minuit
@@ -469,14 +473,17 @@ struct StopTime {
     idx_t route_point_idx;
     uint16_t order;
     uint16_t zone;
-    bool ODT;
 
+    std::bitset<8> properties;
+    bool pick_up_allowed() const {return properties[PICK_UP];}
+    bool drop_off_allowed() const {return properties[DROP_OFF];}
+    bool odt() const {return properties[ODT];}
 
     StopTime(): arrival_time(0), departure_time(0), vehicle_journey_idx(invalid_idx), route_point_idx(invalid_idx), order(0),
-        zone(0), ODT(false){}
+        zone(0) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-            ar & arrival_time & departure_time & vehicle_journey_idx & route_point_idx & order & ODT & zone & idx;
+            ar & arrival_time & departure_time & vehicle_journey_idx & route_point_idx & order & properties & zone & idx;
     }
 };
 

@@ -48,8 +48,8 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(stop_point->stop_area, stop_area);
 
     navimake::types::VehicleJourney* vj = data.vehicle_journeys[0];
-    BOOST_CHECK_EQUAL(vj->name, "41");
-    BOOST_CHECK_EQUAL(vj->name, vj->external_code);
+    BOOST_CHECK_EQUAL(vj->external_code, "41");
+    BOOST_CHECK_EQUAL(vj->name, "Porte de Clignancourt");
     BOOST_CHECK_EQUAL(vj->route, route);
 
     navimake::types::StopTime* stop = data.stops[0];
