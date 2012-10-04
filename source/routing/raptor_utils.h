@@ -10,15 +10,15 @@ enum type_idx {
     depart
 };
 struct type_retour {
-    unsigned int stid;
+    type::idx_t stop_time_idx;
     int spid_embarquement;
     DateTime arrival, departure;
     type_idx type;
 
-    type_retour(const DateTime & arrival, const DateTime & departure) : stid(navitia::type::invalid_idx),
+    type_retour(const DateTime & arrival, const DateTime & departure) : stop_time_idx(navitia::type::invalid_idx),
         spid_embarquement(navitia::type::invalid_idx), arrival(arrival), departure(departure), type(depart) {}
 
-    type_retour(const type::StopTime & st, const DateTime & date, int embarquement, bool clockwise) : stid(st.idx), spid_embarquement(embarquement),
+    type_retour(const type::StopTime & st, const DateTime & date, int embarquement, bool clockwise) : stop_time_idx(st.idx), spid_embarquement(embarquement),
         type(vj) {
         if(clockwise) {
             arrival = date;
@@ -33,11 +33,11 @@ struct type_retour {
         arrival.normalize();
     }
 
-    type_retour(const DateTime & arrival, const DateTime & departure, int embarquement) : stid(navitia::type::invalid_idx),
+    type_retour(const DateTime & arrival, const DateTime & departure, int embarquement) : stop_time_idx(navitia::type::invalid_idx),
         spid_embarquement(embarquement), arrival(arrival), departure(departure), type(connection) {}
 
-    type_retour() : stid(-1), spid_embarquement(-1), arrival(), departure(DateTime::min), type(uninitialized) {}
-    type_retour(const type_retour & t) : stid(t.stid), spid_embarquement(t.spid_embarquement), arrival(t.arrival),
+    type_retour() : stop_time_idx(type::invalid_idx), spid_embarquement(-1), arrival(), departure(DateTime::min), type(uninitialized) {}
+    type_retour(const type_retour & t) : stop_time_idx(t.stop_time_idx), spid_embarquement(t.spid_embarquement), arrival(t.arrival),
         departure(departure), type(t.type) {}
 
 };

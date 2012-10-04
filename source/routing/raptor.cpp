@@ -697,7 +697,7 @@ namespace navitia { namespace routing { namespace raptor {
                 if(spid_embarquement == navitia::type::invalid_idx) {
                     r = retour[countb][current_spid];
                     spid_embarquement = r.spid_embarquement;
-                    current_st = data.pt_data.stop_times.at(r.stid);
+                    current_st = data.pt_data.stop_times.at(r.stop_time_idx);
                     if(!reverse)
                         workingDate = r.arrival;
                     else
