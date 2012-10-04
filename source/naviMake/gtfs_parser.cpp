@@ -768,7 +768,7 @@ void GtfsParser::parse_stop_times(Data & data) {
     boost::trim(line);
     Tokenizer tok_header(line);
     std::vector<std::string> elts(tok_header.begin(), tok_header.end());
-    int id_c = -1, arrival_c = -1, departure_c = -1, stop_c = -1, stop_seq_c = -1;
+    int id_c = -1, arrival_c = -1, departure_c = -1, stop_c = -1, stop_seq_c = -1, pickup_c = -1, drop_off_c = -1;
     for(size_t i = 0; i < elts.size(); i++){
         if (elts[i] == "trip_id")
             id_c = i;
@@ -780,9 +780,13 @@ void GtfsParser::parse_stop_times(Data & data) {
             stop_c = i;
         else if (elts[i] == "stop_sequence")
             stop_seq_c = i;
+        else if (elts[i] == "pickup_type")
+            pickup_c = i;
+        else if (elts[i] == "drop_off_type")
+            drop_off_c = i;
     }
 
-    if(id_c == -1 || arrival_c == -1 || departure_c == -1 || stop_c == -1 || stop_seq_c == -1){
+    if(id_c == -1 || arrival_c == -1 || departure_c == -1 || stop_c == -1 || stop_seq_c == -1 || pickup_c == -1 || drop_off_c == -1){
         std::cerr << "Il manque au moins une colonne dans stop_times.txt" << std::endl;
         return;
     }
@@ -811,7 +815,7 @@ void GtfsParser::parse_stop_times(Data & data) {
             //stop_time->route_point = route_point;
             stop_time->order = boost::lexical_cast<int>(elts[stop_seq_c]);
             stop_time->vehicle_journey = vj_it->second;
-            stop_time->ODT = 0;//(elts[pickup_c] == "2" && elts[drop_c] == "2");
+            stop_time->ODT = (elts[pickup_c] == "2" && elts[drop_off_c] == "2");
             stop_time->zone = 0; // à définir selon pickup_type ou drop_off_type = 10
             stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
             data.stops.push_back(stop_time);
