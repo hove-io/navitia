@@ -1,4 +1,5 @@
 #include "types.h"
+#include "builder.h"
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_proximity_list
