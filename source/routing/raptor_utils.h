@@ -18,8 +18,8 @@ struct type_retour {
     type_retour(const DateTime & arrival, const DateTime & departure) : stid(navitia::type::invalid_idx),
         spid_embarquement(navitia::type::invalid_idx), arrival(arrival), departure(departure), type(depart) {}
 
-    type_retour(const type::StopTime & st, const DateTime & date, int embarquement, bool clockwise) : stid(st.idx), spid_embarquement(embarquement),
-        type(vj) {
+    type_retour(const type::StopTime & st, const DateTime & date, int embarquement, bool clockwise)
+    : stid(st.idx), spid_embarquement(embarquement), type(vj) {
         if(clockwise) {
             arrival = date;
             departure = arrival;
@@ -61,7 +61,7 @@ struct best_dest {
         if(it != map_date_time.end()) {
             if(t.arrival + it->second.second <= best_now.arrival) {
                 best_now = t;
-                best_now.arrival = best_now.arrival + it->second.second;
+                best_now.arrival = t.arrival + it->second.second;
                 best_now_spid = spid;
                 count = cnt;
                 return true;
@@ -75,7 +75,7 @@ struct best_dest {
         if(it != map_date_time.end()) {
             if(t.departure != DateTime::min && (t.departure - it->second.first) >= best_now.departure) {
                 best_now = t;
-                best_now.departure = best_now.departure - it->second.first;
+                best_now.departure = t.departure - it->second.first;
                 best_now_spid = spid;
                 count = cnt;
                 return true;

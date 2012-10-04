@@ -168,14 +168,16 @@ namespace navitia { namespace routing { namespace raptor {
                         prec_duration = it->duration;
                     }
                     if(departure <= best[destination].arrival) {
-                        const type_retour nRetour = type_retour(arrival, departure, stop_point);
-                        if(!b_dest.ajouter_best(destination, nRetour, count)) {
+                        const type_retour nRetour = type_retour(departure, departure, stop_point);
                             best[destination] = nRetour;
                             retour[count][destination] = nRetour;
-                            to_mark.push_back(destination);
-                        } else if(count == 0 || retour[count - 1][destination].type == uninitialized) {
+                            if(!b_dest.ajouter_best(destination, nRetour, count)) {
+                                to_mark.push_back(destination);
+                            }
+
+                        /*else if(count == 0 || retour[count - 1][destination].type == uninitialized) {
                             retour[count][destination] = nRetour;
-                        }
+                        }*/
                     }
                 }
             }
@@ -213,15 +215,15 @@ namespace navitia { namespace routing { namespace raptor {
                         prec_duration = it->duration;
                     }
                     if(arrival >= best[destination].departure) {
-                        const type_retour nRetour = type_retour(arrival, departure, stop_point);
-                        if(!b_dest.ajouter_best_reverse(destination, nRetour, count)) {
+                        const type_retour nRetour = type_retour(arrival, arrival, stop_point);
                             best[destination] = nRetour;
                             retour[count][destination] = nRetour;
-                            to_mark.push_back(destination);
-                        } else if(count == 0 || retour[count - 1][destination].type == uninitialized) {
+                            if(!b_dest.ajouter_best_reverse(destination, nRetour, count)) {
+                                to_mark.push_back(destination);
+                        } /*else if(count == 0 || retour[count - 1][destination].type == uninitialized) {
                             retour[count][destination] = nRetour;
                             best[destination] = nRetour;
-                        }
+                        }*/
                     }
                 }
             }
@@ -263,11 +265,11 @@ namespace navitia { namespace routing { namespace raptor {
         for(auto item : departs) {
             DateTime departure = dep, arrival = dep;
             if(clockwise) {
-                arrival = arrival + (item.second / 80) ;
+                arrival = arrival + (item.second / 1.38) ;
             } else {
-                departure = departure - (item.second / 80);
+                departure = departure - (item.second / 1.38);
             }
-            auto r = type_retour(departure, arrival);
+            auto r = type_retour(arrival, departure);
             retour[0][item.first] = r;
             best[item.first] = r;
             marked_sp.set(item.first);
@@ -275,11 +277,11 @@ namespace navitia { namespace routing { namespace raptor {
 
         for(auto item : destinations) {
             if(clockwise) {
-                b_dest.ajouter_destination(item.first, 0, (item.second/80));
+                b_dest.ajouter_destination(item.first, 0, (item.second/1.38));
                 best[item.first].arrival = borne;
             }
             else { 
-                b_dest.ajouter_destination(item.first, (item.second/80), 0);
+                b_dest.ajouter_destination(item.first, (item.second/1.38), 0);
                 best[item.first].departure = borne;
             }
         }
@@ -449,7 +451,9 @@ namespace navitia { namespace routing { namespace raptor {
         }
     }
 
-
+    int RAPTOR::min_time_to_wait(navitia::type::idx_t /*rp1*/, navitia::type::idx_t /*rp2*/) {
+        return 120;
+    }
 
 
 
@@ -502,8 +506,10 @@ namespace navitia { namespace routing { namespace raptor {
                             (t == -1 || retour_temp.arrival <= DateTime(workingDt.date(), it_st->departure_time))) {
                                 DateTime dt = retour_temp.arrival;
 
-                            if(retour_temp.type == vj)
-                                dt = dt + 120;
+                            if(retour_temp.type == vj) {
+                                dt = dt + min_time_to_wait(data.pt_data.stop_times[retour_temp.stid].route_point_idx,
+                                                           route.route_point_list[i]);
+                            }
 
                             int etemp = earliest_trip(route, i, dt);
                             if(etemp >= 0) {
@@ -576,7 +582,8 @@ namespace navitia { namespace routing { namespace raptor {
                             DateTime dt = retour_temp.departure;
 
                             if(retour_temp.type == vj)
-                                dt = dt - 120;
+                                dt = dt - min_time_to_wait(data.pt_data.stop_times[retour_temp.stid].route_point_idx,
+                                                           route.route_point_list[i]);
 
 
                             int etemp = tardiest_trip(route, i, dt);
@@ -623,19 +630,20 @@ namespace navitia { namespace routing { namespace raptor {
 
     std::vector<Path> RAPTOR::makePathesreverse(std::vector<std::pair<type::idx_t, double> > departs) {
         std::vector<Path> result;
-        DateTime dt = DateTime::min;
+//        DateTime dt = DateTime::min;
 
-        for(unsigned int i=0;i<=count;++i) {
-            int spid = std::numeric_limits<int>::max();
-            for(auto dest : b_dest.map_date_time) {
-                if(retour[i][dest.first].type != uninitialized && retour[i][dest.first].departure > dt) {
-                    dt = best[dest.first].departure;
-                    spid = dest.first;
-                }
-            }
-            if(spid != std::numeric_limits<int>::max())
-                result.push_back(makePathreverse(departs, spid, i));
-        }
+//        for(unsigned int i=0;i<=count;++i) {
+//            int spid = std::numeric_limits<int>::max();
+//            for(auto dest : b_dest.map_date_time) {
+//                if(retour[i][dest.first].type != uninitialized && retour[i][dest.first].departure > dt) {
+//                    dt = best[dest.first].departure;
+//                    spid = dest.first;
+//                }
+//            }
+//            if(spid != std::numeric_limits<int>::max())
+//                result.push_back(makePathreverse(departs, spid, i));
+//        }
+        result.push_back(makePathreverse(departs, b_dest.best_now_spid, b_dest.count));
 
         return result;
     }
@@ -651,10 +659,8 @@ namespace navitia { namespace routing { namespace raptor {
         Path result;
         unsigned int current_spid = destination_idx;
         type_retour r = retour[countb][current_spid];
-        DateTime workingDate;
-        if(!reverse)
-            workingDate = r.arrival;
-        else
+        DateTime workingDate = r.arrival;
+        if(reverse)
             workingDate = r.departure;
         
         navitia::type::StopTime current_st;
