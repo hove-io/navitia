@@ -109,6 +109,8 @@ struct Path {
     std::vector<nt::GeographicalCoord> coordinates; //< Coordonnées du parcours
 };
 
+class ProjectionData;
+
 /** Structure contenant tout ce qu'il faut savoir sur le référentiel de voirie */
 struct GeoRef {
 
@@ -118,8 +120,11 @@ struct GeoRef {
     /// Indexe sur les noms de voirie
     firstletter::FirstLetter<unsigned int> fl;
 
-    /// Indexe
+    /// Indexe tous les nœuds
     proximitylist::ProximityList<vertex_t> pl;
+
+    /// Pour chaque stop_point, on associe la projection sur le filaire
+    std::vector<ProjectionData> projected_stop_points;
 
     /// Graphe pour effectuer le calcul d'itinéraire
     Graph graph;
@@ -139,6 +144,9 @@ struct GeoRef {
 
     /** Construit l'indexe spatial */
     void build_proximity_list();
+
+    /** Projete chaque stop_point sur le filaire de voirie */
+    void project_stop_points(const std::vector<type::StopPoint> & stop_points);
 
     /** Calcule le meilleur itinéraire entre deux listes de nœuds
      *
@@ -200,9 +208,6 @@ struct ProjectionData {
     vertex_t source;
     vertex_t target;
 
-    /// Segment sur lequel a été projeté la coordonnée
-    edge_t edge;
-
     /// La coordonnée projetée sur le segment
     type::GeographicalCoord projected;
 
@@ -213,6 +218,10 @@ struct ProjectionData {
     ProjectionData() : source_distance(-1), target_distance(-1){}
     /// Initialise la structure à partir d'une coordonnée et d'un graphe sur lequel on projette    
     ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, const proximitylist::ProximityList<vertex_t> &prox);
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar & source & target & projected & source_distance & target_distance;
+    }
 };
 
 /** Permet de construire un graphe de manière simple
@@ -275,6 +284,12 @@ public:
      * Retourne tous les idx atteignables dans ce rayon, ainsi que la distance en suivant le filaire de voirie
      **/
     std::vector< std::pair<type::idx_t, double> > find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius, bool use_second=false);
+
+    /** Version spécialisée et optimisée pour les stop_points
+     *
+     * Comme c'est une version que l'on utilise très souvent, on pré-calcule les projections
+     */
+    std::vector< std::pair<type::idx_t, double> > find_nearest_stop_points(const type::GeographicalCoord & start_coord, double radius, bool use_second=false);
 
     /// Reconstruit l'itinéraire piéton à partir de l'idx
     Path get_path(type::idx_t idx, bool use_second = false);

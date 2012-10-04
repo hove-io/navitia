@@ -204,7 +204,7 @@ Path GeoRef::compute(std::vector<vertex_t> starts, std::vector<vertex_t> destina
 
 
 ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoRef & sn, const proximitylist::ProximityList<vertex_t> &prox){
-    this->edge = sn.nearest_edge(coord, prox);
+    edge_t edge = sn.nearest_edge(coord, prox);
     // On cherche les coordonnées des extrémités de ce segment
     vertex_t vertex1 = boost::source(edge, sn.graph);
     vertex_t vertex2 = boost::target(edge, sn.graph);
@@ -321,6 +321,12 @@ void GeoRef::build_proximity_list(){
     pl.build();
 }
 
+void GeoRef::project_stop_points(const std::vector<type::StopPoint> & stop_points){
+    this->projected_stop_points.reserve(stop_points.size());
+    for(type::StopPoint stop_point : stop_points){
+        this->projected_stop_points.push_back(ProjectionData(stop_point.coord, *this, this->pl));
+    }
+}
 
 edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates) const {
     return this->nearest_edge(coordinates, this->pl);
@@ -437,6 +443,15 @@ std::pair<type::GeographicalCoord, float> project(type::GeographicalCoord point,
 
     return result;
 }
+
+//std::vector< std::pair<type::idx_t, double> > find_nearest_stop_points(const type::GeographicalCoord & start_coord, double radius, bool use_second=false){
+
+//}
+
+//std::vector< std::pair<type::idx_t, double> > find_nearest_stop_points(const type::GeographicalCoord & start_coord, double radius, bool use_second=false){
+
+//}
+
 
 Path StreetNetworkWorker::get_path(type::idx_t idx, bool use_second){
     Path result;
