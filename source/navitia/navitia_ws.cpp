@@ -15,7 +15,7 @@
 
 #include <boost/tokenizer.hpp>
 #include <iostream>
-
+#include <gperftools/profiler.h>
 using namespace webservice;
 
 namespace nt = navitia::type;
@@ -169,14 +169,13 @@ class Worker : public BaseWorker<navitia::type::Data> {
             LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
             data.loaded = true;
             data.load_lz4(database);
-            data.build_proximity_list();
             data.build_raptor();
             LOG4CPLUS_TRACE(logger, "acquisition du lock");
             nt::Locker lock(d, true);
             LOG4CPLUS_TRACE(logger, "déplacement de data");
             d = std::move(data);
             LOG4CPLUS_TRACE(logger, "Chargement des donnés fini");
-//            ProfilerStart("navitia.prof");
+            ProfilerStart("navitia.prof");
         }catch(...){
             d.loaded = false;
             LOG4CPLUS_ERROR(logger, "erreur durant le chargement des données");

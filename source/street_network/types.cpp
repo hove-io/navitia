@@ -281,7 +281,9 @@ std::vector< std::pair<type::idx_t, double> > StreetNetworkWorker::find_nearest(
     }catch(DestinationFound){}
 
     proximitylist::ProximityList<vertex_t> temp_pl;
-    for(vertex_t u = 0; u < preds.size(); ++u){
+
+    size_t num_vertices = boost::num_vertices(geo_ref.graph);
+    for(vertex_t u = 0; u != num_vertices; ++u){
         if(preds[u] != u)
             temp_pl.add(this->geo_ref.graph[u].coord, u);
     }
@@ -392,13 +394,61 @@ std::pair<type::GeographicalCoord, float> project(type::GeographicalCoord point,
     return result;
 }
 
-//std::vector< std::pair<type::idx_t, double> > find_nearest_stop_points(const type::GeographicalCoord & start_coord, double radius, bool use_second=false){
+std::vector< std::pair<type::idx_t, double> > StreetNetworkWorker::find_nearest_stop_points(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius, bool use_second){
+    ProjectionData start;
+    try{
+        start = ProjectionData(start_coord, this->geo_ref, this->geo_ref.pl);
+    }catch(DestinationFound){}
 
-//}
+    std::vector< std::pair<idx_t, type::GeographicalCoord> > elements;
+    try{
+        elements = pl.find_within(start_coord, radius);
+    }catch(DestinationFound){
+        return std::vector< std::pair<idx_t, double> >();
+    }
 
-//std::vector< std::pair<type::idx_t, double> > find_nearest_stop_points(const type::GeographicalCoord & start_coord, double radius, bool use_second=false){
+    if(!use_second)
+        return find_nearest_stop_points(start, radius, elements, distances, predecessors, idx_projection);
+    else
+        return find_nearest_stop_points(start, radius, elements, distances2, predecessors2, idx_projection2);
+}
 
-//}
+std::vector< std::pair<type::idx_t, double> > StreetNetworkWorker::find_nearest_stop_points(const ProjectionData & start, double radius, const std::vector< std::pair<type::idx_t, type::GeographicalCoord> > & elements,
+                                                                                            std::vector<float> & dist,
+                                                                                            std::vector<vertex_t> & preds,
+                                                                                            std::map<type::idx_t, ProjectionData> & idx_proj){
+    std::vector< std::pair<type::idx_t, double> > result;
+    geo_ref.init(dist, preds);
+    idx_proj.clear();
+
+    // On lance un dijkstra depuis les deux nœuds de départ
+    dist[start.source] = start.source_distance;
+    try{
+        geo_ref.dijkstra(start.source, dist, preds, distance_visitor(radius, dist));
+    }catch(DestinationFound){}
+    dist[start.target] = start.target_distance;
+    try{
+        geo_ref.dijkstra(start.target, dist, preds, distance_visitor(radius, dist));
+    }catch(DestinationFound){}
+
+    double max = std::numeric_limits<double>::max();
+
+    for(auto element: elements){
+        const ProjectionData & projection = geo_ref.projected_stop_points[element.first];
+        double best_dist = max;
+        if(preds[projection.source] != projection.source){
+            best_dist = dist[projection.source] + projection.source_distance;
+        }
+        if(preds[projection.target] != projection.target){
+            best_dist= std::min(best_dist, dist[projection.target] + projection.target_distance);
+        }
+        if(best_dist < radius){
+            result.push_back(std::make_pair(element.first, best_dist));
+            idx_proj[element.first] = projection;
+        }
+    }
+    return result;
+}
 
 
 Path StreetNetworkWorker::get_path(type::idx_t idx, bool use_second){
