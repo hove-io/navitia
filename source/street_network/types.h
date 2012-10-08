@@ -179,6 +179,7 @@ struct GeoRef {
      **/
     template<class Visitor>
     void dijkstra(vertex_t start, std::vector<float> & distances, std::vector<vertex_t> & predecessors, Visitor visitor) const{
+        predecessors[start] = start;
         boost::two_bit_color_map<> color(boost::num_vertices(this->graph));
         boost::dijkstra_shortest_paths_no_init(this->graph, start, &predecessors[0], &distances[0],
 
