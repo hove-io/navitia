@@ -46,7 +46,7 @@ public:
           */
     template<class T>
     struct Indexer{
-        navimake::types::idx_t idx;
+        idx_t idx;
 
         Indexer(): idx(0){}
 
