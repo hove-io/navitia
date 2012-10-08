@@ -188,24 +188,6 @@ void dataRAPTOR::load(const type::PT_Data &data)
         sp_indexrouteorder_reverse[sp.idx] = temp_index_reverse;
     }
 
-    for(unsigned int rpidx = 0; rpidx < 25; ++rpidx) {
-        const auto & rp = data.route_points[rpidx];
-        std::cout << rp.route_idx << " " << rp.order << std::endl;
-    }
-
-    for(auto route : data.routes) {
-        int prec_rpidx = -1;
-        for(auto rpidx : route.route_point_list) {
-            if(prec_rpidx != -1 && (rpidx - prec_rpidx) != 1) {
-                std::cout << "S'pas top ! " << rpidx << " " << prec_rpidx << std::endl;
-                for(auto rpidx2 : route.route_point_list) {
-                    std::cout << rpidx2 << " " << data.route_points[rpidx2].route_idx << " " << data.route_points[rpidx2].order << std::endl;
-                }
-                exit(1);
-            }
-            prec_rpidx = rpidx;
-        }
-    }
 
      std::cout << "Nb data stop times : " << data.stop_times.size() << " stopTimes : " << arrival_times.size()
                << " nb foot path : " << foot_path.size() << " Nombre de stop points : " << data.stop_points.size() << "nb vp : " << data.validity_patterns.size() << " nb routes " << routes.size() <<  std::endl;

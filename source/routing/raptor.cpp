@@ -553,14 +553,19 @@ namespace navitia { namespace routing { namespace raptor {
             auto & working_retour = retour[count];
             make_queuereverse();
             for(const auto & route : data.pt_data.routes) {
-                if(routes_valides.test(route.idx)) { 
+                if(Q[route.idx] != std::numeric_limits<int>::min() && routes_valides.test(route.idx)) { 
                     t = -1;
                     workingDt = DateTime::min;
                     embarquement = std::numeric_limits<int>::max();
                     std::vector<type::StopTime>::const_iterator it_st;
-                    for(int i = Q[route.idx]; i >=0; --i) {
-                        int spid = data.pt_data.route_points[route.route_point_list[i]].stop_point_idx;
+                    const auto begin_rp = data.pt_data.route_points.rbegin() +
+                                     (data.pt_data.route_points.size() - route.route_point_list.back() -1);
+                    const auto end_rp = begin_rp + (route.route_point_list.size() - Q[route.idx]) - 1;
 
+                    //for(int i = Q[route.idx]; i >=0; --i) {
+                    //    int spid = data.pt_data.route_points[route.route_point_list[i]].stop_point_idx;
+                    for(auto it_rp = begin_rp; it_rp != end_rp; ++it_rp) {
+                        int  spid = it_rp->stop_point_idx;
                         if(t >= 0) {
                             --it_st;
                             //On stocke, et on marque pour explorer par la suite
@@ -588,16 +593,16 @@ namespace navitia { namespace routing { namespace raptor {
 
                             if(retour_temp.type == vj)
                                 dt = dt - min_time_to_wait(data.pt_data.stop_times[retour_temp.stid].route_point_idx,
-                                                           route.route_point_list[i]);
+                                                           it_rp->idx);
 
 
-                            int etemp = tardiest_trip(route, i, dt);
+                            int etemp = tardiest_trip(route, it_rp->order, dt);
                             if(etemp >=0 && t!=etemp) {
                                 if(t!=etemp) {
                                     embarquement = spid;
                                     t = etemp;
                                     it_st = data.pt_data.stop_times.begin() 
-                                            + data.pt_data.vehicle_journeys[t].stop_time_list[i];
+                                            + data.pt_data.vehicle_journeys[t].stop_time_list[it_rp->order];
                                 }
                                     workingDt = dt;
                             }

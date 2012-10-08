@@ -247,6 +247,11 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
 
     auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0);
 
+    for(auto r : res1) {
+        std::cout << "Itineraire : " << std::endl;
+        r.print(d);
+    }
+
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
     auto res = res1.back();
