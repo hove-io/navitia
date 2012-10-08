@@ -512,7 +512,7 @@ namespace navitia { namespace routing { namespace raptor {
                                 DateTime dt = retour_temp.arrival;
 
                             if(retour_temp.type == vj) {
-                                dt = dt + min_time_to_wait(data.pt_data.stop_times[retour_temp.stid].route_point_idx,
+                                dt = dt + min_time_to_wait(data.pt_data.stop_times[retour_temp.stop_time_idx].route_point_idx,
                                                            it_rp->order);
                             }
 
@@ -593,7 +593,7 @@ namespace navitia { namespace routing { namespace raptor {
                             DateTime dt = retour_temp.departure;
 
                             if(retour_temp.type == vj)
-                                dt = dt - min_time_to_wait(data.pt_data.stop_times[retour_temp.stid].route_point_idx,
+                                dt = dt - min_time_to_wait(data.pt_data.stop_times[retour_temp.stop_time_idx].route_point_idx,
                                                            it_rp->idx);
 
 
@@ -714,7 +714,7 @@ namespace navitia { namespace routing { namespace raptor {
                 if(spid_embarquement == navitia::type::invalid_idx) {
                     r = retour[countb][current_spid];
                     spid_embarquement = r.spid_embarquement;
-                    current_st = data.pt_data.stop_times.at(r.stid);
+                    current_st = data.pt_data.stop_times.at(r.stop_time_idx);
                     if(!reverse)
                         workingDate = r.arrival;
                     else
