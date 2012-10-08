@@ -130,14 +130,14 @@ struct GeoRef {
     Graph graph;
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & ways & graph & fl & pl;
+        ar & ways & graph & fl & pl & projected_stop_points;
     }
 
     template<class Archive> void load(Archive & ar, const unsigned int) {
         // La désérialisation d'une boost adjacency list ne vide pas le graphe
         // On avait donc une fuite de mémoire
         graph.clear();
-        ar & ways & graph & fl & pl;
+        ar & ways & graph & fl & pl & projected_stop_points;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
@@ -179,6 +179,7 @@ struct GeoRef {
      **/
     template<class Visitor>
     void dijkstra(vertex_t start, std::vector<float> & distances, std::vector<vertex_t> & predecessors, Visitor visitor) const{
+        predecessors[start] = start;
         boost::two_bit_color_map<> color(boost::num_vertices(this->graph));
         boost::dijkstra_shortest_paths_no_init(this->graph, start, &predecessors[0], &distances[0],
 
@@ -249,7 +250,7 @@ public:
      *
      * Comme c'est une version que l'on utilise très souvent, on pré-calcule les projections
      */
-    std::vector< std::pair<type::idx_t, double> > find_nearest_stop_points(const type::GeographicalCoord & start_coord, double radius, bool use_second=false);
+    std::vector< std::pair<type::idx_t, double> > find_nearest_stop_points(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius, bool use_second = false);
 
     /// Reconstruit l'itinéraire piéton à partir de l'idx
     Path get_path(type::idx_t idx, bool use_second = false);
@@ -257,6 +258,13 @@ public:
 private:
     //const StreetNetwork & street_network;
     const GeoRef & geo_ref;
+
+    std::vector< std::pair<type::idx_t, double> > find_nearest_stop_points(const ProjectionData & start, double radius,
+                                                                           const std::vector< std::pair<type::idx_t, type::GeographicalCoord> > & elements,
+                                                                           std::vector<float> & dist,
+                                                                           std::vector<vertex_t> & preds,
+                                                                           std::map<type::idx_t, ProjectionData> & idx_proj);
+
 
     std::vector< std::pair<type::idx_t, double> > find_nearest(const ProjectionData & start,
                                                                double radius,

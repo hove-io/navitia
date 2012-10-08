@@ -134,6 +134,7 @@ void Data::build_proximity_list(){
     this->pt_data.build_proximity_list();
     //this->street_network.build_proximity_list();
     this->geo_ref.build_proximity_list();
+    this->geo_ref.project_stop_points(this->pt_data.stop_points);
 }
 
 

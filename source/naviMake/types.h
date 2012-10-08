@@ -8,10 +8,9 @@
 #include "type/type.h"
 
 namespace nt = navitia::type;
+using nt::idx_t;
 
 namespace navimake{ namespace types{
-
-typedef unsigned int idx_t;
 
 /** En-tête commun pour tous les objets TC portant un nom*/
 struct Nameable{

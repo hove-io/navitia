@@ -56,7 +56,8 @@ int main(int argc, char** argv){
             return 1;
         }
 
-        std::cout << "Calcul de " << data.pt_data.stop_areas[start_idx].name << "(" << start_idx << ")"<< " à " << data.pt_data.stop_areas[target_idx].name  << "(" << target_idx << ")"<<  std::endl;
+        std::cout << "Calcul de " << data.pt_data.stop_areas[start_idx].name << "(" << start_idx << ")"<< " à " 
+                  << data.pt_data.stop_areas[target_idx].name  << "(" << target_idx << ")"<<  std::endl;
         Verification verification(data.pt_data);
         for(auto algo : algos){
             std::cout << std::endl;

@@ -13,7 +13,7 @@
 namespace mpl = boost::mpl;
 
 namespace navitia { namespace type {
-typedef unsigned int idx_t;
+typedef uint32_t idx_t;
 const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
 
 enum class Type_e {
