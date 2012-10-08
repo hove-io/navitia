@@ -543,6 +543,7 @@ namespace navitia { namespace routing { namespace raptor {
 
 
         marcheapiedreverse();
+
         bool end = false;
         while(!end) {
             ++count;
@@ -559,8 +560,9 @@ namespace navitia { namespace routing { namespace raptor {
                     embarquement = std::numeric_limits<int>::max();
                     std::vector<type::StopTime>::const_iterator it_st;
                     const auto begin_rp = data.pt_data.route_points.rbegin() +
-                                     (data.pt_data.route_points.size() - route.route_point_list.back() -1);
-                    const auto end_rp = begin_rp + (route.route_point_list.size() - Q[route.idx]) - 1;
+                                          (data.pt_data.route_points.size() - route.route_point_list[Q[route.idx]] - 1);
+                    const auto end_rp = data.pt_data.route_points.rbegin() +
+                                        (data.pt_data.route_points.size() - route.route_point_list.front());
 
                     //for(int i = Q[route.idx]; i >=0; --i) {
                     //    int spid = data.pt_data.route_points[route.route_point_list[i]].stop_point_idx;
