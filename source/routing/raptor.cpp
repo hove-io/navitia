@@ -448,9 +448,6 @@ void RAPTOR::set_routes_valides(const DateTime& dtDepart) {
 struct raptor_visitor {
     RAPTOR & raptor;
     raptor_visitor(RAPTOR & raptor) : raptor(raptor) {}
-    int embarquement_init() const {
-        return -1;
-    }
 
     DateTime working_datetime_init() const {
         return DateTime::inf;
@@ -532,10 +529,6 @@ struct raptor_reverse_visitor {
     RAPTOR & raptor;
     raptor_reverse_visitor(RAPTOR & raptor) : raptor(raptor) {}
 
-    int embarquement_init() const {
-        return std::numeric_limits<int>::max();
-    }
-
     DateTime working_datetime_init() const {
         return DateTime::min;
     }
@@ -616,7 +609,8 @@ template<typename Visitor>
 void RAPTOR::raptor_loop(Visitor visitor) {
     bool end = false;
     count = 0;
-    int t=-1, embarquement = visitor.embarquement_init();
+    int t=-1;
+    type::idx_t boarding_stop_time_idx = type::invalid_idx;
     DateTime workingDt = visitor.working_datetime_init();
 
     visitor.walking();
@@ -630,7 +624,6 @@ void RAPTOR::raptor_loop(Visitor visitor) {
         for(const auto & route : data.pt_data.routes) {
             if(Q[route.idx] != std::numeric_limits<int>::max() && routes_valides.test(route.idx)) {
                 t = -1;
-                embarquement = visitor.embarquement_init();
                 workingDt = visitor.working_datetime_init();
                 decltype(visitor.first_stoptime(0)) it_st;
                 BOOST_FOREACH(const type::RoutePoint & rp, visitor.route_points(route, Q[route.idx])) {
@@ -639,9 +632,9 @@ void RAPTOR::raptor_loop(Visitor visitor) {
                         ++it_st;
                         //On stocke, et on marque pour explorer par la suite
                         if(visitor.better(best[spid], b_dest.best_now))
-                            end = visitor.store_better(spid, workingDt, best[spid], *it_st, embarquement) && end;
+                            end = visitor.store_better(spid, workingDt, best[spid], *it_st, boarding_stop_time_idx) && end;
                         else
-                            end = visitor.store_better(spid, workingDt, b_dest.best_now, *it_st, embarquement) && end;
+                            end = visitor.store_better(spid, workingDt, b_dest.best_now, *it_st, boarding_stop_time_idx) && end;
                     }
 
                     //Si on peut arriver plus tôt à l'arrêt en passant par une autre route
@@ -659,7 +652,7 @@ void RAPTOR::raptor_loop(Visitor visitor) {
                         if(etemp >= 0) {
                             if(t != etemp) {
                                 t = etemp;
-                                embarquement = spid;
+                                boarding_stop_time_idx = spid;
                                 it_st = visitor.first_stoptime(data.pt_data.vehicle_journeys[t].stop_time_list[rp.order]);
                             }
                             workingDt = dt;
