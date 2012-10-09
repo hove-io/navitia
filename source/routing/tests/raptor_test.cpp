@@ -526,6 +526,9 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
 
 
     BOOST_REQUIRE_EQUAL(res.items.size(), 3);
+    BOOST_REQUIRE_EQUAL(res.items[0].stop_points.size(), 2);
+    BOOST_REQUIRE_EQUAL(res.items[1].stop_points.size(), 3);
+    BOOST_REQUIRE_EQUAL(res.items[2].stop_points.size(), 2);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);

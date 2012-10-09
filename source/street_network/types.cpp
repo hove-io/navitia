@@ -200,19 +200,29 @@ Path GeoRef::compute(std::vector<vertex_t> starts, std::vector<vertex_t> destina
 
 
 ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoRef & sn, const proximitylist::ProximityList<vertex_t> &prox){
-    edge_t edge = sn.nearest_edge(coord, prox);
-    // On cherche les coordonnées des extrémités de ce segment
-    vertex_t vertex1 = boost::source(edge, sn.graph);
-    vertex_t vertex2 = boost::target(edge, sn.graph);
-    type::GeographicalCoord vertex1_coord = sn.graph[vertex1].coord;
-    type::GeographicalCoord vertex2_coord = sn.graph[vertex2].coord;
-    // On projette le nœud sur le segment
-    this->projected = project(coord, vertex1_coord, vertex2_coord).first;
-    // On calcule la distance « initiale » déjà parcourue avant d'atteindre ces extrémité d'où on effectue le calcul d'itinéraire
-    this->source = vertex1;
-    this->target = vertex2;
-    this->source_distance = projected.distance_to(vertex1_coord);
-    this->target_distance = projected.distance_to(vertex2_coord);
+
+    edge_t edge;
+    bool found = true;
+    try {
+        edge = sn.nearest_edge(coord, prox);
+    } catch(proximitylist::NotFound) {
+        found = false;
+    }
+
+    if(found) {
+        // On cherche les coordonnées des extrémités de ce segment
+        vertex_t vertex1 = boost::source(edge, sn.graph);
+        vertex_t vertex2 = boost::target(edge, sn.graph);
+        type::GeographicalCoord vertex1_coord = sn.graph[vertex1].coord;
+        type::GeographicalCoord vertex2_coord = sn.graph[vertex2].coord;
+        // On projette le nœud sur le segment
+        this->projected = project(coord, vertex1_coord, vertex2_coord).first;
+        // On calcule la distance « initiale » déjà parcourue avant d'atteindre ces extrémité d'où on effectue le calcul d'itinéraire
+        this->source = vertex1;
+        this->target = vertex2;
+        this->source_distance = projected.distance_to(vertex1_coord);
+        this->target_distance = projected.distance_to(vertex2_coord);
+    }
 }
 
 
@@ -333,7 +343,13 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates) const {
 
 
 edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const {
-    vertex_t u = prox.find_nearest(coordinates);
+    vertex_t u;
+    try {
+        u = prox.find_nearest(coordinates);
+    } catch(proximitylist::NotFound) {
+        throw proximitylist::NotFound();
+    }
+
     type::GeographicalCoord coord_u, coord_v;
     coord_u = this->graph[u].coord;
     float dist = std::numeric_limits<float>::max();

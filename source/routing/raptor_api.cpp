@@ -50,15 +50,24 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                     pb_section->set_direction(route.name);
                     fill_pb_object(line.idx, d, pb_section->mutable_line());
                 }
+                for(size_t i=0;i<item.stop_points.size();++i){
+                    pbnavitia::StopTime * stop_time = pb_section->add_stop_time();
+                    auto arr_time = item.arrivals[i];
+                    stop_time->set_arrival_date_time(iso_string(d, arr_time.date(), arr_time.hour()));
+                    auto dep_time = item.departures[i];
+                    stop_time->set_departure_date_time(iso_string(d, dep_time.date(), dep_time.hour()));
+                    fill_pb_object(item.stop_points[i], d, stop_time->mutable_stop_point());
+                }
+
+                /*
                 for(navitia::type::idx_t stop_point : item.stop_points){
                     fill_pb_object(stop_point, d, pb_section->add_stop_point());
                 }
-
                 for(auto dep_time : item.departures)
                     pb_section->add_departure_date_time(iso_string(d, dep_time.date(), dep_time.hour()));
 
                 for(auto arr_time : item.arrivals)
-                    pb_section->add_arrival_date_time(iso_string(d, arr_time.date(), arr_time.hour()));
+                    pb_section->add_arrival_date_time(iso_string(d, arr_time.date(), arr_time.hour()));*/
             }
             else
                 pb_section->set_type(pbnavitia::TRANSFER);
