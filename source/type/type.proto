@@ -43,9 +43,10 @@ message StopArea {
 message StopPoint {
     optional string id = 1;
     optional string name = 3;
-    optional string external_code = 4;
-    optional GeographicalCoord coord = 5; 
-    optional PTReferential child = 6; 
+    optional string city_name = 4;
+    optional string external_code = 5;
+    optional GeographicalCoord coord = 6; 
+    optional PTReferential child = 7; 
 }
 
 message Line {
@@ -70,8 +71,9 @@ message Route {
 }
 
 message StopTime {
-    optional int32 arrival_time = 1;
-    optional int32 departure_time = 2;
+    optional string arrival_date_time = 1;
+    optional string departure_date_time = 2;
+    optional StopPoint stop_point = 3;
 }
 
 message VehicleJourney {
@@ -201,17 +203,18 @@ enum SectionType {
 
 message Section {
     optional SectionType type = 1;
+    optional PlaceMark origin = 2;
+    optional PlaceMark destination = 3;
+
 
 // Si c'est du TC
-    optional string network = 2;
-    optional string mode = 3;
-    optional string code = 4;
-    optional string headsign = 5;
-    optional string direction = 6;
-    optional Line line = 7;
-    repeated StopPoint stop_point = 8;
-    repeated string departure_date_time = 9;
-    repeated string arrival_date_time = 10;
+    optional string network = 4;
+    optional string mode = 5;
+    optional string code = 6;
+    optional string headsign = 7;
+    optional string direction = 8;
+    optional Line line = 9;
+    repeated StopTime stop_time = 10;
 
 // Si c'est du routier
     optional StreetNetwork street_network = 11;
