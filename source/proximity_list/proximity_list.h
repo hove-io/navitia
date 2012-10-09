@@ -77,7 +77,11 @@ struct ProximityList
 
     /// Retourne l'élément le plus proche dans tout l'indexe
     T find_nearest(GeographicalCoord coord, double max_dist = 500) const {
-        return this->find_within(coord, max_dist).front().first;
+        auto temp = find_within(coord, max_dist);
+        if(temp.empty())
+            throw NotFound();
+        else
+            return temp.front().first;
     }
 
 
