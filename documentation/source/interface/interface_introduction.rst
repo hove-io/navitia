@@ -12,44 +12,32 @@ Tous les modules sont des web-services REST.
 
 Chaque ressource étant proposée en lecture seule, seul les méthodes GET et POST sont implémentées. 
 
-Toutefois les méthodes GET sont limités à 2ko, et les méthodes POST à 100ko, il est donc conseillé d'utiliser les méthodes POST sur les longues URI (calcul d'itinéraire en particulier).
+Toutefois la méthode GET étant limitée à quelques ko, et la méthode POST à 100ko, il est donc conseillé d'utiliser la méthode POST sur les longues URI (calcul d'itinéraire en particulier).
 
 NAViTiA peut retourner les codes http suivants:
 
 +-----------+------------------------------------+----------------------------------------------------------------------+
 | Code http | Correspondance                     | Remarque                                                             |
 +===========+====================================+======================================================================+
-| 200       | OK                                 | Request completed successfully.                                      |
+| 200       | OK                                 | La requête  a aboutit et la réponse est techniquement normale.       |
 |           |                                    | Response body is XML (Content-Type: application/xml)                 |
 |           |                                    | or JSON (Content-type: application/json).                            |
 +-----------+------------------------------------+----------------------------------------------------------------------+
-| 400       | Bad Request                        | Request parameters are invalid.                                      |
-|           |                                    | The response body is plain text (Content-Type: text/plain)           |
-|           |                                    | and will indicate the problem.                                       |
-|           |                                    | Examples: query parameters indicate invalid column labels,           |
-|           |                                    | limit provided without offset,                                       |
-|           |                                    | trigger is blocking request for some domain rule violation.          |
+| 400       | Bad Request                        | Les paramètres de la requête sont invalides.                         |
+|           |                                    | Utiliser le service Analyze de NAViTiA pour aider au debug           |
 +-----------+------------------------------------+----------------------------------------------------------------------+
-| 401       | Unauthorized                       | The request requires user authentication.                            |
-|           | (Not authenticated)                | Credentials are provided in the WWW-Authenticate header              |
-|           |                                    | using the HTTP Basic or Digest Authentication scheme.                |
-|           |                                    | If the user name/password are provided correctly,                    |
-|           |                                    | then 401 also indicates invalid credentials.                         |
+| 401       | Unauthorized                       | Non gérée pour le moment                                             |
 +-----------+------------------------------------+----------------------------------------------------------------------+
-| 403       | Forbidden                          | The user does not have sufficient privileges to complete the request |
-|           | (Authenticated but not authorized) | The user's granted role(s) is not enabled                            |
-|           |                                    | for the request type on the SQL Resource.                            |
+| 403       | Forbidden                          | Non gérée pour le moment                                             |
+|           | (Authenticated but not authorized) | Non gérée pour le moment                                             |
+|           |                                    | Non gérée pour le moment                                             |
 +-----------+------------------------------------+----------------------------------------------------------------------+
-| 404       | Not Found                          | SQL Resource does not exist.                                         |
-+-----------+------------------------------------+----------------------------------------------------------------------+
-| 405       | Method Not Allowed                 | Request content type and method are invalid.                         |
-+-----------+------------------------------------+----------------------------------------------------------------------+
-| 500       | Internal Server Error              | GLobal error                                                         |
+| 500       | Internal Server Error              | Erreur technique globale                                             |
 +-----------+------------------------------------+----------------------------------------------------------------------+
 
 .. warning::
    Les erreurs purement fonctionnelles sont retournée en code 200, l'erreur étant spécifiée dans la réponse.
-   Par exemple, pour une réponse "NoSolution": "pas de solution d'itinéraire: pas de données pour la date fournie en paramètre"
+   Par exemple, pour une réponse sur un itinéraire sans solution: "pas de solution d'itinéraire: pas de données pour la date fournie en paramètre"
    Il est nécessaire que l'application cliente prenne en compte ce type de réponse.
 
 
@@ -79,5 +67,6 @@ Analyse
 Le service /analyze permet d'analyser la forme des paramètres fournit pour un service (API) donné.
 Par exemple, pour analyser une requête au service "journeys", il suffit d'appeler le service "analyze" en ajoutant le paramètre "&api=journeys" et l'ensemble des paramètres renseignés pour le service "journeys":
 
-http://www.navitia.com/navitia/analyze?api=journeys&format=json&origin=coord:4.915:45.731&destination=coord:4.825:45.760&datetime=20120930T0800&clockwise=1
+http://www.navitia.com/navitia
+/analyze?api=journeys&format=json&origin=coord:4.915:45.731&destination=coord:4.825:45.760&datetime=20120930T0800&clockwise=1
 
