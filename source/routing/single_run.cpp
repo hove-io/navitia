@@ -75,14 +75,18 @@ int main(int argc, char** argv){
             }
 
             Timer t("Calcul avec l'algorithme " + algo);
-            Path res = router->compute(start_idx, target_idx, hour, date)[0];
+            auto tmp = router->compute(start_idx, target_idx, hour, date);
 
-            for(auto item : res.items) {
-                std::cout << item.print(data.pt_data) << std::endl;
-            }
+            if(tmp.size() > 0) {
+                auto res = tmp[0];
 
-            if(verif) {
-                verification.verif(res);
+                for(auto item : res.items) {
+                    std::cout << item.print(data.pt_data) << std::endl;
+                }
+
+                if(verif) {
+                    verification.verif(res);
+                }
             }
             std::cout << std::endl << "______________________________________" << std::endl << std::endl;
             delete router;
