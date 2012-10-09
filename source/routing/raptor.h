@@ -75,7 +75,6 @@ struct RAPTOR : public AbstractRouter
 
 
     void set_routes_valides(const DateTime & dtDepart);
-    int min_time_to_wait(navitia::type::idx_t rp1, navitia::type::idx_t rp2);   
 
     void boucleRAPTOR();
     Path makePath(std::vector<std::pair<type::idx_t, double> > departs,
@@ -85,6 +84,10 @@ struct RAPTOR : public AbstractRouter
     int  earliest_trip(const type::Route & route, const unsigned int order, const DateTime &dt) const;
 
     void boucleRAPTORreverse();
+
+    template<typename Visitor>
+    void raptor_loop(Visitor visitor);
+
     Path makePathreverse(std::vector<std::pair<type::idx_t, double> > departs,
                          unsigned int destination_idx, unsigned int countb);
     void marcheapiedreverse();
