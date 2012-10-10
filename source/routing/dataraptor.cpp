@@ -4,8 +4,8 @@ namespace navitia { namespace routing { namespace raptor {
 
 void dataRAPTOR::load(const type::PT_Data &data)
 {
-    retour_constant.resize(data.stop_points.size());
-    retour_constant_reverse.resize(data.stop_points.size());
+    retour_constant.resize(data.route_points.size());
+    retour_constant_reverse.resize(data.route_points.size());
 
     for(auto &r : retour_constant_reverse) {
         r.arrival = DateTime::min;
@@ -16,47 +16,55 @@ void dataRAPTOR::load(const type::PT_Data &data)
         r.arrival = DateTime::inf;
         r.departure = DateTime::inf;
     }
-    //Construction de la liste des marche à pied à partir des connections renseignées
+    //Construction de la liste des marche à pied à partir des connexions renseignées
 
     foot_path.clear();
     std::vector<list_connections> footpath_temp;
-    footpath_temp.resize(data.stop_points.size());
-    for(navitia::type::Connection connection : data.connections) {
-        footpath_temp[connection.departure_stop_point_idx][connection.destination_stop_point_idx] = connection;
-        navitia::type::Connection inverse;
-        inverse.departure_stop_point_idx = connection.destination_stop_point_idx;
-        inverse.destination_stop_point_idx = connection.departure_stop_point_idx;
+    footpath_temp.resize(data.route_points.size());
+    for(type::Connection connection : data.connections) {
+        type::Connection inverse;
         inverse.duration = connection.duration;
-        footpath_temp[connection.destination_stop_point_idx][connection.departure_stop_point_idx] = inverse;
+        for(type::idx_t departure_rpidx : data.stop_points[connection.departure_stop_point_idx].route_point_list) {
+            for(type::idx_t destination_rpidx : data.stop_points[connection.destination_stop_point_idx].route_point_list) {
+                type::Connection c = connection;
+                c.departure_stop_point_idx = departure_rpidx;
+                c.destination_stop_point_idx = destination_rpidx;
+                footpath_temp[departure_rpidx][destination_rpidx] = c;
+                inverse.departure_stop_point_idx = destination_rpidx;
+                inverse.destination_stop_point_idx = departure_rpidx;
+                footpath_temp[destination_rpidx][departure_rpidx] = inverse;
+            }
+        }
     }
 
     //On rajoute des connexions entre les stops points d'un même stop area si elles n'existent pas
-    footpath_index.resize(data.stop_points.size());
-    footpath_index.resize(data.stop_points.size());
-    for(navitia::type::StopPoint sp : data.stop_points) {
-        navitia::type::StopArea sa = data.stop_areas[sp.stop_area_idx];
-        footpath_index[sp.idx].first = foot_path.size();
+    footpath_index.resize(data.route_points.size());
+    footpath_index.resize(data.route_points.size());
+    for(type::RoutePoint rp : data.route_points) {
+        type::StopArea sa = data.stop_areas[data.stop_points[rp.stop_point_idx].stop_area_idx];
+        footpath_index[rp.idx].first = foot_path.size();
 
         int size = 0;
-        for(auto conn : footpath_temp[sp.idx]) {
+        for(auto conn : footpath_temp[rp.idx]) {
             foot_path.push_back(conn.second);
             ++size;
         }
 
-        for(navitia::type::idx_t spidx : sa.stop_point_list) {
-            navitia::type::StopPoint sp2 = data.stop_points[spidx];
-            if(sp.idx != sp2.idx) {
-                if(footpath_temp[sp.idx].find(sp2.idx) == footpath_temp[sp.idx].end()) {
-                    navitia::type::Connection c;
-                    c.departure_stop_point_idx = sp.idx;
-                    c.destination_stop_point_idx = sp2.idx;
+
+        for(type::idx_t spidx2 : sa.stop_point_list) {
+            for(type::idx_t rpidx2 : data.stop_points[spidx2].route_point_list) {
+                if(rp.idx != rpidx2 && 
+                   footpath_temp[rp.idx].find(rpidx2) == footpath_temp[rp.idx].end()) {
+                    type::Connection c;
+                    c.departure_stop_point_idx = rp.idx;
+                    c.destination_stop_point_idx = rpidx2;
                     c.duration = 2 * 60;
                     foot_path.push_back(c);
                     ++size;
                 }
             }
         }
-        footpath_index[sp.idx].second = size;
+        footpath_index[rp.idx].second = size;
     }
 
 

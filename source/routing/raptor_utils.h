@@ -11,14 +11,15 @@ enum type_idx {
 };
 struct type_retour {
     type::idx_t stop_time_idx;
-    int spid_embarquement;
+    int rpid_embarquement;
     DateTime arrival, departure;
     type_idx type;
 
     type_retour(const DateTime & arrival, const DateTime & departure) : stop_time_idx(navitia::type::invalid_idx),
-        spid_embarquement(navitia::type::invalid_idx), arrival(arrival), departure(departure), type(depart) {}
+        rpid_embarquement(navitia::type::invalid_idx), arrival(arrival), departure(departure), type(depart) {}
 
-    type_retour(const type::StopTime & st, const DateTime & date, int embarquement, bool clockwise) : stop_time_idx(st.idx), spid_embarquement(embarquement),
+    type_retour(const type::StopTime & st, const DateTime & date, int embarquement, bool clockwise) : 
+        stop_time_idx(st.idx), rpid_embarquement(embarquement),
         type(vj) {
         if(clockwise) {
             arrival = date;
@@ -33,11 +34,16 @@ struct type_retour {
         arrival.normalize();
     }
 
-    type_retour(const DateTime & arrival, const DateTime & departure, int embarquement) : stop_time_idx(navitia::type::invalid_idx),
-        spid_embarquement(embarquement), arrival(arrival), departure(departure), type(connection) {}
+    type_retour(const DateTime & arrival, const DateTime & departure, int embarquement) : 
+        stop_time_idx(navitia::type::invalid_idx), rpid_embarquement(embarquement),
+        arrival(arrival), departure(departure), type(connection) {}
 
-    type_retour() : stop_time_idx(type::invalid_idx), spid_embarquement(-1), arrival(), departure(DateTime::min), type(uninitialized) {}
-    type_retour(const type_retour & t) : stop_time_idx(t.stop_time_idx), spid_embarquement(t.spid_embarquement), arrival(t.arrival),
+    type_retour() : 
+        stop_time_idx(type::invalid_idx), rpid_embarquement(type::invalid_idx), arrival(),
+        departure(DateTime::min), type(uninitialized) {}
+
+    type_retour(const type_retour & t) : 
+        stop_time_idx(t.stop_time_idx), rpid_embarquement(t.rpid_embarquement), arrival(t.arrival),
         departure(departure), type(t.type) {}
 
 };
@@ -47,22 +53,22 @@ struct best_dest {
 
     std::/*unordered_*/map<unsigned int, std::pair<int, int>> map_date_time;
     type_retour best_now;
-    unsigned int best_now_spid;
+    unsigned int best_now_rpid;
     unsigned int count;
 
-    void ajouter_destination(unsigned int spid, const int dist_to_dep, const int dist_to_dest) { 
-        map_date_time[spid] = std::make_pair(dist_to_dep, dist_to_dest);
+    void ajouter_destination(unsigned int rpid, const int dist_to_dep, const int dist_to_dest) { 
+        map_date_time[rpid] = std::make_pair(dist_to_dep, dist_to_dest);
     }
 
-    bool is_dest(unsigned int spid) const {return map_date_time.find(spid) != map_date_time.end();}
+    bool is_dest(unsigned int rpid) const {return map_date_time.find(rpid) != map_date_time.end();}
 
-    bool ajouter_best(unsigned int spid, const type_retour &t, int cnt) {
-        auto it = map_date_time.find(spid);
+    bool ajouter_best(unsigned int rpid, const type_retour &t, int cnt) {
+        auto it = map_date_time.find(rpid);
         if(it != map_date_time.end()) {
             if(t.arrival + it->second.second <= best_now.arrival) {
                 best_now = t;
                 best_now.arrival = best_now.arrival + it->second.second;
-                best_now_spid = spid;
+                best_now_rpid = rpid;
                 count = cnt;
                 return true;
             }
@@ -70,13 +76,13 @@ struct best_dest {
         return false;
     }
 
-    bool ajouter_best_reverse(unsigned int spid, const type_retour &t, int cnt) {
-        auto it = map_date_time.find(spid);
+    bool ajouter_best_reverse(unsigned int rpid, const type_retour &t, int cnt) {
+        auto it = map_date_time.find(rpid);
         if(it != map_date_time.end()) {
             if(t.departure != DateTime::min && (t.departure - it->second.first) >= best_now.departure) {
                 best_now = t;
                 best_now.departure = t.departure - it->second.first;
-                best_now_spid = spid;
+                best_now_rpid = rpid;
                 count = cnt;
                 return true;
             }
@@ -87,7 +93,7 @@ struct best_dest {
     void reinit() {
         map_date_time.clear();
         best_now = type_retour();
-        best_now_spid = std::numeric_limits<unsigned int>::max();
+        best_now_rpid = std::numeric_limits<unsigned int>::max();
         count = 0;
     }
 
