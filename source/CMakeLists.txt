@@ -85,6 +85,7 @@ add_subdirectory(lz4_filter)
 add_subdirectory(routing)
 add_subdirectory(georef)
 add_subdirectory(geo_dispatcher)
+add_subdirectory(validator)
 
 add_subdirectory(scripts)
 
