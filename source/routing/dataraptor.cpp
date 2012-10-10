@@ -92,13 +92,13 @@ void dataRAPTOR::load(const type::PT_Data &data)
                       [&](type::idx_t stidx1, type::idx_t stidx2)->bool{
                         const type::StopTime & st1 = data.stop_times[stidx1];
                         const type::StopTime & st2 = data.stop_times[stidx2];
-                        return (st1.departure_time % NB_MINUTES_MINUIT == st2.departure_time % NB_MINUTES_MINUIT && st1.idx < st2.idx) ||
-                               (st1.departure_time % NB_MINUTES_MINUIT <  st2.departure_time % NB_MINUTES_MINUIT);});
+                        return (st1.departure_time % SECONDS_PER_DAY == st2.departure_time % SECONDS_PER_DAY && st1.idx < st2.idx) ||
+                               (st1.departure_time % SECONDS_PER_DAY <  st2.departure_time % SECONDS_PER_DAY);});
             st_idx_forward.insert(st_idx_forward.end(), vec_stdix.begin(), vec_stdix.end());
             for(auto stidx : vec_stdix) {
                 const auto & st = data.stop_times[stidx];
-                departure_times.push_back(st.departure_time % NB_MINUTES_MINUIT);
-                if(st.departure_time > NB_MINUTES_MINUIT) {
+                departure_times.push_back(st.departure_time % SECONDS_PER_DAY);
+                if(st.departure_time > SECONDS_PER_DAY) {
                     auto vp = data.validity_patterns[data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx].days;
                     vp >>=1;
                     auto it = std::find(validity_patterns.begin(), validity_patterns.end(), vp);
@@ -117,14 +117,14 @@ void dataRAPTOR::load(const type::PT_Data &data)
                   [&](type::idx_t stidx1, type::idx_t stidx2)->bool{
                         const type::StopTime & st1 = data.stop_times[stidx1];
                         const type::StopTime & st2 = data.stop_times[stidx2];
-                        return (st1.arrival_time % NB_MINUTES_MINUIT == st2.arrival_time % NB_MINUTES_MINUIT && st1.idx > st2.idx) ||
-                               (st1.arrival_time % NB_MINUTES_MINUIT >  st2.arrival_time % NB_MINUTES_MINUIT);});
+                        return (st1.arrival_time % SECONDS_PER_DAY == st2.arrival_time % SECONDS_PER_DAY && st1.idx > st2.idx) ||
+                               (st1.arrival_time % SECONDS_PER_DAY >  st2.arrival_time % SECONDS_PER_DAY);});
 
             st_idx_backward.insert(st_idx_backward.end(), vec_stdix.begin(), vec_stdix.end());
             for(auto stidx : vec_stdix) {
                 const auto & st = data.stop_times[stidx];
-                arrival_times.push_back(st.arrival_time % NB_MINUTES_MINUIT);
-                if(st.arrival_time > NB_MINUTES_MINUIT) {
+                arrival_times.push_back(st.arrival_time % SECONDS_PER_DAY);
+                if(st.arrival_time > SECONDS_PER_DAY) {
                     auto vp = data.validity_patterns[data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx].days;
                     vp >>=1;;
                     auto it = std::find(validity_patterns.begin(), validity_patterns.end(), vp);
