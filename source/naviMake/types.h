@@ -372,7 +372,6 @@ struct StopTime {
     bool ODT;
     bool pick_up_allowed;
     bool drop_off_allowed;
-    int zone;
 
     struct Transformer{
         inline navitia::type::StopTime operator()(const StopTime* stop){return this->operator()(*stop);}
@@ -380,7 +379,7 @@ struct StopTime {
     };
 
     StopTime(): arrival_time(0), departure_time(0), vehicle_journey(NULL), route_point(NULL), order(0), 
-        ODT(false), pick_up_allowed(false), drop_off_allowed(false), zone(0){}
+        ODT(false), pick_up_allowed(false), drop_off_allowed(false) {}
 
 
     bool operator<(const StopTime& other) const;

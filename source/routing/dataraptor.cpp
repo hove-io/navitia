@@ -81,9 +81,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
     for(const type::Route & route : data.routes) {
         first_stop_time.push_back(arrival_times.size());
         nb_trips.push_back(route.vehicle_journey_list.size());
-        //        for(type::idx_t rpidx : route.route_point_list) {
         for(unsigned int i=0; i < route.route_point_list.size(); ++i) {
-            type::idx_t rpidx = route.route_point_list[i];
             std::vector<type::idx_t> vec_stdix;
             for(type::idx_t vjidx : route.vehicle_journey_list) {
                 vec_stdix.push_back(data.vehicle_journeys[vjidx].stop_time_list[i]);
@@ -92,7 +90,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
                       [&](type::idx_t stidx1, type::idx_t stidx2)->bool{
                         const type::StopTime & st1 = data.stop_times[stidx1];
                         const type::StopTime & st2 = data.stop_times[stidx2];
-                        return (st1.departure_time % SECONDS_PER_DAY == st2.departure_time % SECONDS_PER_DAY && st1.idx < st2.idx) ||
+                        return (st1.departure_time % SECONDS_PER_DAY == st2.departure_time % SECONDS_PER_DAY && stidx1 < stidx2) ||
                                (st1.departure_time % SECONDS_PER_DAY <  st2.departure_time % SECONDS_PER_DAY);});
             st_idx_forward.insert(st_idx_forward.end(), vec_stdix.begin(), vec_stdix.end());
             for(auto stidx : vec_stdix) {
@@ -117,7 +115,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
                   [&](type::idx_t stidx1, type::idx_t stidx2)->bool{
                         const type::StopTime & st1 = data.stop_times[stidx1];
                         const type::StopTime & st2 = data.stop_times[stidx2];
-                        return (st1.arrival_time % SECONDS_PER_DAY == st2.arrival_time % SECONDS_PER_DAY && st1.idx > st2.idx) ||
+                        return (st1.arrival_time % SECONDS_PER_DAY == st2.arrival_time % SECONDS_PER_DAY && stidx1 > stidx2) ||
                                (st1.arrival_time % SECONDS_PER_DAY >  st2.arrival_time % SECONDS_PER_DAY);});
 
             st_idx_backward.insert(st_idx_backward.end(), vec_stdix.begin(), vec_stdix.end());

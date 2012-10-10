@@ -141,10 +141,11 @@ bool Connection::operator<(const Connection& other) const{
     return *(this->departure_stop_point) < *(other.departure_stop_point);
 }
 bool StopTime::operator<(const StopTime& other) const {
-
-    return this->route_point->route < other.route_point->route
-            || ((this->route_point->route == other.route_point->route) && (this->vehicle_journey< other.vehicle_journey
-            || ((this->vehicle_journey == other.vehicle_journey) && (this->order< other.order))));
+    if(this->vehicle_journey == other.vehicle_journey){
+        return this->order < other.order;
+    } else {
+        return *this->vehicle_journey < *other.vehicle_journey;
+    }
 }
 
 
@@ -332,8 +333,6 @@ nt::StopTime StopTime::Transformer::operator()(const StopTime& stop){
     nt_stop.idx = stop.idx;
     nt_stop.arrival_time = stop.arrival_time;
     nt_stop.departure_time = stop.departure_time;
-    nt_stop.order = stop.order;
-    nt_stop.zone = stop.zone;
     nt_stop.properties[nt::StopTime::ODT] = stop.ODT;
     nt_stop.properties[nt::StopTime::DROP_OFF] = stop.drop_off_allowed;
     nt_stop.properties[nt::StopTime::PICK_UP] = stop.pick_up_allowed;

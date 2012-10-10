@@ -792,9 +792,9 @@ Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
                 while(spid_embarquement != current_spid) {
                     navitia::type::StopTime prec_st = current_st;
                     if(!reverse)
-                        current_st = data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(current_st.vehicle_journey_idx).stop_time_list.at(current_st.order-1));
+                        current_st = data.pt_data.stop_times.at(current_st.idx-1);
                     else
-                        current_st = data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(current_st.vehicle_journey_idx).stop_time_list.at(current_st.order+1));
+                        current_st = data.pt_data.stop_times.at(current_st.idx+1);
 
                     if(!reverse && current_st.arrival_time%data.dataRaptor.SECONDS_PER_DAY > prec_st.arrival_time%data.dataRaptor.SECONDS_PER_DAY && prec_st.vehicle_journey_idx!=navitia::type::invalid_idx)
                         workingDate.date_decrement();

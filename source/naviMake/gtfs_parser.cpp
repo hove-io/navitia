@@ -816,7 +816,6 @@ void GtfsParser::parse_stop_times(Data & data) {
             stop_time->order = boost::lexical_cast<int>(elts[stop_seq_c]);
             stop_time->vehicle_journey = vj_it->second;
             stop_time->ODT = (elts[pickup_c] == "2" && elts[drop_off_c] == "2");
-            stop_time->zone = 0; // à définir selon pickup_type ou drop_off_type = 10
             stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
             data.stops.push_back(stop_time);
             count++;
