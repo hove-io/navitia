@@ -53,24 +53,24 @@ bool ValidityPattern::check(boost::gregorian::date day) const {
     return ValidityPattern::check(duration);
 }
 
-bool ValidityPattern::check(int day) const {
+bool ValidityPattern::check(unsigned int day) const {
 //    BOOST_ASSERT(is_valid(day));
     return days[day];
 }
 
-bool ValidityPattern::check2(int day) const {
+bool ValidityPattern::check2(unsigned int day) const {
 //    BOOST_ASSERT(is_valid(day));
     if(day == 0)
         return days[day] || days[day+1];
-    else if(day > 0)
+    else
         return days[day-1] || days[day] || days[day+1];
 }
 
-bool ValidityPattern::uncheck2(int day) const {
+bool ValidityPattern::uncheck2(unsigned int day) const {
 //    BOOST_ASSERT(is_valid(day));
     if(day == 0)
         return !days[day] && !days[day+1];
-    else if(day > 0)
+    else
         return !days[day-1] && !days[day] && !days[day+1];
 }
 
