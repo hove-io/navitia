@@ -18,7 +18,7 @@ std::string EncodingConverter::convert(std::string& str){
     size_t input_left = str.size();
     size_t result = iconv(iconv_handler, &working_input, &input_left, &working_output, &output_left);
     if(result == (size_t)-1){
-        throw std::string("iconv fail: " + errno);
+        throw (std::string("iconv fail: ") + std::to_string(errno));
     }
     return std::string(iconv_output_buffer);
 

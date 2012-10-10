@@ -38,7 +38,7 @@ struct type_retour {
 
     type_retour() : stop_time_idx(type::invalid_idx), spid_embarquement(-1), arrival(), departure(DateTime::min), type(uninitialized) {}
     type_retour(const type_retour & t) : stop_time_idx(t.stop_time_idx), spid_embarquement(t.spid_embarquement), arrival(t.arrival),
-        departure(departure), type(t.type) {}
+        departure(t.departure), type(t.type) {}
 
 };
 

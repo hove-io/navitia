@@ -126,15 +126,7 @@ bool VehicleJourney::operator<(const VehicleJourney& other) const {
 }
 
 bool ValidityPattern::operator <(const ValidityPattern &other) const {
-    int a, b;
-    a = 0;
-    b = 0;
-    for(int i=0; i<7; ++i) {
-        a += pow(this->days[i], i);
-        b += pow(other.check(i), i);
-    }
-
-    return a < b;
+    return this->days.to_string() < other.days.to_string();
 }
 
 bool Connection::operator<(const Connection& other) const{
