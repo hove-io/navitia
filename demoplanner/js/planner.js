@@ -50,9 +50,10 @@ function aff_planning(idPlanning) {
                 feuille += "<li>Trajet en " + item.mode + " " + item.code + " vers " + item.direction + "</li>";
                 feuille += "<ul>";
 
-                for(j=0; j < item.stop_point_list.length; j++) {
-                    feuille += "<li>" + item.stop_point_list[j].name + " " + item.departure_date_time_list[j] + " " + item.arrival_date_time_list[j] + "</li>";
-                    arraypolys.push(new mxn.LatLonPoint(item.stop_point_list[j].coord.y, item.stop_point_list[j].coord.x));
+                for(j=0; j < item.stop_time_list.length; j++) {
+                    var stop_time = item.stop_time_list[j]
+                    feuille += "<li>" + stop_time.stop_point.name + " " + stop_time.departure_date_time + " " + stop_time.arrival_date_time + "</li>";
+                    arraypolys.push(new mxn.LatLonPoint(stop_time.stop_point.coord.y, stop_time.stop_point.coord.x));
                 }
                 feuille += "</ul>";
                 var myPoly = new mxn.Polyline(arraypolys);
