@@ -200,22 +200,22 @@ void RAPTOR::marcheapiedreverse() {
     int last = 0;
     std::vector<navitia::type::idx_t> to_mark;
 
-    for(auto stop_point = marked_rp.find_first(); stop_point != marked_rp.npos; stop_point = marked_rp.find_next(stop_point)) {
-        const auto & index = data.dataRaptor.footpath_index[stop_point];
-        const type_retour & retour_temp = retour[count][stop_point];
+    for(auto route_point = marked_rp.find_first(); route_point != marked_rp.npos; route_point = marked_rp.find_next(route_point)) {
+        const auto & index = data.dataRaptor.footpath_index[route_point];
+        const type_retour & retour_temp = retour[count][route_point];
         int prec_duration = -1;
         DateTime arrival, departure = retour_temp.departure;
         it += index.first - last;
         const auto end = it + index.second;
         for(; it != end; ++it) {
             navitia::type::idx_t destination = it->destination_stop_point_idx;
-            if(stop_point != destination) {
+            if(route_point != destination) {
                 if(it->duration != prec_duration) {
                     arrival = departure - it->duration;
                     prec_duration = it->duration;
                 }
                 if(arrival >= best[destination].departure) {
-                    const type_retour nRetour = type_retour(arrival, arrival, stop_point);
+                    const type_retour nRetour = type_retour(arrival, arrival, route_point);
                     best[destination] = nRetour;
                     retour[count][destination] = nRetour;
                     if(!b_dest.ajouter_best_reverse(destination, nRetour, count)) {
@@ -810,8 +810,8 @@ Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
             else
                 item = PathItem(workingDate, retour[countb][r.rpid_embarquement].departure);
 
-            item.stop_points.push_back(data.pt_data.route_points[current_rpid].stop_point_idx);
             item.type = walking;
+            item.stop_points.push_back(data.pt_data.route_points[current_rpid].stop_point_idx);
             item.stop_points.push_back(data.pt_data.route_points[r.rpid_embarquement].stop_point_idx);
             result.items.push_back(item);
 
@@ -861,7 +861,9 @@ Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
 
                     current_rpid = current_st.route_point_idx;
                     for(auto item : departs) {
-                        stop = stop || item.first == current_rpid;
+                        for(auto rpidx : data.pt_data.stop_points[item.first].route_point_list) {
+                            stop = stop || rpidx == current_rpid;
+                        }
                     }
                     if(stop)
                         break;
@@ -886,8 +888,9 @@ Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
         }
 
         for(auto item : departs) {
-            for(auto rpidx : data.pt_data.stop_points[item.first].route_point_list)
-            stop = stop || rpidx == current_rpid;
+            for(auto rpidx : data.pt_data.stop_points[item.first].route_point_list) {
+                stop = stop || rpidx == current_rpid;
+            }
         }
     }
 

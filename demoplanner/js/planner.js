@@ -52,8 +52,8 @@ function aff_planning(idPlanning) {
 
                 for(j=0; j < item.stop_time_list.length; j++) {
                     var stop_time = item.stop_time_list[j]
-                    feuille += "<li>" + stop_time.stop_point.name + " " + stop_time.departure_date_time + " " + stop_time.arrival_date_time + "</li>";
                     arraypolys.push(new mxn.LatLonPoint(stop_time.stop_point.coord.y, stop_time.stop_point.coord.x));
+                    feuille += "<li>" + stop_time.stop_point.name + " " + stop_time.departure_date_time + " " + stop_time.arrival_date_time + "</li>";
                 }
                 feuille += "</ul>";
                 var myPoly = new mxn.Polyline(arraypolys);
@@ -138,6 +138,10 @@ function clickmap(event_name, event_source, event_args) {
 
 }
 
+function debug(event_name, event_source, event_args) {
+    $.getJSON($("#url_debug").val(), aff_data);
+}
+
 
 
 window.onload= function() {
@@ -145,6 +149,7 @@ window.onload= function() {
     map = new mxn.Mapstraction('mapdiv', 'openlayers');
     map.click.addHandler(clickmap);
     $("#go").click(planner);
+    $("#debug").click(debug);
     $("#centrer").change(function() {
         var sels = $("#centrer option:selected");
         var sel = sels[0].value;
