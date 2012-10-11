@@ -55,6 +55,8 @@ void Data::load_lz4(const std::string & filename) {
         in.push(ifs);
         eos::portable_iarchive ia(in);
         ia >> *this;
+        for(size_t i = 0; i < this->pt_data.stop_times.size(); ++i)
+            this->pt_data.stop_times[i].idx = i;
         last_load = true;
     }catch(std::exception& ex){
         LOG4CPLUS_ERROR(logger, boost::format("le chargement des données à échoué: %s") % ex.what());

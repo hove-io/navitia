@@ -480,7 +480,8 @@ struct StopTime {
     StopTime(): arrival_time(0), departure_time(0), vehicle_journey_idx(invalid_idx), route_point_idx(invalid_idx) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-            ar & arrival_time & departure_time & vehicle_journey_idx & route_point_idx & properties & idx;
+        // Les idx sont volontairement pas sérialisés. On les reconstruit. Ça permet de gagner 5Mo compressé pour l'Île-de-France
+            ar & arrival_time & departure_time & vehicle_journey_idx & route_point_idx & properties /*& idx*/;
     }
 };
 
