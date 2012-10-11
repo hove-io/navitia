@@ -45,56 +45,6 @@ void Data::set_cities(){
     }
 }
 
-void Data::save(const std::string & filename) {
-    std::ofstream ofs(filename.c_str());
-    boost::archive::text_oarchive oa(ofs);
-    oa << *this;
-}
-
-void Data::load(const std::string & filename) {
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    try{
-        last_load_at = pt::microsec_clock::local_time();
-        std::ifstream ifs(filename.c_str());
-        boost::archive::text_iarchive ia(ifs);
-        ia >> *this;
-        last_load = true;
-    }catch(std::exception& ex){
-        LOG4CPLUS_ERROR(logger, boost::format("le chargement des données à échoué: %s") % ex.what());
-        last_load = false;
-        throw;
-    }catch(...){
-        LOG4CPLUS_ERROR(logger, "le chargement des données à échoué");
-        last_load = false;
-        throw;
-    }
-}
-
-void Data::save_bin(const std::string & filename) {
-    std::ofstream ofs(filename.c_str(),  std::ios::out | std::ios::binary);
-    boost::archive::binary_oarchive oa(ofs);
-    oa << *this;
-}
-
-void Data::load_bin(const std::string & filename) {
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    try{
-        last_load_at = pt::microsec_clock::local_time();
-        std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
-        boost::archive::binary_iarchive ia(ifs);
-        ia >> *this;
-        last_load = true;
-    }catch(std::exception& ex){
-        LOG4CPLUS_ERROR(logger, boost::format("le chargement des données à échoué: %s") % ex.what());
-        last_load = false;
-        throw;
-    }catch(...){
-        LOG4CPLUS_ERROR(logger, "le chargement des données à échoué");
-        last_load = false;
-        throw;
-    }
-}
-
 void Data::load_lz4(const std::string & filename) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     try{
