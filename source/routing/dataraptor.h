@@ -15,7 +15,7 @@ struct dataRAPTOR {
     };
 
     //Données statiques
-    const static uint32_t NB_MINUTES_MINUIT = 86400;
+    const static uint32_t SECONDS_PER_DAY = 86400;
     std::vector<navitia::type::Connection> foot_path;
     std::vector<pair_int> footpath_index;
     std::vector<Route_t> routes;

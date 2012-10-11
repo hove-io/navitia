@@ -309,7 +309,7 @@ void CsvFusio::fill_stops(navimake::Data& data){
         }
         if(counter != 0){
             navimake::types::StopTime* stop = new navimake::types::StopTime();
-            stop->zone = boost::lexical_cast<int>(row.at(1));
+            //stop->zone = boost::lexical_cast<int>(row.at(1));
 
             stop->arrival_time = boost::lexical_cast<int>(row.at(2));
             stop->departure_time = boost::lexical_cast<int>(row.at(3));

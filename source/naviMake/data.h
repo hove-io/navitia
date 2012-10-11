@@ -122,13 +122,6 @@ public:
         }
     };
 
-    struct sort_stop_times_list {
-        const navitia::type::PT_Data & data;
-        sort_stop_times_list(const navitia::type::PT_Data & data) : data(data){}
-        bool operator ()(navitia::type::idx_t i, navitia::type::idx_t j) const {
-            return data.stop_times.at(i).order < data.stop_times.at(j).order;
-        }
-    };
 
     /**
          * supprime les objets inutiles

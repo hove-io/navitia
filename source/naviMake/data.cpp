@@ -5,7 +5,6 @@
 using namespace navimake;
 
 void Data::sort(){
-
     std::sort(networks.begin(), networks.end(), Less<navimake::types::Network>());
     std::for_each(networks.begin(), networks.end(), Indexer<navimake::types::Network>());
 
@@ -244,7 +243,7 @@ void Data::build_relations(navitia::type::PT_Data &data){
                 company.line_list.push_back(line.idx);
         }
 
-        std::sort(vj.stop_time_list.begin(), vj.stop_time_list.end(), sort_stop_times_list(data));
+        std::sort(vj.stop_time_list.begin(), vj.stop_time_list.end());
     }
 
     BOOST_FOREACH(navitia::type::Route & route, data.routes){

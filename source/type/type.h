@@ -430,9 +430,9 @@ public:
     }
 
     bool check(boost::gregorian::date day) const;
-    bool check(int day) const;
-    bool check2(int day) const;
-    bool uncheck2(int day) const;
+    bool check(unsigned int day) const;
+    bool check2(unsigned int day) const;
+    bool uncheck2(unsigned int day) const;
     //void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
 };
 
@@ -471,19 +471,16 @@ struct StopTime {
     uint32_t departure_time; ///< En secondes depuis minuit
     idx_t vehicle_journey_idx;
     idx_t route_point_idx;
-    uint16_t order;
-    uint16_t zone;
 
     std::bitset<8> properties;
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}
 
-    StopTime(): arrival_time(0), departure_time(0), vehicle_journey_idx(invalid_idx), route_point_idx(invalid_idx), order(0),
-        zone(0) {}
+    StopTime(): arrival_time(0), departure_time(0), vehicle_journey_idx(invalid_idx), route_point_idx(invalid_idx) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-            ar & arrival_time & departure_time & vehicle_journey_idx & route_point_idx & order & properties & zone & idx;
+            ar & arrival_time & departure_time & vehicle_journey_idx & route_point_idx & properties & idx;
     }
 };
 

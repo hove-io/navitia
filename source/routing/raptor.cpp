@@ -92,41 +92,9 @@ int RAPTOR::tardiest_trip(const type::Route & route, const unsigned int order, c
 
 
 
-//void RAPTOR::make_queue() {
-//    Q.assign(data.pt_data.routes.size(), std::numeric_limits<int>::max());
-
-//    auto it = data.dataRaptor.sp_routeorder_const.begin();
-//    int last = 0;
-//    for(auto stop = marked_sp.find_first(); stop != marked_sp.npos; stop = marked_sp.find_next(stop)) {
-//        auto index = data.dataRaptor.sp_indexrouteorder[stop];
-
-//        it += index.first - last;
-//        last = index.first + index.second;
-//        const auto end = it+index.second;
-//        for(; it!=end; ++it) {
-//            if((it->second < Q[it->first]))
-//                Q[it->first] = it->second;
-//        }
-//    }
-//    marked_sp.reset();
-//}
-
 void RAPTOR::make_queue() {
     Q.assign(data.pt_data.routes.size(), std::numeric_limits<int>::max());
 
-//    auto it = data.dataRaptor.sp_routeorder_const.begin();
-//    int last = 0;
-//    for(auto stop = marked_rp.find_first(); stop != marked_rp.npos; stop = marked_rp.find_next(stop)) {
-//        auto index = data.dataRaptor.sp_indexrouteorder[stop];
-
-//        it += index.first - last;
-//        last = index.first + index.second;
-//        const auto end = it+index.second;
-//        for(; it!=end; ++it) {
-//            if((it->second < Q[it->first]))
-//                Q[it->first] = it->second;
-//        }
-//    }
     for(const type::Route & route : data.pt_data.routes) {
         if(routes_valides.test(route.idx)) {
             for(auto it_rp = data.pt_data.route_points.begin() + route.route_point_list.front();
@@ -150,21 +118,9 @@ void RAPTOR::make_queue() {
 
 
 
+
  void RAPTOR::make_queuereverse() {
     Q.assign(data.pt_data.routes.size(), std::numeric_limits<int>::max());
-//    auto it = data.dataRaptor.sp_routeorder_const_reverse.begin();
-//    int last = 0;
-//    for(auto stop = marked_rp.find_first(); stop != marked_rp.npos; stop = marked_rp.find_next(stop)) {
-//        auto index = data.dataRaptor.sp_indexrouteorder_reverse[stop];
-
-//        it += index.first - last;
-//        last = index.first + index.second;
-//        const auto end = it+index.second;
-//        for(; it!=end; ++it) {
-//            if(Q[it->first] == std::numeric_limits<int>::max() || (it->second > Q[it->first]))
-//                Q[it->first] = it->second;
-//        }
-//    }
 
     for(const type::Route & route : data.pt_data.routes) {
         if(routes_valides.test(route.idx)) {
@@ -178,6 +134,7 @@ void RAPTOR::make_queue() {
                 }
             }
         }
+
     }
     marked_rp.reset();
  }
@@ -721,6 +678,7 @@ void RAPTOR::raptor_loop(Visitor visitor) {
                 workingDt = visitor.working_datetime_init();
                 decltype(visitor.first_stoptime(0)) it_st;
                 BOOST_FOREACH(const type::RoutePoint & rp, visitor.route_points(route, Q[route.idx])) {
+                    navitia::type::idx_t spid = rp.stop_point_idx;
                     if(t >= 0) {
                         ++it_st;
                         //On stocke, et on marque pour explorer par la suite
@@ -886,13 +844,13 @@ Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
                 while(rpid_embarquement != current_rpid) {
                     navitia::type::StopTime prec_st = current_st;
                     if(!reverse)
-                        current_st = data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(current_st.vehicle_journey_idx).stop_time_list.at(current_st.order-1));
+                        current_st = data.pt_data.stop_times.at(current_st.idx - 1);
                     else
-                        current_st = data.pt_data.stop_times.at(data.pt_data.vehicle_journeys.at(current_st.vehicle_journey_idx).stop_time_list.at(current_st.order+1));
+                        current_st = data.pt_data.stop_times.at(current_st.idx + 1);
 
-                    if(!reverse && current_st.arrival_time%data.dataRaptor.NB_MINUTES_MINUIT > prec_st.arrival_time%data.dataRaptor.NB_MINUTES_MINUIT && prec_st.vehicle_journey_idx!=navitia::type::invalid_idx)
+                    if(!reverse && current_st.arrival_time%data.dataRaptor.SECONDS_PER_DAY > prec_st.arrival_time%data.dataRaptor.SECONDS_PER_DAY && prec_st.vehicle_journey_idx!=navitia::type::invalid_idx)
                         workingDate.date_decrement();
-                    else if(reverse && current_st.arrival_time%data.dataRaptor.NB_MINUTES_MINUIT < prec_st.arrival_time%data.dataRaptor.NB_MINUTES_MINUIT && prec_st.vehicle_journey_idx!=navitia::type::invalid_idx)
+                    else if(reverse && current_st.arrival_time%data.dataRaptor.SECONDS_PER_DAY < prec_st.arrival_time%data.dataRaptor.SECONDS_PER_DAY && prec_st.vehicle_journey_idx!=navitia::type::invalid_idx)
                         workingDate.date_increment();
 
                     workingDate = DateTime(workingDate.date(), current_st.arrival_time);

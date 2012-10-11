@@ -123,6 +123,7 @@ namespace webservice
             }else{
                 api = request.path;
             }
+            boost::algorithm::to_lower(api);
 
             if(apis.find(api) == apis.end()) {
                 ResponseData resp;
@@ -155,7 +156,8 @@ namespace webservice
       *
       * Si la fonction est une methode membre, utiliser boost::bind(&Classe::methode, this, _1, _2)
       */
-        void register_api(const std::string & name, ApiFun fun, const std::string & description){
+        void register_api(std::string name, ApiFun fun, const std::string & description){
+            boost::algorithm::to_lower(name);
             apis[name] = fun;
 
             ApiMetadata api;
@@ -169,11 +171,14 @@ namespace webservice
       * Retourne false si l'api n'existe pas.
       * Si le paramètre avait déjà été défini, il est écrasé
       */
-        bool add_param(const std::string & api, const std::string & name,
+        bool add_param(std::string api, std::string name,
                        const std::string & description, enum ApiParameter::Type_p type, bool mandatory, const std::vector<RequestParameter::Parameter_variant>& accepted_values = std::vector<RequestParameter::Parameter_variant>()) {
+            boost::algorithm::to_lower(api);
+            boost::algorithm::to_lower(name);
             if(api_metadata.find(api) == api_metadata.end()) {
                 return false;
             }
+
             ApiParameter param;
             param.description = description;
             param.type = type;
