@@ -99,7 +99,7 @@ bool RoutePoint::operator<(const RoutePoint& other) const {
 
 bool StopArea::operator<(const StopArea& other) const {
     //@TODO géré la gestion de la city
-    return this->name < other.name;
+    return this->external_code < other.external_code;
 }
 
 
@@ -110,7 +110,7 @@ bool StopPoint::operator<(const StopPoint& other) const {
     else if(!other.stop_area)
         return true;
     else if(this->stop_area == other.stop_area){
-        return this->name < other.name;
+        return this->external_code < other.external_code;
     }else{
         return *(this->stop_area) < *(other.stop_area);
     }
@@ -119,7 +119,8 @@ bool StopPoint::operator<(const StopPoint& other) const {
 
 bool VehicleJourney::operator<(const VehicleJourney& other) const {
     if(this->route == other.route){
-        return this->name < other.name;
+        // On compare les pointeurs pour avoir un ordre total (fonctionnellement osef du tri, mais techniquement c'est important)
+        return this->stop_time_list.front() < other.stop_time_list.front();
     }else{
         return *(this->route) < *(other.route);
     }
@@ -134,7 +135,7 @@ bool Connection::operator<(const Connection& other) const{
 }
 bool StopTime::operator<(const StopTime& other) const {
     if(this->vehicle_journey == other.vehicle_journey){
-        return this->order < other.order;
+        return this->route_point->order < other.route_point->order;
     } else {
         return *this->vehicle_journey < *other.vehicle_journey;
     }
