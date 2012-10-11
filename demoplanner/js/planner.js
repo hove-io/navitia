@@ -53,7 +53,7 @@ function aff_planning(idPlanning) {
                 for(j=0; j < item.stop_time_list.length; j++) {
                     var stop_time = item.stop_time_list[j]
                     arraypolys.push(new mxn.LatLonPoint(stop_time.stop_point.coord.y, stop_time.stop_point.coord.x));
-                    feuille += "<li>" + stop_time.stop_point.name + " " + stop_time.departure_date_time + " " + stop_time.arrival_date_time + "</li>";
+                    feuille += "<li>" + stop_time.stop_point.name + " " + stop_time.arrival_date_time + " " + stop_time.departure_date_time + "</li>";
                 }
                 feuille += "</ul>";
                 var myPoly = new mxn.Polyline(arraypolys);

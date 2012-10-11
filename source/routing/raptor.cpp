@@ -701,12 +701,11 @@ void RAPTOR::raptor_loop(Visitor visitor) {
                         }
 
                         int etemp = visitor.best_trip(route, rp.order, dt);
-                        if(etemp >= 0) {
-                            if(t != etemp) {
-                                t = etemp;
-                                embarquement = rp.idx;
-                                it_st = visitor.first_stoptime(data.pt_data.vehicle_journeys[t].stop_time_list[rp.order]);
-                            }
+                        if(etemp >= 0 && t != etemp) {
+                            t = etemp;
+                            embarquement = rp.idx;
+                            it_st = visitor.first_stoptime(data.pt_data.vehicle_journeys[t].stop_time_list[rp.order]);
+
                             workingDt = dt;
                         }
                     }
