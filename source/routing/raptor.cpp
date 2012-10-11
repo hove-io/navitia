@@ -239,12 +239,14 @@ void RAPTOR::init(std::vector<std::pair<type::idx_t, double> > departs,
                   std::vector<std::pair<type::idx_t, double> > destinations,
                   const DateTime dep, DateTime borne,  const bool clockwise, const bool reset) {
     if(reset) {
+        retour.clear();
+
         if(clockwise) {
-            retour.assign(20, data.dataRaptor.retour_constant);
+            retour.push_back(data.dataRaptor.retour_constant);
             best = data.dataRaptor.retour_constant;
             b_dest.reinit(borne, clockwise);
         } else {
-            retour.assign(20, data.dataRaptor.retour_constant_reverse);
+            retour.push_back(data.dataRaptor.retour_constant_reverse);
             best = data.dataRaptor.retour_constant_reverse;
             if(borne == DateTime::inf)
                 borne = DateTime::min;
@@ -692,21 +694,14 @@ void RAPTOR::raptor_loop(Visitor visitor) {
                     const type_retour & retour_temp = prec_retour[rp.idx];
                     if(retour_temp.type != uninitialized &&
                        (t == -1 || visitor.better_or_equal(retour_temp, workingDt, *it_st))) {
-                        DateTime dt = visitor.previous_datetime(retour_temp);
 
-                        if(retour_temp.type == vj) {
-                            dt = dt + 
-                                 visitor.min_time_to_wait(data.pt_data.stop_times[retour_temp.stop_time_idx].route_point_idx,
-                                                          rp.idx);
-                        }
-
-                        int etemp = visitor.best_trip(route, rp.order, dt);
+                        int etemp = visitor.best_trip(route, rp.order, visitor.previous_datetime(retour_temp));
                         if(etemp >= 0 && t != etemp) {
                             t = etemp;
                             embarquement = rp.idx;
                             it_st = visitor.first_stoptime(data.pt_data.vehicle_journeys[t].stop_time_list[rp.order]);
 
-                            workingDt = dt;
+                            workingDt = visitor.previous_datetime(retour_temp);
                         }
                     }
                 }
