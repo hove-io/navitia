@@ -64,6 +64,21 @@ template<typename A, typename B> int check_relations(const std::vector<A> &as, s
 }
 
 
+template<typename A, typename B> int check_relations(const std::vector<A> &as, std::vector<idx_t> A::*idx_list, const std::vector<B> &bs, idx_t B::*to_a_idx){
+    static_data * s = static_data::get();
+    int error_count = 0;
+    std::cout << "Vérification des relations de " << s->captionByType(A::type) << " vers N-" << s->captionByType(B::type) << " et retour" << std::endl;
+    for(const A & a : as){
+        for(idx_t idx : a.*idx_list){
+            if(bs[idx].*to_a_idx != a.idx) {
+                std::cout << "    idx invalide : " << idx << " pour le " << s->captionByType(A::type) << "(" << a.idx << ")" << std::endl;
+                error_count++;
+            }
+        }
+    }
+    std::cout << "    Nombre d'erreurs : " << error_count << std::endl;
+    return error_count;
+}
 int main(int argc, char** argv) {
     if(argc != 2){
         std::cout << "Utilisation : " << argv[0] << " fichier_navitia.lz4" << std::endl;
@@ -77,6 +92,7 @@ int main(int argc, char** argv) {
     error_count += general_check(d.pt_data.stop_areas);
     error_count += check_relations(d.pt_data.stop_areas, &StopArea::city_idx, d.pt_data.cities);
     error_count += check_relations(d.pt_data.stop_areas, &StopArea::stop_point_list, d.pt_data.stop_points);
+    error_count += check_relations(d.pt_data.stop_areas, &StopArea::stop_point_list, d.pt_data.stop_points, &StopPoint::stop_area_idx);
 
     error_count += general_check(d.pt_data.stop_points);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::stop_area_idx, d.pt_data.stop_areas);
@@ -84,6 +100,7 @@ int main(int argc, char** argv) {
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::mode_idx, d.pt_data.modes);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::network_idx, d.pt_data.networks);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::route_point_list, d.pt_data.route_points);
+    error_count += check_relations(d.pt_data.stop_points, &StopPoint::route_point_list, d.pt_data.route_points, &RoutePoint::stop_point_idx);
 
     error_count += general_check(d.pt_data.lines);
     error_count += check_relations(d.pt_data.lines, &Line::company_list, d.pt_data.companies);
@@ -92,6 +109,7 @@ int main(int argc, char** argv) {
     error_count += check_relations(d.pt_data.routes, &Route::line_idx, d.pt_data.lines);
     error_count += check_relations(d.pt_data.routes, &Route::route_point_list, d.pt_data.route_points);
     error_count += check_relations(d.pt_data.routes, &Route::vehicle_journey_list, d.pt_data.vehicle_journeys);
+    error_count += check_relations(d.pt_data.routes, &Route::vehicle_journey_list, d.pt_data.vehicle_journeys, &VehicleJourney::route_idx);
 
     error_count += general_check(d.pt_data.route_points);
     error_count += check_relations(d.pt_data.route_points, &RoutePoint::stop_point_idx, d.pt_data.stop_points);
@@ -103,6 +121,16 @@ int main(int argc, char** argv) {
         for(idx_t idx : vj.stop_time_list){
             if(idx > d.pt_data.stop_times.size()){
                 std::cout << "    idx invalide : " << idx << " pour le vehicle journey(" << vj.idx << ")" << std::endl;
+                error_count++;
+            }
+        }
+        for(size_t i = 1; i < vj.stop_time_list.size(); ++i){
+            StopTime st1 = d.pt_data.stop_times[vj.stop_time_list[i-1]];
+            StopTime st2 = d.pt_data.stop_times[vj.stop_time_list[i]];
+            RoutePoint rp1 = d.pt_data.route_points[st1.route_point_idx];
+            RoutePoint rp2 = d.pt_data.route_points[st2.route_point_idx];
+            if(rp1.order + 1!=  rp2.order){
+                std::cout << "Problème de tri des stop_time du vj " << vj.idx << std::endl;
                 error_count++;
             }
         }
