@@ -51,6 +51,7 @@ Règles globales
 
 Dans l'ensemble les `guidelines google`_ sont très bien. Nous ne les appliquons cependant pas à la lettre 
 Les grandes différences portent sur :
+
 * Boost : on utilise tout ;)
 * Les exception : on utilise
 * C++11 : on utilise ce qui est supporté par GCC 4.5
