@@ -43,7 +43,7 @@ message StopArea {
 message StopPoint {
     optional string id = 1;
     optional string name = 3;
-    optional string city_name = 4;
+    optional City city = 4;
     optional string external_code = 5;
     optional GeographicalCoord coord = 6; 
     optional PTReferential child = 7; 

@@ -36,7 +36,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
     stop_point->mutable_coord()->set_y(sp.coord.y);
     if(max_depth > 0){
         try{
-            fill_pb_object(sp.city_idx, data, stop_point->mutable_child()->add_city(), max_depth-1);
+            fill_pb_object(sp.city_idx, data, stop_point->mutable_city(), max_depth-1);
         }catch(std::out_of_range e){}
         
     }
