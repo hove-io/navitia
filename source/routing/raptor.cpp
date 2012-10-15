@@ -353,7 +353,7 @@ void RAPTOR::marcheapiedreverse() {
 
 void RAPTOR::init(std::vector<std::pair<type::idx_t, double> > departs,
                   std::vector<std::pair<type::idx_t, double> > destinations,
-                  const DateTime dep, DateTime borne,  const bool clockwise, const bool reset) {
+                  const DateTime dep, DateTime borne,  const bool clockwise, const bool reset, const bool map) {
     if(reset) {
         retour.clear();
 
@@ -380,9 +380,9 @@ void RAPTOR::init(std::vector<std::pair<type::idx_t, double> > departs,
 
      for(auto item : departs) {
         DateTime departure = dep, arrival = dep;
-        if(clockwise) {
+        if(clockwise && map) {
             arrival = arrival + (item.second / 1.38) ;
-        } else {
+        } else if(!clockwise && map){
             departure = departure - (item.second / 1.38);
         }
         auto r = type_retour(arrival, departure);
@@ -420,7 +420,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                     const DateTime &dt_depart, const DateTime &borne) {
     std::vector<Path> result;
 
-    init(departs, destinations, dt_depart, borne, true, true);
+    init(departs, destinations, dt_depart, borne, true, true, true);
     set_routes_valides(dt_depart);
     boucleRAPTOR();
 
@@ -428,7 +428,11 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
         return result;
     }
 
-    init(departs, destinations, b_dest.best_now.departure, dt_depart/*get_temps_depart(dt_depart, departs)*/, false, true);
+    auto t = makePathes(departs);
+    result.insert(result.end(), t.begin(), t.end());
+
+
+    init(departs, destinations, b_dest.best_now.departure, dt_depart/*get_temps_depart(dt_depart, departs)*/, false, true, false);
 
     boucleRAPTORreverse();
 
@@ -492,7 +496,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
 
     bool reset = true;
     for(auto dep : dt_departs) {
-        init(departs, destinations, dep, borne, true, reset);
+        init(departs, destinations, dep, borne, true, reset, true);
         boucleRAPTOR();
         bests.push_back(b_dest);
         reset = false;
@@ -502,7 +506,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
         auto b = bests[i];
         auto dt_depart = dt_departs[i];
         if(b.best_now.type != uninitialized) {
-            init(departs, destinations, b.best_now.departure, dt_depart, false, true);
+            init(departs, destinations, b.best_now.departure, dt_depart, false, true, false);
             boucleRAPTORreverse();
             if(b_dest.best_now.type != uninitialized){
                 auto temp = makePathesreverse(destinations);
@@ -532,7 +536,7 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
 
     bool reset = true;
     for(auto dep : dt_departs) {
-        init(departs, destinations, dep, borne, false, reset);
+        init(departs, destinations, dep, borne, false, reset, true);
         boucleRAPTORreverse();
         bests.push_back(b_dest);
         reset = false;
@@ -543,7 +547,7 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
         auto dt_depart = dt_departs[i];
         if(b.best_now.type != uninitialized) {
 
-            init(departs, destinations, dt_depart, b.best_now.departure, true, true);
+            init(departs, destinations, dt_depart, b.best_now.departure, true, true, false);
             boucleRAPTOR();
             if(b_dest.best_now.type != uninitialized){
                 auto temp = makePathes(departs);
@@ -567,7 +571,7 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
                             const DateTime &dt_depart, const DateTime &borne) {
     std::vector<Path> result;
 
-    init(departs, destinations, dt_depart, borne, false, true);
+    init(departs, destinations, dt_depart, borne, false, true, true);
     set_routes_valides(dt_depart);
     boucleRAPTORreverse();
 
@@ -575,7 +579,16 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
         return result;
     }
 
-    init(departs, destinations, b_dest.best_now.arrival, dt_depart, true, true);
+    auto t = makePathesreverse(destinations);
+    result.insert(result.end(), t.begin(), t.end());
+
+    DateTime arr;
+    if(b_dest.best_now.type == vj)
+        arr = DateTime(b_dest.best_now.departure.date(), data.pt_data.stop_times[b_dest.best_now.stop_time_idx].departure_time);
+    else
+        arr = b_dest.best_now.departure;
+
+    init(departs, destinations, arr, dt_depart, true, true, false);
 
     boucleRAPTOR();
 
@@ -915,11 +928,16 @@ Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
         if(retour[countb][current_rpid].type == connection) {
             r = retour[countb][current_rpid];
             auto r2 = retour[countb][r.rpid_embarquement];
+            if(reverse) {
+                item = PathItem(r.departure, r2.arrival);
+            } else {
+                item = PathItem(r2.arrival, r.departure);
+            }
 
-            item = PathItem(r.departure, r2.arrival);
-            item.type = walking;
             item.stop_points.push_back(data.pt_data.route_points[current_rpid].stop_point_idx);
             item.stop_points.push_back(data.pt_data.route_points[r.rpid_embarquement].stop_point_idx);
+            item.type = walking;
+
             result.items.push_back(item);
 
             rpid_embarquement = navitia::type::invalid_idx;
@@ -931,42 +949,32 @@ Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
                 r = retour[countb][current_rpid];
                 rpid_embarquement = r.rpid_embarquement;
                 current_st = data.pt_data.stop_times.at(r.stop_time_idx);
-                if(!reverse)
-                    workingDate = r.arrival;
-                else
-                    workingDate = r.departure;
 
                 item = PathItem();
                 item.type = public_transport;
 
                 if(!reverse) {
-                    item.arrival = DateTime(workingDate.date(), current_st.arrival_time);
+                    workingDate = r.departure;
                 }
                 else {
-                    item.departure = DateTime(workingDate.date(), current_st.departure_time);
+                    workingDate = r.arrival;
                 }
- 
-
+                item.vj_idx = current_st.vehicle_journey_idx;
                 while(rpid_embarquement != current_rpid) {
-                    //Gestion du passe minuit
-                    navitia::type::StopTime prec_st = current_st;
-                    if(!reverse 
-                       && current_st.arrival_time%data.dataRaptor.SECONDS_PER_DAY > 
-                          prec_st.arrival_time%data.dataRaptor.SECONDS_PER_DAY 
-                       && prec_st.vehicle_journey_idx!=navitia::type::invalid_idx)
-                        workingDate.date_decrement();
-                    else if(reverse 
-                            && current_st.arrival_time%data.dataRaptor.SECONDS_PER_DAY < 
-                               prec_st.arrival_time%data.dataRaptor.SECONDS_PER_DAY 
-                            && prec_st.vehicle_journey_idx!=navitia::type::invalid_idx)
-                        workingDate.date_increment();
 
-                    //On stocke le sp, et les temps 
-                    workingDate = DateTime(workingDate.date(), current_st.arrival_time);
+                    //On stocke le sp, et les temps
                     item.stop_points.push_back(data.pt_data.route_points[current_rpid].stop_point_idx);
-                    item.arrivals.push_back(DateTime(workingDate.date(), current_st.arrival_time));
-                    item.departures.push_back(DateTime(workingDate.date(), current_st.departure_time));
-                    item.vj_idx = current_st.vehicle_journey_idx;
+                    if(!reverse) {
+                        workingDate.updatereverse(current_st.departure_time);
+                        item.departures.push_back(workingDate);
+                        workingDate.updatereverse(current_st.arrival_time);
+                        item.arrivals.push_back(workingDate);
+                    } else {
+                        workingDate.update(current_st.arrival_time);
+                        item.arrivals.push_back(workingDate);
+                        workingDate.update(current_st.departure_time);
+                        item.departures.push_back(workingDate);
+                    }
 
                     //On va chercher le prochain stop time
                     if(!reverse)
@@ -986,15 +994,20 @@ Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
                 }
                 // Je stocke le dernier stop point, et ses temps d'arrivée et de départ
                 item.stop_points.push_back(data.pt_data.route_points[current_rpid].stop_point_idx);
-                item.arrivals.push_back(DateTime(workingDate.date(), current_st.arrival_time));
-                item.departures.push_back(DateTime(workingDate.date(), current_st.departure_time));
-
- 
                 if(!reverse) {
-                    item.departure = DateTime(workingDate.date(), current_st.departure_time);
-                }
-                else {
-                    item.arrival = DateTime(workingDate.date(), current_st.arrival_time);
+                    workingDate.updatereverse(current_st.departure_time);
+                    item.departures.push_back(workingDate);
+                    workingDate.updatereverse(current_st.arrival_time);
+                    item.arrivals.push_back(workingDate);
+                    item.arrival = item.arrivals.front();
+                    item.departure = item.departures.back();
+                } else {
+                    workingDate.update(current_st.arrival_time);
+                    item.arrivals.push_back(workingDate);
+                    workingDate.update(current_st.departure_time);
+                    item.departures.push_back(workingDate);
+                    item.arrival = item.arrivals.back();
+                    item.departure = item.departures.front();
                 }
 
                 //On stocke l'item créé
