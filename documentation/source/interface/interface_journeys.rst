@@ -73,6 +73,9 @@ Exemple d'appel:
 
 http://www.navitia.com/navitia/journeysarray?format=json&origin=coord:4.915:45.731&destination=coord:4.825:45.760&clockwise=1&datetime[]=20120930T0800&datetime[]=20120930T0900&datetime[]=20120930T1000
 
+Les horaires sont triés par ordre croissants et retournés dans cet ordre là. Il est donc important de ne pas supposer que les itinéraires retournés
+dans le même ordre que les paramètres datetime[].
+
 
 Format de sortie
 ****************

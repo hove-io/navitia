@@ -1,5 +1,5 @@
 #include "pb_converter.h"
-
+#include "street_network/street_network_api.h"
 namespace nt = navitia::type;
 namespace navitia{
 
@@ -36,7 +36,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
     stop_point->mutable_coord()->set_y(sp.coord.y);
     if(max_depth > 0){
         try{
-            fill_pb_object(sp.city_idx, data, stop_point->mutable_child()->add_city(), max_depth-1);
+            fill_pb_object(sp.city_idx, data, stop_point->mutable_city(), max_depth-1);
         }catch(std::out_of_range e){}
         
     }
@@ -65,6 +65,36 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line,
     line->set_color(l.color);
     line->set_name(l.name);
     line->set_external_code(l.external_code);
+}
+
+void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth){
+    pm->set_type(pbnavitia::STOPPOINT);
+    fill_pb_object(stop_point.idx, data, pm->mutable_stop_point(), max_depth);
+}
+
+void fill_pb_placemark(const georef::Way & way, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth, int house_number){
+    pm->set_type(pbnavitia::ADDRESS);
+    pbnavitia::Address * address = pm->mutable_address();
+    pbnavitia::Way * pb_way = address->mutable_way();
+    pb_way->set_name(way.name);
+    if(house_number >= 0){
+        address->set_house_number(house_number);
+    }
+
+    if(max_depth > 0)
+        fill_pb_object(way.city_idx, data,  pb_way->mutable_city());
+
+}
+
+void fill_road_section(const georef::Path &path, const type::Data &data, pbnavitia::Section* section, int max_depth){
+    section->set_type(pbnavitia::ROAD_NETWORK);
+    pbnavitia::StreetNetwork * sn = section->mutable_street_network();
+    streetnetwork::create_pb(path, data, sn);
+
+    if(path.path_items.size() > 1){
+        fill_pb_placemark(data.geo_ref.ways[path.path_items.front().way_idx], data, section->mutable_origin(), max_depth);
+        fill_pb_placemark(data.geo_ref.ways[path.path_items.back().way_idx], data, section->mutable_destination(), max_depth);
+    }
 }
 
 }//namespace navitia
