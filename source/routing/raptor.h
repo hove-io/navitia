@@ -43,9 +43,9 @@ struct RAPTOR : public AbstractRouter
         retour.assign(20, data.dataRaptor.retour_constant);
     }
 
-    void init(std::vector<std::pair<type::idx_t, double> > departs, 
+    void init(std::vector<std::pair<type::idx_t, double> > departs,
               std::vector<std::pair<type::idx_t, double> > destinations,
-              const DateTime dep, DateTime borne, const bool clockwise, const bool reset);
+              const DateTime dep, DateTime borne, const bool clockwise, const bool reset, const bool map);
 
     DateTime get_temps_depart(const DateTime &dt_depart, const std::vector<std::pair<type::idx_t, double> > &departs);
 
