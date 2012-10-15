@@ -30,12 +30,14 @@ struct RAPTOR : public AbstractRouter
     best_dest b_dest;
     unsigned int count;
     boost::dynamic_bitset<> marked_rp;
+    boost::dynamic_bitset<> marked_sp;
     boost::dynamic_bitset<> routes_valides;
     queue_t Q;
 
     //Constructeur
     RAPTOR(const navitia::type::Data &data) :  data(data), best(data.pt_data.route_points.size()),
                                                marked_rp(data.pt_data.route_points.size()),
+                                               marked_sp(data.pt_data.stop_points.size()),
                                                routes_valides(data.pt_data.routes.size()),
                                                Q(data.dataRaptor.routes.size()) {
         retour.assign(20, data.dataRaptor.retour_constant);
