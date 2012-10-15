@@ -16,8 +16,7 @@ Pour chacun de ces types de données, il est possible de filtrer par un autre ty
 
 Chaque requête sera donc encodée sous la forme suivante:
 
-\http://www.navitia.com/navitia/*{REQUESTED_OBJECTS}*?format={JSON/XML/PB}&filter=*{FILTER_SEMANTIC}*
-
+\http://www.navitia.com/navitia/*{REQUESTED_OBJECTS}*?format={JSON/XML/PB}&filter={*FILTER_SEMANTIC*}
 
 Paramètres d'entrée
 *******************
@@ -48,11 +47,12 @@ Le premier paramètre est en fait le nom de l'API exposé. Il correspond au type
 Filtres complémentaires
 -----------------------
 
-\http://www.navitia.com/navitia/{REQUESTED_OBJECTS}?format={JSON/XML/PB}&filter=*{FILTER_SEMANTIC}*
+\http://www.navitia.com/navitia/{REQUESTED_OBJECTS}?format={JSON/XML/PB}&filter={*FILTER_SEMANTIC*}
 
 La clause *filter* permet de fournir à NAViTiA la règle de restriction à appliquer sur l'ensemble des données de type *REQUESTED_OBJECTS*.
 Celle-ci s'exprime sous la même forme qu'une clause *WHERE* de SQL simplifiée.
 Ainsi:
+
   * seul les opérateurs suivant sont interprétés: *AND, IN, OR, (, )*
   * seules les propriétés suivantes sont filtrables:
 
