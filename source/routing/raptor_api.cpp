@@ -24,7 +24,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
         pb_journey->set_requested_date_time(boost::posix_time::to_iso_string(path.request_time));
 
         // La marche à pied initiale
-        if(path.items.size() > 0 && path.items.front().stop_points.size() > 0){
+        if(path.items.size() > 0 && path.items.front().type == walking && path.items.front().stop_points.size() > 0){
             fill_road_section(worker.get_path(path.items.front().stop_points.front()), d, pb_journey->add_section(), 1);
         }
 
@@ -41,7 +41,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                         pb_section->set_network(d.pt_data.networks[line.network_idx].name );
                     else
                         pb_section->set_network("");
-                    pb_section->set_mode(d.pt_data.modes[vj.mode_idx].name);
+                    if(vj.mode_idx != type::invalid_idx)
+                        pb_section->set_mode(d.pt_data.modes[vj.mode_idx].name);
                     pb_section->set_code(line.code);
                     pb_section->set_headsign(vj.name);
                     pb_section->set_direction(route.name);
@@ -67,8 +68,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
         }
 
         // La marche à pied finale
-        if(path.items.size() > 0 && path.items.back().stop_points.size() > 0){
-            fill_road_section(worker.get_path(path.items.back().stop_points.back(), true), d, pb_journey->add_section(), 1);
+        if(path.items.size() > 0 && path.items.back().type == walking && path.items.back().stop_points.size() > 0){
+          //  fill_road_section(worker.get_path(path.items.back().stop_points.back(), true), d, pb_journey->add_section(), 1);
         }
     }
 
@@ -177,8 +178,7 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
         std::sort(datetimes.begin(), datetimes.end(), 
                   [](boost::posix_time::ptime dt1, boost::posix_time::ptime dt2){return dt1 > dt2;});
     else
-        std::sort(datetimes.begin(), datetimes.end(), 
-                  [](boost::posix_time::ptime dt1, boost::posix_time::ptime dt2){return dt1 < dt2;});
+        std::sort(datetimes.begin(), datetimes.end());
 
     auto departures = get_stop_points(origin, raptor.data, worker);
     auto destinations = get_stop_points(destination, raptor.data, worker, true);
@@ -203,14 +203,15 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
     if(!clockwise)
         borne = DateTime::min;
     else {
-        std::vector<DateTime> dts;
-        for(boost::posix_time::ptime datetime : datetimes){
-            int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
-            int time = datetime.time_of_day().total_seconds();
-            dts.push_back(DateTime(day, time));
-        }
+//        std::vector<DateTime> dts;
+//        for(boost::posix_time::ptime datetime : datetimes){
+//            int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
+//            int time = datetime.time_of_day().total_seconds();
+//            dts.push_back(DateTime(day, time));
+//        }
 
-        return make_pathes(raptor.compute_all(departures, destinations, dts, borne), raptor.data, worker);
+//        return make_pathes(raptor.compute_all(departures, destinations, dts, borne), raptor.data, worker);
+        borne = DateTime::inf;
     }
     for(boost::posix_time::ptime datetime : datetimes){
         std::vector<Path> tmp;

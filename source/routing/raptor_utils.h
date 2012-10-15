@@ -68,6 +68,7 @@ struct best_dest {
             if(t.arrival + it->second.second <= best_now.arrival) {
                 best_now = t;
                 best_now.arrival = best_now.arrival + it->second.second;
+                best_now.departure = best_now.departure + it->second.second;
                 best_now_rpid = rpid;
                 count = cnt;
                 return true;
@@ -81,6 +82,7 @@ struct best_dest {
         if(it != map_date_time.end()) {
             if(t.departure != DateTime::min && (t.departure - it->second.first) >= best_now.departure) {
                 best_now = t;
+                best_now.arrival = t.arrival - it->second.second;
                 best_now.departure = t.departure - it->second.first;
                 best_now_rpid = rpid;
                 count = cnt;
