@@ -44,7 +44,7 @@ struct type_retour {
 
     type_retour(const type_retour & t) : 
         stop_time_idx(t.stop_time_idx), rpid_embarquement(t.rpid_embarquement), arrival(t.arrival),
-        departure(departure), type(t.type) {}
+        departure(t.departure), type(t.type) {}
 
 };
 

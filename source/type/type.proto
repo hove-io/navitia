@@ -7,6 +7,7 @@ enum NavitiaType {
     COUNTRY = 17;
     WAY = 19;
     SITE = 20;
+    ADDRESS = 30;
 }
 
 
@@ -98,6 +99,7 @@ message Way {
     optional string name = 4;
     optional PTReferential child = 5; 
     optional GeographicalCoord coord = 6;
+    optional City city = 7;
 }
 
 message City {
@@ -120,7 +122,11 @@ message Node {
     optional string id = 1;
     optional GeographicalCoord coord = 6;
 }
-    
+
+message Address {
+    optional Way way = 1;
+    optional int32 house_number = 2;
+}
 message Segment {
     optional string id = 1;
     optional Node start = 3;
@@ -155,6 +161,7 @@ message PlaceMark {
     optional StopArea stop_area = 4;
     optional Site site = 5;
     optional StopPoint stop_point = 6;
+    optional Address address = 7;
 }
 
 message FirstLetterItem {

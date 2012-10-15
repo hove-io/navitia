@@ -68,8 +68,10 @@ BOOST_AUTO_TEST_CASE(change){
     BOOST_CHECK_EQUAL(res.items[2].stop_points[0], 1);
     BOOST_CHECK_EQUAL(res.items[2].stop_points[1], 2);
     BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8*3600 + 35*60);
-    BOOST_CHECK_EQUAL(res.items[1].departure.hour(), 9*3600 + 15*60 - 60 * 2);
-    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 9*3600 + 15*60);
+
+    BOOST_CHECK_EQUAL(res.items[1].departure.hour(), 9*3600 + 10*60 - 60 * 2);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 9*3600 + 10*60);
+
     BOOST_CHECK_EQUAL(res.items[2].departure.hour(), 9*3600 + 15*60);
     BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 9*3600 + 20*60);
     BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);

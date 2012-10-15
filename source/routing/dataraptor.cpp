@@ -22,49 +22,47 @@ void dataRAPTOR::load(const type::PT_Data &data)
     std::vector<list_connections> footpath_temp;
     footpath_temp.resize(data.route_points.size());
     for(type::Connection connection : data.connections) {
-        type::Connection inverse;
-        inverse.duration = connection.duration;
-        for(type::idx_t departure_rpidx : data.stop_points[connection.departure_stop_point_idx].route_point_list) {
-            for(type::idx_t destination_rpidx : data.stop_points[connection.destination_stop_point_idx].route_point_list) {
-                type::Connection c = connection;
-                c.departure_stop_point_idx = departure_rpidx;
-                c.destination_stop_point_idx = destination_rpidx;
-                footpath_temp[departure_rpidx][destination_rpidx] = c;
-                inverse.departure_stop_point_idx = destination_rpidx;
-                inverse.destination_stop_point_idx = departure_rpidx;
-                footpath_temp[destination_rpidx][departure_rpidx] = inverse;
-            }
+        footpath_temp[connection.departure_stop_point_idx][connection.destination_stop_point_idx] = connection;
+    }
+
+    for(type::Connection connection : data.connections) {
+        if(footpath_temp[connection.destination_stop_point_idx].find(connection.departure_stop_point_idx) ==
+           footpath_temp[connection.destination_stop_point_idx].end() ) {
+            
+            type::Connection inverse;
+            inverse.duration = connection.duration;
+            inverse.departure_stop_point_idx = connection.destination_stop_point_idx;
+            inverse.destination_stop_point_idx = connection.departure_stop_point_idx;
+            footpath_temp[inverse.departure_stop_point_idx][inverse.destination_stop_point_idx] = inverse;
         }
     }
 
     //On rajoute des connexions entre les stops points d'un même stop area si elles n'existent pas
-    footpath_index.resize(data.route_points.size());
-    footpath_index.resize(data.route_points.size());
-    for(type::RoutePoint rp : data.route_points) {
-        type::StopArea sa = data.stop_areas[data.stop_points[rp.stop_point_idx].stop_area_idx];
-        footpath_index[rp.idx].first = foot_path.size();
+    footpath_index.resize(data.stop_points.size());
+    footpath_index.resize(data.stop_points.size());
+    for(type::StopPoint sp : data.stop_points) {
+        type::StopArea sa = data.stop_areas[sp.stop_area_idx];
+        footpath_index[sp.idx].first = foot_path.size();
 
         int size = 0;
-        for(auto conn : footpath_temp[rp.idx]) {
+        for(auto conn : footpath_temp[sp.idx]) {
             foot_path.push_back(conn.second);
             ++size;
         }
 
 
         for(type::idx_t spidx2 : sa.stop_point_list) {
-            for(type::idx_t rpidx2 : data.stop_points[spidx2].route_point_list) {
-                if(rp.idx != rpidx2 && 
-                   footpath_temp[rp.idx].find(rpidx2) == footpath_temp[rp.idx].end()) {
-                    type::Connection c;
-                    c.departure_stop_point_idx = rp.idx;
-                    c.destination_stop_point_idx = rpidx2;
-                    c.duration = 2 * 60;
-                    foot_path.push_back(c);
-                    ++size;
-                }
+            if(sp.idx != spidx2 && 
+                footpath_temp[sp.idx].find(spidx2) == footpath_temp[sp.idx].end()) {
+                type::Connection c;
+                c.departure_stop_point_idx = sp.idx;
+                c.destination_stop_point_idx = spidx2;
+                c.duration = 2 * 60;
+                foot_path.push_back(c);
+                ++size;
             }
         }
-        footpath_index[rp.idx].second = size;
+        footpath_index[sp.idx].second = size;
     }
 
 
