@@ -69,7 +69,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
 
         // La marche à pied finale
         if(path.items.size() > 0 && path.items.back().type == walking && path.items.back().stop_points.size() > 0){
-          //  fill_road_section(worker.get_path(path.items.back().stop_points.back(), true), d, pb_journey->add_section(), 1);
+            fill_road_section(worker.get_path(path.items.back().stop_points.back(), true), d, pb_journey->add_section(), 1);
         }
     }
 
