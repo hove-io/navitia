@@ -207,19 +207,19 @@ ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoR
         edge = sn.nearest_edge(coord, prox);
     } catch(proximitylist::NotFound) {
         found = false;
+        this->source = std::numeric_limits<vertex_t>::max();
+        this->target = std::numeric_limits<vertex_t>::max();
     }
 
     if(found) {
         // On cherche les coordonnées des extrémités de ce segment
-        vertex_t vertex1 = boost::source(edge, sn.graph);
-        vertex_t vertex2 = boost::target(edge, sn.graph);
-        type::GeographicalCoord vertex1_coord = sn.graph[vertex1].coord;
-        type::GeographicalCoord vertex2_coord = sn.graph[vertex2].coord;
+        this->source = boost::source(edge, sn.graph);
+        this->target = boost::target(edge, sn.graph);
+        type::GeographicalCoord vertex1_coord = sn.graph[this->source].coord;
+        type::GeographicalCoord vertex2_coord = sn.graph[this->target].coord;
         // On projette le nœud sur le segment
         this->projected = project(coord, vertex1_coord, vertex2_coord).first;
         // On calcule la distance « initiale » déjà parcourue avant d'atteindre ces extrémité d'où on effectue le calcul d'itinéraire
-        this->source = vertex1;
-        this->target = vertex2;
         this->source_distance = projected.distance_to(vertex1_coord);
         this->target_distance = projected.distance_to(vertex2_coord);
     }
@@ -437,11 +437,13 @@ std::vector< std::pair<type::idx_t, double> > StreetNetworkWorker::find_nearest_
     // On lance un dijkstra depuis les deux nœuds de départ
     dist[start.source] = start.source_distance;
     try{
-        geo_ref.dijkstra(start.source, dist, preds, distance_visitor(radius, dist));
+        if(start.source < boost::num_vertices(this->geo_ref.graph))
+            geo_ref.dijkstra(start.source, dist, preds, distance_visitor(radius, dist));
     }catch(DestinationFound){}
     dist[start.target] = start.target_distance;
     try{
-        geo_ref.dijkstra(start.target, dist, preds, distance_visitor(radius, dist));
+        if(start.target < boost::num_vertices(this->geo_ref.graph))
+            geo_ref.dijkstra(start.target, dist, preds, distance_visitor(radius, dist));
     }catch(DestinationFound){}
 
     double max = std::numeric_limits<float>::max();
