@@ -51,13 +51,15 @@ struct type_retour {
 struct best_dest {
 //    typedef std::pair<unsigned int, int> idx_dist;
 
-    std::/*unordered_*/map<unsigned int, std::pair<int, int>> map_date_time;
+    std::/*unordered_*/map<unsigned int, float> map_date_time;
     type_retour best_now;
     unsigned int best_now_rpid;
     unsigned int count;
 
-    void ajouter_destination(unsigned int rpid, const int dist_to_dep, const int dist_to_dest) { 
-        map_date_time[rpid] = std::make_pair(dist_to_dep, dist_to_dest);
+    void ajouter_destination(unsigned int rpid, const float dist_to_dest) {
+        if(rpid == 127839)
+            std::cout << "Ajouter distance " << dist_to_dest << std::endl;
+        map_date_time[rpid] = dist_to_dest;
     }
 
     bool is_dest(unsigned int rpid) const {return map_date_time.find(rpid) != map_date_time.end();}
@@ -65,10 +67,10 @@ struct best_dest {
     bool ajouter_best(unsigned int rpid, const type_retour &t, int cnt) {
         auto it = map_date_time.find(rpid);
         if(it != map_date_time.end()) {
-            if(t.arrival + it->second.second <= best_now.arrival) {
+            if(t.arrival + it->second <= best_now.arrival) {
                 best_now = t;
-                best_now.arrival = best_now.arrival + it->second.second;
-                best_now.departure = best_now.departure + it->second.second;
+                best_now.arrival = best_now.arrival + it->second;
+                best_now.departure = best_now.departure + it->second;
                 best_now_rpid = rpid;
                 count = cnt;
                 return true;
@@ -80,12 +82,14 @@ struct best_dest {
     bool ajouter_best_reverse(unsigned int rpid, const type_retour &t, int cnt) {
         auto it = map_date_time.find(rpid);
         if(it != map_date_time.end()) {
-            if(t.departure != DateTime::min && (t.departure - it->second.first) >= best_now.departure) {
+            if(t.departure != DateTime::min && (t.departure - it->second) >= best_now.departure) {
                 best_now = t;
-                best_now.arrival = t.arrival - it->second.second;
-                best_now.departure = t.departure - it->second.first;
+                best_now.arrival = t.arrival - it->second;
+                best_now.departure = t.departure - it->second;
                 best_now_rpid = rpid;
                 count = cnt;
+                if(rpid == 127839)
+                    std::cout << " !!! " << t.arrival << " " << best_now.arrival << " " << it->second<< " " << t.departure << " " << best_now.departure << std::endl;
                 return true;
             }
         }

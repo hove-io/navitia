@@ -643,3 +643,24 @@ BOOST_AUTO_TEST_CASE(pam_veille) {
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 }
+
+BOOST_AUTO_TEST_CASE(sn_debut) {
+    navimake::builder b("20120614");
+    b.vj("A")("stop1", 8*3600)("stop2", 8*3600 + 20*60);
+    b.vj("B")("stop1", 9*3600)("stop2", 9*3600 + 20*60);
+
+    std::vector<std::pair<navitia::type::idx_t, double>> departs, destinations;
+    departs.push_back(std::make_pair(0, 10 * 60));
+    destinations.push_back(std::make_pair(1,0));
+
+    type::Data data;
+    b.build(data.pt_data);
+    data.build_raptor();
+    RAPTOR raptor(data);
+
+    type::PT_Data & d = data.pt_data;
+
+    auto res1 = raptor.compute_all(departs, destinations, routing::DateTime(0, 8*3600));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_CHECK_EQUAL(res1.back().items[0].arrival.hour(), 9*3600 + 20 * 60);
+}
