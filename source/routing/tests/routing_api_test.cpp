@@ -12,7 +12,7 @@ using namespace boost::posix_time;
 
 BOOST_AUTO_TEST_CASE(simple_journey){
     navimake::builder b("20120614");
-    b.vj("A")("stop1", 8000, 8050)("stop2", 8100,8150);
+     b.vj("A")("stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
     type::Data data;
     b.build(data.pt_data);
     data.build_raptor();
@@ -42,14 +42,14 @@ BOOST_AUTO_TEST_CASE(simple_journey){
     pbnavitia::StopTime st2 = section.stop_time(1);
     BOOST_CHECK_EQUAL(st1.stop_point().external_code(), "stop_point:stop1");
     BOOST_CHECK_EQUAL(st2.stop_point().external_code(), "stop_point:stop2");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T021410"); // 8050secs
-    BOOST_CHECK_EQUAL(st1.arrival_date_time(), "20120614T021450");
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T081100");
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T082000");
 }
 
 BOOST_AUTO_TEST_CASE(journey_array){
     navimake::builder b("20120614");
-    b.vj("A")("stop1", 8000, 8050)("stop2", 8100,8150);
-    b.vj("A")("stop1", 8000 + 3600, 8050 + 3600)("stop2", 8100 + 3600 ,8150 + 3600);
+    b.vj("A")("stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
+    b.vj("A")("stop1", 9*3600 +10*60, 9*3600 + 11 * 60)("stop2",  9*3600 + 20 * 60 ,9*3600 + 21*60);
     type::Data data;
     b.build(data.pt_data);
     data.build_raptor();
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
     georef::StreetNetworkWorker sn_worker(data.geo_ref);
 
     // On met les horaires dans le desordre pour voir s'ils sont bien trié comme attendu
-    std::vector<std::string> datetimes{"20120614T030000", "20120614T021000"};
+    std::vector<std::string> datetimes{"20120614T080000", "20120614T090000"};
     pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, sn_worker);
 
     BOOST_REQUIRE(resp.has_requested_api());
@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(journey_array){
     pbnavitia::StopTime st2 = section.stop_time(1);
     BOOST_CHECK_EQUAL(st1.stop_point().external_code(), "stop_point:stop1");
     BOOST_CHECK_EQUAL(st2.stop_point().external_code(), "stop_point:stop2");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T021410"); // 8050secs
-    BOOST_CHECK_EQUAL(st1.arrival_date_time(), "20120614T021450");
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T081100");
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T082000");
 
     journey = planner.journey(1);
     BOOST_REQUIRE_EQUAL(journey.section_size(), 1);
@@ -92,6 +92,6 @@ BOOST_AUTO_TEST_CASE(journey_array){
     st2 = section.stop_time(1);
     BOOST_CHECK_EQUAL(st1.stop_point().external_code(), "stop_point:stop1");
     BOOST_CHECK_EQUAL(st2.stop_point().external_code(), "stop_point:stop2");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T031410"); // 8050secs
-    BOOST_CHECK_EQUAL(st1.arrival_date_time(), "20120614T031450");
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T091100");
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T092000");
 }
