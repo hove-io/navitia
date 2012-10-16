@@ -16,8 +16,7 @@ Pour chacun de ces types de données, il est possible de filtrer par un autre ty
 
 Chaque requête sera donc encodée sous la forme suivante:
 
-\http://www.navitia.com/navitia/*{REQUESTED_OBJECTS}*?format={JSON/XML/PB}[*&{FILTER_TYPE}={FILTER_EXT_CODE}*]
-
+\http://www.navitia.com/navitia/*{REQUESTED_OBJECTS}*?format={JSON/XML/PB}&filter={*FILTER_SEMANTIC*}
 
 Paramètres d'entrée
 *******************
@@ -25,7 +24,7 @@ Paramètres d'entrée
 Type d'objet
 ------------
 
-\http://www.navitia.com/navitia/*{REQUESTED_OBJECTS}*?format={JSON/XML/PB}[&{FILTER_TYPE}={FILTER_EXT_CODE}]
+\http://www.navitia.com/navitia/*{REQUESTED_OBJECTS}*?format={JSON/XML/PB}&filter={FILTER_SEMANTIC}
 
 Le premier paramètre est en fait le nom de l'API exposé. Il correspond au type d'objet à choisir. Celui-ci est déterminant pour la structure des objets en sortie. 
 
@@ -48,28 +47,35 @@ Le premier paramètre est en fait le nom de l'API exposé. Il correspond au type
 Filtres complémentaires
 -----------------------
 
-\http://www.navitia.com/navitia/{REQUESTED_OBJECTS}?format={JSON/XML/PB}[*&{FILTER_TYPE}={FILTER_EXT_CODE}*]
+\http://www.navitia.com/navitia/{REQUESTED_OBJECTS}?format={JSON/XML/PB}&filter={*FILTER_SEMANTIC*}
 
-  * line: permet de filtrer les données retournées selon [1 à n] code externe de ligne
-  * route: permet de filtrer les données retournées selon [1 à n]  code externe de parcours
-  * vehiclejourney:  permet de filtrer les données retournées selon [1 à n]  code externe de circulation
-  * stoparea: permet de filtrer les données retournées selon [1 à n]  code externe de zone d'arrêt
-  * stoppoint: permet de filtrer les données retournées selon [1 à n]  code externe de point d'arrêt
-  * networks: permet de filtrer les données retournées selon [1 à n]  code externe de réseaux commerciaux
-  * company: permet de filtrer les données retournées selon [1 à n]  code externe de transporteurs
-  * mode: permet de filtrer les données retournées selon [1 à n]  code externe de mode
-  * modetype: permet de filtrer les données retournées selon [1 à n]  code externe de type de mode
-  * city: permet de filtrer les données retournées selon [1 à n]  code externe de communes
-  * connection: permet de filtrer les données retournées selon [1 à n]  code externe de correspondances
-  * routepoint: permet de filtrer les données retournées selon [1 à n]  code externe de points d'arrêt sur parcours
-  * district: permet de filtrer les données retournées selon [1 à n]  code externe de départements
-  * country: permet de filtrer les données retournées selon [1 à n]  code externe de pays
+La clause *filter* permet de fournir à NAViTiA la règle de restriction à appliquer sur l'ensemble des données de type *REQUESTED_OBJECTS*.
+Celle-ci s'exprime sous la même forme qu'une clause *WHERE* de SQL simplifiée.
+Ainsi:
+
+  * seul les opérateurs suivant sont interprétés: *AND, IN, OR, (, )*
+  * seules les propriétés suivantes sont filtrables:
+
+    * lineec: permet de filtrer les données retournées selon 1 code externe de ligne
+    * routeec: permet de filtrer les données retournées selon 1 code externe de parcours
+    * vehiclejourneyec:  permet de filtrer les données retournées selon 1 code externe de circulation
+    * stopareaec: permet de filtrer les données retournées selon 1 code externe de zone d'arrêt
+    * stoppointec: permet de filtrer les données retournées selon 1 code externe de point d'arrêt
+    * networkec: permet de filtrer les données retournées selon 1 code externe de réseaux commerciaux
+    * companyec: permet de filtrer les données retournées selon 1 code externe de transporteurs
+    * modeec: permet de filtrer les données retournées selon 1 code externe de mode
+    * modetypeec: permet de filtrer les données retournées selon 1 code externe de type de mode
+    * cityec: permet de filtrer les données retournées selon 1 code externe de communes
+    * connectionec: permet de filtrer les données retournées selon 1 code externe de correspondances
+    * routepointec: permet de filtrer les données retournées selon 1 code externe de points d'arrêt sur parcours
+    * districtec: permet de filtrer les données retournées selon 1 code externe de départements
+    * countryec: permet de filtrer les données retournées selon 1 code externe de pays
 
 
-Pour chaque type de filtre, il est possible de restreinte de 1 à n code externe en passant un tableau de paramètre:
-  * filtre simple: \http://.../navitia/lines?format=json&Mode=BUS
-  * filtres multiples: \http://.../navitia/lines?format=json&StopArea=SA_CHATELET&Mode[]=BUS&Mode[]=Metro 
-  * filtres combinés: \http://.../navitia/lines?format=json&Mode[]=BUS&Mode[]=Metro
+Pour chaque type de filtre, il est possible de restreinte de 1 à n code externe en utilisant les opérateur OR, AND ou IN:
+  * filtre simple: \http://.../navitia/lines?format=json&filter=modeec=BUS
+  * filtres multiples: \http://.../navitia/lines?format=json&filter=StopAreaeec=SA_CHATELET and (Modeec=BUS or modeex=Metro)
+  * filtres combinés: \http://.../navitia/lines?format=json&filter=Modeec in (BUS,Metro)
 
 
 Format de sortie
