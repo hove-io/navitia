@@ -151,7 +151,7 @@ void RAPTOR::route_path_connections_forward() {
             const auto & rpc = idx_rpc.second;
             if(retour[count][rp].arrival < retour[count][rpc.destination_route_point_idx].arrival) {
                 retour[count][rpc.destination_route_point_idx] = 
-                    type_retour(retour[count][rp].arrival, retour[count][rp].arrival, rp);
+                    type_retour(retour[count][rp].arrival, retour[count][rp].arrival, rp, connection_extension);
                 best[rpc.destination_route_point_idx] = retour[count][rpc.destination_route_point_idx];
                 to_mark.push_back(rpc.destination_route_point_idx);
             }
@@ -173,7 +173,7 @@ void RAPTOR::route_path_connections_backward() {
             const auto & rpc = idx_rpc.second;
             if(retour[count][rp].arrival > retour[count][rpc.departure_route_point_idx].arrival) {
                 retour[count][rpc.departure_route_point_idx] = 
-                    type_retour(retour[count][rp].arrival, retour[count][rp].arrival, rp);
+                    type_retour(retour[count][rp].arrival, retour[count][rp].arrival, rp, connection_extension);
                 best[rpc.departure_route_point_idx] = retour[count][rpc.departure_route_point_idx];
                 to_mark.push_back(rpc.departure_route_point_idx);
             }
@@ -894,7 +894,8 @@ Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
     while(!stop) {
 
         // Est-ce qu'on a une section marche à pied ?
-        if(retour[countb][current_rpid].type == connection) {
+        if(retour[countb][current_rpid].type == connection || retour[countb][current_rpid].type == connection_extension
+                ||  retour[countb][current_rpid].type == connection_guarantee) {
             r = retour[countb][current_rpid];
             auto r2 = retour[countb][r.rpid_embarquement];
             if(reverse) {
@@ -905,7 +906,12 @@ Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
 
             item.stop_points.push_back(data.pt_data.route_points[current_rpid].stop_point_idx);
             item.stop_points.push_back(data.pt_data.route_points[r.rpid_embarquement].stop_point_idx);
-            item.type = walking;
+            if(r.type == connection)
+                item.type = walking;
+            else if(r.type == connection_extension)
+                item.type = extension;
+            else if(r.type == connection_guarantee)
+                item.type = guarantee;
 
             result.items.push_back(item);
 

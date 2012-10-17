@@ -181,7 +181,9 @@ struct ValidityPatternTime {
 
 enum ItemType {
     public_transport,
-    walking
+    walking,
+    extension,
+    guarantee
 };
 
 /** Étape d'un itinéraire*/

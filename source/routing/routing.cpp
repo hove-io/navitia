@@ -25,7 +25,17 @@ std::string PathItem::print(const navitia::type::PT_Data & data) const {
 
     navitia::type::StopArea start = data.stop_areas[data.stop_points[stop_points.front()].stop_area_idx];
     navitia::type::StopArea dest = data.stop_areas[data.stop_points[stop_points.back()].stop_area_idx];
-    ss << "Section de type " << (type == public_transport ? "transport en commun" : "marche") << "\n";
+    ss << "Section de type ";
+    if(type == public_transport)
+        ss << "transport en commun";
+    else if(type == walking)
+        ss << "marche";
+    else if(type == extension)
+        ss << "prolongement de service";
+    else if(type ==guarantee)
+        ss << "corresopondance garantie";
+    ss << "\n";
+
 
     if(type == public_transport && vj_idx != navitia::type::invalid_idx){
         const navitia::type::VehicleJourney & vj = data.vehicle_journeys[vj_idx];

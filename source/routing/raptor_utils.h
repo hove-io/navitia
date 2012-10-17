@@ -7,7 +7,9 @@ enum type_idx {
     vj,
     connection,
     uninitialized,
-    depart
+    depart,
+    connection_extension,
+    connection_guarantee
 };
 struct type_retour {
     type::idx_t stop_time_idx;
@@ -37,6 +39,10 @@ struct type_retour {
     type_retour(const DateTime & arrival, const DateTime & departure, int embarquement) : 
         stop_time_idx(navitia::type::invalid_idx), rpid_embarquement(embarquement),
         arrival(arrival), departure(departure), type(connection) {}
+
+    type_retour(const DateTime & arrival, const DateTime & departure, int embarquement, const type_idx & type) :
+        stop_time_idx(navitia::type::invalid_idx), rpid_embarquement(embarquement),
+        arrival(arrival), departure(departure), type(type) {}
 
     type_retour() : 
         stop_time_idx(type::invalid_idx), rpid_embarquement(type::invalid_idx), arrival(),
