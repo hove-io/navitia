@@ -18,7 +18,7 @@ struct VJ {
     types::VehicleJourney * vj;
 
     /// Construit un nouveau vehicle journey
-    VJ(builder & b, const std::string &line_name, const std::string &validity_pattern);
+    VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string & block_id);
 
     /// Ajout un nouveau stopTime
     /// Lorsque le depart n'est pas specifié, on suppose que c'est le même qu'à l'arrivée
@@ -55,7 +55,7 @@ struct builder{
     builder(const std::string & date) : begin(boost::gregorian::date_from_iso_string(date)) {}
 
     /// Crée un vehicle journey
-    VJ vj(const std::string &line_name, const std::string &validity_pattern = "11111111");
+    VJ vj(const std::string &line_name, const std::string &validity_pattern = "11111111", const std::string & block_id="");
 
     /// Crée un nouveau stop area
     SA sa(const std::string & name, double x = 0, double y = 0);

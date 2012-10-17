@@ -2,7 +2,7 @@
 #include "gtfs_parser.h"
 namespace navimake {
 
-VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern) : b(b){
+VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string &block_id) : b(b){
     vj = new types::VehicleJourney();
     b.data.vehicle_journeys.push_back(vj);
 
@@ -25,6 +25,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     } else {
         vj->validity_pattern = vp_it->second;
     }
+    vj->block_id = block_id;
 }
 
 VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart){
@@ -83,8 +84,8 @@ SA & SA::operator()(const std::string & sp_name, double x, double y){
     return *this;
 }
 
-VJ builder::vj(const std::string &line_name, const std::string &validity_pattern){
-    return VJ(*this, line_name, validity_pattern);
+VJ builder::vj(const std::string &line_name, const std::string &validity_pattern, const std::string & block_id){
+    return VJ(*this, line_name, validity_pattern, block_id);
 }
 
 SA builder::sa(const std::string &name, double x, double y){
@@ -109,6 +110,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     navitia::type::PT_Data result;
     connectors::build_routes(data);
     connectors::build_route_points(data);
+    connectors::build_route_point_connections(data);
 
     data.clean();
     data.sort();
