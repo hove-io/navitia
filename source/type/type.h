@@ -37,7 +37,8 @@ enum class Type_e {
     eCountry = 17,
     eUnknown = 18,
     eWay = 19,
-    eCoord = 20
+    eCoord = 20,
+    eRoutePointConnection = 21
 };
 struct PT_Data;
 template<class T> std::string T::* name_getter(){return &T::name;}
@@ -210,6 +211,28 @@ struct Connection: public NavitiaHeader{
         ar & id & idx & external_code & departure_stop_point_idx & destination_stop_point_idx & duration & max_duration;
     }
 };
+
+enum ConnectionKind {
+ extension,
+ guarantee,
+ undefined
+};
+
+struct RoutePointConnection : public NavitiaHeader {
+      const static Type_e type = Type_e::eRoutePointConnection;
+
+      idx_t departure_route_point_idx;
+      idx_t destination_route_point_idx;
+      ConnectionKind connection_kind;
+  
+      RoutePointConnection() : departure_route_point_idx(invalid_idx),  destination_route_point_idx(invalid_idx),
+                               connection_kind(undefined){};
+  
+      template<class Archive> void serialize(Archive & ar, const unsigned int) {
+          ar & id & idx & external_code & departure_route_point_idx & destination_route_point_idx & connection_kind;
+      }
+};
+ 
 
 struct StopArea : public NavitiaHeader, Nameable{
     const static Type_e type = Type_e::eStopArea;

@@ -21,6 +21,7 @@ struct PT_Data : boost::noncopyable{
     std::vector<ModeType> mode_types;
     std::vector<City> cities;
     std::vector<Connection> connections;
+    std::vector<RoutePointConnection> route_point_connections;
     std::vector<RoutePoint> route_points;
 
     std::vector<District> districts;
