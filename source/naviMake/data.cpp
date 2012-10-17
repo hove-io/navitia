@@ -38,6 +38,9 @@ void Data::sort(){
     std::sort(connections.begin(), connections.end(), Less<navimake::types::Connection>());
     std::for_each(connections.begin(), connections.end(), Indexer<navimake::types::Connection>());
 
+    std::sort(route_point_connections.begin(), route_point_connections.end(), Less<navimake::types::RoutePointConnection>());
+    std::for_each(route_point_connections.begin(), route_point_connections.end(), Indexer<navimake::types::RoutePointConnection>());
+
     std::sort(route_points.begin(), route_points.end(), Less<navimake::types::RoutePoint>());
     std::for_each(route_points.begin(), route_points.end(), Indexer<navimake::types::RoutePoint>());
 
@@ -148,6 +151,9 @@ void Data::transform(navitia::type::PT_Data& data){
 
     data.connections.resize(this->connections.size());
     std::transform(this->connections.begin(), this->connections.end(), data.connections.begin(), navimake::types::Connection::Transformer());
+
+    data.route_point_connections.resize(this->route_point_connections.size());
+    std::transform(this->route_point_connections.begin(), this->route_point_connections.end(), data.route_point_connections.begin(), navimake::types::RoutePointConnection::Transformer());
 
     data.route_points.resize(this->route_points.size());
     std::transform(this->route_points.begin(), this->route_points.end(), data.route_points.begin(), navimake::types::RoutePoint::Transformer());

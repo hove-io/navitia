@@ -580,7 +580,7 @@ void GtfsParser::parse_trips(Data & data) {
     boost::trim(line);
     Tokenizer tok_header(line);
     std::vector<std::string> elts(tok_header.begin(), tok_header.end());
-    int id_c = -1, service_c = -1, trip_c = -1, headsign_c = -1;
+    int id_c = -1, service_c = -1, trip_c = -1, headsign_c = -1, block_id_c = -1;
     for(size_t i = 0; i < elts.size(); i++){
         if (elts[i] == "route_id")
             id_c = i;
@@ -590,9 +590,11 @@ void GtfsParser::parse_trips(Data & data) {
             trip_c = i;
         else if (elts[i] == "trip_headsign")
             headsign_c = i;
+        else if (elts[i] == "block_id")
+            block_id_c = i;
     }
 
-    if (id_c == -1 || service_c == -1 || trip_c == -1 || headsign_c == -1){
+    if (id_c == -1 || service_c == -1 || trip_c == -1 || headsign_c == -1 || block_id_c == -1){
         std::cerr << "Il manque au moins une colonne dans trips.txt" << std::endl;
         return;
     }
@@ -638,6 +640,7 @@ void GtfsParser::parse_trips(Data & data) {
                     vj->route = 0;
                     vj->tmp_line = line;
                     vj->mode = itm->second;
+                    vj->block_id = elts[block_id_c];
                     vj_map[vj->external_code] = vj;
                     data.vehicle_journeys.push_back(vj);
                 }
@@ -870,6 +873,67 @@ boost::gregorian::date_period GtfsParser::find_production_date() {
     std::cout << "date de production: ";
     std::cout <<boost::gregorian::to_simple_string(start_date) << " - " << boost::gregorian::to_simple_string(end_date) << std::endl;
     return boost::gregorian::date_period(start_date, end_date);
+}
+
+void  add_route_point_connection(nm::RoutePoint *rp1, nm::RoutePoint *rp2,
+                           std::multimap<std::string, std::string> &route_point_connections, Data & data) {
+    //Si la connexion n'existe pas encore alors on va la créer, sinon on ne fait rien
+    auto pp = route_point_connections.equal_range(rp1->external_code);
+    bool find = false;
+    for(auto it_pp = pp.first; it_pp != pp.second; ++it_pp) {
+        if(it_pp->second == rp2->external_code) {
+            find = true;
+            break;
+        }
+    }
+    if(!find) {
+        route_point_connections.insert(std::make_pair(rp1->external_code, rp2->external_code));
+        nm::RoutePointConnection *rpc = new nm::RoutePointConnection();
+        rpc->departure_route_point = rp1;
+        rpc->destination_route_point = rp2;
+        rpc->route_point_connection_kind = nm::RoutePointConnection::RoutePointConnectionKind::Guarantee;
+        data.route_point_connections.push_back(rpc);
+    }
+}
+
+
+void build_route_point_connections(Data & data) {
+    std::multimap<std::string, nm::VehicleJourney*> block_vj; 
+    std::multimap<std::string, std::string> route_point_connections;
+    for(nm::VehicleJourney *vj: data.vehicle_journeys) {
+        if(vj->block_id != "")
+            block_vj.insert(std::make_pair(vj->block_id, vj));
+    }
+
+    std::string prec_block = "";
+    for(auto it = block_vj.begin(); it!=block_vj.end(); ++it) {
+        std::string block_id = it->first;
+        if(prec_block != block_id) {
+            auto pp = block_vj.equal_range(block_id);
+            //On trie les vj appartenant au meme bloc par leur premier stop time
+            std::vector<nm::VehicleJourney*> vjs;
+            for(auto it_sub = pp.first; it_sub != pp.second; ++it_sub) {
+                vjs.push_back(it_sub->second);
+            }
+            std::sort(vjs.begin(), vjs.end(), [](nm::VehicleJourney *  vj1, nm::VehicleJourney*vj2){
+                                               return vj1->stop_time_list.front()->arrival_time < 
+                                                      vj2->stop_time_list.front()->arrival_time; });
+
+            //On crée les connexions entre le dernier route point et le premier route point
+            auto prec_vj = pp.first->second;   
+            auto it_vj = pp.first;
+            ++it_vj;
+
+            for(; it_vj!=pp.second; ++it_vj) {
+                add_route_point_connection(prec_vj->stop_time_list.back()->route_point,
+                                           it_vj->second->stop_time_list.front()->route_point, 
+                                           route_point_connections, data);
+                prec_vj = it_vj->second; 
+            }
+            prec_block = block_id;
+        }
+    }
+
 }
 
 }}

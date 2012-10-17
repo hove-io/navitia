@@ -84,6 +84,13 @@ void build_routes(Data & data);
 /// Construit les routepoint
 void build_route_points(Data & data);
 
+/// Ajoute une connection entre deux route_point
+void add_route_point_connection(navimake::types::RoutePoint *rp1, navimake::types::RoutePoint *rp2,
+                                std::multimap<std::string, std::string> &route_point_connections, Data & data);
+
+/// Construit les connections pour les correspondances garanties
+void build_route_point_connections(Data & data);
+
 /** Convertit une chaine de charactères du type 8:12:31 en secondes depuis minuit
   *
   * Retourne -1 s'il y a eu un problème

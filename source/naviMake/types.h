@@ -35,6 +35,7 @@ class District;
 class Department;
 class City;
 class Connection;
+class RoutePointConnection;
 class StopArea;
 class Network;
 class Company;
@@ -137,6 +138,31 @@ struct Connection: public TransmodelHeader {
    bool operator<(const Connection& other) const;
 
 };
+
+struct RoutePointConnection: public TransmodelHeader {
+    enum RoutePointConnectionKind {
+        Extension,  //Prolongement de service
+        Guarantee,   //Correspondance garantie
+        UndefinedRoutePointConnectionKind
+    };
+
+    RoutePoint *departure_route_point;
+    RoutePoint *destination_route_point;
+    RoutePointConnectionKind route_point_connection_kind;
+
+    struct Transformer {
+        inline navitia::type::RoutePointConnection operator()(const RoutePointConnection* route_point_connection) 
+        {return this->operator()(*route_point_connection);}
+        navitia::type::RoutePointConnection operator()(const RoutePointConnection &route_point_connection);
+    };
+
+
+    RoutePointConnection() : departure_route_point(NULL), destination_route_point(NULL),
+                             route_point_connection_kind(UndefinedRoutePointConnectionKind) {}
+
+    bool operator<(const RoutePointConnection &other) const;
+};
+
 
 struct StopArea : public TransmodelHeader, Nameable{
     nt::GeographicalCoord coord;
@@ -267,13 +293,14 @@ struct VehicleJourney: public TransmodelHeader, Nameable{
     ValidityPattern* validity_pattern;
     std::vector<StopTime*> stop_time_list; // N'est pas à remplir obligatoirement
     StopTime * first_stop_time;
+    std::string block_id;
 
     struct Transformer{
         inline navitia::type::VehicleJourney operator()(const VehicleJourney* vj){return this->operator()(*vj);}
         navitia::type::VehicleJourney operator()(const VehicleJourney& vj);
     };
 
-    VehicleJourney(): route(NULL), company(NULL), mode(NULL), is_adapted(false), validity_pattern(NULL), stop_time_list(){};
+    VehicleJourney(): route(NULL), company(NULL), mode(NULL), is_adapted(false), validity_pattern(NULL), stop_time_list(), block_id(""){};
 
     bool operator<(const VehicleJourney& other) const;
 };
