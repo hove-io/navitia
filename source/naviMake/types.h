@@ -300,7 +300,7 @@ struct VehicleJourney: public TransmodelHeader, Nameable{
         navitia::type::VehicleJourney operator()(const VehicleJourney& vj);
     };
 
-    VehicleJourney(): route(NULL), company(NULL), mode(NULL), is_adapted(false), validity_pattern(NULL), stop_time_list(), block_id(""){};
+    VehicleJourney(): route(NULL), company(NULL), mode(NULL), is_adapted(false), validity_pattern(NULL), stop_time_list(), block_id(""){}
 
     bool operator<(const VehicleJourney& other) const;
 };

@@ -50,6 +50,7 @@ void GtfsParser::fill(Data & data){
     normalize_extcodes(data);
     build_routes(data);
     build_route_points(data);
+    build_route_point_connections(data);
 }
 
 void GtfsParser::fill_mode_types(Data & data) {

@@ -77,7 +77,7 @@ struct PT_Data : boost::noncopyable{
                 & company_map & country_map
                 // Les proximity list
                 & stop_area_proximity_list & stop_point_proximity_list & city_proximity_list
-                & connections & stop_point_connections;
+                & connections & stop_point_connections & route_point_connections;
     }
 
     /** Initialise tous les indexes

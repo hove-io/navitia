@@ -385,6 +385,7 @@ struct VehicleJourney: public NavitiaHeader, Nameable {
     idx_t validity_pattern_idx;
     std::vector<idx_t> stop_time_list;
 
+
     VehicleJourney(): route_idx(invalid_idx), company_idx(invalid_idx), mode_idx(invalid_idx), vehicle_idx(invalid_idx), is_adapted(false), validity_pattern_idx(invalid_idx) {}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & is_adapted & validity_pattern_idx & idx & stop_time_list;

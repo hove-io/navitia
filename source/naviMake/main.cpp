@@ -100,6 +100,7 @@ int main(int argc, char * argv[])
     std::cout << "city: " << data.cities.size() << std::endl;
     std::cout << "modes: " << data.modes.size() << std::endl;
     std::cout << "validity pattern : " << data.validity_patterns.size() << std::endl;
+    std::cout << "route point connections : " << data.route_point_connections.size() << std::endl;
 
     start = pt::microsec_clock::local_time();
     data.clean();
@@ -112,7 +113,6 @@ int main(int argc, char * argv[])
     start = pt::microsec_clock::local_time();
     data.transform(nav_data.pt_data);
     transform = (pt::microsec_clock::local_time() - start).total_milliseconds();
-
 
     start = pt::microsec_clock::local_time();
     nav_data.build_first_letter();
