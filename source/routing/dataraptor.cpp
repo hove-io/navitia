@@ -16,11 +16,19 @@ void dataRAPTOR::load(const type::PT_Data &data)
         r.arrival = DateTime::inf;
         r.departure = DateTime::inf;
     }
-    //Construction de la liste des marche à pied à partir des connexions renseignées
-
+    
     foot_path.clear();
     std::vector<list_connections> footpath_temp;
     footpath_temp.resize(data.route_points.size());
+
+    //Construction des connexions entre routepoints
+    //(sert pour les prolongements de service ainsi que les correpondances garanties
+    for(type::RoutePointConnection rpc : data.route_point_connections) {
+        footpath_rp_forward.insert(std::make_pair(rpc.departure_route_point_idx, rpc));        
+        footpath_rp_backward.insert(std::make_pair(rpc.destination_route_point_idx, rpc));
+    }
+
+    //Construction de la liste des marche à pied à partir des connexions renseignées
     for(type::Connection connection : data.connections) {
         footpath_temp[connection.departure_stop_point_idx][connection.destination_stop_point_idx] = connection;
     }

@@ -84,6 +84,7 @@ struct RAPTOR : public AbstractRouter
     Path makePath(std::vector<std::pair<type::idx_t, double> > departs,
                   unsigned int destination_idx, unsigned int countb, bool reverse = false);
     void marcheapied();
+    void route_path_connections_forward(); 
     void make_queue();
     int  earliest_trip(const type::Route & route, const unsigned int order, const DateTime &dt) const;
 
@@ -95,6 +96,7 @@ struct RAPTOR : public AbstractRouter
     Path makePathreverse(std::vector<std::pair<type::idx_t, double> > departs,
                          unsigned int destination_idx, unsigned int countb);
     void marcheapiedreverse();
+    void route_path_connections_backward(); 
     void make_queuereverse();
     int tardiest_trip(const type::Route & route, const unsigned int order, const DateTime &dt) const;
 

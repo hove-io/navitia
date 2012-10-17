@@ -18,6 +18,8 @@ struct dataRAPTOR {
     const static uint32_t SECONDS_PER_DAY = 86400;
     std::vector<navitia::type::Connection> foot_path;
     std::vector<pair_int> footpath_index;
+    std::multimap<navitia::type::idx_t, navitia::type::RoutePointConnection> footpath_rp_forward;
+    std::multimap<navitia::type::idx_t, navitia::type::RoutePointConnection> footpath_rp_backward;
     std::vector<Route_t> routes;
     std::vector<uint32_t> arrival_times;
     std::vector<uint32_t> departure_times;
