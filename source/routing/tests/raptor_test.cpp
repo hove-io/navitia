@@ -664,3 +664,20 @@ BOOST_AUTO_TEST_CASE(sn_debut) {
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1.back().items[0].arrival.hour(), 9*3600 + 20 * 60);
 }
+
+BOOST_AUTO_TEST_CASE(prolongement_service) {
+    navimake::builder b("20120614");
+    b.vj("A", "1111111", "block1")("stop1", 8*3600)("stop2", 8*3600+10*60);
+    b.vj("B", "1111111", "block1")("stop4", 8*3600+10*60)("stop3", 8*3600 + 20*60);
+    type::Data data;
+    b.build(data.pt_data);
+    data.build_raptor();
+    RAPTOR raptor(data);
+
+    type::PT_Data & d = data.pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 5*60, 0);
+
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    res1.back().print(d);
+}
