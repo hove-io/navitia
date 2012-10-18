@@ -1,5 +1,6 @@
 #include "raptor.h"
 #include <boost/foreach.hpp>
+
 namespace navitia { namespace routing { namespace raptor {
 
 
@@ -762,6 +763,7 @@ void RAPTOR::raptor_loop(Visitor visitor) {
     count = 0;
     int t=-1, embarquement = visitor.embarquement_init();
     DateTime workingDt = visitor.working_datetime_init();
+    uint32_t l_zone = std::numeric_limits<uint32_t>::max();
 
     visitor.walking();
     while(!end) {
@@ -780,11 +782,13 @@ void RAPTOR::raptor_loop(Visitor visitor) {
                 BOOST_FOREACH(const type::RoutePoint & rp, visitor.route_points(route, Q[route.idx])) {
                     if(t >= 0) {
                         ++it_st;
-                        //On stocke, et on marque pour explorer par la suite
-                        if(visitor.better(best[rp.idx], b_dest.best_now))
-                            end = visitor.store_better(rp.idx, workingDt, best[rp.idx], *it_st, embarquement) && end;
-                        else
-                            end = visitor.store_better(rp.idx, workingDt, b_dest.best_now, *it_st, embarquement) && end;
+                        if(l_zone == std::numeric_limits<uint32_t>::max() || l_zone != it_st->local_traffic_zone) {
+                            //On stocke, et on marque pour explorer par la suite
+                            if(visitor.better(best[rp.idx], b_dest.best_now))
+                                end = visitor.store_better(rp.idx, workingDt, best[rp.idx], *it_st, embarquement) && end;
+                            else
+                                end = visitor.store_better(rp.idx, workingDt, b_dest.best_now, *it_st, embarquement) && end;
+                        }
                     }
 
                     //Si on peut arriver plus tôt à l'arrêt en passant par une autre route
@@ -800,6 +804,7 @@ void RAPTOR::raptor_loop(Visitor visitor) {
 
                             workingDt = visitor.previous_datetime(retour_temp);
                             visitor.update(workingDt, *it_st);
+                            l_zone = it_st->local_traffic_zone;
                         }
                     }
                 }
