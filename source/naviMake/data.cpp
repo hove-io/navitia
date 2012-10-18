@@ -1,7 +1,7 @@
 #include "data.h"
 #include <iostream>
 #include "ptreferential/where.h"
-
+#include "utils/timer.h"
 using namespace navimake;
 
 void Data::sort(){
@@ -66,6 +66,7 @@ void Data::clean(){
         route_vj[(*it)->route->external_code].push_back((*it));
     }
 
+
     for(auto it1 = route_vj.begin(); it1 != route_vj.end(); ++it1) {
 
         for(auto vj1 = it1->second.begin(); vj1 != it1->second.end(); ++vj1) {
@@ -92,28 +93,43 @@ void Data::clean(){
         }
     }
 
-    std::set<int> erasest;
+    std::vector<size_t> erasest;
 
-    for(auto stit = stops.begin(); stit != stops.end(); ++stit) {
-        auto it = toErase.find((*stit)->vehicle_journey->external_code);
+    for(int i=stops.size()-1; i >=0;--i) {
+        auto it = toErase.find(stops[i]->vehicle_journey->external_code);
         if(it != toErase.end()) {
-            erasest.insert(distance(stops.begin(), stit));
+            erasest.push_back(i);
         }
     }
 
-    for(auto it = erasest.rbegin(); it != erasest.rend(); ++it)
-        stops.erase(stops.begin()+*it);
+    // Pour chaque stopTime à supprimer on le détruit, et on remet le dernier élément du vector à la place
+    // On ne redimentionne pas tout de suite le tableau pour des raisons de perf
+    size_t num_elements = stops.size();
+    for(size_t to_erase : erasest) {
+        delete stops[to_erase];
+        stops[to_erase] = stops[num_elements - 1];
+        num_elements--;
+    }
+
+
+    stops.resize(num_elements);
+
     erasest.clear();
-
-    for(auto vjit = vehicle_journeys.begin(); vjit != vehicle_journeys.end(); ++vjit) {
-        auto it = toErase.find((*vjit)->external_code);
+    for(int i=vehicle_journeys.size()-1; i >= 0;--i){
+        auto it = toErase.find(vehicle_journeys[i]->external_code);
         if(it != toErase.end()) {
-            erasest.insert(distance(vehicle_journeys.begin(), vjit));
+            erasest.push_back(i);
         }
     }
 
-    for(auto it = erasest.rbegin(); it != erasest.rend(); ++it)
-        vehicle_journeys.erase(vehicle_journeys.begin()+*it);
+    //Meme chose mais avec les vj
+    num_elements = vehicle_journeys.size();
+    for(size_t to_erase : erasest) {
+        delete vehicle_journeys[to_erase];
+        vehicle_journeys[to_erase] = vehicle_journeys[num_elements - 1];
+        num_elements--;
+    }
+    vehicle_journeys.resize(num_elements);
 
     std::cout << "J'ai supprimé " << toErase.size() << "vehicle journey pour cause de dépassement dans le clean" << std::endl;
 
