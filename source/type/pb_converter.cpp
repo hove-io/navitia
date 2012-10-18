@@ -20,11 +20,8 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* st
     stop_area->set_name(sa.name);
     stop_area->mutable_coord()->set_x(sa.coord.x);
     stop_area->mutable_coord()->set_y(sa.coord.y);
-    if(max_depth > 0){
-        try{
-            fill_pb_object(sa.city_idx, data, stop_area->mutable_child()->add_city(), max_depth-1);
-        }catch(std::out_of_range e){}
-    }
+    if(max_depth > 0 && sa.city_idx != nt::invalid_idx)
+        fill_pb_object(sa.city_idx, data, stop_area->mutable_city(), max_depth-1);
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* stop_point, int max_depth){
@@ -34,27 +31,15 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
     stop_point->set_name(sp.name);
     stop_point->mutable_coord()->set_x(sp.coord.x);
     stop_point->mutable_coord()->set_y(sp.coord.y);
-    if(max_depth > 0){
-        try{
+    if(max_depth > 0 && sp.city_idx != nt::invalid_idx)
             fill_pb_object(sp.city_idx, data, stop_point->mutable_city(), max_depth-1);
-        }catch(std::out_of_range e){}
-        
-    }
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Way * way, int max_depth){
     navitia::georef::Way w = data.geo_ref.ways.at(idx);
     way->set_name(w.name);
-    /*stop_point->mutable_coord()->set_x(sp.coord.x);
-    stop_point->mutable_coord()->set_y(sp.coord.y);*/
-    if(max_depth > 0){
-        try{
-            fill_pb_object(w.city_idx, data, way->mutable_child()->add_city(), max_depth-1);
-        }catch(std::out_of_range e){
-            std::cout << w.city_idx << std::endl;
-        }
-        
-    }
+    if(max_depth && w.city_idx != nt::invalid_idx)
+        fill_pb_object(w.city_idx, data, way->mutable_city(), max_depth-1);
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line, int){
@@ -65,6 +50,63 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line,
     line->set_color(l.color);
     line->set_name(l.name);
     line->set_external_code(l.external_code);
+}
+
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Route * route, int max_depth){
+    navitia::type::Route r = data.pt_data.routes.at(idx);
+    route->set_name(r.name);
+    route->set_id(r.id);
+    route->set_external_code(r.external_code);
+    if(max_depth > 0 && r.line_idx != type::invalid_idx)
+        fill_pb_object(r.line_idx, data, route->mutable_line(), max_depth - 1);
+}
+
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Network * network, int){
+    navitia::type::Network n = data.pt_data.networks.at(idx);
+    network->set_name(n.name);
+    network->set_id(n.id);
+    network->set_external_code(n.external_code);
+}
+
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::CommercialMode * commercial_mode, int){
+    navitia::type::ModeType m = data.pt_data.mode_types.at(idx);
+    commercial_mode->set_name(m.name);
+    commercial_mode->set_id(m.id);
+    commercial_mode->set_external_code(m.external_code);
+}
+
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::PhysicalMode * physical_mode, int){
+    navitia::type::Mode m = data.pt_data.modes.at(idx);
+    physical_mode->set_name(m.name);
+    physical_mode->set_id(m.id);
+    physical_mode->set_external_code(m.external_code);
+}
+
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Company * company, int){
+    navitia::type::Company c = data.pt_data.companies.at(idx);
+    company->set_name(c.name);
+    company->set_id(c.id);
+    company->set_external_code(c.external_code);
+}
+
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Connection * connection, int max_depth){
+    navitia::type::Connection c = data.pt_data.connections.at(idx);
+    connection->set_seconds(c.duration);
+    if(c.departure_stop_point_idx != type::invalid_idx && c.destination_stop_point_idx != type::invalid_idx && max_depth > 0){
+        fill_pb_object(c.departure_stop_point_idx, data, connection->mutable_origin(), max_depth - 1);
+        fill_pb_object(c.destination_stop_point_idx, data, connection->mutable_destination(), max_depth - 1);
+    }
+}
+
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::RoutePoint * route_point, int max_depth){
+    navitia::type::RoutePoint rp = data.pt_data.route_points.at(idx);
+    route_point->set_id(rp.id);
+    route_point->set_external_code(rp.external_code);
+    route_point->set_order(rp.order);
+    if(rp.stop_point_idx != type::invalid_idx && max_depth > 0)
+        fill_pb_object(rp.stop_point_idx, data, route_point->mutable_stop_point(), max_depth - 1);
+    if(rp.route_idx != type::invalid_idx && max_depth > 0)
+        fill_pb_object(rp.route_idx, data, route_point->mutable_route(), max_depth - 1);
 }
 
 void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth){

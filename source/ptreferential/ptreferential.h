@@ -36,12 +36,11 @@ struct unknown_table{};
 google::protobuf::Message* get_message(pbnavitia::PTReferential * row, Type_e type);
 
 /// Exécute une requête sur les données Data
-/// Retourne une matrice 2D de chaînes de caractères
-pbnavitia::Response query(std::string request, type::PT_Data & data);
+pbnavitia::Response query(type::Type_e type, std::string request, type::Data & data);
 
 /// Trouve le chemin d'un type de données à un autre
 /// Par exemple StopArea → StopPoint → RoutePoint
-std::vector<Type_e> find_path(Type_e source);
+std::map<Type_e,Type_e> find_path(Type_e source);
 
 /// À parti d'un élément, on veut retrouver tous ceux de destination
 std::vector<type::idx_t> get(Type_e source, Type_e destination, type::idx_t source_idx, type::PT_Data & data);

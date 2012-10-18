@@ -197,12 +197,7 @@ std::vector<idx_t> City::get(Type_e type, const PT_Data &) const {
 std::vector<idx_t> StopArea::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eStopPoint:
-        for(const StopPoint & sp : data.stop_points){
-            if (sp.stop_area_idx == idx)
-                result.push_back(sp.idx);
-        }
-        break;
+    case Type_e::eStopPoint: return this->stop_point_list; break;
     case Type_e::eCity: result.push_back(city_idx); break;
     default: break;
     }

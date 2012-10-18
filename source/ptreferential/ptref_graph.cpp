@@ -1,7 +1,6 @@
-#include "ptreferential.h"
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
-#include <boost/foreach.hpp>
+#include "type/type.h"
 // Ce fichier existe pour
 // 1. Mieux séparer fonctionnellement les choses
 // 2. Éviter trop de recompilation
@@ -40,10 +39,8 @@ struct Jointures {
         vertex_map[Type_e::eValidityPattern] = boost::add_vertex(Type_e::eValidityPattern, g);
         vertex_map[Type_e::eLine] = boost::add_vertex(Type_e::eLine, g);
         vertex_map[Type_e::eRoute] = boost::add_vertex(Type_e::eRoute, g);
-        vertex_map[Type_e::eVehicleJourney] = boost::add_vertex(Type_e::eVehicleJourney, g);
         vertex_map[Type_e::eStopPoint] = boost::add_vertex(Type_e::eStopPoint, g);
         vertex_map[Type_e::eStopArea] = boost::add_vertex(Type_e::eStopArea, g);
-        vertex_map[Type_e::eStopTime] = boost::add_vertex(Type_e::eStopTime, g);
         vertex_map[Type_e::eNetwork] = boost::add_vertex(Type_e::eNetwork, g);
         vertex_map[Type_e::eMode] = boost::add_vertex(Type_e::eMode, g);
         vertex_map[Type_e::eModeType] = boost::add_vertex(Type_e::eModeType, g);
@@ -52,7 +49,6 @@ struct Jointures {
         vertex_map[Type_e::eRoutePoint] = boost::add_vertex(Type_e::eRoutePoint, g);
         vertex_map[Type_e::eDistrict] = boost::add_vertex(Type_e::eDistrict, g);
         vertex_map[Type_e::eCompany] = boost::add_vertex(Type_e::eCompany, g);
-        vertex_map[Type_e::eVehicle] = boost::add_vertex(Type_e::eVehicle, g);
         vertex_map[Type_e::eCountry] = boost::add_vertex(Type_e::eCountry, g);
 
         boost::add_edge(vertex_map[Type_e::eDistrict], vertex_map[Type_e::eCountry], g);
@@ -81,28 +77,17 @@ struct Jointures {
         boost::add_edge(vertex_map[Type_e::eLine], vertex_map[Type_e::eRoute], g);
         boost::add_edge(vertex_map[Type_e::eModeType], vertex_map[Type_e::eRoute], g);
         boost::add_edge(vertex_map[Type_e::eRoutePoint], vertex_map[Type_e::eRoute], g);
-        boost::add_edge(vertex_map[Type_e::eVehicleJourney], vertex_map[Type_e::eRoute], g);
-
-        boost::add_edge(vertex_map[Type_e::eRoute], vertex_map[Type_e::eVehicleJourney], g);
-        boost::add_edge(vertex_map[Type_e::eCompany], vertex_map[Type_e::eVehicleJourney], g);
-        boost::add_edge(vertex_map[Type_e::eMode], vertex_map[Type_e::eVehicleJourney], g);
-        boost::add_edge(vertex_map[Type_e::eVehicle], vertex_map[Type_e::eVehicleJourney], g);
-        boost::add_edge(vertex_map[Type_e::eValidityPattern], vertex_map[Type_e::eVehicleJourney], g);
 
         boost::add_edge(vertex_map[Type_e::eRoute], vertex_map[Type_e::eRoutePoint], g);
         boost::add_edge(vertex_map[Type_e::eStopPoint], vertex_map[Type_e::eRoutePoint], g);
 
         boost::add_edge(vertex_map[Type_e::eStopArea], vertex_map[Type_e::eStopPoint], g);
         boost::add_edge(vertex_map[Type_e::eCity], vertex_map[Type_e::eStopPoint], g);
-        boost::add_edge(vertex_map[Type_e::eMode], vertex_map[Type_e::eStopPoint], g);
-        boost::add_edge(vertex_map[Type_e::eNetwork], vertex_map[Type_e::eStopPoint], g);
-
-        boost::add_edge(vertex_map[Type_e::eVehicle], vertex_map[Type_e::eStopTime], g);
-        boost::add_edge(vertex_map[Type_e::eStopPoint], vertex_map[Type_e::eStopTime], g);
+        boost::add_edge(vertex_map[Type_e::eRoutePoint], vertex_map[Type_e::eStopPoint], g);
     }
 };
 
-std::vector<Type_e> find_path(Type_e source) {
+std::map<Type_e,Type_e> find_path(Type_e source) {
     Jointures j;
     std::vector<vertex_t> predecessors(boost::num_vertices(j.g));
     boost::dijkstra_shortest_paths(j.g, j.vertex_map[source],
@@ -110,9 +95,10 @@ std::vector<Type_e> find_path(Type_e source) {
                                    weight_map(boost::get(&Edge::weight, j.g)));
 
 
-    std::vector<Type_e> result;
-    BOOST_FOREACH(vertex_t vertex, predecessors)
-            result.push_back(j.g[vertex]);
+    std::map<Type_e, Type_e> result;
+
+    for(vertex_t u = 0; u < boost::num_vertices(j.g); ++u)
+        result[j.g[u]] = j.g[predecessors[u]];
     return result;
 }
 

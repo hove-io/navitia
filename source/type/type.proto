@@ -29,7 +29,6 @@ message GeographicalCoord {
 message Country {
     optional string id = 1;
     optional string name  = 3;
-    optional PTReferential child = 4; 
     optional GeographicalCoord coord = 6;
 }
 
@@ -38,7 +37,7 @@ message StopArea {
     optional string name = 3;
     optional string external_code = 4;
     optional GeographicalCoord coord = 5;
-    optional PTReferential child = 6; 
+    optional City city = 6;
 }
 
 message StopPoint {
@@ -47,7 +46,6 @@ message StopPoint {
     optional City city = 4;
     optional string external_code = 5;
     optional GeographicalCoord coord = 6; 
-    optional PTReferential child = 7; 
 }
 
 message Line {
@@ -59,7 +57,6 @@ message Line {
     optional string backward_name = 7;
     optional string additional_data = 8;
     optional string color = 9;
-    optional PTReferential child = 10; 
 }
 
 message Route {
@@ -68,7 +65,7 @@ message Route {
     optional string external_code = 4;
     optional bool is_frequence = 5;
     optional bool is_adapted = 6;
-    optional PTReferential child = 7; 
+    optional Line line = 7;
 }
 
 message StopTime {
@@ -82,22 +79,20 @@ message VehicleJourney {
     optional string name = 3;
     optional string external_code = 4;
     optional bool is_adapted = 5;
-    optional PTReferential child = 6; 
 }
 
 message RoutePoint{
     optional string id = 1;
     optional string external_code = 3;
     optional int32 order = 4;
-
-    optional PTReferential child = 5; 
+    optional StopPoint stop_point = 5;
+    optional Route route = 6;
 }
 
 message Way {
     optional string id = 1;
     optional string external_code = 3;
     optional string name = 4;
-    optional PTReferential child = 5; 
     optional GeographicalCoord coord = 6;
     optional City city = 7;
 }
@@ -106,7 +101,6 @@ message City {
     optional string id = 1;
     optional string external_code = 3;
     optional string name = 4;
-    optional PTReferential child = 5; 
     optional GeographicalCoord coord = 6;
 }
 
@@ -114,25 +108,47 @@ message Site {
     optional string id = 1;
     optional string external_code = 3;
     optional string name = 4;
-    optional PTReferential child = 5; 
     optional GeographicalCoord coord = 6;
 }
 
-message Node {
+message Network {
     optional string id = 1;
-    optional GeographicalCoord coord = 6;
+    optional string external_code = 3;
+    optional string name = 4;
+    repeated Line line = 5;
+}
+
+message PhysicalMode {
+    optional string id = 1;
+    optional string external_code = 3;
+    optional string name = 4;
+    repeated CommercialMode commercial_mode = 5;
+}
+
+message CommercialMode {
+    optional string id = 1;
+    optional string external_code = 3;
+    optional string name = 4;
+    repeated PhysicalMode physical_mode = 5;
+}
+
+message Connection {
+    optional StopPoint origin = 1;
+    optional StopPoint destination = 2;
+    optional int32 seconds = 3;
+}
+
+message Company {
+    optional string id = 1;
+    optional string external_code = 3;
+    optional string name = 4;
 }
 
 message Address {
     optional Way way = 1;
     optional int32 house_number = 2;
 }
-message Segment {
-    optional string id = 1;
-    optional Node start = 3;
-    optional Node end = 4;
-    optional float length = 5;
-}
+
 
 message PTReferential {
     repeated Country country =1;
@@ -140,18 +156,14 @@ message PTReferential {
     repeated StopPoint stop_point = 3;
     repeated Line line = 4;
     repeated Route route = 5;
-    repeated StopTime stop_time = 6;
-    repeated VehicleJourney vehicle_journey = 7;
+    repeated Network network = 6;
+    repeated CommercialMode commercial_mode = 7;
+    repeated PhysicalMode physical_mode = 8;
+    repeated Connection connection = 9;
     repeated RoutePoint route_point = 11;
-    repeated Way way = 12;
     repeated City city = 13;
     repeated Site site = 14;
-    repeated Segment segment = 15;
-
-
-    optional string error = 8;
-    optional string warning = 9;
-    optional string info = 10;
+    repeated Company company = 15;
 }
 
 message PlaceMark {

@@ -69,6 +69,8 @@ std::vector<idx_t> PT_Data::get_target_by_source(Type_e source, Type_e target, s
 
 std::vector<idx_t> PT_Data::get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx){
     std::vector<idx_t> result;
+    if(source_idx == invalid_idx)
+        return result;
     if(source == target){
         result.push_back(source_idx);
         return result;

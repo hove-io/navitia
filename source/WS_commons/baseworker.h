@@ -93,28 +93,19 @@ namespace webservice
             std::string raw_params = request.raw_params;
             decode(raw_params);
             decode(request.data);
-            std::vector<std::string> tokens;
+            std::vector<std::string> tokens, tokens2;
 
-            boost::algorithm::split(tokens, raw_params, boost::algorithm::is_any_of("&"));
+            boost::algorithm::split(tokens, request.data, boost::algorithm::is_any_of("&"));
+            boost::algorithm::split(tokens2, raw_params, boost::algorithm::is_any_of("&"));
+            for(auto token : tokens2) tokens.push_back(token);
+
             for(std::string token : tokens) {
-                std::vector<std::string> elts;
-                boost::algorithm::split(elts, token, boost::algorithm::is_any_of("="));
-                if(elts.size() == 1 && elts[0] != "")
-                    request.params.insert(std::make_pair(boost::algorithm::to_lower_copy(elts[0]), ""));
-                else if(elts.size() >= 2 && elts[0] != "")
-                    request.params.insert(std::make_pair(boost::algorithm::to_lower_copy(elts[0]), elts[1]));
-            }
-
-            std::vector<std::string> tokens2;
-            boost::algorithm::split(tokens2, request.data, boost::algorithm::is_any_of("&"));
-            for(std::string token : tokens2) {
                 size_t pos = token.find("=");
                 if(pos != std::string::npos && token != "")
                     request.params.insert(std::make_pair(boost::algorithm::to_lower_copy(token.substr(0, pos)), token.substr(pos +1)));
                 else if(token.size() > 0 && token[0] != '=')
                     request.params.insert(std::make_pair(boost::algorithm::to_lower_copy(token), ""));
-            }
-            
+            }            
 
             size_t position = request.path.find_last_of('/');
             std::string api;
