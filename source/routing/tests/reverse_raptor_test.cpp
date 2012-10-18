@@ -539,8 +539,30 @@ BOOST_AUTO_TEST_CASE(prolongement_service) {
 
     type::PT_Data & d = data.pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 8*3600 + 25*60, 0);
+    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 8*3600 + 25*60, 0, false);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     res1.back().print(d);
+}
+
+BOOST_AUTO_TEST_CASE(itl) {
+    navimake::builder b("20120614");
+    b.vj("A")("stop1",8*3600+10*60, 8*3600 + 10*60,1)("stop2",8*3600+15*60,8*3600+15*60,1)("stop3", 8*3600+20*60);
+    b.vj("B")("stop1",9*3600)("stop2",10*3600);
+    type::Data data;
+    b.build(data.pt_data);
+    data.build_raptor();
+    RAPTOR raptor(data);
+
+    type::PT_Data & d = data.pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(1).idx, 9*3600+15*60, 0, false);
+
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
+
+
+    res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 8*3600+20*60, 0, false);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_CHECK_EQUAL(res1.back().items[0].departure.hour(), 8*3600+10*60);
+
 }
