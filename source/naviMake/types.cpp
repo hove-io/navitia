@@ -333,6 +333,7 @@ nt::StopTime StopTime::Transformer::operator()(const StopTime& stop){
     nt_stop.properties[nt::StopTime::ODT] = stop.ODT;
     nt_stop.properties[nt::StopTime::DROP_OFF] = stop.drop_off_allowed;
     nt_stop.properties[nt::StopTime::PICK_UP] = stop.pick_up_allowed;
+    nt_stop.local_traffic_zone = stop.local_traffic_zone;
 
     nt_stop.route_point_idx = stop.route_point->idx;
     nt_stop.vehicle_journey_idx = stop.vehicle_journey->idx;

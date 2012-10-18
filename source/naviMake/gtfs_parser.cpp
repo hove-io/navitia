@@ -772,7 +772,7 @@ void GtfsParser::parse_stop_times(Data & data) {
     boost::trim(line);
     Tokenizer tok_header(line);
     std::vector<std::string> elts(tok_header.begin(), tok_header.end());
-    int id_c = -1, arrival_c = -1, departure_c = -1, stop_c = -1, stop_seq_c = -1, pickup_c = -1, drop_off_c = -1;
+    int id_c = -1, arrival_c = -1, departure_c = -1, stop_c = -1, stop_seq_c = -1, pickup_c = -1, drop_off_c = -1, itl_c = -1;
     for(size_t i = 0; i < elts.size(); i++){
         if (elts[i] == "trip_id")
             id_c = i;
@@ -788,6 +788,8 @@ void GtfsParser::parse_stop_times(Data & data) {
             pickup_c = i;
         else if (elts[i] == "drop_off_type")
             drop_off_c = i;
+        else if (elts[i] == "stop_times_itl")
+            itl_c = i;
     }
 
     if(id_c == -1 || arrival_c == -1 || departure_c == -1 || stop_c == -1 || stop_seq_c == -1 || pickup_c == -1 || drop_off_c == -1){
@@ -820,6 +822,10 @@ void GtfsParser::parse_stop_times(Data & data) {
             stop_time->order = boost::lexical_cast<int>(elts[stop_seq_c]);
             stop_time->vehicle_journey = vj_it->second;
             stop_time->ODT = (elts[pickup_c] == "2" && elts[drop_off_c] == "2");
+            if(itl_c != -1)
+                stop_time->local_traffic_zone = boost::lexical_cast<int>(elts[itl_c]);
+            else
+                stop_time->local_traffic_zone = std::numeric_limits<uint32_t>::max();
             stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
             data.stops.push_back(stop_time);
             count++;

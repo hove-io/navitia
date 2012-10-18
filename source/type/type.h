@@ -495,17 +495,19 @@ struct StopTime {
     uint32_t departure_time; ///< En secondes depuis minuit
     idx_t vehicle_journey_idx;
     idx_t route_point_idx;
+    uint32_t local_traffic_zone;
 
     std::bitset<8> properties;
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}
 
-    StopTime(): arrival_time(0), departure_time(0), vehicle_journey_idx(invalid_idx), route_point_idx(invalid_idx) {}
+    StopTime(): arrival_time(0), departure_time(0), vehicle_journey_idx(invalid_idx), route_point_idx(invalid_idx),
+                local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         // Les idx sont volontairement pas sérialisés. On les reconstruit. Ça permet de gagner 5Mo compressé pour l'Île-de-France
-            ar & arrival_time & departure_time & vehicle_journey_idx & route_point_idx & properties /*& idx*/;
+            ar & arrival_time & departure_time & vehicle_journey_idx & route_point_idx & properties & local_traffic_zone/*& idx*/;
     }
 };
 
