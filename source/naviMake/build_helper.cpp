@@ -28,7 +28,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     vj->block_id = block_id;
 }
 
-VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart){
+VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32_t local_trafic_zone){
     types::StopTime * st = new types::StopTime();
     b.data.stops.push_back(st);
     auto it = b.sps.find(sp_name);
@@ -57,6 +57,7 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart){
     st->departure_time = depart;
     st->vehicle_journey = vj;
     st->order = vj->stop_time_list.size();
+    st->local_traffic_zone = local_trafic_zone;
     vj->stop_time_list.push_back(st);
 
     return *this;
