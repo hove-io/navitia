@@ -11,7 +11,7 @@ std::string iso_string(const nt::Data & d, int date, int hour){
     return boost::posix_time::to_iso_string(date_time);
 }
 
-pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths, const nt::Data & d, georef::StreetNetworkWorker & worker) {
+pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths, const nt::Data & d, georef::StreetNetworkWorker & worker, bool origin_coord, bool destination_coord) {
     pbnavitia::Response pb_response;
     pb_response.set_requested_api(pbnavitia::PLANNER);
 
@@ -23,8 +23,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
         pb_journey->set_nb_transfers(path.nb_changes);
         pb_journey->set_requested_date_time(boost::posix_time::to_iso_string(path.request_time));
 
-        // La marche à pied initiale
-        if(path.items.size() > 0 && path.items.front().type == walking && path.items.front().stop_points.size() > 0){
+        // La marche à pied initiale si on avait donné une coordonnée
+        if(origin_coord && path.items.size() > 0 && path.items.front().stop_points.size() > 0){
             fill_road_section(worker.get_path(path.items.front().stop_points.front()), d, pb_journey->add_section(), 1);
         }
 
@@ -67,8 +67,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                 pb_section->set_type(pbnavitia::TRANSFER);
         }
 
-        // La marche à pied finale
-        if(path.items.size() > 0 && path.items.back().type == walking && path.items.back().stop_points.size() > 0){
+        // La marche à pied finale si on avait donné une coordonnée
+        if(destination_coord && path.items.size() > 0 && path.items.back().stop_points.size() > 0){
             fill_road_section(worker.get_path(path.items.back().stop_points.back(), true), d, pb_journey->add_section(), 1);
         }
     }
@@ -148,7 +148,7 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
 
     for(Path & path : result)
         path.request_time = datetime;
-    return make_pathes(result, raptor.data, worker);
+    return make_pathes(result, raptor.data, worker, origin.type == nt::Type_e::eCoord, destination.type == nt::Type_e::eCoord);
 }
 
 
@@ -233,7 +233,7 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
     if(clockwise)
         std::reverse(result.begin(), result.end());
 
-    return make_pathes(result, raptor.data, worker);
+    return make_pathes(result, raptor.data, worker, origin.type == nt::Type_e::eCoord, destination.type == nt::Type_e::eCoord);
 }
 
 }}}
