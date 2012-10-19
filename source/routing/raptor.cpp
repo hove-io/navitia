@@ -836,8 +836,8 @@ std::vector<Path> RAPTOR::makePathes(std::vector<std::pair<type::idx_t, double> 
         DateTime dt;
         int rpid = std::numeric_limits<int>::max();
         for(auto dest : b_dest.map_date_time) {
-            if(retour[i][dest.first].type != uninitialized && retour[i][dest.first].arrival < dt) {
-                dt = best[dest.first].arrival;
+            if(retour[i][dest.first].type != uninitialized && retour[i][dest.first].arrival + dest.second < dt) {
+                dt = best[dest.first].arrival + dest.second;
                 rpid = dest.first;
             }
         }
@@ -854,21 +854,19 @@ std::vector<Path> RAPTOR::makePathes(std::vector<std::pair<type::idx_t, double> 
 
 std::vector<Path> RAPTOR::makePathesreverse(std::vector<std::pair<type::idx_t, double> > departs) {
     std::vector<Path> result;
-    //        DateTime dt = DateTime::min;
 
-    //        for(unsigned int i=0;i<=count;++i) {
-    //            int spid = std::numeric_limits<int>::max();
-    //            for(auto dest : b_dest.map_date_time) {
-    //                if(retour[i][dest.first].type != uninitialized && retour[i][dest.first].departure > dt) {
-    //                    dt = best[dest.first].departure;
-    //                    spid = dest.first;
-    //                }
-    //            }
-    //            if(spid != std::numeric_limits<int>::max())
-    //                result.push_back(makePathreverse(departs, spid, i));
-    //        }
-    result.push_back(makePathreverse(departs, b_dest.best_now_rpid, b_dest.count));
-
+    for(unsigned int i=0;i<=count;++i) {
+        DateTime dt = DateTime::min;
+        int rpid = std::numeric_limits<int>::max();
+        for(auto dest : b_dest.map_date_time) {
+            if(retour[i][dest.first].type != uninitialized && retour[i][dest.first].departure - dest.second > dt) {
+                dt = best[dest.first].departure - dest.second;
+                rpid = dest.first;
+            }
+        }
+        if(rpid != std::numeric_limits<int>::max())
+            result.push_back(makePathreverse(departs, rpid, i));
+    }
     return result;
 }
 
@@ -968,13 +966,6 @@ Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
 
                     //Est-ce que je suis sur un route point de fin 
                     current_rpid = current_st.route_point_idx;
-                    for(auto item : departs) {
-                        for(auto rpidx : data.pt_data.stop_points[item.first].route_point_list) {
-                            stop = stop || rpidx == current_rpid;
-                        }
-                    }
-                    if(stop)
-                        break;
                 }
                 // Je stocke le dernier stop point, et ses temps d'arrivée et de départ
                 item.stop_points.push_back(data.pt_data.route_points[current_rpid].stop_point_idx);
