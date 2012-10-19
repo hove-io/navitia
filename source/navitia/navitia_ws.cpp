@@ -25,7 +25,6 @@ namespace bg = boost::gregorian;
 class Worker : public BaseWorker<navitia::type::Data> {  
 
     std::unique_ptr<navitia::routing::raptor::RAPTOR> calculateur;
-    //std::unique_ptr<navitia::streetnetwork::StreetNetworkWorker> street_network_worker;
     std::unique_ptr<navitia::georef::StreetNetworkWorker> street_network_worker;
 
     log4cplus::Logger logger;
