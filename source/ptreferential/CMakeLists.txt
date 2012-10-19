@@ -1,3 +1,3 @@
-SET(PTREF_SRC ptreferential.cpp indexes.h where.h reflexion.h ptref_graph.cpp)
+SET(PTREF_SRC ptreferential.cpp where.h reflexion.h ptref_graph.cpp)
 add_library(ptreferential ${PTREF_SRC})
 target_link_libraries(ptreferential types data)
