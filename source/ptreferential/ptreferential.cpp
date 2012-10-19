@@ -183,6 +183,7 @@ pbnavitia::Response query(Type_e requested_type, std::string request, Data & dat
         default: break;
         }
         // Attention ! les structures doivent être triées !
+        std::sort(indexes.begin(), indexes.end());
         std::vector<idx_t> tmp_indexes;
         std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
         std::set_intersection(final_indexes.begin(), final_indexes.end(), indexes.begin(), indexes.end(), it);
