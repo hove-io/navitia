@@ -94,8 +94,6 @@ struct best_dest {
                 best_now.departure = t.departure - it->second;
                 best_now_rpid = rpid;
                 count = cnt;
-                if(rpid == 127839)
-                    std::cout << " !!! " << t.arrival << " " << best_now.arrival << " " << it->second<< " " << t.departure << " " << best_now.departure << std::endl;
                 return true;
             }
         }
