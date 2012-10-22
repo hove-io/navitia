@@ -705,3 +705,27 @@ BOOST_AUTO_TEST_CASE(itl) {
 
 }
 
+
+BOOST_AUTO_TEST_CASE(mdi) {
+    navimake::builder b("20120614");
+
+    b.vj("B")("stop1",17*3600, 17*3600,std::numeric_limits<uint32_t>::max(), true, false)("stop2", 17*3600+15*60)("stop3",17*3600+30*60, 17*3600+30*60,std::numeric_limits<uint32_t>::max(), true, true);
+    b.vj("C")("stop4",16*3600, 16*3600,std::numeric_limits<uint32_t>::max(), true, true)("stop5", 16*3600+15*60)("stop6",16*3600+30*60, 16*3600+30*60,std::numeric_limits<uint32_t>::max(), false, true);
+    type::Data data;
+    b.build(data.pt_data);
+    data.build_raptor();
+    RAPTOR raptor(data);
+
+    type::PT_Data & d = data.pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(2).idx, 5*60, 0);
+    BOOST_CHECK_EQUAL(res1.size(), 0);
+    res1 = raptor.compute(d.stop_areas.at(1).idx, d.stop_areas.at(2).idx, 5*60, 0);
+    BOOST_CHECK_EQUAL(res1.size(), 1);
+
+    res1 = raptor.compute(d.stop_areas.at(3).idx, d.stop_areas.at(5).idx, 5*60, 0);
+    BOOST_CHECK_EQUAL(res1.size(), 0);
+    res1 = raptor.compute(d.stop_areas.at(3).idx, d.stop_areas.at(4).idx, 5*60, 0);
+    BOOST_CHECK_EQUAL(res1.size(), 1);
+}
+
