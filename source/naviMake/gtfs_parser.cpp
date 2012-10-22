@@ -822,6 +822,8 @@ void GtfsParser::parse_stop_times(Data & data) {
             stop_time->order = boost::lexical_cast<int>(elts[stop_seq_c]);
             stop_time->vehicle_journey = vj_it->second;
             stop_time->ODT = (elts[pickup_c] == "2" && elts[drop_off_c] == "2");
+            stop_time->pick_up_allowed = elts[pickup_c] == "0";
+            stop_time->drop_off_allowed = elts[drop_off_c] == "0";
             if(itl_c != -1)
                 stop_time->local_traffic_zone = boost::lexical_cast<int>(elts[itl_c]);
             else
