@@ -58,6 +58,8 @@ struct ResponseData {
     std::string api;
     /// Constructeur par défaut (status 200, type text/plain)
     ResponseData();
+    ResponseData & operator=(const ResponseData &resp);
+
 };
 
 

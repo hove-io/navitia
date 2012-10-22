@@ -71,16 +71,25 @@ namespace webservice
     public:
 
         /**
-         * method appelé juste avant l'appel de l'api séléctionné
+         * Méthode appelée juste avant l'appel de l'api séléctionnée
          * il faut surcharger cette methode dans le worker pour ajouter des traitements
          */
         virtual void pre_compute(webservice::RequestData&, Data& ){}
         /**
-         * method appelé juste aprés l'appel de l'api séléctionné
+         * Méthode appelée juste aprés l'appel de l'api séléctionnée
          * il faut surcharger cette methode dans le worker pour ajouter des traitements
          */
         virtual void post_compute(webservice::RequestData&, webservice::ResponseData&){}
 
+        /** Méthode appelée si l'appele lève une exception standart
+         ** il faut surcharger cette methode dans le worker pour ajouter des traitements
+         **/
+        virtual void on_std_exception(const std::exception &, webservice::RequestData&, webservice::ResponseData&, Data &) {throw;}
+
+        /** Méthode appelée si l'appele lève une exception inconnue
+         ** il faut surcharger cette methode dans le worker pour ajouter des traitements
+         **/
+        virtual void on_unknown_exception(webservice::RequestData&, webservice::ResponseData&, Data &) {throw;}
 
         /** Fonction appelée lorsqu'une requête appelle
       *
@@ -128,7 +137,15 @@ namespace webservice
 
                 boost::posix_time::ptime start(boost::posix_time::microsec_clock::local_time());
                 pre_compute(request, d);
-                ResponseData resp = apis[api](request, d);
+                ResponseData resp;
+                try{
+                    resp = apis[api](request, d);
+                } catch(const std::exception & e){
+                    on_std_exception(e, request, resp, d);
+                } catch(...){
+                    on_unknown_exception(request, resp, d);
+                }
+
                 resp.api = api;
                 post_compute(request, resp);
                 //@TODO not threadsafe
