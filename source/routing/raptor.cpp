@@ -623,7 +623,7 @@ struct raptor_visitor {
                       const navitia::type::StopTime &st, const navitia::type::idx_t embarquement) {
         auto & working_retour = raptor.retour[raptor.count];
         working_date_time.update(st.arrival_time);
-        if(better(working_date_time, bound.arrival)) {
+        if(better(working_date_time, bound.arrival) && st.drop_off_allowed()) {
             working_retour[rpid] = type_retour(st, working_date_time, embarquement, true);
             raptor.best[rpid] = working_retour[rpid];
             if(!raptor.b_dest.ajouter_best(rpid, working_retour[rpid], raptor.count)) {
@@ -716,7 +716,7 @@ struct raptor_reverse_visitor {
                       const navitia::type::StopTime st, const navitia::type::idx_t embarquement) {
         auto & working_retour = raptor.retour[raptor.count];
         working_date_time.updatereverse(st.departure_time);
-        if(better(working_date_time, bound.departure)) {
+        if(better(working_date_time, bound.departure) && st.pick_up_allowed()) {
             working_retour[rpid] = type_retour(st, working_date_time, embarquement, false);
             raptor.best[rpid] = working_retour[rpid];
             if(!raptor.b_dest.ajouter_best_reverse(rpid, working_retour[rpid], raptor.count)) {
