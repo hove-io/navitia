@@ -102,6 +102,8 @@ struct TimeDependent : public AbstractRouter{
     bool is_stop_area(vertex_t vertex) const {return vertex < stop_point_offset;}
     bool is_stop_point(vertex_t vertex) const {return vertex >= stop_point_offset && vertex < route_point_offset;}
     bool is_route_point(vertex_t vertex) const {return vertex >= route_point_offset;}
+
+    ~TimeDependent() {}
 };
 
 }}}

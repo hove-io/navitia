@@ -127,6 +127,7 @@ struct RAPTOR : public AbstractRouter
     ///Cherche le premier trip partant avant dt sur la route au route point order
     int tardiest_trip(const type::Route & route, const unsigned int order, const DateTime &dt) const;
 
+    ~RAPTOR() {}
 
 };
 
