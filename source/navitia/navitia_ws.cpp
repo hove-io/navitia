@@ -15,7 +15,7 @@
 
 #include <boost/tokenizer.hpp>
 #include <iostream>
-//#include <gperftools/profiler.h>
+#include <gperftools/profiler.h>
 using namespace webservice;
 
 namespace nt = navitia::type;
@@ -70,7 +70,8 @@ class Worker : public BaseWorker<navitia::type::Data> {
     }
 
     ///netoyage pour le traitement
-    virtual void pre_compute(webservice::RequestData&, nt::Data&){
+    virtual void pre_compute(webservice::RequestData& request, nt::Data&){
+        LOG4CPLUS_TRACE(logger, "Requête : "  + request.path + "  " + request.raw_params);
         pb_response.Clear();
     }
 
@@ -84,7 +85,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     virtual void on_std_exception(const std::exception & e, RequestData &, ResponseData & rd, nt::Data &){
         LOG4CPLUS_FATAL(logger, boost::format("Erreur : %s") % e.what());
         rd.status_code = 500;
-#ifndef DEBUG
+#ifdef DEBUG
         throw;
 #endif
     }
@@ -92,6 +93,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
     virtual void on_unknown_exception(RequestData &, ResponseData & rd, nt::Data &){
         LOG4CPLUS_FATAL(logger, "Erreur inconnue");
         rd.status_code = 500;
+#ifdef DEBUG
+        throw;
+#endif
     }
 
 
@@ -153,6 +157,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     }
 
     void load(navitia::type::Data & d){
+        ProfilerStart("navitia.prof");
         try{
             navitia::type::Data data;
             Configuration * conf = Configuration::get();
@@ -166,7 +171,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
             LOG4CPLUS_TRACE(logger, "déplacement de data");
             d = std::move(data);
             LOG4CPLUS_TRACE(logger, "Chargement des donnés fini");
-            //ProfilerStart("navitia.prof");
+
         }catch(...){
             d.loaded = false;
             LOG4CPLUS_ERROR(logger, "erreur durant le chargement des données");
@@ -248,40 +253,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     }
 
 
-    ResponseData journeys(RequestData & request, navitia::type::Data & d) {
-        ResponseData rd;
-
-        nt::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, rd));
-        if(!locker.locked){
-            return rd;
-        }
-        if(d.last_load_at != this->last_load_at || !calculateur){
-            calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(d));
-            //street_network_worker = std::unique_ptr<navitia::streetnetwork::StreetNetworkWorker>(new navitia::streetnetwork::StreetNetworkWorker(d.street_network));
-            street_network_worker = std::unique_ptr<navitia::georef::StreetNetworkWorker>(new navitia::georef::StreetNetworkWorker(d.geo_ref));
-            this->last_load_at = d.last_load_at;
-
-            LOG4CPLUS_INFO(logger, "instanciation du calculateur");
-        }
-
-        auto datetime = boost::get<boost::posix_time::ptime>(request.parsed_params["datetime"].value);
-
-        navitia::type::EntryPoint departure = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["origin"].value));
-        navitia::type::EntryPoint destination = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["destination"].value));
-
-        bool clockwise = true;
-        if(request.parsed_params.find("clockwise") != request.parsed_params.end())
-            clockwise = boost::get<bool>(request.parsed_params["clockwise"].value);
-
-        pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, datetime, clockwise, *street_network_worker);
-
-        rd.status_code = 200;
-
-        return rd;
-    }
-
-
-    ResponseData journeysarray(RequestData & request, navitia::type::Data & d) {
+    ResponseData journeys(RequestData & request, navitia::type::Data & d, bool multiple_datetime) {
         ResponseData rd;
 
         nt::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, rd));
@@ -303,15 +275,27 @@ class Worker : public BaseWorker<navitia::type::Data> {
         if(request.parsed_params.find("clockwise") != request.parsed_params.end())
             clockwise = boost::get<bool>(request.parsed_params["clockwise"].value);
 
-        auto datetimes = boost::get<std::vector<std::string>>(request.parsed_params["datetime[]"].value);
+        std::multimap<std::string, std::string> forbidden;
+        /*for(auto key : {"line", "mode", "route", "vehiclejourney"}){
+            std::string req_str = std::string("forbidden") + key + "[]";
+            if(request.parsed_params.find(req_str) != request.parsed_params.end()){
+                for(auto external_code : boost::get<std::vector<std::string>>(request.parsed_params[req_str].value))
+                    forbidden.insert(std::make_pair(key, external_code));
+            }
+        }*/
 
-        pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, datetimes, clockwise, *street_network_worker);
+        std::vector<std::string> datetimes;
+        if(multiple_datetime){
+            datetimes = boost::get<std::vector<std::string>>(request.parsed_params["datetime[]"].value);
+        } else {
+            datetimes.push_back(boost::get<std::string>(request.parsed_params["datetime"].value));
+        }
+        pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, datetimes, clockwise, forbidden, *street_network_worker);
 
         rd.status_code = 200;
 
         return rd;
     }
-
 
     ResponseData ptref(nt::Type_e type, RequestData & request, navitia::type::Data &data){
         ResponseData rd;
@@ -356,17 +340,20 @@ class Worker : public BaseWorker<navitia::type::Data> {
         default_params.push_back("stop_name");
         add_param("proximitylist", "filter", "Type à rechercher", ApiParameter::STRING, false, default_params);
 
-        register_api("journeys", boost::bind(&Worker::journeys, this, _1, _2), "Calcul d'itinéraire multimodal");
-        add_param("journeys", "origin", "Point de départ", ApiParameter::STRING, true);
-        add_param("journeys", "destination", "Point d'arrivée", ApiParameter::STRING, true);
-        add_param("journeys", "datetime", "Date et heure de début de l'itinéraire, au format ISO", ApiParameter::DATETIME, true);
-        add_param("journeys", "clockwise", "Sens du calcul ; si 1 on veut partir après l'heure indiquée, si 0, on veut arriver avant [par défaut 1]", ApiParameter::BOOLEAN, false);
-
-        register_api("journeysarray", boost::bind(&Worker::journeysarray, this, _1, _2), "Calcul d'itinéraire multimodal avec plusieurs heures de départ");
-        add_param("journeysarray", "origin", "Point de départ", ApiParameter::STRING, true);
-        add_param("journeysarray", "destination", "Point d'arrivée", ApiParameter::STRING, true);
+        register_api("journeys", boost::bind(&Worker::journeys, this, _1, _2, false), "Calcul d'itinéraire multimodal");
+        add_param("journeys", "datetime", "Date et heure de début de l'itinéraire, au format ISO", ApiParameter::STRING, true);
+        register_api("journeysarray", boost::bind(&Worker::journeys, this, _1, _2, true), "Calcul d'itinéraire multimodal avec plusieurs heures de départ");
         add_param("journeysarray", "datetime[]", "Tableau de dates-heure de début de l'itinéraire, au format ISO", ApiParameter::STRINGLIST, true);
-        add_param("journeysarray", "clockwise", "Sens du calcul ; si 1 on veut partir après l'heure indiquée, si 0, on veut arriver avant [par défaut 1]", ApiParameter::BOOLEAN, false);
+
+        for(auto api : {"journeys", "journeysarray"}){
+            add_param(api, "origin", "Point de départ", ApiParameter::STRING, true);
+            add_param(api, "destination", "Point d'arrivée", ApiParameter::STRING, true);
+            add_param(api, "clockwise", "Sens du calcul ; si 1 on veut partir après l'heure indiquée, si 0, on veut arriver avant [par défaut 1]", ApiParameter::BOOLEAN, false);
+            add_param(api, "forbiddenline[]", "Lignes interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);
+            add_param(api, "forbiddenmode[]", "Modes interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);
+            add_param(api, "forbiddenroute[]", "Routes interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);
+            add_param(api, "forbiddenvehiclejourney[]", "Circulations interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);
+        }
 
         register_api("load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
         register_api("status", boost::bind(&Worker::status, this, _1, _2), "Api de monitoring");

@@ -103,57 +103,10 @@ std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPo
     return result;
 }
 
-pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin, const type::EntryPoint &destination,
-                                  const boost::posix_time::ptime &datetime, bool clockwise,
-                                  georef::StreetNetworkWorker & worker) {
-    pbnavitia::Response response;
-    response.set_requested_api(pbnavitia::PLANNER);
-
-    if(!raptor.data.meta.production_date.contains(datetime.date())) {
-        response.mutable_planner()->set_response_type(pbnavitia::DATE_OUT_OF_BOUNDS);
-        return response;
-    }
-
-    auto departures = get_stop_points(origin, raptor.data, worker);
-    auto destinations = get_stop_points(destination, raptor.data, worker, true);
-    if(departures.size() == 0 && destinations.size() == 0){
-        response.mutable_planner()->set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
-        return response;
-    }
-
-    if(departures.size() == 0){
-        response.mutable_planner()->set_response_type(pbnavitia::NO_ORIGIN_POINT);
-        return response;
-    }
-
-    if(destinations.size() == 0){
-        response.mutable_planner()->set_response_type(pbnavitia::NO_DESTINATION_POINT);
-        return response;
-    }
-
-    std::vector<Path> result;
-
-    int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
-    int time = datetime.time_of_day().total_seconds();
-
-    if(clockwise)
-        result = raptor.compute_all(departures, destinations, DateTime(day, time));
-    else
-        result = raptor.compute_reverse_all(departures, destinations, DateTime(day, time));
-
-    if(result.size() == 0){
-        response.mutable_planner()->set_response_type(pbnavitia::NO_SOLUTION);
-        return response;
-    }
-
-    for(Path & path : result)
-        path.request_time = datetime;
-    return make_pathes(result, raptor.data, worker, origin.type == nt::Type_e::eCoord, destination.type == nt::Type_e::eCoord);
-}
-
 
 pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin, const type::EntryPoint &destination,
                                   const std::vector<std::string> &datetimes_str, bool clockwise,
+                                  std::multimap<std::string, std::string> forbidden,
                                   georef::StreetNetworkWorker & worker) {
     pbnavitia::Response response;
     response.set_requested_api(pbnavitia::PLANNER);
@@ -213,6 +166,7 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
 //        return make_pathes(raptor.compute_all(departures, destinations, dts, borne), raptor.data, worker);
         borne = DateTime::inf;
     }
+
     for(boost::posix_time::ptime datetime : datetimes){
         std::vector<Path> tmp;
         int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
@@ -222,12 +176,20 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
             tmp = raptor.compute_all(departures, destinations, DateTime(day, time), borne);
         else
             tmp = raptor.compute_reverse_all(departures, destinations, DateTime(day, time), borne);
-        if(tmp.size() > 0) {
+
+        // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
+        if(datetimes.size() == 1){
+            result = tmp;
+            if(result.size() == 0){
+                response.mutable_planner()->set_response_type(pbnavitia::NO_SOLUTION);
+                return response;
+            }
+        } else if(tmp.size() > 0) {
+            // Lorsqu'on demande plusieurs horaires, on garde que l'arrivée au plus tôt / départ au plus tard
             tmp.back().request_time = datetime;
             result.push_back(tmp.back());
             borne = tmp.back().items.back().arrival;
-        }
-        else
+        } else // Lorsqu'on demande plusieurs horaires, et qu'il n'y a pas de résultat, on retourne un itinéraire vide
             result.push_back(Path());
     }
     if(clockwise)
