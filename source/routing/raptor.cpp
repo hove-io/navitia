@@ -385,10 +385,10 @@ void RAPTOR::init(std::vector<std::pair<type::idx_t, double> > departs,
 std::vector<Path>
 RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                     const std::vector<std::pair<type::idx_t, double> > &destinations,
-                    const DateTime &dt_depart, const DateTime &borne) {
+                    const DateTime &dt_depart, const DateTime &borne, const std::multimap<std::string, std::string> & forbidden) {
     std::vector<Path> result;
 
-    set_routes_valides(dt_depart);
+    set_routes_valides(dt_depart.date(), forbidden);
     init(departs, destinations, dt_depart, borne, true, true);
     boucleRAPTOR();
 
@@ -456,7 +456,8 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
 
     std::sort(dt_departs.begin(), dt_departs.end(), [](DateTime dt1, DateTime dt2) {return dt1 > dt2;});
 
-    set_routes_valides(dt_departs.front());
+    // Attention ! Et si les départs ne sont pas le même jour ?
+    //set_routes_valides(dt_departs.front());
 
     bool reset = true;
     for(auto dep : dt_departs) {
@@ -494,9 +495,10 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
     std::vector<Path> result;
     std::vector<best_dest> bests;
 
-    std::sort(dt_departs.begin(), dt_departs.end(), [](DateTime dt1, DateTime dt2) {return dt1 < dt2;});
+    std::sort(dt_departs.begin(), dt_departs.end());
 
-    set_routes_valides(dt_departs.front());
+    // Attention ! Et si les départs ne sont pas le même jour ?
+   // set_routes_valides(dt_departs.front().date);
 
     bool reset = true;
     for(auto dep : dt_departs) {
@@ -532,10 +534,10 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
 std::vector<Path>
 RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                             const std::vector<std::pair<type::idx_t, double> > &destinations,
-                            const DateTime &dt_depart, const DateTime &borne) {
+                            const DateTime &dt_depart, const DateTime &borne, const std::multimap<std::string, std::string> & forbidden) {
     std::vector<Path> result;
 
-    set_routes_valides(dt_depart);
+    set_routes_valides(dt_depart.date(), forbidden);
     init(departs, destinations, dt_depart, borne, false, true);
     boucleRAPTORreverse();
 
@@ -558,17 +560,31 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
 
 
 
-void RAPTOR::set_routes_valides(const DateTime& dtDepart) {
-
-    uint32_t date = dtDepart.date();
-
+void RAPTOR::set_routes_valides(uint32_t date, const std::multimap<std::string, std::string> & forbidden) {
     routes_valides.clear();
     routes_valides.resize(data.pt_data.routes.size());
     for(const auto & route : data.pt_data.routes) {
-        for(auto vjidx : route.vehicle_journey_list) {
-            if(data.pt_data.validity_patterns[data.pt_data.vehicle_journeys[vjidx].validity_pattern_idx].check2(date)) {
-                routes_valides.set(route.idx);
-                break;
+        const navitia::type::Line & line = data.pt_data.lines[route.line_idx];
+        const navitia::type::ModeType & mode = data.pt_data.mode_types[route.mode_type_idx];
+
+        // On gère la liste des interdits
+        bool forbidden_route = false;
+        for(auto pair : forbidden){
+            if(pair.first == "line" && pair.second == line.external_code)
+                forbidden_route = true;
+            if(pair.first == "route" && pair.second == route.external_code)
+                forbidden_route = true;
+            if(pair.first == "mode" && pair.second == mode.external_code)
+                forbidden_route = true;
+        }
+
+        // Si la route n'a pas été bloquée par un paramètre, on la valide s'il y a au moins une circulation à j-1/j+1
+        if(!forbidden_route){
+            for(auto vjidx : route.vehicle_journey_list) {
+                if(data.pt_data.validity_patterns[data.pt_data.vehicle_journeys[vjidx].validity_pattern_idx].check2(date)) {
+                    routes_valides.set(route.idx);
+                    break;
+                }
             }
         }
     }

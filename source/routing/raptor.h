@@ -74,7 +74,8 @@ struct RAPTOR : public AbstractRouter
     std::vector<Path> 
     compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                 const std::vector<std::pair<type::idx_t, double> > &destinations,
-                const DateTime &dt_depart, const DateTime &borne = DateTime::inf);
+                const DateTime &dt_depart, const DateTime &borne = DateTime::inf,
+                const std::multimap<std::string, std::string> & forbidden = std::multimap<std::string, std::string>());
     ///Calcul d'itinéraires dans le sens horaire à partir de plusieurs stop points de départs, vers plusieurs stoppoints d'arrivée, à partir d'une collection horaires
     std::vector<Path> 
     compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
@@ -89,10 +90,12 @@ struct RAPTOR : public AbstractRouter
     std::vector<Path> 
     compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                         const std::vector<std::pair<type::idx_t, double> > &destinations,
-                        const DateTime &dt_depart, const DateTime &borne = DateTime::min);
+                        const DateTime &dt_depart, const DateTime &borne = DateTime::min,
+                        const std::multimap<std::string, std::string> & forbidden = std::multimap<std::string, std::string>());
 
-    ///Désactive les routes qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
-    void set_routes_valides(const DateTime & dtDepart);
+    /// Désactive les routes qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
+    /// Gère également les lignes, modes, routes et VJ interdits
+    void set_routes_valides(uint32_t date, const std::multimap<std::string, std::string> & forbidden);
 
     ///Boucle principale, parcourt les routes,
     void boucleRAPTOR();

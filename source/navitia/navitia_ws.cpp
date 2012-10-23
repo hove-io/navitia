@@ -276,13 +276,13 @@ class Worker : public BaseWorker<navitia::type::Data> {
             clockwise = boost::get<bool>(request.parsed_params["clockwise"].value);
 
         std::multimap<std::string, std::string> forbidden;
-        /*for(auto key : {"line", "mode", "route", "vehiclejourney"}){
+        for(auto key : {"line", "mode", "route"}){
             std::string req_str = std::string("forbidden") + key + "[]";
             if(request.parsed_params.find(req_str) != request.parsed_params.end()){
                 for(auto external_code : boost::get<std::vector<std::string>>(request.parsed_params[req_str].value))
                     forbidden.insert(std::make_pair(key, external_code));
             }
-        }*/
+        }
 
         std::vector<std::string> datetimes;
         if(multiple_datetime){
@@ -352,7 +352,6 @@ class Worker : public BaseWorker<navitia::type::Data> {
             add_param(api, "forbiddenline[]", "Lignes interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);
             add_param(api, "forbiddenmode[]", "Modes interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);
             add_param(api, "forbiddenroute[]", "Routes interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);
-            add_param(api, "forbiddenvehiclejourney[]", "Circulations interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);
         }
 
         register_api("load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");

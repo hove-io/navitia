@@ -172,6 +172,7 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
         int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
         int time = datetime.time_of_day().total_seconds();
 
+        raptor.set_routes_valides(day, forbidden);
         if(clockwise)
             tmp = raptor.compute_all(departures, destinations, DateTime(day, time), borne);
         else
