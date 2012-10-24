@@ -11,8 +11,9 @@ using namespace routing::raptor;
 using namespace boost::posix_time;
 
 BOOST_AUTO_TEST_CASE(simple_journey){
+    std::multimap<std::string, std::string> forbidden;
     navimake::builder b("20120614");
-     b.vj("A")("stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
+    b.vj("A")("stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
     type::Data data;
     b.build(data.pt_data);
     data.build_raptor();
@@ -23,7 +24,7 @@ BOOST_AUTO_TEST_CASE(simple_journey){
     type::EntryPoint destination("stop_area:stop2");
 
     georef::StreetNetworkWorker sn_worker(data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, ptime(boost::gregorian::date(2012, 06, 14), time_duration(2, 10, 0)), true, sn_worker);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T021000"}, true, forbidden, sn_worker);
 
     BOOST_REQUIRE(resp.has_requested_api());
     BOOST_CHECK_EQUAL(resp.requested_api(), pbnavitia::PLANNER);
@@ -47,6 +48,7 @@ BOOST_AUTO_TEST_CASE(simple_journey){
 }
 
 BOOST_AUTO_TEST_CASE(journey_array){
+    std::multimap<std::string, std::string> forbidden;
     navimake::builder b("20120614");
     b.vj("A")("stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
     b.vj("A")("stop1", 9*3600 +10*60, 9*3600 + 11 * 60)("stop2",  9*3600 + 20 * 60 ,9*3600 + 21*60);
@@ -63,7 +65,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
 
     // On met les horaires dans le desordre pour voir s'ils sont bien trié comme attendu
     std::vector<std::string> datetimes{"20120614T080000", "20120614T090000"};
-    pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, sn_worker);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, forbidden, sn_worker);
 
     BOOST_REQUIRE(resp.has_requested_api());
     BOOST_CHECK_EQUAL(resp.requested_api(), pbnavitia::PLANNER);
