@@ -450,16 +450,19 @@ std::vector< std::pair<type::idx_t, double> > StreetNetworkWorker::find_nearest_
 
     for(auto element: elements){
         const ProjectionData & projection = geo_ref.projected_stop_points[element.first];
-        double best_dist = max;
-        if(dist[projection.source] < max){
-            best_dist = dist[projection.source] + projection.source_distance;
-        }
-        if(dist[projection.target] < max){
-            best_dist= std::min(best_dist, dist[projection.target] + projection.target_distance);
-        }
-        if(best_dist < radius){
-            result.push_back(std::make_pair(element.first, best_dist));
-            idx_proj[element.first] = projection;
+        // Est-ce que le stop point a pu être raccroché au street network
+        if(projection.source < boost::num_vertices(this->geo_ref.graph) && projection.source < boost::num_vertices(this->geo_ref.graph)){
+            double best_dist = max;
+            if(dist[projection.source] < max){
+                best_dist = dist[projection.source] + projection.source_distance;
+            }
+            if(dist[projection.target] < max){
+                best_dist= std::min(best_dist, dist[projection.target] + projection.target_distance);
+            }
+            if(best_dist < radius){
+                result.push_back(std::make_pair(element.first, best_dist));
+                idx_proj[element.first] = projection;
+            }
         }
     }
     return result;
