@@ -68,8 +68,6 @@ void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
     size_t n_fin_d = cols["bornefin_d"];
     size_t n_fin_g = cols["bornefin_g"];
 
-    navitia::type::Projection proj_lambert2e ("Lambert 2 étendu", "+init=epsg:27572", false);
-
     std::unordered_map<std::string, vertex_t> vertex_map;
     std::unordered_map<std::string, Way> way_map;
     std::unordered_map<int, HouseNumber> house_number_left_map;
@@ -87,8 +85,7 @@ void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
             Vertex v;
             try{
                 v.coord = navitia::type::GeographicalCoord(str_to_double(row[x1]),
-                                                           str_to_double(row[y1]),
-                                                           proj_lambert2e);
+                                                           str_to_double(row[y1]));
 
             } catch(...){
                 std::cout << "coord : " << row[x1] << ";" << row[y1] << std::endl;
@@ -103,8 +100,7 @@ void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
             Vertex v;
             try{
                 v.coord = navitia::type::GeographicalCoord(boost::lexical_cast<double>(row[x2]),
-                                                           boost::lexical_cast<double>(row[y2]),
-                                                           proj_lambert2e);
+                                                           boost::lexical_cast<double>(row[y2]));
 
             } catch(...){
                 std::cout << "coord : " << row[x2] << ";" << row[y2] << std::endl;
@@ -132,11 +128,9 @@ void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
         hn_fin_g.number = str_to_int(row[n_fin_g]);
 
         hn_deb_d.coord = hn_deb_g.coord = navitia::type::GeographicalCoord(str_to_double(row[x1]),
-                                                                   str_to_double(row[y1]),
-                                                                   proj_lambert2e);
+                                                                   str_to_double(row[y1]));
         hn_fin_d.coord = hn_fin_g.coord = navitia::type::GeographicalCoord(str_to_double(row[x2]),
-                                                                   str_to_double(row[y2]),
-                                                                   proj_lambert2e);
+                                                                   str_to_double(row[y2]));
 
         std::string way_key;
         if(row[insee].substr(0,2) == "75")
