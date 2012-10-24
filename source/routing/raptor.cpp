@@ -871,8 +871,8 @@ std::vector<Path> RAPTOR::makePathes(std::vector<std::pair<type::idx_t, double> 
 std::vector<Path> RAPTOR::makePathesreverse(std::vector<std::pair<type::idx_t, double> > departs) {
     std::vector<Path> result;
 
+    DateTime dt = DateTime::min;
     for(unsigned int i=0;i<=count;++i) {
-        DateTime dt = DateTime::min;
         int rpid = std::numeric_limits<int>::max();
         for(auto dest : b_dest.map_date_time) {
             if(retour[i][dest.first].type != uninitialized && retour[i][dest.first].departure - dest.second > dt) {
@@ -940,6 +940,8 @@ Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
 
             rpid_embarquement = navitia::type::invalid_idx;
             current_rpid = r.rpid_embarquement;
+//            if(retour[countb][current_rpid].type == depart)
+//                stop = true;
 
         } else { // Sinon c'est un trajet TC
             // Est-ce que qu'on a à faire à un nouveau trajet ?
@@ -1003,17 +1005,15 @@ Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
 
                 //On stocke l'item créé
                 result.items.push_back(item);
+
                 --countb;
                 rpid_embarquement = navitia::type::invalid_idx ;
 
             }
         }
+        if(retour[countb][current_rpid].type == depart)
+            stop = true;
 
-        for(auto item : departs) {
-            for(auto rpidx : data.pt_data.stop_points[item.first].route_point_list) {
-                stop = stop || rpidx == current_rpid;
-            }
-        }
     }
 
     if(!reverse){
