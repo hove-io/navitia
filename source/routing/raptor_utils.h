@@ -57,26 +57,26 @@ struct type_retour {
 struct best_dest {
 //    typedef std::pair<unsigned int, int> idx_dist;
 
-    std::/*unordered_*/map<unsigned int, float> map_date_time;
+//    std::unordered_map<unsigned int, float> map_date_time;
+    std::vector<float> rpidx_distance;
     type_retour best_now;
     unsigned int best_now_rpid;
     unsigned int count;
 
     void ajouter_destination(unsigned int rpid, const float dist_to_dest) {
-        if(rpid == 127839)
-            std::cout << "Ajouter distance " << dist_to_dest << std::endl;
-        map_date_time[rpid] = dist_to_dest;
+//        map_date_time[rpid] = dist_to_dest;
+        rpidx_distance[rpid] = dist_to_dest;
     }
 
-    bool is_dest(unsigned int rpid) const {return map_date_time.find(rpid) != map_date_time.end();}
+    bool is_dest(unsigned int rpid) const {return rpidx_distance[rpid] != std::numeric_limits<float>::max();}
 
     bool ajouter_best(unsigned int rpid, const type_retour &t, int cnt) {
-        auto it = map_date_time.find(rpid);
-        if(it != map_date_time.end()) {
-            if(t.arrival + it->second <= best_now.arrival) {
+//        auto it = map_date_time.find(rpid);
+        if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
+            if(t.arrival + rpidx_distance[rpid] <= best_now.arrival) {
                 best_now = t;
-                best_now.arrival = best_now.arrival + it->second;
-                best_now.departure = best_now.departure + it->second;
+                best_now.arrival = best_now.arrival + rpidx_distance[rpid];
+                best_now.departure = best_now.departure + rpidx_distance[rpid];
                 best_now_rpid = rpid;
                 count = cnt;
                 return true;
@@ -86,12 +86,14 @@ struct best_dest {
     }
 
     bool ajouter_best_reverse(unsigned int rpid, const type_retour &t, int cnt) {
-        auto it = map_date_time.find(rpid);
-        if(it != map_date_time.end()) {
-            if(t.departure != DateTime::min && (t.departure - it->second) >= best_now.departure) {
+//        auto it = map_date_time.find(rpid);
+//        if(it != map_date_time.end()) {
+
+        if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
+        if(t.departure != DateTime::min && (t.departure - rpidx_distance[rpid]) >= best_now.departure) {
                 best_now = t;
-                best_now.arrival = t.arrival - it->second;
-                best_now.departure = t.departure - it->second;
+                best_now.arrival = t.arrival - rpidx_distance[rpid];
+                best_now.departure = t.departure - rpidx_distance[rpid];
                 best_now_rpid = rpid;
                 count = cnt;
                 return true;
@@ -100,15 +102,17 @@ struct best_dest {
         return false;
     }
 
-    void reinit() {
-        map_date_time.clear();
+    void reinit(size_t nb_rpid) {
+//        map_date_time.clear();
+        rpidx_distance.clear();
+        rpidx_distance.insert(rpidx_distance.end(), nb_rpid, std::numeric_limits<float>::max());
         best_now = type_retour();
         best_now_rpid = std::numeric_limits<unsigned int>::max();
         count = 0;
     }
 
-    void reinit(const DateTime &borne, const bool clockwise) {
-        reinit();
+    void reinit(size_t nb_rpid, const DateTime &borne, const bool clockwise) {
+        reinit(nb_rpid);
         if(clockwise)
             best_now.arrival = borne;
         else

@@ -96,10 +96,11 @@ int RAPTOR::tardiest_trip(const type::Route & route, const unsigned int order, c
 void RAPTOR::make_queue() {
     Q.assign(data.pt_data.routes.size(), std::numeric_limits<int>::max());
 
+    auto begin = data.pt_data.route_points.begin();
     for(const type::Route & route : data.pt_data.routes) {
         if(routes_valides.test(route.idx)) {
-            for(auto it_rp = data.pt_data.route_points.begin() + route.route_point_list.front();
-                it_rp != data.pt_data.route_points.begin() + route.route_point_list.back() +1; ++it_rp) {
+            for(auto it_rp = begin + route.route_point_list.front();
+                it_rp != begin + route.route_point_list.back() +1; ++it_rp) {
                 if(marked_rp.test(it_rp->idx)) {
                     Q[route.idx] = it_rp->order;
                     break;
@@ -123,13 +124,13 @@ void RAPTOR::make_queue() {
 
  void RAPTOR::make_queuereverse() {
     Q.assign(data.pt_data.routes.size(), std::numeric_limits<int>::max());
+    auto begin = data.pt_data.route_points.rbegin() + data.pt_data.route_points.size() ;
 
     for(const type::Route & route : data.pt_data.routes) {
         if(routes_valides.test(route.idx)) {
 
-
-            for(auto it_rp = data.pt_data.route_points.rbegin() + data.pt_data.route_points.size() - route.route_point_list.back() - 1 ;
-                it_rp != data.pt_data.route_points.rbegin() + data.pt_data.route_points.size() - route.route_point_list.front(); ++it_rp) {
+            for(auto it_rp = begin - route.route_point_list.back() - 1 ;
+                it_rp != begin - route.route_point_list.front(); ++it_rp) {
                 if(marked_rp.test(it_rp->idx)) {
                     Q[route.idx] = it_rp->order;
                     break;
@@ -207,7 +208,7 @@ void RAPTOR::marcheapied() {
         DateTime earliest_departure = earliest_arrival + 120;
         //On marque tous les route points du stop point
         for(auto rpidx : data.pt_data.stop_points[stop_point_idx].route_point_list) {
-            if(earliest_departure  < best[rpidx].arrival) {
+            if(rpidx != earliest_rp && earliest_departure  < best[rpidx].arrival) {
                const type_retour nRetour = type_retour(earliest_departure, earliest_departure, earliest_rp);
                best[rpidx] = nRetour;
                retour[count][rpidx] = nRetour;
@@ -324,13 +325,13 @@ void RAPTOR::init(std::vector<std::pair<type::idx_t, double> > departs,
         if(clockwise) {
             retour.push_back(data.dataRaptor.retour_constant);
             best = data.dataRaptor.retour_constant;
-            b_dest.reinit(borne, clockwise);
+            b_dest.reinit(data.pt_data.route_points.size(), borne, clockwise);
         } else {
             retour.push_back(data.dataRaptor.retour_constant_reverse);
             best = data.dataRaptor.retour_constant_reverse;
             if(borne == DateTime::inf)
                 borne = DateTime::min;
-            b_dest.reinit(borne, clockwise);
+            b_dest.reinit(data.pt_data.route_points.size(), borne, clockwise);
         }
     }
 
@@ -401,7 +402,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
     boucleRAPTORreverse();
 
     if(b_dest.best_now.type != uninitialized) {
-        auto temp = makePathesreverse(destinations);
+        auto temp = makePathesreverse(destinations, departs);
         result.insert(result.end(), temp.begin(), temp.end());
         return result;
     }
@@ -474,7 +475,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
             init(departs, destinations, b.best_now.departure, dt_depart, false, true);
             boucleRAPTORreverse();
             if(b_dest.best_now.type != uninitialized){
-                auto temp = makePathesreverse(destinations);
+                auto temp = makePathesreverse(destinations, departs);
                 auto path = temp.back();
                 path.request_time = boost::posix_time::ptime(data.meta.production_date.begin(),
                 boost::posix_time::seconds(dt_depart.hour()));
@@ -516,7 +517,7 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
             init(departs, destinations, dt_depart, b.best_now.departure, true, true);
             boucleRAPTOR();
             if(b_dest.best_now.type != uninitialized){
-                auto temp = makePathes(departs);
+                auto temp = makePathes(departs, destinations);
                 auto path = temp.back();
                 path.request_time = boost::posix_time::ptime(data.meta.production_date.begin(),
                                                              boost::posix_time::seconds(dt_depart.hour()));
@@ -552,7 +553,7 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
     boucleRAPTOR();
 
     if(b_dest.best_now.type != uninitialized) {
-        auto temp = makePathes(departs);
+        auto temp = makePathes(departs, destinations);
         result.insert(result.end(), temp.begin(), temp.end());
     }
     return result;
@@ -845,16 +846,18 @@ void RAPTOR::boucleRAPTORreverse(){
     raptor_loop(visitor);
 }
 
-std::vector<Path> RAPTOR::makePathes(std::vector<std::pair<type::idx_t, double> > departs) {
+std::vector<Path> RAPTOR::makePathes(std::vector<std::pair<type::idx_t, double> > departs, std::vector<std::pair<type::idx_t, double> > destinations) {
     std::vector<Path> result;
 
     for(unsigned int i=0;i<=count;++i) {
         DateTime dt;
         int rpid = std::numeric_limits<int>::max();
-        for(auto dest : b_dest.map_date_time) {
-            if(retour[i][dest.first].type != uninitialized && retour[i][dest.first].arrival + dest.second < dt) {
-                dt = best[dest.first].arrival + dest.second;
-                rpid = dest.first;
+        for(auto spid_dist : destinations) {
+            for(auto dest : data.pt_data.stop_points[spid_dist.first].route_point_list) {
+                if(retour[i][dest].type != uninitialized && retour[i][dest].arrival + spid_dist.second < dt) {
+                    dt = best[dest].arrival + spid_dist.second;
+                    rpid = dest;
+                }
             }
         }
         if(rpid != std::numeric_limits<int>::max())
@@ -868,16 +871,18 @@ std::vector<Path> RAPTOR::makePathes(std::vector<std::pair<type::idx_t, double> 
 
 
 
-std::vector<Path> RAPTOR::makePathesreverse(std::vector<std::pair<type::idx_t, double> > departs) {
+std::vector<Path> RAPTOR::makePathesreverse(std::vector<std::pair<type::idx_t, double> > departs, std::vector<std::pair<type::idx_t, double> > destinations) {
     std::vector<Path> result;
 
     DateTime dt = DateTime::min;
     for(unsigned int i=0;i<=count;++i) {
         int rpid = std::numeric_limits<int>::max();
-        for(auto dest : b_dest.map_date_time) {
-            if(retour[i][dest.first].type != uninitialized && retour[i][dest.first].departure - dest.second > dt) {
-                dt = best[dest.first].departure - dest.second;
-                rpid = dest.first;
+        for(auto spid_dist : destinations) {
+            for(auto dest : data.pt_data.stop_points[spid_dist.first].route_point_list) {
+                if(retour[i][dest].type != uninitialized && retour[i][dest].departure - spid_dist.second > dt) {
+                    dt = best[dest].departure - spid_dist.second;
+                    rpid = dest;
+                }
             }
         }
         if(rpid != std::numeric_limits<int>::max())

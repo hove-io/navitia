@@ -66,9 +66,9 @@ struct RAPTOR : public AbstractRouter
     std::vector<Path> compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
                               int departure_day, DateTime borne, bool clockwise = true);
     ///Construit tous chemins trouvés
-    std::vector<Path> makePathes(std::vector<std::pair<type::idx_t, double> > departs);
+    std::vector<Path> makePathes(std::vector<std::pair<type::idx_t, double> > departs, std::vector<std::pair<type::idx_t, double> > destinations);
     ///Construit tous les chemins trouvés, lorsque le calcul est lancé dans le sens inverse
-    std::vector<Path> makePathesreverse(std::vector<std::pair<type::idx_t, double> > departs);
+    std::vector<Path> makePathesreverse(std::vector<std::pair<type::idx_t, double> > departs, std::vector<std::pair<type::idx_t, double> > destinations);
 
     ///Calcul d'itinéraires dans le sens horaire à partir de plusieurs stop points de départs, vers plusieurs stoppoints d'arrivée, à une heure donnée
     std::vector<Path> 
