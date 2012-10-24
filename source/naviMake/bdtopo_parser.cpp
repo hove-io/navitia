@@ -26,8 +26,8 @@ void BDTopoParser::load_city(navimake::Data& data){
         cols[row[i]] = i;
     }
 
-    size_t name = cols["NOM"];
-    size_t insee = cols["CODE_INSEE"];
+    size_t name = cols["nom"];
+    size_t insee = cols["code_insee"];
     
     for(row = reader.next(); !reader.eof() ;row = reader.next()){
         if(row.size() < 2)
@@ -188,7 +188,7 @@ void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
 
     unsigned int idx=0;
 
-    BOOST_FOREACH(auto way, way_map){
+    for(auto way : way_map){
         way.second.sort_house_number();
         geo_ref.ways.push_back(way.second);
         geo_ref.ways.back().idx = idx;        
