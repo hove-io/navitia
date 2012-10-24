@@ -41,7 +41,7 @@ public:
     static DateTime min;
 
     DateTime() : datetime(std::numeric_limits<uint32_t>::max()){}
-    DateTime(int date, int hour) : datetime((date << date_offset) + hour) {}
+    DateTime(int date, int hour) : datetime((date << date_offset) + hour) {normalize();}
     DateTime(const DateTime & dt) : datetime(dt.datetime) {}
 
     bool operator<(DateTime other) const {
