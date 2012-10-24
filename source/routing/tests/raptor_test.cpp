@@ -550,6 +550,11 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
     type::PT_Data & d = data.pt_data;
     auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 8*3600 + 15*60, 0);
 
+    for(auto r : res1) {
+        std::cout << std::endl << std::endl << "Itineraire " << std::endl;
+        r.print(d);
+    }
+
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
     auto res = res1.back();

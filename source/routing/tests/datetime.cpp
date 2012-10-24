@@ -46,6 +46,24 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     BOOST_CHECK_EQUAL(d.hour(), 9);
 }
 
+
+BOOST_AUTO_TEST_CASE(passe_minuit_update){
+    DateTime d(10, 23*3600);
+
+    d.update(10);
+    BOOST_CHECK_EQUAL(d.date(), 11);
+    BOOST_CHECK_EQUAL(d.hour(), 10);
+}
+
+BOOST_AUTO_TEST_CASE(passe_minuit_update_reverse){
+    DateTime d(1, 300);
+
+    d.updatereverse(23*3600);
+    BOOST_CHECK_EQUAL(d.date(), 0);
+    BOOST_CHECK_EQUAL(d.hour(), 23*3600);
+}
+
+
 BOOST_AUTO_TEST_CASE(decrement){
     DateTime d(2, 100);
     d.decrement(50);
@@ -55,3 +73,11 @@ BOOST_AUTO_TEST_CASE(decrement){
     BOOST_CHECK_EQUAL(d.date(), 1);
     BOOST_CHECK_EQUAL(d.hour(), 24*3600 - 50);
 }
+
+BOOST_AUTO_TEST_CASE(init2) {
+    DateTime d(1, 24*3600 + 10);
+    BOOST_CHECK_EQUAL(d.date(), 2);
+    BOOST_CHECK_EQUAL(d.hour(), 10);
+}
+
+
