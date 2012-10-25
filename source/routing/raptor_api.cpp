@@ -180,6 +180,9 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
         // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
         if(datetimes.size() == 1){
             result = tmp;
+            for(auto & path : result){
+                path.request_time = datetime;
+            }
             if(result.size() == 0){
                 response.mutable_planner()->set_response_type(pbnavitia::NO_SOLUTION);
                 return response;
