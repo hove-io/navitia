@@ -499,6 +499,8 @@ Path StreetNetworkWorker::get_path(type::idx_t idx, bool use_second){
             result = this->geo_ref.build_path(projection.target, this->predecessors2);
             result.length = distances2[projection.target] + projection.target_distance;
         }
+        std::reverse(result.path_items.begin(), result.path_items.end());
+        std::reverse(result.coordinates.begin(), result.coordinates.end());
     }
 
     return result;
