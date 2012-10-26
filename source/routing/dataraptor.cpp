@@ -107,7 +107,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
                         return (st1.departure_time % SECONDS_PER_DAY == st2.departure_time % SECONDS_PER_DAY && stidx1 < stidx2) ||
                                (st1.departure_time % SECONDS_PER_DAY <  st2.departure_time % SECONDS_PER_DAY);});
             ///Suppresion des montées interdites
-            std::remove_if(vec_stdix.begin(), vec_stdix.end(), [&](type::idx_t &st){return !data.stop_times[st].pick_up_allowed();});
+            //std::remove_if(vec_stdix.begin(), vec_stdix.end(), [&](type::idx_t &st){return !data.stop_times[st].pick_up_allowed();});
             st_idx_forward.insert(st_idx_forward.end(), vec_stdix.begin(), vec_stdix.end());
 
             for(auto stidx : vec_stdix) {
@@ -135,7 +135,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
                         return (st1.arrival_time % SECONDS_PER_DAY == st2.arrival_time % SECONDS_PER_DAY && stidx1 > stidx2) ||
                                (st1.arrival_time % SECONDS_PER_DAY >  st2.arrival_time % SECONDS_PER_DAY);});
             ///Suppresion des descentes interdites
-            std::remove_if(vec_stdix.begin(), vec_stdix.end(), [&](type::idx_t &st){return !data.stop_times[st].drop_off_allowed();});
+            //std::remove_if(vec_stdix.begin(), vec_stdix.end(), [&](type::idx_t &st){return !data.stop_times[st].drop_off_allowed();});
 
             st_idx_backward.insert(st_idx_backward.end(), vec_stdix.begin(), vec_stdix.end());
             for(auto stidx : vec_stdix) {

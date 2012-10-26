@@ -20,7 +20,8 @@ int RAPTOR::earliest_trip(const type::Route & route, const unsigned int order, c
 
     //On renvoie le premier trip valide
     for(; it != end; ++it) {
-        if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date))
+        if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date)
+                && data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]].pick_up_allowed())
             return data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]].vehicle_journey_idx;
         ++idx;
     }
@@ -30,7 +31,8 @@ int RAPTOR::earliest_trip(const type::Route & route, const unsigned int order, c
     ++date;
     idx = begin - data.dataRaptor.departure_times.begin();
     for(it = begin; it != end; ++it) {
-        if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date))
+        if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date)
+                && data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]].pick_up_allowed())
             return data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]].vehicle_journey_idx;
         ++idx;
     }
@@ -64,7 +66,8 @@ int RAPTOR::tardiest_trip(const type::Route & route, const unsigned int order, c
     auto date = dt.date();
     //On renvoie le premier trip valide
     for(; it != end; ++it) {
-        if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date))
+        if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date)
+                && data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]].drop_off_allowed())
             return data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]].vehicle_journey_idx;
         ++idx;
     }
@@ -74,7 +77,8 @@ int RAPTOR::tardiest_trip(const type::Route & route, const unsigned int order, c
         --date;
         idx = begin - data.dataRaptor.arrival_times.begin();
         for(it = begin; it != end; ++it) {
-            if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date))
+            if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date)
+                    && data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]].drop_off_allowed())
                 return data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]].vehicle_journey_idx;
             ++idx;
         }
