@@ -415,30 +415,23 @@ DateTime RAPTOR::get_temps_depart(const DateTime &dt_depart,const std::vector<st
     int hour = dt_depart.hour();
     while(!stop) {
 
-        if(retour[cnt][current_rpid].type == connection) {
+        if(retour[cnt][current_rpid].type == connection || retour[cnt][current_rpid].type == connection_extension
+                ||  retour[cnt][current_rpid].type == connection_guarantee) {
             current_rpid = retour[cnt][current_rpid].rpid_embarquement;
             hour = retour[cnt][current_rpid].arrival.hour();
         } else if(retour[cnt][current_rpid].type == vj){
-            type::StopTime prec_st, st = data.pt_data.stop_times[retour[cnt][current_rpid].stop_time_idx];
+            type::StopTime st = data.pt_data.stop_times[retour[cnt][current_rpid].stop_time_idx];
             type::idx_t boarding = retour[cnt][current_rpid].rpid_embarquement;
-            while(current_rpid != boarding) {
-                prec_st = st;
-                st = data.pt_data.stop_times[st.idx -1];
-                current_rpid = st.route_point_idx;
-            }
-            hour = st.departure_time;
+            current_rpid = boarding;
+            hour = data.pt_data.stop_times[data.pt_data.vehicle_journeys[st.vehicle_journey_idx].stop_time_list[data.pt_data.route_points[current_rpid].order]].departure_time;
             --cnt;
         }
 
-        for(auto spidx: departs) {
-            for(auto item : data.pt_data.stop_points[spidx.first].route_point_list) {
-                stop = stop || item == current_rpid;
-            }
-        }
-
+        stop = retour[cnt][current_rpid].type == depart;
     }
 
-    dt.update(hour);
+    auto it_depart = std::find_if(departs.begin(), departs.end(), [&](std::pair<type::idx_t, double> p1){return p1.first == data.pt_data.route_points[current_rpid].stop_point_idx;});
+    dt.update(hour - std::ceil(it_depart->second / 1.38));
     return dt;
 }
 
