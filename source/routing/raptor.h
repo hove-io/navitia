@@ -47,7 +47,7 @@ struct RAPTOR : public AbstractRouter
                                                marked_rp(data.pt_data.route_points.size()),
                                                marked_sp(data.pt_data.stop_points.size()),
                                                routes_valides(data.pt_data.routes.size()),
-                                               Q(data.dataRaptor.routes.size()) {
+                                               Q(data.pt_data.routes.size()) {
         retour.assign(20, data.dataRaptor.retour_constant);
     }
 
