@@ -30,10 +30,6 @@ struct dataRAPTOR {
     std::vector<type::idx_t> vp_idx_backward;
     std::vector<uint32_t> first_stop_time;
     std::vector<uint32_t> nb_trips;
-    std::vector<pair_int> sp_indexrouteorder;
-    std::vector<pair_int> sp_routeorder_const;
-    std::vector<pair_int> sp_indexrouteorder_reverse;
-    std::vector<pair_int> sp_routeorder_const_reverse;
     map_int_pint_t retour_constant;
     map_int_pint_t retour_constant_reverse;
 

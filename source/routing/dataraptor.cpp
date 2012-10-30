@@ -159,53 +159,6 @@ void dataRAPTOR::load(const type::PT_Data &data)
         }
     }
 
-    sp_indexrouteorder.resize(data.stop_points.size());
-    sp_indexrouteorder_reverse.resize(data.stop_points.size());
-    for(auto &sp : data.stop_points) {
-        pair_int temp_index, temp_index_reverse;
-        temp_index.first = sp_routeorder_const.size();
-        temp_index_reverse.first = sp_routeorder_const_reverse.size();
-        std::map<navitia::type::idx_t, int> temp, temp_reverse;
-        for(navitia::type::idx_t idx_rp : sp.route_point_list) {
-            auto &rp = data.route_points[idx_rp];
-            //for(auto rid : ridx_route[rp.route_idx]) {
-            auto rid = rp.route_idx;
-            auto it = temp.find(rid), it_reverse = temp_reverse.find(rid);
-            if(it == temp.end()) {
-                temp[rid] = rp.order;
-            } else if(temp[rp.route_idx] > rp.order) {
-                temp[rid] = rp.order;
-            }
-            if(it_reverse == temp_reverse.end()) {
-                temp_reverse[rid] = rp.order;
-            } else if(temp_reverse[rp.route_idx] < rp.order) {
-                temp_reverse[rid] = rp.order;
-            }
-        }
-
-        std::vector<pair_int> tmp;
-        for(auto it : temp) {
-            tmp.push_back(it);
-        }
-        //        std::sort(tmp.begin(), tmp.end(), [&](pair_int p1, pair_int p2){return routes[p1.first].vp < routes[p2.first].vp;});
-        sp_routeorder_const.insert(sp_routeorder_const.end(), tmp.begin(), tmp.end());
-
-
-        tmp.clear();
-
-        for(auto it : temp_reverse) {
-            tmp.push_back(it);
-        }
-        //        std::sort(tmp.begin(), tmp.end(), [&](pair_int p1, pair_int p2){return routes[p1.first].vp < routes[p2.first].vp;});
-        sp_routeorder_const_reverse.insert(sp_routeorder_const_reverse.end(), tmp.begin(), tmp.end());
-
-        temp_index.second = sp_routeorder_const.size() - temp_index.first;
-        temp_index_reverse.second = sp_routeorder_const_reverse.size() - temp_index_reverse.first;
-        sp_indexrouteorder[sp.idx] = temp_index;
-        sp_indexrouteorder_reverse[sp.idx] = temp_index_reverse;
-    }
-
-
      std::cout << "Nb data stop times : " << data.stop_times.size() << " stopTimes : " << arrival_times.size()
                << " nb foot path : " << foot_path.size() << " Nombre de stop points : " << data.stop_points.size() << "nb vp : " << data.validity_patterns.size() << " nb routes " << routes.size() <<  std::endl;
 
