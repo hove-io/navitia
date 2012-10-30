@@ -138,13 +138,13 @@ namespace webservice
                 boost::posix_time::ptime start(boost::posix_time::microsec_clock::local_time());
                 pre_compute(request, d);
                 ResponseData resp;
-                try{
+              //  try{
                     resp = apis[api](request, d);
-                } catch(const std::exception & e){
+               /* } catch(const std::exception & e){
                     on_std_exception(e, request, resp, d);
                 } catch(...){
                     on_unknown_exception(request, resp, d);
-                }
+                }*/
 
                 resp.api = api;
                 post_compute(request, resp);

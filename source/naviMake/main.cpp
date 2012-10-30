@@ -62,9 +62,8 @@ int main(int argc, char * argv[])
 
         navimake::connectors::BDTopoParser topo_parser(topo_path);
         //gtfs ne contient pas le référentiel des villes, on le charges depuis la BDTOPO
-        topo_parser.load_city(data);        
+        topo_parser.load_city(data);
         topo_parser.load_georef(nav_data.geo_ref);
-        nav_data.set_cities(); // Assigne les villes aux voiries du filaire
     }
     sn = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
@@ -112,12 +111,14 @@ int main(int argc, char * argv[])
 
     start = pt::microsec_clock::local_time();
     data.transform(nav_data.pt_data);
+
     transform = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     start = pt::microsec_clock::local_time();
     nav_data.build_first_letter();
     nav_data.build_proximity_list();
     nav_data.build_external_code();
+    nav_data.set_cities(); // Assigne les villes aux voiries du filaire [depend des ext_code]
     std::cout << "On va construire les correspondances" << std::endl;
     {Timer t("Construction des correspondances");  nav_data.pt_data.build_connections();}
     first_letter = (pt::microsec_clock::local_time() - start).total_milliseconds();

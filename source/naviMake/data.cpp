@@ -272,12 +272,5 @@ void Data::build_relations(navitia::type::PT_Data &data){
         std::sort(route.vehicle_journey_list.begin(), route.vehicle_journey_list.end(), sort_vehicle_journey_list(data));
     }
 
-
-
-
-
-
-
-
     // BOOST_FOREACH(navitia::type::Company & company, data.companies){}
 }
