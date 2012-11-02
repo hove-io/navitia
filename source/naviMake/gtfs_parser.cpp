@@ -33,19 +33,19 @@ int time_to_int(const std::string & time) {
     return result;
 }
 
-GtfsParser::GtfsParser(const std::string & path) : 
+GtfsParser::GtfsParser(const std::string & path) :
     path(path), production_date(boost::gregorian::date(), boost::gregorian::date()){}
 
-void GtfsParser::fill(Data & data){
-    production_date = find_production_date();
+void GtfsParser::fill(Data & data, const std::string beginning_date){
+    production_date = find_production_date(beginning_date);
     fill_mode_types(data);
     parse_agency(data);
     parse_stops(data);
+    parse_routes(data);
+    parse_transfers(data);
     parse_calendar(data);
     parse_calendar_dates(data);
-    parse_routes(data);
     parse_trips(data);
-    parse_transfers(data);
     parse_stop_times(data);
     normalize_extcodes(data);
     build_routes(data);
@@ -131,6 +131,7 @@ void GtfsParser::parse_agency(Data & data){
     std::string line;
     if(!getline(ifile, line)) {
         std::cerr << "Impossible d'ouvrir agency.txt" << std::endl;
+        throw std::exception();
         return;
     }
     int id_c = -1, name_c = -1;
@@ -144,16 +145,23 @@ void GtfsParser::parse_agency(Data & data){
             name_c = i;
     }
 
+    int id = 1;
 
     while(getline(ifile, line)) {
         boost::trim(line);
+        if(line == "")
+            continue;
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
         nm::Network * network = new nm::Network();
-        network->external_code = elts[id_c];
+        if(id_c != -1)
+            network->external_code = elts[id_c];
+        else
+            network->external_code = boost::lexical_cast<std::string>(id);
         network->name = elts[name_c];
         data.networks.push_back(network);
         agency_map[network->external_code] = network;
+        ++id;
     }
 }
 
@@ -171,6 +179,7 @@ void GtfsParser::parse_stops(Data & data) {
     std::string line;
     if(!getline(ifile, line)) {
         std::cerr << "Impossible d'ouvrir stops.txt" << std::endl;
+        throw std::exception();
         return;
     }
 
@@ -201,7 +210,9 @@ void GtfsParser::parse_stops(Data & data) {
     }
 
     if(id_c == -1 || code_c == -1 || lat_c == -1 || lon_c == -1 || name_c == -1) {
-        std::cerr << "Il manque au moins une colonne dans le fichier stops.txt" << std::endl;
+        std::cerr << "Il manque au moins une colonne dans le fichier stops.txt" << std::endl
+                  << "stop_id : " << (id_c!=-1) << " stop_code : " << (code_c!=-1) << " stop_name : " << (name_c!=-1) << " stop_lat : " << (lat_c!=-1)
+                  << " stop_lon : " << (lon_c != -1) << std::endl;
         return;
     }
 
@@ -209,10 +220,14 @@ void GtfsParser::parse_stops(Data & data) {
 
     while(getline(ifile, line)) {
         boost::trim(line);
+        if(line == "")
+            continue;
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
         nm::StopPoint * sp = new nm::StopPoint();
         try{
+            boost::algorithm::trim(elts[lon_c]);
+            boost::algorithm::trim(elts[lat_c]);
             sp->coord.x = boost::lexical_cast<double>(elts[lon_c]);
             sp->coord.y = boost::lexical_cast<double>(elts[lat_c]);
         }
@@ -231,7 +246,7 @@ void GtfsParser::parse_stops(Data & data) {
 
 
             // Si c'est un stopArea
-            if(elts[type_c] == "1") {
+            if(type_c != -1 && elts[type_c] == "1") {
                 nm::StopArea * sa = new nm::StopArea();
                 sa->coord = sp->coord;
                 sa->name = sp->name;
@@ -244,10 +259,14 @@ void GtfsParser::parse_stops(Data & data) {
             else {
                 stop_map[sp->external_code] = sp;
                 data.stop_points.push_back(sp);
-                if(elts[parent_c] != "") // On sauvegarde la référence à la zone d'arrêt
+                if(parent_c!=-1 && elts[parent_c] != "") {// On sauvegarde la référence à la zone d'arrêt
                     stoppoint_areas.push_back(std::make_pair(sp, elts[parent_c]));
+                    if(sa_spmap.find(elts[parent_c]) == sa_spmap.end()) {
+                        sa_spmap.insert(std::make_pair(elts[parent_c], vector_sp()));
+                    }
+                    sa_spmap[elts[parent_c]].push_back(sp);
+                }
             }
-
         }
     }
 
@@ -299,55 +318,83 @@ void GtfsParser::parse_transfers(Data & data) {
             time_c = i;
     }
 
-    if(from_c == -1 || to_c == -1 || time_c == -1){
-        std::cerr << "Il manque au moins une colonne dans transfers.txt" << std::endl;
+    if(from_c == -1 || to_c == -1){
+        std::cerr << "Il manque au moins une colonne dans transfers.txt" << std::endl << "from_stop_id : " << (from_c!=-1) << " to_stop_id : " << (to_c!=-1) << std::endl;
         return;
     }
 
     int nblines = 0;
     while(getline(ifile, line)) {
         boost::trim(line);
+        if(line == "")
+            continue;
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
 
-        nm::Connection * connection = new nm::Connection();
+        typedef boost::unordered_map<std::string, navimake::types::StopPoint*>::iterator sp_iterator;
+        vector_sp departures, arrivals;
         boost::unordered_map<std::string, navimake::types::StopPoint*>::iterator it;
         it = this->stop_map.find(elts[from_c]);
         if(it == this->stop_map.end()){
-            std::cerr << "Ipmossible de trouver le stop point " << elts[from_c] << std::endl;
-            delete connection;
-            continue;
+            std::unordered_map<std::string, vector_sp>::iterator it_sa = this->sa_spmap.find(elts[from_c]);
+            if(it_sa == this->sa_spmap.end()) {
+                std::cerr << "Impossible de trouver le stop point (from) " << elts[from_c] << std::endl;
+                continue;
+            } else {
+                departures = it_sa->second;
+            }
         } else {
-            connection->departure_stop_point = it->second;
+            departures.push_back(it->second);
         }
 
         it = this->stop_map.find(elts[to_c]);
         if(it == this->stop_map.end()){
-            std::cerr << "Ipmossible de trouver le stop point " << elts[from_c] << std::endl;
-            delete connection;
-            continue;
+            std::unordered_map<std::string, vector_sp>::iterator it_sa = this->sa_spmap.find(elts[to_c]);
+            if(it_sa == this->sa_spmap.end()) {
+                std::cerr << "Impossible de trouver le stop point (to) " << elts[to_c] << std::endl;
+                continue;
+            } else {
+                arrivals = it_sa->second;
+            }
         } else {
-           connection->destination_stop_point  = it->second;
-        }
-        nblines++;
-        connection->connection_kind = nm::Connection::LinkConnection;
-        try{
-            connection->duration = boost::lexical_cast<int>(elts[time_c]);
-        } catch (...) {
-            connection->duration = 120;
+            arrivals.push_back(it->second);
         }
 
-        data.connections.push_back(connection);
+        for(auto from_sp : departures) {
+            for(auto to_sp : arrivals) {
+                nm::Connection * connection = new nm::Connection();
+                connection->departure_stop_point = from_sp;
+                connection->destination_stop_point  = to_sp;
+                connection->connection_kind = nm::Connection::LinkConnection;
+                if(time_c != -1) {
+                    try{
+                        connection->duration = boost::lexical_cast<int>(elts[time_c]);
+                    } catch (...) {
+                        connection->duration = 120;
+                    }
+                } else {
+                   connection->duration = 120;
+                }
+
+                data.connections.push_back(connection);
+            }
+        }
+        nblines++;
     }
 
     std::cout << nblines << " correspondances prises en compte sur " << data.connections.size() << std::endl;
 }
 
 void GtfsParser::parse_calendar(Data & data) {
+
     data.validity_patterns.reserve(10000);
 
     std::cout << "On parse : " << (path + "/calendar.txt").c_str() << std::endl;
     std::fstream ifile((path + "/calendar.txt").c_str());
+    if(!ifile.is_open()) {
+        std::cout << "Aucun fichier calendar.txt" << std::endl;
+        return;
+    }
     remove_bom(ifile);
     std::string line;
 
@@ -384,7 +431,10 @@ void GtfsParser::parse_calendar(Data & data) {
             end_date_c = i;
     }
     if(id_c == -1 || monday_c == -1 || tuesday_c == -1 || wednesday_c == -1 || thursday_c == -1 || friday_c == -1 || saturday_c == -1 || sunday_c == -1 || start_date_c == -1 || end_date_c == -1){
-        std::cerr << "Il manque au moins une colonne dans calendar.txt" << std::endl;
+        std::cerr << "Il manque au moins une colonne dans calendar.txt" << std::endl
+                  << "service_id : " << (id_c != -1) << "monday : " << (monday_c!=-1) << " tuesday : " << (tuesday_c!=-1) << " wednesday : " << (wednesday_c!=-1)
+                  << " thursday : " << (thursday_c!=-1) << " friday : " << (friday_c!=-1) << " saturday : " << (saturday_c!=-1) << " sunday : " << (sunday_c!=-1)
+                  << " start_date : " << (start_date_c!=-1) << " end_date : " << (end_date_c!=-1) << std::endl;
         return;
     }
 
@@ -393,6 +443,8 @@ void GtfsParser::parse_calendar(Data & data) {
     while(getline(ifile, line)) {
         nblignes ++;
         boost::trim(line);
+        if(line == "")
+            continue;
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
 
@@ -411,12 +463,12 @@ void GtfsParser::parse_calendar(Data & data) {
 
             vp = new nm::ValidityPattern(production_date.begin());
 
-
             for(unsigned int i = 0; i<366;++i)
                 vp->remove(i);
 
             //Initialisation des jours de la date de départ jusqu'à la date de fin du service
-            boost::gregorian::date_period period = boost::gregorian::date_period(boost::gregorian::from_undelimited_string(elts[start_date_c]), boost::gregorian::from_undelimited_string(elts[end_date_c]));
+            boost::gregorian::date b_date = boost::gregorian::from_undelimited_string(elts[start_date_c]);
+            boost::gregorian::date_period period = boost::gregorian::date_period((b_date > production_date.begin() ? b_date : production_date.begin()), boost::gregorian::from_undelimited_string(elts[end_date_c]));
             for(boost::gregorian::day_iterator it(period.begin()); it<period.end(); ++it) {
                 if(week[(*it).day_of_week()]) {
                     vp->add((*it));
@@ -463,12 +515,15 @@ void GtfsParser::parse_calendar_dates(Data & data){
             e_type_c = i;
     }
     if(id_c == -1 || date_c == -1 || e_type_c == -1){
-        std::cerr << "Il manque au moins une colonne dans calendar_dates.txt" << std::endl;
+        std::cerr << "Il manque au moins une colonne dans calendar_dates.txt" << std::endl
+                  << " service_id : " << (id_c!=-1) << " date : " << (date_c!=-1) << " exception_type : " << (e_type_c!=-1) << std::endl;
         return;
     }
 
     while(getline(ifile, line)) {
         boost::trim(line);
+        if(line == "")
+            continue;
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
 
@@ -504,6 +559,7 @@ void GtfsParser:: parse_routes(Data & data){
     std::string line;
     if(!getline(ifile, line)) {
         std::cerr << "Impossible d'ouvrir le fichier routes.txt" << std::endl;
+        throw std::exception();
         return;
     }
 
@@ -525,13 +581,16 @@ void GtfsParser:: parse_routes(Data & data){
         else if(elts[i] == "agency_id")
             agency_c = i;
     }
-    if(id_c == -1 || short_name_c == -1 || long_name_c == -1 || type_c == -1 || color_c == -1) {
-        std::cerr << "Il manque au moins une colonne dans routes.txt" << std::endl;
+    if(id_c == -1 || short_name_c == -1 || long_name_c == -1 || type_c == -1) {
+        std::cerr << "Il manque au moins une colonne dans routes.txt route_id : " << (id_c!=-1) << " route_short_name : "  << (short_name_c!=-1) <<
+                     " route long name : " << (long_name_c!=-1) << std::endl;
         return;
     }
     int ignored = 0;
     while(getline(ifile, line)) {
         boost::trim(line);
+        if(line == "")
+            continue;
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
 
@@ -540,17 +599,25 @@ void GtfsParser:: parse_routes(Data & data){
             line->external_code = elts[id_c];
             line->name = elts[long_name_c];
             line->code = elts[short_name_c];
-            line->color = elts[color_c];
+            if(color_c != -1)
+                line->color = elts[color_c];
+            else
+                line->color = "";
             line->additional_data = elts[long_name_c];
 
             boost::unordered_map<std::string, nm::ModeType*>::iterator it= mode_type_map.find(elts[type_c]);
             if(it != mode_type_map.end())
                 line->mode_type = it->second;
-
-            auto agency_it = agency_map.find(elts[agency_c]);
-            if(agency_it != agency_map.end())
-                line->network = agency_it->second;
-
+            if(agency_c != -1) {
+                auto agency_it = agency_map.find(elts[agency_c]);
+                if(agency_it != agency_map.end())
+                    line->network = agency_it->second;
+            }
+            else {
+                auto agency_it = agency_map.find("1");
+                if(agency_it != agency_map.end())
+                    line->network = agency_it->second;
+            }
 
             line_map[elts[id_c]] = line;
             data.lines.push_back(line);
@@ -575,6 +642,7 @@ void GtfsParser::parse_trips(Data & data) {
     std::string line;
     if(!getline(ifile, line)) {
         std::cerr << "Impossible d'ouvrir le fichier trips.txt" << std::endl;
+        throw std::exception();
         return;
     }
 
@@ -589,14 +657,15 @@ void GtfsParser::parse_trips(Data & data) {
             service_c = i;
         else if (elts[i] == "trip_id")
             trip_c = i;
-        else if (elts[i] == "trip_headsign")
+        else if(elts[i] == "trip_headsign")
             headsign_c = i;
-        else if (elts[i] == "block_id")
+        else if(elts[i] == "block_id")
             block_id_c = i;
     }
 
-    if (id_c == -1 || service_c == -1 || trip_c == -1 || headsign_c == -1 || block_id_c == -1){
-        std::cerr << "Il manque au moins une colonne dans trips.txt" << std::endl;
+    if (id_c == -1 || service_c == -1 || trip_c == -1){
+        std::cerr << "Il manque au moins une colonne dans trips.txt" << std::endl
+                  << "route_id : " << (id_c!=-1) << " service_id " << (service_c!=-1) << " trip_id : " << (trip_c!=-1) << std::endl;
         return;
     }
 
@@ -604,6 +673,8 @@ void GtfsParser::parse_trips(Data & data) {
     int ignored_vj = 0;
     while(getline(ifile, line)) {
         boost::trim(line);
+        if(line == "")
+            continue;
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
 
@@ -635,13 +706,19 @@ void GtfsParser::parse_trips(Data & data) {
                 boost::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(elts[trip_c]);
                 if(vj_it == vj_map.end()) {
                     nm::VehicleJourney * vj = new nm::VehicleJourney();
-                    vj->name = elts[headsign_c];
                     vj->external_code = elts[trip_c];
+                    if(headsign_c != -1)
+                        vj->name = elts[headsign_c];
+                    else
+                        vj->name = vj->external_code;
                     vj->validity_pattern = vp_xx;
                     vj->route = 0;
                     vj->tmp_line = line;
                     vj->mode = itm->second;
-                    vj->block_id = elts[block_id_c];
+                    if(block_id_c != -1)
+                        vj->block_id = elts[block_id_c];
+                    else
+                        vj->block_id = "";
                     vj_map[vj->external_code] = vj;
                     data.vehicle_journeys.push_back(vj);
                 }
@@ -752,7 +829,10 @@ void build_route_points(Data & data){
     for(nm::Route *route : data.routes){
         if(! route->route_point_list.empty()){
             nm::RoutePoint * last = route->route_point_list.back();
-            route->name = last->stop_point->stop_area->name;
+            if(last->stop_point->stop_area != NULL)
+                route->name = last->stop_point->stop_area->name;
+            else
+                route->name = last->stop_point->name;
         }
     }
     std::cout << "Nombre de route points : " << data.route_points.size() << std::endl;
@@ -766,6 +846,7 @@ void GtfsParser::parse_stop_times(Data & data) {
     std::string line;
     if(!getline(ifile, line)) {
         std::cerr << "Impossible d'ouvrir le fichier stop_times.txt" << std::endl;
+        throw std::exception();
         return;
     }
 
@@ -792,8 +873,10 @@ void GtfsParser::parse_stop_times(Data & data) {
             itl_c = i;
     }
 
-    if(id_c == -1 || arrival_c == -1 || departure_c == -1 || stop_c == -1 || stop_seq_c == -1 || pickup_c == -1 || drop_off_c == -1){
-        std::cerr << "Il manque au moins une colonne dans stop_times.txt" << std::endl;
+    if(id_c == -1 || arrival_c == -1 || departure_c == -1 || stop_c == -1 || stop_seq_c == -1){
+        std::cerr << "Il manque au moins une colonne dans stop_times.txt" << std::endl
+                  << "trip_id : " << (id_c=-1) << " arrival_time : " << (arrival_c!=-1) << " departure_time : " << (departure_c!=-1)
+                  << " stop_id : " << (stop_c!=-1) << " stop_sequence : " << (stop_seq_c!=-1) << std::endl;
         return;
     }
 
@@ -801,6 +884,8 @@ void GtfsParser::parse_stop_times(Data & data) {
     size_t count = 0;
     while(getline(ifile, line)) {
         boost::trim(line);
+        if(line == "")
+            continue;
         Tokenizer tok(line);
         std::vector<std::string> elts(tok.begin(), tok.end());
 
@@ -809,6 +894,7 @@ void GtfsParser::parse_stop_times(Data & data) {
         auto stop_it = stop_map.find(elts[stop_c]);
         if(vj_it == vj_map.end()) {
             std::cerr << "Impossible de trouver le vehicle_journey " << elts[id_c] <<   std::endl;
+            exit(1);
         }
         else if(stop_it == stop_map.end()){
             std::cerr << "Impossible de trouver le StopPoint " << elts[stop_c] << "!"<< std::endl;
@@ -821,9 +907,18 @@ void GtfsParser::parse_stop_times(Data & data) {
             //stop_time->route_point = route_point;
             stop_time->order = boost::lexical_cast<int>(elts[stop_seq_c]);
             stop_time->vehicle_journey = vj_it->second;
-            stop_time->ODT = (elts[pickup_c] == "2" && elts[drop_off_c] == "2");
-            stop_time->pick_up_allowed = elts[pickup_c] == "0";
-            stop_time->drop_off_allowed = elts[drop_off_c] == "0";
+            if(pickup_c != -1 && drop_off_c != -1)
+                stop_time->ODT = (elts[pickup_c] == "2" && elts[drop_off_c] == "2");
+            else
+                stop_time->ODT = false;
+            if(pickup_c != -1)
+                stop_time->pick_up_allowed = elts[pickup_c] == "0";
+            else
+                stop_time->pick_up_allowed = true;
+            if(drop_off_c != -1)
+                stop_time->drop_off_allowed = elts[drop_off_c] == "0";
+            else
+                stop_time->drop_off_allowed = true;
             if(itl_c != -1)
                 stop_time->local_traffic_zone = boost::lexical_cast<int>(elts[itl_c]);
             else
@@ -836,52 +931,179 @@ void GtfsParser::parse_stop_times(Data & data) {
     std::cout << "Nombre d'horaires : " << data.stops.size() << std::endl;
 }
 
-boost::gregorian::date_period GtfsParser::find_production_date() {
-    std::fstream ifile((path + "/calendar.txt").c_str());
+boost::gregorian::date_period GtfsParser::find_production_date(const std::string beginning_date) {
+    std::fstream ifile((path + "/stop_times.txt").c_str());
     remove_bom(ifile);
     std::string line;
-
-    if(!getline(ifile, line)){
-        std::cerr << "Impossible d'ouvrir le fichier calendar.txt" << std::endl;
+    if(!getline(ifile, line)) {
+        std::cerr << "Impossible d'ouvrir le fichier trips.txt" << std::endl;
         throw std::exception();
     }
-    
-    boost::gregorian::date start_date(boost::gregorian::max_date_time), end_date(boost::gregorian::min_date_time);
 
     boost::trim(line);
     Tokenizer tok_header(line);
     std::vector<std::string> elts(tok_header.begin(), tok_header.end());
-    int start_date_c = -1, end_date_c = -1;
-    for(size_t i = 0; i < elts.size(); i++) {
-        if (elts[i] == "start_date")
-            start_date_c = i;
-        else if (elts[i] == "end_date")
-            end_date_c = i;
+    int trip_c = -1;
+    for(size_t i = 0; i < elts.size(); i++){
+        if (elts[i] == "trip_id")
+            trip_c = i;
     }
-    if(start_date_c == -1 || end_date_c == -1){
-        std::cerr << "Il manque au moins une colonne dans calendar.txt" << std::endl;
+
+    if (trip_c == -1){
+        std::cerr << "Il manque au moinsla colonne trip_id dans stop_times.txt, pour trouver la production date " << std::endl
+                  << "trip_id : " << (trip_c != -1) << std::endl;
+        throw std::exception();
+    }
+    std::map<std::string, bool> trips;
+    while(getline(ifile, line)) {
+        boost::trim(line);
+        if(line == "")
+            continue;
+        Tokenizer tok(line);
+        std::vector<std::string> elts(tok.begin(), tok.end());
+        trips.insert(std::make_pair(elts[trip_c], true));
+    }
+
+
+    ifile.close();
+    ifile.open((path + "/trips.txt").c_str());
+    remove_bom(ifile);
+    if(!getline(ifile, line)) {
+        std::cerr << "Impossible d'ouvrir le fichier trips.txt" << std::endl;
         throw std::exception();
     }
 
+    boost::trim(line);
+    tok_header.assign(line);
+    elts.assign(tok_header.begin(), tok_header.end());
+    int service_c = -1;
+    trip_c = -1;
+    for(size_t i = 0; i < elts.size(); i++){
+        if (elts[i] == "service_id")
+            service_c = i;
+        else if(elts[i] == "trip_id")
+            trip_c = i;
+    }
+
+    if (service_c == -1 || trip_c == -1){
+        std::cerr << "Il manque au moins la colonne service_id ou la colonne trip_id dans trips.txt, pour trouver la production date" << std::endl
+                  << "trip_id : " << (trip_c != -1) << " service_id : " << (service_c != -1) << std::endl;
+        throw std::exception();
+    }
+    std::map<std::string, bool> services;
     while(getline(ifile, line)) {
         boost::trim(line);
+        if(line == "")
+            continue;
         Tokenizer tok(line);
-        elts.assign(tok.begin(), tok.end());
+        std::vector<std::string> elts(tok.begin(), tok.end());
+        if(trips.find(elts[trip_c]) != trips.end())
+            services.insert(std::make_pair(elts[service_c], true));
+    }
+    ifile.close();
 
-        boost::gregorian::date current_start_date = boost::gregorian::from_undelimited_string(elts[start_date_c]);
-        boost::gregorian::date current_end_date = boost::gregorian::from_undelimited_string(elts[end_date_c]);
 
-        if(current_start_date < start_date){
-            start_date = current_start_date;
+    ifile.open((path + "/calendar.txt").c_str());
+    remove_bom(ifile);
+    boost::gregorian::date start_date(boost::gregorian::max_date_time), end_date(boost::gregorian::min_date_time);
+
+    bool find_calendar = true;
+    if(getline(ifile, line)){
+        boost::trim(line);
+        Tokenizer tok_header(line);
+        std::vector<std::string> elts(tok_header.begin(), tok_header.end());
+        int start_date_c = -1, end_date_c = -1, service_c = -1;
+        for(size_t i = 0; i < elts.size(); i++) {
+            if (elts[i] == "start_date")
+                start_date_c = i;
+            else if (elts[i] == "end_date")
+                end_date_c = i;
+            else if (elts[i] == "service_id")
+                service_c = i;
         }
-        if(current_end_date > end_date){
-            end_date = current_end_date; 
+        if(start_date_c == -1 || end_date_c == -1 || service_c == -1){
+            std::cerr << "Il manque au moins une colonne dans calendar.txt" << std::endl
+                      << "start_date : " << (start_date_c!=-1) << " end_date : " << (end_date_c != -1) << " service_id : " << (service_c!=-1) << std::endl;
+            throw std::exception();
+        }
+
+        while(getline(ifile, line)) {
+            boost::trim(line);
+            if(line == "")
+                continue;
+            Tokenizer tok(line);
+            elts.assign(tok.begin(), tok.end());
+            if(services.find(elts[service_c]) != services.end()) {
+                boost::gregorian::date current_start_date = boost::gregorian::from_undelimited_string(elts[start_date_c]);
+                boost::gregorian::date current_end_date = boost::gregorian::from_undelimited_string(elts[end_date_c]);
+
+                if(current_start_date < start_date){
+                    start_date = current_start_date;
+                }
+                if(current_end_date > end_date){
+                    end_date = current_end_date;
+                }
+            }
+        }
+    } else {
+        find_calendar = false;
+    }
+    ifile.close();
+    ifile.open((path + "/calendar_dates.txt").c_str());
+    remove_bom(ifile);
+
+    if(!getline(ifile, line)) {
+        if(!find_calendar) {
+            std::cerr << "Impossible d'ouvrir les fichiers calendar.txt et calendar_dates.txt, on ne peut donc pas trouver la date de production" << std::endl;
+            throw std::exception();
+        }
+    } else {
+        boost::trim(line);
+        tok_header.assign(line);
+        elts.assign(tok_header.begin(), tok_header.end());
+        int date_c = -1;
+        service_c = -1;
+        for(size_t i = 0; i < elts.size(); i++) {
+            if (elts[i] == "date")
+                date_c = i;
+            else if (elts[i] == "service_id")
+                service_c = i;
+        }
+
+        if(date_c == -1 || service_c == -1){
+            std::cerr << "Il manque au moins une colonne dans calendar.txt" << std::endl
+                      << "trip_id : " << (trip_c != -1) << " service_id : " << (service_c != -1) << std::endl;
+            throw std::exception();
+        }
+        while(getline(ifile, line)) {
+            boost::trim(line);
+            if(line == "")
+                continue;
+            Tokenizer tok(line);
+            elts.assign(tok.begin(), tok.end());
+            if(services.find(elts[service_c]) != services.end()) {
+                boost::gregorian::date current_date = boost::gregorian::from_undelimited_string(elts[date_c]);
+                if(current_date < start_date){
+                    start_date = current_date;
+                }
+                if(current_date > end_date){
+                    end_date = current_date;
+                }
+            }
         }
     }
 
+
+
+
+
+
+    boost::gregorian::date b_date(boost::gregorian::min_date_time);
+    if(beginning_date != "")
+        b_date = boost::gregorian::from_undelimited_string(beginning_date);
     std::cout << "date de production: ";
-    std::cout <<boost::gregorian::to_simple_string(start_date) << " - " << boost::gregorian::to_simple_string(end_date) << std::endl;
-    return boost::gregorian::date_period(start_date, end_date);
+    std::cout <<boost::gregorian::to_simple_string((start_date>b_date ? start_date : b_date)) << " - " << boost::gregorian::to_simple_string(end_date) << std::endl;
+    return boost::gregorian::date_period((start_date>b_date ? start_date : b_date), end_date);
 }
 
 void  add_route_point_connection(nm::RoutePoint *rp1, nm::RoutePoint *rp2,
