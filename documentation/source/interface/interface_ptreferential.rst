@@ -24,7 +24,7 @@ Paramètres d'entrée
 Type d'objet
 ------------
 
-\http://www.navitia.com/navitia/*{REQUESTED_OBJECTS}*?format={JSON/XML/PB}&filter={FILTER_SEMANTIC}
+\http://www.navitia.com/navitia/**{REQUESTED_OBJECTS}**?format={JSON/XML/PB}&filter={FILTER_SEMANTIC}
 
 Le premier paramètre est en fait le nom de l'API exposé. Il correspond au type d'objet à choisir. Celui-ci est déterminant pour la structure des objets en sortie. 
 
@@ -47,35 +47,51 @@ Le premier paramètre est en fait le nom de l'API exposé. Il correspond au type
 Filtres complémentaires
 -----------------------
 
-\http://www.navitia.com/navitia/{REQUESTED_OBJECTS}?format={JSON/XML/PB}&filter={*FILTER_SEMANTIC*}
+\http://www.navitia.com/navitia/{REQUESTED_OBJECTS}?format={JSON/XML/PB}&filter={**FILTER_SEMANTIC**}
 
 La clause *filter* permet de fournir à NAViTiA la règle de restriction à appliquer sur l'ensemble des données de type *REQUESTED_OBJECTS*.
 Celle-ci s'exprime sous la même forme qu'une clause *WHERE* de SQL simplifiée.
 Ainsi:
 
   * seul les opérateurs suivant sont interprétés: *AND, IN, OR, (, )*
-  * seules les propriétés suivantes sont filtrables:
+  * les filtres peuvent porter sur les objets suivants:
+    
+    * stoparea
+    * route
+    * vehiclejourney
+    * stoparea
+    * stoppoint
+    * network
+    * company
+    * mode
+    * modetype
+    * city
+    * connection
+    * routepoint
+    * district
+    * country
 
-    * lineec: permet de filtrer les données retournées selon 1 code externe de ligne
-    * routeec: permet de filtrer les données retournées selon 1 code externe de parcours
-    * vehiclejourneyec:  permet de filtrer les données retournées selon 1 code externe de circulation
-    * stopareaec: permet de filtrer les données retournées selon 1 code externe de zone d'arrêt
-    * stoppointec: permet de filtrer les données retournées selon 1 code externe de point d'arrêt
-    * networkec: permet de filtrer les données retournées selon 1 code externe de réseaux commerciaux
-    * companyec: permet de filtrer les données retournées selon 1 code externe de transporteurs
-    * modeec: permet de filtrer les données retournées selon 1 code externe de mode
-    * modetypeec: permet de filtrer les données retournées selon 1 code externe de type de mode
-    * cityec: permet de filtrer les données retournées selon 1 code externe de communes
-    * connectionec: permet de filtrer les données retournées selon 1 code externe de correspondances
-    * routepointec: permet de filtrer les données retournées selon 1 code externe de points d'arrêt sur parcours
-    * districtec: permet de filtrer les données retournées selon 1 code externe de départements
-    * countryec: permet de filtrer les données retournées selon 1 code externe de pays
+  * sur chacun des objets sus-cités, les propriétés suivantes sont filtrables:
+
+    * external_code: permet de filtrer les données retournées selon le code externe de l'objet
+    * name: permet de filtrer les données retournées selon le nom de l'objet
+    * ID:  permet de filtrer les données retournées selon l'ID initial de l'objet (cet ID permet la traçabilité de l'objet et n'est pas unique)
+
+  * certains filtres sont spécifiques à certains objets
+
+    * pour les lignes
+
+      * code: permet de filtrer les lignes selon leur code commercial
+
+    * pour les arrêts
+
+      * main: permet de filtrer les zones d'arrêts selon leur taille
 
 
 Pour chaque type de filtre, il est possible de restreinte de 1 à n code externe en utilisant les opérateur OR, AND ou IN:
   * filtre simple: \http://.../navitia/lines?format=json&filter=modeec=BUS
-  * filtres multiples: \http://.../navitia/lines?format=json&filter=StopAreaeec=SA_CHATELET and (Modeec=BUS or modeex=Metro)
-  * filtres combinés: \http://.../navitia/lines?format=json&filter=Modeec in (BUS,Metro)
+  * filtres multiples: \http://.../navitia/lines?format=json&filter=StopArea.external_code=SA_CHATELET and (Mode.external_code=BUS or mode.external_code=Metro)
+  * filtres combinés: \http://.../navitia/lines?format=json&filter=Mode.external_code in (BUS,Metro)
 
 
 Format de sortie
