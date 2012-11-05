@@ -885,7 +885,7 @@ void RAPTOR::boucleRAPTORreverse(bool global_pruning){
 std::vector<Path> RAPTOR::makePathes(std::vector<std::pair<type::idx_t, double> > departs, std::vector<std::pair<type::idx_t, double> > destinations) {
     std::vector<Path> result;
     DateTime dt;
-    for(unsigned int i=0;i<=count;++i) {
+    for(unsigned int i=1;i<=count;++i) {
         int rpid = std::numeric_limits<int>::max();
         for(auto spid_dist : destinations) {
             for(auto dest : data.pt_data.stop_points[spid_dist.first].route_point_list) {
@@ -910,7 +910,7 @@ std::vector<Path> RAPTOR::makePathesreverse(std::vector<std::pair<type::idx_t, d
     std::vector<Path> result;
 
     DateTime dt = DateTime::min;
-    for(unsigned int i=0;i<=count;++i) {
+    for(unsigned int i=1;i<=count;++i) {
         int rpid = std::numeric_limits<int>::max();
         for(auto spid_dist : destinations) {
             for(auto dest : data.pt_data.stop_points[spid_dist.first].route_point_list) {

@@ -472,7 +472,7 @@ std::vector< std::pair<type::idx_t, double> > StreetNetworkWorker::find_nearest_
 Path StreetNetworkWorker::get_path(type::idx_t idx, bool use_second){
     Path result;
     if(!use_second){
-        if(this->idx_projection.find(idx) == idx_projection.end())
+        if(distances[idx] == std::numeric_limits<float>::max() && this->idx_projection.find(idx) == idx_projection.end())
             return result;
 
         ProjectionData projection = idx_projection[idx];
@@ -486,7 +486,7 @@ Path StreetNetworkWorker::get_path(type::idx_t idx, bool use_second){
             result.length = distances[projection.target] + projection.target_distance;
         }
     } else {
-        if(this->idx_projection2.find(idx) == idx_projection2.end())
+        if(distances2[idx] == std::numeric_limits<float>::max() && this->idx_projection2.find(idx) == idx_projection2.end())
             return result;
 
         ProjectionData projection = idx_projection2[idx];
@@ -501,6 +501,38 @@ Path StreetNetworkWorker::get_path(type::idx_t idx, bool use_second){
         }
         std::reverse(result.path_items.begin(), result.path_items.end());
         std::reverse(result.coordinates.begin(), result.coordinates.end());
+    }
+
+    return result;
+}
+
+Path StreetNetworkWorker::get_direct_path() {
+    Path result;
+
+    //Cherche s'il y a des nœuds en commun, et retient le chemin le plus court
+    size_t num_vertices = boost::num_vertices(geo_ref.graph);
+
+    double min_dist = std::numeric_limits<float>::max();
+    vertex_t target = std::numeric_limits<size_t>::max();
+    for(vertex_t u = 0; u != num_vertices; ++u){
+        if((distances[u] != std::numeric_limits<float>::max()) && (distances2[u] != std::numeric_limits<float>::max())
+                && ((distances[u] + distances2[u]) < min_dist)) {
+            target = u;
+            min_dist = distances[u] + distances2[u];
+        }
+    }
+
+    //Construit l'itinéraire
+    if(min_dist != std::numeric_limits<float>::max()) {
+        result = this->geo_ref.build_path(target, this->predecessors);
+        auto path2 = this->geo_ref.build_path(target, this->predecessors2);
+        for(auto p = path2.path_items.rbegin(); p != path2.path_items.rend(); ++p) {
+            result.path_items.push_back(*p);
+            result.length+= p->length;
+        }
+        for(auto c = path2.coordinates.rbegin(); c != path2.coordinates.rend(); ++c) {
+            result.coordinates.push_back(*c);
+        }
     }
 
     return result;

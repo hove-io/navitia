@@ -255,6 +255,9 @@ public:
     /// Reconstruit l'itinéraire piéton à partir de l'idx
     Path get_path(type::idx_t idx, bool use_second = false);
 
+    /// Construit l'itinéraire piéton direct. Le path est vide s'il n'existe pas
+    Path get_direct_path();
+
 private:
     //const StreetNetwork & street_network;
     const GeoRef & geo_ref;

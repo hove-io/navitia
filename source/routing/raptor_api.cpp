@@ -11,66 +11,78 @@ std::string iso_string(const nt::Data & d, int date, int hour){
     return boost::posix_time::to_iso_string(date_time);
 }
 
-pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths, const nt::Data & d, georef::StreetNetworkWorker & worker, bool origin_coord, bool destination_coord) {
+pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths, const nt::Data & d, georef::StreetNetworkWorker & worker) {
     pbnavitia::Response pb_response;
     pb_response.set_requested_api(pbnavitia::PLANNER);
 
+
+    auto temp = worker.get_direct_path();
     pbnavitia::Planner * planner = pb_response.mutable_planner();
-    planner->set_response_type(pbnavitia::ITINERARY_FOUND);
-    for(Path path : paths) {
-        pbnavitia::Journey * pb_journey = planner->add_journey();
-        pb_journey->set_duration(path.duration);
-        pb_journey->set_nb_transfers(path.nb_changes);
-        pb_journey->set_requested_date_time(boost::posix_time::to_iso_string(path.request_time));
-
-        // La marche à pied initiale si on avait donné une coordonnée
-        if(origin_coord && path.items.size() > 0 && path.items.front().stop_points.size() > 0){
-            fill_road_section(worker.get_path(path.items.front().stop_points.front()), d, pb_journey->add_section(), 1);
+    if(paths.size() > 0 || temp.path_items.size() > 0) {
+        planner->set_response_type(pbnavitia::ITINERARY_FOUND);
+        if(temp.path_items.size() > 0) {
+            pbnavitia::Journey * pb_journey = planner->add_journey();
+            pb_journey->set_duration(temp.length);
+            pb_journey->set_nb_transfers(0);
+            fill_road_section(temp, d, pb_journey->add_section(), 1);
         }
+        for(Path path : paths) {
+            pbnavitia::Journey * pb_journey = planner->add_journey();
+            pb_journey->set_duration(path.duration);
+            pb_journey->set_nb_transfers(path.nb_changes);
+            pb_journey->set_requested_date_time(boost::posix_time::to_iso_string(path.request_time));
 
-        // La partie TC et correspondances
-        for(PathItem & item : path.items){
-            pbnavitia::Section * pb_section = pb_journey->add_section();
-            if(item.type == public_transport){
-                pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
-                if( item.vj_idx != type::invalid_idx){ // TODO : réfléchir si ça peut vraiment arriver
-                    const type::VehicleJourney & vj = d.pt_data.vehicle_journeys[item.vj_idx];
-                    const type::Route & route = d.pt_data.routes[vj.route_idx];
-                    const type::Line & line = d.pt_data.lines[route.line_idx];
-                    if(line.network_idx != type::invalid_idx)
-                        pb_section->set_network(d.pt_data.networks[line.network_idx].name );
-                    else
-                        pb_section->set_network("");
-                    if(vj.mode_idx != type::invalid_idx)
-                        pb_section->set_mode(d.pt_data.modes[vj.mode_idx].name);
-                    pb_section->set_code(line.code);
-                    pb_section->set_headsign(vj.name);
-                    pb_section->set_direction(route.name);
-                    fill_pb_object(line.idx, d, pb_section->mutable_line());
-                }
-                for(size_t i=0;i<item.stop_points.size();++i){
-                    pbnavitia::StopTime * stop_time = pb_section->add_stop_time();
-                    auto arr_time = item.arrivals[i];
-                    stop_time->set_arrival_date_time(iso_string(d, arr_time.date(), arr_time.hour()));
-                    auto dep_time = item.departures[i];
-                    stop_time->set_departure_date_time(iso_string(d, dep_time.date(), dep_time.hour()));
-                    fill_pb_object(item.stop_points[i], d, stop_time->mutable_stop_point(), 1);
-                }
-
-                if(item.stop_points.size() >= 2) {
-                    fill_pb_placemark(d.pt_data.stop_points[item.stop_points.front()], d, pb_section->mutable_origin());
-                    fill_pb_placemark(d.pt_data.stop_points[item.stop_points.back()], d, pb_section->mutable_destination());
-                }
+            // La marche à pied initiale si on avait donné une coordonnée
+            if(path.items.size() > 0 && path.items.front().stop_points.size() > 0){
+                fill_road_section(worker.get_path(path.items.front().stop_points.front()), d, pb_journey->add_section(), 1);
             }
 
-            else
-                pb_section->set_type(pbnavitia::TRANSFER);
-        }
+            // La partie TC et correspondances
+            for(PathItem & item : path.items){
+                pbnavitia::Section * pb_section = pb_journey->add_section();
+                if(item.type == public_transport){
+                    pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
+                    if( item.vj_idx != type::invalid_idx){ // TODO : réfléchir si ça peut vraiment arriver
+                        const type::VehicleJourney & vj = d.pt_data.vehicle_journeys[item.vj_idx];
+                        const type::Route & route = d.pt_data.routes[vj.route_idx];
+                        const type::Line & line = d.pt_data.lines[route.line_idx];
+                        if(line.network_idx != type::invalid_idx)
+                            pb_section->set_network(d.pt_data.networks[line.network_idx].name );
+                        else
+                            pb_section->set_network("");
+                        if(vj.mode_idx != type::invalid_idx)
+                            pb_section->set_mode(d.pt_data.modes[vj.mode_idx].name);
+                        pb_section->set_code(line.code);
+                        pb_section->set_headsign(vj.name);
+                        pb_section->set_direction(route.name);
+                        fill_pb_object(line.idx, d, pb_section->mutable_line());
+                    }
+                    for(size_t i=0;i<item.stop_points.size();++i){
+                        pbnavitia::StopTime * stop_time = pb_section->add_stop_time();
+                        auto arr_time = item.arrivals[i];
+                        stop_time->set_arrival_date_time(iso_string(d, arr_time.date(), arr_time.hour()));
+                        auto dep_time = item.departures[i];
+                        stop_time->set_departure_date_time(iso_string(d, dep_time.date(), dep_time.hour()));
+                        fill_pb_object(item.stop_points[i], d, stop_time->mutable_stop_point(), 1);
+                    }
 
-        // La marche à pied finale si on avait donné une coordonnée
-        if(destination_coord && path.items.size() > 0 && path.items.back().stop_points.size() > 0){
-            fill_road_section(worker.get_path(path.items.back().stop_points.back(), true), d, pb_journey->add_section(), 1);
+                    if(item.stop_points.size() >= 2) {
+                        fill_pb_placemark(d.pt_data.stop_points[item.stop_points.front()], d, pb_section->mutable_origin());
+                        fill_pb_placemark(d.pt_data.stop_points[item.stop_points.back()], d, pb_section->mutable_destination());
+                    }
+                }
+
+                else
+                    pb_section->set_type(pbnavitia::TRANSFER);
+            }
+
+            // La marche à pied finale si on avait donné une coordonnée
+            if(path.items.size() > 0 && path.items.back().stop_points.size() > 0){
+                fill_road_section(worker.get_path(path.items.back().stop_points.back(), true), d, pb_journey->add_section(), 1);
+            }
         }
+    } else {
+        planner->set_response_type(pbnavitia::NO_SOLUTION);
     }
 
     return pb_response;
@@ -150,6 +162,7 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
         return response;
     }
 
+
     std::vector<Path> result;
 
     DateTime borne;
@@ -183,10 +196,6 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
             for(auto & path : result){
                 path.request_time = datetime;
             }
-            if(result.size() == 0){
-                response.mutable_planner()->set_response_type(pbnavitia::NO_SOLUTION);
-                return response;
-            }
         } else if(tmp.size() > 0) {
             // Lorsqu'on demande plusieurs horaires, on garde que l'arrivée au plus tôt / départ au plus tard
             tmp.back().request_time = datetime;
@@ -198,7 +207,7 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
     if(clockwise)
         std::reverse(result.begin(), result.end());
 
-    return make_pathes(result, raptor.data, worker, origin.type == nt::Type_e::eCoord, destination.type == nt::Type_e::eCoord);
+    return make_pathes(result, raptor.data, worker);
 }
 
 }}}
