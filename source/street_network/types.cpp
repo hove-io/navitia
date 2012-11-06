@@ -472,7 +472,7 @@ std::vector< std::pair<type::idx_t, double> > StreetNetworkWorker::find_nearest_
 Path StreetNetworkWorker::get_path(type::idx_t idx, bool use_second){
     Path result;
     if(!use_second){
-        if(distances[idx] == std::numeric_limits<float>::max() && this->idx_projection.find(idx) == idx_projection.end())
+        if(idx >= distances.size() || (distances[idx] == std::numeric_limits<float>::max() && this->idx_projection.find(idx) == idx_projection.end()))
             return result;
 
         ProjectionData projection = idx_projection[idx];
@@ -486,7 +486,7 @@ Path StreetNetworkWorker::get_path(type::idx_t idx, bool use_second){
             result.length = distances[projection.target] + projection.target_distance;
         }
     } else {
-        if(distances2[idx] == std::numeric_limits<float>::max() && this->idx_projection2.find(idx) == idx_projection2.end())
+        if(idx >= distances2.size() || (distances2[idx] == std::numeric_limits<float>::max() && this->idx_projection2.find(idx) == idx_projection2.end()))
             return result;
 
         ProjectionData projection = idx_projection2[idx];

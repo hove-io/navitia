@@ -27,15 +27,13 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             fill_road_section(temp, d, pb_journey->add_section(), 1);
         }
         for(Path path : paths) {
+            DateTime departure_time = DateTime::inf, arrival_time = DateTime::inf;
             pbnavitia::Journey * pb_journey = planner->add_journey();
             pb_journey->set_duration(path.duration);
             pb_journey->set_nb_transfers(path.nb_changes);
             pb_journey->set_requested_date_time(boost::posix_time::to_iso_string(path.request_time));
 
-            // La marche à pied initiale si on avait donné une coordonnée
-            if(path.items.size() > 0 && path.items.front().stop_points.size() > 0){
-                fill_road_section(worker.get_path(path.items.front().stop_points.front()), d, pb_journey->add_section(), 1);
-            }
+
 
             // La partie TC et correspondances
             for(PathItem & item : path.items){
@@ -72,14 +70,36 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                     }
                 }
 
-                else
+                else {
                     pb_section->set_type(pbnavitia::TRANSFER);
+                    pb_section->set_duration(item.departure - item.arrival);
+                }
+                pb_section->set_duration(item.arrival - item.departure);
+                if(departure_time == DateTime::inf)
+                    departure_time = item.departure;
+                arrival_time = item.arrival;
+            }
+
+
+            // La marche à pied initiale si on avait donné une coordonnée
+            if(path.items.size() > 0 && path.items.front().stop_points.size() > 0 && path.items.front().stop_points.size() > 0){
+                const auto temp = worker.get_path(path.items.front().stop_points.front());
+                if(temp.path_items.size() > 0) {
+                    fill_road_section(temp , d, pb_journey->add_section(), 1);
+                    departure_time = departure_time - temp.length;
+                }
             }
 
             // La marche à pied finale si on avait donné une coordonnée
-            if(path.items.size() > 0 && path.items.back().stop_points.size() > 0){
-                fill_road_section(worker.get_path(path.items.back().stop_points.back(), true), d, pb_journey->add_section(), 1);
+            if(path.items.size() > 0 && path.items.back().stop_points.size() > 0 && path.items.back().stop_points.size()>0){
+                auto temp = worker.get_path(path.items.back().stop_points.back(), true);
+                if(temp.path_items.size() > 0) {
+                    fill_road_section(temp, d, pb_journey->add_section(), 1);
+                    arrival_time =  arrival_time + temp.length;
+                }
             }
+            pb_journey->set_departure_date_time(iso_string(d, departure_time.date(), departure_time.hour()));
+            pb_journey->set_arrival_date_time(iso_string(d, arrival_time.date(), arrival_time.hour()));
         }
     } else {
         planner->set_response_type(pbnavitia::NO_SOLUTION);
