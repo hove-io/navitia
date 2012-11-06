@@ -20,8 +20,8 @@ namespace navitia { namespace streetnetwork {
         }
         for(auto coord : path.coordinates){
             pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinate();
-            pb_coord->set_lat(coord.x);
-            pb_coord->set_lon(coord.y);
+            pb_coord->set_lon(coord.x);
+            pb_coord->set_lat(coord.y);
         }
     }
 

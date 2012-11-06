@@ -22,8 +22,8 @@ enum API {
 }
 
 message GeographicalCoord {
-    required double lat = 1;
-    required double lon = 2;
+    required double lon = 1;
+    required double lat = 2;
 }
 
 message Country {
