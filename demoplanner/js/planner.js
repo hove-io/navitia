@@ -52,7 +52,7 @@ function aff_planning(idPlanning) {
 
                 for(j=0; j < item.stop_time_list.length; j++) {
                     var stop_time = item.stop_time_list[j]
-                    arraypolys.push(new mxn.LatLonPoint(stop_time.stop_point.coord.y, stop_time.stop_point.coord.x));
+                    arraypolys.push(new mxn.LatLonPoint(stop_time.stop_point.coord.lon, stop_time.stop_point.coord.lat));
                     feuille += "<li>" + stop_time.stop_point.name + " " + stop_time.arrival_date_time + " " + stop_time.departure_date_time + "</li>";
                 }
                 feuille += "</ul>";
@@ -64,7 +64,7 @@ function aff_planning(idPlanning) {
                 feuille += "<li>Marche à pied sur " + item.street_network.length +" mètres</li>"; 
                 var arraypolys = new Array();
                 for(j=0 ; j < item.street_network.coordinate_list.length; j++){
-                    arraypolys.push(new mxn.LatLonPoint(item.street_network.coordinate_list[j].y, item.street_network.coordinate_list[j].x));
+                    arraypolys.push(new mxn.LatLonPoint(item.street_network.coordinate_list[j].lon, item.street_network.coordinate_list[j].lat));
                 }
                 var myPoly = new mxn.Polyline(arraypolys);
                 myPoly.setWidth(2);
