@@ -73,6 +73,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                 else {
                     pb_section->set_type(pbnavitia::TRANSFER);
                     pb_section->set_duration(item.departure - item.arrival);
+                    fill_pb_placemark(d.pt_data.stop_points[item.stop_points.front()], d, pb_section->mutable_origin());
+                    fill_pb_placemark(d.pt_data.stop_points[item.stop_points.back()], d, pb_section->mutable_destination());
                 }
                 pb_section->set_duration(item.arrival - item.departure);
                 if(departure_time == DateTime::inf)
