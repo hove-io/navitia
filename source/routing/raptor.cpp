@@ -951,7 +951,6 @@ Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
     //            stop = stop || item.first == current_spid;
     //        }
 
-    result.nb_changes = countb - 1;
     PathItem item;
     // On boucle tant
     while(!stop) {
@@ -1076,6 +1075,12 @@ Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
         }
     }
     result.percent_visited = 100*count_visites / data.pt_data.stop_points.size();
+
+    result.nb_changes = 0;
+    for(unsigned int i = 1; i <= (result.items.size()-2); ++i) {
+        if(result.items[i].type == walking)
+            ++ result.nb_changes;
+    }
 
     return result;
 }

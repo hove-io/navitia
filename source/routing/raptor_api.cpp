@@ -23,7 +23,6 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
         if(temp.path_items.size() > 0) {
             pbnavitia::Journey * pb_journey = planner->add_journey();
             pb_journey->set_duration(temp.length);
-            pb_journey->set_nb_transfers(0);
             fill_road_section(temp, d, pb_journey->add_section(), 1);
         }
         for(Path path : paths) {
@@ -33,6 +32,14 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             pb_journey->set_nb_transfers(path.nb_changes);
             pb_journey->set_requested_date_time(boost::posix_time::to_iso_string(path.request_time));
 
+            // La marche à pied initiale si on avait donné une coordonnée
+            if(path.items.size() > 0 && path.items.front().stop_points.size() > 0 && path.items.front().stop_points.size() > 0){
+                const auto temp = worker.get_path(path.items.front().stop_points.front());
+                if(temp.path_items.size() > 0) {
+                    fill_road_section(temp , d, pb_journey->add_section(), 1);
+                    departure_time = departure_time - temp.length;
+                }
+            }
 
 
             // La partie TC et correspondances
@@ -83,14 +90,6 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             }
 
 
-            // La marche à pied initiale si on avait donné une coordonnée
-            if(path.items.size() > 0 && path.items.front().stop_points.size() > 0 && path.items.front().stop_points.size() > 0){
-                const auto temp = worker.get_path(path.items.front().stop_points.front());
-                if(temp.path_items.size() > 0) {
-                    fill_road_section(temp , d, pb_journey->add_section(), 1);
-                    departure_time = departure_time - temp.length;
-                }
-            }
 
             // La marche à pied finale si on avait donné une coordonnée
             if(path.items.size() > 0 && path.items.back().stop_points.size() > 0 && path.items.back().stop_points.size()>0){
