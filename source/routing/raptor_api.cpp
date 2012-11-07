@@ -165,6 +165,7 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
     else
         std::sort(datetimes.begin(), datetimes.end());
 
+    worker.init();
     auto departures = get_stop_points(origin, raptor.data, worker);
     auto destinations = get_stop_points(destination, raptor.data, worker, true);
     if(departures.size() == 0 && destinations.size() == 0){
