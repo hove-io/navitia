@@ -37,7 +37,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                 const auto temp = worker.get_path(path.items.front().stop_points.front());
                 if(temp.path_items.size() > 0) {
                     fill_road_section(temp , d, pb_journey->add_section(), 1);
-                    departure_time = departure_time - temp.length;
+                    departure_time = path.items.front().departure - temp.length/1.38;
                 }
             }
 
@@ -96,7 +96,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                 auto temp = worker.get_path(path.items.back().stop_points.back(), true);
                 if(temp.path_items.size() > 0) {
                     fill_road_section(temp, d, pb_journey->add_section(), 1);
-                    arrival_time =  arrival_time + temp.length;
+                    arrival_time =  arrival_time + temp.length/1.38;
                 }
             }
             pb_journey->set_departure_date_time(iso_string(d, departure_time.date(), departure_time.hour()));
