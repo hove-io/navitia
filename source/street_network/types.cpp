@@ -128,6 +128,7 @@ Path GeoRef::build_path(vertex_t best_destination, std::vector<vertex_t> preds) 
     nt::idx_t last_way =  type::invalid_idx;
     PathItem path_item;
     p.coordinates.push_back(graph[reverse_path.back()].coord);
+    p.length = 0;
     for(size_t i = reverse_path.size(); i > 1; --i){
         vertex_t v = reverse_path[i-2];
         vertex_t u = reverse_path[i-1];
@@ -143,6 +144,7 @@ Path GeoRef::build_path(vertex_t best_destination, std::vector<vertex_t> preds) 
         path_item.way_idx = edge.way_idx;
         path_item.segments.push_back(e);
         path_item.length += edge.length;
+        p.length+= edge.length;
     }
     if(reverse_path.size() > 1)
         p.path_items.push_back(path_item);
