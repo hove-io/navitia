@@ -24,8 +24,24 @@ namespace pbnavitia { struct Response;}
 using navitia::type::Type_e;
 namespace navitia{ namespace ptref{
 
+struct ptref_parsing_error : std::exception{
+    enum error_type {
+        global_error = 1,
+        partial_error = 2
+    };
+
+    error_type type;
+    std::string more;
+};
+
+struct ptref_unknown_object : std::exception {
+    std::string more;
+};
+
 /// Exécute une requête sur les données Data
-pbnavitia::Response query(type::Type_e type, std::string request, type::Data & data);
+std::vector<type::idx_t> make_query(type::Type_e requested_type, std::string request, type::Data & data);
+std::vector<type::idx_t> query_idx(type::Type_e requested_type, std::string request, type::Data & data);
+pbnavitia::Response query_pb(type::Type_e type, std::string request, type::Data & data);
 
 /// Trouve le chemin d'un type de données à un autre
 /// Par exemple StopArea → StopPoint → RoutePoint

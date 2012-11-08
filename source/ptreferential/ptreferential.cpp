@@ -132,22 +132,35 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, Data & d) 
 }
 
 
-pbnavitia::Response query(Type_e requested_type, std::string request, Data & data){
+std::vector<Filter> parse(std::string request){
     std::string::iterator begin = request.begin();
-    pbnavitia::Response pb_response;
     std::vector<Filter> filters;
     select_r<std::string::iterator> s;
+    if (qi::phrase_parse(begin, request.end(), s, qi::space, filters)) {
+        if(begin != request.end()) {
+            std::string unparsed(begin, request.end());
+            ptref_parsing_error error;
+            error.type = ptref_parsing_error::partial_error;
+            error.more = unparsed;
+            throw error;
+        }
+    } else {
+        ptref_parsing_error error;
+        error.type = ptref_parsing_error::global_error;
+        throw error;
+    }
+    return filters;
+}
+
+
+std::vector<idx_t> make_query(Type_e requested_type, std::string request, Data & data) {
+    std::vector<Filter> filters;
 
     if(!request.empty()){
-        if (qi::phrase_parse(begin, request.end(), s, qi::space, filters)) {
-            if(begin != request.end()) {
-                std::string unparsed(begin, request.end());
-                pb_response.set_error("PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + unparsed + "<<");
-                return pb_response;
-            }
-        } else {
-            pb_response.set_error("PTReferential : Impossible de parser la requête");
-            return pb_response;
+        try {
+            filters = parse(request);
+        } catch(...) {
+            throw;
         }
     }
 
@@ -156,11 +169,11 @@ pbnavitia::Response query(Type_e requested_type, std::string request, Data & dat
         try {
             filter.navitia_type = static_data->typeByCaption(filter.object);
         } catch(...) {
-            pb_response.set_error("Objet NAViTiA inconnu : " + filter.object);
-            return pb_response;
+            ptref_unknown_object error;
+            error.more = filter.object;
+            throw error;
         }
     }
-
 
     std::vector<idx_t> final_indexes = data.pt_data.get_all_index(requested_type);
     std::vector<idx_t> indexes;
@@ -187,9 +200,42 @@ pbnavitia::Response query(Type_e requested_type, std::string request, Data & dat
         std::set_intersection(final_indexes.begin(), final_indexes.end(), indexes.begin(), indexes.end(), it);
         final_indexes = tmp_indexes;
     }
+    return final_indexes;
+}
 
+
+std::vector<idx_t> query_idx(Type_e requested_type, std::string request, Data & data) {
+    std::vector<idx_t> final_indexes;
+    try {
+        final_indexes = make_query(requested_type, request, data);
+    } catch(...) {
+        return final_indexes;
+    }
+    return final_indexes;
+}
+
+pbnavitia::Response query_pb(Type_e requested_type, std::string request, Data & data){
+    std::vector<idx_t> final_indexes;
+    pbnavitia::Response pb_response;
+    try {
+        final_indexes = make_query(requested_type, request, data);
+    } catch(ptref_parsing_error parse_error) {
+        if(parse_error.type == ptref_parsing_error::error_type::partial_error) {
+            pb_response.set_error("PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + parse_error.more + "<<");
+        } else {
+            pb_response.set_error("PTReferential : Impossible de parser la requête");
+        }
+        return pb_response;
+    } catch(ptref_unknown_object unknown_obj_error) {
+        pb_response.set_error("Objet NAViTiA inconnu : " + unknown_obj_error.more);
+        return pb_response;
+    }
+
+    final_indexes = make_query(requested_type, request, data);
     return extract_data(data, requested_type, final_indexes);
 }
+
+
 
 
 }} // navitia::ptref

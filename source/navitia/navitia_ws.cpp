@@ -306,7 +306,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         }
 
         std::string filters = boost::get<std::string>(request.parsed_params["filter"].value);
-        pb_response = navitia::ptref::query(type, filters, data);
+        pb_response = navitia::ptref::query_pb(type, filters, data);
         rd.status_code = 200;
 
         return rd;
