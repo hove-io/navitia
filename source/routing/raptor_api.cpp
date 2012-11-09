@@ -28,7 +28,6 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
         for(Path path : paths) {
             DateTime departure_time = DateTime::inf, arrival_time = DateTime::inf;
             pbnavitia::Journey * pb_journey = planner->add_journey();
-            pb_journey->set_duration(path.duration);
             pb_journey->set_nb_transfers(path.nb_changes);
             pb_journey->set_requested_date_time(boost::posix_time::to_iso_string(path.request_time));
 
@@ -87,6 +86,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                 if(departure_time == DateTime::inf)
                     departure_time = item.departure;
                 arrival_time = item.arrival;
+                pb_journey->set_duration(arrival_time - departure_time);
             }
 
 
