@@ -6,7 +6,8 @@ namespace navitia { namespace timetables {
 typedef std::pair<routing::DateTime, const type::idx_t> dt_st;
 struct comp_st {
     bool operator()(const dt_st st1, const dt_st st2) const {
-        return (st1.first < st2.first) || ((st1.first ==  st2.first) && (st1.second < st2.second));
+
+        return st1.first < st2.first;
     }
 };
 

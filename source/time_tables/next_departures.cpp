@@ -72,12 +72,13 @@ std::vector<dt_st> next_departures(const std::vector<type::idx_t> &route_points,
        }
    }
 
-   auto last_departure = result_temp.upper_bound(std::make_pair(dt, type::invalid_idx))->first;
+   auto last_departure = result_temp.begin()->first/*upper_bound(std::make_pair(dt, type::invalid_idx))->first*/;
 
 
    while(test_add && last_departure < max_dt &&
          (distance(result_temp.begin(), result_temp.upper_bound(std::make_pair(last_departure, type::invalid_idx))) < nb_departures)) {
        std::vector<type::idx_t> rps;
+
        for(auto it_st = result_temp.lower_bound(std::make_pair(last_departure, type::invalid_idx));
                 it_st!= result_temp.upper_bound(std::make_pair(last_departure, type::invalid_idx)); ++it_st){
            rps.push_back(raptor.data.pt_data.stop_times[it_st->second].route_point_idx);
