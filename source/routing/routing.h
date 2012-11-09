@@ -85,7 +85,7 @@ public:
 
 
     uint32_t operator-(DateTime other) {
-        return this->datetime - other.datetime;
+        return (3600*24*(this->date() - other.date())) + this->hour() - other.hour();
     }
 
     void update(uint32_t hour) {

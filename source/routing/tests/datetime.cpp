@@ -81,3 +81,15 @@ BOOST_AUTO_TEST_CASE(init2) {
 }
 
 
+BOOST_AUTO_TEST_CASE(moins) {
+    DateTime d1(10, 8*3600);
+    DateTime d2(10, 9*3600);
+    DateTime d3(11, 5*3600);
+
+    uint32_t t1 = d2 - d1;
+    uint32_t t2 = d3 - d1;
+    BOOST_CHECK_EQUAL(t1, 3600);
+    BOOST_CHECK_EQUAL(t2, 86400 - 3 * 3600);
+}
+
+
