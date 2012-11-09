@@ -45,7 +45,9 @@ pbnavitia::Response next_departures(std::string request, const std::string &str_
         pbnavitia::StopTime * stoptime = pb_response.add_departure();
         stoptime->set_departure_date_time(iso_string(data, dt_idx.first.date(),  dt_idx.first.hour()));
         stoptime->set_arrival_date_time(iso_string(data, dt_idx.first.date(),  dt_idx.first.hour()));
-        fill_pb_object(data.pt_data.route_points[data.pt_data.stop_times[dt_idx.second].route_point_idx].stop_point_idx, data, stoptime->mutable_stop_point(), 0);
+        const auto &rp = data.pt_data.route_points[data.pt_data.stop_times[dt_idx.second].route_point_idx];
+        fill_pb_object(rp.stop_point_idx, data, stoptime->mutable_stop_point(), 0);
+        fill_pb_object(data.pt_data.routes[rp.route_idx].line_idx, data, stoptime->mutable_line(), 0);
     }
     return pb_response;
 }

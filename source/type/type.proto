@@ -73,6 +73,7 @@ message StopTime {
     optional string arrival_date_time = 1;
     optional string departure_date_time = 2;
     optional StopPoint stop_point = 3;
+    optional Line line = 4;
 }
 
 message VehicleJourney {
