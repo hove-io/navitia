@@ -12,6 +12,7 @@
 #include "street_network/street_network_api.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential.h"
+#include "time_tables/next_departures.h"
 
 #include <boost/tokenizer.hpp>
 #include <iostream>
@@ -312,6 +313,23 @@ class Worker : public BaseWorker<navitia::type::Data> {
         return rd;
     }
 
+    ResponseData next_departures(RequestData & request, navitia::type::Data &data){
+        ResponseData rd;
+
+        nt::Locker locker(check_and_init(request, data, pbnavitia::PTREFERENTIAL, rd));
+        if(!locker.locked){
+            return rd;
+        }
+
+        std::string filters = boost::get<std::string>(request.parsed_params["filter"].value);
+        std::string datetime = boost::get<std::string>(request.parsed_params["datetime"].value);
+        int nb_departures = boost::get<int>(request.parsed_params["nb_departures"].value);
+        pb_response = navitia::timetables::next_departures(filters, datetime, nb_departures, data, *calculateur);
+        rd.status_code = 200;
+
+        return rd;
+    }
+
     public:
     /** Constructeur par défaut
      *
@@ -364,6 +382,15 @@ class Worker : public BaseWorker<navitia::type::Data> {
             register_api(str + "s", boost::bind(&Worker::ptref, this, type, _1, _2), "Liste de " + str);
             add_param(str, "filter", "Conditions pour restreindre les objets retournés", ApiParameter::STRING, false);
         }
+
+        register_api("next_departures", boost::bind(&Worker::next_departures, this, _1, _2), "Renvoie les prochains départs");
+        add_param("next_departures", "filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, false);
+        add_param("next_departures", "datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
+        add_param("next_departures", "nb_departures", "Nombre maximum de départ souhaités", ApiParameter::INT, false);
+
+
+
+
 
         add_default_api();
     }
