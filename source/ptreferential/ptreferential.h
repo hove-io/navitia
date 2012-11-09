@@ -50,4 +50,6 @@ std::map<Type_e,Type_e> find_path(Type_e source);
 /// À parti d'un élément, on veut retrouver tous ceux de destination
 std::vector<type::idx_t> get(Type_e source, Type_e destination, type::idx_t source_idx, type::PT_Data & data);
 
+pbnavitia::Response extract_data(type::Data & data, Type_e requested_type, std::vector<type::idx_t> & rows);
+
 }} //navitia::ptref
