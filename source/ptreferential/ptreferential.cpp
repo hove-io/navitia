@@ -46,7 +46,7 @@ BOOST_FUSION_ADAPT_STRUCT(
     qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter; // La string complète à parser
 
     select_r() : select_r::base_type(filter) {
-        txt %= qi::lexeme[+(qi::alnum|'_'|'|'|':'|'-')]; // Match du texte
+        txt = +(qi::alnum|qi::char_("_:-"));
 
         bin_op =  qi::string("<=")[qi::_val = LEQ]
                 | qi::string(">=")[qi::_val = GEQ]
