@@ -11,6 +11,6 @@ struct comp_st {
 };
 
 
-pbnavitia::Response next_departures(std::string request, const std::string &str_dt, const uint32_t nb_departures, type::Data & data, routing::raptor::RAPTOR &raptor);
-std::vector<type::idx_t> next_departures(const std::vector<type::idx_t> &route_points, const routing::DateTime &dt, const uint32_t nd_departures, routing::raptor::RAPTOR &raptor);
+pbnavitia::Response next_departures(std::string request, const std::string &str_dt, const std::string &str_max_dt, const uint32_t nb_departures, type::Data & data, routing::raptor::RAPTOR &raptor);
+std::vector<dt_st> next_departures(const std::vector<type::idx_t> &route_points, const routing::DateTime &dt, const routing::DateTime &max_dt, const uint32_t nb_departures, routing::raptor::RAPTOR &raptor);
 }}

@@ -316,15 +316,23 @@ class Worker : public BaseWorker<navitia::type::Data> {
     ResponseData next_departures(RequestData & request, navitia::type::Data &data){
         ResponseData rd;
 
-        nt::Locker locker(check_and_init(request, data, pbnavitia::PTREFERENTIAL, rd));
+        nt::Locker locker(check_and_init(request, data, pbnavitia::NEXT_DEPARTURES, rd));
         if(!locker.locked){
             return rd;
+        }
+        if(data.last_load_at != this->last_load_at || !calculateur){
+            calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(data));
+            street_network_worker = std::unique_ptr<navitia::georef::StreetNetworkWorker>(new navitia::georef::StreetNetworkWorker(data.geo_ref));
+            this->last_load_at = data.last_load_at;
+
+            LOG4CPLUS_INFO(logger, "instanciation du calculateur");
         }
 
         std::string filters = boost::get<std::string>(request.parsed_params["filter"].value);
         std::string datetime = boost::get<std::string>(request.parsed_params["datetime"].value);
+        std::string max_date_time = boost::get<std::string>(request.parsed_params["max_datetime"].value);
         int nb_departures = boost::get<int>(request.parsed_params["nb_departures"].value);
-        pb_response = navitia::timetables::next_departures(filters, datetime, nb_departures, data, *calculateur);
+        pb_response = navitia::timetables::next_departures(filters, datetime, max_date_time, nb_departures, data, *calculateur);
         rd.status_code = 200;
 
         return rd;
@@ -384,9 +392,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
         }
 
         register_api("next_departures", boost::bind(&Worker::next_departures, this, _1, _2), "Renvoie les prochains départs");
-        add_param("next_departures", "filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, false);
-        add_param("next_departures", "datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
-        add_param("next_departures", "nb_departures", "Nombre maximum de départ souhaités", ApiParameter::INT, false);
+        add_param("next_departures", "filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, true);
+        add_param("next_departures", "datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, true);
+        add_param("next_departures", "max_datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
+        add_param("next_departures", "nb_departures", "Nombre maximum de départ souhaités", ApiParameter::INT, true);
 
 
 

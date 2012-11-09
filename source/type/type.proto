@@ -19,6 +19,7 @@ enum API {
     LOAD = 5;
     PROXIMITYLIST = 6;
     STATUS = 7;
+    NEXT_DEPARTURES = 8;
 }
 
 message GeographicalCoord {
@@ -310,4 +311,6 @@ message Response{
     optional ProximityList proximitylist = 8;
 
     optional Status status = 9;
+
+    repeated StopTime departure = 10;
 }

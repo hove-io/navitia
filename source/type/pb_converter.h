@@ -15,6 +15,7 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Physical
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Connection * connection, int max_depth = 0);
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::RoutePoint * route_point, int max_depth = 0);
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Company * company, int max_depth = 0);
+void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopTime *stop_time, int max_depth = 0);
 
 void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth = 0);
 void fill_pb_placemark(const georef::Way & way, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth = 0, int house_number = -1);
