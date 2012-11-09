@@ -19,7 +19,10 @@ bool ValidityPattern::is_valid(int duration){
 
 void ValidityPattern::add(boost::gregorian::date day){
     long duration = (day - beginning_date).days();
-    add(duration);
+    if(is_valid(duration))
+        add(duration);
+    else
+        std::cerr << day << " " << beginning_date << " " <<  std::flush;
 }
 
 void ValidityPattern::add(int duration){

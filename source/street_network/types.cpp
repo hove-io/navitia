@@ -128,6 +128,7 @@ Path GeoRef::build_path(vertex_t best_destination, std::vector<vertex_t> preds) 
     nt::idx_t last_way =  type::invalid_idx;
     PathItem path_item;
     p.coordinates.push_back(graph[reverse_path.back()].coord);
+    p.length = 0;
     for(size_t i = reverse_path.size(); i > 1; --i){
         vertex_t v = reverse_path[i-2];
         vertex_t u = reverse_path[i-1];
@@ -143,6 +144,7 @@ Path GeoRef::build_path(vertex_t best_destination, std::vector<vertex_t> preds) 
         path_item.way_idx = edge.way_idx;
         path_item.segments.push_back(e);
         path_item.length += edge.length;
+        p.length+= edge.length;
     }
     if(reverse_path.size() > 1)
         p.path_items.push_back(path_item);
@@ -251,6 +253,15 @@ StreetNetworkWorker::StreetNetworkWorker(const GeoRef &geo_ref) :
     geo_ref(geo_ref)
 {}
 
+void StreetNetworkWorker::init() {
+    departure_launch = false;
+    arrival_launch = false;
+}
+
+bool StreetNetworkWorker::departure_launched() {return departure_launch;}
+bool StreetNetworkWorker::arrival_launched() {return arrival_launch;}
+
+
 std::vector< std::pair<idx_t, double> > StreetNetworkWorker::find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<idx_t> & pl, double radius, bool use_second) {
     ProjectionData start;
     try{
@@ -266,10 +277,14 @@ std::vector< std::pair<idx_t, double> > StreetNetworkWorker::find_nearest(const 
         return std::vector< std::pair<idx_t, double> >();
     }
 
-    if(!use_second)
+    if(!use_second) {
+        departure_launch = true;
         return find_nearest(start, radius, elements, distances, predecessors, idx_projection);
-    else
+    }
+    else{
+        arrival_launch = true;
         return find_nearest(start, radius, elements, distances2, predecessors2, idx_projection2);
+    }
 }
 
 std::vector< std::pair<type::idx_t, double> > StreetNetworkWorker::find_nearest(const ProjectionData & start, double radius, const std::vector< std::pair<idx_t, type::GeographicalCoord> > & elements , std::vector<float> & dist, std::vector<vertex_t> & preds, std::map<type::idx_t, ProjectionData> & idx_proj){
@@ -420,10 +435,14 @@ std::vector< std::pair<type::idx_t, double> > StreetNetworkWorker::find_nearest_
         return std::vector< std::pair<idx_t, double> >();
     }
 
-    if(!use_second)
+    if(!use_second) {
+        departure_launch = true;
         return find_nearest_stop_points(start, radius, elements, distances, predecessors, idx_projection);
-    else
+    }
+    else {
+        arrival_launch = true;
         return find_nearest_stop_points(start, radius, elements, distances2, predecessors2, idx_projection2);
+    }
 }
 
 std::vector< std::pair<type::idx_t, double> > StreetNetworkWorker::find_nearest_stop_points(const ProjectionData & start, double radius, const std::vector< std::pair<type::idx_t, type::GeographicalCoord> > & elements,
@@ -472,7 +491,7 @@ std::vector< std::pair<type::idx_t, double> > StreetNetworkWorker::find_nearest_
 Path StreetNetworkWorker::get_path(type::idx_t idx, bool use_second){
     Path result;
     if(!use_second){
-        if(this->idx_projection.find(idx) == idx_projection.end())
+        if(!departure_launched() || (distances[idx] == std::numeric_limits<float>::max() && this->idx_projection.find(idx) == idx_projection.end()))
             return result;
 
         ProjectionData projection = idx_projection[idx];
@@ -486,7 +505,7 @@ Path StreetNetworkWorker::get_path(type::idx_t idx, bool use_second){
             result.length = distances[projection.target] + projection.target_distance;
         }
     } else {
-        if(this->idx_projection2.find(idx) == idx_projection2.end())
+        if(!arrival_launched() || (distances2[idx] == std::numeric_limits<float>::max() && this->idx_projection2.find(idx) == idx_projection2.end()))
             return result;
 
         ProjectionData projection = idx_projection2[idx];
@@ -501,6 +520,40 @@ Path StreetNetworkWorker::get_path(type::idx_t idx, bool use_second){
         }
         std::reverse(result.path_items.begin(), result.path_items.end());
         std::reverse(result.coordinates.begin(), result.coordinates.end());
+    }
+
+    return result;
+}
+
+Path StreetNetworkWorker::get_direct_path() {
+    Path result;
+
+    if(!departure_launched() || !arrival_launched())
+        return result;
+    //Cherche s'il y a des nœuds en commun, et retient le chemin le plus court
+    size_t num_vertices = boost::num_vertices(geo_ref.graph);
+
+    double min_dist = std::numeric_limits<float>::max();
+    vertex_t target = std::numeric_limits<size_t>::max();
+    for(vertex_t u = 0; u != num_vertices; ++u){
+        if((distances[u] != std::numeric_limits<float>::max()) && (distances2[u] != std::numeric_limits<float>::max())
+                && ((distances[u] + distances2[u]) < min_dist)) {
+            target = u;
+            min_dist = distances[u] + distances2[u];
+        }
+    }
+
+    //Construit l'itinéraire
+    if(min_dist != std::numeric_limits<float>::max()) {
+        result = this->geo_ref.build_path(target, this->predecessors);
+        auto path2 = this->geo_ref.build_path(target, this->predecessors2);
+        for(auto p = path2.path_items.rbegin(); p != path2.path_items.rend(); ++p) {
+            result.path_items.push_back(*p);
+            result.length+= p->length;
+        }
+        for(auto c = path2.coordinates.rbegin(); c != path2.coordinates.rend(); ++c) {
+            result.coordinates.push_back(*c);
+        }
     }
 
     return result;

@@ -78,7 +78,7 @@ int main(int argc, char * argv[])
     }
     else if(type == "gtfs") {
         navimake::connectors::GtfsParser connector(input);
-        connector.fill(data);
+        connector.fill(data, date);
         nav_data.meta.production_date = connector.production_date;
     }
     else {

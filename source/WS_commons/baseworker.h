@@ -279,12 +279,12 @@ namespace webservice
                         << "<ul>";
 
             for(std::pair<std::string, ApiParameter> ap : api_metadata[api].params){
-                rd.response << "<li><b>" << ap.first << "</b> : ";
                 if(ap.second.mandatory){
-                    if(request.params.find(ap.first) == request.params.end())
-                        rd.response << " Absent ! </li>";
-                    else
-                        rd.response << " Présent</li>";
+                    rd.response << "<li><b>" << ap.first << "</b> : ";
+                        if(request.params.find(ap.first) == request.params.end())
+                            rd.response << " Absent ! </li>";
+                        else
+                            rd.response << " Présent</li>";
                 }
             }
 

@@ -15,7 +15,7 @@
 
 #include <boost/tokenizer.hpp>
 #include <iostream>
-#include <gperftools/profiler.h>
+//#include <gperftools/profiler.h>
 using namespace webservice;
 
 namespace nt = navitia::type;
@@ -157,7 +157,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     }
 
     void load(navitia::type::Data & d){
-        ProfilerStart("navitia.prof");
+        //ProfilerStart("navitia.prof");
         try{
             navitia::type::Data data;
             Configuration * conf = Configuration::get();

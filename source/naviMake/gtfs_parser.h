@@ -24,6 +24,8 @@ private:
     boost::unordered_map<std::string, navimake::types::VehicleJourney*> vj_map;
     boost::unordered_map<std::string, navimake::types::Mode*> mode_map;
     boost::unordered_map<std::string, navimake::types::Network*> agency_map;
+    typedef std::vector<navimake::types::StopPoint*> vector_sp;
+    std::unordered_map<std::string, vector_sp> sa_spmap;
 
 public:
     boost::gregorian::date_period production_date;///<Période de validité des données
@@ -35,7 +37,7 @@ public:
     GtfsParser() : production_date(boost::gregorian::date(), boost::gregorian::date()) {}
 
     /// Remplit la structure passée en paramètre
-    void fill(navimake::Data& data);
+    void fill(navimake::Data& data, const std::string beginning_date = "");
 
     /// Remplit les modes types
     void fill_mode_types(Data & data);
@@ -72,7 +74,7 @@ public:
     void parse_trips(Data & data);
     //
     ///parse le fichier calendar.txt afin de trouver la période de validité des données
-    boost::gregorian::date_period find_production_date();
+    boost::gregorian::date_period find_production_date(const std::string beginning_date);
 };
 
 /// Normalise les external code des stop_point et stop_areas

@@ -240,6 +240,21 @@ public:
     //StreetNetworkWorker(const StreetNetwork & street_network);
     StreetNetworkWorker(const GeoRef & geo_ref);
 
+    /**
+     *  Met à jour les indicateurs pour savoir si les calculs ont été lancés
+     *
+     */
+    void init();
+
+    /**
+     * Indique si le calcul itinéraire piéton de départ a été lancé
+     */
+    bool departure_launched();
+    /**
+     * Indique si le calcul itinéraire piéton de fin a été lancé
+     */
+    bool arrival_launched();
+
     /** On définit les coordonnées de départ, un proximitylist et un rayon
      *
      * Retourne tous les idx atteignables dans ce rayon, ainsi que la distance en suivant le filaire de voirie
@@ -254,6 +269,9 @@ public:
 
     /// Reconstruit l'itinéraire piéton à partir de l'idx
     Path get_path(type::idx_t idx, bool use_second = false);
+
+    /// Construit l'itinéraire piéton direct. Le path est vide s'il n'existe pas
+    Path get_direct_path();
 
 private:
     //const StreetNetwork & street_network;
@@ -285,6 +303,10 @@ private:
     /// Associe chaque idx_t aux données de projection sur le filaire associées
     std::map<type::idx_t, ProjectionData> idx_projection;
     std::map<type::idx_t, ProjectionData> idx_projection2;
+
+    /// Savoir si les calculs ont été lancés en début et fin
+    bool departure_launch;
+    bool arrival_launch;
 };
 
 }} //namespace navitia::streetnetwork

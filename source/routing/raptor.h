@@ -47,14 +47,14 @@ struct RAPTOR : public AbstractRouter
                                                marked_rp(data.pt_data.route_points.size()),
                                                marked_sp(data.pt_data.stop_points.size()),
                                                routes_valides(data.pt_data.routes.size()),
-                                               Q(data.dataRaptor.routes.size()) {
+                                               Q(data.pt_data.routes.size()) {
         retour.assign(20, data.dataRaptor.retour_constant);
     }
 
     ///Initialise les structure retour et b_dest
     void init(std::vector<std::pair<type::idx_t, double> > departs,
               std::vector<std::pair<type::idx_t, double> > destinations,
-              const DateTime dep, DateTime borne, const bool clockwise, const bool reset);
+              const DateTime &dep, DateTime borne, const bool clockwise, const bool reset, const bool dep_dest = false);
 
     ///Cherche le temps de départ du calcul
     DateTime get_temps_depart(const DateTime &dt_depart, const std::vector<std::pair<type::idx_t, double> > &departs);
@@ -112,11 +112,11 @@ struct RAPTOR : public AbstractRouter
     int  earliest_trip(const type::Route & route, const unsigned int order, const DateTime &dt) const;
 
     ///Route parcourant dans le sens anti-horaire
-    void boucleRAPTORreverse();
+    void boucleRAPTORreverse(bool global_pruning = true);
 
     ///Boucle principale
     template<typename Visitor>
-    void raptor_loop(Visitor visitor);
+    void raptor_loop(Visitor visitor, bool global_pruning = true);
 
     ///Construit un chemin, utilisé lorsque l'algorithme a été fait en sens anti-horaire
     Path makePathreverse(std::vector<std::pair<type::idx_t, double> > departs,
