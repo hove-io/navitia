@@ -1,6 +1,5 @@
 #include "ptreferential.h"
 #include "reflexion.h"
-#include "where.h"
 #include "type/pb_converter.h"
 
 #include <algorithm>
@@ -11,29 +10,22 @@
 #include <boost/spirit/include/phoenix_operator.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 
-//TODO: change!
-using namespace navitia::type;
-using namespace navitia::ptref;
-
-namespace qi = boost::spirit::qi;
-
-// Un filter est du type stop_area.external_code = "kikoolol"
-struct Filter {
-    navitia::type::Type_e navitia_type; //< Le type parsé
-    std::string object; //< L'objet sous forme de chaîne de caractère ("stop_area")
-    std::string attribute; //< L'attribu ("external code")
-    Operator_e op; //< la comparaison ("=")
-    std::string value; //< la valeur comparée ("kikoolol")
-};
 
 // Wrapper permettant de remplir directement de type avec boost::spirit
 BOOST_FUSION_ADAPT_STRUCT(
-    Filter,
+    navitia::ptref::Filter,
     (std::string, object)
     (std::string, attribute)
-    (Operator_e, op)
+    (navitia::ptref::Operator_e, op)
     (std::string, value)
 )
+
+namespace navitia{ namespace ptref{
+using namespace navitia::type;
+
+namespace qi = boost::spirit::qi;
+
+
 
 
 /// Fonction qui va lire une chaîne de caractère et remplir un vector de Filter
@@ -60,7 +52,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 };
 
-namespace navitia{ namespace ptref{
+
 
 // vérification d'une clause WHERE
 template<class T>
@@ -157,11 +149,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, Data &
     std::vector<Filter> filters;
 
     if(!request.empty()){
-        try {
-            filters = parse(request);
-        } catch(...) {
-            throw;
-        }
+	filters = parse(request);
     }
 
     type::static_data * static_data = type::static_data::get();
@@ -199,17 +187,6 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, Data &
         std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
         std::set_intersection(final_indexes.begin(), final_indexes.end(), indexes.begin(), indexes.end(), it);
         final_indexes = tmp_indexes;
-    }
-    return final_indexes;
-}
-
-
-std::vector<idx_t> query_idx(Type_e requested_type, std::string request, Data & data) {
-    std::vector<idx_t> final_indexes;
-    try {
-        final_indexes = make_query(requested_type, request, data);
-    } catch(...) {
-        return final_indexes;
     }
     return final_indexes;
 }
