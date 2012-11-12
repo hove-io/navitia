@@ -331,7 +331,12 @@ class Worker : public BaseWorker<navitia::type::Data> {
         std::string filters = boost::get<std::string>(request.parsed_params["filter"].value);
         std::string datetime = boost::get<std::string>(request.parsed_params["datetime"].value);
         std::string max_date_time = boost::get<std::string>(request.parsed_params["max_datetime"].value);
-        int nb_departures = boost::get<int>(request.parsed_params["nb_departures"].value);
+
+        int nb_departures;
+        if(request.parsed_params.find("nb_departures") != request.parsed_params.end())
+            nb_departures= boost::get<int>(request.parsed_params["nb_departures"].value);
+        else
+            nb_departures = std::numeric_limits<int>::max();
         pb_response = navitia::timetables::next_departures(filters, datetime, max_date_time, nb_departures, data, *calculateur);
         rd.status_code = 200;
 
@@ -395,7 +400,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         add_param("next_departures", "filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, true);
         add_param("next_departures", "datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, true);
         add_param("next_departures", "max_datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
-        add_param("next_departures", "nb_departures", "Nombre maximum de départ souhaités", ApiParameter::INT, true);
+        add_param("next_departures", "nb_departures", "Nombre maximum de départ souhaités", ApiParameter::INT, false);
 
 
 
