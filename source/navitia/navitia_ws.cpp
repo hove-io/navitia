@@ -336,7 +336,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         if(request.parsed_params.find("nb_departures") != request.parsed_params.end())
             nb_departures= boost::get<int>(request.parsed_params["nb_departures"].value);
         else
-            nb_departures = std::numeric_limits<int>::max();
+            nb_departures = 10;
         pb_response = navitia::timetables::next_departures(filters, datetime, max_date_time, nb_departures, data, *calculateur);
         rd.status_code = 200;
 
