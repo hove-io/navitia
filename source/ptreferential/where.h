@@ -63,7 +63,7 @@ struct WhereWrapper {
 };
 
 /// Possible Operators
-enum Operator_e{EQ, NEQ, LT, GT, LEQ, GEQ};
+enum Operator_e{EQ, NEQ, LT, GT, LEQ, GEQ, HAVING};
 
 /// A specialized clause working on a member and comparing it to a value
 template<class T, class T2>
@@ -88,6 +88,7 @@ struct Where : public BaseWhere<T> {
             case GT: return element.*ptr > value; break;
             case LEQ: return element.*ptr <= value; break;
             case GEQ: return element.*ptr >= value; break;
+            default : return true;
         }
         return false;
     }
