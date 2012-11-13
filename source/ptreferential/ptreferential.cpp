@@ -35,22 +35,28 @@ struct Filter {
 
 };
 
-
 // Wrapper permettant de remplir directement de type avec boost::spirit
 BOOST_FUSION_ADAPT_STRUCT(
-    Filter,
+    navitia::ptref::Filter,
     (std::string, object)
     (std::string, attribute)
-    (Operator_e, op)
+    (navitia::ptref::Operator_e, op)
     (std::string, value)
 )
+
+namespace navitia{ namespace ptref{
+using namespace navitia::type;
+
+namespace qi = boost::spirit::qi;
+
+
+
 
 /// Fonction qui va lire une chaîne de caractère et remplir un vector de Filter
         template <typename Iterator>
         struct select_r
             : qi::grammar<Iterator, std::vector<Filter>(), qi::space_type>
 {
-
     qi::rule<Iterator, std::string(), qi::space_type> txt; // Match une string
     qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
     qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter; // La string complète à parser
@@ -75,7 +81,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 };
 
-namespace navitia{ namespace ptref{
+
 
 // vérification d'une clause WHERE
 template<class T>
@@ -177,11 +183,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, Data &
     std::vector<Filter> filters;
 
     if(!request.empty()){
-        try {
-            filters = parse(request);
-        } catch(...) {
-            throw;
-        }
+	filters = parse(request);
     }
 
     type::static_data * static_data = type::static_data::get();
@@ -223,16 +225,6 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, Data &
     return final_indexes;
 }
 
-
-std::vector<idx_t> query_idx(Type_e requested_type, std::string request, Data & data) {
-    std::vector<idx_t> final_indexes;
-    try {
-        final_indexes = make_query(requested_type, request, data);
-    } catch(...) {
-        return final_indexes;
-    }
-    return final_indexes;
-}
 
 pbnavitia::Response query_pb(Type_e requested_type, std::string request, Data & data){
     std::vector<idx_t> final_indexes;

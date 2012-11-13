@@ -30,17 +30,13 @@ pbnavitia::Response next_departures(std::string request, const std::string &str_
     try {
         route_points = navitia::ptref::make_query(type::Type_e::eRoutePoint, request, data);
     } catch(ptref::ptref_parsing_error parse_error) {
-        if(parse_error.type == ptref::ptref_parsing_error::error_type::partial_error) {
-            pb_response.set_error("NextDepartures / PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + parse_error.more + "<<");
-        } else {
-            pb_response.set_error("NextDepartures / PTReferential : Impossible de parser la requête");
+        switch(parse_error.type){
+        case ptref::ptref_parsing_error::error_type::partial_error: pb_response.set_error("NextDepartures / PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + parse_error.more + "<<"); break;
+        case ptref::ptref_parsing_error::error_type::global_error: pb_response.set_error("NextDepartures / PTReferential : Impossible de parser la requête");
+        case ptref::ptref_parsing_error::error_type::unknown_object: pb_response.set_error("Objet NAViTiA inconnu : " + parse_error.more);
         }
         return pb_response;
-    } catch(ptref::ptref_unknown_object unknown_obj_error) {
-        pb_response.set_error("Objet NAViTiA inconnu : " + unknown_obj_error.more);
-        return pb_response;
     }
-
 
     auto departures_dt_idx = next_departures(route_points, dt, max_dt, nb_departures, raptor);
     pb_response.set_requested_api(pbnavitia::NEXT_DEPARTURES);
