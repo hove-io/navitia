@@ -13,6 +13,7 @@
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential.h"
 #include "time_tables/next_departures.h"
+#include "time_tables/departure_board.h"
 
 #include <boost/tokenizer.hpp>
 #include <iostream>
@@ -307,7 +308,12 @@ class Worker : public BaseWorker<navitia::type::Data> {
         }
 
         std::string filters = boost::get<std::string>(request.parsed_params["filter"].value);
-        pb_response = navitia::ptref::query_pb(type, filters, data);
+        int depth;
+        if(request.parsed_params.find("depth") != request.parsed_params.end())
+            depth= boost::get<int>(request.parsed_params["depth"].value);
+        else
+            depth = 1;
+        pb_response = navitia::ptref::query_pb(type, filters, depth, data);
         rd.status_code = 200;
 
         return rd;
@@ -337,7 +343,50 @@ class Worker : public BaseWorker<navitia::type::Data> {
             nb_departures= boost::get<int>(request.parsed_params["nb_departures"].value);
         else
             nb_departures = 10;
-        pb_response = navitia::timetables::next_departures(filters, datetime, max_date_time, nb_departures, data, *calculateur);
+        int depth;
+        if(request.parsed_params.find("depth") != request.parsed_params.end())
+            depth= boost::get<int>(request.parsed_params["depth"].value);
+        else
+            depth = 1;
+
+        pb_response = navitia::timetables::next_departures(filters, datetime, max_date_time, nb_departures, depth, data, *calculateur);
+        rd.status_code = 200;
+
+        return rd;
+    }
+
+    ResponseData departure_board(RequestData & request, navitia::type::Data &data){
+        ResponseData rd;
+
+        nt::Locker locker(check_and_init(request, data, pbnavitia::NEXT_DEPARTURES, rd));
+        if(!locker.locked){
+            return rd;
+        }
+        if(data.last_load_at != this->last_load_at || !calculateur){
+            calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(data));
+            street_network_worker = std::unique_ptr<navitia::georef::StreetNetworkWorker>(new navitia::georef::StreetNetworkWorker(data.geo_ref));
+            this->last_load_at = data.last_load_at;
+
+            LOG4CPLUS_INFO(logger, "instanciation du calculateur");
+        }
+
+        std::string departure_filter = boost::get<std::string>(request.parsed_params["departure_filter"].value);
+        std::string arrival_filter = boost::get<std::string>(request.parsed_params["arrival_filter"].value);
+        std::string datetime = boost::get<std::string>(request.parsed_params["datetime"].value);
+        std::string max_date_time = boost::get<std::string>(request.parsed_params["max_datetime"].value);
+
+        int nb_departures;
+        if(request.parsed_params.find("nb_departures") != request.parsed_params.end())
+            nb_departures= boost::get<int>(request.parsed_params["nb_departures"].value);
+        else
+            nb_departures = 10;
+        int depth;
+        if(request.parsed_params.find("depth") != request.parsed_params.end())
+            depth= boost::get<int>(request.parsed_params["depth"].value);
+        else
+            depth = 1;
+
+        pb_response = navitia::timetables::departure_board(departure_filter, arrival_filter, datetime, max_date_time, nb_departures, depth, data, *calculateur);
         rd.status_code = 200;
 
         return rd;
@@ -391,18 +440,27 @@ class Worker : public BaseWorker<navitia::type::Data> {
         nt::static_data * static_data = nt::static_data::get();
         for(navitia::type::Type_e type : {nt::Type_e::eStopArea, nt::Type_e::eStopPoint, nt::Type_e::eLine, nt::Type_e::eRoute, nt::Type_e::eNetwork,
             nt::Type_e::eModeType, nt::Type_e::eMode, nt::Type_e::eConnection, nt::Type_e::eRoutePoint, nt::Type_e::eCompany}){
-            std::string str = static_data->captionByType(type);
-            register_api(str + "s", boost::bind(&Worker::ptref, this, type, _1, _2), "Liste de " + str);
+            std::string str = static_data->captionByType(type) + "s";
+            register_api(str /*+ "s"*/, boost::bind(&Worker::ptref, this, type, _1, _2), "Liste de " + str);
             add_param(str, "filter", "Conditions pour restreindre les objets retournés", ApiParameter::STRING, false);
+            add_param(str, "depth", "Profondeur maximale pour les objets", ApiParameter::INT, false);
         }
 
         register_api("next_departures", boost::bind(&Worker::next_departures, this, _1, _2), "Renvoie les prochains départs");
-        add_param("next_departures", "filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, true);
+        add_param("next_departures", "filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, false);
         add_param("next_departures", "datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, true);
         add_param("next_departures", "max_datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
         add_param("next_departures", "nb_departures", "Nombre maximum de départ souhaités", ApiParameter::INT, false);
+        add_param("next_departures", "depth", "Profondeur maximale pour les objets", ApiParameter::INT, false);
 
 
+        register_api("departure_board", boost::bind(&Worker::departure_board, this, _1, _2), "Renvoie le tableau depart/arrivee entre deux filtres");
+        add_param("next_departures", "departure_filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, false);
+        add_param("next_departures", "arrival_filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, false);
+        add_param("next_departures", "datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, true);
+        add_param("next_departures", "max_datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
+        add_param("next_departures", "nb_departures", "Nombre maximum de départ souhaités", ApiParameter::INT, false);
+        add_param("next_departures", "depth", "Profondeur maximale pour les objets", ApiParameter::INT, false);
 
 
 
