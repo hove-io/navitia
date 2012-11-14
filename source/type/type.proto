@@ -20,6 +20,7 @@ enum API {
     PROXIMITYLIST = 6;
     STATUS = 7;
     NEXT_DEPARTURES = 8;
+    DEPARTURE_BOARD = 9;
 }
 
 message GeographicalCoord {
@@ -47,6 +48,7 @@ message StopPoint {
     optional City city = 4;
     optional string external_code = 5;
     optional GeographicalCoord coord = 6; 
+    optional StopArea stop_area = 7;
 }
 
 message Line {
@@ -295,6 +297,11 @@ message Status{
     optional int32 nb_threads = 11;
 }
 
+message PairStopTime {
+    required StopTime first = 1;
+    required StopTime second = 2;
+}
+
 message Response{
     required API requested_api = 1;
     optional string error = 2;
@@ -314,4 +321,6 @@ message Response{
     optional Status status = 9;
 
     repeated StopTime departure = 10;
+
+    repeated PairStopTime board_item = 11;
 }
