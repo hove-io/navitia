@@ -33,6 +33,8 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
     stop_point->mutable_coord()->set_lat(sp.coord.y);
     if(max_depth > 0 && sp.city_idx != nt::invalid_idx)
             fill_pb_object(sp.city_idx, data, stop_point->mutable_city(), max_depth-1);
+    if(max_depth > 0 && sp.stop_area_idx != nt::invalid_idx)
+            fill_pb_object(sp.stop_area_idx, data, stop_point->mutable_stop_area(), max_depth-1);
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Way * way, int max_depth){
