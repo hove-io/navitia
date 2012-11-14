@@ -10,7 +10,7 @@ std::string iso_string(const nt::Data & d, int date, int hour){
     return boost::posix_time::to_iso_string(date_time);
 }
 
-pbnavitia::Response next_departures(std::string request, const std::string &str_dt, const std::string &str_max_dt, const int nb_departures, type::Data & data, routing::raptor::RAPTOR &raptor) {
+pbnavitia::Response next_departures(const std::string &request, const std::string &str_dt, const std::string &str_max_dt, const int nb_departures, const int depth, type::Data & data, routing::raptor::RAPTOR &raptor) {
     pbnavitia::Response pb_response;
     std::vector<type::idx_t> route_points;
 
@@ -45,8 +45,8 @@ pbnavitia::Response next_departures(std::string request, const std::string &str_
         stoptime->set_departure_date_time(iso_string(data, dt_idx.first.date(),  dt_idx.first.hour()));
         stoptime->set_arrival_date_time(iso_string(data, dt_idx.first.date(),  dt_idx.first.hour()));
         const auto &rp = data.pt_data.route_points[data.pt_data.stop_times[dt_idx.second].route_point_idx];
-        fill_pb_object(rp.stop_point_idx, data, stoptime->mutable_stop_point(), 0);
-        fill_pb_object(data.pt_data.routes[rp.route_idx].line_idx, data, stoptime->mutable_line(), 0);
+        fill_pb_object(rp.stop_point_idx, data, stoptime->mutable_stop_point(), depth);
+        fill_pb_object(data.pt_data.routes[rp.route_idx].line_idx, data, stoptime->mutable_line(), depth);
     }
     return pb_response;
 }
@@ -54,7 +54,7 @@ pbnavitia::Response next_departures(std::string request, const std::string &str_
 
 
 
-std::vector<dt_st> next_departures(const std::vector<type::idx_t> &route_points, const routing::DateTime &dt, const routing::DateTime &max_dt, const uint32_t nb_departures, routing::raptor::RAPTOR &raptor) {
+std::vector<dt_st> next_departures(const std::vector<type::idx_t> &route_points, const routing::DateTime &dt, const routing::DateTime &max_dt, const int nb_departures, routing::raptor::RAPTOR &raptor) {
    std::vector<dt_st> result;
    std::multiset<dt_st, comp_st> result_temp;
    auto test_add = true;
@@ -89,7 +89,7 @@ std::vector<dt_st> next_departures(const std::vector<type::idx_t> &route_points,
 
    }
 
-   uint32_t i = 0;
+   int i = 0;
    for(auto it = result_temp.begin(); it != result_temp.end() && i < nb_departures; ++it) {
        if(it->first <= max_dt) {
            result.push_back(*it);
