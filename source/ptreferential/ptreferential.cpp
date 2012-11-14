@@ -76,24 +76,24 @@ WhereWrapper<T> build_clause(std::vector<Filter> filters) {
 
 
 
-pbnavitia::Response extract_data(Data & data, Type_e requested_type, std::vector<idx_t> & rows) {
+pbnavitia::Response extract_data(Data & data, Type_e requested_type, std::vector<idx_t> & rows, const int depth) {
     pbnavitia::Response result;
     result.set_requested_api(pbnavitia::PTREFERENTIAL);
     pbnavitia::PTReferential * pb_response = result.mutable_ptref();
 
     for(idx_t idx : rows){
         switch(requested_type){
-        case Type_e::eLine: fill_pb_object(idx, data, pb_response->add_line(), 1); break;
-        case Type_e::eRoute: fill_pb_object(idx, data, pb_response->add_route(), 1); break;
-        case Type_e::eStopPoint: fill_pb_object(idx, data, pb_response->add_stop_point(), 1); break;
-        case Type_e::eStopArea: fill_pb_object(idx, data, pb_response->add_stop_area(), 1); break;
-        case Type_e::eNetwork: fill_pb_object(idx, data, pb_response->add_network(), 1); break;
-        case Type_e::eMode: fill_pb_object(idx, data, pb_response->add_commercial_mode(), 1); break;
-        case Type_e::eModeType: fill_pb_object(idx, data, pb_response->add_physical_mode(), 1); break;
-        case Type_e::eCity: fill_pb_object(idx, data, pb_response->add_city(), 1); break;
-        case Type_e::eConnection: fill_pb_object(idx, data, pb_response->add_connection(), 1); break;
-        case Type_e::eRoutePoint: fill_pb_object(idx, data, pb_response->add_route_point(), 1); break;
-        case Type_e::eCompany: fill_pb_object(idx, data, pb_response->add_company(), 1); break;
+        case Type_e::eLine: fill_pb_object(idx, data, pb_response->add_line(), depth); break;
+        case Type_e::eRoute: fill_pb_object(idx, data, pb_response->add_route(), depth); break;
+        case Type_e::eStopPoint: fill_pb_object(idx, data, pb_response->add_stop_point(), depth); break;
+        case Type_e::eStopArea: fill_pb_object(idx, data, pb_response->add_stop_area(), depth); break;
+        case Type_e::eNetwork: fill_pb_object(idx, data, pb_response->add_network(), depth); break;
+        case Type_e::eMode: fill_pb_object(idx, data, pb_response->add_commercial_mode(), depth); break;
+        case Type_e::eModeType: fill_pb_object(idx, data, pb_response->add_physical_mode(), depth); break;
+        case Type_e::eCity: fill_pb_object(idx, data, pb_response->add_city(), depth); break;
+        case Type_e::eConnection: fill_pb_object(idx, data, pb_response->add_connection(), depth); break;
+        case Type_e::eRoutePoint: fill_pb_object(idx, data, pb_response->add_route_point(), depth); break;
+        case Type_e::eCompany: fill_pb_object(idx, data, pb_response->add_company(), depth); break;
         default: break;
         }
     }
@@ -200,7 +200,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, Data &
 }
 
 
-pbnavitia::Response query_pb(Type_e requested_type, std::string request, Data & data){
+pbnavitia::Response query_pb(Type_e requested_type, std::string request, const int depth, Data & data){
     std::vector<idx_t> final_indexes;
     pbnavitia::Response pb_response;
     try {
@@ -218,7 +218,7 @@ pbnavitia::Response query_pb(Type_e requested_type, std::string request, Data & 
     }
 
     final_indexes = make_query(requested_type, request, data);
-    return extract_data(data, requested_type, final_indexes);
+    return extract_data(data, requested_type, final_indexes, depth);
 }
 
 
