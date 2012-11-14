@@ -1,45 +1,46 @@
 #include "ptreferential.h"
 #include "reflexion.h"
+#include "where.h"
 #include "type/pb_converter.h"
 
 #include <algorithm>
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_lit.hpp>
+#include <boost/spirit/include/phoenix1.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
+#include <boost/spirit/include/phoenix1_binders.hpp>
+#include <boost/spirit/include/phoenix_stl.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
+#include <boost/spirit/home/phoenix/object/construct.hpp>
 
 
-// Wrapper permettant de remplir directement de type avec boost::spirit
-BOOST_FUSION_ADAPT_STRUCT(
-    navitia::ptref::Filter,
-    (std::string, object)
-    (std::string, attribute)
-    (navitia::ptref::Operator_e, op)
-    (std::string, value)
-)
+//TODO: change!
+using namespace navitia::type;
+using namespace navitia::ptref;
+
+namespace qi = boost::spirit::qi;
+
 
 namespace navitia{ namespace ptref{
 using namespace navitia::type;
 
 namespace qi = boost::spirit::qi;
 
-
-
-
 /// Fonction qui va lire une chaîne de caractère et remplir un vector de Filter
         template <typename Iterator>
         struct select_r
             : qi::grammar<Iterator, std::vector<Filter>(), qi::space_type>
 {
-    qi::rule<Iterator, std::string(), qi::space_type> txt; // Match une string
+    qi::rule<Iterator, std::string(), qi::space_type> txt, txt2; // Match une string
     qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
     qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter; // La string complète à parser
+    qi::rule<Iterator, Filter(), qi::space_type> filter1, filter2; // La string complète à parser
 
     select_r() : select_r::base_type(filter) {
         txt = qi::lexeme[+(qi::alnum|qi::char_("_:-"))];
-
+        txt2 = qi::lexeme[+(qi::alnum|qi::char_("_:-=.<> "))];
         bin_op =  qi::string("<=")[qi::_val = LEQ]
                 | qi::string(">=")[qi::_val = GEQ]
                 | qi::string("<>")[qi::_val = NEQ]
@@ -47,7 +48,9 @@ namespace qi = boost::spirit::qi;
                 | qi::string(">") [qi::_val = GT]
                 | qi::string("=") [qi::_val = EQ];
 
-        filter %= (txt >> "." >> txt >> bin_op >> txt) % qi::lexeme["and"];
+        filter1 = (txt >> "." >> txt >> bin_op >> txt)[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3, qi::_4)];
+        filter2 = (txt >> "HAVING" >> '(' >> txt2 >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
+        filter %= (filter1 | filter2) % qi::lexeme["and"];
     }
 
 };
@@ -111,8 +114,12 @@ std::vector<idx_t> filtered_indexes(const std::vector<T> & data, const C & claus
 template<typename T>
 std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, Data & d) {
     auto & data = d.pt_data.get_data<T>();
-
-    std::vector<idx_t> indexes = filtered_indexes(data, build_clause<T>({filter})); // filtered.get_offsets();
+    std::vector<idx_t> indexes;
+    if(filter.op != HAVING) {
+        indexes = filtered_indexes(data, build_clause<T>({filter})); // filtered.get_offsets();
+    } else {
+        indexes = make_query(nt::static_data::get()->typeByCaption(filter.object), filter.value, d);
+    }
 
     Type_e current = filter.navitia_type;
     std::map<Type_e, Type_e> path = find_path(requested_type);
@@ -120,6 +127,7 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, Data & d) 
         indexes = d.pt_data.get_target_by_source(current, path[current], indexes);
         current = path[current];
     }
+
     return indexes;
 }
 
@@ -190,6 +198,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, Data &
     }
     return final_indexes;
 }
+
 
 pbnavitia::Response query_pb(Type_e requested_type, std::string request, Data & data){
     std::vector<idx_t> final_indexes;

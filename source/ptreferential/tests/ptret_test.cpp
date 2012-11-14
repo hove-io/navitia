@@ -2,13 +2,8 @@
 #define BOOST_TEST_MODULE georef_test
 #include <boost/test/unit_test.hpp>
 #include "ptreferential/ptreferential.h"
-/*
-navitia::type::Type_e navitia_type; //< Le type parsé
-std::string object; //< L'objet sous forme de chaîne de caractère ("stop_area")
-std::string attribute; //< L'attribu ("external code")
-Operator_e op; //< la comparaison ("=")
-std::string value; //< la valeur comparée ("kikoolol")
-*/
+#include "ptreferential/reflexion.h"
+
 using namespace navitia::ptref;
 BOOST_AUTO_TEST_CASE(parser){
     std::vector<Filter> filters = parse("stop_areas.external_code=42");
@@ -43,6 +38,36 @@ BOOST_AUTO_TEST_CASE(many_filter){
     BOOST_CHECK_EQUAL(filters[1].op, EQ);
 }
 
+BOOST_AUTO_TEST_CASE(having) {
+    std::vector<Filter> filters = parse("stop_areas HAVING (line.external_code=1 and stop_area.external_code=3) and line.external_code>=2");
+    BOOST_REQUIRE_EQUAL(filters.size(), 2);
+    BOOST_CHECK_EQUAL(filters[0].object, "stop_areas");
+    BOOST_CHECK_EQUAL(filters[0].attribute, "");
+    BOOST_CHECK_EQUAL(filters[0].value, "line.external_code=1 and stop_area.external_code=3");
+    BOOST_CHECK_EQUAL(filters[0].op, HAVING);
+
+    BOOST_CHECK_EQUAL(filters[1].object, "line");
+    BOOST_CHECK_EQUAL(filters[1].attribute, "external_code");
+    BOOST_CHECK_EQUAL(filters[1].value, "2");
+    BOOST_CHECK_EQUAL(filters[1].op,  GEQ);
+}
+
 BOOST_AUTO_TEST_CASE(exception){
     BOOST_CHECK_THROW(parse("mouuuhh bliiii"), ptref_parsing_error);
+}
+
+struct Moo {
+    int bli;
+};
+DECL_HAS_MEMBER(bli)
+DECL_HAS_MEMBER(foo)
+
+BOOST_AUTO_TEST_CASE(reflexion){
+    BOOST_CHECK(Reflect_bli<Moo>::value);
+    BOOST_CHECK(!Reflect_foo<Moo>::value);
+
+    Moo m;
+    m.bli = 42;
+    BOOST_CHECK_EQUAL(get_bli(m), 42);
+    BOOST_CHECK_THROW(get_foo(m), unknown_member);
 }
