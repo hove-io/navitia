@@ -26,7 +26,7 @@ std::string iso_string(const nt::Data & d, int date, int hour);
  * @return : Réponse au format protocole buffer
  */
 pbnavitia::Response next_departures(const std::string &request, const std::string &str_dt, const std::string &str_max_dt,
-                                    const int nb_departures, const int depth, type::Data & data, routing::raptor::RAPTOR &raptor);
+                                    const int nb_departures, const int depth, type::Data & data);
 
 /**
  * @brief next_departures : Renvoie tous les departures partant de la liste des route points
@@ -38,5 +38,5 @@ pbnavitia::Response next_departures(const std::string &request, const std::strin
  * @return : Renvoie de paire de datetime, st.idx de départs. La liste est triée selon les datetimes.
  */
 std::vector<dt_st> next_departures(const std::vector<type::idx_t> &route_points, const routing::DateTime &dt,
-                                   const routing::DateTime &max_dt, const int nb_departures, routing::raptor::RAPTOR &raptor);
+                                   const routing::DateTime &max_dt, const int nb_departures, type::Data & data);
 }}

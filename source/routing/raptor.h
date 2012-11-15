@@ -7,6 +7,7 @@
 #include "boost/dynamic_bitset.hpp"
 #include "routing/raptor_utils.h"
 #include "routing/dataraptor.h"
+#include "best_trip.h"
 
 namespace navitia { namespace routing { namespace raptor{
 
@@ -108,8 +109,6 @@ struct RAPTOR : public AbstractRouter
     void route_path_connections_forward(); 
     ///Trouve pour chaque route, le premier route point auquel on peut embarquer, se sert de marked_rp
     void make_queue();
-    ///Cherche le premier trip partant apres dt sur la route au route point order
-    int  earliest_trip(const type::Route & route, const unsigned int order, const DateTime &dt) const;
 
     ///Route parcourant dans le sens anti-horaire
     void boucleRAPTORreverse(bool global_pruning = true);
@@ -127,8 +126,6 @@ struct RAPTOR : public AbstractRouter
     void route_path_connections_backward(); 
     ///Trouve pour chaque route, le premier route point auquel on peut embarquer, se sert de marked_rp
     void make_queuereverse();
-    ///Cherche le premier trip partant avant dt sur la route au route point order
-    int tardiest_trip(const type::Route & route, const unsigned int order, const DateTime &dt) const;
 
     ~RAPTOR() {}
 

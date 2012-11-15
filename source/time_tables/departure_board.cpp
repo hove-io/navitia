@@ -32,7 +32,7 @@ std::unordered_map<type::idx_t, uint32_t>  get_arrival_order(const std::vector<t
 
 std::vector<pair_dt_st> departure_board(const std::string &departure_filter, const std::string &arrival_filter,
                                         const routing::DateTime &datetime, const routing::DateTime &max_datetime, const int nb_departures,
-                                        type::Data & data, routing::raptor::RAPTOR &raptor) {
+                                        type::Data & data) {
 
     std::vector<pair_dt_st> result;
     //On va chercher tous les route points correspondant au deuxieme filtre
@@ -46,7 +46,7 @@ std::vector<pair_dt_st> departure_board(const std::string &departure_filter, con
         departure_route_points.push_back(dep_order.first);
 
     //On demande tous les next_departures
-    auto departure_dt_st = next_departures(departure_route_points, datetime, max_datetime, nb_departures, raptor);
+    auto departure_dt_st = next_departures(departure_route_points, datetime, max_datetime, nb_departures, data);
 
 
     //On va chercher les retours
@@ -67,17 +67,17 @@ std::vector<pair_dt_st> departure_board(const std::string &departure_filter, con
 
 pbnavitia::Response departure_board(const std::string &departure_filter, const std::string &arrival_filter,
                                     const std::string &str_dt, const std::string &str_max_dt,
-                                    const int nb_departures, const int depth, type::Data & data, routing::raptor::RAPTOR &raptor) {
+                                    const int nb_departures, const int depth, type::Data & data) {
     pbnavitia::Response pb_response;
 
     boost::posix_time::ptime ptime;
     ptime = boost::posix_time::from_iso_string(str_dt);
-    routing::DateTime dt((ptime.date() - raptor.data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
+    routing::DateTime dt((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
 
     routing::DateTime max_dt;
     if(str_max_dt != "") {
         ptime = boost::posix_time::from_iso_string(str_max_dt);
-        max_dt = routing::DateTime((ptime.date() - raptor.data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
+        max_dt = routing::DateTime((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
     } else if(nb_departures == std::numeric_limits<int>::max()) {
         pb_response.set_error("DepartureBoard : Un des deux champs nb_departures ou max_datetime doit être renseigné");
         return pb_response;
@@ -85,7 +85,7 @@ pbnavitia::Response departure_board(const std::string &departure_filter, const s
 
     std::vector<pair_dt_st> board;
     try {
-        board = departure_board(departure_filter, arrival_filter, dt, max_dt, nb_departures, data, raptor);
+        board = departure_board(departure_filter, arrival_filter, dt, max_dt, nb_departures, data);
     } catch(ptref::ptref_parsing_error parse_error) {
         switch(parse_error.type){
         case ptref::ptref_parsing_error::error_type::partial_error: pb_response.set_error("DepartureBoard / PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + parse_error.more + "<<"); break;

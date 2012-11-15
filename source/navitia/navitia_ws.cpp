@@ -349,7 +349,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         else
             depth = 1;
 
-        pb_response = navitia::timetables::next_departures(filters, datetime, max_date_time, nb_departures, depth, data, *calculateur);
+        pb_response = navitia::timetables::next_departures(filters, datetime, max_date_time, nb_departures, depth, data);
         rd.status_code = 200;
 
         return rd;
@@ -386,7 +386,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         else
             depth = 1;
 
-        pb_response = navitia::timetables::departure_board(departure_filter, arrival_filter, datetime, max_date_time, nb_departures, depth, data, *calculateur);
+        pb_response = navitia::timetables::departure_board(departure_filter, arrival_filter, datetime, max_date_time, nb_departures, depth, data);
         rd.status_code = 200;
 
         return rd;
