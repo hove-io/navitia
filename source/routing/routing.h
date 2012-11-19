@@ -127,12 +127,10 @@ public:
 
     void decrement(uint32_t secs){
         uint32_t hour = this->hour();
-        if(hour < secs){
-            hour = hour + 24*3600 - secs;
-            *this = DateTime(this->date() - 1, hour);
-        } else {
-            *this = DateTime(this->date(), hour - secs);
-        }
+        if(hour > secs)
+            this->updatereverse(hour - secs);
+        else
+            this->updatereverse(86400 - secs + hour);
     }
 
     void date_decrement(){
