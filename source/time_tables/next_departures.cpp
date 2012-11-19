@@ -10,18 +10,18 @@ std::string iso_string(const nt::Data & d, int date, int hour){
     return boost::posix_time::to_iso_string(date_time);
 }
 
-pbnavitia::Response next_departures(const std::string &request, const std::string &str_dt, const std::string &str_max_dt, const int nb_departures, const int depth, type::Data & data, routing::raptor::RAPTOR &raptor) {
+pbnavitia::Response next_departures(const std::string &request, const std::string &str_dt, const std::string &str_max_dt, const int nb_departures, const int depth, type::Data & data) {
     pbnavitia::Response pb_response;
     std::vector<type::idx_t> route_points;
 
     boost::posix_time::ptime ptime;
     ptime = boost::posix_time::from_iso_string(str_dt);
-    routing::DateTime dt((ptime.date() - raptor.data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
+    routing::DateTime dt((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
 
     routing::DateTime max_dt;
     if(str_max_dt != "") {
         ptime = boost::posix_time::from_iso_string(str_max_dt);
-        max_dt = routing::DateTime((ptime.date() - raptor.data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
+        max_dt = routing::DateTime((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
     } else if(nb_departures == std::numeric_limits<int>::max()) {
         pb_response.set_error("NextDepartures : Un des deux champs nb_departures ou max_datetime doit être renseigné");
         return pb_response;
@@ -38,7 +38,7 @@ pbnavitia::Response next_departures(const std::string &request, const std::strin
         return pb_response;
     }
 
-    auto departures_dt_idx = next_departures(route_points, dt, max_dt, nb_departures, raptor);
+    auto departures_dt_idx = next_departures(route_points, dt, max_dt, nb_departures, data);
     pb_response.set_requested_api(pbnavitia::NEXT_DEPARTURES);
     for(auto dt_idx : departures_dt_idx) {
         pbnavitia::StopTime * stoptime = pb_response.add_departure();
@@ -54,7 +54,7 @@ pbnavitia::Response next_departures(const std::string &request, const std::strin
 
 
 
-std::vector<dt_st> next_departures(const std::vector<type::idx_t> &route_points, const routing::DateTime &dt, const routing::DateTime &max_dt, const int nb_departures, routing::raptor::RAPTOR &raptor) {
+std::vector<dt_st> next_departures(const std::vector<type::idx_t> &route_points, const routing::DateTime &dt, const routing::DateTime &max_dt, const int nb_departures, type::Data & data) {
    std::vector<dt_st> result;
    std::multiset<dt_st, comp_st> result_temp;
    auto test_add = true;
@@ -67,10 +67,10 @@ std::vector<dt_st> next_departures(const std::vector<type::idx_t> &route_points,
        test_add = false;
        //On va chercher le prochain départ >= last_departure + 1 pour tous les route points de la liste
        for(auto rp_idx : rps) {
-           const type::RoutePoint & rp = raptor.data.pt_data.route_points[rp_idx];
-           auto etemp = raptor.earliest_trip(raptor.data.pt_data.routes[rp.route_idx], rp.order, last_departure + 1);
+           const type::RoutePoint & rp = data.pt_data.route_points[rp_idx];
+           auto etemp = earliest_trip(data.pt_data.routes[rp.route_idx], rp.order, last_departure + 1, data);
            if(etemp >= 0) {
-               auto st = raptor.data.pt_data.stop_times[raptor.data.pt_data.vehicle_journeys[etemp].stop_time_list[rp.order]];
+               auto st = data.pt_data.stop_times[data.pt_data.vehicle_journeys[etemp].stop_time_list[rp.order]];
                auto dt_temp = dt;
                dt_temp.update(st.departure_time);
                result_temp.insert(std::make_pair(dt_temp, st.idx));
@@ -84,7 +84,7 @@ std::vector<dt_st> next_departures(const std::vector<type::idx_t> &route_points,
        rps.clear();
        for(auto it_st = result_temp.lower_bound(std::make_pair(last_departure, type::invalid_idx));
                 it_st!= result_temp.upper_bound(std::make_pair(last_departure, type::invalid_idx)); ++it_st){
-           rps.push_back(raptor.data.pt_data.stop_times[it_st->second].route_point_idx);
+           rps.push_back(data.pt_data.stop_times[it_st->second].route_point_idx);
        }
 
    }
