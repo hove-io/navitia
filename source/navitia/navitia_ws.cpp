@@ -338,11 +338,12 @@ class Worker : public BaseWorker<navitia::type::Data> {
         std::string datetime = boost::get<std::string>(request.parsed_params["datetime"].value);
         std::string max_date_time = boost::get<std::string>(request.parsed_params["max_datetime"].value);
 
-        int nb_departures;
+        int nb_departures = std::numeric_limits<int>::max();
         if(request.parsed_params.find("nb_departures") != request.parsed_params.end())
             nb_departures= boost::get<int>(request.parsed_params["nb_departures"].value);
-        else
+        else if(max_date_time == "")
             nb_departures = 10;
+
         int depth;
         if(request.parsed_params.find("depth") != request.parsed_params.end())
             depth= boost::get<int>(request.parsed_params["depth"].value);
