@@ -299,42 +299,237 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     BOOST_CHECK_CLOSE(res[1].second, 350, 1);
 }
 
-// Récupérer les cordonnées d'un numéro :
-
-BOOST_AUTO_TEST_CASE(coord_housenumber){
+// Récupérer les cordonnées d'un numéro impair :
+BOOST_AUTO_TEST_CASE(numero_impair){
     navitia::georef::Way way;
     navitia::georef::HouseNumber hn;
+    navitia::georef::Graph graph;
+    vertex_t debut, fin;
+    Vertex v;
+    navitia::georef::Edge e1;
 
-    /*
-rue canoville
-(1,1)       (1,7)       (1,10)       (1,18)
-2           8           16           22
-      */
-    way.name="canoville";
+ /*
+(1,3)       (1,7)       (1,17)       (1,53)
+  3           7           17           53
+*/
+    way.name="AA";
     way.way_type="rue";
-    hn.coord.x=1.0;
-    hn.coord.y=1.0;
-    hn.number = 2;
-    way.house_number_right.push_back(hn);
+    nt::GeographicalCoord upper(1.0,53.0);
+    nt::GeographicalCoord lower(1.0,3.0);
+
+    hn.coord=lower;
+    hn.number = 3;
+    way.house_number_left.push_back(hn);
+    v.coord = hn.coord;
+    debut = boost::add_vertex(v,graph);
 
     hn.coord.x=1.0;
     hn.coord.y=7.0;
+    hn.number = 7;
+    way.house_number_left.push_back(hn);
+    v.coord = hn.coord;
+    fin = boost::add_vertex(v,graph);
+
+    boost::add_edge(debut, fin,e1, graph);
+    boost::add_edge(fin, debut,e1, graph);
+    way.edges.push_back(std::make_pair(debut, fin));
+    way.edges.push_back(std::make_pair(fin,debut));
+
+
+    hn.coord.x=1.0;
+    hn.coord.y=17.0;
+    hn.number = 17;
+    way.house_number_left.push_back(hn);
+    v.coord = hn.coord;
+    debut = boost::add_vertex(v,graph);
+
+    boost::add_edge(fin, debut,e1, graph);
+    boost::add_edge(debut, fin,e1, graph);
+    way.edges.push_back(std::make_pair(fin,debut));
+    way.edges.push_back(std::make_pair(debut, fin));
+
+
+    hn.coord= upper;
+    hn.number = 53;
+    way.house_number_left.push_back(hn);
+    v.coord = hn.coord;
+    fin = boost::add_vertex(v,graph);
+
+    boost::add_edge(debut, fin,e1, graph);
+    boost::add_edge(fin, debut,e1, graph);
+    way.edges.push_back(std::make_pair(debut, fin));
+    way.edges.push_back(std::make_pair(fin,debut));
+
+    way.sort_house_number();
+
+// Numéro recherché est > au plus grand numéro dans la rue
+    nt::GeographicalCoord result = way.nearest_coord(55, graph);
+    BOOST_CHECK_EQUAL(result.distance_to(upper), 0.0);
+
+// Numéro recherché est < au plus petit numéro dans la rue
+    result = way.nearest_coord(1, graph);
+    BOOST_CHECK_EQUAL(result.distance_to(lower), 0.0);
+
+// Numéro recherché est = à numéro dans la rue
+    result = way.nearest_coord(17, graph);
+    BOOST_CHECK_EQUAL(result.distance_to(nt::GeographicalCoord(1.0,17.0)), 0.0);
+
+// Numéro recherché est n'existe pas mais il est inclus entre le plus petit et grand numéro de la rue
+    // ==>  Extrapolation des coordonnées
+   result = way.nearest_coord(43, graph);
+   BOOST_CHECK_EQUAL(result.distance_to(nt::GeographicalCoord(1.0,43.0)), 0.0);
+
+// liste des numéros pair est vide ==> Calcul du barycentre de la rue
+   result = way.nearest_coord(40, graph);
+   BOOST_CHECK_EQUAL(result.distance_to(nt::GeographicalCoord(12.0/12,208.0/12.0)), 0.0);
+
+// les deux listes des numéros pair et impair sont vides ==> Calcul du barycentre de la rue
+   way.house_number_left.clear();
+   result = way.nearest_coord(9, graph);
+   BOOST_CHECK_EQUAL(result.distance_to(nt::GeographicalCoord(12.0/12,208.0/12.0)), 0.0);
+
+}
+
+// Récupérer les cordonnées d'un numéro pair :
+BOOST_AUTO_TEST_CASE(numero_pair){
+    navitia::georef::Way way;
+    navitia::georef::HouseNumber hn;
+    navitia::georef::Graph graph;
+    vertex_t debut, fin;
+    Vertex v;
+    navitia::georef::Edge e1;
+
+ /*
+(2,4)       (2,4)       (2,18)       (2,54)
+  4           4           18           54
+*/
+    way.name="AA";
+    way.way_type="rue";
+    nt::GeographicalCoord upper(2.0,54.0);
+    nt::GeographicalCoord lower(2.0,4.0);
+
+    hn.coord=lower;
+    hn.number = 4;
+    way.house_number_right.push_back(hn);
+    v.coord = hn.coord;
+    debut = boost::add_vertex(v,graph);
+
+    hn.coord.x=2.0;
+    hn.coord.y=8.0;
+    hn.number = 8;
+    way.house_number_right.push_back(hn);
+    v.coord = hn.coord;
+    fin = boost::add_vertex(v,graph);
+
+    boost::add_edge(debut, fin,e1, graph);
+    boost::add_edge(fin, debut,e1, graph);
+    way.edges.push_back(std::make_pair(debut, fin));
+    way.edges.push_back(std::make_pair(fin,debut));
+
+
+    hn.coord.x=2.0;
+    hn.coord.y=18.0;
+    hn.number = 18;
+    way.house_number_right.push_back(hn);
+    v.coord = hn.coord;
+    debut = boost::add_vertex(v,graph);
+
+    boost::add_edge(fin, debut,e1, graph);
+    boost::add_edge(debut, fin,e1, graph);
+    way.edges.push_back(std::make_pair(fin,debut));
+    way.edges.push_back(std::make_pair(debut, fin));
+
+
+    hn.coord= upper;
+    hn.number = 54;
+    way.house_number_right.push_back(hn);
+    v.coord = hn.coord;
+    fin = boost::add_vertex(v,graph);
+
+    boost::add_edge(debut, fin,e1, graph);
+    boost::add_edge(fin, debut,e1, graph);
+    way.edges.push_back(std::make_pair(debut, fin));
+    way.edges.push_back(std::make_pair(fin,debut));
+
+    way.sort_house_number();
+
+// Numéro recherché est > au plus grand numéro dans la rue
+    nt::GeographicalCoord result = way.nearest_coord(56, graph);
+    BOOST_CHECK_EQUAL(result.distance_to(upper), 0.0);
+
+// Numéro recherché est < au plus petit numéro dans la rue
+    result = way.nearest_coord(2, graph);
+    BOOST_CHECK_EQUAL(result.distance_to(lower), 0.0);
+
+// Numéro recherché est = à numéro dans la rue
+    result = way.nearest_coord(18, graph);
+    BOOST_CHECK_EQUAL(result.distance_to(nt::GeographicalCoord(2.0,18.0)), 0.0);
+
+// Numéro recherché est n'existe pas mais il est inclus entre le plus petit et grand numéro de la rue
+    // ==>  Extrapolation des coordonnées
+   result = way.nearest_coord(44, graph);
+   BOOST_CHECK_EQUAL(result.distance_to(nt::GeographicalCoord(2.0,44.0)), 0.0);
+
+// liste des numéros impair est vide ==> Calcul du barycentre de la rue
+   result = way.nearest_coord(41, graph);
+   BOOST_CHECK_EQUAL(result.distance_to(nt::GeographicalCoord(24.0/12,220.0/12.0)), 0.0);
+
+// les deux listes des numéros pair et impair sont vides ==> Calcul du barycentre de la rue
+   way.house_number_right.clear();
+   result = way.nearest_coord(10, graph);
+   BOOST_CHECK_EQUAL(result.distance_to(nt::GeographicalCoord(24.0/12,220.0/12.0)), 0.0);
+}
+
+// Recherche d'un numéro à partir des coordonnées
+BOOST_AUTO_TEST_CASE(coord){
+    navitia::georef::Way way;
+    navitia::georef::HouseNumber hn;
+
+ /*
+(2,4)       (2,8)       (2,18)       (2,54)
+  4           8           18           54
+*/
+
+    way.name="AA";
+    way.way_type="rue";
+    nt::GeographicalCoord upper(2.0,54.0);
+    nt::GeographicalCoord lower(2.0,4.0);
+
+    hn.coord=lower;
+    hn.number = 4;
+    way.house_number_right.push_back(hn);
+
+    hn.coord.x=2.0;
+    hn.coord.y=8.0;
     hn.number = 8;
     way.house_number_right.push_back(hn);
 
-    hn.coord.x=1.0;
-    hn.coord.y=10.0;
-    hn.number = 16;
+    hn.coord.x=2.0;
+    hn.coord.y=18.0;
+    hn.number = 18;
     way.house_number_right.push_back(hn);
 
-    hn.coord.x=1.0;
-    hn.coord.y=18.0;
-    hn.number = 22;
+    hn.coord= upper;
+    hn.number = 54;
     way.house_number_right.push_back(hn);
 
     way.sort_house_number();
-    nt::GeographicalCoord to_return = way.get_geographicalCoord_by_number(10);
-    if (to_return.x ==0)
-        to_return.x =0;
+
+// les coordonnées sont à l'extérieur de la rue coté supérieur
+    int result = way.nearest_number(nt::GeographicalCoord(1.0,55.0));
+    BOOST_CHECK_EQUAL(result, 54);
+
+// les coordonnées sont à l'extérieur de la rue coté inférieur
+    result = way.nearest_number(nt::GeographicalCoord(2.0,3.0));
+    BOOST_CHECK_EQUAL(result, 4);
+
+// coordonnées recherchées est = à coordonnées dans la rue
+    result = way.nearest_number(nt::GeographicalCoord(2.0,8.0));
+    BOOST_CHECK_EQUAL(result, 8);
+
+// les deux listes des numéros sont vides
+    way.house_number_right.clear();
+    result = way.nearest_number(nt::GeographicalCoord(2.0,8.0));
+    BOOST_CHECK_EQUAL(result, -1);
 
 }

@@ -24,7 +24,7 @@ struct Vertex {
     }
 };
 
-/** Propriétés des arcs */
+/** Propriétés des arcs : (anciennement "segment")*/
 
 struct Edge {
     nt::idx_t way_idx; //< indexe vers le nom de rue
@@ -48,7 +48,7 @@ struct Edge {
   */
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, Vertex, Edge> Graph;
 
-/// Représentation d'un nœud dans le graphe
+/// Représentation d'un nœud dans le g,raphe
 typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
 
 /// Représentation d'un arc dans le graphe
@@ -86,8 +86,12 @@ struct Way :public nt::Nameable{
     std::vector< std::pair<vertex_t, vertex_t> > edges;
 
     void sort_house_number();
-    nt::GeographicalCoord get_geographicalCoord_by_number(int);
-    nt::GeographicalCoord nearest_geographical_coord(int);    
+    nt::GeographicalCoord nearest_coord(const int, const Graph&);
+    int nearest_number(const nt::GeographicalCoord& );
+
+    nt::GeographicalCoord barycentre(const Graph& );
+    nt::GeographicalCoord get_geographical_coord(const std::vector< HouseNumber>&, const int);
+    nt::GeographicalCoord extrapol_geographical_coord(int);
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
       ar & idx & name & comment & way_type & city & city_idx & house_number_left & house_number_right & edges;
     }

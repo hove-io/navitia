@@ -11,14 +11,17 @@ namespace navitia{ namespace georef{
 // Exception levée dès que l'on trouve une destination
 struct DestinationFound{};
 
+// tri des numéros de rue
 void Way::sort_house_number(){
     std::sort(this->house_number_right.begin(),this->house_number_right.end());
     std::sort(this->house_number_left.begin(),this->house_number_left.end());
 }
 
-nt::GeographicalCoord Way::nearest_geographical_coord(int number){
-    nt::GeographicalCoord to_return;    
+// recherche des coordonnées les plus proches à un un numéro
+nt::GeographicalCoord Way::extrapol_geographical_coord(int number){
     HouseNumber hn_upper, hn_lower;
+    nt::GeographicalCoord to_return;
+
     if (number % 2 == 0){ // pair
         for(auto it=this->house_number_right.begin(); it != this->house_number_right.end(); ++it){
             if ((*it).number  < number){
@@ -38,50 +41,94 @@ nt::GeographicalCoord Way::nearest_geographical_coord(int number){
             }
         }
     }
-    // l'extrapolation à faire :
+
+    // Extrapolation des coordonnées:
+    int diff_house_number = hn_upper.number - hn_lower.number;
+    int diff_number = number - hn_lower.number;
+
+    double x_step = (hn_upper.coord.x - hn_lower.coord.x) /diff_house_number;
+    to_return.x = hn_lower.coord.x + x_step*diff_number;
+
+    double y_step = (hn_upper.coord.y - hn_lower.coord.y) /diff_house_number;
+    to_return.y = hn_lower.coord.y + y_step*diff_number;
 
     return to_return;
 }
 
-nt::GeographicalCoord Way::get_geographicalCoord_by_number(int number){
+nt::GeographicalCoord Way::get_geographical_coord(const std::vector< HouseNumber>& house_number_list, const int number){
+    nt::GeographicalCoord to_return;    
+    if (house_number_list.size() > 0){
+        if (house_number_list.back().number <= number){
+            to_return = house_number_list.back().coord;
+        }else{
+            if (house_number_list.front().number >= number){
+                to_return = house_number_list.front().coord;
+            }else{
+                for(auto it=house_number_list.begin(); it != house_number_list.end(); ++it){
+                    if ((*it).number  == number){
+                        to_return = (*it).coord;
+                    }
+                }
+                // Dans le cas où on ne trouve pas le numéro
+                to_return = extrapol_geographical_coord(number);
+            }
+        }
+    }
+    return to_return;
+}
+
+// Recherche des coordonnées les plus proches à un numéro
+nt::GeographicalCoord Way::nearest_coord(const int number, const Graph& graph){
+    /// Attention la liste :
+    /// "house_number_right" doit contenir les numéro pairs
+    /// "house_number_left" doit contenir les numéro impairs
+    /// et les deux listes doivent être trier par numéro croissant
+
+    if (((this->house_number_right.size() == 0) && (this->house_number_left.size() == 0))
+        || ((this->house_number_right.size() == 0) && (number % 2 == 0))
+        || ((this->house_number_left.size() == 0) && (number % 2 != 0)))
+        return barycentre(graph);
+
+    if (number % 2 == 0) // Pair
+        return get_geographical_coord(this->house_number_right, number);
+    else // Impair
+        return get_geographical_coord(this->house_number_left, number);
+}
+
+// Calcul du barycentre de la rue
+nt::GeographicalCoord Way::barycentre(const Graph& graph){
     nt::GeographicalCoord to_return;
-    if (number % 2 == 0){ // Pair
-        if (this->house_number_right.size() > 0){
-            if (this->house_number_right.back().number <= number){
-                to_return = this->house_number_right.back().coord;
-            }else{
-                if (this->house_number_right.front().number >= number){
-                    to_return = this->house_number_right.front().coord;
-                }else{
-                    for(auto it=this->house_number_right.begin(); it != this->house_number_right.end(); ++it){
-                        if ((*it).number  == number){
-                            return (*it).coord;
-                        }
-                    }
-                    // Dans le cas où on ne trouve pas le numéro
-                    to_return = nearest_geographical_coord(number);
-                }
-            }
+
+    for(auto edge : this->edges){
+        to_return.x = to_return.x + graph[edge.first].coord.x + graph[edge.second].coord.x;
+        to_return.y = to_return.y + graph[edge.first].coord.y + graph[edge.second].coord.y;
+    }
+    if (this->edges.size() > 0){
+        to_return.x = to_return.x/(this->edges.size() * 2);
+        to_return.y = to_return.y/(this->edges.size() * 2);
+    }
+    return to_return;
+}
+// Recherche du némuro le plus proche à des coordonnées
+int Way::nearest_number(const nt::GeographicalCoord& coord){
+
+    int to_return = -1;
+    double distance, distance_temp;
+    distance = std::numeric_limits<double>::max();
+    for(auto house_number : this->house_number_left){
+        distance_temp = coord.distance_to(house_number.coord);
+        if (distance  > distance_temp){
+            to_return = house_number.number;
+            distance = distance_temp;
         }
-    }else{ // Impair
-        if (this->house_number_left.size() > 0){
-            if (this->house_number_left.back().number <= number){
-                to_return = this->house_number_left.back().coord;
-            }else{
-                if (this->house_number_left.front().number >= number){
-                    to_return = this->house_number_left.front().coord;
-                }else{
-                    for(auto it=this->house_number_left.begin(); it != this->house_number_left.end(); ++it){
-                        if ((*it).number  == number){
-                            return (*it).coord;
-                        }
-                    }
-                    // Dans le cas où on ne trouve pas le numéro
-                    to_return = nearest_geographical_coord(number);
-                }
-            }
+    }
+    for(auto house_number : this->house_number_right){
+        distance_temp = coord.distance_to(house_number.coord);
+        if (distance  > distance_temp){
+            to_return = house_number.number;
+            distance = distance_temp;
         }
-    }    
+    }
     return to_return;
 }
 
