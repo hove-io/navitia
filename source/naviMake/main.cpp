@@ -5,7 +5,7 @@
 #include "connectors.h"
 #include "gtfs_parser.h"
 #include "bdtopo_parser.h"
-
+#include "osm2nav.h"
 #include "utils/timer.h"
 
 #include <fstream>
@@ -18,7 +18,7 @@ namespace pt = boost::posix_time;
 
 int main(int argc, char * argv[])
 {
-    std::string type, input, output, date, topo_path;
+    std::string type, input, output, date, topo_path, osm_filename;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
@@ -26,6 +26,7 @@ int main(int argc, char * argv[])
         ("date,d", po::value<std::string>(&date), "Date de début")
         ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
         ("topo", po::value<std::string>(&topo_path), "Repertoire contenant la bd topo")
+        ("osm", po::value<std::string>(&osm_filename), "Fichier OpenStreetMap au format pbf")
         ("output,o", po::value<std::string>(&output)->default_value("data.nav"), "Fichier de sortie")
         ("version,v", "Affiche la version");
 
@@ -43,7 +44,7 @@ int main(int argc, char * argv[])
         std::cout << desc <<  "\n";
         return 1;
     }
-    if(!vm.count("topo")) {
+    if(!vm.count("topo") && !vm.count("osm")) {
         std::cout << "Pas de topologie chargee" << std::endl;
     }
     pt::ptime start, end;
@@ -64,7 +65,10 @@ int main(int argc, char * argv[])
         //gtfs ne contient pas le référentiel des villes, on le charges depuis la BDTOPO
         topo_parser.load_city(data);
         topo_parser.load_georef(nav_data.geo_ref);
+    } else if(vm.count("osm")){
+        navitia::georef::fill_from_osm(nav_data.geo_ref, osm_filename);
     }
+
     sn = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 
