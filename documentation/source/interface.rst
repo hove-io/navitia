@@ -8,4 +8,6 @@ Description des interfaces
    interface/interface_journeys
    interface/interface_geodispatch.rst
    interface/interface_ptreferential
+   interface/interface_timetables
+	
 
