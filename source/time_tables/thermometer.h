@@ -34,7 +34,7 @@ struct Thermometer {
 
     Thermometer(type::Data &d) : d(d), line_idx(type::invalid_idx) {}
 
-    std::vector<type::idx_t> get_thermometer(type::idx_t line_idx);
+    std::vector<type::idx_t> get_thermometer(type::idx_t line_idx = type::invalid_idx);
 
     std::vector<uint32_t> match_route(const type::Route & route);
 

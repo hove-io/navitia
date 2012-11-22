@@ -21,6 +21,5 @@ void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &dat
 void fill_pb_placemark(const georef::Way & way, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth = 0, int house_number = -1);
 
 void fill_road_section(const georef::Path & path, const type::Data &data, pbnavitia::Section* section, int max_depth = 0);
-void fill_thermometer(std::vector<nt::idx_t> vec_idx, const nt::Data &data, pbnavitia::Thermometer *thermometer, int max_depth = 1);
 
 }//namespace navitia

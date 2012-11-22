@@ -117,13 +117,6 @@ void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &dat
     fill_pb_object(stop_point.idx, data, pm->mutable_stop_point(), max_depth);
 }
 
-
-void fill_thermometer(std::vector<nt::idx_t> vec_idx, const nt::Data &data, pbnavitia::Thermometer *thermometer, int max_depth) {
-    for(type::idx_t spidx : vec_idx) {
-        fill_pb_object(spidx, data, thermometer->add_stop_point(), max_depth);
-    }
-}
-
 void fill_pb_placemark(const georef::Way & way, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth, int house_number){
     pm->set_type(pbnavitia::ADDRESS);
     pbnavitia::Address * address = pm->mutable_address();
