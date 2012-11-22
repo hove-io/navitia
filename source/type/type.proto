@@ -5,7 +5,6 @@ enum NavitiaType {
     STOPAREA = 5;
     CITY = 10;
     COUNTRY = 17;
-    WAY = 19;
     SITE = 20;
     ADDRESS = 30;
 }
@@ -94,14 +93,6 @@ message RoutePoint{
     optional Route route = 6;
 }
 
-message Way {
-    optional string id = 1;
-    optional string external_code = 3;
-    optional string name = 4;
-    optional GeographicalCoord coord = 6;
-    optional City city = 7;
-}
-
 message City {
     optional string id = 1;
     optional string external_code = 3;
@@ -150,7 +141,11 @@ message Company {
 }
 
 message Address {
-    optional Way way = 1;
+    optional string id = 1;
+    optional string external_code = 3;
+    optional string name = 4;
+    optional GeographicalCoord coord = 6;
+    optional City city = 7;
     optional int32 house_number = 2;
 }
 
@@ -173,7 +168,6 @@ message PTReferential {
 
 message PlaceMark {
     optional NavitiaType type = 1;
-    optional Way way = 2;
     optional City city = 3;
     optional StopArea stop_area = 4;
     optional Site site = 5;

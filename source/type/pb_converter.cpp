@@ -37,26 +37,16 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
             fill_pb_object(sp.stop_area_idx, data, stop_point->mutable_stop_area(), max_depth-1);
 }
 
-
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Way * way, int max_depth){
-    navitia::georef::Way w = data.geo_ref.ways.at(idx);
-    way->set_name(w.name);
-    if(max_depth && w.city_idx != nt::invalid_idx)
-        fill_pb_object(w.city_idx, data, way->mutable_city(), max_depth-1);
-}
-
-
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * address, int house_number,type::GeographicalCoord& coord, int max_depth){
-    navitia::georef::Way way = data.geo_ref.ways.at(idx);
-    pbnavitia::Way * pb_way = address->mutable_way();
-    pb_way->set_name(way.name);
+    navitia::georef::Way way = data.geo_ref.ways.at(idx);    
+    address->set_name(way.name);
     if(house_number >= 0){
         address->set_house_number(house_number);
     }
-    pb_way->mutable_coord()->set_lon(coord.x);
-    pb_way->mutable_coord()->set_lat(coord.y);
+    address->mutable_coord()->set_lon(coord.x);
+    address->mutable_coord()->set_lat(coord.y);
     if(max_depth > 0)
-        fill_pb_object(way.city_idx, data,  pb_way->mutable_city());
+        fill_pb_object(way.city_idx, data,  address->mutable_city());
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line, int){
@@ -143,17 +133,6 @@ void fill_pb_placemark(const georef::Way & way, const type::Data &data, pbnaviti
     pm->set_type(pbnavitia::ADDRESS);
     type::GeographicalCoord coord;
     fill_pb_object(way.idx, data, pm->mutable_address(), house_number,coord , max_depth);
-    /*pbnavitia::Address * address = pm->mutable_address();
-
-    pbnavitia::Way * pb_way = address->mutable_way();
-    pb_way->set_name(way.name);
-    if(house_number >= 0){
-        address->set_house_number(house_number);
-    }
-
-    if(max_depth > 0)
-        fill_pb_object(way.city_idx, data,  pb_way->mutable_city());*/
-
 }
 
 void fill_road_section(const georef::Path &path, const type::Data &data, pbnavitia::Section* section, int max_depth){
