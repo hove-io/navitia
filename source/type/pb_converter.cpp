@@ -133,7 +133,7 @@ void fill_pb_placemark(const georef::Way & way, const type::Data &data, pbnaviti
         address->set_house_number(house_number);
     }
 
-    if(max_depth > 0)
+    if(max_depth > 0 && way.city_idx != type::invalid_idx)
         fill_pb_object(way.city_idx, data,  pb_way->mutable_city());
 
 }
