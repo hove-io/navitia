@@ -109,6 +109,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         if(filter.empty()){//on utilise la valeur par défaut si pas de paramètre
             result.push_back(nt::Type_e::eStopArea);
             result.push_back(nt::Type_e::eCity);
+            result.push_back(nt::Type_e::eAddress);
             return result;
         }
 

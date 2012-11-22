@@ -533,3 +533,111 @@ BOOST_AUTO_TEST_CASE(coord){
     BOOST_CHECK_EQUAL(result, -1);
 
 }
+// Test de firstletter
+BOOST_AUTO_TEST_CASE(build_first_letter_test){
+
+        navitia::georef::GeoRef geo_ref;
+        navitia::georef::Way way;
+        navitia::georef::HouseNumber hn;
+        navitia::georef::Graph graph;
+        vertex_t debut, fin;
+        Vertex v;
+        navitia::georef::Edge e1;
+        std::vector<nf::FirstLetter<nt::idx_t>::fl_quality> result;
+
+        way.name = "jeanne d'arc";
+        way.way_type = "rue";        
+        geo_ref.ways.push_back(way);
+
+        way.name = "jean jaures";
+        way.way_type = "place";
+        geo_ref.ways.push_back(way);
+
+        way.name = "jean paul gaultier paris";
+        way.way_type = "rue";
+        geo_ref.ways.push_back(way);
+
+        way.name = "jean jaures";
+        way.way_type = "avenue";
+        geo_ref.ways.push_back(way);
+
+        way.name = "poniatowski";
+        way.way_type = "boulevard";
+        geo_ref.ways.push_back(way);
+
+        way.name = "pente de Bray";
+        way.way_type = "";
+        geo_ref.ways.push_back(way);
+
+        /*
+       (2,4)       (2,4)       (2,18)       (2,54)
+         4           4           18           54
+       */
+        way.name = "jean jaures";
+        way.way_type = "rue";
+        // Ajout des numéros et les noeuds
+        nt::GeographicalCoord upper(2.0,54.0);
+        nt::GeographicalCoord lower(2.0,4.0);
+
+        hn.coord=lower;
+        hn.number = 4;
+        way.house_number_right.push_back(hn);
+        v.coord = hn.coord;
+        debut = boost::add_vertex(v,graph);
+
+        hn.coord.x=2.0;
+        hn.coord.y=8.0;
+        hn.number = 8;
+        way.house_number_right.push_back(hn);
+        v.coord = hn.coord;
+        fin = boost::add_vertex(v,graph);
+
+        boost::add_edge(debut, fin,e1, graph);
+        boost::add_edge(fin, debut,e1, graph);
+        way.edges.push_back(std::make_pair(debut, fin));
+        way.edges.push_back(std::make_pair(fin,debut));
+
+
+        hn.coord.x=2.0;
+        hn.coord.y=18.0;
+        hn.number = 18;
+        way.house_number_right.push_back(hn);
+        v.coord = hn.coord;
+        debut = boost::add_vertex(v,graph);
+
+        boost::add_edge(fin, debut,e1, graph);
+        boost::add_edge(debut, fin,e1, graph);
+        way.edges.push_back(std::make_pair(fin,debut));
+        way.edges.push_back(std::make_pair(debut, fin));
+
+
+        hn.coord= upper;
+        hn.number = 54;
+        way.house_number_right.push_back(hn);
+        v.coord = hn.coord;
+        fin = boost::add_vertex(v,graph);
+
+        boost::add_edge(debut, fin,e1, graph);
+        boost::add_edge(fin, debut,e1, graph);
+        way.edges.push_back(std::make_pair(debut, fin));
+        way.edges.push_back(std::make_pair(fin,debut));
+
+        way.sort_house_number();
+
+        geo_ref.ways.push_back(way);
+
+        way.name = "jean zay";
+        way.way_type = "rue";
+        geo_ref.ways.push_back(way);
+
+        way.name = "jean paul gaultier";
+        way.way_type = "place";
+        geo_ref.ways.push_back(way);
+
+        geo_ref.build_firstletter_list();
+
+        result = geo_ref.find_ways("10 rue jean jaures");
+        if (result.empty())
+            result.clear();
+
+    }

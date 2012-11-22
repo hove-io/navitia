@@ -4,6 +4,8 @@
 #include <fstream>
 #include <unordered_map>
 
+#include "utils/functions.h"
+
 using navitia::type::idx_t;
 
 namespace navitia{ namespace georef{
@@ -56,24 +58,30 @@ nt::GeographicalCoord Way::extrapol_geographical_coord(int number){
 }
 
 nt::GeographicalCoord Way::get_geographical_coord(const std::vector< HouseNumber>& house_number_list, const int number){
-    nt::GeographicalCoord to_return;    
+
     if (house_number_list.size() > 0){
+
+        /// Dans le cas où le numéro recherché est plus grand que tous les numéros de liste
         if (house_number_list.back().number <= number){
-            to_return = house_number_list.back().coord;
-        }else{
-            if (house_number_list.front().number >= number){
-                to_return = house_number_list.front().coord;
-            }else{
-                for(auto it=house_number_list.begin(); it != house_number_list.end(); ++it){
-                    if ((*it).number  == number){
-                        to_return = (*it).coord;
-                    }
-                }
-                // Dans le cas où on ne trouve pas le numéro
-                to_return = extrapol_geographical_coord(number);
-            }
+            return house_number_list.back().coord;
         }
+
+        /// Dans le cas où le numéro recherché est plus petit que tous les numéros de liste
+        if (house_number_list.front().number >= number){
+            return house_number_list.front().coord;
+        }
+
+        /// Dans le cas où le numéro recherché est dans la liste = à un numéro dans la liste
+        for(auto it=house_number_list.begin(); it != house_number_list.end(); ++it){
+            if ((*it).number  == number){
+                return (*it).coord;
+             }
+        }
+
+        /// Dans le cas où le numéro recherché est dans la liste et <> à tous les numéros
+        return extrapol_geographical_coord(number);
     }
+    nt::GeographicalCoord to_return;
     return to_return;
 }
 
@@ -86,7 +94,8 @@ nt::GeographicalCoord Way::nearest_coord(const int number, const Graph& graph){
 
     if (((this->house_number_right.size() == 0) && (this->house_number_left.size() == 0))
         || ((this->house_number_right.size() == 0) && (number % 2 == 0))
-        || ((this->house_number_left.size() == 0) && (number % 2 != 0)))
+        || ((this->house_number_left.size() == 0) && (number % 2 != 0))
+            || (number <= 0))
         return barycentre(graph);
 
     if (number % 2 == 0) // Pair
@@ -390,6 +399,42 @@ void GeoRef::build_proximity_list(){
         pl.add(graph[u].coord, u);
     }
     pl.build();
+}
+
+void GeoRef::build_firstletter_list(){
+    int pos = 0;
+    for(Way way : ways){
+        fl.add_string(way.way_type +" "+ way.name, pos);
+        pos++;
+    }
+    fl.build();
+}
+
+std::vector<nf::FirstLetter<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string & str) const{
+    std::vector<nf::FirstLetter<nt::idx_t>::fl_quality> to_return;
+    boost::tokenizer<> tokens(str);
+    auto token_it = tokens.begin();
+    int search_number = str_to_int(*token_it);
+    std::string search_str;
+
+    if (search_number != -1){
+        search_str = "";
+        for(++token_it; token_it != tokens.end(); ++token_it){
+            search_str = search_str + " " + (*token_it);
+        }
+    }else{
+        search_str = str;
+    }
+    to_return = fl.find_complete(search_str);
+
+    /// récupération des coordonnées du numéro recherché pour chaque rue    
+    for(auto &result_item  : to_return){
+       Way way = this->ways[result_item.idx];
+       result_item.coord = way.nearest_coord(search_number, this->graph);
+       result_item.house_number = search_number;
+    }
+
+    return to_return;
 }
 
 void GeoRef::project_stop_points(const std::vector<type::StopPoint> & stop_points){

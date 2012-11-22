@@ -12,6 +12,7 @@
 #include <map>
 
 namespace nt = navitia::type;
+namespace nf = navitia::firstletter;
 
 namespace navitia { namespace georef {
 
@@ -64,6 +65,7 @@ typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
 struct HouseNumber{
     nt::GeographicalCoord coord;
     int number;
+
     HouseNumber(): number(-1){}
 
     bool operator<(const HouseNumber & other) const{
@@ -77,6 +79,7 @@ struct HouseNumber{
 
 /** Nommage d'une voie (anciennement "adresse"). Typiquement le nom de rue **/
 struct Way :public nt::Nameable{
+public:
     nt::idx_t idx;
     std::string way_type;
     std::string city;
@@ -88,13 +91,14 @@ struct Way :public nt::Nameable{
     void sort_house_number();
     nt::GeographicalCoord nearest_coord(const int, const Graph&);
     int nearest_number(const nt::GeographicalCoord& );
-
     nt::GeographicalCoord barycentre(const Graph& );
-    nt::GeographicalCoord get_geographical_coord(const std::vector< HouseNumber>&, const int);
-    nt::GeographicalCoord extrapol_geographical_coord(int);
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
       ar & idx & name & comment & way_type & city & city_idx & house_number_left & house_number_right & edges;
     }
+
+private:      
+      nt::GeographicalCoord get_geographical_coord(const std::vector< HouseNumber>&, const int);
+      nt::GeographicalCoord extrapol_geographical_coord(int);
 };
 
 
@@ -148,6 +152,13 @@ struct GeoRef {
 
     /** Construit l'indexe spatial */
     void build_proximity_list();
+
+    ///  Construit l'indexe firstletter à partir des rues
+    void build_firstletter_list();
+
+    /// Recherche d'une adresse avec un numéro en utilisant FirstLetter
+    std::vector<nf::FirstLetter<nt::idx_t>::fl_quality> find_ways(const std::string & str) const;
+
 
     /** Projete chaque stop_point sur le filaire de voirie */
     void project_stop_points(const std::vector<type::StopPoint> & stop_points);
