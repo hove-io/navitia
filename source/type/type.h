@@ -451,7 +451,7 @@ public:
     void remove(int day);
     std::string str() const;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & beginning_date & days & idx;
+        ar & beginning_date & days & idx & external_code;
     }
 
     bool check(boost::gregorian::date day) const;

@@ -470,14 +470,14 @@ void GtfsParser::parse_calendar(Data & data) {
             boost::gregorian::date b_date = boost::gregorian::from_undelimited_string(elts[start_date_c]);
             boost::gregorian::date_period period = boost::gregorian::date_period((b_date > production_date.begin() ? b_date : production_date.begin()), boost::gregorian::from_undelimited_string(elts[end_date_c]));
             for(boost::gregorian::day_iterator it(period.begin()); it<period.end(); ++it) {
-                if(week[(*it).day_of_week()]) {
+                if(week.test((*it).day_of_week())) {
                     vp->add((*it));
                 }
                 else
                     vp->remove((*it));
             }
 
-
+            vp->external_code = elts[id_c];
             vp_map[elts[id_c]] = vp;
             data.validity_patterns.push_back(vp);
 
