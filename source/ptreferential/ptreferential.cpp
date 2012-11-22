@@ -50,7 +50,7 @@ namespace qi = boost::spirit::qi;
 
         filter1 = (txt >> "." >> txt >> bin_op >> txt)[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3, qi::_4)];
         filter2 = (txt >> "HAVING" >> '(' >> txt2 >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
-        filter %= (filter1 | filter2) % qi::lexeme["and"];
+        filter %= (filter1 | filter2) % (qi::lexeme["and"] | qi::lexeme["AND"]) ;
     }
 
 };
