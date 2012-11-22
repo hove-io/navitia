@@ -41,7 +41,7 @@ struct Filter {
 };
 
 
-struct ptref_parsing_error : std::exception{
+struct ptref_parsing_error : public std::exception{
     enum error_type {
         global_error ,
         partial_error,
@@ -50,10 +50,8 @@ struct ptref_parsing_error : std::exception{
 
     error_type type;
     std::string more;
-};
 
-struct ptref_unknown_object : std::exception {
-    std::string more;
+    ~ptref_parsing_error() throw() {}
 };
 
 /// Execute une requête et génère la sortie protobuf 
