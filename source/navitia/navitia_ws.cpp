@@ -474,12 +474,12 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
 
         register_api("departure_board", boost::bind(&Worker::departure_board, this, _1, _2), "Renvoie le tableau depart/arrivee entre deux filtres");
-        add_param("next_departures", "departure_filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, false);
-        add_param("next_departures", "arrival_filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, false);
-        add_param("next_departures", "datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, true);
-        add_param("next_departures", "max_datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
-        add_param("next_departures", "nb_departures", "Nombre maximum de départ souhaités", ApiParameter::INT, false);
-        add_param("next_departures", "depth", "Profondeur maximale pour les objets", ApiParameter::INT, false);
+        add_param("departure_board", "departure_filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, false);
+        add_param("departure_board", "arrival_filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, false);
+        add_param("departure_board", "datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, true);
+        add_param("departure_board", "max_datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
+        add_param("departure_board", "nb_departures", "Nombre maximum de départ souhaités", ApiParameter::INT, false);
+        add_param("departure_board", "depth", "Profondeur maximale pour les objets", ApiParameter::INT, false);
 
         register_api("line_schedule", boost::bind(&Worker::line_schedule, this, _1, _2), "Renvoie la fiche horaire de la ligne demandée");
         add_param("line_schedule", "line_external_code", "La ligne dont on veut les horaires", ApiParameter::STRING, false);
