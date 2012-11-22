@@ -38,7 +38,8 @@ enum class Type_e {
     eUnknown = 18,
     eWay = 19,
     eCoord = 20,
-    eRoutePointConnection = 21
+    eRoutePointConnection = 21,
+    eAddress = 22
 };
 struct PT_Data;
 template<class T> std::string T::* name_getter(){return &T::name;}

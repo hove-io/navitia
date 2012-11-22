@@ -155,7 +155,8 @@ static_data * static_data::get() {
                 (Type_e::eVehicle, "vehicle")
                 (Type_e::eCountry, "country")
                 (Type_e::eWay, "way")
-                (Type_e::eCoord, "coord");
+                (Type_e::eCoord, "coord")
+                (Type_e::eAddress, "address");
 
         instance = temp;
 

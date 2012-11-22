@@ -7,6 +7,7 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::City* ci
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopArea* stop_area, int max_depth = 0);
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopPoint* stop_point, int max_depth = 0);
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Way* way, int max_depth = 0);
+void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Address* address, int house_number,type::GeographicalCoord& coord,  int max_depth = 0);
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Line* line, int max_depth = 0);
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Route* route, int max_depth = 0);
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Network* network, int max_depth = 0);

@@ -27,12 +27,10 @@ typedef boost::hash<Node> hashnode;
 typedef std::unordered_map<Node, vertex_t, hashnode> map_nodevertex;
 
 struct Thermometer {
-    vertex_t null_vertex = boost::graph_traits<Graph>::null_vertex();
-
-
+    vertex_t null_vertex;
     type::Data& d;
 
-    Thermometer(type::Data &d) : d(d), line_idx(type::invalid_idx) {}
+    Thermometer(type::Data &d) : null_vertex(boost::graph_traits<Graph>::null_vertex()), d(d), line_idx(type::invalid_idx) {}
 
     std::vector<type::idx_t> get_thermometer(type::idx_t line_idx = type::invalid_idx);
 

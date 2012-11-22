@@ -11,6 +11,8 @@
 #include <unordered_map>
 #include <set>
 
+#include "type/type.h"
+
 namespace navitia { namespace firstletter {
 
 
@@ -29,10 +31,13 @@ struct FirstLetter
         T idx;
         int nb_found;
         int quality;
+        navitia::type::GeographicalCoord coord;
+        int house_number;
 
         fl_quality(){
             nb_found = 0;
             quality = 0;
+            house_number = -1;
         }
 
         bool operator<(const fl_quality & other) const{
