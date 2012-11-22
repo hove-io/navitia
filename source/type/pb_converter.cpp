@@ -44,6 +44,20 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Way * way, i
         fill_pb_object(w.city_idx, data, way->mutable_city(), max_depth-1);
 }
 
+
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * address, int house_number,type::GeographicalCoord& coord, int max_depth){
+    navitia::georef::Way way = data.geo_ref.ways.at(idx);
+    pbnavitia::Way * pb_way = address->mutable_way();
+    pb_way->set_name(way.name);
+    if(house_number >= 0){
+        address->set_house_number(house_number);
+    }
+    pb_way->mutable_coord()->set_lon(coord.x);
+    pb_way->mutable_coord()->set_lat(coord.y);
+    if(max_depth > 0)
+        fill_pb_object(way.city_idx, data,  pb_way->mutable_city());
+}
+
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line, int){
     navitia::type::Line l = data.pt_data.lines.at(idx);
     line->set_forward_name(l.forward_name);
@@ -117,16 +131,10 @@ void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &dat
     fill_pb_object(stop_point.idx, data, pm->mutable_stop_point(), max_depth);
 }
 
-
-void fill_thermometer(std::vector<nt::idx_t> vec_idx, const nt::Data &data, pbnavitia::Thermometer *thermometer, int max_depth) {
-    for(type::idx_t spidx : vec_idx) {
-        fill_pb_object(spidx, data, thermometer->add_stop_point(), max_depth);
-    }
-}
-
 void fill_pb_placemark(const georef::Way & way, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth, int house_number){
     pm->set_type(pbnavitia::ADDRESS);
-    pbnavitia::Address * address = pm->mutable_address();
+    fill_pb_object(way.idx, data, pm->mutable_address(), house_number,coord , max_depth);
+//    pbnavitia::Address * address = pm->mutable_address();
     pbnavitia::Way * pb_way = address->mutable_way();
     pb_way->set_name(way.name);
     if(house_number >= 0){

@@ -104,6 +104,8 @@ int main(int argc, char * argv[])
     std::cout << "modes: " << data.modes.size() << std::endl;
     std::cout << "validity pattern : " << data.validity_patterns.size() << std::endl;
     std::cout << "route point connections : " << data.route_point_connections.size() << std::endl;
+    std::cout << "voies (rues) : " << nav_data.geo_ref.ways.size() << std::endl;
+
 
     start = pt::microsec_clock::local_time();
     data.clean();
@@ -119,10 +121,11 @@ int main(int argc, char * argv[])
     transform = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     start = pt::microsec_clock::local_time();
-    nav_data.build_first_letter();
+
     nav_data.build_proximity_list();
     nav_data.build_external_code();
     nav_data.set_cities(); // Assigne les villes aux voiries du filaire [depend des ext_code]
+    nav_data.build_first_letter();
     std::cout << "On va construire les correspondances" << std::endl;
     {Timer t("Construction des correspondances");  nav_data.pt_data.build_connections();}
     first_letter = (pt::microsec_clock::local_time() - start).total_milliseconds();

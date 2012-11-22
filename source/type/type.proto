@@ -303,18 +303,13 @@ message PairStopTime {
     required StopTime second = 2;
 }
 
-message TableItem {
-    required StopTime stop_time = 1;
-    required int32 x = 2;
-    required int32 y = 3;
-}
-
-message Thermometer {
-    repeated StopPoint stop_point = 1;
+message TableLine {
+    required string stop_point = 1;
+    repeated string stop_time = 2;
 }
 
 message Table {
-    repeated TableItem item = 1;
+    repeated TableLine line = 1;
 }
 
 
@@ -327,9 +322,8 @@ message LineScheduleHeader {
 }
 
 message LineSchedule {
-    required Thermometer thermometer = 1;
-    required Table table = 2;
-    required LineScheduleHeader header = 3;
+    required Table table = 1;
+    required LineScheduleHeader header = 2;
 }
 
 message NextDepartures {

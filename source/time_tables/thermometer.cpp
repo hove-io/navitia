@@ -132,10 +132,8 @@ void Thermometer::generate_thermometer() {
 }
 
 
-
-
 std::vector<type::idx_t> Thermometer::get_thermometer(type::idx_t line_idx_) {
-    if(line_idx_ != line_idx) {
+    if(line_idx_ != line_idx && line_idx_ != type::invalid_idx) {
         line_idx = line_idx_;
         generate_thermometer();
     }
@@ -143,13 +141,8 @@ std::vector<type::idx_t> Thermometer::get_thermometer(type::idx_t line_idx_) {
 }
 
 
-
-
-
-
 std::vector<uint32_t> Thermometer::match_route(const type::Route & route) {
     std::vector<uint32_t> result;
-    uint32_t last_pos = 0;
     auto it = thermometer.begin();
     for(type::idx_t rpidx : route.route_point_list) {
         it = std::find(it, thermometer.end(), d.pt_data.route_points[rpidx].stop_point_idx);

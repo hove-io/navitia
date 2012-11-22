@@ -165,7 +165,8 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, Data &
         try {
             filter.navitia_type = static_data->typeByCaption(filter.object);
         } catch(...) {
-            ptref_unknown_object error;
+            //ptref_unknown_object error;
+            ptref_parsing_error error;
             error.more = filter.object;
             throw error;
         }
@@ -212,8 +213,9 @@ pbnavitia::Response query_pb(Type_e requested_type, std::string request, const i
             pb_response.set_error("PTReferential : Impossible de parser la requête");
         }
         return pb_response;
-    } catch(ptref_unknown_object unknown_obj_error) {
-        pb_response.set_error("Objet NAViTiA inconnu : " + unknown_obj_error.more);
+    //} catch(ptref_unknown_object unknown_obj_error) {
+        } catch(ptref_parsing_error unknown_object) {
+        pb_response.set_error("Objet NAViTiA inconnu : " + unknown_object.more);
         return pb_response;
     }
 
