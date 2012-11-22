@@ -40,8 +40,9 @@ pbnavitia::Response next_departures(const std::string &request, const std::strin
 
     auto departures_dt_idx = next_departures(route_points, dt, max_dt, nb_departures, data);
     pb_response.set_requested_api(pbnavitia::NEXT_DEPARTURES);
+
     for(auto dt_idx : departures_dt_idx) {
-        pbnavitia::StopTime * stoptime = pb_response.add_departure();
+        pbnavitia::StopTime * stoptime = pb_response.mutable_nextdepartures()->add_departure();
         stoptime->set_departure_date_time(iso_string(data, dt_idx.first.date(),  dt_idx.first.hour()));
         stoptime->set_arrival_date_time(iso_string(data, dt_idx.first.date(),  dt_idx.first.hour()));
         const auto &rp = data.pt_data.route_points[data.pt_data.stop_times[dt_idx.second].route_point_idx];

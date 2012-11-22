@@ -332,6 +332,14 @@ message LineSchedule {
     required LineScheduleHeader header = 3;
 }
 
+message NextDepartures {
+    repeated StopTime departure = 1;
+}
+
+message DepartureBoard {
+    repeated PairStopTime board_item = 1;
+}
+
 message Response{
     required API requested_api = 1;
     optional string error = 2;
@@ -350,9 +358,9 @@ message Response{
 
     optional Status status = 9;
 
-    repeated StopTime departure = 10;
+    optional NextDepartures nextdepartures = 10;
 
-    repeated PairStopTime board_item = 11;
+    optional DepartureBoard departureboard = 11;
 
     optional LineSchedule line_schedule = 12;
 }
