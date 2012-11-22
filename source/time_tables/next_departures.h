@@ -4,7 +4,7 @@
 
 namespace navitia { namespace timetables {
 
-typedef std::pair<routing::DateTime, const type::idx_t> dt_st;
+typedef std::pair<routing::DateTime, type::idx_t> dt_st;
 struct comp_st {
     bool operator()(const dt_st st1, const dt_st st2) const {
 
