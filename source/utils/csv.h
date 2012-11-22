@@ -9,6 +9,7 @@
 #ifdef HAVE_ICONV_H
 #include "utils/encoding_converter.h"
 #endif
+#include <map>
 
 /**
  * lecteur CSV basique, si iconv est disponible, le resultat serat retourné en UTF8
@@ -18,6 +19,7 @@ class CsvReader {
         CsvReader(const std::string& filename, char separator=';', std::string encoding="UTF-8");
         ~CsvReader();
         std::vector<std::string> next();
+        int get_pos_col(const std::string&, std::map<std::string, int>&);
         bool eof() const;
         void close();
     private:

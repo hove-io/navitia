@@ -57,3 +57,13 @@ std::vector<std::string> CsvReader::next(){
 
     return vec;
 }
+
+int CsvReader::get_pos_col(const std::string & str, std::map<std::string, int>& map){
+    std::map<std::string,int>::iterator it;  /// Utilisation dans le cas où le key n'existe pas size_t = 0
+
+    it = map.find(str);
+
+    if (it != map.end())
+        return map[str];
+    return -1;
+}
