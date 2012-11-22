@@ -21,6 +21,7 @@ enum API {
     STATUS = 7;
     NEXT_DEPARTURES = 8;
     DEPARTURE_BOARD = 9;
+    LINE_SCHEDULE = 10;
 }
 
 message GeographicalCoord {
@@ -302,6 +303,35 @@ message PairStopTime {
     required StopTime second = 2;
 }
 
+message TableItem {
+    required StopTime stop_time = 1;
+    required int32 x = 2;
+    required int32 y = 3;
+}
+
+message Thermometer {
+    repeated StopPoint stop_point = 1;
+}
+
+message Table {
+    repeated TableItem item = 1;
+}
+
+
+message LineScheduleHeaderItem {
+    required Line line = 1;
+}
+
+message LineScheduleHeader {
+    repeated LineScheduleHeaderItem item = 1;
+}
+
+message LineSchedule {
+    required Thermometer thermometer = 1;
+    required Table table = 2;
+    required LineScheduleHeader header = 3;
+}
+
 message Response{
     required API requested_api = 1;
     optional string error = 2;
@@ -323,4 +353,6 @@ message Response{
     repeated StopTime departure = 10;
 
     repeated PairStopTime board_item = 11;
+
+    optional LineSchedule line_schedule = 12;
 }

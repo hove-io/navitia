@@ -14,6 +14,7 @@
 #include "ptreferential/ptreferential.h"
 #include "time_tables/next_departures.h"
 #include "time_tables/departure_board.h"
+#include "time_tables/line_schedule.h"
 
 #include <boost/tokenizer.hpp>
 #include <iostream>
@@ -326,13 +327,6 @@ class Worker : public BaseWorker<navitia::type::Data> {
         if(!locker.locked){
             return rd;
         }
-        if(data.last_load_at != this->last_load_at || !calculateur){
-            calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(data));
-            street_network_worker = std::unique_ptr<navitia::georef::StreetNetworkWorker>(new navitia::georef::StreetNetworkWorker(data.geo_ref));
-            this->last_load_at = data.last_load_at;
-
-            LOG4CPLUS_INFO(logger, "instanciation du calculateur");
-        }
 
         std::string filters = boost::get<std::string>(request.parsed_params["filter"].value);
         std::string datetime = boost::get<std::string>(request.parsed_params["datetime"].value);
@@ -363,13 +357,6 @@ class Worker : public BaseWorker<navitia::type::Data> {
         if(!locker.locked){
             return rd;
         }
-        if(data.last_load_at != this->last_load_at || !calculateur){
-            calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(data));
-            street_network_worker = std::unique_ptr<navitia::georef::StreetNetworkWorker>(new navitia::georef::StreetNetworkWorker(data.geo_ref));
-            this->last_load_at = data.last_load_at;
-
-            LOG4CPLUS_INFO(logger, "instanciation du calculateur");
-        }
 
         std::string departure_filter = boost::get<std::string>(request.parsed_params["departure_filter"].value);
         std::string arrival_filter = boost::get<std::string>(request.parsed_params["arrival_filter"].value);
@@ -388,6 +375,37 @@ class Worker : public BaseWorker<navitia::type::Data> {
             depth = 1;
 
         pb_response = navitia::timetables::departure_board(departure_filter, arrival_filter, datetime, max_date_time, nb_departures, depth, data);
+        rd.status_code = 200;
+
+        return rd;
+    }
+
+
+    ResponseData line_schedule(RequestData & request, navitia::type::Data &data){
+        ResponseData rd;
+
+        nt::Locker locker(check_and_init(request, data, pbnavitia::LINE_SCHEDULE, rd));
+        if(!locker.locked){
+            return rd;
+        }
+
+        std::string line_externalcode = boost::get<std::string>(request.parsed_params["line_external_code"].value);
+        std::string datetime = boost::get<std::string>(request.parsed_params["datetime"].value);
+        std::string max_date_time = boost::get<std::string>(request.parsed_params["max_datetime"].value);
+
+        int nb_departures = std::numeric_limits<int>::max();
+        if(request.parsed_params.find("nb_departures") != request.parsed_params.end())
+            nb_departures= boost::get<int>(request.parsed_params["nb_departures"].value);
+        else if(max_date_time == "")
+            nb_departures = 10;
+
+        int depth;
+        if(request.parsed_params.find("depth") != request.parsed_params.end())
+            depth= boost::get<int>(request.parsed_params["depth"].value);
+        else
+            depth = 1;
+
+        pb_response = navitia::timetables::line_schedule(line_externalcode, datetime, max_date_time, nb_departures, depth, data);
         rd.status_code = 200;
 
         return rd;
@@ -462,6 +480,13 @@ class Worker : public BaseWorker<navitia::type::Data> {
         add_param("next_departures", "max_datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
         add_param("next_departures", "nb_departures", "Nombre maximum de départ souhaités", ApiParameter::INT, false);
         add_param("next_departures", "depth", "Profondeur maximale pour les objets", ApiParameter::INT, false);
+
+        register_api("line_schedule", boost::bind(&Worker::line_schedule, this, _1, _2), "Renvoie la fiche horaire de la ligne demandée");
+        add_param("line_schedule", "line_external_code", "La ligne dont on veut les horaires", ApiParameter::STRING, false);
+        add_param("line_schedule", "datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, true);
+        add_param("line_schedule", "max_datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
+        add_param("line_schedule", "nb_departures", "Nombre maximum de départ souhaités", ApiParameter::INT, false);
+        add_param("line_schedule", "depth", "Profondeur maximale pour les objets", ApiParameter::INT, false);
 
 
 
