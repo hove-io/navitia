@@ -74,7 +74,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ///netoyage pour le traitement
     virtual void pre_compute(webservice::RequestData& request, nt::Data&){
-        LOG4CPLUS_TRACE(logger, "Requête : "  + request.path + "  " + request.raw_params);
+        LOG4CPLUS_TRACE(logger, "Requête : "  + request.path + "?" + request.raw_params);
         pb_response.Clear();
     }
 
