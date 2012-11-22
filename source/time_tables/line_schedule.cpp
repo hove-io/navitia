@@ -5,7 +5,7 @@
 
 namespace navitia { namespace timetables {
 
-std::vector<vector_stopTime> get_stop_times(const type::idx_t line_idx, const routing::DateTime &dateTime, const routing::DateTime &max_datetime, const uint32_t nb_departures, type::Data &d) {
+std::vector<vector_stopTime> get_all_stop_times(const type::idx_t line_idx, const routing::DateTime &dateTime, const routing::DateTime &max_datetime, const uint32_t nb_departures, type::Data &d) {
     std::vector<vector_stopTime> result;
     //On cherche les premiers route_points de toutes les routes
 
@@ -17,7 +17,7 @@ std::vector<vector_stopTime> get_stop_times(const type::idx_t line_idx, const ro
         }
     }
     //On fait un next_departures sur ces route points
-    auto first_dt_st = next_departures(first_route_points, dateTime, max_datetime, nb_departures, d);
+    auto first_dt_st = get_stop_times(first_route_points, dateTime, max_datetime, nb_departures, d);
 
     //On va chercher tous les prochains horaires
     for(auto ho : first_dt_st) {

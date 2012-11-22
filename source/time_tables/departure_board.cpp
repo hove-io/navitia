@@ -1,5 +1,4 @@
 #include "departure_board.h"
-#include "next_departures.h"
 
 namespace navitia { namespace timetables {
 
@@ -46,7 +45,7 @@ std::vector<pair_dt_st> departure_board(const std::string &departure_filter, con
         departure_route_points.push_back(dep_order.first);
 
     //On demande tous les next_departures
-    auto departure_dt_st = next_departures(departure_route_points, datetime, max_datetime, nb_departures, data);
+    auto departure_dt_st = get_stop_times(departure_route_points, datetime, max_datetime, nb_departures, data);
 
 
     //On va chercher les retours

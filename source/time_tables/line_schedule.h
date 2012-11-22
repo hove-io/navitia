@@ -1,7 +1,9 @@
 #pragma once
 #include "type/type.h"
 #include "routing/routing.h"
-#include "next_departures.h"
+#include "get_stop_times.h"
+#include "type/pb_converter.h"
+
 namespace navitia { namespace timetables {
 
     typedef std::vector<dt_st> vector_stopTime;
