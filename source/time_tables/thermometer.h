@@ -30,9 +30,9 @@ struct Thermometer {
     vertex_t null_vertex;
     type::Data& d;
 
-    Thermometer(type::Data &d) : null_vertex(boost::graph_traits<Graph>::null_vertex()), d(d), line_idx(type::invalid_idx) {}
+    Thermometer(type::Data &d) : null_vertex(boost::graph_traits<Graph>::null_vertex()), d(d), filter("") {}
 
-    std::vector<type::idx_t> get_thermometer(type::idx_t line_idx = type::invalid_idx);
+    std::vector<type::idx_t> get_thermometer(std::string filter = "");
 
     std::vector<uint32_t> match_route(const type::Route & route);
 
@@ -44,7 +44,7 @@ struct Thermometer {
 
 private :
     std::vector<type::idx_t> thermometer;
-    type::idx_t line_idx;
+    std::string filter;
     void generate_thermometer();
     Graph route2graph(const type::Route &route);
 

@@ -1,5 +1,6 @@
 #include "get_stop_times.h"
 #include "routing/best_trip.h"
+#include "type/pb_converter.h"
 namespace navitia { namespace timetables {
 
 std::string iso_string(const nt::Data & d, int date, int hour){
@@ -7,6 +8,8 @@ std::string iso_string(const nt::Data & d, int date, int hour){
     date_time += boost::posix_time::seconds(hour);
     return boost::posix_time::to_iso_string(date_time);
 }
+
+
 
 std::vector<dt_st> get_stop_times(const std::vector<type::idx_t> &route_points, const routing::DateTime &dt, const routing::DateTime &max_dt, const int nb_departures, type::Data & data) {
    std::vector<dt_st> result;
@@ -55,6 +58,7 @@ std::vector<dt_st> get_stop_times(const std::vector<type::idx_t> &route_points, 
 
    return result;
 }
+
 
 }
 

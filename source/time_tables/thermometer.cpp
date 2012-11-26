@@ -1,4 +1,5 @@
 #include "thermometer.h"
+#include "ptreferential/ptreferential.h"
 #include "boost/graph/depth_first_search.hpp"
 #include "boost/graph/topological_sort.hpp"
 
@@ -61,10 +62,13 @@ Graph Thermometer::route2graph(const type::Route &route) {
     vertex_t prev_vertex = null_vertex;
     std::/*unordered_*/map<type::idx_t, uint32_t> idx_nb;
 
-
+    //DEBUG
+    std::cout << std::endl << "route : " << route.idx << std::endl;
     for(type::idx_t route_point_idx : route.route_point_list) {
         Node n;
         n.sp_idx = d.pt_data.route_points[route_point_idx].stop_point_idx;
+        //DEBUG
+        std::cout << n.sp_idx << std::endl;
         if(idx_nb.find(d.pt_data.route_points[route_point_idx].stop_point_idx) == idx_nb.end()) {
             n.nb = 0;
             idx_nb[d.pt_data.route_points[route_point_idx].stop_point_idx] = 0;
@@ -93,10 +97,12 @@ Graph Thermometer::unify_graphes(const std::vector<Graph> graphes) {
         auto last = iter_edges.second;
 
         while(first != last) {
+            //Si le nœud source n'existe pas on l'ajoute
             auto it_source = node_vertex.find(g[boost::source(*first, g)]);
             if(it_source == node_vertex.end()) {
                 node_vertex.insert(std::make_pair(g[boost::source(*first, g)], boost::add_vertex(g[boost::source(*first, g)], result)));
             }
+            //Si le nœud cible n'existe pas on l'ajoute
             it_source = node_vertex.find(g[boost::target(*first, g)]);
             if(it_source == node_vertex.end()) {
                 node_vertex.insert(std::make_pair(g[boost::target(*first, g)], boost::add_vertex(g[boost::target(*first, g)], result)));
@@ -113,10 +119,8 @@ Graph Thermometer::unify_graphes(const std::vector<Graph> graphes) {
 
 void Thermometer::generate_thermometer() {
     std::vector<Graph> graphes;
-    for(type::Route route : d.pt_data.routes) {
-        if(route.line_idx == line_idx) {
-            graphes.push_back(route2graph(route));
-        }
+    for(type::idx_t route_idx : ptref::make_query(navitia::type::Type_e::eRoute, filter, d)) {
+        graphes.push_back(route2graph(d.pt_data.routes[route_idx]));
     }
     Graph unified_graph = this->unify_graphes(graphes);
 
@@ -132,9 +136,9 @@ void Thermometer::generate_thermometer() {
 }
 
 
-std::vector<type::idx_t> Thermometer::get_thermometer(type::idx_t line_idx_) {
-    if(line_idx_ != line_idx && line_idx_ != type::invalid_idx) {
-        line_idx = line_idx_;
+std::vector<type::idx_t> Thermometer::get_thermometer(std::string filter_) {
+    if(filter_ != filter && filter_ != "") {
+        filter = filter_;
         generate_thermometer();
     }
     return thermometer;
@@ -146,9 +150,10 @@ std::vector<uint32_t> Thermometer::match_route(const type::Route & route) {
     auto it = thermometer.begin();
     for(type::idx_t rpidx : route.route_point_list) {
         it = std::find(it, thermometer.end(), d.pt_data.route_points[rpidx].stop_point_idx);
-        if(it==result.end())
+        if(it==thermometer.end())
             throw cant_match(rpidx);
         else {
+            int debug = distance(thermometer.begin(), it);
             result.push_back( distance(thermometer.begin(), it));
         }
         ++it;
