@@ -16,6 +16,7 @@ struct comp_st {
 
 std::string iso_string(const nt::Data & d, int date, int hour);
 
+
 /**
  * @brief get_stop_times : Renvoie tous les departures partant de la liste des route points
  * @param route_points : Les route points à partir desquels on veut les départs
@@ -27,5 +28,7 @@ std::string iso_string(const nt::Data & d, int date, int hour);
  */
 std::vector<dt_st> get_stop_times(const std::vector<type::idx_t> &route_points, const routing::DateTime &dt,
                                    const routing::DateTime &max_dt, const int nb_departures, type::Data & data);
+
+
 
 }}
