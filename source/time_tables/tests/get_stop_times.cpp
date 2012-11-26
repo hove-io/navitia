@@ -1,9 +1,7 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_navimake
 #include <boost/test/unit_test.hpp>
-#include "time_tables/next_departures.h"
-
-#include "routing/raptor.h"
+#include "time_tables/get_stop_times.h"
 #include "naviMake/build_helper.h"
 using namespace navitia::timetables;
 
@@ -19,7 +17,7 @@ BOOST_AUTO_TEST_CASE(test1){
     std::vector<navitia::type::idx_t> rps;
     for(auto rp : d.route_points)
         rps.push_back(rp.idx);
-    auto result = next_departures(rps, navitia::routing::DateTime(0,0), navitia::routing::DateTime(), 1, data);
+    auto result = get_stop_times(rps, navitia::routing::DateTime(0,0), navitia::routing::DateTime(), 1, data);
     BOOST_REQUIRE_EQUAL(result.size(), 1);
 
 }

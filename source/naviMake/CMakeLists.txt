@@ -13,6 +13,8 @@ SET(SOURCE_LIB
         bdtopo_parser.cpp
         build_helper.cpp
         firstletterparser.cpp
+        osm2nav.cpp
+        osm_tags_reader.cpp
 )
 
 SET(SOURCE_NAVIMAKE
@@ -23,13 +25,10 @@ add_library(connectors ${SOURCE_LIB})
 target_link_libraries(connectors ${Boost_LIBRARIES} data)
 
 add_executable (navimake ${SOURCE_NAVIMAKE})
-target_link_libraries(navimake ${Boost_LIBRARIES} connectors)
+target_link_libraries(navimake ${Boost_LIBRARIES} connectors ${OSMPBF})
 
 add_executable (navimake_fl main_firstletter.cpp)
 target_link_libraries(navimake_fl ${Boost_LIBRARIES} connectors)
-
-add_executable (osm2nav osm2nav.cpp)
-target_link_libraries(osm2nav data ${GEOS} ${OSMPBF})
 
 add_subdirectory(tests)
 

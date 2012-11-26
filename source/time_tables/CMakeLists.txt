@@ -1,4 +1,4 @@
-SET(TIME_TABLES_SRC next_departures.cpp departure_board.cpp thermometer.cpp line_schedule.cpp)
+SET(TIME_TABLES_SRC get_stop_times.cpp next_departures.cpp departure_board.cpp thermometer.cpp line_schedule.cpp)
 add_library(time_tables ${TIME_TABLES_SRC})
 target_link_libraries(time_tables types data ptreferential routing)
 

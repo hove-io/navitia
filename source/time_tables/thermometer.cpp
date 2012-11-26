@@ -133,7 +133,7 @@ void Thermometer::generate_thermometer() {
 
 
 std::vector<type::idx_t> Thermometer::get_thermometer(type::idx_t line_idx_) {
-    if(line_idx_ != line_idx) {
+    if(line_idx_ != line_idx && line_idx_ != type::invalid_idx) {
         line_idx = line_idx_;
         generate_thermometer();
     }

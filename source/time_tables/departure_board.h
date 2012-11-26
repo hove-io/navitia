@@ -1,10 +1,8 @@
 #pragma once
 #include "ptreferential/ptreferential.h"
-#include "routing/raptor.h"
 #include "routing/routing.h"
-#include "time_tables/next_departures.h"
 #include "type/pb_converter.h"
-
+#include "get_stop_times.h"
 #include <unordered_map>
 
 namespace navitia { namespace timetables {
