@@ -37,7 +37,6 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
             fill_pb_object(sp.stop_area_idx, data, stop_point->mutable_stop_area(), max_depth-1);
 }
 
-
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Way * way, int max_depth){
     navitia::georef::Way w = data.geo_ref.ways.at(idx);
     way->set_name(w.name);
@@ -134,18 +133,16 @@ void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &dat
 
 void fill_pb_placemark(const georef::Way & way, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth, int house_number){
     pm->set_type(pbnavitia::ADDRESS);
-    type::GeographicalCoord coord;
     fill_pb_object(way.idx, data, pm->mutable_address(), house_number,coord , max_depth);
-    /*pbnavitia::Address * address = pm->mutable_address();
-
+//    pbnavitia::Address * address = pm->mutable_address();
     pbnavitia::Way * pb_way = address->mutable_way();
     pb_way->set_name(way.name);
     if(house_number >= 0){
         address->set_house_number(house_number);
     }
 
-    if(max_depth > 0)
-        fill_pb_object(way.city_idx, data,  pb_way->mutable_city());*/
+    if(max_depth > 0 && way.city_idx != type::invalid_idx)
+        fill_pb_object(way.city_idx, data,  pb_way->mutable_city());
 
 }
 
