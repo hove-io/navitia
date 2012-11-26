@@ -122,20 +122,26 @@ void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &dat
     fill_pb_object(stop_point.idx, data, pm->mutable_stop_point(), max_depth);
 }
 
-void fill_pb_placemark(const georef::Way & way, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth, int house_number){
-    pm->set_type(pbnavitia::ADDRESS);
-    fill_pb_object(way.idx, data, pm->mutable_address(), house_number,coord , max_depth);
-}
-
 void fill_road_section(const georef::Path &path, const type::Data &data, pbnavitia::Section* section, int max_depth){
     if(path.path_items.size() > 0) {
         section->set_type(pbnavitia::ROAD_NETWORK);
         pbnavitia::StreetNetwork * sn = section->mutable_street_network();
         streetnetwork::create_pb(path, data, sn);
+        pbnavitia::PlaceMark* pm;
+        navitia::georef::Way way;
+        type::GeographicalCoord coord;
 
         if(path.path_items.size() > 1){
-            fill_pb_placemark(data.geo_ref.ways[path.path_items.front().way_idx], data, section->mutable_origin(), max_depth);
-            fill_pb_placemark(data.geo_ref.ways[path.path_items.back().way_idx], data, section->mutable_destination(), max_depth);
+
+            way = data.geo_ref.ways[path.path_items.front().way_idx];
+            coord = path.coordinates.front();
+            pm = section->mutable_origin();
+            fill_pb_object(way.idx, data, pm->mutable_address(), way.nearest_number(coord),coord , max_depth);
+
+            way = data.geo_ref.ways[path.path_items.back().way_idx];
+            coord = path.coordinates.back();
+            pm = section->mutable_destination();
+            fill_pb_object(way.idx, data, pm->mutable_address(), way.nearest_number(coord),coord , max_depth);
         }
     }
 }
