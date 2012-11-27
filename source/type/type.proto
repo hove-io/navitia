@@ -96,6 +96,7 @@ message RoutePoint{
 message City {
     optional string id = 1;
     optional string external_code = 3;
+    optional string zip_code = 2;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
 }

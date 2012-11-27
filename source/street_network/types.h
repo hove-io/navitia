@@ -78,7 +78,7 @@ struct HouseNumber{
 };
 
 /** Nommage d'une voie (anciennement "adresse"). Typiquement le nom de rue **/
-struct Way :public nt::Nameable{
+struct Way :public nt::Nameable, nt::NavitiaHeader{
 public:
     nt::idx_t idx;
     std::string way_type;
@@ -93,7 +93,7 @@ public:
     int nearest_number(const nt::GeographicalCoord& );
     nt::GeographicalCoord barycentre(const Graph& );
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-      ar & idx & name & comment & way_type & city & city_idx & house_number_left & house_number_right & edges;
+      ar & idx & name & comment & external_code & way_type & city & city_idx & house_number_left & house_number_right & edges;
     }
 
 private:      

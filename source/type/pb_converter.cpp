@@ -7,6 +7,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::City* city, 
     nt::City city_n = data.pt_data.cities.at(idx);
     city->set_id(city_n.id);
     city->set_id(city_n.id);
+    city->set_zip_code(city_n.main_postal_code);
     city->set_external_code(city_n.external_code);
     city->set_name(city_n.name);
     city->mutable_coord()->set_lon(city_n.coord.x);
