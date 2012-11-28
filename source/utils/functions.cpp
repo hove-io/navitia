@@ -1,6 +1,8 @@
 #include "functions.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string/split.hpp>
+
 
 double str_to_double(std::string str){
     try{
@@ -22,4 +24,10 @@ int str_to_int(std::string str){
         std::cout << "str_to_int : Impossible de convertir [" << str << "] en entier.  " << std::endl;
         return -1;
     }
+}
+
+std::vector<std::string> split_string(const std::string& str,const std::string & separator){
+    std::vector< std::string > SplitVec;
+    split( SplitVec, str, boost::is_any_of(separator), boost::token_compress_on );
+    return SplitVec;
 }

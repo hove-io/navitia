@@ -3,6 +3,7 @@
 #include <iostream>
 #include <boost/assign.hpp>
 #include <proj_api.h>
+#include "utils/functions.h"
 
 
 namespace navitia { namespace type {
@@ -310,13 +311,20 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data &) const {
     return result;
 }
 
-
 EntryPoint::EntryPoint(const std::string &uri) : external_code(uri) {
        size_t pos = uri.find(":");
        if(pos == std::string::npos)
            type = Type_e::eUnknown;
        else {
            type = static_data::get()->typeByCaption(uri.substr(0,pos));
+       }
+
+       // Gestion des adresses
+       if (type == Type_e::eAddress){
+           std::vector<std::string> vect;
+           vect = split_string(uri, ":");
+           this->external_code = vect[0] + ":" + vect[1];
+           this->house_number = str_to_int(vect[2]);
        }
 
        if(type == Type_e::eCoord){

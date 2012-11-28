@@ -128,6 +128,8 @@ std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPo
             result.push_back(std::make_pair(data.pt_data.stop_points[it->second].idx, 0));
         }
     } break;
+        // AA gestion des adresses
+    case type::Type_e::eAddress:
     case type::Type_e::eCoord: {
         result = worker.find_nearest_stop_points(ep.coordinates, data.pt_data.stop_point_proximity_list, 1000, use_second);
     } break;
