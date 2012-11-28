@@ -70,8 +70,8 @@ SA::SA(builder & b, const std::string & sa_name, double x, double y) : b(b) {
     b.data.stop_areas.push_back(sa);
     sa->name = sa_name;
     sa->external_code = sa_name;
-    sa->coord.x = x;
-    sa->coord.y = y;
+    sa->coord.set_lon(x);
+    sa->coord.set_lat(y);
     b.sas[sa_name] = sa;
 }
 
@@ -80,8 +80,8 @@ SA & SA::operator()(const std::string & sp_name, double x, double y){
     b.data.stop_points.push_back(sp);
     sp->name = sp_name;
     sp->external_code = sp_name;
-    sp->coord.x = x;
-    sp->coord.y = y;
+    sa->coord.set_lon(x);
+    sa->coord.set_lat(y);
     sp->stop_area = this->sa;
     b.sps[sp_name] = sp;
     return *this;

@@ -228,8 +228,8 @@ void GtfsParser::parse_stops(Data & data) {
         try{
             boost::algorithm::trim(elts[lon_c]);
             boost::algorithm::trim(elts[lat_c]);
-            sp->coord.x = boost::lexical_cast<double>(elts[lon_c]);
-            sp->coord.y = boost::lexical_cast<double>(elts[lat_c]);
+            sp->coord.set_lon(boost::lexical_cast<double>(elts[lon_c]));
+            sp->coord.set_lat(boost::lexical_cast<double>(elts[lat_c]));
         }
         catch(boost::bad_lexical_cast ) {
             std::cerr << "Impossible de parser les coordonnées pour " << elts[id_c] << " " << elts[code_c]

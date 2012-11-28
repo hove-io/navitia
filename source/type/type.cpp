@@ -2,8 +2,6 @@
 #include "pt_data.h"
 #include <iostream>
 #include <boost/assign.hpp>
-#include <proj_api.h>
-
 
 namespace navitia { namespace type {
 
@@ -74,59 +72,58 @@ bool ValidityPattern::uncheck2(unsigned int day) const {
         return !days[day-1] && !days[day] && !days[day+1];
 }
 
-
-GeographicalCoord::GeographicalCoord(double x, double y, const Projection& projection) : x(x), y(y){
-    GeographicalCoord tmp_coord = this->convert_to(Projection(), projection);
-    this->x = tmp_coord.x;
-    this->y = tmp_coord.y;
-}
-
-
-GeographicalCoord GeographicalCoord::convert_to(const Projection& projection, const Projection& current_projection) const{
-    projPJ pj_src = pj_init_plus(current_projection.definition.c_str());
-    projPJ pj_dest = pj_init_plus(projection.definition.c_str());
-
-    double x, y;
-    x = this->x;
-    y = this->y;
-
-    if(current_projection.is_degree){
-        x *= DEG_TO_RAD;
-        y *= DEG_TO_RAD;
-    }
-
-    pj_transform(pj_src, pj_dest, 1, 1, &x, &y, NULL);
-
-    if(projection.is_degree){
-        x *= RAD_TO_DEG;
-        y *= RAD_TO_DEG;
-    }
-
-    pj_free(pj_dest);
-    pj_free(pj_src);
-    return GeographicalCoord(x, y);
-}
-
 double GeographicalCoord::distance_to(const GeographicalCoord &other) const{
-    if(!degrees)
-        return ::sqrt(::pow(x - other.x, 2)+ ::pow(y-other.y, 2));
     static const double EARTH_RADIUS_IN_METERS = 6372797.560856;
-    double longitudeArc = (this->x - other.x) * DEG_TO_RAD;
-    double latitudeArc  = (this->y - other.y) * DEG_TO_RAD;
+    double longitudeArc = (this->lon() - other.lon()) * DEG_TO_RAD;
+    double latitudeArc  = (this->lat() - other.lat()) * DEG_TO_RAD;
     double latitudeH = sin(latitudeArc * 0.5);
     latitudeH *= latitudeH;
     double lontitudeH = sin(longitudeArc * 0.5);
     lontitudeH *= lontitudeH;
-    double tmp = cos(this->y*DEG_TO_RAD) * cos(other.y*DEG_TO_RAD);
+    double tmp = cos(this->lat()*DEG_TO_RAD) * cos(other.lat()*DEG_TO_RAD);
     return EARTH_RADIUS_IN_METERS * 2.0 * asin(sqrt(latitudeH + tmp*lontitudeH));
 }
 
 bool operator==(const GeographicalCoord & a, const GeographicalCoord & b){
-    return a.degrees == b.degrees && a.distance_to(b) < 1e-3; // soit 1mm
+    return a.distance_to(b) < 0.1; // soit 0.1m
 }
 
+std::pair<GeographicalCoord, float> GeographicalCoord::project(GeographicalCoord segment_start, GeographicalCoord segment_end) const{
+    std::pair<GeographicalCoord, float> result;
+
+    double dlon = segment_end._lon - segment_start._lon;
+    double dlat = segment_end._lat - segment_start._lat;
+    double length = ::sqrt(dlon * dlon + dlat * dlat);
+    double u;
+
+    // On gère le cas où le segment est particulièrement court, et donc ça peut poser des problèmes (à cause de la division par length²)
+    if(length < 1.0){ // moins de un, on projette sur une extrémité
+        if(this->distance_to(segment_start) < this->distance_to(segment_end))
+            u = 0;
+        else
+            u = 1;
+    } else {
+        u = ((this->_lon - segment_start._lon)*dlon + (this->_lat - segment_start._lat)*dlat )/
+                (length * length);
+    }
+
+    // Les deux cas où le projeté tombe en dehors
+    if(u < 0)
+        result = std::make_pair(segment_start, this->distance_to(segment_start));
+    else if(u > 1)
+        result = std::make_pair(segment_end, this->distance_to(segment_end));
+    else {
+        result.first._lon = segment_start._lon + u * (segment_end._lon - segment_start._lon);
+        result.first._lat = segment_start._lat + u * (segment_end._lat - segment_start._lat);
+        result.second = this->distance_to(result.first);
+    }
+
+    return result;
+}
+
+
 std::ostream & operator<<(std::ostream & os, const GeographicalCoord & coord){
-    os << coord.x << ";" << coord.y;
+    os << coord.lon() << ";" << coord.lat();
     return os;
 }
 
@@ -323,12 +320,12 @@ EntryPoint::EntryPoint(const std::string &uri) : external_code(uri) {
            size_t pos2 = uri.find(":", pos+1);
            try{
                if(pos2 != std::string::npos) {
-                   this->coordinates.x = boost::lexical_cast<double>(uri.substr(pos+1, pos2 - pos - 1));
-                   this->coordinates.y = boost::lexical_cast<double>(uri.substr(pos2+1));
+                   this->coordinates.set_lon(boost::lexical_cast<double>(uri.substr(pos+1, pos2 - pos - 1)));
+                   this->coordinates.set_lat(boost::lexical_cast<double>(uri.substr(pos2+1)));
                }
            }catch(boost::bad_lexical_cast){
-               this->coordinates.x = 0;
-               this->coordinates.y = 0;
+               this->coordinates.set_lon(0);
+               this->coordinates.set_lat(0);
            }
        }
    }

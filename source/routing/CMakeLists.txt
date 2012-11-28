@@ -4,7 +4,7 @@ add_library(dataraptor raptor_utils.h dataraptor.cpp)
 target_link_libraries(dataraptor types data)
 
 add_library(routing ${ROUTING_SRC})
-target_link_libraries(routing types data dataraptor)
+target_link_libraries(routing types data dataraptor time_tables)
 
 add_executable(single_run single_run.cpp)
 target_link_libraries(single_run routing boost_program_options dataraptor)

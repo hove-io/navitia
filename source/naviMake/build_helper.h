@@ -60,7 +60,7 @@ struct builder{
 
     /// Crée un nouveau stop area
     SA sa(const std::string & name, double x = 0, double y = 0);
-    SA sa(const std::string & name, navitia::type::GeographicalCoord geo){return sa(name,geo.x, geo.y);}
+    SA sa(const std::string & name, navitia::type::GeographicalCoord geo){return sa(name,geo.lon(), geo.lat());}
 
     /// Crée une connexion
     void connection(const std::string & name1, const std::string & name2, float length);

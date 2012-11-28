@@ -27,8 +27,6 @@ struct GraphBuilder{
     /// Surchage de la création de nœud pour plus de confort
     GraphBuilder & operator()(std::string node_name, float x, float y){ return add_vertex(node_name, x, y);}
 
-    /// Surchage de la création de nœud pour plus de confort
-    GraphBuilder & operator()(std::string node_name, navitia::type::GeographicalCoord geo){ return add_vertex(node_name, geo.x, geo.y);}
 
     /// Surchage de la création d'arc pour plus de confort
     GraphBuilder & operator()(std::string source_name, std::string target_name, float length = -1, bool bidirectionnal = false){

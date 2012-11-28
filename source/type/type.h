@@ -62,37 +62,32 @@ struct NavitiaHeader{
 
 };
 
-/**
- * Représente un systéme de projection
- * le constructeur par défaut doit renvoyer le sytéme de projection utilisé par l'application en interne
- * WGS84 dans notre cas
+
+/** Coordonnées géographiques en WGS84
+ *
+ * Elles sont stockées en virgule fixe pour gagner de la mémoire
  */
-struct Projection{
-    std::string name;
-    std::string definition;
-    bool is_degree;
-
-    Projection(): name("wgs84"), definition("+init=epsg:4326"), is_degree(true){}
-
-    Projection(const std::string& name, const std::string& definition, bool is_degree = false):
-        name(name), definition(definition), is_degree(is_degree){}
-
-};
-
 struct GeographicalCoord{
-    double x;
-    double y;
+    GeographicalCoord() : _lon(0), _lat(0) {}
+    GeographicalCoord(double lon, double lat) : _lon(lon*precision), _lat(lat*precision) {}
+    GeographicalCoord(double x, double y, bool) {set_xy(x, y);}
 
-    /// Est-ce que les coordonnées sont en degres, par défaut on suppose que oui
-    /// Cela a des impacts sur le calcul des distances
-    /// Si ce n'est pas des degrés, on prend la distance euclidienne
-    bool degrees;
+    double lon() const { return _lon/precision;}
+    double lat() const { return _lat/precision;}
+    int32_t raw_lon() const {return _lon;}
+    int32_t raw_lat() const {return _lat;}
 
-    GeographicalCoord() : x(0), y(0), degrees(true) {}
-    GeographicalCoord(double x, double y, bool degrees = true) : x(x), y(y), degrees(degrees) {}
-    GeographicalCoord(double x, double y, const Projection& projection);
+    void set_lon(double lon) { this->_lon = lon*precision;}
+    void set_lat(double lat) { this->_lat = lat*precision;}
+    void set_xy(double x, double y){this->set_lon(x*M_TO_DEG); this->set_lat(y*M_TO_DEG);}
 
-    /* Calcule la distance Grand Arc entre deux nœuds
+    /// Ordre des coordonnées utilisé par ProximityList
+    bool operator<(GeographicalCoord other) const {return this->_lon < other._lon;}
+
+    constexpr static double DEG_TO_RAD = 0.01745329238;
+    constexpr static double precision = 1e7;
+    constexpr static double M_TO_DEG = 1.0/111319.9;
+    /** Calcule la distance Grand Arc entre deux nœuds
       *
       * On utilise la formule de Haversine
       * http://en.wikipedia.org/wiki/Law_of_haversines
@@ -101,29 +96,39 @@ struct GeographicalCoord{
       */
     double distance_to(const GeographicalCoord & other) const;
 
-    /** Calcule la distance au carré grand arc entre deux points de manière approchée */
-    double approx_sqr_distance(const GeographicalCoord &other, double coslat) const{
 
-        if(!degrees)
-            return ::pow(x - other.x, 2)+ ::pow(y-other.y, 2);
+    /** Projette un point sur un segment
+
+       Retourne les coordonnées projetées et la distance au segment
+       Si le point projeté tombe en dehors du segment, alors ça tombe sur le nœud le plus proche
+       http://paulbourke.net/geometry/pointline/
+       */
+    std::pair<type::GeographicalCoord, float> project(GeographicalCoord segment_start, GeographicalCoord segment_end) const;
+
+    /** Calcule la distance au carré grand arc entre deux points de manière approchée
+
+        Cela sert essentiellement lorsqu'il faut faire plein de comparaisons de distances à un point (par exemple pour proximity list)
+    */
+    double approx_sqr_distance(const GeographicalCoord &other, double coslat) const{
         static const double EARTH_RADIUS_IN_METERS_SQUARE = 40612548751652.183023;
-        double latitudeArc = (this->y - other.y) * 0.0174532925199432958;
-        double longitudeArc = (this->x - other.x) * 0.0174532925199432958;
+        double latitudeArc = (this->lat() - other.lat()) * DEG_TO_RAD;
+        double longitudeArc = (this->lon() - other.lon()) * DEG_TO_RAD;
         double tmp = coslat * longitudeArc;
         return EARTH_RADIUS_IN_METERS_SQUARE * (latitudeArc*latitudeArc + tmp*tmp);
     }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & x & y;
+        ar & _lon & _lat;
     }
 
-    GeographicalCoord convert_to(const Projection& projection, const Projection& current_projection = Projection()) const;
+private:
+    int32_t _lon;
+    int32_t _lat;
 };
 
 std::ostream & operator<<(std::ostream &_os, const GeographicalCoord & coord);
 
-// Deux points sont considérés comme étant égaux s'ils sont du même type de coordonnées
-// et si la distance entre eux est inférieure à 1mm
+/** Deux points sont considérés comme étant égaux s'ils sont à moins de 0.1m */
 bool operator==(const GeographicalCoord & a, const GeographicalCoord & b);
 
 struct Country: public NavitiaHeader, Nameable {

@@ -224,6 +224,9 @@ struct ProjectionData {
     vertex_t source;
     vertex_t target;
 
+    /// Est-ce que la projection a réussi ?
+    bool found;
+
     /// La coordonnée projetée sur le segment
     type::GeographicalCoord projected;
 
@@ -241,13 +244,6 @@ struct ProjectionData {
 };
 
 
-/** Projette un point sur un segment
-
-   Retourne les coordonnées projetées et la distance au segment
-   Si le point projeté tombe en dehors du segment, alors ça tombe sur le nœud le plus proche
-   http://paulbourke.net/geometry/pointline/
-   */
-std::pair<type::GeographicalCoord, float> project(type::GeographicalCoord point, type::GeographicalCoord segment_start, type::GeographicalCoord segment_end);
 
 /** Structures avec toutes les données écriture pour streetnetwork */
 struct StreetNetworkWorker {

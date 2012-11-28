@@ -48,11 +48,11 @@ nt::GeographicalCoord Way::extrapol_geographical_coord(int number){
     int diff_house_number = hn_upper.number - hn_lower.number;
     int diff_number = number - hn_lower.number;
 
-    double x_step = (hn_upper.coord.x - hn_lower.coord.x) /diff_house_number;
-    to_return.x = hn_lower.coord.x + x_step*diff_number;
+    double x_step = (hn_upper.coord.lon() - hn_lower.coord.lon()) /diff_house_number;
+    to_return.set_lon(hn_lower.coord.lon() + x_step*diff_number);
 
-    double y_step = (hn_upper.coord.y - hn_lower.coord.y) /diff_house_number;
-    to_return.y = hn_lower.coord.y + y_step*diff_number;
+    double y_step = (hn_upper.coord.lat() - hn_lower.coord.lat()) /diff_house_number;
+    to_return.set_lat(hn_lower.coord.lat() + y_step*diff_number);
 
     return to_return;
 }
@@ -109,12 +109,12 @@ nt::GeographicalCoord Way::barycentre(const Graph& graph){
     nt::GeographicalCoord to_return;
 
     for(auto edge : this->edges){
-        to_return.x = to_return.x + graph[edge.first].coord.x + graph[edge.second].coord.x;
-        to_return.y = to_return.y + graph[edge.first].coord.y + graph[edge.second].coord.y;
+        to_return.set_lon(to_return.lon() + graph[edge.first].coord.lon() + graph[edge.second].coord.lon());
+        to_return.set_lat(to_return.lat() + graph[edge.first].coord.lat() + graph[edge.second].coord.lat());
     }
     if (this->edges.size() > 0){
-        to_return.x = to_return.x/(this->edges.size() * 2);
-        to_return.y = to_return.y/(this->edges.size() * 2);
+        to_return.set_lon(to_return.lon()/(this->edges.size() * 2));
+        to_return.set_lat(to_return.lat()/(this->edges.size() * 2));
     }
     return to_return;
 }
@@ -260,7 +260,7 @@ Path GeoRef::compute(std::vector<vertex_t> starts, std::vector<vertex_t> destina
 ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoRef & sn, const proximitylist::ProximityList<vertex_t> &prox){
 
     edge_t edge;
-    bool found = true;
+    found = true;
     try {
         edge = sn.nearest_edge(coord, prox);
     } catch(proximitylist::NotFound) {
@@ -276,7 +276,7 @@ ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoR
         type::GeographicalCoord vertex1_coord = sn.graph[this->source].coord;
         type::GeographicalCoord vertex2_coord = sn.graph[this->target].coord;
         // On projette le nœud sur le segment
-        this->projected = project(coord, vertex1_coord, vertex2_coord).first;
+        this->projected = coord.project(vertex1_coord, vertex2_coord).first;
         // On calcule la distance « initiale » déjà parcourue avant d'atteindre ces extrémité d'où on effectue le calcul d'itinéraire
         this->source_distance = projected.distance_to(vertex1_coord);
         this->target_distance = projected.distance_to(vertex2_coord);
@@ -289,19 +289,22 @@ Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::Ge
     ProjectionData start(start_coord, *this, this->pl);
     ProjectionData dest(dest_coord, *this, this->pl);
 
-    Path p = compute({start.source, start.target},
+    if(start.found && dest.found){
+       Path p = compute({start.source, start.target},
                      {dest.source, dest.target},
                      {start.source_distance, start.target_distance},
                      {dest.source_distance, dest.target_distance});
 
-    // On rajoute les bouts de coordonnées manquants à partir et vers le projeté de respectivement le départ et l'arrivée
-    std::vector<type::GeographicalCoord> coords = {start.projected};
-    coords.resize(p.coordinates.size() + 2);
-    std::copy(p.coordinates.begin(), p.coordinates.end(), coords.begin() + 1);
-    coords.back() = dest.projected;
-    p.coordinates = coords;
-
-    return p;
+        // On rajoute les bouts de coordonnées manquants à partir et vers le projeté de respectivement le départ et l'arrivée
+        std::vector<type::GeographicalCoord> coords = {start.projected};
+        coords.resize(p.coordinates.size() + 2);
+        std::copy(p.coordinates.begin(), p.coordinates.end(), coords.begin() + 1);
+        coords.back() = dest.projected;
+        p.coordinates = coords;
+        return p;
+    } else {
+        throw proximitylist::NotFound();
+    }
 }
 
 
@@ -466,7 +469,7 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const p
         vertex_t v = boost::target(e, this->graph);
         coord_v = this->graph[v].coord;
         // Petite approximation de la projection : on ne suit pas le tracé de la voirie !
-        auto projected = project(coordinates, coord_u, coord_v);
+        auto projected = coordinates.project(coord_u, coord_v);
         if(projected.second < dist){
             found = true;
             dist = projected.second;
@@ -480,39 +483,6 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const p
 }
 
 
-
-std::pair<type::GeographicalCoord, float> project(type::GeographicalCoord point, type::GeographicalCoord segment_start, type::GeographicalCoord segment_end){
-    std::pair<type::GeographicalCoord, float> result;
-    result.first.degrees = point.degrees;
-
-    float length = segment_start.distance_to(segment_end);
-    float u;
-
-    // On gère le cas où le segment est particulièrement court, et donc ça peut poser des problèmes (à cause de la division par length²)
-    if(length < 1){ // moins d'un mètre, on projette sur une extrémité
-        if(point.distance_to(segment_start) < point.distance_to(segment_end))
-            u = 0;
-        else
-            u = 1;
-    } else {
-        u = ((point.x - segment_start.x)*(segment_end.x - segment_start.x)
-             + (point.y - segment_start.y)*(segment_end.y - segment_start.y) )/
-                (length * length);
-    }
-
-    // Les deux cas où le projeté tombe en dehors
-    if(u < 0)
-        result = std::make_pair(segment_start, segment_start.distance_to(point));
-    else if(u > 1)
-        result = std::make_pair(segment_end, segment_end.distance_to(point));
-    else {
-        result.first.x = segment_start.x + u * (segment_end.x - segment_start.x);
-        result.first.y = segment_start.y + u * (segment_end.y - segment_start.y);
-        result.second = point.distance_to(result.first);
-    }
-
-    return result;
-}
 
 std::vector< std::pair<type::idx_t, double> > StreetNetworkWorker::find_nearest_stop_points(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius, bool use_second){
     ProjectionData start;

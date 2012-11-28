@@ -81,8 +81,8 @@ void FirstletterParser::load_city(Data & data) {
         city->external_code= row[code];
         city->name = row[name];
         city->department = department_map.at(row[dcode]);
-        city->coord.x = boost::lexical_cast<double>(row[cit_x]);
-        city->coord.y = boost::lexical_cast<double>(row[cit_y]);
+        city->coord.set_lon(boost::lexical_cast<double>(row[cit_x]));
+        city->coord.set_lat(boost::lexical_cast<double>(row[cit_y]));
         //city->main_postal_code = row[cit_cp];
 
         data.cities.push_back(city);

@@ -5,7 +5,8 @@ namespace navitia { namespace georef {
 GraphBuilder & GraphBuilder::add_vertex(std::string node_name, float x, float y){
     auto it = this->vertex_map.find(node_name);
     vertex_t v;
-    type::GeographicalCoord coord(x,y,false);
+    type::GeographicalCoord coord;
+    coord.set_xy(x,y);
     if(it  == this->vertex_map.end()){
         v = boost::add_vertex(this->geo_ref.graph);
         vertex_map[node_name] = v;
