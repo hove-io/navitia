@@ -76,6 +76,7 @@ void Data::lz4(const std::string & filename) {
 
 void Data::build_external_code(){
     this->pt_data.build_external_code();
+    geo_ref.normalize_extcode_way();
 }
 
 void Data::build_proximity_list(){

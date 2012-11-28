@@ -410,6 +410,19 @@ void GeoRef::build_firstletter_list(){
     fl.build();
 }
 
+void GeoRef::build_ways(){
+   for(auto way : ways){
+       this->way_map[way.external_code] = way.idx;
+   }
+}
+
+void GeoRef::normalize_extcode_way(){
+    for(Way & way : ways){
+        way.external_code = "address:"+ way.external_code;
+    }
+    this->build_ways();
+}
+
 std::vector<nf::FirstLetter<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string & str) const{
     std::vector<nf::FirstLetter<nt::idx_t>::fl_quality> to_return;
     boost::tokenizer<> tokens(str);
