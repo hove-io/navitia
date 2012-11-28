@@ -46,6 +46,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * ad
     }
     address->mutable_coord()->set_lon(coord.x);
     address->mutable_coord()->set_lat(coord.y);
+    address->set_external_code(way.external_code);
     if(max_depth > 0)
         fill_pb_object(way.city_idx, data,  address->mutable_city());
 }
