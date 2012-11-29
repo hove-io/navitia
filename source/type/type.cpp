@@ -119,9 +119,7 @@ std::pair<GeographicalCoord, float> GeographicalCoord::project(GeographicalCoord
         result.second = this->distance_to(result.first);
     }
 
-    pj_free(pj_dest);
-    pj_free(pj_src);
-    return GeographicalCoord(x, y);
+    return result;
 }
 
 
@@ -323,8 +321,10 @@ EntryPoint::EntryPoint(const std::string &uri) : external_code(uri) {
        if (type == Type_e::eAddress){
            std::vector<std::string> vect;
            vect = split_string(uri, ":");
-           this->external_code = vect[0] + ":" + vect[1];
-           this->house_number = str_to_int(vect[2]);
+           if(vect.size() == 3){
+               this->external_code = vect[0] + ":" + vect[1];
+               this->house_number = str_to_int(vect[2]);
+           }
        }
 
        if(type == Type_e::eCoord){
