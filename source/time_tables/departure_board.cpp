@@ -21,7 +21,7 @@ std::vector<vector_datetime> make_columuns(const std::vector<dt_st> &stop_times)
     return result;
 }
 
-pbnavitia::Response departure_board(const std::string &request, std::string &date, std::string &date_changetime, type::Data &data) {
+pbnavitia::Response stops_schedule(const std::string &request, std::string &date, std::string &date_changetime, type::Data &data) {
     boost::posix_time::ptime debut, change;
     if(date == "")
         debut = boost::posix_time::second_clock::local_time();

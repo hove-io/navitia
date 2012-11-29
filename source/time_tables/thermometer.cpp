@@ -1,165 +1,218 @@
 #include "thermometer.h"
 #include "ptreferential/ptreferential.h"
-#include "boost/graph/depth_first_search.hpp"
-#include "boost/graph/topological_sort.hpp"
-
+#include "time.h"
 #include <boost/graph/graphviz.hpp> //DEBUG
 
 
 namespace navitia { namespace timetables {
 
-std::size_t hash_value(Node const& n)
-{
-        boost::hash<std::pair<type::idx_t, uint32_t>> hasher;
-        return hasher(std::make_pair(n.sp_idx, n.nb));
-}
 
-struct vis_construct_graph : public boost::default_dfs_visitor
-{
-    template <class Edge, class Graph>
-    void back_edge(Edge e , Graph& ) {
-        throw e;
+uint32_t /*Thermometer::*/get_lower_bound(const std::vector<vector_idx> &routes) {
+    std::unordered_map<type::idx_t, uint32_t> min_spid_occurences;
+
+
+    for(auto route : routes) {
+        std::unordered_map<type::idx_t, uint32_t> to_count;
+        for(auto i : route) {
+            if(to_count.find(i) == to_count.end())
+                to_count.insert(std::make_pair(i,1));
+            else
+                ++to_count[i];
+        }
+
+        for(auto p : to_count) {
+            if(min_spid_occurences.find(p.first) == min_spid_occurences.end())
+                min_spid_occurences.insert(std::make_pair(p.first, p.second));
+            else if(p.second > min_spid_occurences[p.first])
+                min_spid_occurences[p.first] = p.second;
+        }
     }
-};
 
+    uint32_t result = 0;
 
-map_nodevertex Thermometer::generate_map(const Graph &graph) {
-    map_nodevertex result;
-    boost::graph_traits<Graph>::vertex_iterator vi, vi_end, next;
-
-    tie(vi, vi_end) = vertices(graph);
-    for (next = vi; vi != vi_end; vi = next) {
-        ++next;
-        result.insert(std::make_pair(graph[*vi], *vi));
-    }
+    for(auto p : min_spid_occurences)
+        result += p.second;
     return result;
 }
 
+std::pair<vector_idx, bool> Thermometer::recc(std::vector<vector_idx> &routes, const uint32_t upper_bound_, int depth) {
+    ++depth;
+    ++debug_nb_branches;
+    uint32_t upper_bound = upper_bound_;
+    std::vector<type::idx_t> result;
+    unsigned int lower_bound = get_lower_bound(routes);
+
+    if(lower_bound >= upper_bound){
+        return std::make_pair(vector_idx(), false);
+   }
 
 
+    std::vector<type::idx_t> possibilities = generate_possibilities(routes);
+    bool res_bool = possibilities.size() == 0;
+    for(auto poss_spidx : possibilities) {
+        std::vector<uint32_t> to_retail = untail(routes, poss_spidx);
+        uint32_t u = upper_bound;
+        if(u != std::numeric_limits<uint32_t>::max())
+            --u;
+        std::pair<vector_idx, bool> tmp = recc(routes, u, depth);
+        retail(routes, poss_spidx, to_retail);
+        if(tmp.second){
+            tmp.first.push_back(poss_spidx);
+            if(u == std::numeric_limits<uint32_t>::max()|| upper_bound > tmp.first.size()) {
+                result = tmp.first;
+                res_bool = true;
+                upper_bound = result.size();
+            }
 
-void Thermometer::break_cycles(Graph & graph, map_nodevertex &node_vertices) {
-    vis_construct_graph v;
-
-    try {
-        boost::depth_first_search(graph, boost::visitor(v));
-    } catch(edge_t e) {
-        Node n = graph[boost::target(e, graph)];
-        ++n.nb;
-        node_vertices[n] = boost::add_vertex(n, graph);
-        vertex_t source = boost::source(e, graph), target = node_vertices[n];
-        boost::remove_edge(e, graph);
-        boost::add_edge(source, target, graph);
-
-        break_cycles(graph, node_vertices);
-    }
-}
-
-
-
-Graph Thermometer::route2graph(const type::Route &route) {
-    Graph result;
-    vertex_t prev_vertex = null_vertex;
-    std::/*unordered_*/map<type::idx_t, uint32_t> idx_nb;
-
-    //DEBUG
-    std::cout << std::endl << "route : " << route.idx << std::endl;
-    for(type::idx_t route_point_idx : route.route_point_list) {
-        Node n;
-        n.sp_idx = d.pt_data.route_points[route_point_idx].stop_point_idx;
-        //DEBUG
-        std::cout << n.sp_idx << std::endl;
-        if(idx_nb.find(d.pt_data.route_points[route_point_idx].stop_point_idx) == idx_nb.end()) {
-            n.nb = 0;
-            idx_nb[d.pt_data.route_points[route_point_idx].stop_point_idx] = 0;
+            if(upper_bound == lower_bound) {
+                ++debug_nb_cuts;
+                break;
+            }
         } else {
-            ++idx_nb[d.pt_data.route_points[route_point_idx].stop_point_idx];
-            n.nb = idx_nb[d.pt_data.route_points[route_point_idx].stop_point_idx];
+            upper_cut++;
         }
-        auto v = boost::add_vertex(n, result);
-
-        if(prev_vertex != null_vertex) {
-            boost::add_edge(prev_vertex, v, result);
-        }
-        prev_vertex = v;
     }
 
-    return result;
+    if(result.size() == 0 && res_bool)
+        std::cout << depth <<  " " << std::flush;
+
+    return std::make_pair(result, res_bool);
 }
 
-Graph Thermometer::unify_graphes(const std::vector<Graph> graphes) {
-    Graph result;
-    map_nodevertex node_vertex;
-
-    for(auto g : graphes) {
-        auto iter_edges = boost::edges(g);
-        auto first = iter_edges.first;
-        auto last = iter_edges.second;
-
-        while(first != last) {
-            //Si le nœud source n'existe pas on l'ajoute
-            auto it_source = node_vertex.find(g[boost::source(*first, g)]);
-            if(it_source == node_vertex.end()) {
-                node_vertex.insert(std::make_pair(g[boost::source(*first, g)], boost::add_vertex(g[boost::source(*first, g)], result)));
+void Thermometer::generate_thermometer(std::vector<vector_idx> routes) {
+    debug_nb_branches = 0; debug_nb_cuts = 0; upper_cut = 0, nb_opt = 0;
+    if(routes.size() > 1) {
+        std::vector<vector_idx> tmp;
+        vector_idx answer;
+        for(auto r : routes) {
+            if(tmp.empty())
+                tmp.push_back(r);
+            else {
+                tmp.push_back(r);
+                for(unsigned int i=0; i < tmp.size(); ++i) {
+                    std::cout << "Route " << i << " : ";
+                    for(auto sp : tmp[i])
+                        std::cout << sp << " ";
+                    std::cout << std::endl;
+                }
+                answer = recc(tmp, type::invalid_idx).first;
+                tmp.clear();
+                tmp.push_back(answer);
             }
-            //Si le nœud cible n'existe pas on l'ajoute
-            it_source = node_vertex.find(g[boost::target(*first, g)]);
-            if(it_source == node_vertex.end()) {
-                node_vertex.insert(std::make_pair(g[boost::target(*first, g)], boost::add_vertex(g[boost::target(*first, g)], result)));
-            }
-            boost::add_edge(node_vertex[g[boost::source(*first, g)]], node_vertex[g[boost::target(*first, g)]], result);
-            ++first;
         }
+
+        thermometer = answer/*recc(routes, type::invalid_idx).first*/;
+    } else {
+        thermometer = routes.back();
     }
 
-    return result;
+
+    std::cout << "Nb branch : " << debug_nb_branches << " nb cuts: " << debug_nb_cuts<< " nb upper cuts " << upper_cut << " nb optimal : " << nb_opt << std::endl;
 }
 
 
-
-void Thermometer::generate_thermometer() {
-    std::vector<Graph> graphes;
-    for(type::idx_t route_idx : ptref::make_query(navitia::type::Type_e::eRoute, filter, d)) {
-        graphes.push_back(route2graph(d.pt_data.routes[route_idx]));
-    }
-    Graph unified_graph = this->unify_graphes(graphes);
-
-    auto tmp = generate_map(unified_graph);
-    this->break_cycles(unified_graph, tmp);
-
-    std::vector<vertex_t> temp;
-    boost::topological_sort(unified_graph, std::back_inserter(temp));
-    std::reverse(temp.begin(), temp.end());
-
-    for(vertex_t n : temp)
-        thermometer.push_back(unified_graph[n].sp_idx);
+vector_idx Thermometer::get_thermometer(std::vector<vector_idx> routes) {
+    generate_thermometer(routes);
+    return thermometer;
 }
 
-
-std::vector<type::idx_t> Thermometer::get_thermometer(std::string filter_) {
+vector_idx Thermometer::get_thermometer(std::string filter_) {
     if(filter_ != filter && filter_ != "") {
         filter = filter_;
-        generate_thermometer();
+        std::vector<vector_idx> routes;
+        for(type::idx_t route_idx : ptref::make_query(navitia::type::Type_e::eRoute, filter, d)) {
+            routes.push_back(vector_idx());
+            for(type::idx_t rpidx : d.pt_data.routes[route_idx].route_point_list)
+                routes.back().push_back(d.pt_data.route_points[rpidx].stop_point_idx);
+        }
+
+        generate_thermometer(routes);
     }
     return thermometer;
 }
 
 
 std::vector<uint32_t> Thermometer::match_route(const type::Route & route) {
+    std::vector<type::idx_t> tmp;
+    for(auto rpidx : route.route_point_list)
+        tmp.push_back(d.pt_data.route_points[rpidx].stop_point_idx);
+    
+    return match_route(tmp);
+}
+
+std::vector<uint32_t> Thermometer::match_route(const vector_idx &stop_point_list) {
     std::vector<uint32_t> result;
     auto it = thermometer.begin();
-    for(type::idx_t rpidx : route.route_point_list) {
-        it = std::find(it, thermometer.end(), d.pt_data.route_points[rpidx].stop_point_idx);
+    for(type::idx_t spidx : stop_point_list) {
+        it = std::find(it, thermometer.end(),  spidx);
         if(it==thermometer.end())
-            throw cant_match(rpidx);
+            throw cant_match(spidx);
         else {
-            int debug = distance(thermometer.begin(), it);
             result.push_back( distance(thermometer.begin(), it));
         }
         ++it;
     }
+    return result;
+
+}
+
+vector_idx Thermometer::generate_possibilities(const std::vector<vector_idx> &routes) {
+
+
+    vector_idx result;
+    std::vector<uint32_t> tmp;
+    std::unordered_map<type::idx_t, size_t> sp_count;
+
+    for(uint32_t i=0; i<routes.size(); ++i) {
+        if(routes[i].size() > 0) {
+            bool is_optimal = true;
+            for(uint32_t j=0; j<routes.size(); ++j) {
+                if(i!=j)
+                    is_optimal = is_optimal && std::find(routes[j].begin(), routes[j].end(), routes[i].back()) == routes[j].end();
+            }
+            if(is_optimal) {
+                ++nb_opt;
+                return {routes[i].back()};
+            }
+            tmp.push_back(i);
+            if(sp_count.find(routes[i].back()) == sp_count.end())
+                sp_count[routes[i].back()] = 1;
+            else
+                ++sp_count[routes[i].back()];
+        }
+    }
+
+    std::sort(tmp.begin(), tmp.end(), [&](uint32_t r1, uint32_t r2) {
+        return  (sp_count[routes[r1].back()]<sp_count[routes[r2].back()]) || (sp_count[routes[r1].back()]==sp_count[routes[r2].back()] && routes[r1].size() > routes[r2].size()) ;});
+
+    for(auto i : tmp) {
+        if(std::find(result.begin(), result.end(), routes[i].back()) == result.end())
+            result.push_back(routes[i].back());
+    }
+
+
 
     return result;
+}
+
+std::vector<uint32_t> Thermometer::untail(std::vector<vector_idx> &routes, type::idx_t spidx) {
+    std::vector<uint32_t> result;
+    if(spidx != type::invalid_idx) {
+        for(unsigned int i=0; i<routes.size(); ++i) {
+            auto & route = routes[i];
+            if(route.size() > 0 && route.back() == spidx) {
+                route.pop_back();
+                result.push_back(i);
+            }
+        }
+    }
+    return result;
+}
+
+void Thermometer::retail(std::vector<vector_idx> &routes, type::idx_t spidx, const std::vector<uint32_t> &to_retail) {
+    for(auto i : to_retail) {
+        routes[i].push_back(spidx);
+    }
 }
 
 }}
