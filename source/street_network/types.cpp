@@ -296,11 +296,7 @@ Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::Ge
                      {dest.source_distance, dest.target_distance});
 
         // On rajoute les bouts de coordonnées manquants à partir et vers le projeté de respectivement le départ et l'arrivée
-        std::vector<type::GeographicalCoord> coords = {start.projected};
-        coords.resize(p.coordinates.size() + 2);
-        std::copy(p.coordinates.begin(), p.coordinates.end(), coords.begin() + 1);
-        coords.back() = dest.projected;
-        p.coordinates = coords;
+        p.coordinates.push_front(start.projected);
         return p;
     } else {
         throw proximitylist::NotFound();
@@ -498,9 +494,9 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const p
 
 
 std::vector< std::pair<type::idx_t, double> > StreetNetworkWorker::find_nearest_stop_points(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius, bool use_second){
-    ProjectionData start;
+    ProjectionData projection;
     try{
-        start = ProjectionData(start_coord, this->geo_ref, this->geo_ref.pl);
+        projection = ProjectionData(start_coord, this->geo_ref, this->geo_ref.pl);
     }catch(DestinationFound){}
 
     std::vector< std::pair<idx_t, type::GeographicalCoord> > elements;
@@ -512,11 +508,13 @@ std::vector< std::pair<type::idx_t, double> > StreetNetworkWorker::find_nearest_
 
     if(!use_second) {
         departure_launch = true;
-        return find_nearest_stop_points(start, radius, elements, distances, predecessors, idx_projection);
+        start = projection;
+        return find_nearest_stop_points(projection, radius, elements, distances, predecessors, idx_projection);
     }
     else {
         arrival_launch = true;
-        return find_nearest_stop_points(start, radius, elements, distances2, predecessors2, idx_projection2);
+        destination = projection;
+        return find_nearest_stop_points(projection, radius, elements, distances2, predecessors2, idx_projection2);
     }
 }
 
@@ -579,6 +577,7 @@ Path StreetNetworkWorker::get_path(type::idx_t idx, bool use_second){
             result = this->geo_ref.build_path(projection.target, this->predecessors);
             result.length = distances[projection.target] + projection.target_distance;
         }
+        result.coordinates.push_front(start.projected);
     } else {
         if(!arrival_launched() || (distances2[idx] == std::numeric_limits<float>::max() && this->idx_projection2.find(idx) == idx_projection2.end()))
             return result;
@@ -595,6 +594,7 @@ Path StreetNetworkWorker::get_path(type::idx_t idx, bool use_second){
         }
         std::reverse(result.path_items.begin(), result.path_items.end());
         std::reverse(result.coordinates.begin(), result.coordinates.end());
+        result.coordinates.push_back(destination.projected);
     }
 
     return result;
@@ -631,6 +631,8 @@ Path StreetNetworkWorker::get_direct_path() {
         }
     }
 
+    result.coordinates.push_front(start.projected);
+    result.coordinates.push_back(destination.projected);
     return result;
 }
 

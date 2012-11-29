@@ -114,7 +114,7 @@ struct PathItem{
 struct Path {
     float length; //< Longueur totale du parcours
     std::vector<PathItem> path_items; //< Liste des voies parcourues
-    std::vector<nt::GeographicalCoord> coordinates; //< Coordonnées du parcours
+    std::deque<nt::GeographicalCoord> coordinates; //< Coordonnées du parcours
 };
 
 class ProjectionData;
@@ -307,6 +307,10 @@ private:
                                                                std::vector<float> & dist,
                                                                std::vector<vertex_t> & preds,
                                                                std::map<type::idx_t, ProjectionData> & idx_proj);
+
+    /// Point de départ et d'arrivée fourni par la requête
+    ProjectionData start;
+    ProjectionData destination;
 
     // Les données sont doublées pour garder les données au départ et à l'arrivée
     /// Tableau des distances utilisé par Dijkstra
