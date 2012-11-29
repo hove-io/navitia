@@ -78,9 +78,9 @@ struct HouseNumber{
 };
 
 /** Nommage d'une voie (anciennement "adresse"). Typiquement le nom de rue **/
-struct Way :public nt::Nameable{
+struct Way :public nt::Nameable, nt::NavitiaHeader{
 public:
-    nt::idx_t idx;
+//    nt::idx_t idx;
     std::string way_type;
     std::string city;
     nt::idx_t city_idx;
@@ -93,7 +93,7 @@ public:
     int nearest_number(const nt::GeographicalCoord& );
     nt::GeographicalCoord barycentre(const Graph& );
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-      ar & idx & name & comment & way_type & city & city_idx & house_number_left & house_number_right & edges;
+      ar & idx & name & comment & external_code & way_type & city & city_idx & house_number_left & house_number_right & edges;
     }
 
 private:      
@@ -124,6 +124,7 @@ struct GeoRef {
 
     /// Liste des voiries
     std::vector<Way> ways;
+    std::map<std::string, nt::idx_t> way_map;
 
     /// Indexe sur les noms de voirie
     firstletter::FirstLetter<unsigned int> fl;
@@ -138,14 +139,14 @@ struct GeoRef {
     Graph graph;
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & ways & graph & fl & pl & projected_stop_points;
+        ar & ways & way_map & graph & fl & pl & projected_stop_points;
     }
 
     template<class Archive> void load(Archive & ar, const unsigned int) {
         // La désérialisation d'une boost adjacency list ne vide pas le graphe
         // On avait donc une fuite de mémoire
         graph.clear();
-        ar & ways & graph & fl & pl & projected_stop_points;
+        ar & ways & way_map & graph & fl & pl & projected_stop_points;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
@@ -155,6 +156,11 @@ struct GeoRef {
 
     ///  Construit l'indexe firstletter à partir des rues
     void build_firstletter_list();
+
+    /// Normalisation des codes externes
+    void normalize_extcode_way();
+    /// Chargement de la liste map code externe idx
+    void build_ways();
 
     /// Recherche d'une adresse avec un numéro en utilisant FirstLetter
     std::vector<nf::FirstLetter<nt::idx_t>::fl_quality> find_ways(const std::string & str) const;

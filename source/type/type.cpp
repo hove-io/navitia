@@ -2,6 +2,7 @@
 #include "pt_data.h"
 #include <iostream>
 #include <boost/assign.hpp>
+#include "utils/functions.h"
 
 namespace navitia { namespace type {
 
@@ -118,7 +119,9 @@ std::pair<GeographicalCoord, float> GeographicalCoord::project(GeographicalCoord
         result.second = this->distance_to(result.first);
     }
 
-    return result;
+    pj_free(pj_dest);
+    pj_free(pj_src);
+    return GeographicalCoord(x, y);
 }
 
 
@@ -314,6 +317,14 @@ EntryPoint::EntryPoint(const std::string &uri) : external_code(uri) {
            type = Type_e::eUnknown;
        else {
            type = static_data::get()->typeByCaption(uri.substr(0,pos));
+       }
+
+       // Gestion des adresses
+       if (type == Type_e::eAddress){
+           std::vector<std::string> vect;
+           vect = split_string(uri, ":");
+           this->external_code = vect[0] + ":" + vect[1];
+           this->house_number = str_to_int(vect[2]);
        }
 
        if(type == Type_e::eCoord){

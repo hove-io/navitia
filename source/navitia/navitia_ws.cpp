@@ -275,6 +275,21 @@ class Worker : public BaseWorker<navitia::type::Data> {
         navitia::type::EntryPoint departure = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["origin"].value));
         navitia::type::EntryPoint destination = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["destination"].value));
 
+        // gestion des addresses
+
+        if (departure.type == navitia::type::Type_e::eAddress){
+            auto way = d.geo_ref.way_map.find(departure.external_code);
+            if (way != d.geo_ref.way_map.end()){
+                departure.coordinates = d.geo_ref.ways[way->second].nearest_coord(departure.house_number, d.geo_ref.graph);
+            }
+        }
+        if (destination.type == navitia::type::Type_e::eAddress){
+            auto way = d.geo_ref.way_map.find(destination.external_code);
+            if (way != d.geo_ref.way_map.end()){
+                destination.coordinates = d.geo_ref.ways[way->second].nearest_coord(destination.house_number, d.geo_ref.graph);
+            }
+        }
+
         bool clockwise = true;
         if(request.parsed_params.find("clockwise") != request.parsed_params.end())
             clockwise = boost::get<bool>(request.parsed_params["clockwise"].value);
