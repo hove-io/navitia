@@ -44,10 +44,10 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * ad
     if(house_number >= 0){
         address->set_house_number(house_number);
     }
-    pb_way->mutable_coord()->set_lon(coord.lon());
-    pb_way->mutable_coord()->set_lat(coord.lat());
+    address->mutable_coord()->set_lon(coord.lon());
+    address->mutable_coord()->set_lat(coord.lat());
     address->set_external_code(way.external_code);
-    if(max_depth > 0)
+    if(max_depth > 0 and way.city_idx != nt::invalid_idx)
         fill_pb_object(way.city_idx, data,  address->mutable_city());
 }
 
@@ -124,20 +124,6 @@ void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &dat
     fill_pb_object(stop_point.idx, data, pm->mutable_stop_point(), max_depth);
 }
 
-void fill_pb_placemark(const georef::Way & way, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth, int house_number){
-    pm->set_type(pbnavitia::ADDRESS);
-    fill_pb_object(way.idx, data, pm->mutable_address(), house_number,coord , max_depth);
-//    pbnavitia::Address * address = pm->mutable_address();
-    pbnavitia::Way * pb_way = address->mutable_way();
-    pb_way->set_name(way.name);
-    if(house_number >= 0){
-        address->set_house_number(house_number);
-    }
-
-    if(max_depth > 0 && way.city_idx != type::invalid_idx)
-        fill_pb_object(way.city_idx, data,  pb_way->mutable_city());
-
-}
 
 void fill_road_section(const georef::Path &path, const type::Data &data, pbnavitia::Section* section, int max_depth){
     if(path.path_items.size() > 0) {
