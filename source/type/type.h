@@ -535,6 +535,7 @@ public:
 struct EntryPoint {
     Type_e type;//< Le type de l'objet
     std::string external_code; //< Le code externe de l'objet
+    int house_number;
     GeographicalCoord coordinates; //< coordonnées du point d'entrée
 
     /// Construit le type à partir d'une chaîne
