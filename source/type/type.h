@@ -67,28 +67,24 @@ struct NavitiaHeader{
 
 
 /** Coordonnées géographiques en WGS84
- *
- * Elles sont stockées en virgule fixe pour gagner de la mémoire
  */
 struct GeographicalCoord{
     GeographicalCoord() : _lon(0), _lat(0) {}
-    GeographicalCoord(double lon, double lat) : _lon(lon*precision), _lat(lat*precision) {}
+    GeographicalCoord(double lon, double lat) : _lon(lon), _lat(lat) {}
+    GeographicalCoord(const GeographicalCoord& coord) : _lon(coord.lon()), _lat(coord.lat()){}
     GeographicalCoord(double x, double y, bool) {set_xy(x, y);}
 
-    double lon() const { return _lon/precision;}
-    double lat() const { return _lat/precision;}
-    int32_t raw_lon() const {return _lon;}
-    int32_t raw_lat() const {return _lat;}
+    double lon() const { return _lon;}
+    double lat() const { return _lat;}
 
-    void set_lon(double lon) { this->_lon = lon*precision;}
-    void set_lat(double lat) { this->_lat = lat*precision;}
+    void set_lon(double lon) { this->_lon = lon;}
+    void set_lat(double lat) { this->_lat = lat;}
     void set_xy(double x, double y){this->set_lon(x*M_TO_DEG); this->set_lat(y*M_TO_DEG);}
 
     /// Ordre des coordonnées utilisé par ProximityList
     bool operator<(GeographicalCoord other) const {return this->_lon < other._lon;}
 
     constexpr static double DEG_TO_RAD = 0.01745329238;
-    constexpr static double precision = 1e7;
     constexpr static double M_TO_DEG = 1.0/111319.9;
     /** Calcule la distance Grand Arc entre deux nœuds
       *
@@ -125,8 +121,8 @@ struct GeographicalCoord{
     }
 
 private:
-    int32_t _lon;
-    int32_t _lat;
+    double _lon;
+    double _lat;
 };
 
 std::ostream & operator<<(std::ostream &_os, const GeographicalCoord & coord);
