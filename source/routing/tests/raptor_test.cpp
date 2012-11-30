@@ -678,8 +678,6 @@ BOOST_AUTO_TEST_CASE(sn_debut) {
     data.build_raptor();
     RAPTOR raptor(data);
 
-    type::PT_Data & d = data.pt_data;
-
     auto res1 = raptor.compute_all(departs, destinations, routing::DateTime(0, 8*3600));
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1.back().items[0].arrival.hour(), 9*3600 + 20 * 60);

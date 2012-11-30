@@ -67,9 +67,9 @@ struct RAPTOR : public AbstractRouter
     std::vector<Path> compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
                               int departure_day, DateTime borne, bool clockwise = true);
     ///Construit tous chemins trouvés
-    std::vector<Path> makePathes(std::vector<std::pair<type::idx_t, double> > departs, std::vector<std::pair<type::idx_t, double> > destinations);
+    std::vector<Path> makePathes(std::vector<std::pair<type::idx_t, double> > destinations);
     ///Construit tous les chemins trouvés, lorsque le calcul est lancé dans le sens inverse
-    std::vector<Path> makePathesreverse(std::vector<std::pair<type::idx_t, double> > departs, std::vector<std::pair<type::idx_t, double> > destinations);
+    std::vector<Path> makePathesreverse(std::vector<std::pair<type::idx_t, double> > destinations);
 
     ///Calcul d'itinéraires dans le sens horaire à partir de plusieurs stop points de départs, vers plusieurs stoppoints d'arrivée, à une heure donnée
     std::vector<Path> 
@@ -101,8 +101,8 @@ struct RAPTOR : public AbstractRouter
     ///Boucle principale, parcourt les routes,
     void boucleRAPTOR();
     ///Construit un chemin
-    Path makePath(std::vector<std::pair<type::idx_t, double> > departs,
-                  unsigned int destination_idx, unsigned int countb, bool reverse = false);
+    Path makePath(type::idx_t destination_idx, unsigned int countb, bool reverse = false);
+
     ///Marche à pied à l'interieur d'un stop point et entre deux stop points
     void marcheapied();
     ///Correspondances garanties et prolongements de service
@@ -118,8 +118,7 @@ struct RAPTOR : public AbstractRouter
     void raptor_loop(Visitor visitor, bool global_pruning = true);
 
     ///Construit un chemin, utilisé lorsque l'algorithme a été fait en sens anti-horaire
-    Path makePathreverse(std::vector<std::pair<type::idx_t, double> > departs,
-                         unsigned int destination_idx, unsigned int countb);
+    Path makePathreverse(unsigned int destination_idx, unsigned int countb);
      ///Marche à pied à l'interieur d'un stop point et entre deux stop points
     void marcheapiedreverse();
     ///Correspondances garanties et prolongements de service

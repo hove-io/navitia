@@ -77,17 +77,16 @@ void Data::clean(){
                 continue;
             }
             for(auto vj2 = (vj1+1); vj2 != it1->second.end(); ++vj2) {
-                if(((*vj1)->validity_pattern->days & (*vj2)->validity_pattern->days).any()) {
+                if(((*vj1)->validity_pattern->days & (*vj2)->validity_pattern->days).any()  &&
+                        (*vj1)->stop_time_list.size() > 0 && (*vj2)->stop_time_list.size() > 0) {
                     navimake::types::VehicleJourney *vjs1, *vjs2;
-                    if((*vj1)->stop_time_list.size() > 0 && (*vj2)->stop_time_list.size() > 0) {
-                        if((*vj1)->stop_time_list.front()->departure_time <= (*vj2)->stop_time_list.front()->departure_time) {
-                            vjs1 = *vj1;
-                            vjs2 = *vj2;
-                        }
-                        else {
-                            vjs1 = *vj2;
-                            vjs2 = *vj1;
-                        }
+                    if((*vj1)->stop_time_list.front()->departure_time <= (*vj2)->stop_time_list.front()->departure_time) {
+                        vjs1 = *vj1;
+                        vjs2 = *vj2;
+                    }
+                    else {
+                        vjs1 = *vj2;
+                        vjs2 = *vj1;
                     }
 
                     for(auto rp = (*vj1)->route->route_point_list.begin(); rp != (*vj1)->route->route_point_list.end();++rp) {
