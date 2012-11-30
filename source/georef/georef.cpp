@@ -11,7 +11,12 @@ namespace navitia{ namespace georef{
 // Exception levée dès que l'on trouve une destination
 struct DestinationFound{};
 
-// tri des numéros de rue
+/** Ajout d'une adresse dans la liste des adresses d'une rue
+  * les adresses avec un numéro pair sont dans la liste "house_number_right"
+  * les adresses avec un numéro impair sont dans la liste "house_number_left"
+  * Après l'ajout, la liste est trié dans l'ordre croissant des numéros
+*/
+
 void Way::add_house_number(const HouseNumber& house_number){
     if (house_number.number % 2 == 0){
             this->house_number_right.push_back(house_number);
@@ -22,7 +27,9 @@ void Way::add_house_number(const HouseNumber& house_number){
     }
 }
 
-// recherche des coordonnées les plus proches à un un numéro
+/** Recherche des coordonnées les plus proches à un un numéro
+    * les coordonnées par extrapolation
+*/
 nt::GeographicalCoord Way::extrapol_geographical_coord(int number){
     HouseNumber hn_upper, hn_lower;
     nt::GeographicalCoord to_return;
@@ -60,6 +67,13 @@ nt::GeographicalCoord Way::extrapol_geographical_coord(int number){
     return to_return;
 }
 
+/**
+    * Si le numéro est plus grand que les numéros, on renvoie les coordonées du plus grand de la rue
+    * Si le numéro est plus petit que les numéros, on renvoie les coordonées du plus petit de la rue
+    * Si le numéro existe, on renvoie ses coordonnées
+    * Sinon, les coordonnées par extrapolation
+*/
+
 nt::GeographicalCoord Way::get_geographical_coord(const std::vector< HouseNumber>& house_number_list, const int number){
 
     if (house_number_list.size() > 0){
@@ -88,7 +102,9 @@ nt::GeographicalCoord Way::get_geographical_coord(const std::vector< HouseNumber
     return to_return;
 }
 
-// Recherche des coordonnées les plus proches à un numéro
+/** Recherche des coordonnées les plus proches à un numéro
+    * Si la rue n'a pas de numéro, on renvoie son barycentre
+*/
 nt::GeographicalCoord Way::nearest_coord(const int number, const Graph& graph){
     /// Attention la liste :
     /// "house_number_right" doit contenir les numéro pairs
@@ -125,7 +141,10 @@ nt::GeographicalCoord Way::barycentre(const Graph& graph){
     boost::geometry::centroid(line, centroid);
     return centroid;
 }
-// Recherche du némuro le plus proche à des coordonnées
+
+/** Recherche du némuro le plus proche à des coordonnées
+    * On récupère le numéro se trouvant à une distance la plus petite par rapport aux coordonnées passées en paramètre
+*/
 int Way::nearest_number(const nt::GeographicalCoord& coord){
 
     int to_return = -1;
@@ -416,12 +435,14 @@ void GeoRef::build_firstletter_list(){
     fl.build();
 }
 
+/** Chargement de la liste way_map : mappage entre codes externes et idx des rues*/
 void GeoRef::build_ways(){
    for(auto way : ways){
        this->way_map[way.external_code] = way.idx;
    }
 }
 
+/** Normalisation des codes externes des rues*/
 void GeoRef::normalize_extcode_way(){
     for(Way & way : ways){
         way.external_code = "address:"+ way.external_code;
@@ -429,6 +450,13 @@ void GeoRef::normalize_extcode_way(){
     this->build_ways();
 }
 
+
+/**
+    * Recherche les voies avec le nom, ce dernier peut contenir : [Numéro de rue] + [Type de la voie ] + [Nom de la voie] + [Nom de la commune]
+        * Exemple : 108 rue victor hugo reims
+    * Si le numéro est rensigné, on renvoie les coordonnées les plus proches
+    * Sinon le barycentre de la rue
+*/
 std::vector<nf::FirstLetter<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string & str) const{
     std::vector<nf::FirstLetter<nt::idx_t>::fl_quality> to_return;
     boost::tokenizer<> tokens(str);
