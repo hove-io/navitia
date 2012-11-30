@@ -336,7 +336,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
     boucleRAPTORreverse(false);
 
     if(b_dest.best_now.type != uninitialized) {
-        auto temp = makePathesreverse(destinations, departs);
+        auto temp = makePathesreverse(departs);
         result.insert(result.end(), temp.begin(), temp.end());
         return result;
     }
@@ -402,7 +402,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
             init(departs, destinations, b.best_now.departure, dt_depart, false, true);
             boucleRAPTORreverse();
             if(b_dest.best_now.type != uninitialized){
-                auto temp = makePathesreverse(destinations, departs);
+                auto temp = makePathesreverse(departs);
                 auto path = temp.back();
                 path.request_time = boost::posix_time::ptime(data.meta.production_date.begin(),
                 boost::posix_time::seconds(dt_depart.hour()));
@@ -444,7 +444,7 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
             init(departs, destinations, dt_depart, b.best_now.departure, true, true);
             boucleRAPTOR();
             if(b_dest.best_now.type != uninitialized){
-                auto temp = makePathes(departs, destinations);
+                auto temp = makePathes(destinations);
                 auto path = temp.back();
                 path.request_time = boost::posix_time::ptime(data.meta.production_date.begin(),
                                                              boost::posix_time::seconds(dt_depart.hour()));
@@ -480,7 +480,7 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
     boucleRAPTOR();
 
     if(b_dest.best_now.type != uninitialized) {
-        auto temp = makePathes(departs, destinations);
+        auto temp = makePathes(destinations);
         result.insert(result.end(), temp.begin(), temp.end());
     }
     return result;
@@ -784,7 +784,7 @@ void RAPTOR::boucleRAPTORreverse(bool global_pruning){
     raptor_loop(visitor, global_pruning);
 }
 
-std::vector<Path> RAPTOR::makePathes(std::vector<std::pair<type::idx_t, double> > departs, std::vector<std::pair<type::idx_t, double> > destinations) {
+std::vector<Path> RAPTOR::makePathes(std::vector<std::pair<type::idx_t, double> > destinations) {
     std::vector<Path> result;
     DateTime dt;
     for(unsigned int i=1;i<=count;++i) {
@@ -798,7 +798,7 @@ std::vector<Path> RAPTOR::makePathes(std::vector<std::pair<type::idx_t, double> 
             }
         }
         if(rpid != std::numeric_limits<int>::max())
-            result.push_back(makePath(departs, rpid, i));
+            result.push_back(makePath(rpid, i));
     }
 
     return result;
@@ -808,7 +808,7 @@ std::vector<Path> RAPTOR::makePathes(std::vector<std::pair<type::idx_t, double> 
 
 
 
-std::vector<Path> RAPTOR::makePathesreverse(std::vector<std::pair<type::idx_t, double> > departs, std::vector<std::pair<type::idx_t, double> > destinations) {
+std::vector<Path> RAPTOR::makePathesreverse(std::vector<std::pair<type::idx_t, double> > destinations) {
     std::vector<Path> result;
 
     DateTime dt = DateTime::min;
@@ -823,7 +823,7 @@ std::vector<Path> RAPTOR::makePathesreverse(std::vector<std::pair<type::idx_t, d
             }
         }
         if(rpid != std::numeric_limits<int>::max())
-            result.push_back(makePathreverse(departs, rpid, i));
+            result.push_back(makePathreverse(rpid, i));
     }
     return result;
 }
@@ -834,8 +834,7 @@ std::vector<Path> RAPTOR::makePathesreverse(std::vector<std::pair<type::idx_t, d
 
 
 
-Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
-                      unsigned int destination_idx, unsigned int countb, bool reverse) {
+Path RAPTOR::makePath(type::idx_t destination_idx, unsigned int countb, bool reverse) {
     Path result;
     unsigned int current_rpid = destination_idx;
     type_retour r = retour[countb][current_rpid];
@@ -993,9 +992,8 @@ Path RAPTOR::makePath(std::vector<std::pair<type::idx_t, double> > departs,
 
 
 
-Path RAPTOR::makePathreverse(std::vector<std::pair<type::idx_t, double> > departs,
-                             unsigned int destination_idx, unsigned int countb) {
-    return makePath(departs, destination_idx, countb, true);
+Path RAPTOR::makePathreverse(unsigned int destination_idx, unsigned int countb) {
+    return makePath(destination_idx, countb, true);
 }
 
 

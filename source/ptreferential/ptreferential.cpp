@@ -207,15 +207,18 @@ pbnavitia::Response query_pb(Type_e requested_type, std::string request, const i
     try {
         final_indexes = make_query(requested_type, request, data);
     } catch(ptref_parsing_error parse_error) {
-        if(parse_error.type == ptref_parsing_error::error_type::partial_error) {
+        switch(parse_error.type){
+        case ptref_parsing_error::error_type::partial_error:
             pb_response.set_error("PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + parse_error.more + "<<");
-        } else {
+            break;
+        case ptref_parsing_error::error_type::unknown_object:
+            pb_response.set_error("Objet NAViTiA inconnu : " + parse_error.more);
+            break;
+        case ptref_parsing_error::error_type::global_error:
             pb_response.set_error("PTReferential : Impossible de parser la requête");
+            break;
         }
-        return pb_response;
-    //} catch(ptref_unknown_object unknown_obj_error) {
-        } catch(ptref_parsing_error unknown_object) {
-        pb_response.set_error("Objet NAViTiA inconnu : " + unknown_object.more);
+
         return pb_response;
     }
 
