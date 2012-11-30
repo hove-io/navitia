@@ -46,14 +46,15 @@ struct ProximityList
 
     /// Retourne tous les éléments dans un rayon de x mètres
     std::vector< std::pair<T, GeographicalCoord> > find_within(GeographicalCoord coord, double distance ) const {
-        double distance_degree = distance * GeographicalCoord::precision / 111320;
+//        double distance_degree = distance * GeographicalCoord::precision / 111320;
+        double distance_degree = distance / 111320;
         double coslat = 1;
 
         double DEG_TO_RAD = 0.0174532925199432958;
         coslat = ::cos(coord.lat() * DEG_TO_RAD);
 
-        auto begin = std::lower_bound(items.begin(), items.end(), coord.raw_lon() - coslat * distance_degree, [](const Item & i, double min){return i.coord.raw_lon() < min;});
-        auto end = std::upper_bound(begin, items.end(), coord.raw_lon() + distance_degree * coslat, [](double max, const Item & i){return max < i.coord.raw_lon();});
+        auto begin = std::lower_bound(items.begin(), items.end(), coord.lon() - coslat * distance_degree, [](const Item & i, double min){return i.coord.lon() < min;});
+        auto end = std::upper_bound(begin, items.end(), coord.lon() + distance_degree * coslat, [](double max, const Item & i){return max < i.coord.lon();});
         std::vector< std::pair<T, GeographicalCoord> > result;
         double max_dist = distance * distance;
         for(; begin != end; ++begin){

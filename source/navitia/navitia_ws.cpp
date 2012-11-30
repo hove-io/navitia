@@ -9,7 +9,7 @@
 
 #include "routing/raptor_api.h"
 #include "first_letter/firstletter_api.h"
-#include "street_network/street_network_api.h"
+#include "georef/street_network.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential.h"
 #include "time_tables/next_departures.h"

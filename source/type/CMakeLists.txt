@@ -21,7 +21,7 @@ SET(DATA_SRC
 )
 
 add_library(data ${DATA_SRC})
-target_link_libraries(data ${Boost_LIBRARIES} types streetnetwork routing)
+target_link_libraries(data ${Boost_LIBRARIES} types georef routing)
 
 FIND_PACKAGE(Boost 1.40.0 COMPONENTS unit_test_framework  REQUIRED)
 add_executable(type_test tests/test.cpp)
