@@ -1,9 +1,5 @@
 FIND_PACKAGE(Boost 1.40.0 COMPONENTS program_options filesystem system REQUIRED)
-FIND_LIBRARY(GEOS geos_c)
 FIND_LIBRARY(OSMPBF osmpbf)
-#find_package(Protobuf REQUIRED)
-
-#PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS osmformat.proto fileformat.proto)
 
 SET(SOURCE_LIB
         connectors.cpp 

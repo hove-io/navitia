@@ -1,7 +1,7 @@
 #include "renderer.h"
 #include "pb_utils.h"
-#include "gateway_mod/context.h"
-#include "gateway_mod/pool.h"
+//#include "gateway_mod/context.h"
+//#include "gateway_mod/pool.h"
 #include "WS_commons/data_structures.h"
 
 namespace navitia{
