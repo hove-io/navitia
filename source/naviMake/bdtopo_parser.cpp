@@ -54,13 +54,13 @@ void add_way(std::unordered_map<std::string, navitia::georef::Way>& way_map,
         if (house_number.number % 2 == 0){
             auto hn = house_number_right_map.find(key);
             if (hn == house_number_right_map.end()){
-                way_map[way_key].house_number_right.push_back(house_number);
+                way_map[way_key].add_house_number(house_number);
                 house_number_right_map[key]= house_number;
             }
         } else{
             auto hn = house_number_left_map.find(key);
             if (hn == house_number_left_map.end()){
-                way_map[way_key].house_number_left.push_back(house_number);
+                way_map[way_key].add_house_number(house_number);
                 house_number_left_map[key]= house_number;
             }
         }
@@ -190,7 +190,6 @@ void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
     unsigned int idx=0;
 
      for(auto way : way_map){
-        way.second.sort_house_number();        
         geo_ref.ways.push_back(way.second);
         geo_ref.ways.back().idx = idx;        
         BOOST_FOREACH(auto node_pair, geo_ref.ways.back().edges){

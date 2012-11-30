@@ -2,7 +2,8 @@
 #include "pt_data.h"
 #include <boost/serialization/version.hpp>
 #include <boost/thread/shared_mutex.hpp>
-#include "street_network/types.h"
+//#include "street_network/types.h"
+#include "georef/georef.h"
 #include "utils/logger.h"
 #include "utils/configuration.h"
 #include "boost/utility.hpp"

@@ -1,4 +1,4 @@
-#include "types.h"
+#include "georef.h"
 
 namespace navitia { namespace georef {
 /** Permet de construire un graphe de manière simple

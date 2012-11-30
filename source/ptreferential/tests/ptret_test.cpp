@@ -1,5 +1,5 @@
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE georef_test
+#define BOOST_TEST_MODULE ptref_test
 #include <boost/test/unit_test.hpp>
 #include "ptreferential/ptreferential.h"
 #include "ptreferential/reflexion.h"

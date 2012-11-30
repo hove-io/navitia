@@ -1,6 +1,7 @@
-#include "street_network_api.h"
+
+#include "street_network.h"
 #include "type/data.h"
-#include "types.h"
+#include "georef.h"
 
 namespace ng = navitia::georef;
 
@@ -25,7 +26,7 @@ namespace navitia { namespace streetnetwork {
         }
     }
 
-    pbnavitia::Response street_network(const navitia::type::GeographicalCoord &origin, 
+    pbnavitia::Response street_network(const navitia::type::GeographicalCoord &origin,
             const navitia::type::GeographicalCoord& destination, const navitia::type::Data &data){
 
         pbnavitia::Response pb_response;
@@ -33,7 +34,7 @@ namespace navitia { namespace streetnetwork {
 
         std::vector<ng::vertex_t> start = {data.geo_ref.pl.find_nearest(origin)};
         std::vector<ng::vertex_t> dest = {data.geo_ref.pl.find_nearest(destination)};
-        
+
         ng::Path path = data.geo_ref.compute(start, dest);
 
         create_pb(path, data, pb_response.mutable_street_network());

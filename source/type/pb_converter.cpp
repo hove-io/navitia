@@ -1,5 +1,6 @@
 #include "pb_converter.h"
-#include "street_network/street_network_api.h"
+#include "georef/georef.h"
+#include "georef/street_network.h"
 namespace nt = navitia::type;
 namespace navitia{
 
