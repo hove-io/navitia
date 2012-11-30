@@ -6,6 +6,15 @@
 #include "type/type.h"
 
 using namespace navitia::type;
+BOOST_AUTO_TEST_CASE(boost_geometry){
+    GeographicalCoord c(2, 48);
+    GeographicalCoord b(3, 48);
+    std::vector<GeographicalCoord> line{c, b};
+    GeographicalCoord centroid;
+    boost::geometry::centroid(line, centroid);
+    BOOST_CHECK_EQUAL(centroid, GeographicalCoord(2.5, 48));
+    //spherical_point s(2,48);
+}
 
 BOOST_AUTO_TEST_CASE(uri_sa) {
     std::string uri("stop_area:moo:ext_code");

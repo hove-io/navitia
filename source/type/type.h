@@ -10,6 +10,9 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bimap.hpp>
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/register/point.hpp>
+#include <boost/geometry/geometries/register/linestring.hpp>
 namespace mpl = boost::mpl;
 
 namespace navitia { namespace type {
@@ -551,3 +554,8 @@ struct EntryPoint {
 };
 
 } } //namespace navitia::type
+
+
+// Adaptateurs permettant d'utiliser boost::geometry avec les geographical coord
+BOOST_GEOMETRY_REGISTER_POINT_2D_GET_SET(navitia::type::GeographicalCoord, double, boost::geometry::cs::cartesian, lon, lat, set_lon, set_lat)
+BOOST_GEOMETRY_REGISTER_LINESTRING(std::vector<navitia::type::GeographicalCoord>)
