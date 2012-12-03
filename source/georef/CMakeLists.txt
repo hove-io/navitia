@@ -1,9 +1,12 @@
-add_library(georef georef.h
+SET(GEOREF_SRC
+    georef.h
     georef.cpp
     street_network.h
     street_network.cpp
-    builder.h
-    builder.cpp)
+)
+
+add_library(georef ${GEOREF_SRC})
+
 target_link_libraries(georef types)
 
 add_subdirectory(tests)

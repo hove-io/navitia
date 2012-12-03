@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include "georef/georef.h"
-#include "georef/builder.h"
+#include "builder.h"
 
 using namespace navitia::georef;
 using namespace boost;
