@@ -94,18 +94,18 @@ std::pair<GeographicalCoord, float> GeographicalCoord::project(GeographicalCoord
 
     double dlon = segment_end._lon - segment_start._lon;
     double dlat = segment_end._lat - segment_start._lat;
-    double length = ::sqrt(dlon * dlon + dlat * dlat);
+    double length_sqr = dlon * dlon + dlat * dlat;
     double u;
 
     // On gère le cas où le segment est particulièrement court, et donc ça peut poser des problèmes (à cause de la division par length²)
-    if(length < 1.0){ // moins de un, on projette sur une extrémité
+    if(length_sqr < 1e-11){ // moins de un mètre, on projette sur une extrémité
         if(this->distance_to(segment_start) < this->distance_to(segment_end))
             u = 0;
         else
             u = 1;
     } else {
         u = ((this->_lon - segment_start._lon)*dlon + (this->_lat - segment_start._lat)*dlat )/
-                (length * length);
+                length_sqr;
     }
 
     // Les deux cas où le projeté tombe en dehors
