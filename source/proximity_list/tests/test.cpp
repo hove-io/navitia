@@ -8,46 +8,10 @@
 using namespace navitia::type;
 using namespace navitia::proximitylist;
 
-BOOST_AUTO_TEST_CASE(distances_euclidiennes) {
-    GeographicalCoord a(0,0, false);
-    GeographicalCoord b(1,0, false);
-
-    BOOST_CHECK_CLOSE(a.distance_to(b), 1, 1e-6);
-    BOOST_CHECK_CLOSE(b.distance_to(a), 1, 1e-6);
-    BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
-    BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
-    b.y = 1;
-    BOOST_CHECK_CLOSE(a.distance_to(b), 1.4142, 0.01);
-    BOOST_CHECK_CLOSE(b.distance_to(a), 1.4142, 0.01);
-    BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
-    BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
-    b.x = -1;
-    b.y = 0;
-    BOOST_CHECK_CLOSE(a.distance_to(b), 1, 1e-6);
-    BOOST_CHECK_CLOSE(b.distance_to(a), 1, 1e-6);
-    BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
-    BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
-    b.x = 0; b.y = 1;
-    BOOST_CHECK_CLOSE(a.distance_to(b), 1, 1e-6);
-    BOOST_CHECK_CLOSE(b.distance_to(a), 1, 1e-6);
-    BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
-    BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
-    b.y = - 100;
-    BOOST_CHECK_CLOSE(a.distance_to(b), 100, 1e-6);
-    BOOST_CHECK_CLOSE(b.distance_to(a), 100, 1e-6);
-    BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
-    BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
-    a.y = 100;
-    BOOST_CHECK_CLOSE(a.distance_to(b), 200, 1e-6);
-    BOOST_CHECK_CLOSE(b.distance_to(a), 200, 1e-6);
-    BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
-    BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
-}
-
 BOOST_AUTO_TEST_CASE(distances_grand_cercle)
 {
-    GeographicalCoord a(0,0, true);
-    GeographicalCoord b(0,0, true);
+    GeographicalCoord a(0,0);
+    GeographicalCoord b(0,0);
     BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
     BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
     BOOST_CHECK_CLOSE(a.distance_to(b), 0, 1e-6);
@@ -58,27 +22,27 @@ BOOST_AUTO_TEST_CASE(distances_grand_cercle)
     BOOST_CHECK_CLOSE(nantes.distance_to(paris), 340000, 10);
     BOOST_CHECK_CLOSE(paris.distance_to(nantes), 340000, 10);
 
-    a.x = 180;
+    a.set_lon(180);
     BOOST_CHECK_CLOSE(a.distance_to(b), 6371*3.14*1000,1);
     BOOST_CHECK_CLOSE(b.distance_to(a), 6371*3.14*1000,1);
     BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
     BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
 
-    a.x=84; a.y=89.999;
+    a.set_lon(84); a.set_lat(89.999);
     BOOST_CHECK_CLOSE(a.distance_to(b), 6371*3.14*1000/2,1);
     BOOST_CHECK_CLOSE(b.distance_to(a), 6371*3.14*1000/2,1);
     BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
     BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
 
 
-    a.x=34; a.y=-89.999;
+    a.set_lon(34); a.set_lat(-89.999);
     BOOST_CHECK_CLOSE(a.distance_to(b), 6371*3.14*1000/2,1);
     BOOST_CHECK_CLOSE(b.distance_to(a), 6371*3.14*1000/2,1);
     BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
     BOOST_CHECK_CLOSE(b.distance_to(b), 0, 1e-6);
 
 
-    a.x=0; a.y=45;
+    a.set_lon(0); a.set_lat(45);
     BOOST_CHECK_CLOSE(a.distance_to(b), 6371*3.14*1000/4,1);
     BOOST_CHECK_CLOSE(b.distance_to(a), 6371*3.14*1000/4,1);
     BOOST_CHECK_CLOSE(a.distance_to(a), 0, 1e-6);
@@ -88,7 +52,7 @@ BOOST_AUTO_TEST_CASE(distances_grand_cercle)
 BOOST_AUTO_TEST_CASE(approx_distance){
     GeographicalCoord canaltp(2.3921, 48.8296);
     GeographicalCoord tour_eiffel(2.29447,48.85834);
-    double coslat = ::cos(canaltp.y * 0.0174532925199432958);
+    double coslat = ::cos(canaltp.lat() * 0.0174532925199432958);
     BOOST_CHECK_CLOSE(canaltp.distance_to(tour_eiffel), ::sqrt(canaltp.approx_sqr_distance(tour_eiffel, coslat)), 1);
     BOOST_CHECK_CLOSE(tour_eiffel.distance_to(canaltp), ::sqrt(tour_eiffel.approx_sqr_distance(canaltp, coslat)), 1);
     BOOST_CHECK_CLOSE(canaltp.distance_to(tour_eiffel), ::sqrt(tour_eiffel.approx_sqr_distance(canaltp, coslat)), 1);
@@ -96,20 +60,20 @@ BOOST_AUTO_TEST_CASE(approx_distance){
 }
 
 BOOST_AUTO_TEST_CASE(find_nearest){
+    constexpr double M_TO_DEG = 1.0/111320.0;
     typedef std::pair<unsigned int, GeographicalCoord> p;
     ProximityList<unsigned int> pl;
 
     GeographicalCoord c;
     std::vector<GeographicalCoord> coords;
-    c.degrees = false;
 
     // Exemple d'illustration issu de wikipedia
-    c.x = 2; c.y = 3; pl.add(c, 1); coords.push_back(c);
-    c.x = 5; c.y = 4; pl.add(c, 2); coords.push_back(c);
-    c.x = 9; c.y = 6; pl.add(c, 3); coords.push_back(c);
-    c.x = 4; c.y = 7; pl.add(c, 4); coords.push_back(c);
-    c.x = 8; c.y = 1; pl.add(c, 5); coords.push_back(c);
-    c.x = 7; c.y = 2; pl.add(c, 6); coords.push_back(c);
+    c.set_lon(M_TO_DEG *2); c.set_lat(M_TO_DEG *3); pl.add(c, 1); coords.push_back(c);
+    c.set_lon(M_TO_DEG *5); c.set_lat(M_TO_DEG *4); pl.add(c, 2); coords.push_back(c);
+    c.set_lon(M_TO_DEG *9); c.set_lat(M_TO_DEG *6); pl.add(c, 3); coords.push_back(c);
+    c.set_lon(M_TO_DEG *4); c.set_lat(M_TO_DEG *7); pl.add(c, 4); coords.push_back(c);
+    c.set_lon(M_TO_DEG *8); c.set_lat(M_TO_DEG *1); pl.add(c, 5); coords.push_back(c);
+    c.set_lon(M_TO_DEG *7); c.set_lat(M_TO_DEG *2); pl.add(c, 6); coords.push_back(c);
     
     pl.build();
 
@@ -118,16 +82,16 @@ BOOST_AUTO_TEST_CASE(find_nearest){
         BOOST_CHECK_EQUAL(pl.items[i].element, expected[i]);
 
 
-    c.x = 2; c.y = 3;
+    c.set_lon(M_TO_DEG *2); c.set_lat(M_TO_DEG *3);
     BOOST_CHECK_EQUAL(pl.find_nearest(c), 1);
 
-    c.x = 7.1; c.y = 1.9;
+    c.set_lon(M_TO_DEG *7.1); c.set_lat(M_TO_DEG *1.9);
     BOOST_CHECK_EQUAL(pl.find_nearest(c), 6);
 
-    c.x = 100; c.y = 6;
+    c.set_lon(M_TO_DEG *100); c.set_lat(M_TO_DEG *6);
     BOOST_CHECK_EQUAL(pl.find_nearest(c), 3);
 
-    c.x = 2; c.y=4;
+    c.set_lon(M_TO_DEG *2); c.set_lat(M_TO_DEG *4);
 
     expected = {1};
     auto tmp1 = pl.find_within(c, 1.1);

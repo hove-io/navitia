@@ -10,6 +10,9 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bimap.hpp>
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/register/point.hpp>
+#include <boost/geometry/geometries/register/linestring.hpp>
 namespace mpl = boost::mpl;
 
 namespace navitia { namespace type {
@@ -62,37 +65,28 @@ struct NavitiaHeader{
 
 };
 
-/**
- * Représente un systéme de projection
- * le constructeur par défaut doit renvoyer le sytéme de projection utilisé par l'application en interne
- * WGS84 dans notre cas
+
+/** Coordonnées géographiques en WGS84
  */
-struct Projection{
-    std::string name;
-    std::string definition;
-    bool is_degree;
-
-    Projection(): name("wgs84"), definition("+init=epsg:4326"), is_degree(true){}
-
-    Projection(const std::string& name, const std::string& definition, bool is_degree = false):
-        name(name), definition(definition), is_degree(is_degree){}
-
-};
-
 struct GeographicalCoord{
-    double x;
-    double y;
+    GeographicalCoord() : _lon(0), _lat(0) {}
+    GeographicalCoord(double lon, double lat) : _lon(lon), _lat(lat) {}
+    GeographicalCoord(const GeographicalCoord& coord) : _lon(coord.lon()), _lat(coord.lat()){}
+    GeographicalCoord(double x, double y, bool) {set_xy(x, y);}
 
-    /// Est-ce que les coordonnées sont en degres, par défaut on suppose que oui
-    /// Cela a des impacts sur le calcul des distances
-    /// Si ce n'est pas des degrés, on prend la distance euclidienne
-    bool degrees;
+    double lon() const { return _lon;}
+    double lat() const { return _lat;}
 
-    GeographicalCoord() : x(0), y(0), degrees(true) {}
-    GeographicalCoord(double x, double y, bool degrees = true) : x(x), y(y), degrees(degrees) {}
-    GeographicalCoord(double x, double y, const Projection& projection);
+    void set_lon(double lon) { this->_lon = lon;}
+    void set_lat(double lat) { this->_lat = lat;}
+    void set_xy(double x, double y){this->set_lon(x*M_TO_DEG); this->set_lat(y*M_TO_DEG);}
 
-    /* Calcule la distance Grand Arc entre deux nœuds
+    /// Ordre des coordonnées utilisé par ProximityList
+    bool operator<(GeographicalCoord other) const {return this->_lon < other._lon;}
+
+    constexpr static double DEG_TO_RAD = 0.01745329238;
+    constexpr static double M_TO_DEG = 1.0/111319.9;
+    /** Calcule la distance Grand Arc entre deux nœuds
       *
       * On utilise la formule de Haversine
       * http://en.wikipedia.org/wiki/Law_of_haversines
@@ -101,29 +95,39 @@ struct GeographicalCoord{
       */
     double distance_to(const GeographicalCoord & other) const;
 
-    /** Calcule la distance au carré grand arc entre deux points de manière approchée */
-    double approx_sqr_distance(const GeographicalCoord &other, double coslat) const{
 
-        if(!degrees)
-            return ::pow(x - other.x, 2)+ ::pow(y-other.y, 2);
+    /** Projette un point sur un segment
+
+       Retourne les coordonnées projetées et la distance au segment
+       Si le point projeté tombe en dehors du segment, alors ça tombe sur le nœud le plus proche
+       http://paulbourke.net/geometry/pointline/
+       */
+    std::pair<type::GeographicalCoord, float> project(GeographicalCoord segment_start, GeographicalCoord segment_end) const;
+
+    /** Calcule la distance au carré grand arc entre deux points de manière approchée
+
+        Cela sert essentiellement lorsqu'il faut faire plein de comparaisons de distances à un point (par exemple pour proximity list)
+    */
+    double approx_sqr_distance(const GeographicalCoord &other, double coslat) const{
         static const double EARTH_RADIUS_IN_METERS_SQUARE = 40612548751652.183023;
-        double latitudeArc = (this->y - other.y) * 0.0174532925199432958;
-        double longitudeArc = (this->x - other.x) * 0.0174532925199432958;
+        double latitudeArc = (this->lat() - other.lat()) * DEG_TO_RAD;
+        double longitudeArc = (this->lon() - other.lon()) * DEG_TO_RAD;
         double tmp = coslat * longitudeArc;
         return EARTH_RADIUS_IN_METERS_SQUARE * (latitudeArc*latitudeArc + tmp*tmp);
     }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & x & y;
+        ar & _lon & _lat;
     }
 
-    GeographicalCoord convert_to(const Projection& projection, const Projection& current_projection = Projection()) const;
+private:
+    double _lon;
+    double _lat;
 };
 
 std::ostream & operator<<(std::ostream &_os, const GeographicalCoord & coord);
 
-// Deux points sont considérés comme étant égaux s'ils sont du même type de coordonnées
-// et si la distance entre eux est inférieure à 1mm
+/** Deux points sont considérés comme étant égaux s'ils sont à moins de 0.1m */
 bool operator==(const GeographicalCoord & a, const GeographicalCoord & b);
 
 struct Country: public NavitiaHeader, Nameable {
@@ -535,6 +539,7 @@ public:
 struct EntryPoint {
     Type_e type;//< Le type de l'objet
     std::string external_code; //< Le code externe de l'objet
+    int house_number;
     GeographicalCoord coordinates; //< coordonnées du point d'entrée
 
     /// Construit le type à partir d'une chaîne
@@ -545,3 +550,8 @@ struct EntryPoint {
 };
 
 } } //namespace navitia::type
+
+
+// Adaptateurs permettant d'utiliser boost::geometry avec les geographical coord
+BOOST_GEOMETRY_REGISTER_POINT_2D_GET_SET(navitia::type::GeographicalCoord, double, boost::geometry::cs::cartesian, lon, lat, set_lon, set_lat)
+BOOST_GEOMETRY_REGISTER_LINESTRING(std::vector<navitia::type::GeographicalCoord>)

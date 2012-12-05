@@ -150,8 +150,8 @@ void CsvFusio::fill_cities(navimake::Data& data){
             city->external_code = row.at(1);
             city->name = row.at(2);
 
-            city->coord.x = boost::lexical_cast<double>(row.at(3));
-            city->coord.y = boost::lexical_cast<double>(row.at(4));
+            city->coord.set_lon(boost::lexical_cast<double>(row.at(3)));
+            city->coord.set_lat(boost::lexical_cast<double>(row.at(4)));
 
             city->main_postal_code = row.at(5);
 
@@ -182,8 +182,8 @@ void CsvFusio::fill_stop_areas(navimake::Data& data){
             if(row.at(4) == "True") stop_area->main_stop_area = true;
             if(row.at(5) == "True") stop_area->main_connection = true;
 
-            stop_area->coord.x = boost::lexical_cast<double>(row.at(6));
-            stop_area->coord.y = boost::lexical_cast<double>(row.at(7));
+            stop_area->coord.set_lon(boost::lexical_cast<double>(row.at(6)));
+            stop_area->coord.set_lat(boost::lexical_cast<double>(row.at(7)));
 
 
             data.stop_areas.push_back(stop_area);
@@ -213,8 +213,8 @@ void CsvFusio::fill_stop_points(navimake::Data& data){
             stop_point->address_number = row.at(7);
             stop_point->address_type_name = row.at(8);
 
-            stop_point->coord.x = boost::lexical_cast<double>(row.at(12));
-            stop_point->coord.y = boost::lexical_cast<double>(row.at(13));
+            stop_point->coord.set_lon(boost::lexical_cast<double>(row.at(12)));
+            stop_point->coord.set_lat(boost::lexical_cast<double>(row.at(13)));
             stop_point->fare_zone = boost::lexical_cast<int>(row.at(14));
 
             std::string stop_area_id = row.at(4);

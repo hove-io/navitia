@@ -1,9 +1,3 @@
-FIND_PACKAGE(Boost 1.40.0 COMPONENTS program_options filesystem system REQUIRED)
-FIND_LIBRARY(GEOS geos_c)
-FIND_LIBRARY(OSMPBF osmpbf)
-#find_package(Protobuf REQUIRED)
-
-#PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS osmformat.proto fileformat.proto)
 
 SET(SOURCE_LIB
         connectors.cpp 
@@ -12,23 +6,16 @@ SET(SOURCE_LIB
         gtfs_parser.cpp
         bdtopo_parser.cpp
         build_helper.cpp
-        firstletterparser.cpp
         osm2nav.cpp
         osm_tags_reader.cpp
 )
-
-SET(SOURCE_NAVIMAKE
-    main.cpp
-)
-
 add_library(connectors ${SOURCE_LIB})
-target_link_libraries(connectors ${Boost_LIBRARIES} data)
 
-add_executable (navimake ${SOURCE_NAVIMAKE})
-target_link_libraries(navimake ${Boost_LIBRARIES} connectors ${OSMPBF})
 
-add_executable (navimake_fl main_firstletter.cpp)
-target_link_libraries(navimake_fl ${Boost_LIBRARIES} connectors)
+FIND_PACKAGE(Boost 1.40.0 COMPONENTS program_options filesystem system serialization date_time thread REQUIRED)
+FIND_LIBRARY(OSMPBF osmpbf)
+add_executable(navimake main.cpp)
+target_link_libraries(navimake connectors ${OSMPBF} types data georef pb_lib utils routing ${Boost_LIBRARIES})
 
 add_subdirectory(tests)
 

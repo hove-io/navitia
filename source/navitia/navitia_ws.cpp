@@ -9,6 +9,7 @@
 
 #include "routing/raptor_api.h"
 #include "first_letter/firstletter_api.h"
+#include "georef/street_network.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential.h"
 #include "time_tables/next_stop_times.h"
@@ -28,7 +29,7 @@ namespace bg = boost::gregorian;
 class Worker : public BaseWorker<navitia::type::Data> {  
 
     std::unique_ptr<navitia::routing::raptor::RAPTOR> calculateur;
-    std::unique_ptr<navitia::georef::StreetNetworkWorker> street_network_worker;
+    std::unique_ptr<navitia::streetnetwork::StreetNetwork> street_network_worker;
 
     log4cplus::Logger logger;
 
@@ -142,7 +143,23 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
         return rd;
     }
+/*
+    ResponseData streetnetwork(RequestData & request, navitia::type::Data & data){
+        ResponseData rd;
 
+        nt::Locker locker(check_and_init(request, data, pbnavitia::STREET_NETWORK, rd));
+        if(!locker.locked){
+            return rd;
+        }
+
+        nt::GeographicalCoord origin(boost::get<double>(request.parsed_params["startlon"].value), boost::get<double>(request.parsed_params["startlat"].value));
+        nt::GeographicalCoord destination(boost::get<double>(request.parsed_params["destlon"].value), boost::get<double>(request.parsed_params["destlat"].value));
+
+        pb_response = navitia::streetnetwork::street_network(origin, destination, data);
+        rd.status_code = 200;
+
+        return rd;
+    }*/
 
     void load(navitia::type::Data & d){
         //ProfilerStart("navitia.prof");
@@ -250,7 +267,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         }
         if(d.last_load_at != this->last_load_at || !calculateur){
             calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(d));
-            street_network_worker = std::unique_ptr<navitia::georef::StreetNetworkWorker>(new navitia::georef::StreetNetworkWorker(d.geo_ref));
+            street_network_worker = std::unique_ptr<navitia::streetnetwork::StreetNetwork>(new navitia::streetnetwork::StreetNetwork(d.geo_ref));
             this->last_load_at = d.last_load_at;
 
             LOG4CPLUS_INFO(logger, "instanciation du calculateur");
@@ -258,6 +275,21 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
         navitia::type::EntryPoint departure = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["origin"].value));
         navitia::type::EntryPoint destination = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["destination"].value));
+
+        // gestion des addresses
+
+        if (departure.type == navitia::type::Type_e::eAddress){
+            auto way = d.geo_ref.way_map.find(departure.external_code);
+            if (way != d.geo_ref.way_map.end()){
+                departure.coordinates = d.geo_ref.ways[way->second].nearest_coord(departure.house_number, d.geo_ref.graph);
+            }
+        }
+        if (destination.type == navitia::type::Type_e::eAddress){
+            auto way = d.geo_ref.way_map.find(destination.external_code);
+            if (way != d.geo_ref.way_map.end()){
+                destination.coordinates = d.geo_ref.ways[way->second].nearest_coord(destination.house_number, d.geo_ref.graph);
+            }
+        }
 
         bool clockwise = true;
         if(request.parsed_params.find("clockwise") != request.parsed_params.end())
@@ -451,6 +483,13 @@ class Worker : public BaseWorker<navitia::type::Data> {
      */
     Worker(navitia::type::Data & ){
         logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+
+/*
+        register_api("streetnetwork", boost::bind(&Worker::streetnetwork, this, _1, _2), "Calcul d'itinéraire piéton");
+        add_param("streetnetwork", "startlon", "Longitude en degrés", ApiParameter::DOUBLE, true);
+        add_param("streetnetwork", "startlat", "Latitude en degrés", ApiParameter::DOUBLE, true);
+        add_param("streetnetwork", "destlon", "Longitude en degrés", ApiParameter::DOUBLE, true);
+        add_param("streetnetwork", "destlat", "Latitude en degrés", ApiParameter::DOUBLE, true);
 
         register_api("firstletter", boost::bind(&Worker::firstletter, this, _1, _2), "Retrouve les objets dont le nom commence par certaines lettres");
         add_param("firstletter", "name", "Valeur recherchée", ApiParameter::STRING, true);

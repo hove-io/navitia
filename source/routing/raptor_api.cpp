@@ -11,7 +11,7 @@ std::string iso_string(const nt::Data & d, int date, int hour){
     return boost::posix_time::to_iso_string(date_time);
 }
 
-pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths, const nt::Data & d, georef::StreetNetworkWorker & worker) {
+pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths, const nt::Data & d, streetnetwork::StreetNetwork & worker) {
     pbnavitia::Response pb_response;
     pb_response.set_requested_api(pbnavitia::PLANNER);
 
@@ -39,7 +39,6 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                     departure_time = path.items.front().departure - temp.length/1.38;
                 }
             }
-
 
             // La partie TC et correspondances
             for(PathItem & item : path.items){
@@ -109,7 +108,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
     return pb_response;
 }
 
-std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPoint &ep, const type::Data & data, georef::StreetNetworkWorker & worker, bool use_second = false){
+std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPoint &ep, const type::Data & data, streetnetwork::StreetNetwork & worker, bool use_second = false){
     std::vector<std::pair<type::idx_t, double> > result;
 
     switch(ep.type) {
@@ -128,6 +127,8 @@ std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPo
             result.push_back(std::make_pair(data.pt_data.stop_points[it->second].idx, 0));
         }
     } break;
+        // AA gestion des adresses
+    case type::Type_e::eAddress:
     case type::Type_e::eCoord: {
         result = worker.find_nearest_stop_points(ep.coordinates, data.pt_data.stop_point_proximity_list, 1000, use_second);
     } break;
@@ -140,7 +141,7 @@ std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPo
 pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin, const type::EntryPoint &destination,
                                   const std::vector<std::string> &datetimes_str, bool clockwise,
                                   std::multimap<std::string, std::string> forbidden,
-                                  georef::StreetNetworkWorker & worker) {
+                                  streetnetwork::StreetNetwork & worker) {
     pbnavitia::Response response;
     response.set_requested_api(pbnavitia::PLANNER);
 

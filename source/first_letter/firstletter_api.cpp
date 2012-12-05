@@ -38,7 +38,7 @@ void create_pb(const std::vector<FirstLetter<nt::idx_t>::fl_quality>& result, co
             //fill_pb_object(result_item.idx, data, place_mark->mutable_way(), 2);
             fill_pb_object(result_item.idx, data, place_mark->mutable_address(), result_item.house_number,result_item.coord, 2);
             item->set_name(data.geo_ref.ways[result_item.idx].name);
-//          item->set_uri(nt::EntryPoint::get_uri(data.pt_data.stop_points[result_item.idx]));
+            item->set_uri(data.geo_ref.ways[result_item.idx].external_code+":"+boost::lexical_cast<std::string>(result_item.house_number));
             item->set_quality(result_item.quality);
             break;
 

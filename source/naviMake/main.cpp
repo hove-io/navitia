@@ -122,9 +122,13 @@ int main(int argc, char * argv[])
 
     start = pt::microsec_clock::local_time();
 
+    std::cout << "Construction de proximity list" << std::endl;
     nav_data.build_proximity_list();
+    std::cout << "Construction de external code" << std::endl;
     nav_data.build_external_code();
+    std::cout << "Assigne les villes aux voiries du filaire" << std::endl;
     nav_data.set_cities(); // Assigne les villes aux voiries du filaire [depend des ext_code]
+    std::cout << "Construction de first letter" << std::endl;
     nav_data.build_first_letter();
     std::cout << "On va construire les correspondances" << std::endl;
     {Timer t("Construction des correspondances");  nav_data.pt_data.build_connections();}
