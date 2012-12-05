@@ -12,7 +12,7 @@ struct Thermometer {
     Thermometer(type::Data &d) : d(d), filter("") {}
 
     vector_idx get_thermometer(std::string filter = "");
-    vector_idx get_thermometer(std::vector<vector_idx> routes, type::idx_t max_sp);
+    vector_idx get_thermometer(std::vector<vector_idx> routes);
     std::vector<uint32_t> match_route(const type::Route & route);
     std::vector<uint32_t> match_route(const vector_idx &route);
 
@@ -33,7 +33,7 @@ private :
     std::string filter;
     int debug_nb_branches, debug_nb_cuts, upper_cut, nb_opt;
 
-    void generate_thermometer(std::vector<vector_idx> &routes, type::idx_t max_sp);
+    void generate_thermometer(std::vector<vector_idx> &routes);
     std::vector<uint32_t> untail(std::vector<vector_idx> &routes, type::idx_t spidx, std::vector<vector_size> &pre_computed_lb);
     void retail(std::vector<vector_idx> &routes, type::idx_t spidx, const std::vector<uint32_t> &to_retail, std::vector<vector_size> &pre_computed_lb);
     vector_idx generate_possibilities(const std::vector<vector_idx> &routes, std::vector<vector_size> &pre_computed_lb);

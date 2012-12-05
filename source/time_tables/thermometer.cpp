@@ -85,14 +85,26 @@ std::pair<vector_idx, bool> Thermometer::recc(std::vector<vector_idx> &routes, s
 
     }
 
-//    if(result.size() == 0 && res_bool)
-//        std::cout << depth <<  " " << std::flush;
-
     return std::make_pair(result, res_bool);
 }
 
-void Thermometer::generate_thermometer(std::vector<vector_idx> &routes, type::idx_t max_sp) {
+uint32_t get_max_sp(std::vector<vector_idx> &routes) {
 
+    uint32_t max_sp = std::numeric_limits<uint32_t>::min();
+
+    for(auto route : routes) {
+        for(auto i : route) {
+            if(i > max_sp)
+                max_sp = i;
+        }
+    }
+
+    return max_sp;
+}
+
+void Thermometer::generate_thermometer(std::vector<vector_idx> &routes) {
+
+    uint32_t max_sp = get_max_sp(routes);
     debug_nb_branches = 0; debug_nb_cuts = 0; upper_cut = 0;
     std::vector<vector_idx> req;
     for(auto v : routes) {
@@ -108,13 +120,11 @@ void Thermometer::generate_thermometer(std::vector<vector_idx> &routes, type::id
         }
     }
     thermometer = req.back();
-    std::cout << "size : " << thermometer.size() << std::endl;
-    std::cout << "Nb branch : " << debug_nb_branches << " nb cuts: " << debug_nb_cuts<< " nb upper cuts " << upper_cut << std::endl;
 }
 
 
-vector_idx Thermometer::get_thermometer(std::vector<vector_idx> routes, type::idx_t max_sp) {
-    generate_thermometer(routes, max_sp);
+vector_idx Thermometer::get_thermometer(std::vector<vector_idx> routes) {
+    generate_thermometer(routes);
     return thermometer;
 }
 
@@ -128,7 +138,7 @@ vector_idx Thermometer::get_thermometer(std::string filter_) {
                 routes.back().push_back(d.pt_data.route_points[rpidx].stop_point_idx);
         }
 
-        generate_thermometer(routes, d.pt_data.stop_points.size()-1);
+        generate_thermometer(routes);
     }
     return thermometer;
 }
