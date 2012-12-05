@@ -297,6 +297,7 @@ Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::Ge
 
         // On rajoute les bouts de coordonnées manquants à partir et vers le projeté de respectivement le départ et l'arrivée
         p.coordinates.push_front(start.projected);
+        p.coordinates.push_back(dest.projected);
         return p;
     } else {
         throw proximitylist::NotFound();
