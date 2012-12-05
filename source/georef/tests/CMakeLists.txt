@@ -6,5 +6,7 @@ SET(GEOREF_SRC_TEST
     builder.h
     builder.cpp
 )
-add_library(georef_test ${GEOREF_SRC_TEST})
+add_executable(georef_test ${GEOREF_SRC_TEST})
 target_link_libraries(georef_test ${Boost_LIBRARIES} georef utils)
+
+ADD_TEST(georef_test ${EXECUTABLE_OUTPUT_PATH}/georef_test --report_level=no)

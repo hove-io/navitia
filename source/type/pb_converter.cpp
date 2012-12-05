@@ -130,7 +130,7 @@ void fill_road_section(const georef::Path &path, const type::Data &data, pbnavit
     if(path.path_items.size() > 0) {
         section->set_type(pbnavitia::ROAD_NETWORK);
         pbnavitia::StreetNetwork * sn = section->mutable_street_network();
-        streetnetwork::create_pb(path, data, sn);
+        create_pb(path, data, sn);
         pbnavitia::PlaceMark* pm;
         navitia::georef::Way way;
         type::GeographicalCoord coord;
@@ -150,4 +150,22 @@ void fill_road_section(const georef::Path &path, const type::Data &data, pbnavit
     }
 }
 
+void create_pb(const navitia::georef::Path& path, const navitia::type::Data& data, pbnavitia::StreetNetwork* sn){
+    sn->set_length(path.length);
+    for(auto item : path.path_items){
+        if(item.way_idx < data.geo_ref.ways.size()){
+            pbnavitia::PathItem * path_item = sn->add_path_item();
+            path_item->set_name(data.geo_ref.ways[item.way_idx].name);
+            path_item->set_length(item.length);
+        }else{
+            std::cout << "Way étrange : " << item.way_idx << std::endl;
+        }
+
+    }
+    for(auto coord : path.coordinates){
+        pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinate();
+        pb_coord->set_lon(coord.lon());
+        pb_coord->set_lat(coord.lat());
+    }
+}
 }//namespace navitia

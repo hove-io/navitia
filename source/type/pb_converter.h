@@ -21,4 +21,5 @@ void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &dat
 
 void fill_road_section(const georef::Path & path, const type::Data &data, pbnavitia::Section* section, int max_depth = 0);
 
+void create_pb(const navitia::georef::Path& path, const navitia::type::Data& data, pbnavitia::StreetNetwork* sn);
 }//namespace navitia

@@ -33,10 +33,10 @@ struct Edge {
     bool cyclable; //< est-ce que le segment est accessible à vélo ?
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & way_idx & length & cyclable;// & start_number & end_number;
+        ar & way_idx & length & cyclable;
     }
 
-    Edge() : way_idx(0), length(0), cyclable(false){}//, start_number(-1), end_number(-1){}
+    Edge() : way_idx(0), length(0), cyclable(false){}
 };
 
 // Plein de typedefs pour nous simpfilier un peu la vie
@@ -61,7 +61,8 @@ typedef boost::graph_traits<Graph>::vertex_iterator vertex_iterator;
 /// Type itérateur sur les arcs du graphe
 typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
 
-// le numéro de la maison : il représente un point dans la rue, voie
+/** le numéro de la maison :
+    il représente un point dans la rue, voie */
 struct HouseNumber{
     nt::GeographicalCoord coord;
     int number;
@@ -77,7 +78,8 @@ struct HouseNumber{
     }
 };
 
-/** Nommage d'une voie (anciennement "adresse"). Typiquement le nom de rue **/
+/** Nommage d'une voie (anciennement "adresse").
+    Typiquement le nom de rue **/
 struct Way :public nt::Nameable, nt::NavitiaHeader{
 public:
     std::string way_type;
@@ -101,7 +103,8 @@ private:
 };
 
 
-/** Un bout d'itinéraire : un nom de voie et une liste de segments */
+/** Un bout d'itinéraire :
+        un nom de voie et une liste de segments */
 struct PathItem{
     nt::idx_t way_idx; //< Voie sur laquel porte le bout du trajet
     float length; //< Longueur du trajet effectué sur cette voie
@@ -217,6 +220,19 @@ struct GeoRef {
     Path build_path(vertex_t best_destination, std::vector<vertex_t> preds) const;
 };
 
+// Exception levée dès que l'on trouve une destination
+struct DestinationFound{};
+
+// Visiteur qui lève une exception dès qu'une des cibles souhaitées est atteinte
+struct target_visitor : public boost::dijkstra_visitor<> {
+    const std::vector<vertex_t> & destinations;
+    target_visitor(const std::vector<vertex_t> & destinations) : destinations(destinations){}
+    void finish_vertex(vertex_t u, const Graph&){
+        if(std::find(destinations.begin(), destinations.end(), u) != destinations.end())
+            throw DestinationFound();
+    }
+};
+
 
 /** Lorsqu'on a une coordonnée, il faut l'accrocher au filaire. Cette structure contient l'accroche
   *
@@ -246,87 +262,6 @@ struct ProjectionData {
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & source & target & projected & source_distance & target_distance;
     }
-};
-
-
-
-/** Structures avec toutes les données écriture pour streetnetwork */
-struct StreetNetworkWorker {
-public:
-    //StreetNetworkWorker(const StreetNetwork & street_network);
-    StreetNetworkWorker(const GeoRef & geo_ref);
-
-    /**
-     *  Met à jour les indicateurs pour savoir si les calculs ont été lancés
-     *
-     */
-    void init();
-
-    /**
-     * Indique si le calcul itinéraire piéton de départ a été lancé
-     */
-    bool departure_launched();
-    /**
-     * Indique si le calcul itinéraire piéton de fin a été lancé
-     */
-    bool arrival_launched();
-
-    /** On définit les coordonnées de départ, un proximitylist et un rayon
-     *
-     * Retourne tous les idx atteignables dans ce rayon, ainsi que la distance en suivant le filaire de voirie
-     **/
-    std::vector< std::pair<type::idx_t, double> > find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius, bool use_second=false);
-
-    /** Version spécialisée et optimisée pour les stop_points
-     *
-     * Comme c'est une version que l'on utilise très souvent, on pré-calcule les projections
-     */
-    std::vector< std::pair<type::idx_t, double> > find_nearest_stop_points(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius, bool use_second = false);
-
-    /// Reconstruit l'itinéraire piéton à partir de l'idx
-    Path get_path(type::idx_t idx, bool use_second = false);
-
-    /// Construit l'itinéraire piéton direct. Le path est vide s'il n'existe pas
-    Path get_direct_path();
-
-private:
-    //const StreetNetwork & street_network;
-    const GeoRef & geo_ref;
-
-    std::vector< std::pair<type::idx_t, double> > find_nearest_stop_points(const ProjectionData & start, double radius,
-                                                                           const std::vector< std::pair<type::idx_t, type::GeographicalCoord> > & elements,
-                                                                           std::vector<float> & dist,
-                                                                           std::vector<vertex_t> & preds,
-                                                                           std::map<type::idx_t, ProjectionData> & idx_proj);
-
-
-    std::vector< std::pair<type::idx_t, double> > find_nearest(const ProjectionData & start,
-                                                               double radius,
-                                                               const std::vector< std::pair<type::idx_t, type::GeographicalCoord> > & elements,
-                                                               std::vector<float> & dist,
-                                                               std::vector<vertex_t> & preds,
-                                                               std::map<type::idx_t, ProjectionData> & idx_proj);
-
-    /// Point de départ et d'arrivée fourni par la requête
-    ProjectionData start;
-    ProjectionData destination;
-
-    // Les données sont doublées pour garder les données au départ et à l'arrivée
-    /// Tableau des distances utilisé par Dijkstra
-    std::vector<float> distances;
-    std::vector<float> distances2;
-
-    /// Tableau des prédécesseurs utilisé par Dijkstra
-    std::vector<vertex_t> predecessors;
-    std::vector<vertex_t> predecessors2;
-
-    /// Associe chaque idx_t aux données de projection sur le filaire associées
-    std::map<type::idx_t, ProjectionData> idx_projection;
-    std::map<type::idx_t, ProjectionData> idx_projection2;
-
-    /// Savoir si les calculs ont été lancés en début et fin
-    bool departure_launch;
-    bool arrival_launch;
 };
 
 }} //namespace navitia::streetnetwork

@@ -6,8 +6,10 @@
 
 #include "georef/georef.h"
 #include "builder.h"
+#include"georef/street_network.h"
 
 using namespace navitia::georef;
+using namespace navitia::streetnetwork;
 using namespace boost;
 
 BOOST_AUTO_TEST_CASE(outil_de_graph) {
@@ -239,7 +241,7 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
 
     GeographicalCoord o(0,0);
 
-    StreetNetworkWorker w(sn);
+    StreetNetwork w(sn);
 
     auto res = w.find_nearest(o, pl, 10);
     BOOST_CHECK_EQUAL(res.size(), 0);
@@ -299,7 +301,7 @@ BOOST_AUTO_TEST_CASE(numero_impair){
     hn.coord.set_lon(1.0);
     hn.coord.set_lat(17.0);
     hn.number = 17;
-    way.house_number_left.push_back(hn);
+    way.add_house_number(hn);
     v.coord = hn.coord;
     debut = boost::add_vertex(v,graph);
 
@@ -311,7 +313,7 @@ BOOST_AUTO_TEST_CASE(numero_impair){
 
     hn.coord= upper;
     hn.number = 53;
-    way.house_number_left.push_back(hn);
+    way.add_house_number(hn);
     v.coord = hn.coord;
     fin = boost::add_vertex(v,graph);
 
@@ -341,11 +343,11 @@ BOOST_AUTO_TEST_CASE(numero_impair){
 
 // liste des numéros pair est vide ==> Calcul du barycentre de la rue
    result = way.nearest_coord(40, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1,26));
+   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1,26.8224299065421));
 // les deux listes des numéros pair et impair sont vides ==> Calcul du barycentre de la rue
    way.house_number_left.clear();
    result = way.nearest_coord(9, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1,25));
+   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1,25.7894736842105));
 
 }
 
@@ -370,14 +372,12 @@ BOOST_AUTO_TEST_CASE(numero_pair){
     hn.coord=lower;
     hn.number = 4;
     way.add_house_number(hn);
-//    way.house_number_right.push_back(hn);
     v.coord = hn.coord;
     debut = boost::add_vertex(v,graph);
 
     hn.coord.set_lon(2.0);
     hn.coord.set_lat(8.0);
     hn.number = 8;
-//    way.house_number_right.push_back(hn);
     way.add_house_number(hn);
     v.coord = hn.coord;
     fin = boost::add_vertex(v,graph);
@@ -391,7 +391,6 @@ BOOST_AUTO_TEST_CASE(numero_pair){
     hn.coord.set_lon(2.0);
     hn.coord.set_lat(18.0);
     hn.number = 18;
-//    way.house_number_right.push_back(hn);
     way.add_house_number(hn);
     v.coord = hn.coord;
     debut = boost::add_vertex(v,graph);
@@ -404,7 +403,6 @@ BOOST_AUTO_TEST_CASE(numero_pair){
 
     hn.coord= upper;
     hn.number = 54;
-//    way.house_number_right.push_back(hn);
     way.add_house_number(hn);
     v.coord = hn.coord;
     fin = boost::add_vertex(v,graph);
@@ -434,12 +432,12 @@ BOOST_AUTO_TEST_CASE(numero_pair){
 
 // liste des numéros impair est vide ==> Calcul du barycentre de la rue
    result = way.nearest_coord(41, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2,27));
+   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2,27.8224299065421));
 
 // les deux listes des numéros pair et impair sont vides ==> Calcul du barycentre de la rue
    way.house_number_right.clear();
    result = way.nearest_coord(10, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2,26));
+   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2,26.7894736842105));
 }
 
 // Recherche d'un numéro à partir des coordonnées
@@ -459,24 +457,20 @@ BOOST_AUTO_TEST_CASE(coord){
 
     hn.coord=lower;
     hn.number = 4;
-//    way.house_number_right.push_back(hn);
     way.add_house_number(hn);
 
     hn.coord.set_lon(2.0);
     hn.coord.set_lat(8.0);
     hn.number = 8;
-//    way.house_number_right.push_back(hn);
     way.add_house_number(hn);
 
     hn.coord.set_lon(2.0);
     hn.coord.set_lat(18.0);
     hn.number = 18;
-//    way.house_number_right.push_back(hn);
     way.add_house_number(hn);
 
     hn.coord= upper;
     hn.number = 54;
-//    way.house_number_right.push_back(hn);
     way.add_house_number(hn);
 
 
@@ -547,7 +541,6 @@ BOOST_AUTO_TEST_CASE(build_first_letter_test){
 
         hn.coord=lower;
         hn.number = 4;
-//        way.house_number_right.push_back(hn);
         way.add_house_number(hn);
         v.coord = hn.coord;
         debut = boost::add_vertex(v,graph);
@@ -555,7 +548,6 @@ BOOST_AUTO_TEST_CASE(build_first_letter_test){
         hn.coord.set_lon(2.0);
         hn.coord.set_lat(8.0);
         hn.number = 8;
-//        way.house_number_right.push_back(hn);
         way.add_house_number(hn);
         v.coord = hn.coord;
         fin = boost::add_vertex(v,graph);
@@ -569,7 +561,6 @@ BOOST_AUTO_TEST_CASE(build_first_letter_test){
         hn.coord.set_lon(2.0);
         hn.coord.set_lat(18.0);
         hn.number = 18;
-//        way.house_number_right.push_back(hn);
         way.add_house_number(hn);
         v.coord = hn.coord;
         debut = boost::add_vertex(v,graph);
@@ -582,7 +573,6 @@ BOOST_AUTO_TEST_CASE(build_first_letter_test){
 
         hn.coord= upper;
         hn.number = 54;
-//        way.house_number_right.push_back(hn);
         way.add_house_number(hn);
         v.coord = hn.coord;
         fin = boost::add_vertex(v,graph);
@@ -591,8 +581,6 @@ BOOST_AUTO_TEST_CASE(build_first_letter_test){
         boost::add_edge(fin, debut,e1, graph);
         way.edges.push_back(std::make_pair(debut, fin));
         way.edges.push_back(std::make_pair(fin,debut));
-
-//        way.sort_house_number();
 
         geo_ref.ways.push_back(way);
 
