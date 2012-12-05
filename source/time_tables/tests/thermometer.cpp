@@ -3,7 +3,6 @@
 #include <boost/test/unit_test.hpp>
 #include "time_tables/thermometer.h"
 
-#include "routing/raptor.h"
 #include "naviMake/build_helper.h"
 
 #include <time.h>

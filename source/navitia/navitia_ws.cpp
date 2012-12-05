@@ -489,7 +489,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         add_param("streetnetwork", "startlon", "Longitude en degrés", ApiParameter::DOUBLE, true);
         add_param("streetnetwork", "startlat", "Latitude en degrés", ApiParameter::DOUBLE, true);
         add_param("streetnetwork", "destlon", "Longitude en degrés", ApiParameter::DOUBLE, true);
-        add_param("streetnetwork", "destlat", "Latitude en degrés", ApiParameter::DOUBLE, true);
+        add_param("streetnetwork", "destlat", "Latitude en degrés", ApiParameter::DOUBLE, true);*/
 
         register_api("firstletter", boost::bind(&Worker::firstletter, this, _1, _2), "Retrouve les objets dont le nom commence par certaines lettres");
         add_param("firstletter", "name", "Valeur recherchée", ApiParameter::STRING, true);

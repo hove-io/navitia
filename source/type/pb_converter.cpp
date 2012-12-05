@@ -39,14 +39,6 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
             fill_pb_object(sp.stop_area_idx, data, stop_point->mutable_stop_area(), max_depth-1);
 }
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Way * way, int max_depth){
-    navitia::georef::Way w = data.geo_ref.ways.at(idx);
-    way->set_name(w.name);
-    if(max_depth && w.city_idx != nt::invalid_idx)
-        fill_pb_object(w.city_idx, data, way->mutable_city(), max_depth-1);
-}
-
-
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * address, int house_number,type::GeographicalCoord& coord, int max_depth){
     navitia::georef::Way way = data.geo_ref.ways.at(idx);    
     address->set_name(way.name);
