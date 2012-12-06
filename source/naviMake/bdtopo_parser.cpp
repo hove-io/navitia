@@ -34,9 +34,12 @@ void BDTopoParser::load_city(navimake::Data& data){
         if(row.size() < 2)
             continue;
         navimake::types::City* city = new navimake::types::City();
-        city->external_code = row[insee];
-        city->name = row[name];
-        city->coord = navitia::type::GeographicalCoord(str_to_double(row[x]),
+        if(insee != -1)
+            city->external_code = row[insee];
+        if(name != -1)
+            city->name = row[name];
+        if(x!=-1 && y!=-1)
+            city->coord = navitia::type::GeographicalCoord(str_to_double(row[x]),
                                                                         str_to_double(row[y]));
         data.cities.push_back(city);
     }
