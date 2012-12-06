@@ -7,8 +7,18 @@
 #include "third_party/osmpbfreader/osmpbfreader.h"
 #include "osm_tags_reader.h"
 #include "georef/georef.h"
+#include "utils/functions.h"
 
 namespace navitia { namespace georef {
+
+struct OSMHouseNumber{
+    type::GeographicalCoord coord;
+    int number;
+
+    OSMHouseNumber(): number(-1){}
+
+};
+
 struct Node {
 public:
     double lon() const {return static_cast<double>(this->lon_m) / precision;}
@@ -50,14 +60,28 @@ using namespace CanalTP;
 
 struct Visitor{
     std::unordered_map<uint64_t, Node> nodes;
+    std::unordered_map<uint64_t, OSMHouseNumber> housenumbers;
     int total_ways;
+    int total_house_number;
+
     std::vector<OSMWay> ways;
     georef::GeoRef & geo_ref;
 
-    Visitor(GeoRef & to_fill) : total_ways(0), geo_ref(to_fill){}
+    Visitor(GeoRef & to_fill) : total_ways(0), total_house_number(0), geo_ref(to_fill){}
 
-    void node_callback(uint64_t osmid, double lon, double lat, const Tags &/*tags*/){
+    void add_osm_housenumber(uint64_t osmid, const Tags & tags){
+        if(tags.find("addr:housenumber") != tags.end()){
+            OSMHouseNumber osm_hn;
+            osm_hn.number = str_to_int(tags.at("addr:housenumber"));
+            if (osm_hn.number > 0 ){
+                this->housenumbers[osmid] = osm_hn;
+            }
+        }
+    }
+
+    void node_callback(uint64_t osmid, double lon, double lat, const Tags & tags){
         this->nodes[osmid] = Node(lon, lat);
+        add_osm_housenumber(osmid, tags);
     }
 
     void way_callback(uint64_t osmid, const Tags &tags, const std::vector<uint64_t> &refs){
@@ -75,16 +99,17 @@ struct Visitor{
             gr_way.external_code = std::to_string(w.idx);
             gr_way.city_idx = type::invalid_idx;
             if(tags.find("name") != tags.end())
-                gr_way.name = tags.at("name");
+                gr_way.name = tags.at("name");             
             geo_ref.ways.push_back(gr_way);
+        }else{
+             add_osm_housenumber(refs.front(), tags);
         }
     }
 
     // Once all the ways and nodes are read, we count how many times a node is used to detect intersections
     void count_nodes_uses() {
-        int count = 0;
+        int count = 0;        
         for(auto w : ways){
-
             for(uint64_t ref : w.refs){
                 if(nodes[ref].increment_use(count)){
                     Vertex v;
@@ -142,16 +167,38 @@ struct Visitor{
         std::cout << "On a " << boost::num_edges(geo_ref.graph) << " arcs" << std::endl;
     }
 
+    void HouseNumbers(){        
+        type::idx_t idx;
+        georef::HouseNumber gr_hn;
+        geo_ref.build_proximity_list();
+        for(auto hn : housenumbers){
+            try{
+                Node n = nodes[hn.first];
+                gr_hn.number = hn.second.number;
+                gr_hn.coord.set_lon(n.lon());
+                gr_hn.coord.set_lat(n.lat());
+                idx = geo_ref.graph[geo_ref.nearest_edge(gr_hn.coord)].way_idx;
+                geo_ref.ways[idx].add_house_number(gr_hn);
+                total_house_number ++;
+            } catch(navitia::proximitylist::NotFound) {
+                std::cout << "Attention, l'adresse n'est pas importée dont le numéro et les coordonnées sont : [" << gr_hn.number<<";"<< gr_hn.coord.lon()<< ";"<< gr_hn.coord.lat()<< "] Impossible de trouver le segment le plus proche.  " << std::endl;
+            }catch(...){
+                std::cout << "Attention, l'adresse n'est pas importée dont le numéro et les coordonnées sont : [" << gr_hn.number<<";"<< gr_hn.coord.lon()<< ";"<< gr_hn.coord.lat()<< "].  " << std::endl;
+            }
+        }
+    }
     // We don't care about relations
     void relation_callback(uint64_t /*osmid*/, const Tags &/*tags*/, const References & /*refs*/){}
 };
 
 void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filename){
     Visitor v(geo_ref_to_fill);
-    CanalTP::read_osm_pbf(osm_pbf_filename, v);
+    CanalTP::read_osm_pbf(osm_pbf_filename, v);    
     std::cout << v.nodes.size() << " nodes, " << v.ways.size() << " ways/" << v.total_ways << std::endl;
     v.count_nodes_uses();
     v.edges();
+    v.HouseNumbers();
+    std::cout << "On a " << v.total_house_number << " adresses" << std::endl;
 }
 }}
 

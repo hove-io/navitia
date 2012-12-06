@@ -308,6 +308,7 @@ Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::Ge
 
 
 void GeoRef::build_proximity_list(){
+    pl.clear(); // vider avant de reconstruire
     BOOST_FOREACH(vertex_t u, boost::vertices(this->graph)){
         pl.add(graph[u].coord, u);
     }
