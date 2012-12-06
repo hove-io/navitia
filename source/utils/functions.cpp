@@ -1,10 +1,12 @@
 #include "functions.h"
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/split.hpp>
 
 
 double str_to_double(std::string str){
+    boost::trim(str);
     try{
         boost::replace_all(str, ",", ".");
         return boost::lexical_cast<double>(str);
@@ -15,6 +17,7 @@ double str_to_double(std::string str){
 }
 
 int str_to_int(std::string str){    
+    boost::trim(str);
     try{
         if (str.empty()){
             return -1;

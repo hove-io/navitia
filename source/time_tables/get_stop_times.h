@@ -4,7 +4,7 @@
 
 
 namespace navitia { namespace timetables {
-typedef std::pair<routing::DateTime, const type::idx_t> dt_st;
+typedef std::pair<routing::DateTime, type::idx_t> dt_st;
 
 struct comp_st {
     bool operator()(const dt_st st1, const dt_st st2) const {
@@ -15,6 +15,7 @@ struct comp_st {
 
 
 std::string iso_string(const nt::Data & d, int date, int hour);
+
 
 /**
  * @brief get_stop_times : Renvoie tous les departures partant de la liste des route points
@@ -27,5 +28,7 @@ std::string iso_string(const nt::Data & d, int date, int hour);
  */
 std::vector<dt_st> get_stop_times(const std::vector<type::idx_t> &route_points, const routing::DateTime &dt,
                                    const routing::DateTime &max_dt, const int nb_departures, type::Data & data);
+
+
 
 }}

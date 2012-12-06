@@ -38,6 +38,9 @@ struct ProximityList
     void add(GeographicalCoord coord, T element){
         items.push_back(Item(coord,element));
     }
+    void clear(){
+        items.clear();
+    }
 
     /// Construit l'indexe
     void build(){
