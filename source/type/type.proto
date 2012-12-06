@@ -19,8 +19,10 @@ enum API {
     PROXIMITYLIST = 6;
     STATUS = 7;
     NEXT_DEPARTURES = 8;
-    DEPARTURE_BOARD = 9;
-    LINE_SCHEDULE = 10;
+    NEXT_ARRIVALS = 9;
+    DEPARTURE_BOARD = 10;
+    LINE_SCHEDULE = 11;
+    STOPS_SCHEDULE = 12;
 }
 
 message GeographicalCoord {
@@ -321,12 +323,27 @@ message LineSchedule {
     required LineScheduleHeader header = 2;
 }
 
-message NextDepartures {
-    repeated StopTime departure = 1;
+message StopTimes {
+    repeated StopTime stoptime = 1;
+}
+
+message StopsSchedule {
+    repeated PairStopTime board_item = 1;
+}
+
+message BoardItem {
+    required string hour =1;
+    repeated string minute = 2;
+}
+
+message Board {
+    repeated BoardItem board_item = 1;
 }
 
 message DepartureBoard {
-    repeated PairStopTime board_item = 1;
+    required StopPoint stop_point = 1;
+    required Line line = 2;
+    required Board board = 3;
 }
 
 message Response{
@@ -347,9 +364,11 @@ message Response{
 
     optional Status status = 9;
 
-    optional NextDepartures nextdepartures = 10;
+    optional StopTimes nextstoptimes = 10;
 
-    optional DepartureBoard departureboard = 11;
+    optional StopsSchedule stops_schedule = 11;
 
     optional LineSchedule line_schedule = 12;
+
+    optional DepartureBoard departure_board = 13;
 }

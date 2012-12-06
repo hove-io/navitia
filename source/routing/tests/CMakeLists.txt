@@ -1,4 +1,4 @@
-FIND_PACKAGE(Boost 1.40.0 COMPONENTS unit_test_framework thread date_time REQUIRED)
+FIND_PACKAGE(Boost 1.40.0 COMPONENTS unit_test_framework date_time REQUIRED)
 #link_directories ( ${Boost_LIBRARY_DIRS} )
 
 add_executable(datetime datetime.cpp)

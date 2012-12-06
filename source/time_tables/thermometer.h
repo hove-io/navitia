@@ -3,38 +3,22 @@
 #include "boost/functional/hash.hpp"
 namespace navitia { namespace timetables {
 
-
-struct Node {
-    type::idx_t sp_idx;
-    uint32_t nb;
-
-    Node() : sp_idx(type::invalid_idx), nb(0) {}
-    Node(type::idx_t idx) : sp_idx(idx), nb(0) {}
-
-    bool operator==(const Node & other) const {
-        return (this->sp_idx == other.sp_idx) && (this->nb == other.nb);
-    }
-
-};
-
-std::size_t hash_value(Node const& n);
-
-
-typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, Node, boost::no_property> Graph;
-typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
-typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
-typedef boost::hash<Node> hashnode;
-typedef std::unordered_map<Node, vertex_t, hashnode> map_nodevertex;
+typedef std::vector<type::idx_t> vector_idx;
+typedef std::vector<size_t> vector_size;
 
 struct Thermometer {
-    vertex_t null_vertex;
     type::Data& d;
 
-    Thermometer(type::Data &d) : null_vertex(boost::graph_traits<Graph>::null_vertex()), d(d), line_idx(type::invalid_idx) {}
+    Thermometer(type::Data &d) : d(d), filter("") {}
 
-    std::vector<type::idx_t> get_thermometer(type::idx_t line_idx = type::invalid_idx);
-
+    vector_idx get_thermometer(std::string filter = "");
+    vector_idx get_thermometer(std::vector<vector_idx> routes);
     std::vector<uint32_t> match_route(const type::Route & route);
+    std::vector<uint32_t> match_route(const vector_idx &route);
+
+    void set_thermometer(const vector_idx &thermometer_) {//Pour debug
+        thermometer = thermometer_;
+    }
 
     struct cant_match {
         type::idx_t rp_idx;
@@ -42,19 +26,20 @@ struct Thermometer {
         cant_match(type::idx_t rp_idx) : rp_idx(rp_idx) {}
     };
 
+    struct upper {};
+
 private :
-    std::vector<type::idx_t> thermometer;
-    type::idx_t line_idx;
-    void generate_thermometer();
-    Graph route2graph(const type::Route &route);
+    vector_idx thermometer;
+    std::string filter;
+    int debug_nb_branches, debug_nb_cuts, upper_cut, nb_opt;
 
-    Graph unify_graphes(const std::vector<Graph> graphes);
-
-    void break_cycles(Graph & graph, map_nodevertex &node_vertices);
-
-    map_nodevertex generate_map(const Graph &graph);
+    void generate_thermometer(std::vector<vector_idx> &routes);
+    std::vector<uint32_t> untail(std::vector<vector_idx> &routes, type::idx_t spidx, std::vector<vector_size> &pre_computed_lb);
+    void retail(std::vector<vector_idx> &routes, type::idx_t spidx, const std::vector<uint32_t> &to_retail, std::vector<vector_size> &pre_computed_lb);
+    vector_idx generate_possibilities(const std::vector<vector_idx> &routes, std::vector<vector_size> &pre_computed_lb);
+    std::pair<vector_idx, bool> recc(std::vector<vector_idx> &routes, std::vector<vector_size> &pre_computed_lb, type::idx_t max_sp, const uint32_t lower_bound_ = std::numeric_limits<uint32_t>::min(), const uint32_t upper_bound_ = std::numeric_limits<uint32_t>::max(), int depth = 0);
 };
-
+uint32_t get_lower_bound(std::vector<vector_size> &pre_computed_lb);
 
 
 
