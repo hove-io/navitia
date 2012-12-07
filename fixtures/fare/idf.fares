@@ -29,16 +29,16 @@
 "*";"network=56";;;"exclusive";"xtickett"
 "*";"mode=rapidtransit"; ; ; "with_changes";
 "*";"mode=localtrain"; ; ; "with_changes";
-"*";"mode=tramway"; ; ; "with_changes";
+"*";"line=800:T4"; ; ; "with_changes";
 "*";"mode=metro"; ; ; "with_changes";
 "mode=localtrain";"mode=rapidtransit"; ; ; "with_changes";
 "mode=rapidtransit";"mode=rapidtransit"; ; ; "with_changes" ;
 "mode=rapidtransit";"mode=localtrain"; ; ; "with_changes";
 "mode=localtrain";"mode=localtrain"; ; ; "with_changes";
-"mode=tramway";"mode=rapidtransit"; ; ; "with_changes";
-"mode=tramway";"mode=localtrain"; ; ; "with_changes";
-"mode=rapidtransit";"mode=tramway"; ; ; "with_changes";
-"mode=localtrain";"mode=tramway"; ; ; "with_changes";
+"line=800:T4";"mode=rapidtransit"; ; ; "with_changes";
+"line=800:T4";"mode=localtrain"; ; ; "with_changes";
+"mode=rapidtransit";"line=800:T4"; ; ; "with_changes";
+"mode=localtrain";"line=800:T4"; ; ; "with_changes";
 "*";"line=100100283:ORLYBUS";;;"exclusive";"100:ORLYBUS"
 "*";"line=100100352:ROISSYB";;;"exclusive";"100:ROISSYB"
 "*";"line=100110200:ORLYVAL";;;"exclusive";"100:ORLYVAL"
