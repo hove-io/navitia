@@ -4,7 +4,7 @@
 namespace navitia { namespace timetables {
 
 typedef std::vector<type::idx_t> vector_idx;
-typedef std::vector<size_t> vector_size;
+typedef std::vector<uint16_t> vector_size;
 
 struct Thermometer {
     type::Data& d;
@@ -37,9 +37,10 @@ private :
     std::vector<uint32_t> untail(std::vector<vector_idx> &routes, type::idx_t spidx, std::vector<vector_size> &pre_computed_lb);
     void retail(std::vector<vector_idx> &routes, type::idx_t spidx, const std::vector<uint32_t> &to_retail, std::vector<vector_size> &pre_computed_lb);
     vector_idx generate_possibilities(const std::vector<vector_idx> &routes, std::vector<vector_size> &pre_computed_lb);
-    std::pair<vector_idx, bool> recc(std::vector<vector_idx> &routes, std::vector<vector_size> &pre_computed_lb, type::idx_t max_sp, const uint32_t lower_bound_ = std::numeric_limits<uint32_t>::min(), const uint32_t upper_bound_ = std::numeric_limits<uint32_t>::max(), int depth = 0);
+    std::pair<vector_idx, bool> recc(std::vector<vector_idx> &routes, std::vector<vector_size> &pre_computed_lb, const uint32_t lower_bound_,type::idx_t max_sp, const uint32_t upper_bound_ = std::numeric_limits<uint32_t>::max(), int depth = 0);
+
 };
-uint32_t get_lower_bound(std::vector<vector_size> &pre_computed_lb);
+uint32_t get_lower_bound(std::vector<vector_size> &pre_computed_lb, vector_size mins, type::idx_t max_sp);
 
 
 
