@@ -294,7 +294,7 @@ void RAPTOR::init(std::vector<std::pair<type::idx_t, double> > departs,
      for(auto item : destinations) {
         if(clockwise) {
             for(type::idx_t rpidx: data.pt_data.stop_points[item.first].route_point_list) {
-                if(routes_valides.test(data.pt_data.route_points[rpidx].route_idx) && best[rpidx].arrival > borne) {
+                if(routes_valides.test(data.pt_data.route_points[rpidx].route_idx) &&(borne == DateTime::inf || best[rpidx].arrival > borne)) {
                     b_dest.ajouter_destination(rpidx, (item.second/1.38));
                     best[rpidx].arrival = borne;
                 }
@@ -302,7 +302,7 @@ void RAPTOR::init(std::vector<std::pair<type::idx_t, double> > departs,
         }
         else {
             for(type::idx_t rpidx: data.pt_data.stop_points[item.first].route_point_list) {
-                if(routes_valides.test(data.pt_data.route_points[rpidx].route_idx) && best[rpidx].departure < borne) {
+                if(routes_valides.test(data.pt_data.route_points[rpidx].route_idx) && (borne == DateTime::min || best[rpidx].departure < borne)) {
                     b_dest.ajouter_destination(rpidx, (item.second/1.38));
                     best[rpidx].departure = borne;
                 }
