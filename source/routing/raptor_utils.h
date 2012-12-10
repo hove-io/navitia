@@ -20,7 +20,7 @@ struct type_retour {
     type_retour(const DateTime & arrival, const DateTime & departure) : stop_time_idx(navitia::type::invalid_idx),
         rpid_embarquement(navitia::type::invalid_idx), arrival(arrival), departure(departure), type(depart) {}
 
-    type_retour(const type::StopTime & st, const DateTime & date, int embarquement, bool clockwise) : 
+    type_retour(const type::StopTime & st, const DateTime & date, int embarquement, bool clockwise) :
         stop_time_idx(st.idx), rpid_embarquement(embarquement),
         type(vj) {
         if(clockwise) {
@@ -36,7 +36,7 @@ struct type_retour {
         arrival.normalize();
     }
 
-    type_retour(const DateTime & arrival, const DateTime & departure, int embarquement) : 
+    type_retour(const DateTime & arrival, const DateTime & departure, int embarquement) :
         stop_time_idx(navitia::type::invalid_idx), rpid_embarquement(embarquement),
         arrival(arrival), departure(departure), type(connection) {}
 
