@@ -912,11 +912,11 @@ void GtfsParser::parse_stop_times(Data & data) {
             else
                 stop_time->ODT = false;
             if(pickup_c != -1)
-                stop_time->pick_up_allowed = elts[pickup_c] == "0";
+                stop_time->pick_up_allowed = elts[pickup_c] != "1";
             else
                 stop_time->pick_up_allowed = true;
             if(drop_off_c != -1)
-                stop_time->drop_off_allowed = elts[drop_off_c] == "0";
+                stop_time->drop_off_allowed = elts[drop_off_c] != "1";
             else
                 stop_time->drop_off_allowed = true;
             if(itl_c != -1)
