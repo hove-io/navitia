@@ -78,6 +78,11 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                 else {
                     pb_section->set_type(pbnavitia::TRANSFER);
                     pb_section->set_duration(item.departure - item.arrival);
+                    switch(item.type) {
+                    case extension : pb_section->set_transfer_type(pbnavitia::EXTENSION); break;
+                    case guarantee : pb_section->set_transfer_type(pbnavitia::GUARANTEED); break;
+                    default :pb_section->set_transfer_type(pbnavitia::WALKING); break;
+                    }
                     fill_pb_placemark(d.pt_data.stop_points[item.stop_points.front()], d, pb_section->mutable_origin(), 1);
                     fill_pb_placemark(d.pt_data.stop_points[item.stop_points.back()], d, pb_section->mutable_destination(), 1);
                 }
