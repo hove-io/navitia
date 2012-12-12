@@ -99,7 +99,7 @@ struct RAPTOR : public AbstractRouter
     void set_routes_valides(uint32_t date, const std::multimap<std::string, std::string> & forbidden);
 
     ///Boucle principale, parcourt les routes,
-    void boucleRAPTOR();
+    void boucleRAPTOR(bool global_pruning = true);
     ///Construit un chemin
     Path makePath(type::idx_t destination_idx, unsigned int countb, bool reverse = false);
 
