@@ -32,10 +32,33 @@ request_parser::request_parser(const std::string &API, const std::string &reques
 
 request_parser::request_parser(const std::string &API, const std::string &request, const std::string &str_dt, const std::string &change_time, type::Data & data) {
     boost::posix_time::ptime ptime, maxptime;
-    ptime = boost::posix_time::from_iso_string(str_dt);
+    if(str_dt != "") {
+        try {
+            ptime = boost::posix_time::from_iso_string(str_dt);
+        } catch(...) {
+            pb_response.set_error(API+" / Probleme lors du parsage de datetime");
+        }
+    }
+    else
+        ptime = boost::posix_time::second_clock::local_time();
+
     ptime = ptime - ptime.time_of_day();
     if(change_time!= "") {
-        boost::posix_time::ptime pchange_time = boost::posix_time::from_iso_string(change_time);
+        std::string ctime = change_time;
+        if(ctime.substr(0,1) == "T") {
+            ctime = "19700101" + ctime;
+            if(ctime.size() == 3)
+                ctime += "00";
+        }
+
+
+        boost::posix_time::ptime pchange_time;
+        try {
+            pchange_time = boost::posix_time::from_iso_string(ctime);
+        } catch(...) {
+            pb_response.set_error(API+" / Probleme lors du parsage de changetime");
+        }
+
         ptime = ptime + pchange_time.time_of_day();
     }
     date_time = routing::DateTime((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());

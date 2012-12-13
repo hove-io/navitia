@@ -419,7 +419,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         else
             depth = 1;
 
-        pb_response = navitia::timetables::stops_schedule(departure_filter, arrival_filter, datetime, max_date_time, nb_departures, depth, data);
+        pb_response = navitia::timetables::departure_board(departure_filter, arrival_filter, datetime, max_date_time, nb_departures, depth, data);
         rd.status_code = 200;
 
         return rd;
@@ -460,9 +460,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
         std::string filter = boost::get<std::string>(request.parsed_params["filter"].value);
         std::string datetime = boost::get<std::string>(request.parsed_params["datetime"].value);
-        std::string max_date_time = boost::get<std::string>(request.parsed_params["max_datetime"].value);
+        std::string max_date_time = boost::get<std::string>(request.parsed_params["changetime"].value);
 
-        pb_response = navitia::timetables::stops_schedule(filter, datetime, max_date_time, data);
+        pb_response = navitia::timetables::departure_board(filter, datetime, max_date_time, data);
         rd.status_code = 200;
 
         return rd;
@@ -556,7 +556,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
         register_api("departure_board", boost::bind(&Worker::departure_board, this, _1, _2), "Renvoie la fiche horaire de la ligne demandée et de l'arret demandé");
         add_param("departure_board", "filter", "Le filtre qui refere à la ligne et au stop point désiré", ApiParameter::STRING, false);
         add_param("departure_board", "datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
-        add_param("departure_board", "date_change_time", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
+        add_param("departure_board", "changetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
 
         add_default_api();
     }
