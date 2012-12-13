@@ -229,12 +229,13 @@ struct RoutePointConnection : public NavitiaHeader {
       idx_t departure_route_point_idx;
       idx_t destination_route_point_idx;
       ConnectionKind connection_kind;
+      int length;
   
       RoutePointConnection() : departure_route_point_idx(invalid_idx),  destination_route_point_idx(invalid_idx),
-                               connection_kind(undefined){};
+                            connection_kind(undefined), length(0){}
   
       template<class Archive> void serialize(Archive & ar, const unsigned int) {
-          ar & id & idx & external_code & departure_route_point_idx & destination_route_point_idx & connection_kind;
+          ar & id & idx & external_code & departure_route_point_idx & destination_route_point_idx & connection_kind & length;
       }
 };
  

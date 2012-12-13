@@ -1106,31 +1106,36 @@ boost::gregorian::date_period GtfsParser::find_production_date(const std::string
     return boost::gregorian::date_period((start_date>b_date ? start_date : b_date), end_date);
 }
 
-void  add_route_point_connection(nm::RoutePoint *rp1, nm::RoutePoint *rp2,
-                           std::multimap<std::string, std::string> &route_point_connections, Data & data) {
-    //Si la connexion n'existe pas encore alors on va la créer, sinon on ne fait rien
+
+void  add_route_point_connection(nm::RoutePoint *rp1, nm::RoutePoint *rp2, int length,
+                           std::multimap<std::string, nm::RoutePointConnection> &route_point_connections) {
+    //Si la connexion n'existe pas encore alors on va la créer, sinon on regarde sa durée, si elle est inférieure, on la modifie
     auto pp = route_point_connections.equal_range(rp1->external_code);
     bool find = false;
     for(auto it_pp = pp.first; it_pp != pp.second; ++it_pp) {
-        if(it_pp->second == rp2->external_code) {
+        if(it_pp->second.destination_route_point->external_code == rp2->external_code) {
             find = true;
+            if(it_pp->second.length > length)
+                it_pp->second.length = length;
             break;
         }
     }
     if(!find) {
-        route_point_connections.insert(std::make_pair(rp1->external_code, rp2->external_code));
-        nm::RoutePointConnection *rpc = new nm::RoutePointConnection();
-        rpc->departure_route_point = rp1;
-        rpc->destination_route_point = rp2;
-        rpc->route_point_connection_kind = nm::RoutePointConnection::RoutePointConnectionKind::Guarantee;
-        data.route_point_connections.push_back(rpc);
+        nm::RoutePointConnection rpc;
+        rpc.departure_route_point = rp1;
+        rpc.destination_route_point = rp2;
+        rpc.route_point_connection_kind = nm::RoutePointConnection::RoutePointConnectionKind::Extension;
+        rpc.length = length;
+        route_point_connections.insert(std::make_pair(rp1->external_code, rpc));
+
     }
 }
 
 
 void build_route_point_connections(Data & data) {
+
     std::multimap<std::string, nm::VehicleJourney*> block_vj; 
-    std::multimap<std::string, std::string> route_point_connections;
+    std::multimap<std::string, nm::RoutePointConnection> route_point_connections;
     for(nm::VehicleJourney *vj: data.vehicle_journeys) {
         if(vj->block_id != "")
             block_vj.insert(std::make_pair(vj->block_id, vj));
@@ -1151,18 +1156,27 @@ void build_route_point_connections(Data & data) {
                                                       vj2->stop_time_list.front()->arrival_time; });
 
             //On crée les connexions entre le dernier route point et le premier route point
-            auto prec_vj = pp.first->second;   
-            auto it_vj = pp.first;
-            ++it_vj;
+            auto prec_vj = vjs.begin();
+            auto it_vj =vjs.begin() + 1;
 
-            for(; it_vj!=pp.second; ++it_vj) {
-                add_route_point_connection(prec_vj->stop_time_list.back()->route_point,
-                                           it_vj->second->stop_time_list.front()->route_point, 
-                                           route_point_connections, data);
-                prec_vj = it_vj->second; 
+            for(; it_vj!=vjs.end(); ++it_vj) {
+                auto &st1 = (*prec_vj)->stop_time_list.back(),
+                     &st2 = (*it_vj)->stop_time_list.front();
+                if((st2->departure_time - st1->arrival_time) >= 0) {
+                    add_route_point_connection(st1->route_point, st2->route_point,
+                                               (st2->departure_time - st1->arrival_time),
+                                               route_point_connections);
+                }
+                prec_vj = it_vj;
             }
             prec_block = block_id;
         }
+    }
+
+
+    //On ajoute les route points dans data
+    for(auto rpc : route_point_connections) {
+        data.route_point_connections.push_back(new nm::RoutePointConnection(rpc.second));
     }
 
 }

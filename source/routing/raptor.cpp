@@ -23,9 +23,12 @@ void RAPTOR::route_path_connections_forward() {
     for(auto rp = marked_rp.find_first(); rp != marked_rp.npos; rp = marked_rp.find_next(rp)) {
         BOOST_FOREACH(auto &idx_rpc, data.dataRaptor.footpath_rp_forward.equal_range(rp)) {
             const auto & rpc = idx_rpc.second;
-            if(retour[count][rp].type == vj && retour[count][rp].arrival < best[rpc.destination_route_point_idx].arrival) {
-                retour[count][rpc.destination_route_point_idx] = 
-                    type_retour(retour[count][rp].arrival, retour[count][rp].arrival, rp, connection_extension);
+            DateTime dt = retour[count][rp].arrival + rpc.length;
+            if(retour[count][rp].type == vj && dt < best[rpc.destination_route_point_idx].arrival) {
+                if(rpc.connection_kind == type::ConnectionKind::extension)
+                    retour[count][rpc.destination_route_point_idx] = type_retour(dt, dt, rp, connection_extension);
+                else
+                    retour[count][rpc.destination_route_point_idx] = type_retour(dt, dt, rp, connection_guarantee);
                 best[rpc.destination_route_point_idx] = retour[count][rpc.destination_route_point_idx];
                 to_mark.push_back(rpc.destination_route_point_idx);
             }
@@ -49,9 +52,12 @@ void RAPTOR::route_path_connections_backward() {
     for(auto rp = marked_rp.find_first(); rp != marked_rp.npos; rp = marked_rp.find_next(rp)) {
         BOOST_FOREACH(auto &idx_rpc,  data.dataRaptor.footpath_rp_backward.equal_range(rp)) {
             const auto & rpc = idx_rpc.second;
-            if(retour[count][rp].type == vj && retour[count][rp].arrival > best[rpc.departure_route_point_idx].arrival) {
-                retour[count][rpc.departure_route_point_idx] = 
-                    type_retour(retour[count][rp].arrival, retour[count][rp].arrival, rp, connection_extension);
+            DateTime dt = retour[count][rp].arrival - rpc.length;
+            if(retour[count][rp].type == vj && dt > best[rpc.departure_route_point_idx].arrival) {
+                if(rpc.connection_kind == type::ConnectionKind::extension)
+                    retour[count][rpc.departure_route_point_idx] = type_retour(dt, dt, rp, connection_extension);
+                else
+                    retour[count][rpc.departure_route_point_idx] = type_retour(dt, dt, rp, connection_guarantee);
                 best[rpc.departure_route_point_idx] = retour[count][rpc.departure_route_point_idx];
                 to_mark.push_back(rpc.departure_route_point_idx);
             }

@@ -149,6 +149,7 @@ struct RoutePointConnection: public TransmodelHeader {
     RoutePoint *departure_route_point;
     RoutePoint *destination_route_point;
     RoutePointConnectionKind route_point_connection_kind;
+    int length;
 
     struct Transformer {
         inline navitia::type::RoutePointConnection operator()(const RoutePointConnection* route_point_connection) 
@@ -158,7 +159,7 @@ struct RoutePointConnection: public TransmodelHeader {
 
 
     RoutePointConnection() : departure_route_point(NULL), destination_route_point(NULL),
-                             route_point_connection_kind(UndefinedRoutePointConnectionKind) {}
+                            route_point_connection_kind(UndefinedRoutePointConnectionKind), length(0) {}
 
     bool operator<(const RoutePointConnection &other) const;
 };

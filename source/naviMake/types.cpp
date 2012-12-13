@@ -364,6 +364,7 @@ nt::RoutePointConnection
     nt_rpc.external_code = route_point_connection.external_code;
     nt_rpc.departure_route_point_idx = route_point_connection.departure_route_point->idx;
     nt_rpc.destination_route_point_idx = route_point_connection.destination_route_point->idx;    
+    nt_rpc.length = route_point_connection.length;
     switch(route_point_connection.route_point_connection_kind) {
         case Extension: nt_rpc.connection_kind = nt::ConnectionKind::extension; break;
         case Guarantee: nt_rpc.connection_kind = nt::ConnectionKind::guarantee; break;
