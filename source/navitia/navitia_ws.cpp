@@ -492,10 +492,10 @@ class Worker : public BaseWorker<navitia::type::Data> {
         add_param("proximitylist", "lat", "Latitude en degrés", ApiParameter::DOUBLE, true);
         add_param("proximitylist", "dist", "Distance maximale, 500m par défaut", ApiParameter::DOUBLE, false);
         std::vector<RequestParameter::Parameter_variant> accepted_params;
-        accepted_params.push_back("stop_area");
-        accepted_params.push_back("stop_point");
-        accepted_params.push_back("city");
-        accepted_params.push_back("adress");
+        accepted_params.push_back(std::string("stop_area"));
+        accepted_params.push_back(std::string("stop_point"));
+        accepted_params.push_back(std::string("city"));
+        accepted_params.push_back(std::string("adress"));
         add_param("proximitylist", "filter", "Type à rechercher", ApiParameter::STRING, false, accepted_params);
 
         register_api("journeys", boost::bind(&Worker::journeys, this, _1, _2, false), "Calcul d'itinéraire multimodal");
