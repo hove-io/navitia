@@ -31,10 +31,8 @@ std::vector<dt_st> get_stop_times(const std::vector<type::idx_t> &route_points, 
                 routing::DateTime dt_temp;
                 dt_temp = last_departure;
                 dt_temp.update(st.departure_time);
-                if(dt_temp < max_dt) {
-                    result_temp.insert(std::make_pair(dt_temp, st.idx));
-                    test_add = true;
-                }
+                result_temp.insert(std::make_pair(dt_temp, st.idx));
+                test_add = true;
             }
         }
 

@@ -56,6 +56,7 @@ struct RAPTOR : public AbstractRouter
     void init(std::vector<std::pair<type::idx_t, double> > departs,
               std::vector<std::pair<type::idx_t, double> > destinations,
               const DateTime &dep, DateTime borne, const bool clockwise, const bool reset, const bool dep_dest = false);
+    std::map<type::idx_t, DateTime> init_departs(std::vector<std::pair<type::idx_t, double> > departs, const bool dep_dest, const DateTime &dep,bool clockwise);
 
     ///Cherche le temps de départ du calcul
     DateTime get_temps_depart(const DateTime &dt_depart, const std::vector<std::pair<type::idx_t, double> > &departs);
@@ -67,9 +68,9 @@ struct RAPTOR : public AbstractRouter
     std::vector<Path> compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
                               int departure_day, DateTime borne, bool clockwise = true);
     ///Construit tous chemins trouvés
-    std::vector<Path> makePathes(std::vector<std::pair<type::idx_t, double> > destinations);
+    std::vector<Path> makePathes(std::vector<std::pair<type::idx_t, double> > destinations, DateTime dt);
     ///Construit tous les chemins trouvés, lorsque le calcul est lancé dans le sens inverse
-    std::vector<Path> makePathesreverse(std::vector<std::pair<type::idx_t, double> > destinations);
+    std::vector<Path> makePathesreverse(std::vector<std::pair<type::idx_t, double> > destinations, DateTime dt);
 
     ///Calcul d'itinéraires dans le sens horaire à partir de plusieurs stop points de départs, vers plusieurs stoppoints d'arrivée, à une heure donnée
     std::vector<Path> 

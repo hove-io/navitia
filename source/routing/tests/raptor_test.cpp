@@ -630,7 +630,7 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
 
 BOOST_AUTO_TEST_CASE(pam_veille) {
     navimake::builder b("20120614");
-    b.vj("A")("stop1", 10*60)("stop2", 20*60)("stop3", 50*60);
+    b.vj("A")("stop1", 3*60)("stop2", 20*60);
     b.vj("B", "01")("stop0", 23*3600)("stop2", 24*3600 + 30*60)("stop3", 24*3600 + 40*60);
     type::Data data;
     b.build(data.pt_data);
@@ -639,7 +639,7 @@ BOOST_AUTO_TEST_CASE(pam_veille) {
 
     type::PT_Data & d = data.pt_data;
 
-    auto res1 = raptor.compute(d.stop_areas.at(1).idx, d.stop_areas.at(3).idx, 5*60, 1);
+    auto res1 = raptor.compute(d.stop_areas.at(1).idx, d.stop_areas.at(3).idx, 5*60, 0);
 
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 }
@@ -658,6 +658,7 @@ BOOST_AUTO_TEST_CASE(pam_3) {
     type::PT_Data & d = data.pt_data;
 
     auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 5*60, 1);
+
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
     BOOST_CHECK_EQUAL(res1[0].items[2].arrival.hour(), 23*3600 + 40 * 60);

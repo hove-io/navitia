@@ -90,15 +90,15 @@ struct best_dest {
 //        if(it != map_date_time.end()) {
 
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
-        if(t.departure != DateTime::min && (t.departure - rpidx_distance[rpid]) >= best_now.departure) {
+            if(t.departure != DateTime::min && (t.departure - rpidx_distance[rpid]) >= best_now.departure) {
                 best_now = t;
                 best_now.arrival = t.arrival - rpidx_distance[rpid];
                 best_now.departure = t.departure - rpidx_distance[rpid];
                 best_now_rpid = rpid;
                 count = cnt;
-                return true;
+                    return true;
+                }
             }
-        }
         return false;
     }
 
