@@ -8,18 +8,9 @@
 #include "routing/raptor_utils.h"
 #include "routing/dataraptor.h"
 #include "best_trip.h"
+#include "raptor_init.h"
 
 namespace navitia { namespace routing { namespace raptor{
-
-typedef std::pair<navitia::type::idx_t, int> pair_idx_int;
-typedef std::vector<int> queue_t;
-typedef std::vector<map_int_pint_t> map_retour_t;
-typedef std::vector<pair_int> vector_pairint;
-typedef std::pair<navitia::type::idx_t, type_retour> idx_retour;
-typedef std::vector<idx_retour> vector_idxretour;
-typedef std::pair<navitia::type::idx_t, double> idx_distance;
-typedef std::vector<idx_distance> vec_idx_distance;
-
 
 struct RAPTOR : public AbstractRouter
 {

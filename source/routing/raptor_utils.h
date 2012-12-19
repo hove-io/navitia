@@ -2,6 +2,21 @@
 #include <unordered_map>
 #include "routing/routing.h"
 namespace navitia { namespace routing { namespace raptor{
+//Forward Declaration
+struct type_retour;
+
+typedef std::pair<int, int> pair_int;
+typedef std::vector<type_retour> map_int_pint_t;
+typedef std::map<navitia::type::idx_t, navitia::type::Connection> list_connections;
+typedef std::vector<navitia::type::idx_t> vector_idx;
+typedef std::pair<navitia::type::idx_t, int> pair_idx_int;
+typedef std::vector<int> queue_t;
+typedef std::vector<map_int_pint_t> map_retour_t;
+typedef std::vector<pair_int> vector_pairint;
+typedef std::pair<navitia::type::idx_t, type_retour> idx_retour;
+typedef std::vector<idx_retour> vector_idxretour;
+typedef std::pair<navitia::type::idx_t, double> idx_distance;
+typedef std::vector<idx_distance> vec_idx_distance;
 
 enum type_idx {
     vj,
@@ -11,6 +26,7 @@ enum type_idx {
     connection_extension,
     connection_guarantee
 };
+
 struct type_retour {
     type::idx_t stop_time_idx;
     int rpid_embarquement;
