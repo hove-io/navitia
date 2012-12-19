@@ -44,13 +44,8 @@ struct RAPTOR : public AbstractRouter
     }
 
     ///Initialise les structure retour et b_dest
-    void init(std::vector<std::pair<type::idx_t, double> > departs,
-              std::vector<std::pair<type::idx_t, double> > destinations,
-              const DateTime &dep, DateTime borne, const bool clockwise, const bool reset, const bool dep_dest = false);
-    std::map<type::idx_t, DateTime> init_departs(std::vector<std::pair<type::idx_t, double> > departs, const bool dep_dest, const DateTime &dep,bool clockwise);
-
-    ///Cherche le temps de départ du calcul
-    DateTime get_temps_depart(const DateTime &dt_depart, const std::vector<std::pair<type::idx_t, double> > &departs);
+    void clear_and_init(std::vector<init::Departure_Type> departs,
+              std::vector<std::pair<type::idx_t, double> > destinations, DateTime borne, const bool clockwise, const bool clear);
 
     ///Lance un calcul d'itinéraire entre deux stop areas
     std::vector<Path> compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
