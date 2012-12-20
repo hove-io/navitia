@@ -137,9 +137,14 @@ std::vector<Departure_Type> getWalkingSolutions(bool clockwise, const std::vecto
         }
     }
 
+
     for(auto p : tmp) {
         result.push_back(p.second);
     }
+    std::sort(result.begin(), result.end(), [](Departure_Type s1, Departure_Type s2) {return s1.ratio > s2.ratio;});
+
+    if(result.size() > 2)
+        result.resize(2);
 
     return result;
 }

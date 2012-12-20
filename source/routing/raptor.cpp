@@ -262,7 +262,10 @@ void RAPTOR::clear_and_init(std::vector<init::Departure_Type> departs,
                     ((clockwise && (borne == DateTime::inf || best[rpidx].arrival > borne)) ||
                     ((!clockwise) && (borne == DateTime::min || best[rpidx].departure < borne)))) {
                     b_dest.ajouter_destination(rpidx, (item.second/1.38));
-                    best[rpidx].arrival = borne;
+                    if(clockwise)
+                        best[rpidx].arrival = borne;
+                    else
+                        best[rpidx].departure = borne;
                 }
         }
     }
@@ -293,9 +296,9 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
     departures = init::getDepartures(departs, destinations, false, this->retour, data);
 
     for(auto departure : departures) {
-        clear_and_init({departure}, departs, dt_depart, false, true);
+        clear_and_init({departure}, departs, /*dt_depart*/departure.departure, false, true);
 
-        boucleRAPTORreverse(false);
+        boucleRAPTORreverse(true);
 
         if(b_dest.best_now.type != uninitialized) {
             auto temp = makePathesreverse(departs, dt_depart);
@@ -765,7 +768,7 @@ std::vector<Path> RAPTOR::makePathesreverse(std::vector<std::pair<type::idx_t, d
             for(auto dest : data.pt_data.stop_points[spid_dist.first].route_point_list) {
                 if(retour[i][dest].type != uninitialized) {
                     DateTime current_dt = retour[i][dest].departure - (spid_dist.second/1.38);
-                    if(current_dt > best_dt) {
+                    if(current_dt >= best_dt) {
                         best_dt = current_dt;
                         best_rp = dest;
                     }
