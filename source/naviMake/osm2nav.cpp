@@ -154,10 +154,14 @@ struct Visitor{
                         georef::Edge e;
                         e.length = length;
                         e.way_idx = w.idx;
+
                         e.cyclable = w.properties[CYCLE_FWD];
                         boost::add_edge(source, target, e, geo_ref.graph);
+                        geo_ref.ways[w.idx].edges.push_back(std::make_pair(source, target));
+
                         e.cyclable = w.properties[CYCLE_BWD];
                         boost::add_edge(target, source, e, geo_ref.graph);
+                        geo_ref.ways[w.idx].edges.push_back(std::make_pair(target, source));
                         source = target;
                         length = 0;
                     }

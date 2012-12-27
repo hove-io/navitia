@@ -2,6 +2,21 @@
 #include <unordered_map>
 #include "routing/routing.h"
 namespace navitia { namespace routing { namespace raptor{
+//Forward Declaration
+struct type_retour;
+
+typedef std::pair<int, int> pair_int;
+typedef std::vector<type_retour> map_int_pint_t;
+typedef std::map<navitia::type::idx_t, navitia::type::Connection> list_connections;
+typedef std::vector<navitia::type::idx_t> vector_idx;
+typedef std::pair<navitia::type::idx_t, int> pair_idx_int;
+typedef std::vector<int> queue_t;
+typedef std::vector<map_int_pint_t> map_retour_t;
+typedef std::vector<pair_int> vector_pairint;
+typedef std::pair<navitia::type::idx_t, type_retour> idx_retour;
+typedef std::vector<idx_retour> vector_idxretour;
+typedef std::pair<navitia::type::idx_t, double> idx_distance;
+typedef std::vector<idx_distance> vec_idx_distance;
 
 enum type_idx {
     vj,
@@ -11,6 +26,7 @@ enum type_idx {
     connection_extension,
     connection_guarantee
 };
+
 struct type_retour {
     type::idx_t stop_time_idx;
     int rpid_embarquement;
@@ -20,7 +36,7 @@ struct type_retour {
     type_retour(const DateTime & arrival, const DateTime & departure) : stop_time_idx(navitia::type::invalid_idx),
         rpid_embarquement(navitia::type::invalid_idx), arrival(arrival), departure(departure), type(depart) {}
 
-    type_retour(const type::StopTime & st, const DateTime & date, int embarquement, bool clockwise) : 
+    type_retour(const type::StopTime & st, const DateTime & date, int embarquement, bool clockwise) :
         stop_time_idx(st.idx), rpid_embarquement(embarquement),
         type(vj) {
         if(clockwise) {
@@ -36,7 +52,7 @@ struct type_retour {
         arrival.normalize();
     }
 
-    type_retour(const DateTime & arrival, const DateTime & departure, int embarquement) : 
+    type_retour(const DateTime & arrival, const DateTime & departure, int embarquement) :
         stop_time_idx(navitia::type::invalid_idx), rpid_embarquement(embarquement),
         arrival(arrival), departure(departure), type(connection) {}
 
@@ -90,15 +106,15 @@ struct best_dest {
 //        if(it != map_date_time.end()) {
 
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
-        if(t.departure != DateTime::min && (t.departure - rpidx_distance[rpid]) >= best_now.departure) {
+            if(t.departure != DateTime::min && (t.departure - rpidx_distance[rpid]) >= best_now.departure) {
                 best_now = t;
                 best_now.arrival = t.arrival - rpidx_distance[rpid];
                 best_now.departure = t.departure - rpidx_distance[rpid];
                 best_now_rpid = rpid;
                 count = cnt;
-                return true;
+                    return true;
+                }
             }
-        }
         return false;
     }
 

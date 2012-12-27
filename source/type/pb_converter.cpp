@@ -139,11 +139,13 @@ void fill_road_section(const georef::Path &path, const type::Data &data, pbnavit
             way = data.geo_ref.ways[path.path_items.front().way_idx];
             coord = path.coordinates.front();
             pm = section->mutable_origin();
+            pm->set_type(pbnavitia::ADDRESS);
             fill_pb_object(way.idx, data, pm->mutable_address(), way.nearest_number(coord),coord , max_depth);
 
             way = data.geo_ref.ways[path.path_items.back().way_idx];
             coord = path.coordinates.back();
             pm = section->mutable_destination();
+            pm->set_type(pbnavitia::ADDRESS);
             fill_pb_object(way.idx, data, pm->mutable_address(), way.nearest_number(coord),coord , max_depth);
         }
     }

@@ -24,11 +24,12 @@ struct DateTime {
      *
      */
 private:
-    uint32_t datetime;
     const static uint32_t hour_mask = 0x000FFFFF;
     const static char date_offset = 20;
 
 public:
+    uint32_t datetime;
+
     uint32_t hour() const {
         return datetime & hour_mask;
     }
@@ -153,6 +154,14 @@ inline DateTime operator+(DateTime dt, int seconds) {
 inline DateTime operator-(DateTime dt, int seconds) {
     dt.decrement(seconds);
     return dt;
+}
+
+inline int operator+(const DateTime &dt1, const DateTime &dt2) {
+    return dt1.datetime + dt2.datetime;
+}
+
+inline int operator-(const DateTime &dt1, const DateTime &dt2) {
+    return dt1.datetime - dt2.datetime;
 }
 
 std::ostream & operator<<(std::ostream & os, const DateTime & dt);

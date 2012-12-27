@@ -21,24 +21,9 @@ std::vector<vector_datetime> make_columuns(const std::vector<dt_st> &stop_times)
     return result;
 }
 
-pbnavitia::Response stops_schedule(const std::string &request, std::string &date, std::string &date_changetime, type::Data &data) {
-    boost::posix_time::ptime debut, change;
-    if(date == "")
-        debut = boost::posix_time::second_clock::local_time();
-    else
-        debut = boost::posix_time::from_iso_string(date);
-    //On repositionne le début à minuit
-    debut = debut - debut.time_of_day();
+pbnavitia::Response departure_board(const std::string &request, std::string &date, std::string &date_changetime, type::Data &data) {
 
-
-    if(date_changetime != "") {
-        //Si le change est différent de minuit, on change le début
-        debut = debut +  boost::posix_time::from_iso_string(date_changetime).time_of_day();
-    }
-
-    change = debut + boost::posix_time::time_duration(24,0,0);
-
-    request_parser parser("DEPARTURE_BOARD", request, boost::posix_time::to_iso_string(debut),  boost::posix_time::to_iso_string(change), std::numeric_limits<int>::max()-1, data);
+    request_parser parser("DEPARTURE_BOARD", request, date,  date_changetime, data);
 
 
     parser.pb_response.set_requested_api(pbnavitia::DEPARTURE_BOARD);

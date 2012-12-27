@@ -7,7 +7,7 @@
 
 namespace navitia { namespace timetables {
 
-std::vector<vector_stopTime> get_all_stop_times(const std::string &filter, const routing::DateTime &dateTime, const routing::DateTime &max_datetime, const uint32_t nb_departures, type::Data &d) {
+std::vector<vector_stopTime> get_all_stop_times(const std::string &filter, const routing::DateTime &dateTime, const routing::DateTime &max_datetime, type::Data &d) {
     std::vector<vector_stopTime> result;
     //On cherche les premiers route_points de toutes les routes
 
@@ -17,7 +17,7 @@ std::vector<vector_stopTime> get_all_stop_times(const std::string &filter, const
     }
 
     //On fait un next_departures sur ces route points
-    auto first_dt_st = get_stop_times(first_route_points, dateTime, max_datetime, nb_departures, d);
+    auto first_dt_st = get_stop_times(first_route_points, dateTime, max_datetime, std::numeric_limits<int>::max(), d);
 
     //On va chercher tous les prochains horaires
     for(auto ho : first_dt_st) {
@@ -56,8 +56,8 @@ std::vector<vector_string> make_matrice(const std::vector<vector_stopTime> & sto
 }
 
 
-pbnavitia::Response line_schedule(const std::string & filter, const std::string &str_dt, const std::string &str_max_dt, const int nb_departures, const uint32_t max_depth, type::Data &d) {
-    request_parser parser("LINE_SCHEDULE", "", str_dt, str_max_dt, nb_departures, d);
+pbnavitia::Response line_schedule(const std::string & filter, const std::string &str_dt, const std::string &change_time, const uint32_t max_depth, type::Data &d) {
+    request_parser parser("LINE_SCHEDULE", "", str_dt, change_time, d);
     parser.pb_response.set_requested_api(pbnavitia::LINE_SCHEDULE);
 
     if(parser.pb_response.has_error()) {
@@ -65,7 +65,7 @@ pbnavitia::Response line_schedule(const std::string & filter, const std::string 
     }
 
     //On récupère les stop_times
-    auto stop_times = get_all_stop_times(filter, parser.date_time, parser.max_datetime, nb_departures, d);
+    auto stop_times = get_all_stop_times(filter, parser.date_time, parser.max_datetime, d);
 
     std::vector<vector_idx> vec_stop_points;
 

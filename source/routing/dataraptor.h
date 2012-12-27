@@ -2,10 +2,7 @@
 #include "raptor_utils.h"
 #include "type/pt_data.h"
 namespace navitia { namespace routing { namespace raptor {
-typedef std::pair<int, int> pair_int;
-typedef std::vector<type_retour> map_int_pint_t;
-typedef std::map<navitia::type::idx_t, navitia::type::Connection> list_connections;
-typedef std::vector<navitia::type::idx_t> vector_idx;
+
 struct dataRAPTOR {
 
     //Données statiques

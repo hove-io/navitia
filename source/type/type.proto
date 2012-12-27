@@ -222,6 +222,12 @@ enum SectionType {
     BIRD_FLY = 5;
 }
 
+enum TransferType {
+    WALKING = 1;
+    GUARANTEED = 2;
+    EXTENSION = 3;
+}
+
 message Section {
     optional SectionType type = 1;
     optional PlaceMark origin = 2;
@@ -240,12 +246,12 @@ message Section {
 // Si c'est du routier
     optional StreetNetwork street_network = 11;
 
-// Si c'est de l'attente il n'y a rien
+// Si c'est de l'attente
+    optional TransferType transfer_type = 12;
 
 // Dans tous les cas
-    optional string polyline = 12;
-    optional int32 duration = 13;
-
+    optional string polyline = 13;
+    optional int32 duration = 14;
 }
 
 message Journey {
@@ -308,7 +314,6 @@ message TableLine {
 message Table {
     repeated TableLine line = 1;
 }
-
 
 message LineScheduleHeaderItem {
     required Line line = 1;

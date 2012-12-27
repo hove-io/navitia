@@ -66,20 +66,25 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                         stop_time->set_arrival_date_time(iso_string(d, arr_time.date(), arr_time.hour()));
                         auto dep_time = item.departures[i];
                         stop_time->set_departure_date_time(iso_string(d, dep_time.date(), dep_time.hour()));
-                        fill_pb_object(item.stop_points[i], d, stop_time->mutable_stop_point(), 1);
+                        fill_pb_object(item.stop_points[i], d, stop_time->mutable_stop_point(), 0);
                     }
 
                     if(item.stop_points.size() >= 2) {
-                        fill_pb_placemark(d.pt_data.stop_points[item.stop_points.front()], d, pb_section->mutable_origin());
-                        fill_pb_placemark(d.pt_data.stop_points[item.stop_points.back()], d, pb_section->mutable_destination());
+                        fill_pb_placemark(d.pt_data.stop_points[item.stop_points.front()], d, pb_section->mutable_origin(), 1);
+                        fill_pb_placemark(d.pt_data.stop_points[item.stop_points.back()], d, pb_section->mutable_destination(), 1);
                     }
                 }
 
                 else {
                     pb_section->set_type(pbnavitia::TRANSFER);
                     pb_section->set_duration(item.departure - item.arrival);
-                    fill_pb_placemark(d.pt_data.stop_points[item.stop_points.front()], d, pb_section->mutable_origin());
-                    fill_pb_placemark(d.pt_data.stop_points[item.stop_points.back()], d, pb_section->mutable_destination());
+                    switch(item.type) {
+                    case extension : pb_section->set_transfer_type(pbnavitia::EXTENSION); break;
+                    case guarantee : pb_section->set_transfer_type(pbnavitia::GUARANTEED); break;
+                    default :pb_section->set_transfer_type(pbnavitia::WALKING); break;
+                    }
+                    fill_pb_placemark(d.pt_data.stop_points[item.stop_points.front()], d, pb_section->mutable_origin(), 1);
+                    fill_pb_placemark(d.pt_data.stop_points[item.stop_points.back()], d, pb_section->mutable_destination(), 1);
                 }
                 pb_section->set_duration(item.arrival - item.departure);
                 if(departure_time == DateTime::inf)

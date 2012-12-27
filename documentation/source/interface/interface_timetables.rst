@@ -89,16 +89,15 @@ Paramètres d'entrée
 +-------------------------+------------------------+-------------------------------------+----------------------------------------+
 | Paramètre               | Type                   | Remarque                            | Exemple                                |
 +=========================+========================+=====================================+========================================+
-| line_external_code      | Code Unique            | Code unique de la ligne             | line_external_code=line:tcl17A         |
+| filter                  | Filter                 | filtre sur les lignes.              | filter=line.external_code=line:TCL01   |
+|                         |                        | Reprend exactatement la synthaxe    |                                        |
+|                         |                        | les filtres de pt_ref.              |                                        |
 +-------------------------+------------------------+-------------------------------------+----------------------------------------+
-| datetime                | <yyyymmdd>T<hhmi>      | La date à partire de laquelle on    | datetime=20121122T1054                 |
+| datetime                | <yyyymmdd>             | La date à partire de laquelle on    | datetime=20121122T1054                 |
 |                         |                        | les horaires.                       |                                        |
 +-------------------------+------------------------+-------------------------------------+----------------------------------------+
-| max_datetime            | <yyyymmdd>T<hhmi>      | La date maximale pour les horaires. | max_datetime=20121122T1056             |
+| changetime              | T<hhmi>                | L'heure de départ du schedule     . | changetime=T0500                       |
 +-------------------------+------------------------+-------------------------------------+----------------------------------------+  
-| nb_departures           | nombre entier          | Le nombre maximal d'horaires        | nb_departures=2000                     |
-|                         |                        | souhaité                            |                                        |
-+-------------------------+------------------------+-------------------------------------+----------------------------------------+
 | max_depth               | nombre entier          | Même argument que dans ptref        | max_depth=2                            |
 +-------------------------+------------------------+-------------------------------------+----------------------------------------+
 

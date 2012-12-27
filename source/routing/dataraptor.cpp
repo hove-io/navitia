@@ -49,28 +49,30 @@ void dataRAPTOR::load(const type::PT_Data &data)
     footpath_index.resize(data.stop_points.size());
     footpath_index.resize(data.stop_points.size());
     for(type::StopPoint sp : data.stop_points) {
-        type::StopArea sa = data.stop_areas[sp.stop_area_idx];
-        footpath_index[sp.idx].first = foot_path.size();
+        if(sp.stop_area_idx != type::invalid_idx) {
+            type::StopArea sa = data.stop_areas[sp.stop_area_idx];
+            footpath_index[sp.idx].first = foot_path.size();
 
-        int size = 0;
-        for(auto conn : footpath_temp[sp.idx]) {
-            foot_path.push_back(conn.second);
-            ++size;
-        }
-
-
-        for(type::idx_t spidx2 : sa.stop_point_list) {
-            if(sp.idx != spidx2 && 
-                footpath_temp[sp.idx].find(spidx2) == footpath_temp[sp.idx].end()) {
-                type::Connection c;
-                c.departure_stop_point_idx = sp.idx;
-                c.destination_stop_point_idx = spidx2;
-                c.duration = 2 * 60;
-                foot_path.push_back(c);
+            int size = 0;
+            for(auto conn : footpath_temp[sp.idx]) {
+                foot_path.push_back(conn.second);
                 ++size;
             }
+
+
+            for(type::idx_t spidx2 : sa.stop_point_list) {
+                if(sp.idx != spidx2 &&
+                    footpath_temp[sp.idx].find(spidx2) == footpath_temp[sp.idx].end()) {
+                    type::Connection c;
+                    c.departure_stop_point_idx = sp.idx;
+                    c.destination_stop_point_idx = spidx2;
+                    c.duration = 2 * 60;
+                    foot_path.push_back(c);
+                    ++size;
+                }
+            }
+            footpath_index[sp.idx].second = size;
         }
-        footpath_index[sp.idx].second = size;
     }
 
 
@@ -115,7 +117,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
                 departure_times.push_back(st.departure_time % SECONDS_PER_DAY);
                 if(st.departure_time > SECONDS_PER_DAY) {
                     auto vp = data.validity_patterns[data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx].days;
-                    vp >>=1;
+                    vp <<=1;
                     auto it = std::find(validity_patterns.begin(), validity_patterns.end(), vp);
                     if(it == validity_patterns.end()) {
                         vp_idx_forward.push_back(validity_patterns.size());
@@ -143,7 +145,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
                 arrival_times.push_back(st.arrival_time % SECONDS_PER_DAY);
                 if(st.arrival_time > SECONDS_PER_DAY) {
                     auto vp = data.validity_patterns[data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx].days;
-                    vp >>=1;;
+                    vp <<=1;;
                     auto it = std::find(validity_patterns.begin(), validity_patterns.end(), vp);
                     if(it == validity_patterns.end()) {
                         vp_idx_backward.push_back(validity_patterns.size());

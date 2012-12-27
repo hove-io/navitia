@@ -73,6 +73,8 @@ do
     if [ -d "$bd_topo" ]
     then
         navimake_options=" --topo $bd_topo "
+    else if [ -r "$bd_topo" ]
+        navimake_options=" --osm $bd_topo "
     else
         echo "bd_topo ($bd_topo) non trouvé"
     fi

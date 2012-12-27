@@ -249,38 +249,19 @@ std::vector<vector_idx> vec_tmp = {
 
     auto result = t.get_thermometer(vec_tmp);
 
-    BOOST_REQUIRE_EQUAL(t.get_thermometer().size(), 96);
+    bool error = false;
+    for(auto route : vec_tmp) {
+        try {
+            t.match_route(route);
+        } catch(Thermometer::cant_match cm) {
+            error = true;
+        }
+    }
+
+    BOOST_REQUIRE_EQUAL(t.get_thermometer().size(), 97);
+    BOOST_REQUIRE_EQUAL(error, false);
 }
 
-    BOOST_AUTO_TEST_CASE(regroupement) {
-
-        srand(time(NULL));
-        navitia::type::Data data;
-
-        Thermometer t(data);
-        std::vector<vector_idx> req;
-        req.push_back({1});
-        req.push_back({2});
-        req.push_back({1,2});
-        auto result = t.get_thermometer(req);
-
-        auto posA = distance(result.begin(), std::find(result.begin(), result.end(), 1));
-        auto posB = distance(result.begin(), std::find(result.begin(), result.end(), 2));
-        BOOST_REQUIRE_EQUAL(posA, 0);
-        BOOST_REQUIRE_EQUAL(posB, 1);
-
-        req.clear();
-
-        req.push_back({2});
-        req.push_back({1});
-        req.push_back({1,2});
-        result = t.get_thermometer(req);
-
-        posA = distance(result.begin(), std::find(result.begin(), result.end(), 1));
-        posB = distance(result.begin(), std::find(result.begin(), result.end(), 2));
-        BOOST_REQUIRE_EQUAL(posA, 0);
-        BOOST_REQUIRE_EQUAL(posB, 1);
-    }
 
     BOOST_AUTO_TEST_CASE(t12) {
         srand(time(NULL));
