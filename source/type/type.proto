@@ -372,3 +372,9 @@ message Response{
 
     optional DepartureBoard departure_board = 13;
 }
+
+
+message req {
+	required string api = 1;
+	required string params = 2;
+}

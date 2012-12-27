@@ -1,5 +1,5 @@
 #include "config.h"
-#include "baseworker.h"
+#include "WS_commons/baseworker.h"
 #include "utils/configuration.h"
 #include "type/data.h"
 #include "type/type.pb.h"
@@ -32,7 +32,7 @@ class Worker : public BaseWorker<navitia::type::Data> {
     std::unique_ptr<navitia::streetnetwork::StreetNetwork> street_network_worker;
 
     log4cplus::Logger logger;
-
+public:
     pbnavitia::Response pb_response;
     boost::posix_time::ptime last_load_at;
 
@@ -75,7 +75,9 @@ class Worker : public BaseWorker<navitia::type::Data> {
 
     ///netoyage pour le traitement
     virtual void pre_compute(webservice::RequestData& request, nt::Data&){
-        LOG4CPLUS_TRACE(logger, "Requête : "  + request.path + "?" + request.raw_params);
+        std::stringstream ss;
+        ss << "Requête dans le thread " << boost::this_thread::get_id() << " " << request.path << "?" << request.raw_params;
+        LOG4CPLUS_TRACE(logger, ss.str());
         pb_response.Clear();
     }
 
