@@ -86,7 +86,9 @@ struct best_dest {
 
     bool is_dest(unsigned int rpid) const {return rpidx_distance[rpid] != std::numeric_limits<float>::max();}
 
-    bool ajouter_best(unsigned int rpid, const type_retour &t, int cnt) {
+    bool ajouter_best(unsigned int rpid, const type_retour &t, int cnt, bool clockwise = true) {
+        if(!clockwise)
+            return ajouter_best_reverse(rpid, t, cnt);
 //        auto it = map_date_time.find(rpid);
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
             if(t.arrival + rpidx_distance[rpid] <= best_now.arrival) {
