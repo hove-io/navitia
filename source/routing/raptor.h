@@ -90,6 +90,9 @@ struct RAPTOR : public AbstractRouter
     ///Construit un chemin
     Path makePath(type::idx_t destination_idx, unsigned int countb, bool reverse = false);
 
+    /// Fonction générique pour la marche à pied
+    /// Il faut spécifier le visiteur selon le sens souhaité
+    template<typename Visitor> void foot_path(const Visitor & v);
     ///Marche à pied à l'interieur d'un stop point et entre deux stop points
     void marcheapied();
     ///Correspondances garanties et prolongements de service
