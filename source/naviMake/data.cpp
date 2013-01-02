@@ -1,7 +1,7 @@
 #include "data.h"
 #include <iostream>
 #include "ptreferential/where.h"
-
+#include "utils/timer.h"
 using namespace navimake;
 
 void Data::sort(){
@@ -38,6 +38,9 @@ void Data::sort(){
     std::sort(connections.begin(), connections.end(), Less<navimake::types::Connection>());
     std::for_each(connections.begin(), connections.end(), Indexer<navimake::types::Connection>());
 
+    std::sort(route_point_connections.begin(), route_point_connections.end(), Less<navimake::types::RoutePointConnection>());
+    std::for_each(route_point_connections.begin(), route_point_connections.end(), Indexer<navimake::types::RoutePointConnection>());
+
     std::sort(route_points.begin(), route_points.end(), Less<navimake::types::RoutePoint>());
     std::for_each(route_points.begin(), route_points.end(), Indexer<navimake::types::RoutePoint>());
 
@@ -63,12 +66,19 @@ void Data::clean(){
         route_vj[(*it)->route->external_code].push_back((*it));
     }
 
+    int erase_overlap = 0, erase_emptiness = 0;
+
     for(auto it1 = route_vj.begin(); it1 != route_vj.end(); ++it1) {
 
         for(auto vj1 = it1->second.begin(); vj1 != it1->second.end(); ++vj1) {
-
+            if((*vj1)->stop_time_list.size() == 0) {
+                toErase.insert((*vj1)->external_code);
+                ++erase_emptiness;
+                continue;
+            }
             for(auto vj2 = (vj1+1); vj2 != it1->second.end(); ++vj2) {
-                if(((*vj1)->validity_pattern->days & (*vj2)->validity_pattern->days).any()) {
+                if(((*vj1)->validity_pattern->days & (*vj2)->validity_pattern->days).any()  &&
+                        (*vj1)->stop_time_list.size() > 0 && (*vj2)->stop_time_list.size() > 0) {
                     navimake::types::VehicleJourney *vjs1, *vjs2;
                     if((*vj1)->stop_time_list.front()->departure_time <= (*vj2)->stop_time_list.front()->departure_time) {
                         vjs1 = *vj1;
@@ -78,9 +88,11 @@ void Data::clean(){
                         vjs1 = *vj2;
                         vjs2 = *vj1;
                     }
+
                     for(auto rp = (*vj1)->route->route_point_list.begin(); rp != (*vj1)->route->route_point_list.end();++rp) {
                         if(vjs1->stop_time_list.at((*rp)->order)->departure_time > vjs2->stop_time_list.at((*rp)->order)->departure_time) {
                             toErase.insert((*vj2)->external_code);
+                            ++erase_overlap;
                             break;
                         }
                     }
@@ -89,30 +101,46 @@ void Data::clean(){
         }
     }
 
-    std::set<int> erasest;
+    std::vector<size_t> erasest;
 
-    for(auto stit = stops.begin(); stit != stops.end(); ++stit) {
-        auto it = toErase.find((*stit)->vehicle_journey->external_code);
+    for(int i=stops.size()-1; i >=0;--i) {
+        auto it = toErase.find(stops[i]->vehicle_journey->external_code);
         if(it != toErase.end()) {
-            erasest.insert(distance(stops.begin(), stit));
+            erasest.push_back(i);
         }
     }
 
-    for(auto it = erasest.rbegin(); it != erasest.rend(); ++it)
-        stops.erase(stops.begin()+*it);
+    // Pour chaque stopTime à supprimer on le détruit, et on remet le dernier élément du vector à la place
+    // On ne redimentionne pas tout de suite le tableau pour des raisons de perf
+    size_t num_elements = stops.size();
+    for(size_t to_erase : erasest) {
+        delete stops[to_erase];
+        stops[to_erase] = stops[num_elements - 1];
+        num_elements--;
+    }
+
+
+    stops.resize(num_elements);
+
     erasest.clear();
-
-    for(auto vjit = vehicle_journeys.begin(); vjit != vehicle_journeys.end(); ++vjit) {
-        auto it = toErase.find((*vjit)->external_code);
+    for(int i=vehicle_journeys.size()-1; i >= 0;--i){
+        auto it = toErase.find(vehicle_journeys[i]->external_code);
         if(it != toErase.end()) {
-            erasest.insert(distance(vehicle_journeys.begin(), vjit));
+            erasest.push_back(i);
         }
     }
 
-    for(auto it = erasest.rbegin(); it != erasest.rend(); ++it)
-        vehicle_journeys.erase(vehicle_journeys.begin()+*it);
+    //Meme chose mais avec les vj
+    num_elements = vehicle_journeys.size();
+    for(size_t to_erase : erasest) {
+        delete vehicle_journeys[to_erase];
+        vehicle_journeys[to_erase] = vehicle_journeys[num_elements - 1];
+        num_elements--;
+    }
+    vehicle_journeys.resize(num_elements);
 
-    std::cout << "J'ai supprimé " << toErase.size() << "vehicle journey pour cause de dépassement dans le clean" << std::endl;
+    std::cout << "J'ai supprimé " << erase_overlap << "vehicle journey pour cause de dépassement, et " <<
+                 erase_emptiness << " car il n'y avait pas de stop time dans le clean" << std::endl;
 
 }
 
@@ -149,6 +177,9 @@ void Data::transform(navitia::type::PT_Data& data){
     data.connections.resize(this->connections.size());
     std::transform(this->connections.begin(), this->connections.end(), data.connections.begin(), navimake::types::Connection::Transformer());
 
+    data.route_point_connections.resize(this->route_point_connections.size());
+    std::transform(this->route_point_connections.begin(), this->route_point_connections.end(), data.route_point_connections.begin(), navimake::types::RoutePointConnection::Transformer());
+
     data.route_points.resize(this->route_points.size());
     std::transform(this->route_points.begin(), this->route_points.end(), data.route_points.begin(), navimake::types::RoutePoint::Transformer());
 
@@ -177,14 +208,17 @@ void Data::build_relations(navitia::type::PT_Data &data){
     //BOOST_FOREACH(navitia::type::ModeType & mode_type, data.mode_types){}
 
     BOOST_FOREACH(navitia::type::StopPoint & sp, data.stop_points){
-        navitia::type::StopArea & sa = data.stop_areas[sp.stop_area_idx];
-        sa.stop_point_list.push_back(sp.idx);
-        if(sp.city_idx != navitia::type::invalid_idx) {
-            navitia::type::City & city = data.cities.at(sp.city_idx);
-            city.stop_point_list.push_back(sp.idx);
-            if(std::find(city.stop_area_list.begin(), city.stop_area_list.end(),sa.idx) == city.stop_area_list.end())
-                city.stop_area_list.push_back(sa.idx);
+        if(sp.stop_area_idx != navitia::type::invalid_idx) {
+            navitia::type::StopArea & sa = data.stop_areas[sp.stop_area_idx];
+            sa.stop_point_list.push_back(sp.idx);
+            if(sp.city_idx != navitia::type::invalid_idx) {
+                navitia::type::City & city = data.cities.at(sp.city_idx);
+                city.stop_point_list.push_back(sp.idx);
+                if(std::find(city.stop_area_list.begin(), city.stop_area_list.end(),sa.idx) == city.stop_area_list.end())
+                    city.stop_area_list.push_back(sa.idx);
+            }
         }
+
     }
 
     BOOST_FOREACH(navitia::type::Line & line, data.lines){
@@ -249,13 +283,6 @@ void Data::build_relations(navitia::type::PT_Data &data){
     BOOST_FOREACH(navitia::type::Route & route, data.routes){
         std::sort(route.vehicle_journey_list.begin(), route.vehicle_journey_list.end(), sort_vehicle_journey_list(data));
     }
-
-
-
-
-
-
-
 
     // BOOST_FOREACH(navitia::type::Company & company, data.companies){}
 }

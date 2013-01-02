@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(test_computation) {
 
     // 13/10/2011 : youpppiiii on peut prendre "parfois" le tramway avec un ticket O/D
     keys.clear();
-    keys.push_back(";8711388;T4;8727141;2011|07|31;09|28;09|39;4;4;tramway"); // L'abbaye -> Aulnay
+    keys.push_back(";8711388;800:T4;8727141;2011|07|31;09|28;09|39;4;4;tramway"); // L'abbaye -> Aulnay
     keys.push_back(";8727141;RER B;8770870;2011|07|31;09|28;09|39;4;4;RapidTransit"); // Aulnay -> CDG
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size(), 1);
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(test_computation) {
 
     keys.clear();
     keys.push_back(";bled_paumé;bus_magique;8711388;2011|07|31;09|28;09|39;4;4;Bus"); // Bled Paumé -> L'Abbaye
-    keys.push_back(";8711388;T4;8727141;2011|07|31;09|40;09|50;4;4;tramway"); // L'abbaye -> Aulnay
+    keys.push_back(";8711388;800:T4;8727141;2011|07|31;09|40;09|50;4;4;tramway"); // L'abbaye -> Aulnay
     keys.push_back(";8727141;RER B;8770870;2011|07|31;09|28;09|39;4;4;RapidTransit"); // Aulnay -> CDG
     res = f.compute(keys);
     BOOST_CHECK_EQUAL(res.size(), 2);
@@ -375,5 +375,13 @@ BOOST_AUTO_TEST_CASE(test_computation) {
     res = f.compute(keys);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res.at(0).value, 265);
+
+    // Mantis sword 46044
+    keys.clear();
+    keys.push_back("440;59062;100112013:T3;8775864;2012|12|05;17|12;17|18;1;1;Tramway");
+    keys.push_back("436;8775864;810:B;8775499;2012|12|05;17|25;17|34;1;3;RapidTransit");
+    res = f.compute(keys);
+    BOOST_REQUIRE_EQUAL(res.size(), 2);
+    BOOST_CHECK_EQUAL(res.at(0).value, 170);
 }
 

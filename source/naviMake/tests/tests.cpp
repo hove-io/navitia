@@ -37,14 +37,14 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     navimake::types::StopArea* stop_area = data.stop_areas[0];
     BOOST_CHECK_EQUAL(stop_area->name, "Gare du Nord");
     BOOST_CHECK_EQUAL(stop_area->external_code, "frpno");
-    BOOST_CHECK_CLOSE(stop_area->coord.x, 2.355022, 0.0000001);
-    BOOST_CHECK_CLOSE(stop_area->coord.y, 48.880342, 0.0000001);
+    BOOST_CHECK_CLOSE(stop_area->coord.lon(), 2.355022, 0.0000001);
+    BOOST_CHECK_CLOSE(stop_area->coord.lat(), 48.880342, 0.0000001);
     
     navimake::types::StopPoint* stop_point = data.stop_points[0];
     BOOST_CHECK_EQUAL(stop_point->name, "Gare du Nord Surface");
     BOOST_CHECK_EQUAL(stop_point->external_code, "frpno:surface");
-    BOOST_CHECK_CLOSE(stop_point->coord.x, 2.355381, 0.0000001);
-    BOOST_CHECK_CLOSE(stop_point->coord.y, 48.880531, 0.0000001);
+    BOOST_CHECK_CLOSE(stop_point->coord.lon(), 2.355381, 0.0000001);
+    BOOST_CHECK_CLOSE(stop_point->coord.lat(), 48.880531, 0.0000001);
     BOOST_CHECK_EQUAL(stop_point->stop_area, stop_area);
 
     navimake::types::VehicleJourney* vj = data.vehicle_journeys[0];
@@ -77,8 +77,8 @@ BOOST_AUTO_TEST_CASE(city_transformer){
     city.use_main_stop_area_property = false;
 
     city.department = dep;
-    city.coord.x = -54.08523;
-    city.coord.x = 5.59273;
+    city.coord.set_lon(-54.08523);
+    city.coord.set_lat(5.59273);
 
   //  city.postal_code_list.push_back("42001");
    // city.postal_code_list.push_back("42002");
@@ -95,8 +95,8 @@ BOOST_AUTO_TEST_CASE(city_transformer){
     BOOST_CHECK_EQUAL(city_n.main_city, city.main_city);
     BOOST_CHECK_EQUAL(city_n.use_main_stop_area_property, city.use_main_stop_area_property);
     BOOST_CHECK_EQUAL(city_n.department_idx , city.department->idx);
-    BOOST_CHECK_EQUAL(city_n.coord.x , city.coord.x);
-    BOOST_CHECK_EQUAL(city_n.coord.y , city.coord.y);
+    BOOST_CHECK_EQUAL(city_n.coord.lon() , city.coord.lon());
+    BOOST_CHECK_EQUAL(city_n.coord.lat() , city.coord.lat());
 
     delete dep;
 }
@@ -143,8 +143,8 @@ BOOST_AUTO_TEST_CASE(stop_area_transformer){
     stop_area.name = "somewhere";
     stop_area.comment = "comment";
 
-    stop_area.coord.x = -54.08523;
-    stop_area.coord.x = 5.59273;
+    stop_area.coord.set_lon(-54.08523);
+    stop_area.coord.set_lat(5.59273);
     stop_area.additional_data = "other data";
     stop_area.main_connection = true;
     stop_area.main_stop_area = true;
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(stop_area_transformer){
     BOOST_CHECK_EQUAL(stop_area_n.external_code, stop_area.external_code);
     BOOST_CHECK_EQUAL(stop_area_n.name, stop_area.name);
     BOOST_CHECK_EQUAL(stop_area_n.comment, stop_area.comment);
-    BOOST_CHECK_EQUAL(stop_area_n.coord.x, stop_area.coord.x);
-    BOOST_CHECK_EQUAL(stop_area_n.coord.y, stop_area.coord.y);
+    BOOST_CHECK_EQUAL(stop_area_n.coord.lon(), stop_area.coord.lon());
+    BOOST_CHECK_EQUAL(stop_area_n.coord.lat(), stop_area.coord.lat());
     BOOST_CHECK_EQUAL(stop_area_n.additional_data, stop_area.additional_data);
 }

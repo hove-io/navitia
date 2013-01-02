@@ -78,14 +78,15 @@ int main(int argc, char** argv){
             auto tmp = router->compute(start_idx, target_idx, hour, date);
 
             if(tmp.size() > 0) {
-                auto res = tmp[0];
+                for(auto res : tmp) {
+                    for(auto item : res.items) {
+                        std::cout << item.print(data.pt_data) << std::endl;
+                    }
 
-                for(auto item : res.items) {
-                    std::cout << item.print(data.pt_data) << std::endl;
-                }
-
-                if(verif) {
-                    verification.verif(res);
+                    if(verif) {
+                        verification.verif(res);
+                    }
+                    std::cout << " --------------------------------" << std::endl;
                 }
             }
             std::cout << std::endl << "______________________________________" << std::endl << std::endl;

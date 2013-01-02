@@ -304,8 +304,8 @@ struct Worker : public BaseWorker<Data> {
         navitia::type::EntryPoint origin(boost::get<std::string>(req.parsed_params["origin"].value));
         navitia::type::EntryPoint destination(boost::get<std::string>(req.parsed_params["destination"].value));
 
-        std::string insee_departure = find(d.departements, origin.coordinates.x, origin.coordinates.y);
-        std::string insee_destination = find(d.departements, destination.coordinates.x, destination.coordinates.y);
+        std::string insee_departure = find(d.departements, origin.coordinates.lon(), origin.coordinates.lat());
+        std::string insee_destination = find(d.departements, destination.coordinates.lon(), destination.coordinates.lat());
 
         if(insee_departure.empty() || insee_destination.empty()){
             if(insee_departure.empty())

@@ -52,7 +52,7 @@ FIND_PACKAGE(Boost 1.40.0 REQUIRED)
 
 
 SET(NAVITIA_VERSION_MAJOR 0)
-SET(NAVITIA_VERSION_MINOR 1)
+SET(NAVITIA_VERSION_MINOR 4.5)
 SET(NAVITIA_VERSION_PATCH dev)
 
 #ajout a l'include path le repertoirre de compilation, pour géré le config.h
@@ -72,11 +72,10 @@ add_subdirectory(interface)
 add_subdirectory(ptreferential)
 add_subdirectory(first_letter)
 add_subdirectory(naviMake)
-add_subdirectory(fastlz_filter)
 add_subdirectory(fare)
 #add_subdirectory(gateway_mod)
 add_subdirectory(visu)
-add_subdirectory(street_network)
+#add_subdirectory(street_network)
 add_subdirectory(proximity_list)
 add_subdirectory(navitia)
 add_subdirectory(vptranslator)
@@ -86,6 +85,7 @@ add_subdirectory(routing)
 add_subdirectory(georef)
 add_subdirectory(geo_dispatcher)
 add_subdirectory(validator)
+add_subdirectory(time_tables)
 
 add_subdirectory(scripts)
 

@@ -24,11 +24,12 @@ struct DateTime {
      *
      */
 private:
-    uint32_t datetime;
     const static uint32_t hour_mask = 0x000FFFFF;
     const static char date_offset = 20;
 
 public:
+    uint32_t datetime;
+
     uint32_t hour() const {
         return datetime & hour_mask;
     }
@@ -41,7 +42,7 @@ public:
     static DateTime min;
 
     DateTime() : datetime(std::numeric_limits<uint32_t>::max()){}
-    DateTime(int date, int hour) : datetime((date << date_offset) + hour) {}
+    DateTime(int date, int hour) : datetime((date << date_offset) + hour) {normalize();}
     DateTime(const DateTime & dt) : datetime(dt.datetime) {}
 
     bool operator<(DateTime other) const {
@@ -85,7 +86,7 @@ public:
 
 
     uint32_t operator-(DateTime other) {
-        return this->datetime - other.datetime;
+        return (3600*24*(this->date() - other.date())) + this->hour() - other.hour();
     }
 
     void update(uint32_t hour) {
@@ -127,12 +128,10 @@ public:
 
     void decrement(uint32_t secs){
         uint32_t hour = this->hour();
-        if(hour < secs){
-            hour = hour + 24*3600 - secs;
-            *this = DateTime(this->date() - 1, hour);
-        } else {
-            *this = DateTime(this->date(), hour - secs);
-        }
+        if(hour > secs)
+            this->updatereverse(hour - secs);
+        else
+            this->updatereverse(86400 - secs + hour);
     }
 
     void date_decrement(){
@@ -155,6 +154,14 @@ inline DateTime operator+(DateTime dt, int seconds) {
 inline DateTime operator-(DateTime dt, int seconds) {
     dt.decrement(seconds);
     return dt;
+}
+
+inline int operator+(const DateTime &dt1, const DateTime &dt2) {
+    return dt1.datetime + dt2.datetime;
+}
+
+inline int operator-(const DateTime &dt1, const DateTime &dt2) {
+    return dt1.datetime - dt2.datetime;
 }
 
 std::ostream & operator<<(std::ostream & os, const DateTime & dt);
@@ -181,7 +188,9 @@ struct ValidityPatternTime {
 
 enum ItemType {
     public_transport,
-    walking
+    walking,
+    extension,
+    guarantee
 };
 
 /** Étape d'un itinéraire*/
@@ -242,6 +251,7 @@ public :
 /** Classe abstraite que tous les calculateurs doivent implémenter */
 struct AbstractRouter {
     virtual std::vector<Path> compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day, bool clockwise = true) = 0;
+    virtual ~AbstractRouter() {}
 };
 
 }}

@@ -28,8 +28,14 @@ private:
 
 /// Exception levée lorsqu'on demande un membre qu'on ne connait pas
 struct unknown_member{};
-struct bad_type{};
 
+/*Macro qui permet de savoir si une classe implémente un membre :
+On l'utilise de la manière suivante :
+DECL_HAS_MEMBER(id)
+Reflect_id<Route>::value vaut true si le membre existe
+Cela génère ensuite une fonction permettant d'avoir le membre d'un objet :
+get_id(route)
+la fonction lève une exception lorsque l'objet n'a pas de membre*/
 #define DECL_HAS_MEMBER(MEM_NAME) \
 template <typename T> \
 struct Reflect_##MEM_NAME { \

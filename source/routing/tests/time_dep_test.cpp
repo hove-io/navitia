@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
-    BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 1);
     BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 1);
 }
 
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_fail){
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 2);
-    BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
+    BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 1);
     BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 2);
 }
 

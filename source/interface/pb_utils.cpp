@@ -101,6 +101,9 @@ std::string pb2json(const google::protobuf::Message* response, int depth){
                 case google::protobuf::FieldDescriptor::TYPE_INT32:
                     buffer << reflection->GetRepeatedInt32(*response, field, i);
                     break;
+                case google::protobuf::FieldDescriptor::TYPE_DOUBLE:
+                    buffer << reflection->GetRepeatedDouble(*response, field, i);
+                    break;
                 case google::protobuf::FieldDescriptor::TYPE_STRING:
                     buffer << "\"" << reflection->GetRepeatedString(*response, field, i) << "\"";
                     break;

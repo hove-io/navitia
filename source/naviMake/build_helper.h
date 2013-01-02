@@ -18,12 +18,13 @@ struct VJ {
     types::VehicleJourney * vj;
 
     /// Construit un nouveau vehicle journey
-    VJ(builder & b, const std::string &line_name, const std::string &validity_pattern);
+    VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string & block_id);
 
     /// Ajout un nouveau stopTime
     /// Lorsque le depart n'est pas specifié, on suppose que c'est le même qu'à l'arrivée
     /// Si le stopPoint n'est pas connu, on le crée avec un stopArea ayant le même nom
-    VJ& operator()(const std::string &stopPoint, int arrivee, int depart = -1);
+    VJ& operator()(const std::string &stopPoint, int arrivee, int depart = -1, uint32_t local_traffic_zone = std::numeric_limits<uint32_t>::max(),
+                   bool drop_off_allowed = true, bool pick_up_allowed = true);
 };
 
 struct SA {
@@ -55,11 +56,11 @@ struct builder{
     builder(const std::string & date) : begin(boost::gregorian::date_from_iso_string(date)) {}
 
     /// Crée un vehicle journey
-    VJ vj(const std::string &line_name, const std::string &validity_pattern = "11111111");
+    VJ vj(const std::string &line_name, const std::string &validity_pattern = "11111111", const std::string & block_id="");
 
     /// Crée un nouveau stop area
     SA sa(const std::string & name, double x = 0, double y = 0);
-    SA sa(const std::string & name, navitia::type::GeographicalCoord geo){return sa(name,geo.x, geo.y);}
+    SA sa(const std::string & name, navitia::type::GeographicalCoord geo){return sa(name,geo.lon(), geo.lat());}
 
     /// Crée une connexion
     void connection(const std::string & name1, const std::string & name2, float length);

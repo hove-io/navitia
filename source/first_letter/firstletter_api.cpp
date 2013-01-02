@@ -33,10 +33,12 @@ void create_pb(const std::vector<FirstLetter<nt::idx_t>::fl_quality>& result, co
             item->set_uri(data.pt_data.stop_points[result_item.idx].external_code);
             item->set_quality(result_item.quality);
             break;
-        case nt::Type_e::eWay:
-			place_mark->set_type(pbnavitia::WAY);
-            fill_pb_object(result_item.idx, data, place_mark->mutable_way(), 2);			item->set_name(data.geo_ref.ways[result_item.idx].name);
-//          item->set_uri(nt::EntryPoint::get_uri(data.pt_data.stop_points[result_item.idx]));
+        case nt::Type_e::eAddress:
+            place_mark->set_type(pbnavitia::ADDRESS);
+            //fill_pb_object(result_item.idx, data, place_mark->mutable_way(), 2);
+            fill_pb_object(result_item.idx, data, place_mark->mutable_address(), result_item.house_number,result_item.coord, 2);
+            item->set_name(data.geo_ref.ways[result_item.idx].name);
+            item->set_uri(data.geo_ref.ways[result_item.idx].external_code+":"+boost::lexical_cast<std::string>(result_item.house_number));
             item->set_quality(result_item.quality);
             break;
 
@@ -63,9 +65,9 @@ pbnavitia::Response firstletter(const std::string &name, const std::vector<nt::T
         case nt::Type_e::eCity:
             result = d.pt_data.city_first_letter.find_complete(name);
             break;
-        case nt::Type_e::eWay:
-            
-            result = d.geo_ref.fl.find_complete(name);
+        case nt::Type_e::eAddress:
+            //result = d.geo_ref.fl.find_complete(name);
+            result = d.geo_ref.find_ways(name);
             break;
         default: break;
         }

@@ -9,4 +9,6 @@ Description des services exposés
    interface/interface_lineschedule
    interface/interface_geodispatch
    interface/interface_ptreferential
+   interface/interface_timetables
+	
 

@@ -71,16 +71,25 @@ namespace webservice
     public:
 
         /**
-         * method appelé juste avant l'appel de l'api séléctionné
+         * Méthode appelée juste avant l'appel de l'api séléctionnée
          * il faut surcharger cette methode dans le worker pour ajouter des traitements
          */
         virtual void pre_compute(webservice::RequestData&, Data& ){}
         /**
-         * method appelé juste aprés l'appel de l'api séléctionné
+         * Méthode appelée juste aprés l'appel de l'api séléctionnée
          * il faut surcharger cette methode dans le worker pour ajouter des traitements
          */
         virtual void post_compute(webservice::RequestData&, webservice::ResponseData&){}
 
+        /** Méthode appelée si l'appele lève une exception standart
+         ** il faut surcharger cette methode dans le worker pour ajouter des traitements
+         **/
+        virtual void on_std_exception(const std::exception &, webservice::RequestData&, webservice::ResponseData&, Data &) {throw;}
+
+        /** Méthode appelée si l'appele lève une exception inconnue
+         ** il faut surcharger cette methode dans le worker pour ajouter des traitements
+         **/
+        virtual void on_unknown_exception(webservice::RequestData&, webservice::ResponseData&, Data &) {throw;}
 
         /** Fonction appelée lorsqu'une requête appelle
       *
@@ -93,28 +102,19 @@ namespace webservice
             std::string raw_params = request.raw_params;
             decode(raw_params);
             decode(request.data);
-            std::vector<std::string> tokens;
+            std::vector<std::string> tokens, tokens2;
 
-            boost::algorithm::split(tokens, raw_params, boost::algorithm::is_any_of("&"));
+            boost::algorithm::split(tokens, request.data, boost::algorithm::is_any_of("&"));
+            boost::algorithm::split(tokens2, raw_params, boost::algorithm::is_any_of("&"));
+            for(auto token : tokens2) tokens.push_back(token);
+
             for(std::string token : tokens) {
-                std::vector<std::string> elts;
-                boost::algorithm::split(elts, token, boost::algorithm::is_any_of("="));
-                if(elts.size() == 1 && elts[0] != "")
-                    request.params.insert(std::make_pair(boost::algorithm::to_lower_copy(elts[0]), ""));
-                else if(elts.size() >= 2 && elts[0] != "")
-                    request.params.insert(std::make_pair(boost::algorithm::to_lower_copy(elts[0]), elts[1]));
-            }
-
-            std::vector<std::string> tokens2;
-            boost::algorithm::split(tokens2, request.data, boost::algorithm::is_any_of("&"));
-            for(std::string token : tokens2) {
                 size_t pos = token.find("=");
                 if(pos != std::string::npos && token != "")
                     request.params.insert(std::make_pair(boost::algorithm::to_lower_copy(token.substr(0, pos)), token.substr(pos +1)));
                 else if(token.size() > 0 && token[0] != '=')
                     request.params.insert(std::make_pair(boost::algorithm::to_lower_copy(token), ""));
-            }
-            
+            }            
 
             size_t position = request.path.find_last_of('/');
             std::string api;
@@ -137,7 +137,15 @@ namespace webservice
 
                 boost::posix_time::ptime start(boost::posix_time::microsec_clock::local_time());
                 pre_compute(request, d);
-                ResponseData resp = apis[api](request, d);
+                ResponseData resp;
+              //  try{
+                    resp = apis[api](request, d);
+               /* } catch(const std::exception & e){
+                    on_std_exception(e, request, resp, d);
+                } catch(...){
+                    on_unknown_exception(request, resp, d);
+                }*/
+
                 resp.api = api;
                 post_compute(request, resp);
                 //@TODO not threadsafe
@@ -271,12 +279,12 @@ namespace webservice
                         << "<ul>";
 
             for(std::pair<std::string, ApiParameter> ap : api_metadata[api].params){
-                rd.response << "<li><b>" << ap.first << "</b> : ";
                 if(ap.second.mandatory){
-                    if(request.params.find(ap.first) == request.params.end())
-                        rd.response << " Absent ! </li>";
-                    else
-                        rd.response << " Présent</li>";
+                    rd.response << "<li><b>" << ap.first << "</b> : ";
+                        if(request.params.find(ap.first) == request.params.end())
+                            rd.response << " Absent ! </li>";
+                        else
+                            rd.response << " Présent</li>";
                 }
             }
 

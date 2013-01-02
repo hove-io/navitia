@@ -30,6 +30,7 @@ public:
     std::vector<navimake::types::District*> districts; //OK
     std::vector<navimake::types::Department*> departments; //OK
     std::vector<navimake::types::ValidityPattern*> validity_patterns;
+    std::vector<navimake::types::RoutePointConnection*> route_point_connections;
 
 
     /** Foncteur permettant de comparer les objets en passant des pointeurs vers ces objets */

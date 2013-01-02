@@ -38,23 +38,26 @@ struct ProximityList
     void add(GeographicalCoord coord, T element){
         items.push_back(Item(coord,element));
     }
+    void clear(){
+        items.clear();
+    }
 
     /// Construit l'indexe
     void build(){
-        std::sort(items.begin(), items.end(), [](const Item & a, const Item & b){return a.coord.x < b.coord.x;});
+        std::sort(items.begin(), items.end(), [](const Item & a, const Item & b){return a.coord < b.coord;});
     }
 
     /// Retourne tous les éléments dans un rayon de x mètres
     std::vector< std::pair<T, GeographicalCoord> > find_within(GeographicalCoord coord, double distance ) const {
-        double distance_degree = distance;
+//        double distance_degree = distance * GeographicalCoord::precision / 111320;
+        double distance_degree = distance / 111320;
         double coslat = 1;
-        if(coord.degrees){
-            double DEG_TO_RAD = 0.0174532925199432958;
-            coslat = ::cos(coord.y * DEG_TO_RAD);
-            distance_degree = distance / 111320; // Nombre de mètres dans un ° à l'Équateur
-        }
-        auto begin = std::lower_bound(items.begin(), items.end(), coord.x - coslat * distance_degree, [](const Item & i, double min){return i.coord.x < min;});
-        auto end = std::upper_bound(begin, items.end(), coord.x + distance_degree * coslat, [](double max, const Item & i){return max < i.coord.x;});
+
+        double DEG_TO_RAD = 0.0174532925199432958;
+        coslat = ::cos(coord.lat() * DEG_TO_RAD);
+
+        auto begin = std::lower_bound(items.begin(), items.end(), coord.lon() - coslat * distance_degree, [](const Item & i, double min){return i.coord.lon() < min;});
+        auto end = std::upper_bound(begin, items.end(), coord.lon() + distance_degree * coslat, [](double max, const Item & i){return max < i.coord.lon();});
         std::vector< std::pair<T, GeographicalCoord> > result;
         double max_dist = distance * distance;
         for(; begin != end; ++begin){
@@ -65,10 +68,6 @@ struct ProximityList
         return result;
     }
 
-    /// Retourne les k-éléments les plus proches
-    std::vector<T> find_k_nearest(GeographicalCoord , size_t ) const {
-        return std::vector<T>();
-    }
 
     /// Fonction de confort pour retrouver l'élément le plus proche dans l'indexe
     T find_nearest(double lon, double lat) const {

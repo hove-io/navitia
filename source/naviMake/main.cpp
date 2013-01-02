@@ -5,7 +5,7 @@
 #include "connectors.h"
 #include "gtfs_parser.h"
 #include "bdtopo_parser.h"
-
+#include "osm2nav.h"
 #include "utils/timer.h"
 
 #include <fstream>
@@ -18,7 +18,7 @@ namespace pt = boost::posix_time;
 
 int main(int argc, char * argv[])
 {
-    std::string type, input, output, date, topo_path;
+    std::string type, input, output, date, topo_path, osm_filename;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
@@ -26,6 +26,7 @@ int main(int argc, char * argv[])
         ("date,d", po::value<std::string>(&date), "Date de début")
         ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
         ("topo", po::value<std::string>(&topo_path), "Repertoire contenant la bd topo")
+        ("osm", po::value<std::string>(&osm_filename), "Fichier OpenStreetMap au format pbf")
         ("output,o", po::value<std::string>(&output)->default_value("data.nav"), "Fichier de sortie")
         ("version,v", "Affiche la version");
 
@@ -43,7 +44,7 @@ int main(int argc, char * argv[])
         std::cout << desc <<  "\n";
         return 1;
     }
-    if(!vm.count("topo")) {
+    if(!vm.count("topo") && !vm.count("osm")) {
         std::cout << "Pas de topologie chargee" << std::endl;
     }
     pt::ptime start, end;
@@ -62,10 +63,12 @@ int main(int argc, char * argv[])
 
         navimake::connectors::BDTopoParser topo_parser(topo_path);
         //gtfs ne contient pas le référentiel des villes, on le charges depuis la BDTOPO
-        topo_parser.load_city(data);        
+        topo_parser.load_city(data);
         topo_parser.load_georef(nav_data.geo_ref);
-        nav_data.set_cities(); // Assigne les villes aux voiries du filaire
+    } else if(vm.count("osm")){
+        navitia::georef::fill_from_osm(nav_data.geo_ref, osm_filename);
     }
+
     sn = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 
@@ -79,7 +82,7 @@ int main(int argc, char * argv[])
     }
     else if(type == "gtfs") {
         navimake::connectors::GtfsParser connector(input);
-        connector.fill(data);
+        connector.fill(data, date);
         nav_data.meta.production_date = connector.production_date;
     }
     else {
@@ -100,6 +103,9 @@ int main(int argc, char * argv[])
     std::cout << "city: " << data.cities.size() << std::endl;
     std::cout << "modes: " << data.modes.size() << std::endl;
     std::cout << "validity pattern : " << data.validity_patterns.size() << std::endl;
+    std::cout << "route point connections : " << data.route_point_connections.size() << std::endl;
+    std::cout << "voies (rues) : " << nav_data.geo_ref.ways.size() << std::endl;
+
 
     start = pt::microsec_clock::local_time();
     data.clean();
@@ -111,13 +117,19 @@ int main(int argc, char * argv[])
 
     start = pt::microsec_clock::local_time();
     data.transform(nav_data.pt_data);
+
     transform = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
-
     start = pt::microsec_clock::local_time();
-    nav_data.build_first_letter();
+
+    std::cout << "Construction de proximity list" << std::endl;
     nav_data.build_proximity_list();
+    std::cout << "Construction de external code" << std::endl;
     nav_data.build_external_code();
+    std::cout << "Assigne les villes aux voiries du filaire" << std::endl;
+    nav_data.set_cities(); // Assigne les villes aux voiries du filaire [depend des ext_code]
+    std::cout << "Construction de first letter" << std::endl;
+    nav_data.build_first_letter();
     std::cout << "On va construire les correspondances" << std::endl;
     {Timer t("Construction des correspondances");  nav_data.pt_data.build_connections();}
     first_letter = (pt::microsec_clock::local_time() - start).total_milliseconds();

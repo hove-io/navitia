@@ -2,7 +2,7 @@
 #include "gtfs_parser.h"
 namespace navimake {
 
-VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern) : b(b){
+VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string &block_id) : b(b){
     vj = new types::VehicleJourney();
     b.data.vehicle_journeys.push_back(vj);
 
@@ -25,9 +25,10 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     } else {
         vj->validity_pattern = vp_it->second;
     }
+    vj->block_id = block_id;
 }
 
-VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart){
+VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32_t local_trafic_zone, bool drop_off_allowed, bool pick_up_allowed){
     types::StopTime * st = new types::StopTime();
     b.data.stops.push_back(st);
     auto it = b.sps.find(sp_name);
@@ -56,6 +57,9 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart){
     st->departure_time = depart;
     st->vehicle_journey = vj;
     st->order = vj->stop_time_list.size();
+    st->local_traffic_zone = local_trafic_zone;
+    st->drop_off_allowed = drop_off_allowed;
+    st->pick_up_allowed = pick_up_allowed;
     vj->stop_time_list.push_back(st);
 
     return *this;
@@ -66,8 +70,8 @@ SA::SA(builder & b, const std::string & sa_name, double x, double y) : b(b) {
     b.data.stop_areas.push_back(sa);
     sa->name = sa_name;
     sa->external_code = sa_name;
-    sa->coord.x = x;
-    sa->coord.y = y;
+    sa->coord.set_lon(x);
+    sa->coord.set_lat(y);
     b.sas[sa_name] = sa;
 }
 
@@ -76,15 +80,15 @@ SA & SA::operator()(const std::string & sp_name, double x, double y){
     b.data.stop_points.push_back(sp);
     sp->name = sp_name;
     sp->external_code = sp_name;
-    sp->coord.x = x;
-    sp->coord.y = y;
+    sa->coord.set_lon(x);
+    sa->coord.set_lat(y);
     sp->stop_area = this->sa;
     b.sps[sp_name] = sp;
     return *this;
 }
 
-VJ builder::vj(const std::string &line_name, const std::string &validity_pattern){
-    return VJ(*this, line_name, validity_pattern);
+VJ builder::vj(const std::string &line_name, const std::string &validity_pattern, const std::string & block_id){
+    return VJ(*this, line_name, validity_pattern, block_id);
 }
 
 SA builder::sa(const std::string &name, double x, double y){
@@ -109,6 +113,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     navitia::type::PT_Data result;
     connectors::build_routes(data);
     connectors::build_route_points(data);
+    connectors::build_route_point_connections(data);
 
     data.clean();
     data.sort();

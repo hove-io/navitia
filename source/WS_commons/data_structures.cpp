@@ -21,6 +21,14 @@ namespace webservice {
 
 
     ResponseData::ResponseData() : content_type("text/plain"), status_code(200), charset("utf-8"){}
+    ResponseData & ResponseData::operator=(const ResponseData &resp) {
+        content_type = resp.content_type;
+        response.str(resp.response.str());
+        status_code = resp.status_code;
+        charset = resp.charset;
+        api = resp.api;
+        return *this;
+    }
 
     RequestData::RequestData() : params_are_valid(true) {}
 

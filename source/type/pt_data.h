@@ -21,6 +21,7 @@ struct PT_Data : boost::noncopyable{
     std::vector<ModeType> mode_types;
     std::vector<City> cities;
     std::vector<Connection> connections;
+    std::vector<RoutePointConnection> route_point_connections;
     std::vector<RoutePoint> route_points;
 
     std::vector<District> districts;
@@ -76,7 +77,7 @@ struct PT_Data : boost::noncopyable{
                 & company_map & country_map
                 // Les proximity list
                 & stop_area_proximity_list & stop_point_proximity_list & city_proximity_list
-                & connections & stop_point_connections;
+                & connections & stop_point_connections & route_point_connections;
     }
 
     /** Initialise tous les indexes

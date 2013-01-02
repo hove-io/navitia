@@ -19,7 +19,10 @@ bool ValidityPattern::is_valid(int duration){
 
 void ValidityPattern::add(boost::gregorian::date day){
     long duration = (day - beginning_date).days();
-    add(duration);
+    if(is_valid(duration))
+        add(duration);
+    else
+        std::cerr << day << " " << beginning_date << " " <<  std::flush;
 }
 
 void ValidityPattern::add(int duration){
@@ -132,6 +135,10 @@ bool ValidityPattern::operator <(const ValidityPattern &other) const {
 
 bool Connection::operator<(const Connection& other) const{
     return *(this->departure_stop_point) < *(other.departure_stop_point);
+}
+
+bool RoutePointConnection::operator<(const RoutePointConnection& other) const {
+    return *(this->departure_route_point) < *(other.departure_route_point);
 }
 bool StopTime::operator<(const StopTime& other) const {
     if(this->vehicle_journey == other.vehicle_journey){
@@ -329,6 +336,7 @@ nt::StopTime StopTime::Transformer::operator()(const StopTime& stop){
     nt_stop.properties[nt::StopTime::ODT] = stop.ODT;
     nt_stop.properties[nt::StopTime::DROP_OFF] = stop.drop_off_allowed;
     nt_stop.properties[nt::StopTime::PICK_UP] = stop.pick_up_allowed;
+    nt_stop.local_traffic_zone = stop.local_traffic_zone;
 
     nt_stop.route_point_idx = stop.route_point->idx;
     nt_stop.vehicle_journey_idx = stop.vehicle_journey->idx;
@@ -346,6 +354,24 @@ nt::Connection Connection::Transformer::operator()(const Connection& connection)
     nt_connection.duration = connection.duration;
     nt_connection.max_duration = connection.max_duration;
     return nt_connection;
+}
+
+nt::RoutePointConnection 
+    RoutePointConnection::Transformer::operator()(const RoutePointConnection& route_point_connection) {
+    nt::RoutePointConnection nt_rpc;
+    nt_rpc.id = route_point_connection.id;
+    nt_rpc.idx = route_point_connection.idx;
+    nt_rpc.external_code = route_point_connection.external_code;
+    nt_rpc.departure_route_point_idx = route_point_connection.departure_route_point->idx;
+    nt_rpc.destination_route_point_idx = route_point_connection.destination_route_point->idx;    
+    nt_rpc.length = route_point_connection.length;
+    switch(route_point_connection.route_point_connection_kind) {
+        case Extension: nt_rpc.connection_kind = nt::ConnectionKind::extension; break;
+        case Guarantee: nt_rpc.connection_kind = nt::ConnectionKind::guarantee; break;
+        case UndefinedRoutePointConnectionKind: nt_rpc.connection_kind = nt::ConnectionKind::undefined; break;
+    };
+
+    return nt_rpc;
 }
 
 nt::RoutePoint RoutePoint::Transformer::operator()(const RoutePoint& route_point){

@@ -2,7 +2,8 @@
 #include "pt_data.h"
 #include <boost/serialization/version.hpp>
 #include <boost/thread/shared_mutex.hpp>
-#include "street_network/types.h"
+//#include "street_network/types.h"
+#include "georef/georef.h"
 #include "utils/logger.h"
 #include "utils/configuration.h"
 #include "boost/utility.hpp"
@@ -21,7 +22,7 @@ namespace navitia { namespace type {
 class Data : boost::noncopyable{
 public:
 
-    static const unsigned int data_version = 8; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
+    static const unsigned int data_version = 12; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
     int nb_threads; //< Nombre de threads. IMPORTANT ! Sans cette variable, ça ne compile pas
     unsigned int version; //< Numéro de version des données chargées
     bool loaded; //< Est-ce que lse données ont été chargées

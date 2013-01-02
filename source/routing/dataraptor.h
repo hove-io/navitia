@@ -2,23 +2,15 @@
 #include "raptor_utils.h"
 #include "type/pt_data.h"
 namespace navitia { namespace routing { namespace raptor {
-typedef std::pair<int, int> pair_int;
-typedef std::vector<type_retour> map_int_pint_t;
-typedef std::map<navitia::type::idx_t, navitia::type::Connection> list_connections;
-typedef std::vector<navitia::type::idx_t> vector_idx;
-struct dataRAPTOR {
 
-    struct Route_t {
-        int nbTrips, nbStops;
-        navitia::type::idx_t firstStopTime, idx;
-        navitia::type::idx_t vp;
-    };
+struct dataRAPTOR {
 
     //Données statiques
     const static uint32_t SECONDS_PER_DAY = 86400;
     std::vector<navitia::type::Connection> foot_path;
     std::vector<pair_int> footpath_index;
-    std::vector<Route_t> routes;
+    std::multimap<navitia::type::idx_t, navitia::type::RoutePointConnection> footpath_rp_forward;
+    std::multimap<navitia::type::idx_t, navitia::type::RoutePointConnection> footpath_rp_backward;
     std::vector<uint32_t> arrival_times;
     std::vector<uint32_t> departure_times;
     std::vector<std::bitset<366>> validity_patterns;
@@ -26,12 +18,8 @@ struct dataRAPTOR {
     std::vector<type::idx_t> st_idx_backward;
     std::vector<type::idx_t> vp_idx_forward;
     std::vector<type::idx_t> vp_idx_backward;
-    std::vector<uint32_t> first_stop_time;
-    std::vector<uint32_t> nb_trips;
-    std::vector<pair_int> sp_indexrouteorder;
-    std::vector<pair_int> sp_routeorder_const;
-    std::vector<pair_int> sp_indexrouteorder_reverse;
-    std::vector<pair_int> sp_routeorder_const_reverse;
+    std::vector<size_t> first_stop_time;
+    std::vector<size_t> nb_trips;
     map_int_pint_t retour_constant;
     map_int_pint_t retour_constant_reverse;
 
