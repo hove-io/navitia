@@ -19,8 +19,11 @@ Le numéro de patch est utilisé afin d'appliquer des corrections sur une versio
 
 Chaque version est de plus surnommée d'un nom de station ou de gare célèbre (par exemple NAViTiA "Gare d'Austerlitz")
 
+Architecture fonctionnelle
+--------------------------
+.. image:: ../_static/Archi_fonctionelle.png
+
 Architecture logicielle
 -----------------------
-.. image:: ../_static/ArchiLogicielle.PNG
-
+.. image:: ../_static/Archi_logicielle.png
 

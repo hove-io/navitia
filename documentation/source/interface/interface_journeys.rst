@@ -1,5 +1,5 @@
-Journeys
-========
+Journeys et journeysarray
+=========================
 
 Le service Journeys est en charge des calculs d'itinéraires multi-modaux, multi-transporteur.
 Cette fonction est exposé sous différentes API de type GET
