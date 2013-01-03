@@ -144,7 +144,7 @@ std::vector<std::pair<type::idx_t, double> > get_stop_points(const type::EntryPo
 
 
 pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin, const type::EntryPoint &destination,
-                                  const std::vector<std::string> &datetimes_str, bool clockwise,
+                                  const std::vector<std::string> &datetimes_str, bool clockwise, const float walking_speed,
                                   std::multimap<std::string, std::string> forbidden,
                                   streetnetwork::StreetNetwork & worker) {
     pbnavitia::Response response;
@@ -214,9 +214,9 @@ pbnavitia::Response make_response(RAPTOR &raptor, const type::EntryPoint &origin
         int time = datetime.time_of_day().total_seconds();
 
         if(clockwise)
-            tmp = raptor.compute_all(departures, destinations, DateTime(day, time), borne, forbidden);
+            tmp = raptor.compute_all(departures, destinations, DateTime(day, time), borne, walking_speed, forbidden);
         else
-            tmp = raptor.compute_reverse_all(departures, destinations, DateTime(day, time), borne, forbidden);
+            tmp = raptor.compute_reverse_all(departures, destinations, DateTime(day, time), borne, walking_speed, forbidden);
 
         // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
         if(datetimes.size() == 1){

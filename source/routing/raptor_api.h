@@ -10,6 +10,6 @@ pbnavitia::Response make_response(RAPTOR &raptor,
                                   const type::EntryPoint &origin,
                                   const type::EntryPoint &destination,
                                   const std::vector<std::string> &datetimes,
-                                  bool clockwise, std::multimap<std::string, std::string> forbidden,
+                                  bool clockwise, const float walking_speed, std::multimap<std::string, std::string> forbidden,
                                   streetnetwork::StreetNetwork & worker);
 }}}

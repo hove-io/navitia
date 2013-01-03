@@ -172,6 +172,7 @@ struct StopArea : public TransmodelHeader, Nameable{
 
     bool main_stop_area;
     bool main_connection;
+    bool is_adapted;
 
     struct Transformer{
         inline navitia::type::StopArea operator()(const StopArea* stop_area){return this->operator()(*stop_area);}
@@ -179,7 +180,7 @@ struct StopArea : public TransmodelHeader, Nameable{
     };
 
 
-    StopArea(): properties(0), main_stop_area(false), main_connection(false) {}
+    StopArea(): properties(0), main_stop_area(false), main_connection(false), is_adapted(false) {}
 
     bool operator<(const StopArea& other) const;
 };
@@ -378,12 +379,14 @@ struct StopPoint : public TransmodelHeader, Nameable{
     Mode* mode;
     City* city;
 
+    bool is_adapted;
+
     struct Transformer{
         inline nt::StopPoint operator()(const StopPoint* stop_point){return this->operator()(*stop_point);}   
         nt::StopPoint operator()(const StopPoint& stop_point);   
     };
 
-    StopPoint(): fare_zone(0), stop_area(NULL), mode(NULL), city(NULL) {}
+    StopPoint(): fare_zone(0), stop_area(NULL), mode(NULL), city(NULL), is_adapted(false) {}
 
     bool operator<(const StopPoint& other) const;
 

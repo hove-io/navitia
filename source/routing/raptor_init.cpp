@@ -2,13 +2,13 @@
 namespace navitia { namespace routing { namespace raptor { namespace init {
 
 std::vector<Departure_Type> getDepartures(const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations,
-                                          bool clockwise, const map_retour_t &retour, const type::Data &data) {
+                                          bool clockwise, const map_retour_t &retour, const type::Data &data, const float walking_speed) {
       std::vector<Departure_Type> result;
 
-      auto pareto_front = getParetoFront(clockwise, departs, destinations, retour, data);
+      auto pareto_front = getParetoFront(clockwise, departs, destinations, retour, data, walking_speed);
       result.insert(result.end(), pareto_front.begin(), pareto_front.end());
 
-      auto walking_solutions = getWalkingSolutions(clockwise, departs, destinations, pareto_front.back(), retour, data);
+      auto walking_solutions = getWalkingSolutions(clockwise, departs, destinations, pareto_front.back(), retour, data, walking_speed);
 
       for(auto s : walking_solutions) {
           bool find = false;
@@ -27,7 +27,7 @@ std::vector<Departure_Type> getDepartures(const std::vector<std::pair<type::idx_
 }
 
 
-std::vector<Departure_Type> getDepartures(const std::vector<std::pair<type::idx_t, double> > &departs, const DateTime &dep, bool clockwise, const type::Data &data) {
+std::vector<Departure_Type> getDepartures(const std::vector<std::pair<type::idx_t, double> > &departs, const DateTime &dep, bool clockwise, const type::Data &data, const float walking_speed) {
     std::vector<Departure_Type> result;
 
     for(auto dep_dist : departs) {
@@ -35,7 +35,7 @@ std::vector<Departure_Type> getDepartures(const std::vector<std::pair<type::idx_
             Departure_Type d;
             d.count = 0;
             d.rpidx = rpidx;
-            d.walking_time = dep_dist.second/1.38;
+            d.walking_time = dep_dist.second/walking_speed;
             if(clockwise)
                 d.arrival = dep + d.walking_time;
             else
@@ -48,7 +48,7 @@ std::vector<Departure_Type> getDepartures(const std::vector<std::pair<type::idx_
 }
 
 
-std::vector<Departure_Type> getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations, const map_retour_t &retour, const type::Data &data) {
+std::vector<Departure_Type> getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations, const map_retour_t &retour, const type::Data &data, const float walking_speed) {
     std::vector<Departure_Type> result;
 
     DateTime best_dt, best_dt_rp;
@@ -61,14 +61,14 @@ std::vector<Departure_Type> getParetoFront(bool clockwise, const std::vector<std
         for(auto spid_dist : destinations) {
             for(auto rpidx : data.pt_data.stop_points[spid_dist.first].route_point_list) {
                 if((retour[i][rpidx].type != uninitialized) &&
-                        ((((clockwise && ((retour[i][rpidx].departure-(spid_dist.second/1.38)) > best_dt)))) || (!clockwise && ((retour[i][rpidx].arrival+(spid_dist.second/1.38)) < best_dt)))) {
+                        ((((clockwise && ((retour[i][rpidx].departure-(spid_dist.second/walking_speed)) > best_dt)))) || (!clockwise && ((retour[i][rpidx].arrival+(spid_dist.second/1.38)) < best_dt)))) {
                     best_rp = rpidx;
                     if(clockwise) {
                         best_dt_rp = retour[i][rpidx].arrival;
-                        best_dt = retour[i][rpidx].arrival-(spid_dist.second/1.38);
+                        best_dt = retour[i][rpidx].arrival-(spid_dist.second/walking_speed);
                     } else {
                         best_dt_rp = retour[i][rpidx].departure;
-                        best_dt = retour[i][rpidx].departure+(spid_dist.second/1.38);
+                        best_dt = retour[i][rpidx].departure+(spid_dist.second/walking_speed);
                     }
                 }
             }
@@ -86,14 +86,14 @@ std::vector<Departure_Type> getParetoFront(bool clockwise, const std::vector<std
                 s.upper_bound = last_time;
                 for(auto spid_dep : departs) {
                     if(data.pt_data.route_points[final_rpidx].stop_point_idx == spid_dep.first) {
-                        s.upper_bound = s.upper_bound + (spid_dep.second/1.38);
+                        s.upper_bound = s.upper_bound + (spid_dep.second/walking_speed);
                     }
                 }
             } else {
                 s.upper_bound = last_time;
                 for(auto spid_dep : departs) {
                     if(data.pt_data.route_points[final_rpidx].stop_point_idx == spid_dep.first) {
-                        s.upper_bound = s.upper_bound - (spid_dep.second/1.38);
+                        s.upper_bound = s.upper_bound - (spid_dep.second/walking_speed);
                     }
                 }
             }
@@ -110,7 +110,7 @@ std::vector<Departure_Type> getParetoFront(bool clockwise, const std::vector<std
 
 
 std::vector<Departure_Type> getWalkingSolutions(bool clockwise, const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations,
-                                                Departure_Type best, const map_retour_t &retour, const type::Data &data) {
+                                                Departure_Type best, const map_retour_t &retour, const type::Data &data, const float walking_speed) {
     std::vector<Departure_Type> result;
 
     std::/*unordered_*/map<type::idx_t, Departure_Type> tmp;
@@ -124,9 +124,9 @@ std::vector<Departure_Type> getWalkingSolutions(bool clockwise, const std::vecto
                 if(retour[i][rpidx].type != uninitialized) {
                     float lost_time;
                     if(clockwise)
-                        lost_time = retour[i][rpidx].departure-(spid_dist.second/1.38) - best.arrival;
+                        lost_time = retour[i][rpidx].departure-(spid_dist.second/walking_speed) - best.arrival;
                     else
-                        lost_time = retour[i][rpidx].arrival+(spid_dist.second/1.38) - best.arrival;
+                        lost_time = retour[i][rpidx].arrival+(spid_dist.second/walking_speed) - best.arrival;
 
                     float walking_time = getWalkingTime(i, rpidx, departs, destinations, clockwise, retour, data);
 
@@ -148,14 +148,14 @@ std::vector<Departure_Type> getWalkingSolutions(bool clockwise, const std::vecto
                             s.upper_bound = last_time;
                             for(auto spid_dep : departs) {
                                 if(data.pt_data.route_points[final_rpidx].stop_point_idx == spid_dep.first) {
-                                    s.upper_bound = s.upper_bound + (spid_dep.second/1.38);
+                                    s.upper_bound = s.upper_bound + (spid_dep.second/walking_speed);
                                 }
                             }
                         } else {
                             s.upper_bound = last_time;
                             for(auto spid_dep : departs) {
                                 if(data.pt_data.route_points[final_rpidx].stop_point_idx == spid_dep.first) {
-                                    s.upper_bound = s.upper_bound - (spid_dep.second/1.38);
+                                    s.upper_bound = s.upper_bound - (spid_dep.second/walking_speed);
                                 }
                             }
                         }

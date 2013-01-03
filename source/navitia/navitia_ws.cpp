@@ -310,7 +310,11 @@ public:
         } else {
             datetimes.push_back(boost::get<std::string>(request.parsed_params["datetime"].value));
         }
-        pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, datetimes, clockwise, forbidden, *street_network_worker);
+
+        float walking_speed = 1.38;
+        if(request.parsed_params.find("walking_speed") != request.parsed_params.end())
+            walking_speed = boost::get<double>(request.parsed_params["walking_speed"].value);
+        pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, datetimes, clockwise, walking_speed, forbidden, *street_network_worker);
 
         rd.status_code = 200;
 
@@ -512,6 +516,7 @@ public:
             add_param(api, "forbiddenline[]", "Lignes interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);
             add_param(api, "forbiddenmode[]", "Modes interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);
             add_param(api, "forbiddenroute[]", "Routes interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);
+            add_param(api, "walking_speed", "Vitesse de la marche à pied en m/s", ApiParameter::DOUBLE, false);
         }
 
         register_api("load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");

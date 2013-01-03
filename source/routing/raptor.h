@@ -45,7 +45,7 @@ struct RAPTOR : public AbstractRouter
 
     ///Initialise les structure retour et b_dest
     void clear_and_init(std::vector<init::Departure_Type> departs,
-              std::vector<std::pair<type::idx_t, double> > destinations, DateTime borne, const bool clockwise, const bool clear);
+              std::vector<std::pair<type::idx_t, double> > destinations, DateTime borne, const bool clockwise, const bool clear, const float walking_speed);
 
     ///Lance un calcul d'itinéraire entre deux stop areas
     std::vector<Path> compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
@@ -54,31 +54,31 @@ struct RAPTOR : public AbstractRouter
     std::vector<Path> compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
                               int departure_day, DateTime borne, bool clockwise = true);
     ///Construit tous chemins trouvés
-    std::vector<Path> makePathes(std::vector<std::pair<type::idx_t, double> > destinations, DateTime dt);
+    std::vector<Path> makePathes(std::vector<std::pair<type::idx_t, double> > destinations, DateTime dt, const float walking_speed);
     ///Construit tous les chemins trouvés, lorsque le calcul est lancé dans le sens inverse
-    std::vector<Path> makePathesreverse(std::vector<std::pair<type::idx_t, double> > destinations, DateTime dt);
+    std::vector<Path> makePathesreverse(std::vector<std::pair<type::idx_t, double> > destinations, DateTime dt, const float walking_speed);
 
     ///Calcul d'itinéraires dans le sens horaire à partir de plusieurs stop points de départs, vers plusieurs stoppoints d'arrivée, à une heure donnée
     std::vector<Path> 
     compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                 const std::vector<std::pair<type::idx_t, double> > &destinations,
-                const DateTime &dt_depart, const DateTime &borne = DateTime::inf,
+                const DateTime &dt_depart, const DateTime &borne = DateTime::inf, const float walking_speed=1.38,
                 const std::multimap<std::string, std::string> & forbidden = std::multimap<std::string, std::string>());
     ///Calcul d'itinéraires dans le sens horaire à partir de plusieurs stop points de départs, vers plusieurs stoppoints d'arrivée, à partir d'une collection horaires
     std::vector<Path> 
     compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                 const std::vector<std::pair<type::idx_t, double> > &destinations,
-                std::vector<DateTime> dt_departs, const DateTime &borne);
+                std::vector<DateTime> dt_departs, const DateTime &borne, const float walking_speed=1.38);
     ///Calcul d'itinéraires dans le sens horaire inversé à partir de plusieurs stop points de départs, vers plusieurs stoppoints d'arrivée, à une heure donnée
     std::vector<Path> 
     compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                         const std::vector<std::pair<type::idx_t, double> > &destinations,
-                        std::vector<DateTime> dt_departs, const DateTime &borne); 
+                        std::vector<DateTime> dt_departs, const DateTime &borne, const float walking_speed=1.38);
     ///Calcul d'itinéraires dans le sens horaire inversé à partir de plusieurs stop points de départs, vers plusieurs stoppoints d'arrivée, à partir d'une collection horaires
     std::vector<Path> 
     compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                         const std::vector<std::pair<type::idx_t, double> > &destinations,
-                        const DateTime &dt_depart, const DateTime &borne = DateTime::min,
+                        const DateTime &dt_depart, const DateTime &borne = DateTime::min, const float walking_speed=1.38,
                         const std::multimap<std::string, std::string> & forbidden = std::multimap<std::string, std::string>());
 
     /// Désactive les routes qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
