@@ -1,19 +1,19 @@
-Journeys
-========
+Journeys et journeysarray
+=========================
 
-La fonction Journeys est en charge des calculs d'itinéraires multi-modaux, multi-transporteur.
+Le service Journeys est en charge des calculs d'itinéraires multi-modaux, multi-transporteur.
 Cette fonction est exposé sous différentes API de type GET
 
   * journeys: retourne les différents types d'itinéraires pertinents par rapport à une demande
-  * journeysarray: retourne la liste des itinéraires "arrivée au plus tôt" pour une liste d'horaire. Pour chaque horaire, une seule réponse sera fournit, celle-ci pouvant être "pas de solution".
+  * journeysarray: retourne une liste d'itinéraires "arrivée au plus tôt" associé à une liste d'horaire demandé. Pour chaque horaire, une seule réponse sera fournit, celle-ci pouvant être "pas de solution".
 
 Paramètres d'entrée
 *******************
 
-Comme toute les fonctions exposées de NAViTiA, le calcul d'itinéraire accepte des requêtes GET ou POST. 
+Comme tous les services exposés de NAViTiA, le calcul d'itinéraire accepte des requêtes GET ou POST. 
 Il est toutefois conseillé d'utiliser la méthode POST sur ce type de requête, les URI pouvant être assez longue.
 
-Certains paramètres sont partagés pour toutes les API de calcul d'itinéraire. 
+Certains paramètres sont partagés sur les 2 API de calcul d'itinéraire. 
 
 Paramètres généraux
 -------------------
