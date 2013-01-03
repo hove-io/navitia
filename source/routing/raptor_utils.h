@@ -36,17 +36,17 @@ struct type_retour {
     type_retour(const DateTime & arrival, const DateTime & departure) : stop_time_idx(navitia::type::invalid_idx),
         rpid_embarquement(navitia::type::invalid_idx), arrival(arrival), departure(departure), type(depart) {}
 
-    type_retour(const type::StopTime & st, const DateTime & date, int embarquement, bool clockwise) :
+    type_retour(const type::StopTime & st, const DateTime & date, int embarquement, bool clockwise, uint32_t gap) :
         stop_time_idx(st.idx), rpid_embarquement(embarquement),
         type(vj) {
         if(clockwise) {
             arrival = date;
             departure = arrival;
-            departure.update(st.departure_time);
+            departure.update(!st.is_frequency() ? st.departure_time : st.start_time +gap);
         } else {
             departure = date;
             arrival = departure;
-            arrival.updatereverse(st.arrival_time);
+            arrival.updatereverse(!st.is_frequency() ? st.arrival_time : st.start_time + gap);
         }
         departure.normalize();
         arrival.normalize();
@@ -71,16 +71,12 @@ struct type_retour {
 };
 
 struct best_dest {
-//    typedef std::pair<unsigned int, int> idx_dist;
-
-//    std::unordered_map<unsigned int, float> map_date_time;
     std::vector<float> rpidx_distance;
     type_retour best_now;
     unsigned int best_now_rpid;
     unsigned int count;
 
     void ajouter_destination(unsigned int rpid, const float dist_to_dest) {
-//        map_date_time[rpid] = dist_to_dest;
         rpidx_distance[rpid] = dist_to_dest;
     }
 
@@ -89,9 +85,8 @@ struct best_dest {
     bool ajouter_best(unsigned int rpid, const type_retour &t, int cnt, bool clockwise = true) {
         if(!clockwise)
             return ajouter_best_reverse(rpid, t, cnt);
-//        auto it = map_date_time.find(rpid);
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
-            if(t.arrival + rpidx_distance[rpid] <= best_now.arrival) {
+            if((t.arrival + rpidx_distance[rpid]) <= best_now.arrival) {
                 best_now = t;
                 best_now.arrival = best_now.arrival + rpidx_distance[rpid];
                 best_now.departure = best_now.departure + rpidx_distance[rpid];
@@ -104,9 +99,6 @@ struct best_dest {
     }
 
     bool ajouter_best_reverse(unsigned int rpid, const type_retour &t, int cnt) {
-//        auto it = map_date_time.find(rpid);
-//        if(it != map_date_time.end()) {
-
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
             if(t.departure != DateTime::min && (t.departure - rpidx_distance[rpid]) >= best_now.departure) {
                 best_now = t;

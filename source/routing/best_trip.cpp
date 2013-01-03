@@ -3,10 +3,7 @@
 namespace navitia { namespace routing {
 
 
-
-
-
-int earliest_trip(const type::Route & route, const unsigned int order, const DateTime &dt, const type::Data &data) {
+std::pair<type::idx_t, uint32_t> earliest_trip(const type::Route & route, const unsigned int order, const DateTime &dt, const type::Data &data) {
     //On cherche le plus petit stop time de la route >= dt.hour()
     std::vector<uint32_t>::const_iterator begin = data.dataRaptor.departure_times.begin() +
             data.dataRaptor.first_stop_time[route.idx] +
@@ -22,25 +19,35 @@ int earliest_trip(const type::Route & route, const unsigned int order, const Dat
 
     //On renvoie le premier trip valide
     for(; it != end; ++it) {
+        const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]];
         if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date)
-                && data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]].pick_up_allowed())
-            return data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]].vehicle_journey_idx;
+                && st.pick_up_allowed()
+                && (!st.is_frequency() || ((st.start_time%raptor::dataRAPTOR::SECONDS_PER_DAY<st.end_time%raptor::dataRAPTOR::SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
+                                       || ((st.start_time%raptor::dataRAPTOR::SECONDS_PER_DAY>st.end_time%raptor::dataRAPTOR::SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour())))) {
+            return std::make_pair(st.vehicle_journey_idx,
+                                  !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
+        }
         ++idx;
     }
 
     //Si on en a pas trouvé, on cherche le lendemain
 
     ++date;
+
     idx = begin - data.dataRaptor.departure_times.begin();
     for(it = begin; it != end; ++it) {
+        const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]];
         if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date)
-                && data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]].pick_up_allowed())
-            return data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]].vehicle_journey_idx;
+                && st.pick_up_allowed()
+                && (!st.is_frequency() || ((st.start_time%raptor::dataRAPTOR::SECONDS_PER_DAY<st.end_time%raptor::dataRAPTOR::SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
+                                       || ((st.start_time%raptor::dataRAPTOR::SECONDS_PER_DAY>st.end_time%raptor::dataRAPTOR::SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
+            return std::make_pair(st.vehicle_journey_idx,
+                                  !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
         ++idx;
     }
 
     //Cette route ne comporte aucun trip compatible
-    return -1;
+    return std::make_pair(type::invalid_idx, 0);
 }
 
 
@@ -52,7 +59,7 @@ int earliest_trip(const type::Route & route, const unsigned int order, const Dat
 
 
 
-int tardiest_trip(const type::Route & route, const unsigned int order, const DateTime &dt, const type::Data &data) {
+std::pair<type::idx_t, uint32_t> tardiest_trip(const type::Route & route, const unsigned int order, const DateTime &dt, const type::Data &data) {
     //On cherche le plus grand stop time de la route <= dt.hour()
     const auto begin = data.dataRaptor.arrival_times.begin() +
                        data.dataRaptor.first_stop_time[route.idx] +
@@ -68,9 +75,13 @@ int tardiest_trip(const type::Route & route, const unsigned int order, const Dat
     auto date = dt.date();
     //On renvoie le premier trip valide
     for(; it != end; ++it) {
+        const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]];
         if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date)
-                && data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]].drop_off_allowed())
-            return data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]].vehicle_journey_idx;
+                && st.drop_off_allowed()
+                && (!st.is_frequency() || ((st.start_time%data.dataRaptor.SECONDS_PER_DAY<st.end_time%data.dataRaptor.SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
+                    || ((st.start_time%data.dataRaptor.SECONDS_PER_DAY>st.end_time%data.dataRaptor.SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
+            return std::make_pair(st.vehicle_journey_idx,
+                                  !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
         ++idx;
     }
 
@@ -79,16 +90,20 @@ int tardiest_trip(const type::Route & route, const unsigned int order, const Dat
         --date;
         idx = begin - data.dataRaptor.arrival_times.begin();
         for(it = begin; it != end; ++it) {
+            const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]];
             if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date)
-                    && data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]].drop_off_allowed())
-                return data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]].vehicle_journey_idx;
+                    && st.drop_off_allowed()
+                    && (!st.is_frequency() || ((st.start_time%data.dataRaptor.SECONDS_PER_DAY<st.end_time%data.dataRaptor.SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
+                        || ((st.start_time%data.dataRaptor.SECONDS_PER_DAY>st.end_time%data.dataRaptor.SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
+                return std::make_pair(st.vehicle_journey_idx,
+                                      !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
             ++idx;
         }
     }
 
 
     //Cette route ne comporte aucun trip compatible
-    return -1;
+    return std::make_pair(type::invalid_idx, 0);
 }
 
 

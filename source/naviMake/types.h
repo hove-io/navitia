@@ -393,6 +393,9 @@ struct StopTime {
     int idx;
     int arrival_time; ///< En secondes depuis minuit
     int departure_time; ///< En secondes depuis minuit
+    int start_time; /// Si horaire en fréquence
+    int end_time; /// Si horaire en fréquence
+    int headway_secs; /// Si horaire en fréquence
     VehicleJourney* vehicle_journey;
     RoutePoint* route_point;
     StopPoint * tmp_stop_point;// ne pas remplir obligatoirement
@@ -400,6 +403,7 @@ struct StopTime {
     bool ODT;
     bool pick_up_allowed;
     bool drop_off_allowed;
+    bool is_frequency;
     uint32_t local_traffic_zone;
 
     struct Transformer{
@@ -407,8 +411,9 @@ struct StopTime {
         navitia::type::StopTime operator()(const StopTime& stop);
     };
 
-    StopTime(): arrival_time(0), departure_time(0), vehicle_journey(NULL), route_point(NULL), order(0), 
-        ODT(false), pick_up_allowed(false), drop_off_allowed(false), local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
+    StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<int>::max()), end_time(std::numeric_limits<int>::max()),
+        headway_secs(std::numeric_limits<int>::max()), vehicle_journey(NULL), route_point(NULL), order(0),
+        ODT(false), pick_up_allowed(false), drop_off_allowed(false), is_frequency(false), local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
 
 
     bool operator<(const StopTime& other) const;

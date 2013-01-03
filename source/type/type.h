@@ -495,10 +495,14 @@ struct StopTime {
     static const uint8_t PICK_UP = 0;
     static const uint8_t DROP_OFF = 1;
     static const uint8_t ODT = 2;
+    static const uint8_t IS_FREQUENCY = 3;
 
     idx_t idx;
     uint32_t arrival_time; ///< En secondes depuis minuit
     uint32_t departure_time; ///< En secondes depuis minuit
+    uint32_t start_time; /// Si horaire en fréquence
+    uint32_t end_time; /// Si horaire en fréquence
+    uint32_t headway_secs; /// Si horaire en fréquence
     idx_t vehicle_journey_idx;
     idx_t route_point_idx;
     uint32_t local_traffic_zone;
@@ -507,13 +511,15 @@ struct StopTime {
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}
+    bool is_frequency() const{return properties[IS_FREQUENCY];}
 
-    StopTime(): arrival_time(0), departure_time(0), vehicle_journey_idx(invalid_idx), route_point_idx(invalid_idx),
-                local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
+    StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<uint32_t>::max()), end_time(std::numeric_limits<uint32_t>::max()),
+        headway_secs(std::numeric_limits<uint32_t>::max()), vehicle_journey_idx(invalid_idx), route_point_idx(invalid_idx),
+        local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         // Les idx sont volontairement pas sérialisés. On les reconstruit. Ça permet de gagner 5Mo compressé pour l'Île-de-France
-            ar & arrival_time & departure_time & vehicle_journey_idx & route_point_idx & properties & local_traffic_zone/*& idx*/;
+            ar & arrival_time & departure_time & start_time & end_time & headway_secs & vehicle_journey_idx & route_point_idx & properties & local_traffic_zone/*& idx*/;
     }
 };
 

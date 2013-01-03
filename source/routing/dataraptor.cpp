@@ -17,9 +17,15 @@ void dataRAPTOR::load(const type::PT_Data &data)
         r.departure = DateTime::inf;
     }
     
-    foot_path.clear();
-    std::vector<list_connections> footpath_temp;
-    footpath_temp.resize(data.route_points.size());
+    foot_path_forward.clear();
+    foot_path_backward.clear();
+    footpath_index_backward.clear();
+    footpath_index_forward.clear();
+    footpath_rp_backward.clear();
+    footpath_rp_forward.clear();
+    std::vector<list_connections> footpath_temp_forward, footpath_temp_backward;
+    footpath_temp_forward.resize(data.route_points.size());
+    footpath_temp_backward.resize(data.route_points.size());
 
     //Construction des connexions entre routepoints
     //(sert pour les prolongements de service ainsi que les correpondances garanties
@@ -30,48 +36,65 @@ void dataRAPTOR::load(const type::PT_Data &data)
 
     //Construction de la liste des marche à pied à partir des connexions renseignées
     for(type::Connection connection : data.connections) {
-        footpath_temp[connection.departure_stop_point_idx][connection.destination_stop_point_idx] = connection;
+        footpath_temp_forward[connection.departure_stop_point_idx][connection.destination_stop_point_idx] = connection;
     }
 
     for(type::Connection connection : data.connections) {
-        if(footpath_temp[connection.destination_stop_point_idx].find(connection.departure_stop_point_idx) ==
-           footpath_temp[connection.destination_stop_point_idx].end() ) {
+        if(footpath_temp_backward[connection.destination_stop_point_idx].find(connection.departure_stop_point_idx) ==
+           footpath_temp_backward[connection.destination_stop_point_idx].end() ) {
             
             type::Connection inverse;
             inverse.duration = connection.duration;
             inverse.departure_stop_point_idx = connection.destination_stop_point_idx;
             inverse.destination_stop_point_idx = connection.departure_stop_point_idx;
-            footpath_temp[inverse.departure_stop_point_idx][inverse.destination_stop_point_idx] = inverse;
+            footpath_temp_backward[inverse.departure_stop_point_idx][inverse.destination_stop_point_idx] = inverse;
+        } else if(footpath_temp_backward[connection.destination_stop_point_idx][connection.departure_stop_point_idx].duration > connection.duration) {
+            footpath_temp_backward[connection.destination_stop_point_idx][connection.departure_stop_point_idx].duration = connection.duration;
         }
+
     }
 
     //On rajoute des connexions entre les stops points d'un même stop area si elles n'existent pas
-    footpath_index.resize(data.stop_points.size());
-    footpath_index.resize(data.stop_points.size());
+    footpath_index_forward.resize(data.stop_points.size());
+    footpath_index_backward.resize(data.stop_points.size());
     for(type::StopPoint sp : data.stop_points) {
         if(sp.stop_area_idx != type::invalid_idx) {
             type::StopArea sa = data.stop_areas[sp.stop_area_idx];
-            footpath_index[sp.idx].first = foot_path.size();
-
-            int size = 0;
-            for(auto conn : footpath_temp[sp.idx]) {
-                foot_path.push_back(conn.second);
-                ++size;
+            footpath_index_forward[sp.idx].first = foot_path_forward.size();
+            footpath_index_backward[sp.idx].first = foot_path_backward.size();
+            int size_forward = 0, size_backward = 0;
+            for(auto conn : footpath_temp_forward[sp.idx]) {
+                foot_path_forward.push_back(conn.second);
+                ++size_forward;
+            }
+            for(auto conn : footpath_temp_backward[sp.idx]) {
+                foot_path_backward.push_back(conn.second);
+                ++size_backward;
             }
 
 
             for(type::idx_t spidx2 : sa.stop_point_list) {
-                if(sp.idx != spidx2 &&
-                    footpath_temp[sp.idx].find(spidx2) == footpath_temp[sp.idx].end()) {
+                if(sp.idx != spidx2) {
                     type::Connection c;
                     c.departure_stop_point_idx = sp.idx;
                     c.destination_stop_point_idx = spidx2;
                     c.duration = 2 * 60;
-                    foot_path.push_back(c);
-                    ++size;
+                    if(footpath_temp_forward[sp.idx].find(spidx2) == footpath_temp_forward[sp.idx].end()) {
+                        foot_path_forward.push_back(c);
+                        ++size_forward;
+                    }
+
+                    if(footpath_temp_backward[spidx2].find(sp.idx) == footpath_temp_backward[spidx2].end()) {
+                        foot_path_backward.push_back(c);
+                        ++size_backward;
+                    }
+
+
                 }
+
             }
-            footpath_index[sp.idx].second = size;
+            footpath_index_forward[sp.idx].second = size_forward;
+            footpath_index_backward[sp.idx].second = size_backward;
         }
     }
 
@@ -106,15 +129,29 @@ void dataRAPTOR::load(const type::PT_Data &data)
                       [&](type::idx_t stidx1, type::idx_t stidx2)->bool{
                         const type::StopTime & st1 = data.stop_times[stidx1];
                         const type::StopTime & st2 = data.stop_times[stidx2];
-                        return (st1.departure_time % SECONDS_PER_DAY == st2.departure_time % SECONDS_PER_DAY && stidx1 < stidx2) ||
-                               (st1.departure_time % SECONDS_PER_DAY <  st2.departure_time % SECONDS_PER_DAY);});
-            ///Suppresion des montées interdites
-            //std::remove_if(vec_stdix.begin(), vec_stdix.end(), [&](type::idx_t &st){return !data.stop_times[st].pick_up_allowed();});
+                        uint32_t time1, time2;
+                        if(!st1.is_frequency())
+                            time1 = st1.departure_time % SECONDS_PER_DAY;
+                        else
+                            time1 = st1.end_time;
+                        if(!st2.is_frequency())
+                            time2 = st2.departure_time % SECONDS_PER_DAY;
+                        else
+                            time2 = st2.end_time;
+
+                        return (time1 == time2 && stidx1 < stidx2) || (time1 < time2);});
+
+
             st_idx_forward.insert(st_idx_forward.end(), vec_stdix.begin(), vec_stdix.end());
 
             for(auto stidx : vec_stdix) {
                 const auto & st = data.stop_times[stidx];
-                departure_times.push_back(st.departure_time % SECONDS_PER_DAY);
+                uint32_t time;
+                if(!st.is_frequency())
+                    time = st.departure_time % SECONDS_PER_DAY;
+                else
+                    time = st.end_time;
+                departure_times.push_back(time);
                 if(st.departure_time > SECONDS_PER_DAY) {
                     auto vp = data.validity_patterns[data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx].days;
                     vp <<=1;
@@ -132,17 +169,30 @@ void dataRAPTOR::load(const type::PT_Data &data)
 
             std::sort(vec_stdix.begin(), vec_stdix.end(),
                   [&](type::idx_t stidx1, type::idx_t stidx2)->bool{
-                        const type::StopTime & st1 = data.stop_times[stidx1];
-                        const type::StopTime & st2 = data.stop_times[stidx2];
-                        return (st1.arrival_time % SECONDS_PER_DAY == st2.arrival_time % SECONDS_PER_DAY && stidx1 > stidx2) ||
-                               (st1.arrival_time % SECONDS_PER_DAY >  st2.arrival_time % SECONDS_PER_DAY);});
-            ///Suppresion des descentes interdites
-            //std::remove_if(vec_stdix.begin(), vec_stdix.end(), [&](type::idx_t &st){return !data.stop_times[st].drop_off_allowed();});
+                      const type::StopTime & st1 = data.stop_times[stidx1];
+                      const type::StopTime & st2 = data.stop_times[stidx2];
+                      uint32_t time1, time2;
+                      if(!st1.is_frequency())
+                          time1 = st1.arrival_time % SECONDS_PER_DAY;
+                      else
+                          time1 = st1.start_time;
+                      if(!st2.is_frequency())
+                          time2 = st2.arrival_time% SECONDS_PER_DAY;
+                      else
+                          time2 = st2.start_time;
+
+                      return (time1 == time2 && stidx1 > stidx2) || (time1 > time2);});
+
 
             st_idx_backward.insert(st_idx_backward.end(), vec_stdix.begin(), vec_stdix.end());
             for(auto stidx : vec_stdix) {
                 const auto & st = data.stop_times[stidx];
-                arrival_times.push_back(st.arrival_time % SECONDS_PER_DAY);
+                uint32_t time;
+                if(!st.is_frequency())
+                    time = st.arrival_time % SECONDS_PER_DAY;
+                else
+                    time = st.start_time;
+                arrival_times.push_back(time);
                 if(st.arrival_time > SECONDS_PER_DAY) {
                     auto vp = data.validity_patterns[data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx].days;
                     vp <<=1;;
@@ -162,7 +212,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
     }
 
      std::cout << "Nb data stop times : " << data.stop_times.size() << " stopTimes : " << arrival_times.size()
-               << " nb foot path : " << foot_path.size() << " Nombre de stop points : " << data.stop_points.size() << "nb vp : " << data.validity_patterns.size() <<  std::endl;
+               << " nb foot path : " << foot_path_forward.size() << " Nombre de stop points : " << data.stop_points.size() << "nb vp : " << data.validity_patterns.size() <<  std::endl;
 
 }
 

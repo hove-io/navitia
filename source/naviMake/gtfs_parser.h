@@ -72,6 +72,10 @@ public:
     /// Parse le fichier trips.txt
     /// Contient les VehicleJourney
     void parse_trips(Data & data);
+
+    /// Parse le fichier frequencies.txt
+    /// Contient les fréquencs
+    void parse_frequencies();
     //
     ///parse le fichier calendar.txt afin de trouver la période de validité des données
     boost::gregorian::date_period find_production_date(const std::string beginning_date);

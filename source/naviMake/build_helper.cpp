@@ -1,6 +1,20 @@
 #include "build_helper.h"
 #include "gtfs_parser.h"
 namespace navimake {
+VJ & VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs) {
+
+    uint32_t first_time = vj->stop_time_list.front()->arrival_time;
+    for(types::StopTime *st : vj->stop_time_list) {
+        st->is_frequency = true;
+        st->start_time = start_time+(st->arrival_time - first_time);
+        st->end_time = end_time+(st->departure_time - first_time);
+        st->headway_secs = headway_secs;
+    }
+
+    return *this;
+
+}
+
 
 VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string &block_id) : b(b){
     vj = new types::VehicleJourney();

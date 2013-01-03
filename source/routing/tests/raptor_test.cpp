@@ -770,6 +770,59 @@ BOOST_AUTO_TEST_CASE(multiples_vj) {
     BOOST_CHECK_EQUAL(res1.size(), 1);
 }
 
+BOOST_AUTO_TEST_CASE(freq_vj) {
+    navimake::builder b("20120614");
+    b.vj("A1")("stop1", 8*3600)("stop2", 8*3600+10*60).frequency(8*3600,18*3600,5*60);
+
+    type::Data data;
+    b.build(data.pt_data);
+    data.build_raptor();
+    RAPTOR raptor(data);
+
+    type::PT_Data & d = data.pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(1).idx, 8*3600, 0);
+
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), 8*3600 + 10*60);
+
+    res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(1).idx, 9*3600, 0);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), 9*3600 + 10*60);
+}
+
+BOOST_AUTO_TEST_CASE(freq_vj_pam) {
+    navimake::builder b("20120614");
+    b.vj("A1")("stop1", 8*3600)("stop2", 8*3600+10*60).frequency(8*3600,26*3600,5*60);
+
+    type::Data data;
+    b.build(data.pt_data);
+    data.build_raptor();
+    RAPTOR raptor(data);
+
+    type::PT_Data & d = data.pt_data;
+
+//    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(1).idx, 23*3600, 0);
+
+
+
+//    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+//    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), 23*3600 + 10*60);
+
+//    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(1).idx, 24*3600, 0);
+//        for(auto r : res1)
+//            r.print(d);
+////    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+//    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.date(), 1);
+//    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), (24*3600 + 10*60)%data.dataRaptor.SECONDS_PER_DAY);
+
+    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(1).idx, 25*3600, 0);
+    for(auto r : res1)
+        r.print(d);
+//    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.date(), 1);
+    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), (25*3600 + 10*60)%data.dataRaptor.SECONDS_PER_DAY);
+}
 
 
 

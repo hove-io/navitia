@@ -26,8 +26,8 @@ std::vector<dt_st> get_stop_times(const std::vector<type::idx_t> &route_points, 
         for(auto rp_idx : rps) {
             const type::RoutePoint & rp = data.pt_data.route_points[rp_idx];
             auto etemp = earliest_trip(data.pt_data.routes[rp.route_idx], rp.order, last_departure + 1, data);
-            if(etemp >= 0) {
-                auto st = data.pt_data.stop_times[data.pt_data.vehicle_journeys[etemp].stop_time_list[rp.order]];
+            if(etemp.first != type::invalid_idx) {
+                auto st = data.pt_data.stop_times[data.pt_data.vehicle_journeys[etemp.first].stop_time_list[rp.order]];
                 routing::DateTime dt_temp;
                 dt_temp = last_departure;
                 dt_temp.update(st.departure_time);

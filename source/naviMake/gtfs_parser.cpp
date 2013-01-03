@@ -47,6 +47,7 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
     parse_calendar_dates(data);
     parse_trips(data);
     parse_stop_times(data);
+    parse_frequencies();
     normalize_extcodes(data);
     build_routes(data);
     build_route_points(data);
@@ -737,6 +738,57 @@ void GtfsParser::parse_trips(Data & data) {
     std::cout << std::endl;
 }
 
+void GtfsParser::parse_frequencies() {
+    std::cout << "On parse : " << (path + "/frequencies.txt").c_str() << std::endl;
+    std::fstream ifile((path + "/frequencies.txt").c_str());
+    remove_bom(ifile);
+    std::string line;
+    if(!getline(ifile, line)) {
+        std::cerr << "Impossible d'ouvrir le fichier frequencies.txt" << std::endl;
+        return;
+    }
+
+    boost::trim(line);
+    Tokenizer tok_header(line);
+    std::vector<std::string> elts(tok_header.begin(), tok_header.end());
+    int trip_id_c = -1, start_time_c = -1, end_time_c = -1, headway_secs_c = -1;
+    for(size_t i = 0; i < elts.size(); i++){
+        if (elts[i] == "trip_id")
+            trip_id_c = i;
+        else if (elts[i] == "start_time")
+            start_time_c = i;
+        else if (elts[i] == "end_time")
+            end_time_c = i;
+        else if(elts[i] == "headway_secs")
+            headway_secs_c = i;
+    }
+
+    if (trip_id_c == -1 || start_time_c == -1 || end_time_c == -1 || headway_secs_c == -1){
+        std::cerr << "Il manque au moins une colonne dans frenquencies.txt" << std::endl
+                  << "trip_id : " << (trip_id_c!=-1) << " start_time " << (start_time_c!=-1) << " end_time : " << (end_time_c!=-1) << " headway_secs : " << (headway_secs_c!=-1) << std::endl;
+        return;
+    }
+
+    while(getline(ifile, line)) {
+        boost::trim(line);
+        if(line == "")
+            continue;
+        Tokenizer tok(line);
+        elts.assign(tok.begin(), tok.end());
+
+        boost::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(elts[trip_id_c]);
+        if(vj_it != vj_map.end()) {
+            int begin = vj_it->second->stop_time_list.front()->arrival_time;
+            for(auto st_it = vj_it->second->stop_time_list.begin(); st_it != vj_it->second->stop_time_list.end(); ++st_it) {
+                (*st_it)->start_time = time_to_int(elts[start_time_c]) + (*st_it)->arrival_time - begin;
+                (*st_it)->end_time = time_to_int(elts[end_time_c]) + (*st_it)->arrival_time - begin;
+                (*st_it)->headway_secs = boost::lexical_cast<int>(elts[headway_secs_c]);
+                (*st_it)->is_frequency = true;
+            }
+        }
+    }
+}
+
 // Compare si deux vehicle journey appartiennent à la même route
 bool same_route(nm::VehicleJourney * vj1, nm::VehicleJourney * vj2){
     if(vj1->stop_time_list.size() != vj2->stop_time_list.size())
@@ -890,13 +942,13 @@ void GtfsParser::parse_stop_times(Data & data) {
         std::vector<std::string> elts(tok.begin(), tok.end());
 
         auto vj_it = vj_map.find(elts[id_c]);
-        boost::algorithm::trim(elts[stop_c]);
-        auto stop_it = stop_map.find(elts[stop_c]);
         if(vj_it == vj_map.end()) {
             std::cerr << "Impossible de trouver le vehicle_journey " << elts[id_c] <<   std::endl;
             exit(1);
         }
-        else if(stop_it == stop_map.end()){
+        boost::algorithm::trim(elts[stop_c]);
+        auto stop_it = stop_map.find(elts[stop_c]);
+        if(stop_it == stop_map.end()){
             std::cerr << "Impossible de trouver le StopPoint " << elts[stop_c] << "!"<< std::endl;
         }
         else {
@@ -1180,5 +1232,6 @@ void build_route_point_connections(Data & data) {
     }
 
 }
+
 
 }}

@@ -25,6 +25,10 @@ struct VJ {
     /// Si le stopPoint n'est pas connu, on le crée avec un stopArea ayant le même nom
     VJ& operator()(const std::string &stopPoint, int arrivee, int depart = -1, uint32_t local_traffic_zone = std::numeric_limits<uint32_t>::max(),
                    bool drop_off_allowed = true, bool pick_up_allowed = true);
+
+    /// Transforme les horaires en horaire entre start_time et end_time, toutes les headways secs
+    VJ & frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs);
+
 };
 
 struct SA {
