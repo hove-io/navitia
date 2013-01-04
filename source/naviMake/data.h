@@ -123,6 +123,11 @@ public:
         }
     };
 
+    /**
+     * Ajoute des objets
+     */
+    void complete();
+
 
     /**
          * supprime les objets inutiles

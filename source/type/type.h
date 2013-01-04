@@ -215,6 +215,8 @@ struct Connection: public NavitiaHeader{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & external_code & departure_stop_point_idx & destination_stop_point_idx & duration & max_duration;
     }
+
+    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
 enum ConnectionKind {

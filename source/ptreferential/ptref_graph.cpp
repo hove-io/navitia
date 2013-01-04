@@ -84,6 +84,9 @@ struct Jointures {
         boost::add_edge(vertex_map[Type_e::eStopArea], vertex_map[Type_e::eStopPoint], g);
         boost::add_edge(vertex_map[Type_e::eCity], vertex_map[Type_e::eStopPoint], g);
         boost::add_edge(vertex_map[Type_e::eRoutePoint], vertex_map[Type_e::eStopPoint], g);
+        boost::add_edge(vertex_map[Type_e::eConnection], vertex_map[Type_e::eStopPoint], g);
+
+        boost::add_edge(vertex_map[Type_e::eStopPoint], vertex_map[Type_e::eConnection], g);
     }
 };
 

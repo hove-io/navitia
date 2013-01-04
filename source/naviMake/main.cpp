@@ -48,7 +48,7 @@ int main(int argc, char * argv[])
         std::cout << "Pas de topologie chargee" << std::endl;
     }
     pt::ptime start, end;
-    int read, clean, sort, transform, save, first_letter, sn;
+    int read, complete, clean, sort, transform, save, first_letter, sn;
 
     navimake::Data data; // Structure temporaire
     navitia::type::Data nav_data; // Structure définitive
@@ -108,6 +108,10 @@ int main(int argc, char * argv[])
 
 
     start = pt::microsec_clock::local_time();
+    data.complete();
+    complete = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+    start = pt::microsec_clock::local_time();
     data.clean();
     clean = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
@@ -141,6 +145,7 @@ int main(int argc, char * argv[])
 
     std::cout << "temps de traitement" << std::endl;
     std::cout << "\t lecture des fichiers " << read << "ms" << std::endl;
+    std::cout << "\t completion des données " << complete << "ms" << std::endl;
     std::cout << "\t netoyage des données " << clean << "ms" << std::endl;
     std::cout << "\t trie des données " << sort << "ms" << std::endl;
     std::cout << "\t transformation " << transform << "ms" << std::endl;

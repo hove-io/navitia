@@ -55,6 +55,76 @@ void Data::sort(){
 
 }
 
+void Data::complete() {
+    //Ajoute les connections entre les stop points d'un meme stop area
+
+    std::multimap<std::string, std::string> conns;
+    for(auto conn : connections) {
+        conns.insert(std::make_pair(conn->departure_stop_point->external_code, conn->destination_stop_point->external_code));
+    }
+
+    std::multimap<std::string, types::StopPoint*> sa_sps;
+
+    for(auto sp : stop_points) {
+        if(sp->stop_area)
+            sa_sps.insert(std::make_pair(sp->stop_area->external_code, sp));
+    }
+    int connections_size = connections.size();
+
+    std::string prec_sa = "";
+    for(auto sa_sp : sa_sps) {
+        if(prec_sa != sa_sp.first) {
+            auto ret = sa_sps.equal_range(sa_sp.first);
+            for(auto it = ret.first; it!= ret.second; ++it){
+                for(auto it2 = it; it2!=ret.second; ++it2) {
+                    if(it->second->external_code != it2->second->external_code) {
+                        bool found = false;
+                        auto ret2 = conns.equal_range(it->second->external_code);
+                        for(auto itc = ret2.first; itc!= ret2.second; ++itc) {
+                            if(itc->second == it2->second->external_code) {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if(!found) {
+                            types::Connection * connection = new types::Connection();
+                            connection->departure_stop_point = it->second;
+                            connection->destination_stop_point  = it2->second;
+                            connection->connection_kind = types::Connection::StopAreaConnection;
+                            connection->duration = 120;
+                            connections.push_back(connection);
+                        }
+
+                        found = false;
+                        ret2 = conns.equal_range(it2->second->external_code);
+                        for(auto itc = ret2.first; itc!= ret2.second; ++itc) {
+                            if(itc->second == it->second->external_code) {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if(!found) {
+                            types::Connection * connection = new types::Connection();
+                            connection->departure_stop_point = it2->second;
+                            connection->destination_stop_point  = it->second;
+                            connection->connection_kind = types::Connection::StopAreaConnection;
+                            connection->duration = 120;
+                            connections.push_back(connection);
+                        }
+                    }
+                }
+            }
+            prec_sa = sa_sp.first;
+        }
+    }
+
+    std::cout << "On a ajouté " << (connections.size() - connections_size) << " connections lors de la completion" << std::endl;
+
+
+}
+
 
 void Data::clean(){
 

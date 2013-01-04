@@ -295,7 +295,7 @@ std::vector<idx_t> RoutePoint::get(Type_e type, const PT_Data &) const {
     return result;
 }
 
-std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data &) const {
+std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::eStopArea: result.push_back(stop_area_idx); break;
@@ -303,6 +303,22 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data &) const {
     case Type_e::eMode: result.push_back(mode_idx); break;
     case Type_e::eNetwork: result.push_back(network_idx); break;
     case Type_e::eRoutePoint: return route_point_list; break;
+    case Type_e::eConnection: for(const Connection & conn : data.stop_point_connections[idx]) {
+            result.push_back(conn.idx);
+        }
+            break;
+    default: break;
+    }
+    return result;
+}
+
+std::vector<idx_t> Connection::get(Type_e type, const PT_Data & ) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case Type_e::eStopPoint:
+        result.push_back(this->departure_stop_point_idx);
+        result.push_back(this->destination_stop_point_idx);
+        break;
     default: break;
     }
     return result;
