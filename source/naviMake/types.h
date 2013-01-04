@@ -407,6 +407,7 @@ struct StopTime {
     bool pick_up_allowed;
     bool drop_off_allowed;
     bool is_frequency;
+    bool is_adapted;
     uint32_t local_traffic_zone;
 
     struct Transformer{

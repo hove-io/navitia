@@ -23,6 +23,7 @@ pbnavitia::Response next_stop_times(const std::string &request, const std::strin
         stoptime->set_departure_date_time(iso_string(data, dt_idx.first.date(),  dt_idx.first.hour()));
         stoptime->set_arrival_date_time(iso_string(data, dt_idx.first.date(),  dt_idx.first.hour()));
         const auto &rp = data.pt_data.route_points[data.pt_data.stop_times[dt_idx.second].route_point_idx];
+        stoptime->set_is_adapted(data.pt_data.stop_times[dt_idx.second].is_adapted());
         fill_pb_object(rp.stop_point_idx, data, stoptime->mutable_stop_point(), depth);
         fill_pb_object(data.pt_data.routes[rp.route_idx].line_idx, data, stoptime->mutable_line(), depth);
     }

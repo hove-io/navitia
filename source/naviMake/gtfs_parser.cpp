@@ -154,6 +154,8 @@ void GtfsParser::parse_agency(Data & data){
             continue;
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
+        for(uint32_t i=0;i<elts.size();++i)
+            boost::algorithm::trim(elts[i]);
         nm::Network * network = new nm::Network();
         if(id_c != -1)
             network->external_code = elts[id_c];
@@ -170,9 +172,6 @@ void GtfsParser::parse_stops(Data & data) {
     // On réserve un peu large, de l'ordre de l'Île-de-France
     data.stop_points.reserve(56000);
     data.stop_areas.reserve(13000);
-    // En GTFS les stopPoint et stopArea sont définis en une seule fois
-    // On garde donc le "parent station" (aka. stopArea) dans un tableau lors de la 1ère passe.
-    std::deque<std::pair<nm::StopPoint*, std::string> > stoppoint_areas;
 
     std::cout << "On parse : " << (path + "/stops.txt").c_str() << std::endl;
     std::fstream ifile((path + "/stops.txt").c_str());
@@ -183,9 +182,10 @@ void GtfsParser::parse_stops(Data & data) {
         throw std::exception();
         return;
     }
+    std::vector<types::StopPoint*> wheelchair_heritance;
 
     // colonne que l'on va utiliser
-    int id_c = -1, code_c = -1, lat_c = -1, lon_c = -1, type_c = -1, parent_c = -1, name_c = -1;
+    int id_c = -1, code_c = -1, lat_c = -1, lon_c = -1, type_c = -1, parent_c = -1, name_c = -1, wheelchair_c = -1;
 
     boost::trim(line);
     Tokenizer tok_header(line);
@@ -205,6 +205,8 @@ void GtfsParser::parse_stops(Data & data) {
             type_c = i;
         else if (elts[i] ==  "parent_station")
             parent_c = i;
+        else if(elts[i] == "wheelchair_boarding")
+            wheelchair_c = i;
     }
     if(code_c == -1){
         code_c = id_c;
@@ -226,9 +228,9 @@ void GtfsParser::parse_stops(Data & data) {
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
         nm::StopPoint * sp = new nm::StopPoint();
+        for(uint32_t i=0;i<elts.size();++i)
+            boost::algorithm::trim(elts[i]);
         try{
-            boost::algorithm::trim(elts[lon_c]);
-            boost::algorithm::trim(elts[lat_c]);
             sp->coord.set_lon(boost::lexical_cast<double>(elts[lon_c]));
             sp->coord.set_lat(boost::lexical_cast<double>(elts[lat_c]));
         }
@@ -240,28 +242,35 @@ void GtfsParser::parse_stops(Data & data) {
         sp->name = elts[name_c];
         sp->external_code = elts[id_c];
 
+
         if(!data.stop_points.empty() && stop_map.find(sp->external_code) != stop_map.end()) {
             ignored++;
         }
         else {
-
-
             // Si c'est un stopArea
             if(type_c != -1 && elts[type_c] == "1") {
                 nm::StopArea * sa = new nm::StopArea();
                 sa->coord = sp->coord;
                 sa->name = sp->name;
                 sa->external_code = sp->external_code;
+                if(wheelchair_c != -1)
+                    sa->is_adapted = elts[wheelchair_c] == "1";
                 stop_area_map[sa->external_code] = sa;
                 data.stop_areas.push_back(sa);
                 delete sp;
             }
             // C'est un StopPoint
             else {
+                if(wheelchair_c != -1) {
+                    if(elts[wheelchair_c] == "0") {
+                        wheelchair_heritance.push_back(sp);
+                    } else {
+                        sp->is_adapted = elts[wheelchair_c] == "1";
+                    }
+                }
                 stop_map[sp->external_code] = sp;
                 data.stop_points.push_back(sp);
                 if(parent_c!=-1 && elts[parent_c] != "") {// On sauvegarde la référence à la zone d'arrêt
-                    stoppoint_areas.push_back(std::make_pair(sp, elts[parent_c]));
                     if(sa_spmap.find(elts[parent_c]) == sa_spmap.end()) {
                         sa_spmap.insert(std::make_pair(elts[parent_c], vector_sp()));
                     }
@@ -273,17 +282,32 @@ void GtfsParser::parse_stops(Data & data) {
 
 
     // On reboucle pour récupérer les stop areas de tous les stop points
-    BOOST_FOREACH(auto sa, stoppoint_areas){
-        auto it = stop_area_map.find(sa.second);
-        if(it != stop_area_map.end()) {
-            (sa.first)->stop_area = it->second;
-        }
-        else{
-            std::cerr << "Le stopPoint " << (sa.first)->external_code
-                      << " a utilisé un stopArea inconnu : " << sa.second << std::endl;
-            (sa.first)->stop_area = 0;
+    for(auto sa_sps : sa_spmap) {
+        if(stop_area_map.find(sa_sps.first) != stop_area_map.end()) {
+            auto it = stop_area_map.find(sa_sps.first);
+            for(auto sp : sa_sps.second) {
+                sp->stop_area = it->second;
+            }
+        } else {
+            std::cerr << "Le stop area " << sa_sps.first
+                      << " n'a pas été trouvé pour les stops points :  ";
+            for(auto sp : sa_sps.second) {
+                std::cerr << sp->external_code << " ";
+                sp->stop_area = 0;
+            }
+            std::cerr << std::endl;
         }
     }
+
+    //On va chercher l'accessibilité pour les stop points qui hérite de l'accessibilité de leur stop area
+    for(auto sp : wheelchair_heritance) {
+        if(sp->stop_area != 0) {
+            sp->is_adapted = sp->stop_area->is_adapted;
+        } else {
+            std::cerr << "Impossible de récuperer l'accessibilité du stop area pour le stop point " << sp->external_code << std::endl;
+        }
+    }
+
 
 
 
@@ -331,6 +355,8 @@ void GtfsParser::parse_transfers(Data & data) {
             continue;
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
+        for(uint32_t i=0;i<elts.size();++i)
+            boost::algorithm::trim(elts[i]);
 
         typedef boost::unordered_map<std::string, navimake::types::StopPoint*>::iterator sp_iterator;
         vector_sp departures, arrivals;
@@ -448,6 +474,8 @@ void GtfsParser::parse_calendar(Data & data) {
             continue;
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
+        for(uint32_t i=0;i<elts.size();++i)
+            boost::algorithm::trim(elts[i]);
 
 
         nm::ValidityPattern * vp;
@@ -594,6 +622,8 @@ void GtfsParser:: parse_routes(Data & data){
             continue;
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
+        for(uint32_t i=0;i<elts.size();++i)
+            boost::algorithm::trim(elts[i]);
 
         if(line_map.find(elts[id_c]) == line_map.end()) {
             nm::Line * line = new nm::Line();
@@ -650,7 +680,7 @@ void GtfsParser::parse_trips(Data & data) {
     boost::trim(line);
     Tokenizer tok_header(line);
     std::vector<std::string> elts(tok_header.begin(), tok_header.end());
-    int id_c = -1, service_c = -1, trip_c = -1, headsign_c = -1, block_id_c = -1;
+    int id_c = -1, service_c = -1, trip_c = -1, headsign_c = -1, block_id_c = -1, wheelchair_c = -1;
     for(size_t i = 0; i < elts.size(); i++){
         if (elts[i] == "route_id")
             id_c = i;
@@ -662,6 +692,8 @@ void GtfsParser::parse_trips(Data & data) {
             headsign_c = i;
         else if(elts[i] == "block_id")
             block_id_c = i;
+        else if(elts[i] == "wheelchair_accessible")
+            wheelchair_c = i;
     }
 
     if (id_c == -1 || service_c == -1 || trip_c == -1){
@@ -678,6 +710,8 @@ void GtfsParser::parse_trips(Data & data) {
             continue;
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
+        for(uint32_t i=0;i<elts.size();++i)
+            boost::algorithm::trim(elts[i]);
 
         boost::unordered_map<std::string, nm::Line*>::iterator it = line_map.find(elts[id_c]);
         if(it == line_map.end()){
@@ -720,6 +754,8 @@ void GtfsParser::parse_trips(Data & data) {
                         vj->block_id = elts[block_id_c];
                     else
                         vj->block_id = "";
+                    if(wheelchair_c != -1)
+                        vj->is_adapted = elts[wheelchair_c] == "1";
                     vj_map[vj->external_code] = vj;
                     data.vehicle_journeys.push_back(vj);
                 }
@@ -775,6 +811,8 @@ void GtfsParser::parse_frequencies() {
             continue;
         Tokenizer tok(line);
         elts.assign(tok.begin(), tok.end());
+        for(uint32_t i=0;i<elts.size();++i)
+            boost::algorithm::trim(elts[i]);
 
         boost::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(elts[trip_id_c]);
         if(vj_it != vj_map.end()) {
@@ -940,13 +978,14 @@ void GtfsParser::parse_stop_times(Data & data) {
             continue;
         Tokenizer tok(line);
         std::vector<std::string> elts(tok.begin(), tok.end());
+        for(uint32_t i=0;i<elts.size();++i)
+            boost::algorithm::trim(elts[i]);
 
         auto vj_it = vj_map.find(elts[id_c]);
         if(vj_it == vj_map.end()) {
             std::cerr << "Impossible de trouver le vehicle_journey " << elts[id_c] <<   std::endl;
             exit(1);
         }
-        boost::algorithm::trim(elts[stop_c]);
         auto stop_it = stop_map.find(elts[stop_c]);
         if(stop_it == stop_map.end()){
             std::cerr << "Impossible de trouver le StopPoint " << elts[stop_c] << "!"<< std::endl;
@@ -976,6 +1015,7 @@ void GtfsParser::parse_stop_times(Data & data) {
             else
                 stop_time->local_traffic_zone = std::numeric_limits<uint32_t>::max();
             stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
+            stop_time->is_adapted = stop_time->vehicle_journey->is_adapted;
             data.stops.push_back(stop_time);
             count++;
         }

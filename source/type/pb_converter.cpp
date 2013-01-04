@@ -22,6 +22,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* st
     stop_area->set_name(sa.name);
     stop_area->mutable_coord()->set_lon(sa.coord.lon());
     stop_area->mutable_coord()->set_lat(sa.coord.lat());
+    stop_area->set_is_adapted(sa.is_adapted);
     if(max_depth > 0 && sa.city_idx != nt::invalid_idx)
         fill_pb_object(sa.city_idx, data, stop_area->mutable_city(), max_depth-1);
 }
@@ -33,6 +34,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
     stop_point->set_name(sp.name);
     stop_point->mutable_coord()->set_lon(sp.coord.lon());
     stop_point->mutable_coord()->set_lat(sp.coord.lat());
+    stop_point->set_is_adapted(sp.is_adapted);
     if(max_depth > 0 && sp.city_idx != nt::invalid_idx)
             fill_pb_object(sp.city_idx, data, stop_point->mutable_city(), max_depth-1);
     if(max_depth > 0 && sp.stop_area_idx != nt::invalid_idx)

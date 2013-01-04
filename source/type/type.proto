@@ -42,6 +42,7 @@ message StopArea {
     optional string external_code = 4;
     optional GeographicalCoord coord = 5;
     optional City city = 6;
+    optional bool is_adapted = 7;
 }
 
 message StopPoint {
@@ -51,6 +52,7 @@ message StopPoint {
     optional string external_code = 5;
     optional GeographicalCoord coord = 6; 
     optional StopArea stop_area = 7;
+    optional bool is_adapted = 8;
 }
 
 message Line {
@@ -78,6 +80,7 @@ message StopTime {
     optional string departure_date_time = 2;
     optional StopPoint stop_point = 3;
     optional Line line = 4;
+    optional bool is_adapted = 5;
 }
 
 message VehicleJourney {

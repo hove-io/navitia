@@ -248,17 +248,16 @@ struct StopArea : public NavitiaHeader, Nameable{
     int properties;
     std::string additional_data;
     idx_t city_idx;
+    bool is_adapted;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & external_code & name & city_idx & coord & stop_point_list;
+        ar & id & idx & external_code & name & city_idx & coord & stop_point_list & is_adapted;
     }
 
-    StopArea(): properties(0), city_idx(invalid_idx){}
+    StopArea(): properties(0), city_idx(invalid_idx), is_adapted(false){}
 
     std::vector<idx_t> stop_point_list;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-
-
 };
 
 struct Network : public NavitiaHeader, Nameable{
@@ -483,11 +482,12 @@ struct StopPoint : public NavitiaHeader, Nameable{
     idx_t network_idx;
     std::vector<idx_t> impact_list;
     std::vector<idx_t> route_point_list;
+    bool is_adapted;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & external_code & name & stop_area_idx & mode_idx & coord & fare_zone & idx & route_point_list;
+        ar & external_code & name & stop_area_idx & mode_idx & coord & fare_zone & idx & route_point_list & is_adapted;
     }
 
-    StopPoint(): fare_zone(0),  stop_area_idx(invalid_idx), city_idx(invalid_idx), mode_idx(invalid_idx), network_idx(invalid_idx){}
+    StopPoint(): fare_zone(0),  stop_area_idx(invalid_idx), city_idx(invalid_idx), mode_idx(invalid_idx), network_idx(invalid_idx), is_adapted(false){}
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -498,6 +498,7 @@ struct StopTime {
     static const uint8_t DROP_OFF = 1;
     static const uint8_t ODT = 2;
     static const uint8_t IS_FREQUENCY = 3;
+    static const uint8_t IS_ADAPTED = 4;
 
     idx_t idx;
     uint32_t arrival_time; ///< En secondes depuis minuit
@@ -514,6 +515,7 @@ struct StopTime {
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}
     bool is_frequency() const{return properties[IS_FREQUENCY];}
+    bool is_adapted() const{return properties[IS_ADAPTED];}
 
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<uint32_t>::max()), end_time(std::numeric_limits<uint32_t>::max()),
         headway_secs(std::numeric_limits<uint32_t>::max()), vehicle_journey_idx(invalid_idx), route_point_idx(invalid_idx),

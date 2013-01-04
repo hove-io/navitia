@@ -67,6 +67,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                         auto dep_time = item.departures[i];
                         stop_time->set_departure_date_time(iso_string(d, dep_time.date(), dep_time.hour()));
                         fill_pb_object(item.stop_points[i], d, stop_time->mutable_stop_point(), 0);
+
                     }
 
                     if(item.stop_points.size() >= 2) {

@@ -162,6 +162,7 @@ navitia::type::StopArea StopArea::Transformer::operator()(const StopArea& stop_a
     sa.coord = stop_area.coord;
     sa.comment = stop_area.comment;
     sa.name = stop_area.name;
+    sa.is_adapted = stop_area.is_adapted;
 
     sa.additional_data = stop_area.additional_data;
     sa.properties = stop_area.properties;
@@ -202,6 +203,8 @@ nt::StopPoint StopPoint::Transformer::operator()(const StopPoint& stop_point){
     nt_stop_point.address_name      = stop_point.address_name;
     nt_stop_point.address_number    = stop_point.address_number;       
     nt_stop_point.address_type_name = stop_point.address_type_name;
+
+    nt_stop_point.is_adapted = stop_point.is_adapted;
     
     if(stop_point.stop_area != NULL)
         nt_stop_point.stop_area_idx = stop_point.stop_area->idx;
@@ -340,6 +343,8 @@ nt::StopTime StopTime::Transformer::operator()(const StopTime& stop){
     nt_stop.properties[nt::StopTime::DROP_OFF] = stop.drop_off_allowed;
     nt_stop.properties[nt::StopTime::PICK_UP] = stop.pick_up_allowed;
     nt_stop.properties[nt::StopTime::IS_FREQUENCY] = stop.is_frequency;
+    nt_stop.properties[nt::StopTime::IS_ADAPTED] = stop.is_adapted;
+
     nt_stop.local_traffic_zone = stop.local_traffic_zone;
 
     nt_stop.route_point_idx = stop.route_point->idx;
