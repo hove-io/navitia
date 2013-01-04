@@ -18,28 +18,31 @@ Certains paramètres sont partagés sur les 2 API de calcul d'itinéraire.
 Paramètres généraux
 -------------------
 
-+-------------+------------------------+-------------------------------------+---------------------------------+
-| Paramètre   | Type                   | Remarque                            | Exemple                         |
-+=============+========================+=====================================+=================================+
-| origin      | Appel par coordonnées: | Coordonnées en WGS84                | &origin=coord:48.8299:2.391     |
-|             |    coord:<lon>:<lat>   | Ne pas confondre lat et lon ;-)     |                                 |
-|             +------------------------+-------------------------------------+---------------------------------+
-|             | Appel par code unique  | URI issue du retour d'un appel      | &origin=stop_area:TCL-0722      |
-|             |                        |   à un autre service                |                                 |
-|             |                        |   (firstLetter, ptreferential...)   |                                 |
-+-------------+------------------------+-------------------------------------+---------------------------------+
-| destination | Appel par coordonnées: | Coordonnées en WGS84                | &destination=coord:48.840:2.319 |
-|             |    coord:<lon>:<lat>   | Ne pas confondre lat et lon ;-)     |                                 |
-|             +------------------------+-------------------------------------+---------------------------------+
-|             | Appel par code unique  | URI issue du retour d'un appel      | &destination=stop_area:5555555  |
-|             |                        |   à un autre service                |                                 |
-|             |                        |   (firstLetter, ptreferential...)   |                                 |
-+-------------+------------------------+-------------------------------------+---------------------------------+
-| clockwise   | booléen                | &ClockWise=1, on veut partir après  | &clockwise=1                    |
-|             |                        |       l'heure indiquée              |                                 |
-|             |                        | &ClockWise=0, on veut arriver avant |                                 |
-|             |                        |       l'heure indiquée              |                                 |
-+-------------+------------------------+-------------------------------------+---------------------------------+
++--------------+------------------------+-------------------------------------+---------------------------------+
+| Paramètre    | Type                   | Remarque                            | Exemple                         |
++==============+========================+=====================================+=================================+
+| origin       | Appel par coordonnées: | Coordonnées en WGS84                | &origin=coord:48.8299:2.391     |
+|              |    coord:<lon>:<lat>   | Ne pas confondre lat et lon ;-)     |                                 |
+|              +------------------------+-------------------------------------+---------------------------------+
+|              | Appel par code unique  | URI issue du retour d'un appel      | &origin=stop_area:TCL-0722      |
+|              |                        |   à un autre service                |                                 |
+|              |                        |   (firstLetter, ptreferential...)   |                                 |
++--------------+------------------------+-------------------------------------+---------------------------------+
+| destination  | Appel par coordonnées: | Coordonnées en WGS84                | &destination=coord:48.840:2.319 |
+|              |    coord:<lon>:<lat>   | Ne pas confondre lat et lon ;-)     |                                 |
+|              +------------------------+-------------------------------------+---------------------------------+
+|              | Appel par code unique  | URI issue du retour d'un appel      | &destination=stop_area:5555555  |
+|              |                        |   à un autre service                |                                 |
+|              |                        |   (firstLetter, ptreferential...)   |                                 |
++--------------+------------------------+-------------------------------------+---------------------------------+
+| clockwise    | booléen                | &ClockWise=1, on veut partir après  | &clockwise=1                    |
+|              |                        |       l'heure indiquée              |                                 |
+|              |                        | &ClockWise=0, on veut arriver avant |                                 |
+|              |                        |       l'heure indiquée              |                                 |
++--------------+------------------------+-------------------------------------+---------------------------------+
+|walking_speed | double                 | Vitesse de marche à pied en m/s     | &walking_speed=1.2              |
+|              |                        | 1.38 par défaut                     |                                 |
++----------------------------------------------------------------------------------------------------------------
 
 Les paramètres origin et destination peuvent accueillir au choix une URI issue d'une autre API 
 (par exemple firstletter ou PTReferential) ou des coordonnées au format WGS84. Ces 2 paramètres sont obligatoires sous une de ces 2 formes.
