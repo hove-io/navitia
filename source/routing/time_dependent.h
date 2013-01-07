@@ -94,7 +94,7 @@ struct TimeDependent : public AbstractRouter{
      * hour correspond à
      * day correspond au jour de circulation au départ
      */
-    std::vector<Path> compute(type::idx_t dep, type::idx_t arr, int hour, int day, bool clockwise = true);
+    std::vector<Path> compute(type::idx_t dep, type::idx_t arr, int hour, int day, bool clockwise = true, bool wheelchair = false);
 
     /** Construit le chemin à retourner à partir du résultat du Dijkstra */
     Path makePath(type::idx_t arr);

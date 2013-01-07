@@ -314,7 +314,12 @@ public:
         float walking_speed = 1.38;
         if(request.parsed_params.find("walking_speed") != request.parsed_params.end())
             walking_speed = boost::get<double>(request.parsed_params["walking_speed"].value);
-        pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, datetimes, clockwise, walking_speed, forbidden, *street_network_worker);
+
+        bool wheelchair = false;
+        if(request.parsed_params.find("wheelchair") != request.parsed_params.end())
+            wheelchair = boost::get<bool>(request.parsed_params["wheelchair"].value);
+
+        pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, datetimes, clockwise, walking_speed, wheelchair, forbidden, *street_network_worker);
 
         rd.status_code = 200;
 
@@ -365,7 +370,11 @@ public:
         else
             depth = 1;
 
-        pb_response = navitia::timetables::next_departures(filters, datetime, max_date_time, nb_departures, depth, data);
+        bool wheelchair = false;
+        if(request.parsed_params.find("wheelchair") != request.parsed_params.end())
+            wheelchair = boost::get<bool>(request.parsed_params["wheelchair"].value);
+
+        pb_response = navitia::timetables::next_departures(filters, datetime, max_date_time, nb_departures, depth, wheelchair, data);
         rd.status_code = 200;
 
         return rd;
@@ -395,7 +404,11 @@ public:
         else
             depth = 1;
 
-        pb_response = navitia::timetables::next_arrivals(filters, datetime, max_date_time, nb_departures, depth, data);
+        bool wheelchair = false;
+        if(request.parsed_params.find("wheelchair") != request.parsed_params.end())
+            wheelchair = boost::get<bool>(request.parsed_params["wheelchair"].value);
+
+        pb_response = navitia::timetables::next_arrivals(filters, datetime, max_date_time, nb_departures, depth, wheelchair, data);
         rd.status_code = 200;
 
         return rd;
@@ -517,6 +530,7 @@ public:
             add_param(api, "forbiddenmode[]", "Modes interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);
             add_param(api, "forbiddenroute[]", "Routes interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);
             add_param(api, "walking_speed", "Vitesse de la marche à pied en m/s", ApiParameter::DOUBLE, false);
+            add_param(api, "wheelchair", "Besoin en accessibilité", ApiParameter::BOOLEAN, false);
         }
 
         register_api("load", boost::bind(&Worker::load, this, _1, _2), "Api de chargement des données");
@@ -537,6 +551,7 @@ public:
         add_param("next_departures", "max_datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
         add_param("next_departures", "nb_departures", "Nombre maximum de départ souhaités", ApiParameter::INT, false);
         add_param("next_departures", "depth", "Profondeur maximale pour les objets", ApiParameter::INT, false);
+        add_param("next_departures", "wheelchair",  "Besoin en accessibilité", ApiParameter::BOOLEAN, false);
 
         register_api("next_arrivals", boost::bind(&Worker::next_arrivals, this, _1, _2), "Renvoie les prochaines arrivées");
         add_param("next_arrivals", "filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, false);
@@ -544,6 +559,7 @@ public:
         add_param("next_arrivals", "max_datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
         add_param("next_arrivals", "nb_departures", "Nombre maximum de départ souhaités", ApiParameter::INT, false);
         add_param("next_arrivals", "depth", "Profondeur maximale pour les objets", ApiParameter::INT, false);
+        add_param("next_arrivals", "wheelchair",  "Besoin en accessibilité", ApiParameter::BOOLEAN, false);
 
 
         register_api("stops_schedule", boost::bind(&Worker::stops_schedule, this, _1, _2), "Renvoie le tableau depart/arrivee entre deux filtres");

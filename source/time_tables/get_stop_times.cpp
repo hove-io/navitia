@@ -11,7 +11,7 @@ std::string iso_string(const nt::Data & d, int date, int hour){
 
 
 
-std::vector<dt_st> get_stop_times(const std::vector<type::idx_t> &route_points, const routing::DateTime &dt, const routing::DateTime &max_dt, const int nb_departures, type::Data & data) {
+std::vector<dt_st> get_stop_times(const std::vector<type::idx_t> &route_points, const routing::DateTime &dt, const routing::DateTime &max_dt, const int nb_departures, type::Data & data, const bool wheelchair) {
     std::vector<dt_st> result;
     std::multiset<dt_st, comp_st> result_temp;
     auto test_add = true;
@@ -25,7 +25,7 @@ std::vector<dt_st> get_stop_times(const std::vector<type::idx_t> &route_points, 
         //On va chercher le prochain départ >= last_departure + 1 pour tous les route points de la liste
         for(auto rp_idx : rps) {
             const type::RoutePoint & rp = data.pt_data.route_points[rp_idx];
-            auto etemp = earliest_trip(data.pt_data.routes[rp.route_idx], rp.order, last_departure + 1, data);
+            auto etemp = earliest_trip(data.pt_data.routes[rp.route_idx], rp.order, last_departure + 1, data, wheelchair);
             if(etemp.first != type::invalid_idx) {
                 auto st = data.pt_data.stop_times[data.pt_data.vehicle_journeys[etemp.first].stop_time_list[rp.order]];
                 routing::DateTime dt_temp;

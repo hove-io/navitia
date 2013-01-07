@@ -6,7 +6,7 @@
 namespace navitia { namespace timetables {
 
 template<typename Visitor>
-pbnavitia::Response next_stop_times(const std::string &request, const std::string &str_dt, const std::string &str_max_dt, const int nb_departures, const int depth, type::Data & data, Visitor vis) {
+pbnavitia::Response next_stop_times(const std::string &request, const std::string &str_dt, const std::string &str_max_dt, const int nb_departures, const int depth, const bool wheelchair, type::Data & data, Visitor vis) {
     request_parser parser(vis.api_str, request, str_dt, str_max_dt, nb_departures,data);
 
     parser.pb_response.set_requested_api(vis.api_pb);
@@ -16,7 +16,7 @@ pbnavitia::Response next_stop_times(const std::string &request, const std::strin
 
     std::remove_if(parser.route_points.begin(), parser.route_points.end(), vis.predicate);
 
-    auto departures_dt_idx = get_stop_times(parser.route_points, parser.date_time, parser.max_datetime, nb_departures, data);
+    auto departures_dt_idx = get_stop_times(parser.route_points, parser.date_time, parser.max_datetime, nb_departures, data, wheelchair);
 
     for(auto dt_idx : departures_dt_idx) {
         pbnavitia::StopTime * stoptime = parser.pb_response.mutable_nextstoptimes()->add_stoptime();
@@ -31,7 +31,7 @@ pbnavitia::Response next_stop_times(const std::string &request, const std::strin
 }
 
 
-pbnavitia::Response next_departures(const std::string &request, const std::string &str_dt, const std::string &str_max_dt, const int nb_departures, const int depth, type::Data & data) {
+pbnavitia::Response next_departures(const std::string &request, const std::string &str_dt, const std::string &str_max_dt, const int nb_departures, const int depth, const bool wheelchair, type::Data & data) {
 
     struct vis_next_departures {
         struct predicate_t {
@@ -47,11 +47,11 @@ pbnavitia::Response next_departures(const std::string &request, const std::strin
         vis_next_departures(type::Data& data) : api_str("NEXT_DEPARTURES"), api_pb(pbnavitia::NEXT_DEPARTURES), predicate(data) {}
     };
     vis_next_departures vis(data);
-    return next_stop_times(request, str_dt, str_max_dt, nb_departures, depth, data, vis);
+    return next_stop_times(request, str_dt, str_max_dt, nb_departures, depth, wheelchair, data, vis);
 }
 
 
-pbnavitia::Response next_arrivals(const std::string &request, const std::string &str_dt, const std::string &str_max_dt, const int nb_departures, const int depth, type::Data & data) {
+pbnavitia::Response next_arrivals(const std::string &request, const std::string &str_dt, const std::string &str_max_dt, const int nb_departures, const int depth, const bool wheelchair, type::Data & data) {
 
     struct vis_next_departures {
         struct predicate_t {
@@ -67,7 +67,7 @@ pbnavitia::Response next_arrivals(const std::string &request, const std::string 
         vis_next_departures(type::Data& data) : api_str("NEXT_ARRIVALS"), api_pb(pbnavitia::NEXT_ARRIVALS), predicate(data) {}
     };
     vis_next_departures vis(data);
-    return next_stop_times(request, str_dt, str_max_dt, nb_departures, depth, data, vis);
+    return next_stop_times(request, str_dt, str_max_dt, nb_departures, depth, wheelchair, data, vis);
 }
 
 

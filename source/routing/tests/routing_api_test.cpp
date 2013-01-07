@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(simple_journey){
     type::EntryPoint destination("stop_area:stop2");
 
     streetnetwork::StreetNetwork sn_worker(data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T021000"}, true, 1.38, forbidden, sn_worker);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T021000"}, true, 1.38, false, forbidden, sn_worker);
 
     BOOST_REQUIRE(resp.has_requested_api());
     BOOST_CHECK_EQUAL(resp.requested_api(), pbnavitia::PLANNER);
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
 
     // On met les horaires dans le desordre pour voir s'ils sont bien trié comme attendu
     std::vector<std::string> datetimes{"20120614T080000", "20120614T090000"};
-    pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, 1.38, forbidden, sn_worker);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, 1.38, false, forbidden, sn_worker);
 
     BOOST_REQUIRE(resp.has_requested_api());
     BOOST_CHECK_EQUAL(resp.requested_api(), pbnavitia::PLANNER);

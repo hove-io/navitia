@@ -34,6 +34,12 @@ Paramètres d'entrée
 +---------------+------------------------+-------------------------------------+----------------------------------------+
 | max_depth     | nombre entier          | Même argument que dans ptref        | max_depth=2                            |
 +---------------+------------------------+-------------------------------------+----------------------------------------+
+| wheelchair    | booléen                | &wheelchair=1 on veut que les       | &wheelchair=1                          |
+|               |                        | départs prenent en compte           |                                        |
+|               |                        | l'accessibilité                     |                                        |
+|               |                        | &wheelchair=0 on ne prend pas en    |                                        |
+|               |                        | l'accessibilité                     |                                        |
++---------------+------------------------+-------------------------------------+----------------------------------------+
 
 Remarques : 
 	* Si aucun des deux paramètres *nb_departures* ou *max_datetime* n'est renseigné il sera alors assigné au paramètre *nb_departure* la valeur 10.

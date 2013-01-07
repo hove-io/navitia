@@ -49,10 +49,10 @@ struct RAPTOR : public AbstractRouter
 
     ///Lance un calcul d'itinéraire entre deux stop areas
     std::vector<Path> compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
-                              int departure_day, bool clockwise = true);
+                              int departure_day, bool clockwise = true, const bool wheelchair = false);
     ///Lance un calcul d'itinéraire entre deux stop areas avec aussi une borne
     std::vector<Path> compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
-                              int departure_day, DateTime borne, bool clockwise = true);
+                              int departure_day, DateTime borne, bool clockwise = true, const bool wheelchair = false);
     ///Construit tous chemins trouvés
     std::vector<Path> makePathes(std::vector<std::pair<type::idx_t, double> > destinations, DateTime dt, const float walking_speed);
     ///Construit tous les chemins trouvés, lorsque le calcul est lancé dans le sens inverse
@@ -62,23 +62,23 @@ struct RAPTOR : public AbstractRouter
     std::vector<Path> 
     compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                 const std::vector<std::pair<type::idx_t, double> > &destinations,
-                const DateTime &dt_depart, const DateTime &borne = DateTime::inf, const float walking_speed=1.38,
+                const DateTime &dt_depart, const DateTime &borne = DateTime::inf, const float walking_speed=1.38, const bool wheelchair = false,
                 const std::multimap<std::string, std::string> & forbidden = std::multimap<std::string, std::string>());
     ///Calcul d'itinéraires dans le sens horaire à partir de plusieurs stop points de départs, vers plusieurs stoppoints d'arrivée, à partir d'une collection horaires
     std::vector<Path> 
     compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                 const std::vector<std::pair<type::idx_t, double> > &destinations,
-                std::vector<DateTime> dt_departs, const DateTime &borne, const float walking_speed=1.38);
+                std::vector<DateTime> dt_departs, const DateTime &borne, const float walking_speed=1.38, const bool wheelchair = false);
     ///Calcul d'itinéraires dans le sens horaire inversé à partir de plusieurs stop points de départs, vers plusieurs stoppoints d'arrivée, à une heure donnée
     std::vector<Path> 
     compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                         const std::vector<std::pair<type::idx_t, double> > &destinations,
-                        std::vector<DateTime> dt_departs, const DateTime &borne, const float walking_speed=1.38);
+                        std::vector<DateTime> dt_departs, const DateTime &borne, const float walking_speed=1.38, const bool wheelchair = false);
     ///Calcul d'itinéraires dans le sens horaire inversé à partir de plusieurs stop points de départs, vers plusieurs stoppoints d'arrivée, à partir d'une collection horaires
     std::vector<Path> 
     compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                         const std::vector<std::pair<type::idx_t, double> > &destinations,
-                        const DateTime &dt_depart, const DateTime &borne = DateTime::min, const float walking_speed=1.38,
+                        const DateTime &dt_depart, const DateTime &borne = DateTime::min, const float walking_speed=1.38, const bool wheelchair = false,
                         const std::multimap<std::string, std::string> & forbidden = std::multimap<std::string, std::string>());
 
     /// Désactive les routes qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
@@ -86,33 +86,33 @@ struct RAPTOR : public AbstractRouter
     void set_routes_valides(uint32_t date, const std::multimap<std::string, std::string> & forbidden);
 
     ///Boucle principale, parcourt les routes,
-    void boucleRAPTOR(bool global_pruning = true);
+    void boucleRAPTOR(const bool wheelchair, bool global_pruning = true);
     ///Construit un chemin
     Path makePath(type::idx_t destination_idx, unsigned int countb, bool reverse = false);
 
     /// Fonction générique pour la marche à pied
     /// Il faut spécifier le visiteur selon le sens souhaité
-    template<typename Visitor> void foot_path(const Visitor & v);
+    template<typename Visitor> void foot_path(const Visitor & v, const bool wheelchair);
     ///Marche à pied à l'interieur d'un stop point et entre deux stop points
-    void marcheapied();
+    void marcheapied(const bool wheelchair);
     ///Correspondances garanties et prolongements de service
-    void route_path_connections_forward(); 
+    void route_path_connections_forward(const bool wheelchair);
     ///Trouve pour chaque route, le premier route point auquel on peut embarquer, se sert de marked_rp
     void make_queue();
 
     ///Route parcourant dans le sens anti-horaire
-    void boucleRAPTORreverse(bool global_pruning = true);
+    void boucleRAPTORreverse(const bool wheelchair, bool global_pruning = true);
 
     ///Boucle principale
     template<typename Visitor>
-    void raptor_loop(Visitor visitor, bool global_pruning = true);
+    void raptor_loop(Visitor visitor, const bool wheelchair = false, bool global_pruning = true);
 
     ///Construit un chemin, utilisé lorsque l'algorithme a été fait en sens anti-horaire
     Path makePathreverse(unsigned int destination_idx, unsigned int countb);
      ///Marche à pied à l'interieur d'un stop point et entre deux stop points
-    void marcheapiedreverse();
+    void marcheapiedreverse(const bool wheelchair);
     ///Correspondances garanties et prolongements de service
-    void route_path_connections_backward(); 
+    void route_path_connections_backward(const bool wheelchair);
     ///Trouve pour chaque route, le premier route point auquel on peut embarquer, se sert de marked_rp
     void make_queuereverse();
 

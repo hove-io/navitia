@@ -824,5 +824,32 @@ BOOST_AUTO_TEST_CASE(freq_vj_pam) {
     BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), (25*3600 + 10*60)%data.dataRaptor.SECONDS_PER_DAY);
 }
 
+BOOST_AUTO_TEST_CASE(adapted) {
+    navimake::builder b("20120614");
+    b.sa("stop1");
+    b.sa("stop2");
+    b.sa("stop3", 0,0, false);
+    b.vj("A1", "11111", "A", false)("stop1", 8*3600)("stop2", 8*3600+10*60);
+    b.vj("A2", "11111", "B", true)("stop1", 9*3600)("stop2", 9*3600+10*60);
+    b.vj("B")("stop3", 9*3600)("stop2", 9*3600 + 10*60);
+
+    type::Data data;
+    b.build(data.pt_data);
+    data.build_raptor();
+    RAPTOR raptor(data);
+
+    type::PT_Data & d = data.pt_data;
+    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(1).idx, 7*3600, 0, routing::DateTime::inf, true, true);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.date(), 0);
+    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), (9*3600 + 10*60)%data.dataRaptor.SECONDS_PER_DAY);
+
+
+    res1 = raptor.compute(d.stop_areas.at(2).idx, d.stop_areas.at(1).idx, 7*3600, 0, routing::DateTime::inf, true, true);
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
+
+
+}
+
 
 

@@ -175,7 +175,7 @@ struct edge_less{
 };
 
 
-std::vector<Path> TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day, bool /*clockwise*/){
+std::vector<Path> TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day, bool /*clockwise*/, bool){
     DateTime start_time(day, hour - 180);
 
     try{

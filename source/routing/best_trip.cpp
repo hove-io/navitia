@@ -3,7 +3,11 @@
 namespace navitia { namespace routing {
 
 
-std::pair<type::idx_t, uint32_t> earliest_trip(const type::Route & route, const unsigned int order, const DateTime &dt, const type::Data &data) {
+std::pair<type::idx_t, uint32_t> earliest_trip(const type::Route & route, const unsigned int order, const DateTime &dt, const type::Data &data, const bool wheelchair) {
+    if(wheelchair && !data.pt_data.stop_points[data.pt_data.route_points[route.route_point_list[order]].stop_point_idx].is_adapted)
+        return std::make_pair(type::invalid_idx, 0);
+
+
     //On cherche le plus petit stop time de la route >= dt.hour()
     std::vector<uint32_t>::const_iterator begin = data.dataRaptor.departure_times.begin() +
             data.dataRaptor.first_stop_time[route.idx] +
@@ -21,7 +25,7 @@ std::pair<type::idx_t, uint32_t> earliest_trip(const type::Route & route, const 
     for(; it != end; ++it) {
         const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]];
         if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date)
-                && st.pick_up_allowed()
+                && st.pick_up_allowed() && (!wheelchair || st.is_adapted())
                 && (!st.is_frequency() || ((st.start_time%raptor::dataRAPTOR::SECONDS_PER_DAY<st.end_time%raptor::dataRAPTOR::SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
                                        || ((st.start_time%raptor::dataRAPTOR::SECONDS_PER_DAY>st.end_time%raptor::dataRAPTOR::SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour())))) {
             return std::make_pair(st.vehicle_journey_idx,
@@ -38,7 +42,7 @@ std::pair<type::idx_t, uint32_t> earliest_trip(const type::Route & route, const 
     for(it = begin; it != end; ++it) {
         const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]];
         if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date)
-                && st.pick_up_allowed()
+                && st.pick_up_allowed() && (!wheelchair || st.is_adapted())
                 && (!st.is_frequency() || ((st.start_time%raptor::dataRAPTOR::SECONDS_PER_DAY<st.end_time%raptor::dataRAPTOR::SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
                                        || ((st.start_time%raptor::dataRAPTOR::SECONDS_PER_DAY>st.end_time%raptor::dataRAPTOR::SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
             return std::make_pair(st.vehicle_journey_idx,
@@ -59,7 +63,9 @@ std::pair<type::idx_t, uint32_t> earliest_trip(const type::Route & route, const 
 
 
 
-std::pair<type::idx_t, uint32_t> tardiest_trip(const type::Route & route, const unsigned int order, const DateTime &dt, const type::Data &data) {
+std::pair<type::idx_t, uint32_t> tardiest_trip(const type::Route & route, const unsigned int order, const DateTime &dt, const type::Data &data, const bool wheelchair) {
+    if(wheelchair && !data.pt_data.stop_points[data.pt_data.route_points[route.route_point_list[order]].stop_point_idx].is_adapted)
+        return std::make_pair(type::invalid_idx, 0);
     //On cherche le plus grand stop time de la route <= dt.hour()
     const auto begin = data.dataRaptor.arrival_times.begin() +
                        data.dataRaptor.first_stop_time[route.idx] +
@@ -77,7 +83,7 @@ std::pair<type::idx_t, uint32_t> tardiest_trip(const type::Route & route, const 
     for(; it != end; ++it) {
         const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]];
         if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date)
-                && st.drop_off_allowed()
+                && st.drop_off_allowed() && (!wheelchair || st.is_adapted())
                 && (!st.is_frequency() || ((st.start_time%data.dataRaptor.SECONDS_PER_DAY<st.end_time%data.dataRaptor.SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
                     || ((st.start_time%data.dataRaptor.SECONDS_PER_DAY>st.end_time%data.dataRaptor.SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
             return std::make_pair(st.vehicle_journey_idx,
@@ -92,7 +98,7 @@ std::pair<type::idx_t, uint32_t> tardiest_trip(const type::Route & route, const 
         for(it = begin; it != end; ++it) {
             const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]];
             if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date)
-                    && st.drop_off_allowed()
+                    && st.drop_off_allowed() && (!wheelchair || st.is_adapted())
                     && (!st.is_frequency() || ((st.start_time%data.dataRaptor.SECONDS_PER_DAY<st.end_time%data.dataRaptor.SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
                         || ((st.start_time%data.dataRaptor.SECONDS_PER_DAY>st.end_time%data.dataRaptor.SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
                 return std::make_pair(st.vehicle_journey_idx,

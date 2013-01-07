@@ -18,7 +18,7 @@ struct VJ {
     types::VehicleJourney * vj;
 
     /// Construit un nouveau vehicle journey
-    VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string & block_id);
+    VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, bool is_adapted = true);
 
     /// Ajout un nouveau stopTime
     /// Lorsque le depart n'est pas specifié, on suppose que c'est le même qu'à l'arrivée
@@ -36,10 +36,10 @@ struct SA {
     types::StopArea * sa;
 
     /// Construit un nouveau stopArea
-    SA(builder & b, const std::string & sa_name, double x, double y);
+    SA(builder & b, const std::string & sa_name, double x, double y, bool is_adapted = true);
 
     /// Construit un stopPoint appartenant au stopArea courant
-    SA & operator()(const std::string & sp_name, double x = 0, double y = 0);
+    SA & operator()(const std::string & sp_name, double x = 0, double y = 0, bool is_adapted = true);
 };
 
 
@@ -60,11 +60,11 @@ struct builder{
     builder(const std::string & date) : begin(boost::gregorian::date_from_iso_string(date)) {}
 
     /// Crée un vehicle journey
-    VJ vj(const std::string &line_name, const std::string &validity_pattern = "11111111", const std::string & block_id="");
+    VJ vj(const std::string &line_name, const std::string &validity_pattern = "11111111", const std::string & block_id="", const bool is_adapted = true);
 
     /// Crée un nouveau stop area
-    SA sa(const std::string & name, double x = 0, double y = 0);
-    SA sa(const std::string & name, navitia::type::GeographicalCoord geo){return sa(name,geo.lon(), geo.lat());}
+    SA sa(const std::string & name, double x = 0, double y = 0, const bool is_adapted = true);
+    SA sa(const std::string & name, navitia::type::GeographicalCoord geo, bool is_adapted = true ){return sa(name,geo.lon(), geo.lat(), is_adapted);}
 
     /// Crée une connexion
     void connection(const std::string & name1, const std::string & name2, float length);
