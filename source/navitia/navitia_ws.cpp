@@ -170,9 +170,7 @@ public:
             std::string database = conf->get_as<std::string>("GENERAL", "database", "IdF.nav");
             LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
             data.loaded = true;
-            data.load_lz4(database);
-            data.build_raptor();
-            LOG4CPLUS_TRACE(logger, "acquisition du lock");
+            data.load(database);
             nt::Locker lock(d, true);
             LOG4CPLUS_TRACE(logger, "déplacement de data");
             d = std::move(data);
