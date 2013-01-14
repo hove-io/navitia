@@ -3,7 +3,7 @@
 
 namespace navitia { namespace timetables {
 request_parser::request_parser(const std::string &API, const std::string &request, const std::string &str_dt, const std::string &str_max_dt,
-               const int nb_departures, type::Data & data) {
+               const int nb_departures, const type::Data & data) {
     boost::posix_time::ptime ptime;
     ptime = boost::posix_time::from_iso_string(str_dt);
     date_time = routing::DateTime((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
@@ -30,7 +30,7 @@ request_parser::request_parser(const std::string &API, const std::string &reques
     }
 }
 
-request_parser::request_parser(const std::string &API, const std::string &request, const std::string &str_dt, const std::string &change_time, type::Data & data) {
+request_parser::request_parser(const std::string &API, const std::string &request, const std::string &str_dt, const std::string &change_time, const type::Data & data) {
     boost::posix_time::ptime ptime, maxptime;
     if(str_dt != "") {
         try {

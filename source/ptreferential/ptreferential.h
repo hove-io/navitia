@@ -55,13 +55,13 @@ struct ptref_parsing_error : public std::exception{
 };
 
 /// Execute une requête et génère la sortie protobuf 
-pbnavitia::Response query_pb(type::Type_e type, std::string request, const int depth, type::Data & data);
+pbnavitia::Response query_pb(type::Type_e type, std::string request, const int depth, const type::Data & data);
 
 /// Exécute une requête sur les données Data : retourne les idx des objets demandés
-std::vector<type::idx_t> make_query(type::Type_e requested_type, std::string request, type::Data & data);
+std::vector<type::idx_t> make_query(type::Type_e requested_type, std::string request, const type::Data &data);
 
 /// Construit la réponse proto buf, une fois que l'on trouvé les indices
-pbnavitia::Response extract_data(type::Data & data, Type_e requested_type, std::vector<type::idx_t> & rows, const int depth);
+pbnavitia::Response extract_data(const type::Data &data, Type_e requested_type, std::vector<type::idx_t> & rows, const int depth);
 
 
 /// Trouve le chemin d'un type de données à un autre

@@ -55,7 +55,7 @@ PT_Data& PT_Data::operator=(PT_Data&& other){
 }
 
 
-std::vector<idx_t> PT_Data::get_target_by_source(Type_e source, Type_e target, std::vector<idx_t> source_idx){
+std::vector<idx_t> PT_Data::get_target_by_source(Type_e source, Type_e target, std::vector<idx_t> source_idx) const {
     std::vector<idx_t> result;
     result.reserve(source_idx.size());
     for(idx_t idx : source_idx) {
@@ -67,7 +67,7 @@ std::vector<idx_t> PT_Data::get_target_by_source(Type_e source, Type_e target, s
     return result;
 }
 
-std::vector<idx_t> PT_Data::get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx){
+std::vector<idx_t> PT_Data::get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const {
     std::vector<idx_t> result;
     if(source_idx == invalid_idx)
         return result;
@@ -98,7 +98,7 @@ std::vector<idx_t> PT_Data::get_target_by_one_source(Type_e source, Type_e targe
     return result;
 }
 
-std::vector<idx_t> PT_Data::get_all_index(Type_e type){
+std::vector<idx_t> PT_Data::get_all_index(Type_e type) const {
     size_t num_elements = 0;
     switch(type){
     case Type_e::eLine: num_elements = lines.size(); break;
@@ -127,24 +127,43 @@ std::vector<idx_t> PT_Data::get_all_index(Type_e type){
     return indexes;
 }
 
-template<> std::vector<Line> & PT_Data::get_data<Line>(){return lines;}
-template<> std::vector<ValidityPattern> & PT_Data::get_data<ValidityPattern>(){return validity_patterns;}
-template<> std::vector<Route> & PT_Data::get_data<Route>(){return routes;}
-template<> std::vector<VehicleJourney> & PT_Data::get_data<VehicleJourney>(){return vehicle_journeys;}
-template<> std::vector<StopPoint> & PT_Data::get_data<StopPoint>(){return stop_points;}
-template<> std::vector<StopArea> & PT_Data::get_data<StopArea>(){return stop_areas;}
-template<> std::vector<StopTime> & PT_Data::get_data<StopTime>(){return stop_times;}
-template<> std::vector<Network> & PT_Data::get_data<Network>(){return networks;}
-template<> std::vector<Mode> & PT_Data::get_data<Mode>(){return modes;}
-template<> std::vector<ModeType> & PT_Data::get_data<ModeType>(){return mode_types;}
-template<> std::vector<City> & PT_Data::get_data<City>(){return cities;}
-template<> std::vector<Connection> & PT_Data::get_data<Connection>(){return connections;}
-template<> std::vector<RoutePoint> & PT_Data::get_data<RoutePoint>(){return route_points;}
-template<> std::vector<District> & PT_Data::get_data<District>(){return districts;}
-template<> std::vector<Department> & PT_Data::get_data<Department>(){return departments;}
-template<> std::vector<Company> & PT_Data::get_data<Company>(){return companies;}
-template<> std::vector<Vehicle> & PT_Data::get_data<Vehicle>(){return vehicles;}
-template<> std::vector<Country> & PT_Data::get_data<Country>(){return countries;}
+template<> std::vector<Line> & PT_Data::get_data<Line>() {return lines;}
+template<> std::vector<ValidityPattern> & PT_Data::get_data<ValidityPattern>() {return validity_patterns;}
+template<> std::vector<Route> & PT_Data::get_data<Route>() {return routes;}
+template<> std::vector<VehicleJourney> & PT_Data::get_data<VehicleJourney>() {return vehicle_journeys;}
+template<> std::vector<StopPoint> & PT_Data::get_data<StopPoint>() {return stop_points;}
+template<> std::vector<StopArea> & PT_Data::get_data<StopArea>() {return stop_areas;}
+template<> std::vector<StopTime> & PT_Data::get_data<StopTime>() {return stop_times;}
+template<> std::vector<Network> & PT_Data::get_data<Network>() {return networks;}
+template<> std::vector<Mode> & PT_Data::get_data<Mode>() {return modes;}
+template<> std::vector<ModeType> & PT_Data::get_data<ModeType>() {return mode_types;}
+template<> std::vector<City> & PT_Data::get_data<City>() {return cities;}
+template<> std::vector<Connection> & PT_Data::get_data<Connection>() {return connections;}
+template<> std::vector<RoutePoint> & PT_Data::get_data<RoutePoint>() {return route_points;}
+template<> std::vector<District> & PT_Data::get_data<District>() {return districts;}
+template<> std::vector<Department> & PT_Data::get_data<Department>() {return departments;}
+template<> std::vector<Company> & PT_Data::get_data<Company>() {return companies;}
+template<> std::vector<Country> & PT_Data::get_data<Country>() {return countries;}
+template<> std::vector<Vehicle> & PT_Data::get_data<Vehicle>() {return vehicles;}
+
+template<> std::vector<Line> const & PT_Data::get_data<Line>() const {return lines;}
+template<> std::vector<ValidityPattern> const & PT_Data::get_data<ValidityPattern>() const {return validity_patterns;}
+template<> std::vector<Route> const & PT_Data::get_data<Route>() const {return routes;}
+template<> std::vector<VehicleJourney> const & PT_Data::get_data<VehicleJourney>() const {return vehicle_journeys;}
+template<> std::vector<StopPoint> const & PT_Data::get_data<StopPoint>() const {return stop_points;}
+template<> std::vector<StopArea> const & PT_Data::get_data<StopArea>() const {return stop_areas;}
+template<> std::vector<StopTime> const & PT_Data::get_data<StopTime>() const {return stop_times;}
+template<> std::vector<Network> const & PT_Data::get_data<Network>() const {return networks;}
+template<> std::vector<Mode> const & PT_Data::get_data<Mode>() const {return modes;}
+template<> std::vector<ModeType> const & PT_Data::get_data<ModeType>() const {return mode_types;}
+template<> std::vector<City> const & PT_Data::get_data<City>() const {return cities;}
+template<> std::vector<Connection> const & PT_Data::get_data<Connection>() const {return connections;}
+template<> std::vector<RoutePoint> const & PT_Data::get_data<RoutePoint>() const {return route_points;}
+template<> std::vector<District> const & PT_Data::get_data<District>() const {return districts;}
+template<> std::vector<Department> const & PT_Data::get_data<Department>() const {return departments;}
+template<> std::vector<Company> const & PT_Data::get_data<Company>() const {return companies;}
+template<> std::vector<Country> const & PT_Data::get_data<Country>() const {return countries;}
+template<> std::vector<Vehicle> const & PT_Data::get_data<Vehicle>() const {return vehicles;}
 
 
 void PT_Data::build_first_letter(){

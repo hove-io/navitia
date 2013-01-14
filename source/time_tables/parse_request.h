@@ -10,10 +10,10 @@ struct request_parser {
     std::vector<type::idx_t> route_points;
 
     request_parser(const std::string &API, const std::string &request, const std::string &str_dt, const std::string &str_max_dt,
-                   const int nb_departures, type::Data & data);
+                   const int nb_departures, const type::Data & data);
 
     request_parser(const std::string &API, const std::string &request, const std::string &change_time, const std::string &str_max_dt,
-                   type::Data & data);
+                   const type::Data & data);
 };
 }
 
