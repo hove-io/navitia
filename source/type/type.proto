@@ -23,6 +23,7 @@ enum API {
     DEPARTURE_BOARD = 10;
     LINE_SCHEDULE = 11;
     STOPS_SCHEDULE = 12;
+    ISOCHRONE = 13;
 }
 
 message GeographicalCoord {
@@ -354,6 +355,16 @@ message DepartureBoard {
     required Board board = 3;
 }
 
+message Arrival {
+    optional StopTime stoptime = 1;
+    optional string error = 2;
+}
+
+message Isochrone {
+    repeated StopTime stop_time = 1;
+    optional string error = 2;
+}
+
 message Response{
     required API requested_api = 1;
     optional string error = 2;
@@ -379,6 +390,10 @@ message Response{
     optional LineSchedule line_schedule = 12;
 
     optional DepartureBoard departure_board = 13;
+
+    optional Arrival arrival = 14;
+
+    optional Isochrone isochrone = 15;
 }
 
 

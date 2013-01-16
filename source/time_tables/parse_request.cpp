@@ -1,19 +1,51 @@
 #include "parse_request.h"
 #include "ptreferential/ptreferential.h"
+#include "boost/lexical_cast.hpp"
 
 namespace navitia { namespace timetables {
+
+routing::DateTime request_parser::parse_time(const std::string str_dt, type::Data &data) {
+    routing::DateTime result;
+    std::string working_str = str_dt;
+
+    if(working_str != "") {
+        if(working_str.substr(0,1) == "T") {
+            if(working_str.size() == 2)
+                working_str = working_str.substr(0,1) + "0" + working_str.substr(1,2);
+            if(working_str.size() == 3)
+                working_str += "00";
+            working_str = boost::lexical_cast<std::string>(data.meta.production_date.begin().year()) +
+                    boost::lexical_cast<std::string>(data.meta.production_date.begin().month())+
+                    boost::lexical_cast<std::string>(data.meta.production_date.begin().day()) + working_str;
+        }
+        auto ptime = boost::posix_time::from_iso_string(str_dt);
+        result = routing::DateTime((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
+    } else {
+        struct parsetimeerror{};
+        throw parsetimeerror();
+    }
+
+    return result;
+}
+
 request_parser::request_parser(const std::string &API, const std::string &request, const std::string &str_dt, const std::string &str_max_dt,
                const int nb_departures, type::Data & data) {
-    boost::posix_time::ptime ptime;
-    ptime = boost::posix_time::from_iso_string(str_dt);
-    date_time = routing::DateTime((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
+
+    try {
+        date_time = parse_time(str_dt, data);
+    } catch(...) {
+        pb_response.set_error(API+" / Probleme lors du parsage de datetime");
+    }
 
     if((nb_departures == std::numeric_limits<int>::max()) && str_max_dt == "") {
         pb_response.set_error(API+" : Un des deux champs nb_departures ou max_datetime doit être renseigné");
     } else {
         if(str_max_dt != "") {
-            ptime = boost::posix_time::from_iso_string(str_max_dt);
-            max_datetime = routing::DateTime((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
+            try {
+                max_datetime = parse_time(str_max_dt, data);
+            } catch(...) {
+                pb_response.set_error(API+" / Probleme lors du parsage de max_datetime");
+            }
         }
 
         if(request!= "") {
@@ -31,40 +63,22 @@ request_parser::request_parser(const std::string &API, const std::string &reques
 }
 
 request_parser::request_parser(const std::string &API, const std::string &request, const std::string &str_dt, const std::string &change_time, type::Data & data) {
-    boost::posix_time::ptime ptime, maxptime;
-    if(str_dt != "") {
-        try {
-            ptime = boost::posix_time::from_iso_string(str_dt);
-        } catch(...) {
-            pb_response.set_error(API+" / Probleme lors du parsage de datetime");
-        }
+
+    try {
+        date_time = parse_time(str_dt, data);
+        date_time = date_time - date_time.hour();
+    } catch(...) {
+        pb_response.set_error(API+" / Probleme lors du parsage de datetime");
     }
-    else
-        ptime = boost::posix_time::second_clock::local_time();
 
-    ptime = ptime - ptime.time_of_day();
-    if(change_time!= "") {
-        std::string ctime = change_time;
-        if(ctime.substr(0,1) == "T") {
-            ctime = "19700101" + ctime;
-            if(ctime.size() == 3)
-                ctime += "00";
-        }
-
-
-        boost::posix_time::ptime pchange_time;
-        try {
-            pchange_time = boost::posix_time::from_iso_string(ctime);
-        } catch(...) {
-            pb_response.set_error(API+" / Probleme lors du parsage de changetime");
-        }
-
-        ptime = ptime + pchange_time.time_of_day();
+    try {
+        max_datetime = parse_time(change_time, data);
+        max_datetime = max_datetime - max_datetime.date() * routing::DateTime::NB_SECONDS_DAY;
+        max_datetime = max_datetime + (date_time.date() + 1) * routing::DateTime::NB_SECONDS_DAY;
+    }catch(...) {
+        pb_response.set_error(API+" / Probleme lors du parsage de changetime");
     }
-    date_time = routing::DateTime((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
 
-    maxptime = ptime + boost::posix_time::time_duration(24,0,0);
-    max_datetime = routing::DateTime((maxptime.date() - data.meta.production_date.begin()).days(), maxptime.time_of_day().total_seconds());
 
 
     if(request!= "") {
@@ -81,4 +95,14 @@ request_parser::request_parser(const std::string &API, const std::string &reques
 
 
 }
+
+request_parser::request_parser(const std::string &API, const std::string str_dt, type::Data & data) {
+    try {
+        date_time = parse_time(str_dt, data);
+        date_time = date_time - date_time.hour();
+    } catch(...) {
+        pb_response.set_error(API+" / Probleme lors du parsage de datetime");
+    }
+}
+
 }}
