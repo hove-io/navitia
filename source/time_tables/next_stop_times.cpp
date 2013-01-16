@@ -53,7 +53,7 @@ pbnavitia::Response next_departures(const std::string &request, const std::strin
 
 pbnavitia::Response next_arrivals(const std::string &request, const std::string &str_dt, const std::string &str_max_dt, const int nb_departures, const int depth, const bool wheelchair, type::Data & data) {
 
-    struct vis_next_departures {
+    struct vis_next_arrivals {
         struct predicate_t {
             type::Data &data;
             predicate_t(type::Data& data) : data(data){}
@@ -64,9 +64,9 @@ pbnavitia::Response next_arrivals(const std::string &request, const std::string 
         std::string api_str;
         pbnavitia::API api_pb;
         predicate_t predicate;
-        vis_next_departures(type::Data& data) : api_str("NEXT_ARRIVALS"), api_pb(pbnavitia::NEXT_ARRIVALS), predicate(data) {}
+        vis_next_arrivals(type::Data& data) : api_str("NEXT_ARRIVALS"), api_pb(pbnavitia::NEXT_ARRIVALS), predicate(data) {}
     };
-    vis_next_departures vis(data);
+    vis_next_arrivals vis(data);
     return next_stop_times(request, str_dt, str_max_dt, nb_departures, depth, wheelchair, data, vis);
 }
 
