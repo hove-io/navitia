@@ -41,31 +41,38 @@ void Data::set_cities(){
     }
 }
 
-void Data::load_lz4(const std::string & filename) {
+void Data::load(const std::string & filename) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     try {
+        this->load_lz4(filename);
         last_load_at = pt::microsec_clock::local_time();
-        std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
-        boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
-        in.push(LZ4Decompressor(2048*500),8192*500, 8192*500);
-        in.push(ifs);
-        eos::portable_iarchive ia(in);
-        ia >> *this;
         for(size_t i = 0; i < this->pt_data.stop_times.size(); ++i)
             this->pt_data.stop_times[i].idx = i;
         last_load = true;
     } catch(std::exception& ex) {
         LOG4CPLUS_ERROR(logger, boost::format("le chargement des données à échoué: %s") % ex.what());
         last_load = false;
-        throw;
     } catch(...) {
         LOG4CPLUS_ERROR(logger, "le chargement des données à échoué");
         last_load = false;
-        throw;
     }
 }
 
-void Data::lz4(const std::string & filename) {
+void Data::load_lz4(const std::string & filename) {
+    std::ifstream ifs(filename.c_str(),  std::ios::in | std::ios::binary);
+    boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
+    in.push(LZ4Decompressor(2048*500),8192*500, 8192*500);
+    in.push(ifs);
+    eos::portable_iarchive ia(in);
+    ia >> *this;
+}
+
+void Data::save(const std::string & filename){
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    this->save_lz4(filename);
+}
+
+void Data::save_lz4(const std::string & filename) {
     std::ofstream ofs(filename.c_str(),std::ios::out|std::ios::binary|std::ios::trunc);
     boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
     out.push(LZ4Compressor(2048*500), 1024*500, 1024*500);

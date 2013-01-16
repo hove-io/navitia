@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
 
     Data d;
     std::cout << "Chargement des données : " << argv[1] << std::endl;
-    d.load_lz4(argv[1]);
+    d.load(argv[1]);
     int error_count = 0;
 
     error_count += general_check(d.pt_data.stop_areas);

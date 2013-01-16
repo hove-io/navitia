@@ -58,7 +58,6 @@ public:
     bool last_load;
     boost::posix_time::ptime last_load_at;
 
-    public:
 
     /// Constructeur de data, définit le nombre de threads, charge les données
     Data() : nb_threads(8), loaded(false), last_load(true){
@@ -92,33 +91,11 @@ public:
         ar & pt_data & geo_ref & meta;
     }
 
-    /** Sauvegarde la structure de fichier au format texte
-      *
-      * Le format est plus portable que la version binaire
-      */
-    void save(const std::string & filename);
-
-    /** Charge la structure de données du fichier au format texte */
+    /** Charge les données et effectue les initialisations nécessaires */
     void load(const std::string & filename);
 
-    /** Charge les données binaires compressées en FastLZ
-      *
-      * La compression FastLZ est extrèmement rapide mais moyennement performante
-      * Le but est que la lecture du fichier compression soit aussi rapide que sans compression
-      */
-    void load_lz4(const std::string & filename);
-
-    /** Sauvegarde les données en binaire compressé avec FastLZ*/
-    void lz4(const std::string & filename);
-
-    /** Sauvegarde la structure de fichier au format binaire
-      *
-      * Attention à la portabilité
-      */
-    void save_bin(const std::string & filename);
-
-    /** Charge la structure de données depuis un fichier au format binaire */
-    void load_bin(const std::string & filename);
+    /** Sauvegarde les données */
+    void save(const std::string & filename);
 
     /** Construit l'indexe ExternelCode */
     void build_external_code();
@@ -132,10 +109,18 @@ public:
     /** Construit les données raptor */
     void build_raptor();
 
-
     Data& operator=(Data&& other);
 
+private:
+    /** Charge les données binaires compressées en LZ4
+      *
+      * La compression LZ4 est extrèmement rapide mais moyennement performante
+      * Le but est que la lecture du fichier compression soit aussi rapide que sans compression
+      */
+    void load_lz4(const std::string & filename);
 
+    /** Sauvegarde les données en binaire compressé avec LZ4*/
+    void save_lz4(const std::string & filename);
 
 };
 
