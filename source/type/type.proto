@@ -1,9 +1,17 @@
 package pbnavitia;
 
 enum NavitiaType {
+    LINE = 1;
+    ROUTE = 2;
     STOPPOINT = 4;
     STOPAREA = 5;
+    NETWORK = 7;
+    MODE = 8;
+    MODETYPE = 9;
     CITY = 10;
+    CONNECTION = 11;
+    ROUTEPOINT = 12;
+    COMPANY = 15;
     COUNTRY = 17;
     SITE = 20;
     ADDRESS = 30;
@@ -354,35 +362,80 @@ message DepartureBoard {
     required Board board = 3;
 }
 
+message Load {
+    required bool ok = 1;
+}
+
 message Response{
     required API requested_api = 1;
     optional string error = 2;
-
     optional string info = 3;
 
     optional FirstLetter firstletter = 4;
-
     optional PTReferential ptref = 5;
-
     optional StreetNetwork street_network = 6;
- 
     optional Planner planner = 7;	
-
     optional ProximityList proximitylist = 8;
-
     optional Status status = 9;
-
     optional StopTimes nextstoptimes = 10;
-
     optional StopsSchedule stops_schedule = 11;
-
     optional LineSchedule line_schedule = 12;
-
     optional DepartureBoard departure_board = 13;
+    optional Load load = 14;
 }
 
 
 message req {
 	required string api = 1;
 	required string params = 2;
+}
+
+message FirstLetterRequest {
+    required string name = 1;
+    repeated NavitiaType types = 2;
+}
+
+message NextStopTimeRequest {
+    required string departure_filter = 1;
+    required string arrival_filter = 2;
+    required string datetime = 3;
+    required string changetime = 4;
+    required int32 depth = 5;
+    required string max_datetime = 6;
+    required int32 nb_departure = 7;
+    required bool wheelchair = 8;
+}
+
+message JourneysRequest {
+    required string origin = 1;
+    required string destination = 2;
+    repeated string datetime = 3;
+    required bool clockwise = 4;
+    repeated string forbiddenline = 5;
+    repeated string forbiddenmode = 6;
+    repeated string forbiddenroute = 7;
+    required double walking_speed = 8;
+    required bool wheelchair = 9;
+}
+
+message ProximityListRequest {
+    required GeographicalCoord coord = 1;
+    required double distance = 2;
+    repeated NavitiaType types = 3;
+}
+
+message PTRefRequest {
+    required NavitiaType requested_type = 1;
+    required string filter = 2;
+    required int32 depth = 3;
+}
+
+message Request {
+    required API requested_api = 1;
+
+    optional FirstLetterRequest first_letter = 2;
+    optional NextStopTimeRequest next_stop_times = 4;
+    optional ProximityListRequest proximity_list = 5;
+    optional JourneysRequest journeys = 6;
+    optional PTRefRequest ptref = 7;
 }

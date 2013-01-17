@@ -204,6 +204,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
 pbnavitia::Response query_pb(Type_e requested_type, std::string request, const int depth, const Data &data){
     std::vector<idx_t> final_indexes;
     pbnavitia::Response pb_response;
+    pb_response.set_requested_api(pbnavitia::PTREFERENTIAL);
     try {
         final_indexes = make_query(requested_type, request, data);
     } catch(ptref_parsing_error parse_error) {
