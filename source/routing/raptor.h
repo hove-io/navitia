@@ -18,9 +18,9 @@ struct RAPTOR : public AbstractRouter
 
     ///Données modifiées pendant le calcul
     ///Contient les heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque route point à chaque tour
-    map_retour_t retour;
+    map_labels_t labels;
     ///Contient les meilleures heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque route point
-    map_int_pint_t best;
+    map_int_pint_t best_labels;
     ///Contient tous les points d'arrivée, et la meilleure façon dont on est arrivé à destination
     best_dest b_dest;
     ///Nombre de correspondances effectuées jusqu'à présent
@@ -36,12 +36,12 @@ struct RAPTOR : public AbstractRouter
 
     //Constructeur
     RAPTOR(const navitia::type::Data &data) :  
-        data(data), best(data.pt_data.route_points.size()),
+        data(data), best_labels(data.pt_data.route_points.size()),
         marked_rp(data.pt_data.route_points.size()),
         marked_sp(data.pt_data.stop_points.size()),
         routes_valides(data.pt_data.routes.size()),
         Q(data.pt_data.routes.size()) {
-            retour.assign(20, data.dataRaptor.retour_constant);
+            labels.assign(20, data.dataRaptor.labels_const);
     }
 
     ///Initialise les structure retour et b_dest
@@ -122,7 +122,7 @@ struct RAPTOR : public AbstractRouter
      *  vers tous les autres points.
      *  Renvoie toutes les arrivées vers tous les stop points.
      */
-    std::vector<idx_retour>
+    std::vector<idx_label>
     isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
               const DateTime &dt_depart, const DateTime &borne = DateTime::min,
               const float walking_speed=1.38, const bool wheelchair = false,
