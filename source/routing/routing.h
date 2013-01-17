@@ -17,26 +17,7 @@ struct NotFound{};
  */
 struct DateTime {
 
-    /** Mesdames, Messieurs, votre attention s'il vous plaît
-     * Pour des raisons de micro-optimisation, la date et l'heure sont codés sur un seul entier
-     * Les 12 bits les plus forts codent les jours
-     * Les 20 bits plus faibles codent l'heure
-     *
-     */
-private:
-    const static uint32_t hour_mask = 0x000FFFFF;
-    const static char date_offset = 20;
-
-public:
     uint32_t datetime;
-
-    uint32_t hour() const {
-        return datetime & hour_mask;
-    }
-
-    uint32_t date() const {
-        return datetime >> date_offset;
-    }
 
     static const uint32_t NB_SECONDS_DAY = 86400;
 
@@ -44,8 +25,17 @@ public:
     static DateTime min;
 
     DateTime() : datetime(std::numeric_limits<uint32_t>::max()){}
-    DateTime(int date, int hour) : datetime((date << date_offset) + hour) {normalize();}
+    DateTime(int date, int hour) : datetime(date*NB_SECONDS_DAY + hour) {}
     DateTime(const DateTime & dt) : datetime(dt.datetime) {}
+
+    uint32_t hour() const {
+        return datetime%NB_SECONDS_DAY;
+    }
+
+    uint32_t date() const {
+        return datetime/NB_SECONDS_DAY;
+    }
+
 
     bool operator<(DateTime other) const {
         return this->datetime < other.datetime;
@@ -71,12 +61,12 @@ public:
         return DateTime(0,0);
     }
 
-    void normalize(){
-        uint32_t hour = this->hour();
-        if(hour > NB_SECONDS_DAY) {
-            *this = DateTime(this->date() + 1, hour % (NB_SECONDS_DAY));
-        }
-    }
+//    void normalize(){
+//        uint32_t hour = this->hour();
+//        if(hour > NB_SECONDS_DAY) {
+//            *this = DateTime(this->date() + 1, hour % (NB_SECONDS_DAY));
+//        }
+//    }
 
     bool operator==(DateTime other) const {
         return this->datetime == other.datetime;
@@ -88,60 +78,44 @@ public:
 
 
     uint32_t operator-(DateTime other) {
-        return (NB_SECONDS_DAY*(this->date() - other.date())) + this->hour() - other.hour();
+        return datetime - other.datetime;
     }
 
     void update(uint32_t hour) {
-        int date = this->date();
-
-        if(hour > NB_SECONDS_DAY)
+        if(hour>=NB_SECONDS_DAY)
             hour -= NB_SECONDS_DAY;
-        if(this->hour() > hour) {
-            ++date;
-            this->datetime = (date << date_offset) + hour;
-        } else {
-            this->datetime += (hour - this->hour());
-        }
-
+        datetime += ((hour>=this->hour())?0:NB_SECONDS_DAY) + hour - this->hour();
     }
 
     void updatereverse(uint32_t hour) {
-        int date = this->date();
-        if(hour > NB_SECONDS_DAY)
+        if(hour>=NB_SECONDS_DAY)
             hour -= NB_SECONDS_DAY;
-        if(this->hour() < hour) {
-            if(date > 0) {
-                --date;
-                this->datetime = (date << date_offset) + hour;
-            } else {
-                this->datetime = 0;
-            }
-
-        } else {
-            this->datetime -= (this->hour() - hour);
+        if(hour<=this->hour())
+            datetime += hour - this->hour();
+        else {
+            if(this->date() > 0)
+                datetime += hour - this->hour() - NB_SECONDS_DAY;
+            else
+                datetime = 0;
         }
-
     }
 
     void increment(uint32_t secs){
         datetime += secs;
-        this->normalize();
     }
 
     void decrement(uint32_t secs){
-        uint32_t hour = this->hour();
-        if(hour > secs)
-            this->updatereverse(hour - secs);
-        else
-            this->updatereverse(NB_SECONDS_DAY - secs + hour);
+        datetime -= secs;
     }
 
     void date_decrement(){
-        datetime -= 1 << date_offset;
+        //datetime -= 1 << date_offset;
+        datetime -= NB_SECONDS_DAY;
     }
 
     void date_increment(){
-        datetime += 1 << date_offset;
+        //datetime += 1 << date_offset;
+        datetime += NB_SECONDS_DAY;
     }
 
 

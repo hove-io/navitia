@@ -48,8 +48,6 @@ struct type_retour {
             arrival = departure;
             arrival.updatereverse(!st.is_frequency() ? st.arrival_time : st.start_time + gap);
         }
-        departure.normalize();
-        arrival.normalize();
     }
 
     type_retour(const DateTime & arrival, const DateTime & departure, int embarquement) :

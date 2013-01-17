@@ -70,6 +70,12 @@ struct RAPTOR : public AbstractRouter
     makePathesreverse(std::vector<std::pair<type::idx_t, double> > destinations,
                       DateTime dt, const float walking_speed);
 
+    template<typename Visitor>
+    std::vector<Path> compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
+                                  const std::vector<std::pair<type::idx_t, double> > &destinations,
+                                  const DateTime &dt_depart, const DateTime &borne, const float walking_speed, const bool wheelchair, const std::multimap<std::string, std::string> & forbidden,
+                                  Visitor vis);
+
     /** Calcul d'itinéraires dans le sens horaire à partir de plusieurs 
      *  stop points de départs, vers plusieurs stoppoints d'arrivée,
      *  à une heure donnée.
