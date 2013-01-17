@@ -77,7 +77,7 @@ WhereWrapper<T> build_clause(std::vector<Filter> filters) {
 
 
 
-pbnavitia::Response extract_data(Data & data, Type_e requested_type, std::vector<idx_t> & rows, const int depth) {
+pbnavitia::Response extract_data(const Data & data, Type_e requested_type, std::vector<idx_t> & rows, const int depth) {
     pbnavitia::Response result;
     result.set_requested_api(pbnavitia::PTREFERENTIAL);
     pbnavitia::PTReferential * pb_response = result.mutable_ptref();
@@ -103,7 +103,7 @@ pbnavitia::Response extract_data(Data & data, Type_e requested_type, std::vector
 
 
 template<typename T, typename C>
-std::vector<idx_t> filtered_indexes(const std::vector<T> & data, const C & clause){
+std::vector<idx_t> filtered_indexes(const std::vector<T> & data, const C & clause) {
     std::vector<idx_t> result;
     for(size_t i = 0; i < data.size(); ++i){
         if(clause(data[i]))
@@ -113,7 +113,7 @@ std::vector<idx_t> filtered_indexes(const std::vector<T> & data, const C & claus
 }
 
 template<typename T>
-std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, Data & d) {
+std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
     auto & data = d.pt_data.get_data<T>();
     std::vector<idx_t> indexes;
     if(filter.op != HAVING) {
@@ -154,7 +154,7 @@ std::vector<Filter> parse(std::string request){
 }
 
 
-std::vector<idx_t> make_query(Type_e requested_type, std::string request, Data & data) {
+std::vector<idx_t> make_query(Type_e requested_type, std::string request, const Data & data) {
     std::vector<Filter> filters;
 
     if(!request.empty()){
@@ -202,7 +202,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, Data &
 }
 
 
-pbnavitia::Response query_pb(Type_e requested_type, std::string request, const int depth, Data & data){
+pbnavitia::Response query_pb(Type_e requested_type, std::string request, const int depth, const Data &data){
     std::vector<idx_t> final_indexes;
     pbnavitia::Response pb_response;
     pb_response.set_requested_api(pbnavitia::PTREFERENTIAL);

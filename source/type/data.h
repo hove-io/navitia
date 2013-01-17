@@ -92,7 +92,7 @@ public:
     }
 
     /** Charge les données et effectue les initialisations nécessaires */
-    void load(const std::string & filename);
+    bool load(const std::string & filename);
 
     /** Sauvegarde les données */
     void save(const std::string & filename);

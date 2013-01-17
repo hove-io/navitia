@@ -7,7 +7,7 @@
 namespace navitia { namespace timetables {
 typedef std::vector<routing::DateTime> vector_datetime;
 
-pbnavitia::Response departure_board(const std::string &filter, std::string &date, std::string &date_changetime, type::Data &data);
+pbnavitia::Response departure_board(const std::string &filter, const std::string &date, const std::string &date_changetime, const type::Data &data);
 }
 
 }

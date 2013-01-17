@@ -119,21 +119,22 @@ struct PT_Data : boost::noncopyable{
     /** Étant donné une liste d'indexes pointant vers source,
       * retourne une liste d'indexes pointant vers target
       */
-    std::vector<idx_t> get_target_by_source(Type_e source, Type_e target, std::vector<idx_t> source_idx);
+    std::vector<idx_t> get_target_by_source(Type_e source, Type_e target, std::vector<idx_t> source_idx) const;
 
     /** Étant donné un index pointant vers source,
       * retourne une liste d'indexes pointant vers target
       */
-    std::vector<idx_t> get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx);
+    std::vector<idx_t> get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const ;
 
     /** Retourne la structure de données associée au type */
     template<typename T>  std::vector<T> & get_data();
+    template<typename T>  std::vector<T> const & get_data() const;
 
     /** Retourne tous les indices d'un type donné
       *
       * Concrètement, on a un tableau avec des éléments allant de 0 à (n-1) où n est le nombre d'éléments
       */
-    std::vector<idx_t> get_all_index(Type_e type);
+    std::vector<idx_t> get_all_index(Type_e type) const;
 
 
     /** Construit une nouvelle structure de correspondance */
