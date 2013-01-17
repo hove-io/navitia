@@ -133,6 +133,7 @@ public:
 
         nt::Locker locker(check_and_init(request, data, pbnavitia::FIRSTLETTER, rd));
         if(!locker.locked){
+
             return rd;
         }
 
@@ -255,8 +256,13 @@ public:
         return rd;
     }
 
+    enum JourneyType {
+        OneDateTime = 1,
+        MultipleDateTimes = 2,
+        Isochrone = 3
+    };
 
-    ResponseData journeys(RequestData & request, navitia::type::Data & d, bool multiple_datetime) {
+    ResponseData journeys(RequestData & request, navitia::type::Data & d, JourneyType journey_type) {
         ResponseData rd;
 
         nt::Locker locker(check_and_init(request, d, pbnavitia::PLANNER, rd));
@@ -272,7 +278,9 @@ public:
         }
 
         navitia::type::EntryPoint departure = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["origin"].value));
-        navitia::type::EntryPoint destination = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["destination"].value));
+        navitia::type::EntryPoint destination;
+        if(journey_type != JourneyType::Isochrone)
+            destination = navitia::type::EntryPoint(boost::get<std::string>(request.parsed_params["destination"].value));
 
         // gestion des addresses
 
@@ -282,7 +290,7 @@ public:
                 departure.coordinates = d.geo_ref.ways[way->second].nearest_coord(departure.house_number, d.geo_ref.graph);
             }
         }
-        if (destination.type == navitia::type::Type_e::eAddress){
+        if (journey_type != JourneyType::Isochrone && destination.type == navitia::type::Type_e::eAddress){
             auto way = d.geo_ref.way_map.find(destination.external_code);
             if (way != d.geo_ref.way_map.end()){
                 destination.coordinates = d.geo_ref.ways[way->second].nearest_coord(destination.house_number, d.geo_ref.graph);
@@ -303,7 +311,7 @@ public:
         }
 
         std::vector<std::string> datetimes;
-        if(multiple_datetime){
+        if(journey_type == JourneyType::MultipleDateTimes){
             datetimes = boost::get<std::vector<std::string>>(request.parsed_params["datetime[]"].value);
         } else {
             datetimes.push_back(boost::get<std::string>(request.parsed_params["datetime"].value));
@@ -316,9 +324,10 @@ public:
         bool wheelchair = false;
         if(request.parsed_params.find("wheelchair") != request.parsed_params.end())
             wheelchair = boost::get<bool>(request.parsed_params["wheelchair"].value);
-
-        pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, datetimes, clockwise, walking_speed, wheelchair, forbidden, *street_network_worker);
-
+        if(journey_type != JourneyType::Isochrone)
+            pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, datetimes, clockwise, walking_speed, wheelchair, forbidden, *street_network_worker);
+        else
+            pb_response = navitia::routing::raptor::make_isochrone(*calculateur, departure, datetimes.front(), clockwise, walking_speed, wheelchair, forbidden, *street_network_worker);
         rd.status_code = 200;
 
         return rd;
@@ -515,14 +524,17 @@ public:
         accepted_params.push_back(std::string("adress"));
         add_param("proximitylist", "filter", "Type à rechercher", ApiParameter::STRING, false, accepted_params);
 
-        register_api("journeys", boost::bind(&Worker::journeys, this, _1, _2, false), "Calcul d'itinéraire multimodal");
+        register_api("journeys", boost::bind(&Worker::journeys, this, _1, _2, Worker::JourneyType::OneDateTime), "Calcul d'itinéraire multimodal");
         add_param("journeys", "datetime", "Date et heure de début de l'itinéraire, au format ISO", ApiParameter::STRING, true);
-        register_api("journeysarray", boost::bind(&Worker::journeys, this, _1, _2, true), "Calcul d'itinéraire multimodal avec plusieurs heures de départ");
+        register_api("journeysarray", boost::bind(&Worker::journeys, this, _1, _2, Worker::JourneyType::MultipleDateTimes), "Calcul d'itinéraire multimodal avec plusieurs heures de départ");
         add_param("journeysarray", "datetime[]", "Tableau de dates-heure de début de l'itinéraire, au format ISO", ApiParameter::STRINGLIST, true);
+        register_api("isochrone", boost::bind(&Worker::journeys, this, _1, _2, Worker::JourneyType::Isochrone), "Calcul d'isochrone multimodal");
+        add_param("isochrone", "datetime", "Date et heure de début de l'isochrone, au format ISO", ApiParameter::STRING, true);
 
-        for(auto api : {"journeys", "journeysarray"}){
+        for(auto api : {"journeys", "journeysarray", "isochrone"}){
             add_param(api, "origin", "Point de départ", ApiParameter::STRING, true);
-            add_param(api, "destination", "Point d'arrivée", ApiParameter::STRING, true);
+            if(std::strcmp(api, "isochrone")!=0)
+                add_param(api, "destination", "Point d'arrivée", ApiParameter::STRING, true);
             add_param(api, "clockwise", "Sens du calcul ; si 1 on veut partir après l'heure indiquée, si 0, on veut arriver avant [par défaut 1]", ApiParameter::BOOLEAN, false);
             add_param(api, "forbiddenline[]", "Lignes interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);
             add_param(api, "forbiddenmode[]", "Modes interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);

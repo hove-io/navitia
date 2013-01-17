@@ -802,24 +802,24 @@ BOOST_AUTO_TEST_CASE(freq_vj_pam) {
 
     type::PT_Data & d = data.pt_data;
 
-//    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(1).idx, 23*3600, 0);
+    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(1).idx, 23*3600, 0);
 
 
 
-//    BOOST_REQUIRE_EQUAL(res1.size(), 1);
-//    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), 23*3600 + 10*60);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), 23*3600 + 10*60);
 
-//    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(1).idx, 24*3600, 0);
-//        for(auto r : res1)
-//            r.print(d);
-////    BOOST_REQUIRE_EQUAL(res1.size(), 1);
-//    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.date(), 1);
-//    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), (24*3600 + 10*60)%data.dataRaptor.SECONDS_PER_DAY);
+    /*auto*/ res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(1).idx, 24*3600, 0);
+        for(auto r : res1)
+            r.print(d);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.date(), 1);
+    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), (24*3600 + 10*60)%data.dataRaptor.SECONDS_PER_DAY);
 
-    auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(1).idx, 25*3600, 0);
+    /*auto*/ res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(1).idx, 25*3600, 0);
     for(auto r : res1)
         r.print(d);
-//    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1[0].items[0].arrival.date(), 1);
     BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), (25*3600 + 10*60)%data.dataRaptor.SECONDS_PER_DAY);
 }

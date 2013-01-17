@@ -1,5 +1,6 @@
 #include "raptor.h"
 #include <boost/foreach.hpp>
+#include <boost/geometry.hpp>
 
 namespace navitia { namespace routing { namespace raptor {
 
@@ -427,6 +428,44 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
 
     return result;
 }
+
+
+std::vector<idx_retour>
+RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
+          const DateTime &dt_depart, const DateTime &borne,
+          const float walking_speed, const bool wheelchair,
+          const std::multimap<std::string, std::string> & forbidden) {
+
+    std::vector<idx_retour> result;
+    set_routes_valides(dt_depart.date(), forbidden);
+    auto departures = init::getDepartures(departs, dt_depart, true, data, walking_speed);
+    clear_and_init(departures, {}, borne, true, true, walking_speed);
+
+    boucleRAPTOR(wheelchair);
+
+    for(const type::StopPoint &sp : data.pt_data.stop_points) {
+        DateTime mini = DateTime::inf;
+        type::idx_t mini_rp = type::invalid_idx;
+        for(type::idx_t rpidx : sp.route_point_list) {
+            if(best[rpidx].arrival < mini) {
+                mini = best[rpidx].arrival;
+                mini_rp = rpidx;
+            }    
+        }
+
+        type_retour t;
+        if(mini_rp != type::invalid_idx) {
+            result.push_back(std::make_pair(sp.idx,best[mini_rp]));
+        }
+    
+    }
+    std::sort(result.begin(), result.end(), 
+            [](idx_retour r1, idx_retour r2) {
+               return r1.second.arrival < r2.second.arrival; 
+            });
+    return result;
+}
+
 
 
 

@@ -10,6 +10,17 @@ pbnavitia::Response make_response(RAPTOR &raptor,
                                   const type::EntryPoint &origin,
                                   const type::EntryPoint &destination,
                                   const std::vector<std::string> &datetimes,
-                                  bool clockwise, const float walking_speed, const bool wheelchair, std::multimap<std::string, std::string> forbidden,
+                                  bool clockwise, const float walking_speed,
+                                  const bool wheelchair,
+                                  std::multimap<std::string, std::string> forbidden,
                                   streetnetwork::StreetNetwork & worker);
+
+pbnavitia::Response make_isochrone(RAPTOR &raptor,
+                                   const type::EntryPoint origin,
+                                   std::string &datetime,bool clockwise,
+                                   const float walking_speed, const bool wheelchair,
+                                   std::multimap<std::string, std::string> forbidden,
+                                   streetnetwork::StreetNetwork & worker);
+
+
 }}}

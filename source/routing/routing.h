@@ -38,6 +38,8 @@ public:
         return datetime >> date_offset;
     }
 
+    static const uint32_t NB_SECONDS_DAY = 86400;
+
     static DateTime inf;
     static DateTime min;
 
@@ -71,8 +73,8 @@ public:
 
     void normalize(){
         uint32_t hour = this->hour();
-        if(hour > 24*3600) {
-            *this = DateTime(this->date() + 1, hour % (24*3600));
+        if(hour > NB_SECONDS_DAY) {
+            *this = DateTime(this->date() + 1, hour % (NB_SECONDS_DAY));
         }
     }
 
@@ -86,14 +88,14 @@ public:
 
 
     uint32_t operator-(DateTime other) {
-        return (3600*24*(this->date() - other.date())) + this->hour() - other.hour();
+        return (NB_SECONDS_DAY*(this->date() - other.date())) + this->hour() - other.hour();
     }
 
     void update(uint32_t hour) {
         int date = this->date();
 
-        if(hour > 86400)
-            hour -= 86400;
+        if(hour > NB_SECONDS_DAY)
+            hour -= NB_SECONDS_DAY;
         if(this->hour() > hour) {
             ++date;
             this->datetime = (date << date_offset) + hour;
@@ -105,8 +107,8 @@ public:
 
     void updatereverse(uint32_t hour) {
         int date = this->date();
-        if(hour > 86400)
-            hour -= 86400;
+        if(hour > NB_SECONDS_DAY)
+            hour -= NB_SECONDS_DAY;
         if(this->hour() < hour) {
             if(date > 0) {
                 --date;
@@ -131,7 +133,7 @@ public:
         if(hour > secs)
             this->updatereverse(hour - secs);
         else
-            this->updatereverse(86400 - secs + hour);
+            this->updatereverse(NB_SECONDS_DAY - secs + hour);
     }
 
     void date_decrement(){

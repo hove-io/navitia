@@ -33,7 +33,7 @@ namespace qi = boost::spirit::qi;
         struct select_r
             : qi::grammar<Iterator, std::vector<Filter>(), qi::space_type>
 {
-    qi::rule<Iterator, std::string(), qi::space_type> txt, txt2; // Match une string
+    qi::rule<Iterator, std::string(), qi::space_type> txt, txt2, txt3; // Match une string
     qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
     qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter; // La string complète à parser
     qi::rule<Iterator, Filter(), qi::space_type> filter1, filter2; // La string complète à parser
@@ -41,6 +41,7 @@ namespace qi = boost::spirit::qi;
     select_r() : select_r::base_type(filter) {
         txt = qi::lexeme[+(qi::alnum|qi::char_("_:-"))];
         txt2 = qi::lexeme[+(qi::alnum|qi::char_("_:-=.<> "))];
+        txt3 = '"' >> qi::lexeme[+(qi::alnum|qi::char_("_:- "))] >> '"';
         bin_op =  qi::string("<=")[qi::_val = LEQ]
                 | qi::string(">=")[qi::_val = GEQ]
                 | qi::string("<>")[qi::_val = NEQ]
@@ -48,7 +49,7 @@ namespace qi = boost::spirit::qi;
                 | qi::string(">") [qi::_val = GT]
                 | qi::string("=") [qi::_val = EQ];
 
-        filter1 = (txt >> "." >> txt >> bin_op >> txt)[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3, qi::_4)];
+        filter1 = (txt >> "." >> txt >> bin_op >> (txt|txt3))[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3, qi::_4)];
         filter2 = (txt >> "HAVING" >> '(' >> txt2 >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
         filter %= (filter1 | filter2) % (qi::lexeme["and"] | qi::lexeme["AND"]) ;
     }
