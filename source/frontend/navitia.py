@@ -3,7 +3,6 @@ import zmq
 import type_pb2
 import json
 import dict2xml
-from lwpb.codec import MessageCodec
 import time
 from protobuf_to_dict import protobuf_to_dict
 from werkzeug.wrappers import Request, Response
@@ -14,9 +13,6 @@ from werkzeug.routing import Map, Rule
 context = zmq.Context()
 socket = context.socket(zmq.REQ)
 socket.connect("ipc:///tmp/diediedie")
-
-response = MessageCodec( pb2file='type.pb', typename='pbnavitia.Response' )
-request = MessageCodec( pb2file='type.pb', typename='pbnavitia.Request' )
 
 def render_output(pb_resp, format, request):
     if format == 'json':
@@ -131,13 +127,13 @@ def on_proximity_list(request, version, format):
     resp = send_and_receive(req)
     return render_output(resp, format, request)
 
-def on_journeys(request, version, format):
+def journeys(requested_type, request, version, format):
 #    req.params = "origin=coord:2.1301409667968625:48.802045523752106&destination=coord:2.3818232910156234:48.86202003509158&datetime=20120615T143200&format=pb" 
     req = type_pb2.Request()
-    req.requested_api = type_pb2.PLANNER
+    req.requested_api = requested_type
 
     req.journeys.origin = request.args.get("origin")
-    req.journeys.destination = request.args.get("destination")
+    req.journeys.destination = request.args.get("destination", "")
     req.journeys.datetime.append(request.args.get("datetime"))
     req.journeys.clockwise = request.args.get("clockwise", True, type=bool)
     #req.journeys.forbiddenline += request.args.getlist('forbiddenline[]')
@@ -147,6 +143,9 @@ def on_journeys(request, version, format):
     req.journeys.wheelchair = request.args.get('wheelchair', False, type=float)
     resp = send_and_receive(req)
     return render_output(resp, format, request)
+
+def on_journeys(requested_type):
+    return lambda request, version, format: journeys(requested_type, request, version, format)
 
 def ptref(requested_type, request, version, format):
     req = type_pb2.Request()
@@ -167,14 +166,13 @@ url_map = Map([
     Rule('/load.<format>', endpoint = on_load),
     Rule('/status.<format>', endpoint = on_status),
     Rule('/<version>/first_letter.<format>', endpoint = on_first_letter),
-    Rule('/<version>/journeys.<format>', endpoint = on_journeys),
     Rule('/<version>/line_schedule.<format>', endpoint = on_line_schedule),
     Rule('/<version>/next_departures.<format>', endpoint = on_next_departures),
     Rule('/<version>/next_arrivals.<format>', endpoint = on_next_arrivals),
     Rule('/<version>/stops_schedule.<format>', endpoint = on_stops_schedule),
     Rule('/<version>/departure_board.<format>', endpoint = on_departure_board),
     Rule('/<version>/proximity_list.<format>', endpoint = on_proximity_list),
-    Rule('/<version>/journeys.<format>', endpoint = on_journeys),
+    Rule('/<version>/journeys.<format>', endpoint = on_journeys(type_pb2.PLANNER)),
     Rule('/<version>/stop_areas.<format>', endpoint = on_ptref(type_pb2.STOPAREA)),
     Rule('/<version>/stop_points.<format>', endpoint = on_ptref(type_pb2.STOPPOINT)),
     Rule('/<version>/lines.<format>', endpoint = on_ptref(type_pb2.LINE)),
@@ -185,6 +183,7 @@ url_map = Map([
     Rule('/<version>/connections.<format>', endpoint = on_ptref(type_pb2.CONNECTION)),
     Rule('/<version>/route_points.<format>', endpoint = on_ptref(type_pb2.ROUTEPOINT)),
     Rule('/<version>/companies.<format>', endpoint = on_ptref(type_pb2.COMPANY)),
+    Rule('/<version>/isochrone.<format>', endpoint = on_journeys(type_pb2.ISOCHRONE)),
     ])
 
 
