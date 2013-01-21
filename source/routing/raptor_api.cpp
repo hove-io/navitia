@@ -290,7 +290,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
         borne = DateTime::inf;
     }
     
-    std::vector<idx_retour> tmp;
+    std::vector<idx_label> tmp;
     int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
     int time = datetime.time_of_day().total_seconds();
 
@@ -301,12 +301,12 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
         //    tmp = raptor.compute_reverse_all(departures, destinations, DateTime(day, time), borne, walking_speed, wheelchair, forbidden);
         //
     
-    for(idx_retour & sp_retour : tmp) {
+    for(idx_label & sp_label : tmp) {
         auto st = response.mutable_isochrone()->add_stop_time();
-        auto t = sp_retour.second;
+        auto t = sp_label.second;
         st->set_arrival_date_time(iso_string(raptor.data, t.arrival.date(), t.arrival.hour()));
         st->set_departure_date_time(iso_string(raptor.data, t.departure.date(), t.departure.hour()));
-        fill_pb_object(sp_retour.first, raptor.data, st->mutable_stop_point(), 0);
+        fill_pb_object(sp_label.first, raptor.data, st->mutable_stop_point(), 0);
     }
 
     return response;

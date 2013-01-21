@@ -16,7 +16,7 @@ namespace navitia { namespace type {
 /** Contient toutes les données théoriques du référentiel transport en communs
   *
   * Il existe trois formats de stockage : texte, binaire, binaire compressé
-  * Il est conseillé de toujours utiliser le format compressé (la compression a un surcoût quasiment nul et
+  * Il est conseillé de toujours utiliser le format compressé (la compression a un surcout quasiment nul et
   * peut même (sur des disques lents) accélerer le chargement).
   */
 class Data : boost::noncopyable{

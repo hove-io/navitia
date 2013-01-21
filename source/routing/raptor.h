@@ -9,8 +9,9 @@
 #include "routing/dataraptor.h"
 #include "best_trip.h"
 #include "raptor_init.h"
+#include "raptor_path.h"
 
-namespace navitia { namespace routing { namespace raptor{
+namespace navitia { namespace routing { namespace raptor {
 
 struct RAPTOR : public AbstractRouter
 {
@@ -18,9 +19,9 @@ struct RAPTOR : public AbstractRouter
 
     ///Données modifiées pendant le calcul
     ///Contient les heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque route point à chaque tour
-    map_retour_t retour;
+    map_labels_t labels;
     ///Contient les meilleures heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque route point
-    map_int_pint_t best;
+    map_int_pint_t best_labels;
     ///Contient tous les points d'arrivée, et la meilleure façon dont on est arrivé à destination
     best_dest b_dest;
     ///Nombre de correspondances effectuées jusqu'à présent
@@ -36,12 +37,12 @@ struct RAPTOR : public AbstractRouter
 
     //Constructeur
     RAPTOR(const navitia::type::Data &data) :  
-        data(data), best(data.pt_data.route_points.size()),
+        data(data), best_labels(data.pt_data.route_points.size()),
         marked_rp(data.pt_data.route_points.size()),
         marked_sp(data.pt_data.stop_points.size()),
         routes_valides(data.pt_data.routes.size()),
         Q(data.pt_data.routes.size()) {
-            retour.assign(20, data.dataRaptor.retour_constant);
+            labels.assign(20, data.dataRaptor.labels_const);
     }
 
     ///Initialise les structure retour et b_dest
@@ -61,19 +62,12 @@ struct RAPTOR : public AbstractRouter
             int departure_day, DateTime borne, bool clockwise = true,
             const bool wheelchair = false);
 
-    ///Construit tous chemins trouvés
-    std::vector<Path> 
-    makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
-               DateTime dt, const float walking_speed);
-    ///Construit tous les chemins trouvés, lorsque le calcul est lancé dans le sens inverse
-    std::vector<Path> 
-    makePathesreverse(std::vector<std::pair<type::idx_t, double> > destinations,
-                      DateTime dt, const float walking_speed);
-
     template<typename Visitor>
     std::vector<Path> compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                                   const std::vector<std::pair<type::idx_t, double> > &destinations,
-                                  const DateTime &dt_depart, const DateTime &borne, const float walking_speed, const bool wheelchair, const std::multimap<std::string, std::string> & forbidden,
+                                  const DateTime &dt_depart, const DateTime &borne,
+                                  const float walking_speed, const bool wheelchair,
+                                  const std::multimap<std::string, std::string> & forbidden,
                                   Visitor vis);
 
     /** Calcul d'itinéraires dans le sens horaire à partir de plusieurs 
@@ -122,7 +116,7 @@ struct RAPTOR : public AbstractRouter
      *  vers tous les autres points.
      *  Renvoie toutes les arrivées vers tous les stop points.
      */
-    std::vector<idx_retour>
+    std::vector<idx_label>
     isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
               const DateTime &dt_depart, const DateTime &borne = DateTime::min,
               const float walking_speed=1.38, const bool wheelchair = false,
@@ -135,9 +129,6 @@ struct RAPTOR : public AbstractRouter
 
     ///Boucle principale, parcourt les routes,
     void boucleRAPTOR(const bool wheelchair, bool global_pruning = true);
-    ///Construit un chemin
-    Path makePath(type::idx_t destination_idx, unsigned int countb, bool reverse = false);
-
     /// Fonction générique pour la marche à pied
     /// Il faut spécifier le visiteur selon le sens souhaité
     template<typename Visitor> void foot_path(const Visitor & v, const bool wheelchair);
@@ -155,8 +146,6 @@ struct RAPTOR : public AbstractRouter
     template<typename Visitor>
     void raptor_loop(Visitor visitor, const bool wheelchair = false, bool global_pruning = true);
 
-    ///Construit un chemin, utilisé lorsque l'algorithme a été fait en sens anti-horaire
-    Path makePathreverse(unsigned int destination_idx, unsigned int countb);
      ///Marche à pied à l'interieur d'un stop point et entre deux stop points
     void marcheapiedreverse(const bool wheelchair);
     ///Correspondances garanties et prolongements de service

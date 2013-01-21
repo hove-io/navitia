@@ -4,15 +4,15 @@ namespace navitia { namespace routing { namespace raptor {
 
 void dataRAPTOR::load(const type::PT_Data &data)
 {
-    retour_constant.resize(data.route_points.size());
-    retour_constant_reverse.resize(data.route_points.size());
+    labels_const.resize(data.route_points.size());
+    labels_const_reverse.resize(data.route_points.size());
 
-    for(auto &r : retour_constant_reverse) {
+    for(auto &r : labels_const_reverse) {
         r.arrival = DateTime::min;
         r.departure = DateTime::min;
     }
 
-    for(auto &r : retour_constant) {
+    for(auto &r : labels_const) {
         r.arrival = DateTime::inf;
         r.departure = DateTime::inf;
     }

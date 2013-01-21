@@ -16,17 +16,17 @@ struct Departure_Type {
     Departure_Type() : rpidx(type::invalid_idx), count(0), walking_time(0), ratio(std::numeric_limits<float>::min()) {}
 };
 
-std::vector<Departure_Type> getDepartures(const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations, bool clockwise, const map_retour_t &retour, const type::Data &data, const float walking_speed);
+std::vector<Departure_Type> getDepartures(const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations, bool clockwise, const map_labels_t &labels, const type::Data &data, const float walking_speed);
 
 std::vector<Departure_Type> getDepartures(const std::vector<std::pair<type::idx_t, double> > &departs, const DateTime &dep, bool clockwise, const type::Data & data, const float walking_speed);
 
-std::vector<Departure_Type> getWalkingSolutions(bool clockwise, const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations, Departure_Type best, const map_retour_t &retour, const type::Data &data, const float walking_speed);
+std::vector<Departure_Type> getWalkingSolutions(bool clockwise, const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations, Departure_Type best, const map_labels_t &labels, const type::Data &data, const float walking_speed);
 
-std::vector<Departure_Type> getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations, const map_retour_t &retour, const type::Data &data, const float walking_speed);
+std::vector<Departure_Type> getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations, const map_labels_t &labels, const type::Data &data, const float walking_speed);
 
-std::pair<type::idx_t, DateTime>  getFinalRpidAndDate(int count, type::idx_t rpid, const map_retour_t &retour, bool clockwise, const type::Data &data);
+std::pair<type::idx_t, DateTime>  getFinalRpidAndDate(int count, type::idx_t rpid, const map_labels_t &labels, bool clockwise, const type::Data &data);
 
-float getWalkingTime(int count, type::idx_t rpid, const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations, bool clockwise, const map_retour_t &retour, const type::Data &data);
+float getWalkingTime(int count, type::idx_t rpid, const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations, bool clockwise, const map_labels_t &labels, const type::Data &data);
 }
 
 
