@@ -116,7 +116,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
 
 std::vector<std::pair<type::idx_t, double> > 
 get_stop_points(const type::EntryPoint &ep, const type::Data & data,
-                streetnetwork::StreetNetwork & worker, bool use_second = false){
+                streetnetwork::StreetNetwork & worker, bool use_second = false,
+                const int walking_distance = 1000){
     std::vector<std::pair<type::idx_t, double> > result;
 
     switch(ep.type) {
@@ -138,7 +139,7 @@ get_stop_points(const type::EntryPoint &ep, const type::Data & data,
         // AA gestion des adresses
     case type::Type_e::eAddress:
     case type::Type_e::eCoord: {
-        result = worker.find_nearest_stop_points(ep.coordinates, data.pt_data.stop_point_proximity_list, 1000, use_second);
+        result = worker.find_nearest_stop_points(ep.coordinates, data.pt_data.stop_point_proximity_list, walking_distance, use_second);
     } break;
     default: break;
     }
@@ -180,7 +181,7 @@ pbnavitia::Response
 make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               const type::EntryPoint &destination, 
               const std::vector<std::string> &datetimes_str, bool clockwise,
-              const float walking_speed, const bool wheelchair,
+              const float walking_speed, const int walking_distance, const bool wheelchair,
               std::multimap<std::string, std::string> forbidden,
               streetnetwork::StreetNetwork & worker) {
 
@@ -234,9 +235,9 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
         int time = datetime.time_of_day().total_seconds();
 
         if(clockwise)
-            tmp = raptor.compute_all(departures, destinations, DateTime(day, time), borne, walking_speed, wheelchair, forbidden);
+            tmp = raptor.compute_all(departures, destinations, DateTime(day, time), borne, walking_speed, walking_distance, wheelchair, forbidden);
         else
-            tmp = raptor.compute_reverse_all(departures, destinations, DateTime(day, time), borne, walking_speed, wheelchair, forbidden);
+            tmp = raptor.compute_reverse_all(departures, destinations, DateTime(day, time), borne, walking_speed, walking_distance, wheelchair, forbidden);
 
         // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
         if(datetimes.size() == 1){
@@ -261,7 +262,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
 pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    const type::EntryPoint origin,
                                    std::string &datetime_str,bool clockwise,
-                                   const float walking_speed, const bool wheelchair,
+                                   const float walking_speed, const int walking_distance, const bool wheelchair,
                                    std::multimap<std::string, std::string> forbidden,
                                    streetnetwork::StreetNetwork & worker) {
     
@@ -296,7 +297,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
 
     if(clockwise)
         tmp = raptor.isochrone(departures,DateTime(day, time), borne, 
-                               walking_speed, wheelchair, forbidden);
+                               walking_speed, walking_distance, wheelchair, forbidden);
         //else
         //    tmp = raptor.compute_reverse_all(departures, destinations, DateTime(day, time), borne, walking_speed, wheelchair, forbidden);
         //

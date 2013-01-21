@@ -169,8 +169,9 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request) 
     for(int i = 0; i < request.datetime_size(); ++i)
         datetimes.push_back(request.datetime(i));
 
+
     return routing::raptor::make_response(*calculateur, origin, destination, datetimes,
-                                          request.clockwise(), request.walking_speed(), request.wheelchair(),
+                                          request.clockwise(), request.walking_speed(), request.walking_distance(), request.wheelchair(),
                                           forbidden, *street_network_worker);
 }
 

@@ -272,7 +272,8 @@ template<typename Visitor>
 std::vector<Path>
 RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                     const std::vector<std::pair<type::idx_t, double> > &destinations,
-                    const DateTime &dt_depart, const DateTime &borne, const float walking_speed, const bool wheelchair, const std::multimap<std::string, std::string> & forbidden,
+                    const DateTime &dt_depart, const DateTime &borne, const float walking_speed,
+                    const int walking_distance, const bool wheelchair, const std::multimap<std::string, std::string> & forbidden,
                     Visitor vis) {
     std::vector<Path> result;
     std::vector<init::Departure_Type> departures;
@@ -280,13 +281,11 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
     set_routes_valides(dt_depart.date(), forbidden);
     if(vis.first_phase_clockwise) {
         departures = init::getDepartures(departs, dt_depart, vis.first_phase_clockwise, data, walking_speed);
-        clear_and_init(departures, destinations, borne, vis.first_phase_clockwise, true, walking_speed);
-        boucleRAPTOR(wheelchair, false);
+        clear_and_init(departures, destinations, borne, vis.first_phase_clockwise, true, walking_speed, walking_distance);
         boucleRAPTOR(wheelchair/*, false*/);
     } else {
         departures = init::getDepartures(destinations, dt_depart, vis.first_phase_clockwise, data, walking_speed);
-        clear_and_init(departures, departs, borne, vis.first_phase_clockwise, true, walking_speed);
-        boucleRAPTORreverse(wheelchair, false);
+        clear_and_init(departures, departs, borne, vis.first_phase_clockwise, true, walking_speed, walking_distance);
         boucleRAPTORreverse(wheelchair/*, false*/);
     }
 
@@ -303,11 +302,11 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
 
     for(auto departure : departures) {
         if(vis.second_phase_clockwise) {
-            clear_and_init({departure}, destinations, dt_depart, vis.second_phase_clockwise, true, walking_speed);
+            clear_and_init({departure}, destinations, dt_depart, vis.second_phase_clockwise, true, walking_speed, walking_distance);
             boucleRAPTOR(wheelchair, false);
         }
         else {
-            clear_and_init({departure}, departs, dt_depart, vis.second_phase_clockwise, true, walking_speed);
+            clear_and_init({departure}, departs, dt_depart, vis.second_phase_clockwise, true, walking_speed, walking_distance);
             boucleRAPTORreverse(wheelchair, true);
         }
 
@@ -334,10 +333,10 @@ std::vector<Path>
 RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                     const std::vector<std::pair<type::idx_t, double> > &destinations,
                     const DateTime &dt_depart, const DateTime &borne,
-                    const float walking_speed, const bool wheelchair,
+                    const float walking_speed, const int walking_distance, const bool wheelchair,
                     const std::multimap<std::string, std::string> & forbidden) {
 
-    return compute_all(departs, destinations, dt_depart, borne, walking_speed,
+    return compute_all(departs, destinations, dt_depart, borne, walking_speed, walking_distance,
                        wheelchair, forbidden, visitor_clockwise());
 }
 
@@ -349,9 +348,9 @@ std::vector<Path>
 RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                             const std::vector<std::pair<type::idx_t, double> > &destinations,
                             const DateTime &dt_depart, const DateTime &borne,
-                            const float walking_speed, const bool wheelchair,
+                            const float walking_speed, const int walking_distance, const bool wheelchair,
                             const std::multimap<std::string, std::string> & forbidden) {
-    return compute_all(departs, destinations, dt_depart, borne, walking_speed,
+    return compute_all(departs, destinations, dt_depart, borne, walking_speed, walking_distance,
                        wheelchair, forbidden, visitor_anti_clockwise());
 }
 
@@ -361,7 +360,7 @@ std::vector<Path>
 RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                     const std::vector<std::pair<type::idx_t, double> > &destinations,
                     std::vector<DateTime> dt_departs, const DateTime &borne,
-                    const float walking_speed, const bool wheelchair) {
+                    const float walking_speed, const int walking_distance, const bool wheelchair) {
     std::vector<Path> result;
     std::vector<best_dest> bests;
 
@@ -374,7 +373,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
     bool reset = true;
     for(auto dep : dt_departs) {
         auto departures = init::getDepartures(departs, dep, true, data, walking_speed);
-        clear_and_init(departures, destinations, borne, true, reset, walking_speed);
+        clear_and_init(departures, destinations, borne, true, reset, walking_speed, walking_distance);
         boucleRAPTOR(wheelchair);
         bests.push_back(b_dest);
         reset = false;
@@ -387,7 +386,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
             init::Departure_Type d;
             d.rpidx = b.best_now_rpid;
             d.arrival = b.best_now.arrival;
-            clear_and_init({d}, departs, dt_depart, false, true, walking_speed);
+            clear_and_init({d}, departs, dt_depart, false, true, walking_speed, walking_distance);
             boucleRAPTORreverse(wheelchair);
             if(b_dest.best_now.type != uninitialized){
                 auto temp = makePathesreverse(departs, dt_depart, walking_speed, *this);
@@ -408,7 +407,7 @@ std::vector<Path>
 RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                     const std::vector<std::pair<type::idx_t, double> > &destinations,
                     std::vector<DateTime> dt_departs, const DateTime &borne,
-                    const float walking_speed, const bool wheelchair) {
+                    const float walking_speed,  const int walking_distance, const bool wheelchair) {
     std::vector<Path> result;
     std::vector<best_dest> bests;
 
@@ -420,7 +419,7 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
     bool reset = true;
     for(auto dep : dt_departs) {
         auto departures = init::getDepartures(departs, dep, false, data, walking_speed);
-        clear_and_init(departures, destinations, borne, false, reset, walking_speed);
+        clear_and_init(departures, destinations, borne, false, reset, walking_speed, walking_distance);
         boucleRAPTORreverse(wheelchair);
         bests.push_back(b_dest);
         reset = false;
@@ -433,7 +432,7 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
             init::Departure_Type d;
             d.rpidx = b.best_now_rpid;
             d.arrival = b.best_now.departure;
-            clear_and_init({d}, departs, dt_depart, true, true, walking_speed);
+            clear_and_init({d}, departs, dt_depart, true, true, walking_speed, walking_distance);
             boucleRAPTOR(wheelchair);
             if(b_dest.best_now.type != uninitialized){
                 auto temp = makePathes(destinations, dt_depart, walking_speed, *this);
@@ -457,13 +456,13 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
 std::vector<idx_label>
 RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
           const DateTime &dt_depart, const DateTime &borne,
-          const float walking_speed, const bool wheelchair,
+          const float walking_speed, const int walking_distance, const bool wheelchair,
           const std::multimap<std::string, std::string> & forbidden) {
 
     std::vector<idx_label> result;
     set_routes_valides(dt_depart.date(), forbidden);
     auto departures = init::getDepartures(departs, dt_depart, true, data, walking_speed);
-    clear_and_init(departures, {}, borne, true, true, walking_speed);
+    clear_and_init(departures, {}, borne, true, true, walking_speed, walking_distance);
 
     boucleRAPTOR(wheelchair);
 
@@ -826,9 +825,9 @@ std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, in
     }
 
     if(clockwise)
-        return compute_all(departs, destinations, DateTime(departure_day, departure_hour), borne, 1, wheelchair);
+        return compute_all(departs, destinations, DateTime(departure_day, departure_hour), borne, 1, 1000, wheelchair);
     else
-        return compute_reverse_all(departs, destinations, DateTime(departure_day, departure_hour), borne, 1, wheelchair);
+        return compute_reverse_all(departs, destinations, DateTime(departure_day, departure_hour), borne, 1, 1000, wheelchair);
 
 
 }

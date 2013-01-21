@@ -422,6 +422,7 @@ message JourneysRequest {
     repeated string forbiddenmode = 6;
     repeated string forbiddenroute = 7;
     required double walking_speed = 8;
+    required int32 walking_distance =10;
     required bool wheelchair = 9;
 }
 

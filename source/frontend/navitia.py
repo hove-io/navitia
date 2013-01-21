@@ -144,6 +144,7 @@ def on_journeys(request, version, format):
     #req.journeys.forbiddenmode += request.args.getlist('forbiddenmode[]')
     #req.journeys.forbiddenroute += request.args.getlist('forbiddenroute[]')
     req.journeys.walking_speed = request.args.get('walking_speed', 1.3, type=float)
+    req.journeys.walking_distance = request.args.get('walking_distance', 1000, type=int)
     req.journeys.wheelchair = request.args.get('wheelchair', False, type=float)
     resp = send_and_receive(req)
     return render_output(resp, format, request)

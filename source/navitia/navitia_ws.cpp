@@ -324,10 +324,15 @@ public:
         bool wheelchair = false;
         if(request.parsed_params.find("wheelchair") != request.parsed_params.end())
             wheelchair = boost::get<bool>(request.parsed_params["wheelchair"].value);
+        int walking_distance = 1000;
+        if(request.parsed_params.find("walking_distance") != request.parsed_params.end())
+            wheelchair = boost::get<bool>(request.parsed_params["walking_distance"].value);
+
+
         if(journey_type != JourneyType::Isochrone)
-            pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, datetimes, clockwise, walking_speed, wheelchair, forbidden, *street_network_worker);
+            pb_response = navitia::routing::raptor::make_response(*calculateur, departure, destination, datetimes, clockwise, walking_speed, walking_distance, wheelchair, forbidden, *street_network_worker);
         else
-            pb_response = navitia::routing::raptor::make_isochrone(*calculateur, departure, datetimes.front(), clockwise, walking_speed, wheelchair, forbidden, *street_network_worker);
+            pb_response = navitia::routing::raptor::make_isochrone(*calculateur, departure, datetimes.front(), clockwise, walking_speed, walking_distance, wheelchair, forbidden, *street_network_worker);
         rd.status_code = 200;
 
         return rd;
@@ -540,6 +545,7 @@ public:
             add_param(api, "forbiddenmode[]", "Modes interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);
             add_param(api, "forbiddenroute[]", "Routes interdites identifiées par leur external code", ApiParameter::STRINGLIST, false);
             add_param(api, "walking_speed", "Vitesse de la marche à pied en m/s", ApiParameter::DOUBLE, false);
+            add_param(api, "walking_distance", "Distance maximale de marche à pied en m/s", ApiParameter::INT, false);
             add_param(api, "wheelchair", "Besoin en accessibilité", ApiParameter::BOOLEAN, false);
         }
 
