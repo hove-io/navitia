@@ -211,7 +211,8 @@ void RAPTOR::marcheapiedreverse(const bool wheelchair) {
 
 void RAPTOR::clear_and_init(std::vector<init::Departure_Type> departs,
                   std::vector<std::pair<type::idx_t, double> > destinations,
-                  DateTime borne,  const bool clockwise, const bool clear, const float walking_speed) {
+                  DateTime borne,  const bool clockwise, const bool clear,
+                  const float walking_speed, const int walking_distance) {
 
     if(clockwise)
         Q.assign(data.pt_data.routes.size(), std::numeric_limits<int>::max());
@@ -225,13 +226,13 @@ void RAPTOR::clear_and_init(std::vector<init::Departure_Type> departs,
         if(clockwise) {
             labels.push_back(data.dataRaptor.labels_const);
             best_labels = data.dataRaptor.labels_const;
-            b_dest.reinit(data.pt_data.route_points.size(), borne, clockwise);
+            b_dest.reinit(data.pt_data.route_points.size(), borne, clockwise, std::ceil(walking_distance/walking_speed));
         } else {
             labels.push_back(data.dataRaptor.labels_const_reverse);
             best_labels = data.dataRaptor.labels_const_reverse;
             if(borne == DateTime::inf)
                 borne = DateTime::min;
-                b_dest.reinit(data.pt_data.route_points.size(), borne, clockwise);
+                b_dest.reinit(data.pt_data.route_points.size(), borne, clockwise, std::ceil(walking_distance/walking_speed));
         }
     }
 
@@ -281,10 +282,12 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
         departures = init::getDepartures(departs, dt_depart, vis.first_phase_clockwise, data, walking_speed);
         clear_and_init(departures, destinations, borne, vis.first_phase_clockwise, true, walking_speed);
         boucleRAPTOR(wheelchair, false);
+        boucleRAPTOR(wheelchair/*, false*/);
     } else {
         departures = init::getDepartures(destinations, dt_depart, vis.first_phase_clockwise, data, walking_speed);
         clear_and_init(departures, departs, borne, vis.first_phase_clockwise, true, walking_speed);
         boucleRAPTORreverse(wheelchair, false);
+        boucleRAPTORreverse(wheelchair/*, false*/);
     }
 
 

@@ -73,6 +73,7 @@ struct best_dest {
     label best_now;
     unsigned int best_now_rpid;
     unsigned int count;
+    float max_walking;
 
     void add_destination(unsigned int rpid, const float dist_to_dest) {
         rpidx_distance[rpid] = dist_to_dest;
@@ -84,7 +85,8 @@ struct best_dest {
         if(!clockwise)
             return add_best_reverse(rpid, t, cnt);
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
-            if((t.arrival + rpidx_distance[rpid]) <= best_now.arrival) {
+            if((best_now.arrival == DateTime::inf) ||
+               ((t.arrival != DateTime::inf) && (t.arrival + rpidx_distance[rpid]) <= (best_now.arrival + max_walking))) {
                 best_now = t;
                 best_now.arrival = best_now.arrival + rpidx_distance[rpid];
                 best_now.departure = best_now.departure + rpidx_distance[rpid];
@@ -98,7 +100,8 @@ struct best_dest {
 
     bool add_best_reverse(unsigned int rpid, const label &t, int cnt) {
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
-            if(t.departure != DateTime::min && (t.departure - rpidx_distance[rpid]) >= best_now.departure) {
+            if((best_now.departure.datetime <= max_walking) ||
+               (t.departure != DateTime::min && (t.departure - rpidx_distance[rpid]) >= (best_now.departure - max_walking))) {
                 best_now = t;
                 best_now.arrival = t.arrival - rpidx_distance[rpid];
                 best_now.departure = t.departure - rpidx_distance[rpid];
@@ -110,17 +113,17 @@ struct best_dest {
         return false;
     }
 
-    void reinit(size_t nb_rpid) {
-//        map_date_time.clear();
+    void reinit(const size_t nb_rpid, const float max_walking_ = 0) {
         rpidx_distance.clear();
         rpidx_distance.insert(rpidx_distance.end(), nb_rpid, std::numeric_limits<float>::max());
         best_now = label();
-        best_now_rpid = std::numeric_limits<unsigned int>::max();
+        best_now_rpid = type::invalid_idx;
         count = 0;
+        max_walking = max_walking_;
     }
 
-    void reinit(size_t nb_rpid, const DateTime &borne, const bool clockwise) {
-        reinit(nb_rpid);
+    void reinit(size_t nb_rpid, const DateTime &borne, const bool clockwise, const float max_walking = 0) {
+        reinit(nb_rpid, max_walking);
         if(clockwise)
             best_now.arrival = borne;
         else
