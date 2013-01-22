@@ -831,7 +831,7 @@ BOOST_AUTO_TEST_CASE(adapted) {
     b.sa("stop3", 0,0, false);
     b.vj("A1", "11111", "A", false)("stop1", 8*3600)("stop2", 8*3600+10*60);
     b.vj("A2", "11111", "B", true)("stop1", 9*3600)("stop2", 9*3600+10*60);
-    b.vj("B")("stop3", 9*3600)("stop2", 9*3600 + 10*60);
+    b.vj("B", "11111", "B", true)("stop3", 9*3600)("stop2", 9*3600 + 10*60);
 
     type::Data data;
     b.build(data.pt_data);

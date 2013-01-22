@@ -21,7 +21,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    float walking_speed, int walking_distance,
                                    bool wheelchair,
                                    std::multimap<std::string, std::string> forbidden,
-                                   streetnetwork::StreetNetwork & worker, int max_duration = 72000);
+                                   streetnetwork::StreetNetwork & worker, int max_duration = 7200);
 
 
 }}}

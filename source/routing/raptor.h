@@ -13,11 +13,11 @@
 
 namespace navitia { namespace routing { namespace raptor {
 
+/** Worker Raptor : une instance par thread, les données sont modifiées par le calcul */
 struct RAPTOR : public AbstractRouter
 {
     const navitia::type::Data & data;
 
-    ///Données modifiées pendant le calcul
     ///Contient les heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque route point à chaque tour
     map_labels_t labels;
     ///Contient les meilleures heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque route point
@@ -99,8 +99,8 @@ struct RAPTOR : public AbstractRouter
     compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                         const std::vector<std::pair<type::idx_t, double> > &destinations,
                         std::vector<DateTime> dt_departs, const DateTime &borne,
-                        const float walking_speed=1.38, const int walking_distance = 1000,
-                        const bool wheelchair = false);
+                        float walking_speed=1.38, int walking_distance = 1000,
+                        bool wheelchair = false);
 
     /** Calcul d'itinéraires dans le sens horaire inversé à partir de plusieurs
      *  stop points de départs, vers plusieurs stoppoints d'arrivée,
@@ -109,19 +109,20 @@ struct RAPTOR : public AbstractRouter
     std::vector<Path> 
     compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                         const std::vector<std::pair<type::idx_t, double> > &destinations,
-                        const DateTime &dt_depart, const DateTime &borne = DateTime::min, const float walking_speed=1.38,
-                        const int walking_distance = 1000, const bool wheelchair = false,
+                        const DateTime &dt_depart, const DateTime &borne = DateTime::min, float walking_speed=1.38,
+                        int walking_distance = 1000, bool wheelchair = false,
                         const std::multimap<std::string, std::string> & forbidden = std::multimap<std::string, std::string>());
     
     /** Calcul l'isochrone à partir de tous les points contenus dans departs,
      *  vers tous les autres points.
      *  Renvoie toutes les arrivées vers tous les stop points.
      */
-    std::vector<idx_label>
+    void
     isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
               const DateTime &dt_depart, const DateTime &borne = DateTime::min,
-              const float walking_speed=1.38, const int walking_distance = 1000, const bool wheelchair = false,
-              const std::multimap<std::string, std::string> & forbidden = std::multimap<std::string, std::string>());
+              float walking_speed=1.38, int walking_distance = 1000, bool wheelchair = false,
+              const std::multimap<std::string, std::string> & forbidden = std::multimap<std::string, std::string>(),
+              bool clockwise = true);
 
 
     /// Désactive les routes qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
@@ -153,6 +154,10 @@ struct RAPTOR : public AbstractRouter
     void route_path_connections_backward(const bool wheelchair);
     ///Trouve pour chaque route, le premier route point auquel on peut embarquer, se sert de marked_rp
     void make_queuereverse();
+
+    /// Retourne à quel tour on a trouvé la meilleure solution pour ce routepoint
+    /// Retourne -1 s'il n'existe pas de meilleure solution
+    int best_round(type::idx_t route_point_idx);
 
     ~RAPTOR() {}
 

@@ -3,9 +3,10 @@
 #include "type/pt_data.h"
 namespace navitia { namespace routing { namespace raptor {
 
+/* Données statiques qui ne sont pas modifiées pendant le calcul */
 struct dataRAPTOR {
 
-    //Données statiques
+
     const static uint32_t SECONDS_PER_DAY = 86400;
     std::vector<navitia::type::Connection> foot_path_forward;
     std::vector<pair_int> footpath_index_forward;

@@ -1,6 +1,5 @@
 #include "raptor.h"
 #include <boost/foreach.hpp>
-#include <boost/geometry.hpp>
 
 namespace navitia { namespace routing { namespace raptor{
 
@@ -348,9 +347,9 @@ std::vector<Path>
 RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                             const std::vector<std::pair<type::idx_t, double> > &destinations,
                             const DateTime &dt_depart, const DateTime &borne,
-                            const float walking_speed, const bool wheelchair,
+                            float walking_speed, int walking_distance, bool wheelchair,
                             const std::multimap<std::string, std::string> & forbidden) {
-    return compute_all(departs, destinations, dt_depart, borne, walking_speed,
+    return compute_all(departs, destinations, dt_depart, borne, walking_speed, walking_distance,
                        wheelchair, forbidden, visitor_anti_clockwise());
 }
 
@@ -360,7 +359,7 @@ std::vector<Path>
 RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                     const std::vector<std::pair<type::idx_t, double> > &destinations,
                     std::vector<DateTime> dt_departs, const DateTime &borne,
-                    const float walking_speed, const bool wheelchair) {
+                    float walking_speed, int walking_distance, bool wheelchair) {
     std::vector<Path> result;
     std::vector<best_dest> bests;
 
@@ -419,7 +418,7 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
     bool reset = true;
     for(auto dep : dt_departs) {
         auto departures = init::getDepartures(departs, dep, false, data, walking_speed);
-        clear_and_init(departures, destinations, borne, false, reset, walking_speed);
+        clear_and_init(departures, destinations, borne, false, reset, walking_speed, walking_distance);
         boucleRAPTORreverse(wheelchair);
         bests.push_back(b_dest);
         reset = false;
@@ -455,25 +454,20 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
 void
 RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
           const DateTime &dt_depart, const DateTime &borne,
-          const float walking_speed, const bool wheelchair,
+          float walking_speed, int walking_distance, bool wheelchair,
           const std::multimap<std::string, std::string> & forbidden,
           bool clockwise) {
 
     std::vector<idx_label> result;
     set_routes_valides(dt_depart.date(), forbidden);
     auto departures = init::getDepartures(departs, dt_depart, true, data, walking_speed);
-    clear_and_init(departures, {}, borne, true, true, walking_speed);
+    clear_and_init(departures, {}, borne, true, true, walking_speed, walking_distance);
 
     if(clockwise) {
         boucleRAPTOR(wheelchair);
     } else {
         boucleRAPTORreverse(wheelchair);
     }
-    std::sort(result.begin(), result.end(), 
-            [](idx_label r1, idx_label r2) {
-               return r1.second.arrival < r2.second.arrival; 
-            });
-    return result;
 }
 
 
@@ -813,10 +807,20 @@ std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, in
     }
 
     if(clockwise)
-        return compute_all(departs, destinations, DateTime(departure_day, departure_hour), borne, 1, wheelchair);
+        return compute_all(departs, destinations, DateTime(departure_day, departure_hour), borne, 1, 1000, wheelchair);
     else
-        return compute_reverse_all(departs, destinations, DateTime(departure_day, departure_hour), borne, 1, wheelchair);
-
-
+        return compute_reverse_all(departs, destinations, DateTime(departure_day, departure_hour), borne, 1, 1000, wheelchair);
 }
+
+
+int RAPTOR::best_round(type::idx_t route_point_idx){
+    for(size_t i = 0; i < labels.size(); ++i){
+        if(labels[i][route_point_idx].arrival == best_labels[route_point_idx].arrival
+                && labels[i][route_point_idx].departure == best_labels[route_point_idx].departure){
+            return i;
+        }
+    }
+    return -1;
+}
+
 }}}

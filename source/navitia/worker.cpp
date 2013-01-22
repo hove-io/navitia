@@ -148,7 +148,6 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     this->init_worker_data();
 
     type::EntryPoint origin = type::EntryPoint(request.origin());
-    type::EntryPoint destination = type::EntryPoint(request.destination());
 
     if (origin.type == type::Type_e::eAddress) {
         origin.coordinates = this->coord_of_address(origin);

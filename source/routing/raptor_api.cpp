@@ -263,11 +263,11 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
 }
 
 pbnavitia::Response make_isochrone(RAPTOR &raptor,
-                                   const type::EntryPoint origin,
+                                   type::EntryPoint origin,
                                    const std::string &datetime_str,bool clockwise,
-                                   const float walking_speed, const int walking_distance, const bool wheelchair,
+                                   float walking_speed, int walking_distance,  bool wheelchair,
                                    std::multimap<std::string, std::string> forbidden,
-                                   streetnetwork::StreetNetwork & worker) {
+                                   streetnetwork::StreetNetwork & worker, int max_duration) {
     
     pbnavitia::Response response;
     response.set_requested_api(pbnavitia::ISOCHRONE);
@@ -294,7 +294,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     int time = datetime.time_of_day().total_seconds();
 
     raptor.isochrone(departures,DateTime(day, time), bound,
-                           walking_speed, wheelchair, forbidden, clockwise);
+                           walking_speed, walking_distance, wheelchair, forbidden, clockwise);
 
 
     for(const type::StopPoint &sp : raptor.data.pt_data.stop_points) {
@@ -323,7 +323,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                 }
             }
 
-           /* if(duration <= max_duration) */{
+            if(duration <= max_duration) {
                 auto pb_stop_time = response.mutable_isochrone()->add_stop_time();
                 pb_stop_time->set_arrival_date_time(iso_string(raptor.data, label.arrival.date(), label.arrival.hour()));
                 pb_stop_time->set_departure_date_time(iso_string(raptor.data, label.departure.date(), label.departure.hour()));
