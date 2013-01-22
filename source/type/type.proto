@@ -90,6 +90,8 @@ message StopTime {
     optional StopPoint stop_point = 3;
     optional Line line = 4;
     optional bool is_adapted = 5;
+    optional int32 duration = 6;
+    optional int32 nb_changes = 7;
 }
 
 message VehicleJourney {
@@ -369,6 +371,7 @@ message Load {
 
 message Isochrone {
     repeated StopTime stop_time = 1;
+    optional ResponseType response_type = 2;
 }
 
 message Response{
@@ -422,6 +425,7 @@ message JourneysRequest {
     repeated string forbiddenmode = 6;
     repeated string forbiddenroute = 7;
     required double walking_speed = 8;
+    required int32 walking_distance =10;
     required bool wheelchair = 9;
 }
 

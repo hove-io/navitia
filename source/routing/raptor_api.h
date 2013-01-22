@@ -11,16 +11,17 @@ pbnavitia::Response make_response(RAPTOR &raptor,
                                   const type::EntryPoint &destination,
                                   const std::vector<std::string> &datetimes,
                                   bool clockwise, const float walking_speed,
-                                  const bool wheelchair,
+                                  const int walking_distance, const bool wheelchair,
                                   std::multimap<std::string, std::string> forbidden,
                                   streetnetwork::StreetNetwork & worker);
 
 pbnavitia::Response make_isochrone(RAPTOR &raptor,
-                                   const type::EntryPoint origin,
-                                   const std::string &datetime,bool clockwise,
-                                   const float walking_speed, const bool wheelchair,
+                                   type::EntryPoint origin,
+                                   const std::string &datetime, bool clockwise,
+                                   float walking_speed, int walking_distance,
+                                   bool wheelchair,
                                    std::multimap<std::string, std::string> forbidden,
-                                   streetnetwork::StreetNetwork & worker);
+                                   streetnetwork::StreetNetwork & worker, int max_duration = 72000);
 
 
 }}}

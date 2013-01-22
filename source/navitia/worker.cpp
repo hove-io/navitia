@@ -148,6 +148,8 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     this->init_worker_data();
 
     type::EntryPoint origin = type::EntryPoint(request.origin());
+    type::EntryPoint destination = type::EntryPoint(request.destination());
+
     if (origin.type == type::Type_e::eAddress) {
         origin.coordinates = this->coord_of_address(origin);
     }
@@ -175,11 +177,11 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
     if(api != pbnavitia::ISOCHRONE){
         return routing::raptor::make_response(*calculateur, origin, destination, datetimes,
-                                              request.clockwise(), request.walking_speed(), request.wheelchair(),
+                                              request.clockwise(), request.walking_speed(), request.walking_distance(), request.wheelchair(),
                                               forbidden, *street_network_worker);
     } else {
         return navitia::routing::raptor::make_isochrone(*calculateur, origin, request.datetime(0),
-                                                        request.clockwise(), request.walking_speed(), request.wheelchair(),
+                                                        request.clockwise(), request.walking_speed(), request.walking_distance(), request.wheelchair(),
                                                         forbidden, *street_network_worker);
     }
 }
@@ -208,7 +210,6 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
     case pbnavitia::PLANNER: return journeys(request.journeys(), request.requested_api()); break;
     case pbnavitia::PROXIMITYLIST: return proximity_list(request.proximity_list()); break;
     case pbnavitia::PTREFERENTIAL: return pt_ref(request.ptref()); break;
-
     default: break;
     }
 

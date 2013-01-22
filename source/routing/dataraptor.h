@@ -26,8 +26,8 @@ struct dataRAPTOR {
     std::vector<size_t> nb_trips;
     std::vector<size_t> first_frequency;
     std::vector<size_t> nb_frequencies;
-    map_int_pint_t labels_const;
-    map_int_pint_t labels_const_reverse;
+    label_vector_t labels_const;
+    label_vector_t labels_const_reverse;
 
     dataRAPTOR()  {}
     void load(const navitia::type::PT_Data &data);
