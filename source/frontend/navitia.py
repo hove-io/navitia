@@ -1,5 +1,4 @@
 # coding=utf-8
-import zmq
 import type_pb2
 import json
 import dict2xml
@@ -8,13 +7,13 @@ from protobuf_to_dict import protobuf_to_dict
 from werkzeug.wrappers import Request, Response
 from werkzeug.wsgi import responder
 from werkzeug.routing import Map, Rule
+from wsgiref.simple_server import make_server
 
 from validate import *
 from swagger import api_doc
-# Prepare our context and sockets
-context = zmq.Context()
-socket = context.socket(zmq.REQ)
-socket.connect("ipc:///tmp/diediedie")
+import instance_manager
+
+instances = instance_manager.NavitiaManager(default_zmq_socket='ipc:///tmp/diediedie')
 
 def render_output(pb_resp, format, request):
     if format == 'json':
@@ -37,6 +36,7 @@ def render_output(pb_resp, format, request):
 
 
 def send_and_receive(request):
+    socket = instances.socket_of_key(None)
     socket.send(request.SerializeToString())
     pb = socket.recv()
     print "Taille du protobuf : ", len(pb)
@@ -83,9 +83,7 @@ def on_first_letter(request, version, format):
         if type in pb_type:
             req.first_letter.types.append(pb_type[type])
     resp = send_and_receive(req)
-    print resp.firstletter.items[0].object.address.name
     return render_output(resp, format, request)
-
 
 
 def stop_times(request, version, format, departure_filter, arrival_filter, api):
@@ -208,7 +206,7 @@ journeyArguments = {
 
 apis = {
         "first_letter" : {"endpoint" : on_first_letter, "arguments" : {"name" : Argument("The data to search", str, True, False ),
-                                                                       "filter" : Argument("The type of datas you want in return", str, True, False)}},
+                                                                       "filter" : Argument("The type of datas you want in return", str, False, False)}},
         "next_departures" : {"endpoint" : on_next_departures, "arguments" :
                              nextTimesArguments},
         "next_arrivals" : {"endpoint" : on_next_arrivals, "arguments" :
@@ -282,8 +280,8 @@ def application(environ, start_response):
     return urls.dispatch(lambda fun, v: fun(request, **v),
             catch_http_exceptions=True)
 
-from gevent.pywsgi import WSGIServer
 if __name__ == '__main__':
-    print 'Serving on 8088...'
-    WSGIServer(('', 8088), application).serve_forever()
+    httpd = make_server('', 8088, application)
+    print "Serving on port 8088..."
+    httpd.serve_forever()
 
