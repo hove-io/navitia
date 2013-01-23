@@ -23,7 +23,7 @@ def api_doc(apis, api = None) :
     response = {}
     response['apiVersion'] = "0.2"
     response['swaggerVersion'] = "1.1"
-    response['basePath'] = "http://127.0.0.1:8088"
+    response['basePath'] = ""
     response['apis'] = []
     
     if(api) :
