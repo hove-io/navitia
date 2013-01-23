@@ -18,10 +18,6 @@ def convertType(validator):
     else:
         return "string"
 
-def convertBool(boolean):
-    if(boolean):
-        return "true"
-    return "false"
 
 def api_doc(apis, api = None) : 
     response = {}
@@ -39,8 +35,8 @@ def api_doc(apis, api = None) :
                 param['paramType'] = 'path'
                 param['description'] = val.description
                 param['dataType'] = convertType(val.validator)
-                param['required'] = convertBool(val.required)
-                param['allowMultiple'] = convertBool(val.repeated)
+                param['required'] = val.required
+                param['allowMultiple'] = val.repeated
                 params.append(param)
 
             response['resourcePath'] = "/"+api
