@@ -7,6 +7,7 @@ from protobuf_to_dict import protobuf_to_dict
 from werkzeug.wrappers import Request, Response
 from werkzeug.wsgi import responder
 from werkzeug.routing import Map, Rule
+from wsgiref.simple_server import make_server
 
 from validate import *
 from swagger import api_doc
@@ -279,8 +280,8 @@ def application(environ, start_response):
     return urls.dispatch(lambda fun, v: fun(request, **v),
             catch_http_exceptions=True)
 
-from gevent.pywsgi import WSGIServer
 if __name__ == '__main__':
-    print 'Serving on 8088...'
-    WSGIServer(('', 8088), application).serve_forever()
+    httpd = make_server('', 8088, application)
+    print "Serving on port 8088..."
+    httpd.serve_forever()
 
