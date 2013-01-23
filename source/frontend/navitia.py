@@ -9,6 +9,8 @@ from werkzeug.wrappers import Request, Response
 from werkzeug.wsgi import responder
 from werkzeug.routing import Map, Rule
 
+from validate import *
+from swagger import api_doc
 # Prepare our context and sockets
 context = zmq.Context()
 socket = context.socket(zmq.REQ)
@@ -52,6 +54,10 @@ def on_status(request, format):
     return render_output(resp, format, request)
 
 def on_load(request, format):
+    for key, val in request.args.iteritems() : 
+        for a in request.args.getlist(key) :
+            print key+"=>"+a
+    print "agrs size : %d "%len(request.args)
     req = type_pb2.Request()
     req.requested_api = type_pb2.LOAD
     resp = send_and_receive(req)
@@ -161,31 +167,112 @@ def ptref(requested_type, request, version, format):
 def on_ptref(requested_type):
     return lambda request, version, format: ptref(requested_type, request, version, format)
 
+
+scheduleArguments = {
+        "filter" : Argument("Filter to have the times you want", str, True,
+                            False),
+        "datetime" : Argument("The date from which you want the times",
+                              datetime, True, False),
+        "change_datetime" : Argument("The date where you want to cut the request",
+                                  datetime, False, False),        
+        "wheelchair" : Argument("true if you want the times to have accessibility", boolean, False, False, "0")
+        }
+stopsScheduleArguments = scheduleArguments
+del stopsScheduleArguments["filter"]
+stopsScheduleArguments["departure_filter"] = Argument("The filter of your departure point", str,
+                                                      True, False)
+stopsScheduleArguments["arrival_filter"] = Argument("The filter of your arrival point", str,
+                                                      True, False)
+
+nextTimesArguments = scheduleArguments
+nextTimesArguments["nb_departures"] = Argument("The maximum number of departures", int,False, False)
+
+ptrefArguments = {
+        "filter" : Argument("Conditions to filter the returned objects", str,
+                            False, False),
+        "depth" : Argument("Maximum depth on objects", int, False, False, 1)
+        }
+journeyArguments = {
+        "origin" : Argument("Departure Point", str, True, False),
+        "destination" : Argument("Destination Point" , str, True, False),
+        "clockwise" : Argument("1 if you want to have a journey that starts after datetime, 0 if you a journey that arrives before datetime", False, False, 1),
+        "forbiddenline" : Argument("Forbidden lines identified by their external codes", False, True),
+        "forbiddenmode" : Argument("Forbidden modes identified by their external codes", False, True),
+        "forbiddenroute" : Argument("Forbidden routes identified by their external codes", False, True),
+        "walking_speed" : Argument("Walking speed in m/s", float, False, False, 1.38),
+        "walking_distance" : Argument("Maximum walking distance in meters", int,
+                                      False, False, "1000"),
+        "wheelchair" : Argument("Does the journey has to be accessible ?",
+                                boolean, False, False, "false")
+        }
+
+apis = {
+        "first_letter" : {"endpoint" : on_first_letter, "arguments" : {"name" : Argument("The data to search", str, True, False ),
+                                                                       "filter" : Argument("The type of datas you want in return", str, True, False)}},
+        "next_departures" : {"endpoint" : on_next_departures, "arguments" :
+                             nextTimesArguments},
+        "next_arrivals" : {"endpoint" : on_next_arrivals, "arguments" :
+                            nextTimesArguments},
+        "line_schedule" : {"endpoint" : on_line_schedule, "arguments" :
+                           scheduleArguments},
+        "stops_schedule" : {"endpoint" : on_stops_schedule, "arguments" :
+                            stopsScheduleArguments},
+        "departure_board" : {"endpoint" : on_departure_board,
+                             "arguments":scheduleArguments},
+        "stop_areas" : {"endpoint" : on_ptref(type_pb2.STOPAREA), "arguments" :
+                        ptrefArguments},
+        "stop_points" : {"endpoint" : on_ptref(type_pb2.STOPPOINT), "arguments" :
+                        ptrefArguments},
+        "lines" : {"endpoint" : on_ptref(type_pb2.LINE), "arguments" :
+                        ptrefArguments},
+        "routes" : {"endpoint" : on_ptref(type_pb2.ROUTE), "arguments" :
+                        ptrefArguments},
+        "networks" : {"endpoint" : on_ptref(type_pb2.NETWORK), "arguments" :
+                        ptrefArguments},
+        "modes" : {"endpoint" : on_ptref(type_pb2.MODE), "arguments" :
+                        ptrefArguments},
+        "mode_types" : {"endpoint" : on_ptref(type_pb2.MODETYPE), "arguments" :
+                        ptrefArguments},
+        "connections" : {"endpoint" : on_ptref(type_pb2.CONNECTION), "arguments" :
+                        ptrefArguments},
+        "route_points" : {"endpoint" : on_ptref(type_pb2.ROUTEPOINT), "arguments" :
+                        ptrefArguments},
+        "companies" : {"endpoint" : on_ptref(type_pb2.COMPANY), "arguments" :
+                        ptrefArguments},
+        "journeys" : {"endpoint" :  on_journeys(type_pb2.PLANNER), "arguments" :
+                      journeyArguments},
+        "isochrone" : {"endpoint" : on_journeys(type_pb2.ISOCHRONE), "arguments" : journeyArguments}
+        
+        }
+
+def on_api(request, version, api, format):
+    if(api in apis):
+         v = validate_arguments(request, apis[api]["arguments"])
+         if(v.valid):
+            return apis[api]["endpoint"](request, version, format)
+         else:
+             print "requete non valide"
+             print v.details
+    else:
+        print api +" non trouve ! "
+
+
+def on_summary_doc(request) : 
+    return api_doc(apis)
+
+def on_doc(request, api):
+    return api_doc(apis, api)
+
 url_map = Map([
     Rule('/', endpoint=on_index),
     Rule('/<version>/', endpoint=on_index),
     Rule('/load.<format>', endpoint = on_load),
     Rule('/status.<format>', endpoint = on_status),
-    Rule('/<version>/first_letter.<format>', endpoint = on_first_letter),
-    Rule('/<version>/line_schedule.<format>', endpoint = on_line_schedule),
-    Rule('/<version>/next_departures.<format>', endpoint = on_next_departures),
-    Rule('/<version>/next_arrivals.<format>', endpoint = on_next_arrivals),
-    Rule('/<version>/stops_schedule.<format>', endpoint = on_stops_schedule),
-    Rule('/<version>/departure_board.<format>', endpoint = on_departure_board),
-    Rule('/<version>/proximity_list.<format>', endpoint = on_proximity_list),
-    Rule('/<version>/journeys.<format>', endpoint = on_journeys(type_pb2.PLANNER)),
-    Rule('/<version>/stop_areas.<format>', endpoint = on_ptref(type_pb2.STOPAREA)),
-    Rule('/<version>/stop_points.<format>', endpoint = on_ptref(type_pb2.STOPPOINT)),
-    Rule('/<version>/lines.<format>', endpoint = on_ptref(type_pb2.LINE)),
-    Rule('/<version>/routes.<format>', endpoint = on_ptref(type_pb2.ROUTE)),
-    Rule('/<version>/networks.<format>', endpoint = on_ptref(type_pb2.NETWORK)),
-    Rule('/<version>/modes.<format>', endpoint = on_ptref(type_pb2.MODE)),
-    Rule('/<version>/mode_types.<format>', endpoint = on_ptref(type_pb2.MODETYPE)),
-    Rule('/<version>/connections.<format>', endpoint = on_ptref(type_pb2.CONNECTION)),
-    Rule('/<version>/route_points.<format>', endpoint = on_ptref(type_pb2.ROUTEPOINT)),
-    Rule('/<version>/companies.<format>', endpoint = on_ptref(type_pb2.COMPANY)),
-    Rule('/<version>/isochrone.<format>', endpoint = on_journeys(type_pb2.ISOCHRONE)),
+    Rule('/<version>/<api>.<format>', endpoint = on_api),
+    Rule('/doc.json', endpoint = on_summary_doc),
+    Rule('/doc.json/<api>', endpoint = on_doc)
     ])
+
 
 
 @responder
