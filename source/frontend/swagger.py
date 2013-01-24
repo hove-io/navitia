@@ -32,7 +32,7 @@ def api_doc(apis, api = None) :
             for key, val in apis[api]['arguments'].iteritems():
                 param = {}
                 param['name'] = key
-                param['paramType'] = 'path'
+                param['paramType'] = 'query'
                 param['description'] = val.description
                 param['dataType'] = convertType(val.validator)
                 param['required'] = val.required

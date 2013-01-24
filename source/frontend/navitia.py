@@ -13,7 +13,7 @@ from validate import *
 from swagger import api_doc
 import instance_manager
 
-instances = instance_manager.NavitiaManager(default_zmq_socket='ipc:///tmp/diediedie')
+instances = instance_manager.NavitiaManager('Jörmungandr.ini')
 
 def render_output(pb_resp, format, request):
     if format == 'json':

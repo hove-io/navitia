@@ -24,7 +24,7 @@ class NavitiaManager:
         """
 
         self.geom = {}
-        self.key_navitia = {}
+        self.keys_navitia = {}
         context = zmq.Context()
         self.default_socket = None
         
@@ -33,16 +33,16 @@ class NavitiaManager:
             config.read(ini_file)
     
             with open(config.get('instances', 'geometry'), 'rb') as csvfile:
-                csvreader = csv.reader(csvfile)
+                csvreader = csv.reader(csvfile, delimiter=';')
                 for row in csvreader:
-                    geom[row[0]] = prep(loads(row[1]))
+                    self.geom[row[0]] = prep(loads(row[1]))
     
             with open(config.get('instances', 'keys_navitia'), 'rb') as csvfile:
-                csvreader = csv.reader(csvfile)
+                csvreader = csv.reader(csvfile, delimiter=';')
                 for row in csvreader:
                     socket = context.socket(zmq.REQ)
                     socket.connect(row[1])
-                    keys_navitia[row[0]] = socket
+                    self.keys_navitia[row[0]] = socket
         else:
             self.default_socket = context.socket(zmq.REQ)
             self.default_socket.connect(default_zmq_socket)
