@@ -280,10 +280,10 @@ def on_api(request, version, region, api, format):
 
 
 def on_summary_doc(request) : 
-    return api_doc(apis, instances)
+    return render(api_doc(apis, instances), 'json', request)
 
 def on_doc(request, api):
-    return api_doc(apis, instances, api)
+    return render(api_doc(apis, instances, api), 'json', request)
 
 url_map = Map([
     Rule('/', endpoint=on_index),
