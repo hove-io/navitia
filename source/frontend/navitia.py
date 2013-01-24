@@ -256,10 +256,10 @@ def on_api(request, version, region, api, format):
 
 
 def on_summary_doc(request) : 
-    return api_doc(apis)
+    return api_doc(apis, instances)
 
 def on_doc(request, api):
-    return api_doc(apis, api)
+    return api_doc(apis, instances, api)
 
 url_map = Map([
     Rule('/', endpoint=on_index),

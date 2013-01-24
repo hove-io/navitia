@@ -19,7 +19,7 @@ def convertType(validator):
         return "string"
 
 
-def api_doc(apis, api = None) : 
+def api_doc(apis, instance_manager, api = None) : 
     response = {}
     response['apiVersion'] = "0.2"
     response['swaggerVersion'] = "1.1"
@@ -38,10 +38,31 @@ def api_doc(apis, api = None) :
                 param['required'] = val.required
                 param['allowMultiple'] = val.repeated
                 params.append(param)
+            version = {}
+            version['name'] = 'version'
+            version['paramType'] = 'path'
+            version['description'] = 'Version of the Api'
+            version['dataType'] = 'String'
+            version['allowableValues'] = {"values" : ["v0"],
+                                          "valueType":"LIST"}
+            version['required'] = True
+            version['allowMultiple'] = False
+            regions = {}
+            regions['name'] = 'region'
+            regions['paramType'] = 'path'
+            regions['description'] = 'The region you want to query'
+            regions['dataType'] = 'String'
+            regions['required'] = True
+            regions['allowMultiple'] = False
+            regions['allowableValues'] = {"valueType":"LIST", "values":[]}
+            for key, val in instance_manager.keys_navitia.iteritems():
+                regions['allowableValues']["values"].append(key)
+            params.append(version)
+            params.append(regions)
 
             response['resourcePath'] = "/"+api
             response['apis'].append({
-                    "path" : "/"+api+".{format}",
+                    "path" : "/{version}/{region}/"+api+".{format}",
                     "description" : "",
                     "operations" : [{
                             "httpMethod" : "GET",
