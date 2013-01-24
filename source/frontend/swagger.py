@@ -26,8 +26,8 @@ def api_doc(apis, api = None) :
     response['basePath'] = ""
     response['apis'] = []
     
-    if(api) :
-        if(api in apis) :
+    if api:
+        if api in apis:
             params = []
             for key, val in apis[api]['arguments'].iteritems():
                 param = {}
@@ -57,7 +57,6 @@ def api_doc(apis, api = None) :
         for key, val in apis.iteritems() :
             response['apis'].append({"path":"/doc.{format}/"+key, "description" : ""})
 
-    r = Response(json.dumps(response, ensure_ascii=False), mimetype='application/json')
-    r.headers.add('Access-Control-Allow-Origin', '*')
-    return r
+
+    return response
 

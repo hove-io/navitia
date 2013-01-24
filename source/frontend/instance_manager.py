@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from shapely.wkt import loads
+from shapely import wkt
 from shapely.geometry import Point
 from shapely.prepared import prep
 import ConfigParser
@@ -25,6 +25,7 @@ class NavitiaManager:
 
         self.geom = {}
         self.keys_navitia = {}
+        self.names = {}
         context = zmq.Context()
         self.default_socket = None
         
@@ -35,7 +36,9 @@ class NavitiaManager:
             with open(config.get('instances', 'geometry'), 'rb') as csvfile:
                 csvreader = csv.reader(csvfile, delimiter=';')
                 for row in csvreader:
-                    self.geom[row[0]] = prep(loads(row[1]))
+                    self.geom[row[0]] = wkt.loads(row[2])
+                    self.names[row[0]] = row[1]
+
     
             with open(config.get('instances', 'keys_navitia'), 'rb') as csvfile:
                 csvreader = csv.reader(csvfile, delimiter=';')
@@ -54,7 +57,7 @@ class NavitiaManager:
         Retourne None si on a rien trouvé
         """
         p = Point(lon,lat)
-        for key, geom in self.iteritems():
+        for key, geom in self.geom.iteritems():
             if geom.contains(p):
                 return key
         return None
@@ -69,3 +72,9 @@ class NavitiaManager:
         else:
             return self.default_socket
 
+    def regions(self):
+        result = []
+        for key, geom in self.geom.iteritems():
+            result.append({'region_id': key, 'region_name': self.names[key], 'shape' : wkt.dumps(geom)})
+        return result
+    

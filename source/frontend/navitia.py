@@ -15,31 +15,37 @@ import instance_manager
 
 instances = instance_manager.NavitiaManager('Jörmungandr.ini')
 
-def render_output(pb_resp, format, request):
+def render(dico, format, request):
     if format == 'json':
-        json_str = json.dumps(protobuf_to_dict(pb_resp, enum_as_labels=True), ensure_ascii=False)
+        json_str = json.dumps(dico, ensure_ascii=False)
         callback = request.args.get('callback', '')
         if callback == '':
-            return Response(json_str, mimetype='application/json')
+            result = Response(json_str, mimetype='application/json')
         else:
-            return Response(callback + '(' + json_str + ')', mimetype='application/json')
+            result = Response(callback + '(' + json_str + ')', mimetype='application/json')
     elif format == 'txt':
-        return Response(json.dumps(protobuf_to_dict(pb_resp, enum_as_labels=True), ensure_ascii=False, indent=4),
-                mimetype='text/plain')
+        result = Response(json.dumps(dico, ensure_ascii=False, indent=4), mimetype='text/plain')
     elif format == 'xml':
-        return Response('<?xml version="1.0" encoding="UTF-8"?>\n'+dict2xml.dict2xml(protobuf_to_dict(pb_resp, enum_as_labels=True), wrap="Response"),
-                mimetype='application/xml')
+        result = Response('<?xml version="1.0" encoding="UTF-8"?>\n'+ dict2xml.dict2xml(dico, wrap="Response"), mimetype='application/xml')
     elif format == 'pb':
+        result = Response('Protocol buffer not supported for this request', status=404)
+    else:
+        result = Response("Unknown file format format. Please choose .json, .txt, .xml or .pb", mimetype='text/plain', status=404)
+    result.headers.add('Access-Control-Allow-Origin', '*')
+    return result
+
+
+def render_from_protobuf(pb_resp, format, request):
+    if format == 'pb':
         return Response(pb_resp.SerializeToString(), mimetype='application/octet-stream')
     else:
-        return Response("Unknown file format format. Please choose .json, .txt, .xml or .pb", mimetype='text/plain', status=404)
+        render(protobuf_to_dict(pb_resp, enum_as_labels=True), format, request)
 
 
 def send_and_receive(request, region = None):
     socket = instances.socket_of_key(region)
     socket.send(request.SerializeToString())
     pb = socket.recv()
-    print "Taille du protobuf : ", len(pb)
     resp = type_pb2.Response()
     resp.ParseFromString(pb)
     return resp
@@ -47,21 +53,21 @@ def send_and_receive(request, region = None):
 def on_index(request, version = None ):
     return Response('Hello from the index')
 
+def on_regions(request, version, format):
+    return render(instances.regions(), format, request)
+
+
 def on_status(request, region, format):
     req = type_pb2.Request()
     req.requested_api = type_pb2.STATUS
     resp = send_and_receive(req, region)
-    return render_output(resp, format, request)
+    return render_from_protobuf(resp, format, request)
 
 def on_load(request, region, format):
-    for key, val in request.args.iteritems() : 
-        for a in request.args.getlist(key) :
-            print key+"=>"+a
-    print "agrs size : %d "%len(request.args)
     req = type_pb2.Request()
     req.requested_api = type_pb2.LOAD
     resp = send_and_receive(req, region)
-    return render_output(resp, format, request)
+    return render_from_protobuf(resp, format, request)
 
 pb_type = {
         'stop_area': type_pb2.STOPAREA,
@@ -83,7 +89,7 @@ def on_first_letter(request, version, region, format):
         if type in pb_type:
             req.first_letter.types.append(pb_type[type])
     resp = send_and_receive(req, region)
-    return render_output(resp, format, request)
+    return render_from_protobuf(resp, format, request)
 
 
 def stop_times(request, version, region, format, departure_filter, arrival_filter, api):
@@ -99,7 +105,7 @@ def stop_times(request, version, region, format, departure_filter, arrival_filte
     req.next_departure.depth = request.args.get("wheelchair", False, type=bool)
     req.line_schedule.changetime = request.args.get("changetime", "00T00")
     resp = send_and_receive(req, region)
-    return render_output(resp, format, request)
+    return render_from_protobuf(resp, format, request)
 
 def on_line_schedule(request, version, region, format):
     return stop_times(request, version, region, format, request.args.get("filter", ""), "", type_pb2.LINE_SCHEDULE)
@@ -129,7 +135,7 @@ def on_proximity_list(request, version, region, format):
         if type in pb_type:
             req.proximity_list.types.append(pb_type[type])
     resp = send_and_receive(req, region)
-    return render_output(resp, format, request)
+    return render_from_protobuf(resp, format, request)
 
 def journeys(requested_type, request, version, region, format):
 #    req.params = "origin=coord:2.1301409667968625:48.802045523752106&destination=coord:2.3818232910156234:48.86202003509158&datetime=20120615T143200&format=pb" 
@@ -147,7 +153,7 @@ def journeys(requested_type, request, version, region, format):
     req.journeys.walking_distance = request.args.get('walking_distance', 1000, type=int)
     req.journeys.wheelchair = request.args.get('wheelchair', False, type=float)
     resp = send_and_receive(req, region)
-    return render_output(resp, format, request)
+    return render_from_protobuf(resp, format, request)
 
 def on_journeys(requested_type):
     return lambda request, version, region, format: journeys(requested_type, request, version, region, format)
@@ -160,7 +166,7 @@ def ptref(requested_type, request, version, region, format):
     req.ptref.filter = request.args.get("filter", "")
     req.ptref.depth = request.args.get("depth", 1, type=int)
     resp = send_and_receive(req, region)
-    return render_output(resp, format, request)
+    return render_from_protobuf(resp, format, request)
 
 def on_ptref(requested_type):
     return lambda request, version, region, format: ptref(requested_type, request, version, region, format)
@@ -244,15 +250,16 @@ apis = {
         }
 
 def on_api(request, version, region, api, format):
-    if(api in apis):
+    if version != "v0":
+        return Response("Unknown version: " + version, status=404)
+    if api in apis:
          v = validate_arguments(request, apis[api]["arguments"])
-         if(v.valid):
+         if v.valid:
             return apis[api]["endpoint"](request, version, region, format)
          else:
-             print "requete non valide"
-             print v.details
+             return Response("Invalid arguments: " + v.details, status=400)
     else:
-        print api +" non trouve ! "
+        return Response("Unknown api: " + api, status=404)
 
 
 def on_summary_doc(request) : 
@@ -264,6 +271,7 @@ def on_doc(request, api):
 url_map = Map([
     Rule('/', endpoint=on_index),
     Rule('/<version>/', endpoint=on_index),
+    Rule('/<version>/regions.<format>', endpoint = on_regions),
     Rule('/<region>/load.<format>', endpoint = on_load),
     Rule('/<region>/status.<format>', endpoint = on_status),
     Rule('/<version>/<region>/<api>.<format>', endpoint = on_api),
