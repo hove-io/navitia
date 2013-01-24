@@ -59,14 +59,14 @@ def api_doc(apis, instance_manager, api = None) :
                 regions['allowableValues']["values"].append(key)
             params.append(version)
             params.append(regions)
-
             response['resourcePath'] = "/"+api
+            
             response['apis'].append({
                     "path" : "/{version}/{region}/"+api+".{format}",
-                    "description" : "",
+                    "description" : apis[api]["description"] if "description" in apis[api] else "",
                     "operations" : [{
                             "httpMethod" : "GET",
-                            "summary" : "",
+                            "summary" : apis[api]["description"] if "description" in apis[api] else "",
                             "nickname" : api,
                             "responseClass" : "void",
                             "parameters" : params
@@ -76,7 +76,7 @@ def api_doc(apis, instance_manager, api = None) :
 
     else:
         for key, val in apis.iteritems() :
-            response['apis'].append({"path":"/doc.{format}/"+key, "description" : ""})
+            response['apis'].append({"path":"/doc.{format}/"+key, "description" :apis[key]["description"] if "description" in apis[key] else  ""})
 
     r = Response(json.dumps(response, ensure_ascii=False), mimetype='application/json')
     r.headers.add('Access-Control-Allow-Origin', '*')
