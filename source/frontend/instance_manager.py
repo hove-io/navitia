@@ -64,8 +64,8 @@ class NavitiaManager:
 
         Si key vaut None et qu'aucune socket n'a été dans les fichiers de configuration, retourne la socket par défaut
         """
-        if key in self.key_navitia:
-            return self.key_navitia[key]
+        if key in self.keys_navitia:
+            return self.keys_navitia[key]
         else:
             return self.default_socket
 

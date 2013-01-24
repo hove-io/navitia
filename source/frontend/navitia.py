@@ -35,8 +35,8 @@ def render_output(pb_resp, format, request):
         return Response("Unknown file format format. Please choose .json, .txt, .xml or .pb", mimetype='text/plain', status=404)
 
 
-def send_and_receive(request):
-    socket = instances.socket_of_key(None)
+def send_and_receive(request, region = None):
+    socket = instances.socket_of_key(region)
     socket.send(request.SerializeToString())
     pb = socket.recv()
     print "Taille du protobuf : ", len(pb)
@@ -47,20 +47,20 @@ def send_and_receive(request):
 def on_index(request, version = None ):
     return Response('Hello from the index')
 
-def on_status(request, format):
+def on_status(request, region, format):
     req = type_pb2.Request()
     req.requested_api = type_pb2.STATUS
-    resp = send_and_receive(req)
+    resp = send_and_receive(req, region)
     return render_output(resp, format, request)
 
-def on_load(request, format):
+def on_load(request, region, format):
     for key, val in request.args.iteritems() : 
         for a in request.args.getlist(key) :
             print key+"=>"+a
     print "agrs size : %d "%len(request.args)
     req = type_pb2.Request()
     req.requested_api = type_pb2.LOAD
-    resp = send_and_receive(req)
+    resp = send_and_receive(req, region)
     return render_output(resp, format, request)
 
 pb_type = {
@@ -70,7 +70,7 @@ pb_type = {
         'address': type_pb2.ADDRESS
         }
 
-def on_first_letter(request, version, format):
+def on_first_letter(request, version, region, format):
     req = type_pb2.Request()
     req.requested_api = type_pb2.FIRSTLETTER
     req.first_letter.name = request.args['name']
@@ -82,11 +82,11 @@ def on_first_letter(request, version, format):
     for type in types:
         if type in pb_type:
             req.first_letter.types.append(pb_type[type])
-    resp = send_and_receive(req)
+    resp = send_and_receive(req, region)
     return render_output(resp, format, request)
 
 
-def stop_times(request, version, format, departure_filter, arrival_filter, api):
+def stop_times(request, version, region, format, departure_filter, arrival_filter, api):
     req = type_pb2.req()
     req.requested_api = api
     req.next_departure.departure_filter = departure_filter
@@ -98,25 +98,25 @@ def stop_times(request, version, format, departure_filter, arrival_filter, api):
     req.next_departure.depth = request.args.get("depth", 1, type=int)
     req.next_departure.depth = request.args.get("wheelchair", False, type=bool)
     req.line_schedule.changetime = request.args.get("changetime", "00T00")
-    resp = send_and_receive(req)
+    resp = send_and_receive(req, region)
     return render_output(resp, format, request)
 
-def on_line_schedule(request, version, format):
-    return stop_times(request, version, format, request.args.get("filter", ""), "", type_pb2.LINE_SCHEDULE)
+def on_line_schedule(request, version, region, format):
+    return stop_times(request, version, region, format, request.args.get("filter", ""), "", type_pb2.LINE_SCHEDULE)
 
-def on_next_arrivals(request, version, format):
-    return stop_times(request, version, format, request.args.get("filter", ""), "", type_pb2.NEXT_DEPARTURES)
+def on_next_arrivals(request, version, region, format):
+    return stop_times(request, version, region, format, request.args.get("filter", ""), "", type_pb2.NEXT_DEPARTURES)
 
-def on_next_departures(request, version, format):
-    return stop_times(request, version, format, "", request.args.get("filter", ""), type_pb2.NEXT_ARRIVALS)
+def on_next_departures(request, version, region, format):
+    return stop_times(request, version, region, format, "", request.args.get("filter", ""), type_pb2.NEXT_ARRIVALS)
 
-def on_stops_schedule(request, version, format):
-    return stop_times(request, version, format, "", request.args.get("departure_filter", ""), request.args.get("arrvial_filter", ""),type_pb2.STOPS_SCHEDULE)
+def on_stops_schedule(request, version, region, format):
+    return stop_times(request, version, region, format, "", request.args.get("departure_filter", ""), request.args.get("arrvial_filter", ""),type_pb2.STOPS_SCHEDULE)
 
-def on_departure_board(request, version, format):
-    return stop_times(request, version, format, request.args.get("filter", ""), "", type_pb2.DEPARTURE_BOARD)
+def on_departure_board(request, version, region, format):
+    return stop_times(request, version, region, format, request.args.get("filter", ""), "", type_pb2.DEPARTURE_BOARD)
 
-def on_proximity_list(request, version, format):
+def on_proximity_list(request, version, region, format):
     req = type_pb2.Request()
     req.requested_api = type_pb2.PROXIMITYLIST
     req.proximity_list.coord.lon = request.args.get("lon", type=float)
@@ -128,10 +128,10 @@ def on_proximity_list(request, version, format):
     for type in types:
         if type in pb_type:
             req.proximity_list.types.append(pb_type[type])
-    resp = send_and_receive(req)
+    resp = send_and_receive(req, region)
     return render_output(resp, format, request)
 
-def journeys(requested_type, request, version, format):
+def journeys(requested_type, request, version, region, format):
 #    req.params = "origin=coord:2.1301409667968625:48.802045523752106&destination=coord:2.3818232910156234:48.86202003509158&datetime=20120615T143200&format=pb" 
     req = type_pb2.Request()
     req.requested_api = requested_type
@@ -146,24 +146,24 @@ def journeys(requested_type, request, version, format):
     req.journeys.walking_speed = request.args.get('walking_speed', 1.3, type=float)
     req.journeys.walking_distance = request.args.get('walking_distance', 1000, type=int)
     req.journeys.wheelchair = request.args.get('wheelchair', False, type=float)
-    resp = send_and_receive(req)
+    resp = send_and_receive(req, region)
     return render_output(resp, format, request)
 
 def on_journeys(requested_type):
-    return lambda request, version, format: journeys(requested_type, request, version, format)
+    return lambda request, version, region, format: journeys(requested_type, request, version, region, format)
 
-def ptref(requested_type, request, version, format):
+def ptref(requested_type, request, version, region, format):
     req = type_pb2.Request()
     req.requested_api = type_pb2.PTREFERENTIAL
 
     req.ptref.requested_type = requested_type
     req.ptref.filter = request.args.get("filter", "")
     req.ptref.depth = request.args.get("depth", 1, type=int)
-    resp = send_and_receive(req)
+    resp = send_and_receive(req, region)
     return render_output(resp, format, request)
 
 def on_ptref(requested_type):
-    return lambda request, version, format: ptref(requested_type, request, version, format)
+    return lambda request, version, region, format: ptref(requested_type, request, version, region, format)
 
 
 scheduleArguments = {
@@ -243,11 +243,11 @@ apis = {
         
         }
 
-def on_api(request, version, api, format):
+def on_api(request, version, region, api, format):
     if(api in apis):
          v = validate_arguments(request, apis[api]["arguments"])
          if(v.valid):
-            return apis[api]["endpoint"](request, version, format)
+            return apis[api]["endpoint"](request, version, region, format)
          else:
              print "requete non valide"
              print v.details
@@ -264,9 +264,9 @@ def on_doc(request, api):
 url_map = Map([
     Rule('/', endpoint=on_index),
     Rule('/<version>/', endpoint=on_index),
-    Rule('/load.<format>', endpoint = on_load),
-    Rule('/status.<format>', endpoint = on_status),
-    Rule('/<version>/<api>.<format>', endpoint = on_api),
+    Rule('/<region>/load.<format>', endpoint = on_load),
+    Rule('/<region>/status.<format>', endpoint = on_status),
+    Rule('/<version>/<region>/<api>.<format>', endpoint = on_api),
     Rule('/doc.json', endpoint = on_summary_doc),
     Rule('/doc.json/<api>', endpoint = on_doc)
     ])
