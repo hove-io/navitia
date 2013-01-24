@@ -212,40 +212,57 @@ journeyArguments = {
 
 apis = {
         "first_letter" : {"endpoint" : on_first_letter, "arguments" : {"name" : Argument("The data to search", str, True, False ),
-                                                                       "filter" : Argument("The type of datas you want in return", str, False, False)}},
+                                                                       "filter" : Argument("The type of datas you want in return", str, False, False)},
+                          "description" : "Retrieves the objects which contains in their name the \"name\""},
         "next_departures" : {"endpoint" : on_next_departures, "arguments" :
-                             nextTimesArguments},
+                             nextTimesArguments, 
+                             "description" : "Retrieves the departures after datetime at the stop points filtered with filter"},
         "next_arrivals" : {"endpoint" : on_next_arrivals, "arguments" :
-                            nextTimesArguments},
+                            nextTimesArguments,
+                           "description" : "Retrieves the departures after datetime at the stop points filtered with filter"},
         "line_schedule" : {"endpoint" : on_line_schedule, "arguments" :
-                           scheduleArguments},
+                           scheduleArguments,
+                           "description" : "Retrieves the schedule of line at the day datetime"},
         "stops_schedule" : {"endpoint" : on_stops_schedule, "arguments" :
-                            stopsScheduleArguments},
+                            stopsScheduleArguments,
+                            "description" : "Retrieves the schedule for 2 stops points"},
         "departure_board" : {"endpoint" : on_departure_board,
-                             "arguments":scheduleArguments},
+                             "arguments":scheduleArguments,
+                             "description" : "Give all the departures of filter at datetime"},
         "stop_areas" : {"endpoint" : on_ptref(type_pb2.STOPAREA), "arguments" :
-                        ptrefArguments},
+                        ptrefArguments,
+                        "description" : "Retrieves all the stop areas filtered with filter"},
         "stop_points" : {"endpoint" : on_ptref(type_pb2.STOPPOINT), "arguments" :
-                        ptrefArguments},
+                        ptrefArguments,
+                        "description" : "Retrieves all the stop points filtered with filter"},
         "lines" : {"endpoint" : on_ptref(type_pb2.LINE), "arguments" :
-                        ptrefArguments},
+                        ptrefArguments,
+                        "description" : "Retrieves all the stop_areas filtered with filter"},
         "routes" : {"endpoint" : on_ptref(type_pb2.ROUTE), "arguments" :
                         ptrefArguments},
         "networks" : {"endpoint" : on_ptref(type_pb2.NETWORK), "arguments" :
-                        ptrefArguments},
+                        ptrefArguments,
+                        "description" : "Retrieves all the networks filtered with filter"},
         "modes" : {"endpoint" : on_ptref(type_pb2.MODE), "arguments" :
-                        ptrefArguments},
+                        ptrefArguments,
+                        "description" : "Retrieves all the modes filtered with filter"},
         "mode_types" : {"endpoint" : on_ptref(type_pb2.MODETYPE), "arguments" :
-                        ptrefArguments},
+                        ptrefArguments,
+                        "description" : "Retrieves all the mode types filtered with filter"},
         "connections" : {"endpoint" : on_ptref(type_pb2.CONNECTION), "arguments" :
-                        ptrefArguments},
+                        ptrefArguments,
+                        "description" : "Retrieves all the connections points filtered with filter"},
         "route_points" : {"endpoint" : on_ptref(type_pb2.ROUTEPOINT), "arguments" :
-                        ptrefArguments},
+                        ptrefArguments,
+                        "description" : "Retrieves all the route points filtered with filter"},
         "companies" : {"endpoint" : on_ptref(type_pb2.COMPANY), "arguments" :
-                        ptrefArguments},
+                        ptrefArguments,
+                        "description" : "Retrieves all the companies filtered with filter"},
         "journeys" : {"endpoint" :  on_journeys(type_pb2.PLANNER), "arguments" :
-                      journeyArguments},
-        "isochrone" : {"endpoint" : on_journeys(type_pb2.ISOCHRONE), "arguments" : journeyArguments}
+                      journeyArguments,
+                      "description" : "Computes and retrieves a journey"},
+        "isochrone" : {"endpoint" : on_journeys(type_pb2.ISOCHRONE), "arguments" : journeyArguments,
+                       "description" : "Computes and retrieves an isochrone"}
         
         }
 
@@ -263,10 +280,10 @@ def on_api(request, version, region, api, format):
 
 
 def on_summary_doc(request) : 
-    return api_doc(apis)
+    return api_doc(apis, instances)
 
 def on_doc(request, api):
-    return api_doc(apis, api)
+    return api_doc(apis, instances, api)
 
 url_map = Map([
     Rule('/', endpoint=on_index),
