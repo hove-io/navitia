@@ -2,7 +2,7 @@
 import type_pb2
 import json
 import dict2xml
-import time
+import copy
 from protobuf_to_dict import protobuf_to_dict
 from werkzeug.wrappers import Request, Response
 from werkzeug.wsgi import responder
@@ -181,14 +181,14 @@ scheduleArguments = {
                                   datetime, False, False),        
         "wheelchair" : Argument("true if you want the times to have accessibility", boolean, False, False, "0")
         }
-stopsScheduleArguments = scheduleArguments
+stopsScheduleArguments = copy.copy(scheduleArguments)
 del stopsScheduleArguments["filter"]
 stopsScheduleArguments["departure_filter"] = Argument("The filter of your departure point", str,
                                                       True, False)
 stopsScheduleArguments["arrival_filter"] = Argument("The filter of your arrival point", str,
                                                       True, False)
 
-nextTimesArguments = scheduleArguments
+nextTimesArguments = copy.copy(scheduleArguments)
 nextTimesArguments["nb_departures"] = Argument("The maximum number of departures", int,False, False)
 
 ptrefArguments = {
