@@ -29,14 +29,17 @@ def api_doc(apis, instance_manager, api = None) :
     if api:
         if api in apis:
             params = []
-            for key, val in apis[api]['arguments'].iteritems():
+            list_params = apis[api]['arguments'].items()
+            list_params.sort(key = lambda x : x[1].order)
+
+            for item in list_params:
                 param = {}
-                param['name'] = key
+                param['name'] = item[0]
                 param['paramType'] = 'query'
-                param['description'] = val.description
-                param['dataType'] = convertType(val.validator)
-                param['required'] = val.required
-                param['allowMultiple'] = val.repeated
+                param['description'] = item[1].description
+                param['dataType'] = convertType(item[1].validator)
+                param['required'] = item[1].required
+                param['allowMultiple'] = item[1].repeated
                 params.append(param)
             path = "/"
             version = {}
@@ -81,7 +84,7 @@ def api_doc(apis, instance_manager, api = None) :
 
     else:
         list_apis = apis.items()
-        list_apis.sort(key = lambda x : x[1]['priority'] if "priority" in x[1] else 50)
+        list_apis.sort(key = lambda x : x[1]['order'] if "order" in x[1] else 50)
         for l in list_apis :
             key = l[0]
             response['apis'].append({"path":"/doc.{format}/"+key, "description" :apis[key]["description"] if "description" in apis[key] else  ""})

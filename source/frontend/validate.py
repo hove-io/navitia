@@ -9,15 +9,17 @@ class Argument :
     required = True,
     repeated = False,
     validator = None,
-    defaultValue = None
+    defaultValue = None,
+    order = 50
 
     def __init__(self, desc, validator, required = False, repeated = False,
-                 defaultValue = None) :
+                 defaultValue = None, order = 50) :
         self.description = desc
         self.required = required
         self.repeated = repeated
         self.validator = validator
         self.defaultValue = defaultValue
+        self.order = order
         if(self.validator == None) : 
             print "A validator is required"
 
