@@ -38,6 +38,7 @@ def api_doc(apis, instance_manager, api = None) :
                 param['required'] = val.required
                 param['allowMultiple'] = val.repeated
                 params.append(param)
+            path = "/"
             version = {}
             version['name'] = 'version'
             version['paramType'] = 'path'
@@ -47,22 +48,26 @@ def api_doc(apis, instance_manager, api = None) :
                                           "valueType":"LIST"}
             version['required'] = True
             version['allowMultiple'] = False
-            regions = {}
-            regions['name'] = 'region'
-            regions['paramType'] = 'path'
-            regions['description'] = 'The region you want to query'
-            regions['dataType'] = 'String'
-            regions['required'] = True
-            regions['allowMultiple'] = False
-            regions['allowableValues'] = {"valueType":"LIST", "values":[]}
-            for key, val in instance_manager.keys_navitia.iteritems():
-                regions['allowableValues']["values"].append(key)
             params.append(version)
-            params.append(regions)
-            response['resourcePath'] = "/"+api
+            path += "{version}/"
+            
+            if not("regions" in apis[api]) or apis[api]["regions"]:
+                regions = {}
+                regions['name'] = 'region'
+                regions['paramType'] = 'path'
+                regions['description'] = 'The region you want to query'
+                regions['dataType'] = 'String'
+                regions['required'] = True
+                regions['allowMultiple'] = False
+                regions['allowableValues'] = {"valueType":"LIST", "values":[]}
+                for key, val in instance_manager.keys_navitia.iteritems():
+                    regions['allowableValues']["values"].append(key)
+                params.append(regions)
+                path += "{region}/"
+            response['resourcePath'] = api
             
             response['apis'].append({
-                    "path" : "/{version}/{region}/"+api+".{format}",
+                    "path" : path+api+".{format}",
                     "description" : apis[api]["description"] if "description" in apis[api] else "",
                     "operations" : [{
                             "httpMethod" : "GET",
@@ -75,7 +80,10 @@ def api_doc(apis, instance_manager, api = None) :
                                     })
 
     else:
-        for key, val in apis.iteritems() :
+        list_apis = apis.items()
+        list_apis.sort(key = lambda x : x[1]['priority'] if "priority" in x[1] else 50)
+        for l in list_apis :
+            key = l[0]
             response['apis'].append({"path":"/doc.{format}/"+key, "description" :apis[key]["description"] if "description" in apis[key] else  ""})
 
 
