@@ -47,7 +47,7 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
  * @return : Un object protobuff de type DEPARTURE_BOARD
  */
 pbnavitia::Response stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
-                                    const std::string &str_dt, const std::string &str_max_dt,
-                                    const int nb_departures, const int depth, type::Data & data);
+                                    const std::string &str_dt, uint32_t duration,
+                                    uint32_t nb_stoptimes, uint32_t depth, type::Data & data);
 
 }}

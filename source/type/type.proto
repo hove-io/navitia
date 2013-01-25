@@ -408,11 +408,10 @@ message FirstLetterRequest {
 message NextStopTimeRequest {
     required string departure_filter = 1;
     required string arrival_filter = 2;
-    required string datetime = 3;
-    required string changetime = 4;
+    required string from_datetime = 3;
+    required int32 duration = 4;
     required int32 depth = 5;
-    required string max_datetime = 6;
-    required int32 nb_departure = 7;
+    required int32 nb_stoptimes = 7;
     required bool wheelchair = 8;
 }
 

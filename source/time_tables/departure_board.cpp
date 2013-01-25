@@ -21,9 +21,9 @@ std::vector<vector_datetime> make_columuns(const std::vector<dt_st> &stop_times)
     return result;
 }
 
-pbnavitia::Response departure_board(const std::string &request, const std::string &date, const std::string &date_changetime, const type::Data &data) {
+pbnavitia::Response departure_board(const std::string &request, const std::string &date, uint32_t duration, const type::Data &data) {
 
-    request_parser parser("DEPARTURE_BOARD", request, date,  date_changetime, data);
+    request_parser parser("DEPARTURE_BOARD", request, date,  duration, data);
 
 
     parser.pb_response.set_requested_api(pbnavitia::DEPARTURE_BOARD);

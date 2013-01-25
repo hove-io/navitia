@@ -9,12 +9,8 @@ struct request_parser {
     routing::DateTime max_datetime;
     std::vector<type::idx_t> route_points;
 
-
-    request_parser(const std::string &API, const std::string &request, const std::string &str_dt, const std::string &str_max_dt,
-                   const int nb_departures, const type::Data & data);
-
-    request_parser(const std::string &API, const std::string &request, const std::string &change_time, const std::string &str_max_dt,
-                   const type::Data & data);
+    request_parser(const std::string &API, const std::string &request, const std::string &change_time,
+                   uint32_t duration, const type::Data & data);
 
     request_parser(const std::string &API, const std::string str_dt, const type::Data & data);
 

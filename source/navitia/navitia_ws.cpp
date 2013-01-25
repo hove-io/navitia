@@ -368,12 +368,15 @@ public:
 
         std::string filters = boost::get<std::string>(request.parsed_params["filter"].value);
         std::string datetime = boost::get<std::string>(request.parsed_params["datetime"].value);
-        std::string max_date_time = boost::get<std::string>(request.parsed_params["max_datetime"].value);
+        
+        uint32_t duration = std::numeric_limits<uint32_t>::max();
+        if(request.parsed_params.find("duration") != request.parsed_params.end())
+            duration = boost::get<uint32_t>(request.parsed_params["duration"].value);
 
         int nb_departures = std::numeric_limits<int>::max();
         if(request.parsed_params.find("nb_departures") != request.parsed_params.end())
             nb_departures= boost::get<int>(request.parsed_params["nb_departures"].value);
-        else if(max_date_time == "")
+        else if(duration == std::numeric_limits<uint32_t>::max())
             nb_departures = 10;
 
         int depth;
@@ -386,7 +389,7 @@ public:
         if(request.parsed_params.find("wheelchair") != request.parsed_params.end())
             wheelchair = boost::get<bool>(request.parsed_params["wheelchair"].value);
 
-        pb_response = navitia::timetables::next_departures(filters, datetime, max_date_time, nb_departures, depth, wheelchair, data);
+        pb_response = navitia::timetables::next_departures(filters, datetime, duration, nb_departures, depth, wheelchair, data);
         rd.status_code = 200;
 
         return rd;
@@ -402,14 +405,16 @@ public:
 
         std::string filters = boost::get<std::string>(request.parsed_params["filter"].value);
         std::string datetime = boost::get<std::string>(request.parsed_params["datetime"].value);
-        std::string max_date_time = boost::get<std::string>(request.parsed_params["max_datetime"].value);
+        uint32_t duration = std::numeric_limits<uint32_t>::max();
+        if(request.parsed_params.find("duration") != request.parsed_params.end())
+            duration = boost::get<uint32_t>(request.parsed_params["duration"].value);
 
         int nb_departures = std::numeric_limits<int>::max();
         if(request.parsed_params.find("nb_departures") != request.parsed_params.end())
             nb_departures= boost::get<int>(request.parsed_params["nb_departures"].value);
-        else if(max_date_time == "")
+        else if(duration == std::numeric_limits<uint32_t>::max())
             nb_departures = 10;
-
+    
         int depth;
         if(request.parsed_params.find("depth") != request.parsed_params.end())
             depth= boost::get<int>(request.parsed_params["depth"].value);
@@ -420,7 +425,7 @@ public:
         if(request.parsed_params.find("wheelchair") != request.parsed_params.end())
             wheelchair = boost::get<bool>(request.parsed_params["wheelchair"].value);
 
-        pb_response = navitia::timetables::next_arrivals(filters, datetime, max_date_time, nb_departures, depth, wheelchair, data);
+        pb_response = navitia::timetables::next_arrivals(filters, datetime, duration, nb_departures, depth, wheelchair, data);
         rd.status_code = 200;
 
         return rd;
@@ -437,20 +442,23 @@ public:
         std::string departure_filter = boost::get<std::string>(request.parsed_params["departure_filter"].value);
         std::string arrival_filter = boost::get<std::string>(request.parsed_params["arrival_filter"].value);
         std::string datetime = boost::get<std::string>(request.parsed_params["datetime"].value);
-        std::string max_date_time = boost::get<std::string>(request.parsed_params["max_datetime"].value);
+        uint32_t duration = std::numeric_limits<uint32_t>::max();
+        if(request.parsed_params.find("duration") != request.parsed_params.end())
+            duration = boost::get<uint32_t>(request.parsed_params["duration"].value);
 
-        int nb_departures;
+        int nb_departures = std::numeric_limits<int>::max();
         if(request.parsed_params.find("nb_departures") != request.parsed_params.end())
             nb_departures= boost::get<int>(request.parsed_params["nb_departures"].value);
-        else
+        else if(duration == std::numeric_limits<uint32_t>::max())
             nb_departures = 10;
+
         int depth;
         if(request.parsed_params.find("depth") != request.parsed_params.end())
             depth= boost::get<int>(request.parsed_params["depth"].value);
         else
             depth = 1;
 
-        pb_response = navitia::timetables::stops_schedule(departure_filter, arrival_filter, datetime, max_date_time, nb_departures, depth, data);
+        pb_response = navitia::timetables::stops_schedule(departure_filter, arrival_filter, datetime, duration, nb_departures, depth, data);
         rd.status_code = 200;
 
         return rd;
@@ -467,15 +475,15 @@ public:
 
         std::string filter = boost::get<std::string>(request.parsed_params["filter"].value);
         std::string datetime = boost::get<std::string>(request.parsed_params["datetime"].value);
-        std::string change_time = boost::get<std::string>(request.parsed_params["changetime"].value);
+        uint32_t duration = 86400;
+        if(request.parsed_params.find("duration") != request.parsed_params.end())
+            duration = boost::get<uint32_t>(request.parsed_params["duration"].value);
 
-        int depth;
+        uint32_t depth = 1;
         if(request.parsed_params.find("depth") != request.parsed_params.end())
-            depth= boost::get<int>(request.parsed_params["depth"].value);
-        else
-            depth = 1;
+            depth= boost::get<uint32_t>(request.parsed_params["depth"].value);
 
-        pb_response = navitia::timetables::line_schedule(filter, datetime, change_time, depth, data);
+        pb_response = navitia::timetables::line_schedule(filter, datetime, duration, depth, data);
         rd.status_code = 200;
 
         return rd;
@@ -491,9 +499,12 @@ public:
 
         std::string filter = boost::get<std::string>(request.parsed_params["filter"].value);
         std::string datetime = boost::get<std::string>(request.parsed_params["datetime"].value);
-        std::string max_date_time = boost::get<std::string>(request.parsed_params["changetime"].value);
+        uint32_t duration = 86400;
+        if(request.parsed_params.find("duration") != request.parsed_params.end())
+            duration = boost::get<uint32_t>(request.parsed_params["duration"].value);
 
-        pb_response = navitia::timetables::departure_board(filter, datetime, max_date_time, data);
+
+        pb_response = navitia::timetables::departure_board(filter, datetime, duration, data);
         rd.status_code = 200;
 
         return rd;
@@ -564,7 +575,7 @@ public:
         register_api("next_departures", boost::bind(&Worker::next_departures, this, _1, _2), "Renvoie les prochains départs");
         add_param("next_departures", "filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, false);
         add_param("next_departures", "datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, true);
-        add_param("next_departures", "max_datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
+        add_param("next_departures", "duration", "Durée maximale entre datetime et le dernier stop time retourné", ApiParameter::INT, false);
         add_param("next_departures", "nb_departures", "Nombre maximum de départ souhaités", ApiParameter::INT, false);
         add_param("next_departures", "depth", "Profondeur maximale pour les objets", ApiParameter::INT, false);
         add_param("next_departures", "wheelchair",  "Besoin en accessibilité", ApiParameter::BOOLEAN, false);
@@ -572,7 +583,7 @@ public:
         register_api("next_arrivals", boost::bind(&Worker::next_arrivals, this, _1, _2), "Renvoie les prochaines arrivées");
         add_param("next_arrivals", "filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, false);
         add_param("next_arrivals", "datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, true);
-        add_param("next_arrivals", "max_datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
+        add_param("next_arrivals", "duration", "Durée maximale entre datetime et le dernier stop time retourné", ApiParameter::INT, false);
         add_param("next_arrivals", "nb_departures", "Nombre maximum de départ souhaités", ApiParameter::INT, false);
         add_param("next_arrivals", "depth", "Profondeur maximale pour les objets", ApiParameter::INT, false);
         add_param("next_arrivals", "wheelchair",  "Besoin en accessibilité", ApiParameter::BOOLEAN, false);
@@ -582,20 +593,21 @@ public:
         add_param("stops_schedule", "departure_filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, false);
         add_param("stops_schedule", "arrival_filter", "Conditions pour restreindre les départs retournés", ApiParameter::STRING, false);
         add_param("stops_schedule", "datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, true);
-        add_param("stops_schedule", "max_datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
+        add_param("stops_schedule", "duration", "Durée maximale entre datetime et le dernier stop time retourné", ApiParameter::INT, false);
         add_param("stops_schedule", "nb_departures", "Nombre maximum de départ souhaités", ApiParameter::INT, false);
         add_param("stops_schedule", "depth", "Profondeur maximale pour les objets", ApiParameter::INT, false);
 
         register_api("line_schedule", boost::bind(&Worker::line_schedule, this, _1, _2), "Renvoie la fiche horaire d'un jour de la ligne demandée");
         add_param("line_schedule", "filter", "Le filtre pour sélectionner la ligne", ApiParameter::STRING, true);
         add_param("line_schedule", "datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, true);
-        add_param("line_schedule", "changetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
+        add_param("line_schedule", "duration", "Durée maximale entre datetime et le dernier stop time retourné", ApiParameter::INT, false);
         add_param("line_schedule", "depth", "Profondeur maximale pour les objets", ApiParameter::INT, false);
 
         register_api("departure_board", boost::bind(&Worker::departure_board, this, _1, _2), "Renvoie la fiche horaire de la ligne demandée et de l'arret demandé");
         add_param("departure_board", "filter", "Le filtre qui refere à la ligne et au stop point désiré", ApiParameter::STRING, false);
         add_param("departure_board", "datetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
-        add_param("departure_board", "changetime", "Date à partir de laquelle on veut les prochains départs (au format iso)", ApiParameter::STRING, false);
+        add_param("departure_board", "duration", "Durée maximale entre datetime et le dernier stop time retourné", ApiParameter::INT, false);
+
 
         add_default_api();
     }

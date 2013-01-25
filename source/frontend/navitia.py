@@ -99,11 +99,10 @@ def stop_times(request, version, region, format, departure_filter, arrival_filte
     req.next_stop_times.departure_filter = departure_filter
     req.next_stop_times.arrival_filter = arrival_filter
 
-    req.next_stop_times.datetime = request.args.get("datetime")
-    req.next_stop_times.changetime = request.args.get("changetime", "T000")
+    req.next_stop_times.from_datetime = request.args.get("from_datetime")
+    req.next_stop_times.duration = request.args.get("duration", 86400)
     req.next_stop_times.depth = request.args.get("depth", 1, type=int)
-    req.next_stop_times.max_datetime = request.args.get("max_datetime", "")
-    req.next_stop_times.nb_departure = request.args.get("nb_departures", 10, type=int)
+    req.next_stop_times.nb_stoptimes = request.args.get("nb_stoptimes", 10, type=int)
     req.next_stop_times.wheelchair = request.args.get("wheelchair", False, type=bool)
     resp = send_and_receive(req, region)
     return render_from_protobuf(resp, format, request)
@@ -176,10 +175,10 @@ def on_ptref(requested_type):
 scheduleArguments = {
         "filter" : Argument("Filter to have the times you want", str, True,
                             False),
-        "datetime" : Argument("The date from which you want the times",
+        "from_datetime" : Argument("The date from which you want the times",
                               datetime, True, False),
-        "change_datetime" : Argument("The date where you want to cut the request",
-                                  datetime, False, False),        
+        "duration" : Argument("Maximum duration between the datetime and the last  retrieved stop time",
+                                  int, False, False),        
         "wheelchair" : Argument("true if you want the times to have accessibility", boolean, False, False, "0")
         }
 stopsScheduleArguments = copy.copy(scheduleArguments)
@@ -190,7 +189,7 @@ stopsScheduleArguments["arrival_filter"] = Argument("The filter of your arrival 
                                                       True, False)
 
 nextTimesArguments = copy.copy(scheduleArguments)
-nextTimesArguments["nb_departures"] = Argument("The maximum number of departures", int,False, False)
+nextTimesArguments["nb_stoptimes"] = Argument("The maximum number of stop_times", int,False, False)
 
 ptrefArguments = {
         "filter" : Argument("Conditions to filter the returned objects", str,

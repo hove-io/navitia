@@ -117,15 +117,15 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     this->init_worker_data();
     switch(api){
     case pbnavitia::NEXT_DEPARTURES:
-        return navitia::timetables::next_departures(request.departure_filter(), request.datetime(), request.max_datetime(), request.nb_departure(), request.depth(), request.wheelchair(), this->data);
+        return navitia::timetables::next_departures(request.departure_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), request.wheelchair(), this->data);
     case pbnavitia::NEXT_ARRIVALS:
-        return navitia::timetables::next_arrivals(request.arrival_filter(), request.datetime(), request.max_datetime(), request.nb_departure(), request.depth(), request.wheelchair(), this->data);
+        return navitia::timetables::next_arrivals(request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), request.wheelchair(), this->data);
     case pbnavitia::STOPS_SCHEDULE:
-        return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.datetime(), request.max_datetime(), request.nb_departure(), request.depth(), this->data);
+        return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), this->data);
     case pbnavitia::DEPARTURE_BOARD:
-        return navitia::timetables::departure_board(request.departure_filter(), request.datetime(), request.max_datetime(), this->data);
+        return navitia::timetables::departure_board(request.departure_filter(), request.from_datetime(), request.duration(), this->data);
     default:
-        return navitia::timetables::line_schedule(request.departure_filter(), request.datetime(), request.changetime(), request.depth(), this->data);
+        return navitia::timetables::line_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
     }
 }
 

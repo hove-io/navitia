@@ -56,8 +56,8 @@ std::vector<vector_string> make_matrice(const std::vector<vector_stopTime> & sto
 }
 
 
-pbnavitia::Response line_schedule(const std::string & filter, const std::string &str_dt, const std::string &change_time, const uint32_t max_depth, type::Data &d) {
-    request_parser parser("LINE_SCHEDULE", "", str_dt, change_time, d);
+pbnavitia::Response line_schedule(const std::string & filter, const std::string &str_dt, uint32_t duration, const uint32_t max_depth, type::Data &d) {
+    request_parser parser("LINE_SCHEDULE", "", str_dt, duration, d);
     parser.pb_response.set_requested_api(pbnavitia::LINE_SCHEDULE);
 
     if(parser.pb_response.has_error()) {

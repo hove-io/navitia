@@ -30,7 +30,7 @@ std::unordered_map<type::idx_t, uint32_t>  get_arrival_order(const std::vector<t
 
 
 std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
-                                        const routing::DateTime &datetime, const routing::DateTime &max_datetime, const int nb_departures,
+                                        const routing::DateTime &datetime, const routing::DateTime &max_datetime, const int nb_stoptimes,
                                         type::Data & data) {
 
     std::vector<pair_dt_st> result;
@@ -45,7 +45,7 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
         departure_route_points.push_back(dep_order.first);
 
     //On demande tous les next_departures
-    auto departure_dt_st = get_stop_times(departure_route_points, datetime, max_datetime, nb_departures, data);
+    auto departure_dt_st = get_stop_times(departure_route_points, datetime, max_datetime, nb_stoptimes, data);
 
 
     //On va chercher les retours
@@ -65,8 +65,8 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
 
 
 pbnavitia::Response stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
-                                    const std::string &str_dt, const std::string &str_max_dt,
-                                    const int nb_departures, const int depth, type::Data & data) {
+                                    const std::string &str_dt, uint32_t duration, 
+                                    uint32_t nb_stoptimes, uint32_t depth, type::Data & data) {
     pbnavitia::Response pb_response;
 
     boost::posix_time::ptime ptime;
@@ -74,17 +74,10 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
     routing::DateTime dt((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
 
     routing::DateTime max_dt;
-    if(str_max_dt != "") {
-        ptime = boost::posix_time::from_iso_string(str_max_dt);
-        max_dt = routing::DateTime((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
-    } else if(nb_departures == std::numeric_limits<int>::max()) {
-        pb_response.set_error("DepartureBoard : Un des deux champs nb_departures ou max_datetime doit être renseigné");
-        return pb_response;
-    }
-
+    max_dt = dt + duration;
     std::vector<pair_dt_st> board;
     try {
-        board = stops_schedule(departure_filter, arrival_filter, dt, max_dt, nb_departures, data);
+        board = stops_schedule(departure_filter, arrival_filter, dt, max_dt, nb_stoptimes, data);
     } catch(ptref::ptref_parsing_error parse_error) {
         switch(parse_error.type){
         case ptref::ptref_parsing_error::error_type::partial_error: pb_response.set_error("DepartureBoard / PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + parse_error.more + "<<"); break;
