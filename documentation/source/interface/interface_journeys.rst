@@ -42,11 +42,11 @@ Paramètres généraux
 +------------------+------------------------+-------------------------------------+---------------------------------+
 | walking_speed    | double                 | Vitesse de marche à pied en m/s     | &walking_speed=1.2              |
 |                  |                        | 1.38 par défaut                     |                                 |
-+-------------------------------------------------------------------------------------------------------------------+
-| walking_distance | int                    | Distance maximale de marche en      | &walking_distance=1000          |		
++------------------+------------------------+-------------------------------------+---------------------------------+
+| walking_distance | int                    | Distance maximale de marche en      | &walking_distance=1000          |
 |                  |                        | mètres                              |                                 |
 |                  |                        | 1000 par défaut                     |                                 |
-+-------------------------------------------------------------------------------------------------------------------+
++------------------+------------------------+-------------------------------------+---------------------------------+
 | wheelchair       | booléen                | &wheelchair=1 on veut que le trajet | &wheelchair=1                   |
 |                  |                        | soit adapté aux fauteuils roulants  |                                 |
 |                  |                        | &wheelchair=0 on ne prend pas en    |                                 |
