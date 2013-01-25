@@ -287,8 +287,8 @@ apis = {
         "proximity_list" : {"endpoint" : on_proximity_list, "arguments" : {
                 "lon" : Argument("Longitude of the point from where you want objects", float, True, False),
                 "lat" : Argument("Latitude of the point from where you want objects", float, True, False),
-                "dist" : Argument("Distance range of the query", int, True, False),
-                "filter" : Argument("Type of the objects you want to have in return", str, True, False)
+                "dist" : Argument("Distance range of the query", int, False, False, 1000),
+                "filter" : Argument("Type of the objects you want to have in return", str, False, False)
                 },
             "description" : "Retrieves all the objects around a point within the given distance",
             "order" : 1.1}
@@ -335,9 +335,7 @@ def on_universal_journeys(api):
 
 def on_universal_proximity_list(request, version, format):
     try:
-        lon = float(origin_re.group(1))
-        lat = float(origin_re.group(2))
-        region = instances.key_of_coord(lon, lat)
+        region = instances.key_of_coord(float(request.args.get("lon")), float(request.args.get("lat")))
         if region:
             return on_api(request, version, region, "proximity_list", format)
         else:
