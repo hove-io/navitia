@@ -198,12 +198,13 @@ ptrefArguments = {
         "depth" : Argument("Maximum depth on objects", int, False, False, 1)
         }
 journeyArguments = {
-        "origin" : Argument("Departure Point", str, True, False),
-        "destination" : Argument("Destination Point" , str, True, False),
-        "clockwise" : Argument("1 if you want to have a journey that starts after datetime, 0 if you a journey that arrives before datetime", False, False, 1),
-        "forbiddenline" : Argument("Forbidden lines identified by their external codes", False, True),
-        "forbiddenmode" : Argument("Forbidden modes identified by their external codes", False, True),
-        "forbiddenroute" : Argument("Forbidden routes identified by their external codes", False, True),
+        "origin" : Argument("Departure Point", str, True, False, order = 0),
+        "destination" : Argument("Destination Point" , str, True, False, order = 1),
+        "datetime" : Argument("The time from which you want to arrive (or arrive before depending on the value of clockwise", datetime, True, False, order = 2),
+        "clockwise" : Argument("1 if you want to have a journey that starts after datetime, 0 if you a journey that arrives before datetime", int, False, False, order = 3),
+        "forbiddenline" : Argument("Forbidden lines identified by their external codes",  str, False, True),
+        "forbiddenmode" : Argument("Forbidden modes identified by their external codes", str, False, True),
+        "forbiddenroute" : Argument("Forbidden routes identified by their external codes", str, False, True),
         "walking_speed" : Argument("Walking speed in m/s", float, False, False, 1.38),
         "walking_distance" : Argument("Maximum walking distance in meters", int,
                                       False, False, "1000"),
