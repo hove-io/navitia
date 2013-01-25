@@ -39,7 +39,7 @@ def render_from_protobuf(pb_resp, format, request):
     if format == 'pb':
         return Response(pb_resp.SerializeToString(), mimetype='application/octet-stream')
     else:
-        render(protobuf_to_dict(pb_resp, enum_as_labels=True), format, request)
+        return render(protobuf_to_dict(pb_resp, enum_as_labels=True), format, request)
 
 
 def send_and_receive(request, region = None):
@@ -117,7 +117,7 @@ def on_next_departures(request, version, region, format):
     return stop_times(request, version, region, format, "", request.args.get("filter", ""), type_pb2.NEXT_ARRIVALS)
 
 def on_stops_schedule(request, version, region, format):
-    return stop_times(request, version, region, format, "", request.args.get("departure_filter", ""), request.args.get("arrvial_filter", ""),type_pb2.STOPS_SCHEDULE)
+    return stop_times(request, version, region, format, request.args.get("departure_filter", ""), request.args.get("arrvial_filter", ""),type_pb2.STOPS_SCHEDULE)
 
 def on_departure_board(request, version, region, format):
     return stop_times(request, version, region, format, request.args.get("filter", ""), "", type_pb2.DEPARTURE_BOARD)
