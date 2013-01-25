@@ -3,6 +3,7 @@ import type_pb2
 import json
 import dict2xml
 import copy
+import re
 from protobuf_to_dict import protobuf_to_dict
 from werkzeug.wrappers import Request, Response
 from werkzeug.wsgi import responder
@@ -93,17 +94,17 @@ def on_first_letter(request, version, region, format):
 
 
 def stop_times(request, version, region, format, departure_filter, arrival_filter, api):
-    req = type_pb2.req()
+    req = type_pb2.Request()
     req.requested_api = api
-    req.next_departure.departure_filter = departure_filter
-    req.next_departure.arrival_filter = arrival_filter
+    req.next_stop_times.departure_filter = departure_filter
+    req.next_stop_times.arrival_filter = arrival_filter
 
-    req.next_departure.datetime = request.args.get("next_departure")
-    req.next_departure.max_datetime = request.args.get("max_datetime")
-    req.next_departure.nb_departures = request.args.get("nb_departures", 10, type=int)
-    req.next_departure.depth = request.args.get("depth", 1, type=int)
-    req.next_departure.depth = request.args.get("wheelchair", False, type=bool)
-    req.line_schedule.changetime = request.args.get("changetime", "00T00")
+    req.next_stop_times.datetime = request.args.get("datetime")
+    req.next_stop_times.changetime = request.args.get("changetime", "T000")
+    req.next_stop_times.depth = request.args.get("depth", 1, type=int)
+    req.next_stop_times.max_datetime = request.args.get("max_datetime", "")
+    req.next_stop_times.nb_departure = request.args.get("nb_departures", 10, type=int)
+    req.next_stop_times.wheelchair = request.args.get("wheelchair", False, type=bool)
     resp = send_and_receive(req, region)
     return render_from_protobuf(resp, format, request)
 
@@ -274,10 +275,44 @@ def on_api(request, version, region, api, format):
          if v.valid:
             return apis[api]["endpoint"](request, version, region, format)
          else:
-             return Response("Invalid arguments: " + v.details, status=400)
+             return Response("Invalid arguments: " + str(v.details), status=400)
     else:
         return Response("Unknown api: " + api, status=404)
 
+
+def universal_journeys(api, request, version, format):
+    origin = request.args.get("origin", "")
+    origin_re = re.match('^coord:(.+):(.+)$', origin)
+    region = None
+    if origin_re:
+        try:
+            lon = float(origin_re.group(1))
+            lat = float(origin_re.group(2))
+            region = instances.key_of_coord(lon, lat)
+        except:
+            return Response("Unable to parse coordianates", status=400)
+        if region:
+            return on_api(request, version, region, api, format)
+        else:
+            return Response("No region found at given coordinates", status=404)
+    else:
+        return Response("Journeys without specifying a region only accept coordinates as origin or destination", status=400)
+
+def on_universal_journeys(api):
+    return lambda request, version, format: universal_journeys(api, request, version, region, format)
+
+def on_universal_proximity_list(request, version, format):
+    try:
+        lon = float(origin_re.group(1))
+        lat = float(origin_re.group(2))
+        region = instances.key_of_coord(lon, lat)
+        if region:
+            return on_api(request, version, region, "proximity_list", format)
+        else:
+            return Response("No region found at given coordinates", status=404)
+    except:
+        return Response("Invalid coordianates", status=400)
+   
 
 def on_summary_doc(request) : 
     return render(api_doc(apis, instances), 'json', request)
@@ -289,6 +324,9 @@ url_map = Map([
     Rule('/', endpoint=on_index),
     Rule('/<version>/', endpoint=on_index),
     Rule('/<version>/regions.<format>', endpoint = on_regions),
+    Rule('/<version>/journeys.<format>', endpoint = on_universal_journeys("journeys")),
+    Rule('/<version>/isochrone.<format>', endpoint = on_universal_journeys("isochrone")),
+    Rule('/<version>/proximity_list.<format>', endpoint = on_universal_proximity_list),
     Rule('/<region>/load.<format>', endpoint = on_load),
     Rule('/<region>/status.<format>', endpoint = on_status),
     Rule('/<version>/<region>/<api>.<format>', endpoint = on_api),
