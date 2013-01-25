@@ -281,7 +281,15 @@ apis = {
                           "priority":1},
         "isochrone" : {"endpoint" : on_journeys(type_pb2.ISOCHRONE), "arguments" : journeyArguments,
                        "description" : "Computes and retrieves an isochrone",
-                          "priority":1}
+                          "priority":1},
+        "proximity_list" : {"endpoint" : on_proximity_list, "arguments" : {
+                "lon" : Argument("Longitude of the point from where you want objects", float, True, False),
+                "lat" : Argument("Latitude of the point from where you want objects", float, True, False),
+                "dist" : Argument("Distance range of the query", int, True, False),
+                "filter" : Argument("Type of the objects you want to have in return", str, True, False)
+                },
+            "description" : "Retrieves all the objects around a point within the given distance",
+            "priority" : 1.1}
         
         }
 apis_all = copy.copy(apis)
