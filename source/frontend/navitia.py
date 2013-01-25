@@ -265,6 +265,9 @@ apis = {
                        "description" : "Computes and retrieves an isochrone"}
         
         }
+apis_all = copy.copy(apis)
+apis_all["regions"] = {"arguments" : {}, "description" : "Retrieves the list of available regions", "regions" : False}
+
 
 def on_api(request, version, region, api, format):
     if version != "v0":
@@ -279,11 +282,11 @@ def on_api(request, version, region, api, format):
         return Response("Unknown api: " + api, status=404)
 
 
-def on_summary_doc(request) : 
-    return render(api_doc(apis, instances), 'json', request)
+def on_summary_doc(request) :
+    return render(api_doc(apis_all, instances), 'json', request)
 
 def on_doc(request, api):
-    return render(api_doc(apis, instances, api), 'json', request)
+    return render(api_doc(apis_all, instances, api), 'json', request)
 
 url_map = Map([
     Rule('/', endpoint=on_index),
