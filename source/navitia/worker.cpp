@@ -30,6 +30,7 @@ nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     case pbnavitia::CONNECTION: return nt::Type_e::eConnection; break;
     case pbnavitia::ROUTEPOINT: return nt::Type_e::eRoutePoint; break;
     case pbnavitia::COMPANY: return nt::Type_e::eCompany; break;
+    case pbnavitia::VEHICLEJOURNEY: return nt::Type_e::eVehicleJourney; break;
     default: return nt::Type_e::eUnknown;
     }
 }
@@ -194,7 +195,6 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
 pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
     pbnavitia::Response result;
     result.set_requested_api(request.requested_api());
-    std::cout << "Requête reçue : " << request.requested_api() << std::endl;
     switch(request.requested_api()){
     case pbnavitia::STATUS: return status(); break;
     case pbnavitia::LOAD: return load(); break;

@@ -95,6 +95,7 @@ pbnavitia::Response extract_data(const Data & data, Type_e requested_type, std::
         case Type_e::eConnection: fill_pb_object(idx, data, pb_response->add_connection(), depth); break;
         case Type_e::eRoutePoint: fill_pb_object(idx, data, pb_response->add_route_point(), depth); break;
         case Type_e::eCompany: fill_pb_object(idx, data, pb_response->add_company(), depth); break;
+        case Type_e::eVehicleJourney: fill_pb_object(idx, data, pb_response->add_vehicle_journey(), depth); break;
         default: break;
         }
     }
@@ -189,6 +190,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
         case Type_e::eConnection: indexes = get_indexes<Connection>(filter, requested_type, data); break;
         case Type_e::eRoutePoint: indexes = get_indexes<RoutePoint>(filter, requested_type, data); break;
         case Type_e::eCompany: indexes = get_indexes<Company>(filter, requested_type, data); break;
+        case Type_e::eVehicleJourney : indexes = get_indexes<VehicleJourney>(filter, requested_type, data); break;
         default: break;
         }
         // Attention ! les structures doivent être triées !

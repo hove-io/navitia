@@ -11,6 +11,7 @@ enum NavitiaType {
     CITY = 10;
     CONNECTION = 11;
     ROUTEPOINT = 12;
+    VEHICLEJOURNEY = 13;
     COMPANY = 15;
     COUNTRY = 17;
     SITE = 20;
@@ -52,6 +53,7 @@ message StopArea {
     optional GeographicalCoord coord = 5;
     optional City city = 6;
     optional bool is_adapted = 7;
+    repeated StopPoint stop_point = 8;
 }
 
 message StopPoint {
@@ -73,6 +75,7 @@ message Line {
     optional string backward_name = 7;
     optional string additional_data = 8;
     optional string color = 9;
+    repeated Route route = 10;
 }
 
 message Route {
@@ -82,6 +85,7 @@ message Route {
     optional bool is_frequence = 5;
     optional bool is_adapted = 6;
     optional Line line = 7;
+    repeated RoutePoint route_point= 8;
 }
 
 message StopDateTime {
@@ -94,11 +98,24 @@ message StopDateTime {
     optional int32 nb_changes = 7;
 }
 
+message StopTime {
+    optional string arrival_time = 1;
+    optional string departure_time = 3;
+    optional VehicleJourney vehicle_journey = 4;
+    optional RoutePoint route_point = 5;
+    optional bool pickup_allowed = 6;
+    optional bool drop_off_allowed = 7;
+    optional bool is_adapted = 8;
+}
+
+
 message VehicleJourney {
     optional string id = 1;
     optional string name = 3;
     optional string external_code = 4;
     optional bool is_adapted = 5;
+    repeated StopTime stop_time = 6;
+    optional Route route = 7;
 }
 
 message RoutePoint{
@@ -181,6 +198,7 @@ message PTReferential {
     repeated City city = 13;
     repeated Site site = 14;
     repeated Company company = 15;
+    repeated VehicleJourney vehicle_journey = 16;
 }
 
 message PlaceMark {

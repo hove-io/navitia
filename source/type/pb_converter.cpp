@@ -110,6 +110,38 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Connection *
     }
 }
 
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::VehicleJourney * vehicle_journey, int max_depth){
+    navitia::type::VehicleJourney vj = data.pt_data.vehicle_journeys.at(idx);
+    vehicle_journey->set_name(vj.name);
+    vehicle_journey->set_external_code(vj.external_code);
+    vehicle_journey->set_is_adapted(vj.is_adapted);
+    if(vj.route_idx != type::invalid_idx && max_depth > 0)
+        fill_pb_object(vj.route_idx, data, vehicle_journey->mutable_route(), max_depth-1);
+
+    if(max_depth > 0) {
+        for(type::idx_t stop_time_idx : vj.stop_time_list) {
+            fill_pb_object(stop_time_idx, data, vehicle_journey->add_stop_time(), max_depth -1);
+        }
+    }
+}
+
+void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopTime *stop_time, int max_depth) {
+    navitia::type::StopTime st = data.pt_data.stop_times.at(idx);
+    boost::posix_time::ptime d = boost::posix_time::from_iso_string("19700101");
+    boost::posix_time::ptime p = d +  boost::posix_time::seconds(st.arrival_time);
+    stop_time->set_arrival_time(boost::posix_time::to_iso_string(p));
+    p = d +  boost::posix_time::seconds(st.departure_time);
+    stop_time->set_arrival_time(boost::posix_time::to_iso_string(p));
+    stop_time->set_is_adapted(st.is_adapted());
+    stop_time->set_pickup_allowed(st.pick_up_allowed());
+    stop_time->set_drop_off_allowed(st.drop_off_allowed());
+    if(st.route_point_idx != type::invalid_idx && max_depth > 0)
+        fill_pb_object(st.route_point_idx, data, stop_time->mutable_route_point(), max_depth-1);
+    if(st.vehicle_journey_idx != type::invalid_idx && max_depth > 0)
+        fill_pb_object(st.vehicle_journey_idx, data, stop_time->mutable_vehicle_journey(), max_depth-1);
+}
+
+
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::RoutePoint * route_point, int max_depth){
     navitia::type::RoutePoint rp = data.pt_data.route_points.at(idx);
     route_point->set_id(rp.id);
