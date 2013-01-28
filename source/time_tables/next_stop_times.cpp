@@ -19,7 +19,7 @@ pbnavitia::Response next_stop_times(const std::string &request, const std::strin
     auto departures_dt_idx = get_stop_times(parser.route_points, parser.date_time, parser.max_datetime, nb_stoptimes, data, wheelchair);
 
     for(auto dt_idx : departures_dt_idx) {
-        pbnavitia::StopTime * stoptime = parser.pb_response.mutable_nextstoptimes()->add_stoptime();
+        pbnavitia::StopDateTime * stoptime = parser.pb_response.mutable_nextstoptimes()->add_stoptime();
         stoptime->set_departure_date_time(iso_string(data, dt_idx.first.date(),  dt_idx.first.hour()));
         stoptime->set_arrival_date_time(iso_string(data, dt_idx.first.date(),  dt_idx.first.hour()));
         const auto &rp = data.pt_data.route_points[data.pt_data.stop_times[dt_idx.second].route_point_idx];

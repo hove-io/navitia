@@ -84,7 +84,7 @@ message Route {
     optional Line line = 7;
 }
 
-message StopTime {
+message StopDateTime {
     optional string arrival_date_time = 1;
     optional string departure_date_time = 2;
     optional StopPoint stop_point = 3;
@@ -255,7 +255,7 @@ message Section {
     optional string headsign = 7;
     optional string direction = 8;
     optional Line line = 9;
-    repeated StopTime stop_time = 10;
+    repeated StopDateTime stop_time = 10;
 
 // Si c'est du routier
     optional StreetNetwork street_network = 11;
@@ -316,8 +316,8 @@ message Status{
 }
 
 message PairStopTime {
-    required StopTime first = 1;
-    required StopTime second = 2;
+    required StopDateTime first = 1;
+    required StopDateTime second = 2;
 }
 
 message TableLine {
@@ -343,7 +343,7 @@ message LineSchedule {
 }
 
 message StopTimes {
-    repeated StopTime stoptime = 1;
+    repeated StopDateTime stoptime = 1;
 }
 
 message StopsSchedule {
@@ -370,7 +370,7 @@ message Load {
 }
 
 message Isochrone {
-    repeated StopTime stop_time = 1;
+    repeated StopDateTime stop_time = 1;
     optional ResponseType response_type = 2;
 }
 

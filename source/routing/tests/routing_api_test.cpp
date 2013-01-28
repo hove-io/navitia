@@ -39,8 +39,8 @@ BOOST_AUTO_TEST_CASE(simple_journey){
     pbnavitia::Section section = journey.section(0);
 
     BOOST_REQUIRE_EQUAL(section.stop_time_size(), 2);
-    pbnavitia::StopTime st1 = section.stop_time(0);
-    pbnavitia::StopTime st2 = section.stop_time(1);
+    auto st1 = section.stop_time(0);
+    auto st2 = section.stop_time(1);
     BOOST_CHECK_EQUAL(st1.stop_point().external_code(), "stop_point:stop1");
     BOOST_CHECK_EQUAL(st2.stop_point().external_code(), "stop_point:stop2");
     BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T081100");
@@ -79,8 +79,8 @@ BOOST_AUTO_TEST_CASE(journey_array){
     BOOST_REQUIRE_EQUAL(journey.section_size(), 1);
     pbnavitia::Section section = journey.section(0);
     BOOST_REQUIRE_EQUAL(section.stop_time_size(), 2);
-    pbnavitia::StopTime st1 = section.stop_time(0);
-    pbnavitia::StopTime st2 = section.stop_time(1);
+    auto st1 = section.stop_time(0);
+    auto st2 = section.stop_time(1);
     BOOST_CHECK_EQUAL(st1.stop_point().external_code(), "stop_point:stop1");
     BOOST_CHECK_EQUAL(st2.stop_point().external_code(), "stop_point:stop2");
     BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T081100");

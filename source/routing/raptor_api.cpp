@@ -62,7 +62,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                         fill_pb_object(line.idx, d, pb_section->mutable_line());
                     }
                     for(size_t i=0;i<item.stop_points.size();++i){
-                        pbnavitia::StopTime * stop_time = pb_section->add_stop_time();
+                        pbnavitia::StopDateTime * stop_time = pb_section->add_stop_time();
                         auto arr_time = item.arrivals[i];
                         stop_time->set_arrival_date_time(iso_string(d, arr_time.date(), arr_time.hour()));
                         auto dep_time = item.departures[i];
@@ -335,7 +335,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     }
 
      std::sort(response.mutable_isochrone()->mutable_stop_time()->begin(), response.mutable_isochrone()->mutable_stop_time()->end(),
-               [](const pbnavitia::StopTime & stop_time1, const pbnavitia::StopTime & stop_time2) {
+               [](const pbnavitia::StopDateTime & stop_time1, const pbnavitia::StopDateTime & stop_time2) {
                return stop_time1.duration() < stop_time2.duration();
                 });
 
