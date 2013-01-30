@@ -54,7 +54,7 @@ namespace qi = boost::spirit::qi;
 
         filter1 = (txt >> "." >> txt >> bin_op >> (txt|txt3))[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3, qi::_4)];
         filter2 = (txt >> "HAVING" >> '(' >> txt2 >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
-        filter3 = ("AROUND("  >> qi::float_ >> ',' >> qi::float_ >> ')' >> "WITHIN" >> qi::int_ >> 'm') [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
+        filter3 = ("AROUND"  >> qi::float_ >> ':' >> qi::float_ >> "WITHIN" >> qi::int_ >> 'm') [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
         pre_filter %= (filter1 | filter2) % (qi::lexeme["and"] | qi::lexeme["AND"]);
         a_filter = pre_filter >> -filter3;
         filter = (a_filter | filter3);
@@ -223,6 +223,7 @@ pbnavitia::Response query_pb(Type_e requested_type, std::string request, const i
     } catch(ptref_parsing_error parse_error) {
         switch(parse_error.type){
         case ptref_parsing_error::error_type::partial_error:
+            std::cout << "PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" << parse_error.more  << "<<" << std::endl;
             pb_response.set_error("PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + parse_error.more + "<<");
             break;
         case ptref_parsing_error::error_type::unknown_object:
@@ -236,7 +237,7 @@ pbnavitia::Response query_pb(Type_e requested_type, std::string request, const i
         return pb_response;
     }
 
-    final_indexes = make_query(requested_type, request, data);
+    //final_indexes = make_query(requested_type, request, data);
     return extract_data(data, requested_type, final_indexes, depth);
 }
 
