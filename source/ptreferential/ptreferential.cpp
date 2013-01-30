@@ -38,7 +38,7 @@ namespace qi = boost::spirit::qi;
     qi::rule<Iterator, std::string(), qi::space_type> txt, txt2, txt3; // Match une string
     qi::rule<Iterator, float, qi::space_type> fl1; 
     qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
-    qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter, pre_filter; // La string complÃ¨te Ã  parser
+    qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter, pre_filter, a_filter; // La string complÃ¨te Ã  parser
     qi::rule<Iterator, Filter(), qi::space_type> filter1, filter2, filter3; // La string complÃ¨te Ã  parser
 
     select_r() : select_r::base_type(filter) {
@@ -56,7 +56,8 @@ namespace qi = boost::spirit::qi;
         filter2 = (txt >> "HAVING" >> '(' >> txt2 >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
         filter3 = ("AROUND("  >> qi::float_ >> ',' >> qi::float_ >> ')' >> "WITHIN" >> qi::int_ >> 'm') [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
         pre_filter %= (filter1 | filter2) % (qi::lexeme["and"] | qi::lexeme["AND"]);
-        filter = pre_filter >> -filter3;
+        a_filter = pre_filter >> -filter3;
+        filter = (a_filter | filter3);
     }
 
 };
