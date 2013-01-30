@@ -2,8 +2,10 @@
 #include "reflexion.h"
 #include "where.h"
 #include "type/pb_converter.h"
+#include "proximity_list/proximity_list.h"
 
 #include <algorithm>
+#include <regex>
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_lit.hpp>
@@ -34,9 +36,10 @@ namespace qi = boost::spirit::qi;
             : qi::grammar<Iterator, std::vector<Filter>(), qi::space_type>
 {
     qi::rule<Iterator, std::string(), qi::space_type> txt, txt2, txt3; // Match une string
+    qi::rule<Iterator, float, qi::space_type> fl1; 
     qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
-    qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter; // La string complète à parser
-    qi::rule<Iterator, Filter(), qi::space_type> filter1, filter2; // La string complète à parser
+    qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter; // La string complÃ¨te Ã  parser
+    qi::rule<Iterator, Filter(), qi::space_type> filter1, filter2, filter3; // La string complÃ¨te Ã  parser
 
     select_r() : select_r::base_type(filter) {
         txt = qi::lexeme[+(qi::alnum|qi::char_("_:-"))];
@@ -51,11 +54,11 @@ namespace qi = boost::spirit::qi;
 
         filter1 = (txt >> "." >> txt >> bin_op >> (txt|txt3))[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3, qi::_4)];
         filter2 = (txt >> "HAVING" >> '(' >> txt2 >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
-        filter %= (filter1 | filter2) % (qi::lexeme["and"] | qi::lexeme["AND"]) ;
+        filter3 = ("AROUND("  >> qi::float_ >> ',' >> qi::float_ >> ')' >> "WITHIN" >> qi::int_ >> 'm') [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
+        filter %= (filter1 | filter2 | filter3) % (qi::lexeme["and"] | qi::lexeme["AND"]);
     }
 
 };
-
 
 
 // vérification d'une clause WHERE
@@ -117,10 +120,15 @@ template<typename T>
 std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
     auto & data = d.pt_data.get_data<T>();
     std::vector<idx_t> indexes;
-    if(filter.op != HAVING) {
-        indexes = filtered_indexes(data, build_clause<T>({filter})); // filtered.get_offsets();
-    } else {
+    if(filter.op == AROUND) {
+        type::GeographicalCoord coord(filter.lon, filter.lat);
+        auto tmp = d.pt_data.stop_point_proximity_list.find_within(coord, filter.distance);
+        for(auto idx_coord : tmp)
+            indexes.push_back(idx_coord.first);
+    } else if( filter.op == HAVING ) {
         indexes = make_query(nt::static_data::get()->typeByCaption(filter.object), filter.value, d);
+    } else {
+        indexes = filtered_indexes(data, build_clause<T>({filter})); // filtered.get_offsets();
     }
 
     Type_e current = filter.navitia_type;
@@ -169,7 +177,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
         } catch(...) {
             //ptref_unknown_object error;
             ptref_parsing_error error;
-            error.more = filter.object;
+            error.more = "Object inconnu : " + filter.object;
             throw error;
         }
     }

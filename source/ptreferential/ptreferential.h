@@ -34,12 +34,16 @@ struct Filter {
     std::string attribute; //< L'attribu ("external code")
     Operator_e op; //< la comparaison ("=")
     std::string value; //< la valeur comparée ("kikoolol")
+    float lon, lat;
+    int distance;
 
     Filter(std::string object, std::string attribute, Operator_e op, std::string value) : object(object), attribute(attribute), op(op), value(value) {}
     Filter(std::string object, std::string value) : object(object), op(HAVING), value(value) {}
+    Filter(std::string value) : object("stop_point"), op(AROUND), value(value){
+        std::cout << "Pas float " << value << std::endl; }
+    Filter(float lon, float lat, int distance): object("stop_point"), op(AROUND), lon(lon), lat(lat), distance(distance) {}
     Filter() {}
 };
-
 
 struct ptref_parsing_error : public std::exception{
     enum error_type {
