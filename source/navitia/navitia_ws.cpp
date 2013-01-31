@@ -11,7 +11,7 @@
 #include "first_letter/firstletter_api.h"
 #include "georef/street_network.h"
 #include "proximity_list/proximitylist_api.h"
-#include "ptreferential/ptreferential.h"
+#include "ptreferential/ptreferential_api.h"
 #include "time_tables/next_stop_times.h"
 #include "time_tables/departure_board.h"
 #include "time_tables/line_schedule.h"
@@ -175,7 +175,7 @@ public:
             nt::Locker lock(d, true);
             LOG4CPLUS_TRACE(logger, "déplacement de data");
             d = std::move(data);
-            LOG4CPLUS_TRACE(logger, "Chargement des donnés fini");
+            LOG4CPLUS_TRACE(logger, "Chargement des données terminé ");
         }catch(...){
             d.loaded = false;
             LOG4CPLUS_ERROR(logger, "erreur durant le chargement des données");

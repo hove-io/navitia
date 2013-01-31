@@ -1,7 +1,6 @@
 #include "ptreferential.h"
 #include "reflexion.h"
 #include "where.h"
-#include "type/pb_converter.h"
 #include "proximity_list/proximity_list.h"
 
 #include <algorithm>
@@ -54,7 +53,7 @@ namespace qi = boost::spirit::qi;
 
         filter1 = (txt >> "." >> txt >> bin_op >> (txt|txt3))[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3, qi::_4)];
         filter2 = (txt >> "HAVING" >> '(' >> txt2 >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
-        filter3 = ("AROUND"  >> qi::float_ >> ':' >> qi::float_ >> "WITHIN" >> qi::int_ >> 'm') [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
+        filter3 = ("AROUND"  >> qi::double_ >> ':' >> qi::double_ >> "WITHIN" >> qi::int_ >> 'm') [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
         pre_filter %= (filter1 | filter2) % (qi::lexeme["and"] | qi::lexeme["AND"]);
         a_filter = pre_filter >> -filter3;
         filter = (a_filter | filter3);
@@ -82,30 +81,6 @@ WhereWrapper<T> build_clause(std::vector<Filter> filters) {
 
 
 
-pbnavitia::Response extract_data(const Data & data, Type_e requested_type, std::vector<idx_t> & rows, const int depth) {
-    pbnavitia::Response result;
-    result.set_requested_api(pbnavitia::PTREFERENTIAL);
-    pbnavitia::PTReferential * pb_response = result.mutable_ptref();
-
-    for(idx_t idx : rows){
-        switch(requested_type){
-        case Type_e::eLine: fill_pb_object(idx, data, pb_response->add_line(), depth); break;
-        case Type_e::eRoute: fill_pb_object(idx, data, pb_response->add_route(), depth); break;
-        case Type_e::eStopPoint: fill_pb_object(idx, data, pb_response->add_stop_point(), depth); break;
-        case Type_e::eStopArea: fill_pb_object(idx, data, pb_response->add_stop_area(), depth); break;
-        case Type_e::eNetwork: fill_pb_object(idx, data, pb_response->add_network(), depth); break;
-        case Type_e::eMode: fill_pb_object(idx, data, pb_response->add_commercial_mode(), depth); break;
-        case Type_e::eModeType: fill_pb_object(idx, data, pb_response->add_physical_mode(), depth); break;
-        case Type_e::eCity: fill_pb_object(idx, data, pb_response->add_city(), depth); break;
-        case Type_e::eConnection: fill_pb_object(idx, data, pb_response->add_connection(), depth); break;
-        case Type_e::eRoutePoint: fill_pb_object(idx, data, pb_response->add_route_point(), depth); break;
-        case Type_e::eCompany: fill_pb_object(idx, data, pb_response->add_company(), depth); break;
-        case Type_e::eVehicleJourney: fill_pb_object(idx, data, pb_response->add_vehicle_journey(), depth); break;
-        default: break;
-        }
-    }
-    return result;
-}
 
 
 template<typename T, typename C>
@@ -214,32 +189,6 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
 }
 
 
-pbnavitia::Response query_pb(Type_e requested_type, std::string request, const int depth, const Data &data){
-    std::vector<idx_t> final_indexes;
-    pbnavitia::Response pb_response;
-    pb_response.set_requested_api(pbnavitia::PTREFERENTIAL);
-    try {
-        final_indexes = make_query(requested_type, request, data);
-    } catch(ptref_parsing_error parse_error) {
-        switch(parse_error.type){
-        case ptref_parsing_error::error_type::partial_error:
-            std::cout << "PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" << parse_error.more  << "<<" << std::endl;
-            pb_response.set_error("PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + parse_error.more + "<<");
-            break;
-        case ptref_parsing_error::error_type::unknown_object:
-            pb_response.set_error("Objet NAViTiA inconnu : " + parse_error.more);
-            break;
-        case ptref_parsing_error::error_type::global_error:
-            pb_response.set_error("PTReferential : Impossible de parser la requête");
-            break;
-        }
-
-        return pb_response;
-    }
-
-    //final_indexes = make_query(requested_type, request, data);
-    return extract_data(data, requested_type, final_indexes, depth);
-}
 
 
 

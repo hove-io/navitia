@@ -4,7 +4,7 @@
 #include "routing/raptor_api.h"
 #include "first_letter/firstletter_api.h"
 #include "proximity_list/proximitylist_api.h"
-#include "ptreferential/ptreferential.h"
+#include "ptreferential/ptreferential_api.h"
 #include "time_tables/line_schedule.h"
 #include "time_tables/next_stop_times.h"
 #include "time_tables/2stops_schedule.h"
@@ -83,7 +83,7 @@ bool Worker::load_and_switch() {
         LOG4CPLUS_TRACE(logger, "déplacement de data");
         boost::unique_lock<boost::shared_mutex> lock(tmp_data.load_mutex);
         data = std::move(tmp_data);
-        LOG4CPLUS_TRACE(logger, "Chargement des donnés fini");
+        LOG4CPLUS_TRACE(logger, "Chargement des données terminé");
         return true;
     }
 }

@@ -20,8 +20,6 @@
 
 #include "type/data.h"
 #include "where.h"
-namespace pbnavitia { struct Response;}
-
 
 
 using navitia::type::Type_e;
@@ -34,14 +32,12 @@ struct Filter {
     std::string attribute; //< L'attribu ("external code")
     Operator_e op; //< la comparaison ("=")
     std::string value; //< la valeur comparée ("kikoolol")
-    float lon, lat;
+    double lon, lat;
     int distance;
 
     Filter(std::string object, std::string attribute, Operator_e op, std::string value) : object(object), attribute(attribute), op(op), value(value) {}
     Filter(std::string object, std::string value) : object(object), op(HAVING), value(value) {}
-    Filter(std::string value) : object("stop_point"), op(AROUND), value(value){
-        std::cout << "Pas float " << value << std::endl; }
-    Filter(float lon, float lat, int distance): object("stop_point"), op(AROUND), lon(lon), lat(lat), distance(distance) {}
+    Filter(double lon, double lat, int distance): object("stop_point"), op(AROUND), lon(lon), lat(lat), distance(distance) {}
     Filter() {}
 };
 
@@ -58,14 +54,8 @@ struct ptref_parsing_error : public std::exception{
     ~ptref_parsing_error() throw() {}
 };
 
-/// Execute une requête et génère la sortie protobuf 
-pbnavitia::Response query_pb(type::Type_e type, std::string request, const int depth, const type::Data & data);
-
 /// Exécute une requête sur les données Data : retourne les idx des objets demandés
 std::vector<type::idx_t> make_query(type::Type_e requested_type, std::string request, const type::Data &data);
-
-/// Construit la réponse proto buf, une fois que l'on trouvé les indices
-pbnavitia::Response extract_data(const type::Data &data, Type_e requested_type, std::vector<type::idx_t> & rows, const int depth);
 
 
 /// Trouve le chemin d'un type de données à un autre
