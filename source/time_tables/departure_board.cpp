@@ -9,11 +9,13 @@ namespace navitia { namespace timetables {
 
 std::vector<vector_datetime> make_columuns(const std::vector<dt_st> &stop_times) {
     std::vector<vector_datetime> result;
-    routing::DateTime &prev_date = routing::DateTime::inf;
+    routing::DateTime prev_date = routing::DateTime::inf;
 
     for(auto & item : stop_times) {
-        if((prev_date.hour()/3600) != (item.first.hour()/3600)) {
+        if(prev_date == routing::DateTime:: inf || (prev_date.hour()/3600) != (item.first.hour()/3600)) {
             result.push_back(vector_datetime());
+        } else if(prev_date == routing::DateTime::inf) {
+            std::cout << item.first << " " << prev_date.hour() << " " << item.first.hour() << std::endl;
         }
         result.back().push_back(item.first);
         prev_date = item.first;
@@ -34,25 +36,25 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
         return parser.pb_response;
 
     pbnavitia::DepartureBoard * dep_board = parser.pb_response.mutable_departure_board();
-    fill_pb_object(data.pt_data.route_points[parser.route_points.front()].stop_point_idx, data, dep_board->mutable_stop_point());
-    fill_pb_object(data.pt_data.routes[data.pt_data.route_points[parser.route_points.front()].route_idx].line_idx, data, dep_board->mutable_line());
+    
+    for(type::idx_t route_point_idx : parser.route_points) {
+        auto board = dep_board->add_board();
+        fill_pb_object(data.pt_data.route_points[route_point_idx].stop_point_idx, data, board->mutable_stop_point());
+        fill_pb_object(data.pt_data.routes[data.pt_data.route_points[route_point_idx].route_idx].line_idx, data, board->mutable_line());
+       
+        auto stop_times = get_stop_times({route_point_idx}, parser.date_time, parser.max_datetime, std::numeric_limits<int>::max(), data);
 
-    pbnavitia::Board * board = dep_board->mutable_board();
+        for(vector_datetime vec : make_columuns(stop_times)) {
+            pbnavitia::BoardItem *item = board->add_board_item();
 
-
-
-    auto stop_times = get_stop_times(parser.route_points, parser.date_time, parser.max_datetime, std::numeric_limits<int>::max(), data);
-
-    for(vector_datetime vec : make_columuns(stop_times)) {
-        pbnavitia::BoardItem *item = board->add_board_item();
-
-        for(routing::DateTime dt : vec) {
-            if(!item->has_hour())
-                item->set_hour(boost::lexical_cast<std::string>(dt.hour()/3600));
-            item->add_minute(boost::lexical_cast<std::string>((dt.hour()%3600)/60));
+            for(routing::DateTime dt : vec) {
+                if(!item->has_hour())
+                    item->set_hour(boost::lexical_cast<std::string>(dt.hour()/3600));
+                item->add_minute(boost::lexical_cast<std::string>((dt.hour()%3600)/60));
+            }   
         }
-    }
 
+    }
 
     return parser.pb_response;
 }

@@ -374,13 +374,13 @@ message BoardItem {
 }
 
 message Board {
-    repeated BoardItem board_item = 1;
+    required StopPoint stop_point = 1;
+    required Line line = 2;
+    repeated BoardItem board_item = 3;
 }
 
 message DepartureBoard {
-    required StopPoint stop_point = 1;
-    required Line line = 2;
-    required Board board = 3;
+    repeated Board board = 1;
 }
 
 message Load {
