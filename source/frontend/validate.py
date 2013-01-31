@@ -80,10 +80,11 @@ def validate_arguments(request, validation_dict) :
                         response.valid = False
                     response.details[key] = {"status" : "notvalid", "value" : val }
     for key, value in validation_dict.iteritems():
-        if value.required:
-            if not(key in request.args) :
+        if not(key in request.args) :
+            if value.required:
                 response.valid = False
                 response.details[key] = {"status", "missing"}
+    
 
 
 

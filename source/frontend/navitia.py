@@ -178,7 +178,7 @@ scheduleArguments = {
         "from_datetime" : Argument("The date from which you want the times",
                               datetime, True, False, order=10),
         "duration" : Argument("Maximum duration between the datetime and the last  retrieved stop time",
-                                  int, False, False, order=20),        
+                                  int, False, False, 86400, order=20 ),        
         "wheelchair" : Argument("true if you want the times to have accessibility", boolean, False, False, "0", order=50)
         }
 stopsScheduleArguments = copy.copy(scheduleArguments)
@@ -189,7 +189,7 @@ stopsScheduleArguments["arrival_filter"] = Argument("The filter of your arrival 
                                                       True, False,order=1)
 
 nextTimesArguments = copy.copy(scheduleArguments)
-nextTimesArguments["nb_stoptimes"] = Argument("The maximum number of stop_times", int,False, False, order=30)
+nextTimesArguments["nb_stoptimes"] = Argument("The maximum number of stop_times", int,False, False, 20, order=30)
 
 ptrefArguments = {
         "filter" : Argument("Conditions to filter the returned objects", str,
@@ -201,20 +201,20 @@ journeyArguments = {
         "origin" : Argument("Departure Point", str, True, False, order = 0),
         "destination" : Argument("Destination Point" , str, True, False, order = 1),
         "datetime" : Argument("The time from which you want to arrive (or arrive before depending on the value of clockwise", datetime, True, False, order = 2),
-        "clockwise" : Argument("1 if you want to have a journey that starts after datetime, 0 if you a journey that arrives before datetime", int, False, False, order = 3),
-        "forbiddenline" : Argument("Forbidden lines identified by their external codes",  str, False, True),
-        "forbiddenmode" : Argument("Forbidden modes identified by their external codes", str, False, True),
-        "forbiddenroute" : Argument("Forbidden routes identified by their external codes", str, False, True),
+        "clockwise" : Argument("1 if you want to have a journey that starts after datetime, 0 if you a journey that arrives before datetime", int, False, False, 1, order = 3),
+        "forbiddenline" : Argument("Forbidden lines identified by their external codes",  str, False, True, ""),
+        "forbiddenmode" : Argument("Forbidden modes identified by their external codes", str, False, True, ""),
+        "forbiddenroute" : Argument("Forbidden routes identified by their external codes", str, False, True, ""),
         "walking_speed" : Argument("Walking speed in m/s", float, False, False, 1.38),
         "walking_distance" : Argument("Maximum walking distance in meters", int,
-                                      False, False, "1000"),
+                                      False, False, 1000),
         "wheelchair" : Argument("Does the journey has to be accessible ?",
-                                boolean, False, False, "false")
+                                boolean, False, False, 0)
         }
 
 apis = {
         "first_letter" : {"endpoint" : on_first_letter, "arguments" : {"name" : Argument("The data to search", str, True, False, order = 1),
-                                                                       "filter" : Argument("The type of datas you want in return", str, False, False)},
+                                                                       "filter" : Argument("The type of datas you want in return", str, False, False, "")},
                           "description" : "Retrieves the objects which contains in their name the \"name\"",
                           "order":2},
         "next_departures" : {"endpoint" : on_next_departures, "arguments" :
@@ -292,7 +292,7 @@ apis = {
                 "lon" : Argument("Longitude of the point from where you want objects", float, True, False, order=0),
                 "lat" : Argument("Latitude of the point from where you want objects", float, True, False, order=1),
                 "dist" : Argument("Distance range of the query", int, False, False, 1000, order=3),
-                "filter" : Argument("Type of the objects you want to have in return", str, False, False, order=4)
+                "filter" : Argument("Type of the objects you want to have in return", str, False, False, "", order=4)
                 },
             "description" : "Retrieves all the objects around a point within the given distance",
             "order" : 1.1}
@@ -307,6 +307,7 @@ def on_api(request, version, region, api, format):
     if version != "v0":
         return Response("Unknown version: " + version, status=404)
     if api in apis:
+         print apis[api]["arguments"]
          v = validate_arguments(request, apis[api]["arguments"])
          if v.valid:
             return apis[api]["endpoint"](request, version, region, format)

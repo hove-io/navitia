@@ -77,7 +77,8 @@ def api_doc(apis, instance_manager, api = None) :
                             "summary" : apis[api]["description"] if "description" in apis[api] else "",
                             "nickname" : api,
                             "responseClass" : "void",
-                            "parameters" : params
+                            "parameters" : params,
+                            #"example" : apis[api]["example"] if "example" in apis[api] else None
                             }
                             ]
                                     })
