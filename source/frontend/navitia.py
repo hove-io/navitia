@@ -51,7 +51,7 @@ def send_and_receive(request, region = None):
     resp.ParseFromString(pb)
     return resp
 
-def on_index(request, version = None ):
+def on_index(request, version = None, region = None ):
     return Response('Hello from the index')
 
 def on_regions(request, version, format):
@@ -364,6 +364,7 @@ url_map = Map([
     Rule('/<version>/proximity_list.<format>', endpoint = on_universal_proximity_list),
     Rule('/<region>/load.<format>', endpoint = on_load),
     Rule('/<region>/status.<format>', endpoint = on_status),
+    Rule('/<version>/<region>/', endpoint = on_index),
     Rule('/<version>/<region>/<api>.<format>', endpoint = on_api),
     Rule('/doc.json', endpoint = on_summary_doc),
     Rule('/doc.json/<api>', endpoint = on_doc)
