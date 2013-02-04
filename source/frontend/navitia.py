@@ -336,7 +336,7 @@ def universal_journeys(api, request, version, format):
         return Response("Journeys without specifying a region only accept coordinates as origin or destination", status=400)
 
 def on_universal_journeys(api):
-    return lambda request, version, format: universal_journeys(api, request, version, region, format)
+    return lambda request, version, format: universal_journeys(api, request, version, format)
 
 def on_universal_proximity_list(request, version, format):
     try:
