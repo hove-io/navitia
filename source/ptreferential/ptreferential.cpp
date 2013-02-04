@@ -43,7 +43,8 @@ namespace qi = boost::spirit::qi;
     select_r() : select_r::base_type(filter) {
         txt = qi::lexeme[+(qi::alnum|qi::char_("_:-"))];
         txt2 = qi::lexeme[+(qi::alnum|qi::char_("_:-=.<> "))];
-        txt3 = '"' >> qi::lexeme[+(qi::alnum|qi::char_("_:- "))] >> '"';
+        //txt3 = '"' >> qi::lexeme[+(qi::alnum|qi::char_("_:- "))] >> '"';
+        txt3 = '"' >> qi::lexeme[+(qi::alnum|qi::char_("\x5F\x58\x2D\x20\x26"))] >> '"';
         bin_op =  qi::string("<=")[qi::_val = LEQ]
                 | qi::string(">=")[qi::_val = GEQ]
                 | qi::string("<>")[qi::_val = NEQ]
