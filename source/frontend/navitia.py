@@ -83,7 +83,7 @@ def on_first_letter(request, version, region, format):
     req.first_letter.name = request.args['name']
     
 
-    types = request.args.getlist('filter[]')
+    types = request.args.getlist('object_type[]')
     if len(types) == 0 :
         types = ['stop_area', 'address', 'city']
     for type in types:
@@ -128,7 +128,7 @@ def on_proximity_list(request, version, region, format):
     req.proximity_list.coord.lon = request.args.get("lon", type=float)
     req.proximity_list.coord.lat = request.args.get("lat", type=float)
     req.proximity_list.distance = request.args.get("distance", 500, type=int)
-    types = request.args.getlist('filter[]')
+    types = request.args.getlist('object_type[]')
     if len(types) == 0 :
         types = ['stop_area', 'address', 'city']
     for type in types:
@@ -214,7 +214,7 @@ journeyArguments = {
 
 apis = {
         "first_letter" : {"endpoint" : on_first_letter, "arguments" : {"name" : Argument("The data to search", str, True, False, order = 1),
-                                                                       "filter" : Argument("The type of datas you want in return", str, False, False, "")},
+                                                                       "object_type" : Argument("The type of datas you want in return", str, False, False, "")},
                           "description" : "Retrieves the objects which contains in their name the \"name\"",
                           "order":2},
         "next_departures" : {"endpoint" : on_next_departures, "arguments" :
@@ -292,7 +292,7 @@ apis = {
                 "lon" : Argument("Longitude of the point from where you want objects", float, True, False, order=0),
                 "lat" : Argument("Latitude of the point from where you want objects", float, True, False, order=1),
                 "dist" : Argument("Distance range of the query", int, False, False, 1000, order=3),
-                "filter" : Argument("Type of the objects you want to have in return", str, False, False, "", order=4)
+                "object_type" : Argument("Type of the objects you want to have in return", str, False, False, "", order=4)
                 },
             "description" : "Retrieves all the objects around a point within the given distance",
             "order" : 1.1}
