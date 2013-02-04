@@ -355,9 +355,13 @@ message LineScheduleHeader {
     repeated LineScheduleHeaderItem item = 1;
 }
 
-message LineSchedule {
+message Schedule {
     required Table table = 1;
     required LineScheduleHeader header = 2;
+}
+
+message LineSchedule {
+    repeated Schedule schedule = 1;
 }
 
 message StopTimes {
@@ -409,7 +413,7 @@ message Response{
     optional LineSchedule line_schedule = 12;
     optional DepartureBoard departure_board = 13;
     optional Load load = 14;
-	optional Isochrone isochrone = 15;
+    optional Isochrone isochrone = 15;
 }
 
 

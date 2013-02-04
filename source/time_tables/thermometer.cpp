@@ -78,7 +78,7 @@ std::pair<vector_idx, bool> Thermometer::recc(std::vector<vector_idx> &routes, s
     return std::make_pair(result, res_bool);
 }
 
-uint32_t get_max_sp(std::vector<vector_idx> &routes) {
+uint32_t get_max_sp(const std::vector<vector_idx> &routes) {
 
     uint32_t max_sp = std::numeric_limits<uint32_t>::min();
 
@@ -92,7 +92,7 @@ uint32_t get_max_sp(std::vector<vector_idx> &routes) {
     return max_sp;
 }
 
-void Thermometer::generate_thermometer(std::vector<vector_idx> &routes) {
+void Thermometer::generate_thermometer(const std::vector<vector_idx> &routes) {
 
     uint32_t max_sp = get_max_sp(routes);
     debug_nb_branches = 0; debug_nb_cuts = 0; upper_cut = 0;
@@ -120,25 +120,10 @@ void Thermometer::generate_thermometer(std::vector<vector_idx> &routes) {
 }
 
 
-vector_idx Thermometer::get_thermometer(std::vector<vector_idx> routes) {
-    generate_thermometer(routes);
+vector_idx Thermometer::get_thermometer() {
     return thermometer;
 }
 
-vector_idx Thermometer::get_thermometer(std::string filter_) {
-    if(filter_ != filter && filter_ != "") {
-        filter = filter_;
-        std::vector<vector_idx> routes;
-        for(type::idx_t route_idx : ptref::make_query(navitia::type::Type_e::eRoute, filter, d)) {
-            routes.push_back(vector_idx());
-            for(type::idx_t rpidx : d.pt_data.routes[route_idx].route_point_list)
-                routes.back().push_back(d.pt_data.route_points[rpidx].stop_point_idx);
-        }
-
-        generate_thermometer(routes);
-    }
-    return thermometer;
-}
 
 
 std::vector<uint32_t> Thermometer::match_route(const type::Route & route) {

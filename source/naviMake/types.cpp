@@ -240,13 +240,6 @@ nt::Line Line::Transformer::operator()(const Line& line){
     if(line.network != NULL)
         nt_line.network_idx = line.network->idx;
 
-    if(line.backward_direction != NULL)
-        nt_line.backward_direction_idx = line.backward_direction->idx;
-
-    if(line.forward_direction != NULL)
-        nt_line.forward_direction_idx = line.forward_direction->idx;
-
-    
     return nt_line;
 }
 

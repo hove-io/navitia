@@ -7,12 +7,12 @@
 
 namespace navitia { namespace timetables {
 
-std::vector<vector_stopTime> get_all_stop_times(const std::string &filter, const routing::DateTime &dateTime, const routing::DateTime &max_datetime, type::Data &d) {
+std::vector<vector_stopTime> get_all_stop_times(const vector_idx &routes, const routing::DateTime &dateTime, const routing::DateTime &max_datetime, type::Data &d) {
     std::vector<vector_stopTime> result;
-    //On cherche les premiers route_points de toutes les routes
 
+    //On cherche les premiers route_points de toutes les routes
     std::vector<type::idx_t> first_route_points;
-    for(type::idx_t route_idx : ptref::make_query(navitia::type::Type_e::eRoute, filter, d)) {
+    for(type::idx_t route_idx : routes) {
         first_route_points.push_back(d.pt_data.routes[route_idx].route_point_list.front());
     }
 
@@ -63,44 +63,38 @@ pbnavitia::Response line_schedule(const std::string & filter, const std::string 
     if(parser.pb_response.has_error()) {
         return parser.pb_response;
     }
-
-    //On récupère les stop_times
-    auto stop_times = get_all_stop_times(filter, parser.date_time, parser.max_datetime, d);
-
-    std::vector<vector_idx> vec_stop_points;
-
-    for(auto vec_st : stop_times) {
-        vec_stop_points.push_back(vector_idx());
-        for(auto pairst : vec_st) {
-            vec_stop_points.back().push_back(d.pt_data.route_points[d.pt_data.stop_times[pairst.second].route_point_idx].stop_point_idx);
-        }
-    }
-
     Thermometer thermometer(d);
-    thermometer.get_thermometer(filter);
 
-
-
-    //On remplit l'objet header
-    pbnavitia::LineScheduleHeader *header = parser.pb_response.mutable_line_schedule()->mutable_header();
-    for(vector_stopTime vec : stop_times) {
-        auto dt_idx = vec.front();
-        fill_pb_object(d.pt_data.routes[d.pt_data.route_points[d.pt_data.stop_times[dt_idx.second].route_point_idx].route_idx].line_idx, d, header->add_item()->mutable_line(), max_depth-1);
-    }
-
-    //On génère la matrice
-    std::vector<vector_string> matrice = make_matrice(stop_times, thermometer, d);
-
-    pbnavitia::Table *table = parser.pb_response.mutable_line_schedule()->mutable_table();
-    for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {
-        type::idx_t spidx=thermometer.get_thermometer()[i];
-        const type::StopPoint & sp = d.pt_data.stop_points[spidx];
-        pbnavitia::TableLine * line = table->add_line();
-        line->set_stop_point(sp.name);
-
-        for(unsigned int j=0; j<stop_times.size(); ++j) {
-            line->add_stop_time(matrice[i][j]);
+    for(type::idx_t line_idx : navitia::ptref::make_query(type::Type_e::eLine, filter, d)) {
+        auto schedule = parser.pb_response.mutable_line_schedule()->add_schedule();
+        auto routes = d.pt_data.lines[line_idx].route_list;
+        //On récupère les stop_times
+        auto stop_times = get_all_stop_times(routes, parser.date_time, parser.max_datetime, d);
+        std::vector<vector_idx> route_point_routes;
+        for(auto route_idx : routes)
+            route_point_routes.push_back(d.pt_data.routes[route_idx].route_point_list);
+        thermometer.generate_thermometer(route_point_routes);
+        //On remplit l'objet header
+        pbnavitia::LineScheduleHeader *header = schedule->mutable_header();
+        for(vector_stopTime vec : stop_times) {
+            fill_pb_object(line_idx, d, header->add_item()->mutable_line(), max_depth-1);
         }
+        //On génère la matrice
+        std::vector<vector_string> matrice = make_matrice(stop_times, thermometer, d);
+
+        pbnavitia::Table *table = schedule->mutable_table();
+        for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {
+            type::idx_t spidx=thermometer.get_thermometer()[i];
+            const type::StopPoint & sp = d.pt_data.stop_points[spidx];
+            pbnavitia::TableLine * line = table->add_line();
+            line->set_stop_point(sp.name);
+
+            for(unsigned int j=0; j<stop_times.size(); ++j) {
+                line->add_stop_time(matrice[i][j]);
+            }
+        }
+
+
     }
 
     return parser.pb_response;

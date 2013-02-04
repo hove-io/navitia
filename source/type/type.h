@@ -336,20 +336,17 @@ struct Line : public NavitiaHeader, Nameable {
     std::vector<idx_t> company_list;
     idx_t network_idx;
 
-    std::vector<idx_t> forward_route;
-    std::vector<idx_t> backward_route;
+    std::vector<idx_t> route_list;
 
     std::vector<idx_t> impact_list;
 
-    idx_t forward_direction_idx;
-    idx_t backward_direction_idx;
 
-    Line(): sort(0), mode_type_idx(invalid_idx), network_idx(invalid_idx), forward_direction_idx(invalid_idx), backward_direction_idx(invalid_idx){}
+    Line(): sort(0), mode_type_idx(invalid_idx), network_idx(invalid_idx){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & external_code & code & forward_name & backward_name & additional_data & color
-                & sort & mode_type_idx & mode_list & company_list & network_idx & forward_direction_idx & backward_direction_idx
-                & impact_list;
+                & sort & mode_type_idx & mode_list & company_list & network_idx 
+                & route_list& impact_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
