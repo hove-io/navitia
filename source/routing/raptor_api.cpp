@@ -162,11 +162,11 @@ parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str,
                     response.mutable_planner()->set_response_type(pbnavitia::DATE_OUT_OF_BOUNDS);
                 else if(response.requested_api() == pbnavitia::ISOCHRONE)
                     response.mutable_isochrone()->set_response_type(pbnavitia::DATE_OUT_OF_BOUNDS);
-                response.set_info("Example of invalid date: " + datetime);
             }
             datetimes.push_back(ptime);
         } catch(...){
             response.set_error("Impossible to parse date " + datetime);
+            response.set_info("Example of invalid date: " + datetime);
         }
     }
     if(clockwise)
