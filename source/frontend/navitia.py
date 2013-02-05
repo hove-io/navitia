@@ -39,7 +39,7 @@ def render_from_protobuf(pb_resp, format, callback):
     if format == 'pb':
         return Response(pb_resp.SerializeToString(), mimetype='application/octet-stream')
     else:
-        return render(protobuf_to_dict(pb_resp, enum_as_labels=True), format, callback)
+        return render(protobuf_to_dict(pb_resp, use_enum_labels=True), format, callback)
 
 
 def send_and_receive(request, region = None):
@@ -245,7 +245,7 @@ apis = {
                           "order":5},
         "modes" : {"endpoint" : on_ptref(type_pb2.MODE), "arguments" :
                         ptrefArguments,
-                        "description" : "Retrieves all the modedestinations filtered with filter",
+                        "description" : "Retrieves all the modes filtered with filter",
                           "order":5},
         "mode_types" : {"endpoint" : on_ptref(type_pb2.MODETYPE), "arguments" :
                         ptrefArguments,
@@ -292,12 +292,12 @@ apis_all["regions"] = {"arguments" : {}, "description" : "Retrieves the list of 
 def on_api(request, version, region, api, format):
     if version != "v0":
         return Response("Unknown version: " + version, status=404)
-    if api in apis_all:
-         v = validate_arguments(request, apis_all[api]["arguments"])
-         if v.valid:
-            return apis_all[api]["endpoint"](v.arguments, version, region, format, request.args.get('callback'))
-         else:
-             return Response("Invalid arguments: " + str(v.details), status=400)
+    if api in apis:
+        v = validate_arguments(request, apis[api]["arguments"])
+        if v.valid:
+            return apis[api]["endpoint"](v.arguments, version, region, format, request.args.get("callback"))
+        else:
+            return Response("Invalid arguments: " + str(v.details), status=400)
     else:
         return Response("Unknown api: " + api, status=404)
 

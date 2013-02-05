@@ -28,20 +28,23 @@ def repeated(type_callable):
     return lambda value_list: [type_callable(value) for value in value_list]
 
 
-def protobuf_to_dict(pb, type_callable_map=TYPE_CALLABLE_MAP, enum_as_labels = False):
+def enum_label_name(field, value):
+    return field.enum_type.values_by_number[int(value)].name
+
+
+def protobuf_to_dict(pb, type_callable_map=TYPE_CALLABLE_MAP, use_enum_labels=False):
+    # recursion!
+    type_callable_map[FieldDescriptor.TYPE_MESSAGE] = lambda pb: protobuf_to_dict(pb, type_callable_map, use_enum_labels)
     result_dict = {}
     for field, value in pb.ListFields():
         if field.type not in type_callable_map:
             raise TypeError("Field %s.%s has unrecognised type id %d" % (
                 pb.__class__.__name__, field.name, field.type))
         type_callable = type_callable_map[field.type]
-        if enum_as_labels and field.type == FieldDescriptor.TYPE_ENUM :
-            type_callable = lambda value: field.enum_type.values_by_number[int(value)].name
+        if use_enum_labels and field.type == FieldDescriptor.TYPE_ENUM:
+            type_callable = lambda value: enum_label_name(field, value)
         if field.label == FieldDescriptor.LABEL_REPEATED:
             type_callable = repeated(type_callable)
         result_dict[field.name] = type_callable(value)
     return result_dict
 
-
-# recursion, bitches.
-TYPE_CALLABLE_MAP[FieldDescriptor.TYPE_MESSAGE] = protobuf_to_dict
