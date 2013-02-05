@@ -2,8 +2,10 @@ import re
 from werkzeug.routing import Rule
 
 class Validation_Response : 
-    valid = True,
-    details = {}
+    def __init__(self):
+        self.valid = True
+        self.details = {}
+        self.arguments = {}
 
 class Argument : 
     required = True,
@@ -63,20 +65,24 @@ def datetime(value):
 def validate_arguments(request, validation_dict) :
     response = Validation_Response() 
     for key, value in request.args.iteritems() :
-        s = re.split(r"\[\]$", key)
-        splitted_key = s[0]
-        if(not (splitted_key in validation_dict)) : 
+        if(not (key in validation_dict)) : 
             response.details[key] = {"status" : "ignored", "value":value}
         else:
-            if not(validation_dict[splitted_key].repeated) and (len(s)>1 or len(request.args.getlist(splitted_key))> 2):
+            if not(validation_dict[key].repeated) and (request.args.getlist(key)> 1):
                 response.details[key] = {"status" : "multiple", "value":value}
 
             for val in request.args.getlist(key) :
                 try :
-                    v = validation_dict[splitted_key].validator(val)
+                    validation_dict[key].validator(val)
                     response.details[key] = {"status" : "valid", "value": val}
+                    if not(validation_dict[key].repeated) :
+                        response.arguments[key] = value
+                    else:
+                        if not(key in response.arguments):
+                            response.arguments[key] = []
+                        response.arguments[key].append(value)
                 except:
-                    if(validation_dict[splitted_key].required):
+                    if(validation_dict[key].required):
                         response.valid = False
                     response.details[key] = {"status" : "notvalid", "value" : val }
     for key, value in validation_dict.iteritems():
@@ -84,6 +90,8 @@ def validate_arguments(request, validation_dict) :
             if value.required:
                 response.valid = False
                 response.details[key] = {"status", "missing"}
+            else:
+                response.arguments[key] = value.defaultValue
     
 
 
@@ -98,4 +106,21 @@ class RuleArguments(Rule):
         Rule.__init__(self, string, defaults, subdomain, methods, build_only,
                       endpoint, strict_slashes, redirect_to, alias, host)
         self.arguments = arguments
+
+def validate_apis(apis) :
+    response = Validation_Response() 
+    for name, api in apis.iteritems():
+        response.details[name] = [] 
+        
+        if not "arguments" in api:
+            response.valid = False
+            response.details[name].append("No arguments in the api ")
+        else:
+            for argname, argument in api["arguments"].iteritems():
+                if not(argument.required) and argument.defaultValue == None:
+                    response.details[name].append(argname + " doesn't have any defaultValue and is not required ")
+                    response.valid = False
+
+
+    return response
 

@@ -16,11 +16,10 @@ import instance_manager
 
 instances = instance_manager.NavitiaManager('Jörmungandr.ini')
 
-def render(dico, format, request):
+def render(dico, format, callback):
     if format == 'json':
         json_str = json.dumps(dico, ensure_ascii=False)
-        callback = request.args.get('callback', '')
-        if callback == '':
+        if callback == '' or callback == None:
             result = Response(json_str, mimetype='application/json')
         else:
             result = Response(callback + '(' + json_str + ')', mimetype='application/json')
@@ -36,11 +35,11 @@ def render(dico, format, request):
     return result
 
 
-def render_from_protobuf(pb_resp, format, request):
+def render_from_protobuf(pb_resp, format, callback):
     if format == 'pb':
         return Response(pb_resp.SerializeToString(), mimetype='application/octet-stream')
     else:
-        return render(protobuf_to_dict(pb_resp, enum_as_labels=True), format, request)
+        return render(protobuf_to_dict(pb_resp, enum_as_labels=True), format, callback)
 
 
 def send_and_receive(request, region = None):
@@ -55,20 +54,19 @@ def on_index(request, version = None, region = None ):
     return Response('Hello from the index')
 
 def on_regions(request, version, format):
-    return render(instances.regions(), format, request)
-
+    return render(instances.regions(), format,  request.args.get('callback'))
 
 def on_status(request, region, format):
     req = type_pb2.Request()
     req.requested_api = type_pb2.STATUS
     resp = send_and_receive(req, region)
-    return render_from_protobuf(resp, format, request)
+    return render_from_protobuf(resp, format, request.args.get('callback'))
 
 def on_load(request, region, format):
     req = type_pb2.Request()
     req.requested_api = type_pb2.LOAD
     resp = send_and_receive(req, region)
-    return render_from_protobuf(resp, format, request)
+    return render_from_protobuf(resp, format, request.args.get('callback'))
 
 pb_type = {
         'stop_area': type_pb2.STOPAREA,
@@ -77,99 +75,87 @@ pb_type = {
         'address': type_pb2.ADDRESS
         }
 
-def on_first_letter(request, version, region, format):
+def on_first_letter(request_args, version, region, format, callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.FIRSTLETTER
-    req.first_letter.name = request.args['name']
-    
-
-    types = request.args.getlist('object_type[]')
-    if len(types) == 0 :
-        types = ['stop_area', 'address', 'city']
-    for type in types:
-        if type in pb_type:
-            req.first_letter.types.append(pb_type[type])
+    req.first_letter.name = request_args['name']
+    req.first_letter.types = request_args['object_type']
     resp = send_and_receive(req, region)
-    return render_from_protobuf(resp, format, request)
+    return render_from_protobuf(resp, format, callback)
 
 
-def stop_times(request, version, region, format, departure_filter, arrival_filter, api):
+def stop_times(request_args, version, region, format, departure_filter, arrival_filter, api, callback):
     req = type_pb2.Request()
     req.requested_api = api
     req.next_stop_times.departure_filter = departure_filter
     req.next_stop_times.arrival_filter = arrival_filter
 
-    req.next_stop_times.from_datetime = request.args.get("from_datetime")
-    req.next_stop_times.duration = request.args.get("duration", 86400)
-    req.next_stop_times.depth = request.args.get("depth", 1, type=int)
-    req.next_stop_times.nb_stoptimes = request.args.get("nb_stoptimes", 10, type=int)
-    req.next_stop_times.wheelchair = request.args.get("wheelchair", False, type=bool)
+    req.next_stop_times.from_datetime = request_args["from_datetime"]
+    req.next_stop_times.duration = request_args["duration"]
+    req.next_stop_times.depth = request_args["depth"]
+    req.next_stop_times.nb_stoptimes = request_args["nb_stoptimes"]
+    req.next_stop_times.wheelchair = request_args["wheelchair"]
     resp = send_and_receive(req, region)
-    return render_from_protobuf(resp, format, request)
+    return render_from_protobuf(resp, format, request.args.get('callback'))
 
-def on_line_schedule(request, version, region, format):
-    return stop_times(request, version, region, format, request.args.get("filter", ""), "", type_pb2.LINE_SCHEDULE)
+def on_line_schedule(request_args, version, region, format, callback):
+    return stop_times(request_args, version, region, format, request_args["filter"], "", type_pb2.LINE_SCHEDUL, callbackE)
 
-def on_next_arrivals(request, version, region, format):
-    return stop_times(request, version, region, format, request.args.get("filter", ""), "", type_pb2.NEXT_DEPARTURES)
+def on_next_arrivals(request_args, version, region, format, callback):
+    return stop_times(request_args, version, region, format, request_args["filter"], "", type_pb2.NEXT_DEPARTURES, callback)
 
-def on_next_departures(request, version, region, format):
-    return stop_times(request, version, region, format, "", request.args.get("filter", ""), type_pb2.NEXT_ARRIVALS)
+def on_next_departures(request_args, version, region, format, callback):
+    return stop_times(request_args, version, region, format, "", request_args["filter"], type_pb2.NEXT_ARRIVALS, callback)
 
-def on_stops_schedule(request, version, region, format):
-    return stop_times(request, version, region, format, request.args.get("departure_filter", ""), request.args.get("arrvial_filter", ""),type_pb2.STOPS_SCHEDULE)
+def on_stops_schedule(request_args, version, region, format, callback):
+    return stop_times(request_args, version, region, format, request_args["departure_filter"], request_args["arrival_filter"],type_pb2.STOPS_SCHEDULE, callback)
 
-def on_departure_board(request, version, region, format):
-    return stop_times(request, version, region, format, request.args.get("filter", ""), "", type_pb2.DEPARTURE_BOARD)
+def on_departure_board(request_args, version, region, format, callback):
+    return stop_times(request_args, version, region, format, request_args["filter"], "", type_pb2.DEPARTURE_BOARD, callback)
 
-def on_proximity_list(request, version, region, format):
+def on_proximity_list(request_args, version, region, format, callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.PROXIMITYLIST
-    req.proximity_list.coord.lon = request.args.get("lon", type=float)
-    req.proximity_list.coord.lat = request.args.get("lat", type=float)
-    req.proximity_list.distance = request.args.get("distance", 500, type=int)
-    types = request.args.getlist('object_type[]')
-    if len(types) == 0 :
-        types = ['stop_area', 'address', 'city']
-    for type in types:
-        if type in pb_type:
-            req.proximity_list.types.append(pb_type[type])
+    req.proximity_list.coord.lon = request_args["lon"]
+    req.proximity_list.coord.lat = request_args["lat"]
+    req.proximity_list.distance = request_args["distance"]
+    req.proximity_list.types = request_args["object_type"]
     resp = send_and_receive(req, region)
-    return render_from_protobuf(resp, format, request)
+    return render_from_protobuf(resp, format, callback)
 
-def journeys(requested_type, request, version, region, format):
+def journeys(requested_type, request_args, version, region, format, callback):
 #    req.params = "origin=coord:2.1301409667968625:48.802045523752106&destination=coord:2.3818232910156234:48.86202003509158&datetime=20120615T143200&format=pb" 
     req = type_pb2.Request()
     req.requested_api = requested_type
 
-    req.journeys.origin = request.args.get("origin")
-    req.journeys.destination = request.args.get("destination", "")
-    req.journeys.datetime.append(request.args.get("datetime"))
-    req.journeys.clockwise = request.args.get("clockwise", True, type=bool)
+    req.journeys.origin = request_args["origin"]
+    req.journeys.destination = request_args["destination"]
+    req.journeys.datetime.append(request_args["datetime"])
+    req.journeys.clockwise = request_args["clockwise"]
     #req.journeys.forbiddenline += request.args.getlist('forbiddenline[]')
     #req.journeys.forbiddenmode += request.args.getlist('forbiddenmode[]')
     #req.journeys.forbiddenroute += request.args.getlist('forbiddenroute[]')
-    req.journeys.walking_speed = request.args.get('walking_speed', 1.3, type=float)
-    req.journeys.walking_distance = request.args.get('walking_distance', 1000, type=int)
-    req.journeys.wheelchair = request.args.get('wheelchair', False, type=float)
+    req.journeys.walking_speed = request_args["walking_speed"]
+    req.journeys.walking_distance = request_args["walking_distance"]
+    req.journeys.wheelchair = request_args["wheelchair"]
     resp = send_and_receive(req, region)
-    return render_from_protobuf(resp, format, request)
+    return render_from_protobuf(resp, format, callback)
 
 def on_journeys(requested_type):
-    return lambda request, version, region, format: journeys(requested_type, request, version, region, format)
+    return lambda request, version, region, format, callback: journeys(requested_type, request, version, region, format, callback)
 
-def ptref(requested_type, request, version, region, format):
+def ptref(requested_type, request_args, version, region, format, callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.PTREFERENTIAL
 
     req.ptref.requested_type = requested_type
-    req.ptref.filter = request.args.get("filter", "")
-    req.ptref.depth = request.args.get("depth", 1, type=int)
+    req.ptref.filter = request_args["filter"]
+    req.ptref.depth = request_args["depth"]
     resp = send_and_receive(req, region)
-    return render_from_protobuf(resp, format, request)
+    return render_from_protobuf(resp, format, callback)
 
 def on_ptref(requested_type):
-    return lambda request, version, region, format: ptref(requested_type, request, version, region, format)
+    return lambda request_args, version, region, format, callback: ptref(requested_type, request_args, version, region, format, callback)
 
 
 scheduleArguments = {
@@ -178,8 +164,8 @@ scheduleArguments = {
         "from_datetime" : Argument("The date from which you want the times",
                               datetime, True, False, order=10),
         "duration" : Argument("Maximum duration between the datetime and the last  retrieved stop time",
-                                  int, False, False, 86400, order=20 ),        
-        "wheelchair" : Argument("true if you want the times to have accessibility", boolean, False, False, "0", order=50)
+                                  int, False, False, defaultValue=86400, order=20 ),        
+        "wheelchair" : Argument("true if you want the times to have accessibility", boolean, False, False, defaultValue="0", order=50)
         }
 stopsScheduleArguments = copy.copy(scheduleArguments)
 del stopsScheduleArguments["filter"]
@@ -193,7 +179,7 @@ nextTimesArguments["nb_stoptimes"] = Argument("The maximum number of stop_times"
 
 ptrefArguments = {
         "filter" : Argument("Conditions to filter the returned objects", str,
-                            False, False, order=0),
+                            False, False, "", order=0),
         "depth" : Argument("Maximum depth on objects", int, False, False, 1,
                            order = 50)
         }
@@ -259,7 +245,7 @@ apis = {
                           "order":5},
         "modes" : {"endpoint" : on_ptref(type_pb2.MODE), "arguments" :
                         ptrefArguments,
-                        "description" : "Retrieves all the modes filtered with filter",
+                        "description" : "Retrieves all the modedestinations filtered with filter",
                           "order":5},
         "mode_types" : {"endpoint" : on_ptref(type_pb2.MODETYPE), "arguments" :
                         ptrefArguments,
@@ -306,11 +292,10 @@ apis_all["regions"] = {"arguments" : {}, "description" : "Retrieves the list of 
 def on_api(request, version, region, api, format):
     if version != "v0":
         return Response("Unknown version: " + version, status=404)
-    if api in apis:
-         print apis[api]["arguments"]
-         v = validate_arguments(request, apis[api]["arguments"])
+    if api in apis_all:
+         v = validate_arguments(request, apis_all[api]["arguments"])
          if v.valid:
-            return apis[api]["endpoint"](request, version, region, format)
+            return apis_all[api]["endpoint"](v.arguments, version, region, format, request.args.get('callback'))
          else:
              return Response("Invalid arguments: " + str(v.details), status=400)
     else:
@@ -327,7 +312,7 @@ def universal_journeys(api, request, version, format):
             lat = float(origin_re.group(2))
             region = instances.key_of_coord(lon, lat)
         except:
-            return Response("Unable to parse coordianates", status=400)
+            return Response("Unable to parse coordinates", status=400)
         if region:
             return on_api(request, version, region, api, format)
         else:
@@ -350,10 +335,10 @@ def on_universal_proximity_list(request, version, format):
    
 
 def on_summary_doc(request) :
-    return render(api_doc(apis_all, instances), 'json', request)
+    return render(api_doc(apis_all, instances), 'json',  request.args.get('callback'))
 
 def on_doc(request, api):
-    return render(api_doc(apis_all, instances, api), 'json', request)
+    return render(api_doc(apis_all, instances, api), 'json', request.args.get('callback'))
 
 url_map = Map([
     Rule('/', endpoint=on_index),
@@ -380,6 +365,14 @@ def application(environ, start_response):
             catch_http_exceptions=True)
 
 if __name__ == '__main__':
+    v = validate_apis(apis_all)
+    if not(v.valid):
+        for apiname, details in v.details.iteritems():
+            if len(details) > 0:
+                print "Error in api : " + apiname
+                for error in details : 
+                    print "\t"+error
+
     httpd = make_server('', 8088, application)
     print "Serving on port 8088..."
     httpd.serve_forever()
