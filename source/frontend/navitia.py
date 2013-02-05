@@ -40,7 +40,7 @@ def render_from_protobuf(pb_resp, format, request):
     if format == 'pb':
         return Response(pb_resp.SerializeToString(), mimetype='application/octet-stream')
     else:
-        return render(protobuf_to_dict(pb_resp, enum_as_labels=True), format, request)
+        return render(protobuf_to_dict(pb_resp, use_enum_labels=True), format, request)
 
 
 def send_and_receive(request, region = None):
