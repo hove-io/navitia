@@ -27,9 +27,9 @@ class Argument :
 
 
 def boolean(value):
-    if(value == "0") :
+    if(value.lower() == "true") :
         return False
-    elif(value=="1"):
+    elif(value.lower()=="false"):
          return True
     else:
         raise Exception("validation_error")
@@ -60,6 +60,12 @@ def datetime(value):
         raise Exception("validation_error")
 
     return value
+
+def entrypoint(value):
+    return True
+
+def filter(value):
+    return True
 
 
 def validate_arguments(request, validation_dict) :

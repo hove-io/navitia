@@ -15,6 +15,10 @@ def convertType(validator):
         return "float"
     elif validator == boolean:
         return "boolean"
+    elif validator == entrypoint:
+        return '<a href="#">entrypoint</a>'
+    elif validator == filter:
+        return "filter"
     else:
         return "string"
 

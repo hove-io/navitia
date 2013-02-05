@@ -129,7 +129,7 @@ def journeys(requested_type, request_args, version, region, format, callback):
     req.requested_api = requested_type
 
     req.journeys.origin = request_args["origin"]
-    req.journeys.destination = request_args["destination"]
+    req.journeys.destination = request_args["destination"] if "destination" in request_args else ""
     req.journeys.datetime.append(request_args["datetime"])
     req.journeys.clockwise = request_args["clockwise"]
     #req.journeys.forbiddenline += request.args.getlist('forbiddenline[]')
@@ -159,48 +159,50 @@ def on_ptref(requested_type):
 
 
 scheduleArguments = {
-        "filter" : Argument("Filter to have the times you want", str, True,
+        "filter" : Argument("Filter to have the times you want", filter, True,
                             False, order=0),
         "from_datetime" : Argument("The date from which you want the times",
                               datetime, True, False, order=10),
         "duration" : Argument("Maximum duration between the datetime and the last  retrieved stop time",
                                   int, False, False, defaultValue=86400, order=20 ),        
-        "wheelchair" : Argument("true if you want the times to have accessibility", boolean, False, False, defaultValue="0", order=50)
+        "wheelchair" : Argument("true if you want the times to have accessibility", boolean, False, False, defaultValue=False, order=50)
         }
 stopsScheduleArguments = copy.copy(scheduleArguments)
 del stopsScheduleArguments["filter"]
-stopsScheduleArguments["departure_filter"] = Argument("The filter of your departure point", str,
+stopsScheduleArguments["departure_filter"] = Argument("The filter of your departure point", filter,
                                                       True, False,order=0)
-stopsScheduleArguments["arrival_filter"] = Argument("The filter of your arrival point", str,
+stopsScheduleArguments["arrival_filter"] = Argument("The filter of your arrival point", filter,
                                                       True, False,order=1)
 
 nextTimesArguments = copy.copy(scheduleArguments)
-nextTimesArguments["nb_stoptimes"] = Argument("The maximum number of stop_times", int,False, False, 20, order=30)
+nextTimesArguments["nb_stoptimes"] = Argument("The maximum number of stop_times", int , False, False, 20, order=30)
 
 ptrefArguments = {
-        "filter" : Argument("Conditions to filter the returned objects", str,
+        "filter" : Argument("Conditions to filter the returned objects", filter,
                             False, False, "", order=0),
         "depth" : Argument("Maximum depth on objects", int, False, False, 1,
                            order = 50)
         }
 journeyArguments = {
-        "origin" : Argument("Departure Point", str, True, False, order = 0),
-        "destination" : Argument("Destination Point" , str, True, False, order = 1),
+        "origin" : Argument("Departure Point", entrypoint, True, False, order = 0),
+        "destination" : Argument("Destination Point" , entrypoint, True, False, order = 1),
         "datetime" : Argument("The time from which you want to arrive (or arrive before depending on the value of clockwise", datetime, True, False, order = 2),
-        "clockwise" : Argument("1 if you want to have a journey that starts after datetime, 0 if you a journey that arrives before datetime", int, False, False, 1, order = 3),
-        "forbiddenline" : Argument("Forbidden lines identified by their external codes",  str, False, True, ""),
-        "forbiddenmode" : Argument("Forbidden modes identified by their external codes", str, False, True, ""),
-        "forbiddenroute" : Argument("Forbidden routes identified by their external codes", str, False, True, ""),
+        "clockwise" : Argument("1 if you want to have a journey that starts after datetime, 0 if you a journey that arrives before datetime", boolean, False, False, True, order = 3),
+        #"forbiddenline" : Argument("Forbidden lines identified by their external codes",  str, False, True, ""),
+        #"forbiddenmode" : Argument("Forbidden modes identified by their external codes", str, False, True, ""),
+        #"forbiddenroute" : Argument("Forbidden routes identified by their external codes", str, False, True, ""),
         "walking_speed" : Argument("Walking speed in m/s", float, False, False, 1.38),
         "walking_distance" : Argument("Maximum walking distance in meters", int,
                                       False, False, 1000),
         "wheelchair" : Argument("Does the journey has to be accessible ?",
                                 boolean, False, False, 0)
         }
+isochroneArguments = copy.copy(journeyArguments)
+del isochroneArguments["destination"]
 
 apis = {
         "first_letter" : {"endpoint" : on_first_letter, "arguments" : {"name" : Argument("The data to search", str, True, False, order = 1),
-                                                                       "object_type" : Argument("The type of datas you want in return", str, False, False, "")},
+                                                                       "object_type[]" : Argument("The type of datas you want in return", str, False, False, "")},
                           "description" : "Retrieves the objects which contains in their name the \"name\"",
                           "order":2},
         "next_departures" : {"endpoint" : on_next_departures, "arguments" :
@@ -271,14 +273,14 @@ apis = {
                       journeyArguments,
                       "description" : "Computes and retrieves a journey",
                           "order":1},
-        "isochrone" : {"endpoint" : on_journeys(type_pb2.ISOCHRONE), "arguments" : journeyArguments,
+        "isochrone" : {"endpoint" : on_journeys(type_pb2.ISOCHRONE), "arguments" : isochroneArguments,
                        "description" : "Computes and retrieves an isochrone",
                           "order":1},
         "proximity_list" : {"endpoint" : on_proximity_list, "arguments" : {
                 "lon" : Argument("Longitude of the point from where you want objects", float, True, False, order=0),
                 "lat" : Argument("Latitude of the point from where you want objects", float, True, False, order=1),
                 "dist" : Argument("Distance range of the query", int, False, False, 1000, order=3),
-                "object_type" : Argument("Type of the objects you want to have in return", str, False, False, "", order=4)
+                "object_type[]" : Argument("Type of the objects you want to have in return", str, False, False, "", order=4)
                 },
             "description" : "Retrieves all the objects around a point within the given distance",
             "order" : 1.1}
