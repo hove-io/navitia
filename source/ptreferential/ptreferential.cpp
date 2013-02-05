@@ -34,7 +34,8 @@ namespace qi = boost::spirit::qi;
         struct select_r
             : qi::grammar<Iterator, std::vector<Filter>(), qi::space_type>
 {
-    qi::rule<Iterator, std::string(), qi::space_type> txt, txt2, txt3; // Match une string
+    qi::rule<Iterator, std::string(), qi::space_type> txt, txt2/*, txt3*/; // Match une string
+    qi::rule<Iterator, std::string()> txt3;
     qi::rule<Iterator, float, qi::space_type> fl1; 
     qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
     qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter, pre_filter, a_filter; // La string complÃ¨te Ã  parser
@@ -44,7 +45,7 @@ namespace qi = boost::spirit::qi;
         txt = qi::lexeme[+(qi::alnum|qi::char_("_:-"))];
         txt2 = qi::lexeme[+(qi::alnum|qi::char_("_:-=.<> "))];
         //txt3 = '"' >> qi::lexeme[+(qi::alnum|qi::char_("_:- "))] >> '"';
-        txt3 = '"' >> qi::lexeme[+(qi::alnum|qi::char_("\x5F\x58\x2D\x20\x26"))] >> '"';
+        txt3 = '"' >> qi::lexeme[+(qi::alnum|qi::char_("_:- &"))] >> '"';
         bin_op =  qi::string("<=")[qi::_val = LEQ]
                 | qi::string(">=")[qi::_val = GEQ]
                 | qi::string("<>")[qi::_val = NEQ]
@@ -54,7 +55,7 @@ namespace qi = boost::spirit::qi;
 
         filter1 = (txt >> "." >> txt >> bin_op >> (txt|txt3))[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3, qi::_4)];
         filter2 = (txt >> "HAVING" >> '(' >> txt2 >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
-        filter3 = ("AROUND"  >> qi::double_ >> ':' >> qi::double_ >> "WITHIN" >> qi::int_ >> 'm') [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
+        filter3 = ("AROUND"  >> qi::double_ >> ':' >> qi::double_ >> "WITHIN" >> qi::int_ ) [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
         pre_filter %= (filter1 | filter2) % (qi::lexeme["and"] | qi::lexeme["AND"]);
         a_filter = pre_filter >> -filter3;
         filter = (a_filter | filter3);
@@ -142,6 +143,8 @@ std::vector<Filter> parse(std::string request){
 
 
 std::vector<idx_t> make_query(Type_e requested_type, std::string request, const Data & data) {
+    //DEBUG
+    std::cout << "Requete make query : " << request << std::endl;
     std::vector<Filter> filters;
 
     if(!request.empty()){
