@@ -47,7 +47,7 @@ def time(value):
 
     return value
 
-def datetime(value): 
+def datetime_validator(value): 
     m = re.match(r"^(\d){4}(?P<month>(\d){2})(?P<day>(\d){2})(?P<hour>T(\d){3,4})", value)
     if(m) :
         if(int(m.groupdict()['month']) < 1 or int(m.groupdict()['month']) > 12 or

@@ -13,6 +13,7 @@ from wsgiref.simple_server import make_server
 from validate import *
 from swagger import api_doc
 import instance_manager
+from find_extrem_datetimes import *
 
 instances = instance_manager.NavitiaManager('Jörmungandr.ini')
 
@@ -75,7 +76,7 @@ pb_type = {
         'address': type_pb2.ADDRESS
         }
 
-def on_first_letter(request_args, version, region, format, callback):
+def on_first_letter(request_args, version, region, format, base_url, callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.FIRSTLETTER
     req.first_letter.name = request_args['name']
@@ -84,7 +85,7 @@ def on_first_letter(request_args, version, region, format, callback):
     return render_from_protobuf(resp, format, callback)
 
 
-def stop_times(request_args, version, region, format, departure_filter, arrival_filter, api, callback):
+def stop_times(request_args, version, region, format, base_url, departure_filter, arrival_filter, api, callback):
     req = type_pb2.Request()
     req.requested_api = api
     req.next_stop_times.departure_filter = departure_filter
@@ -98,22 +99,22 @@ def stop_times(request_args, version, region, format, departure_filter, arrival_
     resp = send_and_receive(req, region)
     return render_from_protobuf(resp, format, request.args.get('callback'))
 
-def on_line_schedule(request_args, version, region, format, callback):
+def on_line_schedule(request_args, version, region, format, base_url, callback):
     return stop_times(request_args, version, region, format, request_args["filter"], "", type_pb2.LINE_SCHEDUL, callbackE)
 
-def on_next_arrivals(request_args, version, region, format, callback):
+def on_next_arrivals(request_args, version, region, format, base_url, callback):
     return stop_times(request_args, version, region, format, request_args["filter"], "", type_pb2.NEXT_DEPARTURES, callback)
 
-def on_next_departures(request_args, version, region, format, callback):
+def on_next_departures(request_args, version, region, format, base_url, callback):
     return stop_times(request_args, version, region, format, "", request_args["filter"], type_pb2.NEXT_ARRIVALS, callback)
 
-def on_stops_schedule(request_args, version, region, format, callback):
+def on_stops_schedule(request_args, version, region, format, base_url, callback):
     return stop_times(request_args, version, region, format, request_args["departure_filter"], request_args["arrival_filter"],type_pb2.STOPS_SCHEDULE, callback)
 
-def on_departure_board(request_args, version, region, format, callback):
+def on_departure_board(request_args, version, region, format, base_url, callback):
     return stop_times(request_args, version, region, format, request_args["filter"], "", type_pb2.DEPARTURE_BOARD, callback)
 
-def on_proximity_list(request_args, version, region, format, callback):
+def on_proximity_list(request_args, version, region, format, base_url, callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.PROXIMITYLIST
     req.proximity_list.coord.lon = request_args["lon"]
@@ -123,8 +124,7 @@ def on_proximity_list(request_args, version, region, format, callback):
     resp = send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
-def journeys(requested_type, request_args, version, region, format, callback):
-#    req.params = "origin=coord:2.1301409667968625:48.802045523752106&destination=coord:2.3818232910156234:48.86202003509158&datetime=20120615T143200&format=pb" 
+def journeys(requested_type, request_args, version, region, format, base_url, callback):
     req = type_pb2.Request()
     req.requested_api = requested_type
 
@@ -139,12 +139,18 @@ def journeys(requested_type, request_args, version, region, format, callback):
     req.journeys.walking_distance = request_args["walking_distance"]
     req.journeys.wheelchair = request_args["wheelchair"]
     resp = send_and_receive(req, region)
+    extrems = extremes(resp, request_args)
+    if extrems["before"] != "":
+        resp.planner.before = base_url + "?" + extrems['before']
+    if extrems["after"] != "":
+        resp.planner.after = base_url + "?" + extrems['after']
+
     return render_from_protobuf(resp, format, callback)
 
 def on_journeys(requested_type):
-    return lambda request, version, region, format, callback: journeys(requested_type, request, version, region, format, callback)
+    return lambda request, version, region, format, base_url, callback: journeys(requested_type, request, version, region, format, base_url, callback)
 
-def ptref(requested_type, request_args, version, region, format, callback):
+def ptref(requested_type, request_args, version, region, format, base_url,  callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.PTREFERENTIAL
 
@@ -155,14 +161,14 @@ def ptref(requested_type, request_args, version, region, format, callback):
     return render_from_protobuf(resp, format, callback)
 
 def on_ptref(requested_type):
-    return lambda request_args, version, region, format, callback: ptref(requested_type, request_args, version, region, format, callback)
+    return lambda request_args, version, region, format, base_url, callback: ptref(requested_type, request_args, version, region, format, base_url, callback)
 
 
 scheduleArguments = {
         "filter" : Argument("Filter to have the times you want", filter, True,
                             False, order=0),
         "from_datetime" : Argument("The date from which you want the times",
-                              datetime, True, False, order=10),
+                              datetime_validator, True, False, order=10),
         "duration" : Argument("Maximum duration between the datetime and the last  retrieved stop time",
                                   int, False, False, defaultValue=86400, order=20 ),        
         "wheelchair" : Argument("true if you want the times to have accessibility", boolean, False, False, defaultValue=False, order=50)
@@ -186,7 +192,7 @@ ptrefArguments = {
 journeyArguments = {
         "origin" : Argument("Departure Point", entrypoint, True, False, order = 0),
         "destination" : Argument("Destination Point" , entrypoint, True, False, order = 1),
-        "datetime" : Argument("The time from which you want to arrive (or arrive before depending on the value of clockwise", datetime, True, False, order = 2),
+        "datetime" : Argument("The time from which you want to arrive (or arrive before depending on the value of clockwise", datetime_validator, True, False, order = 2),
         "clockwise" : Argument("1 if you want to have a journey that starts after datetime, 0 if you a journey that arrives before datetime", boolean, False, False, True, order = 3),
         #"forbiddenline" : Argument("Forbidden lines identified by their external codes",  str, False, True, ""),
         #"forbiddenmode" : Argument("Forbidden modes identified by their external codes", str, False, True, ""),
@@ -297,7 +303,7 @@ def on_api(request, version, region, api, format):
     if api in apis:
         v = validate_arguments(request, apis[api]["arguments"])
         if v.valid:
-            return apis[api]["endpoint"](v.arguments, version, region, format, request.args.get("callback"))
+            return apis[api]["endpoint"](v.arguments, version, region, format, request.base_url, request.args.get("callback"))
         else:
             return Response("Invalid arguments: " + str(v.details), status=400)
     else:
