@@ -119,7 +119,8 @@ def on_proximity_list(request_args, version, region, format, callback):
     req.proximity_list.coord.lon = request_args["lon"]
     req.proximity_list.coord.lat = request_args["lat"]
     req.proximity_list.distance = request_args["distance"]
-    req.proximity_list.types = request_args["object_type"]
+    for object_type in request_args["object_type[]"]:
+        req.proximity_list.types.append(pb_type[object_type])
     resp = send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
@@ -202,7 +203,7 @@ del isochroneArguments["destination"]
 
 apis = {
         "first_letter" : {"endpoint" : on_first_letter, "arguments" : {"name" : Argument("The data to search", str, True, False, order = 1),
-                                                                       "object_type[]" : Argument("The type of datas you want in return", str, False, False, "")},
+                                                                       "object_type" : Argument("The type of datas you want in return", str, False, False, "")},
                           "description" : "Retrieves the objects which contains in their name the \"name\"",
                           "order":2},
         "next_departures" : {"endpoint" : on_next_departures, "arguments" :
@@ -279,8 +280,8 @@ apis = {
         "proximity_list" : {"endpoint" : on_proximity_list, "arguments" : {
                 "lon" : Argument("Longitude of the point from where you want objects", float, True, False, order=0),
                 "lat" : Argument("Latitude of the point from where you want objects", float, True, False, order=1),
-                "dist" : Argument("Distance range of the query", int, False, False, 1000, order=3),
-                "object_type[]" : Argument("Type of the objects you want to have in return", str, False, False, "", order=4)
+                "distance" : Argument("Distance range of the query", int, False, False, 1000, order=3),
+                "object_type[]" : Argument("Type of the objects you want to have in return", str, False, False, ["stop_area", "stop_point"], order=4)
                 },
             "description" : "Retrieves all the objects around a point within the given distance",
             "order" : 1.1}

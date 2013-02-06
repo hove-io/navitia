@@ -62,33 +62,33 @@ def datetime(value):
     return value
 
 def entrypoint(value):
-    return True
+    return value
 
 def filter(value):
-    return True
+    return value
 
 
 def validate_arguments(request, validation_dict) :
     response = Validation_Response() 
     for key, value in request.args.iteritems() :
-        if(not (key in validation_dict)) : 
+        if not (key in validation_dict) : 
             response.details[key] = {"status" : "ignored", "value":value}
         else:
-            if not(validation_dict[key].repeated) and (request.args.getlist(key)> 1):
+            if not validation_dict[key].repeated and len(request.args.getlist(key)) > 1:
                 response.details[key] = {"status" : "multiple", "value":value}
 
             for val in request.args.getlist(key) :
                 try :
-                    validation_dict[key].validator(val)
+                    parsed_val = validation_dict[key].validator(val)
                     response.details[key] = {"status" : "valid", "value": val}
                     if not(validation_dict[key].repeated) :
-                        response.arguments[key] = value
+                        response.arguments[key] = parsed_val
                     else:
                         if not(key in response.arguments):
                             response.arguments[key] = []
-                        response.arguments[key].append(value)
+                        response.arguments[key].append(parsed_val)
                 except:
-                    if(validation_dict[key].required):
+                    if validation_dict[key].required:
                         response.valid = False
                     response.details[key] = {"status" : "notvalid", "value" : val }
     for key, value in validation_dict.iteritems():
