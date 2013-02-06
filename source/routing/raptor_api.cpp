@@ -292,8 +292,9 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     std::vector<idx_label> tmp;
     int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
     int time = datetime.time_of_day().total_seconds();
+    DateTime init_dt = DateTime(day, time);
 
-    raptor.isochrone(departures,DateTime(day, time), bound,
+    raptor.isochrone(departures, init_dt, bound,
                            walking_speed, walking_distance, wheelchair, forbidden, clockwise);
 
 
@@ -314,7 +315,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
             int round = raptor.best_round(best_rp);
             boost::tie(initial_rp, initial_dt) = init::getFinalRpidAndDate(round, best_rp, raptor.labels, clockwise, raptor.data);
 
-            int duration = ::abs(label.arrival - initial_dt);
+            int duration = ::abs(label.arrival - init_dt);
 
             if(origin.type == type::Type_e::eCoord) {
                 auto temp = worker.get_path(raptor.data.pt_data.route_points[initial_rp].stop_point_idx);
