@@ -5,8 +5,8 @@ from validate import *
 def convertType(validator):
     if validator == str :
         return "string"
-    elif validator == datetime:
-        return "datetime"
+    elif validator == datetime_validator:
+        return "datetime_validator"
     elif validator == time:
         return "time"
     elif validator == int:
@@ -16,9 +16,9 @@ def convertType(validator):
     elif validator == boolean:
         return "boolean"
     elif validator == entrypoint:
-        return '<a href="#">entrypoint</a>'
+        return '<a href="http://www.navitia.io/#entrypoints">entrypoint</a>'
     elif validator == filter:
-        return "filter"
+        return '<a href="http://www.navitia.io/#filter">filter</a>'
     else:
         return "string"
 
