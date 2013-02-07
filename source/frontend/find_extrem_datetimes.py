@@ -19,14 +19,14 @@ def extremes(resp, request) :
 
             minute = timedelta(minutes = 1)
             if earlier != "22221101T0101" :
-                print earlier
                 d = datetime.strptime(earlier, "%Y%m%dT%H%M%S")
-                datetime_before = d - minute
-                response["before"] = tmp +"clockwise=true&datetime="+datetime_before.strftime("%Y%m%dT%H%M%S")
+                datetime_after = d + minute
+                response["after"] = tmp + "clockwise=true&datetime="+datetime_after.strftime("%Y%m%dT%H%M%S")
 
             if later != "20000101T000000":
-                d = datetime.strptime(later, "%Y%m%dT%H%M%S")
-                datetime_after = d + minute
-                response["after"] = tmp + "clockwise=false&datetime="+datetime_after.strftime("%Y%m%dT%H%M%S")
-    print response
+                d = datetime.strptime(later, "%Y%m%dT%H%M%S") 
+                print minute
+                print "later : " + d.strftime("%Y%m%dT%H%M%S")
+                datetime_before = d - minute
+                response["before"] = tmp +"clockwise=false&datetime="+datetime_before.strftime("%Y%m%dT%H%M%S")
     return response
