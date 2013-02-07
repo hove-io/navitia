@@ -91,8 +91,9 @@ def api_doc(apis, instance_manager, api = None) :
         list_apis = apis.items()
         list_apis.sort(key = lambda x : x[1]['order'] if "order" in x[1] else 50)
         for l in list_apis :
-            key = l[0]
-            response['apis'].append({"path":"/doc.{format}/"+key, "description" :apis[key]["description"] if "description" in apis[key] else  ""})
+            if "hidden" not in l or not l["hidden"]:
+                key = l[0]
+                response['apis'].append({"path":"/doc.{format}/"+key, "description" :apis[key]["description"] if "description" in apis[key] else  ""})
 
 
     return response
