@@ -848,6 +848,9 @@ BOOST_AUTO_TEST_CASE(adapted) {
     res1 = raptor.compute(d.stop_areas.at(2).idx, d.stop_areas.at(1).idx, 7*3600, 0, routing::DateTime::inf, true, true);
     BOOST_REQUIRE_EQUAL(res1.size(), 0);
 
+    res1 = raptor.compute(d.stop_areas.at(2).idx, d.stop_areas.at(1).idx, 7*3600, 0, routing::DateTime::inf, true, false);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
 
 }
 
