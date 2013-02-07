@@ -28,9 +28,9 @@ class Argument :
 
 def boolean(value):
     if(value.lower() == "true") :
-        return False
+        return True
     elif(value.lower()=="false"):
-         return True
+         return False
     else:
         raise Exception("validation_error")
 
