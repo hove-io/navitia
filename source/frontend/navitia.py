@@ -76,7 +76,7 @@ pb_type = {
         'address': type_pb2.ADDRESS
         }
 
-def on_first_letter(request_args, version, region, format, base_url, callback):
+def on_first_letter(request_args, version, region, format, callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.FIRSTLETTER
     req.first_letter.name = request_args['name']
@@ -85,7 +85,7 @@ def on_first_letter(request_args, version, region, format, base_url, callback):
     return render_from_protobuf(resp, format, callback)
 
 
-def stop_times(request_args, version, region, format, base_url, departure_filter, arrival_filter, api, callback):
+def stop_times(request_args, version, region, format, departure_filter, arrival_filter, api, callback):
     req = type_pb2.Request()
     req.requested_api = api
     req.next_stop_times.departure_filter = departure_filter
@@ -99,22 +99,22 @@ def stop_times(request_args, version, region, format, base_url, departure_filter
     resp = send_and_receive(req, region)
     return render_from_protobuf(resp, format, request.args.get('callback'))
 
-def on_line_schedule(request_args, version, region, format, base_url, callback):
+def on_line_schedule(request_args, version, region, format,  callback):
     return stop_times(request_args, version, region, format, request_args["filter"], "", type_pb2.LINE_SCHEDUL, callbackE)
 
-def on_next_arrivals(request_args, version, region, format, base_url, callback):
+def on_next_arrivals(request_args, version, region, format, callback):
     return stop_times(request_args, version, region, format, request_args["filter"], "", type_pb2.NEXT_DEPARTURES, callback)
 
-def on_next_departures(request_args, version, region, format, base_url, callback):
+def on_next_departures(request_args, version, region, format, callback):
     return stop_times(request_args, version, region, format, "", request_args["filter"], type_pb2.NEXT_ARRIVALS, callback)
 
-def on_stops_schedule(request_args, version, region, format, base_url, callback):
+def on_stops_schedule(request_args, version, region, format, callback):
     return stop_times(request_args, version, region, format, request_args["departure_filter"], request_args["arrival_filter"],type_pb2.STOPS_SCHEDULE, callback)
 
-def on_departure_board(request_args, version, region, format, base_url, callback):
+def on_departure_board(request_args, version, region, format, callback):
     return stop_times(request_args, version, region, format, request_args["filter"], "", type_pb2.DEPARTURE_BOARD, callback)
 
-def on_proximity_list(request_args, version, region, format, base_url, callback):
+def on_proximity_list(request_args, version, region, format, callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.PROXIMITYLIST
     req.proximity_list.coord.lon = request_args["lon"]
@@ -125,7 +125,7 @@ def on_proximity_list(request_args, version, region, format, base_url, callback)
     resp = send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
-def journeys(requested_type, request_args, version, region, format, base_url, callback):
+def journeys(requested_type, request_args, version, region, format, callback):
     req = type_pb2.Request()
     req.requested_api = requested_type
 
@@ -142,16 +142,16 @@ def journeys(requested_type, request_args, version, region, format, base_url, ca
     resp = send_and_receive(req, region)
     extrems = extremes(resp, request_args)
     if extrems["before"] != "":
-        resp.planner.before = base_url + "?" + extrems['before']
+        resp.planner.before = extrems['before']
     if extrems["after"] != "":
-        resp.planner.after = base_url + "?" + extrems['after']
+        resp.planner.after = extrems['after']
 
     return render_from_protobuf(resp, format, callback)
 
 def on_journeys(requested_type):
-    return lambda request, version, region, format, base_url, callback: journeys(requested_type, request, version, region, format, base_url, callback)
+    return lambda request, version, region, format, callback: journeys(requested_type, request, version, region, format, callback)
 
-def ptref(requested_type, request_args, version, region, format, base_url,  callback):
+def ptref(requested_type, request_args, version, region, format, callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.PTREFERENTIAL
 
@@ -162,7 +162,7 @@ def ptref(requested_type, request_args, version, region, format, base_url,  call
     return render_from_protobuf(resp, format, callback)
 
 def on_ptref(requested_type):
-    return lambda request_args, version, region, format, base_url, callback: ptref(requested_type, request_args, version, region, format, base_url, callback)
+    return lambda request_args, version, region, format, callback: ptref(requested_type, request_args, version, region, format, callback)
 
 
 scheduleArguments = {
@@ -201,8 +201,8 @@ journeyArguments = {
         "walking_speed" : Argument("Walking speed in m/s", float, False, False, 1.38),
         "walking_distance" : Argument("Maximum walking distance in meters", int,
                                       False, False, 1000),
-        "wheelchair" : Argument("Does the journey has to be accessible ?",
-                                boolean, False, False, 0)
+        "wheelchair" : Argument("Does the journey has to be accessible?",
+                                boolean, False, False, False)
         }
 isochroneArguments = copy.copy(journeyArguments)
 del isochroneArguments["destination"]
@@ -304,7 +304,7 @@ def on_api(request, version, region, api, format):
     if api in apis:
         v = validate_arguments(request, apis[api]["arguments"])
         if v.valid:
-            return apis[api]["endpoint"](v.arguments, version, region, format, request.base_url, request.args.get("callback"))
+            return apis[api]["endpoint"](v.arguments, version, region, format, request.args.get("callback"))
         else:
             return Response("Invalid arguments: " + str(v.details), status=400)
     else:
