@@ -60,8 +60,14 @@ def datetime_validator(value):
         raise Exception("validation_error")
 
     return value
+valid_types = ("validity_pattern", "line", "route", "vehicle_journey",
+        "stop_point", "stop_area", "stop_time", "network", "mode", "mode_type",
+        "city", "connection", "route_point", "district", "department", "company", " vehicle", "country", "way", "coord", "address")
 
 def entrypoint(value):
+    m = re.match(r"^(?P<type>(\w)+):", value)
+    if not m or m.groupdict()["type"] not in valid_types:
+        raise Exception("validation_error")
     return value
 
 def filter(value):
