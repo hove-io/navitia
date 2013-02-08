@@ -13,7 +13,7 @@ from wsgiref.simple_server import make_server
 from validate import *
 from swagger import api_doc
 import instance_manager
-from find_extrem_datetimes import *
+from find_extrem_datetimes import extremes
 
 instances = instance_manager.NavitiaManager('Jörmungandr.ini')
 
@@ -140,11 +140,10 @@ def journeys(requested_type, request_args, version, region, format, callback):
     req.journeys.walking_distance = request_args["walking_distance"]
     req.journeys.wheelchair = request_args["wheelchair"]
     resp = send_and_receive(req, region)
-    extrems = extremes(resp, request_args)
-    if extrems["before"] != "":
-        resp.planner.before = extrems['before']
-    if extrems["after"] != "":
-        resp.planner.after = extrems['after']
+    return render_from_protobuf(resp, format, callback)
+
+    if before and after:
+        resp.planner.before, resp.planner.after
 
     return render_from_protobuf(resp, format, callback)
 
@@ -193,8 +192,8 @@ ptrefArguments = {
 journeyArguments = {
         "origin" : Argument("Departure Point", entrypoint, True, False, order = 0),
         "destination" : Argument("Destination Point" , entrypoint, True, False, order = 1),
-        "datetime" : Argument("The time from which you want to arrive (or arrive before depending on the value of clockwise", datetime_validator, True, False, order = 2),
-        "clockwise" : Argument("1 if you want to have a journey that starts after datetime, 0 if you a journey that arrives before datetime", boolean, False, False, True, order = 3),
+        "datetime" : Argument("The time from which you want to arrive (or arrive before depending on the value of clockwise)", datetime_validator, True, False, order = 2),
+        "clockwise" : Argument("true if you want to have a journey that starts after datetime, false if you a journey that arrives before datetime", boolean, False, False, True, order = 3),
         #"forbiddenline" : Argument("Forbidden lines identified by their external codes",  str, False, True, ""),
         #"forbiddenmode" : Argument("Forbidden modes identified by their external codes", str, False, True, ""),
         #"forbiddenroute" : Argument("Forbidden routes identified by their external codes", str, False, True, ""),

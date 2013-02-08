@@ -1,31 +1,22 @@
 from datetime import datetime, timedelta
-def extremes(resp, request) : 
-    response = {"before" : "", "after":""}
-    earlier = "22221101T010159"
-    later = "20000101T000000"
-    if resp.planner != None:
-        if resp.planner != None:
-            for journey in resp.planner.journey:
-                if journey.arrival_date_time< earlier:
-                    earlier = journey.arrival_date_time
-                if journey.departure_date_time > later:
-                    later = journey.departure_date_time
+from operator import attrgetter
+def extremes(resp, request): 
+    before = None
+    after = None
 
-            
-            tmp = ""
-            for key, value in request.iteritems():
-                if key != "datetime" and key != "clockwise":
-                    tmp += key + "=" +str(value) + "&"
+    if resp.planner and len(resp.planner.journey) > 0:
+        asap_journey = min(resp.planner.journey, key=attrgetter('arrival_date_time'))
+        query_args = ""
+        for key, value in request.iteritems():
+            if key != "datetime" and key != "clockwise":
+                query_args += key + "=" +str(value) + "&"
 
+        if asap_journey.arrival_date_time and asap_journey.departure_date_time:
             minute = timedelta(minutes = 1)
-            if earlier != "22221101T0101" :
-                d = datetime.strptime(later, "%Y%m%dT%H%M%S")
-                datetime_after = d + minute
-                response["after"] = tmp + "clockwise=true&datetime="+datetime_after.strftime("%Y%m%dT%H%M%S")
+            datetime_after = datetime.strptime(asap_journey.departure_date_time, "%Y%m%dT%H%M%S") + minute
+            before = query_args + "clockwise=true&datetime="+datetime_after.strftime("%Y%m%dT%H%M%S")
+    
+            datetime_before = datetime.strptime(asap_journey.arrival_date_time, "%Y%m%dT%H%M%S") - minute
+            after = query_args +"clockwise=false&datetime="+datetime_before.strftime("%Y%m%dT%H%M%S")
 
-            if later != "20000101T000000":
-                d = datetime.strptime(earlier, "%Y%m%dT%H%M%S") 
-                print minute
-                datetime_before = d - minute
-                response["before"] = tmp +"clockwise=false&datetime="+datetime_before.strftime("%Y%m%dT%H%M%S")
-    return response
+    return (before,after)
