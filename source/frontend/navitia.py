@@ -52,7 +52,7 @@ def send_and_receive(request, region = None):
     return resp
 
 def on_index(request, version = None, region = None ):
-    return Response('Hello from the index')
+    return Response('Welcome to the navitia API. Have a look at http://www.navitia.io to learn how to use it.')
 
 def on_regions(request, version, format):
     return render(instances.regions(), format,  request.args.get('callback'))
