@@ -80,7 +80,9 @@ def on_first_letter(request_args, version, region, format, callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.FIRSTLETTER
     req.first_letter.name = request_args['name']
-    req.first_letter.types = request_args['object_type']
+    for object_type in request_args["object_type[]"]:
+        req.first_letter.types.append(pb_type[object_type])
+
     resp = send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
@@ -210,7 +212,7 @@ del isochroneArguments["destination"]
 
 apis = {
         "first_letter" : {"endpoint" : on_first_letter, "arguments" : {"name" : Argument("The data to search", str, True, False, order = 1),
-                                                                       "object_type" : Argument("The type of datas you want in return", str, False, False, "")},
+                                                                       "object_type[]" : Argument("The type of datas you want in return", str, False, True, ["stop_area", "stop_point", "address"])},
                           "description" : "Retrieves the objects which contains in their name the \"name\"",
                           "order":2},
         "next_departures" : {"endpoint" : on_next_departures, "arguments" :
