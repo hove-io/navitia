@@ -13,6 +13,12 @@ using namespace navitia;
 using namespace routing;
 namespace po = boost::program_options;
 
+std::string iso_string(const nt::Data & d, int date, int hour){
+    boost::posix_time::ptime date_time(d.meta.production_date.begin() + boost::gregorian::days(date));
+    date_time += boost::posix_time::seconds(hour);
+    return boost::posix_time::to_iso_string(date_time);
+}
+
 struct PathDemand {
     type::idx_t start;
     type::idx_t target;
@@ -57,14 +63,14 @@ int main(int argc, char** argv){
 
     type::Data data;
     {
-        Timer t("Charegement des données : " + file);
+        Timer t("Chargement des données : " + file);
         data.load(file);
     }
 
     // Génération des instances
     std::random_device rd;
     std::mt19937 rng(31442);
-    std::uniform_int_distribution<> gen(0,data.pt_data.stop_areas.size());
+    std::uniform_int_distribution<> gen(0,data.pt_data.stop_points.size()-1);
 
     std::vector<PathDemand> demands;
     for(int i = 0; i < iterations; ++i) {
@@ -89,7 +95,6 @@ int main(int argc, char** argv){
             }
         }
     }
-
     // Calculs des itinéraires
     std::map<std::string, std::vector<Result> > results;
     for(auto algo : algos){
@@ -146,8 +151,8 @@ int main(int argc, char** argv){
 
     for(size_t i = 0; i < demands.size(); ++i){
         PathDemand demand = demands[i];
-        out_file << data.pt_data.stop_areas[demand.start].external_code
-                 << ", " << data.pt_data.stop_areas[demand.target].external_code
+        out_file << data.pt_data.stop_points[demand.start].external_code
+                 << ", " << data.pt_data.stop_points[demand.target].external_code
                  << ", " << demand.date
                  << ", " << demand.hour;
         for(auto algo : algos){
