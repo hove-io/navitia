@@ -94,10 +94,10 @@ def stop_times(request_args, version, region, format, departure_filter, arrival_
     req.next_stop_times.from_datetime = request_args["from_datetime"]
     req.next_stop_times.duration = request_args["duration"]
     req.next_stop_times.depth = request_args["depth"]
-    req.next_stop_times.nb_stoptimes = request_args["nb_stoptimes"]
+    req.next_stop_times.nb_stoptimes = request_args["nb_stoptimes"] if "nb_stoptimes" in request_args else 0
     req.next_stop_times.wheelchair = request_args["wheelchair"]
     resp = send_and_receive(req, region)
-    return render_from_protobuf(resp, format, request.args.get('callback'))
+    return render_from_protobuf(resp, format, callback)
 
 def on_line_schedule(request_args, version, region, format,  callback):
     return stop_times(request_args, version, region, format, request_args["filter"], "", type_pb2.LINE_SCHEDUL, callbackE)
@@ -171,7 +171,9 @@ scheduleArguments = {
                               datetime_validator, True, False, order=10),
         "duration" : Argument("Maximum duration between the datetime and the last  retrieved stop time",
                                   int, False, False, defaultValue=86400, order=20 ),        
-        "wheelchair" : Argument("true if you want the times to have accessibility", boolean, False, False, defaultValue=False, order=50)
+        "wheelchair" : Argument("true if you want the times to have accessibility", boolean, False, False, defaultValue=False, order=50),
+        "depth" : Argument("Maximal depth of the returned objects", int, False,
+                           False, defaultValue = 1, order=100)
         }
 stopsScheduleArguments = copy.copy(scheduleArguments)
 del stopsScheduleArguments["filter"]
