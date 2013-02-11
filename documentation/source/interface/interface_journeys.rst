@@ -1,4 +1,4 @@
-Journeys et journeysarray
+Le calcul d'itinéraire
 =========================
 
 Le service Journeys est en charge des calculs d'itinéraires multi-modaux, multi-transporteur.

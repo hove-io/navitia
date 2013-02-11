@@ -1,4 +1,4 @@
-Requêtes sur le référentiel d'objet de transport public
+La recherche des données
 =======================================================
 
 Le module "PTReferential" de NAViTiA est en charge de l'exposition des données du référentiel de transport en commun.

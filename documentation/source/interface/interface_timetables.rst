@@ -1,5 +1,5 @@
-TimeTables
-===========
+Les horaires
+=============
 
 Les interfaces contenues dans timetables permettent de renvoyer des horaires présentés de différentes manières
 
