@@ -66,7 +66,7 @@ void CsvFusio::fill_modes_type(navimake::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            navimake::types::ModeType* mode_type = new navimake::types::ModeType();
+            navimake::types::CommercialMode* mode_type = new navimake::types::CommercialMode();
             mode_type->id = row.at(0);
             mode_type->name = row.at(1);
             mode_type->external_code = row.at(2);
@@ -88,13 +88,13 @@ void CsvFusio::fill_modes(navimake::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            navimake::types::Mode* mode = new navimake::types::Mode();
+            navimake::types::PhysicalMode* mode = new navimake::types::PhysicalMode();
             mode->id = row.at(0);
             mode->name = row.at(2);
             mode->external_code = row.at(3);
 
             std::string mode_type_id = row.at(1);
-            mode->mode_type = this->find(mode_type_map, mode_type_id);
+            mode->commercial_mode = this->find(mode_type_map, mode_type_id);
 
             data.modes.push_back(mode);
             mode_map[mode->id] = mode; 
@@ -125,7 +125,7 @@ void CsvFusio::fill_lines(navimake::Data& data){
             line->network = this->find(network_map, network_id);
 
             std::string mode_type_id = row.at(1);
-            line->mode_type = this->find(mode_type_map, mode_type_id);
+            line->commercial_mode = this->find(mode_type_map, mode_type_id);
 
             data.lines.push_back(line);
             line_map[line->id] = line;
@@ -224,7 +224,7 @@ void CsvFusio::fill_stop_points(navimake::Data& data){
             stop_point->city = this->find(city_map, city_external_code);
 
             std::string mode_id = row.at(11);
-            stop_point->mode = this->find(mode_map, mode_id);
+            stop_point->physical_mode = this->find(mode_map, mode_id);
 
             data.stop_points.push_back(stop_point);
             stop_point_map[stop_point->id] = stop_point;
@@ -257,7 +257,7 @@ void CsvFusio::fill_routes(navimake::Data& data){
             route->line = this->find(line_map, line_id);
 
             std::string mode_id = row.at(8);
-            route->mode = this->find(mode_map, mode_id);
+            route->physical_mode = this->find(mode_map, mode_id);
 
             data.routes.push_back(route);
             route_map[route->id] = route;
@@ -288,7 +288,7 @@ void CsvFusio::fill_vehicle_journeys(navimake::Data& data){
             vehicle_journey->route = this->find(route_map, route_id);
 
             std::string mode_id = row.at(10);
-            vehicle_journey->mode = this->find(mode_map, mode_id);
+            vehicle_journey->physical_mode = this->find(mode_map, mode_id);
 
             data.vehicle_journeys.push_back(vehicle_journey);
             vehicle_journey_map[vehicle_journey->id] = vehicle_journey;

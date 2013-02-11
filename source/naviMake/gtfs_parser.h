@@ -16,13 +16,13 @@ private:
     std::string path;///< Chemin vers les fichiers
 
     // Plusieurs maps pour savoir à quel position est quel objet identifié par son ID GTFS
-    boost::unordered_map<std::string, navimake::types::ModeType*> mode_type_map;
+    boost::unordered_map<std::string, navimake::types::CommercialMode*> mode_type_map;
     boost::unordered_map<std::string, navimake::types::StopPoint*> stop_map;
     boost::unordered_map<std::string, navimake::types::StopArea*> stop_area_map;
     boost::unordered_map<std::string, navimake::types::Line*> line_map;
     boost::unordered_map<std::string, navimake::types::ValidityPattern*> vp_map;
     boost::unordered_map<std::string, navimake::types::VehicleJourney*> vj_map;
-    boost::unordered_map<std::string, navimake::types::Mode*> mode_map;
+    boost::unordered_map<std::string, navimake::types::PhysicalMode*> mode_map;
     boost::unordered_map<std::string, navimake::types::Network*> agency_map;
     typedef std::vector<navimake::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;

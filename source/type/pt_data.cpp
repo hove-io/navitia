@@ -13,8 +13,8 @@ PT_Data& PT_Data::operator=(PT_Data&& other){
     stop_times = other.stop_times;
 
     networks = other.networks;
-    modes = other.modes;
-    mode_types = other.mode_types;
+    physical_modes = other.physical_modes;
+    commercial_modes = other.commercial_modes;
     cities = other.cities;
     connections = other.connections;
     route_points = other.route_points;
@@ -43,8 +43,8 @@ PT_Data& PT_Data::operator=(PT_Data&& other){
     stop_area_map = other.stop_area_map;
     stop_point_map = other.stop_point_map;
     network_map = other.network_map;
-    mode_map = other.mode_map;
-    mode_type_map = other.mode_type_map;
+    physical_mode_map = other.physical_mode_map;
+    commercial_mode_map = other.commercial_mode_map;
     city_map = other.city_map;
     district_map = other.district_map;
     department_map = other.department_map;
@@ -82,8 +82,8 @@ std::vector<idx_t> PT_Data::get_target_by_one_source(Type_e source, Type_e targe
         case Type_e::eStopPoint: result = stop_points[source_idx].get(target, *this); break;
         case Type_e::eStopArea: result = stop_areas[source_idx].get(target, *this); break;
         case Type_e::eNetwork: result = networks[source_idx].get(target, *this); break;
-        case Type_e::eMode: result = modes[source_idx].get(target, *this); break;
-        case Type_e::eModeType: result = mode_types[source_idx].get(target, *this); break;
+        case Type_e::ePhysicalMode: result = physical_modes[source_idx].get(target, *this); break;
+        case Type_e::eCommercialMode: result = commercial_modes[source_idx].get(target, *this); break;
         case Type_e::eCity: result = cities[source_idx].get(target, *this); break;
         case Type_e::eDistrict: result = districts[source_idx].get(target, *this); break;
         case Type_e::eDepartment: result = departments[source_idx].get(target, *this); break;
@@ -109,8 +109,8 @@ std::vector<idx_t> PT_Data::get_all_index(Type_e type) const {
     case Type_e::eStopArea: num_elements = stop_areas.size(); break;
     case Type_e::eStopTime: num_elements = stop_times.size(); break;
     case Type_e::eNetwork: num_elements = networks.size(); break;
-    case Type_e::eMode: num_elements = modes.size(); break;
-    case Type_e::eModeType: num_elements = mode_types.size(); break;
+    case Type_e::ePhysicalMode: num_elements = physical_modes.size(); break;
+    case Type_e::eCommercialMode: num_elements = commercial_modes.size(); break;
     case Type_e::eCity: num_elements = cities.size(); break;
     case Type_e::eConnection: num_elements = connections.size(); break;
     case Type_e::eRoutePoint: num_elements = route_points.size(); break;
@@ -135,8 +135,8 @@ template<> std::vector<StopPoint> & PT_Data::get_data<StopPoint>() {return stop_
 template<> std::vector<StopArea> & PT_Data::get_data<StopArea>() {return stop_areas;}
 template<> std::vector<StopTime> & PT_Data::get_data<StopTime>() {return stop_times;}
 template<> std::vector<Network> & PT_Data::get_data<Network>() {return networks;}
-template<> std::vector<Mode> & PT_Data::get_data<Mode>() {return modes;}
-template<> std::vector<ModeType> & PT_Data::get_data<ModeType>() {return mode_types;}
+template<> std::vector<PhysicalMode> & PT_Data::get_data<PhysicalMode>() {return physical_modes;}
+template<> std::vector<CommercialMode> & PT_Data::get_data<CommercialMode>() {return commercial_modes;}
 template<> std::vector<City> & PT_Data::get_data<City>() {return cities;}
 template<> std::vector<Connection> & PT_Data::get_data<Connection>() {return connections;}
 template<> std::vector<RoutePoint> & PT_Data::get_data<RoutePoint>() {return route_points;}
@@ -154,8 +154,8 @@ template<> std::vector<StopPoint> const & PT_Data::get_data<StopPoint>() const {
 template<> std::vector<StopArea> const & PT_Data::get_data<StopArea>() const {return stop_areas;}
 template<> std::vector<StopTime> const & PT_Data::get_data<StopTime>() const {return stop_times;}
 template<> std::vector<Network> const & PT_Data::get_data<Network>() const {return networks;}
-template<> std::vector<Mode> const & PT_Data::get_data<Mode>() const {return modes;}
-template<> std::vector<ModeType> const & PT_Data::get_data<ModeType>() const {return mode_types;}
+template<> std::vector<PhysicalMode> const & PT_Data::get_data<PhysicalMode>() const {return physical_modes;}
+template<> std::vector<CommercialMode> const & PT_Data::get_data<CommercialMode>() const {return commercial_modes;}
 template<> std::vector<City> const & PT_Data::get_data<City>() const {return cities;}
 template<> std::vector<Connection> const & PT_Data::get_data<Connection>() const {return connections;}
 template<> std::vector<RoutePoint> const & PT_Data::get_data<RoutePoint>() const {return route_points;}
@@ -216,8 +216,8 @@ void PT_Data::build_external_code() {
     normalize_extcode<StopArea>(stop_area_map);
     normalize_extcode<StopPoint>(stop_point_map);
     normalize_extcode<Network>(network_map);
-    normalize_extcode<Mode>(mode_map);
-    normalize_extcode<ModeType>(mode_type_map);
+    normalize_extcode<PhysicalMode>(physical_mode_map);
+    normalize_extcode<CommercialMode>(commercial_mode_map);
     normalize_extcode<City>(city_map);
     normalize_extcode<District>(district_map);
     normalize_extcode<Department>(department_map);

@@ -478,7 +478,7 @@ void RAPTOR::set_routes_valides(uint32_t date, const std::multimap<std::string, 
     routes_valides.resize(data.pt_data.routes.size());
     for(const auto & route : data.pt_data.routes) {
         const navitia::type::Line & line = data.pt_data.lines[route.line_idx];
-        const navitia::type::ModeType & mode = data.pt_data.mode_types[route.mode_type_idx];
+        const navitia::type::CommercialMode & mode = data.pt_data.commercial_modes[route.commercial_mode_idx];
 
         // On gère la liste des interdits
         bool forbidden_route = false;

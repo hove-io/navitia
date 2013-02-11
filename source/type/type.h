@@ -28,8 +28,8 @@ enum class Type_e {
     eStopArea = 5,
     eStopTime = 6,
     eNetwork = 7,
-    eMode = 8,
-    eModeType = 9,
+    ePhysicalMode = 8,
+    eCommercialMode = 9,
     eCity = 10,
     eConnection = 11,
     eRoutePoint = 12,
@@ -100,7 +100,7 @@ struct GeographicalCoord{
 
        Retourne les coordonnées projetées et la distance au segment
        Si le point projeté tombe en dehors du segment, alors ça tombe sur le nœud le plus proche
-       http://paulbourke.net/geometry/pointline/
+       htCommercialtp://paulbourke.net/geometry/pointline/
        */
     std::pair<type::GeographicalCoord, float> project(GeographicalCoord segment_start, GeographicalCoord segment_end) const;
 
@@ -299,25 +299,25 @@ struct Company : public NavitiaHeader, Nameable{
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
-struct ModeType : public NavitiaHeader, Nameable{
-    const static Type_e type = Type_e::eModeType;
-    std::vector<idx_t> mode_list;
+struct CommercialMode : public NavitiaHeader, Nameable{
+    const static Type_e type = Type_e::eCommercialMode;
+    std::vector<idx_t> physical_mode_list;
     std::vector<idx_t> line_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & external_code & mode_list & line_list;
+        ar & idx & id & name & external_code & physical_mode_list & line_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
-struct Mode : public NavitiaHeader, Nameable{
-    const static Type_e type = Type_e::eMode;
-    idx_t mode_type_idx;
+struct PhysicalMode : public NavitiaHeader, Nameable{
+    const static Type_e type = Type_e::ePhysicalMode;
+    idx_t commercial_mode_idx;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & external_code & mode_type_idx & idx;
+        ar & id & idx & name & external_code & commercial_mode_idx & idx;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
-    Mode() : mode_type_idx(invalid_idx) {}
+    PhysicalMode() : commercial_mode_idx(invalid_idx) {}
 };
 
 struct Line : public NavitiaHeader, Nameable {
@@ -330,9 +330,9 @@ struct Line : public NavitiaHeader, Nameable {
     std::string color;
     int sort;
 
-    idx_t mode_type_idx;
+    idx_t commercial_mode_idx;
 
-    std::vector<idx_t> mode_list;
+    std::vector<idx_t> physical_mode_list;
     std::vector<idx_t> company_list;
     idx_t network_idx;
 
@@ -341,11 +341,11 @@ struct Line : public NavitiaHeader, Nameable {
     std::vector<idx_t> impact_list;
 
 
-    Line(): sort(0), mode_type_idx(invalid_idx), network_idx(invalid_idx){}
+    Line(): sort(0), commercial_mode_idx(invalid_idx), network_idx(invalid_idx){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & external_code & code & forward_name & backward_name & additional_data & color
-                & sort & mode_type_idx & mode_list & company_list & network_idx 
+                & sort & commercial_mode_idx & physical_mode_list & company_list & network_idx
                 & route_list& impact_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -357,7 +357,7 @@ struct Route : public NavitiaHeader, Nameable{
     bool is_forward;
     bool is_adapted;
     idx_t line_idx;
-    idx_t mode_type_idx;
+    idx_t commercial_mode_idx;
     
     std::vector<idx_t> route_point_list;
     std::vector<idx_t> freq_route_point_list;
@@ -368,10 +368,10 @@ struct Route : public NavitiaHeader, Nameable{
     std::vector<idx_t> vehicle_journey_list_arrival;
 
 
-    Route(): is_frequence(false), is_forward(false), is_adapted(false), line_idx(invalid_idx), mode_type_idx(invalid_idx) {};
+    Route(): is_frequence(false), is_forward(false), is_adapted(false), line_idx(invalid_idx), commercial_mode_idx(invalid_idx) {};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & external_code & is_frequence & is_forward & is_adapted & mode_type_idx
+        ar & id & idx & name & external_code & is_frequence & is_forward & is_adapted & commercial_mode_idx
                 & line_idx & route_point_list & freq_route_point_list & freq_setting_list
                 & vehicle_journey_list & vehicle_journey_list_arrival & impact_list;
     }
@@ -383,16 +383,16 @@ struct VehicleJourney: public NavitiaHeader, Nameable {
     const static Type_e type = Type_e::eVehicleJourney;
     idx_t route_idx;
     idx_t company_idx;
-    idx_t mode_idx;
+    idx_t physical_mode_idx;
     idx_t vehicle_idx;
     bool is_adapted;
     idx_t validity_pattern_idx;
     std::vector<idx_t> stop_time_list;
 
 
-    VehicleJourney(): route_idx(invalid_idx), company_idx(invalid_idx), mode_idx(invalid_idx), vehicle_idx(invalid_idx), is_adapted(false), validity_pattern_idx(invalid_idx) {}
+    VehicleJourney(): route_idx(invalid_idx), company_idx(invalid_idx), physical_mode_idx(invalid_idx), vehicle_idx(invalid_idx), is_adapted(false), validity_pattern_idx(invalid_idx) {}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & external_code & route_idx & company_idx & mode_idx & vehicle_idx & is_adapted & validity_pattern_idx & idx & stop_time_list;
+        ar & name & external_code & route_idx & company_idx & physical_mode_idx & vehicle_idx & is_adapted & validity_pattern_idx & idx & stop_time_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
@@ -475,16 +475,16 @@ struct StopPoint : public NavitiaHeader, Nameable{
 
     idx_t stop_area_idx;
     idx_t city_idx;
-    idx_t mode_idx;
+    idx_t physical_mode_idx;
     idx_t network_idx;
     std::vector<idx_t> impact_list;
     std::vector<idx_t> route_point_list;
     bool is_adapted;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & external_code & name & stop_area_idx & mode_idx & coord & fare_zone & idx & route_point_list & is_adapted;
+        ar & external_code & name & stop_area_idx & physical_mode_idx & coord & fare_zone & idx & route_point_list & is_adapted;
     }
 
-    StopPoint(): fare_zone(0),  stop_area_idx(invalid_idx), city_idx(invalid_idx), mode_idx(invalid_idx), network_idx(invalid_idx), is_adapted(false){}
+    StopPoint(): fare_zone(0),  stop_area_idx(invalid_idx), city_idx(invalid_idx), physical_mode_idx(invalid_idx), network_idx(invalid_idx), is_adapted(false){}
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 

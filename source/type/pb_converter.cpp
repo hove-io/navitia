@@ -81,14 +81,14 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Network * ne
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::CommercialMode * commercial_mode, int){
-    navitia::type::ModeType m = data.pt_data.mode_types.at(idx);
+    navitia::type::CommercialMode m = data.pt_data.commercial_modes.at(idx);
     commercial_mode->set_name(m.name);
     commercial_mode->set_id(m.id);
     commercial_mode->set_external_code(m.external_code);
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::PhysicalMode * physical_mode, int){
-    navitia::type::Mode m = data.pt_data.modes.at(idx);
+    navitia::type::PhysicalMode m = data.pt_data.physical_modes.at(idx);
     physical_mode->set_name(m.name);
     physical_mode->set_id(m.id);
     physical_mode->set_external_code(m.external_code);

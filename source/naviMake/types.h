@@ -39,8 +39,8 @@ class RoutePointConnection;
 class StopArea;
 class Network;
 class Company;
-class ModeType;
-class Mode;
+class CommercialMode;
+class PhysicalMode;
 class Line;
 class Route;
 class VehicleJourney;
@@ -215,27 +215,27 @@ struct Company : public TransmodelHeader, Nameable{
     std::string fax;
 };
 
-struct ModeType : public TransmodelHeader, Nameable{
+struct CommercialMode : public TransmodelHeader, Nameable{
 
     struct Transformer{
-        inline nt::ModeType operator()(const ModeType* mode_type){return this->operator()(*mode_type);}   
-        nt::ModeType operator()(const ModeType& mode_type);   
+        inline nt::CommercialMode operator()(const CommercialMode* commercial_mode_type){return this->operator()(*commercial_mode_type);}
+        nt::CommercialMode operator()(const CommercialMode& mode_type);
     };
 
-    bool operator<(const ModeType& other)const ;
+    bool operator<(const CommercialMode& other)const ;
 };
 
-struct Mode : public TransmodelHeader, Nameable{
-    ModeType* mode_type;
+struct PhysicalMode : public TransmodelHeader, Nameable{
+    CommercialMode* commercial_mode;
 
     struct Transformer{
-        inline nt::Mode operator()(const Mode* mode){return this->operator()(*mode);}   
-        nt::Mode operator()(const Mode& mode);   
+        inline nt::PhysicalMode operator()(const PhysicalMode* physical_mode){return this->operator()(*physical_mode);}
+        nt::PhysicalMode operator()(const PhysicalMode& physical_mode);
     };
 
-    Mode(): mode_type(NULL){}
+    PhysicalMode(): commercial_mode(NULL){}
 
-    bool operator<(const Mode& other) const;
+    bool operator<(const PhysicalMode& other) const;
 };
 
 struct Line : public TransmodelHeader, Nameable {
@@ -247,7 +247,7 @@ struct Line : public TransmodelHeader, Nameable {
     std::string color;
     int sort;
     
-    ModeType* mode_type;
+    CommercialMode* commercial_mode;
 
     Network* network;
 
@@ -260,7 +260,7 @@ struct Line : public TransmodelHeader, Nameable {
         nt::Line operator()(const Line& line);   
     };
 
-    Line(): sort(0), mode_type(NULL), network(NULL), forward_direction(NULL), backward_direction(NULL){}
+    Line(): sort(0), commercial_mode(NULL), network(NULL), forward_direction(NULL), backward_direction(NULL){}
 
     bool operator<(const Line & other) const;
 
@@ -271,7 +271,7 @@ struct Route : public TransmodelHeader, Nameable{
     bool is_forward;
     bool is_adapted;
     Line* line;
-    Mode* mode;   
+    PhysicalMode* physical_mode;
     std::vector<RoutePoint*> route_point_list;
 
     struct Transformer{
@@ -279,7 +279,7 @@ struct Route : public TransmodelHeader, Nameable{
         navitia::type::Route operator()(const Route& route);
     };
 
-    Route(): is_frequence(false), is_forward(false), is_adapted(false), line(NULL), mode(NULL){};
+    Route(): is_frequence(false), is_forward(false), is_adapted(false), line(NULL), physical_mode(NULL){};
 
     bool operator<(const Route& other) const;
 
@@ -287,7 +287,7 @@ struct Route : public TransmodelHeader, Nameable{
 struct VehicleJourney: public TransmodelHeader, Nameable{
     Route* route;
     Company* company;
-    Mode* mode;
+    PhysicalMode* physical_mode;
     Line * tmp_line; // N'est pas à remplir obligatoirement
     //Vehicle* vehicle;
     bool is_adapted;
@@ -302,7 +302,7 @@ struct VehicleJourney: public TransmodelHeader, Nameable{
         navitia::type::VehicleJourney operator()(const VehicleJourney& vj);
     };
 
-    VehicleJourney(): route(NULL), company(NULL), mode(NULL), is_adapted(false), validity_pattern(NULL), stop_time_list(), block_id(""){}
+    VehicleJourney(): route(NULL), company(NULL), physical_mode(NULL), is_adapted(false), validity_pattern(NULL), stop_time_list(), block_id(""){}
 
     bool operator<(const VehicleJourney& other) const;
 };
@@ -376,7 +376,7 @@ struct StopPoint : public TransmodelHeader, Nameable{
     std::string address_type_name;
 
     StopArea* stop_area;
-    Mode* mode;
+    PhysicalMode* physical_mode;
     City* city;
 
     bool is_adapted;
@@ -386,7 +386,7 @@ struct StopPoint : public TransmodelHeader, Nameable{
         nt::StopPoint operator()(const StopPoint& stop_point);   
     };
 
-    StopPoint(): fare_zone(0), stop_area(NULL), mode(NULL), city(NULL), is_adapted(false) {}
+    StopPoint(): fare_zone(0), stop_area(NULL), physical_mode(NULL), city(NULL), is_adapted(false) {}
 
     bool operator<(const StopPoint& other) const;
 

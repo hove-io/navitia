@@ -8,11 +8,11 @@ void Data::sort(){
     std::sort(networks.begin(), networks.end(), Less<navimake::types::Network>());
     std::for_each(networks.begin(), networks.end(), Indexer<navimake::types::Network>());
 
-    std::sort(mode_types.begin(), mode_types.end(), Less<navimake::types::ModeType>());
-    std::for_each(mode_types.begin(), mode_types.end(), Indexer<navimake::types::ModeType>());
+    std::sort(mode_types.begin(), mode_types.end(), Less<navimake::types::CommercialMode>());
+    std::for_each(mode_types.begin(), mode_types.end(), Indexer<navimake::types::CommercialMode>());
 
-    std::sort(modes.begin(), modes.end(), Less<navimake::types::Mode>());
-    std::for_each(modes.begin(), modes.end(), Indexer<navimake::types::Mode>());
+    std::sort(modes.begin(), modes.end(), Less<navimake::types::PhysicalMode>());
+    std::for_each(modes.begin(), modes.end(), Indexer<navimake::types::PhysicalMode>());
 
     std::sort(cities.begin(), cities.end(), Less<navimake::types::City>());
     std::for_each(cities.begin(), cities.end(), Indexer<navimake::types::City>());
@@ -220,11 +220,11 @@ void Data::transform(navitia::type::PT_Data& data){
     data.stop_areas.resize(this->stop_areas.size());
     std::transform(this->stop_areas.begin(), this->stop_areas.end(), data.stop_areas.begin(), navimake::types::StopArea::Transformer());
 
-    data.modes.resize(this->modes.size());
-    std::transform(this->modes.begin(), this->modes.end(), data.modes.begin(), navimake::types::Mode::Transformer());
+    data.physical_modes.resize(this->modes.size());
+    std::transform(this->modes.begin(), this->modes.end(), data.physical_modes.begin(), navimake::types::PhysicalMode::Transformer());
 
-    data.mode_types.resize(this->mode_types.size());
-    std::transform(this->mode_types.begin(), this->mode_types.end(), data.mode_types.begin(), navimake::types::ModeType::Transformer());
+    data.commercial_modes.resize(this->mode_types.size());
+    std::transform(this->mode_types.begin(), this->mode_types.end(), data.commercial_modes.begin(), navimake::types::CommercialMode::Transformer());
 
     data.stop_points.resize(this->stop_points.size());
     std::transform(this->stop_points.begin(), this->stop_points.end(), data.stop_points.begin(), navimake::types::StopPoint::Transformer());
@@ -271,8 +271,8 @@ void Data::transform(navitia::type::PT_Data& data){
 void Data::build_relations(navitia::type::PT_Data &data){
     //BOOST_FOREACH(navimake::types::StopArea & sa, data.stop_areas){}
 
-    BOOST_FOREACH(navitia::type::Mode & mode, data.modes){
-        data.mode_types[mode.mode_type_idx].mode_list.push_back(mode.idx);
+    BOOST_FOREACH(navitia::type::PhysicalMode & physical_mode, data.physical_modes){
+        data.commercial_modes[physical_mode.commercial_mode_idx].physical_mode_list.push_back(physical_mode.idx);
     }
 
     //BOOST_FOREACH(navitia::type::ModeType & mode_type, data.mode_types){}
@@ -292,8 +292,8 @@ void Data::build_relations(navitia::type::PT_Data &data){
     }
 
     BOOST_FOREACH(navitia::type::Line & line, data.lines){
-        if(line.mode_type_idx != navitia::type::invalid_idx)
-            data.mode_types.at(line.mode_type_idx).line_list.push_back(line.idx);
+        if(line.commercial_mode_idx != navitia::type::invalid_idx)
+            data.commercial_modes.at(line.commercial_mode_idx).line_list.push_back(line.idx);
         if(line.network_idx != navitia::type::invalid_idx)
             data.networks.at(line.network_idx).line_list.push_back(line.idx);
     }
@@ -327,8 +327,8 @@ void Data::build_relations(navitia::type::PT_Data &data){
     }
 
     BOOST_FOREACH(navitia::type::Route & route, data.routes){
-        if(route.mode_type_idx != navitia::type::invalid_idx)
-            data.mode_types.at(route.mode_type_idx).line_list.push_back(route.line_idx);
+        if(route.commercial_mode_idx != navitia::type::invalid_idx)
+            data.commercial_modes.at(route.commercial_mode_idx).line_list.push_back(route.line_idx);
         if(route.line_idx != navitia::type::invalid_idx)
             data.lines.at(route.line_idx).route_list.push_back(route.idx);
         std::sort(route.route_point_list.begin(), route.route_point_list.end(), sort_route_points_list(data));
@@ -338,8 +338,8 @@ void Data::build_relations(navitia::type::PT_Data &data){
         data.routes[vj.route_idx].vehicle_journey_list.push_back(vj.idx);
 
         navitia::type::Line & line = data.lines.at(data.routes.at(vj.route_idx).line_idx);
-        if(std::find(line.mode_list.begin(), line.mode_list.end(), vj.mode_idx) == line.mode_list.end())
-            line.mode_list.push_back(vj.mode_idx);
+        if(std::find(line.physical_mode_list.begin(), line.physical_mode_list.end(), vj.physical_mode_idx) == line.physical_mode_list.end())
+            line.physical_mode_list.push_back(vj.physical_mode_idx);
 
         if(vj.company_idx != navitia::type::invalid_idx){
             navitia::type::Company & company = data.companies.at(vj.company_idx);

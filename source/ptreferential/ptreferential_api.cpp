@@ -15,8 +15,8 @@ pbnavitia::Response extract_data(const type::Data & data, type::Type_e requested
         case type::Type_e::eStopPoint: fill_pb_object(idx, data, pb_response->add_stop_points(), depth); break;
         case type::Type_e::eStopArea: fill_pb_object(idx, data, pb_response->add_stop_areas(), depth); break;
         case type::Type_e::eNetwork: fill_pb_object(idx, data, pb_response->add_networks(), depth); break;
-        case type::Type_e::eMode: fill_pb_object(idx, data, pb_response->add_commercial_modes(), depth); break;
-        case type::Type_e::eModeType: fill_pb_object(idx, data, pb_response->add_physical_modes(), depth); break;
+        case type::Type_e::ePhysicalMode: fill_pb_object(idx, data, pb_response->add_commercial_modes(), depth); break;
+        case type::Type_e::eCommercialMode: fill_pb_object(idx, data, pb_response->add_physical_modes(), depth); break;
         case type::Type_e::eCity: fill_pb_object(idx, data, pb_response->add_cities(), depth); break;
         case type::Type_e::eConnection: fill_pb_object(idx, data, pb_response->add_connections(), depth); break;
         case type::Type_e::eRoutePoint: fill_pb_object(idx, data, pb_response->add_route_points(), depth); break;

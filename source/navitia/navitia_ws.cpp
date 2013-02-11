@@ -565,7 +565,7 @@ public:
 
         nt::static_data * static_data = nt::static_data::get();
         for(navitia::type::Type_e type : {nt::Type_e::eStopArea, nt::Type_e::eStopPoint, nt::Type_e::eLine, nt::Type_e::eRoute, nt::Type_e::eNetwork,
-            nt::Type_e::eModeType, nt::Type_e::eMode, nt::Type_e::eConnection, nt::Type_e::eRoutePoint, nt::Type_e::eCompany}){
+            nt::Type_e::eCommercialMode, nt::Type_e::ePhysicalMode, nt::Type_e::eConnection, nt::Type_e::eRoutePoint, nt::Type_e::eCompany}){
             std::string str = static_data->captionByType(type) + "s";
             register_api(str /*+ "s"*/, boost::bind(&Worker::ptref, this, type, _1, _2), "Liste de " + str);
             add_param(str, "filter", "Conditions pour restreindre les objets retournés", ApiParameter::STRING, false);

@@ -55,56 +55,56 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
 }
 
 void GtfsParser::fill_mode_types(Data & data) {
-    navimake::types::ModeType* mode_type = new navimake::types::ModeType();
+    navimake::types::CommercialMode* mode_type = new navimake::types::CommercialMode();
     mode_type->id = "0";
     mode_type->name = "Tram";
     mode_type->external_code = "0x0";
     data.mode_types.push_back(mode_type);
     mode_type_map[mode_type->id] = mode_type;
 
-    mode_type = new navimake::types::ModeType();
+    mode_type = new navimake::types::CommercialMode();
     mode_type->id = "1";
     mode_type->name = "Metro";
     mode_type->external_code = "0x1";
     data.mode_types.push_back(mode_type);
     mode_type_map[mode_type->id] = mode_type;
 
-    mode_type = new navimake::types::ModeType();
+    mode_type = new navimake::types::CommercialMode();
     mode_type->id = "2";
     mode_type->name = "Rail";
     mode_type->external_code = "0x2";
     data.mode_types.push_back(mode_type);
     mode_type_map[mode_type->id] = mode_type;
 
-    mode_type = new navimake::types::ModeType();
+    mode_type = new navimake::types::CommercialMode();
     mode_type->id = "3";
     mode_type->name = "Bus";
     mode_type->external_code = "0x3";
     data.mode_types.push_back(mode_type);
     mode_type_map[mode_type->id] = mode_type;
 
-    mode_type = new navimake::types::ModeType();
+    mode_type = new navimake::types::CommercialMode();
     mode_type->id = "4";
     mode_type->name = "Ferry";
     mode_type->external_code = "0x4";
     data.mode_types.push_back(mode_type);
     mode_type_map[mode_type->id] = mode_type;
 
-    mode_type = new navimake::types::ModeType();
+    mode_type = new navimake::types::CommercialMode();
     mode_type->id = "5";
     mode_type->name = "Cable car";
     mode_type->external_code = "0x5";
     data.mode_types.push_back(mode_type);
     mode_type_map[mode_type->id] = mode_type;
 
-    mode_type = new navimake::types::ModeType();
+    mode_type = new navimake::types::CommercialMode();
     mode_type->id = "6";
     mode_type->name = "Gondola";
     mode_type->external_code = "0x6";
     data.mode_types.push_back(mode_type);
     mode_type_map[mode_type->id] = mode_type;
 
-    mode_type = new navimake::types::ModeType();
+    mode_type = new navimake::types::CommercialMode();
     mode_type->id = "7";
     mode_type->name = "Funicular";
     mode_type->external_code = "0x7";
@@ -112,12 +112,12 @@ void GtfsParser::fill_mode_types(Data & data) {
     mode_type_map[mode_type->id] = mode_type;
 
 
-    BOOST_FOREACH(navimake::types::ModeType *mt, data.mode_types) {
-        navimake::types::Mode* mode = new navimake::types::Mode();
+    BOOST_FOREACH(navimake::types::CommercialMode *mt, data.mode_types) {
+        navimake::types::PhysicalMode* mode = new navimake::types::PhysicalMode();
         mode->id = mt->id;
         mode->name = mt->name;
         mode->external_code = mt->external_code;
-        mode->mode_type = mt;
+        mode->commercial_mode = mt;
         data.modes.push_back(mode);
         mode_map[mode->id] = mode;
     }
@@ -636,9 +636,9 @@ void GtfsParser:: parse_routes(Data & data){
                 line->color = "";
             line->additional_data = elts[long_name_c];
 
-            boost::unordered_map<std::string, nm::ModeType*>::iterator it= mode_type_map.find(elts[type_c]);
+            boost::unordered_map<std::string, nm::CommercialMode*>::iterator it= mode_type_map.find(elts[type_c]);
             if(it != mode_type_map.end())
-                line->mode_type = it->second;
+                line->commercial_mode = it->second;
             if(agency_c != -1) {
                 auto agency_it = agency_map.find(elts[agency_c]);
                 if(agency_it != agency_map.end())
@@ -721,9 +721,9 @@ void GtfsParser::parse_trips(Data & data) {
         else {
             nm::Line * line = it->second;
 
-            boost::unordered_map<std::string, nm::Mode*>::iterator itm = mode_map.find(line->mode_type->id);
+            boost::unordered_map<std::string, nm::PhysicalMode*>::iterator itm = mode_map.find(line->commercial_mode->id);
             if(itm == mode_map.end()){
-                std::cerr << "Impossible de trouver le mode (au sens GTFS) " << line->mode_type->id
+                std::cerr << "Impossible de trouver le mode (au sens GTFS) " << line->commercial_mode->id
                           << " référencée par trip " << elts[trip_c] << std::endl;
             } else {
                 nm::ValidityPattern * vp_xx;
@@ -749,7 +749,7 @@ void GtfsParser::parse_trips(Data & data) {
                     vj->validity_pattern = vp_xx;
                     vj->route = 0;
                     vj->tmp_line = line;
-                    vj->mode = itm->second;
+                    vj->physical_mode = itm->second;
                     if(block_id_c != -1)
                         vj->block_id = elts[block_id_c];
                     else
@@ -867,7 +867,7 @@ void build_routes(Data & data){
             nm::Route * route = new nm::Route();
             route->external_code = vj1->tmp_line->external_code + "-" + boost::lexical_cast<std::string>(count);
             route->line = vj1->tmp_line;
-            route->mode = vj1->mode;
+            route->physical_mode = vj1->physical_mode;
             vj1->route = route;
             data.routes.push_back(route);
 

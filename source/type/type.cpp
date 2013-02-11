@@ -142,8 +142,8 @@ static_data * static_data::get() {
                 (Type_e::eStopArea, "stop_area")
                 (Type_e::eStopTime, "stop_time")
                 (Type_e::eNetwork, "network")
-                (Type_e::eMode, "mode")
-                (Type_e::eModeType, "mode_type")
+                (Type_e::ePhysicalMode, "mode")
+                (Type_e::eCommercialMode, "mode_type")
                 (Type_e::eCity, "city")
                 (Type_e::eConnection, "connection")
                 (Type_e::eRoutePoint, "route_point")
@@ -222,20 +222,20 @@ std::vector<idx_t> Company::get(Type_e type, const PT_Data &) const {
     return result;
 }
 
-std::vector<idx_t> ModeType::get(Type_e type, const PT_Data &) const {
+std::vector<idx_t> CommercialMode::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::eLine: return line_list; break;
-    case Type_e::eMode: return mode_list; break;
+    case Type_e::ePhysicalMode: return physical_mode_list; break;
     default: break;
     }
     return result;
 }
 
-std::vector<idx_t> Mode::get(Type_e type, const PT_Data &) const {
+std::vector<idx_t> PhysicalMode::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eModeType: result.push_back(mode_type_idx); break;
+    case Type_e::eCommercialMode: result.push_back(commercial_mode_idx); break;
     default: break;
     }
     return result;
@@ -244,8 +244,8 @@ std::vector<idx_t> Mode::get(Type_e type, const PT_Data &) const {
 std::vector<idx_t> Line::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eModeType: result.push_back(mode_type_idx); break;
-    case Type_e::eMode: return mode_list; break;
+    case Type_e::eCommercialMode: result.push_back(commercial_mode_idx); break;
+    case Type_e::ePhysicalMode: return physical_mode_list; break;
     case Type_e::eCompany: return company_list; break;
     case Type_e::eNetwork: result.push_back(network_idx); break;
     case Type_e::eRoute: for(const Route & route : data.routes) {
@@ -263,7 +263,7 @@ std::vector<idx_t> Route::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::eLine: result.push_back(line_idx); break;
-    case Type_e::eModeType: result.push_back(mode_type_idx); break;
+    case Type_e::eCommercialMode: result.push_back(commercial_mode_idx); break;
     case Type_e::eRoutePoint: return route_point_list; break;
     case Type_e::eVehicleJourney: return vehicle_journey_list; break;
     default: break;
@@ -277,7 +277,7 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data &) const {
     switch(type) {
     case Type_e::eRoute: result.push_back(route_idx); break;
     case Type_e::eCompany: result.push_back(company_idx); break;
-    case Type_e::eMode: result.push_back(mode_idx); break;
+    case Type_e::ePhysicalMode: result.push_back(physical_mode_idx); break;
     case Type_e::eVehicle: result.push_back(vehicle_idx); break;
     case Type_e::eValidityPattern: result.push_back(validity_pattern_idx); break;
     default: break;
@@ -300,7 +300,7 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data & data) const {
     switch(type) {
     case Type_e::eStopArea: result.push_back(stop_area_idx); break;
     case Type_e::eCity: result.push_back(city_idx); break;
-    case Type_e::eMode: result.push_back(mode_idx); break;
+    case Type_e::ePhysicalMode: result.push_back(physical_mode_idx); break;
     case Type_e::eNetwork: result.push_back(network_idx); break;
     case Type_e::eRoutePoint: return route_point_list; break;
     case Type_e::eConnection: for(const Connection & conn : data.stop_point_connections[idx]) {

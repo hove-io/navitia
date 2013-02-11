@@ -17,8 +17,8 @@ struct PT_Data : boost::noncopyable{
     std::vector<StopTime> stop_times;
 
     std::vector<Network> networks;
-    std::vector<Mode> modes;
-    std::vector<ModeType> mode_types;
+    std::vector<PhysicalMode> physical_modes;
+    std::vector<CommercialMode> commercial_modes;
     std::vector<City> cities;
     std::vector<Connection> connections;
     std::vector<RoutePointConnection> route_point_connections;
@@ -52,8 +52,8 @@ struct PT_Data : boost::noncopyable{
     ExtCodeMap stop_area_map;
     ExtCodeMap stop_point_map;
     ExtCodeMap network_map;
-    ExtCodeMap mode_map;
-    ExtCodeMap mode_type_map;
+    ExtCodeMap physical_mode_map;
+    ExtCodeMap commercial_mode_map;
     ExtCodeMap city_map;
     ExtCodeMap district_map;
     ExtCodeMap department_map;
@@ -68,12 +68,12 @@ struct PT_Data : boost::noncopyable{
         ar
                 // Les listes de données
                 & validity_patterns & lines & stop_points & stop_areas & stop_times & routes
-                & vehicle_journeys & route_points & mode_types & modes & cities & networks
+                & vehicle_journeys & route_points & commercial_modes & physical_modes & cities & networks
                 // Les firstLetter
                 & stop_area_first_letter & city_first_letter & stop_point_first_letter
                 // Les map d'externalcode
                 & line_map & route_map & vehicle_journey_map & stop_area_map & stop_point_map
-                & network_map & mode_map & mode_type_map & city_map & district_map & department_map
+                & network_map & physical_mode_map & commercial_mode_map & city_map & district_map & department_map
                 & company_map & country_map
                 // Les proximity list
                 & stop_area_proximity_list & stop_point_proximity_list & city_proximity_list

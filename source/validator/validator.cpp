@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
     error_count += general_check(d.pt_data.stop_points);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::stop_area_idx, d.pt_data.stop_areas);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::city_idx, d.pt_data.cities);
-    error_count += check_relations(d.pt_data.stop_points, &StopPoint::mode_idx, d.pt_data.modes);
+    error_count += check_relations(d.pt_data.stop_points, &StopPoint::physical_mode_idx, d.pt_data.physical_modes);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::network_idx, d.pt_data.networks);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::route_point_list, d.pt_data.route_points);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::route_point_list, d.pt_data.route_points, &RoutePoint::stop_point_idx);
@@ -140,8 +140,8 @@ int main(int argc, char** argv) {
     error_count += general_check(d.pt_data.companies);
     error_count += general_check(d.pt_data.countries);
     error_count += general_check(d.pt_data.departments);
-    error_count += general_check(d.pt_data.modes);
-    error_count += general_check(d.pt_data.mode_types);
+    error_count += general_check(d.pt_data.physical_modes);
+    error_count += general_check(d.pt_data.commercial_modes);
     error_count += general_check(d.pt_data.vehicles);
 
     std::cout << "Vérification des stop_times" << std::endl;

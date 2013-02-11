@@ -6,8 +6,8 @@ enum NavitiaType {
     STOPPOINT = 4;
     STOPAREA = 5;
     NETWORK = 7;
-    MODE = 8;
-    MODETYPE = 9;
+    PHYSICALMODE = 8;
+    COMMERCIALMODE = 9;
     CITY = 10;
     CONNECTION = 11;
     ROUTEPOINT = 12;

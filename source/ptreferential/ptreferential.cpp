@@ -171,8 +171,8 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
         case Type_e::eStopPoint: indexes = get_indexes<StopPoint>(filter, requested_type, data); break;
         case Type_e::eStopArea: indexes = get_indexes<StopArea>(filter, requested_type, data); break;
         case Type_e::eNetwork: indexes = get_indexes<Network>(filter, requested_type, data); break;
-        case Type_e::eMode: indexes = get_indexes<Mode>(filter, requested_type, data); break;
-        case Type_e::eModeType: indexes = get_indexes<ModeType>(filter, requested_type, data); break;
+        case Type_e::ePhysicalMode: indexes = get_indexes<PhysicalMode>(filter, requested_type, data); break;
+        case Type_e::eCommercialMode: indexes = get_indexes<CommercialMode>(filter, requested_type, data); break;
         case Type_e::eCity: indexes = get_indexes<City>(filter, requested_type, data); break;
         case Type_e::eConnection: indexes = get_indexes<Connection>(filter, requested_type, data); break;
         case Type_e::eRoutePoint: indexes = get_indexes<RoutePoint>(filter, requested_type, data); break;

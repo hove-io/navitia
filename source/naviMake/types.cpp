@@ -55,28 +55,28 @@ bool District::operator<(const District& other) const {
 }
 
 
-bool ModeType::operator<(const ModeType& other) const {
+bool CommercialMode::operator<(const CommercialMode& other) const {
     return this->name < other.name;
 }
 
-bool Mode::operator<(const Mode& other) const {
-    if(this->mode_type == other.mode_type || this->mode_type == NULL){
+bool PhysicalMode::operator<(const PhysicalMode& other) const {
+    if(this->commercial_mode == other.commercial_mode || this->commercial_mode == NULL){
         return this->name < other.name;
     }else{
-        return *(this->mode_type) < *(other.mode_type);
+        return *(this->commercial_mode) < *(other.commercial_mode);
     }
 }
 
 bool Line::operator<(const Line& other) const {
-    if(this->mode_type == NULL && other.mode_type != NULL){
+    if(this->commercial_mode == NULL && other.commercial_mode != NULL){
         return true;
-    }else if(other.mode_type == NULL && this->mode_type != NULL){
+    }else if(other.commercial_mode == NULL && this->commercial_mode != NULL){
         return false;
     }
-    if(this->mode_type == other.mode_type){
+    if(this->commercial_mode == other.commercial_mode){
         return this->external_code < other.external_code;
     }else{
-        return *(this->mode_type) < *(other.mode_type);
+        return *(this->commercial_mode) < *(other.commercial_mode);
     }
 }
 
@@ -170,20 +170,20 @@ navitia::type::StopArea StopArea::Transformer::operator()(const StopArea& stop_a
 }
 
 
-nt::Mode Mode::Transformer::operator()(const Mode& mode){
-    nt::Mode nt_mode;
+nt::PhysicalMode PhysicalMode::Transformer::operator()(const PhysicalMode& mode){
+    nt::PhysicalMode nt_mode;
     nt_mode.id = mode.id;
     nt_mode.idx = mode.idx;
     nt_mode.external_code = mode.external_code;
     nt_mode.name = mode.name;
-    nt_mode.mode_type_idx = mode.mode_type->idx;
+    nt_mode.commercial_mode_idx = mode.commercial_mode->idx;
     return nt_mode;
 
 }
 
 
-nt::ModeType ModeType::Transformer::operator()(const ModeType& mode_type){
-    nt::ModeType nt_mode_type;
+nt::CommercialMode CommercialMode::Transformer::operator()(const CommercialMode& mode_type){
+    nt::CommercialMode nt_mode_type;
     nt_mode_type.id = mode_type.id;
     nt_mode_type.idx = mode_type.idx;
     nt_mode_type.external_code = mode_type.external_code;
@@ -210,8 +210,8 @@ nt::StopPoint StopPoint::Transformer::operator()(const StopPoint& stop_point){
         nt_stop_point.stop_area_idx = stop_point.stop_area->idx;
 
 
-    if(stop_point.mode != NULL)
-        nt_stop_point.mode_idx = stop_point.mode->idx;
+    if(stop_point.physical_mode != NULL)
+        nt_stop_point.physical_mode_idx = stop_point.physical_mode->idx;
 
     if(stop_point.city != NULL)
         nt_stop_point.city_idx = stop_point.city->idx;
@@ -234,8 +234,8 @@ nt::Line Line::Transformer::operator()(const Line& line){
     nt_line.forward_name = line.forward_name;
     nt_line.additional_data = line.additional_data;
 
-    if(line.mode_type != NULL)
-        nt_line.mode_type_idx = line.mode_type->idx;
+    if(line.commercial_mode != NULL)
+        nt_line.commercial_mode_idx = line.commercial_mode->idx;
 
     if(line.network != NULL)
         nt_line.network_idx = line.network->idx;
@@ -318,8 +318,8 @@ nt::Route Route::Transformer::operator()(const Route& route){
     if(route.line != NULL)
         nt_route.line_idx = route.line->idx;
 
-    if(route.mode != NULL && route.mode->mode_type != NULL)
-        nt_route.mode_type_idx = route.mode->mode_type->idx;
+    if(route.physical_mode != NULL && route.physical_mode->commercial_mode != NULL)
+        nt_route.commercial_mode_idx = route.physical_mode->commercial_mode->idx;
 
     return nt_route;
 }
@@ -402,8 +402,8 @@ nt::VehicleJourney VehicleJourney::Transformer::operator()(const VehicleJourney&
     if(vj.company != NULL)
         nt_vj.company_idx = vj.company->idx;
 
-    if(vj.mode != NULL)
-        nt_vj.mode_idx = vj.mode->idx;
+    if(vj.physical_mode != NULL)
+        nt_vj.physical_mode_idx = vj.physical_mode->idx;
 
     nt_vj.route_idx = vj.route->idx;
 

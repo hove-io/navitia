@@ -54,8 +54,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                             pb_section->set_network(d.pt_data.networks[line.network_idx].name );
                         else
                             pb_section->set_network("");
-                        if(vj.mode_idx != type::invalid_idx)
-                            pb_section->set_mode(d.pt_data.modes[vj.mode_idx].name);
+                        if(vj.physical_mode_idx != type::invalid_idx)
+                            pb_section->set_mode(d.pt_data.physical_modes[vj.physical_mode_idx].name);
                         pb_section->set_code(line.code);
                         pb_section->set_headsign(vj.name);
                         pb_section->set_direction(route.name);
