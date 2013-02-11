@@ -66,7 +66,7 @@ pbnavitia::Response line_schedule(const std::string & filter, const std::string 
     Thermometer thermometer(d);
 
     for(type::idx_t line_idx : navitia::ptref::make_query(type::Type_e::eLine, filter, d)) {
-        auto schedule = parser.pb_response.mutable_line_schedule()->add_schedule();
+        auto schedule = parser.pb_response.mutable_line_schedule()->add_schedules();
         auto routes = d.pt_data.lines[line_idx].route_list;
         //On récupère les stop_times
         auto stop_times = get_all_stop_times(routes, parser.date_time, parser.max_datetime, d);
@@ -77,7 +77,7 @@ pbnavitia::Response line_schedule(const std::string & filter, const std::string 
         //On remplit l'objet header
         pbnavitia::LineScheduleHeader *header = schedule->mutable_header();
         for(vector_stopTime vec : stop_times) {
-            fill_pb_object(line_idx, d, header->add_item()->mutable_line(), max_depth-1);
+            fill_pb_object(line_idx, d, header->add_items()->mutable_line(), max_depth-1);
         }
         //On génère la matrice
         std::vector<vector_string> matrice = make_matrice(stop_times, thermometer, d);
@@ -86,11 +86,11 @@ pbnavitia::Response line_schedule(const std::string & filter, const std::string 
         for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {
             type::idx_t spidx=thermometer.get_thermometer()[i];
             const type::StopPoint & sp = d.pt_data.stop_points[spidx];
-            pbnavitia::TableLine * line = table->add_line();
+            pbnavitia::TableLine * line = table->add_lines();
             line->set_stop_point(sp.name);
 
             for(unsigned int j=0; j<stop_times.size(); ++j) {
-                line->add_stop_time(matrice[i][j]);
+                line->add_stop_times(matrice[i][j]);
             }
         }
 

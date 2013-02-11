@@ -38,19 +38,19 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
     pbnavitia::DepartureBoard * dep_board = parser.pb_response.mutable_departure_board();
     
     for(type::idx_t route_point_idx : parser.route_points) {
-        auto board = dep_board->add_board();
+        auto board = dep_board->add_boards();
         fill_pb_object(data.pt_data.route_points[route_point_idx].stop_point_idx, data, board->mutable_stop_point());
         fill_pb_object(data.pt_data.routes[data.pt_data.route_points[route_point_idx].route_idx].line_idx, data, board->mutable_line());
        
         auto stop_times = get_stop_times({route_point_idx}, parser.date_time, parser.max_datetime, std::numeric_limits<int>::max(), data);
 
         for(vector_datetime vec : make_columuns(stop_times)) {
-            pbnavitia::BoardItem *item = board->add_board_item();
+            pbnavitia::BoardItem *item = board->add_board_items();
 
             for(routing::DateTime dt : vec) {
                 if(!item->has_hour())
                     item->set_hour(boost::lexical_cast<std::string>(dt.hour()/3600));
-                item->add_minute(boost::lexical_cast<std::string>((dt.hour()%3600)/60));
+                item->add_minutes(boost::lexical_cast<std::string>((dt.hour()%3600)/60));
             }   
         }
 

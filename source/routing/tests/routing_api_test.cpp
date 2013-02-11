@@ -32,15 +32,15 @@ BOOST_AUTO_TEST_CASE(simple_journey){
     BOOST_REQUIRE(resp.has_planner());
     pbnavitia::Planner planner = resp.planner();
     BOOST_REQUIRE_EQUAL(planner.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(planner.journey_size(), 1);
-    pbnavitia::Journey journey = planner.journey(0);
+    BOOST_REQUIRE_EQUAL(planner.journeys_size(), 1);
+    pbnavitia::Journey journey = planner.journeys(0);
 
-    BOOST_REQUIRE_EQUAL(journey.section_size(), 1);
-    pbnavitia::Section section = journey.section(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
+    pbnavitia::Section section = journey.sections(0);
 
-    BOOST_REQUIRE_EQUAL(section.stop_time_size(), 2);
-    auto st1 = section.stop_time(0);
-    auto st2 = section.stop_time(1);
+    BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
+    auto st1 = section.stop_date_times(0);
+    auto st2 = section.stop_date_times(1);
     BOOST_CHECK_EQUAL(st1.stop_point().external_code(), "stop_point:stop1");
     BOOST_CHECK_EQUAL(st2.stop_point().external_code(), "stop_point:stop2");
     BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T081100");
@@ -73,25 +73,25 @@ BOOST_AUTO_TEST_CASE(journey_array){
     BOOST_REQUIRE(resp.has_planner());
     pbnavitia::Planner planner = resp.planner();
     BOOST_REQUIRE_EQUAL(planner.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(planner.journey_size(), 2);
+    BOOST_REQUIRE_EQUAL(planner.journeys_size(), 2);
 
-    pbnavitia::Journey journey = planner.journey(0);
-    BOOST_REQUIRE_EQUAL(journey.section_size(), 1);
-    pbnavitia::Section section = journey.section(0);
-    BOOST_REQUIRE_EQUAL(section.stop_time_size(), 2);
-    auto st1 = section.stop_time(0);
-    auto st2 = section.stop_time(1);
+    pbnavitia::Journey journey = planner.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
+    pbnavitia::Section section = journey.sections(0);
+    BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
+    auto st1 = section.stop_date_times(0);
+    auto st2 = section.stop_date_times(1);
     BOOST_CHECK_EQUAL(st1.stop_point().external_code(), "stop_point:stop1");
     BOOST_CHECK_EQUAL(st2.stop_point().external_code(), "stop_point:stop2");
     BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T081100");
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T082000");
 
-    journey = planner.journey(1);
-    BOOST_REQUIRE_EQUAL(journey.section_size(), 1);
-    section = journey.section(0);
-    BOOST_REQUIRE_EQUAL(section.stop_time_size(), 2);
-    st1 = section.stop_time(0);
-    st2 = section.stop_time(1);
+    journey = planner.journeys(1);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
+    section = journey.sections(0);
+    BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
+    st1 = section.stop_date_times(0);
+    st2 = section.stop_date_times(1);
     BOOST_CHECK_EQUAL(st1.stop_point().external_code(), "stop_point:stop1");
     BOOST_CHECK_EQUAL(st2.stop_point().external_code(), "stop_point:stop2");
     BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T091100");

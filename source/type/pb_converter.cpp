@@ -120,7 +120,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::VehicleJourn
 
     if(max_depth > 0) {
         for(type::idx_t stop_time_idx : vj.stop_time_list) {
-            fill_pb_object(stop_time_idx, data, vehicle_journey->add_stop_time(), max_depth -1);
+            fill_pb_object(stop_time_idx, data, vehicle_journey->add_stop_times(), max_depth -1);
         }
     }
 }
@@ -189,7 +189,7 @@ void create_pb(const navitia::georef::Path& path, const navitia::type::Data& dat
     sn->set_length(path.length);
     for(auto item : path.path_items){
         if(item.way_idx < data.geo_ref.ways.size()){
-            pbnavitia::PathItem * path_item = sn->add_path_item();
+            pbnavitia::PathItem * path_item = sn->add_path_items();
             path_item->set_name(data.geo_ref.ways[item.way_idx].name);
             path_item->set_length(item.length);
         }else{
@@ -198,7 +198,7 @@ void create_pb(const navitia::georef::Path& path, const navitia::type::Data& dat
 
     }
     for(auto coord : path.coordinates){
-        pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinate();
+        pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
         pb_coord->set_lon(coord.lon());
         pb_coord->set_lat(coord.lat());
     }

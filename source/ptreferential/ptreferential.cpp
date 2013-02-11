@@ -143,8 +143,6 @@ std::vector<Filter> parse(std::string request){
 
 
 std::vector<idx_t> make_query(Type_e requested_type, std::string request, const Data & data) {
-    //DEBUG
-    std::cout << "Requete make query : " << request << std::endl;
     std::vector<Filter> filters;
 
     if(!request.empty()){

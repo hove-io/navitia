@@ -22,13 +22,13 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
     if(paths.size() > 0 || temp.path_items.size() > 0) {
         planner->set_response_type(pbnavitia::ITINERARY_FOUND);
         if(temp.path_items.size() > 0) {
-            pbnavitia::Journey * pb_journey = planner->add_journey();
+            pbnavitia::Journey * pb_journey = planner->add_journeys();
             pb_journey->set_duration(temp.length);
-            fill_road_section(temp, d, pb_journey->add_section(), 1);
+            fill_road_section(temp, d, pb_journey->add_sections(), 1);
         }
         for(Path path : paths) {
             DateTime departure_time = DateTime::inf, arrival_time = DateTime::inf;
-            pbnavitia::Journey * pb_journey = planner->add_journey();
+            pbnavitia::Journey * pb_journey = planner->add_journeys();
             pb_journey->set_nb_transfers(path.nb_changes);
             pb_journey->set_requested_date_time(boost::posix_time::to_iso_string(path.request_time));
 
@@ -36,14 +36,14 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             if(path.items.size() > 0 && path.items.front().stop_points.size() > 0 && path.items.front().stop_points.size() > 0){
                 const auto temp = worker.get_path(path.items.front().stop_points.front());
                 if(temp.path_items.size() > 0) {
-                    fill_road_section(temp , d, pb_journey->add_section(), 1);
+                    fill_road_section(temp , d, pb_journey->add_sections(), 1);
                     departure_time = path.items.front().departure - temp.length/1.38;
                 }
             }
 
             // La partie TC et correspondances
             for(PathItem & item : path.items){
-                pbnavitia::Section * pb_section = pb_journey->add_section();
+                pbnavitia::Section * pb_section = pb_journey->add_sections();
                 if(item.type == public_transport){
                     pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
                     if( item.vj_idx != type::invalid_idx){ // TODO : réfléchir si ça peut vraiment arriver
@@ -62,7 +62,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                         fill_pb_object(line.idx, d, pb_section->mutable_line());
                     }
                     for(size_t i=0;i<item.stop_points.size();++i){
-                        pbnavitia::StopDateTime * stop_time = pb_section->add_stop_time();
+                        pbnavitia::StopDateTime * stop_time = pb_section->add_stop_date_times();
                         auto arr_time = item.arrivals[i];
                         stop_time->set_arrival_date_time(iso_string(d, arr_time.date(), arr_time.hour()));
                         auto dep_time = item.departures[i];
@@ -101,7 +101,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             if(path.items.size() > 0 && path.items.back().stop_points.size() > 0 && path.items.back().stop_points.size()>0){
                 auto temp = worker.get_path(path.items.back().stop_points.back(), true);
                 if(temp.path_items.size() > 0) {
-                    fill_road_section(temp, d, pb_journey->add_section(), 1);
+                    fill_road_section(temp, d, pb_journey->add_sections(), 1);
                     arrival_time =  arrival_time + temp.length/1.38;
                 }
             }
@@ -325,7 +325,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
             }
 
             if(duration <= max_duration) {
-                auto pb_stop_time = response.mutable_isochrone()->add_stop_time();
+                auto pb_stop_time = response.mutable_isochrone()->add_stop_date_times();
                 pb_stop_time->set_arrival_date_time(iso_string(raptor.data, label.arrival.date(), label.arrival.hour()));
                 pb_stop_time->set_departure_date_time(iso_string(raptor.data, label.departure.date(), label.departure.hour()));
                 pb_stop_time->set_duration(duration);
@@ -335,7 +335,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
         }
     }
 
-     std::sort(response.mutable_isochrone()->mutable_stop_time()->begin(), response.mutable_isochrone()->mutable_stop_time()->end(),
+     std::sort(response.mutable_isochrone()->mutable_stop_date_times()->begin(), response.mutable_isochrone()->mutable_stop_date_times()->end(),
                [](const pbnavitia::StopDateTime & stop_time1, const pbnavitia::StopDateTime & stop_time2) {
                return stop_time1.duration() < stop_time2.duration();
                 });

@@ -163,16 +163,16 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     }
 
     std::multimap<std::string, std::string> forbidden;
-    for(int i = 0; i < request.forbiddenline_size(); ++i)
-        forbidden.insert(std::make_pair("line", request.forbiddenline(i)));
-    for(int i = 0; i < request.forbiddenmode_size(); ++i)
-        forbidden.insert(std::make_pair("mode", request.forbiddenmode(i)));
-    for(int i = 0; i < request.forbiddenroute_size(); ++i)
-        forbidden.insert(std::make_pair("route", request.forbiddenroute(i)));
+    for(int i = 0; i < request.forbiddenlines_size(); ++i)
+        forbidden.insert(std::make_pair("line", request.forbiddenlines(i)));
+    for(int i = 0; i < request.forbiddenmodes_size(); ++i)
+        forbidden.insert(std::make_pair("mode", request.forbiddenmodes(i)));
+    for(int i = 0; i < request.forbiddenroutes_size(); ++i)
+        forbidden.insert(std::make_pair("route", request.forbiddenroutes(i)));
 
     std::vector<std::string> datetimes;
-    for(int i = 0; i < request.datetime_size(); ++i)
-        datetimes.push_back(request.datetime(i));
+    for(int i = 0; i < request.datetimes_size(); ++i)
+        datetimes.push_back(request.datetimes(i));
 
 
     if(api != pbnavitia::ISOCHRONE){
@@ -180,7 +180,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
                                               request.clockwise(), request.walking_speed(), request.walking_distance(), request.wheelchair(),
                                               forbidden, *street_network_worker);
     } else {
-        return navitia::routing::raptor::make_isochrone(*calculateur, origin, request.datetime(0),
+        return navitia::routing::raptor::make_isochrone(*calculateur, origin, request.datetimes(0),
                                                         request.clockwise(), request.walking_speed(), request.walking_distance(), request.wheelchair(),
                                                         forbidden, *street_network_worker);
     }

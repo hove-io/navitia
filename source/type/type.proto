@@ -53,7 +53,7 @@ message StopArea {
     optional GeographicalCoord coord = 5;
     optional City city = 6;
     optional bool is_adapted = 7;
-    repeated StopPoint stop_point = 8;
+    repeated StopPoint stop_points = 8;
 }
 
 message StopPoint {
@@ -75,7 +75,7 @@ message Line {
     optional string backward_name = 7;
     optional string additional_data = 8;
     optional string color = 9;
-    repeated Route route = 10;
+    repeated Route routes = 10;
 }
 
 message Route {
@@ -85,7 +85,7 @@ message Route {
     optional bool is_frequence = 5;
     optional bool is_adapted = 6;
     optional Line line = 7;
-    repeated RoutePoint route_point= 8;
+    repeated RoutePoint route_points = 8;
 }
 
 message StopDateTime {
@@ -114,7 +114,7 @@ message VehicleJourney {
     optional string name = 3;
     optional string external_code = 4;
     optional bool is_adapted = 5;
-    repeated StopTime stop_time = 6;
+    repeated StopTime stop_times = 6;
     optional Route route = 7;
 }
 
@@ -145,21 +145,21 @@ message Network {
     optional string id = 1;
     optional string external_code = 3;
     optional string name = 4;
-    repeated Line line = 5;
+    repeated Line lines = 5;
 }
 
 message PhysicalMode {
     optional string id = 1;
     optional string external_code = 3;
     optional string name = 4;
-    repeated CommercialMode commercial_mode = 5;
+    repeated CommercialMode commercial_modes = 5;
 }
 
 message CommercialMode {
     optional string id = 1;
     optional string external_code = 3;
     optional string name = 4;
-    repeated PhysicalMode physical_mode = 5;
+    repeated PhysicalMode physical_modes = 5;
 }
 
 message Connection {
@@ -185,20 +185,19 @@ message Address {
 
 
 message PTReferential {
-    repeated Country country =1;
-    repeated StopArea stop_area = 2;
-    repeated StopPoint stop_point = 3;
-    repeated Line line = 4;
-    repeated Route route = 5;
-    repeated Network network = 6;
-    repeated CommercialMode commercial_mode = 7;
-    repeated PhysicalMode physical_mode = 8;
-    repeated Connection connection = 9;
-    repeated RoutePoint route_point = 11;
-    repeated City city = 13;
-    repeated Site site = 14;
-    repeated Company company = 15;
-    repeated VehicleJourney vehicle_journey = 16;
+    repeated Country countries = 1;
+    repeated StopArea stop_areas = 2;
+    repeated StopPoint stop_points = 3;
+    repeated Line lines = 4;
+    repeated Route routes = 5;
+    repeated Network networks = 6;
+    repeated CommercialMode commercial_modes = 7;
+    repeated PhysicalMode physical_modes = 8;
+    repeated Connection connections = 9;
+    repeated RoutePoint route_points = 11;
+    repeated City cities = 13;
+    repeated Company companies = 15;
+    repeated VehicleJourney vehicle_journeys = 16;
 }
 
 message PlaceMark {
@@ -219,8 +218,8 @@ message FirstLetterItem {
 
 message FirstLetter {
     repeated FirstLetterItem items = 1;
-    repeated string ignored_word = 2;
-    repeated string bad_word = 3;
+    repeated string ignored_words = 2;
+    repeated string bad_words = 3;
 }
 
 message ProximityListItem {
@@ -242,8 +241,8 @@ message PathItem {
 
 message StreetNetwork {
     optional double length = 1;
-    repeated PathItem path_item = 2;
-    repeated GeographicalCoord coordinate = 3;
+    repeated PathItem path_items = 2;
+    repeated GeographicalCoord coordinates = 3;
 }
 
 enum SectionType {
@@ -273,7 +272,7 @@ message Section {
     optional string headsign = 7;
     optional string direction = 8;
     optional Line line = 9;
-    repeated StopDateTime stop_time = 10;
+    repeated StopDateTime stop_date_times = 10;
 
 // Si c'est du routier
     optional StreetNetwork street_network = 11;
@@ -292,7 +291,7 @@ message Journey {
     optional string departure_date_time = 3;
     optional string arrival_date_time = 4;
     optional string requested_date_time = 5;
-    repeated Section section = 6;
+    repeated Section sections = 6;
     optional string call_before = 7;
     optional string call_after = 8;
 }
@@ -310,7 +309,7 @@ enum ResponseType {
 }
 
 message Planner {
-    repeated Journey journey = 1;
+    repeated Journey journeys = 1;
     optional ResponseType response_type = 2;
     optional string before = 3;
     optional string after = 4;
@@ -342,11 +341,11 @@ message PairStopTime {
 
 message TableLine {
     required string stop_point = 1;
-    repeated string stop_time = 2;
+    repeated string stop_times = 2;
 }
 
 message Table {
-    repeated TableLine line = 1;
+    repeated TableLine lines = 1;
 }
 
 message LineScheduleHeaderItem {
@@ -354,7 +353,7 @@ message LineScheduleHeaderItem {
 }
 
 message LineScheduleHeader {
-    repeated LineScheduleHeaderItem item = 1;
+    repeated LineScheduleHeaderItem items = 1;
 }
 
 message Schedule {
@@ -363,30 +362,30 @@ message Schedule {
 }
 
 message LineSchedule {
-    repeated Schedule schedule = 1;
+    repeated Schedule schedules = 1;
 }
 
 message StopTimes {
-    repeated StopDateTime stoptime = 1;
+    repeated StopDateTime stop_date_times = 1;
 }
 
 message StopsSchedule {
-    repeated PairStopTime board_item = 1;
+    repeated PairStopTime board_items = 1;
 }
 
 message BoardItem {
     required string hour =1;
-    repeated string minute = 2;
+    repeated string minutes = 2;
 }
 
 message Board {
     required StopPoint stop_point = 1;
     required Line line = 2;
-    repeated BoardItem board_item = 3;
+    repeated BoardItem board_items = 3;
 }
 
 message DepartureBoard {
-    repeated Board board = 1;
+    repeated Board boards = 1;
 }
 
 message Load {
@@ -394,7 +393,7 @@ message Load {
 }
 
 message Isochrone {
-    repeated StopDateTime stop_time = 1;
+    repeated StopDateTime stop_date_times = 1;
     optional ResponseType response_type = 2;
 }
 
@@ -442,11 +441,11 @@ message NextStopTimeRequest {
 message JourneysRequest {
     required string origin = 1;
     required string destination = 2;
-    repeated string datetime = 3;
+    repeated string datetimes = 3;
     required bool clockwise = 4;
-    repeated string forbiddenline = 5;
-    repeated string forbiddenmode = 6;
-    repeated string forbiddenroute = 7;
+    repeated string forbiddenlines = 5;
+    repeated string forbiddenmodes = 6;
+    repeated string forbiddenroutes = 7;
     required double walking_speed = 8;
     required int32 walking_distance =10;
     required bool wheelchair = 9;

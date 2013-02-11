@@ -89,7 +89,7 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
 
     pb_response.set_requested_api(pbnavitia::DEPARTURE_BOARD);
     for(auto pair_dt_idx : board) {
-        pbnavitia::PairStopTime * pair_stoptime = pb_response.mutable_stops_schedule()->add_board_item();
+        pbnavitia::PairStopTime * pair_stoptime = pb_response.mutable_stops_schedule()->add_board_items();
         auto stoptime = pair_stoptime->mutable_first();
         const auto &dt_idx = pair_dt_idx.first;
         stoptime->set_departure_date_time(iso_string(data, dt_idx.first.date(),  dt_idx.first.hour()));

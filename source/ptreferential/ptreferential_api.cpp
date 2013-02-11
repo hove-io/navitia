@@ -10,18 +10,18 @@ pbnavitia::Response extract_data(const type::Data & data, type::Type_e requested
 
     for(type::idx_t idx : rows){
         switch(requested_type){
-        case type::Type_e::eLine: fill_pb_object(idx, data, pb_response->add_line(), depth); break;
-        case type::Type_e::eRoute: fill_pb_object(idx, data, pb_response->add_route(), depth); break;
-        case type::Type_e::eStopPoint: fill_pb_object(idx, data, pb_response->add_stop_point(), depth); break;
-        case type::Type_e::eStopArea: fill_pb_object(idx, data, pb_response->add_stop_area(), depth); break;
-        case type::Type_e::eNetwork: fill_pb_object(idx, data, pb_response->add_network(), depth); break;
-        case type::Type_e::eMode: fill_pb_object(idx, data, pb_response->add_commercial_mode(), depth); break;
-        case type::Type_e::eModeType: fill_pb_object(idx, data, pb_response->add_physical_mode(), depth); break;
-        case type::Type_e::eCity: fill_pb_object(idx, data, pb_response->add_city(), depth); break;
-        case type::Type_e::eConnection: fill_pb_object(idx, data, pb_response->add_connection(), depth); break;
-        case type::Type_e::eRoutePoint: fill_pb_object(idx, data, pb_response->add_route_point(), depth); break;
-        case type::Type_e::eCompany: fill_pb_object(idx, data, pb_response->add_company(), depth); break;
-        case type::Type_e::eVehicleJourney: fill_pb_object(idx, data, pb_response->add_vehicle_journey(), depth); break;
+        case type::Type_e::eLine: fill_pb_object(idx, data, pb_response->add_lines(), depth); break;
+        case type::Type_e::eRoute: fill_pb_object(idx, data, pb_response->add_routes(), depth); break;
+        case type::Type_e::eStopPoint: fill_pb_object(idx, data, pb_response->add_stop_points(), depth); break;
+        case type::Type_e::eStopArea: fill_pb_object(idx, data, pb_response->add_stop_areas(), depth); break;
+        case type::Type_e::eNetwork: fill_pb_object(idx, data, pb_response->add_networks(), depth); break;
+        case type::Type_e::eMode: fill_pb_object(idx, data, pb_response->add_commercial_modes(), depth); break;
+        case type::Type_e::eModeType: fill_pb_object(idx, data, pb_response->add_physical_modes(), depth); break;
+        case type::Type_e::eCity: fill_pb_object(idx, data, pb_response->add_cities(), depth); break;
+        case type::Type_e::eConnection: fill_pb_object(idx, data, pb_response->add_connections(), depth); break;
+        case type::Type_e::eRoutePoint: fill_pb_object(idx, data, pb_response->add_route_points(), depth); break;
+        case type::Type_e::eCompany: fill_pb_object(idx, data, pb_response->add_companies(), depth); break;
+        case type::Type_e::eVehicleJourney: fill_pb_object(idx, data, pb_response->add_vehicle_journeys(), depth); break;
         default: break;
         }
     }
