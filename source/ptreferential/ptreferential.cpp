@@ -73,8 +73,8 @@ WhereWrapper<T> build_clause(std::vector<Filter> filters) {
             wh = wh && WHERE(ptr_id<T>(), filter.op, filter.value);
         else if(filter.attribute == "idx")
             wh = wh && WHERE(ptr_idx<T>(), filter.op, filter.value);
-        else if(filter.attribute == "external_code")
-            wh = wh && WHERE(ptr_external_code<T>(), filter.op, filter.value);
+        else if(filter.attribute == "uri")
+            wh = wh && WHERE(ptr_uri<T>(), filter.op, filter.value);
         else if(filter.attribute == "name")
             wh = wh && WHERE(ptr_name<T>(), filter.op, filter.value);
         }

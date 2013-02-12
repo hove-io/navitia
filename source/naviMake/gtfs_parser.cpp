@@ -58,56 +58,56 @@ void GtfsParser::fill_mode_types(Data & data) {
     navimake::types::CommercialMode* mode_type = new navimake::types::CommercialMode();
     mode_type->id = "0";
     mode_type->name = "Tram";
-    mode_type->external_code = "0x0";
+    mode_type->uri = "0x0";
     data.mode_types.push_back(mode_type);
     mode_type_map[mode_type->id] = mode_type;
 
     mode_type = new navimake::types::CommercialMode();
     mode_type->id = "1";
     mode_type->name = "Metro";
-    mode_type->external_code = "0x1";
+    mode_type->uri = "0x1";
     data.mode_types.push_back(mode_type);
     mode_type_map[mode_type->id] = mode_type;
 
     mode_type = new navimake::types::CommercialMode();
     mode_type->id = "2";
     mode_type->name = "Rail";
-    mode_type->external_code = "0x2";
+    mode_type->uri = "0x2";
     data.mode_types.push_back(mode_type);
     mode_type_map[mode_type->id] = mode_type;
 
     mode_type = new navimake::types::CommercialMode();
     mode_type->id = "3";
     mode_type->name = "Bus";
-    mode_type->external_code = "0x3";
+    mode_type->uri = "0x3";
     data.mode_types.push_back(mode_type);
     mode_type_map[mode_type->id] = mode_type;
 
     mode_type = new navimake::types::CommercialMode();
     mode_type->id = "4";
     mode_type->name = "Ferry";
-    mode_type->external_code = "0x4";
+    mode_type->uri = "0x4";
     data.mode_types.push_back(mode_type);
     mode_type_map[mode_type->id] = mode_type;
 
     mode_type = new navimake::types::CommercialMode();
     mode_type->id = "5";
     mode_type->name = "Cable car";
-    mode_type->external_code = "0x5";
+    mode_type->uri = "0x5";
     data.mode_types.push_back(mode_type);
     mode_type_map[mode_type->id] = mode_type;
 
     mode_type = new navimake::types::CommercialMode();
     mode_type->id = "6";
     mode_type->name = "Gondola";
-    mode_type->external_code = "0x6";
+    mode_type->uri = "0x6";
     data.mode_types.push_back(mode_type);
     mode_type_map[mode_type->id] = mode_type;
 
     mode_type = new navimake::types::CommercialMode();
     mode_type->id = "7";
     mode_type->name = "Funicular";
-    mode_type->external_code = "0x7";
+    mode_type->uri = "0x7";
     data.mode_types.push_back(mode_type);
     mode_type_map[mode_type->id] = mode_type;
 
@@ -116,7 +116,7 @@ void GtfsParser::fill_mode_types(Data & data) {
         navimake::types::PhysicalMode* mode = new navimake::types::PhysicalMode();
         mode->id = mt->id;
         mode->name = mt->name;
-        mode->external_code = mt->external_code;
+        mode->uri = mt->uri;
         mode->commercial_mode = mt;
         data.modes.push_back(mode);
         mode_map[mode->id] = mode;
@@ -158,12 +158,12 @@ void GtfsParser::parse_agency(Data & data){
             boost::algorithm::trim(elts[i]);
         nm::Network * network = new nm::Network();
         if(id_c != -1)
-            network->external_code = elts[id_c];
+            network->uri = elts[id_c];
         else
-            network->external_code = boost::lexical_cast<std::string>(id);
+            network->uri = boost::lexical_cast<std::string>(id);
         network->name = elts[name_c];
         data.networks.push_back(network);
-        agency_map[network->external_code] = network;
+        agency_map[network->uri] = network;
         ++id;
     }
 }
@@ -240,10 +240,10 @@ void GtfsParser::parse_stops(Data & data) {
         }
 
         sp->name = elts[name_c];
-        sp->external_code = elts[id_c];
+        sp->uri = elts[id_c];
 
 
-        if(!data.stop_points.empty() && stop_map.find(sp->external_code) != stop_map.end()) {
+        if(!data.stop_points.empty() && stop_map.find(sp->uri) != stop_map.end()) {
             ignored++;
         }
         else {
@@ -252,10 +252,10 @@ void GtfsParser::parse_stops(Data & data) {
                 nm::StopArea * sa = new nm::StopArea();
                 sa->coord = sp->coord;
                 sa->name = sp->name;
-                sa->external_code = sp->external_code;
+                sa->uri = sp->uri;
                 if(wheelchair_c != -1)
                     sa->is_adapted = elts[wheelchair_c] == "1";
-                stop_area_map[sa->external_code] = sa;
+                stop_area_map[sa->uri] = sa;
                 data.stop_areas.push_back(sa);
                 delete sp;
             }
@@ -268,7 +268,7 @@ void GtfsParser::parse_stops(Data & data) {
                         sp->is_adapted = elts[wheelchair_c] == "1";
                     }
                 }
-                stop_map[sp->external_code] = sp;
+                stop_map[sp->uri] = sp;
                 data.stop_points.push_back(sp);
                 if(parent_c!=-1 && elts[parent_c] != "") {// On sauvegarde la référence à la zone d'arrêt
                     if(sa_spmap.find(elts[parent_c]) == sa_spmap.end()) {
@@ -292,7 +292,7 @@ void GtfsParser::parse_stops(Data & data) {
             std::cerr << "Le stop area " << sa_sps.first
                       << " n'a pas été trouvé pour les stops points :  ";
             for(auto sp : sa_sps.second) {
-                std::cerr << sp->external_code << " ";
+                std::cerr << sp->uri << " ";
                 sp->stop_area = 0;
             }
             std::cerr << std::endl;
@@ -304,7 +304,7 @@ void GtfsParser::parse_stops(Data & data) {
         if(sp->stop_area != 0) {
             sp->is_adapted = sp->stop_area->is_adapted;
         } else {
-            std::cerr << "Impossible de récuperer l'accessibilité du stop area pour le stop point " << sp->external_code << std::endl;
+            std::cerr << "Impossible de récuperer l'accessibilité du stop area pour le stop point " << sp->uri << std::endl;
         }
     }
 
@@ -506,7 +506,7 @@ void GtfsParser::parse_calendar(Data & data) {
                     vp->remove((*it));
             }
 
-            vp->external_code = elts[id_c];
+            vp->uri = elts[id_c];
             vp_map[elts[id_c]] = vp;
             data.validity_patterns.push_back(vp);
 
@@ -627,7 +627,7 @@ void GtfsParser:: parse_routes(Data & data){
 
         if(line_map.find(elts[id_c]) == line_map.end()) {
             nm::Line * line = new nm::Line();
-            line->external_code = elts[id_c];
+            line->uri = elts[id_c];
             line->name = elts[long_name_c];
             line->code = elts[short_name_c];
             if(color_c != -1)
@@ -741,11 +741,11 @@ void GtfsParser::parse_trips(Data & data) {
                 boost::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(elts[trip_c]);
                 if(vj_it == vj_map.end()) {
                     nm::VehicleJourney * vj = new nm::VehicleJourney();
-                    vj->external_code = elts[trip_c];
+                    vj->uri = elts[trip_c];
                     if(headsign_c != -1)
                         vj->name = elts[headsign_c];
                     else
-                        vj->name = vj->external_code;
+                        vj->name = vj->uri;
                     vj->validity_pattern = vp_xx;
                     vj->route = 0;
                     vj->tmp_line = line;
@@ -756,7 +756,7 @@ void GtfsParser::parse_trips(Data & data) {
                         vj->block_id = "";
                     if(wheelchair_c != -1)
                         vj->is_adapted = elts[wheelchair_c] == "1";
-                    vj_map[vj->external_code] = vj;
+                    vj_map[vj->uri] = vj;
                     data.vehicle_journeys.push_back(vj);
                 }
                 else {
@@ -840,32 +840,32 @@ bool same_route(nm::VehicleJourney * vj1, nm::VehicleJourney * vj2){
 
 void normalize_extcodes(Data & data){
     for(nm::StopArea * sa : data.stop_areas){
-        boost::algorithm::replace_first(sa->external_code, "StopArea:", "");
+        boost::algorithm::replace_first(sa->uri, "StopArea:", "");
     }
     for(nm::StopPoint * sp : data.stop_points){
-        boost::algorithm::replace_first(sp->external_code, "StopPoint:", "");
+        boost::algorithm::replace_first(sp->uri, "StopPoint:", "");
     }
 }
 
 void build_routes(Data & data){
     std::cout << "On calcule les routes" << std::endl;
-    // Associe à chaque line external_code le nombre de route trouvées jusqu'à present
+    // Associe à chaque line uri le nombre de route trouvées jusqu'à present
     std::map<std::string, int> line_routes_count;
     for(auto it1 = data.vehicle_journeys.begin(); it1 != data.vehicle_journeys.end(); ++it1){
         nm::VehicleJourney * vj1 = *it1;
         // Si le vj n'appartient encore à aucune route
         if(vj1->route == 0) {
-            auto it = line_routes_count.find(vj1->tmp_line->external_code);
+            auto it = line_routes_count.find(vj1->tmp_line->uri);
             int count = 1;
             if(it == line_routes_count.end()){
-                line_routes_count[vj1->tmp_line->external_code] = count;
+                line_routes_count[vj1->tmp_line->uri] = count;
             } else {
                 count = it->second + 1;
                 it->second = count;
             }
 
             nm::Route * route = new nm::Route();
-            route->external_code = vj1->tmp_line->external_code + "-" + boost::lexical_cast<std::string>(count);
+            route->uri = vj1->tmp_line->uri + "-" + boost::lexical_cast<std::string>(count);
             route->line = vj1->tmp_line;
             route->physical_mode = vj1->physical_mode;
             vj1->route = route;
@@ -892,7 +892,7 @@ void build_route_points(Data & data){
 
         stop_seq = 0;
         BOOST_FOREACH(nm::StopTime * stop_time, vj->stop_time_list){
-            std::string route_point_extcode = vj->route->external_code + ":" + stop_time->tmp_stop_point->external_code+":"+boost::lexical_cast<std::string>(stop_seq);
+            std::string route_point_extcode = vj->route->uri + ":" + stop_time->tmp_stop_point->uri+":"+boost::lexical_cast<std::string>(stop_seq);
 
 
             auto route_point_it = route_point_map.find(route_point_extcode);
@@ -904,7 +904,7 @@ void build_route_points(Data & data){
                 route_point->stop_point = stop_time->tmp_stop_point;
                 route_point_map[route_point_extcode] = route_point;
                 route_point->order = stop_seq;
-                route_point->external_code = route_point_extcode;
+                route_point->uri = route_point_extcode;
                 data.route_points.push_back(route_point);
             } else {
                 route_point = route_point_it->second;
@@ -1202,10 +1202,10 @@ boost::gregorian::date_period GtfsParser::find_production_date(const std::string
 void  add_route_point_connection(nm::RoutePoint *rp1, nm::RoutePoint *rp2, int length,
                            std::multimap<std::string, nm::RoutePointConnection> &route_point_connections) {
     //Si la connexion n'existe pas encore alors on va la créer, sinon on regarde sa durée, si elle est inférieure, on la modifie
-    auto pp = route_point_connections.equal_range(rp1->external_code);
+    auto pp = route_point_connections.equal_range(rp1->uri);
     bool find = false;
     for(auto it_pp = pp.first; it_pp != pp.second; ++it_pp) {
-        if(it_pp->second.destination_route_point->external_code == rp2->external_code) {
+        if(it_pp->second.destination_route_point->uri == rp2->uri) {
             find = true;
             if(it_pp->second.length > length)
                 it_pp->second.length = length;
@@ -1218,7 +1218,7 @@ void  add_route_point_connection(nm::RoutePoint *rp1, nm::RoutePoint *rp2, int l
         rpc.destination_route_point = rp2;
         rpc.route_point_connection_kind = nm::RoutePointConnection::RoutePointConnectionKind::Extension;
         rpc.length = length;
-        route_point_connections.insert(std::make_pair(rp1->external_code, rpc));
+        route_point_connections.insert(std::make_pair(rp1->uri, rpc));
 
     }
 }

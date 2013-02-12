@@ -84,8 +84,8 @@ void Data::save_lz4(const std::string & filename) {
     oa << *this;
 }
 
-void Data::build_external_code(){
-    this->pt_data.build_external_code();
+void Data::build_uri(){
+    this->pt_data.build_uri();
     geo_ref.normalize_extcode_way();
 }
 

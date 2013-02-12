@@ -151,8 +151,8 @@ int main(int argc, char** argv){
 
     for(size_t i = 0; i < demands.size(); ++i){
         PathDemand demand = demands[i];
-        out_file << data.pt_data.stop_points[demand.start].external_code
-                 << ", " << data.pt_data.stop_points[demand.target].external_code
+        out_file << data.pt_data.stop_points[demand.start].uri
+                 << ", " << data.pt_data.stop_points[demand.target].uri
                  << ", " << demand.date
                  << ", " << demand.hour;
         for(auto algo : algos){

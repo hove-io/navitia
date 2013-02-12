@@ -87,7 +87,7 @@ struct PT_Data : boost::noncopyable{
     void build_index();
 
     /** Construit l'indexe ExternelCode */
-    void build_external_code();
+    void build_uri();
 
     /** Construit l'indexe FirstLetter */
     void build_first_letter();
@@ -105,13 +105,13 @@ struct PT_Data : boost::noncopyable{
     }
 
 
-    /// Prefixe le type à l'external_code
+    /// Prefixe le type à l'uri
     template<typename T>
     void normalize_extcode(std::map<std::string, idx_t> & map){
         std::string prefix = static_data::get()->captionByType(T::type);
         for(auto & element : this->get_data<T>()){
-            element.external_code = prefix + ":" + element.external_code;
-            map[element.external_code] = element.idx;
+            element.uri = prefix + ":" + element.uri;
+            map[element.uri] = element.idx;
         }
     }
 

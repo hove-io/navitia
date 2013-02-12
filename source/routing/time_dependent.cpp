@@ -63,7 +63,7 @@ void  TimeDependent::build_graph(){
             ValidityPatternTime vpt1(vj.validity_pattern_idx, stop1.departure_time);
             ValidityPatternTime vpt2(vj.validity_pattern_idx, stop2.arrival_time);
             if(stop1.departure_time > stop2.arrival_time){
-                std::cout << "Incohérence " << vj.external_code << std::endl;
+                std::cout << "Incohérence " << vj.uri << std::endl;
                 std::cout << stop1.departure_time << " " << stop2.arrival_time << std::endl;
             }
             bool b;

@@ -98,7 +98,7 @@ public:
     void save(const std::string & filename);
 
     /** Construit l'indexe ExternelCode */
-    void build_external_code();
+    void build_uri();
 
     /** Construit l'indexe FirstLetter */
     void build_first_letter();

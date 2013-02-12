@@ -41,16 +41,16 @@ std::string PathItem::print(const navitia::type::PT_Data & data) const {
         const navitia::type::VehicleJourney & vj = data.vehicle_journeys[vj_idx];
         const navitia::type::Route & route = data.routes[vj.route_idx];
         const navitia::type::Line & line = data.lines[route.line_idx];
-        ss << "Ligne : " << line.name  << " (" << line.external_code << " " << line.idx << "), "
-           << "Route : " << route.name << " (" << route.external_code << " " << route.idx << "), "
+        ss << "Ligne : " << line.name  << " (" << line.uri << " " << line.idx << "), "
+           << "Route : " << route.name << " (" << route.uri << " " << route.idx << "), "
            << "Vehicle journey " << vj_idx << "\n";
     }
-    ss << "Départ de " << start.name << "(" << start.external_code << " " << start.idx << ") à " << departure << "\n";
+    ss << "Départ de " << start.name << "(" << start.uri << " " << start.idx << ") à " << departure << "\n";
     for(auto sp_idx : stop_points){
         navitia::type::StopPoint sp = data.stop_points[sp_idx];
-        ss << "    " << sp.name << " (" << sp.external_code << " " << sp.idx << ")" << "\n";
+        ss << "    " << sp.name << " (" << sp.uri << " " << sp.idx << ")" << "\n";
     }
-    ss << "Arrivée à " << dest.name << "(" << dest.external_code << " " << dest.idx << ") à " << arrival << "\n";
+    ss << "Arrivée à " << dest.name << "(" << dest.uri << " " << dest.idx << ") à " << arrival << "\n";
     return ss.str();
 }
 

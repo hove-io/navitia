@@ -327,14 +327,14 @@ void GeoRef::build_firstletter_list(){
 /** Chargement de la liste way_map : mappage entre codes externes et idx des rues*/
 void GeoRef::build_ways(){
    for(auto way : ways){
-       this->way_map[way.external_code] = way.idx;
+       this->way_map[way.uri] = way.idx;
    }
 }
 
 /** Normalisation des codes externes des rues*/
 void GeoRef::normalize_extcode_way(){
     for(Way & way : ways){
-        way.external_code = "address:"+ way.external_code;
+        way.uri = "address:"+ way.uri;
     }
     this->build_ways();
 }

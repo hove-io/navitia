@@ -25,7 +25,7 @@ struct Nameable{
 struct TransmodelHeader{
     std::string id; //< Identifiant de l'objet par le fournisseur de la donnée
     idx_t idx; //< Indexe de l'objet dans le tableau
-    std::string external_code; //< Code pérène
+    std::string uri; //< Code pérène
     TransmodelHeader() : idx(0){}
 };
 

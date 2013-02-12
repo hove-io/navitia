@@ -325,7 +325,7 @@ std::vector<idx_t> Connection::get(Type_e type, const PT_Data & ) const {
 }
 
 
-EntryPoint::EntryPoint(const std::string &uri) : external_code(uri) {
+EntryPoint::EntryPoint(const std::string &uri) : uri(uri) {
        size_t pos = uri.find(":");
        if(pos == std::string::npos)
            type = Type_e::eUnknown;
@@ -338,7 +338,7 @@ EntryPoint::EntryPoint(const std::string &uri) : external_code(uri) {
            std::vector<std::string> vect;
            vect = split_string(uri, ":");
            if(vect.size() == 3){
-               this->external_code = vect[0] + ":" + vect[1];
+               this->uri = vect[0] + ":" + vect[1];
                this->house_number = str_to_int(vect[2]);
            }
        }

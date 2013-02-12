@@ -39,7 +39,7 @@ void CsvFusio::fill_networks(navimake::Data& data){
             navimake::types::Network* network = new navimake::types::Network();
             network->id = row.at(0);
             network->name = row.at(2);
-            network->external_code = row.at(3);
+            network->uri = row.at(3);
             network->address_name = row.at(5);
             network->address_number = row.at(6);
             network->address_type_name = row.at(7);
@@ -69,7 +69,7 @@ void CsvFusio::fill_modes_type(navimake::Data& data){
             navimake::types::CommercialMode* mode_type = new navimake::types::CommercialMode();
             mode_type->id = row.at(0);
             mode_type->name = row.at(1);
-            mode_type->external_code = row.at(2);
+            mode_type->uri = row.at(2);
             data.mode_types.push_back(mode_type);
             mode_type_map[mode_type->id] = mode_type; 
         }
@@ -91,7 +91,7 @@ void CsvFusio::fill_modes(navimake::Data& data){
             navimake::types::PhysicalMode* mode = new navimake::types::PhysicalMode();
             mode->id = row.at(0);
             mode->name = row.at(2);
-            mode->external_code = row.at(3);
+            mode->uri = row.at(3);
 
             std::string mode_type_id = row.at(1);
             mode->commercial_mode = this->find(mode_type_map, mode_type_id);
@@ -118,7 +118,7 @@ void CsvFusio::fill_lines(navimake::Data& data){
             navimake::types::Line* line = new navimake::types::Line();
             line->id = row.at(0);
             line->name = row.at(4);
-            line->external_code = row.at(3);
+            line->uri = row.at(3);
             line->code = row.at(2);
 
             std::string network_id = row.at(5);
@@ -147,7 +147,7 @@ void CsvFusio::fill_cities(navimake::Data& data){
         if(counter != 0){
             navimake::types::City* city = new navimake::types::City();
             city->id = counter;//boost::lexical_cast<int>(row[0]);
-            city->external_code = row.at(1);
+            city->uri = row.at(1);
             city->name = row.at(2);
 
             city->coord.set_lon(boost::lexical_cast<double>(row.at(3)));
@@ -156,7 +156,7 @@ void CsvFusio::fill_cities(navimake::Data& data){
             city->main_postal_code = row.at(5);
 
             data.cities.push_back(city);
-            city_map[city->external_code] = city;
+            city_map[city->uri] = city;
         }
         counter++;       
     }
@@ -176,7 +176,7 @@ void CsvFusio::fill_stop_areas(navimake::Data& data){
         if(counter != 0){
             navimake::types::StopArea* stop_area = new navimake::types::StopArea();
             stop_area->id = boost::lexical_cast<int>(row.at(0));
-            stop_area->external_code = row.at(2);
+            stop_area->uri = row.at(2);
             stop_area->name = row.at(1);
 
             if(row.at(4) == "True") stop_area->main_stop_area = true;
@@ -206,7 +206,7 @@ void CsvFusio::fill_stop_points(navimake::Data& data){
         if(counter != 0){
             navimake::types::StopPoint* stop_point = new navimake::types::StopPoint();
             stop_point->id = boost::lexical_cast<int>(row.at(0));
-            stop_point->external_code = row.at(2);
+            stop_point->uri = row.at(2);
             stop_point->name = row.at(3);
 
             stop_point->address_name = row.at(6);
@@ -220,8 +220,8 @@ void CsvFusio::fill_stop_points(navimake::Data& data){
             std::string stop_area_id = row.at(4);
             stop_point->stop_area = this->find(stop_area_map, stop_area_id);
 
-            std::string city_external_code = row.at(5);
-            stop_point->city = this->find(city_map, city_external_code);
+            std::string city_uri = row.at(5);
+            stop_point->city = this->find(city_map, city_uri);
 
             std::string mode_id = row.at(11);
             stop_point->physical_mode = this->find(mode_map, mode_id);
@@ -247,7 +247,7 @@ void CsvFusio::fill_routes(navimake::Data& data){
         if(counter != 0){
             navimake::types::Route* route = new navimake::types::Route();
             route->id = boost::lexical_cast<int>(row.at(0));
-            route->external_code = row.at(3);
+            route->uri = row.at(3);
             route->name = row.at(2);
 
             if(row.at(1) == "True") route->is_frequence = true;
@@ -279,7 +279,7 @@ void CsvFusio::fill_vehicle_journeys(navimake::Data& data){
         if(counter != 0){
             navimake::types::VehicleJourney* vehicle_journey = new navimake::types::VehicleJourney();
             vehicle_journey->id = row.at(0);
-            vehicle_journey->external_code = row.at(8);
+            vehicle_journey->uri = row.at(8);
             vehicle_journey->name = row.at(7);
 
             if(row.at(12) == "True") vehicle_journey->is_adapted = true;
@@ -321,7 +321,7 @@ void CsvFusio::fill_stops(navimake::Data& data){
 
             std::string stop_point_id = row.at(7);
             navimake::types::StopPoint* stop_point = this->find(stop_point_map, stop_point_id);
-            std::string code = stop_point->external_code + ":" + stop->vehicle_journey->route->external_code;
+            std::string code = stop_point->uri + ":" + stop->vehicle_journey->route->uri;
             
             stop->route_point = this->find(route_point_map, code);
             
@@ -382,7 +382,7 @@ void CsvFusio::fill_route_points(navimake::Data& data){
             route_point->stop_point = this->find(stop_point_map, stop_point_id);
 
             data.route_points.push_back(route_point);
-            std::string code = route_point->route->external_code + ":" + route_point->stop_point->external_code;
+            std::string code = route_point->route->uri + ":" + route_point->stop_point->uri;
             route_point_map[code] = route_point;
         }
         counter++;       

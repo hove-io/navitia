@@ -38,7 +38,7 @@ int main(int argc, char * argv[]) {
     data.transform(nav_data.pt_data);
     nav_data.build_first_letter();
     nav_data.build_proximity_list();
-    nav_data.build_external_code();
+    nav_data.build_uri();
 
     nav_data.build_raptor();
     navitia::routing::raptor::RAPTOR raptor(nav_data);

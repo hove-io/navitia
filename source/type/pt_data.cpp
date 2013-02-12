@@ -209,7 +209,7 @@ void PT_Data::build_proximity_list() {
     this->stop_point_proximity_list.build();
 }
 
-void PT_Data::build_external_code() {
+void PT_Data::build_uri() {
     normalize_extcode<Line>(line_map);
     normalize_extcode<Route>(route_map);
     normalize_extcode<VehicleJourney>(vehicle_journey_map);

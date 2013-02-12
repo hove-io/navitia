@@ -36,19 +36,19 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
 
     navimake::types::StopArea* stop_area = data.stop_areas[0];
     BOOST_CHECK_EQUAL(stop_area->name, "Gare du Nord");
-    BOOST_CHECK_EQUAL(stop_area->external_code, "frpno");
+    BOOST_CHECK_EQUAL(stop_area->uri, "frpno");
     BOOST_CHECK_CLOSE(stop_area->coord.lon(), 2.355022, 0.0000001);
     BOOST_CHECK_CLOSE(stop_area->coord.lat(), 48.880342, 0.0000001);
     
     navimake::types::StopPoint* stop_point = data.stop_points[0];
     BOOST_CHECK_EQUAL(stop_point->name, "Gare du Nord Surface");
-    BOOST_CHECK_EQUAL(stop_point->external_code, "frpno:surface");
+    BOOST_CHECK_EQUAL(stop_point->uri, "frpno:surface");
     BOOST_CHECK_CLOSE(stop_point->coord.lon(), 2.355381, 0.0000001);
     BOOST_CHECK_CLOSE(stop_point->coord.lat(), 48.880531, 0.0000001);
     BOOST_CHECK_EQUAL(stop_point->stop_area, stop_area);
 
     navimake::types::VehicleJourney* vj = data.vehicle_journeys[0];
-    BOOST_CHECK_EQUAL(vj->external_code, "41");
+    BOOST_CHECK_EQUAL(vj->uri, "41");
     BOOST_CHECK_EQUAL(vj->name, "Porte de Clignancourt");
     BOOST_CHECK_EQUAL(vj->route, route);
 
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(stop->ODT, false);
     BOOST_CHECK_EQUAL(stop->arrival_time, 21600);
     BOOST_CHECK_EQUAL(stop->departure_time, 21601);
-    BOOST_CHECK_EQUAL(stop->route_point->stop_point->external_code, "frpno:metro4");
+    BOOST_CHECK_EQUAL(stop->route_point->stop_point->uri, "frpno:metro4");
     BOOST_CHECK_EQUAL(stop->route_point->stop_point->name, "Gare du Nord metro ligne 4");
     BOOST_CHECK_EQUAL(stop->route_point->stop_point, data.stop_points[2]);
 
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(city_transformer){
     city.comment = "test city";
     city.id = "1";
     city.idx = 1;
-    city.external_code = "city01";
+    city.uri = "city01";
     city.main_postal_code = "42000";
     city.main_city = true;
     city.use_main_stop_area_property = false;
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(city_transformer){
 
     BOOST_CHECK_EQUAL(city_n.idx, city.idx);
     BOOST_CHECK_EQUAL(city_n.id, city.id);
-    BOOST_CHECK_EQUAL(city_n.external_code, city.external_code);
+    BOOST_CHECK_EQUAL(city_n.uri, city.uri);
     BOOST_CHECK_EQUAL(city_n.comment, city.comment);
     BOOST_CHECK_EQUAL(city_n.name, city.name);
     BOOST_CHECK_EQUAL(city_n.main_postal_code, city.main_postal_code);
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(connection_transformer){
     
     connection.id = "12";
     connection.idx = 32;
-    connection.external_code = "connection_12";
+    connection.uri = "connection_12";
     connection.departure_stop_point = origin;
     connection.destination_stop_point = destination;
     connection.duration = 10;
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(connection_transformer){
 
     BOOST_CHECK_EQUAL(connection_n.idx, connection.idx);
     BOOST_CHECK_EQUAL(connection_n.id, connection.id);
-    BOOST_CHECK_EQUAL(connection_n.external_code, connection.external_code);
+    BOOST_CHECK_EQUAL(connection_n.uri, connection.uri);
     BOOST_CHECK_EQUAL(connection_n.departure_stop_point_idx, origin->idx);
     BOOST_CHECK_EQUAL(connection_n.destination_stop_point_idx, destination->idx);
     BOOST_CHECK_EQUAL(connection_n.duration, connection.duration);
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(stop_area_transformer){
 
     stop_area.id = "12";
     stop_area.idx = 32;
-    stop_area.external_code = "stop_area_12";
+    stop_area.uri = "stop_area_12";
     stop_area.name = "somewhere";
     stop_area.comment = "comment";
 
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(stop_area_transformer){
 
     BOOST_CHECK_EQUAL(stop_area_n.idx, stop_area.idx);
     BOOST_CHECK_EQUAL(stop_area_n.id, stop_area.id);
-    BOOST_CHECK_EQUAL(stop_area_n.external_code, stop_area.external_code);
+    BOOST_CHECK_EQUAL(stop_area_n.uri, stop_area.uri);
     BOOST_CHECK_EQUAL(stop_area_n.name, stop_area.name);
     BOOST_CHECK_EQUAL(stop_area_n.comment, stop_area.comment);
     BOOST_CHECK_EQUAL(stop_area_n.coord.lon(), stop_area.coord.lon());

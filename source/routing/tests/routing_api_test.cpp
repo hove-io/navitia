@@ -41,8 +41,8 @@ BOOST_AUTO_TEST_CASE(simple_journey){
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
     auto st1 = section.stop_date_times(0);
     auto st2 = section.stop_date_times(1);
-    BOOST_CHECK_EQUAL(st1.stop_point().external_code(), "stop_point:stop1");
-    BOOST_CHECK_EQUAL(st2.stop_point().external_code(), "stop_point:stop2");
+    BOOST_CHECK_EQUAL(st1.stop_point().uri(), "stop_point:stop1");
+    BOOST_CHECK_EQUAL(st2.stop_point().uri(), "stop_point:stop2");
     BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T081100");
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T082000");
 }
@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(journey_array){
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
     auto st1 = section.stop_date_times(0);
     auto st2 = section.stop_date_times(1);
-    BOOST_CHECK_EQUAL(st1.stop_point().external_code(), "stop_point:stop1");
-    BOOST_CHECK_EQUAL(st2.stop_point().external_code(), "stop_point:stop2");
+    BOOST_CHECK_EQUAL(st1.stop_point().uri(), "stop_point:stop1");
+    BOOST_CHECK_EQUAL(st2.stop_point().uri(), "stop_point:stop2");
     BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T081100");
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T082000");
 
@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(journey_array){
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
     st1 = section.stop_date_times(0);
     st2 = section.stop_date_times(1);
-    BOOST_CHECK_EQUAL(st1.stop_point().external_code(), "stop_point:stop1");
-    BOOST_CHECK_EQUAL(st2.stop_point().external_code(), "stop_point:stop2");
+    BOOST_CHECK_EQUAL(st1.stop_point().uri(), "stop_point:stop1");
+    BOOST_CHECK_EQUAL(st2.stop_point().uri(), "stop_point:stop2");
     BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T091100");
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T092000");
 }

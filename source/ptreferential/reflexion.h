@@ -51,7 +51,7 @@ template<class T> typename boost::disable_if<Reflect_##MEM_NAME<T>, int>::type g
 template<class T> typename boost::enable_if<Reflect_##MEM_NAME<T>, decltype(T::MEM_NAME) T::*>::type ptr_##MEM_NAME(){return &T::MEM_NAME;}\
 template<class T> typename boost::disable_if<Reflect_##MEM_NAME<T>, int T::*>::type ptr_##MEM_NAME(){throw unknown_member();}
 
-DECL_HAS_MEMBER(external_code)
+DECL_HAS_MEMBER(uri)
 DECL_HAS_MEMBER(id)
 DECL_HAS_MEMBER(idx)
 DECL_HAS_MEMBER(name)
@@ -62,7 +62,7 @@ template<class T>
 col_t get_value(T& object, const std::string & name){
     if(name == "id") return get_id(object);
     else if(name == "idx") return get_idx(object);
-    else if(name == "external_code") return get_external_code(object);
+    else if(name == "uri") return get_uri(object);
     else if(name == "name") return get_name(object);
     else
         throw unknown_member();

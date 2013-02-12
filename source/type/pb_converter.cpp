@@ -9,7 +9,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::City* city, 
     city->set_id(city_n.id);
     city->set_id(city_n.id);
     city->set_zip_code(city_n.main_postal_code);
-    city->set_external_code(city_n.external_code);
+    city->set_uri(city_n.uri);
     city->set_name(city_n.name);
     city->mutable_coord()->set_lon(city_n.coord.lon());
     city->mutable_coord()->set_lat(city_n.coord.lat());
@@ -18,7 +18,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::City* city, 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* stop_area, int max_depth){
     nt::StopArea sa = data.pt_data.stop_areas.at(idx);
     stop_area->set_id(sa.id);
-    stop_area->set_external_code(sa.external_code);
+    stop_area->set_uri(sa.uri);
     stop_area->set_name(sa.name);
     stop_area->mutable_coord()->set_lon(sa.coord.lon());
     stop_area->mutable_coord()->set_lat(sa.coord.lat());
@@ -30,7 +30,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* st
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* stop_point, int max_depth){
     nt::StopPoint sp = data.pt_data.stop_points.at(idx);
     stop_point->set_id(sp.id);
-    stop_point->set_external_code(sp.external_code);
+    stop_point->set_uri(sp.uri);
     stop_point->set_name(sp.name);
     stop_point->mutable_coord()->set_lon(sp.coord.lon());
     stop_point->mutable_coord()->set_lat(sp.coord.lat());
@@ -49,7 +49,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * ad
     }
     address->mutable_coord()->set_lon(coord.lon());
     address->mutable_coord()->set_lat(coord.lat());
-    address->set_external_code(way.external_code);
+    address->set_uri(way.uri);
     if(max_depth > 0 and way.city_idx != nt::invalid_idx)
         fill_pb_object(way.city_idx, data,  address->mutable_city());
 }
@@ -61,14 +61,14 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line,
     line->set_code(l.code);
     line->set_color(l.color);
     line->set_name(l.name);
-    line->set_external_code(l.external_code);
+    line->set_uri(l.uri);
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Route * route, int max_depth){
     navitia::type::Route r = data.pt_data.routes.at(idx);
     route->set_name(r.name);
     route->set_id(r.id);
-    route->set_external_code(r.external_code);
+    route->set_uri(r.uri);
     if(max_depth > 0 && r.line_idx != type::invalid_idx)
         fill_pb_object(r.line_idx, data, route->mutable_line(), max_depth - 1);
 }
@@ -77,28 +77,28 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Network * ne
     navitia::type::Network n = data.pt_data.networks.at(idx);
     network->set_name(n.name);
     network->set_id(n.id);
-    network->set_external_code(n.external_code);
+    network->set_uri(n.uri);
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::CommercialMode * commercial_mode, int){
     navitia::type::CommercialMode m = data.pt_data.commercial_modes.at(idx);
     commercial_mode->set_name(m.name);
     commercial_mode->set_id(m.id);
-    commercial_mode->set_external_code(m.external_code);
+    commercial_mode->set_uri(m.uri);
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::PhysicalMode * physical_mode, int){
     navitia::type::PhysicalMode m = data.pt_data.physical_modes.at(idx);
     physical_mode->set_name(m.name);
     physical_mode->set_id(m.id);
-    physical_mode->set_external_code(m.external_code);
+    physical_mode->set_uri(m.uri);
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Company * company, int){
     navitia::type::Company c = data.pt_data.companies.at(idx);
     company->set_name(c.name);
     company->set_id(c.id);
-    company->set_external_code(c.external_code);
+    company->set_uri(c.uri);
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Connection * connection, int max_depth){
@@ -113,7 +113,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Connection *
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::VehicleJourney * vehicle_journey, int max_depth){
     navitia::type::VehicleJourney vj = data.pt_data.vehicle_journeys.at(idx);
     vehicle_journey->set_name(vj.name);
-    vehicle_journey->set_external_code(vj.external_code);
+    vehicle_journey->set_uri(vj.uri);
     vehicle_journey->set_is_adapted(vj.is_adapted);
     if(vj.route_idx != type::invalid_idx && max_depth > 0)
         fill_pb_object(vj.route_idx, data, vehicle_journey->mutable_route(), max_depth-1);
@@ -145,7 +145,7 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopTime
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::RoutePoint * route_point, int max_depth){
     navitia::type::RoutePoint rp = data.pt_data.route_points.at(idx);
     route_point->set_id(rp.id);
-    route_point->set_external_code(rp.external_code);
+    route_point->set_uri(rp.uri);
     route_point->set_order(rp.order);
     if(rp.stop_point_idx != type::invalid_idx && max_depth > 0)
         fill_pb_object(rp.stop_point_idx, data, route_point->mutable_stop_point(), max_depth - 1);

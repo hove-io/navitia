@@ -17,13 +17,13 @@ BOOST_AUTO_TEST_CASE(boost_geometry){
 }
 
 BOOST_AUTO_TEST_CASE(uri_sa) {
-    std::string uri("stop_area:moo:ext_code");
+    std::string uri("stop_area:moo:uri");
     EntryPoint ep(uri);
 
     BOOST_CHECK(ep.type == Type_e::eStopArea);
 
     // On garde le prefixe de type
-    BOOST_CHECK_EQUAL(ep.external_code, "stop_area:moo:ext_code");
+    BOOST_CHECK_EQUAL(ep.uri, "stop_area:moo:uri");
 }
 
 BOOST_AUTO_TEST_CASE(uri_coord) {

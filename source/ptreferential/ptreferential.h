@@ -25,7 +25,7 @@
 using navitia::type::Type_e;
 namespace navitia{ namespace ptref{
 
-// Un filter est du type stop_area.external_code = "kikoolol"
+// Un filter est du type stop_area.uri = "kikoolol"
 struct Filter {
     navitia::type::Type_e navitia_type; //< Le type parsé
     std::string object; //< L'objet sous forme de chaîne de caractère ("stop_area")

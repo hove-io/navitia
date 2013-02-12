@@ -60,14 +60,14 @@ void Data::complete() {
 
     std::multimap<std::string, std::string> conns;
     for(auto conn : connections) {
-        conns.insert(std::make_pair(conn->departure_stop_point->external_code, conn->destination_stop_point->external_code));
+        conns.insert(std::make_pair(conn->departure_stop_point->uri, conn->destination_stop_point->uri));
     }
 
     std::multimap<std::string, types::StopPoint*> sa_sps;
 
     for(auto sp : stop_points) {
         if(sp->stop_area)
-            sa_sps.insert(std::make_pair(sp->stop_area->external_code, sp));
+            sa_sps.insert(std::make_pair(sp->stop_area->uri, sp));
     }
     int connections_size = connections.size();
 
@@ -77,11 +77,11 @@ void Data::complete() {
             auto ret = sa_sps.equal_range(sa_sp.first);
             for(auto it = ret.first; it!= ret.second; ++it){
                 for(auto it2 = it; it2!=ret.second; ++it2) {
-                    if(it->second->external_code != it2->second->external_code) {
+                    if(it->second->uri != it2->second->uri) {
                         bool found = false;
-                        auto ret2 = conns.equal_range(it->second->external_code);
+                        auto ret2 = conns.equal_range(it->second->uri);
                         for(auto itc = ret2.first; itc!= ret2.second; ++itc) {
-                            if(itc->second == it2->second->external_code) {
+                            if(itc->second == it2->second->uri) {
                                 found = true;
                                 break;
                             }
@@ -97,9 +97,9 @@ void Data::complete() {
                         }
 
                         found = false;
-                        ret2 = conns.equal_range(it2->second->external_code);
+                        ret2 = conns.equal_range(it2->second->uri);
                         for(auto itc = ret2.first; itc!= ret2.second; ++itc) {
-                            if(itc->second == it->second->external_code) {
+                            if(itc->second == it->second->uri) {
                                 found = true;
                                 break;
                             }
@@ -133,7 +133,7 @@ void Data::clean(){
     typedef std::vector<navimake::types::VehicleJourney *> vjs;
     std::unordered_map<std::string, vjs> route_vj;
     for(auto it = vehicle_journeys.begin(); it != vehicle_journeys.end(); ++it) {
-        route_vj[(*it)->route->external_code].push_back((*it));
+        route_vj[(*it)->route->uri].push_back((*it));
     }
 
     int erase_overlap = 0, erase_emptiness = 0;
@@ -142,7 +142,7 @@ void Data::clean(){
 
         for(auto vj1 = it1->second.begin(); vj1 != it1->second.end(); ++vj1) {
             if((*vj1)->stop_time_list.size() == 0) {
-                toErase.insert((*vj1)->external_code);
+                toErase.insert((*vj1)->uri);
                 ++erase_emptiness;
                 continue;
             }
@@ -161,7 +161,7 @@ void Data::clean(){
 
                     for(auto rp = (*vj1)->route->route_point_list.begin(); rp != (*vj1)->route->route_point_list.end();++rp) {
                         if(vjs1->stop_time_list.at((*rp)->order)->departure_time > vjs2->stop_time_list.at((*rp)->order)->departure_time) {
-                            toErase.insert((*vj2)->external_code);
+                            toErase.insert((*vj2)->uri);
                             ++erase_overlap;
                             break;
                         }
@@ -174,7 +174,7 @@ void Data::clean(){
     std::vector<size_t> erasest;
 
     for(int i=stops.size()-1; i >=0;--i) {
-        auto it = toErase.find(stops[i]->vehicle_journey->external_code);
+        auto it = toErase.find(stops[i]->vehicle_journey->uri);
         if(it != toErase.end()) {
             erasest.push_back(i);
         }
@@ -194,7 +194,7 @@ void Data::clean(){
 
     erasest.clear();
     for(int i=vehicle_journeys.size()-1; i >= 0;--i){
-        auto it = toErase.find(vehicle_journeys[i]->external_code);
+        auto it = toErase.find(vehicle_journeys[i]->uri);
         if(it != toErase.end()) {
             erasest.push_back(i);
         }

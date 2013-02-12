@@ -483,11 +483,11 @@ void RAPTOR::set_routes_valides(uint32_t date, const std::multimap<std::string, 
         // On gère la liste des interdits
         bool forbidden_route = false;
         for(auto pair : forbidden){
-            if(pair.first == "line" && pair.second == line.external_code)
+            if(pair.first == "line" && pair.second == line.uri)
                 forbidden_route = true;
-            if(pair.first == "route" && pair.second == route.external_code)
+            if(pair.first == "route" && pair.second == route.uri)
                 forbidden_route = true;
-            if(pair.first == "mode" && pair.second == mode.external_code)
+            if(pair.first == "mode" && pair.second == mode.uri)
                 forbidden_route = true;
         }
 

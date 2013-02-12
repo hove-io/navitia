@@ -2,8 +2,8 @@
 
 using namespace navitia::type;
 
-template<typename T> bool valid_ext_code(const T & a){
-    if(a.external_code.empty()){
+template<typename T> bool valid_uri(const T & a){
+    if(a.uri.empty()){
         std::cout << "    Code externe non renseigné : " << a.idx << std::endl;
         return false;
     } else {
@@ -26,7 +26,7 @@ template<typename T> int general_check(const std::vector<T> & elements){
     int error_count = 0;
     for(size_t i = 0; i < elements.size(); ++i) {
         const T & el = elements[i];
-        if(!valid_ext_code(el)) ++error_count;
+        if(!valid_uri(el)) ++error_count;
         if(!valid_idx(el, i)) ++error_count;
     }
     std::cout << "    Nombre d'erreurs : " << error_count << std::endl;

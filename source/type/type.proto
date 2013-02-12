@@ -49,7 +49,7 @@ message Country {
 message StopArea {
     optional string id = 1;
     optional string name = 3;
-    optional string external_code = 4;
+    optional string uri = 4;
     optional GeographicalCoord coord = 5;
     optional City city = 6;
     optional bool is_adapted = 7;
@@ -60,7 +60,7 @@ message StopPoint {
     optional string id = 1;
     optional string name = 3;
     optional City city = 4;
-    optional string external_code = 5;
+    optional string uri = 5;
     optional GeographicalCoord coord = 6; 
     optional StopArea stop_area = 7;
     optional bool is_adapted = 8;
@@ -69,7 +69,7 @@ message StopPoint {
 message Line {
     optional string id = 1;
     optional string name = 3;
-    optional string external_code = 4;
+    optional string uri = 4;
     optional string code = 5;
     optional string forward_name = 6;
     optional string backward_name = 7;
@@ -81,7 +81,7 @@ message Line {
 message Route {
     optional string id = 1;
     optional string name = 3;
-    optional string external_code = 4;
+    optional string uri = 4;
     optional bool is_frequence = 5;
     optional bool is_adapted = 6;
     optional Line line = 7;
@@ -112,7 +112,7 @@ message StopTime {
 message VehicleJourney {
     optional string id = 1;
     optional string name = 3;
-    optional string external_code = 4;
+    optional string uri = 4;
     optional bool is_adapted = 5;
     repeated StopTime stop_times = 6;
     optional Route route = 7;
@@ -120,7 +120,7 @@ message VehicleJourney {
 
 message RoutePoint{
     optional string id = 1;
-    optional string external_code = 3;
+    optional string uri = 3;
     optional int32 order = 4;
     optional StopPoint stop_point = 5;
     optional Route route = 6;
@@ -128,7 +128,7 @@ message RoutePoint{
 
 message City {
     optional string id = 1;
-    optional string external_code = 3;
+    optional string uri = 3;
     optional string zip_code = 2;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
@@ -136,28 +136,28 @@ message City {
 
 message Site {
     optional string id = 1;
-    optional string external_code = 3;
+    optional string uri = 3;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
 }
 
 message Network {
     optional string id = 1;
-    optional string external_code = 3;
+    optional string uri = 3;
     optional string name = 4;
     repeated Line lines = 5;
 }
 
 message PhysicalMode {
     optional string id = 1;
-    optional string external_code = 3;
+    optional string uri = 3;
     optional string name = 4;
     repeated CommercialMode commercial_modes = 5;
 }
 
 message CommercialMode {
     optional string id = 1;
-    optional string external_code = 3;
+    optional string uri = 3;
     optional string name = 4;
     repeated PhysicalMode physical_modes = 5;
 }
@@ -170,13 +170,13 @@ message Connection {
 
 message Company {
     optional string id = 1;
-    optional string external_code = 3;
+    optional string uri = 3;
     optional string name = 4;
 }
 
 message Address {
     optional string id = 1;
-    optional string external_code = 3;
+    optional string uri = 3;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
     optional City city = 7;

@@ -124,7 +124,7 @@ get_stop_points(const type::EntryPoint &ep, const type::Data & data,
     switch(ep.type) {
     case navitia::type::Type_e::eStopArea:
     {
-        auto it = data.pt_data.stop_area_map.find(ep.external_code);
+        auto it = data.pt_data.stop_area_map.find(ep.uri);
         if(it!= data.pt_data.stop_area_map.end()) {
             for(auto spidx : data.pt_data.stop_areas[it->second].stop_point_list) {
                 result.push_back(std::make_pair(spidx, 0));
@@ -132,7 +132,7 @@ get_stop_points(const type::EntryPoint &ep, const type::Data & data,
         }
     } break;
     case type::Type_e::eStopPoint: {
-        auto it = data.pt_data.stop_point_map.find(ep.external_code);
+        auto it = data.pt_data.stop_point_map.find(ep.uri);
         if(it != data.pt_data.stop_point_map.end()){
             result.push_back(std::make_pair(data.pt_data.stop_points[it->second].idx, 0));
         }

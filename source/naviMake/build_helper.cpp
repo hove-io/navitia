@@ -23,7 +23,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     auto it = b.lines.find(line_name);
     if(it == b.lines.end()){
         vj->tmp_line = new types::Line();
-        vj->tmp_line->external_code = line_name;
+        vj->tmp_line->uri = line_name;
         b.lines[line_name] = vj->tmp_line;
         vj->tmp_line->name = line_name;
         b.data.lines.push_back(vj->tmp_line);
@@ -50,14 +50,14 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32
     if(it == b.sps.end()){
         st->tmp_stop_point = new types::StopPoint();        
         st->tmp_stop_point->name = sp_name;
-        st->tmp_stop_point->external_code = sp_name;
+        st->tmp_stop_point->uri = sp_name;
         b.sps[sp_name] = st->tmp_stop_point;
         b.data.stop_points.push_back(st->tmp_stop_point);
         auto sa_it = b.sas.find(sp_name);
         if(sa_it == b.sas.end()) {
             st->tmp_stop_point->stop_area = new types::StopArea();
             st->tmp_stop_point->stop_area->name = sp_name;
-            st->tmp_stop_point->stop_area->external_code = sp_name;
+            st->tmp_stop_point->stop_area->uri = sp_name;
             st->tmp_stop_point->stop_area->is_adapted = true;
             b.sas[sp_name] = st->tmp_stop_point->stop_area;
             b.data.stop_areas.push_back(st->tmp_stop_point->stop_area);
@@ -88,7 +88,7 @@ SA::SA(builder & b, const std::string & sa_name, double x, double y, bool is_ada
     sa = new types::StopArea();
     b.data.stop_areas.push_back(sa);
     sa->name = sa_name;
-    sa->external_code = sa_name;
+    sa->uri = sa_name;
     sa->coord.set_lon(x);
     sa->coord.set_lat(y);
     sa->is_adapted = is_adapted;
@@ -99,7 +99,7 @@ SA & SA::operator()(const std::string & sp_name, double x, double y, bool is_ada
     types::StopPoint * sp = new types::StopPoint();
     b.data.stop_points.push_back(sp);
     sp->name = sp_name;
-    sp->external_code = sp_name;
+    sp->uri = sp_name;
     sp->is_adapted = is_adapted;
     sa->coord.set_lon(x);
     sa->coord.set_lat(y);
@@ -140,7 +140,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     data.clean();
     data.sort();
     data.transform(pt_data);
-    pt_data.build_external_code();
+    pt_data.build_uri();
 }
 
 

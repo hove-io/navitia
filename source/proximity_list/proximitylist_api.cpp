@@ -15,21 +15,21 @@ void create_pb(const std::vector<std::pair<type::idx_t, type::GeographicalCoord>
             place_mark->set_type(pbnavitia::STOPAREA);
             fill_pb_object(result_item.first, data, place_mark->mutable_stop_area(), 2);
             item->set_name(data.pt_data.stop_areas[result_item.first].name);
-            item->set_uri(data.pt_data.stop_areas[result_item.first].external_code);
+            item->set_uri(data.pt_data.stop_areas[result_item.first].uri);
             item->set_distance(coord.distance_to(result_item.second));
             break;
         case nt::Type_e::eCity:
             place_mark->set_type(pbnavitia::CITY);
             fill_pb_object(result_item.first, data, place_mark->mutable_city());
             item->set_name(data.pt_data.cities[result_item.first].name);
-            item->set_uri(data.pt_data.cities[result_item.first].external_code);
+            item->set_uri(data.pt_data.cities[result_item.first].uri);
             item->set_distance(coord.distance_to(result_item.second));
             break;
         case nt::Type_e::eStopPoint:
             place_mark->set_type(pbnavitia::STOPPOINT);
             fill_pb_object(result_item.first, data, place_mark->mutable_stop_point(), 2);
             item->set_name(data.pt_data.stop_points[result_item.first].name);
-            item->set_uri(data.pt_data.stop_points[result_item.first].external_code);
+            item->set_uri(data.pt_data.stop_points[result_item.first].uri);
             item->set_distance(coord.distance_to(result_item.second));
             break;
 

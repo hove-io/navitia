@@ -94,7 +94,7 @@ public:
     int nearest_number(const nt::GeographicalCoord& );
     nt::GeographicalCoord barycentre(const Graph& );
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-      ar & idx & name & comment & external_code & way_type & city & city_idx & house_number_left & house_number_right & edges;
+      ar & idx & name & comment & uri & way_type & city & city_idx & house_number_left & house_number_right & edges;
     }
 
 private:

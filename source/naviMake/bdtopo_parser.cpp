@@ -35,7 +35,7 @@ void BDTopoParser::load_city(navimake::Data& data){
             continue;
         navimake::types::City* city = new navimake::types::City();
         if(insee != -1)
-            city->external_code = row[insee];
+            city->uri = row[insee];
         if(name != -1)
             city->name = row[name];
         if(x!=-1 && y!=-1)
@@ -174,7 +174,7 @@ void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
         if(way_it == way_map.end()){
             way_map[way_key].name = row[nom];
             way_map[way_key].city = row[insee];
-            way_map[way_key].external_code = way_key;
+            way_map[way_key].uri = way_key;
             if (type > -1){
                 way_map[way_key].way_type = row[type];
             }

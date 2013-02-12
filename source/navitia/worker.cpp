@@ -137,7 +137,7 @@ pbnavitia::Response Worker::proximity_list(const pbnavitia::ProximityListRequest
 
 type::GeographicalCoord Worker::coord_of_address(const type::EntryPoint & entry_point) {
     type::GeographicalCoord result;
-    auto way = this->data.geo_ref.way_map.find(entry_point.external_code);
+    auto way = this->data.geo_ref.way_map.find(entry_point.uri);
     if (way != this->data.geo_ref.way_map.end()){
         result = this->data.geo_ref.ways[way->second].nearest_coord(entry_point.house_number, this->data.geo_ref.graph);
     }

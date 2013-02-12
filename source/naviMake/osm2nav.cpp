@@ -96,7 +96,7 @@ struct Visitor{
 
             georef::Way gr_way;
             gr_way.idx = w.idx;
-            gr_way.external_code = std::to_string(w.idx);
+            gr_way.uri = std::to_string(w.idx);
             gr_way.city_idx = type::invalid_idx;
             if(tags.find("name") != tags.end())
                 gr_way.name = tags.at("name");             
