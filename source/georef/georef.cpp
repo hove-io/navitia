@@ -125,15 +125,13 @@ nt::GeographicalCoord Way::barycentre(const Graph& graph){
     std::vector<nt::GeographicalCoord> line;
     nt::GeographicalCoord centroid;
 
-    for(auto hn: this->house_number_right){
-        line.push_back(hn.coord);
-    }
-    for(auto hn: this->house_number_left){
-        line.push_back(hn.coord);
-    }
+    std::pair<vertex_t, vertex_t> previous(type::invalid_idx, type::invalid_idx);
     for(auto edge : this->edges){
-        line.push_back(graph[edge.first].coord);
-        line.push_back(graph[edge.second].coord);
+        if(edge.first != previous.second || edge.second != previous.first ){
+            line.push_back(graph[edge.first].coord);
+            line.push_back(graph[edge.second].coord);
+        }
+        previous = edge;
     }
     boost::geometry::centroid(line, centroid);
     return centroid;
