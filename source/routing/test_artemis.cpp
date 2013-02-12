@@ -36,7 +36,7 @@ int main(int argc, char * argv[]) {
     data.clean();
     data.sort();
     data.transform(nav_data.pt_data);
-    nav_data.build_first_letter();
+    nav_data.build_autocomplete();
     nav_data.build_proximity_list();
     nav_data.build_uri();
 

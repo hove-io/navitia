@@ -1,6 +1,6 @@
 #pragma once
 #include "type.h"
-#include "first_letter/first_letter.h"
+#include "autocomplete/autocomplete.h"
 #include "proximity_list/proximity_list.h"
 
 #include <boost/serialization/map.hpp>
@@ -33,9 +33,9 @@ struct PT_Data : boost::noncopyable{
     std::vector<std::vector<Connection> > stop_point_connections;
 
     // First letter
-    firstletter::FirstLetter<idx_t> stop_area_first_letter;
-    firstletter::FirstLetter<idx_t> city_first_letter;
-    firstletter::FirstLetter<idx_t> stop_point_first_letter;
+    autocomplete::Autocomplete<idx_t> stop_area_autocomplete;
+    autocomplete::Autocomplete<idx_t> city_autocomplete;
+    autocomplete::Autocomplete<idx_t> stop_point_autocomplete;
 
     // Proximity list
     proximitylist::ProximityList<idx_t> stop_area_proximity_list;
@@ -70,7 +70,7 @@ struct PT_Data : boost::noncopyable{
                 & validity_patterns & lines & stop_points & stop_areas & stop_times & routes
                 & vehicle_journeys & route_points & commercial_modes & physical_modes & cities & networks
                 // Les firstLetter
-                & stop_area_first_letter & city_first_letter & stop_point_first_letter
+                & stop_area_autocomplete & city_autocomplete & stop_point_autocomplete
                 // Les map d'externalcode
                 & line_map & route_map & vehicle_journey_map & stop_area_map & stop_point_map
                 & network_map & physical_mode_map & commercial_mode_map & city_map & district_map & department_map
@@ -89,8 +89,8 @@ struct PT_Data : boost::noncopyable{
     /** Construit l'indexe ExternelCode */
     void build_uri();
 
-    /** Construit l'indexe FirstLetter */
-    void build_first_letter();
+    /** Construit l'indexe Autocomplete */
+    void build_autocomplete();
 
     /** Construit l'indexe ProximityList */
     void build_proximity_list();

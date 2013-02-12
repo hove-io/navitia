@@ -2,7 +2,7 @@
 
 #include "utils/configuration.h"
 #include "routing/raptor_api.h"
-#include "first_letter/firstletter_api.h"
+#include "autocomplete/autocomplete_api.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential_api.h"
 #include "time_tables/line_schedule.h"
@@ -108,9 +108,9 @@ pbnavitia::Response Worker::load() {
 
 
 
-pbnavitia::Response Worker::first_letter(const pbnavitia::FirstLetterRequest & request) {
+pbnavitia::Response Worker::autocomplete(const pbnavitia::AutocompleteRequest & request) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
-    return navitia::firstletter::firstletter(request.name(), vector_of_pb_types(request), this->data);
+    return navitia::autocomplete::autocomplete(request.name(), vector_of_pb_types(request), this->data);
 }
 
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest & request, pbnavitia::API api) {
@@ -198,7 +198,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
     switch(request.requested_api()){
     case pbnavitia::STATUS: return status(); break;
     case pbnavitia::LOAD: return load(); break;
-    case pbnavitia::FIRSTLETTER: return first_letter(request.first_letter()); break;
+    case pbnavitia::AUTOCOMPLETE: return autocomplete(request.autocomplete()); break;
     case pbnavitia::LINE_SCHEDULE:
     case pbnavitia::NEXT_DEPARTURES:
     case pbnavitia::NEXT_ARRIVALS:

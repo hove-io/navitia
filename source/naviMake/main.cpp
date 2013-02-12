@@ -48,7 +48,7 @@ int main(int argc, char * argv[])
         std::cout << "Pas de topologie chargee" << std::endl;
     }
     pt::ptime start, end;
-    int read, complete, clean, sort, transform, save, first_letter, sn;
+    int read, complete, clean, sort, transform, save, autocomplete, sn;
 
     navimake::Data data; // Structure temporaire
     navitia::type::Data nav_data; // Structure définitive
@@ -133,10 +133,10 @@ int main(int argc, char * argv[])
     std::cout << "Assigne les villes aux voiries du filaire" << std::endl;
     nav_data.set_cities(); // Assigne les villes aux voiries du filaire [depend des uri]
     std::cout << "Construction de first letter" << std::endl;
-    nav_data.build_first_letter();
+    nav_data.build_autocomplete();
     std::cout << "On va construire les correspondances" << std::endl;
     {Timer t("Construction des correspondances");  nav_data.pt_data.build_connections();}
-    first_letter = (pt::microsec_clock::local_time() - start).total_milliseconds();
+    autocomplete = (pt::microsec_clock::local_time() - start).total_milliseconds();
     std::cout <<"Debut sauvegarde ..." << std::endl;
     start = pt::microsec_clock::local_time();
 
@@ -150,7 +150,7 @@ int main(int argc, char * argv[])
     std::cout << "\t trie des données " << sort << "ms" << std::endl;
     std::cout << "\t transformation " << transform << "ms" << std::endl;
     std::cout << "\t street network " << sn << "ms" << std::endl;
-    std::cout << "\t construction de firstletter " << first_letter << "ms" << std::endl;
+    std::cout << "\t construction de autocomplete " << autocomplete << "ms" << std::endl;
     std::cout << "\t serialization " << save << "ms" << std::endl;
     
     return 0;

@@ -76,12 +76,12 @@ pb_type = {
         'address': type_pb2.ADDRESS
         }
 
-def on_first_letter(request_args, version, region, format, callback):
+def on_autocomplete(request_args, version, region, format, callback):
     req = type_pb2.Request()
-    req.requested_api = type_pb2.FIRSTLETTER
-    req.first_letter.name = request_args['name']
+    req.requested_api = type_pb2.AUTOCOMPLETE
+    req.autocomplete.name = request_args['name']
     for object_type in request_args["object_type[]"]:
-        req.first_letter.types.append(pb_type[object_type])
+        req.autocomplete.types.append(pb_type[object_type])
 
     resp = send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
@@ -211,7 +211,7 @@ isochroneArguments = copy.copy(journeyArguments)
 del isochroneArguments["destination"]
 
 apis = {
-        "first_letter" : {"endpoint" : on_first_letter, "arguments" : {"name" : Argument("The data to search", str, True, False, order = 1),
+        "autocomplete" : {"endpoint" : on_autocomplete, "arguments" : {"name" : Argument("The data to search", str, True, False, order = 1),
                                                                        "object_type[]" : Argument("The type of datas you want in return", str, False, True, ["stop_area", "stop_point", "address"])},
                           "description" : "Retrieves the objects which contains in their name the \"name\"",
                           "order":2},
@@ -255,13 +255,13 @@ apis = {
                         ptrefArguments,
                         "description" : "Retrieves all the networks filtered with filter",
                           "order":5},
-        "modes" : {"endpoint" : on_ptref(type_pb2.MODE), "arguments" :
+        "modes" : {"endpoint" : on_ptref(type_pb2.PHYSICALMODE), "arguments" :
                         ptrefArguments,
-                        "description" : "Retrieves all the modes filtered with filter",
+                        "description" : "Retrieves all the physical modes filtered with filter",
                           "order":5},
-        "mode_types" : {"endpoint" : on_ptref(type_pb2.MODETYPE), "arguments" :
+        "mode_types" : {"endpoint" : on_ptref(type_pb2.COMMERCIALMODE), "arguments" :
                         ptrefArguments,
-                        "description" : "Retrieves all the mode types filtered with filter",
+                        "description" : "Retrieves all the commercial modes filtered with filter",
                           "order":5},
         "connections" : {"endpoint" : on_ptref(type_pb2.CONNECTION), "arguments" :
                         ptrefArguments,

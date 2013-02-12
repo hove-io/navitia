@@ -315,7 +315,7 @@ void GeoRef::build_proximity_list(){
     pl.build();
 }
 
-void GeoRef::build_firstletter_list(){
+void GeoRef::build_autocomplete_list(){
     int pos = 0;
     for(Way way : ways){
         fl.add_string(way.way_type +" "+ way.name, pos);
@@ -346,8 +346,8 @@ void GeoRef::normalize_extcode_way(){
     * Si le numéro est rensigné, on renvoie les coordonnées les plus proches
     * Sinon le barycentre de la rue
 */
-std::vector<nf::FirstLetter<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string & str) const{
-    std::vector<nf::FirstLetter<nt::idx_t>::fl_quality> to_return;
+std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string & str) const{
+    std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> to_return;
     boost::tokenizer<> tokens(str);
     auto token_it = tokens.begin();
     int search_number = str_to_int(*token_it);

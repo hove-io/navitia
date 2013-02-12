@@ -140,7 +140,7 @@
           <property name="currentIndex">
            <number>0</number>
           </property>
-          <widget class="QWidget" name="first_letter">
+          <widget class="QWidget" name="autocomplete">
            <property name="geometry">
             <rect>
              <x>0</x>

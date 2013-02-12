@@ -14,7 +14,7 @@ namespace navitia{ namespace gateway{
 
 Worker::Worker(Pool &){
     register_api("/", boost::bind(&Worker::handle, this, _1, _2), "traite les requétes");
-    register_api("firstletter", boost::bind(&Worker::handle, this, _1, _2), "traite les requètes");
+    register_api("autocomplete", boost::bind(&Worker::handle, this, _1, _2), "traite les requètes");
     register_api("proximitylist", boost::bind(&Worker::handle, this, _1, _2), "traite les requètes");
     register_api("streetnetwork", boost::bind(&Worker::handle, this, _1, _2), "traite les requètes");
     register_api("planner", boost::bind(&Worker::handle, this, _1, _2), "planne les requêtes");

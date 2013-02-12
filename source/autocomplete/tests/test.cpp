@@ -1,7 +1,7 @@
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE test_first_letter
+#define BOOST_TEST_MODULE test_autocomplete
 
-#include "first_letter/first_letter.h"
+#include "autocomplete/autocomplete.h"
 #include "type/data.h"
 #include <boost/test/unit_test.hpp>
 #include <vector>
@@ -12,51 +12,51 @@
 #include<unordered_map>
 
 namespace pt = boost::posix_time;
-using namespace navitia::firstletter;
+using namespace navitia::autocomplete;
 
 BOOST_AUTO_TEST_CASE(parse_state_test){
-    FirstLetter<unsigned int> fl;
-    fl.add_string("rue jean jaures", 0);
-    fl.add_string("place jean jaures", 1);
-    fl.add_string("rue jeanne d'arc", 2);
-    fl.add_string("avenue jean jaures", 3);
-    fl.add_string("boulevard poniatowski", 4);
-    fl.add_string("pente de Bray", 5);
-    fl.build();    
+    Autocomplete<unsigned int> ac;
+    ac.add_string("rue jean jaures", 0);
+    ac.add_string("place jean jaures", 1);
+    ac.add_string("rue jeanne d'arc", 2);
+    ac.add_string("avenue jean jaures", 3);
+    ac.add_string("boulevard poniatowski", 4);
+    ac.add_string("pente de Bray", 5);
+    ac.build();    
 
-    auto res = fl.find("rue jean jaures");
+    auto res = ac.find("rue jean jaures");
     std::vector<int> expected = {0};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
-    res = fl.find("jaures");
+    res = ac.find("jaures");
     expected = {0, 1, 3};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
-    res = fl.find("avenue");
+    res = ac.find("avenue");
     expected = {3};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
-    res = fl.find("av");
+    res = ac.find("av");
     expected = {3};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
-    res = fl.find("r jean");
+    res = ac.find("r jean");
     expected = {0, 2};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
-    res = fl.find("jean r");
+    res = ac.find("jean r");
     expected = {0, 2};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
-    res = fl.find("jEaN r");
+    res = ac.find("jEaN r");
     expected = {0, 2};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
-    res = fl.find("ponia");
+    res = ac.find("ponia");
     expected = {4};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 
-    res = fl.find("ru je jau");
+    res = ac.find("ru je jau");
     expected = {0};
     BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());    
 }
@@ -68,21 +68,21 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
   */
 
 BOOST_AUTO_TEST_CASE(alias_test){
-    FirstLetter<unsigned int> fl;
+    Autocomplete<unsigned int> ac;
     std::map <std::string,std::string> map;
     map["st"]="saint";
-    std::string str = fl.get_alias("st", map);
+    std::string str = ac.get_alias("st", map);
     BOOST_CHECK_EQUAL("saint",str);
 
     map["de"]="";
-    str = fl.get_alias("de", map);
+    str = ac.get_alias("de", map);
     BOOST_CHECK_EQUAL("", str);
 }
 
 /*
-    > Le fonctionnement partiel :> On prends tous les firstletter s'il y au moins un match
-      et trie la liste des FirstLetter par la qualité.
-    > La qualité est calculé avec le nombre des mots dans la recherche et le nombre des matchs dans FirstLetter.
+    > Le fonctionnement partiel :> On prends tous les autocomplete s'il y au moins un match
+      et trie la liste des Autocomplete par la qualité.
+    > La qualité est calculé avec le nombre des mots dans la recherche et le nombre des matchs dans Autocomplete.
 
     Exemple:
     vector[] = {0,1,2,3,4,5};
@@ -107,18 +107,18 @@ BOOST_AUTO_TEST_CASE(alias_test){
 */
 
 BOOST_AUTO_TEST_CASE(parse_state_nb_found_test){
-        FirstLetter<unsigned int> fl;
+        Autocomplete<unsigned int> ac;
 
-        fl.add_string("place jean jaures", 0);
-        fl.add_string("rue jeanne d'arc", 1);
-        fl.add_string("avenue jean jaures", 2);
-        fl.add_string("boulevard poniatowski", 3);
-        fl.add_string("pente de Bray", 4);
-        fl.add_string("rue jean jaures", 5);
+        ac.add_string("place jean jaures", 0);
+        ac.add_string("rue jeanne d'arc", 1);
+        ac.add_string("avenue jean jaures", 2);
+        ac.add_string("boulevard poniatowski", 3);
+        ac.add_string("pente de Bray", 4);
+        ac.add_string("rue jean jaures", 5);
 
-        fl.build();
+        ac.build();
 
-        auto res = fl.find_partial("rue jean");
+        auto res = ac.find_partial("rue jean");
         BOOST_REQUIRE_EQUAL(res.size(), 4);
         BOOST_CHECK_EQUAL(res.at(0).idx, 5);
         BOOST_CHECK_EQUAL(res.at(1).idx, 1);
@@ -133,14 +133,14 @@ BOOST_AUTO_TEST_CASE(parse_state_nb_found_test){
     }
 
 /*
-    > Le fonctionnement normal :> On prends que les firstletter si tous les mots dans la recherche existent
-      et trie la liste des FirstLetter par la qualité.
-    > La qualité est calculé avec le nombre des mots dans la recherche et le nombre des mots dans FirstLetter remonté.
+    > Le fonctionnement normal :> On prends que les autocomplete si tous les mots dans la recherche existent
+      et trie la liste des Autocomplete par la qualité.
+    > La qualité est calculé avec le nombre des mots dans la recherche et le nombre des mots dans autocomplete remonté.
 sort
     Exemple:
     vector[] = {0,1,2,3,4,5,6,7,8};
     Recherche : "rue jean";
-    Vector      nb_found    FL_wordcount    Quality
+    Vector      nb_found    AC_wordcount    Quality
         0           2           4               50
         2           2           5               40
         6           2           3               66
@@ -151,21 +151,21 @@ sort
     Result [] = {6,7,0,2}
 */
 
-BOOST_AUTO_TEST_CASE(first_letter_find_quality_test){
-        FirstLetter<unsigned int> fl;
-        fl.add_string("rue jeanne d'arc", 0);
-        fl.add_string("place jean jaures", 1);
-        fl.add_string("rue jean paul gaultier paris", 2);
-        fl.add_string("avenue jean jaures", 3);
-        fl.add_string("boulevard poniatowski", 4);
-        fl.add_string("pente de Bray", 5);
-        fl.add_string("rue jean jaures", 6);
-        fl.add_string("rue jean zay ", 7);
-        fl.add_string("place jean paul gaultier ", 8);
+BOOST_AUTO_TEST_CASE(autocomplete_find_quality_test){
+        Autocomplete<unsigned int> ac;
+        ac.add_string("rue jeanne d'arc", 0);
+        ac.add_string("place jean jaures", 1);
+        ac.add_string("rue jean paul gaultier paris", 2);
+        ac.add_string("avenue jean jaures", 3);
+        ac.add_string("boulevard poniatowski", 4);
+        ac.add_string("pente de Bray", 5);
+        ac.add_string("rue jean jaures", 6);
+        ac.add_string("rue jean zay ", 7);
+        ac.add_string("place jean paul gaultier ", 8);
 
-        fl.build();
+        ac.build();
 
-        auto res = fl.find_complete("rue jean");
+        auto res = ac.find_complete("rue jean");
         std::vector<int> expected = {6,7,0,2};
         BOOST_REQUIRE_EQUAL(res.size(), 4);
         BOOST_REQUIRE_EQUAL(res.at(0).quality, 66);

@@ -96,8 +96,8 @@ void Data::build_proximity_list(){
 }
 
 
-void Data::build_first_letter(){
-    pt_data.build_first_letter();
+void Data::build_autocomplete(){
+    pt_data.build_autocomplete();
 
     for(auto way : geo_ref.ways){
         if(way.city_idx < pt_data.cities.size())

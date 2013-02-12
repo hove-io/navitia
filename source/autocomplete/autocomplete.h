@@ -13,7 +13,7 @@
 
 #include "type/type.h"
 
-namespace navitia { namespace firstletter {
+namespace navitia { namespace autocomplete {
 
 
 /** Map de type first letter
@@ -24,9 +24,9 @@ namespace navitia { namespace firstletter {
   * Quand on cherche "r jean" on veut récupérer la valeur correspondant à la clef "rue jean jaures" et "rue jeanne d'arc"
   */
 template<class T>
-struct FirstLetter
+struct Autocomplete
 {    
-    /// structure qui contient la position des mots dans firstletter et le nombre de match.
+    /// structure qui contient la position des mots dans autocomplete et le nombre de match.
     struct fl_quality{
         T idx;
         int nb_found;
@@ -56,7 +56,7 @@ struct FirstLetter
     /// Structure principale de notre indexe
     std::vector<vec_elt> vec_map;
 
-    /// Structure pour garder le nombre des mots dans chaque FirstLetter (Position)
+    /// Structure pour garder le nombre des mots dans chaque Autocomplete (Position)
     std::map<T, int> word_count;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
@@ -197,7 +197,7 @@ struct FirstLetter
             index_result = match(*token_it);
             wordCount++;
 
-            //incrémenter la propriété "nb_found" pour chaque index des mots firstletter dans vec_map
+            //incrémenter la propriété "nb_found" pour chaque index des mots autocomplete dans vec_map
             add_word_quality(fl_result,index_result);
 
             //Recherche des mots qui restent
@@ -205,7 +205,7 @@ struct FirstLetter
                 wordCount++;
                 index_result = match(*token_it);
 
-                //incrémenter la propriété "nb_found" pour chaque index des mots firstletter dans vec_map
+                //incrémenter la propriété "nb_found" pour chaque index des mots autocomplete dans vec_map
                 add_word_quality(fl_result,index_result);
             }
 
@@ -283,4 +283,4 @@ struct FirstLetter
     }
 };
 
-}} // namespace navitia::firstletter
+}} // namespace navitia::autocomplete

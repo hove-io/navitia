@@ -8,9 +8,9 @@ struct Data;
 enum class Type_e;
 }
 
-namespace firstletter {
+namespace autocomplete {
 
 /** Trouve tous les objets définis par filter dont le nom contient name */
-pbnavitia::Response firstletter(const std::string &name, const std::vector<navitia::type::Type_e> &filter, const navitia::type::Data &d);
+pbnavitia::Response autocomplete(const std::string &name, const std::vector<navitia::type::Type_e> &filter, const navitia::type::Data &d);
 
 }}

@@ -31,7 +31,7 @@ public:
 
     /** Le map qui contient la liste des Alias utilisé par
           * 1. module de binarisation des données ou le module de chargement.
-            2. Module firstletter à chaque appel.
+            2. Module autocomplete à chaque appel.
           */
     std::map<std::string, std::string> Alias_List;
 
@@ -100,8 +100,8 @@ public:
     /** Construit l'indexe ExternelCode */
     void build_uri();
 
-    /** Construit l'indexe FirstLetter */
-    void build_first_letter();
+    /** Construit l'indexe Autocomplete */
+    void build_autocomplete();
 
     /** Construit l'indexe ProximityList */
     void build_proximity_list();

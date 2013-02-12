@@ -1,6 +1,6 @@
 #pragma once
 
-#include "first_letter/first_letter.h"
+#include "autocomplete/autocomplete.h"
 #include "proximity_list/proximity_list.h"
 
 #include <boost/graph/adjacency_list.hpp>
@@ -12,7 +12,7 @@
 #include <map>
 
 namespace nt = navitia::type;
-namespace nf = navitia::firstletter;
+namespace nf = navitia::autocomplete;
 
 namespace navitia { namespace georef {
 
@@ -129,7 +129,7 @@ struct GeoRef {
     std::map<std::string, nt::idx_t> way_map;
 
     /// Indexe sur les noms de voirie
-    firstletter::FirstLetter<unsigned int> fl;
+    autocomplete::Autocomplete<unsigned int> fl;
 
     /// Indexe tous les nœuds
     proximitylist::ProximityList<vertex_t> pl;
@@ -156,16 +156,16 @@ struct GeoRef {
     /** Construit l'indexe spatial */
     void build_proximity_list();
 
-    ///  Construit l'indexe firstletter à partir des rues
-    void build_firstletter_list();
+    ///  Construit l'indexe autocomplete à partir des rues
+    void build_autocomplete_list();
 
     /// Normalisation des codes externes
     void normalize_extcode_way();
     /// Chargement de la liste map code externe idx
     void build_ways();
 
-    /// Recherche d'une adresse avec un numéro en utilisant FirstLetter
-    std::vector<nf::FirstLetter<nt::idx_t>::fl_quality> find_ways(const std::string & str) const;
+    /// Recherche d'une adresse avec un numéro en utilisant Autocomplete
+    std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str) const;
 
 
     /** Projete chaque stop_point sur le filaire de voirie */

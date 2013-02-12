@@ -39,7 +39,7 @@
  * Chaque module existe dans un sous-repertoire de source
  *  - \ref WS_Commons : squelette pour construire un webservice fcgi/isapi
  *  - \ref fare : calcul des tarifs d'un trajet
- *  - \ref first_letter : indexation de chaînes de caractères pour retrouver rapidement un élément
+ *  - \ref autocomplete : indexation de chaînes de caractères pour retrouver rapidement un élément
  *  - \ref gateway : une passerelle plus modulaire adaptée au cloud
  *  - log : expérimentations des logs
  *  - \ref navimake : transformer des exports fusion .csv dans le format interne

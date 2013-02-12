@@ -20,7 +20,7 @@ enum NavitiaType {
 
 
 enum API {
-    FIRSTLETTER = 1;
+    AUTOCOMPLETE = 1;
     PTREFERENTIAL = 2;
     STREET_NETWORK = 3;
     PLANNER = 4;	
@@ -209,15 +209,15 @@ message PlaceMark {
     optional Address address = 7;
 }
 
-message FirstLetterItem {
+message AutocompleteItem {
     optional string name = 1;
     optional int32 quality = 2;
     optional string uri = 3;
     optional PlaceMark object = 4;
 }
 
-message FirstLetter {
-    repeated FirstLetterItem items = 1;
+message Autocomplete {
+    repeated AutocompleteItem items = 1;
     repeated string ignored_words = 2;
     repeated string bad_words = 3;
 }
@@ -403,7 +403,7 @@ message Response{
 
     optional string info = 3;
 
-    optional FirstLetter firstletter = 4;
+    optional Autocomplete autocomplete = 4;
     optional PTReferential ptref = 5;
     optional StreetNetwork street_network = 6;
     optional Planner planner = 7;	
@@ -423,7 +423,7 @@ message req {
 	required string params = 2;
 }
 
-message FirstLetterRequest {
+message AutocompleteRequest {
     required string name = 1;
     repeated NavitiaType types = 2;
 }
@@ -466,7 +466,7 @@ message PTRefRequest {
 message Request {
     required API requested_api = 1;
 
-    optional FirstLetterRequest first_letter = 2;
+    optional AutocompleteRequest autocomplete = 2;
     optional NextStopTimeRequest next_stop_times = 4;
     optional ProximityListRequest proximity_list = 5;
     optional JourneysRequest journeys = 6;

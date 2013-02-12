@@ -28,9 +28,9 @@ PT_Data& PT_Data::operator=(PT_Data&& other){
     stop_point_connections = other.stop_point_connections;
 
     // First letter
-    stop_area_first_letter = other.stop_area_first_letter;
-    city_first_letter = other.city_first_letter;
-    stop_point_first_letter = other.stop_point_first_letter;
+    stop_area_autocomplete = other.stop_area_autocomplete;
+    city_autocomplete = other.city_autocomplete;
+    stop_point_autocomplete = other.stop_point_autocomplete;
 
     // Proximity list
     stop_area_proximity_list = other.stop_area_proximity_list;
@@ -166,30 +166,30 @@ template<> std::vector<Country> const & PT_Data::get_data<Country>() const {retu
 template<> std::vector<Vehicle> const & PT_Data::get_data<Vehicle>() const {return vehicles;}
 
 
-void PT_Data::build_first_letter(){
+void PT_Data::build_autocomplete(){
     for(const StopArea & sa : this->stop_areas){
         if(sa.city_idx < this->cities.size())
-            this->stop_area_first_letter.add_string(sa.name + " " + cities[sa.city_idx].name, sa.idx);
+            this->stop_area_autocomplete.add_string(sa.name + " " + cities[sa.city_idx].name, sa.idx);
         else
-            this->stop_area_first_letter.add_string(sa.name, sa.idx);
+            this->stop_area_autocomplete.add_string(sa.name, sa.idx);
     }
 
-    this->stop_area_first_letter.build();
+    this->stop_area_autocomplete.build();
 
     for(const StopPoint & sp : this->stop_points){
         if(sp.city_idx < this->cities.size())
-            this->stop_point_first_letter.add_string(sp.name + " " + cities[sp.city_idx].name, sp.idx);
+            this->stop_point_autocomplete.add_string(sp.name + " " + cities[sp.city_idx].name, sp.idx);
         else
-            this->stop_point_first_letter.add_string(sp.name, sp.idx);
+            this->stop_point_autocomplete.add_string(sp.name, sp.idx);
     }
 
-    this->stop_point_first_letter.build();
+    this->stop_point_autocomplete.build();
 
 
     for(const City & city : cities){
-        this->city_first_letter.add_string(city.name, city.idx);
+        this->city_autocomplete.add_string(city.name, city.idx);
     }
-    this->city_first_letter.build();
+    this->city_autocomplete.build();
 }
 
 void PT_Data::build_proximity_list() {

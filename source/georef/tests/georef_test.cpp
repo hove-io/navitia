@@ -493,8 +493,8 @@ BOOST_AUTO_TEST_CASE(coord){
     BOOST_CHECK_EQUAL(result, -1);
 
 }
-// Test de firstletter
-BOOST_AUTO_TEST_CASE(build_first_letter_test){
+// Test de autocomplete
+BOOST_AUTO_TEST_CASE(build_autocomplete_test){
 
         navitia::georef::GeoRef geo_ref;
         navitia::georef::Way way;
@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(build_first_letter_test){
         vertex_t debut, fin;
         Vertex v;
         navitia::georef::Edge e1;
-        std::vector<nf::FirstLetter<nt::idx_t>::fl_quality> result;
+        std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> result;
 
         way.name = "jeanne d'arc";
         way.way_type = "rue";
@@ -592,7 +592,7 @@ BOOST_AUTO_TEST_CASE(build_first_letter_test){
         way.way_type = "place";
         geo_ref.ways.push_back(way);
 
-        geo_ref.build_firstletter_list();
+        geo_ref.build_autocomplete_list();
 
         result = geo_ref.find_ways("10 rue jean jaures");
         if (result.empty())

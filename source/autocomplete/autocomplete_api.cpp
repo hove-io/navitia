@@ -1,15 +1,15 @@
-#include "firstletter_api.h"
+#include "autocomplete_api.h"
 #include "type/pb_converter.h"
 #include <boost/foreach.hpp>
 
-namespace navitia { namespace firstletter {
+namespace navitia { namespace autocomplete {
 /**
- * se charge de remplir l'objet protocolbuffer firstletter passé en paramètre
+ * se charge de remplir l'objet protocolbuffer autocomplete passé en paramètre
  *
  */
-void create_pb(const std::vector<FirstLetter<nt::idx_t>::fl_quality>& result, const nt::Type_e type, const nt::Data& data, pbnavitia::FirstLetter& pb_fl){
+void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result, const nt::Type_e type, const nt::Data& data, pbnavitia::Autocomplete& pb_fl){
     BOOST_FOREACH(auto result_item, result){
-        pbnavitia::FirstLetterItem* item = pb_fl.add_items();
+        pbnavitia::AutocompleteItem* item = pb_fl.add_items();
         pbnavitia::PlaceMark* place_mark = item->mutable_object();
         switch(type){
         case nt::Type_e::eStopArea:
@@ -48,22 +48,22 @@ void create_pb(const std::vector<FirstLetter<nt::idx_t>::fl_quality>& result, co
     }
 }
 
-pbnavitia::Response firstletter(const std::string &name, const std::vector<nt::Type_e> &filter, const navitia::type::Data &d){
+pbnavitia::Response autocomplete(const std::string &name, const std::vector<nt::Type_e> &filter, const navitia::type::Data &d){
     pbnavitia::Response pb_response;
-    pb_response.set_requested_api(pbnavitia::FIRSTLETTER);
+    pb_response.set_requested_api(pbnavitia::AUTOCOMPLETE);
 
-    std::vector<FirstLetter<nt::idx_t>::fl_quality> result;
-    pbnavitia::FirstLetter* pb = pb_response.mutable_firstletter();
+    std::vector<Autocomplete<nt::idx_t>::fl_quality> result;
+    pbnavitia::Autocomplete* pb = pb_response.mutable_autocomplete();
     BOOST_FOREACH(nt::Type_e type, filter){
         switch(type){
         case nt::Type_e::eStopArea:
-            result = d.pt_data.stop_area_first_letter.find_complete(name);
+            result = d.pt_data.stop_area_autocomplete.find_complete(name);
             break;
         case nt::Type_e::eStopPoint:
-            result = d.pt_data.stop_point_first_letter.find_complete(name);
+            result = d.pt_data.stop_point_autocomplete.find_complete(name);
             break;
         case nt::Type_e::eCity:
-            result = d.pt_data.city_first_letter.find_complete(name);
+            result = d.pt_data.city_autocomplete.find_complete(name);
             break;
         case nt::Type_e::eAddress:
             //result = d.geo_ref.fl.find_complete(name);
@@ -76,4 +76,4 @@ pbnavitia::Response firstletter(const std::string &name, const std::vector<nt::T
     return pb_response;
 }
 
-}} //namespace navitia::firstletter
+}} //namespace navitia::autocomplete

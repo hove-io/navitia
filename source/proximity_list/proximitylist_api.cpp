@@ -3,7 +3,7 @@
 
 namespace navitia { namespace proximitylist {
 /**
- * se charge de remplir l'objet protocolbuffer firstletter passé en paramètre
+ * se charge de remplir l'objet protocolbuffer autocomplete passé en paramètre
  *
  */
 void create_pb(const std::vector<std::pair<type::idx_t, type::GeographicalCoord> >& result, const nt::Type_e type, const nt::Data& data, pbnavitia::ProximityList& pb_pl,type::GeographicalCoord coord){
