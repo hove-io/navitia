@@ -148,7 +148,7 @@ struct Visitor{
                     type::GeographicalCoord current(current_node.lon(), current_node.lat());
                     length += current.distance_to(prev);
                     prev = current;
-                    // If a node is used more than once, it is an intersection, hence it's a node of the road network graph
+                    // If a node is used more than once, it is an intersection, hence it's a node of the street network graph
                     if(current_node.uses > 1){
                         type::idx_t target = current_node.idx;
                         georef::Edge e;

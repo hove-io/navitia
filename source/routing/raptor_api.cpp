@@ -24,7 +24,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
         if(temp.path_items.size() > 0) {
             pbnavitia::Journey * pb_journey = planner->add_journeys();
             pb_journey->set_duration(temp.length);
-            fill_road_section(temp, d, pb_journey->add_sections(), 1);
+            fill_street_section(temp, d, pb_journey->add_sections(), 1);
         }
         for(Path path : paths) {
             DateTime departure_time = DateTime::inf, arrival_time = DateTime::inf;
@@ -36,7 +36,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             if(path.items.size() > 0 && path.items.front().stop_points.size() > 0 && path.items.front().stop_points.size() > 0){
                 const auto temp = worker.get_path(path.items.front().stop_points.front());
                 if(temp.path_items.size() > 0) {
-                    fill_road_section(temp , d, pb_journey->add_sections(), 1);
+                    fill_street_section(temp , d, pb_journey->add_sections(), 1);
                     departure_time = path.items.front().departure - temp.length/1.38;
                 }
             }
@@ -101,7 +101,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             if(path.items.size() > 0 && path.items.back().stop_points.size() > 0 && path.items.back().stop_points.size()>0){
                 auto temp = worker.get_path(path.items.back().stop_points.back(), true);
                 if(temp.path_items.size() > 0) {
-                    fill_road_section(temp, d, pb_journey->add_sections(), 1);
+                    fill_street_section(temp, d, pb_journey->add_sections(), 1);
                     arrival_time =  arrival_time + temp.length/1.38;
                 }
             }

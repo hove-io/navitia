@@ -159,9 +159,9 @@ void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &dat
     fill_pb_object(stop_point.idx, data, pm->mutable_stop_point(), max_depth);
 }
 
-void fill_road_section(const georef::Path &path, const type::Data &data, pbnavitia::Section* section, int max_depth){
+void fill_street_section(const georef::Path &path, const type::Data &data, pbnavitia::Section* section, int max_depth){
     if(path.path_items.size() > 0) {
-        section->set_type(pbnavitia::ROAD_NETWORK);
+        section->set_type(pbnavitia::STREET_NETWORK);
         pbnavitia::StreetNetwork * sn = section->mutable_street_network();
         create_pb(path, data, sn);
         pbnavitia::PlaceMark* pm;
