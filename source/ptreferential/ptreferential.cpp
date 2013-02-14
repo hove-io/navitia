@@ -154,9 +154,8 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
         try {
             filter.navitia_type = static_data->typeByCaption(filter.object);
         } catch(...) {
-            //ptref_unknown_object error;
             ptref_parsing_error error;
-            error.more = "Object inconnu : " + filter.object;
+            error.more = "Unknown object: " + filter.object;
             throw error;
         }
     }

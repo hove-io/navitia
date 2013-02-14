@@ -37,20 +37,18 @@ pbnavitia::Response query_pb(type::Type_e requested_type, std::string request, c
     } catch(ptref_parsing_error parse_error) {
         switch(parse_error.type){
         case ptref_parsing_error::error_type::partial_error:
-            pb_response.set_error("PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + parse_error.more + "<<");
+            pb_response.set_error("Filter: Unable to parse the whole string. Not parsed: >>" + parse_error.more + "<<");
             break;
         case ptref_parsing_error::error_type::unknown_object:
-            pb_response.set_error("Objet NAViTiA inconnu : " + parse_error.more);
+            pb_response.set_error("Filter: unknown object type: " + parse_error.more);
             break;
         case ptref_parsing_error::error_type::global_error:
-            pb_response.set_error("PTReferential : Impossible de parser la requête");
+            pb_response.set_error("Filter: Unable to parse");
             break;
         }
-
         return pb_response;
     }
 
-    //final_indexes = make_query(requested_type, request, data);
     return extract_data(data, requested_type, final_indexes, depth);
 }
 
