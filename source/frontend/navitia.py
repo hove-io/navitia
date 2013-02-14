@@ -110,7 +110,7 @@ def stop_times(request_args, version, region, format, departure_filter, arrival_
     return render_from_protobuf(resp, format, callback)
 
 def on_line_schedule(request_args, version, region, format,  callback):
-    return stop_times(request_args, version, region, format, request_args["filter"], "", type_pb2.LINE_SCHEDUL, callbackE)
+    return stop_times(request_args, version, region, format, request_args["filter"], "", type_pb2.LINE_SCHEDULE, callback)
 
 def on_next_arrivals(request_args, version, region, format, callback):
     return stop_times(request_args, version, region, format, request_args["filter"], "", type_pb2.NEXT_DEPARTURES, callback)
