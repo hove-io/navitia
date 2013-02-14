@@ -182,13 +182,13 @@ nt::PhysicalMode PhysicalMode::Transformer::operator()(const PhysicalMode& mode)
 }
 
 
-nt::CommercialMode CommercialMode::Transformer::operator()(const CommercialMode& mode_type){
-    nt::CommercialMode nt_mode_type;
-    nt_mode_type.id = mode_type.id;
-    nt_mode_type.idx = mode_type.idx;
-    nt_mode_type.uri = mode_type.uri;
-    nt_mode_type.name = mode_type.name;
-    return nt_mode_type;
+nt::CommercialMode CommercialMode::Transformer::operator()(const CommercialMode& commercial_mode){
+    nt::CommercialMode nt_commercial_mode;
+    nt_commercial_mode.id = commercial_mode.id;
+    nt_commercial_mode.idx = commercial_mode.idx;
+    nt_commercial_mode.uri = commercial_mode.uri;
+    nt_commercial_mode.name = commercial_mode.name;
+    return nt_commercial_mode;
 }
 
 nt::StopPoint StopPoint::Transformer::operator()(const StopPoint& stop_point){

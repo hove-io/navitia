@@ -27,7 +27,7 @@ class CsvFusio {
         }
 
         std::map<std::string, navimake::types::Network*> network_map;
-        std::map<std::string, navimake::types::CommercialMode*> mode_type_map;
+        std::map<std::string, navimake::types::CommercialMode*> commercial_mode_map;
         std::map<std::string, navimake::types::PhysicalMode*> mode_map;
         std::map<std::string, navimake::types::City*> city_map;
         std::map<std::string, navimake::types::StopArea*> stop_area_map;

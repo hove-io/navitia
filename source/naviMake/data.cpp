@@ -8,8 +8,8 @@ void Data::sort(){
     std::sort(networks.begin(), networks.end(), Less<navimake::types::Network>());
     std::for_each(networks.begin(), networks.end(), Indexer<navimake::types::Network>());
 
-    std::sort(mode_types.begin(), mode_types.end(), Less<navimake::types::CommercialMode>());
-    std::for_each(mode_types.begin(), mode_types.end(), Indexer<navimake::types::CommercialMode>());
+    std::sort(commercial_modes.begin(), commercial_modes.end(), Less<navimake::types::CommercialMode>());
+    std::for_each(commercial_modes.begin(), commercial_modes.end(), Indexer<navimake::types::CommercialMode>());
 
     std::sort(modes.begin(), modes.end(), Less<navimake::types::PhysicalMode>());
     std::for_each(modes.begin(), modes.end(), Indexer<navimake::types::PhysicalMode>());
@@ -223,8 +223,8 @@ void Data::transform(navitia::type::PT_Data& data){
     data.physical_modes.resize(this->modes.size());
     std::transform(this->modes.begin(), this->modes.end(), data.physical_modes.begin(), navimake::types::PhysicalMode::Transformer());
 
-    data.commercial_modes.resize(this->mode_types.size());
-    std::transform(this->mode_types.begin(), this->mode_types.end(), data.commercial_modes.begin(), navimake::types::CommercialMode::Transformer());
+    data.commercial_modes.resize(this->commercial_modes.size());
+    std::transform(this->commercial_modes.begin(), this->commercial_modes.end(), data.commercial_modes.begin(), navimake::types::CommercialMode::Transformer());
 
     data.stop_points.resize(this->stop_points.size());
     std::transform(this->stop_points.begin(), this->stop_points.end(), data.stop_points.begin(), navimake::types::StopPoint::Transformer());
@@ -275,7 +275,7 @@ void Data::build_relations(navitia::type::PT_Data &data){
         data.commercial_modes[physical_mode.commercial_mode_idx].physical_mode_list.push_back(physical_mode.idx);
     }
 
-    //BOOST_FOREACH(navitia::type::ModeType & mode_type, data.mode_types){}
+    //BOOST_FOREACH(navitia::type::ModeType & commercial_mode, data.commercial_modes){}
 
     BOOST_FOREACH(navitia::type::StopPoint & sp, data.stop_points){
         if(sp.stop_area_idx != navitia::type::invalid_idx) {

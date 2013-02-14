@@ -218,8 +218,8 @@ struct Company : public TransmodelHeader, Nameable{
 struct CommercialMode : public TransmodelHeader, Nameable{
 
     struct Transformer{
-        inline nt::CommercialMode operator()(const CommercialMode* commercial_mode_type){return this->operator()(*commercial_mode_type);}
-        nt::CommercialMode operator()(const CommercialMode& mode_type);
+        inline nt::CommercialMode operator()(const CommercialMode* commercial_commercial_mode){return this->operator()(*commercial_commercial_mode);}
+        nt::CommercialMode operator()(const CommercialMode& commercial_mode);
     };
 
     bool operator<(const CommercialMode& other)const ;

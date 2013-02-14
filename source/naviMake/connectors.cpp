@@ -66,12 +66,12 @@ void CsvFusio::fill_modes_type(navimake::Data& data){
             throw BadFormated();
         }
         if(counter != 0){
-            navimake::types::CommercialMode* mode_type = new navimake::types::CommercialMode();
-            mode_type->id = row.at(0);
-            mode_type->name = row.at(1);
-            mode_type->uri = row.at(2);
-            data.mode_types.push_back(mode_type);
-            mode_type_map[mode_type->id] = mode_type; 
+            navimake::types::CommercialMode* commercial_mode = new navimake::types::CommercialMode();
+            commercial_mode->id = row.at(0);
+            commercial_mode->name = row.at(1);
+            commercial_mode->uri = row.at(2);
+            data.commercial_modes.push_back(commercial_mode);
+            commercial_mode_map[commercial_mode->id] = commercial_mode; 
         }
         counter++;       
     }
@@ -93,8 +93,8 @@ void CsvFusio::fill_modes(navimake::Data& data){
             mode->name = row.at(2);
             mode->uri = row.at(3);
 
-            std::string mode_type_id = row.at(1);
-            mode->commercial_mode = this->find(mode_type_map, mode_type_id);
+            std::string commercial_mode_id = row.at(1);
+            mode->commercial_mode = this->find(commercial_mode_map, commercial_mode_id);
 
             data.modes.push_back(mode);
             mode_map[mode->id] = mode; 
@@ -124,8 +124,8 @@ void CsvFusio::fill_lines(navimake::Data& data){
             std::string network_id = row.at(5);
             line->network = this->find(network_map, network_id);
 
-            std::string mode_type_id = row.at(1);
-            line->commercial_mode = this->find(mode_type_map, mode_type_id);
+            std::string commercial_mode_id = row.at(1);
+            line->commercial_mode = this->find(commercial_mode_map, commercial_mode_id);
 
             data.lines.push_back(line);
             line_map[line->id] = line;
