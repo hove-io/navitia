@@ -757,7 +757,11 @@ void RAPTOR::raptor_loop(Visitor visitor, const bool wheelchair, bool global_pru
             }
             visitor.reset_queue_item(Q[route.idx]);
         }
+
+        // Prolongements de service
         visitor.route_path_connections(wheelchair);
+
+        // Correspondances
         visitor.walking(wheelchair);
     }
 }

@@ -343,11 +343,11 @@ BOOST_AUTO_TEST_CASE(numero_impair){
 
 // liste des numéros pair est vide ==> Calcul du barycentre de la rue
    result = way.nearest_coord(40, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1,26.8224299065421));
+   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1,28)); // 3 + 25
 // les deux listes des numéros pair et impair sont vides ==> Calcul du barycentre de la rue
    way.house_number_left.clear();
    result = way.nearest_coord(9, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1,25.7894736842105));
+   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1,28));
 
 }
 
@@ -432,12 +432,12 @@ BOOST_AUTO_TEST_CASE(numero_pair){
 
 // liste des numéros impair est vide ==> Calcul du barycentre de la rue
    result = way.nearest_coord(41, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2,27.8224299065421));
+   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2,29)); // 4+25
 
 // les deux listes des numéros pair et impair sont vides ==> Calcul du barycentre de la rue
    way.house_number_right.clear();
    result = way.nearest_coord(10, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2,26.7894736842105));
+   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2,29));
 }
 
 // Recherche d'un numéro à partir des coordonnées

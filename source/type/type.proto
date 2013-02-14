@@ -22,7 +22,6 @@ enum NavitiaType {
 enum API {
     AUTOCOMPLETE = 1;
     PTREFERENTIAL = 2;
-    STREET_NETWORK = 3;
     PLANNER = 4;	
     LOAD = 5;
     PROXIMITYLIST = 6;
@@ -247,7 +246,7 @@ message StreetNetwork {
 
 enum SectionType {
     PUBLIC_TRANSPORT = 1;
-    ROAD_NETWORK = 2;
+    STREET_NETWORK = 2;
     WAITING = 3;
     TRANSFER = 4;
     BIRD_FLY = 5;
