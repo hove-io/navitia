@@ -71,8 +71,12 @@ pbnavitia::Response line_schedule(const std::string & filter, const std::string 
         //On récupère les stop_times
         auto stop_times = get_all_stop_times(routes, parser.date_time, parser.max_datetime, d);
         std::vector<vector_idx> route_point_routes;
-        for(auto route_idx : routes)
-            route_point_routes.push_back(d.pt_data.routes[route_idx].route_point_list);
+        for(auto route_idx : routes) {
+            route_point_routes.push_back(vector_idx());
+            for(auto rpidx : d.pt_data.routes[route_idx].route_point_list) {
+                route_point_routes.back().push_back(d.pt_data.route_points[rpidx].stop_point_idx);
+            }
+        }
         thermometer.generate_thermometer(route_point_routes);
         //On remplit l'objet header
         pbnavitia::LineScheduleHeader *header = schedule->mutable_header();

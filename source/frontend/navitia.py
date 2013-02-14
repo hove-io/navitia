@@ -55,7 +55,15 @@ def on_index(request, version = None, region = None ):
     return Response('Welcome to the navitia API. Have a look at http://www.navitia.io to learn how to use it.')
 
 def on_regions(request, version, format):
-    return render(instances.regions(), format,  request.args.get('callback'))
+    response = instances.regions()
+    for r in response : 
+        req = type_pb2.Request()
+        req.requested_api = type_pb2.STATUS
+        resp = send_and_receive(req, r['region_id'])
+        r['start_production_date'] = resp.status.start_production_date
+        r['end_production_date'] = resp.status.end_production_date
+
+    return render(response, format,  request.args.get('callback'))
 
 def on_status(request_args, request, region, format, callback):
     req = type_pb2.Request()
@@ -102,7 +110,7 @@ def stop_times(request_args, version, region, format, departure_filter, arrival_
     return render_from_protobuf(resp, format, callback)
 
 def on_line_schedule(request_args, version, region, format,  callback):
-    return stop_times(request_args, version, region, format, request_args["filter"], "", type_pb2.LINE_SCHEDUL, callbackE)
+    return stop_times(request_args, version, region, format, request_args["filter"], "", type_pb2.LINE_SCHEDULE, callback)
 
 def on_next_arrivals(request_args, version, region, format, callback):
     return stop_times(request_args, version, region, format, request_args["filter"], "", type_pb2.NEXT_DEPARTURES, callback)
