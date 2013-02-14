@@ -133,7 +133,7 @@ def journeys(requested_type, request_args, version, region, format, callback):
 
     req.journeys.origin = request_args["origin"]
     req.journeys.destination = request_args["destination"] if "destination" in request_args else ""
-    req.journeys.datetime.append(request_args["datetime"])
+    req.journeys.datetimes.append(request_args["datetime"])
     req.journeys.clockwise = request_args["clockwise"]
     #req.journeys.forbiddenline += request.args.getlist('forbiddenline[]')
     #req.journeys.forbiddenmode += request.args.getlist('forbiddenmode[]')
