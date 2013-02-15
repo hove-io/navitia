@@ -22,6 +22,7 @@ struct MetaData{
 
     std::vector<std::string> data_sources;
 
+    std::string shape;
 
     MetaData() : production_date(boost::gregorian::date(), boost::gregorian::date()), navimake_version(NAVITIA_VERSION) {}
 
@@ -35,7 +36,7 @@ struct MetaData{
             std::cerr << "Attention le fichier de données est à la version " << version << " (version actuelle : " << data_version << ")" << std::endl;
         }
 
-        ar & production_date & publication_date & navimake_version & data_sources;
+        ar & production_date & publication_date & navimake_version & data_sources & shape;
     }
 
     friend class boost::serialization::access;

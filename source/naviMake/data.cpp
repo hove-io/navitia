@@ -2,6 +2,9 @@
 #include <iostream>
 #include "ptreferential/where.h"
 #include "utils/timer.h"
+
+#include <boost/geometry.hpp>
+
 using namespace navimake;
 
 void Data::sort(){
@@ -356,5 +359,21 @@ void Data::build_relations(navitia::type::PT_Data &data){
         std::sort(route.vehicle_journey_list.begin(), route.vehicle_journey_list.end(), sort_vehicle_journey_list(data));
     }
 
-    // BOOST_FOREACH(navitia::type::Company & company, data.companies){}
+
+        // BOOST_FOREACH(navitia::type::Company & company, data.companies){}
+}
+
+std::string Data::find_shape(navitia::type::PT_Data &data) {
+
+    std::vector<navitia::type::GeographicalCoord> bag;
+    for(navitia::type::StopPoint sp : data.stop_points) {
+        bag.push_back(sp.coord);
+    }
+    boost::geometry::model::box<navitia::type::GeographicalCoord> envelope, buffer;
+    boost::geometry::envelope(bag, envelope);
+    boost::geometry::buffer(envelope, buffer, 0.01);
+
+    std::ostringstream os;
+    os << boost::geometry::wkt(buffer);
+    return os.str();
 }

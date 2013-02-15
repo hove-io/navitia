@@ -29,6 +29,7 @@ class Worker {
 
         pbnavitia::Response load();
         pbnavitia::Response status();
+        pbnavitia::Response metadatas();
         pbnavitia::Response autocomplete(const pbnavitia::AutocompleteRequest &request);
         pbnavitia::Response next_stop_times(const pbnavitia::NextStopTimeRequest &request, pbnavitia::API api);
         pbnavitia::Response proximity_list(const pbnavitia::ProximityListRequest &request);

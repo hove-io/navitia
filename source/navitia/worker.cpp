@@ -70,6 +70,19 @@ pbnavitia::Response Worker::status() {
     return result;
 }
 
+pbnavitia::Response Worker::metadatas() {
+    pbnavitia::Response result;
+    result.set_requested_api(pbnavitia::METADATAS);
+    
+    auto metadatas = result.mutable_metadatas();
+
+    metadatas->set_start_production_date(bg::to_iso_string(data.meta.production_date.begin()));
+    metadatas->set_end_production_date(bg::to_iso_string(data.meta.production_date.end()));
+    metadatas->set_shape(data.meta.shape);
+
+    return result;
+}
+
 bool Worker::load_and_switch() {
     type::Data tmp_data;
     Configuration * conf = Configuration::get();
@@ -209,6 +222,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
     case pbnavitia::PLANNER: return journeys(request.journeys(), request.requested_api()); break;
     case pbnavitia::PROXIMITYLIST: return proximity_list(request.proximity_list()); break;
     case pbnavitia::PTREFERENTIAL: return pt_ref(request.ptref()); break;
+    case pbnavitia::METADATAS : return metadatas(); break;
     default: break;
     }
 
