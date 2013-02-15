@@ -143,7 +143,7 @@ static_data * static_data::get() {
                 (Type_e::eStopTime, "stop_time")
                 (Type_e::eNetwork, "network")
                 (Type_e::ePhysicalMode, "mode")
-                (Type_e::eCommercialMode, "mode_type")
+                (Type_e::eCommercialMode, "commercial_mode")
                 (Type_e::eCity, "city")
                 (Type_e::eConnection, "connection")
                 (Type_e::eRoutePoint, "route_point")

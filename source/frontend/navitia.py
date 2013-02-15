@@ -270,11 +270,11 @@ apis = {
                         ptrefArguments,
                         "description" : "Retrieves all the networks filtered with filter",
                           "order":5},
-        "modes" : {"endpoint" : on_ptref(type_pb2.PHYSICALMODE), "arguments" :
+        "physical_modes" : {"endpoint" : on_ptref(type_pb2.PHYSICALMODE), "arguments" :
                         ptrefArguments,
                         "description" : "Retrieves all the physical modes filtered with filter",
                           "order":5},
-        "mode_types" : {"endpoint" : on_ptref(type_pb2.COMMERCIALMODE), "arguments" :
+        "commercial_modes" : {"endpoint" : on_ptref(type_pb2.COMMERCIALMODE), "arguments" :
                         ptrefArguments,
                         "description" : "Retrieves all the commercial modes filtered with filter",
                           "order":5},

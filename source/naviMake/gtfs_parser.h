@@ -16,7 +16,7 @@ private:
     std::string path;///< Chemin vers les fichiers
 
     // Plusieurs maps pour savoir à quel position est quel objet identifié par son ID GTFS
-    boost::unordered_map<std::string, navimake::types::CommercialMode*> mode_type_map;
+    boost::unordered_map<std::string, navimake::types::CommercialMode*> commercial_mode_map;
     boost::unordered_map<std::string, navimake::types::StopPoint*> stop_map;
     boost::unordered_map<std::string, navimake::types::StopArea*> stop_area_map;
     boost::unordered_map<std::string, navimake::types::Line*> line_map;
@@ -40,7 +40,7 @@ public:
     void fill(navimake::Data& data, const std::string beginning_date = "");
 
     /// Remplit les modes types
-    void fill_mode_types(Data & data);
+    void fill_commercial_modes(Data & data);
 
     /// Parse le fichier des agency, on s'en sert pour remplir les network
     void parse_agency(Data & data);

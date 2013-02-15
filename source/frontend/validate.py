@@ -61,7 +61,7 @@ def datetime_validator(value):
 
     return value
 valid_types = ("validity_pattern", "line", "route", "vehicle_journey",
-        "stop_point", "stop_area", "stop_time", "network", "mode", "mode_type",
+        "stop_point", "stop_area", "stop_time", "network", "mode", "commercial_mode",
         "city", "connection", "route_point", "district", "department", "company", " vehicle", "country", "way", "coord", "address")
 
 def entrypoint(value):

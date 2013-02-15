@@ -38,7 +38,7 @@ GtfsParser::GtfsParser(const std::string & path) :
 
 void GtfsParser::fill(Data & data, const std::string beginning_date){
     production_date = find_production_date(beginning_date);
-    fill_mode_types(data);
+    fill_commercial_modes(data);
     parse_agency(data);
     parse_stops(data);
     parse_routes(data);
@@ -54,65 +54,65 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
     build_route_point_connections(data);
 }
 
-void GtfsParser::fill_mode_types(Data & data) {
-    navimake::types::CommercialMode* mode_type = new navimake::types::CommercialMode();
-    mode_type->id = "0";
-    mode_type->name = "Tram";
-    mode_type->uri = "0x0";
-    data.mode_types.push_back(mode_type);
-    mode_type_map[mode_type->id] = mode_type;
+void GtfsParser::fill_commercial_modes(Data & data) {
+    navimake::types::CommercialMode* commercial_mode = new navimake::types::CommercialMode();
+    commercial_mode->id = "0";
+    commercial_mode->name = "Tram";
+    commercial_mode->uri = "0x0";
+    data.commercial_modes.push_back(commercial_mode);
+    commercial_mode_map[commercial_mode->id] = commercial_mode;
 
-    mode_type = new navimake::types::CommercialMode();
-    mode_type->id = "1";
-    mode_type->name = "Metro";
-    mode_type->uri = "0x1";
-    data.mode_types.push_back(mode_type);
-    mode_type_map[mode_type->id] = mode_type;
+    commercial_mode = new navimake::types::CommercialMode();
+    commercial_mode->id = "1";
+    commercial_mode->name = "Metro";
+    commercial_mode->uri = "0x1";
+    data.commercial_modes.push_back(commercial_mode);
+    commercial_mode_map[commercial_mode->id] = commercial_mode;
 
-    mode_type = new navimake::types::CommercialMode();
-    mode_type->id = "2";
-    mode_type->name = "Rail";
-    mode_type->uri = "0x2";
-    data.mode_types.push_back(mode_type);
-    mode_type_map[mode_type->id] = mode_type;
+    commercial_mode = new navimake::types::CommercialMode();
+    commercial_mode->id = "2";
+    commercial_mode->name = "Rail";
+    commercial_mode->uri = "0x2";
+    data.commercial_modes.push_back(commercial_mode);
+    commercial_mode_map[commercial_mode->id] = commercial_mode;
 
-    mode_type = new navimake::types::CommercialMode();
-    mode_type->id = "3";
-    mode_type->name = "Bus";
-    mode_type->uri = "0x3";
-    data.mode_types.push_back(mode_type);
-    mode_type_map[mode_type->id] = mode_type;
+    commercial_mode = new navimake::types::CommercialMode();
+    commercial_mode->id = "3";
+    commercial_mode->name = "Bus";
+    commercial_mode->uri = "0x3";
+    data.commercial_modes.push_back(commercial_mode);
+    commercial_mode_map[commercial_mode->id] = commercial_mode;
 
-    mode_type = new navimake::types::CommercialMode();
-    mode_type->id = "4";
-    mode_type->name = "Ferry";
-    mode_type->uri = "0x4";
-    data.mode_types.push_back(mode_type);
-    mode_type_map[mode_type->id] = mode_type;
+    commercial_mode = new navimake::types::CommercialMode();
+    commercial_mode->id = "4";
+    commercial_mode->name = "Ferry";
+    commercial_mode->uri = "0x4";
+    data.commercial_modes.push_back(commercial_mode);
+    commercial_mode_map[commercial_mode->id] = commercial_mode;
 
-    mode_type = new navimake::types::CommercialMode();
-    mode_type->id = "5";
-    mode_type->name = "Cable car";
-    mode_type->uri = "0x5";
-    data.mode_types.push_back(mode_type);
-    mode_type_map[mode_type->id] = mode_type;
+    commercial_mode = new navimake::types::CommercialMode();
+    commercial_mode->id = "5";
+    commercial_mode->name = "Cable car";
+    commercial_mode->uri = "0x5";
+    data.commercial_modes.push_back(commercial_mode);
+    commercial_mode_map[commercial_mode->id] = commercial_mode;
 
-    mode_type = new navimake::types::CommercialMode();
-    mode_type->id = "6";
-    mode_type->name = "Gondola";
-    mode_type->uri = "0x6";
-    data.mode_types.push_back(mode_type);
-    mode_type_map[mode_type->id] = mode_type;
+    commercial_mode = new navimake::types::CommercialMode();
+    commercial_mode->id = "6";
+    commercial_mode->name = "Gondola";
+    commercial_mode->uri = "0x6";
+    data.commercial_modes.push_back(commercial_mode);
+    commercial_mode_map[commercial_mode->id] = commercial_mode;
 
-    mode_type = new navimake::types::CommercialMode();
-    mode_type->id = "7";
-    mode_type->name = "Funicular";
-    mode_type->uri = "0x7";
-    data.mode_types.push_back(mode_type);
-    mode_type_map[mode_type->id] = mode_type;
+    commercial_mode = new navimake::types::CommercialMode();
+    commercial_mode->id = "7";
+    commercial_mode->name = "Funicular";
+    commercial_mode->uri = "0x7";
+    data.commercial_modes.push_back(commercial_mode);
+    commercial_mode_map[commercial_mode->id] = commercial_mode;
 
 
-    BOOST_FOREACH(navimake::types::CommercialMode *mt, data.mode_types) {
+    BOOST_FOREACH(navimake::types::CommercialMode *mt, data.commercial_modes) {
         navimake::types::PhysicalMode* mode = new navimake::types::PhysicalMode();
         mode->id = mt->id;
         mode->name = mt->name;
@@ -636,8 +636,8 @@ void GtfsParser:: parse_routes(Data & data){
                 line->color = "";
             line->additional_data = elts[long_name_c];
 
-            boost::unordered_map<std::string, nm::CommercialMode*>::iterator it= mode_type_map.find(elts[type_c]);
-            if(it != mode_type_map.end())
+            boost::unordered_map<std::string, nm::CommercialMode*>::iterator it= commercial_mode_map.find(elts[type_c]);
+            if(it != commercial_mode_map.end())
                 line->commercial_mode = it->second;
             if(agency_c != -1) {
                 auto agency_it = agency_map.find(elts[agency_c]);

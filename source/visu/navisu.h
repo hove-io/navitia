@@ -129,7 +129,7 @@ public:
     void show_stop_time();
     void show_network();
     void show_mode();
-    void show_mode_type();
+    void show_commercial_mode();
     void show_city();
     void show_connection();
     void show_route_point();

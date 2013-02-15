@@ -91,7 +91,7 @@ void navisu::tableSelected(QString table){
     else if(table == "StopTime") show_stop_time();
     else if(table == "Network") show_network();
     else if(table == "Mode") show_mode();
-    else if(table == "ModeType") show_mode_type();
+    else if(table == "ModeType") show_commercial_mode();
     else if(table == "City") show_city();
     else if(table == "Connection") show_connection();
     else if(table == "RoutePoint") show_route_point();
@@ -148,8 +148,8 @@ void navisu::show_line(){
         setItem(i, 6, l.additional_data);
         setItem(i, 7, l.color);
         setItem(i, 8, l.sort);
-        if(l.mode_type_idx < d.pt_data.mode_types.size())
-            setItem(i, 9, formatHeader(d.pt_data.mode_types[l.mode_type_idx]));
+        if(l.commercial_mode_idx < d.pt_data.commercial_modes.size())
+            setItem(i, 9, formatHeader(d.pt_data.commercial_modes[l.commercial_mode_idx]));
         if(l.network_idx < d.pt_data.networks.size())
             setItem(i, 10, formatHeader(d.pt_data.networks[l.network_idx]));
         if(l.forward_direction_idx < d.pt_data.stop_areas.size())
@@ -173,8 +173,8 @@ void navisu::show_route(){
         setItem(i, 5, r.is_adapted);
         if(r.line_idx < d.pt_data.lines.size())
             setItem(i, 6, formatHeader(d.pt_data.lines[r.line_idx]));
-        if(r.mode_type_idx < d.pt_data.mode_types.size())
-            setItem(i, 7, formatHeader(d.pt_data.mode_types[r.mode_type_idx]));
+        if(r.commercial_mode_idx < d.pt_data.commercial_modes.size())
+            setItem(i, 7, formatHeader(d.pt_data.commercial_modes[r.commercial_mode_idx]));
     }
 }
 
@@ -259,16 +259,16 @@ void navisu::show_mode() {
         setItem(i, 0, m.uri);
         setItem(i, 1, m.id);
         setItem(i, 2, m.name);
-        if(m.mode_type_idx < d.pt_data.mode_types.size())
-            setItem(i, 3, formatHeader(d.pt_data.mode_types[m.mode_type_idx]));
+        if(m.commercial_mode_idx < d.pt_data.commercial_modes.size())
+            setItem(i, 3, formatHeader(d.pt_data.commercial_modes[m.commercial_mode_idx]));
     }
 }
 
-void navisu::show_mode_type(){
-    resetTable(5, d.pt_data.mode_types.size());
+void navisu::show_commercial_mode(){
+    resetTable(5, d.pt_data.commercial_modes.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Nb Modes" << "Nb lines");
-    for(size_t i=0; i < d.pt_data.mode_types.size(); ++i){
-        ModeType & mt = d.pt_data.mode_types[i];
+    for(size_t i=0; i < d.pt_data.commercial_modes.size(); ++i){
+        ModeType & mt = d.pt_data.commercial_modes[i];
         setItem(i, 0, mt.uri);
         setItem(i, 1, mt.id);
         setItem(i, 2, mt.name);
