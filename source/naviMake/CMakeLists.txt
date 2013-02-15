@@ -19,4 +19,4 @@ target_link_libraries(navimake connectors ${OSMPBF} types data georef pb_lib uti
 
 add_subdirectory(tests)
 
-INSTALL_TARGETS(/navimake navimake)
+INSTALL_TARGETS(/usr/bin/navimake navimake)
