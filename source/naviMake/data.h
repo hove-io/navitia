@@ -144,6 +144,8 @@ public:
           */
     void build_relations(navitia::type::PT_Data & data);
 
+    /// Construit le contour de la région à partir des stops points    
+    std::string find_shape(navitia::type::PT_Data &data);
     ~Data(){
         BOOST_FOREACH(navimake::types::Network* network, networks){
             delete network;

@@ -32,6 +32,7 @@ enum API {
     LINE_SCHEDULE = 11;
     STOPS_SCHEDULE = 12;
     ISOCHRONE = 13;
+    METADATAS = 14;
 }
 
 message GeographicalCoord {
@@ -396,6 +397,12 @@ message Isochrone {
     optional ResponseType response_type = 2;
 }
 
+message Metadatas {
+    required string start_production_date = 1;
+    required string end_production_date = 2;
+    required string shape = 3;
+}
+
 message Response{
     required API requested_api = 1;
     optional string error = 2;
@@ -414,6 +421,7 @@ message Response{
     optional DepartureBoard departure_board = 13;
     optional Load load = 14;
     optional Isochrone isochrone = 15;
+    optional Metadatas metadatas = 16;
 }
 
 

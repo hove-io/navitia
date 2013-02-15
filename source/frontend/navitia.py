@@ -71,6 +71,13 @@ def on_status(request_args, request, region, format, callback):
     resp = send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
+def on_metadatas(request_args, request, region, format, callback):
+    req = type_pb2.Request()
+    req.requested_api = type_pb2.METADATAS
+    resp = send_and_receive(req, region)
+    return render_from_protobuf(resp, format, callback)
+
+
 def on_load(request, region, format):
     req = type_pb2.Request()
     req.requested_api = type_pb2.LOAD
@@ -302,9 +309,9 @@ apis = {
                 },
             "description" : "Retrieves all the objects around a point within the given distance",
             "order" : 1.1},
-        "status" : {"endpoint" : on_status, "arguments" : {}, "description" : "Retrieves the status of a region"},
-        "load" : {"endpoint" : on_load, "arguments" : {},  "hidden" : True}
-        
+        "metadatas" : {"endpoint" : on_metadatas, "arguments" : {}, "description" : "Retrieves the metadatas of a region"},
+        "status" : {"endpoint" : on_status, "arguments" : {}, "description" : "Retrieves the status of a region", "hidden" : True},
+        "load" : {"endpoint" : on_load, "arguments" : {},  "hidden" : True},
         }
 apis_all = copy.copy(apis)
 apis_all["regions"] = {"arguments" : {}, "description" : "Retrieves the list of available regions", "regions" : False,
