@@ -98,8 +98,7 @@ SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Tristram Gräbener<tristram.grabener@canalt
 SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
 SET(CPACK_DEBIAN_PACKAGE_NAME "navitia")
 
-SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.48.0, libboost-serialization1.48.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.48.0")
-
+SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.48.0, libboost-serialization1.48.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.48.0, libboost-program-options1.48.0, libboost-filesystem1.48.0")
 #set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/DEBIAN/preinst;${CMAKE_SOURCE_DIR}/DEBIAN/postinst;${CMAKE_SOURCE_DIR}/DEBIAN/conffiles;")
 
 
