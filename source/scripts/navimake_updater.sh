@@ -70,13 +70,13 @@ do
         exit 4
     fi
 
-    if [ -d "$bd_topo" ]
+    if [ -d "$street_network" ]
     then
-        navimake_options=" --topo $bd_topo "
-    else if [ -r "$bd_topo" ]
-        navimake_options=" --osm $bd_topo "
+        navimake_options=" --topo $street_network "
+    else if [ -r "$street_network" ]
+        navimake_options=" --osm $street_network "
     else
-        echo "bd_topo ($bd_topo) non trouvé"
+        echo "street_network ($street_network) non trouvé"
     fi
     
 
