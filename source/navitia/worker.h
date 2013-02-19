@@ -24,7 +24,6 @@ class Worker {
 
         type::GeographicalCoord coord_of_address(const type::EntryPoint & entry_point);
 
-        bool load_and_switch();
         void init_worker_data();
 
         pbnavitia::Response load();

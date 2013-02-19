@@ -83,24 +83,6 @@ pbnavitia::Response Worker::metadatas() {
     return result;
 }
 
-bool Worker::load_and_switch() {
-    type::Data tmp_data;
-    Configuration * conf = Configuration::get();
-    std::string database = conf->get_as<std::string>("GENERAL", "database", "IdF.nav");
-    LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
-
-    if(!tmp_data.load(database)) {
-        return false;
-    } else {
-        tmp_data.loaded = true;
-        LOG4CPLUS_TRACE(logger, "déplacement de data");
-        boost::unique_lock<boost::shared_mutex> lock(tmp_data.load_mutex);
-        data = std::move(tmp_data);
-        LOG4CPLUS_TRACE(logger, "Chargement des données terminé");
-        return true;
-    }
-}
-
 void Worker::init_worker_data(){
     if(this->data.last_load_at != this->last_load_at || !calculateur){
         calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(this->data));
@@ -114,7 +96,8 @@ void Worker::init_worker_data(){
 pbnavitia::Response Worker::load() {
     pbnavitia::Response result;
     result.set_requested_api(pbnavitia::LOAD);
-    result.mutable_load()->set_ok(this->load_and_switch());
+    data.to_load = true;
+    result.mutable_load()->set_ok(true);
 
     return result;
 }

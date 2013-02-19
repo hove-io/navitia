@@ -17,7 +17,7 @@ namespace navitia { namespace type {
 
 Data& Data::operator=(Data&& other){
     version = other.version;
-    loaded = other.loaded;
+    loaded.store(other.loaded.load());
     meta = other.meta;
     Alias_List = other.Alias_List;
     pt_data = std::move(other.pt_data);
