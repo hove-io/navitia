@@ -4,6 +4,7 @@
 
 #include <memory>
 
+
 namespace navitia {
 
 class MaintenanceWorker {
@@ -12,13 +13,15 @@ class MaintenanceWorker {
         log4cplus::Logger logger;
 
     public:
-        MaintenanceWorker(navitia::type::Data & data) : data(data), logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))){}
+        MaintenanceWorker(navitia::type::Data & data);
 
         bool load_and_switch();
 
         void load();
 
         void operator()();
+
+        void sighandler(int signal);
 };
 
 }
