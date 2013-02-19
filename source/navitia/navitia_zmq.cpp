@@ -1,4 +1,5 @@
 #include "worker.h"
+#include "maintenance_worker.h"
 #include "type/type.pb.h"
 
 #include <zmq.hpp>
@@ -45,20 +46,19 @@ int main(int, char** argv){
     zmq::context_t context (1);
     zmq::socket_t clients (context, ZMQ_ROUTER);
     std::string zmq_socket = conf->get_as<std::string>("GENERAL", "zmq_socket", "ipc:///tmp/default_navitia");
-    clients.bind (zmq_socket.c_str());
+    clients.bind(zmq_socket.c_str());
     zmq::socket_t workers (context, ZMQ_DEALER);
-    workers.bind ("inproc://workers");
+    workers.bind("inproc://workers");
 
     // Launch pool of worker threads
     for (int thread_nbr = 0; thread_nbr < data.nb_threads; ++thread_nbr) {
         threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data)));
     }
-
-    navitia::Worker init_worker(data);
-    init_worker.load();
+    
+    threads.create_thread(navitia::MaintenanceWorker(std::ref(data)));
 
     // Connect work threads to client threads via a queue
-    zmq::device (ZMQ_QUEUE, clients, workers);
+    zmq::device(ZMQ_QUEUE, clients, workers);
 
     return 0;
 }

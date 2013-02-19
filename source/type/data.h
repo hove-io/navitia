@@ -10,6 +10,7 @@
 #include "meta_data.h"
 #include <boost/format.hpp>
 #include "routing/dataraptor.h"
+#include <atomic>
 
 namespace navitia { namespace type {
 
@@ -25,7 +26,7 @@ public:
     static const unsigned int data_version = 15; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
     int nb_threads; //< Nombre de threads. IMPORTANT ! Sans cette variable, ça ne compile pas
     unsigned int version; //< Numéro de version des données chargées
-    bool loaded; //< Est-ce que lse données ont été chargées
+    std::atomic<bool> loaded; //< Est-ce que lse données ont été chargées
 
     MetaData meta;
 
@@ -58,9 +59,11 @@ public:
     bool last_load;
     boost::posix_time::ptime last_load_at;
 
+    std::atomic<bool> to_load;
+
 
     /// Constructeur de data, définit le nombre de threads, charge les données
-    Data() : nb_threads(8), loaded(false), last_load(true){
+    Data() : nb_threads(8), loaded(false), last_load(true), to_load(true){
         if(Configuration::is_instanciated()){
             init_logger();
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
