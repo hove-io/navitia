@@ -4,6 +4,8 @@ import json
 import dict2xml
 import copy
 import re
+import sys
+import signal
 from protobuf_to_dict import protobuf_to_dict
 from werkzeug.wrappers import Request, Response
 from werkzeug.wsgi import responder
@@ -15,7 +17,7 @@ from swagger import api_doc
 import instance_manager
 from find_extrem_datetimes import extremes
 
-instances = instance_manager.NavitiaManager('Jörmungandr.ini')
+instances = None 
 
 def render(dico, format, callback):
     if format == 'json':
@@ -43,14 +45,6 @@ def render_from_protobuf(pb_resp, format, callback):
         return render(protobuf_to_dict(pb_resp, use_enum_labels=True), format, callback)
 
 
-def send_and_receive(request, region = None):
-    socket = instances.socket_of_key(region)
-    socket.send(request.SerializeToString())
-    pb = socket.recv()
-    resp = type_pb2.Response()
-    resp.ParseFromString(pb)
-    return resp
-
 def on_index(request, version = None, region = None ):
     return Response('Welcome to the navitia API. Have a look at http://www.navitia.io to learn how to use it.')
 
@@ -59,7 +53,7 @@ def on_regions(request, version, format):
     for r in response : 
         req = type_pb2.Request()
         req.requested_api = type_pb2.STATUS
-        resp = send_and_receive(req, r['region_id'])
+        resp = instances.send_and_receive(req, r['region_id'])
         r['start_production_date'] = resp.status.start_production_date
         r['end_production_date'] = resp.status.end_production_date
 
@@ -68,20 +62,20 @@ def on_regions(request, version, format):
 def on_status(request_args, request, region, format, callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.STATUS
-    resp = send_and_receive(req, region)
+    resp = instances.send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
 def on_metadatas(request_args, request, region, format, callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.METADATAS
-    resp = send_and_receive(req, region)
+    resp = instances.send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
 
 def on_load(request, region, format):
     req = type_pb2.Request()
     req.requested_api = type_pb2.LOAD
-    resp = send_and_receive(req, region)
+    resp = instances.send_and_receive(req, region)
     return render_from_protobuf(resp, format, request.args.get('callback'))
 
 pb_type = {
@@ -98,7 +92,7 @@ def on_autocomplete(request_args, version, region, format, callback):
     for object_type in request_args["object_type[]"]:
         req.autocomplete.types.append(pb_type[object_type])
 
-    resp = send_and_receive(req, region)
+    resp = instances.send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
 
@@ -113,7 +107,7 @@ def stop_times(request_args, version, region, format, departure_filter, arrival_
     req.next_stop_times.depth = request_args["depth"]
     req.next_stop_times.nb_stoptimes = request_args["nb_stoptimes"] if "nb_stoptimes" in request_args else 0
     req.next_stop_times.wheelchair = request_args["wheelchair"]
-    resp = send_and_receive(req, region)
+    resp = instances.send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
 def on_line_schedule(request_args, version, region, format,  callback):
@@ -139,7 +133,7 @@ def on_proximity_list(request_args, version, region, format, callback):
     req.proximity_list.distance = request_args["distance"]
     for object_type in request_args["object_type[]"]:
         req.proximity_list.types.append(pb_type[object_type])
-    resp = send_and_receive(req, region)
+    resp = instances.send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
 def journeys(requested_type, request_args, version, region, format, callback):
@@ -156,7 +150,7 @@ def journeys(requested_type, request_args, version, region, format, callback):
     req.journeys.walking_speed = request_args["walking_speed"]
     req.journeys.walking_distance = request_args["walking_distance"]
     req.journeys.wheelchair = request_args["wheelchair"]
-    resp = send_and_receive(req, region)
+    resp = instances.send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
     if before and after:
@@ -174,7 +168,7 @@ def ptref(requested_type, request_args, version, region, format, callback):
     req.ptref.requested_type = requested_type
     req.ptref.filter = request_args["filter"]
     req.ptref.depth = request_args["depth"]
-    resp = send_and_receive(req, region)
+    resp = instances.send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
 def on_ptref(requested_type):
@@ -383,15 +377,22 @@ url_map = Map([
     ])
 
 
+def kill_thread(signal, frame):
+    global instances
+    instances.stop()
+    sys.exit(0)
 
 @responder
 def application(environ, start_response):
+    global instances
+    instances = instance_manager.NavitiaManager()
     request = Request(environ)
     urls = url_map.bind_to_environ(environ)
     return urls.dispatch(lambda fun, v: fun(request, **v),
             catch_http_exceptions=True)
 
 if __name__ == '__main__':
+    instances = instance_manager.NavitiaManager('Jörmungandr.ini')
     v = validate_apis(apis_all)
     if not(v.valid):
         for apiname, details in v.details.iteritems():
@@ -399,7 +400,7 @@ if __name__ == '__main__':
                 print "Error in api : " + apiname
                 for error in details : 
                     print "\t"+error
-
+    signal.signal(signal.SIGINT, kill_thread)
     httpd = make_server('', 8088, application)
     print "Serving on port 8088..."
     httpd.serve_forever()

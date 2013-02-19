@@ -2,10 +2,18 @@
 
 from shapely import wkt
 from shapely.geometry import Point
-from shapely.prepared import prep
 import ConfigParser
-import csv
 import zmq
+from threading import Lock, Thread, Event
+import type_pb2
+import glob
+
+class Instance:
+    def __init__(self):
+        self.geom = None
+        self.socket = None
+        self.lock = Lock()
+        
 
 class NavitiaManager:
     """ Permet de coordonner les différents NAViTiA gérés par le front-end
@@ -15,40 +23,66 @@ class NavitiaManager:
     De plus il est possible de définir la zone géographique (au format WKT) couverte par un identifiant
     """
 
-    def __init__(self, ini_file=None, default_zmq_socket='ipc:///tmp/default_navitia'):
+    def __init__(self, ini_file=None):
         """ Charge la configuration à partir d'un fichier ini indiquant les chemins des fichiers contenant :
         - géométries de la région sur laquelle s'applique le moteur
         - la socket pour chaque identifiant navitia
-        
-        S'il n'y a pas de fichier ini de configuration, on considère qu'il n'y a qu'un seul NAViTiA connecté à la socket par défaut
         """
-
-        self.geom = {}
-        self.keys_navitia = {}
-        self.names = {}
+        
+        self.instances = {}
+        
         context = zmq.Context()
         self.default_socket = None
-        
-        if(ini_file):
-            config = ConfigParser.ConfigParser({'geometry' : 'geometry.csv', 'key_navitia': 'key_navitia.csv'})
-            config.read(ini_file)
-    
-            with open(config.get('instances', 'geometry'), 'rb') as csvfile:
-                csvreader = csv.reader(csvfile, delimiter=';')
-                for row in csvreader:
-                    self.geom[row[0]] = wkt.loads(row[2])
-                    self.names[row[0]] = row[1]
 
-    
-            with open(config.get('instances', 'keys_navitia'), 'rb') as csvfile:
-                csvreader = csv.reader(csvfile, delimiter=';')
-                for row in csvreader:
-                    socket = context.socket(zmq.REQ)
-                    socket.connect(row[1])
-                    self.keys_navitia[row[0]] = socket
+        ini_files = []
+        if ini_file == None :
+            ini_files = glob.glob("/etc/jormungandr.d/*.ini")
         else:
-            self.default_socket = context.socket(zmq.REQ)
-            self.default_socket.connect(default_zmq_socket)
+            ini_files = [ini_file]
+
+        for file_name in ini_files:
+            conf = ConfigParser.ConfigParser()
+            conf.read(file_name)
+            socket = context.socket(zmq.REQ)
+            socket.connect(conf.get('instance' , 'socket'))
+            self.instances[conf.get('instance' , 'key')] = Instance()
+            self.instances[conf.get('instance' , 'key')].socket = socket
+
+        self.thread_event = Event()
+        self.thread = Thread(target = self.thread_ping)
+        self.thread.start()
+
+    def send_and_receive(self, request, region = None):
+        if region in self.instances:
+            instance = self.instances[region]
+        else:
+            return None
+        instance.lock.acquire()
+        instance.socket.send(request.SerializeToString())
+        pb = instance.socket.recv()
+        instance.lock.release()
+        resp = type_pb2.Response()
+        resp.ParseFromString(pb)
+        return resp
+
+
+    def thread_ping(self, timer=10):
+        req = type_pb2.Request()
+        req.requested_api = type_pb2.METADATAS
+        while not self.thread_event.is_set():
+            for key, instance in self.instances.iteritems():
+                resp = self.send_and_receive(req, key)
+                instance.shape = wkt.loads(resp.metadatas.shape)
+            self.thread_event.wait(timer)
+
+
+
+
+    def stop(self) : 
+        self.thread_event.set()
+
+
+
     
 
     def key_of_coord(self, lon, lat):
@@ -57,24 +91,14 @@ class NavitiaManager:
         Retourne None si on a rien trouvé
         """
         p = Point(lon,lat)
-        for key, geom in self.geom.iteritems():
-            if geom.contains(p):
+        for key, instance in self.instances.iteritems():
+            if instance.geom and instance.geom.contains(p):
                 return key
         return None
 
-    def socket_of_key(self, key = None):
-        """ Retourne la socket ZMQ vers le NAViTiA correspondant à la clef
-
-        Si key vaut None et qu'aucune socket n'a été dans les fichiers de configuration, retourne la socket par défaut
-        """
-        if key in self.keys_navitia:
-            return self.keys_navitia[key]
-        else:
-            return self.default_socket
-
     def regions(self):
         result = []
-        for key, geom in self.geom.iteritems():
-            result.append({'region_id': key, 'region_name': self.names[key], 'shape' : wkt.dumps(geom)})
+        for key, instance in self.instances.iteritems():
+            result.append({'region_id': key, 'shape' : wkt.dumps(instance.geom) if instance.geom else ""})
         return result
     
