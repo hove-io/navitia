@@ -72,7 +72,6 @@ def on_status(request_args, request, region, format, callback):
     resp = send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
-<<<<<<< HEAD
 def on_metadatas(request_args, request, region, format, callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.METADATAS
