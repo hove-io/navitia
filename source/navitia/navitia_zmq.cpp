@@ -14,7 +14,7 @@ void doWork(zmq::context_t & context, navitia::type::Data & data) {
     socket.connect ("inproc://workers");
     bool run = true;
     navitia::Worker w(data);
-    while (run) {
+    while(run) {
         // Wait for next request from client
         zmq::message_t request;
         socket.recv(&request);
@@ -43,15 +43,15 @@ int main(int, char** argv){
 
     boost::thread_group threads;
     // Prepare our context and sockets
-    zmq::context_t context (1);
-    zmq::socket_t clients (context, ZMQ_ROUTER);
+    zmq::context_t context(1);
+    zmq::socket_t clients(context, ZMQ_ROUTER);
     std::string zmq_socket = conf->get_as<std::string>("GENERAL", "zmq_socket", "ipc:///tmp/default_navitia");
     clients.bind(zmq_socket.c_str());
-    zmq::socket_t workers (context, ZMQ_DEALER);
+    zmq::socket_t workers(context, ZMQ_DEALER);
     workers.bind("inproc://workers");
 
     // Launch pool of worker threads
-    for (int thread_nbr = 0; thread_nbr < data.nb_threads; ++thread_nbr) {
+    for(int thread_nbr = 0; thread_nbr < data.nb_threads; ++thread_nbr) {
         threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data)));
     }
     

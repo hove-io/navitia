@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # coding=utf-8
 import type_pb2
 import json
@@ -71,6 +72,7 @@ def on_status(request_args, request, region, format, callback):
     resp = send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
+<<<<<<< HEAD
 def on_metadatas(request_args, request, region, format, callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.METADATAS
@@ -78,11 +80,11 @@ def on_metadatas(request_args, request, region, format, callback):
     return render_from_protobuf(resp, format, callback)
 
 
-def on_load(request, region, format):
+def on_load(request, version, region, format, callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.LOAD
     resp = send_and_receive(req, region)
-    return render_from_protobuf(resp, format, request.args.get('callback'))
+    return render_from_protobuf(resp, format, callback)
 
 pb_type = {
         'stop_area': type_pb2.STOPAREA,
