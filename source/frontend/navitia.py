@@ -17,7 +17,7 @@ from swagger import api_doc
 import instance_manager
 from find_extrem_datetimes import extremes
 
-instances = None 
+navitia_manager = None 
 
 def render(dico, format, callback):
     if format == 'json':
@@ -50,10 +50,10 @@ def on_index(request, version = None, region = None ):
 
 def on_regions(request, version, format):
     response = {'requested_api': 'REGIONS', 'regions': []}
-    for region in instances.instances.keys() : 
+    for region in navitia_manager.instances.keys() : 
         req = type_pb2.Request()
         req.requested_api = type_pb2.METADATAS
-        resp = instances.send_and_receive(req, region)
+        resp = navitia_manager.send_and_receive(req, region)
         resp_dict = protobuf_to_dict(resp) 
         if 'metadatas' in resp_dict.keys():
             response['regions'].append(resp_dict['metadatas'])
@@ -63,20 +63,20 @@ def on_regions(request, version, format):
 def on_status(request_args, request, region, format, callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.STATUS
-    resp = instances.send_and_receive(req, region)
+    resp = navitia_manager.send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
 def on_metadatas(request_args, request, region, format, callback):
     req = type_pb2.Request()
     req.requested_api = type_pb2.METADATAS
-    resp = instances.send_and_receive(req, region)
+    resp = navitia_manager.send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
 
 def on_load(request, region, format):
     req = type_pb2.Request()
     req.requested_api = type_pb2.LOAD
-    resp = instances.send_and_receive(req, region)
+    resp = navitia_manager.send_and_receive(req, region)
     return render_from_protobuf(resp, format, request.args.get('callback'))
 
 pb_type = {
@@ -93,7 +93,7 @@ def on_autocomplete(request_args, version, region, format, callback):
     for object_type in request_args["object_type[]"]:
         req.autocomplete.types.append(pb_type[object_type])
 
-    resp = instances.send_and_receive(req, region)
+    resp = navitia_manager.send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
 
@@ -108,7 +108,7 @@ def stop_times(request_args, version, region, format, departure_filter, arrival_
     req.next_stop_times.depth = request_args["depth"]
     req.next_stop_times.nb_stoptimes = request_args["nb_stoptimes"] if "nb_stoptimes" in request_args else 0
     req.next_stop_times.wheelchair = request_args["wheelchair"]
-    resp = instances.send_and_receive(req, region)
+    resp = navitia_manager.send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
 def on_line_schedule(request_args, version, region, format,  callback):
@@ -134,7 +134,7 @@ def on_proximity_list(request_args, version, region, format, callback):
     req.proximity_list.distance = request_args["distance"]
     for object_type in request_args["object_type[]"]:
         req.proximity_list.types.append(pb_type[object_type])
-    resp = instances.send_and_receive(req, region)
+    resp = navitia_manager.send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
 def journeys(requested_type, request_args, version, region, format, callback):
@@ -151,7 +151,7 @@ def journeys(requested_type, request_args, version, region, format, callback):
     req.journeys.walking_speed = request_args["walking_speed"]
     req.journeys.walking_distance = request_args["walking_distance"]
     req.journeys.wheelchair = request_args["wheelchair"]
-    resp = instances.send_and_receive(req, region)
+    resp = navitia_manager.send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
     if before and after:
@@ -169,7 +169,7 @@ def ptref(requested_type, request_args, version, region, format, callback):
     req.ptref.requested_type = requested_type
     req.ptref.filter = request_args["filter"]
     req.ptref.depth = request_args["depth"]
-    resp = instances.send_and_receive(req, region)
+    resp = navitia_manager.send_and_receive(req, region)
     return render_from_protobuf(resp, format, callback)
 
 def on_ptref(requested_type):
@@ -334,7 +334,7 @@ def universal_journeys(api, request, version, format):
         try:
             lon = float(origin_re.group(1))
             lat = float(origin_re.group(2))
-            region = instances.key_of_coord(lon, lat)
+            region = navitia_manager.key_of_coord(lon, lat)
         except:
             return Response("Unable to parse coordinates", status=400)
         if region:
@@ -349,7 +349,7 @@ def on_universal_journeys(api):
 
 def on_universal_proximity_list(request, version, format):
     try:
-        region = instances.key_of_coord(float(request.args.get("lon")), float(request.args.get("lat")))
+        region = navitia_manager.key_of_coord(float(request.args.get("lon")), float(request.args.get("lat")))
         if region:
             return on_api(request, version, region, "proximity_list", format)
         else:
@@ -359,10 +359,10 @@ def on_universal_proximity_list(request, version, format):
    
 
 def on_summary_doc(request) :
-    return render(api_doc(apis_all, instances), 'json',  request.args.get('callback'))
+    return render(api_doc(apis_all, navitia_manager), 'json',  request.args.get('callback'))
 
 def on_doc(request, api):
-    return render(api_doc(apis_all, instances, api), 'json', request.args.get('callback'))
+    return render(api_doc(apis_all, navitia_manager, api), 'json', request.args.get('callback'))
 
 url_map = Map([
     Rule('/', endpoint=on_index),
@@ -379,8 +379,8 @@ url_map = Map([
 
 
 def kill_thread(signal, frame):
-    global instances
-    instances.stop()
+    global navitia_manager
+    navitia_manager.stop()
     sys.exit(0)
 
 @responder
@@ -391,7 +391,7 @@ def application(environ, start_response):
             catch_http_exceptions=True)
 
 if __name__ == '__main__':
-    instances = instance_manager.NavitiaManager('Jörmungandr.ini')
+    navitia_manager = instance_manager.NavitiaManager('Jörmungandr.ini')
     v = validate_apis(apis_all)
     if not(v.valid):
         for apiname, details in v.details.iteritems():
@@ -405,5 +405,5 @@ if __name__ == '__main__':
     httpd.serve_forever()
 
 else:
-    instances = instance_manager.NavitiaManager()
+    navitia_manager = instance_manager.NavitiaManager()
 
