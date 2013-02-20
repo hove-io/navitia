@@ -49,13 +49,14 @@ def on_index(request, version = None, region = None ):
     return Response('Welcome to the navitia API. Have a look at http://www.navitia.io to learn how to use it.')
 
 def on_regions(request, version, format):
-    response = instances.regions()
-    for r in response : 
+    response = {'requested_api': 'REGIONS', 'regions': []}
+    for region in instances.instances.keys() : 
         req = type_pb2.Request()
-        req.requested_api = type_pb2.STATUS
-        resp = instances.send_and_receive(req, r['region_id'])
-        r['start_production_date'] = resp.status.start_production_date
-        r['end_production_date'] = resp.status.end_production_date
+        req.requested_api = type_pb2.METADATAS
+        resp = instances.send_and_receive(req, region)
+        resp_dict = protobuf_to_dict(resp) 
+        if 'metadatas' in resp_dict.keys():
+            response['regions'].append(resp_dict['metadatas'])
 
     return render(response, format,  request.args.get('callback'))
 
@@ -384,8 +385,6 @@ def kill_thread(signal, frame):
 
 @responder
 def application(environ, start_response):
-    global instances
-    instances = instance_manager.NavitiaManager()
     request = Request(environ)
     urls = url_map.bind_to_environ(environ)
     return urls.dispatch(lambda fun, v: fun(request, **v),
@@ -404,4 +403,7 @@ if __name__ == '__main__':
     httpd = make_server('', 8088, application)
     print "Serving on port 8088..."
     httpd.serve_forever()
+
+else:
+    instances = instance_manager.NavitiaManager()
 

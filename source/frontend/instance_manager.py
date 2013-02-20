@@ -96,9 +96,3 @@ class NavitiaManager:
                 return key
         return None
 
-    def regions(self):
-        result = []
-        for key, instance in self.instances.iteritems():
-            result.append({'region_id': key, 'shape' : wkt.dumps(instance.geom) if instance.geom else ""})
-        return result
-    
