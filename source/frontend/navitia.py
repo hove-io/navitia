@@ -390,6 +390,8 @@ def application(environ, start_response):
     return urls.dispatch(lambda fun, v: fun(request, **v),
             catch_http_exceptions=True)
 
+signal.signal(signal.SIGINT, kill_thread)
+
 if __name__ == '__main__':
     navitia_manager = instance_manager.NavitiaManager('Jörmungandr.ini')
     v = validate_apis(apis_all)
@@ -399,7 +401,6 @@ if __name__ == '__main__':
                 print "Error in api : " + apiname
                 for error in details : 
                     print "\t"+error
-    signal.signal(signal.SIGINT, kill_thread)
     httpd = make_server('', 8088, application)
     print "Serving on port 8088..."
     httpd.serve_forever()
