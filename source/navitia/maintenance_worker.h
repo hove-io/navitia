@@ -7,7 +7,7 @@
 
 namespace navitia {
 
-class MaintenanceWorker {
+class MaintenanceWorker{
     private:
         navitia::type::Data & data;
         log4cplus::Logger logger;
