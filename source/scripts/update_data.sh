@@ -2,11 +2,11 @@
 
 print_help(){
 
-    echo "$0 <data_source> <destination> <instance_url>"
+    echo "$0 <data_source> <destination> <init_file>"
 
     echo "data_source: uri vers les données binarisé"
     echo "destination: endroit ou les données doivent etre déposé"
-    echo "instance_url: instance ou effectuer un load"
+    echo "init_file : script sur lequel il faut effectuer un reload"
 
 }
 
@@ -28,7 +28,7 @@ fi
 
 data_source=$1
 destination=$2
-instance_url=$3
+init_file=$3
 
 if [ -r "$data_source.md5" ]
 then
@@ -50,7 +50,7 @@ then
     else
         wget -O $destination $data_source
     fi
-    curl "$instance_url/load"
+    `$init_file reload`
 
 fi
 
