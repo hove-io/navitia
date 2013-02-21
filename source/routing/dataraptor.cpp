@@ -211,10 +211,8 @@ void dataRAPTOR::load(const type::PT_Data &data)
         }
     }
 
-     std::cout << "Nb data stop times : " << data.stop_times.size() << " stopTimes : " << arrival_times.size()
-               << " nb foot path : " << foot_path_forward.size() << " Nombre de stop points : " << data.stop_points.size() << "nb vp : " << data.validity_patterns.size() <<  std::endl;
 
 }
 
 
-                  }}}
+}}}

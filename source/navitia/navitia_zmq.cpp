@@ -18,11 +18,11 @@ void doWork(zmq::context_t & context, navitia::type::Data & data) {
         try{
             // Wait for next request from client
             socket.recv(&request);
-        }catch(zmq::error_t){ 
+        }catch(zmq::error_t){
             //on gére le cas du sighup durant un recv
             continue;
         }
-        
+
         pbnavitia::Request pb_req;
         pb_req.ParseFromArray(request.data(), request.size());
 
@@ -54,7 +54,7 @@ int main(int, char** argv){
     clients.bind(zmq_socket.c_str());
     zmq::socket_t workers(context, ZMQ_DEALER);
     workers.bind("inproc://workers");
-    
+
     // Launch pool of worker threads
     for(int thread_nbr = 0; thread_nbr < data.nb_threads; ++thread_nbr) {
         threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data)));
@@ -69,7 +69,6 @@ int main(int, char** argv){
         }catch(zmq::error_t){}//lors d'un SIGHUP on restore la queue
     }while(true);
 
-    std::cout << "fin" << std::endl;
     return 0;
 }
 
