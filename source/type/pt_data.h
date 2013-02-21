@@ -1,5 +1,6 @@
 #pragma once
 #include "type.h"
+#include "type/message.h"
 #include "autocomplete/autocomplete.h"
 #include "proximity_list/proximity_list.h"
 
@@ -60,11 +61,14 @@ struct PT_Data : boost::noncopyable{
     ExtCodeMap company_map;
     ExtCodeMap country_map;
 
+    //Message
+    MessageHolder message_holder;
+
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
       *
       * Elle est appelée par boost et pas directement
       */
-    template<class Archive> void serialize(Archive & ar, const unsigned int) {        
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar
                 // Les listes de données
                 & validity_patterns & lines & stop_points & stop_areas & stop_times & routes

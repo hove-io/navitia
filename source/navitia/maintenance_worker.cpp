@@ -31,7 +31,7 @@ bool MaintenanceWorker::load_and_switch(){
     } else {
         tmp_data.loaded = true;
         LOG4CPLUS_TRACE(logger, "déplacement de data");
-        boost::unique_lock<boost::shared_mutex> lock(tmp_data.load_mutex);
+        boost::unique_lock<boost::shared_mutex> lock(data.load_mutex);
         data = std::move(tmp_data);
         LOG4CPLUS_TRACE(logger, "Chargement des données terminé");
         return true;
@@ -51,10 +51,33 @@ void MaintenanceWorker::load(){
     }
 }
 
+void MaintenanceWorker::load_rt(){
+    if(pt::microsec_clock::universal_time() > next_rt_load){
+
+        Configuration * conf = Configuration::get();
+        std::string database_rt = conf->get_as<std::string>("GENERAL", "database-rt", "");
+        if(!database_rt.empty()){
+            LOG4CPLUS_INFO(logger, "chargement des messages AT");
+            nt::MessageHolder holder;
+            holder.load(database_rt);
+
+            boost::unique_lock<boost::shared_mutex> lock(data.load_mutex);
+            data.pt_data.message_holder = std::move(holder);
+
+            LOG4CPLUS_TRACE(logger, "chargement des messages AT fini!");
+        }else{
+            LOG4CPLUS_TRACE(logger, "chargement des messages AT desactivé");
+        }
+        next_rt_load = pt::microsec_clock::universal_time() + pt::minutes(1);
+    }
+}
+
 void MaintenanceWorker::operator()(){
     LOG4CPLUS_INFO(logger, "démarrage du thread de maintenance");
     while(true){
         load();
+
+        load_rt();
 
         boost::this_thread::sleep(pt::seconds(1));
     }
@@ -68,7 +91,8 @@ void MaintenanceWorker::sighandler(int signal){
 
 }
 
-MaintenanceWorker::MaintenanceWorker(navitia::type::Data & data) : data(data), logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))){
+MaintenanceWorker::MaintenanceWorker(navitia::type::Data & data) : data(data),
+    logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))), next_rt_load(pt::microsec_clock::universal_time()){
     dirty_pointer = this;
 
     struct sigaction action;

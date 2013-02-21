@@ -55,7 +55,7 @@ public:
     boost::shared_mutex load_mutex;
 
     friend class boost::serialization::access;
-    
+
     bool last_load;
     boost::posix_time::ptime last_load_at;
 

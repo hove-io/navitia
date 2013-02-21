@@ -16,6 +16,7 @@ SET(DATA_SRC
     data.cpp
     ${CMAKE_SOURCE_DIR}/../third_party/lz4/lz4.c
     pt_data.cpp
+    message.cpp
 )
 
 add_library(data ${DATA_SRC})
