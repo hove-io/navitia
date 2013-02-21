@@ -9,6 +9,7 @@
 
 namespace nt = navitia::type;
 namespace po = boost::program_options;
+namespace pt = boost::posix_time;
 
 po::variables_map load_config(const std::string& filename){
     po::options_description desc("Allowed options");
@@ -35,7 +36,7 @@ po::variables_map load_config(const std::string& filename){
 
 
 
-int main(int argc, char const* argv[]){
+int main(){
     po::variables_map params = load_config("ratimake.ini");//@TODO: config
 
     navitia::ratimake::AtLoader loader;
@@ -44,7 +45,7 @@ int main(int argc, char const* argv[]){
 
     nt::MessageHolder holder;
     holder.messages = messages;
-    holder.generation_date = pt::second_clock::unoversal_time();
+    holder.generation_date = pt::second_clock::universal_time();
 
     std::cout << "nb objects impactés: " << messages.size() << std::endl;
     holder.save(params["destination"].as<std::string>());
