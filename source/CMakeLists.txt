@@ -52,7 +52,7 @@ FIND_PACKAGE(Boost 1.40.0 REQUIRED)
 
 
 SET(NAVITIA_VERSION_MAJOR 0)
-SET(NAVITIA_VERSION_MINOR 48)
+SET(NAVITIA_VERSION_MINOR 49)
 SET(NAVITIA_VERSION_PATCH dev)
 
 #ajout a l'include path le repertoirre de compilation, pour géré le config.h
@@ -83,7 +83,7 @@ add_subdirectory(routing)
 add_subdirectory(georef)
 add_subdirectory(validator)
 add_subdirectory(time_tables)
-
+add_subdirectory(frontend)
 add_subdirectory(scripts)
 
 #on génére le fichier config.h
@@ -99,7 +99,7 @@ SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
 SET(CPACK_DEBIAN_PACKAGE_NAME "navitia")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Navitia navimake Jörmungandr")
 
-SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.48.0, libboost-serialization1.48.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.48.0, libboost-program-options1.48.0, libboost-filesystem1.48.0, gunicorn, python-zmq, python-werkzeug")
+SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.48.0, libboost-serialization1.48.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.48.0, libboost-program-options1.48.0, libboost-filesystem1.48.0, gunicorn, python-zmq, python-werkzeug, python-shapely")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/debian/postinst;")
 
 
