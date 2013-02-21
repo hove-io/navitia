@@ -12,6 +12,7 @@ class Instance:
     def __init__(self):
         self.geom = None
         self.socket = None
+        self.socket_path = None
         self.lock = Lock()
         
 
@@ -31,8 +32,10 @@ class NavitiaManager:
         
         self.instances = {}
         
-        context = zmq.Context()
+        self.context = zmq.Context()
         self.default_socket = None
+
+        self.poller = zmq.Poller()
 
         ini_files = []
         if ini_file == None :
@@ -43,10 +46,13 @@ class NavitiaManager:
         for file_name in ini_files:
             conf = ConfigParser.ConfigParser()
             conf.read(file_name)
-            socket = context.socket(zmq.REQ)
-            socket.connect(conf.get('instance' , 'socket'))
-            self.instances[conf.get('instance' , 'key')] = Instance()
-            self.instances[conf.get('instance' , 'key')].socket = socket
+            instance =  Instance()
+            instance.socket_path = conf.get('instance' , 'socket')
+            instance.socket = self.context.socket(zmq.REQ)
+            instance.socket.connect(instance.socket_path)
+            self.poller.register(instance.socket, zmq.POLLIN)
+            self.instances[conf.get('instance' , 'key')] = instance
+
 
         self.thread_event = Event()
         self.thread = Thread(target = self.thread_ping)
@@ -58,22 +64,36 @@ class NavitiaManager:
         else:
             return None
         instance.lock.acquire()
-        instance.socket.send(request.SerializeToString())
-        pb = instance.socket.recv()
-        instance.lock.release()
-        resp = type_pb2.Response()
-        resp.ParseFromString(pb)
-        return resp
+        instance.socket.send(request.SerializeToString())#, zmq.NOBLOCK, copy=False)
+        socks = dict(self.poller.poll(1000))
+        if socks.get(instance.socket) == zmq.POLLIN:
+            pb = instance.socket.recv()
+            instance.lock.release()
+            resp = type_pb2.Response()
+            resp.ParseFromString(pb)
+            return resp
+        else :
+            print region+" is a dead socket"       
+            instance.socket.setsockopt(zmq.LINGER, 0)
+            instance.socket.close()
+            self.poller.unregister(instance.socket)
+            instance.socket = self.context.socket(zmq.REQ)
+            instance.socket.connect(instance.socket_path)
+            self.poller.register(instance.socket)
+            instance.lock.release()
+            return None
 
 
-    def thread_ping(self, timer=10):
+    def thread_ping(self, timer=1):
         req = type_pb2.Request()
         req.requested_api = type_pb2.METADATAS
         while not self.thread_event.is_set():
             for key, instance in self.instances.iteritems():
                 resp = self.send_and_receive(req, key)
-                instance.shape = wkt.loads(resp.metadatas.shape)
+                if resp:
+                    instance.shape = wkt.loads(resp.metadatas.shape)
             self.thread_event.wait(timer)
+        print "fin thread ping"
 
 
 

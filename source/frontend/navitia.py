@@ -379,8 +379,10 @@ url_map = Map([
 
 
 def kill_thread(signal, frame):
+    print "Got signal !"
     global navitia_manager
     navitia_manager.stop()
+    print "stoped"
     sys.exit(0)
 
 @responder
@@ -391,6 +393,7 @@ def application(environ, start_response):
             catch_http_exceptions=True)
 
 signal.signal(signal.SIGINT, kill_thread)
+signal.signal(signal.SIGTERM, kill_thread)
 
 if __name__ == '__main__':
     navitia_manager = instance_manager.NavitiaManager('Jörmungandr.ini')
