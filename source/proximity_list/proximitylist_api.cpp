@@ -12,7 +12,7 @@ void create_pb(const std::vector<std::pair<type::idx_t, type::GeographicalCoord>
         pbnavitia::PlaceMark* place_mark = item->mutable_object();
         switch(type){
         case nt::Type_e::eStopArea:
-            place_mark->set_type(pbnavitia::STOPAREA);
+            place_mark->set_type(pbnavitia::STOP_AREA);
             fill_pb_object(result_item.first, data, place_mark->mutable_stop_area(), 2);
             item->set_name(data.pt_data.stop_areas[result_item.first].name);
             item->set_uri(data.pt_data.stop_areas[result_item.first].uri);
@@ -26,7 +26,7 @@ void create_pb(const std::vector<std::pair<type::idx_t, type::GeographicalCoord>
             item->set_distance(coord.distance_to(result_item.second));
             break;
         case nt::Type_e::eStopPoint:
-            place_mark->set_type(pbnavitia::STOPPOINT);
+            place_mark->set_type(pbnavitia::STOP_POINT);
             fill_pb_object(result_item.first, data, place_mark->mutable_stop_point(), 2);
             item->set_name(data.pt_data.stop_points[result_item.first].name);
             item->set_uri(data.pt_data.stop_points[result_item.first].uri);
@@ -42,7 +42,7 @@ void create_pb(const std::vector<std::pair<type::idx_t, type::GeographicalCoord>
 
 pbnavitia::Response find(type::GeographicalCoord coord, double distance, const std::vector<nt::Type_e> & filter, const type::Data & data) {
     pbnavitia::Response response;
-    response.set_requested_api(pbnavitia::PROXIMITYLIST);
+    response.set_requested_api(pbnavitia::PROXIMITY_LIST);
 
     std::vector<std::pair<type::idx_t, type::GeographicalCoord> > result;
     pbnavitia::ProximityList* pb = response.mutable_proximitylist();

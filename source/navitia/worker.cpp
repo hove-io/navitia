@@ -19,18 +19,18 @@ namespace navitia {
 nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     switch(pb_type){
     case pbnavitia::ADDRESS: return nt::Type_e::eAddress; break;
-    case pbnavitia::STOPAREA: return nt::Type_e::eStopArea; break;
-    case pbnavitia::STOPPOINT: return nt::Type_e::eStopPoint; break;
+    case pbnavitia::STOP_AREA: return nt::Type_e::eStopArea; break;
+    case pbnavitia::STOP_POINT: return nt::Type_e::eStopPoint; break;
     case pbnavitia::CITY: return nt::Type_e::eCity; break;
     case pbnavitia::LINE: return nt::Type_e::eLine; break;
     case pbnavitia::ROUTE: return nt::Type_e::eRoute; break;
     case pbnavitia::NETWORK: return nt::Type_e::eNetwork; break;
-    case pbnavitia::COMMERCIALMODE: return nt::Type_e::ePhysicalMode; break;
-    case pbnavitia::PHYSICALMODE: return nt::Type_e::eCommercialMode; break;
+    case pbnavitia::COMMERCIAL_MODE: return nt::Type_e::ePhysicalMode; break;
+    case pbnavitia::PHYSICAL_MODE: return nt::Type_e::eCommercialMode; break;
     case pbnavitia::CONNECTION: return nt::Type_e::eConnection; break;
-    case pbnavitia::ROUTEPOINT: return nt::Type_e::eRoutePoint; break;
+    case pbnavitia::ROUTE_POINT: return nt::Type_e::eRoutePoint; break;
     case pbnavitia::COMPANY: return nt::Type_e::eCompany; break;
-    case pbnavitia::VEHICLEJOURNEY: return nt::Type_e::eVehicleJourney; break;
+    case pbnavitia::VEHICLE_JOURNEY: return nt::Type_e::eVehicleJourney; break;
     default: return nt::Type_e::eUnknown;
     }
 }
@@ -203,7 +203,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
         return next_stop_times(request.next_stop_times(), request.requested_api()); break;
     case pbnavitia::ISOCHRONE:
     case pbnavitia::PLANNER: return journeys(request.journeys(), request.requested_api()); break;
-    case pbnavitia::PROXIMITYLIST: return proximity_list(request.proximity_list()); break;
+    case pbnavitia::PROXIMITY_LIST: return proximity_list(request.proximity_list()); break;
     case pbnavitia::PTREFERENTIAL: return pt_ref(request.ptref()); break;
     case pbnavitia::METADATAS : return metadatas(); break;
     default: break;
