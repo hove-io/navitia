@@ -38,7 +38,7 @@ int main(int argc, char * argv[])
         return 0;
     }
 
-    if(vm.count("help") || !vm.count("input") || !vm.count("type")) {
+    if(vm.count("help") || !vm.count("input")) {
         std::cout << desc <<  "\n";
         return 1;
     }
