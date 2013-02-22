@@ -92,9 +92,9 @@ class NavitiaManager:
                 resp = self.send_and_receive(req, key)
                 if resp:
                     try:
-                        instance.shape = wkt.loads(resp.metadatas.shape)
+                        instance.geom = wkt.loads(resp.metadatas.shape)
                     except:
-                        instance.shape = ""
+                        instance.geom = None
             self.thread_event.wait(timer)
         print "fin thread ping"
 

@@ -44,6 +44,9 @@ def api_doc(apis, instance_manager, api = None) :
                 param['dataType'] = convertType(item[1].validator)
                 param['required'] = item[1].required
                 param['allowMultiple'] = item[1].repeated
+                if item[1].allowableValues:
+                    param['allowableValues'] = {"valueType" : "LIST", "values" :
+                                                item[1].allowableValues}
                 params.append(param)
             path = "/"
             version = {}
@@ -67,7 +70,7 @@ def api_doc(apis, instance_manager, api = None) :
                 regions['required'] = True
                 regions['allowMultiple'] = False
                 regions['allowableValues'] = {"valueType":"LIST", "values":[]}
-                for key, val in instance_manager.keys_navitia.iteritems():
+                for key in instance_manager.instances.keys():
                     regions['allowableValues']["values"].append(key)
                 params.append(regions)
                 path += "{region}/"
