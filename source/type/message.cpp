@@ -11,8 +11,10 @@
 #include "third_party/eos_portable_archive/portable_iarchive.hpp"
 #include "third_party/eos_portable_archive/portable_oarchive.hpp"
 #include "lz4_filter/filter.h"
+#include <boost/foreach.hpp>
 
 namespace pt = boost::posix_time;
+namespace bg = boost::gregorian;
 
 namespace navitia { namespace type {
 
@@ -60,5 +62,63 @@ MessageHolder& MessageHolder::operator=(const navitia::type::MessageHolder&& oth
     this->generation_date = std::move(other.generation_date);
     return *this;
 }
+
+std::vector<Message> MessageHolder::find_messages(const std::string& uri, const boost::posix_time::ptime& now,
+        const boost::posix_time::ptime& action_time) const{
+    std::vector<Message> result;
+    auto it = messages.find(uri);
+    if(it != messages.end()){
+        BOOST_FOREACH(auto m, it->second){
+            if(m.is_valid(now, action_time)){
+                result.push_back(m);
+            }
+        }
+    }
+    return result;
+
+}
+
+bool Message::is_valid(const boost::posix_time::ptime& now, const boost::posix_time::ptime& action_time) const{
+    if(now.is_not_a_date_time() && action_time.is_not_a_date_time()){
+        return false;
+    }
+
+    bool to_return = is_publishable(now);
+
+    if(!action_time.is_not_a_date_time()){
+        to_return = to_return && is_applicable(action_time);
+    }
+    return to_return;
+}
+
+bool Message::is_publishable(const boost::posix_time::ptime& time) const{
+    return publication_period.contains(time);
+}
+
+bool Message::is_applicable(const boost::posix_time::ptime& time) const{
+    bool to_return = application_period.contains(time);
+
+    to_return = to_return && time.time_of_day() > application_daily_start_hour
+                          && time.time_of_day() < application_daily_end_hour;
+
+    to_return = to_return && valid_day_of_week(time.date());
+    return to_return;
+
+}
+
+bool Message::valid_day_of_week(const bg::date& date) const{
+
+    switch(date.day_of_week()){
+        case bg::Monday: return this->active_days[0];
+        case bg::Tuesday: return this->active_days[1];
+        case bg::Wednesday: return this->active_days[2];
+        case bg::Thursday: return this->active_days[3];
+        case bg::Friday: return this->active_days[4];
+        case bg::Saturday: return this->active_days[5];
+        case bg::Sunday: return this->active_days[6];
+    }
+    return false; // Ne devrait pas arriver
+}
+
 
 }}//namespace

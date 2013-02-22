@@ -10,13 +10,14 @@ add_custom_command (TARGET pb_lib
     COMMAND protoc ARGS --python_out=../frontend type.proto
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/type )
 
-add_library(types type.cpp)
+add_library(types type.cpp 
+    message.cpp
+)
 
 SET(DATA_SRC
     data.cpp
     ${CMAKE_SOURCE_DIR}/../third_party/lz4/lz4.c
     pt_data.cpp
-    message.cpp
 )
 
 add_library(data ${DATA_SRC})
