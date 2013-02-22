@@ -8,6 +8,8 @@
 #include <QtSql/qsqlerror.h>
 #include <QtSql/qsqlrecord.h>
 #include <boost/format.hpp>
+#include "utils/exception.h"
+#include <log4cplus/logger.h>
 
 
 namespace pt = boost::posix_time;
@@ -28,8 +30,7 @@ QSqlDatabase AtLoader::connect(const po::variables_map& params){
     }
 
     if(!at_db.open()){
-        std::cerr << "connection fail: " << at_db.lastError().text().toStdString() << std::endl;
-        throw std::exception();
+        throw navitia::exception(at_db.lastError().text().toStdString());
     }
     return at_db;
 }
@@ -39,26 +40,41 @@ navitia::type::Type_e parse_object_type(std::string object_type){
         return navitia::type::Type_e::eStopArea;
     }else if(ba::iequals(object_type, "StopPoint")){
         return navitia::type::Type_e::eStopPoint;
+    }else if(ba::iequals(object_type, "Line")){
+        return navitia::type::Type_e::eLine;
+    }else if(ba::iequals(object_type, "VehicleJourney")){
+        return navitia::type::Type_e::eVehicleJourney;
+    }else if(ba::iequals(object_type, "Route")){
+        return navitia::type::Type_e::eRoute;
+    }else if(ba::iequals(object_type, "Network")){
+        return navitia::type::Type_e::eNetwork;
+    }else if(ba::iequals(object_type, "RoutePoint")){
+        return navitia::type::Type_e::eRoutePoint;
+    }else if(ba::iequals(object_type, "Company")){
+        return navitia::type::Type_e::eCompany;
     }else{
-        throw std::exception();
+        throw navitia::exception((boost::format("object_type unknow: %s") % object_type).str());
     }
 
 }
 
-std::map<std::string, std::vector<navitia::type::Message>> AtLoader::load(const po::variables_map& params){
+std::map<std::string, std::vector<navitia::type::Message>> AtLoader::load(const po::variables_map& params, const boost::posix_time::ptime& now){
+    log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
     std::map<std::string, std::vector<navitia::type::Message>> messages;
-    QSqlQuery result = exec(params);
+    QSqlQuery result = exec(params, now);
     while(result.next()){
         try{
             nt::Message m = parse_message(result);
             messages[m.object_uri].push_back(m);
-        }catch(const std::exception& e){}
+        }catch(const std::exception& e){
+            LOG4CPLUS_WARN(logger, e.what());
+        }
     }
     return messages;
 }
 
 
-QSqlQuery AtLoader::exec(const po::variables_map& params){
+QSqlQuery AtLoader::exec(const po::variables_map& params, const pt::ptime& now){
 
     QSqlQuery requester(this->connect(params));
     requester.setForwardOnly(true);
@@ -90,19 +106,16 @@ QSqlQuery AtLoader::exec(const po::variables_map& params){
     );
 
     if(!result){
-        std::cerr << "Erreur lors de la préparation de la requéte : " << requester.lastError().text().toStdString() << std::endl;
-        throw std::exception();
+        throw navitia::exception("Erreur lors de la préparation de la requéte : " + requester.lastError().text().toStdString());
     }
-    //requester.bindValue(":date", QVariant(QString::fromStdString(pt::to_iso_extended_string(pt::second_clock::local_time()))));
-    requester.bindValue(":date_pub", QVariant(QString::fromStdString("2013-01-01T00:00:00")));
-    requester.bindValue(":date_clo", QVariant(QString::fromStdString("2013-01-01T00:00:00")));
+    requester.bindValue(":date_pub", QVariant(QString::fromStdString(pt::to_iso_extended_string(now))));
+    requester.bindValue(":date_clo", QVariant(QString::fromStdString(pt::to_iso_extended_string(now))));
     requester.bindValue(":media_lang", QVariant(QString::fromStdString(params["media-lang"].as<std::string>())));
     requester.bindValue(":media_media", QVariant(QString::fromStdString(params["media-media"].as<std::string>())));
 
     result = requester.exec();
     if(!result){
-        std::cerr << "Erreur lors de l'execution de la requéte " << requester.lastError().text().toStdString() << std::endl;
-        throw std::exception();
+        throw navitia::exception("Erreur lors de l'execution de la requéte " + requester.lastError().text().toStdString());
     }
 
     return requester;
@@ -113,18 +126,20 @@ navitia::type::Message AtLoader::parse_message(const QSqlQuery& requester){
 
     message.uri = (boost::format("message:%d:%d") % requester.value(0).toInt() % requester.value(1).toInt()).str();
 
-    if(!requester.isNull(2))
-        message.publication_start_date = pt::time_from_string(requester.value(2).toString().toStdString());
+    if(!requester.isNull(2) && !requester.isNull(3)){
+        pt::ptime start_date = pt::time_from_string(requester.value(2).toString().toStdString());
+        pt::ptime end_date = pt::time_from_string(requester.value(3).toString().toStdString());
 
-    if(!requester.isNull(3))
-        message.publication_end_date = pt::time_from_string(requester.value(3).toString().toStdString());
+        message.publication_period = pt::time_period(start_date, end_date);
+    }
 
 
-    if(!requester.isNull(4))
-        message.application_start_date = pt::time_from_string(requester.value(4).toString().toStdString());
+    if(!requester.isNull(4) && !requester.isNull(5)){
+        pt::ptime start_date = pt::time_from_string(requester.value(4).toString().toStdString());
+        pt::ptime end_date = pt::time_from_string(requester.value(5).toString().toStdString());
 
-    if(!requester.isNull(5))
-        message.application_end_date = pt::time_from_string(requester.value(5).toString().toStdString());
+        message.application_period = pt::time_period(start_date, end_date);
+    }
 
 
     if(!requester.isNull(6))

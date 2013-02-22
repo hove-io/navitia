@@ -80,8 +80,8 @@ def on_load(request, region, format):
     return render_from_protobuf(resp, format, request.args.get('callback'))
 
 pb_type = {
-        'stop_area': type_pb2.STOPAREA,
-        'stop_point': type_pb2.STOPPOINT,
+        'stop_area': type_pb2.STOP_AREA,
+        'stop_point': type_pb2.STOP_POINT,
         'city': type_pb2.CITY,
         'address': type_pb2.ADDRESS
         }
@@ -128,7 +128,7 @@ def on_departure_board(request_args, version, region, format, callback):
 
 def on_proximity_list(request_args, version, region, format, callback):
     req = type_pb2.Request()
-    req.requested_api = type_pb2.PROXIMITYLIST
+    req.requested_api = type_pb2.PROXIMITY_LIST
     req.proximity_list.coord.lon = request_args["lon"]
     req.proximity_list.coord.lat = request_args["lat"]
     req.proximity_list.distance = request_args["distance"]
@@ -245,11 +245,11 @@ apis = {
                              "arguments":scheduleArguments,
                              "description" : "Give all the departures of filter at datetime",
                           "order":4},
-        "stop_areas" : {"endpoint" : on_ptref(type_pb2.STOPAREA), "arguments" :
+        "stop_areas" : {"endpoint" : on_ptref(type_pb2.STOP_AREA), "arguments" :
                         ptrefArguments,
                         "description" : "Retrieves all the stop areas filtered with filter",
                           "order":5},
-        "stop_points" : {"endpoint" : on_ptref(type_pb2.STOPPOINT), "arguments" :
+        "stop_points" : {"endpoint" : on_ptref(type_pb2.STOP_POINT), "arguments" :
                         ptrefArguments,
                         "description" : "Retrieves all the stop points filtered with filter",
                           "order":5},
@@ -265,11 +265,11 @@ apis = {
                         ptrefArguments,
                         "description" : "Retrieves all the networks filtered with filter",
                           "order":5},
-        "physical_modes" : {"endpoint" : on_ptref(type_pb2.PHYSICALMODE), "arguments" :
+        "physical_modes" : {"endpoint" : on_ptref(type_pb2.PHYSICAL_MODE), "arguments" :
                         ptrefArguments,
                         "description" : "Retrieves all the physical modes filtered with filter",
                           "order":5},
-        "commercial_modes" : {"endpoint" : on_ptref(type_pb2.COMMERCIALMODE), "arguments" :
+        "commercial_modes" : {"endpoint" : on_ptref(type_pb2.COMMERCIAL_MODE), "arguments" :
                         ptrefArguments,
                         "description" : "Retrieves all the commercial modes filtered with filter",
                           "order":5},
@@ -277,7 +277,7 @@ apis = {
                         ptrefArguments,
                         "description" : "Retrieves all the connections points filtered with filter",
                           "order":5},
-        "route_points" : {"endpoint" : on_ptref(type_pb2.ROUTEPOINT), "arguments" :
+        "route_points" : {"endpoint" : on_ptref(type_pb2.ROUTE_POINT), "arguments" :
                         ptrefArguments,
                         "description" : "Retrieves all the route points filtered with filter",
                           "order":5},
@@ -285,7 +285,7 @@ apis = {
                         ptrefArguments,
                         "description" : "Retrieves all the companies filtered with filter",
                           "order":5},
-        "vehicle_journeys" : {"endpoint" : on_ptref(type_pb2.VEHICLEJOURNEY),
+        "vehicle_journeys" : {"endpoint" : on_ptref(type_pb2.VEHICLE_JOURNEY),
                               "arguments" : ptrefArguments,
                               "description" :"Retrieves all the vehicle journeys filtered with filter" ,
                               "order" : 5},

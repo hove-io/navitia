@@ -42,7 +42,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * address, int house_number,type::GeographicalCoord& coord, int max_depth){
-    navitia::georef::Way way = data.geo_ref.ways.at(idx);    
+    navitia::georef::Way way = data.geo_ref.ways.at(idx);
     address->set_name(way.name);
     if(house_number >= 0){
         address->set_house_number(house_number);
@@ -155,7 +155,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::RoutePoint *
 
 
 void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth){
-    pm->set_type(pbnavitia::STOPPOINT);
+    pm->set_type(pbnavitia::STOP_POINT);
     fill_pb_object(stop_point.idx, data, pm->mutable_stop_point(), max_depth);
 }
 

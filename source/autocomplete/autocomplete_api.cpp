@@ -13,7 +13,7 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result, c
         pbnavitia::PlaceMark* place_mark = item->mutable_object();
         switch(type){
         case nt::Type_e::eStopArea:
-            place_mark->set_type(pbnavitia::STOPAREA);
+            place_mark->set_type(pbnavitia::STOP_AREA);
             fill_pb_object(result_item.idx, data, place_mark->mutable_stop_area(), 2);
             item->set_name(data.pt_data.stop_areas[result_item.idx].name);
             item->set_uri(data.pt_data.stop_areas[result_item.idx].uri);
@@ -27,7 +27,7 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result, c
             item->set_quality(result_item.quality);
             break;
         case nt::Type_e::eStopPoint:
-            place_mark->set_type(pbnavitia::STOPPOINT);
+            place_mark->set_type(pbnavitia::STOP_POINT);
             fill_pb_object(result_item.idx, data, place_mark->mutable_stop_point(), 2);
             item->set_name(data.pt_data.stop_points[result_item.idx].name);
             item->set_uri(data.pt_data.stop_points[result_item.idx].uri);
