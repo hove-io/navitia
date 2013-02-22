@@ -73,14 +73,17 @@ do
     if [ -d "$street_network" ]
     then
         navimake_options=" --topo $street_network "
-    else if [ -r "$street_network" ]
-        navimake_options=" --osm $street_network "
-    else
-        echo "street_network ($street_network) non trouvé"
+    else 
+        if [ -r "$street_network" ] 
+        then
+            navimake_options=" --osm $street_network "
+        else
+            echo "street_network ($street_network) non trouvé"
+        fi 
     fi
     
 
-    `$navimake -t gtfs -i $temp_dir -o $data_dir/$data_filename $navimake_options >> "$temp_dir/bina.log" 2>&1`
+    `$navimake -i $temp_dir -o $data_dir/$data_filename $navimake_options >> "$temp_dir/bina.log" 2>&1`
     if [ $? -ne 0 ]
     then
         mv $file $error_dir

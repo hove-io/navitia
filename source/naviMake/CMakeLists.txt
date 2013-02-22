@@ -1,6 +1,5 @@
 
-SET(SOURCE_LIB
-        connectors.cpp 
+SET(SOURCE_LIB 
         data.cpp 
         types.cpp 
         gtfs_parser.cpp

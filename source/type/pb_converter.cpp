@@ -192,7 +192,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::RoutePoint *
 
 void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth,
         const pt::ptime& now, const pt::ptime& action_time){
-    pm->set_type(pbnavitia::STOPPOINT);
+    pm->set_type(pbnavitia::STOP_POINT);
     fill_pb_object(stop_point.idx, data, pm->mutable_stop_point(), max_depth, now, action_time);
 }
 
