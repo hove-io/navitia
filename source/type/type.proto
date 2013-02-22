@@ -22,7 +22,7 @@ enum NavitiaType {
 enum API {
     AUTOCOMPLETE = 1;
     PTREFERENTIAL = 2;
-    PLANNER = 4;	
+    PLANNER = 4;
     LOAD = 5;
     PROXIMITYLIST = 6;
     STATUS = 7;
@@ -33,6 +33,14 @@ enum API {
     STOPS_SCHEDULE = 12;
     ISOCHRONE = 13;
     METADATAS = 14;
+}
+
+message Message{
+    optional string uri = 1;
+    optional string message = 2;
+    optional string title = 3;
+
+
 }
 
 message GeographicalCoord {
@@ -54,6 +62,7 @@ message StopArea {
     optional City city = 6;
     optional bool is_adapted = 7;
     repeated StopPoint stop_points = 8;
+    repeated Message messages = 9;
 }
 
 message StopPoint {
@@ -61,9 +70,11 @@ message StopPoint {
     optional string name = 3;
     optional City city = 4;
     optional string uri = 5;
-    optional GeographicalCoord coord = 6; 
+    optional GeographicalCoord coord = 6;
     optional StopArea stop_area = 7;
     optional bool is_adapted = 8;
+
+    repeated Message messages = 9;
 }
 
 message Line {
@@ -76,6 +87,8 @@ message Line {
     optional string additional_data = 8;
     optional string color = 9;
     repeated Route routes = 10;
+
+    repeated Message messages = 11;
 }
 
 message Route {
@@ -86,6 +99,8 @@ message Route {
     optional bool is_adapted = 6;
     optional Line line = 7;
     repeated RoutePoint route_points = 8;
+
+    repeated Message messages = 9;
 }
 
 message StopDateTime {
@@ -116,6 +131,8 @@ message VehicleJourney {
     optional bool is_adapted = 5;
     repeated StopTime stop_times = 6;
     optional Route route = 7;
+
+    repeated Message messages = 8;
 }
 
 message RoutePoint{
@@ -124,6 +141,8 @@ message RoutePoint{
     optional int32 order = 4;
     optional StopPoint stop_point = 5;
     optional Route route = 6;
+
+    repeated Message messages = 7;
 }
 
 message City {
@@ -412,7 +431,7 @@ message Response{
     optional Autocomplete autocomplete = 4;
     optional PTReferential ptref = 5;
     optional StreetNetwork street_network = 6;
-    optional Planner planner = 7;	
+    optional Planner planner = 7;
     optional ProximityList proximitylist = 8;
     optional Status status = 9;
     optional StopTimes nextstoptimes = 10;
@@ -426,8 +445,8 @@ message Response{
 
 
 message req {
-	required string api = 1;
-	required string params = 2;
+    required string api = 1;
+    required string params = 2;
 }
 
 message AutocompleteRequest {

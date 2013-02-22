@@ -14,7 +14,7 @@ class Instance:
         self.socket = None
         self.socket_path = None
         self.lock = Lock()
-        
+
 
 class NavitiaManager:
     """ Permet de coordonner les différents NAViTiA gérés par le front-end
@@ -29,9 +29,9 @@ class NavitiaManager:
         - géométries de la région sur laquelle s'applique le moteur
         - la socket pour chaque identifiant navitia
         """
-        
+
         self.instances = {}
-        
+
         self.context = zmq.Context()
         self.default_socket = None
 
@@ -73,7 +73,7 @@ class NavitiaManager:
             resp.ParseFromString(pb)
             return resp
         else :
-            print region+" is a dead socket"       
+            print region+" is a dead socket (" + instance.socket_path + ")"
             instance.socket.setsockopt(zmq.LINGER, 0)
             instance.socket.close()
             self.poller.unregister(instance.socket)

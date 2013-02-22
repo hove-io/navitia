@@ -37,7 +37,7 @@ struct Message{
     std::string message;
     std::string title;
 
-    Message(): object_type(Type_e::eValidityPattern), 
+    Message(): object_type(Type_e::eValidityPattern),
         publication_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)),
         application_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)){}
 
@@ -46,6 +46,13 @@ struct Message{
             & application_period & application_daily_start_hour
             & application_daily_end_hour & active_days & message & title;
     }
+
+    bool is_valid(const boost::posix_time::ptime& now, const boost::posix_time::ptime& action_time)const;
+
+    bool valid_day_of_week(const boost::gregorian::date& date) const;
+
+    bool is_publishable(const boost::posix_time::ptime& time) const;
+    bool is_applicable(const boost::posix_time::ptime& time) const;
 
 };
 
@@ -78,6 +85,9 @@ struct MessageHolder{
     void save(const std::string & filename);
 
     MessageHolder& operator=(const navitia::type::MessageHolder&&);
+
+    std::vector<Message> find_messages(const std::string& uri, const boost::posix_time::ptime& now,
+        const boost::posix_time::ptime& action_time) const;
 
     private:
     void load_lz4(const std::string & filename);

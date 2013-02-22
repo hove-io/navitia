@@ -1,10 +1,13 @@
 #include "pb_converter.h"
 #include "georef/georef.h"
 #include "georef/street_network.h"
+#include <boost/foreach.hpp>
 namespace nt = navitia::type;
+
+namespace pt = boost::posix_time;
 namespace navitia{
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::City* city, int){
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::City* city, int, const pt::ptime&, const pt::ptime& ){
     nt::City city_n = data.pt_data.cities.at(idx);
     city->set_id(city_n.id);
     city->set_id(city_n.id);
@@ -15,7 +18,8 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::City* city, 
     city->mutable_coord()->set_lat(city_n.coord.lat());
 }
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* stop_area, int max_depth){
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* stop_area, int max_depth,
+        const pt::ptime& now, const pt::ptime& action_time){
     nt::StopArea sa = data.pt_data.stop_areas.at(idx);
     stop_area->set_id(sa.id);
     stop_area->set_uri(sa.uri);
@@ -24,10 +28,15 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* st
     stop_area->mutable_coord()->set_lat(sa.coord.lat());
     stop_area->set_is_adapted(sa.is_adapted);
     if(max_depth > 0 && sa.city_idx != nt::invalid_idx)
-        fill_pb_object(sa.city_idx, data, stop_area->mutable_city(), max_depth-1);
+        fill_pb_object(sa.city_idx, data, stop_area->mutable_city(), max_depth-1, now, action_time);
+
+    BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(sa.uri, now, action_time)){
+        fill_message(message, data, stop_area->add_messages(), max_depth-1, now, action_time);
+    }
 }
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* stop_point, int max_depth){
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* stop_point, int max_depth,
+        const pt::ptime& now, const pt::ptime& action_time){
     nt::StopPoint sp = data.pt_data.stop_points.at(idx);
     stop_point->set_id(sp.id);
     stop_point->set_uri(sp.uri);
@@ -36,12 +45,18 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
     stop_point->mutable_coord()->set_lat(sp.coord.lat());
     stop_point->set_is_adapted(sp.is_adapted);
     if(max_depth > 0 && sp.city_idx != nt::invalid_idx)
-            fill_pb_object(sp.city_idx, data, stop_point->mutable_city(), max_depth-1);
+        fill_pb_object(sp.city_idx, data, stop_point->mutable_city(), max_depth-1, now, action_time);
     if(max_depth > 0 && sp.stop_area_idx != nt::invalid_idx)
-            fill_pb_object(sp.stop_area_idx, data, stop_point->mutable_stop_area(), max_depth-1);
+        fill_pb_object(sp.stop_area_idx, data, stop_point->mutable_stop_area(), max_depth-1, now, action_time);
+
+
+    BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(sp.uri, now, action_time)){
+        fill_message(message, data, stop_point->add_messages(), max_depth-1, now, action_time);
+    }
 }
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * address, int house_number,type::GeographicalCoord& coord, int max_depth){
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * address, int house_number,
+        type::GeographicalCoord& coord, int max_depth, const pt::ptime& now, const pt::ptime& action_time){
     navitia::georef::Way way = data.geo_ref.ways.at(idx);
     address->set_name(way.name);
     if(house_number >= 0){
@@ -51,10 +66,11 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * ad
     address->mutable_coord()->set_lat(coord.lat());
     address->set_uri(way.uri);
     if(max_depth > 0 and way.city_idx != nt::invalid_idx)
-        fill_pb_object(way.city_idx, data,  address->mutable_city());
+        fill_pb_object(way.city_idx, data,  address->mutable_city(), max_depth-1, now, action_time);
 }
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line, int){
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line, int,
+        const pt::ptime&, const pt::ptime&){
     navitia::type::Line l = data.pt_data.lines.at(idx);
     line->set_forward_name(l.forward_name);
     line->set_backward_name(l.backward_name);
@@ -64,68 +80,83 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line,
     line->set_uri(l.uri);
 }
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Route * route, int max_depth){
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Route * route, int max_depth,
+        const pt::ptime& now, const pt::ptime& action_time){
     navitia::type::Route r = data.pt_data.routes.at(idx);
     route->set_name(r.name);
     route->set_id(r.id);
     route->set_uri(r.uri);
     if(max_depth > 0 && r.line_idx != type::invalid_idx)
-        fill_pb_object(r.line_idx, data, route->mutable_line(), max_depth - 1);
+        fill_pb_object(r.line_idx, data, route->mutable_line(), max_depth - 1, now, action_time);
+
+    BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(r.uri, now, action_time)){
+        fill_message(message, data, route->add_messages(), max_depth-1, now, action_time);
+    }
 }
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Network * network, int){
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Network * network, int,
+        const pt::ptime&, const pt::ptime&){
     navitia::type::Network n = data.pt_data.networks.at(idx);
     network->set_name(n.name);
     network->set_id(n.id);
     network->set_uri(n.uri);
 }
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::CommercialMode * commercial_mode, int){
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::CommercialMode * commercial_mode,
+        int, const pt::ptime&, const pt::ptime&){
     navitia::type::CommercialMode m = data.pt_data.commercial_modes.at(idx);
     commercial_mode->set_name(m.name);
     commercial_mode->set_id(m.id);
     commercial_mode->set_uri(m.uri);
 }
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::PhysicalMode * physical_mode, int){
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::PhysicalMode * physical_mode, int,
+        const pt::ptime&, const pt::ptime&){
     navitia::type::PhysicalMode m = data.pt_data.physical_modes.at(idx);
     physical_mode->set_name(m.name);
     physical_mode->set_id(m.id);
     physical_mode->set_uri(m.uri);
 }
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Company * company, int){
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Company * company, int, const pt::ptime&, const pt::ptime&){
     navitia::type::Company c = data.pt_data.companies.at(idx);
     company->set_name(c.name);
     company->set_id(c.id);
     company->set_uri(c.uri);
 }
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Connection * connection, int max_depth){
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Connection * connection, int max_depth,
+        const pt::ptime& now, const pt::ptime& action_time){
     navitia::type::Connection c = data.pt_data.connections.at(idx);
     connection->set_seconds(c.duration);
     if(c.departure_stop_point_idx != type::invalid_idx && c.destination_stop_point_idx != type::invalid_idx && max_depth > 0){
-        fill_pb_object(c.departure_stop_point_idx, data, connection->mutable_origin(), max_depth - 1);
-        fill_pb_object(c.destination_stop_point_idx, data, connection->mutable_destination(), max_depth - 1);
+        fill_pb_object(c.departure_stop_point_idx, data, connection->mutable_origin(), max_depth - 1, now, action_time);
+        fill_pb_object(c.destination_stop_point_idx, data, connection->mutable_destination(), max_depth - 1, now, action_time);
     }
 }
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::VehicleJourney * vehicle_journey, int max_depth){
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::VehicleJourney * vehicle_journey, int max_depth,
+        const pt::ptime& now, const pt::ptime& action_time){
     navitia::type::VehicleJourney vj = data.pt_data.vehicle_journeys.at(idx);
     vehicle_journey->set_name(vj.name);
     vehicle_journey->set_uri(vj.uri);
     vehicle_journey->set_is_adapted(vj.is_adapted);
     if(vj.route_idx != type::invalid_idx && max_depth > 0)
-        fill_pb_object(vj.route_idx, data, vehicle_journey->mutable_route(), max_depth-1);
+        fill_pb_object(vj.route_idx, data, vehicle_journey->mutable_route(), max_depth-1, now, action_time);
 
     if(max_depth > 0) {
         for(type::idx_t stop_time_idx : vj.stop_time_list) {
-            fill_pb_object(stop_time_idx, data, vehicle_journey->add_stop_times(), max_depth -1);
+            fill_pb_object(stop_time_idx, data, vehicle_journey->add_stop_times(), max_depth -1, now, action_time);
         }
+    }
+
+    BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(vj.uri, now, action_time)){
+        fill_message(message, data, vehicle_journey->add_messages(), max_depth-1, now, action_time);
     }
 }
 
-void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopTime *stop_time, int max_depth) {
+void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopTime *stop_time, int max_depth,
+        const pt::ptime& now, const pt::ptime& action_time) {
     navitia::type::StopTime st = data.pt_data.stop_times.at(idx);
     boost::posix_time::ptime d = boost::posix_time::from_iso_string("19700101");
     boost::posix_time::ptime p = d +  boost::posix_time::seconds(st.arrival_time);
@@ -136,30 +167,37 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopTime
     stop_time->set_pickup_allowed(st.pick_up_allowed());
     stop_time->set_drop_off_allowed(st.drop_off_allowed());
     if(st.route_point_idx != type::invalid_idx && max_depth > 0)
-        fill_pb_object(st.route_point_idx, data, stop_time->mutable_route_point(), max_depth-1);
+        fill_pb_object(st.route_point_idx, data, stop_time->mutable_route_point(), max_depth-1, now, action_time);
     if(st.vehicle_journey_idx != type::invalid_idx && max_depth > 0)
-        fill_pb_object(st.vehicle_journey_idx, data, stop_time->mutable_vehicle_journey(), max_depth-1);
+        fill_pb_object(st.vehicle_journey_idx, data, stop_time->mutable_vehicle_journey(), max_depth-1, now, action_time);
 }
 
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::RoutePoint * route_point, int max_depth){
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::RoutePoint * route_point, int max_depth,
+        const pt::ptime& now, const pt::ptime& action_time){
     navitia::type::RoutePoint rp = data.pt_data.route_points.at(idx);
     route_point->set_id(rp.id);
     route_point->set_uri(rp.uri);
     route_point->set_order(rp.order);
     if(rp.stop_point_idx != type::invalid_idx && max_depth > 0)
-        fill_pb_object(rp.stop_point_idx, data, route_point->mutable_stop_point(), max_depth - 1);
+        fill_pb_object(rp.stop_point_idx, data, route_point->mutable_stop_point(), max_depth - 1, now, action_time);
     if(rp.route_idx != type::invalid_idx && max_depth > 0)
-        fill_pb_object(rp.route_idx, data, route_point->mutable_route(), max_depth - 1);
+        fill_pb_object(rp.route_idx, data, route_point->mutable_route(), max_depth - 1, now, action_time);
+
+    BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(rp.uri, now, action_time)){
+        fill_message(message, data, route_point->add_messages(), max_depth-1, now, action_time);
+    }
 }
 
 
-void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth){
+void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth,
+        const pt::ptime& now, const pt::ptime& action_time){
     pm->set_type(pbnavitia::STOPPOINT);
-    fill_pb_object(stop_point.idx, data, pm->mutable_stop_point(), max_depth);
+    fill_pb_object(stop_point.idx, data, pm->mutable_stop_point(), max_depth, now, action_time);
 }
 
-void fill_street_section(const georef::Path &path, const type::Data &data, pbnavitia::Section* section, int max_depth){
+void fill_street_section(const georef::Path &path, const type::Data &data, pbnavitia::Section* section,
+        int max_depth, const pt::ptime& now, const pt::ptime& action_time){
     if(path.path_items.size() > 0) {
         section->set_type(pbnavitia::STREET_NETWORK);
         pbnavitia::StreetNetwork * sn = section->mutable_street_network();
@@ -174,18 +212,27 @@ void fill_street_section(const georef::Path &path, const type::Data &data, pbnav
             coord = path.coordinates.front();
             pm = section->mutable_origin();
             pm->set_type(pbnavitia::ADDRESS);
-            fill_pb_object(way.idx, data, pm->mutable_address(), way.nearest_number(coord),coord , max_depth);
+            fill_pb_object(way.idx, data, pm->mutable_address(), way.nearest_number(coord),coord , max_depth, now, action_time);
 
             way = data.geo_ref.ways[path.path_items.back().way_idx];
             coord = path.coordinates.back();
             pm = section->mutable_destination();
             pm->set_type(pbnavitia::ADDRESS);
-            fill_pb_object(way.idx, data, pm->mutable_address(), way.nearest_number(coord),coord , max_depth);
+            fill_pb_object(way.idx, data, pm->mutable_address(), way.nearest_number(coord),coord , max_depth, now, action_time);
         }
     }
 }
 
-void create_pb(const navitia::georef::Path& path, const navitia::type::Data& data, pbnavitia::StreetNetwork* sn){
+void fill_message(const type::Message & message, const type::Data&, pbnavitia::Message* pb_message, int,
+        const boost::posix_time::ptime&, const boost::posix_time::ptime&){
+
+    pb_message->set_uri(message.uri);
+    pb_message->set_message(message.message);
+    pb_message->set_title(message.title);
+}
+
+void create_pb(const navitia::georef::Path& path, const navitia::type::Data& data, pbnavitia::StreetNetwork* sn,
+        const pt::ptime&, const pt::ptime&){
     sn->set_length(path.length);
     for(auto item : path.path_items){
         if(item.way_idx < data.geo_ref.ways.size()){
