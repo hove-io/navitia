@@ -46,7 +46,7 @@ then
 
     if [ -r $data_source ]
     then
-        cp $data_source $destination
+        scp $data_source $destination
     else
         wget -O $destination $data_source
     fi
