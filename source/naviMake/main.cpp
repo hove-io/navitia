@@ -2,7 +2,6 @@
 #include <iostream>
 #include <boost/foreach.hpp>
 
-#include "connectors.h"
 #include "gtfs_parser.h"
 #include "bdtopo_parser.h"
 #include "osm2nav.h"
@@ -22,7 +21,6 @@ int main(int argc, char * argv[])
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
-        ("type,t", po::value<std::string>(&type), "Type du format d'entrée [fusio, gtfs]")
         ("date,d", po::value<std::string>(&date), "Date de début")
         ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
         ("topo", po::value<std::string>(&topo_path), "Repertoire contenant la bd topo")
@@ -76,19 +74,11 @@ int main(int argc, char * argv[])
 
     nav_data.meta.data_sources.push_back(boost::filesystem::absolute(input).native());
 
-    if(type == "fusio") {
-        navimake::connectors::CsvFusio connector(input);
-        connector.fill(data);
-    }
-    else if(type == "gtfs") {
-        navimake::connectors::GtfsParser connector(input);
-        connector.fill(data, date);
-        nav_data.meta.production_date = connector.production_date;
-    }
-    else {
-        std::cout << desc << "\n";
-        return 1;
-    }
+
+    navimake::connectors::GtfsParser connector(input);
+    connector.fill(data, date);
+    nav_data.meta.production_date = connector.production_date;
+
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 
