@@ -12,4 +12,4 @@ data_dir=/tmp/data
 
 data_filename=data.nav.lz4
 
-bd_topo='/home/kinou/workspace/navitia/data/IdF/BD_TOPO_STIF'
+street_network='/home/kinou/workspace/navitia/data/IdF/BD_TOPO_STIF'
