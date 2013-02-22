@@ -126,18 +126,20 @@ navitia::type::Message AtLoader::parse_message(const QSqlQuery& requester){
 
     message.uri = (boost::format("message:%d:%d") % requester.value(0).toInt() % requester.value(1).toInt()).str();
 
-    if(!requester.isNull(2))
-        message.publication_start_date = pt::time_from_string(requester.value(2).toString().toStdString());
+    if(!requester.isNull(2) && !requester.isNull(3)){
+        pt::ptime start_date = pt::time_from_string(requester.value(2).toString().toStdString());
+        pt::ptime end_date = pt::time_from_string(requester.value(3).toString().toStdString());
 
-    if(!requester.isNull(3))
-        message.publication_end_date = pt::time_from_string(requester.value(3).toString().toStdString());
+        message.publication_period = pt::time_period(start_date, end_date);
+    }
 
 
-    if(!requester.isNull(4))
-        message.application_start_date = pt::time_from_string(requester.value(4).toString().toStdString());
+    if(!requester.isNull(4) && !requester.isNull(5)){
+        pt::ptime start_date = pt::time_from_string(requester.value(4).toString().toStdString());
+        pt::ptime end_date = pt::time_from_string(requester.value(5).toString().toStdString());
 
-    if(!requester.isNull(5))
-        message.application_end_date = pt::time_from_string(requester.value(5).toString().toStdString());
+        message.application_period = pt::time_period(start_date, end_date);
+    }
 
 
     if(!requester.isNull(6))

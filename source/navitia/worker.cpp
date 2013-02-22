@@ -73,7 +73,7 @@ pbnavitia::Response Worker::status() {
 pbnavitia::Response Worker::metadatas() {
     pbnavitia::Response result;
     result.set_requested_api(pbnavitia::METADATAS);
-    
+
     auto metadatas = result.mutable_metadatas();
 
     metadatas->set_start_production_date(bg::to_iso_string(data.meta.production_date.begin()));

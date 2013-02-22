@@ -25,11 +25,9 @@ struct Message{
     Type_e object_type;
     std::string object_uri;
 
-    boost::posix_time::ptime publication_start_date;
-    boost::posix_time::ptime publication_end_date;
+    boost::posix_time::time_period publication_period;
 
-    boost::posix_time::ptime application_start_date;
-    boost::posix_time::ptime application_end_date;
+    boost::posix_time::time_period application_period;
 
     boost::posix_time::time_duration application_daily_start_hour;
     boost::posix_time::time_duration application_daily_end_hour;
@@ -39,11 +37,13 @@ struct Message{
     std::string message;
     std::string title;
 
-    Message(): object_type(Type_e::eValidityPattern){}
+    Message(): object_type(Type_e::eValidityPattern), 
+        publication_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)),
+        application_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int){
-        ar & uri & object_type & object_uri & publication_start_date & publication_end_date
-            & application_start_date & application_end_date & application_daily_start_hour
+        ar & uri & object_type & object_uri & publication_period
+            & application_period & application_daily_start_hour
             & application_daily_end_hour & active_days & message & title;
     }
 
