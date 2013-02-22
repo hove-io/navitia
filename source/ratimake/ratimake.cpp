@@ -23,9 +23,9 @@ po::variables_map load_config(int argc, const char** argv){
         ("config-file", po::value<std::string>()->default_value(argv[0] + std::string(".ini")), "chemin vers le fichier de configuration")
         ("log4cplus-config-file", po::value<std::string>()->default_value("log4cplus.ini"), "chemin vers le fichier de configuration de log4cplus")
         ("connect-string", po::value<std::string>(), "parametres de connection à la base de données : DRIVER=FreeTDS;SERVER=;UID=;PWD=;DATABASE=;TDS_Version=8.0;Port=1433;ClientCharset=UTF-8")
-        ("media-lang", po::value<std::string>()->default_value("FR"), "filename")
-        ("media-media", po::value<std::string>()->default_value("INTERNET"), "filename")
-        ("destination", po::value<std::string>(), "nom du fichier généré par ratimake");
+        ("media-lang", po::value<std::string>()->default_value("FR"), "langue du media à charger")
+        ("media-media", po::value<std::string>()->default_value("INTERNET"), "media à cahrger")
+        ("destination", po::value<std::string>()->default_value("at.rt.lz4"), "nom du fichier généré par ratimake");
 
     po::variables_map vm;
 
