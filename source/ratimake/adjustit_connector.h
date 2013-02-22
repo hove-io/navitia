@@ -16,12 +16,12 @@ struct AtLoader {
 
         QSqlDatabase connect(const boost::program_options::variables_map& params);
 
-        QSqlQuery exec(const boost::program_options::variables_map& params);
+        QSqlQuery exec(const boost::program_options::variables_map& params, const boost::posix_time::ptime& now);
 
         navitia::type::Message parse_message(const QSqlQuery& requester);
 
     public:
-        std::map<std::string, std::vector<navitia::type::Message>> load(const boost::program_options::variables_map& params);
+        std::map<std::string, std::vector<navitia::type::Message>> load(const boost::program_options::variables_map& params, const boost::posix_time::ptime& now);
 
 };
 
