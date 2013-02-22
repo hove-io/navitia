@@ -91,7 +91,10 @@ class NavitiaManager:
             for key, instance in self.instances.iteritems():
                 resp = self.send_and_receive(req, key)
                 if resp:
-                    instance.shape = wkt.loads(resp.metadatas.shape)
+                    try:
+                        instance.shape = wkt.loads(resp.metadatas.shape)
+                    except:
+                        instance.shape = ""
             self.thread_event.wait(timer)
         print "fin thread ping"
 
