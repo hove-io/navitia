@@ -21,6 +21,17 @@
 
 namespace navitia { namespace type {
 
+enum Jours {
+    Lun = 0x01,
+    Mar = 0x02,
+    Mer = 0x04,
+    Jeu = 0x08,
+    Ven = 0x10,
+    Sam = 0x20,
+    Dim = 0x40,
+    Fer = 0x80
+};
+
 struct Message{
     std::string uri;
 

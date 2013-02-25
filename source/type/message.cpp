@@ -16,6 +16,7 @@
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
 
+
 namespace navitia { namespace type {
 bool MessageHolder::load(const std::string & filename) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -96,30 +97,33 @@ bool Message::is_publishable(const boost::posix_time::ptime& time) const{
 }
 
 bool Message::is_applicable(const boost::posix_time::time_period& period) const{
-    bool to_return = application_period.intersects(period);
-
     bool days_intersects = false;
 
     //intersection de la period ou se déroule l'action et de la periode de validité de la perturbation
     pt::time_period common_period = period.intersection(application_period);
 
-    //on doit travailler jour par jour
-    //=> on crée une période qui va de début à debut +24H ou jusqu'a la fin si elle se produit avant
-    pt::time_period current_period(common_period.begin(), std::min(common_period.begin()+pt::hours(24), common_period.end()));
+    //si la periode commune est null, l'impact n'est pas valide
+    if(common_period.is_null()){
+        return false;
+    }
 
-    while(!days_intersects && current_period.begin() < common_period.end()){
+    //on doit travailler jour par jour
+    //
+    bg::date current_date = common_period.begin().date();
+
+    while(!days_intersects && current_date <= common_period.end().date()){
         //on test uniquement le debut de la period, si la fin est valide, elle sera testé à la prochaine itération
-        days_intersects = valid_day_of_week(current_period.begin().date());
+        days_intersects = valid_day_of_week(current_date);
 
         //vérification des plages horaires journaliéres
+        pt::time_period current_period = common_period.intersection(pt::time_period(pt::ptime(current_date, pt::seconds(0)), pt::hours(24)));
         days_intersects = days_intersects && valid_hour_perturbation(current_period);
 
-        current_period.shift(pt::hours(24));
+        current_date += bg::days(1);
     }
 
 
-    to_return = to_return && days_intersects;
-    return to_return;
+    return days_intersects;
 
 }
 
