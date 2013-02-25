@@ -2,12 +2,14 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+
 #include <boost/serialization/serialization.hpp>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
 #include <boost/date_time/posix_time/time_serialize.hpp>
 #include <boost/serialization/bitset.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
+
 
 #include <atomic>
 #include <map>
@@ -47,17 +49,20 @@ struct Message{
             & application_daily_end_hour & active_days & message & title;
     }
 
-    bool is_valid(const boost::posix_time::ptime& now, const boost::posix_time::ptime& action_time)const;
+    bool is_valid(const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_time)const;
 
     bool valid_day_of_week(const boost::gregorian::date& date) const;
 
+    bool valid_hour_perturbation(const boost::posix_time::time_period& period) const;
+
     bool is_publishable(const boost::posix_time::ptime& time) const;
-    bool is_applicable(const boost::posix_time::ptime& time) const;
+    bool is_applicable(const boost::posix_time::time_period& time) const;
 
 };
 
 struct MessageHolder{
 
+    static const unsigned int version = 1; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
     //UTC
     boost::posix_time::ptime generation_date;
 
@@ -87,7 +92,7 @@ struct MessageHolder{
     MessageHolder& operator=(const navitia::type::MessageHolder&&);
 
     std::vector<Message> find_messages(const std::string& uri, const boost::posix_time::ptime& now,
-        const boost::posix_time::ptime& action_time) const;
+        const boost::posix_time::time_period& action_time) const;
 
     private:
     void load_lz4(const std::string & filename);
@@ -98,3 +103,4 @@ struct MessageHolder{
 };
 
 }}//namespace
+BOOST_CLASS_VERSION(navitia::type::MessageHolder, navitia::type::MessageHolder::version)
