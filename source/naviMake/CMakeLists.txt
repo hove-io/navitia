@@ -11,7 +11,7 @@ SET(SOURCE_LIB
 add_library(connectors ${SOURCE_LIB})
 
 
-FIND_PACKAGE(Boost 1.40.0 COMPONENTS program_options filesystem system serialization date_time thread REQUIRED)
+FIND_PACKAGE(Boost 1.48.0 COMPONENTS program_options filesystem system serialization date_time thread REQUIRED)
 FIND_LIBRARY(OSMPBF osmpbf)
 add_executable(navimake main.cpp)
 target_link_libraries(navimake connectors ${OSMPBF} types data georef pb_lib utils routing ${Boost_LIBRARIES})

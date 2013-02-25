@@ -4,6 +4,13 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/foreach.hpp>
 #include "type/type.h"
+#include "type/message.h"
+#include "type/data.h"
+
+namespace pt = boost::posix_time;
+namespace bg = boost::gregorian;
+
+#define BOOST_CHECK_NOT(value) BOOST_CHECK(!value)
 
 using namespace navitia::type;
 BOOST_AUTO_TEST_CASE(boost_geometry){
@@ -96,4 +103,24 @@ BOOST_AUTO_TEST_CASE(projection) {
     BOOST_CHECK_SMALL(pp.lon(), 1e-3);
     BOOST_CHECK_SMALL(pp.lat(), 1e-3);
     BOOST_CHECK_CLOSE(d, pp.distance_to(p), 1e-3);
+}
+
+
+BOOST_AUTO_TEST_CASE(message_publishable){
+    Message message;
+
+    message.publication_period = pt::time_period(pt::time_from_string("2013-02-22 12:32:00"),
+            pt::time_from_string("2013-02-23 12:32:00"));
+
+    BOOST_CHECK(message.is_publishable(pt::time_from_string("2013-02-22 14:00:00")));
+
+    BOOST_CHECK_NOT(message.is_publishable(pt::time_from_string("2013-02-24 14:00:00")));
+    BOOST_CHECK_NOT(message.is_publishable(pt::time_from_string("2013-02-21 14:00:00")));
+
+    BOOST_CHECK_NOT(message.is_publishable(pt::time_from_string("2013-02-22 12:00:00")));
+    BOOST_CHECK_NOT(message.is_publishable(pt::time_from_string("2013-02-23 14:00:00")));
+
+    BOOST_CHECK(message.is_publishable(pt::time_from_string("2013-02-22 12:32:00")));
+    BOOST_CHECK(message.is_publishable(pt::time_from_string("2013-02-23 12:31:00")));
+
 }
