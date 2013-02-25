@@ -24,5 +24,5 @@ target_link_libraries(rab_raptor_test connectors data georef utils  routing ${Bo
 ADD_TEST(rab_raptor_test ${EXECUTABLE_OUTPUT_PATH}/rab_raptor_test --report_level=no)
 
 add_executable(routing_api_test routing_api_test.cpp)
-target_link_libraries(routing_api_test connectors data types routing pb_lib interface georef utils  ${Boost_LIBRARIES})
+target_link_libraries(routing_api_test connectors data types routing pb_lib georef utils  ${Boost_LIBRARIES})
 ADD_TEST(routing_api_test ${EXECUTABLE_OUTPUT_PATH}/routing_api_test --report_level=no)

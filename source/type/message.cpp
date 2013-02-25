@@ -16,8 +16,8 @@
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
 
-namespace navitia { namespace type {
 
+namespace navitia { namespace type {
 bool MessageHolder::load(const std::string & filename) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     try {
@@ -64,12 +64,12 @@ MessageHolder& MessageHolder::operator=(const navitia::type::MessageHolder&& oth
 }
 
 std::vector<Message> MessageHolder::find_messages(const std::string& uri, const boost::posix_time::ptime& now,
-        const boost::posix_time::ptime& action_time) const{
+        const boost::posix_time::time_period& action_period) const{
     std::vector<Message> result;
     auto it = messages.find(uri);
     if(it != messages.end()){
         BOOST_FOREACH(auto m, it->second){
-            if(m.is_valid(now, action_time)){
+            if(m.is_valid(now, action_period)){
                 result.push_back(m);
             }
         }
@@ -78,15 +78,16 @@ std::vector<Message> MessageHolder::find_messages(const std::string& uri, const 
 
 }
 
-bool Message::is_valid(const boost::posix_time::ptime& now, const boost::posix_time::ptime& action_time) const{
-    if(now.is_not_a_date_time() && action_time.is_not_a_date_time()){
+//TODO action_time devrait etre une time_duration
+bool Message::is_valid(const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period) const{
+    if(now.is_not_a_date_time() && action_period.is_null()){
         return false;
     }
 
     bool to_return = is_publishable(now);
 
-    if(!action_time.is_not_a_date_time()){
-        to_return = to_return && is_applicable(action_time);
+    if(!action_period.is_null()){
+        to_return = to_return && is_applicable(action_period);
     }
     return to_return;
 }
@@ -95,14 +96,42 @@ bool Message::is_publishable(const boost::posix_time::ptime& time) const{
     return publication_period.contains(time);
 }
 
-bool Message::is_applicable(const boost::posix_time::ptime& time) const{
-    bool to_return = application_period.contains(time);
+bool Message::is_applicable(const boost::posix_time::time_period& period) const{
+    bool days_intersects = false;
 
-    to_return = to_return && time.time_of_day() > application_daily_start_hour
-                          && time.time_of_day() < application_daily_end_hour;
+    //intersection de la period ou se déroule l'action et de la periode de validité de la perturbation
+    pt::time_period common_period = period.intersection(application_period);
 
-    to_return = to_return && valid_day_of_week(time.date());
-    return to_return;
+    //si la periode commune est null, l'impact n'est pas valide
+    if(common_period.is_null()){
+        return false;
+    }
+
+    //on doit travailler jour par jour
+    //
+    bg::date current_date = common_period.begin().date();
+
+    while(!days_intersects && current_date <= common_period.end().date()){
+        //on test uniquement le debut de la period, si la fin est valide, elle sera testé à la prochaine itération
+        days_intersects = valid_day_of_week(current_date);
+
+        //vérification des plages horaires journaliéres
+        pt::time_period current_period = common_period.intersection(pt::time_period(pt::ptime(current_date, pt::seconds(0)), pt::hours(24)));
+        days_intersects = days_intersects && valid_hour_perturbation(current_period);
+
+        current_date += bg::days(1);
+    }
+
+
+    return days_intersects;
+
+}
+
+bool Message::valid_hour_perturbation(const pt::time_period& period) const{
+    pt::time_period daily_period(pt::ptime(period.begin().date(), application_daily_start_hour),
+            pt::ptime(period.begin().date(), application_daily_end_hour));
+
+    return period.intersects(daily_period);
 
 }
 

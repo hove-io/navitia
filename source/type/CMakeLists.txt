@@ -22,9 +22,9 @@ SET(DATA_SRC
 
 add_library(data ${DATA_SRC})
 
-FIND_PACKAGE(Boost 1.40.0 COMPONENTS unit_test_framework  REQUIRED)
+FIND_PACKAGE(Boost 1.48.0 COMPONENTS serialization unit_test_framework  date_time filesystem system REQUIRED)
 add_executable(type_test tests/test.cpp)
-target_link_libraries(type_test ${Boost_LIBRARIES}  types utils)
+target_link_libraries(type_test types data utils ${Boost_LIBRARIES})
 
 ADD_TEST(type_test ${EXECUTABLE_OUTPUT_PATH}/type_test --report_level=no)
 
