@@ -1,4 +1,5 @@
 import re
+import sys
 from werkzeug.routing import Rule
 
 class Validation_Response : 
@@ -7,21 +8,24 @@ class Validation_Response :
         self.details = {}
         self.arguments = {}
 
+
 class Argument : 
     required = True,
     repeated = False,
     validator = None,
     defaultValue = None,
-    order = 50
+    order = 50,
+    allowableValues = None
 
     def __init__(self, desc, validator, required = False, repeated = False,
-                 defaultValue = None, order = 50) :
+                 defaultValue = None, order = 50, allowableValues = None) :
         self.description = desc
         self.required = required
         self.repeated = repeated
         self.validator = validator
         self.defaultValue = defaultValue
         self.order = order
+        self.allowableValues = allowableValues
         if(self.validator == None) : 
             print "A validator is required"
 
@@ -88,12 +92,21 @@ def validate_arguments(request, validation_dict) :
                     parsed_val = validation_dict[key].validator(val)
                     response.details[key] = {"status" : "valid", "value": val}
                     if not(validation_dict[key].repeated) :
-                        response.arguments[key] = parsed_val
+                        if not(validation_dict[key].allowableValues) or parsed_val in validation_dict[key].allowableValues :
+                            response.arguments[key] = parsed_val
+                        else:
+                            response.valid=False
+                            response.details[key] = {"status" : "not in allowable values", "value":parsed_val}
                     else:
-                        if not(key in response.arguments):
-                            response.arguments[key] = []
-                        response.arguments[key].append(parsed_val)
+                        if not(validation_dict[key].allowableValues) or parsed_val in validation_dict[key].allowableValues :
+                            if not(key in response.arguments):
+                                response.arguments[key] = []
+                            response.arguments[key].append(parsed_val)
+                        else:
+                            response.valid=False
+                            response.details[key] = {"status" : "not in allowable values", "value":parsed_val}
                 except:
+                    print "Unexpected error:", sys.exc_info()[0]
                     if validation_dict[key].required:
                         response.valid = False
                     response.details[key] = {"status" : "notvalid", "value" : val }
