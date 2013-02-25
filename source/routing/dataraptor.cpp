@@ -8,13 +8,13 @@ void dataRAPTOR::load(const type::PT_Data &data)
     labels_const_reverse.resize(data.route_points.size());
 
     for(auto &r : labels_const_reverse) {
-        r.arrival = DateTime::min;
-        r.departure = DateTime::min;
+        r.arrival = navitia::type::DateTime::min;
+        r.departure = navitia::type::DateTime::min;
     }
 
     for(auto &r : labels_const) {
-        r.arrival = DateTime::inf;
-        r.departure = DateTime::inf;
+        r.arrival = navitia::type::DateTime::inf;
+        r.departure = navitia::type::DateTime::inf;
     }
     
     foot_path_forward.clear();

@@ -92,8 +92,8 @@ void  TimeDependent::build_graph(){
 }
 
 
-DateTime TimeTable::eval(const DateTime & departure, const type::PT_Data &data) const{
-    if(departure == DateTime::inf)
+navitia::type::DateTime TimeTable::eval(const navitia::type::DateTime & departure, const type::PT_Data &data) const{
+    if(departure == navitia::type::DateTime::inf)
         return departure;
 
     // Si on a des durée constantes, c'est simple à trouver
@@ -107,7 +107,7 @@ DateTime TimeTable::eval(const DateTime & departure, const type::PT_Data &data) 
     for(; it != end; ++it){
         const type::ValidityPattern & vp = data.validity_patterns[it->first.vp_idx];
         if(vp.check(departure.date())){
-            return DateTime(departure.date(), it->second.hour);
+            return navitia::type::DateTime(departure.date(), it->second.hour);
         }
     }
 
@@ -115,16 +115,16 @@ DateTime TimeTable::eval(const DateTime & departure, const type::PT_Data &data) 
     for(auto it = this->time_table.begin(); it != end; ++it){
         const type::ValidityPattern & vp = data.validity_patterns[it->first.vp_idx];
         if(vp.check(departure.date() + 1)){
-            return DateTime(departure.date() + 1, it->second.hour);
+            return navitia::type::DateTime(departure.date() + 1, it->second.hour);
         }
     }
 
     // Bon, on en fait cet arc n'est jamais utilisable
-    return DateTime::inf;
+    return navitia::type::DateTime::inf;
 }
 
-std::pair<DateTime, type::idx_t> TimeTable::first_departure(DateTime departure, const type::PT_Data &data) const{
-    if(departure == DateTime::inf)
+std::pair<navitia::type::DateTime, type::idx_t> TimeTable::first_departure(navitia::type::DateTime departure, const type::PT_Data &data) const{
+    if(departure == navitia::type::DateTime::inf)
         return std::make_pair(departure, type::invalid_idx);
 
     if(this->constant_duration >= 0)
@@ -138,7 +138,7 @@ std::pair<DateTime, type::idx_t> TimeTable::first_departure(DateTime departure, 
     for(; it != end; ++it){
         const type::ValidityPattern & vp = data.validity_patterns[it->first.vp_idx];
         if(vp.check(departure.date())){
-            return std::make_pair(DateTime(departure.date(), it->first.hour), it->vj);
+            return std::make_pair(navitia::type::DateTime(departure.date(), it->first.hour), it->vj);
         }
     }
 
@@ -146,37 +146,37 @@ std::pair<DateTime, type::idx_t> TimeTable::first_departure(DateTime departure, 
     for(auto it = this->time_table.begin(); it != end; ++it){
         const type::ValidityPattern & vp = data.validity_patterns[it->first.vp_idx];
         if(vp.check(departure.date() + 1)){
-            return std::make_pair(DateTime(departure.date() + 1, it->first.hour), it->vj);
+            return std::make_pair(navitia::type::DateTime(departure.date() + 1, it->first.hour), it->vj);
         }
     }
 
     // Bon, on en fait cet arc n'est jamais utilisable
-    return std::make_pair(DateTime::inf, type::invalid_idx);
+    return std::make_pair(navitia::type::DateTime::inf, type::invalid_idx);
 }
 
 
 struct Combine{
     const type::PT_Data & data;
     Combine(const type::PT_Data & data) : data(data) {}
-    DateTime operator()(DateTime dt, const TimeTable & t) const {
+    navitia::type::DateTime operator()(navitia::type::DateTime dt, const TimeTable & t) const {
         return t.eval(dt, data);
     }
-    DateTime operator()(DateTime dt, const DateTime & t) const {
+    navitia::type::DateTime operator()(navitia::type::DateTime dt, const navitia::type::DateTime & t) const {
         dt.increment(t.hour());
         return dt;
     }
 };
 
 struct edge_less{
-    bool operator()(DateTime a, DateTime b) const {
+    bool operator()(navitia::type::DateTime a, navitia::type::DateTime b) const {
         return a < b;
     }
-    bool operator ()(const TimeTable&, DateTime) const{return false;}
+    bool operator ()(const TimeTable&, navitia::type::DateTime) const{return false;}
 };
 
 
 std::vector<Path> TimeDependent::compute(type::idx_t dep, type::idx_t arr, int hour, int day, bool /*clockwise*/, bool){
-    DateTime start_time(day, hour - 180);
+    navitia::type::DateTime start_time(day, hour - 180);
 
     try{
         boost::dijkstra_shortest_paths(this->graph, dep,
@@ -184,7 +184,7 @@ std::vector<Path> TimeDependent::compute(type::idx_t dep, type::idx_t arr, int h
                                        .predecessor_map(&preds[0])
                                        .weight_map(boost::get(&Edge::t, graph))
                                        .distance_combine(Combine(this->data))
-                                       .distance_inf(DateTime::infinity())
+                                       .distance_inf(navitia::type::DateTime::infinity())
                                        .distance_zero(start_time-180)
                                        .distance_compare(edge_less())
                                        .visitor(goal_visitor(arr))

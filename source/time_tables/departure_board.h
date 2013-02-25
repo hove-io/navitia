@@ -5,7 +5,7 @@
 
 
 namespace navitia { namespace timetables {
-typedef std::vector<routing::DateTime> vector_datetime;
+typedef std::vector<type::DateTime> vector_datetime;
 typedef std::pair<uint32_t, uint32_t> stop_point_line;
 typedef std::vector<dt_st> vector_dt_st;
 

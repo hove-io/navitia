@@ -23,7 +23,7 @@ void RAPTOR::route_path_connections_forward(const bool wheelchair) {
     for(auto rp = marked_rp.find_first(); rp != marked_rp.npos; rp = marked_rp.find_next(rp)) {
         BOOST_FOREACH(auto &idx_rpc, data.dataRaptor.footpath_rp_forward.equal_range(rp)) {
             const auto & rpc = idx_rpc.second;
-            DateTime dt = labels[count][rp].arrival + rpc.length;
+            navitia::type::DateTime dt = labels[count][rp].arrival + rpc.length;
             if(labels[count][rp].type == vj && dt < best_labels[rpc.destination_route_point_idx].arrival &&
                     (!wheelchair || (data.pt_data.stop_points[rpc.departure_route_point_idx].is_adapted
                                      && data.pt_data.stop_points[rpc.destination_route_point_idx].is_adapted))) {
@@ -54,7 +54,7 @@ void RAPTOR::route_path_connections_backward(const bool wheelchair) {
     for(auto rp = marked_rp.find_first(); rp != marked_rp.npos; rp = marked_rp.find_next(rp)) {
         BOOST_FOREACH(auto &idx_rpc,  data.dataRaptor.footpath_rp_backward.equal_range(rp)) {
             const auto & rpc = idx_rpc.second;
-            DateTime dt = labels[count][rp].arrival - rpc.length;
+            navitia::type::DateTime dt = labels[count][rp].arrival - rpc.length;
             if(labels[count][rp].type == vj && dt > best_labels[rpc.departure_route_point_idx].arrival&&
                     (!wheelchair || (data.pt_data.stop_points[rpc.departure_route_point_idx].is_adapted
                                      && data.pt_data.stop_points[rpc.destination_route_point_idx].is_adapted))) {
@@ -82,8 +82,8 @@ void RAPTOR::route_path_connections_backward(const bool wheelchair) {
 
 struct walking_backwards_visitor {
 
-    static DateTime worst() {
-        return DateTime::min;
+    static navitia::type::DateTime worst() {
+        return navitia::type::DateTime::min;
     }
     template<typename T1, typename T2> bool comp(const T1& a, const T2& b) const {
         return a > b;
@@ -92,14 +92,14 @@ struct walking_backwards_visitor {
         return a - b;
     }
 
-    static DateTime label::*  instant;
+    static navitia::type::DateTime label::*  instant;
     static constexpr bool clockwise = false;
 };
-DateTime label::*  walking_backwards_visitor::instant= &label::departure;
+navitia::type::DateTime label::*  walking_backwards_visitor::instant= &label::departure;
 
 struct walking_visitor {
-    static DateTime worst() {
-        return DateTime::inf;
+    static navitia::type::DateTime worst() {
+        return navitia::type::DateTime::inf;
     }
     template<typename T1, typename T2> bool comp(const T1& a, const T2& b) const {
         return a < b;
@@ -108,10 +108,10 @@ struct walking_visitor {
         return a + b;
     }
 
-    static DateTime label::*  instant;
+    static navitia::type::DateTime label::*  instant;
     static constexpr bool clockwise = true;
 };
-DateTime label::*  walking_visitor::instant = &label::arrival;
+navitia::type::DateTime label::*  walking_visitor::instant = &label::arrival;
 
 
 template<typename Visitor>
@@ -123,7 +123,7 @@ void RAPTOR::foot_path(const Visitor & v, const bool wheelchair) {
     for(auto stop_point_idx = marked_sp.find_first(); stop_point_idx != marked_sp.npos; 
         stop_point_idx = marked_sp.find_next(stop_point_idx)) {
         //On cherche le plus petit rp du sp 
-        DateTime best_arrival = v.worst();
+        navitia::type::DateTime best_arrival = v.worst();
         type::idx_t best_rp = navitia::type::invalid_idx;
         const type::StopPoint & stop_point = data.pt_data.stop_points[stop_point_idx];
         if(!wheelchair || stop_point.is_adapted) {
@@ -134,7 +134,7 @@ void RAPTOR::foot_path(const Visitor & v, const bool wheelchair) {
                 }
             }
             if(best_rp != type::invalid_idx) {
-                DateTime best_departure = v.combine(best_arrival, 120);
+                navitia::type::DateTime best_departure = v.combine(best_arrival, 120);
                 //On marque tous les route points du stop point
                 for(auto rpidx : stop_point.route_point_list) {
                     if(rpidx != best_rp && v.comp(best_departure, best_labels[rpidx].*Visitor::instant) ) {
@@ -157,7 +157,7 @@ void RAPTOR::foot_path(const Visitor & v, const bool wheelchair) {
 
                 const label & label_temp = labels[count][best_rp];
                 int prec_duration = -1;
-                DateTime next = v.worst(), previous = label_temp.*v.instant;
+                navitia::type::DateTime next = v.worst(), previous = label_temp.*v.instant;
                 it += index.first - last;
                 const auto end = it + index.second;
 
@@ -210,7 +210,7 @@ void RAPTOR::marcheapiedreverse(const bool wheelchair) {
 
 void RAPTOR::clear_and_init(std::vector<init::Departure_Type> departs,
                   std::vector<std::pair<type::idx_t, double> > destinations,
-                  DateTime borne,  const bool clockwise, const bool clear,
+                  navitia::type::DateTime borne,  const bool clockwise, const bool clear,
                   const float walking_speed, const int walking_distance) {
 
     if(clockwise)
@@ -229,8 +229,8 @@ void RAPTOR::clear_and_init(std::vector<init::Departure_Type> departs,
         } else {
             labels.push_back(data.dataRaptor.labels_const_reverse);
             best_labels = data.dataRaptor.labels_const_reverse;
-            if(borne == DateTime::inf)
-                borne = DateTime::min;
+            if(borne == navitia::type::DateTime::inf)
+                borne = navitia::type::DateTime::min;
                 b_dest.reinit(data.pt_data.route_points.size(), borne, clockwise, std::ceil(walking_distance/walking_speed));
         }
     }
@@ -244,7 +244,7 @@ void RAPTOR::clear_and_init(std::vector<init::Departure_Type> departs,
             Q[route_point.route_idx] = route_point.order;
         else if(!clockwise &&  Q[route_point.route_idx] < route_point.order)
             Q[route_point.route_idx] = route_point.order;
-        if(item.arrival != DateTime::min && item.arrival!=DateTime::inf) {
+        if(item.arrival != navitia::type::DateTime::min && item.arrival!=navitia::type::DateTime::inf) {
             marked_sp.set(data.pt_data.route_points[item.rpidx].stop_point_idx);
         }
     }
@@ -252,8 +252,8 @@ void RAPTOR::clear_and_init(std::vector<init::Departure_Type> departs,
     for(auto item : destinations) {
         for(type::idx_t rpidx: data.pt_data.stop_points[item.first].route_point_list) {
             if(routes_valides.test(data.pt_data.route_points[rpidx].route_idx) &&
-                    ((clockwise && (borne == DateTime::inf || best_labels[rpidx].arrival > borne)) ||
-                    ((!clockwise) && (borne == DateTime::min || best_labels[rpidx].departure < borne)))) {
+                    ((clockwise && (borne == navitia::type::DateTime::inf || best_labels[rpidx].arrival > borne)) ||
+                    ((!clockwise) && (borne == navitia::type::DateTime::min || best_labels[rpidx].departure < borne)))) {
                     b_dest.add_destination(rpidx, (item.second/walking_speed));
                     if(clockwise)
                         best_labels[rpidx].arrival = borne;
@@ -271,7 +271,7 @@ template<typename Visitor>
 std::vector<Path>
 RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                     const std::vector<std::pair<type::idx_t, double> > &destinations,
-                    const DateTime &dt_depart, const DateTime &borne, const float walking_speed,
+                    const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne, const float walking_speed,
                     const int walking_distance, const bool wheelchair, const std::multimap<std::string, std::string> & forbidden,
                     Visitor vis) {
     std::vector<Path> result;
@@ -331,7 +331,7 @@ struct visitor_clockwise {
 std::vector<Path>
 RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                     const std::vector<std::pair<type::idx_t, double> > &destinations,
-                    const DateTime &dt_depart, const DateTime &borne,
+                    const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne,
                     const float walking_speed, const int walking_distance, const bool wheelchair,
                     const std::multimap<std::string, std::string> & forbidden) {
 
@@ -346,7 +346,7 @@ struct visitor_anti_clockwise {
 std::vector<Path>
 RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                             const std::vector<std::pair<type::idx_t, double> > &destinations,
-                            const DateTime &dt_depart, const DateTime &borne,
+                            const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne,
                             float walking_speed, int walking_distance, bool wheelchair,
                             const std::multimap<std::string, std::string> & forbidden) {
     return compute_all(departs, destinations, dt_depart, borne, walking_speed, walking_distance,
@@ -358,13 +358,13 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
 std::vector<Path>
 RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                     const std::vector<std::pair<type::idx_t, double> > &destinations,
-                    std::vector<DateTime> dt_departs, const DateTime &borne,
+                    std::vector<navitia::type::DateTime> dt_departs, const navitia::type::DateTime &borne,
                     float walking_speed, int walking_distance, bool wheelchair) {
     std::vector<Path> result;
     std::vector<best_dest> bests;
 
     std::sort(dt_departs.begin(), dt_departs.end(), 
-              [](DateTime dt1, DateTime dt2) {return dt1 > dt2;});
+              [](navitia::type::DateTime dt1, navitia::type::DateTime dt2) {return dt1 > dt2;});
 
     // Attention ! Et si les départs ne sont pas le même jour ?
     //set_routes_valides(dt_departs.front());
@@ -405,7 +405,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
 std::vector<Path>
 RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                     const std::vector<std::pair<type::idx_t, double> > &destinations,
-                    std::vector<DateTime> dt_departs, const DateTime &borne,
+                    std::vector<navitia::type::DateTime> dt_departs, const navitia::type::DateTime &borne,
                     const float walking_speed,  const int walking_distance, const bool wheelchair) {
     std::vector<Path> result;
     std::vector<best_dest> bests;
@@ -453,7 +453,7 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
 
 void
 RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
-          const DateTime &dt_depart, const DateTime &borne,
+          const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne,
           float walking_speed, int walking_distance, bool wheelchair,
           const std::multimap<std::string, std::string> & forbidden,
           bool clockwise) {
@@ -512,11 +512,11 @@ struct raptor_visitor {
         return type::invalid_idx;
     }
 
-    DateTime working_datetime_init() const {
-        return DateTime::inf;
+    navitia::type::DateTime working_datetime_init() const {
+        return navitia::type::DateTime::inf;
     }
 
-    bool better(const DateTime &a, const DateTime &b) const {
+    bool better(const navitia::type::DateTime &a, const navitia::type::DateTime &b) const {
         return a < b;
     }
 
@@ -524,7 +524,7 @@ struct raptor_visitor {
         return a.arrival < b.arrival;
     }
 
-    bool better_or_equal(const label &a, const DateTime &current_dt, const type::StopTime &st) {
+    bool better_or_equal(const label &a, const navitia::type::DateTime &current_dt, const type::StopTime &st) {
         return previous_datetime(a) <= current_datetime(current_dt.date(), st);
     }
 
@@ -540,7 +540,7 @@ struct raptor_visitor {
         raptor.make_queue();
     }
 
-    std::pair<type::idx_t, uint32_t> best_trip(const type::Route & route, int order, const DateTime & date_time, const bool wheelchair) const {
+    std::pair<type::idx_t, uint32_t> best_trip(const type::Route & route, int order, const navitia::type::DateTime & date_time, const bool wheelchair) const {
         return earliest_trip(route, order, date_time, raptor.data, wheelchair);
     }
 
@@ -548,7 +548,7 @@ struct raptor_visitor {
         raptor.labels.push_back(raptor.data.dataRaptor.labels_const);
     }
 
-    bool store_better(const navitia::type::idx_t rpid, DateTime &working_date_time, const label&bound,
+    bool store_better(const navitia::type::idx_t rpid, navitia::type::DateTime &working_date_time, const label&bound,
                       const navitia::type::StopTime &st, const navitia::type::idx_t embarquement, uint32_t gap) {
         auto & working_labels= raptor.labels[raptor.count];
         working_date_time.update(!st.is_frequency()? st.arrival_time : st.start_time + gap);
@@ -571,12 +571,12 @@ struct raptor_visitor {
         return true;
     }
 
-    DateTime previous_datetime(const label & tau) const {
+    navitia::type::DateTime previous_datetime(const label & tau) const {
         return tau.arrival;
     }
 
-    DateTime current_datetime(int date, const type::StopTime & stop_time) const {
-        return DateTime(date, stop_time.departure_time);
+    navitia::type::DateTime current_datetime(int date, const type::StopTime & stop_time) const {
+        return navitia::type::DateTime(date, stop_time.departure_time);
     }
 
     std::pair<std::vector<type::RoutePoint>::const_iterator, std::vector<type::RoutePoint>::const_iterator>
@@ -594,7 +594,7 @@ struct raptor_visitor {
         return 120;
     }
 
-    void update(DateTime & dt, const type::StopTime & st, const uint32_t gap) {
+    void update(navitia::type::DateTime & dt, const type::StopTime & st, const uint32_t gap) {
         dt.update(!st.is_frequency()? st.arrival_time : st.start_time+gap);
     }
 
@@ -611,11 +611,11 @@ struct raptor_reverse_visitor {
         return std::numeric_limits<int>::max();
     }
 
-    DateTime working_datetime_init() const {
-        return DateTime::min;
+    navitia::type::DateTime working_datetime_init() const {
+        return navitia::type::DateTime::min;
     }
 
-    bool better(const DateTime &a, const DateTime &b) const {
+    bool better(const navitia::type::DateTime &a, const navitia::type::DateTime &b) const {
         return a > b;
     }
 
@@ -623,7 +623,7 @@ struct raptor_reverse_visitor {
         return a.departure > b.departure;
     }
 
-    bool better_or_equal(const label &a, const DateTime &current_dt, const type::StopTime &st) {
+    bool better_or_equal(const label &a, const navitia::type::DateTime &current_dt, const type::StopTime &st) {
         return previous_datetime(a) >= current_datetime(current_dt.date(), st);
     }
 
@@ -639,7 +639,7 @@ struct raptor_reverse_visitor {
         raptor.make_queuereverse();
     }
 
-    std::pair<type::idx_t, uint32_t> best_trip(const type::Route & route, int order, const DateTime & date_time, const bool wheelchair) const {
+    std::pair<type::idx_t, uint32_t> best_trip(const type::Route & route, int order, const navitia::type::DateTime & date_time, const bool wheelchair) const {
         return tardiest_trip(route, order, date_time, raptor.data, wheelchair);
     }
 
@@ -647,7 +647,7 @@ struct raptor_reverse_visitor {
         raptor.labels.push_back(raptor.data.dataRaptor.labels_const_reverse);
     }
 
-    bool store_better(const navitia::type::idx_t rpid, DateTime &working_date_time, const label&bound,
+    bool store_better(const navitia::type::idx_t rpid, navitia::type::DateTime &working_date_time, const label&bound,
                       const navitia::type::StopTime st, const navitia::type::idx_t embarquement, uint32_t gap) {
         auto & working_labels = raptor.labels[raptor.count];
         working_date_time.updatereverse(!st.is_frequency()? st.departure_time : st.start_time + gap);
@@ -668,12 +668,12 @@ struct raptor_reverse_visitor {
         return true;
     }
 
-    DateTime previous_datetime(const label & tau) const {
+    navitia::type::DateTime previous_datetime(const label & tau) const {
         return tau.departure;
     }
 
-    DateTime current_datetime(int date, const type::StopTime & stop_time) const {
-        return DateTime(date, stop_time.arrival_time);
+    navitia::type::DateTime current_datetime(int date, const type::StopTime & stop_time) const {
+        return navitia::type::DateTime(date, stop_time.arrival_time);
     }
 
     std::pair<std::vector<type::RoutePoint>::const_reverse_iterator, std::vector<type::RoutePoint>::const_reverse_iterator>
@@ -691,7 +691,7 @@ struct raptor_reverse_visitor {
         return -120;
     }
 
-    void update(DateTime & dt, const type::StopTime & st, const uint32_t gap) {
+    void update(navitia::type::DateTime & dt, const type::StopTime & st, const uint32_t gap) {
         dt.updatereverse(!st.is_frequency() ? st.departure_time : st.start_time + gap);
     }
 
@@ -706,7 +706,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const bool wheelchair, bool global_pru
     count = 0;
     type::idx_t t=-1;
     int embarquement = visitor.embarquement_init();
-    DateTime workingDt = visitor.working_datetime_init();
+    navitia::type::DateTime workingDt = visitor.working_datetime_init();
     uint32_t l_zone = std::numeric_limits<uint32_t>::max();
 
     visitor.walking(wheelchair);
@@ -785,9 +785,9 @@ void RAPTOR::boucleRAPTORreverse(const bool wheelchair, bool global_pruning){
 std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
                                   int departure_day, bool clockwise, bool wheelchair) {
     if(clockwise)
-        return compute(departure_idx, destination_idx, departure_hour, departure_day, DateTime::inf, clockwise, wheelchair);
+        return compute(departure_idx, destination_idx, departure_hour, departure_day, navitia::type::DateTime::inf, clockwise, wheelchair);
     else
-        return compute(departure_idx, destination_idx, departure_hour, departure_day, DateTime::min, clockwise, wheelchair);
+        return compute(departure_idx, destination_idx, departure_hour, departure_day, navitia::type::DateTime::min, clockwise, wheelchair);
 
 }
 
@@ -798,7 +798,7 @@ std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, in
 
 
 std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
-                                  int departure_day, DateTime borne, bool clockwise, bool wheelchair) {
+                                  int departure_day, navitia::type::DateTime borne, bool clockwise, bool wheelchair) {
     
     std::vector<std::pair<type::idx_t, double> > departs, destinations;
 
@@ -811,9 +811,9 @@ std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, in
     }
 
     if(clockwise)
-        return compute_all(departs, destinations, DateTime(departure_day, departure_hour), borne, 1, 1000, wheelchair);
+        return compute_all(departs, destinations, navitia::type::DateTime(departure_day, departure_hour), borne, 1, 1000, wheelchair);
     else
-        return compute_reverse_all(departs, destinations, DateTime(departure_day, departure_hour), borne, 1, 1000, wheelchair);
+        return compute_reverse_all(departs, destinations, navitia::type::DateTime(departure_day, departure_hour), borne, 1, 1000, wheelchair);
 }
 
 

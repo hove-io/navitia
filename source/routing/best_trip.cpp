@@ -3,7 +3,7 @@
 namespace navitia { namespace routing {
 
 
-std::pair<type::idx_t, uint32_t> earliest_trip(const type::Route & route, const unsigned int order, const DateTime &dt, const type::Data &data, const bool wheelchair) {
+std::pair<type::idx_t, uint32_t> earliest_trip(const type::Route & route, const unsigned int order, const navitia::type::DateTime &dt, const type::Data &data, const bool wheelchair) {
     if(wheelchair && !data.pt_data.stop_points[data.pt_data.route_points[route.route_point_list[order]].stop_point_idx].is_adapted)
         return std::make_pair(type::invalid_idx, 0);
 
@@ -63,7 +63,7 @@ std::pair<type::idx_t, uint32_t> earliest_trip(const type::Route & route, const 
 
 
 
-std::pair<type::idx_t, uint32_t> tardiest_trip(const type::Route & route, const unsigned int order, const DateTime &dt, const type::Data &data, const bool wheelchair) {
+std::pair<type::idx_t, uint32_t> tardiest_trip(const type::Route & route, const unsigned int order, const navitia::type::DateTime &dt, const type::Data &data, const bool wheelchair) {
     if(wheelchair && !data.pt_data.stop_points[data.pt_data.route_points[route.route_point_list[order]].stop_point_idx].is_adapted)
         return std::make_pair(type::invalid_idx, 0);
     //On cherche le plus grand stop time de la route <= dt.hour()

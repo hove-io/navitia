@@ -17,12 +17,12 @@ namespace navitia { namespace routing {
     ///Construit tous chemins trouvés
     std::vector<Path> 
     makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
-               DateTime dt, const float walking_speed, 
+               navitia::type::DateTime dt, const float walking_speed, 
                const RAPTOR &raptor_);
     ///Construit tous les chemins trouvés, lorsque le calcul est lancé dans le sens inverse
     std::vector<Path> 
     makePathesreverse(std::vector<std::pair<type::idx_t, double> > destinations,
-                      DateTime dt, const float walking_speed,
+                      navitia::type::DateTime dt, const float walking_speed,
                       const RAPTOR &raptor_);
 
 }}}

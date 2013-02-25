@@ -7,7 +7,7 @@
 
 namespace navitia { namespace timetables {
 
-std::vector<vector_stopTime> get_all_stop_times(const vector_idx &routes, const routing::DateTime &dateTime, const routing::DateTime &max_datetime, type::Data &d) {
+std::vector<vector_stopTime> get_all_stop_times(const vector_idx &routes, const type::DateTime &dateTime, const type::DateTime &max_datetime, type::Data &d) {
     std::vector<vector_stopTime> result;
 
     //On cherche les premiers route_points de toutes les routes
@@ -22,7 +22,7 @@ std::vector<vector_stopTime> get_all_stop_times(const vector_idx &routes, const 
     //On va chercher tous les prochains horaires
     for(auto ho : first_dt_st) {
         result.push_back(vector_stopTime());
-        routing::DateTime dt = ho.first;
+        type::DateTime dt = ho.first;
         for(type::idx_t stidx : d.pt_data.vehicle_journeys[d.pt_data.stop_times[ho.second].vehicle_journey_idx].stop_time_list) {
             dt.update(d.pt_data.stop_times[stidx].departure_time);
             result.back().push_back(std::make_pair(dt, stidx));
@@ -46,7 +46,7 @@ std::vector<vector_string> make_matrice(const std::vector<vector_stopTime> & sto
         std::vector<uint32_t> orders = thermometer.match_route(d.pt_data.routes[d.pt_data.vehicle_journeys[d.pt_data.stop_times[vec.front().second].vehicle_journey_idx].route_idx]);
         int order = 0;
         for(dt_st dt_idx : vec) {
-            result[orders[order]][y] = iso_string(d, dt_idx.first.date(),  dt_idx.first.hour());
+            result[orders[order]][y] = iso_string(dt_idx.first.date(),  dt_idx.first.hour(), d);
             ++order;
         }
         ++y;

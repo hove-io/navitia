@@ -30,7 +30,7 @@ std::unordered_map<type::idx_t, uint32_t>  get_arrival_order(const std::vector<t
 
 
 std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
-                                        const routing::DateTime &datetime, const routing::DateTime &max_datetime, const int nb_stoptimes,
+                                        const type::DateTime &datetime, const type::DateTime &max_datetime, const int nb_stoptimes,
                                         type::Data & data) {
 
     std::vector<pair_dt_st> result;
@@ -54,7 +54,7 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
         const type::VehicleJourney vj = data.pt_data.vehicle_journeys[departure_st.vehicle_journey_idx];
         const uint32_t arrival_order = departure_idx_arrival_order[departure_st.route_point_idx];
         const type::StopTime &arrival_st = data.pt_data.stop_times[vj.stop_time_list[arrival_order]];
-        routing::DateTime arrival_dt = dep_dt_st.first;
+        type::DateTime arrival_dt = dep_dt_st.first;
         arrival_dt.update(arrival_st.arrival_time);
         result.push_back(std::make_pair(dep_dt_st, std::make_pair(arrival_dt, arrival_st.idx)));
     }
@@ -71,9 +71,9 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
 
     boost::posix_time::ptime ptime;
     ptime = boost::posix_time::from_iso_string(str_dt);
-    routing::DateTime dt((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
+    type::DateTime dt((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
 
-    routing::DateTime max_dt;
+    type::DateTime max_dt;
     max_dt = dt + duration;
     std::vector<pair_dt_st> board;
     try {
@@ -92,16 +92,16 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
         pbnavitia::PairStopTime * pair_stoptime = pb_response.mutable_stops_schedule()->add_board_items();
         auto stoptime = pair_stoptime->mutable_first();
         const auto &dt_idx = pair_dt_idx.first;
-        stoptime->set_departure_date_time(iso_string(data, dt_idx.first.date(),  dt_idx.first.hour()));
-        stoptime->set_arrival_date_time(iso_string(data, dt_idx.first.date(),  dt_idx.first.hour()));
+        stoptime->set_departure_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
+        stoptime->set_arrival_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
         const auto &rp = data.pt_data.route_points[data.pt_data.stop_times[dt_idx.second].route_point_idx];
         fill_pb_object(rp.stop_point_idx, data, stoptime->mutable_stop_point(), depth);
         fill_pb_object(data.pt_data.routes[rp.route_idx].line_idx, data, stoptime->mutable_line(), depth);
 
         stoptime = pair_stoptime->mutable_second();
         const auto &dt_idx2 = pair_dt_idx.second;
-        stoptime->set_departure_date_time(iso_string(data, dt_idx2.first.date(),  dt_idx2.first.hour()));
-        stoptime->set_arrival_date_time(iso_string(data, dt_idx2.first.date(),  dt_idx2.first.hour()));
+        stoptime->set_departure_date_time(type::iso_string(dt_idx2.first.date(),  dt_idx2.first.hour(), data));
+        stoptime->set_arrival_date_time(type::iso_string(dt_idx2.first.date(),  dt_idx2.first.hour(), data));
         const auto &rp2 = data.pt_data.route_points[data.pt_data.stop_times[dt_idx2.second].route_point_idx];
         fill_pb_object(rp2.stop_point_idx, data, stoptime->mutable_stop_point(), depth);
         fill_pb_object(data.pt_data.routes[rp2.route_idx].line_idx, data, stoptime->mutable_line(), depth);

@@ -3,8 +3,8 @@
 
 namespace navitia { namespace timetables {
 
-routing::DateTime request_parser::parse_time(const std::string str_dt, const type::Data &data) {
-    routing::DateTime result;
+type::DateTime request_parser::parse_time(const std::string str_dt, const type::Data &data) {
+    type::DateTime result;
     std::string working_str = str_dt;
 
     if(working_str != "") {
@@ -18,7 +18,7 @@ routing::DateTime request_parser::parse_time(const std::string str_dt, const typ
                     boost::lexical_cast<std::string>(data.meta.production_date.begin().day()) + working_str;
         }
         auto ptime = boost::posix_time::from_iso_string(str_dt);
-        result = routing::DateTime((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
+        result = type::DateTime((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
     } else {
         struct parsetimeerror{};
         throw parsetimeerror();
