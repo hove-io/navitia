@@ -68,7 +68,6 @@ ENABLE_TESTING()
 
 add_subdirectory(WS_commons)
 add_subdirectory(type)
-add_subdirectory(interface)
 add_subdirectory(ptreferential)
 add_subdirectory(autocomplete)
 add_subdirectory(naviMake)
