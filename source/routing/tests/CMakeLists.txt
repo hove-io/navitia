@@ -1,10 +1,5 @@
 FIND_PACKAGE(Boost 1.40.0 COMPONENTS unit_test_framework date_time REQUIRED)
 #link_directories ( ${Boost_LIBRARY_DIRS} )
-
-add_executable(datetime datetime.cpp)
-target_link_libraries(datetime ${Boost_LIBRARIES})
-ADD_TEST(datetime ${EXECUTABLE_OUTPUT_PATH}/datetime --report_level=no)
-
 add_executable(time_dep_test time_dep_test.cpp)
 target_link_libraries(time_dep_test connectors utils data georef routing types utils ${Boost_LIBRARIES})
 ADD_TEST(time_dep_test ${EXECUTABLE_OUTPUT_PATH}/time_dep_test --report_level=no)

@@ -30,13 +30,13 @@ enum type_idx {
 struct label {
     type::idx_t stop_time_idx;
     int rpid_embarquement;
-    DateTime arrival, departure;
+    navitia::type::DateTime arrival, departure;
     type_idx type;
 
-    label(const DateTime & arrival, const DateTime & departure) : stop_time_idx(navitia::type::invalid_idx),
+    label(const navitia::type::DateTime & arrival, const navitia::type::DateTime & departure) : stop_time_idx(navitia::type::invalid_idx),
         rpid_embarquement(navitia::type::invalid_idx), arrival(arrival), departure(departure), type(depart) {}
 
-    label(const type::StopTime & st, const DateTime & date, int embarquement, bool clockwise, uint32_t gap) :
+    label(const type::StopTime & st, const navitia::type::DateTime & date, int embarquement, bool clockwise, uint32_t gap) :
         stop_time_idx(st.idx), rpid_embarquement(embarquement),
         type(vj) {
         if(clockwise) {
@@ -50,17 +50,17 @@ struct label {
         }
     }
 
-    label(const DateTime & arrival, const DateTime & departure, int embarquement) :
+    label(const navitia::type::DateTime & arrival, const navitia::type::DateTime & departure, int embarquement) :
         stop_time_idx(navitia::type::invalid_idx), rpid_embarquement(embarquement),
         arrival(arrival), departure(departure), type(connection) {}
 
-    label(const DateTime & arrival, const DateTime & departure, int embarquement, const type_idx & type) :
+    label(const navitia::type::DateTime & arrival, const navitia::type::DateTime & departure, int embarquement, const type_idx & type) :
         stop_time_idx(navitia::type::invalid_idx), rpid_embarquement(embarquement),
         arrival(arrival), departure(departure), type(type) {}
 
     label() :
         stop_time_idx(type::invalid_idx), rpid_embarquement(type::invalid_idx), arrival(),
-        departure(DateTime::min), type(uninitialized) {}
+        departure(navitia::type::DateTime::min), type(uninitialized) {}
 
     label(const label & t) :
         stop_time_idx(t.stop_time_idx), rpid_embarquement(t.rpid_embarquement), arrival(t.arrival),
@@ -85,8 +85,8 @@ struct best_dest {
         if(!clockwise)
             return add_best_reverse(rpid, t, cnt);
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
-            if((best_now.arrival == DateTime::inf) ||
-               ((t.arrival != DateTime::inf) && (t.arrival + rpidx_distance[rpid]) <= (best_now.arrival + max_walking))) {
+            if((best_now.arrival == navitia::type::DateTime::inf) ||
+               ((t.arrival != navitia::type::DateTime::inf) && (t.arrival + rpidx_distance[rpid]) <= (best_now.arrival + max_walking))) {
                 best_now = t;
                 best_now.arrival = best_now.arrival + rpidx_distance[rpid];
                 best_now.departure = best_now.departure + rpidx_distance[rpid];
@@ -101,7 +101,7 @@ struct best_dest {
     bool add_best_reverse(unsigned int rpid, const label &t, int cnt) {
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
             if((best_now.departure.datetime <= max_walking) ||
-               (t.departure != DateTime::min && (t.departure - rpidx_distance[rpid]) >= (best_now.departure - max_walking))) {
+               (t.departure != navitia::type::DateTime::min && (t.departure - rpidx_distance[rpid]) >= (best_now.departure - max_walking))) {
                 best_now = t;
                 best_now.arrival = t.arrival - rpidx_distance[rpid];
                 best_now.departure = t.departure - rpidx_distance[rpid];
@@ -122,7 +122,7 @@ struct best_dest {
         max_walking = max_walking_;
     }
 
-    void reinit(size_t nb_rpid, const DateTime &borne, const bool clockwise, const float max_walking = 0) {
+    void reinit(size_t nb_rpid, const navitia::type::DateTime &borne, const bool clockwise, const float max_walking = 0) {
         reinit(nb_rpid, max_walking);
         if(clockwise)
             best_now.arrival = borne;
@@ -131,7 +131,7 @@ struct best_dest {
     }
 
     void reverse() {
-        best_now.departure = DateTime::min;
+        best_now.departure = navitia::type::DateTime::min;
     }
 
 

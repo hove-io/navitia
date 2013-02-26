@@ -5,8 +5,8 @@
 namespace navitia { namespace timetables {
 struct request_parser {
     pbnavitia::Response pb_response;
-    routing::DateTime date_time;
-    routing::DateTime max_datetime;
+    type::DateTime date_time;
+    type::DateTime max_datetime;
     std::vector<type::idx_t> route_points;
 
     request_parser(const std::string &API, const std::string &request, const std::string &change_time,
@@ -14,7 +14,7 @@ struct request_parser {
 
     request_parser(const std::string &API, const std::string str_dt, const type::Data & data);
 
-    routing::DateTime parse_time(const std::string str_dt, const type::Data & data);
+    type::DateTime parse_time(const std::string str_dt, const type::Data & data);
 };
 }
 

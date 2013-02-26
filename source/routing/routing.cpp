@@ -2,19 +2,6 @@
 
 namespace navitia { namespace routing {
 
-DateTime DateTime::inf = DateTime::infinity();
-DateTime DateTime::min = DateTime::minimity();
-
-std::ostream & operator<<(std::ostream & os, const DateTime & dt){
-    os << "D=" << dt.date() << " " << dt.hour()/(3600) << ":";
-    if((dt.hour()%3600)/60 < 10)
-        os << "0" << (dt.hour()%3600)/60;
-    else
-        os << (dt.hour()%3600)/60;
-    return os;
-}
-
-
 std::string PathItem::print(const navitia::type::PT_Data & data) const {
     std::stringstream ss;
 
@@ -59,7 +46,7 @@ bool Verification::verif(Path path) {
 }
 
 bool Verification::croissance(Path path) {
-    DateTime precdt = DateTime::min;
+    navitia::type::DateTime precdt = navitia::type::DateTime::min;
     for(PathItem item : path.items) {
         if(precdt > item.departure) {
             std::cout << "Erreur dans la vérification de la croissance des horaires : " << precdt  << " >  " << item.departure << std::endl;
@@ -117,7 +104,7 @@ bool Verification::check_correspondances(Path path) {
             conn.duration = item.arrival - item.departure;
             stop_point_list.push_back(conn);
         }
-        if(precitem.arrival != DateTime::inf) {
+        if(precitem.arrival != navitia::type::DateTime::inf) {
             if(precitem.type == public_transport && item.type == public_transport) {
                 conn.departure_stop_point_idx = precitem.stop_points.back();
                 conn.destination_stop_point_idx =  item.stop_points.front();

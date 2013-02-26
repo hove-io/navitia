@@ -5,15 +5,15 @@ namespace navitia { namespace routing { namespace raptor {
     
 std::vector<Path> 
 makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
-           DateTime dt, const float walking_speed, const RAPTOR &raptor_ ) {
+           navitia::type::DateTime dt, const float walking_speed, const RAPTOR &raptor_ ) {
     std::vector<Path> result;
-    DateTime best_dt = dt;
+    navitia::type::DateTime best_dt = dt;
     for(unsigned int i=1;i<=raptor_.count;++i) {
         type::idx_t best_rp = type::invalid_idx;
         for(auto spid_dist : destinations) {
             for(auto dest : raptor_.data.pt_data.stop_points[spid_dist.first].route_point_list) {
                 if(raptor_.labels[i][dest].type != uninitialized) {
-                    DateTime current_dt = raptor_.labels[i][dest].departure + (spid_dist.second/walking_speed);
+                    navitia::type::DateTime current_dt = raptor_.labels[i][dest].departure + (spid_dist.second/walking_speed);
                     if(current_dt <= best_dt) {
                         best_dt = current_dt;
                         best_rp = dest;
@@ -34,18 +34,18 @@ makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
 
 std::vector<Path> 
 makePathesreverse(std::vector<std::pair<type::idx_t, double> > destinations,
-                          DateTime dt, const float walking_speed,
+                          navitia::type::DateTime dt, const float walking_speed,
                           const RAPTOR &raptor_) {
     std::vector<Path> result;
 
-    DateTime best_dt = dt;
+    navitia::type::DateTime best_dt = dt;
 
     for(unsigned int i=1;i<=raptor_.count;++i) {
         type::idx_t best_rp = type::invalid_idx;
         for(auto spid_dist : destinations) {
             for(auto dest : raptor_.data.pt_data.stop_points[spid_dist.first].route_point_list) {
                 if(raptor_.labels[i][dest].type != uninitialized) {
-                    DateTime current_dt = raptor_.labels[i][dest].departure - (spid_dist.second/walking_speed);
+                    navitia::type::DateTime current_dt = raptor_.labels[i][dest].departure - (spid_dist.second/walking_speed);
                     if(current_dt >= best_dt) {
                         best_dt = current_dt;
                         best_rp = dest;
@@ -72,7 +72,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool reverse,
     Path result;
     unsigned int current_rpid = destination_idx;
     label l = raptor_.labels[countb][current_rpid];
-    DateTime workingDate;
+    navitia::type::DateTime workingDate;
     if(!reverse)
         workingDate = l.arrival;
     else

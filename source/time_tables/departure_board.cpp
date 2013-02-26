@@ -9,10 +9,10 @@ namespace navitia { namespace timetables {
 
 std::vector<vector_datetime> make_columuns(const vector_dt_st &stop_times) {
     std::vector<vector_datetime> result;
-    routing::DateTime prev_date = routing::DateTime::inf;
+    type::DateTime prev_date = type::DateTime::inf;
 
     for(auto & item : stop_times) {
-        if(prev_date == routing::DateTime:: inf || (prev_date.hour()/3600) != (item.first.hour()/3600)) {
+        if(prev_date == type::DateTime:: inf || (prev_date.hour()/3600) != (item.first.hour()/3600)) {
             //On supprime les doublons
             if(result.size() > 0) {
                 auto it = std::unique(result.back().begin(), result.back().end());
@@ -74,14 +74,14 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
         auto vec_st = id_vec.second;
         std::sort(vec_st.begin(), vec_st.end(),
                   [&](dt_st d1, dt_st d2) {
-                    return std::abs((d1.first.hour() % routing::DateTime::NB_SECONDS_DAY)-parser.date_time.hour())
-                        <  std::abs((d2.first.hour() % routing::DateTime::NB_SECONDS_DAY)-parser.date_time.hour());
+                    return std::abs((d1.first.hour() % type::DateTime::NB_SECONDS_DAY)-parser.date_time.hour())
+                        <  std::abs((d2.first.hour() % type::DateTime::NB_SECONDS_DAY)-parser.date_time.hour());
                   });
 
         for(auto vec : make_columuns(vec_st)) {
             pbnavitia::BoardItem *item = board->add_board_items();
 
-            for(routing::DateTime dt : vec) {
+            for(type::DateTime dt : vec) {
                 if(!item->has_hour())
                     item->set_hour(boost::lexical_cast<std::string>(dt.hour()/3600));
                 item->add_minutes(boost::lexical_cast<std::string>((dt.hour()%3600)/60));

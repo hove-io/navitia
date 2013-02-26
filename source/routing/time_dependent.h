@@ -1,4 +1,4 @@
-#pragma once
+
 
 #include "routing.h"
 #include "type/data.h"
@@ -34,10 +34,10 @@ struct TimeTable {
      *
      * Prend en compte le passe-minuit
      */
-    DateTime eval(const DateTime &departure, const type::PT_Data & data) const;
+    navitia::type::DateTime eval(const navitia::type::DateTime &departure, const type::PT_Data & data) const;
 
     /** Retourne le premier départ possible à une heure donnée */
-    std::pair<DateTime, type::idx_t> first_departure(DateTime departure, const type::PT_Data & data) const;
+    std::pair<navitia::type::DateTime, type::idx_t> first_departure(navitia::type::DateTime departure, const type::PT_Data & data) const;
 
     TimeTable() : constant_duration(-1){}
     TimeTable(int constant_duration) : constant_duration(constant_duration){}
@@ -83,7 +83,7 @@ struct TimeDependent : public AbstractRouter{
     size_t route_point_offset;
 
     std::vector<vertex_t> preds;
-    std::vector<DateTime> distance;
+    std::vector<navitia::type::DateTime> distance;
     TimeDependent(const type::Data & global_data);
 
     /// Génère le graphe sur le quel sera fait le calcul

@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(test1){
     std::vector<navitia::type::idx_t> rps;
     for(auto rp : d.route_points)
         rps.push_back(rp.idx);
-    auto result = get_stop_times(rps, navitia::routing::DateTime(0,0), navitia::routing::DateTime(), 1, data);
+    auto result = get_stop_times(rps, navitia::type::DateTime(0,0), navitia::type::DateTime(), 1, data);
     BOOST_REQUIRE_EQUAL(result.size(), 1);
 
 }

@@ -11,7 +11,7 @@ add_custom_command (TARGET pb_lib
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/type )
 
 add_library(types type.cpp 
-    message.cpp
+    message.cpp datetime.cpp
 )
 
 SET(DATA_SRC
@@ -27,3 +27,8 @@ add_executable(type_test tests/test.cpp)
 target_link_libraries(type_test types data utils ${Boost_LIBRARIES})
 
 ADD_TEST(type_test ${EXECUTABLE_OUTPUT_PATH}/type_test --report_level=no)
+
+add_executable(datetime_test tests/datetime.cpp)
+target_link_libraries(datetime_test ${Boost_LIBRARIES})
+ADD_TEST(datetime_test ${EXECUTABLE_OUTPUT_PATH}/datetime_test --report_level=no)
+

@@ -27,7 +27,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             fill_street_section(temp, d, pb_journey->add_sections(), 1);
         }
         for(Path path : paths) {
-            DateTime departure_time = DateTime::inf, arrival_time = DateTime::inf;
+            navitia::type::DateTime departure_time = navitia::type::DateTime::inf, arrival_time = navitia::type::DateTime::inf;
             pbnavitia::Journey * pb_journey = planner->add_journeys();
             pb_journey->set_nb_transfers(path.nb_changes);
             pb_journey->set_requested_date_time(boost::posix_time::to_iso_string(path.request_time));
@@ -89,7 +89,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                     fill_pb_placemark(d.pt_data.stop_points[item.stop_points.back()], d, pb_section->mutable_destination(), 1);
                 }
                 pb_section->set_duration(item.arrival - item.departure);
-                if(departure_time == DateTime::inf)
+                if(departure_time == navitia::type::DateTime::inf)
                     departure_time = item.departure;
                 arrival_time = item.arrival;
                 pb_journey->set_duration(arrival_time - departure_time);
@@ -217,19 +217,19 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
 
     std::vector<Path> result;
 
-    DateTime borne;
+    navitia::type::DateTime borne;
     if(!clockwise)
-        borne = DateTime::min;
+        borne = navitia::type::DateTime::min;
     else {
-//        std::vector<DateTime> dts;
+//        std::vector<navitia::type::DateTime> dts;
 //        for(boost::posix_time::ptime datetime : datetimes){
 //            int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
 //            int time = datetime.time_of_day().total_seconds();
-//            dts.push_back(DateTime(day, time));
+//            dts.push_back(navitia::type::DateTime(day, time));
 //        }
 
 //        return make_pathes(raptor.compute_all(departures, destinations, dts, borne), raptor.data, worker);
-        borne = DateTime::inf;
+        borne = navitia::type::DateTime::inf;
     }
 
     for(boost::posix_time::ptime datetime : datetimes){
@@ -238,9 +238,9 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
         int time = datetime.time_of_day().total_seconds();
 
         if(clockwise)
-            tmp = raptor.compute_all(departures, destinations, DateTime(day, time), borne, walking_speed, walking_distance, wheelchair, forbidden);
+            tmp = raptor.compute_all(departures, destinations, navitia::type::DateTime(day, time), borne, walking_speed, walking_distance, wheelchair, forbidden);
         else
-            tmp = raptor.compute_reverse_all(departures, destinations, DateTime(day, time), borne, walking_speed, walking_distance, wheelchair, forbidden);
+            tmp = raptor.compute_reverse_all(departures, destinations, navitia::type::DateTime(day, time), borne, walking_speed, walking_distance, wheelchair, forbidden);
 
         // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
         if(datetimes.size() == 1){
@@ -287,19 +287,19 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
         return response;
     }
     
-    DateTime bound = clockwise ? DateTime::inf : DateTime::min;
+    navitia::type::DateTime bound = clockwise ? navitia::type::DateTime::inf : navitia::type::DateTime::min;
     
     std::vector<idx_label> tmp;
     int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
     int time = datetime.time_of_day().total_seconds();
-    DateTime init_dt = DateTime(day, time);
+    navitia::type::DateTime init_dt = navitia::type::DateTime(day, time);
 
     raptor.isochrone(departures, init_dt, bound,
                            walking_speed, walking_distance, wheelchair, forbidden, clockwise);
 
 
     for(const type::StopPoint &sp : raptor.data.pt_data.stop_points) {
-        DateTime best = bound;
+        navitia::type::DateTime best = bound;
         type::idx_t best_rp = type::invalid_idx;
         for(type::idx_t rpidx : sp.route_point_list) {
             if(raptor.best_labels[rpidx].arrival < best) {
@@ -311,7 +311,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
         if(best_rp != type::invalid_idx) {
             auto label = raptor.best_labels[best_rp];
             type::idx_t initial_rp;
-            DateTime initial_dt;
+            navitia::type::DateTime initial_dt;
             int round = raptor.best_round(best_rp);
             boost::tie(initial_rp, initial_dt) = init::getFinalRpidAndDate(round, best_rp, raptor.labels, clockwise, raptor.data);
 
