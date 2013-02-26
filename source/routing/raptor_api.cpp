@@ -12,9 +12,30 @@ std::string iso_string(const nt::Data & d, int date, int hour){
     return boost::posix_time::to_iso_string(date_time);
 }
 
+void fill_section(pbnavitia::Section *pb_section, navitia::type::idx_t vj_idx,
+        const nt::Data & d, boost::posix_time::ptime now, boost::posix_time::time_period action_period) {
+
+    const type::VehicleJourney & vj = d.pt_data.vehicle_journeys[vj_idx];
+    const type::Route & route = d.pt_data.routes[vj.route_idx];
+    const type::Line & line = d.pt_data.lines[route.line_idx];
+    if(line.network_idx != type::invalid_idx)
+        pb_section->set_network(d.pt_data.networks[line.network_idx].name );
+    else
+        pb_section->set_network("");
+    if(vj.physical_mode_idx != type::invalid_idx)
+        pb_section->set_mode(d.pt_data.physical_modes[vj.physical_mode_idx].name);
+    pb_section->set_code(line.code);
+    pb_section->set_headsign(vj.name);
+    pb_section->set_direction(route.name);
+    fill_pb_object(vj_idx, d, pb_section->mutable_vehicle_journey(), 0, now, action_period);
+    fill_pb_object(route.idx, d, pb_section->mutable_vehicle_journey()->mutable_route(), 0, now, action_period);
+    fill_pb_object(line.idx, d, pb_section->mutable_vehicle_journey()->mutable_route()->mutable_line(), 0, now, action_period);
+}
+
 pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths, const nt::Data & d, streetnetwork::StreetNetwork & worker) {
     pbnavitia::Response pb_response;
     pb_response.set_requested_api(pbnavitia::PLANNER);
+    boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 
 
     auto temp = worker.get_direct_path();
@@ -46,34 +67,32 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                 pbnavitia::Section * pb_section = pb_journey->add_sections();
                 if(item.type == public_transport){
                     pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
-                    if( item.vj_idx != type::invalid_idx){ // TODO : réfléchir si ça peut vraiment arriver
-                        const type::VehicleJourney & vj = d.pt_data.vehicle_journeys[item.vj_idx];
-                        const type::Route & route = d.pt_data.routes[vj.route_idx];
-                        const type::Line & line = d.pt_data.lines[route.line_idx];
-                        if(line.network_idx != type::invalid_idx)
-                            pb_section->set_network(d.pt_data.networks[line.network_idx].name );
-                        else
-                            pb_section->set_network("");
-                        if(vj.physical_mode_idx != type::invalid_idx)
-                            pb_section->set_mode(d.pt_data.physical_modes[vj.physical_mode_idx].name);
-                        pb_section->set_code(line.code);
-                        pb_section->set_headsign(vj.name);
-                        pb_section->set_direction(route.name);
-                        fill_pb_object(line.idx, d, pb_section->mutable_line());
-                    }
+                    
+                    boost::posix_time::ptime departure_ptime , arrival_ptime;
                     for(size_t i=0;i<item.stop_points.size();++i){
                         pbnavitia::StopDateTime * stop_time = pb_section->add_stop_date_times();
                         auto arr_time = item.arrivals[i];
                         stop_time->set_arrival_date_time(iso_string(d, arr_time.date(), arr_time.hour()));
                         auto dep_time = item.departures[i];
                         stop_time->set_departure_date_time(iso_string(d, dep_time.date(), dep_time.hour()));
-                        fill_pb_object(item.stop_points[i], d, stop_time->mutable_stop_point(), 0);
+                        boost::posix_time::time_period action_period(to_posix_time(dep_time, d), to_posix_time(arr_time, d));
+                        fill_pb_object(item.stop_points[i], d, stop_time->mutable_stop_point(), 0, now, action_period);
+                        if(!pb_section->has_origin())
+                            fill_pb_placemark(d.pt_data.stop_points[item.stop_points[i]], d, pb_section->mutable_origin(), 1, now, action_period);
+                        fill_pb_placemark(d.pt_data.stop_points[item.stop_points[i]], d, pb_section->mutable_destination(), 1, now, action_period);
 
+
+                        // L'heure de départ du véhicule au premier stop point
+                        if(departure_ptime.is_not_a_date_time())
+                            departure_ptime = to_posix_time(dep_time, d);
+                        // L'heure d'arrivée au dernier stop point
+                        arrival_ptime = to_posix_time(arr_time, d);
                     }
 
-                    if(item.stop_points.size() >= 2) {
-                        fill_pb_placemark(d.pt_data.stop_points[item.stop_points.front()], d, pb_section->mutable_origin(), 1);
-                        fill_pb_placemark(d.pt_data.stop_points[item.stop_points.back()], d, pb_section->mutable_destination(), 1);
+
+                    if( item.vj_idx != type::invalid_idx){ // TODO : réfléchir si ça peut vraiment arriver
+                        boost::posix_time::time_period action_period(departure_ptime, arrival_ptime); 
+                        fill_section(pb_section, item.vj_idx, d, now, action_period);
                     }
                 }
 
@@ -85,8 +104,10 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                         case guarantee : pb_section->set_transfer_type(pbnavitia::GUARANTEED); break;
                         default :pb_section->set_transfer_type(pbnavitia::WALKING); break;
                     }
-                    fill_pb_placemark(d.pt_data.stop_points[item.stop_points.front()], d, pb_section->mutable_origin(), 1);
-                    fill_pb_placemark(d.pt_data.stop_points[item.stop_points.back()], d, pb_section->mutable_destination(), 1);
+
+                    boost::posix_time::time_period action_period(to_posix_time(item.departure, d), to_posix_time(item.arrival, d));
+                    fill_pb_placemark(d.pt_data.stop_points[item.stop_points.front()], d, pb_section->mutable_origin(), 1, now, action_period);
+                    fill_pb_placemark(d.pt_data.stop_points[item.stop_points.back()], d, pb_section->mutable_destination(), 1, now, action_period);
                 }
                 pb_section->set_duration(item.arrival - item.departure);
                 if(departure_time == navitia::type::DateTime::inf)
