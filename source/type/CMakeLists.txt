@@ -10,7 +10,7 @@ add_custom_command (TARGET pb_lib
     COMMAND protoc ARGS --python_out=../frontend type.proto
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/type )
 
-add_library(types type.cpp 
+add_library(types type.cpp
     message.cpp datetime.cpp
 )
 

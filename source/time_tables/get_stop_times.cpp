@@ -57,4 +57,4 @@ std::vector<dt_st> get_stop_times(const std::vector<type::idx_t> &route_points, 
 
 }
 
-                  }
+}

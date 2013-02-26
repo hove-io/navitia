@@ -5,6 +5,9 @@
 
 #include "boost/lexical_cast.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
+
+namespace pt = boost::posix_time;
+
 namespace navitia { namespace timetables {
 
 std::vector<vector_datetime> make_columuns(const vector_dt_st &stop_times) {
@@ -53,7 +56,7 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
     for(type::idx_t route_point_idx : parser.route_points) {
         auto stop_point_idx = data.pt_data.route_points[route_point_idx].stop_point_idx;
         auto line_idx = data.pt_data.routes[data.pt_data.route_points[route_point_idx].route_idx].line_idx;
-       
+
         auto stop_times = get_stop_times({route_point_idx}, parser.date_time, parser.max_datetime, std::numeric_limits<int>::max(), data);
 
         auto key = std::make_pair(stop_point_idx, line_idx);
@@ -65,11 +68,14 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
         iter->second.insert(iter->second.end(), stop_times.begin(), stop_times.end());
     }
 
+    auto current_time = pt::second_clock::local_time();
+    pt::time_period action_period(to_posix_time(parser.date_time, data), to_posix_time(parser.max_datetime, data));
 
     for(auto id_vec : map_line_stop_point) {
+
         auto board = dep_board->add_boards();
-        fill_pb_object(id_vec.first.first, data, board->mutable_stop_point());
-        fill_pb_object(id_vec.first.second, data, board->mutable_line());
+        fill_pb_object(id_vec.first.first, data, board->mutable_stop_point(), 0, current_time, action_period);
+        fill_pb_object(id_vec.first.second, data, board->mutable_line(), 0, current_time, action_period);
 
         auto vec_st = id_vec.second;
         std::sort(vec_st.begin(), vec_st.end(),

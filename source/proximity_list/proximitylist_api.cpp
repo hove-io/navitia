@@ -10,24 +10,26 @@ void create_pb(const std::vector<std::pair<type::idx_t, type::GeographicalCoord>
     for(auto result_item : result){
         pbnavitia::ProximityListItem* item = pb_pl.add_items();
         pbnavitia::PlaceMark* place_mark = item->mutable_object();
+        //on récupére la date pour les impacts
+        auto current_date = boost::posix_time::second_clock::local_time();
         switch(type){
         case nt::Type_e::eStopArea:
             place_mark->set_type(pbnavitia::STOP_AREA);
-            fill_pb_object(result_item.first, data, place_mark->mutable_stop_area(), 2);
+            fill_pb_object(result_item.first, data, place_mark->mutable_stop_area(), 2, current_date);
             item->set_name(data.pt_data.stop_areas[result_item.first].name);
             item->set_uri(data.pt_data.stop_areas[result_item.first].uri);
             item->set_distance(coord.distance_to(result_item.second));
             break;
         case nt::Type_e::eCity:
             place_mark->set_type(pbnavitia::CITY);
-            fill_pb_object(result_item.first, data, place_mark->mutable_city());
+            fill_pb_object(result_item.first, data, place_mark->mutable_city(), 0, current_date);
             item->set_name(data.pt_data.cities[result_item.first].name);
             item->set_uri(data.pt_data.cities[result_item.first].uri);
             item->set_distance(coord.distance_to(result_item.second));
             break;
         case nt::Type_e::eStopPoint:
             place_mark->set_type(pbnavitia::STOP_POINT);
-            fill_pb_object(result_item.first, data, place_mark->mutable_stop_point(), 2);
+            fill_pb_object(result_item.first, data, place_mark->mutable_stop_point(), 2, current_date);
             item->set_name(data.pt_data.stop_points[result_item.first].name);
             item->set_uri(data.pt_data.stop_points[result_item.first].uri);
             item->set_distance(coord.distance_to(result_item.second));
