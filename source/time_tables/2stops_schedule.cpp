@@ -1,5 +1,6 @@
 #include "2stops_schedule.h"
 
+namespace pt = boost::posix_time;
 namespace navitia { namespace timetables {
 
 std::unordered_map<type::idx_t, uint32_t>  get_arrival_order(const std::vector<type::idx_t> &departure_routepoint, const std::string &arrival_filter, type::Data & data) {
@@ -88,6 +89,9 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
     }
 
     pb_response.set_requested_api(pbnavitia::DEPARTURE_BOARD);
+    auto current_time = pt::second_clock::local_time();
+    pt::time_period action_period(to_posix_time(dt, data), to_posix_time(max_dt, data));
+
     for(auto pair_dt_idx : board) {
         pbnavitia::PairStopTime * pair_stoptime = pb_response.mutable_stops_schedule()->add_board_items();
         auto stoptime = pair_stoptime->mutable_first();
@@ -95,16 +99,16 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
         stoptime->set_departure_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
         stoptime->set_arrival_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
         const auto &rp = data.pt_data.route_points[data.pt_data.stop_times[dt_idx.second].route_point_idx];
-        fill_pb_object(rp.stop_point_idx, data, stoptime->mutable_stop_point(), depth);
-        fill_pb_object(data.pt_data.routes[rp.route_idx].line_idx, data, stoptime->mutable_line(), depth);
+        fill_pb_object(rp.stop_point_idx, data, stoptime->mutable_stop_point(), depth, current_time, action_period);
+        fill_pb_object(data.pt_data.routes[rp.route_idx].line_idx, data, stoptime->mutable_line(), depth, current_time, action_period);
 
         stoptime = pair_stoptime->mutable_second();
         const auto &dt_idx2 = pair_dt_idx.second;
         stoptime->set_departure_date_time(type::iso_string(dt_idx2.first.date(),  dt_idx2.first.hour(), data));
         stoptime->set_arrival_date_time(type::iso_string(dt_idx2.first.date(),  dt_idx2.first.hour(), data));
         const auto &rp2 = data.pt_data.route_points[data.pt_data.stop_times[dt_idx2.second].route_point_idx];
-        fill_pb_object(rp2.stop_point_idx, data, stoptime->mutable_stop_point(), depth);
-        fill_pb_object(data.pt_data.routes[rp2.route_idx].line_idx, data, stoptime->mutable_line(), depth);
+        fill_pb_object(rp2.stop_point_idx, data, stoptime->mutable_stop_point(), depth, current_time, action_period);
+        fill_pb_object(data.pt_data.routes[rp2.route_idx].line_idx, data, stoptime->mutable_line(), depth, current_time, action_period);
     }
     return pb_response;
 }
