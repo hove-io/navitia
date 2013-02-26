@@ -290,7 +290,7 @@ message Section {
     optional string code = 6;
     optional string headsign = 7;
     optional string direction = 8;
-    optional Line line = 9;
+    optional VehicleJourney vehicle_journey = 9;
     repeated StopDateTime stop_date_times = 10;
 
 // Si c'est du routier
