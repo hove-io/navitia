@@ -52,12 +52,15 @@ struct Jointures {
         vertex_map[Type_e::eCountry] = boost::add_vertex(Type_e::eCountry, g);
 
         boost::add_edge(vertex_map[Type_e::eDistrict], vertex_map[Type_e::eCountry], g);
-
-        boost::add_edge(vertex_map[Type_e::eStopArea], vertex_map[Type_e::eCity], g);
+        boost::add_edge(vertex_map[Type_e::eDepartment], vertex_map[Type_e::eDistrict], g);
+        
         boost::add_edge(vertex_map[Type_e::eDepartment], vertex_map[Type_e::eCity], g);
 
-        boost::add_edge(vertex_map[Type_e::eStopPoint], vertex_map[Type_e::eStopArea], g);
+        boost::add_edge(vertex_map[Type_e::eStopArea], vertex_map[Type_e::eCity], g);
         boost::add_edge(vertex_map[Type_e::eCity], vertex_map[Type_e::eStopArea], g);
+
+
+        boost::add_edge(vertex_map[Type_e::eStopPoint], vertex_map[Type_e::eStopArea], g);
 
         boost::add_edge(vertex_map[Type_e::eLine], vertex_map[Type_e::eNetwork], g);
 
@@ -71,6 +74,7 @@ struct Jointures {
         boost::add_edge(vertex_map[Type_e::eCommercialMode], vertex_map[Type_e::eLine], g);
         boost::add_edge(vertex_map[Type_e::ePhysicalMode], vertex_map[Type_e::eLine], g);
         boost::add_edge(vertex_map[Type_e::eCompany], vertex_map[Type_e::eLine], g);
+        boost::add_edge(vertex_map[Type_e::eLine], vertex_map[Type_e::eCompany], g);
         boost::add_edge(vertex_map[Type_e::eNetwork], vertex_map[Type_e::eLine], g);
         boost::add_edge(vertex_map[Type_e::eRoute], vertex_map[Type_e::eLine], g);
 
@@ -91,9 +95,9 @@ struct Jointures {
         boost::add_edge(vertex_map[Type_e::eVehicleJourney], vertex_map[Type_e::eRoute], g);
         boost::add_edge(vertex_map[Type_e::eRoute], vertex_map[Type_e::eVehicleJourney], g);
         boost::add_edge(vertex_map[Type_e::eVehicleJourney], vertex_map[Type_e::eStopTime], g);
-        
 
     }
+
 };
 
 std::map<Type_e,Type_e> find_path(Type_e source) {
