@@ -339,13 +339,6 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
 
             int duration = ::abs(label.arrival - init_dt);
 
-            if(origin.type == type::Type_e::eCoord) {
-                auto temp = worker.get_path(raptor.data.pt_data.journey_pattern_points[initial_rp].stop_point_idx);
-                if(temp.path_items.size() > 0) {
-                    duration += temp.length/walking_speed;
-                }
-            }
-
             if(duration <= max_duration) {
                 auto pb_item = response.mutable_isochrone()->add_items();
                 auto pb_stop_date_time = pb_item->mutable_stop_date_time();
