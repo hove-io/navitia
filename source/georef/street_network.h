@@ -40,15 +40,7 @@ public:
      */
     bool arrival_launched();
 
-    /** On définit les coordonnées de départ, un proximitylist et un rayon
-     *
-     * Retourne tous les idx atteignables dans ce rayon, ainsi que la distance en suivant le filaire de voirie
-     **/
-    std::vector< std::pair<type::idx_t, double> > find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius, bool use_second=false);
-
-    /** Version spécialisée et optimisée pour les stop_points
-     *
-     * Comme c'est une version que l'on utilise très souvent, on pré-calcule les projections
+    /** Calcule quels sont les stop point atteignables en radius mètres de marche à pied
      */
     std::vector< std::pair<type::idx_t, double> > find_nearest_stop_points(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius, bool use_second = false);
 
@@ -67,13 +59,6 @@ private:
                                                                            std::vector<ng::vertex_t> & preds,
                                                                            std::map<type::idx_t, ng::ProjectionData> & idx_proj);
 
-
-    std::vector< std::pair<type::idx_t, double> > find_nearest(const ng::ProjectionData & start,
-                                                               double radius,
-                                                               const std::vector< std::pair<type::idx_t, type::GeographicalCoord> > & elements,
-                                                               std::vector<float> & dist,
-                                                               std::vector<ng::vertex_t> & preds,
-                                                               std::map<type::idx_t, ng::ProjectionData> & idx_proj);
 
     /// Point de départ et d'arrivée fourni par la requête
     ng::ProjectionData start;

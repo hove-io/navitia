@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
 
 BOOST_AUTO_TEST_CASE(compute_nearest){
     using namespace navitia::type;
-    //StreetNetwork sn;
+
     GeoRef sn;
     GraphBuilder b(sn);
 
@@ -235,28 +235,31 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     GeographicalCoord c1(50,10, false);
     GeographicalCoord c2(350,20, false);
     navitia::proximitylist::ProximityList<idx_t> pl;
-    pl.add(c1, 1);
-    pl.add(c2, 2);
+    pl.add(c1, 0);
+    pl.add(c2, 1);
     pl.build();
+
+    sn.projected_stop_points.push_back(ProjectionData(c1, sn, sn.pl));
+    sn.projected_stop_points.push_back(ProjectionData(c2, sn, sn.pl));
 
     GeographicalCoord o(0,0);
 
     StreetNetwork w(sn);
 
-    auto res = w.find_nearest(o, pl, 10);
+    auto res = w.find_nearest_stop_points(o, pl, 10);
     BOOST_CHECK_EQUAL(res.size(), 0);
 
-    res = w.find_nearest(o, pl, 100);
+    res = w.find_nearest_stop_points(o, pl, 100);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
-    BOOST_CHECK_EQUAL(res[0].first , 1);
+    BOOST_CHECK_EQUAL(res[0].first , 0);
     BOOST_CHECK_CLOSE(res[0].second, 50, 1);
 
-    res = w.find_nearest(o, pl, 1000);
+    res = w.find_nearest_stop_points(o, pl, 1000);
     std::sort(res.begin(), res.end());
     BOOST_CHECK_EQUAL(res.size(), 2);
-    BOOST_CHECK_EQUAL(res[0].first , 1);
+    BOOST_CHECK_EQUAL(res[0].first , 0);
     BOOST_CHECK_CLOSE(res[0].second, 50, 1);
-    BOOST_CHECK_EQUAL(res[1].first , 2);
+    BOOST_CHECK_EQUAL(res[1].first , 1);
     BOOST_CHECK_CLOSE(res[1].second, 350, 1);
 }
 

@@ -17,106 +17,27 @@ bool StreetNetwork::departure_launched() {return departure_launch;}
 bool StreetNetwork::arrival_launched() {return arrival_launch;}
 
 
-std::vector< std::pair<nt::idx_t, double> > StreetNetwork::find_nearest(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<nt::idx_t> & pl, double radius, bool use_second) {
-    ng::ProjectionData start;
-    try{
-        start = ng::ProjectionData(start_coord, this->geo_ref, this->geo_ref.pl);
-    }catch(ng::DestinationFound){}
 
+std::vector< std::pair<type::idx_t, double> > StreetNetwork::find_nearest_stop_points(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius, bool use_second){
+    // On cherche le segment le plus proche des coordonnées
+    ng::ProjectionData start_edge = ng::ProjectionData(start_coord, this->geo_ref, this->geo_ref.pl);
+    if(!start_edge.found)
+        return std::vector< std::pair<nt::idx_t, double> >();
 
     // On trouve tous les élements à moins radius mètres en vol d'oiseau
-    std::vector< std::pair<nt::idx_t, type::GeographicalCoord> > elements;
-    try{
-        elements = pl.find_within(start_coord, radius);
-    }catch(ng::DestinationFound){
+    std::vector< std::pair<nt::idx_t, type::GeographicalCoord> > elements = pl.find_within(start_coord, radius);
+    if(elements.empty())
         return std::vector< std::pair<nt::idx_t, double> >();
-    }
 
+    // Est-ce qu'on calcule au départ ou à l'arrivée
+    // Les résultats sont gardés pour reconstruire l'itinéraire routier après avoir calculé l'itinéraire TC
     if(!use_second) {
         departure_launch = true;
-        return find_nearest(start, radius, elements, distances, predecessors, idx_projection);
+        return find_nearest_stop_points(start_edge, radius, elements, distances, predecessors, idx_projection);
     }
     else{
         arrival_launch = true;
-        return find_nearest(start, radius, elements, distances2, predecessors2, idx_projection2);
-    }
-}
-
-std::vector< std::pair<type::idx_t, double> > StreetNetwork::find_nearest(const ng::ProjectionData & start,
-                                                                          double radius,
-                                                                          const std::vector< std::pair<nt::idx_t, type::GeographicalCoord> > & elements , std::vector<float> & dist, std::vector<ng::vertex_t> & preds, std::map<type::idx_t, ng::ProjectionData> & idx_proj){
-    geo_ref.init(dist, preds);
-    idx_proj.clear();
-
-    // On lance un dijkstra depuis les deux nœuds de départ
-    dist[start.source] = start.source_distance;
-    try{
-        geo_ref.dijkstra(start.source, dist, preds, distance_visitor(radius, dist));
-    }catch(ng::DestinationFound){}
-    dist[start.target] = start.target_distance;
-    try{
-        geo_ref.dijkstra(start.target, dist, preds, distance_visitor(radius, dist));
-    }catch(ng::DestinationFound){}
-
-    proximitylist::ProximityList<ng::vertex_t> temp_pl;
-
-    size_t num_vertices = boost::num_vertices(geo_ref.graph);
-    double max_dist = std::numeric_limits<double>::max();
-    for(ng::vertex_t u = 0; u != num_vertices; ++u){
-        if(dist[u] < max_dist)
-            temp_pl.add(this->geo_ref.graph[u].coord, u);
-    }
-    temp_pl.build();
-
-    std::vector< std::pair<nt::idx_t, double> > result;
-    // À chaque fois on regarde la distance réelle en suivant le filaire de voirie
-    for(auto element : elements){
-
-        ng::ProjectionData current;
-        try{
-            current = ng::ProjectionData(element.second, this->geo_ref, temp_pl);
-            idx_proj[element.first] = current;
-        }catch(ng::DestinationFound){}
-
-        ng::vertex_t best;
-        double best_distance;
-        if(dist[current.source] < dist[current.target]){
-            best = current.source;
-            best_distance = current.source_distance + dist[best];
-        } else {
-            best = current.target;
-            best_distance = current.target_distance + dist[best];
-        }
-
-        if(best_distance < radius){
-            result.push_back(std::make_pair(element.first, best_distance));
-        }
-    }
-    return result;
-}
-
-std::vector< std::pair<type::idx_t, double> > StreetNetwork::find_nearest_stop_points(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius, bool use_second){
-    ng::ProjectionData projection;
-    try{
-        projection = ng::ProjectionData(start_coord, this->geo_ref, this->geo_ref.pl);
-    }catch(ng::DestinationFound){}
-
-    std::vector< std::pair<nt::idx_t, type::GeographicalCoord> > elements;
-    try{
-        elements = pl.find_within(start_coord, radius);
-    }catch(ng::DestinationFound){
-        return std::vector< std::pair<nt::idx_t, double> >();
-    }
-
-    if(!use_second) {
-        departure_launch = true;
-        start = projection;
-        return find_nearest_stop_points(projection, radius, elements, distances, predecessors, idx_projection);
-    }
-    else {
-        arrival_launch = true;
-        destination = projection;
-        return find_nearest_stop_points(projection, radius, elements, distances2, predecessors2, idx_projection2);
+        return find_nearest_stop_points(start_edge, radius, elements, distances2, predecessors2, idx_projection2);
     }
 }
 
@@ -131,13 +52,12 @@ std::vector< std::pair<type::idx_t, double> > StreetNetwork::find_nearest_stop_p
     // On lance un dijkstra depuis les deux nœuds de départ
     dist[start.source] = start.source_distance;
     try{
-        if(start.source < boost::num_vertices(this->geo_ref.graph))
-            geo_ref.dijkstra(start.source, dist, preds, distance_visitor(radius, dist));
+        geo_ref.dijkstra(start.source, dist, preds, distance_visitor(radius, dist));
     }catch(ng::DestinationFound){}
+
     dist[start.target] = start.target_distance;
     try{
-        if(start.target < boost::num_vertices(this->geo_ref.graph))
-            geo_ref.dijkstra(start.target, dist, preds, distance_visitor(radius, dist));
+        geo_ref.dijkstra(start.target, dist, preds, distance_visitor(radius, dist));
     }catch(ng::DestinationFound){}
 
     double max = std::numeric_limits<float>::max();
@@ -145,7 +65,7 @@ std::vector< std::pair<type::idx_t, double> > StreetNetwork::find_nearest_stop_p
     for(auto element: elements){
         const ng::ProjectionData & projection = geo_ref.projected_stop_points[element.first];
         // Est-ce que le stop point a pu être raccroché au street network
-        if(projection.source < boost::num_vertices(this->geo_ref.graph) && projection.source < boost::num_vertices(this->geo_ref.graph)){
+        if(projection.found){
             double best_dist = max;
             if(dist[projection.source] < max){
                 best_dist = dist[projection.source] + projection.source_distance;
