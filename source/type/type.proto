@@ -420,6 +420,7 @@ message Metadatas {
     required string start_production_date = 1;
     required string end_production_date = 2;
     required string shape = 3;
+    required string status = 4;
 }
 
 message Response{
