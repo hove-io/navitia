@@ -35,18 +35,18 @@ class District;
 class Department;
 class City;
 class Connection;
-class RoutePointConnection;
+class JourneyPatternPointConnection;
 class StopArea;
 class Network;
 class Company;
 class CommercialMode;
 class PhysicalMode;
 class Line;
-class Route;
+class JourneyPattern;
 class VehicleJourney;
 class ValidityPattern;
 class Equipement;
-class RoutePoint;
+class JourneyPatternPoint;
 class StopPoint;
 class StopTime;
 
@@ -139,29 +139,29 @@ struct Connection: public TransmodelHeader {
 
 };
 
-struct RoutePointConnection: public TransmodelHeader {
-    enum RoutePointConnectionKind {
+struct JourneyPatternPointConnection: public TransmodelHeader {
+    enum JourneyPatternPointConnectionKind {
         Extension,  //Prolongement de service
         Guarantee,   //Correspondance garantie
-        UndefinedRoutePointConnectionKind
+        UndefinedJourneyPatternPointConnectionKind
     };
 
-    RoutePoint *departure_route_point;
-    RoutePoint *destination_route_point;
-    RoutePointConnectionKind route_point_connection_kind;
+    JourneyPatternPoint *departure_journey_pattern_point;
+    JourneyPatternPoint *destination_journey_pattern_point;
+    JourneyPatternPointConnectionKind journey_pattern_point_connection_kind;
     int length;
 
     struct Transformer {
-        inline navitia::type::RoutePointConnection operator()(const RoutePointConnection* route_point_connection) 
-        {return this->operator()(*route_point_connection);}
-        navitia::type::RoutePointConnection operator()(const RoutePointConnection &route_point_connection);
+        inline navitia::type::JourneyPatternPointConnection operator()(const JourneyPatternPointConnection* journey_pattern_point_connection) 
+        {return this->operator()(*journey_pattern_point_connection);}
+        navitia::type::JourneyPatternPointConnection operator()(const JourneyPatternPointConnection &journey_pattern_point_connection);
     };
 
 
-    RoutePointConnection() : departure_route_point(NULL), destination_route_point(NULL),
-                            route_point_connection_kind(UndefinedRoutePointConnectionKind), length(0) {}
+    JourneyPatternPointConnection() : departure_journey_pattern_point(NULL), destination_journey_pattern_point(NULL),
+                            journey_pattern_point_connection_kind(UndefinedJourneyPatternPointConnectionKind), length(0) {}
 
-    bool operator<(const RoutePointConnection &other) const;
+    bool operator<(const JourneyPatternPointConnection &other) const;
 };
 
 
@@ -267,25 +267,34 @@ struct Line : public TransmodelHeader, Nameable {
 };
 
 struct Route : public TransmodelHeader, Nameable{
-    bool is_frequence;
-    bool is_forward;
-    bool is_adapted;
-    Line* line;
-    PhysicalMode* physical_mode;
-    std::vector<RoutePoint*> route_point_list;
+    Line * line;
 
     struct Transformer{
         inline navitia::type::Route operator()(const Route* route){return this->operator()(*route);}
         navitia::type::Route operator()(const Route& route);
     };
 
-    Route(): is_frequence(false), is_forward(false), is_adapted(false), line(NULL), physical_mode(NULL){};
-
     bool operator<(const Route& other) const;
+};
+
+struct JourneyPattern : public TransmodelHeader, Nameable{
+    bool is_frequence;
+    Route* route;
+    PhysicalMode* physical_mode;
+    std::vector<JourneyPatternPoint*> journey_pattern_point_list;
+
+    struct Transformer{
+        inline navitia::type::JourneyPattern operator()(const JourneyPattern* journey_pattern){return this->operator()(*journey_pattern);}
+        navitia::type::JourneyPattern operator()(const JourneyPattern& journey_pattern);
+    };
+
+    JourneyPattern(): is_frequence(false), route(NULL), physical_mode(NULL){};
+
+    bool operator<(const JourneyPattern& other) const;
 
  };
 struct VehicleJourney: public TransmodelHeader, Nameable{
-    Route* route;
+    JourneyPattern* journey_pattern;
     Company* company;
     PhysicalMode* physical_mode;
     Line * tmp_line; // N'est pas à remplir obligatoirement
@@ -302,7 +311,7 @@ struct VehicleJourney: public TransmodelHeader, Nameable{
         navitia::type::VehicleJourney operator()(const VehicleJourney& vj);
     };
 
-    VehicleJourney(): route(NULL), company(NULL), physical_mode(NULL), is_adapted(false), validity_pattern(NULL), stop_time_list(), block_id(""){}
+    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), is_adapted(false), validity_pattern(NULL), stop_time_list(), block_id(""){}
 
     bool operator<(const VehicleJourney& other) const;
 };
@@ -323,21 +332,21 @@ struct Equipement : public TransmodelHeader {
     
 };
 
-struct RoutePoint : public TransmodelHeader, Nameable{
+struct JourneyPatternPoint : public TransmodelHeader, Nameable{
     int order;
     bool main_stop_point;
     int fare_section;
-    Route* route;
+    JourneyPattern* journey_pattern;
     StopPoint* stop_point;
 
     struct Transformer{
-        inline nt::RoutePoint operator()(const RoutePoint* route_point){return this->operator()(*route_point);}   
-        nt::RoutePoint operator()(const RoutePoint& route_point);
+        inline nt::JourneyPatternPoint operator()(const JourneyPatternPoint* journey_pattern_point){return this->operator()(*journey_pattern_point);}   
+        nt::JourneyPatternPoint operator()(const JourneyPatternPoint& journey_pattern_point);
     };
 
-    RoutePoint() : order(0), main_stop_point(false), fare_section(0), route(NULL), stop_point(NULL){}
+    JourneyPatternPoint() : order(0), main_stop_point(false), fare_section(0), journey_pattern(NULL), stop_point(NULL){}
 
-    bool operator<(const RoutePoint& other) const;
+    bool operator<(const JourneyPatternPoint& other) const;
 
 };
 
@@ -400,7 +409,7 @@ struct StopTime {
     int end_time; /// Si horaire en fréquence
     int headway_secs; /// Si horaire en fréquence
     VehicleJourney* vehicle_journey;
-    RoutePoint* route_point;
+    JourneyPatternPoint* journey_pattern_point;
     StopPoint * tmp_stop_point;// ne pas remplir obligatoirement
     int order;
     bool ODT;
@@ -416,7 +425,7 @@ struct StopTime {
     };
 
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<int>::max()), end_time(std::numeric_limits<int>::max()),
-        headway_secs(std::numeric_limits<int>::max()), vehicle_journey(NULL), route_point(NULL), order(0),
+        headway_secs(std::numeric_limits<int>::max()), vehicle_journey(NULL), journey_pattern_point(NULL), order(0),
         ODT(false), pick_up_allowed(false), drop_off_allowed(false), is_frequency(false), local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
 
 

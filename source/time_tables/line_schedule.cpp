@@ -7,17 +7,17 @@
 
 namespace navitia { namespace timetables {
 
-std::vector<vector_stopTime> get_all_stop_times(const vector_idx &routes, const type::DateTime &dateTime, const type::DateTime &max_datetime, type::Data &d) {
+std::vector<vector_stopTime> get_all_stop_times(const vector_idx &journey_patterns, const type::DateTime &dateTime, const type::DateTime &max_datetime, type::Data &d) {
     std::vector<vector_stopTime> result;
 
-    //On cherche les premiers route_points de toutes les routes
-    std::vector<type::idx_t> first_route_points;
-    for(type::idx_t route_idx : routes) {
-        first_route_points.push_back(d.pt_data.routes[route_idx].route_point_list.front());
+    //On cherche les premiers journey_pattern_points de toutes les journey_patterns
+    std::vector<type::idx_t> first_journey_pattern_points;
+    for(type::idx_t journey_pattern_idx : journey_patterns) {
+        first_journey_pattern_points.push_back(d.pt_data.journey_patterns[journey_pattern_idx].journey_pattern_point_list.front());
     }
 
-    //On fait un next_departures sur ces route points
-    auto first_dt_st = get_stop_times(first_route_points, dateTime, max_datetime, std::numeric_limits<int>::max(), d);
+    //On fait un next_departures sur ces journey_pattern points
+    auto first_dt_st = get_stop_times(first_journey_pattern_points, dateTime, max_datetime, std::numeric_limits<int>::max(), d);
 
     //On va chercher tous les prochains horaires
     for(auto ho : first_dt_st) {
@@ -43,7 +43,7 @@ std::vector<vector_string> make_matrice(const std::vector<vector_stopTime> & sto
     //On remplit le tableau
     int y=0;
     for(vector_stopTime vec : stop_times) {
-        std::vector<uint32_t> orders = thermometer.match_route(d.pt_data.routes[d.pt_data.vehicle_journeys[d.pt_data.stop_times[vec.front().second].vehicle_journey_idx].route_idx]);
+        std::vector<uint32_t> orders = thermometer.match_journey_pattern(d.pt_data.journey_patterns[d.pt_data.vehicle_journeys[d.pt_data.stop_times[vec.front().second].vehicle_journey_idx].journey_pattern_idx]);
         int order = 0;
         for(dt_st dt_idx : vec) {
             result[orders[order]][y] = iso_string(dt_idx.first.date(),  dt_idx.first.hour(), d);
@@ -67,17 +67,17 @@ pbnavitia::Response line_schedule(const std::string & filter, const std::string 
 
     for(type::idx_t line_idx : navitia::ptref::make_query(type::Type_e::eLine, filter, d)) {
         auto schedule = parser.pb_response.mutable_line_schedule()->add_schedules();
-        auto routes = d.pt_data.lines[line_idx].route_list;
+        auto journey_patterns = d.pt_data.lines[line_idx].journey_pattern_list;
         //On récupère les stop_times
-        auto stop_times = get_all_stop_times(routes, parser.date_time, parser.max_datetime, d);
-        std::vector<vector_idx> route_point_routes;
-        for(auto route_idx : routes) {
-            route_point_routes.push_back(vector_idx());
-            for(auto rpidx : d.pt_data.routes[route_idx].route_point_list) {
-                route_point_routes.back().push_back(d.pt_data.route_points[rpidx].stop_point_idx);
+        auto stop_times = get_all_stop_times(journey_patterns, parser.date_time, parser.max_datetime, d);
+        std::vector<vector_idx> journey_pattern_point_journey_patterns;
+        for(auto journey_pattern_idx : journey_patterns) {
+            journey_pattern_point_journey_patterns.push_back(vector_idx());
+            for(auto rpidx : d.pt_data.journey_patterns[journey_pattern_idx].journey_pattern_point_list) {
+                journey_pattern_point_journey_patterns.back().push_back(d.pt_data.journey_pattern_points[rpidx].stop_point_idx);
             }
         }
-        thermometer.generate_thermometer(route_point_routes);
+        thermometer.generate_thermometer(journey_pattern_point_journey_patterns);
         //On remplit l'objet header
         pbnavitia::LineScheduleHeader *header = schedule->mutable_header();
         for(vector_stopTime vec : stop_times) {

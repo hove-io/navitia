@@ -23,8 +23,8 @@ void Data::sort(){
     std::sort(lines.begin(), lines.end(), Less<navimake::types::Line>());
     std::for_each(lines.begin(), lines.end(), Indexer<navimake::types::Line>());
 
-    std::sort(routes.begin(), routes.end(), Less<navimake::types::Route>());
-    std::for_each(routes.begin(), routes.end(), Indexer<navimake::types::Route>());
+    std::sort(journey_patterns.begin(), journey_patterns.end(), Less<navimake::types::JourneyPattern>());
+    std::for_each(journey_patterns.begin(), journey_patterns.end(), Indexer<navimake::types::JourneyPattern>());
 
     std::sort(stops.begin(), stops.end(), Less<navimake::types::StopTime>());
     std::for_each(stops.begin(), stops.end(), Indexer<navimake::types::StopTime>());
@@ -41,11 +41,11 @@ void Data::sort(){
     std::sort(connections.begin(), connections.end(), Less<navimake::types::Connection>());
     std::for_each(connections.begin(), connections.end(), Indexer<navimake::types::Connection>());
 
-    std::sort(route_point_connections.begin(), route_point_connections.end(), Less<navimake::types::RoutePointConnection>());
-    std::for_each(route_point_connections.begin(), route_point_connections.end(), Indexer<navimake::types::RoutePointConnection>());
+    std::sort(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end(), Less<navimake::types::JourneyPatternPointConnection>());
+    std::for_each(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end(), Indexer<navimake::types::JourneyPatternPointConnection>());
 
-    std::sort(route_points.begin(), route_points.end(), Less<navimake::types::RoutePoint>());
-    std::for_each(route_points.begin(), route_points.end(), Indexer<navimake::types::RoutePoint>());
+    std::sort(journey_pattern_points.begin(), journey_pattern_points.end(), Less<navimake::types::JourneyPatternPoint>());
+    std::for_each(journey_pattern_points.begin(), journey_pattern_points.end(), Indexer<navimake::types::JourneyPatternPoint>());
 
     std::sort(validity_patterns.begin(), validity_patterns.end(), Less<navimake::types::ValidityPattern>());
     std::for_each(validity_patterns.begin(), validity_patterns.end(), Indexer<navimake::types::ValidityPattern>());
@@ -134,14 +134,14 @@ void Data::clean(){
     std::set<std::string> toErase;
 
     typedef std::vector<navimake::types::VehicleJourney *> vjs;
-    std::unordered_map<std::string, vjs> route_vj;
+    std::unordered_map<std::string, vjs> journey_pattern_vj;
     for(auto it = vehicle_journeys.begin(); it != vehicle_journeys.end(); ++it) {
-        route_vj[(*it)->route->uri].push_back((*it));
+        journey_pattern_vj[(*it)->journey_pattern->uri].push_back((*it));
     }
 
     int erase_overlap = 0, erase_emptiness = 0;
 
-    for(auto it1 = route_vj.begin(); it1 != route_vj.end(); ++it1) {
+    for(auto it1 = journey_pattern_vj.begin(); it1 != journey_pattern_vj.end(); ++it1) {
 
         for(auto vj1 = it1->second.begin(); vj1 != it1->second.end(); ++vj1) {
             if((*vj1)->stop_time_list.size() == 0) {
@@ -162,7 +162,7 @@ void Data::clean(){
                         vjs2 = *vj1;
                     }
 
-                    for(auto rp = (*vj1)->route->route_point_list.begin(); rp != (*vj1)->route->route_point_list.end();++rp) {
+                    for(auto rp = (*vj1)->journey_pattern->journey_pattern_point_list.begin(); rp != (*vj1)->journey_pattern->journey_pattern_point_list.end();++rp) {
                         if(vjs1->stop_time_list.at((*rp)->order)->departure_time > vjs2->stop_time_list.at((*rp)->order)->departure_time) {
                             toErase.insert((*vj2)->uri);
                             ++erase_overlap;
@@ -241,8 +241,8 @@ void Data::transform(navitia::type::PT_Data& data){
     data.networks.resize(this->networks.size());
     std::transform(this->networks.begin(), this->networks.end(), data.networks.begin(), navimake::types::Network::Transformer());
 
-    data.routes.resize(this->routes.size());
-    std::transform(this->routes.begin(), this->routes.end(), data.routes.begin(), navimake::types::Route::Transformer());
+    data.journey_patterns.resize(this->journey_patterns.size());
+    std::transform(this->journey_patterns.begin(), this->journey_patterns.end(), data.journey_patterns.begin(), navimake::types::JourneyPattern::Transformer());
 
     data.stop_times.resize(this->stops.size());
     std::transform(this->stops.begin(), this->stops.end(), data.stop_times.begin(), navimake::types::StopTime::Transformer());
@@ -250,11 +250,11 @@ void Data::transform(navitia::type::PT_Data& data){
     data.connections.resize(this->connections.size());
     std::transform(this->connections.begin(), this->connections.end(), data.connections.begin(), navimake::types::Connection::Transformer());
 
-    data.route_point_connections.resize(this->route_point_connections.size());
-    std::transform(this->route_point_connections.begin(), this->route_point_connections.end(), data.route_point_connections.begin(), navimake::types::RoutePointConnection::Transformer());
+    data.journey_pattern_point_connections.resize(this->journey_pattern_point_connections.size());
+    std::transform(this->journey_pattern_point_connections.begin(), this->journey_pattern_point_connections.end(), data.journey_pattern_point_connections.begin(), navimake::types::JourneyPatternPointConnection::Transformer());
 
-    data.route_points.resize(this->route_points.size());
-    std::transform(this->route_points.begin(), this->route_points.end(), data.route_points.begin(), navimake::types::RoutePoint::Transformer());
+    data.journey_pattern_points.resize(this->journey_pattern_points.size());
+    std::transform(this->journey_pattern_points.begin(), this->journey_pattern_points.end(), data.journey_pattern_points.begin(), navimake::types::JourneyPatternPoint::Transformer());
 
     data.vehicle_journeys.resize(this->vehicle_journeys.size());
     std::transform(this->vehicle_journeys.begin(), this->vehicle_journeys.end(), data.vehicle_journeys.begin(), navimake::types::VehicleJourney::Transformer());
@@ -267,6 +267,10 @@ void Data::transform(navitia::type::PT_Data& data){
 
     data.departments.resize(this->departments.size());
     std::transform(this->departments.begin(), this->departments.end(), data.departments.begin(), navimake::types::Department::Transformer());
+
+    data.routes.resize(this->routes.size());
+    std::transform(this->routes.begin(), this->routes.end(), data.routes.begin(), navimake::types::Route::Transformer());
+
     build_relations(data);
 
 }
@@ -320,47 +324,49 @@ void Data::build_relations(navitia::type::PT_Data &data){
 
     //BOOST_FOREACH(navitia::type::Connection & connection, data.connections){}
 
-    BOOST_FOREACH(navitia::type::RoutePoint & route_point, data.route_points){
-        data.routes.at(route_point.route_idx).route_point_list.push_back(route_point.idx);
-        data.stop_points.at(route_point.stop_point_idx).route_point_list.push_back(route_point.idx);
+    BOOST_FOREACH(navitia::type::JourneyPatternPoint & journey_pattern_point, data.journey_pattern_points){
+        data.journey_patterns.at(journey_pattern_point.journey_pattern_idx).journey_pattern_point_list.push_back(journey_pattern_point.idx);
+        data.stop_points.at(journey_pattern_point.stop_point_idx).journey_pattern_point_list.push_back(journey_pattern_point.idx);
     }
 
     BOOST_FOREACH(navitia::type::StopTime & st, data.stop_times){
         data.vehicle_journeys.at(st.vehicle_journey_idx).stop_time_list.push_back(st.idx);
     }
 
-    BOOST_FOREACH(navitia::type::Route & route, data.routes){
-        if(route.commercial_mode_idx != navitia::type::invalid_idx)
-            data.commercial_modes.at(route.commercial_mode_idx).line_list.push_back(route.line_idx);
-        if(route.line_idx != navitia::type::invalid_idx)
-            data.lines.at(route.line_idx).route_list.push_back(route.idx);
-        std::sort(route.route_point_list.begin(), route.route_point_list.end(), sort_route_points_list(data));
+    BOOST_FOREACH(navitia::type::JourneyPattern & journey_pattern, data.journey_patterns){
+        if(journey_pattern.route_idx != navitia::type::invalid_idx)
+            data.routes.at(journey_pattern.route_idx).journey_pattern_list.push_back(journey_pattern.idx);
+        std::sort(journey_pattern.journey_pattern_point_list.begin(), journey_pattern.journey_pattern_point_list.end(), sort_journey_pattern_points_list(data));
+        std::sort(journey_pattern.vehicle_journey_list.begin(), journey_pattern.vehicle_journey_list.end(), sort_vehicle_journey_list(data));
     }
 
     BOOST_FOREACH(navitia::type::VehicleJourney & vj, data.vehicle_journeys){
-        data.routes[vj.route_idx].vehicle_journey_list.push_back(vj.idx);
+        data.journey_patterns[vj.journey_pattern_idx].vehicle_journey_list.push_back(vj.idx);
 
-        navitia::type::Line & line = data.lines.at(data.routes.at(vj.route_idx).line_idx);
-        if(std::find(line.physical_mode_list.begin(), line.physical_mode_list.end(), vj.physical_mode_idx) == line.physical_mode_list.end())
-            line.physical_mode_list.push_back(vj.physical_mode_idx);
 
-        if(vj.company_idx != navitia::type::invalid_idx){
-            navitia::type::Company & company = data.companies.at(vj.company_idx);
-            if(std::find(line.company_list.begin(), line.company_list.end(), vj.company_idx) == line.company_list.end())
-                line.company_list.push_back(vj.company_idx);
-            if(std::find(company.line_list.begin(), company.line_list.end(), line.idx) == company.line_list.end())
-                company.line_list.push_back(line.idx);
+        if(vj.journey_pattern_idx != navitia::type::invalid_idx){
+            navitia::type::JourneyPattern jp = data.journey_patterns.at(vj.journey_pattern_idx);
+            if(jp.route_idx != navitia::type::invalid_idx){
+                navitia::type::Route route = data.routes.at(jp.route_idx);
+                if(route.line_idx != navitia::type::invalid_idx){
+                    navitia::type::Line & line = data.lines.at(route.line_idx);
+                    if(std::find(line.physical_mode_list.begin(), line.physical_mode_list.end(), vj.physical_mode_idx) == line.physical_mode_list.end())
+                        line.physical_mode_list.push_back(vj.physical_mode_idx);
+
+                    if(vj.company_idx != navitia::type::invalid_idx){
+                        navitia::type::Company & company = data.companies.at(vj.company_idx);
+                        if(std::find(line.company_list.begin(), line.company_list.end(), vj.company_idx) == line.company_list.end())
+                            line.company_list.push_back(vj.company_idx);
+                        if(std::find(company.line_list.begin(), company.line_list.end(), line.idx) == company.line_list.end())
+                            company.line_list.push_back(line.idx);
+                    }
+                }
+            }
         }
-
         std::sort(vj.stop_time_list.begin(), vj.stop_time_list.end());
     }
 
-    BOOST_FOREACH(navitia::type::Route & route, data.routes){
-        std::sort(route.vehicle_journey_list.begin(), route.vehicle_journey_list.end(), sort_vehicle_journey_list(data));
-    }
-
-
-        // BOOST_FOREACH(navitia::type::Company & company, data.companies){}
+    // BOOST_FOREACH(navitia::type::Company & company, data.companies){}
 }
 
 std::string Data::find_shape(navitia::type::PT_Data &data) {

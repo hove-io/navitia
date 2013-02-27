@@ -15,22 +15,23 @@ namespace navimake{
       */
 class Data{
 public:
-    std::vector<navimake::types::Network*> networks; //OK
-    std::vector<navimake::types::CommercialMode*> commercial_modes; //OK
-    std::vector<navimake::types::Line*> lines; //OK
-    std::vector<navimake::types::PhysicalMode*> modes; //OK
-    std::vector<navimake::types::City*> cities; //OK
-    std::vector<navimake::types::StopArea*> stop_areas; //OK
-    std::vector<navimake::types::StopPoint*> stop_points; //OK
-    std::vector<navimake::types::VehicleJourney*> vehicle_journeys;
-    std::vector<navimake::types::Route*> routes; //OK
-    std::vector<navimake::types::StopTime*> stops; //OK
-    std::vector<navimake::types::Connection*> connections; //OK
-    std::vector<navimake::types::RoutePoint*> route_points; //OK
-    std::vector<navimake::types::District*> districts; //OK
-    std::vector<navimake::types::Department*> departments; //OK
-    std::vector<navimake::types::ValidityPattern*> validity_patterns;
-    std::vector<navimake::types::RoutePointConnection*> route_point_connections;
+    std::vector<types::Network*> networks;
+    std::vector<types::CommercialMode*> commercial_modes;
+    std::vector<types::Line*> lines;
+    std::vector<types::PhysicalMode*> modes;
+    std::vector<types::City*> cities;
+    std::vector<types::StopArea*> stop_areas;
+    std::vector<types::StopPoint*> stop_points;
+    std::vector<types::VehicleJourney*> vehicle_journeys;
+    std::vector<types::JourneyPattern*> journey_patterns;
+    std::vector<types::StopTime*> stops;
+    std::vector<types::Connection*> connections;
+    std::vector<types::JourneyPatternPoint*> journey_pattern_points;
+    std::vector<types::District*> districts;
+    std::vector<types::Department*> departments;
+    std::vector<types::ValidityPattern*> validity_patterns;
+    std::vector<types::JourneyPatternPointConnection*> journey_pattern_point_connections;
+    std::vector<types::Route*> routes;
 
 
     /** Foncteur permettant de comparer les objets en passant des pointeurs vers ces objets */
@@ -115,11 +116,11 @@ public:
         }
     };
 
-    struct sort_route_points_list {
+    struct sort_journey_pattern_points_list {
         const navitia::type::PT_Data & data;
-        sort_route_points_list(const navitia::type::PT_Data & data) : data(data){}
+        sort_journey_pattern_points_list(const navitia::type::PT_Data & data) : data(data){}
         bool operator ()(unsigned int i, unsigned int j) const {
-            return data.route_points.at(i).order < data.route_points.at(j).order;
+            return data.journey_pattern_points.at(i).order < data.journey_pattern_points.at(j).order;
         }
     };
 
@@ -171,11 +172,11 @@ public:
         BOOST_FOREACH(navimake::types::VehicleJourney* vehicle_journey, vehicle_journeys){
             delete vehicle_journey;
         }
-        BOOST_FOREACH(navimake::types::Route* route, routes){
-            delete route;
+        BOOST_FOREACH(navimake::types::JourneyPattern* journey_pattern, journey_patterns){
+            delete journey_pattern;
         }
-        BOOST_FOREACH(navimake::types::RoutePoint* route_point, route_points){
-            delete route_point;
+        BOOST_FOREACH(navimake::types::JourneyPatternPoint* journey_pattern_point, journey_pattern_points){
+            delete journey_pattern_point;
         }
         BOOST_FOREACH(navimake::types::StopTime* stop, stops){
             delete stop;

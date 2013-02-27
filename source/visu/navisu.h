@@ -122,7 +122,7 @@ public:
     template<class T> void setItem(int col, int row, const T & str);
     void show_validity_pattern();
     void show_line();
-    void show_route();
+    void show_journey_pattern();
     void show_vehicle_journey();
     void show_stop_point();
     void show_stop_area();
@@ -132,7 +132,7 @@ public:
     void show_commercial_mode();
     void show_city();
     void show_connection();
-    void show_route_point();
+    void show_journey_pattern_point();
     void show_district();
     void show_department();
     void show_company();

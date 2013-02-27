@@ -80,8 +80,6 @@ bool Line::operator<(const Line& other) const {
     }
 }
 
-
-
 bool Route::operator<(const Route& other) const {
     if(this->line == other.line){
         return this->uri <  other.uri;
@@ -90,11 +88,19 @@ bool Route::operator<(const Route& other) const {
     }
 }
 
-bool RoutePoint::operator<(const RoutePoint& other) const {
+bool JourneyPattern::operator<(const JourneyPattern& other) const {
     if(this->route == other.route){
-        return this->order < other.order;
+        return this->uri <  other.uri;
     }else{
         return *(this->route) < *(other.route);
+    }
+}
+
+bool JourneyPatternPoint::operator<(const JourneyPatternPoint& other) const {
+    if(this->journey_pattern == other.journey_pattern){
+        return this->order < other.order;
+    }else{
+        return *(this->journey_pattern) < *(other.journey_pattern);
     }
 
 }
@@ -121,11 +127,11 @@ bool StopPoint::operator<(const StopPoint& other) const {
 
 
 bool VehicleJourney::operator<(const VehicleJourney& other) const {
-    if(this->route == other.route){
+    if(this->journey_pattern == other.journey_pattern){
         // On compare les pointeurs pour avoir un ordre total (fonctionnellement osef du tri, mais techniquement c'est important)
         return this->stop_time_list.front() < other.stop_time_list.front();
     }else{
-        return *(this->route) < *(other.route);
+        return *(this->journey_pattern) < *(other.journey_pattern);
     }
 }
 
@@ -137,12 +143,12 @@ bool Connection::operator<(const Connection& other) const{
     return *(this->departure_stop_point) < *(other.departure_stop_point);
 }
 
-bool RoutePointConnection::operator<(const RoutePointConnection& other) const {
-    return *(this->departure_route_point) < *(other.departure_route_point);
+bool JourneyPatternPointConnection::operator<(const JourneyPatternPointConnection& other) const {
+    return *(this->departure_journey_pattern_point) < *(other.departure_journey_pattern_point);
 }
 bool StopTime::operator<(const StopTime& other) const {
     if(this->vehicle_journey == other.vehicle_journey){
-        return this->route_point->order < other.route_point->order;
+        return this->journey_pattern_point->order < other.journey_pattern_point->order;
     } else {
         return *this->vehicle_journey < *other.vehicle_journey;
     }
@@ -162,7 +168,6 @@ navitia::type::StopArea StopArea::Transformer::operator()(const StopArea& stop_a
     sa.coord = stop_area.coord;
     sa.comment = stop_area.comment;
     sa.name = stop_area.name;
-    sa.is_adapted = stop_area.is_adapted;
 
     sa.additional_data = stop_area.additional_data;
     sa.properties = stop_area.properties;
@@ -203,8 +208,6 @@ nt::StopPoint StopPoint::Transformer::operator()(const StopPoint& stop_point){
     nt_stop_point.address_name      = stop_point.address_name;
     nt_stop_point.address_number    = stop_point.address_number;       
     nt_stop_point.address_type_name = stop_point.address_type_name;
-
-    nt_stop_point.is_adapted = stop_point.is_adapted;
     
     if(stop_point.stop_area != NULL)
         nt_stop_point.stop_area_idx = stop_point.stop_area->idx;
@@ -277,6 +280,17 @@ nt::Department Department::Transformer::operator()(const Department& department)
     return nt_department;
 }
 
+nt::Route Route::Transformer::operator()(const Route& route){
+    navitia::type::Route nt_route;
+    nt_route.id = route.id;
+    nt_route.idx = route.idx;
+    nt_route.uri = route.uri;
+    nt_route.name = route.name;
+    if(route.line != NULL)
+        nt_route.line_idx = route.line->idx;
+
+    return nt_route;
+}
 
 nt::District District::Transformer::operator()(const District& district){
     navitia::type::District nt_district;
@@ -305,23 +319,21 @@ nt::Network Network::Transformer::operator()(const Network& network){
     return nt_network;
 }
 
-nt::Route Route::Transformer::operator()(const Route& route){
-    nt::Route nt_route;
-    nt_route.id = route.id;
-    nt_route.idx = route.idx;
-    nt_route.uri = route.uri;
-    nt_route.name = route.name;
-    nt_route.is_frequence = route.is_frequence;
-    nt_route.is_forward = route.is_forward;
-    nt_route.is_adapted = route.is_adapted;
+nt::JourneyPattern JourneyPattern::Transformer::operator()(const JourneyPattern& journey_pattern){
+    nt::JourneyPattern nt_journey_pattern;
+    nt_journey_pattern.id = journey_pattern.id;
+    nt_journey_pattern.idx = journey_pattern.idx;
+    nt_journey_pattern.uri = journey_pattern.uri;
+    nt_journey_pattern.name = journey_pattern.name;
+    nt_journey_pattern.is_frequence = journey_pattern.is_frequence;
     
-    if(route.line != NULL)
-        nt_route.line_idx = route.line->idx;
+    if(journey_pattern.route != NULL)
+        nt_journey_pattern.route_idx = journey_pattern.route->idx;
 
-    if(route.physical_mode != NULL && route.physical_mode->commercial_mode != NULL)
-        nt_route.commercial_mode_idx = route.physical_mode->commercial_mode->idx;
+    if(journey_pattern.physical_mode != NULL && journey_pattern.physical_mode->commercial_mode != NULL)
+        nt_journey_pattern.commercial_mode_idx = journey_pattern.physical_mode->commercial_mode->idx;
 
-    return nt_route;
+    return nt_journey_pattern;
 }
 
 nt::StopTime StopTime::Transformer::operator()(const StopTime& stop){
@@ -336,11 +348,10 @@ nt::StopTime StopTime::Transformer::operator()(const StopTime& stop){
     nt_stop.properties[nt::StopTime::DROP_OFF] = stop.drop_off_allowed;
     nt_stop.properties[nt::StopTime::PICK_UP] = stop.pick_up_allowed;
     nt_stop.properties[nt::StopTime::IS_FREQUENCY] = stop.is_frequency;
-    nt_stop.properties[nt::StopTime::IS_ADAPTED] = stop.is_adapted;
 
     nt_stop.local_traffic_zone = stop.local_traffic_zone;
 
-    nt_stop.route_point_idx = stop.route_point->idx;
+    nt_stop.journey_pattern_point_idx = stop.journey_pattern_point->idx;
     nt_stop.vehicle_journey_idx = stop.vehicle_journey->idx;
     return nt_stop;
 
@@ -358,36 +369,36 @@ nt::Connection Connection::Transformer::operator()(const Connection& connection)
     return nt_connection;
 }
 
-nt::RoutePointConnection 
-    RoutePointConnection::Transformer::operator()(const RoutePointConnection& route_point_connection) {
-    nt::RoutePointConnection nt_rpc;
-    nt_rpc.id = route_point_connection.id;
-    nt_rpc.idx = route_point_connection.idx;
-    nt_rpc.uri = route_point_connection.uri;
-    nt_rpc.departure_route_point_idx = route_point_connection.departure_route_point->idx;
-    nt_rpc.destination_route_point_idx = route_point_connection.destination_route_point->idx;    
-    nt_rpc.length = route_point_connection.length;
-    switch(route_point_connection.route_point_connection_kind) {
+nt::JourneyPatternPointConnection 
+    JourneyPatternPointConnection::Transformer::operator()(const JourneyPatternPointConnection& journey_pattern_point_connection) {
+    nt::JourneyPatternPointConnection nt_rpc;
+    nt_rpc.id = journey_pattern_point_connection.id;
+    nt_rpc.idx = journey_pattern_point_connection.idx;
+    nt_rpc.uri = journey_pattern_point_connection.uri;
+    nt_rpc.departure_journey_pattern_point_idx = journey_pattern_point_connection.departure_journey_pattern_point->idx;
+    nt_rpc.destination_journey_pattern_point_idx = journey_pattern_point_connection.destination_journey_pattern_point->idx;    
+    nt_rpc.length = journey_pattern_point_connection.length;
+    switch(journey_pattern_point_connection.journey_pattern_point_connection_kind) {
         case Extension: nt_rpc.connection_kind = nt::ConnectionKind::extension; break;
         case Guarantee: nt_rpc.connection_kind = nt::ConnectionKind::guarantee; break;
-        case UndefinedRoutePointConnectionKind: nt_rpc.connection_kind = nt::ConnectionKind::undefined; break;
+        case UndefinedJourneyPatternPointConnectionKind: nt_rpc.connection_kind = nt::ConnectionKind::undefined; break;
     };
 
     return nt_rpc;
 }
 
-nt::RoutePoint RoutePoint::Transformer::operator()(const RoutePoint& route_point){
-    nt::RoutePoint nt_route_point;
-    nt_route_point.id = route_point.id;
-    nt_route_point.idx = route_point.idx;
-    nt_route_point.uri = route_point.uri;
-    nt_route_point.order = route_point.order;
-    nt_route_point.main_stop_point = route_point.main_stop_point;
-    nt_route_point.fare_section = route_point.fare_section;
+nt::JourneyPatternPoint JourneyPatternPoint::Transformer::operator()(const JourneyPatternPoint& journey_pattern_point){
+    nt::JourneyPatternPoint nt_journey_pattern_point;
+    nt_journey_pattern_point.id = journey_pattern_point.id;
+    nt_journey_pattern_point.idx = journey_pattern_point.idx;
+    nt_journey_pattern_point.uri = journey_pattern_point.uri;
+    nt_journey_pattern_point.order = journey_pattern_point.order;
+    nt_journey_pattern_point.main_stop_point = journey_pattern_point.main_stop_point;
+    nt_journey_pattern_point.fare_section = journey_pattern_point.fare_section;
     
-    nt_route_point.stop_point_idx = route_point.stop_point->idx;
-    nt_route_point.route_idx = route_point.route->idx;
-    return nt_route_point;
+    nt_journey_pattern_point.stop_point_idx = journey_pattern_point.stop_point->idx;
+    nt_journey_pattern_point.journey_pattern_idx = journey_pattern_point.journey_pattern->idx;
+    return nt_journey_pattern_point;
 }
 
 nt::VehicleJourney VehicleJourney::Transformer::operator()(const VehicleJourney& vj){
@@ -397,7 +408,6 @@ nt::VehicleJourney VehicleJourney::Transformer::operator()(const VehicleJourney&
     nt_vj.name = vj.name;
     nt_vj.uri = vj.uri;
     nt_vj.comment = vj.comment;
-    nt_vj.is_adapted = vj.is_adapted;
 
     if(vj.company != NULL)
         nt_vj.company_idx = vj.company->idx;
@@ -405,7 +415,7 @@ nt::VehicleJourney VehicleJourney::Transformer::operator()(const VehicleJourney&
     if(vj.physical_mode != NULL)
         nt_vj.physical_mode_idx = vj.physical_mode->idx;
 
-    nt_vj.route_idx = vj.route->idx;
+    nt_vj.journey_pattern_idx = vj.journey_pattern->idx;
 
     if(vj.validity_pattern != NULL)
         nt_vj.validity_pattern_idx = vj.validity_pattern->idx;

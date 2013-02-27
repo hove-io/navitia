@@ -46,20 +46,21 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
     if(parser.pb_response.has_error())
         return parser.pb_response;
 
-    if(parser.route_points.size() == 0)
+    if(parser.journey_pattern_points.size() == 0)
         return parser.pb_response;
 
     pbnavitia::DepartureBoard * dep_board = parser.pb_response.mutable_departure_board();
 
     std::map<stop_point_line, vector_dt_st> map_line_stop_point;
-    // On regroupe entre eux les stop_times appartenant au meme couple (stop_point, line)
-    for(type::idx_t route_point_idx : parser.route_points) {
-        auto stop_point_idx = data.pt_data.route_points[route_point_idx].stop_point_idx;
-        auto line_idx = data.pt_data.routes[data.pt_data.route_points[route_point_idx].route_idx].line_idx;
+    // On regroupe entre eux les stop_times appartenant au meme couple (stop_point, route)
+    // On veut en effet afficher les départs regroupés par route (une route étant une vague direction commerciale
+    for(type::idx_t journey_pattern_point_idx : parser.journey_pattern_points) {
+        auto stop_point_idx = data.pt_data.journey_pattern_points[journey_pattern_point_idx].stop_point_idx;
+        auto route_idx = data.pt_data.journey_patterns[data.pt_data.journey_pattern_points[journey_pattern_point_idx].journey_pattern_idx].route_idx;
 
-        auto stop_times = get_stop_times({route_point_idx}, parser.date_time, parser.max_datetime, std::numeric_limits<int>::max(), data);
+        auto stop_times = get_stop_times({journey_pattern_point_idx}, parser.date_time, parser.max_datetime, std::numeric_limits<int>::max(), data);
 
-        auto key = std::make_pair(stop_point_idx, line_idx);
+        auto key = std::make_pair(stop_point_idx, route_idx);
         auto iter = map_line_stop_point.find(key);
         if(iter == map_line_stop_point.end()) {
             iter = map_line_stop_point.insert(std::make_pair(key, vector_dt_st())).first;

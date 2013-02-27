@@ -31,7 +31,7 @@ std::vector<Departure_Type> getDepartures(const std::vector<std::pair<type::idx_
     std::vector<Departure_Type> result;
 
     for(auto dep_dist : departs) {
-        for(auto rpidx : data.pt_data.stop_points[dep_dist.first].route_point_list) {
+        for(auto rpidx : data.pt_data.stop_points[dep_dist.first].journey_pattern_point_list) {
             Departure_Type d;
             d.count = 0;
             d.rpidx = rpidx;
@@ -59,7 +59,7 @@ std::vector<Departure_Type> getParetoFront(bool clockwise, const std::vector<std
     for(unsigned int i=0; i < labels.size(); ++i) {
         type::idx_t best_rp = type::invalid_idx;
         for(auto spid_dist : destinations) {
-            for(auto rpidx : data.pt_data.stop_points[spid_dist.first].route_point_list) {
+            for(auto rpidx : data.pt_data.stop_points[spid_dist.first].journey_pattern_point_list) {
                 if((labels[i][rpidx].type != uninitialized) &&
                         ((((clockwise && ((labels[i][rpidx].departure-(spid_dist.second/walking_speed)) > best_dt)))) || (!clockwise && ((labels[i][rpidx].arrival+(spid_dist.second/1.38)) < best_dt)))) {
                     best_rp = rpidx;
@@ -85,14 +85,14 @@ std::vector<Departure_Type> getParetoFront(bool clockwise, const std::vector<std
             if(clockwise) {
                 s.upper_bound = last_time;
                 for(auto spid_dep : departs) {
-                    if(data.pt_data.route_points[final_rpidx].stop_point_idx == spid_dep.first) {
+                    if(data.pt_data.journey_pattern_points[final_rpidx].stop_point_idx == spid_dep.first) {
                         s.upper_bound = s.upper_bound + (spid_dep.second/walking_speed);
                     }
                 }
             } else {
                 s.upper_bound = last_time;
                 for(auto spid_dep : departs) {
-                    if(data.pt_data.route_points[final_rpidx].stop_point_idx == spid_dep.first) {
+                    if(data.pt_data.journey_pattern_points[final_rpidx].stop_point_idx == spid_dep.first) {
                         s.upper_bound = s.upper_bound - (spid_dep.second/walking_speed);
                     }
                 }
@@ -120,7 +120,7 @@ std::vector<Departure_Type> getWalkingSolutions(bool clockwise, const std::vecto
             Departure_Type best_departure;
             best_departure.ratio = 2;
             best_departure.rpidx = type::invalid_idx;
-            for(auto rpidx : data.pt_data.stop_points[spid_dist.first].route_point_list) {
+            for(auto rpidx : data.pt_data.stop_points[spid_dist.first].journey_pattern_point_list) {
                 if(labels[i][rpidx].type != uninitialized) {
                     float lost_time;
                     if(clockwise)
@@ -147,14 +147,14 @@ std::vector<Departure_Type> getWalkingSolutions(bool clockwise, const std::vecto
                         if(clockwise) {
                             s.upper_bound = last_time;
                             for(auto spid_dep : departs) {
-                                if(data.pt_data.route_points[final_rpidx].stop_point_idx == spid_dep.first) {
+                                if(data.pt_data.journey_pattern_points[final_rpidx].stop_point_idx == spid_dep.first) {
                                     s.upper_bound = s.upper_bound + (spid_dep.second/walking_speed);
                                 }
                             }
                         } else {
                             s.upper_bound = last_time;
                             for(auto spid_dep : departs) {
-                                if(data.pt_data.route_points[final_rpidx].stop_point_idx == spid_dep.first) {
+                                if(data.pt_data.journey_pattern_points[final_rpidx].stop_point_idx == spid_dep.first) {
                                     s.upper_bound = s.upper_bound - (spid_dep.second/walking_speed);
                                 }
                             }
@@ -165,11 +165,11 @@ std::vector<Departure_Type> getWalkingSolutions(bool clockwise, const std::vecto
                 }
             }
             if(best_departure.rpidx != type::invalid_idx) {
-                type::idx_t route = data.pt_data.route_points[best_departure.rpidx].route_idx;
-                if(tmp.find(route) == tmp.end()) {
-                    tmp.insert(std::make_pair(route, best_departure));
-                } else if(tmp[route].ratio > best_departure.ratio) {
-                    tmp[route] = best_departure;
+                type::idx_t journey_pattern = data.pt_data.journey_pattern_points[best_departure.rpidx].journey_pattern_idx;
+                if(tmp.find(journey_pattern) == tmp.end()) {
+                    tmp.insert(std::make_pair(journey_pattern, best_departure));
+                } else if(tmp[journey_pattern].ratio > best_departure.ratio) {
+                    tmp[journey_pattern] = best_departure;
                 }
             }
 
@@ -196,7 +196,7 @@ std::pair<type::idx_t, navitia::type::DateTime> getFinalRpidAndDate(int count, t
     while(labels[cnt][current_rpid].type != depart) {
         if(labels[cnt][current_rpid].type == vj) {
             const type::StopTime &st1 = data.pt_data.stop_times[labels[cnt][current_rpid].stop_time_idx];
-            const type::StopTime &st2 = data.pt_data.stop_times[data.pt_data.vehicle_journeys[st1.vehicle_journey_idx].stop_time_list[data.pt_data.route_points[labels[cnt][current_rpid].rpid_embarquement].order]];
+            const type::StopTime &st2 = data.pt_data.stop_times[data.pt_data.vehicle_journeys[st1.vehicle_journey_idx].stop_time_list[data.pt_data.journey_pattern_points[labels[cnt][current_rpid].rpid_embarquement].order]];
             if(!clockwise)
                 last_time.updatereverse(st2.arrival_time);
             else
@@ -219,7 +219,7 @@ float getWalkingTime(int count, type::idx_t rpid, const std::vector<std::pair<ty
     float walking_time = 0;
     //Marche à la fin
     for(auto dest_dist : destinations) {
-        if(dest_dist.first == data.pt_data.route_points[current_rpid].stop_point_idx) {
+        if(dest_dist.first == data.pt_data.journey_pattern_points[current_rpid].stop_point_idx) {
             walking_time = dest_dist.second;
         }
     }
@@ -240,7 +240,7 @@ float getWalkingTime(int count, type::idx_t rpid, const std::vector<std::pair<ty
     }
     //Marche au départ
     for(auto dep_dist : departs) {
-        if(dep_dist.first == data.pt_data.route_points[current_rpid].stop_point_idx)
+        if(dep_dist.first == data.pt_data.journey_pattern_points[current_rpid].stop_point_idx)
             walking_time += dep_dist.second;
     }
 

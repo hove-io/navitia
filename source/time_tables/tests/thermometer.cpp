@@ -271,9 +271,9 @@ std::vector<vector_idx> vec_tmp = {
     t.generate_thermometer(vec_tmp);
     auto result = t.get_thermometer();
     bool error = false;
-    for(auto route : vec_tmp) {
+    for(auto journey_pattern : vec_tmp) {
         try {
-            t.match_route(route);
+            t.match_journey_pattern(journey_pattern);
         } catch(Thermometer::cant_match cm) {
             error = true;
         }

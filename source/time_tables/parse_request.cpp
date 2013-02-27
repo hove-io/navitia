@@ -38,7 +38,7 @@ request_parser::request_parser(const std::string &API, const std::string &reques
     max_datetime = date_time + duration;
     if(request!= "") {
         try {
-            route_points = navitia::ptref::make_query(type::Type_e::eRoutePoint, request, data);
+            journey_pattern_points = navitia::ptref::make_query(type::Type_e::eJourneyPatternPoint, request, data);
         } catch(ptref::ptref_parsing_error parse_error) {
             switch(parse_error.type){
                 case ptref::ptref_parsing_error::error_type::partial_error: pb_response.set_error(API+" / PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + parse_error.more + "<<"); break;

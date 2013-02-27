@@ -83,17 +83,17 @@ int main(int argc, char * argv[])
 
 
     std::cout << "line: " << data.lines.size() << std::endl;
-    std::cout << "route: " << data.routes.size() << std::endl;
+    std::cout << "journey_pattern: " << data.journey_patterns.size() << std::endl;
     std::cout << "stoparea: " << data.stop_areas.size() << std::endl;
     std::cout << "stoppoint: " << data.stop_points.size() << std::endl;
     std::cout << "vehiclejourney: " << data.vehicle_journeys.size() << std::endl;
     std::cout << "stop: " << data.stops.size() << std::endl;
     std::cout << "connection: " << data.connections.size() << std::endl;
-    std::cout << "route points: " << data.route_points.size() << std::endl;
+    std::cout << "journey_pattern points: " << data.journey_pattern_points.size() << std::endl;
     std::cout << "city: " << data.cities.size() << std::endl;
     std::cout << "modes: " << data.modes.size() << std::endl;
     std::cout << "validity pattern : " << data.validity_patterns.size() << std::endl;
-    std::cout << "route point connections : " << data.route_point_connections.size() << std::endl;
+    std::cout << "journey_pattern point connections : " << data.journey_pattern_point_connections.size() << std::endl;
     std::cout << "voies (rues) : " << nav_data.geo_ref.ways.size() << std::endl;
 
 

@@ -16,13 +16,13 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     parser.fill(data);
 
     BOOST_CHECK_EQUAL(data.lines.size(), 2);
-    BOOST_CHECK_EQUAL(data.routes.size(), 3);
+    BOOST_CHECK_EQUAL(data.journey_patterns.size(), 3);
     BOOST_CHECK_EQUAL(data.stop_areas.size(), 6);
     BOOST_CHECK_EQUAL(data.stop_points.size(), 11);
     BOOST_CHECK_EQUAL(data.vehicle_journeys.size(), 8);
     BOOST_CHECK_EQUAL(data.stops.size(), 32);
     BOOST_CHECK_EQUAL(data.connections.size(), 0);
-    BOOST_CHECK_EQUAL(data.route_points.size(), 12);
+    BOOST_CHECK_EQUAL(data.journey_pattern_points.size(), 12);
 
 
     navimake::types::Line* line = data.lines[0];
@@ -31,8 +31,8 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     BOOST_CHECK_EQUAL(line->color, "");
 
 
-    navimake::types::Route* route = data.routes[0];
-    BOOST_CHECK_EQUAL(route->line->code, "4");
+    navimake::types::JourneyPattern* journey_pattern = data.journey_patterns[0];
+    BOOST_CHECK_EQUAL(journey_pattern->route->line->code, "4");
 
     navimake::types::StopArea* stop_area = data.stop_areas[0];
     BOOST_CHECK_EQUAL(stop_area->name, "Gare du Nord");
@@ -50,15 +50,15 @@ BOOST_AUTO_TEST_CASE(parse_gtfs){
     navimake::types::VehicleJourney* vj = data.vehicle_journeys[0];
     BOOST_CHECK_EQUAL(vj->uri, "41");
     BOOST_CHECK_EQUAL(vj->name, "Porte de Clignancourt");
-    BOOST_CHECK_EQUAL(vj->route, route);
+    BOOST_CHECK_EQUAL(vj->journey_pattern, journey_pattern);
 
     navimake::types::StopTime* stop = data.stops[0];
     BOOST_CHECK_EQUAL(stop->ODT, false);
     BOOST_CHECK_EQUAL(stop->arrival_time, 21600);
     BOOST_CHECK_EQUAL(stop->departure_time, 21601);
-    BOOST_CHECK_EQUAL(stop->route_point->stop_point->uri, "frpno:metro4");
-    BOOST_CHECK_EQUAL(stop->route_point->stop_point->name, "Gare du Nord metro ligne 4");
-    BOOST_CHECK_EQUAL(stop->route_point->stop_point, data.stop_points[2]);
+    BOOST_CHECK_EQUAL(stop->journey_pattern_point->stop_point->uri, "frpno:metro4");
+    BOOST_CHECK_EQUAL(stop->journey_pattern_point->stop_point->name, "Gare du Nord metro ligne 4");
+    BOOST_CHECK_EQUAL(stop->journey_pattern_point->stop_point, data.stop_points[2]);
 
 }
 

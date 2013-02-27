@@ -26,7 +26,6 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* st
     stop_area->set_name(sa.name);
     stop_area->mutable_coord()->set_lon(sa.coord.lon());
     stop_area->mutable_coord()->set_lat(sa.coord.lat());
-    stop_area->set_is_adapted(sa.is_adapted);
     if(max_depth > 0 && sa.city_idx != nt::invalid_idx)
         fill_pb_object(sa.city_idx, data, stop_area->mutable_city(), max_depth-1, now, action_period);
 
@@ -43,7 +42,6 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
     stop_point->set_name(sp.name);
     stop_point->mutable_coord()->set_lon(sp.coord.lon());
     stop_point->mutable_coord()->set_lat(sp.coord.lat());
-    stop_point->set_is_adapted(sp.is_adapted);
     if(max_depth > 0 && sp.city_idx != nt::invalid_idx)
         fill_pb_object(sp.city_idx, data, stop_point->mutable_city(), max_depth-1, now, action_period);
     if(max_depth > 0 && sp.stop_area_idx != nt::invalid_idx)
@@ -72,26 +70,34 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * ad
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line, int,
         const pt::ptime&, const pt::time_period&){
     navitia::type::Line l = data.pt_data.lines.at(idx);
-    line->set_forward_name(l.forward_name);
-    line->set_backward_name(l.backward_name);
     line->set_code(l.code);
     line->set_color(l.color);
     line->set_name(l.name);
     line->set_uri(l.uri);
 }
 
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::JourneyPattern * journey_pattern, int max_depth,
+        const pt::ptime& now, const pt::time_period& action_period){
+    navitia::type::JourneyPattern r = data.pt_data.journey_patterns.at(idx);
+    journey_pattern->set_name(r.name);
+    journey_pattern->set_id(r.id);
+    journey_pattern->set_uri(r.uri);
+    if(max_depth > 0 && r.route_idx != type::invalid_idx)
+        fill_pb_object(r.route_idx, data, journey_pattern->mutable_route(), max_depth - 1, now, action_period);
+
+    BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(r.uri, now, action_period)){
+        fill_message(message, data, journey_pattern->add_messages(), max_depth-1, now, action_period);
+    }
+}
+
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Route * route, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period){
     navitia::type::Route r = data.pt_data.routes.at(idx);
     route->set_name(r.name);
-    route->set_id(r.id);
     route->set_uri(r.uri);
+    route->set_id(r.id);
     if(max_depth > 0 && r.line_idx != type::invalid_idx)
         fill_pb_object(r.line_idx, data, route->mutable_line(), max_depth - 1, now, action_period);
-
-    BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(r.uri, now, action_period)){
-        fill_message(message, data, route->add_messages(), max_depth-1, now, action_period);
-    }
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Network * network, int,
@@ -140,9 +146,8 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::VehicleJourn
     navitia::type::VehicleJourney vj = data.pt_data.vehicle_journeys.at(idx);
     vehicle_journey->set_name(vj.name);
     vehicle_journey->set_uri(vj.uri);
-    vehicle_journey->set_is_adapted(vj.is_adapted);
-    if(vj.route_idx != type::invalid_idx && max_depth > 0)
-        fill_pb_object(vj.route_idx, data, vehicle_journey->mutable_route(), max_depth-1, now, action_period);
+    if(vj.journey_pattern_idx != type::invalid_idx && max_depth > 0)
+        fill_pb_object(vj.journey_pattern_idx, data, vehicle_journey->mutable_journey_pattern(), max_depth-1, now, action_period);
 
     if(max_depth > 0) {
         for(type::idx_t stop_time_idx : vj.stop_time_list) {
@@ -163,29 +168,28 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopTime
     stop_time->set_arrival_time(boost::posix_time::to_iso_string(p));
     p = d +  boost::posix_time::seconds(st.departure_time);
     stop_time->set_arrival_time(boost::posix_time::to_iso_string(p));
-    stop_time->set_is_adapted(st.is_adapted());
     stop_time->set_pickup_allowed(st.pick_up_allowed());
     stop_time->set_drop_off_allowed(st.drop_off_allowed());
-    if(st.route_point_idx != type::invalid_idx && max_depth > 0)
-        fill_pb_object(st.route_point_idx, data, stop_time->mutable_route_point(), max_depth-1, now, action_period);
+    if(st.journey_pattern_point_idx != type::invalid_idx && max_depth > 0)
+        fill_pb_object(st.journey_pattern_point_idx, data, stop_time->mutable_journey_pattern_point(), max_depth-1, now, action_period);
     if(st.vehicle_journey_idx != type::invalid_idx && max_depth > 0)
         fill_pb_object(st.vehicle_journey_idx, data, stop_time->mutable_vehicle_journey(), max_depth-1, now, action_period);
 }
 
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::RoutePoint * route_point, int max_depth,
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::JourneyPatternPoint * journey_pattern_point, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period){
-    navitia::type::RoutePoint rp = data.pt_data.route_points.at(idx);
-    route_point->set_id(rp.id);
-    route_point->set_uri(rp.uri);
-    route_point->set_order(rp.order);
+    navitia::type::JourneyPatternPoint rp = data.pt_data.journey_pattern_points.at(idx);
+    journey_pattern_point->set_id(rp.id);
+    journey_pattern_point->set_uri(rp.uri);
+    journey_pattern_point->set_order(rp.order);
     if(rp.stop_point_idx != type::invalid_idx && max_depth > 0)
-        fill_pb_object(rp.stop_point_idx, data, route_point->mutable_stop_point(), max_depth - 1, now, action_period);
-    if(rp.route_idx != type::invalid_idx && max_depth > 0)
-        fill_pb_object(rp.route_idx, data, route_point->mutable_route(), max_depth - 1, now, action_period);
+        fill_pb_object(rp.stop_point_idx, data, journey_pattern_point->mutable_stop_point(), max_depth - 1, now, action_period);
+    if(rp.journey_pattern_idx != type::invalid_idx && max_depth > 0)
+        fill_pb_object(rp.journey_pattern_idx, data, journey_pattern_point->mutable_journey_pattern(), max_depth - 1, now, action_period);
 
     BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(rp.uri, now, action_period)){
-        fill_message(message, data, route_point->add_messages(), max_depth-1, now, action_period);
+        fill_message(message, data, journey_pattern_point->add_messages(), max_depth-1, now, action_period);
     }
 }
 

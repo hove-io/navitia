@@ -22,8 +22,10 @@ struct PT_Data : boost::noncopyable{
     std::vector<CommercialMode> commercial_modes;
     std::vector<City> cities;
     std::vector<Connection> connections;
-    std::vector<RoutePointConnection> route_point_connections;
-    std::vector<RoutePoint> route_points;
+
+    std::vector<JourneyPattern> journey_patterns;
+    std::vector<JourneyPatternPointConnection> journey_pattern_point_connections;
+    std::vector<JourneyPatternPoint> journey_pattern_points;
 
     std::vector<District> districts;
     std::vector<Department> departments;
@@ -48,7 +50,7 @@ struct PT_Data : boost::noncopyable{
     // En attendant on utilise std::map car on sait le sérialiser...
     typedef std::map<std::string, idx_t> ExtCodeMap;
     ExtCodeMap line_map;
-    ExtCodeMap route_map;
+    ExtCodeMap journey_pattern_map;
     ExtCodeMap vehicle_journey_map;
     ExtCodeMap stop_area_map;
     ExtCodeMap stop_point_map;
@@ -60,6 +62,7 @@ struct PT_Data : boost::noncopyable{
     ExtCodeMap department_map;
     ExtCodeMap company_map;
     ExtCodeMap country_map;
+    ExtCodeMap routes_map;
 
     //Message
     MessageHolder message_holder;
@@ -71,17 +74,17 @@ struct PT_Data : boost::noncopyable{
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar
                 // Les listes de données
-                & validity_patterns & lines & stop_points & stop_areas & stop_times & routes
-                & vehicle_journeys & route_points & commercial_modes & physical_modes & cities & networks
+                & validity_patterns & lines & stop_points & stop_areas & stop_times & journey_patterns & routes
+                & vehicle_journeys & journey_pattern_points & commercial_modes & physical_modes & cities & networks
                 // Les firstLetter
                 & stop_area_autocomplete & city_autocomplete & stop_point_autocomplete
                 // Les map d'externalcode
-                & line_map & route_map & vehicle_journey_map & stop_area_map & stop_point_map
+                & line_map & journey_pattern_map & vehicle_journey_map & stop_area_map & stop_point_map
                 & network_map & physical_mode_map & commercial_mode_map & city_map & district_map & department_map
                 & company_map & country_map
                 // Les proximity list
                 & stop_area_proximity_list & stop_point_proximity_list & city_proximity_list
-                & connections & stop_point_connections & route_point_connections;
+                & connections & stop_point_connections & journey_pattern_point_connections;
     }
 
     /** Initialise tous les indexes
@@ -144,12 +147,12 @@ struct PT_Data : boost::noncopyable{
     /** Construit une nouvelle structure de correspondance */
     void build_connections();
 
-    /** Retourne la correspondance entre deux route point
+    /** Retourne la correspondance entre deux journey_pattern point
      *
      * Cela peut varier pour les correspondances garanties ou les prolongements de service
      * Dans le cas normal, il s'agit juste du temps de sécurité
     */
-    Connection route_point_connection(idx_t, idx_t){
+    Connection journey_pattern_point_connection(idx_t, idx_t){
         Connection result;
         result.duration = 120;
         result.connection_type = eStopPointConnection;
@@ -158,9 +161,9 @@ struct PT_Data : boost::noncopyable{
 
     PT_Data& operator=(PT_Data&& other);
 
-    int connection_duration(idx_t origin_route_point, idx_t destination_route_point){
-        const RoutePoint & origin = route_points[origin_route_point];
-        const RoutePoint & destination = route_points[destination_route_point];
+    int connection_duration(idx_t origin_journey_pattern_point, idx_t destination_journey_pattern_point){
+        const JourneyPatternPoint & origin = journey_pattern_points[origin_journey_pattern_point];
+        const JourneyPatternPoint & destination = journey_pattern_points[destination_journey_pattern_point];
         if(origin.stop_point_idx == destination.stop_point_idx)
             return 120;
         else

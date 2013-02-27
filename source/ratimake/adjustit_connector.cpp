@@ -44,12 +44,12 @@ navitia::type::Type_e parse_object_type(std::string object_type){
         return navitia::type::Type_e::eLine;
     }else if(ba::iequals(object_type, "VehicleJourney")){
         return navitia::type::Type_e::eVehicleJourney;
-    }else if(ba::iequals(object_type, "Route")){
-        return navitia::type::Type_e::eRoute;
+    }else if(ba::iequals(object_type, "JourneyPattern")){
+        return navitia::type::Type_e::eJourneyPattern;
     }else if(ba::iequals(object_type, "Network")){
         return navitia::type::Type_e::eNetwork;
-    }else if(ba::iequals(object_type, "RoutePoint")){
-        return navitia::type::Type_e::eRoutePoint;
+    }else if(ba::iequals(object_type, "JourneyPatternPoint")){
+        return navitia::type::Type_e::eJourneyPatternPoint;
     }else if(ba::iequals(object_type, "Company")){
         return navitia::type::Type_e::eCompany;
     }else{

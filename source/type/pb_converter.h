@@ -17,6 +17,7 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopArea
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopPoint* stop_point, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
+
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Address* address, int house_number,type::GeographicalCoord& coord,
         int max_depth = 0, const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
@@ -25,7 +26,11 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Line* li
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Route* route, int max_depth = 0,
+void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::JourneyPattern* journey_pattern, int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period);
+
+void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Route* journey_pattern, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
@@ -45,7 +50,7 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Connecti
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::RoutePoint * route_point, int max_depth = 0,
+void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::JourneyPatternPoint * journey_pattern_point, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 

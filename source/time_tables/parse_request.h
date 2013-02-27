@@ -7,7 +7,7 @@ struct request_parser {
     pbnavitia::Response pb_response;
     type::DateTime date_time;
     type::DateTime max_datetime;
-    std::vector<type::idx_t> route_points;
+    std::vector<type::idx_t> journey_pattern_points;
 
     request_parser(const std::string &API, const std::string &request, const std::string &change_time,
                    uint32_t duration, const type::Data & data);

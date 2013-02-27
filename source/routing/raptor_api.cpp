@@ -16,7 +16,8 @@ void fill_section(pbnavitia::Section *pb_section, navitia::type::idx_t vj_idx,
         const nt::Data & d, boost::posix_time::ptime now, boost::posix_time::time_period action_period) {
 
     const type::VehicleJourney & vj = d.pt_data.vehicle_journeys[vj_idx];
-    const type::Route & route = d.pt_data.routes[vj.route_idx];
+    const type::JourneyPattern & jp = d.pt_data.journey_patterns[vj.journey_pattern_idx];
+    const type::Route & route = d.pt_data.routes[jp.route_idx];
     const type::Line & line = d.pt_data.lines[route.line_idx];
     if(line.network_idx != type::invalid_idx)
         pb_section->set_network(d.pt_data.networks[line.network_idx].name );
@@ -322,7 +323,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     for(const type::StopPoint &sp : raptor.data.pt_data.stop_points) {
         navitia::type::DateTime best = bound;
         type::idx_t best_rp = type::invalid_idx;
-        for(type::idx_t rpidx : sp.route_point_list) {
+        for(type::idx_t rpidx : sp.journey_pattern_point_list) {
             if(raptor.best_labels[rpidx].arrival < best) {
                 best = raptor.best_labels[rpidx].arrival;
                 best_rp = rpidx;
@@ -332,32 +333,33 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
         if(best_rp != type::invalid_idx) {
             auto label = raptor.best_labels[best_rp];
             type::idx_t initial_rp;
-            navitia::type::DateTime initial_dt;
+            type::DateTime initial_dt;
             int round = raptor.best_round(best_rp);
             boost::tie(initial_rp, initial_dt) = init::getFinalRpidAndDate(round, best_rp, raptor.labels, clockwise, raptor.data);
 
             int duration = ::abs(label.arrival - init_dt);
 
             if(origin.type == type::Type_e::eCoord) {
-                auto temp = worker.get_path(raptor.data.pt_data.route_points[initial_rp].stop_point_idx);
+                auto temp = worker.get_path(raptor.data.pt_data.journey_pattern_points[initial_rp].stop_point_idx);
                 if(temp.path_items.size() > 0) {
                     duration += temp.length/walking_speed;
                 }
             }
 
             if(duration <= max_duration) {
-                auto pb_stop_time = response.mutable_isochrone()->add_stop_date_times();
-                pb_stop_time->set_arrival_date_time(iso_string(raptor.data, label.arrival.date(), label.arrival.hour()));
-                pb_stop_time->set_departure_date_time(iso_string(raptor.data, label.departure.date(), label.departure.hour()));
-                pb_stop_time->set_duration(duration);
-                pb_stop_time->set_nb_changes(round);
-                fill_pb_object(raptor.data.pt_data.route_points[best_rp].stop_point_idx, raptor.data, pb_stop_time->mutable_stop_point(), 0);
+                auto pb_item = response.mutable_isochrone()->add_items();
+                auto pb_stop_date_time = pb_item->mutable_stop_date_time();
+                pb_stop_date_time->set_arrival_date_time(iso_string(raptor.data, label.arrival.date(), label.arrival.hour()));
+                pb_stop_date_time->set_departure_date_time(iso_string(raptor.data, label.departure.date(), label.departure.hour()));
+                pb_item->set_duration(duration);
+                pb_item->set_nb_changes(round);
+                fill_pb_object(raptor.data.pt_data.journey_pattern_points[best_rp].stop_point_idx, raptor.data, pb_stop_date_time->mutable_stop_point(), 0);
             }
         }
     }
 
-     std::sort(response.mutable_isochrone()->mutable_stop_date_times()->begin(), response.mutable_isochrone()->mutable_stop_date_times()->end(),
-               [](const pbnavitia::StopDateTime & stop_time1, const pbnavitia::StopDateTime & stop_time2) {
+     std::sort(response.mutable_isochrone()->mutable_items()->begin(), response.mutable_isochrone()->mutable_items()->end(),
+               [](const pbnavitia::IsochroneItem & stop_time1, const pbnavitia::IsochroneItem & stop_time2) {
                return stop_time1.duration() < stop_time2.duration();
                 });
 

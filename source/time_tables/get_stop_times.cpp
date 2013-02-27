@@ -6,21 +6,21 @@ namespace navitia { namespace timetables {
 
 
 
-std::vector<dt_st> get_stop_times(const std::vector<type::idx_t> &route_points, const type::DateTime &dt, const type::DateTime &max_dt, const int nb_departures, const type::Data & data, const bool wheelchair) {
+std::vector<dt_st> get_stop_times(const std::vector<type::idx_t> &journey_pattern_points, const type::DateTime &dt, const type::DateTime &max_dt, const int nb_departures, const type::Data & data, const bool wheelchair) {
     std::vector<dt_st> result;
     std::multiset<dt_st, comp_st> result_temp;
     auto test_add = true;
     auto last_departure = dt;
-    std::vector<type::idx_t> rps = route_points; //On veut connaitre poru tous les route points leur premier départ
+    std::vector<type::idx_t> rps = journey_pattern_points; //On veut connaitre poru tous les journey_pattern points leur premier départ
 
     while(test_add && last_departure < max_dt &&
           (distance(result_temp.begin(), result_temp.upper_bound(std::make_pair(last_departure, type::invalid_idx))) < nb_departures)) {
 
         test_add = false;
-        //On va chercher le prochain départ >= last_departure + 1 pour tous les route points de la liste
+        //On va chercher le prochain départ >= last_departure + 1 pour tous les journey_pattern points de la liste
         for(auto rp_idx : rps) {
-            const type::RoutePoint & rp = data.pt_data.route_points[rp_idx];
-            auto etemp = routing::earliest_trip(data.pt_data.routes[rp.route_idx], rp.order, last_departure + 1, data, wheelchair);
+            const type::JourneyPatternPoint & rp = data.pt_data.journey_pattern_points[rp_idx];
+            auto etemp = routing::earliest_trip(data.pt_data.journey_patterns[rp.journey_pattern_idx], rp.order, last_departure + 1, data, wheelchair);
             if(etemp.first != type::invalid_idx) {
                 auto st = data.pt_data.stop_times[data.pt_data.vehicle_journeys[etemp.first].stop_time_list[rp.order]];
                 type::DateTime dt_temp;
@@ -33,11 +33,11 @@ std::vector<dt_st> get_stop_times(const std::vector<type::idx_t> &route_points, 
 
         //Le prochain départ sera le premier dt >= last_departure
         last_departure = result_temp.upper_bound(std::make_pair(last_departure, type::invalid_idx))->first;
-        //On met à jour la liste des routepoints à updater (ceux qui sont >= last_departure
+        //On met à jour la liste des journey_patternpoints à updater (ceux qui sont >= last_departure
         rps.clear();
         for(auto it_st = result_temp.lower_bound(std::make_pair(last_departure, type::invalid_idx));
             it_st!= result_temp.upper_bound(std::make_pair(last_departure, type::invalid_idx)); ++it_st){
-            rps.push_back(data.pt_data.stop_times[it_st->second].route_point_idx);
+            rps.push_back(data.pt_data.stop_times[it_st->second].journey_pattern_point_idx);
         }
      }
 

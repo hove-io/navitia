@@ -53,9 +53,9 @@ public:
     /// Contient les dates définies par jour (et non par période)
     void parse_calendar_dates(Data & data);
 
-    /// Parse le fichier routes.txt
+    /// Parse le fichier journey_patterns.txt
     /// Contient les lignes (au sens navitia)
-    void parse_routes(Data & data);
+    void parse_journey_patterns(Data & data);
 
     /// Parse le fichier stops.txt
     /// Contient les points d'arrêt et les zones d'arrêt
@@ -84,18 +84,18 @@ public:
 /// Normalise les external code des stop_point et stop_areas
 void normalize_extcodes(Data & data);
 
-/// Construit les routes en retrouvant les paterns à partir des VJ
-void build_routes(Data & data);
+/// Construit les journey_patterns en retrouvant les paterns à partir des VJ
+void build_journey_patterns(Data & data);
 
-/// Construit les routepoint
-void build_route_points(Data & data);
+/// Construit les journey_patternpoint
+void build_journey_pattern_points(Data & data);
 
-/// Ajoute une connection entre deux route_point
-void add_route_point_connection(navimake::types::RoutePoint *rp1, navimake::types::RoutePoint *rp2, int length,
-                                std::multimap<std::string, navimake::types::RoutePointConnection> &route_point_connections);
+/// Ajoute une connection entre deux journey_pattern_point
+void add_journey_pattern_point_connection(navimake::types::JourneyPatternPoint *rp1, navimake::types::JourneyPatternPoint *rp2, int length,
+                                std::multimap<std::string, navimake::types::JourneyPatternPointConnection> &journey_pattern_point_connections);
 
 /// Construit les connections pour les correspondances garanties
-void build_route_point_connections(Data & data);
+void build_journey_pattern_point_connections(Data & data);
 
 /** Convertit une chaine de charactères du type 8:12:31 en secondes depuis minuit
   *

@@ -4,8 +4,8 @@ namespace navitia { namespace routing { namespace raptor {
 
 void dataRAPTOR::load(const type::PT_Data &data)
 {
-    labels_const.resize(data.route_points.size());
-    labels_const_reverse.resize(data.route_points.size());
+    labels_const.resize(data.journey_pattern_points.size());
+    labels_const_reverse.resize(data.journey_pattern_points.size());
 
     for(auto &r : labels_const_reverse) {
         r.arrival = navitia::type::DateTime::min;
@@ -24,14 +24,14 @@ void dataRAPTOR::load(const type::PT_Data &data)
     footpath_rp_backward.clear();
     footpath_rp_forward.clear();
     std::vector<list_connections> footpath_temp_forward, footpath_temp_backward;
-    footpath_temp_forward.resize(data.route_points.size());
-    footpath_temp_backward.resize(data.route_points.size());
+    footpath_temp_forward.resize(data.journey_pattern_points.size());
+    footpath_temp_backward.resize(data.journey_pattern_points.size());
 
-    //Construction des connexions entre routepoints
+    //Construction des connexions entre journey_patternpoints
     //(sert pour les prolongements de service ainsi que les correpondances garanties
-    for(type::RoutePointConnection rpc : data.route_point_connections) {
-        footpath_rp_forward.insert(std::make_pair(rpc.departure_route_point_idx, rpc));        
-        footpath_rp_backward.insert(std::make_pair(rpc.destination_route_point_idx, rpc));
+    for(type::JourneyPatternPointConnection rpc : data.journey_pattern_point_connections) {
+        footpath_rp_forward.insert(std::make_pair(rpc.departure_journey_pattern_point_idx, rpc));        
+        footpath_rp_backward.insert(std::make_pair(rpc.destination_journey_pattern_point_idx, rpc));
     }
 
     //Construction de la liste des marche à pied à partir des connexions renseignées
@@ -102,7 +102,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
 
 
     typedef std::unordered_map<navitia::type::idx_t, vector_idx> idx_vector_idx;
-    idx_vector_idx ridx_route;
+    idx_vector_idx ridx_journey_pattern;
     
     arrival_times.clear();
     departure_times.clear();
@@ -117,12 +117,12 @@ void dataRAPTOR::load(const type::PT_Data &data)
     for(auto vp : data.validity_patterns) 
         validity_patterns.push_back(vp.days);
 
-    for(const type::Route & route : data.routes) {
+    for(const type::JourneyPattern & journey_pattern : data.journey_patterns) {
         first_stop_time.push_back(arrival_times.size());
-        nb_trips.push_back(route.vehicle_journey_list.size());
-        for(unsigned int i=0; i < route.route_point_list.size(); ++i) {
+        nb_trips.push_back(journey_pattern.vehicle_journey_list.size());
+        for(unsigned int i=0; i < journey_pattern.journey_pattern_point_list.size(); ++i) {
             std::vector<type::idx_t> vec_stdix;
-            for(type::idx_t vjidx : route.vehicle_journey_list) {
+            for(type::idx_t vjidx : journey_pattern.vehicle_journey_list) {
                 vec_stdix.push_back(data.vehicle_journeys[vjidx].stop_time_list[i]);
             }
             std::sort(vec_stdix.begin(), vec_stdix.end(),

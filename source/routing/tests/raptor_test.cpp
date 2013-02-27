@@ -824,6 +824,7 @@ BOOST_AUTO_TEST_CASE(freq_vj_pam) {
     BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), (25*3600 + 10*60)%data.dataRaptor.SECONDS_PER_DAY);
 }
 
+/*
 BOOST_AUTO_TEST_CASE(adapted) {
     navimake::builder b("20120614");
     b.sa("stop1");
@@ -852,7 +853,7 @@ BOOST_AUTO_TEST_CASE(adapted) {
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
 
-}
+}*/
 
 
 

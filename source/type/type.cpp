@@ -136,7 +136,7 @@ static_data * static_data::get() {
         boost::assign::insert(temp->types_string)
                 (Type_e::eValidityPattern, "validity_pattern")
                 (Type_e::eLine, "line")
-                (Type_e::eRoute, "route")
+                (Type_e::eJourneyPattern, "journey_pattern")
                 (Type_e::eVehicleJourney, "vehicle_journey")
                 (Type_e::eStopPoint, "stop_point")
                 (Type_e::eStopArea, "stop_area")
@@ -146,7 +146,7 @@ static_data * static_data::get() {
                 (Type_e::eCommercialMode, "commercial_mode")
                 (Type_e::eCity, "city")
                 (Type_e::eConnection, "connection")
-                (Type_e::eRoutePoint, "route_point")
+                (Type_e::eJourneyPatternPoint, "journey_pattern_point")
                 (Type_e::eDistrict, "district")
                 (Type_e::eDepartment, "department")
                 (Type_e::eCompany, "company")
@@ -154,7 +154,8 @@ static_data * static_data::get() {
                 (Type_e::eCountry, "country")
                 (Type_e::eWay, "way")
                 (Type_e::eCoord, "coord")
-                (Type_e::eAddress, "address");
+                (Type_e::eAddress, "address")
+                (Type_e::eRoute, "route");
 
         instance = temp;
 
@@ -259,12 +260,12 @@ std::vector<idx_t> Line::get(Type_e type, const PT_Data & data) const {
 }
 
 
-std::vector<idx_t> Route::get(Type_e type, const PT_Data &) const {
+std::vector<idx_t> JourneyPattern::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eLine: result.push_back(line_idx); break;
+    case Type_e::eRoute: result.push_back(route_idx); break;
     case Type_e::eCommercialMode: result.push_back(commercial_mode_idx); break;
-    case Type_e::eRoutePoint: return route_point_list; break;
+    case Type_e::eJourneyPatternPoint: return journey_pattern_point_list; break;
     case Type_e::eVehicleJourney: return vehicle_journey_list; break;
     default: break;
     }
@@ -275,7 +276,7 @@ std::vector<idx_t> Route::get(Type_e type, const PT_Data &) const {
 std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eRoute: result.push_back(route_idx); break;
+    case Type_e::eJourneyPattern: result.push_back(journey_pattern_idx); break;
     case Type_e::eCompany: result.push_back(company_idx); break;
     case Type_e::ePhysicalMode: result.push_back(physical_mode_idx); break;
     case Type_e::eVehicle: result.push_back(vehicle_idx); break;
@@ -285,10 +286,10 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data &) const {
     return result;
 }
 
-std::vector<idx_t> RoutePoint::get(Type_e type, const PT_Data &) const {
+std::vector<idx_t> JourneyPatternPoint::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eRoute: result.push_back(route_idx); break;
+    case Type_e::eJourneyPattern: result.push_back(journey_pattern_idx); break;
     case Type_e::eStopPoint: result.push_back(stop_point_idx); break;
     default: break;
     }
@@ -302,7 +303,7 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data & data) const {
     case Type_e::eCity: result.push_back(city_idx); break;
     case Type_e::ePhysicalMode: result.push_back(physical_mode_idx); break;
     case Type_e::eNetwork: result.push_back(network_idx); break;
-    case Type_e::eRoutePoint: return route_point_list; break;
+    case Type_e::eJourneyPatternPoint: return journey_pattern_point_list; break;
     case Type_e::eConnection: for(const Connection & conn : data.stop_point_connections[idx]) {
             result.push_back(conn.idx);
         }

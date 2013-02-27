@@ -59,7 +59,7 @@ std::vector<type::idx_t> make_query(type::Type_e requested_type, std::string req
 
 
 /// Trouve le chemin d'un type de données à un autre
-/// Par exemple StopArea → StopPoint → RoutePoint
+/// Par exemple StopArea → StopPoint → JourneyPatternPoint
 std::map<Type_e,Type_e> find_path(Type_e source);
 
 /// À parti d'un élément, on veut retrouver tous ceux de destination

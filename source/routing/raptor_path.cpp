@@ -11,7 +11,7 @@ makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
     for(unsigned int i=1;i<=raptor_.count;++i) {
         type::idx_t best_rp = type::invalid_idx;
         for(auto spid_dist : destinations) {
-            for(auto dest : raptor_.data.pt_data.stop_points[spid_dist.first].route_point_list) {
+            for(auto dest : raptor_.data.pt_data.stop_points[spid_dist.first].journey_pattern_point_list) {
                 if(raptor_.labels[i][dest].type != uninitialized) {
                     navitia::type::DateTime current_dt = raptor_.labels[i][dest].departure + (spid_dist.second/walking_speed);
                     if(current_dt <= best_dt) {
@@ -43,7 +43,7 @@ makePathesreverse(std::vector<std::pair<type::idx_t, double> > destinations,
     for(unsigned int i=1;i<=raptor_.count;++i) {
         type::idx_t best_rp = type::invalid_idx;
         for(auto spid_dist : destinations) {
-            for(auto dest : raptor_.data.pt_data.stop_points[spid_dist.first].route_point_list) {
+            for(auto dest : raptor_.data.pt_data.stop_points[spid_dist.first].journey_pattern_point_list) {
                 if(raptor_.labels[i][dest].type != uninitialized) {
                     navitia::type::DateTime current_dt = raptor_.labels[i][dest].departure - (spid_dist.second/walking_speed);
                     if(current_dt >= best_dt) {
@@ -99,8 +99,8 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool reverse,
                 item = PathItem(r2.arrival, l.departure);
             }
 
-            item.stop_points.push_back(raptor_.data.pt_data.route_points[current_rpid].stop_point_idx);
-            item.stop_points.push_back(raptor_.data.pt_data.route_points[l.rpid_embarquement].stop_point_idx);
+            item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_rpid].stop_point_idx);
+            item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[l.rpid_embarquement].stop_point_idx);
             if(l.type == connection)
                 item.type = walking;
             else if(l.type == connection_extension)
@@ -133,7 +133,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool reverse,
                 while(rpid_embarquement != current_rpid) {
 
                     //On stocke le sp, et les temps
-                    item.stop_points.push_back(raptor_.data.pt_data.route_points[current_rpid].stop_point_idx);
+                    item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_rpid].stop_point_idx);
                     if(!reverse) {
                         workingDate.updatereverse(current_st.departure_time+gap);
                         item.departures.push_back(workingDate);
@@ -152,11 +152,11 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool reverse,
                     else
                         current_st = raptor_.data.pt_data.stop_times.at(current_st.idx + 1);
 
-                    //Est-ce que je suis sur un route point de fin 
-                    current_rpid = current_st.route_point_idx;
+                    //Est-ce que je suis sur un journey_pattern point de fin 
+                    current_rpid = current_st.journey_pattern_point_idx;
                 }
                 // Je stocke le dernier stop point, et ses temps d'arrivée et de départ
-                item.stop_points.push_back(raptor_.data.pt_data.route_points[current_rpid].stop_point_idx);
+                item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_rpid].stop_point_idx);
                 if(!reverse) {
                     workingDate.updatereverse(current_st.departure_time+gap);
                     item.departures.push_back(workingDate);

@@ -17,7 +17,7 @@ pbnavitia::Response extract_data(const type::Data & data, type::Type_e requested
     for(type::idx_t idx : rows){
         switch(requested_type){
         case type::Type_e::eLine: fill_pb_object(idx, data, pb_response->add_lines(), depth, today); break;
-        case type::Type_e::eRoute: fill_pb_object(idx, data, pb_response->add_routes(), depth, today); break;
+        case type::Type_e::eJourneyPattern: fill_pb_object(idx, data, pb_response->add_journey_patterns(), depth, today); break;
         case type::Type_e::eStopPoint: fill_pb_object(idx, data, pb_response->add_stop_points(), depth, today); break;
         case type::Type_e::eStopArea: fill_pb_object(idx, data, pb_response->add_stop_areas(), depth, today); break;
         case type::Type_e::eNetwork: fill_pb_object(idx, data, pb_response->add_networks(), depth); break;
@@ -25,7 +25,7 @@ pbnavitia::Response extract_data(const type::Data & data, type::Type_e requested
         case type::Type_e::eCommercialMode: fill_pb_object(idx, data, pb_response->add_physical_modes(), depth); break;
         case type::Type_e::eCity: fill_pb_object(idx, data, pb_response->add_cities(), depth); break;
         case type::Type_e::eConnection: fill_pb_object(idx, data, pb_response->add_connections(), depth); break;
-        case type::Type_e::eRoutePoint: fill_pb_object(idx, data, pb_response->add_route_points(), depth, today); break;
+        case type::Type_e::eJourneyPatternPoint: fill_pb_object(idx, data, pb_response->add_journey_pattern_points(), depth, today); break;
         case type::Type_e::eCompany: fill_pb_object(idx, data, pb_response->add_companies(), depth); break;
         case type::Type_e::eVehicleJourney: fill_pb_object(idx, data, pb_response->add_vehicle_journeys(), depth, today); break;
         default: break;

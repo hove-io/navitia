@@ -84,7 +84,7 @@ void navisu::tableSelected(QString table){
     if(table == "StopArea") show_stop_area();
     else if(table == "ValidityPattern") show_validity_pattern();
     else if(table == "Line") show_line();
-    else if(table == "Route") show_route();
+    else if(table == "JourneyPattern") show_journey_pattern();
     else if(table == "VehicleJourney") show_vehicle_journey();
     else if(table == "StopPoint") show_stop_point();
     else if(table == "StopArea") show_stop_area();
@@ -94,7 +94,7 @@ void navisu::tableSelected(QString table){
     else if(table == "ModeType") show_commercial_mode();
     else if(table == "City") show_city();
     else if(table == "Connection") show_connection();
-    else if(table == "RoutePoint") show_route_point();
+    else if(table == "JourneyPatternPoint") show_journey_pattern_point();
     else if(table == "District") show_district();
     else if(table == "Department") show_department();
     else if(table == "Company") show_company();
@@ -159,12 +159,12 @@ void navisu::show_line(){
     }
 }
 
-void navisu::show_route(){
-    resetTable(8, d.pt_data.routes.size());
+void navisu::show_journey_pattern(){
+    resetTable(8, d.pt_data.journey_patterns.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Name" << "Is Frequence" << "Is Foward" << "Is Adapted" << "Line" << "Mode Type" );
 
-    for(size_t i=0; i < d.pt_data.routes.size(); ++i){
-        Route & r = d.pt_data.routes[i];
+    for(size_t i=0; i < d.pt_data.journey_patterns.size(); ++i){
+        JourneyPattern & r = d.pt_data.journey_patterns[i];
         setItem(i, 0, r.uri);
         setItem(i, 1, r.id);
         setItem(i, 2, r.name);
@@ -180,15 +180,15 @@ void navisu::show_route(){
 
 void navisu::show_vehicle_journey(){
     resetTable(8, d.pt_data.vehicle_journeys.size());
-    ui->tableWidget->setHorizontalHeaderLabels(QStringList() <<"External Code" << "Id" << "Name" << "Route" << "Company" << "Mode" << "Vehicle" << "Is adapted");
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() <<"External Code" << "Id" << "Name" << "JourneyPattern" << "Company" << "Mode" << "Vehicle" << "Is adapted");
 
     for(size_t i=0; i < d.pt_data.vehicle_journeys.size(); ++i){
         VehicleJourney & vj = d.pt_data.vehicle_journeys[i];
         setItem(i, 0, vj.uri);
         setItem(i, 1, vj.id);
         setItem(i, 2, vj.name);
-        if(vj.route_idx < d.pt_data.routes.size())
-            setItem(i, 3, formatHeader(d.pt_data.routes[vj.route_idx]));
+        if(vj.journey_pattern_idx < d.pt_data.journey_patterns.size())
+            setItem(i, 3, formatHeader(d.pt_data.journey_patterns[vj.journey_pattern_idx]));
         if(vj.company_idx < d.pt_data.companies.size())
             setItem(i, 4, formatHeader(d.pt_data.companies[vj.company_idx]));
         if(vj.mode_idx < d.pt_data.modes.size())
@@ -326,18 +326,18 @@ void navisu::show_district(){
 
 }
 
-void navisu::show_route_point(){
-    resetTable(5, d.pt_data.route_points.size());
-    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Order" << "Stop Point" << "Route");
-    for(size_t i=0; i < d.pt_data.route_points.size(); ++i){
-        RoutePoint & rp = d.pt_data.route_points[i];
+void navisu::show_journey_pattern_point(){
+    resetTable(5, d.pt_data.journey_pattern_points.size());
+    ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" << "Order" << "Stop Point" << "JourneyPattern");
+    for(size_t i=0; i < d.pt_data.journey_pattern_points.size(); ++i){
+        JourneyPatternPoint & rp = d.pt_data.journey_pattern_points[i];
         setItem(i, 0, rp.uri);
         setItem(i, 1, rp.id);
         setItem(i, 2, rp.order);
         if(rp.stop_point_idx < d.pt_data.stop_points.size())
             setItem(i, 3, formatHeader(d.pt_data.stop_points[rp.stop_point_idx]));
-        if(rp.route_idx < d.pt_data.routes.size())
-            setItem(i, 4, formatHeader(d.pt_data.routes[rp.route_idx]));
+        if(rp.journey_pattern_idx < d.pt_data.journey_patterns.size())
+            setItem(i, 4, formatHeader(d.pt_data.journey_patterns[rp.journey_pattern_idx]));
 
     }
 }

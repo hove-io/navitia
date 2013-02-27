@@ -166,7 +166,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
         switch(filter.navitia_type){
         case Type_e::eLine: indexes = get_indexes<Line>(filter, requested_type, data); break;
         case Type_e::eValidityPattern: indexes = get_indexes<ValidityPattern>(filter, requested_type, data); break;
-        case Type_e::eRoute: indexes = get_indexes<Route>(filter, requested_type, data); break;
+        case Type_e::eJourneyPattern: indexes = get_indexes<JourneyPattern>(filter, requested_type, data); break;
         case Type_e::eStopPoint: indexes = get_indexes<StopPoint>(filter, requested_type, data); break;
         case Type_e::eStopArea: indexes = get_indexes<StopArea>(filter, requested_type, data); break;
         case Type_e::eNetwork: indexes = get_indexes<Network>(filter, requested_type, data); break;
@@ -174,7 +174,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
         case Type_e::eCommercialMode: indexes = get_indexes<CommercialMode>(filter, requested_type, data); break;
         case Type_e::eCity: indexes = get_indexes<City>(filter, requested_type, data); break;
         case Type_e::eConnection: indexes = get_indexes<Connection>(filter, requested_type, data); break;
-        case Type_e::eRoutePoint: indexes = get_indexes<RoutePoint>(filter, requested_type, data); break;
+        case Type_e::eJourneyPatternPoint: indexes = get_indexes<JourneyPatternPoint>(filter, requested_type, data); break;
         case Type_e::eCompany: indexes = get_indexes<Company>(filter, requested_type, data); break;
         case Type_e::eVehicleJourney : indexes = get_indexes<VehicleJourney>(filter, requested_type, data); break;
         default: break;

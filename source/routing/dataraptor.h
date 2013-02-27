@@ -12,8 +12,8 @@ struct dataRAPTOR {
     std::vector<pair_int> footpath_index_forward;
     std::vector<navitia::type::Connection> foot_path_backward;
     std::vector<pair_int> footpath_index_backward;
-    std::multimap<navitia::type::idx_t, navitia::type::RoutePointConnection> footpath_rp_forward;
-    std::multimap<navitia::type::idx_t, navitia::type::RoutePointConnection> footpath_rp_backward;
+    std::multimap<navitia::type::idx_t, navitia::type::JourneyPatternPointConnection> footpath_rp_forward;
+    std::multimap<navitia::type::idx_t, navitia::type::JourneyPatternPointConnection> footpath_rp_backward;
     std::vector<uint32_t> arrival_times;
     std::vector<uint32_t> departure_times;
     std::vector<uint32_t> start_times_frequencies;
@@ -34,20 +34,20 @@ struct dataRAPTOR {
     void load(const navitia::type::PT_Data &data);
 
 
-    inline int get_stop_time_order(const type::Route & route, int orderVj, int order) const{
-        return first_stop_time[route.idx] + (order * nb_trips[route.idx]) + orderVj;
+    inline int get_stop_time_order(const type::JourneyPattern & journey_pattern, int orderVj, int order) const{
+        return first_stop_time[journey_pattern.idx] + (order * nb_trips[journey_pattern.idx]) + orderVj;
     }
-    inline uint32_t get_arrival_time(const type::Route & route, int orderVj, int order) const{
+    inline uint32_t get_arrival_time(const type::JourneyPattern & journey_pattern, int orderVj, int order) const{
         if(orderVj < 0)
             return std::numeric_limits<uint32_t>::max();
         else
-            return arrival_times[get_stop_time_order(route, orderVj, order)];
+            return arrival_times[get_stop_time_order(journey_pattern, orderVj, order)];
     }
-    inline uint32_t get_departure_time(const type::Route & route, int orderVj, int order) const{
+    inline uint32_t get_departure_time(const type::JourneyPattern & journey_pattern, int orderVj, int order) const{
         if(orderVj < 0)
             return std::numeric_limits<uint32_t>::max();
         else
-            return departure_times[get_stop_time_order(route, orderVj, order)];
+            return departure_times[get_stop_time_order(journey_pattern, orderVj, order)];
     }
 };
 

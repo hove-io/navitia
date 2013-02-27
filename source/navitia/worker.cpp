@@ -23,12 +23,12 @@ nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     case pbnavitia::STOP_POINT: return nt::Type_e::eStopPoint; break;
     case pbnavitia::CITY: return nt::Type_e::eCity; break;
     case pbnavitia::LINE: return nt::Type_e::eLine; break;
-    case pbnavitia::ROUTE: return nt::Type_e::eRoute; break;
+    case pbnavitia::ROUTE: return nt::Type_e::eJourneyPattern; break;
     case pbnavitia::NETWORK: return nt::Type_e::eNetwork; break;
     case pbnavitia::COMMERCIAL_MODE: return nt::Type_e::ePhysicalMode; break;
     case pbnavitia::PHYSICAL_MODE: return nt::Type_e::eCommercialMode; break;
     case pbnavitia::CONNECTION: return nt::Type_e::eConnection; break;
-    case pbnavitia::ROUTE_POINT: return nt::Type_e::eRoutePoint; break;
+    case pbnavitia::JOURNEY_PATTERN_POINT: return nt::Type_e::eJourneyPatternPoint; break;
     case pbnavitia::COMPANY: return nt::Type_e::eCompany; break;
     case pbnavitia::VEHICLE_JOURNEY: return nt::Type_e::eVehicleJourney; break;
     default: return nt::Type_e::eUnknown;
@@ -160,12 +160,6 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     }
 
     std::multimap<std::string, std::string> forbidden;
-    for(int i = 0; i < request.forbiddenlines_size(); ++i)
-        forbidden.insert(std::make_pair("line", request.forbiddenlines(i)));
-    for(int i = 0; i < request.forbiddenmodes_size(); ++i)
-        forbidden.insert(std::make_pair("mode", request.forbiddenmodes(i)));
-    for(int i = 0; i < request.forbiddenroutes_size(); ++i)
-        forbidden.insert(std::make_pair("route", request.forbiddenroutes(i)));
 
     std::vector<std::string> datetimes;
     for(int i = 0; i < request.datetimes_size(); ++i)

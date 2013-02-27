@@ -14,18 +14,17 @@ pbnavitia::Response next_stop_times(const std::string &request, const std::strin
         return parser.pb_response;
     }
 
-    std::remove_if(parser.route_points.begin(), parser.route_points.end(), vis.predicate);
+    std::remove_if(parser.journey_pattern_points.begin(), parser.journey_pattern_points.end(), vis.predicate);
 
-    auto departures_dt_idx = get_stop_times(parser.route_points, parser.date_time, parser.max_datetime, nb_stoptimes, data, wheelchair);
+    auto departures_dt_idx = get_stop_times(parser.journey_pattern_points, parser.date_time, parser.max_datetime, nb_stoptimes, data, wheelchair);
 
     for(auto dt_idx : departures_dt_idx) {
         pbnavitia::StopDateTime * stoptime = parser.pb_response.mutable_nextstoptimes()->add_stop_date_times();
         stoptime->set_departure_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
         stoptime->set_arrival_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
-        const auto &rp = data.pt_data.route_points[data.pt_data.stop_times[dt_idx.second].route_point_idx];
-        stoptime->set_is_adapted(data.pt_data.stop_times[dt_idx.second].is_adapted());
+        const auto &rp = data.pt_data.journey_pattern_points[data.pt_data.stop_times[dt_idx.second].journey_pattern_point_idx];
+
         fill_pb_object(rp.stop_point_idx, data, stoptime->mutable_stop_point(), depth);
-        fill_pb_object(data.pt_data.routes[rp.route_idx].line_idx, data, stoptime->mutable_line(), depth);
     }
     return parser.pb_response;
 }
@@ -38,7 +37,7 @@ pbnavitia::Response next_departures(const std::string &request, const std::strin
             type::Data &data;
             predicate_t(type::Data& data) : data(data){}
             bool operator()(const type::idx_t rpidx) const{
-                return data.pt_data.route_points[rpidx].order == (int)(data.pt_data.routes[data.pt_data.route_points[rpidx].route_idx].route_point_list.size()-1);
+                return data.pt_data.journey_pattern_points[rpidx].order == (int)(data.pt_data.journey_patterns[data.pt_data.journey_pattern_points[rpidx].journey_pattern_idx].journey_pattern_point_list.size()-1);
             }
         };
         std::string api_str;
@@ -58,7 +57,7 @@ pbnavitia::Response next_arrivals(const std::string &request, const std::string 
             type::Data &data;
             predicate_t(type::Data& data) : data(data){}
             bool operator()(const type::idx_t rpidx) const{
-                return data.pt_data.route_points[rpidx].order == 0;
+                return data.pt_data.journey_pattern_points[rpidx].order == 0;
             }
         };
         std::string api_str;

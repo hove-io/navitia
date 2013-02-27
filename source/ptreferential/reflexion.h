@@ -32,9 +32,9 @@ struct unknown_member{};
 /*Macro qui permet de savoir si une classe implémente un membre :
 On l'utilise de la manière suivante :
 DECL_HAS_MEMBER(id)
-Reflect_id<Route>::value vaut true si le membre existe
+Reflect_id<JourneyPattern>::value vaut true si le membre existe
 Cela génère ensuite une fonction permettant d'avoir le membre d'un objet :
-get_id(route)
+get_id(journey_pattern)
 la fonction lève une exception lorsque l'objet n'a pas de membre*/
 #define DECL_HAS_MEMBER(MEM_NAME) \
 template <typename T> \

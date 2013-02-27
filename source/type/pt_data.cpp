@@ -6,6 +6,7 @@ namespace navitia{namespace type {
 PT_Data& PT_Data::operator=(PT_Data&& other){
     validity_patterns = other.validity_patterns;
     lines = other.lines;
+    journey_patterns = other.journey_patterns;
     routes = other.routes;
     vehicle_journeys = other.vehicle_journeys;
     stop_points = other.stop_points;
@@ -17,7 +18,7 @@ PT_Data& PT_Data::operator=(PT_Data&& other){
     commercial_modes = other.commercial_modes;
     cities = other.cities;
     connections = other.connections;
-    route_points = other.route_points;
+    journey_pattern_points = other.journey_pattern_points;
 
     districts = other.districts;
     departments = other.departments;
@@ -38,7 +39,7 @@ PT_Data& PT_Data::operator=(PT_Data&& other){
     city_proximity_list = other.city_proximity_list;
 
     line_map = other.line_map;
-    route_map = other.route_map;
+    journey_pattern_map = other.journey_pattern_map;
     vehicle_journey_map = other.vehicle_journey_map;
     stop_area_map = other.stop_area_map;
     stop_point_map = other.stop_point_map;
@@ -77,7 +78,7 @@ std::vector<idx_t> PT_Data::get_target_by_one_source(Type_e source, Type_e targe
     }
     switch(source) {
         case Type_e::eLine: result = lines[source_idx].get(target, *this); break;
-        case Type_e::eRoute: result = routes[source_idx].get(target, *this); break;
+        case Type_e::eJourneyPattern: result = journey_patterns[source_idx].get(target, *this); break;
         case Type_e::eVehicleJourney: result = vehicle_journeys[source_idx].get(target, *this); break;
         case Type_e::eStopPoint: result = stop_points[source_idx].get(target, *this); break;
         case Type_e::eStopArea: result = stop_areas[source_idx].get(target, *this); break;
@@ -92,7 +93,8 @@ std::vector<idx_t> PT_Data::get_target_by_one_source(Type_e source, Type_e targe
         case Type_e::eValidityPattern: result = validity_patterns[source_idx].get(target, *this); break;
         case Type_e::eConnection: result = connections[source_idx].get(target, *this); break;
         case Type_e::eCountry: result = countries[source_idx].get(target, *this); break;
-        case Type_e::eRoutePoint: result = route_points[source_idx].get(target, *this); break;
+        case Type_e::eJourneyPatternPoint: result = journey_pattern_points[source_idx].get(target, *this); break;
+        case Type_e::eRoute: result = routes[source_idx].get(target, *this); break;
         default: break;
     }
     return result;
@@ -103,7 +105,7 @@ std::vector<idx_t> PT_Data::get_all_index(Type_e type) const {
     switch(type){
     case Type_e::eLine: num_elements = lines.size(); break;
     case Type_e::eValidityPattern: num_elements = validity_patterns.size(); break;
-    case Type_e::eRoute: num_elements = routes.size(); break;
+    case Type_e::eJourneyPattern: num_elements = journey_patterns.size(); break;
     case Type_e::eVehicleJourney: num_elements = vehicle_journeys.size(); break;
     case Type_e::eStopPoint: num_elements = stop_points.size(); break;
     case Type_e::eStopArea: num_elements = stop_areas.size(); break;
@@ -113,7 +115,7 @@ std::vector<idx_t> PT_Data::get_all_index(Type_e type) const {
     case Type_e::eCommercialMode: num_elements = commercial_modes.size(); break;
     case Type_e::eCity: num_elements = cities.size(); break;
     case Type_e::eConnection: num_elements = connections.size(); break;
-    case Type_e::eRoutePoint: num_elements = route_points.size(); break;
+    case Type_e::eJourneyPatternPoint: num_elements = journey_pattern_points.size(); break;
     case Type_e::eDistrict: num_elements = districts.size(); break;
     case Type_e::eDepartment: num_elements = departments.size(); break;
     case Type_e::eCompany: num_elements = companies.size(); break;
@@ -129,7 +131,7 @@ std::vector<idx_t> PT_Data::get_all_index(Type_e type) const {
 
 template<> std::vector<Line> & PT_Data::get_data<Line>() {return lines;}
 template<> std::vector<ValidityPattern> & PT_Data::get_data<ValidityPattern>() {return validity_patterns;}
-template<> std::vector<Route> & PT_Data::get_data<Route>() {return routes;}
+template<> std::vector<JourneyPattern> & PT_Data::get_data<JourneyPattern>() {return journey_patterns;}
 template<> std::vector<VehicleJourney> & PT_Data::get_data<VehicleJourney>() {return vehicle_journeys;}
 template<> std::vector<StopPoint> & PT_Data::get_data<StopPoint>() {return stop_points;}
 template<> std::vector<StopArea> & PT_Data::get_data<StopArea>() {return stop_areas;}
@@ -139,16 +141,17 @@ template<> std::vector<PhysicalMode> & PT_Data::get_data<PhysicalMode>() {return
 template<> std::vector<CommercialMode> & PT_Data::get_data<CommercialMode>() {return commercial_modes;}
 template<> std::vector<City> & PT_Data::get_data<City>() {return cities;}
 template<> std::vector<Connection> & PT_Data::get_data<Connection>() {return connections;}
-template<> std::vector<RoutePoint> & PT_Data::get_data<RoutePoint>() {return route_points;}
+template<> std::vector<JourneyPatternPoint> & PT_Data::get_data<JourneyPatternPoint>() {return journey_pattern_points;}
 template<> std::vector<District> & PT_Data::get_data<District>() {return districts;}
 template<> std::vector<Department> & PT_Data::get_data<Department>() {return departments;}
 template<> std::vector<Company> & PT_Data::get_data<Company>() {return companies;}
 template<> std::vector<Country> & PT_Data::get_data<Country>() {return countries;}
 template<> std::vector<Vehicle> & PT_Data::get_data<Vehicle>() {return vehicles;}
+template<> std::vector<Route> & PT_Data::get_data<Route>() {return routes;}
 
 template<> std::vector<Line> const & PT_Data::get_data<Line>() const {return lines;}
 template<> std::vector<ValidityPattern> const & PT_Data::get_data<ValidityPattern>() const {return validity_patterns;}
-template<> std::vector<Route> const & PT_Data::get_data<Route>() const {return routes;}
+template<> std::vector<JourneyPattern> const & PT_Data::get_data<JourneyPattern>() const {return journey_patterns;}
 template<> std::vector<VehicleJourney> const & PT_Data::get_data<VehicleJourney>() const {return vehicle_journeys;}
 template<> std::vector<StopPoint> const & PT_Data::get_data<StopPoint>() const {return stop_points;}
 template<> std::vector<StopArea> const & PT_Data::get_data<StopArea>() const {return stop_areas;}
@@ -158,12 +161,13 @@ template<> std::vector<PhysicalMode> const & PT_Data::get_data<PhysicalMode>() c
 template<> std::vector<CommercialMode> const & PT_Data::get_data<CommercialMode>() const {return commercial_modes;}
 template<> std::vector<City> const & PT_Data::get_data<City>() const {return cities;}
 template<> std::vector<Connection> const & PT_Data::get_data<Connection>() const {return connections;}
-template<> std::vector<RoutePoint> const & PT_Data::get_data<RoutePoint>() const {return route_points;}
+template<> std::vector<JourneyPatternPoint> const & PT_Data::get_data<JourneyPatternPoint>() const {return journey_pattern_points;}
 template<> std::vector<District> const & PT_Data::get_data<District>() const {return districts;}
 template<> std::vector<Department> const & PT_Data::get_data<Department>() const {return departments;}
 template<> std::vector<Company> const & PT_Data::get_data<Company>() const {return companies;}
 template<> std::vector<Country> const & PT_Data::get_data<Country>() const {return countries;}
 template<> std::vector<Vehicle> const & PT_Data::get_data<Vehicle>() const {return vehicles;}
+template<> std::vector<Route> const & PT_Data::get_data<Route>() const {return routes;}
 
 
 void PT_Data::build_autocomplete(){
@@ -211,7 +215,7 @@ void PT_Data::build_proximity_list() {
 
 void PT_Data::build_uri() {
     normalize_extcode<Line>(line_map);
-    normalize_extcode<Route>(route_map);
+    normalize_extcode<JourneyPattern>(journey_pattern_map);
     normalize_extcode<VehicleJourney>(vehicle_journey_map);
     normalize_extcode<StopArea>(stop_area_map);
     normalize_extcode<StopPoint>(stop_point_map);
@@ -223,6 +227,7 @@ void PT_Data::build_uri() {
     normalize_extcode<Department>(department_map);
     normalize_extcode<Company>(company_map);
     normalize_extcode<Country>(country_map);
+    normalize_extcode<Route>(routes_map);
 }
 
 

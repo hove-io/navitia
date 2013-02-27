@@ -138,10 +138,14 @@ class Apis:
                         Arguments.ptrefArguments,
                         "description" : "Retrieves all the connections points filtered with filter",
                           "order":5},
-        "route_points" : {"endpoint" : on_ptref(type_pb2.ROUTE_POINT), "arguments" :
+        "journey_pattern_points" : {"endpoint" : on_ptref(type_pb2.JOURNEY_PATTERN_POINT), "arguments" :
                         Arguments.ptrefArguments,
-                        "description" : "Retrieves all the route points filtered with filter",
-                          "order":5},
+                        "description" : "Retrieves all the journey pattern points filtered with filter",
+                        "order":5, "hidden": True},
+        "journey_patterns" : {"endpoint" : on_ptref(type_pb2.JOURNEY_PATTERN), "arguments" :
+                        Arguments.ptrefArguments,
+                        "description" : "Retrieves all the journey pattern filtered with filter",
+                        "order":5, "hidden": True},
         "companies" : {"endpoint" : on_ptref(type_pb2.COMPANY), "arguments" :
                         Arguments.ptrefArguments,
                         "description" : "Retrieves all the companies filtered with filter",

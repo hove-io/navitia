@@ -2,7 +2,7 @@ package pbnavitia;
 
 enum NavitiaType {
     LINE = 1;
-    ROUTE = 2;
+    JOURNEY_PATTERN = 2;
     STOP_POINT = 4;
     STOP_AREA = 5;
     NETWORK = 7;
@@ -10,12 +10,12 @@ enum NavitiaType {
     COMMERCIAL_MODE = 9;
     CITY = 10;
     CONNECTION = 11;
-    ROUTE_POINT = 12;
+    JOURNEY_PATTERN_POINT = 12;
     VEHICLE_JOURNEY = 13;
     COMPANY = 15;
     COUNTRY = 17;
-    SITE = 20;
-    ADDRESS = 30;
+    ADDRESS = 22;
+    ROUTE = 23;
 }
 
 
@@ -33,6 +33,7 @@ enum API {
     STOPS_SCHEDULE = 12;
     ISOCHRONE = 13;
     METADATAS = 14;
+	JOURNEY_PATTERNS = 15;
 }
 
 message Message{
@@ -60,7 +61,6 @@ message StopArea {
     optional string uri = 4;
     optional GeographicalCoord coord = 5;
     optional City city = 6;
-    optional bool is_adapted = 7;
     repeated StopPoint stop_points = 8;
     repeated Message messages = 9;
 }
@@ -72,7 +72,6 @@ message StopPoint {
     optional string uri = 5;
     optional GeographicalCoord coord = 6;
     optional StopArea stop_area = 7;
-    optional bool is_adapted = 8;
 
     repeated Message messages = 9;
 }
@@ -82,8 +81,6 @@ message Line {
     optional string name = 3;
     optional string uri = 4;
     optional string code = 5;
-    optional string forward_name = 6;
-    optional string backward_name = 7;
     optional string additional_data = 8;
     optional string color = 9;
     repeated Route routes = 10;
@@ -96,9 +93,17 @@ message Route {
     optional string name = 3;
     optional string uri = 4;
     optional bool is_frequence = 5;
-    optional bool is_adapted = 6;
     optional Line line = 7;
-    repeated RoutePoint route_points = 8;
+    repeated JourneyPattern journey_patterns = 8;
+}
+
+message JourneyPattern {
+    optional string id = 1;
+    optional string name = 3;
+    optional string uri = 4;
+    optional bool is_frequence = 5;
+    optional Route route = 7;
+    repeated JourneyPatternPoint journey_pattern_points = 8;
 
     repeated Message messages = 9;
 }
@@ -107,20 +112,15 @@ message StopDateTime {
     optional string arrival_date_time = 1;
     optional string departure_date_time = 2;
     optional StopPoint stop_point = 3;
-    optional Line line = 4;
-    optional bool is_adapted = 5;
-    optional int32 duration = 6;
-    optional int32 nb_changes = 7;
 }
 
 message StopTime {
     optional string arrival_time = 1;
     optional string departure_time = 3;
     optional VehicleJourney vehicle_journey = 4;
-    optional RoutePoint route_point = 5;
+    optional JourneyPatternPoint journey_pattern_point = 5;
     optional bool pickup_allowed = 6;
     optional bool drop_off_allowed = 7;
-    optional bool is_adapted = 8;
 }
 
 
@@ -128,19 +128,19 @@ message VehicleJourney {
     optional string id = 1;
     optional string name = 3;
     optional string uri = 4;
-    optional bool is_adapted = 5;
     repeated StopTime stop_times = 6;
     optional Route route = 7;
+    optional JourneyPattern journey_pattern = 8;
 
-    repeated Message messages = 8;
+    repeated Message messages = 9;
 }
 
-message RoutePoint{
+message JourneyPatternPoint{
     optional string id = 1;
     optional string uri = 3;
     optional int32 order = 4;
     optional StopPoint stop_point = 5;
-    optional Route route = 6;
+    optional JourneyPattern journey_pattern = 6;
 
     repeated Message messages = 7;
 }
@@ -213,10 +213,11 @@ message PTReferential {
     repeated CommercialMode commercial_modes = 7;
     repeated PhysicalMode physical_modes = 8;
     repeated Connection connections = 9;
-    repeated RoutePoint route_points = 11;
+    repeated JourneyPatternPoint journey_pattern_points = 11;
     repeated City cities = 13;
     repeated Company companies = 15;
     repeated VehicleJourney vehicle_journeys = 16;
+    repeated JourneyPattern journey_patterns = 17;
 }
 
 message PlaceMark {
@@ -411,8 +412,14 @@ message Load {
     required bool ok = 1;
 }
 
+message IsochroneItem {
+    required StopDateTime stop_date_time = 1;
+    required int32 duration = 2;
+    required int32 nb_changes = 3;
+}
+
 message Isochrone {
-    repeated StopDateTime stop_date_times = 1;
+    repeated IsochroneItem items = 1;
     optional ResponseType response_type = 2;
 }
 
@@ -470,9 +477,7 @@ message JourneysRequest {
     required string destination = 2;
     repeated string datetimes = 3;
     required bool clockwise = 4;
-    repeated string forbiddenlines = 5;
-    repeated string forbiddenmodes = 6;
-    repeated string forbiddenroutes = 7;
+    repeated string forbidden_uris = 7;
     required double walking_speed = 8;
     required int32 walking_distance =10;
     required bool wheelchair = 9;

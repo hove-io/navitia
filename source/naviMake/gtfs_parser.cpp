@@ -41,7 +41,7 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
     fill_commercial_modes(data);
     parse_agency(data);
     parse_stops(data);
-    parse_routes(data);
+    parse_journey_patterns(data);
     parse_transfers(data);
     parse_calendar(data);
     parse_calendar_dates(data);
@@ -49,9 +49,9 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
     parse_stop_times(data);
     parse_frequencies();
     normalize_extcodes(data);
-    build_routes(data);
-    build_route_points(data);
-    build_route_point_connections(data);
+    build_journey_patterns(data);
+    build_journey_pattern_points(data);
+    build_journey_pattern_point_connections(data);
 }
 
 void GtfsParser::fill_commercial_modes(Data & data) {
@@ -580,7 +580,7 @@ void GtfsParser::parse_calendar_dates(Data & data){
     std::cout << "Nombre de validity patterns : " << data.validity_patterns.size() << std::endl;
 }
 
-void GtfsParser:: parse_routes(Data & data){
+void GtfsParser:: parse_journey_patterns(Data & data){
     data.lines.reserve(10000);
     std::cout << "On parse : " << (path + "/routes.txt").c_str() << std::endl;
     std::fstream ifile((path + "/routes.txt").c_str());
@@ -611,7 +611,7 @@ void GtfsParser:: parse_routes(Data & data){
             agency_c = i;
     }
     if(id_c == -1 || short_name_c == -1 || long_name_c == -1 || type_c == -1) {
-        std::cerr << "Il manque au moins une colonne dans routes.txt route_id : " << (id_c!=-1) << " route_short_name : "  << (short_name_c!=-1) <<
+        std::cerr << "Il manque au moins une colonne dans route.txt journey_pattern_id : " << (id_c!=-1) << " route_short_name : "  << (short_name_c!=-1) <<
                      " route long name : " << (long_name_c!=-1) << std::endl;
         return;
     }
@@ -665,7 +665,7 @@ void GtfsParser:: parse_routes(Data & data){
 }
 
 void GtfsParser::parse_trips(Data & data) {
-    data.routes.reserve(350000);
+    data.journey_patterns.reserve(350000);
     data.vehicle_journeys.reserve(350000);
     std::cout << "On parse : " << (path + "/trips.txt").c_str() << std::endl;
     std::fstream ifile((path + "/trips.txt").c_str());
@@ -747,7 +747,7 @@ void GtfsParser::parse_trips(Data & data) {
                     else
                         vj->name = vj->uri;
                     vj->validity_pattern = vp_xx;
-                    vj->route = 0;
+                    vj->journey_pattern = 0;
                     vj->tmp_line = line;
                     vj->physical_mode = itm->second;
                     if(block_id_c != -1)
@@ -827,8 +827,8 @@ void GtfsParser::parse_frequencies() {
     }
 }
 
-// Compare si deux vehicle journey appartiennent à la même route
-bool same_route(nm::VehicleJourney * vj1, nm::VehicleJourney * vj2){
+// Compare si deux vehicle journey appartiennent à la même journey_pattern
+bool same_journey_pattern(nm::VehicleJourney * vj1, nm::VehicleJourney * vj2){
     if(vj1->stop_time_list.size() != vj2->stop_time_list.size())
         return false;
     for(size_t i = 0; i < vj1->stop_time_list.size(); ++i)
@@ -847,85 +847,91 @@ void normalize_extcodes(Data & data){
     }
 }
 
-void build_routes(Data & data){
-    std::cout << "On calcule les routes" << std::endl;
-    // Associe à chaque line uri le nombre de route trouvées jusqu'à present
-    std::map<std::string, int> line_routes_count;
+// TODO : pour l'instant on construit une route par journey pattern
+// Il faudrait factoriser les routes
+void build_journey_patterns(Data & data){
+    std::cout << "On calcule les journey_patterns" << std::endl;
+    // Associe à chaque line uri le nombre de journey_pattern trouvées jusqu'à present
+    std::map<std::string, int> line_journey_patterns_count;
     for(auto it1 = data.vehicle_journeys.begin(); it1 != data.vehicle_journeys.end(); ++it1){
         nm::VehicleJourney * vj1 = *it1;
-        // Si le vj n'appartient encore à aucune route
-        if(vj1->route == 0) {
-            auto it = line_routes_count.find(vj1->tmp_line->uri);
+        // Si le vj n'appartient encore à aucune journey_pattern
+        if(vj1->journey_pattern == 0) {
+            auto it = line_journey_patterns_count.find(vj1->tmp_line->uri);
             int count = 1;
-            if(it == line_routes_count.end()){
-                line_routes_count[vj1->tmp_line->uri] = count;
+            if(it == line_journey_patterns_count.end()){
+                line_journey_patterns_count[vj1->tmp_line->uri] = count;
             } else {
                 count = it->second + 1;
                 it->second = count;
             }
 
             nm::Route * route = new nm::Route();
-            route->uri = vj1->tmp_line->uri + "-" + boost::lexical_cast<std::string>(count);
             route->line = vj1->tmp_line;
-            route->physical_mode = vj1->physical_mode;
-            vj1->route = route;
             data.routes.push_back(route);
+
+            nm::JourneyPattern * journey_pattern = new nm::JourneyPattern();
+            journey_pattern->uri = vj1->tmp_line->uri + "-" + boost::lexical_cast<std::string>(count);
+            journey_pattern->route = route;
+            journey_pattern->physical_mode = vj1->physical_mode;
+            vj1->journey_pattern = journey_pattern;
+            data.journey_patterns.push_back(journey_pattern);
 
             for(auto it2 = it1 + 1; it1 != data.vehicle_journeys.end() && it2 != data.vehicle_journeys.end(); ++it2){
                 nm::VehicleJourney * vj2 = *it2;
-                if(vj2->route == 0 && same_route(vj1, vj2)){
-                    vj2->route = vj1->route;
+                if(vj2->journey_pattern == 0 && same_journey_pattern(vj1, vj2)){
+                    vj2->journey_pattern = vj1->journey_pattern;
                 }
             }
         }
     }
-    std::cout << "Nombre de routes : " << data.routes.size() << std::endl;
+    std::cout << "Nombre de journey_patterns : " << data.journey_patterns.size() << std::endl;
     std::cout << std::endl;
 }
 
-void build_route_points(Data & data){
-    std::cout << "Construction des route points" << std::endl;
-    std::map<std::string, navimake::types::RoutePoint*> route_point_map;
+void build_journey_pattern_points(Data & data){
+    std::cout << "Construction des journey_pattern points" << std::endl;
+    std::map<std::string, navimake::types::JourneyPatternPoint*> journey_pattern_point_map;
 
     int stop_seq;
     BOOST_FOREACH(nm::VehicleJourney * vj, data.vehicle_journeys){
 
         stop_seq = 0;
         BOOST_FOREACH(nm::StopTime * stop_time, vj->stop_time_list){
-            std::string route_point_extcode = vj->route->uri + ":" + stop_time->tmp_stop_point->uri+":"+boost::lexical_cast<std::string>(stop_seq);
+            std::string journey_pattern_point_extcode = vj->journey_pattern->uri + ":" + stop_time->tmp_stop_point->uri+":"+boost::lexical_cast<std::string>(stop_seq);
 
 
-            auto route_point_it = route_point_map.find(route_point_extcode);
-            nm::RoutePoint * route_point;
-            if(route_point_it == route_point_map.end()) {
-                route_point = new nm::RoutePoint();
-                route_point->route = vj->route;
-                route_point->route->route_point_list.push_back(route_point);
-                route_point->stop_point = stop_time->tmp_stop_point;
-                route_point_map[route_point_extcode] = route_point;
-                route_point->order = stop_seq;
-                route_point->uri = route_point_extcode;
-                data.route_points.push_back(route_point);
+            auto journey_pattern_point_it = journey_pattern_point_map.find(journey_pattern_point_extcode);
+            nm::JourneyPatternPoint * journey_pattern_point;
+            if(journey_pattern_point_it == journey_pattern_point_map.end()) {
+                journey_pattern_point = new nm::JourneyPatternPoint();
+                journey_pattern_point->journey_pattern = vj->journey_pattern;
+                journey_pattern_point->journey_pattern->journey_pattern_point_list.push_back(journey_pattern_point);
+                journey_pattern_point->stop_point = stop_time->tmp_stop_point;
+                journey_pattern_point_map[journey_pattern_point_extcode] = journey_pattern_point;
+                journey_pattern_point->order = stop_seq;
+                journey_pattern_point->uri = journey_pattern_point_extcode;
+                data.journey_pattern_points.push_back(journey_pattern_point);
             } else {
-                route_point = route_point_it->second;
+                journey_pattern_point = journey_pattern_point_it->second;
             }
             ++stop_seq;
-            stop_time->route_point = route_point;
+            stop_time->journey_pattern_point = journey_pattern_point;
 
         }
 
     }
 
-    for(nm::Route *route : data.routes){
-        if(! route->route_point_list.empty()){
-            nm::RoutePoint * last = route->route_point_list.back();
+    for(nm::JourneyPattern *journey_pattern : data.journey_patterns){
+        if(! journey_pattern->journey_pattern_point_list.empty()){
+            nm::JourneyPatternPoint * last = journey_pattern->journey_pattern_point_list.back();
             if(last->stop_point->stop_area != NULL)
-                route->name = last->stop_point->stop_area->name;
+                journey_pattern->name = last->stop_point->stop_area->name;
             else
-                route->name = last->stop_point->name;
+                journey_pattern->name = last->stop_point->name;
         }
     }
-    std::cout << "Nombre de route points : " << data.route_points.size() << std::endl;
+    std::cout << "Nombre de journey_pattern points : " << data.journey_pattern_points.size() << std::endl;
 }
 
 void GtfsParser::parse_stop_times(Data & data) {
@@ -995,7 +1001,7 @@ void GtfsParser::parse_stop_times(Data & data) {
             stop_time->arrival_time = time_to_int(elts[arrival_c]);
             stop_time->departure_time = time_to_int(elts[departure_c]);
             stop_time->tmp_stop_point = stop_it->second;
-            //stop_time->route_point = route_point;
+            //stop_time->journey_pattern_point = journey_pattern_point;
             stop_time->order = boost::lexical_cast<int>(elts[stop_seq_c]);
             stop_time->vehicle_journey = vj_it->second;
             if(pickup_c != -1 && drop_off_c != -1)
@@ -1199,13 +1205,13 @@ boost::gregorian::date_period GtfsParser::find_production_date(const std::string
 }
 
 
-void  add_route_point_connection(nm::RoutePoint *rp1, nm::RoutePoint *rp2, int length,
-                           std::multimap<std::string, nm::RoutePointConnection> &route_point_connections) {
+void  add_journey_pattern_point_connection(nm::JourneyPatternPoint *rp1, nm::JourneyPatternPoint *rp2, int length,
+                           std::multimap<std::string, nm::JourneyPatternPointConnection> &journey_pattern_point_connections) {
     //Si la connexion n'existe pas encore alors on va la créer, sinon on regarde sa durée, si elle est inférieure, on la modifie
-    auto pp = route_point_connections.equal_range(rp1->uri);
+    auto pp = journey_pattern_point_connections.equal_range(rp1->uri);
     bool find = false;
     for(auto it_pp = pp.first; it_pp != pp.second; ++it_pp) {
-        if(it_pp->second.destination_route_point->uri == rp2->uri) {
+        if(it_pp->second.destination_journey_pattern_point->uri == rp2->uri) {
             find = true;
             if(it_pp->second.length > length)
                 it_pp->second.length = length;
@@ -1213,21 +1219,21 @@ void  add_route_point_connection(nm::RoutePoint *rp1, nm::RoutePoint *rp2, int l
         }
     }
     if(!find) {
-        nm::RoutePointConnection rpc;
-        rpc.departure_route_point = rp1;
-        rpc.destination_route_point = rp2;
-        rpc.route_point_connection_kind = nm::RoutePointConnection::RoutePointConnectionKind::Extension;
+        nm::JourneyPatternPointConnection rpc;
+        rpc.departure_journey_pattern_point = rp1;
+        rpc.destination_journey_pattern_point = rp2;
+        rpc.journey_pattern_point_connection_kind = nm::JourneyPatternPointConnection::JourneyPatternPointConnectionKind::Extension;
         rpc.length = length;
-        route_point_connections.insert(std::make_pair(rp1->uri, rpc));
+        journey_pattern_point_connections.insert(std::make_pair(rp1->uri, rpc));
 
     }
 }
 
 
-void build_route_point_connections(Data & data) {
+void build_journey_pattern_point_connections(Data & data) {
 
     std::multimap<std::string, nm::VehicleJourney*> block_vj; 
-    std::multimap<std::string, nm::RoutePointConnection> route_point_connections;
+    std::multimap<std::string, nm::JourneyPatternPointConnection> journey_pattern_point_connections;
     for(nm::VehicleJourney *vj: data.vehicle_journeys) {
         if(vj->block_id != "")
             block_vj.insert(std::make_pair(vj->block_id, vj));
@@ -1247,7 +1253,7 @@ void build_route_point_connections(Data & data) {
                                                return vj1->stop_time_list.front()->arrival_time < 
                                                       vj2->stop_time_list.front()->arrival_time; });
 
-            //On crée les connexions entre le dernier route point et le premier route point
+            //On crée les connexions entre le dernier journey_pattern point et le premier journey_pattern point
             auto prec_vj = vjs.begin();
             auto it_vj =vjs.begin() + 1;
 
@@ -1255,9 +1261,9 @@ void build_route_point_connections(Data & data) {
                 auto &st1 = (*prec_vj)->stop_time_list.back(),
                      &st2 = (*it_vj)->stop_time_list.front();
                 if((st2->departure_time - st1->arrival_time) >= 0) {
-                    add_route_point_connection(st1->route_point, st2->route_point,
+                    add_journey_pattern_point_connection(st1->journey_pattern_point, st2->journey_pattern_point,
                                                (st2->departure_time - st1->arrival_time),
-                                               route_point_connections);
+                                               journey_pattern_point_connections);
                 }
                 prec_vj = it_vj;
             }
@@ -1266,9 +1272,9 @@ void build_route_point_connections(Data & data) {
     }
 
 
-    //On ajoute les route points dans data
-    for(auto rpc : route_point_connections) {
-        data.route_point_connections.push_back(new nm::RoutePointConnection(rpc.second));
+    //On ajoute les journey_pattern points dans data
+    for(auto rpc : journey_pattern_point_connections) {
+        data.journey_pattern_point_connections.push_back(new nm::JourneyPatternPointConnection(rpc.second));
     }
 
 }

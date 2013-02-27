@@ -26,10 +26,12 @@ std::string PathItem::print(const navitia::type::PT_Data & data) const {
 
     if(type == public_transport && vj_idx != navitia::type::invalid_idx){
         const navitia::type::VehicleJourney & vj = data.vehicle_journeys[vj_idx];
-        const navitia::type::Route & route = data.routes[vj.route_idx];
+        const navitia::type::JourneyPattern & journey_pattern = data.journey_patterns[vj.journey_pattern_idx];
+        const navitia::type::Route & route = data.routes[journey_pattern.route_idx];
         const navitia::type::Line & line = data.lines[route.line_idx];
         ss << "Ligne : " << line.name  << " (" << line.uri << " " << line.idx << "), "
-           << "Route : " << route.name << " (" << route.uri << " " << route.idx << "), "
+           << "Route : " << route.name  << " (" << route.uri << " " << route.idx << "), "
+           << "JourneyPattern : " << journey_pattern.name << " (" << journey_pattern.uri << " " << journey_pattern.idx << "), "
            << "Vehicle journey " << vj_idx << "\n";
     }
     ss << "Départ de " << start.name << "(" << start.uri << " " << start.idx << ") à " << departure << "\n";
@@ -82,7 +84,7 @@ bool Verification::appartenance_rp(Path path) {
 
             for(auto spidx : item.stop_points) {
                 if(std::find_if(vj.stop_time_list.begin(), vj.stop_time_list.end(),
-                                [&](int stidx){ return (data.route_points[data.stop_times[stidx].route_point_idx].stop_point_idx == spidx);}) == vj.stop_time_list.end()) {
+                                [&](int stidx){ return (data.journey_pattern_points[data.stop_times[stidx].journey_pattern_point_idx].stop_point_idx == spidx);}) == vj.stop_time_list.end()) {
                     std::cout << "Le stop point : " << spidx << " n'appartient pas au vj : " << item.vj_idx << std::endl;
                     return false;
                 }
