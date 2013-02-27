@@ -153,10 +153,10 @@ class Apis:
         "journeys" : {"endpoint" :  on_journeys(type_pb2.PLANNER), "arguments" :
                       Arguments.journeyArguments,
                       "description" : "Computes and retrieves a journey",
-                          "order":1},
+                      "order":1, "universal" : True},
         "isochrone" : {"endpoint" : on_journeys(type_pb2.ISOCHRONE), "arguments" : Arguments.isochroneArguments,
                        "description" : "Computes and retrieves an isochrone",
-                          "order":1},
+                          "order":1, "universal" : True},
         "proximity_list" : {"endpoint" : on_proximity_list, "arguments" : {
                 "lon" : Argument("Longitude of the point from where you want objects", float, True, False, order=0),
                 "lat" : Argument("Latitude of the point from where you want objects", float, True, False, order=1),
@@ -164,10 +164,10 @@ class Apis:
                 "object_type[]" : Argument("Type of the objects you want to have in return", str, False, False, ["stop_area", "stop_point"], order=4)
                 },
             "description" : "Retrieves all the objects around a point within the given distance",
-            "order" : 1.1},
+            "order" : 1.1, "universal" : True},
         "metadatas" : {"endpoint" : on_metadatas, "arguments" : {}, "description" : "Retrieves the metadatas of a region"},
         "status" : {"endpoint" : on_status, "arguments" : {}, "description" : "Retrieves the status of a region", "hidden" : True},
-        "load" : {"endpoint" : on_load, "arguments" : {},  "hidden" : True},
+        "load" : {"endpoint" : on_load, "arguments" : {},  "hidden" : True}
         }
 
     def __init__(self):

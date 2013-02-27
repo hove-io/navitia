@@ -86,10 +86,27 @@ def api_doc(apis, api = None) :
                             "nickname" : api,
                             "responseClass" : "void",
                             "parameters" : params,
-                            #"example" : apis[api]["example"] if "example" in apis[api] else None
                             }
                             ]
-                                    })
+            })
+            if "universal" in apis[api] and apis[api]["universal"]:
+                for param in params : 
+                    if(param['dataType'] == convertType(entrypoint)):
+                        param['description'] += " (can only be a coord)"
+
+
+                params.pop()
+                response['apis'].append({
+                        "path" : "/{version}/"+api+".format",
+                        "description" : apis[api]["description"] if "description" in apis[api] else "",
+                        "operations" : [{
+                            "httpMethod" : "GET",
+                            "summary" : apis[api]["description"] if "description" in apis[api] else "",
+                            "nickname" : api+"_universal",
+                            "responseClass" : "void",
+                            "parameters" : params,
+                            }]
+                })
 
     else:
         list_apis = apis.items()
