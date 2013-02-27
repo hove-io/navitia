@@ -274,13 +274,11 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
     std::vector<init::Departure_Type> departures;
 
     set_journey_patterns_valides(dt_depart.date(), forbidden);
+    departures = init::getDepartures(departs, dt_depart, vis.first_phase_clockwise, data, walking_speed);
+    clear_and_init(departures, destinations, borne, vis.first_phase_clockwise, true, walking_speed, walking_distance);
     if(vis.first_phase_clockwise) {
-        departures = init::getDepartures(departs, dt_depart, vis.first_phase_clockwise, data, walking_speed);
-        clear_and_init(departures, destinations, borne, vis.first_phase_clockwise, true, walking_speed, walking_distance);
         boucleRAPTOR(wheelchair/*, false*/);
     } else {
-        departures = init::getDepartures(destinations, dt_depart, vis.first_phase_clockwise, data, walking_speed);
-        clear_and_init(departures, departs, borne, vis.first_phase_clockwise, true, walking_speed, walking_distance);
         boucleRAPTORreverse(wheelchair/*, false*/);
     }
 
