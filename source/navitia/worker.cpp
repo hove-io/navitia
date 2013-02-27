@@ -79,6 +79,7 @@ pbnavitia::Response Worker::metadatas() {
     metadatas->set_start_production_date(bg::to_iso_string(data.meta.production_date.begin()));
     metadatas->set_end_production_date(bg::to_iso_string(data.meta.production_date.end()));
     metadatas->set_shape(data.meta.shape);
+    metadatas->set_status("running");
 
     return result;
 }

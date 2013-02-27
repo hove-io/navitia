@@ -2,11 +2,14 @@
 
 from shapely import wkt
 from shapely.geometry import Point
+from shapely.geos import ReadingError
 import ConfigParser
 import zmq
 from threading import Lock, Thread, Event
 import type_pb2
 import glob
+from singleton import singleton
+
 
 class Instance:
     def __init__(self):
@@ -15,7 +18,12 @@ class Instance:
         self.socket_path = None
         self.lock = Lock()
 
+class DeadSocketException(Exception):
+    def __init__(self, message):
+        Exception.__init__(self, message)
+        
 
+@singleton
 class NavitiaManager:
     """ Permet de coordonner les différents NAViTiA gérés par le front-end
     Un identifiant correspond à une socket ZMQ Navitia où se connecter
@@ -73,7 +81,6 @@ class NavitiaManager:
             resp.ParseFromString(pb)
             return resp
         else :
-            print region+" is a dead socket (" + instance.socket_path + ")"
             instance.socket.setsockopt(zmq.LINGER, 0)
             instance.socket.close()
             self.poller.unregister(instance.socket)
@@ -81,7 +88,7 @@ class NavitiaManager:
             instance.socket.connect(instance.socket_path)
             self.poller.register(instance.socket)
             instance.lock.release()
-            return None
+            raise DeadSocketException(region+" is a dead socket (" + instance.socket_path + ")")
 
 
     def thread_ping(self, timer=1):
@@ -89,12 +96,15 @@ class NavitiaManager:
         req.requested_api = type_pb2.METADATAS
         while not self.thread_event.is_set():
             for key, instance in self.instances.iteritems():
-                resp = self.send_and_receive(req, key)
-                if resp:
-                    try:
+                try:
+                    resp = self.send_and_receive(req, key)
+                    if resp:
                         instance.geom = wkt.loads(resp.metadatas.shape)
-                    except:
-                        instance.geom = None
+                except DeadSocketException, e:
+                    print e
+                except shapely.geos.ReadingError:
+                    instance.geom = None
+
             self.thread_event.wait(timer)
         print "fin thread ping"
 

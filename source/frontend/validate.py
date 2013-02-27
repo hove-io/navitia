@@ -29,6 +29,11 @@ class Argument :
         if(self.validator == None) : 
             print "A validator is required"
 
+class ValidationTypeException(Exception):
+    def __init__(self, message):
+        Exception.__init__(self, message)
+        
+
 
 def boolean(value):
     if(value.lower() == "true") :
@@ -36,18 +41,18 @@ def boolean(value):
     elif(value.lower()=="false"):
          return False
     else:
-        raise Exception("validation_error")
+        raise ValidationTypeException("boolean")
 
 def time(value): 
     m = re.match(r"T(?P<hour>(\d){1,2})(?P<minutes>(\d){2})", value)
     if(m) :
         if(int(m.groupdict()['hour']) < 0 or int(m.groupdict()['hour']) > 24 or
            int(m.groupdict()['minutes']) < 0 or int(m.groupdict()['minutes']) > 60):
-            raise Exception("validation_error")
+            raise ValidationTypeException("time1")
         else:
             return value
     else:
-            raise Exception("validation_error")
+            raise ValidationTypeException("time2")
 
     return value
 
@@ -61,7 +66,7 @@ def datetime_validator(value):
             time(m.groupdict()['hour'])
             return value
     else:
-        raise Exception("validation_error")
+        raise ValidationTypeException("datetime")
 
     return value
 valid_types = ("validity_pattern", "line", "route", "vehicle_journey",
@@ -71,7 +76,7 @@ valid_types = ("validity_pattern", "line", "route", "vehicle_journey",
 def entrypoint(value):
     m = re.match(r"^(?P<type>(\w)+):", value)
     if not m or m.groupdict()["type"] not in valid_types:
-        raise Exception("validation_error")
+        raise ValidationTypeException("entrypoint")
     return value
 
 def filter(value):
@@ -88,6 +93,7 @@ def validate_arguments(request, validation_dict) :
                 response.details[key] = {"status" : "multiple", "value":value}
 
             for val in request.args.getlist(key) :
+                print key + " =>  " + val
                 try :
                     parsed_val = validation_dict[key].validator(val)
                     response.details[key] = {"status" : "valid", "value": val}

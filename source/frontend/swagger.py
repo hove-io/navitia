@@ -1,6 +1,7 @@
 from werkzeug.wrappers import Response
 import json
 from validate import *
+from instance_manager import NavitiaManager
 
 def convertType(validator):
     if validator == str :
@@ -23,7 +24,7 @@ def convertType(validator):
         return "string"
 
 
-def api_doc(apis, instance_manager, api = None) : 
+def api_doc(apis, api = None) : 
     response = {}
     response['apiVersion'] = "0.2"
     response['swaggerVersion'] = "1.1"
@@ -70,7 +71,7 @@ def api_doc(apis, instance_manager, api = None) :
                 regions['required'] = True
                 regions['allowMultiple'] = False
                 regions['allowableValues'] = {"valueType":"LIST", "values":[]}
-                for key in instance_manager.instances.keys():
+                for key in NavitiaManager().instances.keys():
                     regions['allowableValues']["values"].append(key)
                 params.append(regions)
                 path += "{region}/"
