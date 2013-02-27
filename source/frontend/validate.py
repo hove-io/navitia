@@ -93,7 +93,6 @@ def validate_arguments(request, validation_dict) :
                 response.details[key] = {"status" : "multiple", "value":value}
 
             for val in request.args.getlist(key) :
-                print key + " =>  " + val
                 try :
                     parsed_val = validation_dict[key].validator(val)
                     response.details[key] = {"status" : "valid", "value": val}
