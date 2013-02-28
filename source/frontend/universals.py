@@ -2,6 +2,7 @@ from apis import Apis
 from werkzeug import Response
 from instance_manager import NavitiaManager
 import sys
+import re
 
 
 def universal_journeys(api, request, version, format):

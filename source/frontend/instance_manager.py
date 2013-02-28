@@ -1,8 +1,6 @@
 # coding=utf-8
 
-from shapely import wkt
-from shapely.geometry import Point
-from shapely.geos import ReadingError
+from shapely import wkt, geometry, geos
 import ConfigParser
 import zmq
 from threading import Lock, Thread, Event
@@ -102,7 +100,7 @@ class NavitiaManager:
                         instance.geom = wkt.loads(resp.metadatas.shape)
                 except DeadSocketException, e:
                     print e
-                except shapely.geos.ReadingError:
+                except geos.ReadingError:
                     instance.geom = None
 
             self.thread_event.wait(timer)
@@ -123,7 +121,7 @@ class NavitiaManager:
 
         Retourne None si on a rien trouvé
         """
-        p = Point(lon,lat)
+        p = geometry.Point(lon,lat)
         for key, instance in self.instances.iteritems():
             if instance.geom and instance.geom.contains(p):
                 return key
