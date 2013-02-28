@@ -91,10 +91,10 @@ def on_line_schedule(request_args, version, region):
     return stop_times(request_args, version, region, request_args["filter"], "", type_pb2.LINE_SCHEDULE)
 
 def on_next_arrivals(request_args, version, region):
-    return stop_times(request_args, version, region, request_args["filter"], "", type_pb2.NEXT_DEPARTURES)
+    return stop_times(request_args, version, region, "", request_args["filter"], type_pb2.NEXT_ARRIVALS)
 
 def on_next_departures(request_args, version, region):
-    return stop_times(request_args, version, region, "", request_args["filter"], type_pb2.NEXT_ARRIVALS)
+    return stop_times(request_args, version, region, request_args["filter"], "", type_pb2.NEXT_DEPARTURES)
 
 def on_stops_schedule(request_args, version, region):
     return stop_times(request_args, version, region, request_args["departure_filter"], request_args["arrival_filter"],type_pb2.STOPS_SCHEDULE)
