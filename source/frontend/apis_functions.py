@@ -25,6 +25,7 @@ def on_regions(request, version, format):
         try:
             resp = NavitiaManager().send_and_receive(req, region)
             resp_dict = protobuf_to_dict(resp) 
+            resp_dict['region_id'] = region
             if 'metadatas' in resp_dict.keys():
                 response['regions'].append(resp_dict['metadatas'])
         except DeadSocketException :
