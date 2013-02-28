@@ -28,6 +28,7 @@ pbnavitia::Response extract_data(const type::Data & data, type::Type_e requested
         case type::Type_e::eJourneyPatternPoint: fill_pb_object(idx, data, pb_response->add_journey_pattern_points(), depth, today); break;
         case type::Type_e::eCompany: fill_pb_object(idx, data, pb_response->add_companies(), depth); break;
         case type::Type_e::eVehicleJourney: fill_pb_object(idx, data, pb_response->add_vehicle_journeys(), depth, today); break;
+        case type::Type_e::eRoute: fill_pb_object(idx, data, pb_response->add_routes(), depth, today); break;
         default: break;
         }
     }
@@ -41,17 +42,7 @@ pbnavitia::Response query_pb(type::Type_e requested_type, std::string request, c
     try {
         final_indexes = make_query(requested_type, request, data);
     } catch(ptref_parsing_error parse_error) {
-        switch(parse_error.type){
-        case ptref_parsing_error::error_type::partial_error:
-            pb_response.set_error("Filter: Unable to parse the whole string. Not parsed: >>" + parse_error.more + "<<");
-            break;
-        case ptref_parsing_error::error_type::unknown_object:
-            pb_response.set_error("Filter: unknown object type: " + parse_error.more);
-            break;
-        case ptref_parsing_error::error_type::global_error:
-            pb_response.set_error("Filter: Unable to parse");
-            break;
-        }
+        pb_response.set_error(parse_error.more);
         return pb_response;
     }
 

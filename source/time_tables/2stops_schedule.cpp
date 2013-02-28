@@ -80,11 +80,7 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
     try {
         board = stops_schedule(departure_filter, arrival_filter, dt, max_dt, nb_stoptimes, data);
     } catch(ptref::ptref_parsing_error parse_error) {
-        switch(parse_error.type){
-        case ptref::ptref_parsing_error::error_type::partial_error: pb_response.set_error("DepartureBoard / PTReferential : On n'a pas réussi à parser toute la requête. Non-interprété : >>" + parse_error.more + "<<"); break;
-        case ptref::ptref_parsing_error::error_type::global_error: pb_response.set_error("DepartureBoard / PTReferential : Impossible de parser la requête");
-        case ptref::ptref_parsing_error::error_type::unknown_object: pb_response.set_error("Objet NAViTiA inconnu : " + parse_error.more);
-        }
+        pb_response.set_error(parse_error.more);
         return pb_response;
     }
 

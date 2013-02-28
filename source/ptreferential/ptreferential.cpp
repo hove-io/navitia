@@ -34,17 +34,16 @@ namespace qi = boost::spirit::qi;
         struct select_r
             : qi::grammar<Iterator, std::vector<Filter>(), qi::space_type>
 {
-    qi::rule<Iterator, std::string(), qi::space_type> txt, txt2/*, txt3*/; // Match une string
+    qi::rule<Iterator, std::string(), qi::space_type> txt, txt2; // Match une string
     qi::rule<Iterator, std::string()> txt3;
     qi::rule<Iterator, float, qi::space_type> fl1; 
     qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
-    qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter, pre_filter, a_filter; // La string complÃ¨te Ã  parser
-    qi::rule<Iterator, Filter(), qi::space_type> filter1, filter2, filter3; // La string complÃ¨te Ã  parser
+    qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter, pre_filter, a_filter; // La string complète a parser
+    qi::rule<Iterator, Filter(), qi::space_type> filter1, filter2, filter3; // La string complète à parser
 
     select_r() : select_r::base_type(filter) {
         txt = qi::lexeme[+(qi::alnum|qi::char_("_:-"))];
         txt2 = qi::lexeme[+(qi::alnum|qi::char_("_:-=.<> "))];
-        //txt3 = '"' >> qi::lexeme[+(qi::alnum|qi::char_("_:- "))] >> '"';
         txt3 = '"' >> qi::lexeme[+(qi::alnum|qi::char_("_:- &"))] >> '"';
         bin_op =  qi::string("<=")[qi::_val = LEQ]
                 | qi::string(">=")[qi::_val = GEQ]
@@ -107,7 +106,7 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
     } else if( filter.op == HAVING ) {
         indexes = make_query(nt::static_data::get()->typeByCaption(filter.object), filter.value, d);
     } else {
-        indexes = filtered_indexes(data, build_clause<T>({filter})); // filtered.get_offsets();
+        indexes = filtered_indexes(data, build_clause<T>({filter}));
     }
 
     Type_e current = filter.navitia_type;
@@ -120,7 +119,6 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
     return indexes;
 }
 
-
 std::vector<Filter> parse(std::string request){
     std::string::iterator begin = request.begin();
     std::vector<Filter> filters;
@@ -130,12 +128,13 @@ std::vector<Filter> parse(std::string request){
             std::string unparsed(begin, request.end());
             ptref_parsing_error error;
             error.type = ptref_parsing_error::partial_error;
-            error.more = unparsed;
+            error.more = "Filter: Unable to parse the whole string. Not parsed: >>" + unparsed + "<<";
             throw error;
         }
     } else {
         ptref_parsing_error error;
         error.type = ptref_parsing_error::global_error;
+        error.more = "Filter: unable to parse";
         throw error;
     }
     return filters;
@@ -146,7 +145,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
     std::vector<Filter> filters;
 
     if(!request.empty()){
-	filters = parse(request);
+        filters = parse(request);
     }
 
     type::static_data * static_data = type::static_data::get();
@@ -155,7 +154,8 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
             filter.navitia_type = static_data->typeByCaption(filter.object);
         } catch(...) {
             ptref_parsing_error error;
-            error.more = "Unknown object: " + filter.object;
+            error.type = ptref_parsing_error::error_type::unknown_object;
+            error.more = "Filter Unknown object type: " + filter.object;
             throw error;
         }
     }
