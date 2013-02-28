@@ -1,6 +1,6 @@
 #include "line_schedule.h"
 #include "thermometer.h"
-#include "parse_request.h"
+#include "request_handle.h"
 #include "type/pb_converter.h"
 #include "ptreferential/ptreferential.h"
 
@@ -57,19 +57,19 @@ std::vector<vector_string> make_matrice(const std::vector<vector_stopTime> & sto
 
 
 pbnavitia::Response line_schedule(const std::string & filter, const std::string &str_dt, uint32_t duration, const uint32_t max_depth, type::Data &d) {
-    RequestHandle parser("LINE_SCHEDULE", "", str_dt, duration, d);
-    parser.pb_response.set_requested_api(pbnavitia::LINE_SCHEDULE);
+    RequestHandle handler("LINE_SCHEDULE", "", str_dt, duration, d);
+    handler.pb_response.set_requested_api(pbnavitia::LINE_SCHEDULE);
 
-    if(parser.pb_response.has_error()) {
-        return parser.pb_response;
+    if(handler.pb_response.has_error()) {
+        return handler.pb_response;
     }
     Thermometer thermometer(d);
 
     for(type::idx_t line_idx : navitia::ptref::make_query(type::Type_e::eLine, filter, d)) {
-        auto schedule = parser.pb_response.mutable_line_schedule()->add_schedules();
+        auto schedule = handler.pb_response.mutable_line_schedule()->add_schedules();
         auto journey_patterns = d.pt_data.lines[line_idx].get(type::Type_e::eJourneyPattern, d.pt_data);
         //On récupère les stop_times
-        auto stop_times = get_all_stop_times(journey_patterns, parser.date_time, parser.max_datetime, d);
+        auto stop_times = get_all_stop_times(journey_patterns, handler.date_time, handler.max_datetime, d);
         std::vector<vector_idx> journey_pattern_point_journey_patterns;
         for(auto journey_pattern_idx : journey_patterns) {
             journey_pattern_point_journey_patterns.push_back(vector_idx());
@@ -101,7 +101,7 @@ pbnavitia::Response line_schedule(const std::string & filter, const std::string 
 
     }
 
-    return parser.pb_response;
+    return handler.pb_response;
 
 }
 }}

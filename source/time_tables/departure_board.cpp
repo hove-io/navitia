@@ -1,5 +1,5 @@
 #include "departure_board.h"
-#include "parse_request.h"
+#include "request_handle.h"
 #include "get_stop_times.h"
 #include "type/pb_converter.h"
 
@@ -39,26 +39,26 @@ std::vector<vector_datetime> make_columuns(const vector_dt_st &stop_times) {
 
 pbnavitia::Response departure_board(const std::string &request, const std::string &date, uint32_t duration, const type::Data &data) {
 
-    RequestHandle parser("DEPARTURE_BOARD", request, date,  duration, data);
+    RequestHandle handler("DEPARTURE_BOARD", request, date,  duration, data);
 
 
-    parser.pb_response.set_requested_api(pbnavitia::DEPARTURE_BOARD);
-    if(parser.pb_response.has_error())
-        return parser.pb_response;
+    handler.pb_response.set_requested_api(pbnavitia::DEPARTURE_BOARD);
+    if(handler.pb_response.has_error())
+        return handler.pb_response;
 
-    if(parser.journey_pattern_points.size() == 0)
-        return parser.pb_response;
+    if(handler.journey_pattern_points.size() == 0)
+        return handler.pb_response;
 
-    pbnavitia::DepartureBoard * dep_board = parser.pb_response.mutable_departure_board();
+    pbnavitia::DepartureBoard * dep_board = handler.pb_response.mutable_departure_board();
 
     std::map<stop_point_line, vector_dt_st> map_line_stop_point;
     // On regroupe entre eux les stop_times appartenant au meme couple (stop_point, route)
     // On veut en effet afficher les départs regroupés par route (une route étant une vague direction commerciale
-    for(type::idx_t journey_pattern_point_idx : parser.journey_pattern_points) {
+    for(type::idx_t journey_pattern_point_idx : handler.journey_pattern_points) {
         auto stop_point_idx = data.pt_data.journey_pattern_points[journey_pattern_point_idx].stop_point_idx;
         auto route_idx = data.pt_data.journey_patterns[data.pt_data.journey_pattern_points[journey_pattern_point_idx].journey_pattern_idx].route_idx;
 
-        auto stop_times = get_stop_times({journey_pattern_point_idx}, parser.date_time, parser.max_datetime, std::numeric_limits<int>::max(), data);
+        auto stop_times = get_stop_times({journey_pattern_point_idx}, handler.date_time, handler.max_datetime, std::numeric_limits<int>::max(), data);
 
         auto key = std::make_pair(stop_point_idx, route_idx);
         auto iter = map_line_stop_point.find(key);
@@ -70,7 +70,7 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
     }
 
     auto current_time = pt::second_clock::local_time();
-    pt::time_period action_period(to_posix_time(parser.date_time, data), to_posix_time(parser.max_datetime, data));
+    pt::time_period action_period(to_posix_time(handler.date_time, data), to_posix_time(handler.max_datetime, data));
 
     for(auto id_vec : map_line_stop_point) {
 
@@ -81,8 +81,8 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
         auto vec_st = id_vec.second;
         std::sort(vec_st.begin(), vec_st.end(),
                   [&](dt_st d1, dt_st d2) {
-                    return std::abs((d1.first.hour() % type::DateTime::NB_SECONDS_DAY)-parser.date_time.hour())
-                        <  std::abs((d2.first.hour() % type::DateTime::NB_SECONDS_DAY)-parser.date_time.hour());
+                    return std::abs((d1.first.hour() % type::DateTime::NB_SECONDS_DAY)-handler.date_time.hour())
+                        <  std::abs((d2.first.hour() % type::DateTime::NB_SECONDS_DAY)-handler.date_time.hour());
                   });
 
         for(auto vec : make_columuns(vec_st)) {
@@ -96,7 +96,7 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
         }
     }
 
-    return parser.pb_response;
+    return handler.pb_response;
 }
 
 

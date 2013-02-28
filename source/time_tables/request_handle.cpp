@@ -1,9 +1,9 @@
-#include "parse_request.h"
+#include "request_handle.h"
 #include "ptreferential/ptreferential.h"
 
 namespace navitia { namespace timetables {
 
-request_parser::request_parser(const std::string &API, const std::string &request, const std::string &str_dt, uint32_t duration, const type::Data & data) {
+RequestHandle::RequestHandle(const std::string &API, const std::string &request, const std::string &str_dt, uint32_t duration, const type::Data & data) {
 
     try {
         auto ptime = boost::posix_time::from_iso_string(str_dt);

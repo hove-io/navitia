@@ -1,32 +1,32 @@
 #include "next_stop_times.h"
 #include "get_stop_times.h"
-#include "parse_request.h"
+#include "request_handle.h"
 
 
 namespace navitia { namespace timetables {
 
 template<typename Visitor>
 pbnavitia::Response next_stop_times(const std::string &request, const std::string &str_dt, uint32_t duration, uint32_t nb_stoptimes, const int depth, const bool wheelchair, type::Data & data, Visitor vis) {
-    request_parser parser(vis.api_str, request, str_dt, duration,data);
+    RequestHandle handler(vis.api_str, request, str_dt, duration,data);
 
-    parser.pb_response.set_requested_api(vis.api_pb);
-    if(parser.pb_response.has_error()) {
-        return parser.pb_response;
+    handler.pb_response.set_requested_api(vis.api_pb);
+    if(handler.pb_response.has_error()) {
+        return handler.pb_response;
     }
 
-    std::remove_if(parser.journey_pattern_points.begin(), parser.journey_pattern_points.end(), vis.predicate);
+    std::remove_if(handler.journey_pattern_points.begin(), handler.journey_pattern_points.end(), vis.predicate);
 
-    auto departures_dt_idx = get_stop_times(parser.journey_pattern_points, parser.date_time, parser.max_datetime, nb_stoptimes, data, wheelchair);
+    auto departures_dt_idx = get_stop_times(handler.journey_pattern_points, handler.date_time, handler.max_datetime, nb_stoptimes, data, wheelchair);
 
     for(auto dt_idx : departures_dt_idx) {
-        pbnavitia::StopDateTime * stoptime = parser.pb_response.mutable_nextstoptimes()->add_stop_date_times();
+        pbnavitia::StopDateTime * stoptime = handler.pb_response.mutable_nextstoptimes()->add_stop_date_times();
         stoptime->set_departure_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
         stoptime->set_arrival_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
         const auto &rp = data.pt_data.journey_pattern_points[data.pt_data.stop_times[dt_idx.second].journey_pattern_point_idx];
 
         fill_pb_object(rp.stop_point_idx, data, stoptime->mutable_stop_point(), depth);
     }
-    return parser.pb_response;
+    return handler.pb_response;
 }
 
 
