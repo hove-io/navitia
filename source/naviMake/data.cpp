@@ -56,6 +56,9 @@ void Data::sort(){
     std::sort(districts.begin(), districts.end(), Less<navimake::types::District>());
     std::for_each(districts.begin(), districts.end(), Indexer<navimake::types::District>());
 
+    std::sort(routes.begin(), routes.end(), Less<navimake::types::Route>());
+    std::for_each(routes.begin(), routes.end(), Indexer<navimake::types::Route>());
+
 }
 
 void Data::complete() {
@@ -338,6 +341,11 @@ void Data::build_relations(navitia::type::PT_Data &data){
             data.routes.at(journey_pattern.route_idx).journey_pattern_list.push_back(journey_pattern.idx);
         std::sort(journey_pattern.journey_pattern_point_list.begin(), journey_pattern.journey_pattern_point_list.end(), sort_journey_pattern_points_list(data));
         std::sort(journey_pattern.vehicle_journey_list.begin(), journey_pattern.vehicle_journey_list.end(), sort_vehicle_journey_list(data));
+    }
+
+    for(navitia::type::Route & route : data.routes){
+        if(route.line_idx != navitia::type::invalid_idx)
+            data.lines.at(route.line_idx).route_list.push_back(route.idx);
     }
 
     BOOST_FOREACH(navitia::type::VehicleJourney & vj, data.vehicle_journeys){

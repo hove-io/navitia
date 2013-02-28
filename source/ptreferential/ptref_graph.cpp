@@ -50,6 +50,7 @@ struct Jointures {
         vertex_map[Type_e::eDistrict] = boost::add_vertex(Type_e::eDistrict, g);
         vertex_map[Type_e::eCompany] = boost::add_vertex(Type_e::eCompany, g);
         vertex_map[Type_e::eCountry] = boost::add_vertex(Type_e::eCountry, g);
+        vertex_map[Type_e::eRoute] = boost::add_vertex(Type_e::eRoute, g);
 
         boost::add_edge(vertex_map[Type_e::eDistrict], vertex_map[Type_e::eCountry], g);
         boost::add_edge(vertex_map[Type_e::eDepartment], vertex_map[Type_e::eDistrict], g);
@@ -77,10 +78,15 @@ struct Jointures {
         boost::add_edge(vertex_map[Type_e::eLine], vertex_map[Type_e::eCompany], g);
         boost::add_edge(vertex_map[Type_e::eNetwork], vertex_map[Type_e::eLine], g);
         boost::add_edge(vertex_map[Type_e::eJourneyPattern], vertex_map[Type_e::eLine], g);
+        boost::add_edge(vertex_map[Type_e::eRoute], vertex_map[Type_e::eLine], g);
+
+        boost::add_edge(vertex_map[Type_e::eJourneyPatternPoint], vertex_map[Type_e::eRoute], g);
+        boost::add_edge(vertex_map[Type_e::eLine], vertex_map[Type_e::eRoute], g);
 
         boost::add_edge(vertex_map[Type_e::eLine], vertex_map[Type_e::eJourneyPattern], g);
         boost::add_edge(vertex_map[Type_e::eCommercialMode], vertex_map[Type_e::eJourneyPattern], g);
         boost::add_edge(vertex_map[Type_e::eJourneyPatternPoint], vertex_map[Type_e::eJourneyPattern], g);
+        boost::add_edge(vertex_map[Type_e::eRoute], vertex_map[Type_e::eJourneyPattern], g);
 
         boost::add_edge(vertex_map[Type_e::eJourneyPattern], vertex_map[Type_e::eJourneyPatternPoint], g);
         boost::add_edge(vertex_map[Type_e::eStopPoint], vertex_map[Type_e::eJourneyPatternPoint], g);

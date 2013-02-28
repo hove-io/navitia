@@ -242,23 +242,28 @@ std::vector<idx_t> PhysicalMode::get(Type_e type, const PT_Data &) const {
     return result;
 }
 
-std::vector<idx_t> Line::get(Type_e type, const PT_Data & data) const {
+std::vector<idx_t> Line::get(Type_e type, const PT_Data&) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::eCommercialMode: result.push_back(commercial_mode_idx); break;
     case Type_e::ePhysicalMode: return physical_mode_list; break;
     case Type_e::eCompany: return company_list; break;
     case Type_e::eNetwork: result.push_back(network_idx); break;
-    case Type_e::eRoute: for(const Route & route : data.routes) {
-            if(route.line_idx == idx)
-                result.push_back(route.idx);
-        }
-        break;
+    case Type_e::eRoute: return route_list; break;
     default: break;
     }
     return result;
 }
 
+std::vector<idx_t> Route::get(Type_e type, const PT_Data &) const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case Type_e::eLine: result.push_back(line_idx); break;
+    case Type_e::eJourneyPattern: return journey_pattern_list; break;
+    default: break;
+    }
+    return result;
+}
 
 std::vector<idx_t> JourneyPattern::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;

@@ -67,7 +67,7 @@ pbnavitia::Response line_schedule(const std::string & filter, const std::string 
 
     for(type::idx_t line_idx : navitia::ptref::make_query(type::Type_e::eLine, filter, d)) {
         auto schedule = parser.pb_response.mutable_line_schedule()->add_schedules();
-        auto journey_patterns = d.pt_data.lines[line_idx].journey_pattern_list;
+        auto journey_patterns = d.pt_data.lines[line_idx].get(type::Type_e::eJourneyPattern, d.pt_data);
         //On récupère les stop_times
         auto stop_times = get_all_stop_times(journey_patterns, parser.date_time, parser.max_datetime, d);
         std::vector<vector_idx> journey_pattern_point_journey_patterns;

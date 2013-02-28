@@ -336,7 +336,7 @@ struct Line : public NavitiaHeader, Nameable {
     std::vector<idx_t> company_list;
     idx_t network_idx;
 
-    std::vector<idx_t> journey_pattern_list;
+    std::vector<idx_t> route_list;
 
     std::vector<idx_t> impact_list;
 
@@ -346,7 +346,7 @@ struct Line : public NavitiaHeader, Nameable {
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & uri & code & forward_name & backward_name & additional_data & color
                 & sort & commercial_mode_idx & physical_mode_list & company_list & network_idx
-                & journey_pattern_list& impact_list;
+                & route_list& impact_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
@@ -361,6 +361,8 @@ struct Route : public NavitiaHeader, Nameable {
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & uri & line_idx & journey_pattern_list;
     }
+
+    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
 struct JourneyPattern : public NavitiaHeader, Nameable{

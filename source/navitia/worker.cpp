@@ -23,7 +23,8 @@ nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     case pbnavitia::STOP_POINT: return nt::Type_e::eStopPoint; break;
     case pbnavitia::CITY: return nt::Type_e::eCity; break;
     case pbnavitia::LINE: return nt::Type_e::eLine; break;
-    case pbnavitia::ROUTE: return nt::Type_e::eJourneyPattern; break;
+    case pbnavitia::ROUTE: return nt::Type_e::eRoute; break;
+    case pbnavitia::JOURNEY_PATTERN: return nt::Type_e::eJourneyPattern; break;
     case pbnavitia::NETWORK: return nt::Type_e::eNetwork; break;
     case pbnavitia::COMMERCIAL_MODE: return nt::Type_e::ePhysicalMode; break;
     case pbnavitia::PHYSICAL_MODE: return nt::Type_e::eCommercialMode; break;
@@ -122,8 +123,13 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
         return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), this->data);
     case pbnavitia::DEPARTURE_BOARD:
         return navitia::timetables::departure_board(request.departure_filter(), request.from_datetime(), request.duration(), this->data);
-    default:
+    case pbnavitia::LINE_SCHEDULE:
         return navitia::timetables::line_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
+    default:
+        LOG4CPLUS_WARN(logger, "On a reçu une requête time table inconnue");
+        pbnavitia::Response response;
+        response.set_error("Unknown time table api");
+        return response;
     }
 }
 

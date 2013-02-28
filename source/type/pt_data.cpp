@@ -121,6 +121,7 @@ std::vector<idx_t> PT_Data::get_all_index(Type_e type) const {
     case Type_e::eCompany: num_elements = companies.size(); break;
     case Type_e::eVehicle: num_elements = vehicles.size(); break;
     case Type_e::eCountry: num_elements = countries.size(); break;
+    case Type_e::eRoute: num_elements = routes.size(); break;
     default:  break;
     }
     std::vector<idx_t> indexes(num_elements);

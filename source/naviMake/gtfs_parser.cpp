@@ -867,8 +867,6 @@ void build_journey_patterns(Data & data){
             }
 
             nm::Route * route = new nm::Route();
-            route->line = vj1->tmp_line;
-            data.routes.push_back(route);
 
             nm::JourneyPattern * journey_pattern = new nm::JourneyPattern();
             journey_pattern->uri = vj1->tmp_line->uri + "-" + boost::lexical_cast<std::string>(count);
@@ -876,6 +874,11 @@ void build_journey_patterns(Data & data){
             journey_pattern->physical_mode = vj1->physical_mode;
             vj1->journey_pattern = journey_pattern;
             data.journey_patterns.push_back(journey_pattern);
+
+            route->line = vj1->tmp_line;
+            route->uri = journey_pattern->uri;
+            route->name = journey_pattern->name;
+            data.routes.push_back(route);
 
             for(auto it2 = it1 + 1; it1 != data.vehicle_journeys.end() && it2 != data.vehicle_journeys.end(); ++it2){
                 nm::VehicleJourney * vj2 = *it2;

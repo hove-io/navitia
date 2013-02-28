@@ -67,13 +67,18 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * ad
         fill_pb_object(way.city_idx, data,  address->mutable_city(), max_depth-1, now, action_period);
 }
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line, int,
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line, int depth,
         const pt::ptime&, const pt::time_period&){
     navitia::type::Line l = data.pt_data.lines.at(idx);
     line->set_code(l.code);
     line->set_color(l.color);
     line->set_name(l.name);
     line->set_uri(l.uri);
+
+    if(depth>0){
+        for(nt::idx_t route_idx : l.route_list)
+            fill_pb_object(route_idx, data, line->add_routes(), depth-1);
+    }
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::JourneyPattern * journey_pattern, int max_depth,
