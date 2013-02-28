@@ -39,7 +39,7 @@ std::vector<vector_datetime> make_columuns(const vector_dt_st &stop_times) {
 
 pbnavitia::Response departure_board(const std::string &request, const std::string &date, uint32_t duration, const type::Data &data) {
 
-    request_parser parser("DEPARTURE_BOARD", request, date,  duration, data);
+    RequestHandle parser("DEPARTURE_BOARD", request, date,  duration, data);
 
 
     parser.pb_response.set_requested_api(pbnavitia::DEPARTURE_BOARD);
