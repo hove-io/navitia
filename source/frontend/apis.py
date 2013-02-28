@@ -32,7 +32,7 @@ class Arguments:
     }
 
     nextTimesArguments = {
-        "filter" : Argument("Filter to have the times you want", filter, True,
+        "filter" : Argument("Filter to have the times you want", filter, False,
                             False, order=0),
         "from_datetime" : Argument("The date from which you want the times",
                               datetime_validator, True, False, order=10),
@@ -41,7 +41,7 @@ class Arguments:
         "wheelchair" : Argument("true if you want the times to have accessibility", boolean, False, False, defaultValue=False, order=50),
         "depth" : Argument("Maximal depth of the returned objects", int, False,
                            False, defaultValue = 1, order=100),
-        "nb_stoptimes": Argument("The maximum number of stop_times", int , False, False, 20, order=30)
+        "nb_stoptimes": Argument("The maximum number of stop_times, defaults to 20", int , False, False, 20, order=30)
         }
 
     ptrefArguments = {
