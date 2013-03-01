@@ -14,6 +14,7 @@ class Instance:
         self.geom = None
         self.socket = None
         self.socket_path = None
+        self.poller = zmq.Poller()
         self.lock = Lock()
 
 class DeadSocketException(Exception):
@@ -41,7 +42,6 @@ class NavitiaManager:
         self.context = zmq.Context()
         self.default_socket = None
 
-        self.poller = zmq.Poller()
 
         ini_files = []
         if ini_file == None :
@@ -56,7 +56,7 @@ class NavitiaManager:
             instance.socket_path = conf.get('instance' , 'socket')
             instance.socket = self.context.socket(zmq.REQ)
             instance.socket.connect(instance.socket_path)
-            self.poller.register(instance.socket, zmq.POLLIN)
+            instance.poller.register(instance.socket, zmq.POLLIN)
             self.instances[conf.get('instance' , 'key')] = instance
 
 
@@ -71,7 +71,7 @@ class NavitiaManager:
             return None
         instance.lock.acquire()
         instance.socket.send(request.SerializeToString())#, zmq.NOBLOCK, copy=False)
-        socks = dict(self.poller.poll(1000))
+        socks = dict(instance.poller.poll(1000))
         if socks.get(instance.socket) == zmq.POLLIN:
             pb = instance.socket.recv()
             instance.lock.release()
@@ -81,10 +81,10 @@ class NavitiaManager:
         else :
             instance.socket.setsockopt(zmq.LINGER, 0)
             instance.socket.close()
-            self.poller.unregister(instance.socket)
+            instance.poller.unregister(instance.socket)
             instance.socket = self.context.socket(zmq.REQ)
             instance.socket.connect(instance.socket_path)
-            self.poller.register(instance.socket)
+            instance.poller.register(instance.socket)
             instance.lock.release()
             raise DeadSocketException(region+" is a dead socket (" + instance.socket_path + ")")
 
