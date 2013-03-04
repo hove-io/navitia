@@ -79,7 +79,7 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
     std::vector<pair_dt_st> board;
     try {
         board = stops_schedule(departure_filter, arrival_filter, dt, max_dt, nb_stoptimes, data);
-    } catch(ptref::ptref_parsing_error parse_error) {
+    } catch(ptref::parsing_error parse_error) {
         pb_response.set_error(parse_error.more);
         return pb_response;
     }
