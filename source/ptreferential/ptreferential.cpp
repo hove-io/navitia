@@ -177,7 +177,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
         case Type_e::eJourneyPatternPoint: indexes = get_indexes<JourneyPatternPoint>(filter, requested_type, data); break;
         case Type_e::eCompany: indexes = get_indexes<Company>(filter, requested_type, data); break;
         case Type_e::eVehicleJourney : indexes = get_indexes<VehicleJourney>(filter, requested_type, data); break;
-        default: break;
+        case Type_e::eRoute: indexes = get_indexes<Route>(filter, requested_type, data); break;
         }
         // Attention ! les structures doivent être triées !
         std::sort(indexes.begin(), indexes.end());
