@@ -126,16 +126,10 @@ std::vector<Filter> parse(std::string request){
     if (qi::phrase_parse(begin, request.end(), s, qi::space, filters)) {
         if(begin != request.end()) {
             std::string unparsed(begin, request.end());
-            ptref_parsing_error error;
-            error.type = ptref_parsing_error::partial_error;
-            error.more = "Filter: Unable to parse the whole string. Not parsed: >>" + unparsed + "<<";
-            throw error;
+            throw ptref_parsing_error(ptref_parsing_error::partial_error, "Filter: Unable to parse the whole string. Not parsed: >>" + unparsed + "<<");
         }
     } else {
-        ptref_parsing_error error;
-        error.type = ptref_parsing_error::global_error;
-        error.more = "Filter: unable to parse";
-        throw error;
+        throw ptref_parsing_error(ptref_parsing_error::global_error, "Filter: unable to parse");
     }
     return filters;
 }
@@ -153,10 +147,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
         try {
             filter.navitia_type = static_data->typeByCaption(filter.object);
         } catch(...) {
-            ptref_parsing_error error;
-            error.type = ptref_parsing_error::error_type::unknown_object;
-            error.more = "Filter Unknown object type: " + filter.object;
-            throw error;
+            throw ptref_parsing_error(ptref_parsing_error::error_type::unknown_object, "Filter Unknown object type: " + filter.object);
         }
     }
 
@@ -179,11 +170,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
         case Type_e::eVehicleJourney : indexes = get_indexes<VehicleJourney>(filter, requested_type, data); break;
         case Type_e::eRoute: indexes = get_indexes<Route>(filter, requested_type, data); break;
         default:
-            ptref_parsing_error error;
-            error.type = ptref_parsing_error::partial_error;
-            error.more = "Filter: Unable to find the requested type. Not parsed: >>" + nt::static_data::get()->captionByType(filter.navitia_type) + "<<";
-            throw error;
-break;
+            throw ptref_parsing_error(ptref_parsing_error::partial_error,"Filter: Unable to find the requested type. Not parsed: >>" + nt::static_data::get()->captionByType(filter.navitia_type) + "<<");
         }
         // Attention ! les structures doivent être triées !
         std::sort(indexes.begin(), indexes.end());

@@ -51,6 +51,8 @@ struct ptref_parsing_error : public std::exception{
     error_type type;
     std::string more;
 
+    ptref_parsing_error(error_type type, const std::string & str) : type(type), more(str) {}
+
     ~ptref_parsing_error() throw() {}
 };
 
