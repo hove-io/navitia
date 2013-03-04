@@ -41,6 +41,9 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     }
     vj->block_id = block_id;
     vj->is_adapted = is_adapted;
+
+    if(!b.data.companies.empty())
+        vj->company = b.data.companies.front();
 }
 
 VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32_t local_trafic_zone, bool drop_off_allowed, bool pick_up_allowed){
@@ -51,6 +54,12 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32
         st->tmp_stop_point = new types::StopPoint();        
         st->tmp_stop_point->name = sp_name;
         st->tmp_stop_point->uri = sp_name;
+        if(!b.data.physical_modes.empty())
+            st->tmp_stop_point->physical_mode = b.data.physical_modes.front();
+        if(!b.data.networks.empty())
+            st->tmp_stop_point->network = b.data.networks.front();
+
+
         b.sps[sp_name] = st->tmp_stop_point;
         b.data.stop_points.push_back(st->tmp_stop_point);
         auto sa_it = b.sas.find(sp_name);
@@ -131,8 +140,104 @@ void builder::connection(const std::string & name1, const std::string & name2, f
 
 }
 
+ void builder::generate_dummy_basis() {
+    types::Country *country = new types::Country();
+    this->data.countries.push_back(country);
+    country->name = "base_country";
+    country->uri = "country:base_country";
+
+    types::District *district = new types::District();
+    this->data.districts.push_back(district);
+    district->name = "base_district";
+    district->uri = "district:base_district";
+    district->country = country;
+     
+
+    types::Department *department = new types::Department();
+    this->data.departments.push_back(department);
+    department->name= "base_department";
+    department->uri = "department:base_department";
+    department->district = district;    
+
+    types::City *city = new types::City();
+    this->data.cities.push_back(city);
+    city->name = "base_city";
+    city->uri = "city:base_city";
+    city->department = department;
+
+    types::Company *company = new types::Company();
+    this->data.companies.push_back(company);
+    company->name = "base_company";
+    company->uri = "company:base_company";
+
+    types::Network *network = new types::Network();
+    this->data.networks.push_back(network);
+    network->name = "base_network";
+    network->uri = "network:base_network";
+
+
+
+    types::CommercialMode *commercial_mode = new types::CommercialMode();
+    commercial_mode->id = "0";
+    commercial_mode->name = "Tram";
+    commercial_mode->uri = "0x0";
+    this->data.commercial_modes.push_back(commercial_mode);
+
+    commercial_mode = new navimake::types::CommercialMode();
+    commercial_mode->id = "1";
+    commercial_mode->name = "Metro";
+    commercial_mode->uri = "0x1";
+    this->data.commercial_modes.push_back(commercial_mode);
+
+    commercial_mode = new types::CommercialMode();
+    commercial_mode->id = "2";
+    commercial_mode->name = "Rail";
+    commercial_mode->uri = "0x2";
+    this->data.commercial_modes.push_back(commercial_mode);
+
+    commercial_mode = new types::CommercialMode();
+    commercial_mode->id = "3";
+    commercial_mode->name = "Bus";
+    commercial_mode->uri = "0x3";
+    this->data.commercial_modes.push_back(commercial_mode);
+
+    commercial_mode = new types::CommercialMode();
+    commercial_mode->id = "4";
+    commercial_mode->name = "Ferry";
+    commercial_mode->uri = "0x4";
+    this->data.commercial_modes.push_back(commercial_mode);
+
+    commercial_mode = new types::CommercialMode();
+    commercial_mode->id = "5";
+    commercial_mode->name = "Cable car";
+    commercial_mode->uri = "0x5";
+    this->data.commercial_modes.push_back(commercial_mode);
+
+    commercial_mode = new types::CommercialMode();
+    commercial_mode->id = "6";
+    commercial_mode->name = "Gondola";
+    commercial_mode->uri = "0x6";
+    this->data.commercial_modes.push_back(commercial_mode);
+
+    commercial_mode = new types::CommercialMode();
+    commercial_mode->id = "7";
+    commercial_mode->name = "Funicular";
+    commercial_mode->uri = "0x7";
+    this->data.commercial_modes.push_back(commercial_mode);
+
+
+    BOOST_FOREACH(types::CommercialMode *mt, this->data.commercial_modes) {
+        types::PhysicalMode* mode = new types::PhysicalMode();
+        mode->id = mt->id;
+        mode->name = mt->name;
+        mode->uri = mt->uri;
+        mode->commercial_mode = mt;
+        this->data.physical_modes.push_back(mode);
+    }
+
+ }
+
  void builder::build(navitia::type::PT_Data & pt_data) {
-    navitia::type::PT_Data result;
     connectors::build_journey_patterns(data);
     connectors::build_journey_pattern_points(data);
     connectors::build_journey_pattern_point_connections(data);
