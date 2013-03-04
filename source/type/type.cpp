@@ -163,9 +163,9 @@ static_data * static_data::get() {
     return instance;
 }
 
-std::string static_data::getListNameByType(Type_e type){
-    return instance->types_string.left.at(type) + "_list";
-}
+//std::string static_data::getListNameByType(Type_e type){
+//    return instance->types_string.left.at(type) + "_list";
+//}
 
 Type_e static_data::typeByCaption(const std::string & type_str) {
     return instance->types_string.right.at(type_str);

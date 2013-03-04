@@ -538,7 +538,7 @@ private:
     static static_data * instance;
 public:
     static static_data * get();
-    static std::string getListNameByType(Type_e type);
+    // static std::string getListNameByType(Type_e type);
     static boost::posix_time::ptime parse_date_time(const std::string& s);
     static Type_e typeByCaption(const std::string & type_str);
     static std::string captionByType(Type_e type);
