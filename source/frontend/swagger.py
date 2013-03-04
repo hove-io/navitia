@@ -7,7 +7,7 @@ def convertType(validator):
     if validator == str :
         return "string"
     elif validator == datetime_validator:
-        return "datetime_validator"
+        return "datetime"
     elif validator == time:
         return "time"
     elif validator == int:
