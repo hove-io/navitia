@@ -196,6 +196,21 @@ nt::CommercialMode CommercialMode::Transformer::operator()(const CommercialMode&
     return nt_commercial_mode;
 }
 
+nt::Company Company::Transformer::operator()(const Company& company){
+    nt::Company nt_company;
+    nt_company.id = company.id;
+    nt_company.idx = company.idx;
+    nt_company.name = company.name;
+    nt_company.uri = company.uri;
+    nt_company.address_name = company.address_name;
+    nt_company.address_number = company.address_number;
+    nt_company.address_type_name = company.address_type_name;
+    nt_company.phone_number = company.phone_number;
+    nt_company.mail = company.mail;
+    nt_company.website = company.website;
+    nt_company.fax = company.fax;
+    return nt_company;
+}
 nt::StopPoint StopPoint::Transformer::operator()(const StopPoint& stop_point){
     nt::StopPoint nt_stop_point;
     nt_stop_point.id = stop_point.id;
@@ -218,6 +233,9 @@ nt::StopPoint StopPoint::Transformer::operator()(const StopPoint& stop_point){
 
     if(stop_point.city != NULL)
         nt_stop_point.city_idx = stop_point.city->idx;
+
+    if(stop_point.network != NULL)
+        nt_stop_point.network_idx = stop_point.network->idx;
 
     return nt_stop_point;
 
@@ -259,9 +277,8 @@ nt::City City::Transformer::operator()(const City& city){
     nt_city.main_city = city.main_city;
     if(city.department != NULL)
         nt_city.department_idx = city.department->idx;
-    else
-        nt_city.department_idx = nt::invalid_idx;
-    
+
+
     return nt_city;
 }
 
@@ -274,8 +291,6 @@ nt::Department Department::Transformer::operator()(const Department& department)
 
     if(department.district != NULL)
         nt_department.district_idx = department.district->idx;
-    else
-        nt_department.district_idx = nt::invalid_idx;
 
     return nt_department;
 }
@@ -298,8 +313,23 @@ nt::District District::Transformer::operator()(const District& district){
     nt_district.idx = district.idx;
     nt_district.uri = district.uri;
     nt_district.name = district.name;
+    if(district.country != NULL)
+        nt_district.country_idx = district.country->idx;
 
     return nt_district;
+}
+
+nt::Country Country::Transformer::operator()(const Country& country){
+    navitia::type::Country nt_country;
+    nt_country.id = country.id;
+    nt_country.idx = country.idx;
+    nt_country.uri = country.uri;
+    nt_country.name = country.name;
+    
+    for(auto district : country.district_list)
+        nt_country.district_list.push_back(district->idx);
+
+    return nt_country;
 }
 
 nt::Network Network::Transformer::operator()(const Network& network){
