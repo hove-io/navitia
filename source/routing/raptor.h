@@ -152,8 +152,6 @@ struct RAPTOR : public AbstractRouter
     void marcheapiedreverse(const bool wheelchair);
     ///Correspondances garanties et prolongements de service
     void journey_pattern_path_connections_backward(const bool wheelchair);
-    ///Trouve pour chaque journey_pattern, le premier journey_pattern point auquel on peut embarquer, se sert de marked_rp
-    void make_queuereverse();
 
     /// Retourne à quel tour on a trouvé la meilleure solution pour ce journey_patternpoint
     /// Retourne -1 s'il n'existe pas de meilleure solution

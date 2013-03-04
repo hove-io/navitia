@@ -9,15 +9,6 @@ void RAPTOR::make_queue() {
 }
 
 
-
- void RAPTOR::make_queuereverse() {
-    marked_rp.reset();
-    marked_sp.reset();
- }
-
-
-
-
 void RAPTOR::journey_pattern_path_connections_forward(const bool wheelchair) {
     std::vector<type::idx_t> to_mark;
     for(auto rp = marked_rp.find_first(); rp != marked_rp.npos; rp = marked_rp.find_next(rp)) {
@@ -533,10 +524,6 @@ struct raptor_visitor {
         raptor.journey_pattern_path_connections_forward(wheelchair);
     }
 
-    void make_queue(){
-        raptor.make_queue();
-    }
-
     std::pair<type::idx_t, uint32_t> best_trip(const type::JourneyPattern & journey_pattern, int order, const navitia::type::DateTime & date_time, const bool wheelchair) const {
         return earliest_trip(journey_pattern, order, date_time, raptor.data, wheelchair);
     }
@@ -632,10 +619,6 @@ struct raptor_reverse_visitor {
         raptor.journey_pattern_path_connections_backward(wheelchair);
     }
 
-    void make_queue(){
-        raptor.make_queuereverse();
-    }
-
     std::pair<type::idx_t, uint32_t> best_trip(const type::JourneyPattern & journey_pattern, int order, const navitia::type::DateTime & date_time, const bool wheelchair) const {
         return tardiest_trip(journey_pattern, order, date_time, raptor.data, wheelchair);
     }
@@ -713,7 +696,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const bool wheelchair, bool global_pru
         if(count == labels.size())
             visitor.one_more_step();
         const auto & prec_labels= labels[count -1];
-        visitor.make_queue();
+        this->make_queue();
         for(const auto & journey_pattern : data.pt_data.journey_patterns) {
             if(Q[journey_pattern.idx] != std::numeric_limits<int>::max() && Q[journey_pattern.idx] != -1 && journey_patterns_valides.test(journey_pattern.idx)) {
                 t = type::invalid_idx;
