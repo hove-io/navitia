@@ -199,7 +199,8 @@ enum ConnectionType {
     eStopAreaConnection,
     eWalkingConnection,
     eVJConnection,
-    eGuaranteedConnection
+    eGuaranteedConnection,
+
 };
 
 struct Connection: public NavitiaHeader{
