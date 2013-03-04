@@ -184,6 +184,27 @@ std::vector<idx_t> Country::get(Type_e type, const PT_Data &)  const {
     return result;
 }
 
+
+std::vector<idx_t> District::get(Type_e type, const PT_Data &)  const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case Type_e::eCountry: result.push_back(country_idx) ; break;
+    case Type_e::eDepartment: return department_list; break;
+    default: break;
+    }
+    return result;
+}
+
+std::vector<idx_t> Department::get(Type_e type, const PT_Data &)  const {
+    std::vector<idx_t> result;
+    switch(type) {
+    case Type_e::eDistrict:  result.push_back(district_idx); break;
+    case Type_e::eCity: return city_list; break;
+    default: break;
+    }
+    return result;
+}
+
 std::vector<idx_t> City::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
