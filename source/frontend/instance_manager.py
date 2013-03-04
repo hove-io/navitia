@@ -20,7 +20,13 @@ class Instance:
 class DeadSocketException(Exception):
     def __init__(self, message):
         Exception.__init__(self, message)
+
+
         
+class RegionNotFound(Exception):
+    def __init__(self, message):
+        Exception.__init__(self, message)
+
 
 @singleton
 class NavitiaManager:
@@ -67,26 +73,27 @@ class NavitiaManager:
     def send_and_receive(self, request, region = None):
         if region in self.instances:
             instance = self.instances[region]
+            instance.lock.acquire()
+            instance.socket.send(request.SerializeToString())#, zmq.NOBLOCK, copy=False)
+            socks = dict(instance.poller.poll(1000))
+            if socks.get(instance.socket) == zmq.POLLIN:
+                pb = instance.socket.recv()
+                instance.lock.release()
+                resp = type_pb2.Response()
+                resp.ParseFromString(pb)
+                return resp
+            else :
+                instance.socket.setsockopt(zmq.LINGER, 0)
+                instance.socket.close()
+                instance.poller.unregister(instance.socket)
+                instance.socket = self.context.socket(zmq.REQ)
+                instance.socket.connect(instance.socket_path)
+                instance.poller.register(instance.socket)
+                instance.lock.release()
+                raise DeadSocketException(region+" is a dead socket (" + instance.socket_path + ")")
         else:
-            return None
-        instance.lock.acquire()
-        instance.socket.send(request.SerializeToString())#, zmq.NOBLOCK, copy=False)
-        socks = dict(instance.poller.poll(1000))
-        if socks.get(instance.socket) == zmq.POLLIN:
-            pb = instance.socket.recv()
-            instance.lock.release()
-            resp = type_pb2.Response()
-            resp.ParseFromString(pb)
-            return resp
-        else :
-            instance.socket.setsockopt(zmq.LINGER, 0)
-            instance.socket.close()
-            instance.poller.unregister(instance.socket)
-            instance.socket = self.context.socket(zmq.REQ)
-            instance.socket.connect(instance.socket_path)
-            instance.poller.register(instance.socket)
-            instance.lock.release()
-            raise DeadSocketException(region+" is a dead socket (" + instance.socket_path + ")")
+            raise RegionNotFound(region +" not found ")
+        
 
 
     def thread_ping(self, timer=1):

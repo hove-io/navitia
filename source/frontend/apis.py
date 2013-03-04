@@ -1,7 +1,7 @@
 from validate import *
 from apis_functions import *
 from singleton import singleton
-from instance_manager import DeadSocketException
+from instance_manager import DeadSocketException, RegionNotFound
 
 
 class Arguments:
@@ -33,7 +33,7 @@ class Arguments:
 
     nextTimesArguments = {
         "filter" : Argument("Filter to have the times you want", filter, False,
-                            False, order=0),
+                            False, order=0, defaultValue = ""),
         "from_datetime" : Argument("The date from which you want the times",
                               datetime_validator, True, False, order=10),
         "duration" : Argument("Maximum duration between the datetime and the last  retrieved stop time",
@@ -190,6 +190,8 @@ class Apis:
                     return render_from_protobuf(self.apis[api]["endpoint"](v.arguments, version, region), format, request.args.get("callback"))
                 except DeadSocketException, e:
                     return Response(e, status=503)
+                except RegionNotFound, e:
+                    return Response(e, status=404)
             else:
                 return Response("Invalid arguments: " + str(v.details), status=400)
         else:
