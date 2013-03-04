@@ -333,7 +333,6 @@ struct Line : public NavitiaHeader, Nameable {
 
     idx_t commercial_mode_idx;
 
-    std::vector<idx_t> physical_mode_list;
     std::vector<idx_t> company_list;
     idx_t network_idx;
 

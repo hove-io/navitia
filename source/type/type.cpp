@@ -267,7 +267,6 @@ std::vector<idx_t> Line::get(Type_e type, const PT_Data&) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::eCommercialMode: result.push_back(commercial_mode_idx); break;
-    case Type_e::ePhysicalMode: return physical_mode_list; break;
     case Type_e::eCompany: return company_list; break;
     case Type_e::eNetwork: result.push_back(network_idx); break;
     case Type_e::eRoute: return route_list; break;
