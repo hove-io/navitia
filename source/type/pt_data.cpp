@@ -23,7 +23,6 @@ PT_Data& PT_Data::operator=(PT_Data&& other){
     districts = other.districts;
     departments = other.departments;
     companies = other.companies;
-    vehicles = other.vehicles;
     countries = other.countries;
 
     stop_point_connections = other.stop_point_connections;
@@ -89,7 +88,6 @@ std::vector<idx_t> PT_Data::get_target_by_one_source(Type_e source, Type_e targe
         case Type_e::eDistrict: result = districts[source_idx].get(target, *this); break;
         case Type_e::eDepartment: result = departments[source_idx].get(target, *this); break;
         case Type_e::eCompany: result = companies[source_idx].get(target, *this); break;
-        case Type_e::eVehicle: result = vehicles[source_idx].get(target, *this); break;
         case Type_e::eValidityPattern: result = validity_patterns[source_idx].get(target, *this); break;
         case Type_e::eConnection: result = connections[source_idx].get(target, *this); break;
         case Type_e::eCountry: result = countries[source_idx].get(target, *this); break;
@@ -119,7 +117,6 @@ std::vector<idx_t> PT_Data::get_all_index(Type_e type) const {
     case Type_e::eDistrict: num_elements = districts.size(); break;
     case Type_e::eDepartment: num_elements = departments.size(); break;
     case Type_e::eCompany: num_elements = companies.size(); break;
-    case Type_e::eVehicle: num_elements = vehicles.size(); break;
     case Type_e::eCountry: num_elements = countries.size(); break;
     case Type_e::eRoute: num_elements = routes.size(); break;
     default:  break;
@@ -147,7 +144,6 @@ template<> std::vector<District> & PT_Data::get_data<District>() {return distric
 template<> std::vector<Department> & PT_Data::get_data<Department>() {return departments;}
 template<> std::vector<Company> & PT_Data::get_data<Company>() {return companies;}
 template<> std::vector<Country> & PT_Data::get_data<Country>() {return countries;}
-template<> std::vector<Vehicle> & PT_Data::get_data<Vehicle>() {return vehicles;}
 template<> std::vector<Route> & PT_Data::get_data<Route>() {return routes;}
 
 template<> std::vector<Line> const & PT_Data::get_data<Line>() const {return lines;}
@@ -167,7 +163,6 @@ template<> std::vector<District> const & PT_Data::get_data<District>() const {re
 template<> std::vector<Department> const & PT_Data::get_data<Department>() const {return departments;}
 template<> std::vector<Company> const & PT_Data::get_data<Company>() const {return companies;}
 template<> std::vector<Country> const & PT_Data::get_data<Country>() const {return countries;}
-template<> std::vector<Vehicle> const & PT_Data::get_data<Vehicle>() const {return vehicles;}
 template<> std::vector<Route> const & PT_Data::get_data<Route>() const {return routes;}
 
 

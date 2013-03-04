@@ -284,7 +284,7 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data &) const {
     case Type_e::eJourneyPattern: result.push_back(journey_pattern_idx); break;
     case Type_e::eCompany: result.push_back(company_idx); break;
     case Type_e::ePhysicalMode: result.push_back(physical_mode_idx); break;
-    case Type_e::eVehicle: result.push_back(vehicle_idx); break;
+    //case Type_e::eVehicle: result.push_back(vehicle_idx); break;
     case Type_e::eValidityPattern: result.push_back(validity_pattern_idx); break;
     default: break;
     }

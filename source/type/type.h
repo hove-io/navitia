@@ -396,21 +396,21 @@ struct VehicleJourney: public NavitiaHeader, Nameable {
     idx_t journey_pattern_idx;
     idx_t company_idx;
     idx_t physical_mode_idx;
-    idx_t vehicle_idx;
+    //idx_t vehicle_idx;
     idx_t validity_pattern_idx;
     std::vector<idx_t> stop_time_list;
 
 
-    VehicleJourney(): journey_pattern_idx(invalid_idx), company_idx(invalid_idx), physical_mode_idx(invalid_idx), vehicle_idx(invalid_idx), validity_pattern_idx(invalid_idx) {}
+    VehicleJourney(): journey_pattern_idx(invalid_idx), company_idx(invalid_idx), physical_mode_idx(invalid_idx), /*vehicle_idx(invalid_idx), */validity_pattern_idx(invalid_idx) {}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & uri & journey_pattern_idx & company_idx & physical_mode_idx & vehicle_idx & validity_pattern_idx & idx & stop_time_list;
+        ar & name & uri & journey_pattern_idx & company_idx & physical_mode_idx & validity_pattern_idx & idx & stop_time_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
-struct Vehicle: public NavitiaHeader, Nameable {
+/*struct Vehicle: public NavitiaHeader, Nameable {
     const static Type_e type = Type_e::eVehicle;
-};
+};*/
 
 struct Equipement : public NavitiaHeader {
     enum EquipementKind{ Sheltred, 
