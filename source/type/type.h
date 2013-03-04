@@ -180,13 +180,10 @@ struct City : public NavitiaHeader, Nameable {
     idx_t department_idx;
     GeographicalCoord coord;
 
-    std::vector<idx_t> postal_code_list;
+    //std::vector<std::string> postal_code_list;
     std::vector<idx_t> stop_area_list;
-    std::vector<idx_t> address_list;
-    std::vector<idx_t> site_list;
     std::vector<idx_t> stop_point_list;
-    std::vector<idx_t> hang_list;
-    std::vector<idx_t> odt_list;
+    //std::vector<idx_t> odt_list;
 
     City() : main_city(false), use_main_stop_area_property(false), department_idx(invalid_idx){}
 
