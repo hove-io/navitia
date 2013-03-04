@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(having) {
 }
 
 BOOST_AUTO_TEST_CASE(exception){
-    BOOST_CHECK_THROW(parse("mouuuhh bliiii"), ptref_parsing_error);
+    BOOST_CHECK_THROW(parse("mouuuhh bliiii"), parsing_error);
 }
 
 struct Moo {
