@@ -178,6 +178,12 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
         case Type_e::eCompany: indexes = get_indexes<Company>(filter, requested_type, data); break;
         case Type_e::eVehicleJourney : indexes = get_indexes<VehicleJourney>(filter, requested_type, data); break;
         case Type_e::eRoute: indexes = get_indexes<Route>(filter, requested_type, data); break;
+        default:
+            ptref_parsing_error error;
+            error.type = ptref_parsing_error::partial_error;
+            error.more = "Filter: Unable to find the requested type. Not parsed: >>" + nt::static_data::get()->captionByType(filter.navitia_type) + "<<";
+            throw error;
+break;
         }
         // Attention ! les structures doivent être triées !
         std::sort(indexes.begin(), indexes.end());
