@@ -151,6 +151,7 @@ struct District : public NavitiaHeader, Nameable {
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & main_city_idx & country_idx & department_list & idx;
     }
+    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
     District() : main_city_idx(invalid_idx), country_idx(invalid_idx) {}
 };
@@ -164,6 +165,8 @@ struct Department : public NavitiaHeader, Nameable {
         ar & name & main_city_idx & district_idx & city_list & idx & id;
     }
 
+    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
+    
     Department() : main_city_idx(invalid_idx), district_idx(invalid_idx) {}
 };
 
@@ -177,13 +180,10 @@ struct City : public NavitiaHeader, Nameable {
     idx_t department_idx;
     GeographicalCoord coord;
 
-    std::vector<idx_t> postal_code_list;
+    //std::vector<std::string> postal_code_list;
     std::vector<idx_t> stop_area_list;
-    std::vector<idx_t> address_list;
-    std::vector<idx_t> site_list;
     std::vector<idx_t> stop_point_list;
-    std::vector<idx_t> hang_list;
-    std::vector<idx_t> odt_list;
+    //std::vector<idx_t> odt_list;
 
     City() : main_city(false), use_main_stop_area_property(false), department_idx(invalid_idx){}
 
@@ -199,7 +199,8 @@ enum ConnectionType {
     eStopAreaConnection,
     eWalkingConnection,
     eVJConnection,
-    eGuaranteedConnection
+    eGuaranteedConnection,
+
 };
 
 struct Connection: public NavitiaHeader{
@@ -332,21 +333,17 @@ struct Line : public NavitiaHeader, Nameable {
 
     idx_t commercial_mode_idx;
 
-    std::vector<idx_t> physical_mode_list;
     std::vector<idx_t> company_list;
     idx_t network_idx;
 
     std::vector<idx_t> route_list;
 
-    std::vector<idx_t> impact_list;
-
-
     Line(): sort(0), commercial_mode_idx(invalid_idx), network_idx(invalid_idx){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & uri & code & forward_name & backward_name & additional_data & color
-                & sort & commercial_mode_idx & physical_mode_list & company_list & network_idx
-                & route_list& impact_list;
+                & sort & commercial_mode_idx  & company_list & network_idx
+                & route_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
@@ -375,7 +372,6 @@ struct JourneyPattern : public NavitiaHeader, Nameable{
     std::vector<idx_t> freq_journey_pattern_point_list;
     std::vector<idx_t> freq_setting_list;
     std::vector<idx_t> vehicle_journey_list;
-    std::vector<idx_t> impact_list;
 
     std::vector<idx_t> vehicle_journey_list_arrival;
 
@@ -385,7 +381,7 @@ struct JourneyPattern : public NavitiaHeader, Nameable{
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & uri & is_frequence & route_idx & commercial_mode_idx
                 & journey_pattern_point_list & freq_journey_pattern_point_list & freq_setting_list
-                & vehicle_journey_list & vehicle_journey_list_arrival & impact_list;
+                & vehicle_journey_list & vehicle_journey_list_arrival;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -396,21 +392,21 @@ struct VehicleJourney: public NavitiaHeader, Nameable {
     idx_t journey_pattern_idx;
     idx_t company_idx;
     idx_t physical_mode_idx;
-    idx_t vehicle_idx;
+    //idx_t vehicle_idx;
     idx_t validity_pattern_idx;
     std::vector<idx_t> stop_time_list;
 
 
-    VehicleJourney(): journey_pattern_idx(invalid_idx), company_idx(invalid_idx), physical_mode_idx(invalid_idx), vehicle_idx(invalid_idx), validity_pattern_idx(invalid_idx) {}
+    VehicleJourney(): journey_pattern_idx(invalid_idx), company_idx(invalid_idx), physical_mode_idx(invalid_idx), /*vehicle_idx(invalid_idx), */validity_pattern_idx(invalid_idx) {}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & uri & journey_pattern_idx & company_idx & physical_mode_idx & vehicle_idx & validity_pattern_idx & idx & stop_time_list;
+        ar & name & uri & journey_pattern_idx & company_idx & physical_mode_idx & validity_pattern_idx & idx & stop_time_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
-struct Vehicle: public NavitiaHeader, Nameable {
+/*struct Vehicle: public NavitiaHeader, Nameable {
     const static Type_e type = Type_e::eVehicle;
-};
+};*/
 
 struct Equipement : public NavitiaHeader {
     enum EquipementKind{ Sheltred, 
@@ -436,13 +432,11 @@ struct JourneyPatternPoint : public NavitiaHeader{
     idx_t journey_pattern_idx;
     idx_t stop_point_idx;
 
-    std::vector<idx_t> impact_list;
-
     JourneyPatternPoint() : order(0), main_stop_point(false), fare_section(0), journey_pattern_idx(invalid_idx), stop_point_idx(invalid_idx){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & id & idx & uri & order & main_stop_point & fare_section & journey_pattern_idx 
-                & stop_point_idx & impact_list & order ;
+                & stop_point_idx & order ;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
@@ -488,7 +482,6 @@ struct StopPoint : public NavitiaHeader, Nameable{
     idx_t city_idx;
     idx_t physical_mode_idx;
     idx_t network_idx;
-    std::vector<idx_t> impact_list;
     std::vector<idx_t> journey_pattern_point_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & uri & name & stop_area_idx & physical_mode_idx & coord & fare_zone & idx & journey_pattern_point_list;
@@ -538,7 +531,7 @@ private:
     static static_data * instance;
 public:
     static static_data * get();
-    static std::string getListNameByType(Type_e type);
+    // static std::string getListNameByType(Type_e type);
     static boost::posix_time::ptime parse_date_time(const std::string& s);
     static Type_e typeByCaption(const std::string & type_str);
     static std::string captionByType(Type_e type);

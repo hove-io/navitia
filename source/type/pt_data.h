@@ -30,7 +30,6 @@ struct PT_Data : boost::noncopyable{
     std::vector<District> districts;
     std::vector<Department> departments;
     std::vector<Company> companies;
-    std::vector<Vehicle> vehicles;
     std::vector<Country> countries;
 
     std::vector<std::vector<Connection> > stop_point_connections;

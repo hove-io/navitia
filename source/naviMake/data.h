@@ -16,10 +16,12 @@ namespace navimake{
 class Data{
 public:
     std::vector<types::Network*> networks;
+    std::vector<types::Company*> companies;
     std::vector<types::CommercialMode*> commercial_modes;
     std::vector<types::Line*> lines;
-    std::vector<types::PhysicalMode*> modes;
+    std::vector<types::PhysicalMode*> physical_modes;
     std::vector<types::City*> cities;
+    std::vector<types::Country*> countries;
     std::vector<types::StopArea*> stop_areas;
     std::vector<types::StopPoint*> stop_points;
     std::vector<types::VehicleJourney*> vehicle_journeys;
@@ -157,7 +159,7 @@ public:
         BOOST_FOREACH(navimake::types::Line* line, lines){
             delete line;
         }
-        BOOST_FOREACH(navimake::types::PhysicalMode* mode, modes){
+        BOOST_FOREACH(navimake::types::PhysicalMode* mode, physical_modes){
             delete mode;
         }
         BOOST_FOREACH(navimake::types::City* city, cities){

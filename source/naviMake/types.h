@@ -53,8 +53,14 @@ class StopTime;
 
 struct Country : public TransmodelHeader, Nameable{
     City* main_city;
+
+    std::vector<District*> district_list;
     bool operator<(const Country& other){ return this->name < other.name;}
 
+    struct Transformer{
+        inline navitia::type::Country operator()(const Country* country){return this->operator()(*country);}
+        navitia::type::Country operator()(const Country& country);
+    };
 };
 
 struct District: public TransmodelHeader, Nameable{
@@ -72,7 +78,6 @@ struct District: public TransmodelHeader, Nameable{
 struct Department: public TransmodelHeader, Nameable{
     City* main_city;
     District *district;
-
     bool operator<(const Department& other) const;
 
     struct Transformer{
@@ -213,12 +218,18 @@ struct Company : public TransmodelHeader, Nameable{
     std::string mail;
     std::string website;
     std::string fax;
+
+    struct Transformer{
+        inline nt::Company operator()(const Company* company){return this->operator()(*company);}
+        nt::Company operator()(const Company& company);
+    };
+    bool operator<(const Company& other)const{ return this->name < other.name;}
 };
 
 struct CommercialMode : public TransmodelHeader, Nameable{
 
     struct Transformer{
-        inline nt::CommercialMode operator()(const CommercialMode* commercial_commercial_mode){return this->operator()(*commercial_commercial_mode);}
+        inline nt::CommercialMode operator()(const CommercialMode* commercial_mode){return this->operator()(*commercial_mode);}
         nt::CommercialMode operator()(const CommercialMode& commercial_mode);
     };
 
@@ -248,19 +259,16 @@ struct Line : public TransmodelHeader, Nameable {
     int sort;
     
     CommercialMode* commercial_mode;
-
     Network* network;
+    Company* company;
 
-    StopPoint* forward_direction;
-
-    StopPoint* backward_direction;
 
     struct Transformer{
         inline nt::Line operator()(const Line* line){return this->operator()(*line);}   
         nt::Line operator()(const Line& line);   
     };
 
-    Line(): sort(0), commercial_mode(NULL), network(NULL), forward_direction(NULL), backward_direction(NULL){}
+    Line(): sort(0), commercial_mode(NULL), network(NULL), company(NULL){}
 
     bool operator<(const Line & other) const;
 
@@ -387,6 +395,7 @@ struct StopPoint : public TransmodelHeader, Nameable{
     StopArea* stop_area;
     PhysicalMode* physical_mode;
     City* city;
+    Network* network; 
 
     bool is_adapted;
 
@@ -395,7 +404,7 @@ struct StopPoint : public TransmodelHeader, Nameable{
         nt::StopPoint operator()(const StopPoint& stop_point);   
     };
 
-    StopPoint(): fare_zone(0), stop_area(NULL), physical_mode(NULL), city(NULL), is_adapted(false) {}
+    StopPoint(): fare_zone(0), stop_area(NULL), physical_mode(NULL), city(NULL), network(NULL), is_adapted(false) {}
 
     bool operator<(const StopPoint& other) const;
 

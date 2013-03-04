@@ -117,7 +117,6 @@ int main(int argc, char** argv) {
 
     error_count += general_check(d.pt_data.vehicle_journeys);
     error_count += check_relations(d.pt_data.vehicle_journeys, &VehicleJourney::journey_pattern_idx, d.pt_data.journey_patterns);
-    error_count += check_relations(d.pt_data.vehicle_journeys, &VehicleJourney::vehicle_idx, d.pt_data.vehicles);
     for(const VehicleJourney &vj: d.pt_data.vehicle_journeys){
         for(idx_t idx : vj.stop_time_list){
             if(idx > d.pt_data.stop_times.size()){
@@ -143,7 +142,6 @@ int main(int argc, char** argv) {
     error_count += general_check(d.pt_data.departments);
     error_count += general_check(d.pt_data.physical_modes);
     error_count += general_check(d.pt_data.commercial_modes);
-    error_count += general_check(d.pt_data.vehicles);
 
     std::cout << "Vérification des stop_times" << std::endl;
     for(size_t i = 0; i < d.pt_data.stop_times.size(); ++i){

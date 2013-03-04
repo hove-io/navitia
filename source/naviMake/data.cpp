@@ -14,8 +14,8 @@ void Data::sort(){
     std::sort(commercial_modes.begin(), commercial_modes.end(), Less<navimake::types::CommercialMode>());
     std::for_each(commercial_modes.begin(), commercial_modes.end(), Indexer<navimake::types::CommercialMode>());
 
-    std::sort(modes.begin(), modes.end(), Less<navimake::types::PhysicalMode>());
-    std::for_each(modes.begin(), modes.end(), Indexer<navimake::types::PhysicalMode>());
+    std::sort(physical_modes.begin(), physical_modes.end(), Less<navimake::types::PhysicalMode>());
+    std::for_each(physical_modes.begin(), physical_modes.end(), Indexer<navimake::types::PhysicalMode>());
 
     std::sort(cities.begin(), cities.end(), Less<navimake::types::City>());
     std::for_each(cities.begin(), cities.end(), Indexer<navimake::types::City>());
@@ -56,9 +56,14 @@ void Data::sort(){
     std::sort(districts.begin(), districts.end(), Less<navimake::types::District>());
     std::for_each(districts.begin(), districts.end(), Indexer<navimake::types::District>());
 
+    std::sort(countries.begin(), countries.end(), Less<navimake::types::Country>());
+    std::for_each(countries.begin(), countries.end(), Indexer<navimake::types::Country>());
+
     std::sort(routes.begin(), routes.end(), Less<navimake::types::Route>());
     std::for_each(routes.begin(), routes.end(), Indexer<navimake::types::Route>());
 
+    std::sort(companies.begin(), companies.end(), Less<navimake::types::Company>());
+    std::for_each(companies.begin(), companies.end(), Indexer<navimake::types::Company>());
 }
 
 void Data::complete() {
@@ -226,8 +231,8 @@ void Data::transform(navitia::type::PT_Data& data){
     data.stop_areas.resize(this->stop_areas.size());
     std::transform(this->stop_areas.begin(), this->stop_areas.end(), data.stop_areas.begin(), navimake::types::StopArea::Transformer());
 
-    data.physical_modes.resize(this->modes.size());
-    std::transform(this->modes.begin(), this->modes.end(), data.physical_modes.begin(), navimake::types::PhysicalMode::Transformer());
+    data.physical_modes.resize(this->physical_modes.size());
+    std::transform(this->physical_modes.begin(), this->physical_modes.end(), data.physical_modes.begin(), navimake::types::PhysicalMode::Transformer());
 
     data.commercial_modes.resize(this->commercial_modes.size());
     std::transform(this->commercial_modes.begin(), this->commercial_modes.end(), data.commercial_modes.begin(), navimake::types::CommercialMode::Transformer());
@@ -274,12 +279,19 @@ void Data::transform(navitia::type::PT_Data& data){
     data.routes.resize(this->routes.size());
     std::transform(this->routes.begin(), this->routes.end(), data.routes.begin(), navimake::types::Route::Transformer());
 
+    data.companies.resize(this->companies.size());
+    std::transform(this->companies.begin(), this->companies.end(), data.companies.begin(), navimake::types::Company::Transformer());
+
+    data.countries.resize(this->companies.size());
+    std::transform(this->countries.begin(), this->countries.end(), data.countries.begin(), navimake::types::Country::Transformer());
+
+
     build_relations(data);
 
 }
 
 void Data::build_relations(navitia::type::PT_Data &data){
-    //BOOST_FOREACH(navimake::types::StopArea & sa, data.stop_areas){}
+    //for(navimake::types::StopArea & sa, data.stop_areas){}
 
     BOOST_FOREACH(navitia::type::PhysicalMode & physical_mode, data.physical_modes){
         data.commercial_modes[physical_mode.commercial_mode_idx].physical_mode_list.push_back(physical_mode.idx);
@@ -358,9 +370,6 @@ void Data::build_relations(navitia::type::PT_Data &data){
                 navitia::type::Route route = data.routes.at(jp.route_idx);
                 if(route.line_idx != navitia::type::invalid_idx){
                     navitia::type::Line & line = data.lines.at(route.line_idx);
-                    if(std::find(line.physical_mode_list.begin(), line.physical_mode_list.end(), vj.physical_mode_idx) == line.physical_mode_list.end())
-                        line.physical_mode_list.push_back(vj.physical_mode_idx);
-
                     if(vj.company_idx != navitia::type::invalid_idx){
                         navitia::type::Company & company = data.companies.at(vj.company_idx);
                         if(std::find(line.company_list.begin(), line.company_list.end(), vj.company_idx) == line.company_list.end())
@@ -374,7 +383,7 @@ void Data::build_relations(navitia::type::PT_Data &data){
         std::sort(vj.stop_time_list.begin(), vj.stop_time_list.end());
     }
 
-    // BOOST_FOREACH(navitia::type::Company & company, data.companies){}
+   //for(navitia::type::Company & company : data.companies) {}
 }
 
 std::string Data::find_shape(navitia::type::PT_Data &data) {
