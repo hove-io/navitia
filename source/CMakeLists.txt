@@ -83,6 +83,7 @@ add_subdirectory(georef)
 add_subdirectory(validator)
 add_subdirectory(time_tables)
 add_subdirectory(frontend)
+add_subdirectory(connectors)
 add_subdirectory(ratimake)
 
 add_subdirectory(scripts)

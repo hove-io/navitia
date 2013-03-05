@@ -199,7 +199,7 @@ enum ConnectionType {
     eStopAreaConnection,
     eWalkingConnection,
     eVJConnection,
-    eGuaranteedConnection,
+    eGuaranteedConnection
 
 };
 
