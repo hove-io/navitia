@@ -41,7 +41,7 @@ struct Filter {
     Filter() {}
 };
 
-struct ptref_parsing_error : public std::exception{
+struct parsing_error : public std::exception{
     enum error_type {
         global_error ,
         partial_error,
@@ -51,7 +51,9 @@ struct ptref_parsing_error : public std::exception{
     error_type type;
     std::string more;
 
-    ~ptref_parsing_error() throw() {}
+    parsing_error(error_type type, const std::string & str) : type(type), more(str) {}
+
+    ~parsing_error() throw() {}
 };
 
 /// Exécute une requête sur les données Data : retourne les idx des objets demandés
