@@ -62,13 +62,6 @@ struct DateTime {
         return DateTime(0,0);
     }
 
-//    void normalize(){
-//        uint32_t hour = this->hour();
-//        if(hour > NB_SECONDS_DAY) {
-//            *this = DateTime(this->date() + 1, hour % (NB_SECONDS_DAY));
-//        }
-//    }
-
     bool operator==(DateTime other) const {
         return this->datetime == other.datetime;
     }

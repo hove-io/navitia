@@ -1,6 +1,6 @@
 #include <fstream>
 #include "type/type.h"
-#include "ratimake/adjustit_connector.h"
+#include "connectors/adjustit_connector.h"
 
 #include <boost/program_options.hpp>
 
@@ -52,7 +52,7 @@ po::variables_map load_config(int argc, const char** argv){
 
 void generate(const po::variables_map& params, const pt::ptime& now){
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
-    navitia::ratimake::AtLoader loader;
+    navitia::AtLoader loader;
     std::map<std::string, std::vector<navitia::type::Message>> messages;
 
     messages = loader.load(params, now);
