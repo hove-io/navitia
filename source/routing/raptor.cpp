@@ -9,19 +9,21 @@ void RAPTOR::make_queue() {
 }
 
 
-void RAPTOR::journey_pattern_path_connections_forward(const bool wheelchair) {
+template<class Visitor>
+void RAPTOR::journey_pattern_path_connections(const Visitor & visitor, const bool wheelchair) {
     std::vector<type::idx_t> to_mark;
     for(auto rp = marked_rp.find_first(); rp != marked_rp.npos; rp = marked_rp.find_next(rp)) {
-        BOOST_FOREACH(auto &idx_rpc, data.dataRaptor.footpath_rp_forward.equal_range(rp)) {
+        BOOST_FOREACH(auto &idx_rpc, data.dataRaptor.footpath_rp(visitor.clockwise).equal_range(rp)) {
             const auto & rpc = idx_rpc.second;
-            navitia::type::DateTime dt = labels[count][rp].arrival + rpc.length;
-            if(labels[count][rp].type == vj && dt < best_labels[rpc.destination_journey_pattern_point_idx].arrival /*&& !wheelchair*/) {
+            type::idx_t jpp_idx = rpc.*visitor.journey_pattern_point_idx;
+            navitia::type::DateTime dt = visitor.combine(labels[count][rp].arrival, rpc.length);
+            if(labels[count][rp].type == vj && visitor.comp(dt, best_labels[jpp_idx].arrival) /*&& !wheelchair*/) {
                 if(rpc.connection_kind == type::ConnectionKind::extension)
-                    labels[count][rpc.destination_journey_pattern_point_idx] = label(dt, dt, rp, connection_extension);
+                    labels[count][jpp_idx] = label(dt, dt, rp, connection_extension);
                 else
-                    labels[count][rpc.destination_journey_pattern_point_idx] = label(dt, dt, rp, connection_guarantee);
-                best_labels[rpc.destination_journey_pattern_point_idx] = labels[count][rpc.destination_journey_pattern_point_idx];
-                to_mark.push_back(rpc.destination_journey_pattern_point_idx);
+                    labels[count][jpp_idx] = label(dt, dt, rp, connection_guarantee);
+                best_labels[jpp_idx] = labels[count][jpp_idx];
+                to_mark.push_back(jpp_idx);
             }
         }
     }
@@ -29,40 +31,12 @@ void RAPTOR::journey_pattern_path_connections_forward(const bool wheelchair) {
     for(auto rp : to_mark) {
         marked_rp.set(rp);
         const auto & journey_pattern_point = data.pt_data.journey_pattern_points[rp];
-        if(Q[journey_pattern_point.journey_pattern_idx] > journey_pattern_point.order) {
+        if(visitor.comp(journey_pattern_point.order, Q[journey_pattern_point.journey_pattern_idx]) ) {
             Q[journey_pattern_point.journey_pattern_idx] = journey_pattern_point.order;
         }
     }
 }
 
-
-
-
-void RAPTOR::journey_pattern_path_connections_backward(const bool wheelchair) {
-    std::vector<type::idx_t> to_mark;
-    for(auto rp = marked_rp.find_first(); rp != marked_rp.npos; rp = marked_rp.find_next(rp)) {
-        BOOST_FOREACH(auto &idx_rpc,  data.dataRaptor.footpath_rp_backward.equal_range(rp)) {
-            const auto & rpc = idx_rpc.second;
-            navitia::type::DateTime dt = labels[count][rp].arrival - rpc.length;
-            if(labels[count][rp].type == vj && dt > best_labels[rpc.departure_journey_pattern_point_idx].arrival /*&& !wheelchair*/) {
-                if(rpc.connection_kind == type::ConnectionKind::extension)
-                    labels[count][rpc.departure_journey_pattern_point_idx] = label(dt, dt, rp, connection_extension);
-                else
-                    labels[count][rpc.departure_journey_pattern_point_idx] = label(dt, dt, rp, connection_guarantee);
-                best_labels[rpc.departure_journey_pattern_point_idx] = labels[count][rpc.departure_journey_pattern_point_idx];
-                to_mark.push_back(rpc.departure_journey_pattern_point_idx);
-            }
-        }
-    }
-
-    for(auto rp : to_mark) {
-        marked_rp.set(rp);
-        const auto & journey_pattern_point = data.pt_data.journey_pattern_points[rp];
-        if(Q[journey_pattern_point.journey_pattern_idx] < journey_pattern_point.order) {
-            Q[journey_pattern_point.journey_pattern_idx] = journey_pattern_point.order;
-        }
-    }
-}
 
 
 template<typename Visitor>
@@ -461,11 +435,6 @@ struct raptor_visitor {
         return a.*instant <= current_datetime(current_dt.date(), st);
     }
 
-
-    void journey_pattern_path_connections(const bool wheelchair) {
-        raptor.journey_pattern_path_connections_forward(wheelchair);
-    }
-
     std::pair<type::idx_t, uint32_t> best_trip(const type::JourneyPattern & journey_pattern, int order, const navitia::type::DateTime & date_time, const bool wheelchair) const {
         return earliest_trip(journey_pattern, order, date_time, raptor.data, wheelchair);
     }
@@ -536,10 +505,14 @@ struct raptor_visitor {
         return a + b;
     }
 
-    static navitia::type::DateTime label::* instant;
+    // On définit quelques pointeurs sur membres. C'est moyennement élégant, mais ça simplifie par rapport à avoir des accesseurs
+    static type::DateTime label::* instant;
     static constexpr bool clockwise = true;
+    static type::idx_t type::JourneyPatternPointConnection::* journey_pattern_point_idx;
 };
-navitia::type::DateTime label::* raptor_visitor::instant = &label::arrival;
+// Les pointeurs doivent être définis statiquement
+type::DateTime label::* raptor_visitor::instant = &label::arrival;
+type::idx_t type::JourneyPatternPointConnection::* raptor_visitor::journey_pattern_point_idx = &type::JourneyPatternPointConnection::destination_journey_pattern_point_idx;
 
 struct raptor_reverse_visitor {
     RAPTOR & raptor;
@@ -555,14 +528,6 @@ struct raptor_reverse_visitor {
 
     bool better_or_equal(const label &a, const navitia::type::DateTime &current_dt, const type::StopTime &st) {
         return a.*instant >= current_datetime(current_dt.date(), st);
-    }
-
-    void walking(const bool wheelchair) {
-        raptor.marcheapiedreverse(wheelchair);
-    }
-
-    void journey_pattern_path_connections(const bool wheelchair) {
-        raptor.journey_pattern_path_connections_backward(wheelchair);
     }
 
     std::pair<type::idx_t, uint32_t> best_trip(const type::JourneyPattern & journey_pattern, int order, const navitia::type::DateTime & date_time, const bool wheelchair) const {
@@ -633,10 +598,14 @@ struct raptor_reverse_visitor {
         return a - b;
     }
 
-    static navitia::type::DateTime label::* instant;
+    // On définit quelques pointeurs sur membres. C'est moyennement élégant, mais ça simplifie par rapport à avoir des accesseurs
+    static type::DateTime label::* instant;
     static constexpr bool clockwise = false;
+    static type::idx_t type::JourneyPatternPointConnection::* journey_pattern_point_idx;
 };
-navitia::type::DateTime label::* raptor_reverse_visitor::instant= &label::departure;
+// Les pointeurs doivent être définis statiquement
+type::DateTime label::* raptor_reverse_visitor::instant= &label::departure;
+type::idx_t type::JourneyPatternPointConnection::* raptor_reverse_visitor::journey_pattern_point_idx = &type::JourneyPatternPointConnection::departure_journey_pattern_point_idx;
 
 template<typename Visitor>
 void RAPTOR::raptor_loop(Visitor visitor, const bool wheelchair, bool global_pruning) {
@@ -697,7 +666,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const bool wheelchair, bool global_pru
         }
 
         // Prolongements de service
-        visitor.journey_pattern_path_connections(wheelchair);
+        this->journey_pattern_path_connections(visitor, wheelchair);
 
         // Correspondances
         this->foot_path(visitor, wheelchair);

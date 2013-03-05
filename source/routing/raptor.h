@@ -131,13 +131,14 @@ struct RAPTOR : public AbstractRouter
 
     ///Boucle principale, parcourt les journey_patterns,
     void boucleRAPTOR(const bool wheelchair, bool global_pruning = true);
+
     /// Fonction générique pour la marche à pied
     /// Il faut spécifier le visiteur selon le sens souhaité
     template<typename Visitor> void foot_path(const Visitor & v, const bool wheelchair);
-    ///Marche à pied à l'interieur d'un stop point et entre deux stop points
-    void marcheapied(const bool wheelchair);
+
     ///Correspondances garanties et prolongements de service
-    void journey_pattern_path_connections_forward(const bool wheelchair);
+    template<typename Visitor> void journey_pattern_path_connections(const Visitor &visitor, const bool wheelchair);
+
     ///Trouve pour chaque journey_pattern, le premier journey_pattern point auquel on peut embarquer, se sert de marked_rp
     void make_queue();
 
@@ -148,10 +149,6 @@ struct RAPTOR : public AbstractRouter
     template<typename Visitor>
     void raptor_loop(Visitor visitor, const bool wheelchair = false, bool global_pruning = true);
 
-     ///Marche à pied à l'interieur d'un stop point et entre deux stop points
-    void marcheapiedreverse(const bool wheelchair);
-    ///Correspondances garanties et prolongements de service
-    void journey_pattern_path_connections_backward(const bool wheelchair);
 
     /// Retourne à quel tour on a trouvé la meilleure solution pour ce journey_patternpoint
     /// Retourne -1 s'il n'existe pas de meilleure solution
