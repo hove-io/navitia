@@ -4,6 +4,7 @@
 
 #include <string>
 #include <fstream>
+#include <sstream>
 #include <vector>
 #include <unordered_map>
 #include <boost/tokenizer.hpp>
@@ -18,6 +19,8 @@
 class CsvReader {
     public:
         CsvReader(const std::string& filename, char separator=';', bool read_headers = false, std::string encoding="UTF-8");
+        CsvReader(std::stringstream& sstream, char separator=';', bool read_headers = false, std::string encoding="UTF-8");
+
         ~CsvReader();
         std::vector<std::string> next();
         int get_pos_col(const std::string&);
@@ -26,12 +29,14 @@ class CsvReader {
         bool is_open();
         bool validate(const std::vector<std::string> &mandatory_headers);
         std::string missing_headers(const std::vector<std::string> &mandatory_headers);
+        std::string filename;
     private:
 
 
-        std::string filename;
         std::string line;
         std::fstream file;
+        std::stringstream sstream;
+        std::istream *stream;
         bool closed;
         boost::escaped_list_separator<char> functor;
         std::unordered_map<std::string, int> headers;

@@ -10,57 +10,6 @@
 const std::string gtfs_path = "/navimake/gtfs";
 
 
-BOOST_AUTO_TEST_CASE(parse_gtfs){
-    navimake::Data data;
-    navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
-    parser.fill(data);
-
-    BOOST_CHECK_EQUAL(data.lines.size(), 2);
-    BOOST_CHECK_EQUAL(data.journey_patterns.size(), 3);
-    BOOST_CHECK_EQUAL(data.stop_areas.size(), 6);
-    BOOST_CHECK_EQUAL(data.stop_points.size(), 11);
-    BOOST_CHECK_EQUAL(data.vehicle_journeys.size(), 8);
-    BOOST_CHECK_EQUAL(data.stops.size(), 32);
-    BOOST_CHECK_EQUAL(data.connections.size(), 0);
-    BOOST_CHECK_EQUAL(data.journey_pattern_points.size(), 12);
-
-
-    navimake::types::Line* line = data.lines[0];
-    BOOST_CHECK_EQUAL(line->code, "4");
-    BOOST_CHECK_EQUAL(line->name, "Metro 4 – Porte de clignancourt – Porte d'Orléans");
-    BOOST_CHECK_EQUAL(line->color, "");
-
-
-    navimake::types::JourneyPattern* journey_pattern = data.journey_patterns[0];
-    BOOST_CHECK_EQUAL(journey_pattern->route->line->code, "4");
-
-    navimake::types::StopArea* stop_area = data.stop_areas[0];
-    BOOST_CHECK_EQUAL(stop_area->name, "Gare du Nord");
-    BOOST_CHECK_EQUAL(stop_area->uri, "frpno");
-    BOOST_CHECK_CLOSE(stop_area->coord.lon(), 2.355022, 0.0000001);
-    BOOST_CHECK_CLOSE(stop_area->coord.lat(), 48.880342, 0.0000001);
-    
-    navimake::types::StopPoint* stop_point = data.stop_points[0];
-    BOOST_CHECK_EQUAL(stop_point->name, "Gare du Nord Surface");
-    BOOST_CHECK_EQUAL(stop_point->uri, "frpno:surface");
-    BOOST_CHECK_CLOSE(stop_point->coord.lon(), 2.355381, 0.0000001);
-    BOOST_CHECK_CLOSE(stop_point->coord.lat(), 48.880531, 0.0000001);
-    BOOST_CHECK_EQUAL(stop_point->stop_area, stop_area);
-
-    navimake::types::VehicleJourney* vj = data.vehicle_journeys[0];
-    BOOST_CHECK_EQUAL(vj->uri, "41");
-    BOOST_CHECK_EQUAL(vj->name, "Porte de Clignancourt");
-    BOOST_CHECK_EQUAL(vj->journey_pattern, journey_pattern);
-
-    navimake::types::StopTime* stop = data.stops[0];
-    BOOST_CHECK_EQUAL(stop->ODT, false);
-    BOOST_CHECK_EQUAL(stop->arrival_time, 21600);
-    BOOST_CHECK_EQUAL(stop->departure_time, 21601);
-    BOOST_CHECK_EQUAL(stop->journey_pattern_point->stop_point->uri, "frpno:metro4");
-    BOOST_CHECK_EQUAL(stop->journey_pattern_point->stop_point->name, "Gare du Nord metro ligne 4");
-    BOOST_CHECK_EQUAL(stop->journey_pattern_point->stop_point, data.stop_points[2]);
-
-}
 
 
 BOOST_AUTO_TEST_CASE(city_transformer){

@@ -1,23 +1,28 @@
 #include "csv.h"
 #include <exception>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 #include <boost/algorithm/string.hpp>
 
 typedef boost::tokenizer<boost::escaped_list_separator<char> > Tokenizer;
 
-CsvReader::CsvReader(const std::string& filename, char separator, bool read_headers, std::string encoding): filename(filename), closed(false),
-    functor('\\', separator, '"')
+CsvReader::CsvReader(const std::string& filename, char separator, bool read_headers, std::string encoding): filename(filename),
+    file(), closed(false), functor('\\', separator, '"') 
 #ifdef HAVE_ICONV_H
 	, converter(NULL)
 #endif
 {
     file.open(filename);
-
+    stream = new std::istream(file.rdbuf());
+    stream->setstate(file.rdstate());
     if(encoding != "UTF-8"){
         //TODO la taille en dur s'mal
 #ifdef HAVE_ICONV_H
         converter = new EncodingConverter(encoding, "UTF-8", 2048);
 #endif
     }
+
     if(file.is_open()) {
 
         remove_bom(file);
@@ -27,12 +32,32 @@ CsvReader::CsvReader(const std::string& filename, char separator, bool read_head
             for(size_t i=0; i<line.size(); ++i)
                 this->headers.insert(std::make_pair(line[i], i));
         }
+    } 
+}
+
+CsvReader::CsvReader(std::stringstream &sstream, char separator, bool read_headers, std::string encoding): filename("sstream"),
+    file(), closed(false), functor('\\', separator, '"') 
+#ifdef HAVE_ICONV_H
+	, converter(NULL)
+#endif
+{
+    stream = new std::istream(sstream.rdbuf());
+    if(encoding != "UTF-8"){
+        //TODO la taille en dur s'mal
+#ifdef HAVE_ICONV_H
+        converter = new EncodingConverter(encoding, "UTF-8", 2048);
+#endif
     }
 
+    if(read_headers) {
+        auto line = next();
+        for(size_t i=0; i<line.size(); ++i)
+            this->headers.insert(std::make_pair(line[i], i));
+    } 
 }
 
 bool CsvReader::is_open() {
-    return file.is_open();
+    return stream->good();
 }
 
 bool CsvReader::validate(const std::vector<std::string> &mandatory_headers) {
@@ -64,7 +89,7 @@ void CsvReader::close(){
 }
 
 bool CsvReader::eof() const{
-    return file.eof();
+    return stream->eof() | stream->bad() | stream->fail();
 }
 
 CsvReader::~CsvReader(){
@@ -72,18 +97,17 @@ CsvReader::~CsvReader(){
 }
 
 std::vector<std::string> CsvReader::next(){
-    if(!this->file.is_open()){
+    if(!is_open()){
         throw std::exception();
     }
 
     do{
-        if(file.eof()){
+        if(eof()){
             return std::vector<std::string>();
         }
-        std::getline(file, line);
+        std::getline(*stream, line);
     }while(line.empty());
 
-    boost::trim(line);
 
 #ifdef HAVE_ICONV_H
     if(converter != NULL){
@@ -91,9 +115,12 @@ std::vector<std::string> CsvReader::next(){
     }
 #endif
 
+    boost::trim(line);
     std::vector<std::string> vec;
     Tokenizer tok(line, functor);
     vec.assign(tok.begin(), tok.end());
+    for(auto &s: vec)
+        boost::trim(s);
 
     return vec;
 }
