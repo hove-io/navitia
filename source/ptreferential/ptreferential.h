@@ -41,7 +41,16 @@ struct Filter {
     Filter() {}
 };
 
-struct parsing_error : public std::exception{
+struct ptref_error : public std::exception {
+    std::string more;
+
+    ptref_error(const std::string & more) : more(more) {}
+    virtual const char* what() const throw() {
+        return this->more.c_str();
+    }
+};
+
+struct parsing_error : public ptref_error{
     enum error_type {
         global_error ,
         partial_error,
@@ -49,9 +58,8 @@ struct parsing_error : public std::exception{
     };
 
     error_type type;
-    std::string more;
 
-    parsing_error(error_type type, const std::string & str) : type(type), more(str) {}
+    parsing_error(error_type type, const std::string & str) : ptref_error(str), type(type) {}
 
     ~parsing_error() throw() {}
 };

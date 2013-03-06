@@ -3,7 +3,10 @@
 #include <boost/test/unit_test.hpp>
 #include "ptreferential/ptreferential.h"
 #include "ptreferential/reflexion.h"
+#include "ptreferential/ptref_graph.h"
 #include "naviMake/build_helper.h"
+
+#include <boost/graph/connected_components.hpp>
 
 using namespace navitia::ptref;
 BOOST_AUTO_TEST_CASE(parser){
@@ -181,4 +184,26 @@ BOOST_AUTO_TEST_CASE(filtre_direct) {
      
     indexes = make_query(navitia::type::Type_e::eRoute, "route.uri=route:A-1", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(find_path_test){
+    auto res = find_path(navitia::type::Type_e::eRoute);
+    // Cas où on veut partir et arriver au même point
+    BOOST_CHECK(res[navitia::type::Type_e::eRoute] == navitia::type::Type_e::eRoute);
+    // On regarde qu'il y a un semblant d'itinéraire pour chaque type : il faut un prédécesseur
+    for(auto node_pred : res){
+        if(node_pred.first != Type_e::eRoute)
+            BOOST_CHECK(node_pred.first != node_pred.second);
+    }
+
+    // On vérifie qu'il n'y ait pas de nœud qui ne soit pas atteignable depuis un autre nœud
+    // On utilise les composantes fortement connexes : there must be only one
+    Jointures j;
+    std::vector<vertex_t> component(boost::num_vertices(j.g));
+    int num = boost::connected_components(j.g, &component[0]);
+    BOOST_CHECK_EQUAL(num, 1);
+
+    // Type qui n'existe pas dans le graph : il n'y a pas de chemin
+    BOOST_CHECK_THROW(find_path(navitia::type::Type_e::eUnknown), ptref_error);
+
 }
