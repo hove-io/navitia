@@ -14,3 +14,8 @@ add_executable(navimake_test ${SOURCE})
 target_link_libraries(navimake_test connectors types utils ${Boost_LIBRARIES})
 
 ADD_TEST(navimake_test ${EXECUTABLE_OUTPUT_PATH}/navimake_test --report_level=no)
+
+add_executable(gtfs_parser_test gtfsparser_test.cpp)
+target_link_libraries(gtfs_parser_test connectors types utils ${Boost_LIBRARIES})
+
+ADD_TEST(gtfs_parser_test ${EXECUTABLE_OUTPUT_PATH}/gtfs_parser_test --report_level=no)
