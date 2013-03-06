@@ -6,6 +6,7 @@
 #include <boost/thread/condition_variable.hpp>
 #include <queue>
 #include "utils/csv.h"
+#include <utils/logger.h>
 
 /** Lit les fichiers au format General Transit Feed Specifications
   *
@@ -27,6 +28,7 @@ private:
     boost::unordered_map<std::string, navimake::types::Network*> agency_map;
     typedef std::vector<navimake::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;
+    log4cplus::Logger logger;
 
 public:
     boost::gregorian::date_period production_date;///<Période de validité des données
@@ -80,6 +82,8 @@ public:
     //
     ///parse le fichier calendar.txt afin de trouver la période de validité des données
     boost::gregorian::date_period find_production_date(const std::string beginning_date);
+
+    boost::gregorian::date_period basic_production_date(const std::string beginning_date);
 };
 
 /// Normalise les external code des stop_point et stop_areas
@@ -103,4 +107,16 @@ void build_journey_pattern_point_connections(Data & data);
   * Retourne -1 s'il y a eu un problème
   */
 int time_to_int(const std::string & time);
+
+struct FileNotFoundException{
+    std::string filename;
+    FileNotFoundException(std::string filename) : filename(filename) {}
+};
+
+struct UnableToFindProductionDateException {};
+
+struct InvalidHeaders{
+    std::string filename;
+    InvalidHeaders(std::string filename) : filename(filename) {}
+};
 }}
