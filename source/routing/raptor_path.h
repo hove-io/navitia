@@ -10,7 +10,7 @@ namespace navitia { namespace routing {
                          const RAPTOR &raptor_);
 
     ///Construit un chemin
-    Path makePath(type::idx_t destination_idx, unsigned int countb, bool reverse,
+    Path makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                   const RAPTOR &raptor_);
 
 

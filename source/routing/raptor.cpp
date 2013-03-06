@@ -443,29 +443,6 @@ struct raptor_visitor {
         raptor.labels.push_back(raptor.data.dataRaptor.labels_const);
     }
 
-    bool store_better(const navitia::type::idx_t rpid, navitia::type::DateTime &working_date_time, const label&bound,
-                      const navitia::type::StopTime &st, const navitia::type::idx_t embarquement, uint32_t gap) {
-        auto & working_labels= raptor.labels[raptor.count];
-        working_date_time.update(!st.is_frequency()? st.arrival_time : st.start_time + gap);
-        if(comp(working_date_time, bound.arrival) && st.drop_off_allowed()) {
-            working_labels[rpid] = label(st, working_date_time, embarquement, true, gap);
-            raptor.best_labels[rpid] = working_labels[rpid];
-            if(!raptor.b_dest.add_best(rpid, working_labels[rpid], raptor.count)) {
-                raptor.marked_rp.set(rpid);
-                raptor.marked_sp.set(raptor.data.pt_data.journey_pattern_points[rpid].stop_point_idx);
-                return false;
-            }
-        } else if(working_date_time == bound.arrival &&
-                  raptor.labels[raptor.count-1][rpid].type == uninitialized) {
-            auto l = label(st, working_date_time, embarquement, true, gap);
-            if(raptor.b_dest.add_best(rpid, l, raptor.count)) {
-                working_labels[rpid] = l;
-                raptor.best_labels[rpid] = l;
-            }
-        }
-        return true;
-    }
-
     navitia::type::DateTime current_datetime(int date, const type::StopTime & stop_time) const {
         return navitia::type::DateTime(date, stop_time.departure_time);
     }
@@ -486,7 +463,7 @@ struct raptor_visitor {
     }
 
     void update(navitia::type::DateTime & dt, const type::StopTime & st, const uint32_t gap) {
-        dt.update(!st.is_frequency()? st.arrival_time : st.start_time+gap);
+        dt.update(!st.is_frequency()? st.arrival_time : st.start_time+gap, clockwise);
     }
 
     void reset_queue_item(int &item) {
@@ -536,28 +513,7 @@ struct raptor_reverse_visitor {
 
     void one_more_step() {
         raptor.labels.push_back(raptor.data.dataRaptor.labels_const_reverse);
-    }
-
-    bool store_better(const navitia::type::idx_t rpid, navitia::type::DateTime &working_date_time, const label&bound,
-                      const navitia::type::StopTime st, const navitia::type::idx_t embarquement, uint32_t gap) {
-        auto & working_labels = raptor.labels[raptor.count];
-        working_date_time.updatereverse(!st.is_frequency()? st.departure_time : st.start_time + gap);
-        if(comp(working_date_time, bound.departure) && st.pick_up_allowed()) {
-            working_labels [rpid] = label(st, working_date_time, embarquement, false, gap);
-            raptor.best_labels[rpid] = working_labels [rpid];
-            if(!raptor.b_dest.add_best_reverse(rpid, working_labels [rpid], raptor.count)) {
-                raptor.marked_rp.set(rpid);
-                raptor.marked_sp.set(raptor.data.pt_data.journey_pattern_points[rpid].stop_point_idx);
-                return false;
-            }
-        } else if(working_date_time == bound.departure &&
-                  raptor.labels[raptor.count-1][rpid].type == uninitialized) {
-            auto r = label(st, working_date_time, embarquement, false, gap);
-            if(raptor.b_dest.add_best_reverse(rpid, r, raptor.count))
-                working_labels [rpid] = r;
-        }
-        return true;
-    }
+    }    
 
     navitia::type::DateTime current_datetime(int date, const type::StopTime & stop_time) const {
         return navitia::type::DateTime(date, stop_time.arrival_time);
@@ -579,7 +535,7 @@ struct raptor_reverse_visitor {
     }
 
     void update(navitia::type::DateTime & dt, const type::StopTime & st, const uint32_t gap) {
-        dt.updatereverse(!st.is_frequency() ? st.departure_time : st.start_time + gap);
+        dt.update(!st.is_frequency() ? st.departure_time : st.start_time + gap, clockwise);
     }
 
     void reset_queue_item(int &item) {
@@ -635,11 +591,32 @@ void RAPTOR::raptor_loop(Visitor visitor, const bool wheelchair, bool global_pru
                     if(t != type::invalid_idx) {
                         ++it_st;
                         if(l_zone == std::numeric_limits<uint32_t>::max() || l_zone != it_st->local_traffic_zone) {
-                            //On stocke, et on marque pour explorer par la suite
+                            //On stocke le meilleur label, et on marque pour explorer par la suite
+                            label bound;
                             if(visitor.better(best_labels[rp.idx], b_dest.best_now) || !global_pruning)
-                                end = visitor.store_better(rp.idx, workingDt, best_labels[rp.idx], *it_st, embarquement, gap) && end;
+                                bound = best_labels[rp.idx];
                             else
-                                end = visitor.store_better(rp.idx, workingDt, b_dest.best_now, *it_st, embarquement, gap) && end;
+                                bound = b_dest.best_now;
+                            const navitia::type::StopTime &st = *it_st;
+
+                            auto & working_labels = this->labels[this->count];
+                            workingDt.update(!st.is_frequency()? st.section_end_time(visitor.clockwise) : st.start_time + gap, visitor.clockwise);
+                            if(visitor.comp(workingDt, bound.*visitor.instant) && st.valid_end(visitor.clockwise)) {
+                                working_labels[rp.idx] = label(st, workingDt, embarquement, visitor.clockwise, gap);
+                                this->best_labels[rp.idx] = working_labels[rp.idx];
+                                if(!this->b_dest.add_best(rp.idx, working_labels[rp.idx], this->count, visitor.clockwise)) {
+                                    this->marked_rp.set(rp.idx);
+                                    this->marked_sp.set(this->data.pt_data.journey_pattern_points[rp.idx].stop_point_idx);
+                                    end = false;
+                                }
+                            } else if(workingDt == bound.*visitor.instant &&
+                                      this->labels[this->count-1][rp.idx].type == uninitialized) {
+                                auto l = label(st, workingDt, embarquement, visitor.clockwise, gap);
+                                if(this->b_dest.add_best(rp.idx, l, this->count, visitor.clockwise)) {
+                                    working_labels[rp.idx] = l;
+                                    this->best_labels[rp.idx] = l;
+                                }
+                            }
                         }
                     }
 

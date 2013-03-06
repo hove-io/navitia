@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_update){
 BOOST_AUTO_TEST_CASE(passe_minuit_update_reverse){
     DateTime d(1, 300);
 
-    d.updatereverse(23*3600);
+    d.update(23*3600, false);
     BOOST_CHECK_EQUAL(d.date(), 0);
     BOOST_CHECK_EQUAL(d.hour(), 23*3600);
 }

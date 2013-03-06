@@ -46,7 +46,7 @@ struct label {
         } else {
             departure = date;
             arrival = departure;
-            arrival.updatereverse(!st.is_frequency() ? st.arrival_time : st.start_time + gap);
+            arrival.update(!st.is_frequency() ? st.arrival_time : st.start_time + gap, clockwise);
         }
     }
 
