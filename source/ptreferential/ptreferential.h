@@ -29,7 +29,7 @@ namespace navitia{ namespace ptref{
 struct Filter {
     navitia::type::Type_e navitia_type; //< Le type parsé
     std::string object; //< L'objet sous forme de chaîne de caractère ("stop_area")
-    std::string attribute; //< L'attribu ("external code")
+    std::string attribute; //< L'attribu ("uri")
     Operator_e op; //< la comparaison ("=")
     std::string value; //< la valeur comparée ("kikoolol")
     double lon, lat;
