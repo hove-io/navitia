@@ -180,10 +180,7 @@ struct City : public NavitiaHeader, Nameable {
     idx_t department_idx;
     GeographicalCoord coord;
 
-    //std::vector<std::string> postal_code_list;
-    std::vector<idx_t> stop_area_list;
     std::vector<idx_t> stop_point_list;
-    //std::vector<idx_t> odt_list;
 
     City() : main_city(false), use_main_stop_area_property(false), department_idx(invalid_idx){}
 
@@ -302,23 +299,22 @@ struct Company : public NavitiaHeader, Nameable{
 
 struct CommercialMode : public NavitiaHeader, Nameable{
     const static Type_e type = Type_e::eCommercialMode;
-    std::vector<idx_t> physical_mode_list;
     std::vector<idx_t> line_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & uri & physical_mode_list & line_list;
+        ar & idx & id & name & uri & line_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
 struct PhysicalMode : public NavitiaHeader, Nameable{
     const static Type_e type = Type_e::ePhysicalMode;
-    idx_t commercial_mode_idx;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & commercial_mode_idx & idx;
+        ar & id & idx & name & uri & idx;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
-    PhysicalMode() : commercial_mode_idx(invalid_idx) {}
+    PhysicalMode() {}
 };
 
 struct Line : public NavitiaHeader, Nameable {
@@ -392,7 +388,6 @@ struct VehicleJourney: public NavitiaHeader, Nameable {
     idx_t journey_pattern_idx;
     idx_t company_idx;
     idx_t physical_mode_idx;
-    //idx_t vehicle_idx;
     idx_t validity_pattern_idx;
     std::vector<idx_t> stop_time_list;
 

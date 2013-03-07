@@ -60,11 +60,7 @@ bool CommercialMode::operator<(const CommercialMode& other) const {
 }
 
 bool PhysicalMode::operator<(const PhysicalMode& other) const {
-    if(this->commercial_mode == other.commercial_mode || this->commercial_mode == NULL){
-        return this->name < other.name;
-    }else{
-        return *(this->commercial_mode) < *(other.commercial_mode);
-    }
+    return this->name < other.name;
 }
 
 bool Line::operator<(const Line& other) const {
@@ -181,9 +177,7 @@ nt::PhysicalMode PhysicalMode::Transformer::operator()(const PhysicalMode& mode)
     nt_mode.idx = mode.idx;
     nt_mode.uri = mode.uri;
     nt_mode.name = mode.name;
-    nt_mode.commercial_mode_idx = mode.commercial_mode->idx;
     return nt_mode;
-
 }
 
 
@@ -360,8 +354,8 @@ nt::JourneyPattern JourneyPattern::Transformer::operator()(const JourneyPattern&
     if(journey_pattern.route != NULL)
         nt_journey_pattern.route_idx = journey_pattern.route->idx;
 
-    if(journey_pattern.physical_mode != NULL && journey_pattern.physical_mode->commercial_mode != NULL)
-        nt_journey_pattern.commercial_mode_idx = journey_pattern.physical_mode->commercial_mode->idx;
+    if(journey_pattern.physical_mode != NULL)
+        nt_journey_pattern.commercial_mode_idx = journey_pattern.physical_mode->idx;
 
     return nt_journey_pattern;
 }

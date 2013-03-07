@@ -291,26 +291,15 @@ void Data::transform(navitia::type::PT_Data& data){
 }
 
 void Data::build_relations(navitia::type::PT_Data &data){
-    //for(navimake::types::StopArea & sa, data.stop_areas){}
-
-    BOOST_FOREACH(navitia::type::PhysicalMode & physical_mode, data.physical_modes){
-        data.commercial_modes[physical_mode.commercial_mode_idx].physical_mode_list.push_back(physical_mode.idx);
-    }
-
-    //BOOST_FOREACH(navitia::type::ModeType & commercial_mode, data.commercial_modes){}
-
     BOOST_FOREACH(navitia::type::StopPoint & sp, data.stop_points){
         if(sp.stop_area_idx != navitia::type::invalid_idx) {
             navitia::type::StopArea & sa = data.stop_areas[sp.stop_area_idx];
-            sa.stop_point_list.push_back(sp.idx);
-            if(sp.city_idx != navitia::type::invalid_idx) {
-                navitia::type::City & city = data.cities.at(sp.city_idx);
-                city.stop_point_list.push_back(sp.idx);
-                if(std::find(city.stop_area_list.begin(), city.stop_area_list.end(),sa.idx) == city.stop_area_list.end())
-                    city.stop_area_list.push_back(sa.idx);
-            }
+            sa.stop_point_list.push_back(sp.idx);        
         }
-
+        if(sp.city_idx != navitia::type::invalid_idx) {
+            navitia::type::City & city = data.cities.at(sp.city_idx);
+            city.stop_point_list.push_back(sp.idx);
+        }
     }
 
     BOOST_FOREACH(navitia::type::Line & line, data.lines){

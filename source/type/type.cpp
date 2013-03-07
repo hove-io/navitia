@@ -208,7 +208,7 @@ std::vector<idx_t> Department::get(Type_e type, const PT_Data &)  const {
 std::vector<idx_t> City::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eStopArea: return stop_area_list; break;
+    case Type_e::eStopPoint: return stop_point_list; break;
     case Type_e::eDepartment: result.push_back(department_idx); break;
     default: break;
     }
@@ -248,16 +248,20 @@ std::vector<idx_t> CommercialMode::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::eLine: return line_list; break;
-    case Type_e::ePhysicalMode: return physical_mode_list; break;
     default: break;
     }
     return result;
 }
 
-std::vector<idx_t> PhysicalMode::get(Type_e type, const PT_Data &) const {
+std::vector<idx_t> PhysicalMode::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eCommercialMode: result.push_back(commercial_mode_idx); break;
+        case Type_e::eVehicleJourney:
+            for(auto vj : data.vehicle_journeys) {
+                if(vj.physical_mode_idx == this->idx)
+                    result.push_back(vj.idx);
+            }
+            break;
     default: break;
     }
     return result;
@@ -304,7 +308,6 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data &) const {
     case Type_e::eJourneyPattern: result.push_back(journey_pattern_idx); break;
     case Type_e::eCompany: result.push_back(company_idx); break;
     case Type_e::ePhysicalMode: result.push_back(physical_mode_idx); break;
-    //case Type_e::eVehicle: result.push_back(vehicle_idx); break;
     case Type_e::eValidityPattern: result.push_back(validity_pattern_idx); break;
     default: break;
     }
@@ -327,7 +330,6 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data & data) const {
     case Type_e::eStopArea: result.push_back(stop_area_idx); break;
     case Type_e::eCity: result.push_back(city_idx); break;
     case Type_e::ePhysicalMode: result.push_back(physical_mode_idx); break;
-    case Type_e::eNetwork: result.push_back(network_idx); break;
     case Type_e::eJourneyPatternPoint: return journey_pattern_point_list; break;
     case Type_e::eConnection: for(const Connection & conn : data.stop_point_connections[idx]) {
             result.push_back(conn.idx);
