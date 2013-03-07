@@ -6,7 +6,12 @@
 #include "ptreferential/ptref_graph.h"
 #include "naviMake/build_helper.h"
 
+#include <boost/graph/strong_components.hpp>
 #include <boost/graph/connected_components.hpp>
+
+namespace navitia{namespace ptref {
+template<typename T> std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data & d);
+}}
 
 using namespace navitia::ptref;
 BOOST_AUTO_TEST_CASE(parser){
@@ -57,7 +62,9 @@ BOOST_AUTO_TEST_CASE(having) {
 }
 
 BOOST_AUTO_TEST_CASE(exception){
+    BOOST_CHECK_THROW(parse(""), parsing_error);
     BOOST_CHECK_THROW(parse("mouuuhh bliiii"), parsing_error);
+    BOOST_CHECK_THROW(parse("stop_areas.uri==42"), parsing_error);
 }
 
 struct Moo {
@@ -132,7 +139,38 @@ BOOST_AUTO_TEST_CASE(sans_filtre) {
 }
 
 
-BOOST_AUTO_TEST_CASE(filtre_direct) {
+
+BOOST_AUTO_TEST_CASE(get_indexes_test){
+    navimake::builder b("201303011T1739");
+    b.generate_dummy_basis();
+    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
+    b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
+    b.connection("stop2", "stop3", 10*60);
+    b.connection("stop3", "stop2", 10*60);
+
+    navitia::type::Data data;
+    b.build(data.pt_data);
+
+    // On cherche à retrouver la ligne 1, en passant le stoparea en filtre
+    Filter filter;
+    filter.navitia_type = Type_e::eStopArea;
+    filter.attribute = "uri";
+    filter.op = EQ;
+    filter.value = "stop_area:stop1";
+    auto indexes = get_indexes<StopArea>(filter, Type_e::eLine, data);
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_CHECK_EQUAL(indexes[0], 0);
+
+    // On cherche les stopareas de la ligneA
+    filter.navitia_type = Type_e::eLine;
+    filter.value = "line:A";
+    indexes = get_indexes<Line>(filter, Type_e::eStopArea, data);
+    BOOST_REQUIRE_EQUAL(indexes.size(), 2);
+    BOOST_CHECK_EQUAL(indexes[0], 0);
+    BOOST_CHECK_EQUAL(indexes[1], 1);
+}
+
+BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
 
     navimake::builder b("201303011T1739");
     b.generate_dummy_basis();
@@ -192,16 +230,20 @@ BOOST_AUTO_TEST_CASE(find_path_test){
     BOOST_CHECK(res[navitia::type::Type_e::eRoute] == navitia::type::Type_e::eRoute);
     // On regarde qu'il y a un semblant d'itinéraire pour chaque type : il faut un prédécesseur
     for(auto node_pred : res){
-        if(node_pred.first != Type_e::eRoute)
+        // Route c'est lui même puisque c'est la source, et validity pattern est puni, donc il est seul dans son coin
+        if(node_pred.first != Type_e::eRoute && node_pred.first != Type_e::eValidityPattern)
             BOOST_CHECK(node_pred.first != node_pred.second);
     }
 
     // On vérifie qu'il n'y ait pas de nœud qui ne soit pas atteignable depuis un autre nœud
-    // On utilise les composantes fortement connexes : there must be only one
+    // En connexité non forte, il y a un seul ensemble : validity pattern est relié (en un seul sens) au gros paté
+    // Avec les composantes fortement connexes : there must be only two : validity pattern est isolé car on ne peut y aller
     Jointures j;
     std::vector<vertex_t> component(boost::num_vertices(j.g));
     int num = boost::connected_components(j.g, &component[0]);
     BOOST_CHECK_EQUAL(num, 1);
+    num =  boost::strong_components(j.g, &component[0]);
+    BOOST_CHECK_EQUAL(num, 2);
 
     // Type qui n'existe pas dans le graph : il n'y a pas de chemin
     BOOST_CHECK_THROW(find_path(navitia::type::Type_e::eUnknown), ptref_error);
