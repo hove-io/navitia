@@ -259,4 +259,17 @@ void create_pb(const navitia::georef::Path& path, const navitia::type::Data& dat
         pb_coord->set_lat(coord.lat());
     }
 }
+
+void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Poi* poi, int max_depth,
+        const pt::ptime& now, const pt::time_period& action_period){
+    navitia::georef::POI geopoi = data.geo_ref.pois.at(idx);
+    poi->set_name(geopoi.name);
+    poi->mutable_coord()->set_lat(geopoi.coord.lat());
+    poi->mutable_coord()->set_lon(geopoi.coord.lon());
+
+    if(max_depth > 0 and geopoi.city_idx != nt::invalid_idx)
+            fill_pb_object(geopoi.city_idx, data,  poi->mutable_city(), max_depth-1, now, action_period);
+}
+
+
 }//namespace navitia
