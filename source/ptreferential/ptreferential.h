@@ -48,6 +48,7 @@ struct ptref_error : public std::exception {
     virtual const char* what() const throw() {
         return this->more.c_str();
     }
+    ~ptref_error() throw(){}
 };
 
 struct parsing_error : public ptref_error{
