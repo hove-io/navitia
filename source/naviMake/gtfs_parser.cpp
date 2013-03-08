@@ -238,7 +238,8 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
         sp->name = row[name_c];
         sp->uri = row[id_c];
 
-        if(!data.stop_points.empty() && stop_map.find(sp->uri) != stop_map.end()) {
+        if((!data.stop_points.empty() && stop_map.find(sp->uri) != stop_map.end()) ||
+           (!data.stop_areas.empty() && stop_area_map.find(sp->uri) != stop_area_map.end())     ) {
             ignored++;
         }
         else {
@@ -503,7 +504,8 @@ void GtfsParser::parse_lines(Data & data, CsvReader &csv){
 
     int id_c = csv.get_pos_col("route_id"), short_name_c = csv.get_pos_col("route_short_name"),
         long_name_c = csv.get_pos_col("route_long_name"), type_c = csv.get_pos_col("route_type"),
-        color_c = csv.get_pos_col("route_color"), agency_c = csv.get_pos_col("agendy_id");    int ignored = 0;
+        color_c = csv.get_pos_col("route_color"), agency_c = csv.get_pos_col("agency_id");
+    int ignored = 0;
     
     while(!csv.eof()) {
         auto row = csv.next();
@@ -516,8 +518,6 @@ void GtfsParser::parse_lines(Data & data, CsvReader &csv){
             line->code = row[short_name_c];
             if(color_c != -1)
                 line->color = row[color_c];
-            else
-                line->color = "";
             line->additional_data = row[long_name_c];
 
             boost::unordered_map<std::string, nm::CommercialMode*>::iterator it= commercial_mode_map.find(row[type_c]);
@@ -529,7 +529,7 @@ void GtfsParser::parse_lines(Data & data, CsvReader &csv){
                     line->network = agency_it->second;
             }
             else {
-                auto agency_it = agency_map.find("1");
+                auto agency_it = agency_map.find("default_agency");
                 if(agency_it != agency_map.end())
                     line->network = agency_it->second;
             }
@@ -574,17 +574,17 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
         if(it == line_map.end()){
             LOG4CPLUS_WARN(logger, "Impossible de trouver la Route (au sens GTFS) " + row[id_c]
                       + " référencée par trip " + row[trip_c]);
+            ignored++;
         }
         else {
             nm::Line * line = it->second;
-
             boost::unordered_map<std::string, nm::PhysicalMode*>::iterator itm = mode_map.find(line->commercial_mode->id);
             if(itm == mode_map.end()){
                 LOG4CPLUS_WARN(logger, "Impossible de trouver le mode (au sens GTFS) " + line->commercial_mode->id
                           + " référencée par trip " + row[trip_c]);
+                ignored++;
             } else {
                 nm::ValidityPattern * vp_xx;
-
                 boost::unordered_map<std::string, nm::ValidityPattern*>::iterator vp_it = vp_map.find(row[service_c]);
                 if(vp_it == vp_map.end()) {
                     ignored++;
@@ -593,7 +593,6 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                 else {
                     vp_xx = vp_it->second;
                 }
-
 
                 boost::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(row[trip_c]);
                 if(vj_it == vj_map.end()) {
@@ -619,7 +618,6 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                 else {
                     ignored_vj++;
                 }
-
             }
         }
     }
@@ -788,11 +786,14 @@ void GtfsParser::parse_stop_times(Data & data, CsvReader &csv) {
 
 
     size_t count = 0;
-    for(auto row = csv.next(); !csv.eof() ;row = csv.next()) {
+    while(!csv.eof()) {
+        auto row = csv.next();
+        if(row.empty())
+            break;
         auto vj_it = vj_map.find(row[id_c]);
         if(vj_it == vj_map.end()) {
-            LOG4CPLUS_FATAL(logger, "Impossible de trouver le vehicle_journey " + row[id_c]);
-            exit(1);
+            LOG4CPLUS_WARN(logger, "Impossible de trouver le vehicle_journey " + row[id_c]);
+            continue;
         }
         auto stop_it = stop_map.find(row[stop_c]);
         if(stop_it == stop_map.end()){
