@@ -54,13 +54,7 @@ BOOST_AUTO_TEST_CASE(parse_agencies) {
         sstream << ", ACME,,,,,";
         navimake::Data data;
         navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
-        CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_NO_THROW(parser.parse_agency(data, csv));
-        BOOST_REQUIRE_EQUAL(data.networks.size(), 2);
-        BOOST_CHECK_EQUAL(data.networks[0]->name, "RATP");
-        BOOST_CHECK_EQUAL(data.networks[0]->uri, "ratp");
-        BOOST_CHECK_EQUAL(data.networks[1]->name, "ACME");
-        BOOST_CHECK_EQUAL(data.networks[1]->uri, "2");
+        CsvReader csv(sstream, ',' , true); 
     }
 }
 
@@ -89,71 +83,273 @@ BOOST_AUTO_TEST_CASE(parse_stops) {
         CsvReader csv(sstream, ',' , true);
         BOOST_REQUIRE_NO_THROW(parser.parse_stops(data, csv));
     }
+
+    {
+        std::stringstream sstream(std::stringstream::in | std::stringstream::out);
+        sstream << boost::algorithm::join(required_fields, ",") << "\n";
+        sstream << "\"a\", \"A\",\"bad_lon\",\"bad_lat\"";
+        navimake::Data data;
+        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        CsvReader csv(sstream, ',' , true);
+        BOOST_REQUIRE_NO_THROW(parser.parse_stops(data, csv));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(parse_transfers) {
+
+    std::vector<std::string> fields={"from_stop_id","to_stop_id","transfer_type",
+                                     "min_transfer_type"},
+            required_fields = {"from_stop_id","to_stop_id","transfer_type"};
+
+    //Check des champs obligatoires
+    for(auto required_field : required_fields) {
+        std::stringstream sstream(std::stringstream::in | std::stringstream::out);
+        sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
+        sstream << "\n";
+        navimake::Data data;
+        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        CsvReader csv(sstream, ',' , true);
+        BOOST_REQUIRE_THROW(parser.parse_transfers(data, csv), navimake::connectors::InvalidHeaders);
+    }
+
+    {
+        std::stringstream sstream(std::stringstream::in | std::stringstream::out);
+        sstream << boost::algorithm::join(fields, ",");
+        navimake::Data data;
+        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        CsvReader csv(sstream, ',' , true);
+        BOOST_REQUIRE_NO_THROW(parser.parse_transfers(data, csv));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(parse_lines) {
+    std::vector<std::string> fields={"route_id","agency_id","route_short_name",
+                                     "route_long_name", "route_desc",
+                                     "route_type", "route_url", "route_color",
+                                     "route_text_color"},
+            required_fields = {"route_id", "route_short_name", "route_long_name",
+                               "route_type"};
+
+    //Check des champs obligatoires
+    for(auto required_field : required_fields) {
+        std::stringstream sstream(std::stringstream::in | std::stringstream::out);
+        sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
+        sstream << "\n";
+        navimake::Data data;
+        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        CsvReader csv(sstream, ',' , true);
+        BOOST_REQUIRE_THROW(parser.parse_lines(data, csv), navimake::connectors::InvalidHeaders);
+    }
+
+    {
+        std::stringstream sstream(std::stringstream::in | std::stringstream::out);
+        sstream << boost::algorithm::join(fields, ",");
+        navimake::Data data;
+        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        CsvReader csv(sstream, ',' , true);
+        BOOST_REQUIRE_NO_THROW(parser.parse_lines(data, csv));
+    }
 }
 
 
+BOOST_AUTO_TEST_CASE(parse_trips) {
+    std::vector<std::string> fields={"route_id","service_id","trip_id",
+                "trip_headsign", "trip_short_name", "direction_id", "block_id",
+                "shape_id", "wheelchair_accessible"},
+            required_fields = {"route_id", "service_id", "trip_id"};
+
+    //Check des champs obligatoires
+    for(auto required_field : required_fields) {
+        std::stringstream sstream(std::stringstream::in | std::stringstream::out);
+        sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
+        sstream << "\n";
+        navimake::Data data;
+        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        CsvReader csv(sstream, ',' , true);
+        BOOST_REQUIRE_THROW(parser.parse_trips(data, csv), navimake::connectors::InvalidHeaders);
+    }
+
+    {
+        std::stringstream sstream(std::stringstream::in | std::stringstream::out);
+        sstream << boost::algorithm::join(fields, ",");
+        navimake::Data data;
+        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        CsvReader csv(sstream, ',' , true);
+        BOOST_REQUIRE_NO_THROW(parser.parse_trips(data, csv));
+    }
+}
 
 BOOST_AUTO_TEST_CASE(parse_gtfs){
     navimake::Data data;
     navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
     parser.fill(data);
-
-
-    /* BOOST_CHECK_EQUAL(data.lines.size(), 2);
-    BOOST_CHECK_EQUAL(data.journey_patterns.size(), 3);
-    BOOST_CHECK_EQUAL(data.stop_areas.size(), 6);
-    BOOST_CHECK_EQUAL(data.stop_points.size(), 11);
-    BOOST_CHECK_EQUAL(data.vehicle_journeys.size(), 8);
-    BOOST_CHECK_EQUAL(data.stops.size(), 32);
-    BOOST_CHECK_EQUAL(data.connections.size(), 0);
-    BOOST_CHECK_EQUAL(data.journey_pattern_points.size(), 12);*/
-
+    
     //Agency
     BOOST_REQUIRE_EQUAL(data.networks.size(), 2);
     BOOST_CHECK_EQUAL(data.networks[0]->name, "RATP");
     BOOST_CHECK_EQUAL(data.networks[0]->uri, "ratp");
     BOOST_CHECK_EQUAL(data.networks[1]->name, "ACME");
-    BOOST_CHECK_EQUAL(data.networks[1]->uri, "2");
+    BOOST_CHECK_EQUAL(data.networks[1]->uri, "");
 
     //Stop areas
-    BOOST_REQUIRE_EQUAL(data.stop_areas.size(), 6);
+    BOOST_REQUIRE_EQUAL(data.stop_areas.size(), 5);
+    BOOST_CHECK_EQUAL(data.stop_areas[0]->name, "Doublon");
+    BOOST_CHECK_EQUAL(data.stop_areas[0]->uri, "doublon_sa");
+    BOOST_CHECK_EQUAL(data.stop_areas[0]->coord.lon(), 0);
+    BOOST_CHECK_EQUAL(data.stop_areas[0]->coord.lat(), 1);
+    BOOST_CHECK_EQUAL(data.stop_areas[0]->wheelchair_boarding, false);
+
+
+    BOOST_CHECK_EQUAL(data.stop_areas[1]->name, "Stop Area avant");
+    BOOST_CHECK_EQUAL(data.stop_areas[1]->uri, "sa_avant");
+    BOOST_CHECK_EQUAL(data.stop_areas[1]->coord.lon(), 2.355022);
+    BOOST_CHECK_EQUAL(data.stop_areas[1]->coord.lat(), 48.880342);
+    BOOST_CHECK_EQUAL(data.stop_areas[1]->wheelchair_boarding, false);
+
+    BOOST_CHECK_EQUAL(data.stop_areas[2]->name, "Stop Area apres");
+    BOOST_CHECK_EQUAL(data.stop_areas[2]->uri, "sa_apres");
+    BOOST_CHECK_EQUAL(data.stop_areas[2]->coord.lon(), 2.355022);
+    BOOST_CHECK_EQUAL(data.stop_areas[2]->coord.lat(), 48.880342);
+    BOOST_CHECK_EQUAL(data.stop_areas[2]->wheelchair_boarding, false);
+
+    BOOST_CHECK_EQUAL(data.stop_areas[3]->name, "Stop area seul");
+    BOOST_CHECK_EQUAL(data.stop_areas[3]->uri, "sa_seul");
+    BOOST_CHECK_EQUAL(data.stop_areas[3]->coord.lon(), 2.355022);
+    BOOST_CHECK_EQUAL(data.stop_areas[3]->coord.lat(), 48.880342);
+    BOOST_CHECK_EQUAL(data.stop_areas[3]->wheelchair_boarding, false);
+
+    BOOST_CHECK_EQUAL(data.stop_areas[4]->name, "Stop area wheelchair");
+    BOOST_CHECK_EQUAL(data.stop_areas[4]->uri, "sa_wheelchair");
+    BOOST_CHECK_EQUAL(data.stop_areas[4]->coord.lon(), 2.355022);
+    BOOST_CHECK_EQUAL(data.stop_areas[4]->coord.lat(), 48.880342);
+    BOOST_CHECK_EQUAL(data.stop_areas[4]->wheelchair_boarding, true);
+
+
 
     //Stop points
+    BOOST_REQUIRE_EQUAL(data.stop_points.size(), 9);
+
+    BOOST_CHECK_EQUAL(data.stop_points[0]->name, "Doublon");
+    BOOST_CHECK_EQUAL(data.stop_points[0]->uri, "doublon_sp");
+    BOOST_CHECK_EQUAL(data.stop_points[0]->coord.lon(), 0);
+    BOOST_CHECK_EQUAL(data.stop_points[0]->coord.lat(), 1);
+    BOOST_CHECK_EQUAL(data.stop_points[0]->wheelchair_boarding, false);
+    BOOST_REQUIRE(data.stop_points[0]->stop_area== NULL);
+
+    BOOST_CHECK_EQUAL(data.stop_points[1]->name, "StopPoint apres sa 1");
+    BOOST_CHECK_EQUAL(data.stop_points[1]->uri, "sa_avant:sp1");
+    BOOST_CHECK_EQUAL(data.stop_points[1]->coord.lat(), 48.880531);
+    BOOST_CHECK_EQUAL(data.stop_points[1]->coord.lon(), 2.355381);
+    BOOST_CHECK_EQUAL(data.stop_points[1]->wheelchair_boarding, false);
+    BOOST_REQUIRE(data.stop_points[1]->stop_area!= NULL);
+    BOOST_CHECK_EQUAL(data.stop_points[1]->stop_area->uri, "sa_avant");
+
+    BOOST_CHECK_EQUAL(data.stop_points[2]->name, "StopPoint apres sa 2");
+    BOOST_CHECK_EQUAL(data.stop_points[2]->uri, "sa_avant:sp2");
+    BOOST_CHECK_EQUAL(data.stop_points[2]->coord.lon(), 2.354786);
+    BOOST_CHECK_EQUAL(data.stop_points[2]->coord.lat(), 48.880191);
+    BOOST_CHECK_EQUAL(data.stop_points[2]->wheelchair_boarding, false);
+    BOOST_REQUIRE(data.stop_points[2]->stop_area!= NULL);
+    BOOST_CHECK_EQUAL(data.stop_points[2]->stop_area->uri, "sa_avant");
+
+    BOOST_CHECK_EQUAL(data.stop_points[3]->name, "Stop Point avant sa 1");
+    BOOST_CHECK_EQUAL(data.stop_points[3]->uri, "sa_apres:sp1");
+    BOOST_CHECK_EQUAL(data.stop_points[3]->coord.lon(), 2.355381);
+    BOOST_CHECK_EQUAL(data.stop_points[3]->coord.lat(), 48.880531);
+    BOOST_CHECK_EQUAL(data.stop_points[3]->wheelchair_boarding, false);
+    BOOST_REQUIRE(data.stop_points[3]->stop_area!= NULL);
+    BOOST_CHECK_EQUAL(data.stop_points[3]->stop_area->uri, "sa_apres");
+
+    BOOST_CHECK_EQUAL(data.stop_points[4]->name, "Stop Point avant sa 2");
+    BOOST_CHECK_EQUAL(data.stop_points[4]->uri, "sa_apres:sp2");
+    BOOST_CHECK_EQUAL(data.stop_points[4]->coord.lon(), 2.354786);
+    BOOST_CHECK_EQUAL(data.stop_points[4]->coord.lat(), 48.880191);
+    BOOST_CHECK_EQUAL(data.stop_points[4]->wheelchair_boarding, false);
+    BOOST_REQUIRE(data.stop_points[4]->stop_area!= NULL);
+    BOOST_CHECK_EQUAL(data.stop_points[4]->stop_area->uri, "sa_apres");
+
+    BOOST_CHECK_EQUAL(data.stop_points[5]->name, "Stop point seul");
+    BOOST_CHECK_EQUAL(data.stop_points[5]->uri, "sp_seul");
+    BOOST_CHECK_EQUAL(data.stop_points[5]->coord.lon(), 2.355022);
+    BOOST_CHECK_EQUAL(data.stop_points[5]->coord.lat(), 48.880342);
+    BOOST_CHECK_EQUAL(data.stop_points[5]->wheelchair_boarding, false);
+    BOOST_CHECK(data.stop_points[5]->stop_area == NULL);
+
+    BOOST_CHECK_EQUAL(data.stop_points[6]->name, "Sp wheelchair");
+    BOOST_CHECK_EQUAL(data.stop_points[6]->uri, "sp_wheelchair");
+    BOOST_CHECK_EQUAL(data.stop_points[6]->coord.lat(), 4);
+    BOOST_CHECK_EQUAL(data.stop_points[6]->coord.lon(), 2);
+    BOOST_CHECK_EQUAL(data.stop_points[6]->wheelchair_boarding, true);
+
+    BOOST_CHECK_EQUAL(data.stop_points[7]->name, "Stop point inherits");
+    BOOST_CHECK_EQUAL(data.stop_points[7]->uri, "sa_wheelchair:sp1");
+    BOOST_CHECK_EQUAL(data.stop_points[7]->coord.lon(), 2.355022);
+    BOOST_CHECK_EQUAL(data.stop_points[7]->coord.lat(), 48.880342);
+    BOOST_CHECK_EQUAL(data.stop_points[7]->wheelchair_boarding, true);
+    BOOST_REQUIRE(data.stop_points[7]->stop_area!= NULL);
+    BOOST_CHECK_EQUAL(data.stop_points[7]->stop_area->uri, "sa_wheelchair");
+
+    BOOST_CHECK_EQUAL(data.stop_points[8]->name, "Stop point change");
+    BOOST_CHECK_EQUAL(data.stop_points[8]->uri, "sa_wheelchair:sp2");
+    BOOST_CHECK_EQUAL(data.stop_points[8]->coord.lon(), 2.355022);
+    BOOST_CHECK_EQUAL(data.stop_points[8]->coord.lat(), 48.880342);
+    BOOST_CHECK_EQUAL(data.stop_points[8]->wheelchair_boarding, false);
+    BOOST_REQUIRE(data.stop_points[8]->stop_area!= NULL);
+    BOOST_CHECK_EQUAL(data.stop_points[8]->stop_area->uri, "sa_wheelchair");
+
+    //Transfers
+    BOOST_REQUIRE_EQUAL(data.connections.size(), 9);
+    BOOST_CHECK_EQUAL(data.connections[0]->departure_stop_point->uri, "sp_seul");
+    BOOST_CHECK_EQUAL(data.connections[0]->destination_stop_point->uri, "sa_avant:sp1");
+    BOOST_CHECK_EQUAL(data.connections[0]->duration, 150);
+
+    BOOST_CHECK_EQUAL(data.connections[1]->departure_stop_point->uri,"sa_avant:sp1");
+    BOOST_CHECK_EQUAL(data.connections[1]->destination_stop_point->uri, "sp_seul");
+    BOOST_CHECK_EQUAL(data.connections[1]->duration, 160);
+
+    BOOST_CHECK_EQUAL(data.connections[2]->departure_stop_point->uri,"sa_avant:sp2");
+    BOOST_CHECK_EQUAL(data.connections[2]->destination_stop_point->uri, "sp_seul");
+    BOOST_CHECK_EQUAL(data.connections[2]->duration, 160);
+
+    BOOST_CHECK_EQUAL(data.connections[3]->departure_stop_point->uri, "sp_seul");
+    BOOST_CHECK_EQUAL(data.connections[3]->destination_stop_point->uri, "sa_wheelchair:sp1");
+    BOOST_CHECK_EQUAL(data.connections[3]->duration, 170);
+
+    BOOST_CHECK_EQUAL(data.connections[4]->departure_stop_point->uri, "sp_seul");
+    BOOST_CHECK_EQUAL(data.connections[4]->destination_stop_point->uri, "sa_wheelchair:sp2");
+    BOOST_CHECK_EQUAL(data.connections[4]->duration, 170);
+
+    BOOST_CHECK_EQUAL(data.connections[5]->departure_stop_point->uri, "sa_apres:sp1");
+    BOOST_CHECK_EQUAL(data.connections[5]->destination_stop_point->uri, "sa_avant:sp1");
+    BOOST_CHECK_EQUAL(data.connections[5]->duration, 180);
+
+    BOOST_CHECK_EQUAL(data.connections[6]->departure_stop_point->uri, "sa_apres:sp1");
+    BOOST_CHECK_EQUAL(data.connections[6]->destination_stop_point->uri, "sa_avant:sp2");
+    BOOST_CHECK_EQUAL(data.connections[6]->duration, 180);
+
+    BOOST_CHECK_EQUAL(data.connections[7]->departure_stop_point->uri, "sa_apres:sp2");
+    BOOST_CHECK_EQUAL(data.connections[7]->destination_stop_point->uri, "sa_avant:sp1");
+    BOOST_CHECK_EQUAL(data.connections[7]->duration, 180);
+
+    BOOST_CHECK_EQUAL(data.connections[8]->departure_stop_point->uri, "sa_apres:sp2");
+    BOOST_CHECK_EQUAL(data.connections[8]->destination_stop_point->uri, "sa_avant:sp2");
+    BOOST_CHECK_EQUAL(data.connections[8]->duration, 180);
 
 
-    navimake::types::Line* line = data.lines[0];
-    BOOST_CHECK_EQUAL(line->code, "4");
-    BOOST_CHECK_EQUAL(line->name, "Metro 4 – Porte de clignancourt – Porte d'Orléans");
-    BOOST_CHECK_EQUAL(line->color, "");
+    // Lignes
+    BOOST_REQUIRE_EQUAL(data.lines.size(), 2);
+    BOOST_CHECK_EQUAL(data.lines[0]->uri, "1");
+    BOOST_CHECK_EQUAL(data.lines[0]->name, "Ligne 1");
+    BOOST_REQUIRE(data.lines[0]->network!=NULL);
+    BOOST_CHECK_EQUAL(data.lines[0]->network->uri, "ratp");
 
+    BOOST_CHECK_EQUAL(data.lines[1]->uri, "2");
+    BOOST_CHECK_EQUAL(data.lines[1]->name, "Ligne 2");
+    BOOST_REQUIRE(data.lines[1]->network==NULL);
 
-    navimake::types::JourneyPattern* journey_pattern = data.journey_patterns[0];
-    BOOST_CHECK_EQUAL(journey_pattern->route->line->code, "4");
-
-    navimake::types::StopArea* stop_area = data.stop_areas[0];
-    BOOST_CHECK_EQUAL(stop_area->name, "Gare du Nord");
-    BOOST_CHECK_EQUAL(stop_area->uri, "frpno");
-    BOOST_CHECK_CLOSE(stop_area->coord.lon(), 2.355022, 0.0000001);
-    BOOST_CHECK_CLOSE(stop_area->coord.lat(), 48.880342, 0.0000001);
-    
-    navimake::types::StopPoint* stop_point = data.stop_points[0];
-    BOOST_CHECK_EQUAL(stop_point->name, "Gare du Nord Surface");
-    BOOST_CHECK_EQUAL(stop_point->uri, "frpno:surface");
-    BOOST_CHECK_CLOSE(stop_point->coord.lon(), 2.355381, 0.0000001);
-    BOOST_CHECK_CLOSE(stop_point->coord.lat(), 48.880531, 0.0000001);
-    BOOST_CHECK_EQUAL(stop_point->stop_area, stop_area);
-
-    navimake::types::VehicleJourney* vj = data.vehicle_journeys[0];
-    BOOST_CHECK_EQUAL(vj->uri, "41");
-    BOOST_CHECK_EQUAL(vj->name, "Porte de Clignancourt");
-    BOOST_CHECK_EQUAL(vj->journey_pattern, journey_pattern);
-
-    navimake::types::StopTime* stop = data.stops[0];
-    BOOST_CHECK_EQUAL(stop->ODT, false);
-    BOOST_CHECK_EQUAL(stop->arrival_time, 21600);
-    BOOST_CHECK_EQUAL(stop->departure_time, 21601);
-    BOOST_CHECK_EQUAL(stop->journey_pattern_point->stop_point->uri, "frpno:metro4");
-    BOOST_CHECK_EQUAL(stop->journey_pattern_point->stop_point->name, "Gare du Nord metro ligne 4");
-    BOOST_CHECK_EQUAL(stop->journey_pattern_point->stop_point, data.stop_points[2]);
+    //Trips
+    BOOST_REQUIRE_EQUAL(data.vehicle_journeys.size(), 1);
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->uri, "myonetruetrip");
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->name, "My one true headsign");
 
 }
