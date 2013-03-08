@@ -400,7 +400,7 @@ message BoardItem {
 
 message Board {
     required StopPoint stop_point = 1;
-    required Line line = 2;
+    required Route route = 2;
     repeated BoardItem board_items = 3;
 }
 
