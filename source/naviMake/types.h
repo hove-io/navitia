@@ -237,14 +237,13 @@ struct CommercialMode : public TransmodelHeader, Nameable{
 };
 
 struct PhysicalMode : public TransmodelHeader, Nameable{
-    CommercialMode* commercial_mode;
 
     struct Transformer{
         inline nt::PhysicalMode operator()(const PhysicalMode* physical_mode){return this->operator()(*physical_mode);}
         nt::PhysicalMode operator()(const PhysicalMode& physical_mode);
     };
 
-    PhysicalMode(): commercial_mode(NULL){}
+    PhysicalMode() {}
 
     bool operator<(const PhysicalMode& other) const;
 };

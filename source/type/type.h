@@ -180,10 +180,7 @@ struct City : public NavitiaHeader, Nameable {
     idx_t department_idx;
     GeographicalCoord coord;
 
-    //std::vector<std::string> postal_code_list;
-    std::vector<idx_t> stop_area_list;
     std::vector<idx_t> stop_point_list;
-    //std::vector<idx_t> odt_list;
 
     City() : main_city(false), use_main_stop_area_property(false), department_idx(invalid_idx){}
 
@@ -304,23 +301,22 @@ struct Company : public NavitiaHeader, Nameable{
 
 struct CommercialMode : public NavitiaHeader, Nameable{
     const static Type_e type = Type_e::eCommercialMode;
-    std::vector<idx_t> physical_mode_list;
     std::vector<idx_t> line_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & uri & physical_mode_list & line_list;
+        ar & idx & id & name & uri & line_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
 struct PhysicalMode : public NavitiaHeader, Nameable{
     const static Type_e type = Type_e::ePhysicalMode;
-    idx_t commercial_mode_idx;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & commercial_mode_idx & idx;
+        ar & id & idx & name & uri & idx;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
-    PhysicalMode() : commercial_mode_idx(invalid_idx) {}
+    PhysicalMode() {}
 };
 
 struct Line : public NavitiaHeader, Nameable {
@@ -394,7 +390,6 @@ struct VehicleJourney: public NavitiaHeader, Nameable {
     idx_t journey_pattern_idx;
     idx_t company_idx;
     idx_t physical_mode_idx;
-    //idx_t vehicle_idx;
     idx_t validity_pattern_idx;
     bool wheelchair_boarding;
     std::vector<idx_t> stop_time_list;
@@ -518,6 +513,10 @@ struct StopTime {
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}
     bool is_frequency() const{return properties[IS_FREQUENCY];}
+    /// Est-ce qu'on peut finir par ce stop_time : dans le sens avant on veut descendre
+    bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
+    /// Heure de fin de stop_time : dans le sens avant, c'est la fin, sinon le départ
+    uint32_t section_end_time(bool clockwise) const {return clockwise ? arrival_time : departure_time;}
 
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<uint32_t>::max()), end_time(std::numeric_limits<uint32_t>::max()),
         headway_secs(std::numeric_limits<uint32_t>::max()), vehicle_journey_idx(invalid_idx), journey_pattern_point_idx(invalid_idx),

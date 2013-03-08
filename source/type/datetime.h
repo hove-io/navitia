@@ -75,24 +75,23 @@ struct DateTime {
         return datetime - other.datetime;
     }
 
-    void update(uint32_t hour) {
+    void update(uint32_t hour, bool clockwise = true) {
         if(hour>=NB_SECONDS_DAY)
             hour -= NB_SECONDS_DAY;
-        datetime += ((hour>=this->hour())?0:NB_SECONDS_DAY) + hour - this->hour();
-    }
-
-    void updatereverse(uint32_t hour) {
-        if(hour>=NB_SECONDS_DAY)
-            hour -= NB_SECONDS_DAY;
-        if(hour<=this->hour())
-            datetime += hour - this->hour();
-        else {
-            if(this->date() > 0)
-                datetime += hour - this->hour() - NB_SECONDS_DAY;
-            else
-                datetime = 0;
+        if(clockwise){
+            datetime += ((hour>=this->hour())?0:NB_SECONDS_DAY) + hour - this->hour();
+        } else {
+            if(hour<=this->hour())
+                datetime += hour - this->hour();
+            else {
+                if(this->date() > 0)
+                    datetime += hour - this->hour() - NB_SECONDS_DAY;
+                else
+                    datetime = 0;
+            }
         }
     }
+
 
     void increment(uint32_t secs){
         datetime += secs;

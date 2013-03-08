@@ -198,7 +198,7 @@ std::pair<type::idx_t, navitia::type::DateTime> getFinalRpidAndDate(int count, t
             const type::StopTime &st1 = data.pt_data.stop_times[labels[cnt][current_rpid].stop_time_idx];
             const type::StopTime &st2 = data.pt_data.stop_times[data.pt_data.vehicle_journeys[st1.vehicle_journey_idx].stop_time_list[data.pt_data.journey_pattern_points[labels[cnt][current_rpid].rpid_embarquement].order]];
             if(!clockwise)
-                last_time.updatereverse(st2.arrival_time);
+                last_time.update(st2.arrival_time, false);
             else
                 last_time.update(st2.departure_time);
             current_rpid = labels[cnt][current_rpid].rpid_embarquement;

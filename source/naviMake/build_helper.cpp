@@ -231,7 +231,6 @@ void builder::connection(const std::string & name1, const std::string & name2, f
         mode->id = mt->id;
         mode->name = mt->name;
         mode->uri = mt->uri;
-        mode->commercial_mode = mt;
         this->data.physical_modes.push_back(mode);
     }
 

@@ -22,7 +22,7 @@ makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
             }
         }
         if(best_rp != type::invalid_idx)
-            result.push_back(makePath(best_rp, i, false, raptor_));
+            result.push_back(makePath(best_rp, i, true, raptor_));
     }
 
     return result;
@@ -55,7 +55,7 @@ makePathesreverse(std::vector<std::pair<type::idx_t, double> > destinations,
         }
 
         if(best_rp != type::invalid_idx)
-            result.push_back(makePathreverse(best_rp, i, raptor_));
+            result.push_back(makePath(best_rp, i, false, raptor_));
     }
     return result;
 }
@@ -67,13 +67,13 @@ makePathesreverse(std::vector<std::pair<type::idx_t, double> > destinations,
 
 
 Path 
-makePath(type::idx_t destination_idx, unsigned int countb, bool reverse,
+makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
          const RAPTOR &raptor_) {
     Path result;
     unsigned int current_rpid = destination_idx;
     label l = raptor_.labels[countb][current_rpid];
     navitia::type::DateTime workingDate;
-    if(!reverse)
+    if(clockwise)
         workingDate = l.arrival;
     else
         workingDate = l.departure;
@@ -93,10 +93,10 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool reverse,
            raptor_.labels[countb][current_rpid].type == connection_guarantee) {
             l = raptor_.labels[countb][current_rpid];
             auto r2 = raptor_.labels[countb][l.rpid_embarquement];
-            if(reverse) {
-                item = PathItem(l.departure, r2.arrival);
-            } else {
+            if(clockwise) {
                 item = PathItem(r2.arrival, l.departure);
+            } else {
+                item = PathItem(l.departure, r2.arrival);
             }
 
             item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_rpid].stop_point_idx);
@@ -123,7 +123,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool reverse,
                 item = PathItem();
                 item.type = public_transport;
 
-                if(!reverse) {
+                if(clockwise) {
                     workingDate = l.departure;
                 }
                 else {
@@ -134,10 +134,10 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool reverse,
 
                     //On stocke le sp, et les temps
                     item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_rpid].stop_point_idx);
-                    if(!reverse) {
-                        workingDate.updatereverse(current_st.departure_time+gap);
+                    if(clockwise) {
+                        workingDate.update(current_st.departure_time+gap, false);
                         item.departures.push_back(workingDate);
-                        workingDate.updatereverse(current_st.arrival_time+gap);
+                        workingDate.update(current_st.arrival_time+gap, false);
                         item.arrivals.push_back(workingDate);
                     } else {
                         workingDate.update(current_st.arrival_time+gap);
@@ -147,7 +147,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool reverse,
                     }
 
                     //On va chercher le prochain stop time
-                    if(!reverse)
+                    if(clockwise)
                         current_st = raptor_.data.pt_data.stop_times.at(current_st.idx - 1);
                     else
                         current_st = raptor_.data.pt_data.stop_times.at(current_st.idx + 1);
@@ -157,10 +157,10 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool reverse,
                 }
                 // Je stocke le dernier stop point, et ses temps d'arrivée et de départ
                 item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_rpid].stop_point_idx);
-                if(!reverse) {
-                    workingDate.updatereverse(current_st.departure_time+gap);
+                if(clockwise) {
+                    workingDate.update(current_st.departure_time+gap, false);
                     item.departures.push_back(workingDate);
-                    workingDate.updatereverse(current_st.arrival_time+gap);
+                    workingDate.update(current_st.arrival_time+gap, false);
                     item.arrivals.push_back(workingDate);
                     item.arrival = item.arrivals.front();
                     item.departure = item.departures.back();
@@ -186,7 +186,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool reverse,
 
     }
 
-    if(!reverse){
+    if(clockwise){
         std::reverse(result.items.begin(), result.items.end());
         for(auto & item : result.items) {
             std::reverse(item.stop_points.begin(), item.stop_points.end());
@@ -225,7 +225,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool reverse,
 Path 
 makePathreverse(unsigned int destination_idx, unsigned int countb,
                 const RAPTOR &raptor_) {
-    return makePath(destination_idx, countb, true, raptor_);
+    return makePath(destination_idx, countb, false, raptor_);
 }
 
 

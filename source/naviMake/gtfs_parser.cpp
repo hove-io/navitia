@@ -157,7 +157,6 @@ void GtfsParser::fill_modes(Data & data) {
         mode->id = mt->id;
         mode->name = mt->name;
         mode->uri = mt->uri;
-        mode->commercial_mode = mt;
         data.physical_modes.push_back(mode);
         mode_map[mode->id] = mode;
     }
