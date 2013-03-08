@@ -168,6 +168,7 @@ navitia::type::StopArea StopArea::Transformer::operator()(const StopArea& stop_a
     sa.coord = stop_area.coord;
     sa.comment = stop_area.comment;
     sa.name = stop_area.name;
+    sa.wheelchair_boarding = stop_area.wheelchair_boarding;
 
     sa.additional_data = stop_area.additional_data;
     sa.properties = stop_area.properties;
@@ -224,6 +225,7 @@ nt::StopPoint StopPoint::Transformer::operator()(const StopPoint& stop_point){
     nt_stop_point.address_number    = stop_point.address_number;       
     nt_stop_point.address_type_name = stop_point.address_type_name;
     
+    nt_stop_point.wheelchair_boarding = stop_point.wheelchair_boarding;
     if(stop_point.stop_area != NULL)
         nt_stop_point.stop_area_idx = stop_point.stop_area->idx;
 
@@ -378,6 +380,7 @@ nt::StopTime StopTime::Transformer::operator()(const StopTime& stop){
     nt_stop.properties[nt::StopTime::DROP_OFF] = stop.drop_off_allowed;
     nt_stop.properties[nt::StopTime::PICK_UP] = stop.pick_up_allowed;
     nt_stop.properties[nt::StopTime::IS_FREQUENCY] = stop.is_frequency;
+    nt_stop.properties[nt::StopTime::WHEELCHAIR_BOARDING] = stop.wheelchair_boarding;
 
     nt_stop.local_traffic_zone = stop.local_traffic_zone;
 
@@ -449,6 +452,8 @@ nt::VehicleJourney VehicleJourney::Transformer::operator()(const VehicleJourney&
 
     if(vj.validity_pattern != NULL)
         nt_vj.validity_pattern_idx = vj.validity_pattern->idx;
+
+    nt_vj.wheelchair_boarding = vj.wheelchair_boarding;
 
     return nt_vj;
 }
