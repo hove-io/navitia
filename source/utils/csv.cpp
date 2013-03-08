@@ -32,7 +32,9 @@ CsvReader::CsvReader(const std::string& filename, char separator, bool read_head
             for(size_t i=0; i<line.size(); ++i)
                 this->headers.insert(std::make_pair(line[i], i));
         }
-    } 
+    } else {
+        closed = true;
+    }
 }
 
 CsvReader::CsvReader(std::stringstream &sstream, char separator, bool read_headers, std::string encoding): filename("sstream"),
@@ -82,9 +84,12 @@ void CsvReader::close(){
         file.close();
 #ifdef HAVE_ICONV_H
 		//TODO gérer des options de compile plutot que par plateforme
-        delete converter;
-        converter = NULL;
+        if(converter != NULL) {
+            delete converter;
+            converter = NULL;
+        }
 #endif
+        closed = true;
     }
 }
 
@@ -126,9 +131,7 @@ std::vector<std::string> CsvReader::next(){
 }
 
 int CsvReader::get_pos_col(const std::string & str){
-    std::unordered_map<std::string,int>::iterator it;  /// Utilisation dans le cas où le key n'existe pas size_t = 0
-
-    it = headers.find(str);
+    auto it = headers.find(str);  /// Utilisation dans le cas où le key n'existe pas size_t = 0
 
     if (it != headers.end())
         return headers[str];
