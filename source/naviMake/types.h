@@ -177,7 +177,7 @@ struct StopArea : public TransmodelHeader, Nameable{
 
     bool main_stop_area;
     bool main_connection;
-    bool is_adapted;
+    bool wheelchair_boarding;
 
     struct Transformer{
         inline navitia::type::StopArea operator()(const StopArea* stop_area){return this->operator()(*stop_area);}
@@ -185,7 +185,7 @@ struct StopArea : public TransmodelHeader, Nameable{
     };
 
 
-    StopArea(): properties(0), main_stop_area(false), main_connection(false), is_adapted(false) {}
+    StopArea(): properties(0), main_stop_area(false), main_connection(false), wheelchair_boarding(false) {}
 
     bool operator<(const StopArea& other) const;
 };
@@ -267,7 +267,7 @@ struct Line : public TransmodelHeader, Nameable {
         nt::Line operator()(const Line& line);   
     };
 
-    Line(): sort(0), commercial_mode(NULL), network(NULL), company(NULL){}
+    Line(): color(""), sort(0), commercial_mode(NULL), network(NULL), company(NULL){}
 
     bool operator<(const Line & other) const;
 
@@ -306,7 +306,7 @@ struct VehicleJourney: public TransmodelHeader, Nameable{
     PhysicalMode* physical_mode;
     Line * tmp_line; // N'est pas à remplir obligatoirement
     //Vehicle* vehicle;
-    bool is_adapted;
+    bool wheelchair_boarding;
 
     ValidityPattern* validity_pattern;
     std::vector<StopTime*> stop_time_list; // N'est pas à remplir obligatoirement
@@ -318,7 +318,7 @@ struct VehicleJourney: public TransmodelHeader, Nameable{
         navitia::type::VehicleJourney operator()(const VehicleJourney& vj);
     };
 
-    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), is_adapted(false), validity_pattern(NULL), stop_time_list(), block_id(""){}
+    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), wheelchair_boarding(false), validity_pattern(NULL), stop_time_list(), block_id(""){}
 
     bool operator<(const VehicleJourney& other) const;
 };
@@ -396,14 +396,14 @@ struct StopPoint : public TransmodelHeader, Nameable{
     City* city;
     Network* network; 
 
-    bool is_adapted;
+    bool wheelchair_boarding;
 
     struct Transformer{
         inline nt::StopPoint operator()(const StopPoint* stop_point){return this->operator()(*stop_point);}   
         nt::StopPoint operator()(const StopPoint& stop_point);   
     };
 
-    StopPoint(): fare_zone(0), stop_area(NULL), physical_mode(NULL), city(NULL), network(NULL), is_adapted(false) {}
+    StopPoint(): fare_zone(0), stop_area(NULL), physical_mode(NULL), city(NULL), network(NULL), wheelchair_boarding(false) {}
 
     bool operator<(const StopPoint& other) const;
 
@@ -424,7 +424,8 @@ struct StopTime {
     bool pick_up_allowed;
     bool drop_off_allowed;
     bool is_frequency;
-    bool is_adapted;
+    bool wheelchair_boarding;
+    
     uint32_t local_traffic_zone;
 
     struct Transformer{
@@ -434,7 +435,9 @@ struct StopTime {
 
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<int>::max()), end_time(std::numeric_limits<int>::max()),
         headway_secs(std::numeric_limits<int>::max()), vehicle_journey(NULL), journey_pattern_point(NULL), order(0),
-        ODT(false), pick_up_allowed(false), drop_off_allowed(false), is_frequency(false), local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
+        ODT(false), pick_up_allowed(false), drop_off_allowed(false), is_frequency(false), wheelchair_boarding(false),
+                local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
+
 
 
     bool operator<(const StopTime& other) const;

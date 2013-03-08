@@ -16,7 +16,7 @@ VJ & VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs
 }
 
 
-VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string &block_id, bool is_adapted) : b(b){
+VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string &block_id, bool wheelchair_boarding) : b(b){
     vj = new types::VehicleJourney();
     b.data.vehicle_journeys.push_back(vj);
 
@@ -40,7 +40,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         vj->validity_pattern = vp_it->second;
     }
     vj->block_id = block_id;
-    vj->is_adapted = is_adapted;
+    vj->wheelchair_boarding = wheelchair_boarding;
 
     if(!b.data.companies.empty())
         vj->company = b.data.companies.front();
@@ -67,13 +67,13 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32
             st->tmp_stop_point->stop_area = new types::StopArea();
             st->tmp_stop_point->stop_area->name = sp_name;
             st->tmp_stop_point->stop_area->uri = sp_name;
-            st->tmp_stop_point->stop_area->is_adapted = true;
+            st->tmp_stop_point->stop_area->wheelchair_boarding = true;
             b.sas[sp_name] = st->tmp_stop_point->stop_area;
             b.data.stop_areas.push_back(st->tmp_stop_point->stop_area);
-            st->tmp_stop_point->is_adapted = true;
+            st->tmp_stop_point->wheelchair_boarding = true;
         } else {
             st->tmp_stop_point->stop_area = sa_it->second;
-            st->tmp_stop_point->is_adapted = st->tmp_stop_point->stop_area->is_adapted;
+            st->tmp_stop_point->wheelchair_boarding = st->tmp_stop_point->stop_area->wheelchair_boarding;
         }
     } else {
         st->tmp_stop_point = it->second;
@@ -88,42 +88,42 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32
     st->drop_off_allowed = drop_off_allowed;
     st->pick_up_allowed = pick_up_allowed;
     vj->stop_time_list.push_back(st);
-    st->is_adapted = st->vehicle_journey->is_adapted;
+    st->wheelchair_boarding = st->vehicle_journey->wheelchair_boarding;
 
     return *this;
 }
 
-SA::SA(builder & b, const std::string & sa_name, double x, double y, bool is_adapted) : b(b) {
+SA::SA(builder & b, const std::string & sa_name, double x, double y, bool wheelchair_boarding) : b(b) {
     sa = new types::StopArea();
     b.data.stop_areas.push_back(sa);
     sa->name = sa_name;
     sa->uri = sa_name;
     sa->coord.set_lon(x);
     sa->coord.set_lat(y);
-    sa->is_adapted = is_adapted;
+    sa->wheelchair_boarding = wheelchair_boarding;
     b.sas[sa_name] = sa;
 }
 
-SA & SA::operator()(const std::string & sp_name, double x, double y, bool is_adapted){
+SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelchair_boarding){
     types::StopPoint * sp = new types::StopPoint();
     b.data.stop_points.push_back(sp);
     sp->name = sp_name;
     sp->uri = sp_name;
-    sp->is_adapted = is_adapted;
+    sp->wheelchair_boarding = wheelchair_boarding;
     sa->coord.set_lon(x);
     sa->coord.set_lat(y);
-    sp->is_adapted = is_adapted;
+    sp->wheelchair_boarding = wheelchair_boarding;
     sp->stop_area = this->sa;
     b.sps[sp_name] = sp;
     return *this;
 }
 
-VJ builder::vj(const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, const bool is_adapted){
-    return VJ(*this, line_name, validity_pattern, block_id, is_adapted);
+VJ builder::vj(const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, const bool wheelchair_boarding){
+    return VJ(*this, line_name, validity_pattern, block_id, wheelchair_boarding);
 }
 
-SA builder::sa(const std::string &name, double x, double y, const bool is_adapted){
-    return SA(*this, name, x, y, is_adapted);
+SA builder::sa(const std::string &name, double x, double y, const bool wheelchair_boarding){
+    return SA(*this, name, x, y, wheelchair_boarding);
 }
 
 void builder::connection(const std::string & name1, const std::string & name2, float length) {

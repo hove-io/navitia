@@ -1,3 +1,4 @@
 "route_id","agency_id","route_short_name","route_long_name","route_desc","route_type","route_url","route_color","route_text_color"
-4,"ratp",4,"Metro 4 – Porte de clignancourt – Porte d'Orléans",,1,,,
-5,"ratp",5,"Metro 5 – Bobigny – Place d'italie",,1,,,
+1,"ratp",1,"Ligne 1",,1,,,
+1,"ratp",1,"Ligne 1",,1,,,
+2,"tropfakelenetwork",1,"Ligne 2",,1,,,

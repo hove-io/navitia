@@ -248,12 +248,14 @@ struct StopArea : public NavitiaHeader, Nameable{
     int properties;
     std::string additional_data;
     idx_t city_idx;
+    bool wheelchair_boarding;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & uri & name & city_idx & coord & stop_point_list;
+        ar & id & idx & uri & name & city_idx & coord & stop_point_list &
+            wheelchair_boarding;
     }
 
-    StopArea(): properties(0), city_idx(invalid_idx) {}
+    StopArea(): properties(0), city_idx(invalid_idx), wheelchair_boarding(false) {}
 
     std::vector<idx_t> stop_point_list;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -390,12 +392,12 @@ struct VehicleJourney: public NavitiaHeader, Nameable {
     idx_t company_idx;
     idx_t physical_mode_idx;
     idx_t validity_pattern_idx;
+    bool wheelchair_boarding;
     std::vector<idx_t> stop_time_list;
 
-
-    VehicleJourney(): journey_pattern_idx(invalid_idx), company_idx(invalid_idx), physical_mode_idx(invalid_idx), /*vehicle_idx(invalid_idx), */validity_pattern_idx(invalid_idx) {}
+    VehicleJourney(): journey_pattern_idx(invalid_idx), company_idx(invalid_idx), physical_mode_idx(invalid_idx), /*vehicle_idx(invalid_idx), */validity_pattern_idx(invalid_idx) , wheelchair_boarding(false){}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & uri & journey_pattern_idx & company_idx & physical_mode_idx & validity_pattern_idx & idx & stop_time_list;
+        ar & name & uri & journey_pattern_idx & company_idx & physical_mode_idx & validity_pattern_idx & idx & wheelchair_boarding & stop_time_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
@@ -479,11 +481,12 @@ struct StopPoint : public NavitiaHeader, Nameable{
     idx_t physical_mode_idx;
     idx_t network_idx;
     std::vector<idx_t> journey_pattern_point_list;
+    bool wheelchair_boarding;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & uri & name & stop_area_idx & physical_mode_idx & coord & fare_zone & idx & journey_pattern_point_list;
+        ar & uri & name & stop_area_idx & physical_mode_idx & coord & fare_zone & idx & journey_pattern_point_list & wheelchair_boarding;
     }
 
-    StopPoint(): fare_zone(0),  stop_area_idx(invalid_idx), city_idx(invalid_idx), physical_mode_idx(invalid_idx), network_idx(invalid_idx) {}
+    StopPoint(): fare_zone(0),  stop_area_idx(invalid_idx), city_idx(invalid_idx), physical_mode_idx(invalid_idx), network_idx(invalid_idx), wheelchair_boarding(false) {}
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -494,6 +497,7 @@ struct StopTime {
     static const uint8_t DROP_OFF = 1;
     static const uint8_t ODT = 2;
     static const uint8_t IS_FREQUENCY = 3;
+    static const uint8_t WHEELCHAIR_BOARDING = 4;
 
     idx_t idx;
     uint32_t arrival_time; ///< En secondes depuis minuit

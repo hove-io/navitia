@@ -1,0 +1,9 @@
+from_stop_id, to_stop_id, transfer_type, min_transfer_time
+"bad", "doublon", 0, 120
+"doublon", "bad", 0, 120
+"sp_seul", "sa_seul", 0, 140
+"sp_seul", "sa_avant:sp1", 0,150
+"sa_avant", "sp_seul", 0,160
+"sp_seul", "sa_wheelchair", 0,170
+"sa_apres", "sa_avant",0,180
+

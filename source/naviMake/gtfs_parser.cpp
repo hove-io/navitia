@@ -62,7 +62,7 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
     std::vector<string_function> filename_function_list;
     filename_function_list.push_back(std::make_pair("agency.txt", &GtfsParser::parse_agency));
     filename_function_list.push_back(std::make_pair("stops.txt", &GtfsParser::parse_stops));
-    filename_function_list.push_back(std::make_pair("routes.txt", &GtfsParser::parse_journey_patterns));
+    filename_function_list.push_back(std::make_pair("routes.txt", &GtfsParser::parse_lines));
     filename_function_list.push_back(std::make_pair("transfers.txt", &GtfsParser::parse_transfers));
     filename_function_list.push_back(std::make_pair("calendar.txt", &GtfsParser::parse_calendar));
     filename_function_list.push_back(std::make_pair("calendar_dates.txt", &GtfsParser::parse_calendar_dates));
@@ -172,19 +172,25 @@ void GtfsParser::parse_agency(Data & data, CsvReader & csv){
     }
 
     int id_c = csv.get_pos_col("agency_id"), name_c = csv.get_pos_col("agency_name");
-    int id = 1;
+
+    bool line_read = false;
     while(!csv.eof()) {
         auto row = csv.next();
         if(!row.empty()) {
+            if(line_read && id_c == -1) {
+                LOG4CPLUS_FATAL(logger, "Erreur lors de la lecture " + csv.filename +
+                        "le fichier comporte plus d'une agence et n'a pas de colonne agency_id");
+                throw InvalidHeaders(csv.filename);
+            }
             nm::Network * network = new nm::Network();
-            if(id_c != -1 && row[id_c]!="")
+            if(id_c != -1)
                 network->uri = row[id_c];
             else
-                network->uri = boost::lexical_cast<std::string>(id);
+                network->uri = "default_agency";
             network->name = row[name_c];
             data.networks.push_back(network);
             agency_map[network->uri] = network;
-            ++id;
+            line_read = true;
         }
     }
 }
@@ -206,7 +212,7 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
     int id_c = csv.get_pos_col("stop_id"), code_c = csv.get_pos_col("stop_code"),
         lat_c = csv.get_pos_col("stop_lat"), lon_c = csv.get_pos_col("stop_lon"),
         type_c = csv.get_pos_col("location_type"), parent_c = csv.get_pos_col("parent_station"),
-        name_c = csv.get_pos_col("stop_name"), wheelchair_c = csv.get_pos_col("stop_wheelchair");
+        name_c = csv.get_pos_col("stop_name"), wheelchair_c = csv.get_pos_col("wheelchair_boarding");
 
     if(code_c == -1){
         code_c = id_c;
@@ -231,7 +237,8 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
         sp->name = row[name_c];
         sp->uri = row[id_c];
 
-        if(!data.stop_points.empty() && stop_map.find(sp->uri) != stop_map.end()) {
+        if((!data.stop_points.empty() && stop_map.find(sp->uri) != stop_map.end()) ||
+           (!data.stop_areas.empty() && stop_area_map.find(sp->uri) != stop_area_map.end())     ) {
             ignored++;
         }
         else {
@@ -242,7 +249,7 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
                 sa->name = sp->name;
                 sa->uri = sp->uri;
                 if(wheelchair_c != -1)
-                    sa->is_adapted = row[wheelchair_c] == "1";
+                    sa->wheelchair_boarding = row[wheelchair_c] == "1";
                 stop_area_map[sa->uri] = sa;
                 data.stop_areas.push_back(sa);
                 delete sp;
@@ -253,7 +260,7 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
                     if(row[wheelchair_c] == "0") {
                         wheelchair_heritance.push_back(sp);
                     } else {
-                        sp->is_adapted = row[wheelchair_c] == "1";
+                        sp->wheelchair_boarding = row[wheelchair_c] == "1";
                     }
                 }
                 stop_map[sp->uri] = sp;
@@ -289,7 +296,7 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
     //On va chercher l'accessibilité pour les stop points qui hérite de l'accessibilité de leur stop area
     for(auto sp : wheelchair_heritance) {
         if(sp->stop_area != 0) {
-            sp->is_adapted = sp->stop_area->is_adapted;
+            sp->wheelchair_boarding = sp->stop_area->wheelchair_boarding;
         } else {
             LOG4CPLUS_WARN(logger, "Impossible de récuperer l'accessibilité du stop area pour le stop point " + sp->uri);
         }
@@ -483,7 +490,7 @@ void GtfsParser::parse_calendar_dates(Data & data, CsvReader & csv){
 }
 
 
-void GtfsParser:: parse_journey_patterns(Data & data, CsvReader &csv){
+void GtfsParser::parse_lines(Data & data, CsvReader &csv){
     std::vector<std::string> mandatory_headers = {"route_id", "route_short_name",
         "route_long_name", "route_type"};
     if(!csv.validate(mandatory_headers)) {
@@ -496,7 +503,8 @@ void GtfsParser:: parse_journey_patterns(Data & data, CsvReader &csv){
 
     int id_c = csv.get_pos_col("route_id"), short_name_c = csv.get_pos_col("route_short_name"),
         long_name_c = csv.get_pos_col("route_long_name"), type_c = csv.get_pos_col("route_type"),
-        color_c = csv.get_pos_col("route_color"), agency_c = csv.get_pos_col("agendy_id");    int ignored = 0;
+        color_c = csv.get_pos_col("route_color"), agency_c = csv.get_pos_col("agency_id");
+    int ignored = 0;
     
     while(!csv.eof()) {
         auto row = csv.next();
@@ -509,8 +517,6 @@ void GtfsParser:: parse_journey_patterns(Data & data, CsvReader &csv){
             line->code = row[short_name_c];
             if(color_c != -1)
                 line->color = row[color_c];
-            else
-                line->color = "";
             line->additional_data = row[long_name_c];
 
             boost::unordered_map<std::string, nm::CommercialMode*>::iterator it= commercial_mode_map.find(row[type_c]);
@@ -522,7 +528,7 @@ void GtfsParser:: parse_journey_patterns(Data & data, CsvReader &csv){
                     line->network = agency_it->second;
             }
             else {
-                auto agency_it = agency_map.find("1");
+                auto agency_it = agency_map.find("default_agency");
                 if(agency_it != agency_map.end())
                     line->network = agency_it->second;
             }
@@ -567,17 +573,17 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
         if(it == line_map.end()){
             LOG4CPLUS_WARN(logger, "Impossible de trouver la Route (au sens GTFS) " + row[id_c]
                       + " référencée par trip " + row[trip_c]);
+            ignored++;
         }
         else {
             nm::Line * line = it->second;
-
             boost::unordered_map<std::string, nm::PhysicalMode*>::iterator itm = mode_map.find(line->commercial_mode->id);
             if(itm == mode_map.end()){
                 LOG4CPLUS_WARN(logger, "Impossible de trouver le mode (au sens GTFS) " + line->commercial_mode->id
                           + " référencée par trip " + row[trip_c]);
+                ignored++;
             } else {
                 nm::ValidityPattern * vp_xx;
-
                 boost::unordered_map<std::string, nm::ValidityPattern*>::iterator vp_it = vp_map.find(row[service_c]);
                 if(vp_it == vp_map.end()) {
                     ignored++;
@@ -586,7 +592,6 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                 else {
                     vp_xx = vp_it->second;
                 }
-
 
                 boost::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(row[trip_c]);
                 if(vj_it == vj_map.end()) {
@@ -605,14 +610,13 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                     else
                         vj->block_id = "";
                     if(wheelchair_c != -1)
-                        vj->is_adapted = row[wheelchair_c] == "1";
+                        vj->wheelchair_boarding = row[wheelchair_c] == "1";
                     vj_map[vj->uri] = vj;
                     data.vehicle_journeys.push_back(vj);
                 }
                 else {
                     ignored_vj++;
                 }
-
             }
         }
     }
@@ -781,11 +785,14 @@ void GtfsParser::parse_stop_times(Data & data, CsvReader &csv) {
 
 
     size_t count = 0;
-    for(auto row = csv.next(); !csv.eof() ;row = csv.next()) {
+    while(!csv.eof()) {
+        auto row = csv.next();
+        if(row.empty())
+            break;
         auto vj_it = vj_map.find(row[id_c]);
         if(vj_it == vj_map.end()) {
-            LOG4CPLUS_FATAL(logger, "Impossible de trouver le vehicle_journey " + row[id_c]);
-            exit(1);
+            LOG4CPLUS_WARN(logger, "Impossible de trouver le vehicle_journey " + row[id_c]);
+            continue;
         }
         auto stop_it = stop_map.find(row[stop_c]);
         if(stop_it == stop_map.end()){
@@ -816,7 +823,7 @@ void GtfsParser::parse_stop_times(Data & data, CsvReader &csv) {
             else
                 stop_time->local_traffic_zone = std::numeric_limits<uint32_t>::max();
             stop_time->vehicle_journey->stop_time_list.push_back(stop_time);
-            stop_time->is_adapted = stop_time->vehicle_journey->is_adapted;
+            stop_time->wheelchair_boarding = stop_time->vehicle_journey->wheelchair_boarding;
             data.stops.push_back(stop_time);
             count++;
         }
