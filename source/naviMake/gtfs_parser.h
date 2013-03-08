@@ -58,7 +58,7 @@ public:
 
     /// Parse le fichier journey_patterns.txt
     /// Contient les lignes (au sens navitia)
-    void parse_journey_patterns(Data & data, CsvReader &csv);
+    void parse_lines(Data & data, CsvReader &csv);
 
     /// Parse le fichier stops.txt
     /// Contient les points d'arrêt et les zones d'arrêt

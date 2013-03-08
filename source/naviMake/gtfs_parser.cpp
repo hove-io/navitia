@@ -490,7 +490,7 @@ void GtfsParser::parse_calendar_dates(Data & data, CsvReader & csv){
 }
 
 
-void GtfsParser:: parse_journey_patterns(Data & data, CsvReader &csv){
+void GtfsParser::parse_lines(Data & data, CsvReader &csv){
     std::vector<std::string> mandatory_headers = {"route_id", "route_short_name",
         "route_long_name", "route_type"};
     if(!csv.validate(mandatory_headers)) {
