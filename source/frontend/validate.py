@@ -122,9 +122,6 @@ def validate_arguments(request, validation_dict) :
                 response.details[key] = {"status", "missing"}
             else:
                 response.arguments[key] = value.defaultValue
-    
-
-
 
     return response
 
