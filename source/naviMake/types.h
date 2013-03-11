@@ -18,6 +18,10 @@ struct Nameable{
     std::string comment;
 };
 
+struct hasProperties {
+    bitset<7> properties;
+}
+
 /** En tête de tous les objets TC.
   *
   * Cette classe est héritée par \b tous les objets TC
@@ -107,7 +111,7 @@ struct City : public TransmodelHeader, Nameable {
 
 };
 
-struct Connection: public TransmodelHeader {
+struct Connection: public TransmodelHeader , hasProperties{
     enum ConnectionKind{
         AddressConnection,           //Jonction adresse / arrêt commercial
         SiteConnection,              //Jonction Lieu public / arrêt commercial
@@ -170,9 +174,8 @@ struct JourneyPatternPointConnection: public TransmodelHeader {
 };
 
 
-struct StopArea : public TransmodelHeader, Nameable{
+struct StopArea : public TransmodelHeader, Nameable, hasProperties{
     nt::GeographicalCoord coord;
-    int properties;
     std::string additional_data;
 
     bool main_stop_area;
@@ -300,7 +303,7 @@ struct JourneyPattern : public TransmodelHeader, Nameable{
     bool operator<(const JourneyPattern& other) const;
 
  };
-struct VehicleJourney: public TransmodelHeader, Nameable{
+struct VehicleJourney: public TransmodelHeader, Nameable, hasProperties{
     JourneyPattern* journey_pattern;
     Company* company;
     PhysicalMode* physical_mode;
@@ -383,7 +386,7 @@ public:
 
 };
 
-struct StopPoint : public TransmodelHeader, Nameable{
+struct StopPoint : public TransmodelHeader, Nameable, hasProperties{
     nt::GeographicalCoord coord;
     int fare_zone;
 
