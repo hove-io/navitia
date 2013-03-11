@@ -233,6 +233,8 @@ nt::StopPoint StopPoint::Transformer::operator()(const StopPoint& stop_point){
     if(stop_point.network != NULL)
         nt_stop_point.network_idx = stop_point.network->idx;
 
+    nt_stop_point.properties = stop_point.properties;
+
     return nt_stop_point;
 
 }
@@ -393,6 +395,7 @@ nt::Connection Connection::Transformer::operator()(const Connection& connection)
     nt_connection.destination_stop_point_idx = connection.destination_stop_point->idx;
     nt_connection.duration = connection.duration;
     nt_connection.max_duration = connection.max_duration;
+    nt_connection.properties = connection.properties;
     return nt_connection;
 }
 
@@ -448,6 +451,7 @@ nt::VehicleJourney VehicleJourney::Transformer::operator()(const VehicleJourney&
         nt_vj.validity_pattern_idx = vj.validity_pattern->idx;
 
     nt_vj.wheelchair_boarding = vj.wheelchair_boarding;
+    nt_vj.properties = vj.properties;
 
     return nt_vj;
 }
