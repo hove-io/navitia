@@ -86,6 +86,13 @@ struct NavitiaHeader{
 
 };
 
+struct hasProperties {
+    std::bitset<7> properties;
+    static const int WHEELCHAIR_BOARDING = 0;
+
+    bool wheelchair_boarding() {return properties[WHEELCHAIR_BOARDING];}
+};
+
 
 /** Coordonnées géographiques en WGS84
  */
@@ -220,7 +227,7 @@ enum ConnectionType {
 
 };
 
-struct Connection: public NavitiaHeader{
+struct Connection: public NavitiaHeader, hasProperties{
     const static Type_e type = Type_e::Connection;
     idx_t departure_stop_point_idx;
     idx_t destination_stop_point_idx;
@@ -259,10 +266,9 @@ struct JourneyPatternPointConnection : public NavitiaHeader {
 };
  
 
-struct StopArea : public NavitiaHeader, Nameable{
+struct StopArea : public NavitiaHeader, Nameable, hasProperties{
     const static Type_e type = Type_e::StopArea;
     GeographicalCoord coord;
-    int properties;
     std::string additional_data;
     idx_t city_idx;
     bool wheelchair_boarding;
@@ -272,7 +278,7 @@ struct StopArea : public NavitiaHeader, Nameable{
             wheelchair_boarding;
     }
 
-    StopArea(): properties(0), city_idx(invalid_idx), wheelchair_boarding(false) {}
+    StopArea(): city_idx(invalid_idx), wheelchair_boarding(false) {}
 
     std::vector<idx_t> stop_point_list;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -285,9 +291,7 @@ struct Network : public NavitiaHeader, Nameable{
     std::string address_type_name;
     std::string phone_number;
     std::string mail;
-    std::string website;/*struct Vehicle: public NavitiaHeader, Nameable {
-    const static Type_e type = Type_e::eVehicle;
-};*/
+    std::string website;
     std::string fax;
 
     std::vector<idx_t> line_list;
@@ -405,7 +409,7 @@ struct JourneyPattern : public NavitiaHeader, Nameable{
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
-struct VehicleJourney: public NavitiaHeader, Nameable {
+struct VehicleJourney: public NavitiaHeader, Nameable, hasProperties{
     const static Type_e type = Type_e::VehicleJourney;
     idx_t journey_pattern_idx;
     idx_t company_idx;
@@ -483,7 +487,7 @@ public:
     //void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
 };
 
-struct StopPoint : public NavitiaHeader, Nameable{
+struct StopPoint : public NavitiaHeader, Nameable, hasProperties{
     const static Type_e type = Type_e::StopPoint;
     GeographicalCoord coord;
     int fare_zone;

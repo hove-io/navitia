@@ -233,6 +233,8 @@ nt::StopPoint StopPoint::get_navitia_type() const {
     if(this->network != NULL)
         nt_stop_point.network_idx = this->network->idx;
 
+    nt_stop_point.properties = stop_point.properties;
+
     return nt_stop_point;
 
 }
@@ -392,6 +394,7 @@ nt::Connection Connection::get_navitia_type() const {
     nt_connection.destination_stop_point_idx = this->destination_stop_point->idx;
     nt_connection.duration = this->duration;
     nt_connection.max_duration = this->max_duration;
+    nt_connection.properties = connection.properties;
     return nt_connection;
 }
 
@@ -447,6 +450,7 @@ nt::VehicleJourney VehicleJourney::get_navitia_type() const {
         nt_vj.validity_pattern_idx = this->validity_pattern->idx;
 
     nt_vj.wheelchair_boarding = this->wheelchair_boarding;
+    nt_vj.properties = vj.properties;
 
     return nt_vj;
 }

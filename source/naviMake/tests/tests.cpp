@@ -95,7 +95,6 @@ BOOST_AUTO_TEST_CASE(stop_area_transformer){
     stop_area.additional_data = "other data";
     stop_area.main_connection = true;
     stop_area.main_stop_area = true;
-    stop_area.properties = 18;
 
     navitia::type::StopArea stop_area_n = stop_area.get_navitia_type();
 

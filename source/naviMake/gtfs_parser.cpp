@@ -1012,20 +1012,27 @@ void build_journey_pattern_point_connections(Data & data) {
                 vjs.push_back(it_sub->second);
             }
             std::sort(vjs.begin(), vjs.end(), [](nm::VehicleJourney *  vj1, nm::VehicleJourney*vj2){
-                                               return vj1->stop_time_list.front()->arrival_time < 
-                                                      vj2->stop_time_list.front()->arrival_time; });
+                    if(!vj1->stop_time_list.empty() && !vj2->stop_time_list.empty()) {
+                        return vj1->stop_time_list.front()->arrival_time < 
+                                                      vj2->stop_time_list.front()->arrival_time; 
+                    } else {
+                        return !vj1->stop_time_list.empty();
+                    }
+                    });
 
             //On crée les connexions entre le dernier journey_pattern point et le premier journey_pattern point
             auto prec_vj = vjs.begin();
             auto it_vj =vjs.begin() + 1;
 
             for(; it_vj!=vjs.end(); ++it_vj) {
-                auto &st1 = (*prec_vj)->stop_time_list.back(),
-                     &st2 = (*it_vj)->stop_time_list.front();
-                if((st2->departure_time - st1->arrival_time) >= 0) {
-                    add_journey_pattern_point_connection(st1->journey_pattern_point, st2->journey_pattern_point,
-                                               (st2->departure_time - st1->arrival_time),
-                                               journey_pattern_point_connections);
+                if(!((*prec_vj)->stop_time_list.empty()) && (!(*it_vj)->stop_time_list.empty())) {
+                    auto &st1 = (*prec_vj)->stop_time_list.back(),
+                        &st2 = (*it_vj)->stop_time_list.front();
+                    if((st2->departure_time - st1->arrival_time) >= 0) {
+                        add_journey_pattern_point_connection(st1->journey_pattern_point, st2->journey_pattern_point,
+                                                (st2->departure_time - st1->arrival_time),
+                                                journey_pattern_point_connections);
+                    }
                 }
                 prec_vj = it_vj;
             }
