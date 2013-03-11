@@ -37,21 +37,21 @@ QSqlDatabase AtLoader::connect(const po::variables_map& params){
 
 navitia::type::Type_e parse_object_type(std::string object_type){
     if(ba::iequals(object_type, "StopArea")){
-        return navitia::type::Type_e::eStopArea;
+        return navitia::type::Type_e::StopArea;
     }else if(ba::iequals(object_type, "StopPoint")){
-        return navitia::type::Type_e::eStopPoint;
+        return navitia::type::Type_e::StopPoint;
     }else if(ba::iequals(object_type, "Line")){
-        return navitia::type::Type_e::eLine;
+        return navitia::type::Type_e::Line;
     }else if(ba::iequals(object_type, "VehicleJourney")){
-        return navitia::type::Type_e::eVehicleJourney;
+        return navitia::type::Type_e::VehicleJourney;
     }else if(ba::iequals(object_type, "JourneyPattern")){
-        return navitia::type::Type_e::eJourneyPattern;
+        return navitia::type::Type_e::JourneyPattern;
     }else if(ba::iequals(object_type, "Network")){
-        return navitia::type::Type_e::eNetwork;
+        return navitia::type::Type_e::Network;
     }else if(ba::iequals(object_type, "JourneyPatternPoint")){
-        return navitia::type::Type_e::eJourneyPatternPoint;
+        return navitia::type::Type_e::JourneyPatternPoint;
     }else if(ba::iequals(object_type, "Company")){
-        return navitia::type::Type_e::eCompany;
+        return navitia::type::Type_e::Company;
     }else{
         throw navitia::exception((boost::format("object_type unknow: %s") % object_type).str());
     }

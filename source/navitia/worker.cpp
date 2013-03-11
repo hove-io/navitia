@@ -18,21 +18,21 @@ namespace navitia {
 
 nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     switch(pb_type){
-    case pbnavitia::ADDRESS: return nt::Type_e::eAddress; break;
-    case pbnavitia::STOP_AREA: return nt::Type_e::eStopArea; break;
-    case pbnavitia::STOP_POINT: return nt::Type_e::eStopPoint; break;
-    case pbnavitia::CITY: return nt::Type_e::eCity; break;
-    case pbnavitia::LINE: return nt::Type_e::eLine; break;
-    case pbnavitia::ROUTE: return nt::Type_e::eRoute; break;
-    case pbnavitia::JOURNEY_PATTERN: return nt::Type_e::eJourneyPattern; break;
-    case pbnavitia::NETWORK: return nt::Type_e::eNetwork; break;
-    case pbnavitia::COMMERCIAL_MODE: return nt::Type_e::ePhysicalMode; break;
-    case pbnavitia::PHYSICAL_MODE: return nt::Type_e::eCommercialMode; break;
-    case pbnavitia::CONNECTION: return nt::Type_e::eConnection; break;
-    case pbnavitia::JOURNEY_PATTERN_POINT: return nt::Type_e::eJourneyPatternPoint; break;
-    case pbnavitia::COMPANY: return nt::Type_e::eCompany; break;
-    case pbnavitia::VEHICLE_JOURNEY: return nt::Type_e::eVehicleJourney; break;
-    default: return nt::Type_e::eUnknown;
+    case pbnavitia::ADDRESS: return nt::Type_e::Address; break;
+    case pbnavitia::STOP_AREA: return nt::Type_e::StopArea; break;
+    case pbnavitia::STOP_POINT: return nt::Type_e::StopPoint; break;
+    case pbnavitia::CITY: return nt::Type_e::City; break;
+    case pbnavitia::LINE: return nt::Type_e::Line; break;
+    case pbnavitia::ROUTE: return nt::Type_e::Route; break;
+    case pbnavitia::JOURNEY_PATTERN: return nt::Type_e::JourneyPattern; break;
+    case pbnavitia::NETWORK: return nt::Type_e::Network; break;
+    case pbnavitia::COMMERCIAL_MODE: return nt::Type_e::PhysicalMode; break;
+    case pbnavitia::PHYSICAL_MODE: return nt::Type_e::CommercialMode; break;
+    case pbnavitia::CONNECTION: return nt::Type_e::Connection; break;
+    case pbnavitia::JOURNEY_PATTERN_POINT: return nt::Type_e::JourneyPatternPoint; break;
+    case pbnavitia::COMPANY: return nt::Type_e::Company; break;
+    case pbnavitia::VEHICLE_JOURNEY: return nt::Type_e::VehicleJourney; break;
+    default: return nt::Type_e::Unknown;
     }
 }
 
@@ -153,14 +153,14 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
     type::EntryPoint origin = type::EntryPoint(request.origin());
 
-    if (origin.type == type::Type_e::eAddress) {
+    if (origin.type == type::Type_e::Address) {
         origin.coordinates = this->coord_of_address(origin);
     }
 
     type::EntryPoint destination;
     if(api != pbnavitia::ISOCHRONE) {
         destination = type::EntryPoint(request.destination());
-        if (destination.type == type::Type_e::eAddress) {
+        if (destination.type == type::Type_e::Address) {
             destination.coordinates = this->coord_of_address(destination);
         }
     }

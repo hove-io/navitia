@@ -50,7 +50,7 @@ struct Message{
     std::string message;
     std::string title;
 
-    Message(): object_type(Type_e::eValidityPattern),
+    Message(): object_type(Type_e::ValidityPattern),
         publication_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)),
         application_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)){}
 

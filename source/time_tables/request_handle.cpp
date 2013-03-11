@@ -16,7 +16,7 @@ RequestHandle::RequestHandle(const std::string &API, const std::string &request,
 
         date_time = type::DateTime((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
         max_datetime = date_time + duration;
-        journey_pattern_points = navitia::ptref::make_query(type::Type_e::eJourneyPatternPoint, request, data);
+        journey_pattern_points = navitia::ptref::make_query(type::Type_e::JourneyPatternPoint, request, data);
 
     } catch(ptref::parsing_error parse_error) {
         pb_response.set_error(parse_error.more);

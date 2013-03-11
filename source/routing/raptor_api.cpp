@@ -144,7 +144,7 @@ get_stop_points(const type::EntryPoint &ep, const type::Data & data,
     std::vector<std::pair<type::idx_t, double> > result;
 
     switch(ep.type) {
-    case navitia::type::Type_e::eStopArea:
+    case navitia::type::Type_e::StopArea:
     {
         auto it = data.pt_data.stop_area_map.find(ep.uri);
         if(it!= data.pt_data.stop_area_map.end()) {
@@ -153,15 +153,15 @@ get_stop_points(const type::EntryPoint &ep, const type::Data & data,
             }
         }
     } break;
-    case type::Type_e::eStopPoint: {
+    case type::Type_e::StopPoint: {
         auto it = data.pt_data.stop_point_map.find(ep.uri);
         if(it != data.pt_data.stop_point_map.end()){
             result.push_back(std::make_pair(data.pt_data.stop_points[it->second].idx, 0));
         }
     } break;
         // AA gestion des adresses
-    case type::Type_e::eAddress:
-    case type::Type_e::eCoord: {
+    case type::Type_e::Address:
+    case type::Type_e::Coord: {
         result = worker.find_nearest_stop_points(ep.coordinates, data.pt_data.stop_point_proximity_list, walking_distance, use_second);
     } break;
     default: break;

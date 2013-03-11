@@ -14,89 +14,74 @@ namespace navitia { namespace ptref {
  */
 
 Jointures::Jointures() {
-    vertex_map[Type_e::eValidityPattern] = boost::add_vertex(Type_e::eValidityPattern, g);
-    vertex_map[Type_e::eLine] = boost::add_vertex(Type_e::eLine, g);
-    vertex_map[Type_e::eJourneyPattern] = boost::add_vertex(Type_e::eJourneyPattern, g);
-    vertex_map[Type_e::eStopPoint] = boost::add_vertex(Type_e::eStopPoint, g);
-    vertex_map[Type_e::eStopArea] = boost::add_vertex(Type_e::eStopArea, g);
-    vertex_map[Type_e::eNetwork] = boost::add_vertex(Type_e::eNetwork, g);
-    vertex_map[Type_e::ePhysicalMode] = boost::add_vertex(Type_e::ePhysicalMode, g);
-    vertex_map[Type_e::eCommercialMode] = boost::add_vertex(Type_e::eCommercialMode, g);
-    vertex_map[Type_e::eCity] = boost::add_vertex(Type_e::eCity, g);
-    vertex_map[Type_e::eConnection] = boost::add_vertex(Type_e::eConnection, g);
-    vertex_map[Type_e::eJourneyPatternPoint] = boost::add_vertex(Type_e::eJourneyPatternPoint, g);
-    vertex_map[Type_e::eDistrict] = boost::add_vertex(Type_e::eDistrict, g);
-    vertex_map[Type_e::eCompany] = boost::add_vertex(Type_e::eCompany, g);
-    vertex_map[Type_e::eCountry] = boost::add_vertex(Type_e::eCountry, g);
-    vertex_map[Type_e::eRoute] = boost::add_vertex(Type_e::eRoute, g);
-    vertex_map[Type_e::eDepartment] = boost::add_vertex(Type_e::eDepartment, g);
-    vertex_map[Type_e::eVehicleJourney] = boost::add_vertex(Type_e::eVehicleJourney, g);
+#define VERTEX_MAP(type_name, collection_name) vertex_map[Type_e::type_name] = boost::add_vertex(Type_e::type_name, g);
+    ITERATE_NAVITIA_PT_TYPES(VERTEX_MAP)
 
     // À partir d'une city, on peut avoir son departement et ses stop_points
-    boost::add_edge(vertex_map.at(Type_e::eDepartment), vertex_map.at(Type_e::eCity), g);
-    boost::add_edge(vertex_map.at(Type_e::eStopPoint), vertex_map.at(Type_e::eCity), g);
+    boost::add_edge(vertex_map.at(Type_e::Department), vertex_map.at(Type_e::City), g);
+    boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::City), g);
 
     // À partir d'un country, on peut avoir ses districts
-    boost::add_edge(vertex_map.at(Type_e::eDistrict), vertex_map.at(Type_e::eCountry), g);
+    boost::add_edge(vertex_map.at(Type_e::District), vertex_map.at(Type_e::Country), g);
 
     // À partir d'un district, on peut avoir son country et ses départements
-    boost::add_edge(vertex_map.at(Type_e::eCountry), vertex_map.at(Type_e::eDistrict),  g);
-    boost::add_edge(vertex_map.at(Type_e::eDepartment), vertex_map.at(Type_e::eDistrict), g);
+    boost::add_edge(vertex_map.at(Type_e::Country), vertex_map.at(Type_e::District),  g);
+    boost::add_edge(vertex_map.at(Type_e::Department), vertex_map.at(Type_e::District), g);
 
     // À partir d'un département, on peut avoir son district et ses citys
-    boost::add_edge(vertex_map.at(Type_e::eDistrict), vertex_map.at(Type_e::eDepartment), g);
-    boost::add_edge(vertex_map.at(Type_e::eCity), vertex_map.at(Type_e::eDepartment), g);
+    boost::add_edge(vertex_map.at(Type_e::District), vertex_map.at(Type_e::Department), g);
+    boost::add_edge(vertex_map.at(Type_e::City), vertex_map.at(Type_e::Department), g);
 
     // À partir d'un stop area, on peut avoir ses stop points et sa city
-    boost::add_edge(vertex_map.at(Type_e::eCity), vertex_map.at(Type_e::eStopArea), g);
-    boost::add_edge(vertex_map.at(Type_e::eStopPoint), vertex_map.at(Type_e::eStopArea), g);
+    boost::add_edge(vertex_map.at(Type_e::City), vertex_map.at(Type_e::StopArea), g);
+    boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::StopArea), g);
 
     // À partir d'un network on peut avoir ses lignes
-    boost::add_edge(vertex_map.at(Type_e::eLine), vertex_map.at(Type_e::eNetwork), g);
+    boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Network), g);
 
     // À partir d'une company, on peut avoir ses lignes
-    boost::add_edge(vertex_map.at(Type_e::eLine), vertex_map.at(Type_e::eCompany), g);
+    boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Company), g);
 
     // À partir d'un commercial mode on peut avoir ses lignes et son mode physique
-    boost::add_edge(vertex_map.at(Type_e::eLine), vertex_map.at(Type_e::eCommercialMode), g);
+    boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::CommercialMode), g);
 
     // À partir d'un physical mode on peut avoir les vehicule journeys
-    boost::add_edge(vertex_map.at(Type_e::eVehicleJourney), vertex_map.at(Type_e::ePhysicalMode), g);
+    boost::add_edge(vertex_map.at(Type_e::VehicleJourney), vertex_map.at(Type_e::PhysicalMode), g);
 
     // À partir d'une ligne on peut avoir ses modes commerciaux, compagnies, réseaux et routes
-    boost::add_edge(vertex_map.at(Type_e::eCommercialMode), vertex_map.at(Type_e::eLine), g);
-    boost::add_edge(vertex_map.at(Type_e::eCompany), vertex_map.at(Type_e::eLine), g);
-    boost::add_edge(vertex_map.at(Type_e::eNetwork), vertex_map.at(Type_e::eLine), g);
-    boost::add_edge(vertex_map.at(Type_e::eRoute), vertex_map.at(Type_e::eLine), g);
+    boost::add_edge(vertex_map.at(Type_e::CommercialMode), vertex_map.at(Type_e::Line), g);
+    boost::add_edge(vertex_map.at(Type_e::Company), vertex_map.at(Type_e::Line), g);
+    boost::add_edge(vertex_map.at(Type_e::Network), vertex_map.at(Type_e::Line), g);
+    boost::add_edge(vertex_map.at(Type_e::Route), vertex_map.at(Type_e::Line), g);
 
     // À partir d'une route on a sa ligne et ses journey pattern
-    boost::add_edge(vertex_map.at(Type_e::eJourneyPattern), vertex_map.at(Type_e::eRoute), g);
-    boost::add_edge(vertex_map.at(Type_e::eLine), vertex_map.at(Type_e::eRoute), g);
+    boost::add_edge(vertex_map.at(Type_e::JourneyPattern), vertex_map.at(Type_e::Route), g);
+    boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Route), g);
 
     // À partir d'un journey pattern on peut avoir sa route, ses points et son vehicule journey
-    boost::add_edge(vertex_map.at(Type_e::eRoute), vertex_map.at(Type_e::eJourneyPattern), g);
-    boost::add_edge(vertex_map.at(Type_e::eJourneyPatternPoint), vertex_map.at(Type_e::eJourneyPattern), g);
-    boost::add_edge(vertex_map.at(Type_e::eVehicleJourney), vertex_map.at(Type_e::eJourneyPattern), g);
+    boost::add_edge(vertex_map.at(Type_e::Route), vertex_map.at(Type_e::JourneyPattern), g);
+    boost::add_edge(vertex_map.at(Type_e::JourneyPatternPoint), vertex_map.at(Type_e::JourneyPattern), g);
+    boost::add_edge(vertex_map.at(Type_e::VehicleJourney), vertex_map.at(Type_e::JourneyPattern), g);
 
     // À partir d'un vehicle journey, on peut avoir le journey parttern, la companie créole, le mode physique et le validity pattern
-    boost::add_edge(vertex_map.at(Type_e::eJourneyPattern), vertex_map.at(Type_e::eVehicleJourney), g);
-    boost::add_edge(vertex_map.at(Type_e::eCompany), vertex_map.at(Type_e::eVehicleJourney), g);
-    boost::add_edge(vertex_map.at(Type_e::ePhysicalMode), vertex_map.at(Type_e::eVehicleJourney), g);
-    boost::add_edge(vertex_map.at(Type_e::eValidityPattern), vertex_map.at(Type_e::eVehicleJourney), g);
+    boost::add_edge(vertex_map.at(Type_e::JourneyPattern), vertex_map.at(Type_e::VehicleJourney), g);
+    boost::add_edge(vertex_map.at(Type_e::Company), vertex_map.at(Type_e::VehicleJourney), g);
+    boost::add_edge(vertex_map.at(Type_e::PhysicalMode), vertex_map.at(Type_e::VehicleJourney), g);
+    boost::add_edge(vertex_map.at(Type_e::ValidityPattern), vertex_map.at(Type_e::VehicleJourney), g);
 
     // À partir d'un journey pattern point on obtient le journey pattern et le stop point
-    boost::add_edge(vertex_map.at(Type_e::eJourneyPattern), vertex_map.at(Type_e::eJourneyPatternPoint), g);
-    boost::add_edge(vertex_map.at(Type_e::eStopPoint), vertex_map.at(Type_e::eJourneyPatternPoint), g);
+    boost::add_edge(vertex_map.at(Type_e::JourneyPattern), vertex_map.at(Type_e::JourneyPatternPoint), g);
+    boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::JourneyPatternPoint), g);
 
     // D'un stop point on obtient : le stop area, city, mode physique, journey pattern point et connection
-    boost::add_edge(vertex_map.at(Type_e::eStopArea), vertex_map.at(Type_e::eStopPoint), g);
-    boost::add_edge(vertex_map.at(Type_e::ePhysicalMode), vertex_map.at(Type_e::eStopPoint), g);
-    boost::add_edge(vertex_map.at(Type_e::eCity), vertex_map.at(Type_e::eStopPoint), g);
-    boost::add_edge(vertex_map.at(Type_e::eJourneyPatternPoint), vertex_map.at(Type_e::eStopPoint), g);
-    boost::add_edge(vertex_map.at(Type_e::eConnection), vertex_map.at(Type_e::eStopPoint), g);
+    boost::add_edge(vertex_map.at(Type_e::StopArea), vertex_map.at(Type_e::StopPoint), g);
+    boost::add_edge(vertex_map.at(Type_e::PhysicalMode), vertex_map.at(Type_e::StopPoint), g);
+    boost::add_edge(vertex_map.at(Type_e::City), vertex_map.at(Type_e::StopPoint), g);
+    boost::add_edge(vertex_map.at(Type_e::JourneyPatternPoint), vertex_map.at(Type_e::StopPoint), g);
+    boost::add_edge(vertex_map.at(Type_e::Connection), vertex_map.at(Type_e::StopPoint), g);
 
     // D'une connection on a ses deux stop points
-    boost::add_edge(vertex_map[Type_e::eStopPoint], vertex_map[Type_e::eConnection], g);
+    boost::add_edge(vertex_map[Type_e::StopPoint], vertex_map[Type_e::Connection], g);
 }
 
 // Retourne un map qui indique pour chaque type par quel type on peut l'atteindre
