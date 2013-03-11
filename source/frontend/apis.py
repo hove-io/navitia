@@ -165,7 +165,7 @@ class Apis:
                 "lon" : Argument("Longitude of the point from where you want objects", float, True, False, order=0),
                 "lat" : Argument("Latitude of the point from where you want objects", float, True, False, order=1),
                 "distance" : Argument("Distance range of the query", int, False, False, 1000, order=3),
-                "object_type[]" : Argument("Type of the objects you want to have in return", str, False, False, ["stop_area", "stop_point"], order=4)
+                "object_type[]" : Argument("Type of the objects you want to have in return", str, False, True, ["stop_area", "stop_point"], order=4)
                 },
             "description" : "Retrieves all the objects around a point within the given distance",
             "order" : 1.1, "universal" : True},
