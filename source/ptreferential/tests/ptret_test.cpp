@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
 
     indexes = make_query(navitia::type::Type_e::Connection, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
-    indexes = make_query(navitia::type::Type_e::JourneyPatternPoint, "journey_pattern_point.uri=A-1:stop1:0", data);
+    indexes = make_query(navitia::type::Type_e::JourneyPatternPoint, "journey_pattern_point.uri=journey_pattern_point:A-1:stop1:0", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
     indexes = make_query(navitia::type::Type_e::VehicleJourney, "", data);

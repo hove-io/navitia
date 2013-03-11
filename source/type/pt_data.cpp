@@ -4,28 +4,11 @@ namespace navitia{namespace type {
 
 
 PT_Data& PT_Data::operator=(PT_Data&& other){
-    validity_patterns = other.validity_patterns;
-    lines = other.lines;
-    journey_patterns = other.journey_patterns;
-    routes = other.routes;
-    vehicle_journeys = other.vehicle_journeys;
-    stop_points = other.stop_points;
-    stop_areas = other.stop_areas;
+#define COPY_FROM_OTHER(type_name, collection_name) collection_name = other.collection_name; collection_name##_map = other.collection_name##_map;
+    ITERATE_NAVITIA_PT_TYPES(COPY_FROM_OTHER)
+
+    journey_pattern_point_connections = other.journey_pattern_point_connections;
     stop_times = other.stop_times;
-
-    networks = other.networks;
-    physical_modes = other.physical_modes;
-    commercial_modes = other.commercial_modes;
-    cities = other.cities;
-    connections = other.connections;
-    journey_pattern_points = other.journey_pattern_points;
-
-    districts = other.districts;
-    departments = other.departments;
-    companies = other.companies;
-    countries = other.countries;
-
-    stop_point_connections = other.stop_point_connections;
 
     // First letter
     stop_area_autocomplete = other.stop_area_autocomplete;
@@ -36,20 +19,6 @@ PT_Data& PT_Data::operator=(PT_Data&& other){
     stop_area_proximity_list = other.stop_area_proximity_list;
     stop_point_proximity_list = other.stop_point_proximity_list;
     city_proximity_list = other.city_proximity_list;
-
-    line_map = other.line_map;
-    journey_pattern_map = other.journey_pattern_map;
-    vehicle_journey_map = other.vehicle_journey_map;
-    stop_area_map = other.stop_area_map;
-    stop_point_map = other.stop_point_map;
-    network_map = other.network_map;
-    physical_mode_map = other.physical_mode_map;
-    commercial_mode_map = other.commercial_mode_map;
-    city_map = other.city_map;
-    district_map = other.district_map;
-    department_map = other.department_map;
-    company_map = other.company_map;
-    country_map = other.country_map;
 
     return *this;
 }
@@ -146,20 +115,8 @@ void PT_Data::build_proximity_list() {
 }
 
 void PT_Data::build_uri() {
-    normalize_extcode<Line>(line_map);
-    normalize_extcode<JourneyPattern>(journey_pattern_map);
-    normalize_extcode<VehicleJourney>(vehicle_journey_map);
-    normalize_extcode<StopArea>(stop_area_map);
-    normalize_extcode<StopPoint>(stop_point_map);
-    normalize_extcode<Network>(network_map);
-    normalize_extcode<PhysicalMode>(physical_mode_map);
-    normalize_extcode<CommercialMode>(commercial_mode_map);
-    normalize_extcode<City>(city_map);
-    normalize_extcode<District>(district_map);
-    normalize_extcode<Department>(department_map);
-    normalize_extcode<Company>(company_map);
-    normalize_extcode<Country>(country_map);
-    normalize_extcode<Route>(routes_map);
+#define NORMALIZE_EXT_CODE(type_name, collection_name) normalize_extcode<type_name>(collection_name##_map);
+    ITERATE_NAVITIA_PT_TYPES(NORMALIZE_EXT_CODE)
 }
 
 

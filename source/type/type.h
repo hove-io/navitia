@@ -19,7 +19,7 @@ namespace navitia { namespace type {
 typedef uint32_t idx_t;
 const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
 
-// Types qui sont exclus :
+// Types qui sont exclus : JourneyPatternPointConnection
 #define ITERATE_NAVITIA_PT_TYPES(FUN)\
     FUN(ValidityPattern, validity_patterns)\
     FUN(Line, lines)\

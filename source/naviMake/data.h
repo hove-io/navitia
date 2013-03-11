@@ -39,8 +39,8 @@ public:
 
 
     /** Foncteur permettant de comparer les objets en passant des pointeurs vers ces objets */
-    template<class T>
     struct Less{
+        template<class T>
         bool operator() (T* x, T* y) const{
             return *x < *y;
         }
@@ -50,12 +50,11 @@ public:
           *
           * Cela permet de numéroter tous les objets de 0 à n-1 d'un vecteur de pointeurs
           */
-    template<class T>
     struct Indexer{
         idx_t idx;
-
         Indexer(): idx(0){}
 
+        template<class T>
         void operator()(T* obj){obj->idx = idx; idx++;}
     };
 
@@ -152,52 +151,11 @@ public:
     /// Construit le contour de la région à partir des stops points    
     std::string find_shape(navitia::type::PT_Data &data);
     ~Data(){
-        BOOST_FOREACH(navimake::types::Network* network, networks){
-            delete network;
-        }
-        BOOST_FOREACH(navimake::types::CommercialMode* commercial_mode, commercial_modes){
-            delete commercial_mode;
-        }
-        BOOST_FOREACH(navimake::types::Line* line, lines){
-            delete line;
-        }
-        BOOST_FOREACH(navimake::types::PhysicalMode* mode, physical_modes){
-            delete mode;
-        }
-        BOOST_FOREACH(navimake::types::City* city, cities){
-            delete city;
-        }
-        BOOST_FOREACH(navimake::types::StopArea* stop_area, stop_areas){
-            delete stop_area;
-        }
-        BOOST_FOREACH(navimake::types::StopPoint* stop_point, stop_points){
-            delete stop_point;
-        }
-        BOOST_FOREACH(navimake::types::VehicleJourney* vehicle_journey, vehicle_journeys){
-            delete vehicle_journey;
-        }
-        BOOST_FOREACH(navimake::types::JourneyPattern* journey_pattern, journey_patterns){
-            delete journey_pattern;
-        }
-        BOOST_FOREACH(navimake::types::JourneyPatternPoint* journey_pattern_point, journey_pattern_points){
-            delete journey_pattern_point;
-        }
-        BOOST_FOREACH(navimake::types::StopTime* stop, stops){
+#define DELETE_ALL_ELEMENTS(type_name, collection_name) for(auto element : collection_name) delete element;
+        ITERATE_NAVITIA_PT_TYPES(DELETE_ALL_ELEMENTS)
+        for(navimake::types::StopTime* stop : stops){
             delete stop;
         }
-        BOOST_FOREACH(navimake::types::Connection* connection, connections){
-            delete connection;
-        }
-        BOOST_FOREACH(auto district, districts){
-            delete district;
-        }
-        BOOST_FOREACH(auto department, departments){
-            delete department;
-        }
-        BOOST_FOREACH(navimake::types::ValidityPattern* validity_pattern, validity_patterns){
-            delete validity_pattern;
-        }
-
     }
 
 };

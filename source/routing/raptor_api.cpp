@@ -146,16 +146,16 @@ get_stop_points(const type::EntryPoint &ep, const type::Data & data,
     switch(ep.type) {
     case navitia::type::Type_e::StopArea:
     {
-        auto it = data.pt_data.stop_area_map.find(ep.uri);
-        if(it!= data.pt_data.stop_area_map.end()) {
+        auto it = data.pt_data.stop_areas_map.find(ep.uri);
+        if(it!= data.pt_data.stop_areas_map.end()) {
             for(auto spidx : data.pt_data.stop_areas[it->second].stop_point_list) {
                 result.push_back(std::make_pair(spidx, 0));
             }
         }
     } break;
     case type::Type_e::StopPoint: {
-        auto it = data.pt_data.stop_point_map.find(ep.uri);
-        if(it != data.pt_data.stop_point_map.end()){
+        auto it = data.pt_data.stop_points_map.find(ep.uri);
+        if(it != data.pt_data.stop_points_map.end()){
             result.push_back(std::make_pair(data.pt_data.stop_points[it->second].idx, 0));
         }
     } break;

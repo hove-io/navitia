@@ -78,10 +78,10 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
         CsvReader csv(path+ "/" + filename_function.first, ',' , true);
         if(!csv.is_open()) {
             if(required_files.find(filename_function.first) != required_files.end()) {
-                LOG4CPLUS_FATAL(logger, "Impossible d'ouvrir" + filename_function.first);
+                LOG4CPLUS_FATAL(logger, "Impossible d'ouvrir " + filename_function.first);
                 throw FileNotFoundException(filename_function.first);
             } else {
-                LOG4CPLUS_WARN(logger, "Impossible d'ouvrir" + filename_function.first);
+                LOG4CPLUS_WARN(logger, "Impossible d'ouvrir " + filename_function.first);
             }
         } else {
             filename_function.second(this, data, csv);

@@ -8,62 +8,15 @@
 using namespace navimake;
 
 void Data::sort(){
-    std::sort(networks.begin(), networks.end(), Less<navimake::types::Network>());
-    std::for_each(networks.begin(), networks.end(), Indexer<navimake::types::Network>());
+#define SORT_AND_INDEX(type_name, collection_name) std::sort(collection_name.begin(), collection_name.end(), Less());\
+    std::for_each(collection_name.begin(), collection_name.end(), Indexer());
+    ITERATE_NAVITIA_PT_TYPES(SORT_AND_INDEX)
 
-    std::sort(commercial_modes.begin(), commercial_modes.end(), Less<navimake::types::CommercialMode>());
-    std::for_each(commercial_modes.begin(), commercial_modes.end(), Indexer<navimake::types::CommercialMode>());
+    std::sort(stops.begin(), stops.end(), Less());
+    std::for_each(stops.begin(), stops.end(), Indexer());
 
-    std::sort(physical_modes.begin(), physical_modes.end(), Less<navimake::types::PhysicalMode>());
-    std::for_each(physical_modes.begin(), physical_modes.end(), Indexer<navimake::types::PhysicalMode>());
-
-    std::sort(cities.begin(), cities.end(), Less<navimake::types::City>());
-    std::for_each(cities.begin(), cities.end(), Indexer<navimake::types::City>());
-
-    std::sort(lines.begin(), lines.end(), Less<navimake::types::Line>());
-    std::for_each(lines.begin(), lines.end(), Indexer<navimake::types::Line>());
-
-    std::sort(journey_patterns.begin(), journey_patterns.end(), Less<navimake::types::JourneyPattern>());
-    std::for_each(journey_patterns.begin(), journey_patterns.end(), Indexer<navimake::types::JourneyPattern>());
-
-    std::sort(stops.begin(), stops.end(), Less<navimake::types::StopTime>());
-    std::for_each(stops.begin(), stops.end(), Indexer<navimake::types::StopTime>());
-
-    std::sort(stop_areas.begin(), stop_areas.end(), Less<navimake::types::StopArea>());
-    std::for_each(stop_areas.begin(), stop_areas.end(), Indexer<navimake::types::StopArea>());
-
-    std::sort(stop_points.begin(), stop_points.end(), Less<navimake::types::StopPoint>());
-    std::for_each(stop_points.begin(), stop_points.end(), Indexer<navimake::types::StopPoint>());
-
-    std::sort(vehicle_journeys.begin(), vehicle_journeys.end(), Less<navimake::types::VehicleJourney>());
-    std::for_each(vehicle_journeys.begin(), vehicle_journeys.end(), Indexer<navimake::types::VehicleJourney>());
-
-    std::sort(connections.begin(), connections.end(), Less<navimake::types::Connection>());
-    std::for_each(connections.begin(), connections.end(), Indexer<navimake::types::Connection>());
-
-    std::sort(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end(), Less<navimake::types::JourneyPatternPointConnection>());
-    std::for_each(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end(), Indexer<navimake::types::JourneyPatternPointConnection>());
-
-    std::sort(journey_pattern_points.begin(), journey_pattern_points.end(), Less<navimake::types::JourneyPatternPoint>());
-    std::for_each(journey_pattern_points.begin(), journey_pattern_points.end(), Indexer<navimake::types::JourneyPatternPoint>());
-
-    std::sort(validity_patterns.begin(), validity_patterns.end(), Less<navimake::types::ValidityPattern>());
-    std::for_each(validity_patterns.begin(), validity_patterns.end(), Indexer<navimake::types::ValidityPattern>());
-
-    std::sort(departments.begin(), departments.end(), Less<navimake::types::Department>());
-    std::for_each(departments.begin(), departments.end(), Indexer<navimake::types::Department>());
-
-    std::sort(districts.begin(), districts.end(), Less<navimake::types::District>());
-    std::for_each(districts.begin(), districts.end(), Indexer<navimake::types::District>());
-
-    std::sort(countries.begin(), countries.end(), Less<navimake::types::Country>());
-    std::for_each(countries.begin(), countries.end(), Indexer<navimake::types::Country>());
-
-    std::sort(routes.begin(), routes.end(), Less<navimake::types::Route>());
-    std::for_each(routes.begin(), routes.end(), Indexer<navimake::types::Route>());
-
-    std::sort(companies.begin(), companies.end(), Less<navimake::types::Company>());
-    std::for_each(companies.begin(), companies.end(), Indexer<navimake::types::Company>());
+    std::sort(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end(), Less());
+    std::for_each(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end(), Indexer());
 }
 
 void Data::complete() {
@@ -225,66 +178,24 @@ void Data::clean(){
 
 }
 
-
+// Functor qui sert à transformer un objet navimake en objet navitia
+// Il appelle la methode get_navitia_type
+struct Transformer {
+    template<class T> auto operator()(T * object) -> decltype(object->get_navitia_type()){
+        return object->get_navitia_type();
+    }
+};
 
 void Data::transform(navitia::type::PT_Data& data){
-    data.stop_areas.resize(this->stop_areas.size());
-    std::transform(this->stop_areas.begin(), this->stop_areas.end(), data.stop_areas.begin(), navimake::types::StopArea::Transformer());
-
-    data.physical_modes.resize(this->physical_modes.size());
-    std::transform(this->physical_modes.begin(), this->physical_modes.end(), data.physical_modes.begin(), navimake::types::PhysicalMode::Transformer());
-
-    data.commercial_modes.resize(this->commercial_modes.size());
-    std::transform(this->commercial_modes.begin(), this->commercial_modes.end(), data.commercial_modes.begin(), navimake::types::CommercialMode::Transformer());
-
-    data.stop_points.resize(this->stop_points.size());
-    std::transform(this->stop_points.begin(), this->stop_points.end(), data.stop_points.begin(), navimake::types::StopPoint::Transformer());
-
-    data.lines.resize(this->lines.size());
-    std::transform(this->lines.begin(), this->lines.end(), data.lines.begin(), navimake::types::Line::Transformer());
-
-    data.cities.resize(this->cities.size());
-    std::transform(this->cities.begin(), this->cities.end(), data.cities.begin(), navimake::types::City::Transformer());
-
-    data.networks.resize(this->networks.size());
-    std::transform(this->networks.begin(), this->networks.end(), data.networks.begin(), navimake::types::Network::Transformer());
-
-    data.journey_patterns.resize(this->journey_patterns.size());
-    std::transform(this->journey_patterns.begin(), this->journey_patterns.end(), data.journey_patterns.begin(), navimake::types::JourneyPattern::Transformer());
-
-    data.stop_times.resize(this->stops.size());
-    std::transform(this->stops.begin(), this->stops.end(), data.stop_times.begin(), navimake::types::StopTime::Transformer());
-
-    data.connections.resize(this->connections.size());
-    std::transform(this->connections.begin(), this->connections.end(), data.connections.begin(), navimake::types::Connection::Transformer());
+#define RESIZE_AND_TRANSFORM(type_name, collection_name) data.collection_name.resize(this->collection_name.size());\
+    std::transform(this->collection_name.begin(), this->collection_name.end(), data.collection_name.begin(), Transformer());
+    ITERATE_NAVITIA_PT_TYPES(RESIZE_AND_TRANSFORM)
 
     data.journey_pattern_point_connections.resize(this->journey_pattern_point_connections.size());
-    std::transform(this->journey_pattern_point_connections.begin(), this->journey_pattern_point_connections.end(), data.journey_pattern_point_connections.begin(), navimake::types::JourneyPatternPointConnection::Transformer());
+    std::transform(this->journey_pattern_point_connections.begin(), this->journey_pattern_point_connections.end(), data.journey_pattern_point_connections.begin(), Transformer());
 
-    data.journey_pattern_points.resize(this->journey_pattern_points.size());
-    std::transform(this->journey_pattern_points.begin(), this->journey_pattern_points.end(), data.journey_pattern_points.begin(), navimake::types::JourneyPatternPoint::Transformer());
-
-    data.vehicle_journeys.resize(this->vehicle_journeys.size());
-    std::transform(this->vehicle_journeys.begin(), this->vehicle_journeys.end(), data.vehicle_journeys.begin(), navimake::types::VehicleJourney::Transformer());
-
-    data.validity_patterns.resize(this->validity_patterns.size());
-    std::transform(this->validity_patterns.begin(), this->validity_patterns.end(), data.validity_patterns.begin(), navimake::types::ValidityPattern::Transformer());
-
-    data.districts.resize(this->districts.size());
-    std::transform(this->districts.begin(), this->districts.end(), data.districts.begin(), navimake::types::District::Transformer());
-
-    data.departments.resize(this->departments.size());
-    std::transform(this->departments.begin(), this->departments.end(), data.departments.begin(), navimake::types::Department::Transformer());
-
-    data.routes.resize(this->routes.size());
-    std::transform(this->routes.begin(), this->routes.end(), data.routes.begin(), navimake::types::Route::Transformer());
-
-    data.companies.resize(this->companies.size());
-    std::transform(this->companies.begin(), this->companies.end(), data.companies.begin(), navimake::types::Company::Transformer());
-
-    data.countries.resize(this->companies.size());
-    std::transform(this->countries.begin(), this->countries.end(), data.countries.begin(), navimake::types::Country::Transformer());
-
+    data.stop_times.resize(this->stops.size());
+    std::transform(this->stops.begin(), this->stops.end(), data.stop_times.begin(), Transformer());
 
     build_relations(data);
 
