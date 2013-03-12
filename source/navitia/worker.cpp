@@ -116,9 +116,9 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     this->init_worker_data();
     switch(api){
     case pbnavitia::NEXT_DEPARTURES:
-        return navitia::timetables::next_departures(request.departure_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), request.wheelchair(), this->data);
+        return navitia::timetables::next_departures(request.departure_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(),/* request.wheelchair()*/false, this->data);
     case pbnavitia::NEXT_ARRIVALS:
-        return navitia::timetables::next_arrivals(request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), request.wheelchair(), this->data);
+        return navitia::timetables::next_arrivals(request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), /*request.wheelchair()*/false, this->data);
     case pbnavitia::STOPS_SCHEDULE:
         return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), this->data);
     case pbnavitia::DEPARTURE_BOARD:
@@ -174,11 +174,11 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
     if(api != pbnavitia::ISOCHRONE){
         return routing::raptor::make_response(*calculateur, origin, destination, datetimes,
-                                              request.clockwise(), request.walking_speed(), request.walking_distance(), request.wheelchair(),
+                                              request.clockwise(), request.walking_speed(), request.walking_distance(), /*request.wheelchair()*/false,
                                               forbidden, *street_network_worker);
     } else {
         return navitia::routing::raptor::make_isochrone(*calculateur, origin, request.datetimes(0),
-                                                        request.clockwise(), request.walking_speed(), request.walking_distance(), request.wheelchair(),
+                                                        request.clockwise(), request.walking_speed(), request.walking_distance(), /*request.wheelchair()*/false,
                                                         forbidden, *street_network_worker);
     }
 }

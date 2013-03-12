@@ -3,6 +3,8 @@
 #include "routing/raptor.h"
 #include "georef/street_network.h"
 #include "type/type.pb.h"
+#include "type/response.pb.h"
+#include "type/request.pb.h"
 
 #include <memory>
 

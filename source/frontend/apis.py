@@ -51,8 +51,8 @@ class Arguments:
                            order = 50)
         }
     journeyArguments = {
-        "origin" : Argument("Departure Point", entrypoint, True, False, order = 0),
-        "destination" : Argument("Destination Point" , entrypoint, True, False, order = 1),
+        "origin" : Argument("Departure Point", entrypoint(), True, False, order = 0),
+        "destination" : Argument("Destination Point" , entrypoint(), True, False, order = 1),
         "datetime" : Argument("The time from which you want to arrive (or arrive before depending on the value of clockwise)", datetime_validator, True, False, order = 2),
         "clockwise" : Argument("true if you want to have a journey that starts after datetime, false if you a journey that arrives before datetime", boolean, False, False, True, order = 3),
         #"forbiddenline" : Argument("Forbidden lines identified by their external codes",  str, False, True, ""),
@@ -66,7 +66,7 @@ class Arguments:
         }
 
     isochroneArguments ={
-        "origin" : Argument("Departure Point", entrypoint, True, False, order = 0),
+        "origin" : Argument("Departure Point", entrypoint(), True, False, order = 0),
         "datetime" : Argument("The time from which you want to arrive (or arrive before depending on the value of clockwise)", datetime_validator, True, False, order = 2),
         "clockwise" : Argument("true if you want to have a journey that starts after datetime, false if you a journey that arrives before datetime", boolean, False, False, True, order = 3),
         #"forbiddenline" : Argument("Forbidden lines identified by their external codes",  str, False, True, ""),
