@@ -100,38 +100,38 @@ BOOST_AUTO_TEST_CASE(sans_filtre) {
     auto indexes = make_query(navitia::type::Type_e::eLine, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
 
-     indexes = make_query(navitia::type::Type_e::eJourneyPattern, "", data);
+    indexes = make_query(navitia::type::Type_e::eJourneyPattern, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
 
-     indexes = make_query(navitia::type::Type_e::eStopPoint, "", data);
+    indexes = make_query(navitia::type::Type_e::eStopPoint, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 4);
 
 
-     indexes = make_query(navitia::type::Type_e::eStopArea, "", data);
+    indexes = make_query(navitia::type::Type_e::eStopArea, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 4);
 
 
-     indexes = make_query(navitia::type::Type_e::eNetwork, "", data);
+    indexes = make_query(navitia::type::Type_e::eNetwork, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
 
-     indexes = make_query(navitia::type::Type_e::ePhysicalMode, "", data);
+    indexes = make_query(navitia::type::Type_e::ePhysicalMode, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 8);
 
 
-     indexes = make_query(navitia::type::Type_e::eCommercialMode, "", data);
+    indexes = make_query(navitia::type::Type_e::eCommercialMode, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 8);
 
 
-     indexes = make_query(navitia::type::Type_e::eCity, "", data);
+    indexes = make_query(navitia::type::Type_e::eCity, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
-     indexes = make_query(navitia::type::Type_e::eConnection, "", data);
+    indexes = make_query(navitia::type::Type_e::eConnection, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
-     indexes = make_query(navitia::type::Type_e::eJourneyPatternPoint, "", data);
+    indexes = make_query(navitia::type::Type_e::eJourneyPatternPoint, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 4);
 
-     indexes = make_query(navitia::type::Type_e::eVehicleJourney, "", data);
+    indexes = make_query(navitia::type::Type_e::eVehicleJourney, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
      
     indexes = make_query(navitia::type::Type_e::eRoute, "", data);
