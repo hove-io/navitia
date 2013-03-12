@@ -70,14 +70,14 @@ pbnavitia::Response line_schedule(const std::string & filter, const std::string 
         auto journey_patterns = d.pt_data.lines[line_idx].get(type::Type_e::eJourneyPattern, d.pt_data);
         //On récupère les stop_times
         auto stop_times = get_all_stop_times(journey_patterns, handler.date_time, handler.max_datetime, d);
-        std::vector<vector_idx> journey_pattern_point_journey_patterns;
+        std::vector<vector_idx> stop_points;
         for(auto journey_pattern_idx : journey_patterns) {
-            journey_pattern_point_journey_patterns.push_back(vector_idx());
-            for(auto rpidx : d.pt_data.journey_patterns[journey_pattern_idx].journey_pattern_point_list) {
-                journey_pattern_point_journey_patterns.back().push_back(d.pt_data.journey_pattern_points[rpidx].stop_point_idx);
+            stop_points.push_back(vector_idx());
+            for(auto jppidx : d.pt_data.journey_patterns[journey_pattern_idx].journey_pattern_point_list) {
+                stop_points.back().push_back(d.pt_data.journey_pattern_points[jppidx].stop_point_idx);
             }
         }
-        thermometer.generate_thermometer(journey_pattern_point_journey_patterns);
+        thermometer.generate_thermometer(stop_points);
         //On remplit l'objet header
         pbnavitia::LineScheduleHeader *header = schedule->mutable_header();
         for(vector_stopTime vec : stop_times) {
@@ -97,11 +97,7 @@ pbnavitia::Response line_schedule(const std::string & filter, const std::string 
                 line->add_stop_times(matrice[i][j]);
             }
         }
-
-
     }
-
     return handler.pb_response;
-
 }
 }}
