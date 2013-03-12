@@ -83,7 +83,7 @@ struct City : public TransmodelHeader, Nameable {
 
 };
 
-struct Connection: public TransmodelHeader {
+struct Connection: public TransmodelHeader, hasProperties {
     enum ConnectionKind{
         AddressConnection,           //Jonction adresse / arrêt commercial
         SiteConnection,              //Jonction Lieu public / arrêt commercial
