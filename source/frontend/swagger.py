@@ -15,7 +15,7 @@ def convertType(validator):
         return "float"
     elif validator == boolean:
         return "boolean"
-    elif validator == entrypoint:
+    elif validator == entrypoint():
         return '<a href="http://www.navitia.io/#entrypoints">entrypoint</a>'
     elif validator == filter:
         return '<a href="http://www.navitia.io/#filter">filter</a>'

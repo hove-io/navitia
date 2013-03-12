@@ -1,0 +1,48 @@
+import "type.proto";
+package pbnavitia;
+
+message AutocompleteRequest {
+    required string name = 1;
+    repeated NavitiaType types = 2;
+}
+
+message NextStopTimeRequest {
+    required string departure_filter = 1;
+    required string arrival_filter = 2;
+    required string from_datetime = 3;
+    required int32 duration = 4;
+    required int32 depth = 5;
+    required int32 nb_stoptimes = 7;
+}
+
+message JourneysRequest {
+    required string origin = 1;
+    required string destination = 2;
+    repeated string datetimes = 3;
+    required bool clockwise = 4;
+    repeated string forbidden_uris = 7;
+    required double walking_speed = 8;
+    required int32 walking_distance =10;
+}
+
+message ProximityListRequest {
+    required GeographicalCoord coord = 1;
+    required double distance = 2;
+    repeated NavitiaType types = 3;
+}
+
+message PTRefRequest {
+    required NavitiaType requested_type = 1;
+    required string filter = 2;
+    required int32 depth = 3;
+}
+
+message Request {
+    required API requested_api = 1;
+
+    optional AutocompleteRequest autocomplete = 2;
+    optional NextStopTimeRequest next_stop_times = 4;
+    optional ProximityListRequest proximity_list = 5;
+    optional JourneysRequest journeys = 6;
+    optional PTRefRequest ptref = 7;
+}

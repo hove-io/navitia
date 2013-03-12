@@ -19,15 +19,6 @@ void fill_section(pbnavitia::Section *pb_section, navitia::type::idx_t vj_idx,
     const type::JourneyPattern & jp = d.pt_data.journey_patterns[vj.journey_pattern_idx];
     const type::Route & route = d.pt_data.routes[jp.route_idx];
     const type::Line & line = d.pt_data.lines[route.line_idx];
-    if(line.network_idx != type::invalid_idx)
-        pb_section->set_network(d.pt_data.networks[line.network_idx].name );
-    else
-        pb_section->set_network("");
-    if(vj.physical_mode_idx != type::invalid_idx)
-        pb_section->set_mode(d.pt_data.physical_modes[vj.physical_mode_idx].name);
-    pb_section->set_code(line.code);
-    pb_section->set_headsign(vj.name);
-    pb_section->set_direction(route.name);
     fill_pb_object(vj_idx, d, pb_section->mutable_vehicle_journey(), 0, now, action_period);
     fill_pb_object(route.idx, d, pb_section->mutable_vehicle_journey()->mutable_route(), 0, now, action_period);
     fill_pb_object(line.idx, d, pb_section->mutable_vehicle_journey()->mutable_route()->mutable_line(), 0, now, action_period);

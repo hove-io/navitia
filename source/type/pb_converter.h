@@ -1,7 +1,7 @@
 #pragma once
 #include "data.h"
 #include "type/type.pb.h"
-
+#include "type/response.pb.h"
 
 #define null_time_period boost::posix_time::time_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0))
 
