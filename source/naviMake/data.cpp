@@ -19,6 +19,24 @@ void Data::sort(){
     std::for_each(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end(), Indexer());
 }
 
+void Data::normalize_uri(){
+    ::navimake::normalize_uri(networks);
+    ::navimake::normalize_uri(companies);
+    ::navimake::normalize_uri(commercial_modes);
+    ::navimake::normalize_uri(lines);
+    ::navimake::normalize_uri(physical_modes);
+    ::navimake::normalize_uri(cities);
+    ::navimake::normalize_uri(countries);
+    ::navimake::normalize_uri(stop_areas);
+    ::navimake::normalize_uri(stop_points);
+    ::navimake::normalize_uri(vehicle_journeys);
+    ::navimake::normalize_uri(journey_patterns);
+    ::navimake::normalize_uri(districts);
+    ::navimake::normalize_uri(departments);
+    ::navimake::normalize_uri(validity_patterns);
+    ::navimake::normalize_uri(routes);
+}
+
 void Data::complete() {
     //Ajoute les connections entre les stop points d'un meme stop area
 

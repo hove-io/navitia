@@ -239,6 +239,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     connectors::build_journey_pattern_points(data);
     connectors::build_journey_pattern_point_connections(data);
 
+    data.normalize_uri();
     data.clean();
     data.sort();
     data.transform(pt_data);
