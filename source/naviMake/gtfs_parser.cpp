@@ -1012,13 +1012,13 @@ void build_journey_pattern_point_connections(Data & data) {
                 vjs.push_back(it_sub->second);
             }
             std::sort(vjs.begin(), vjs.end(), [](nm::VehicleJourney *  vj1, nm::VehicleJourney*vj2){
-                    if(!vj1->stop_time_list.empty() && !vj2->stop_time_list.empty()) {
-                        return vj1->stop_time_list.front()->arrival_time < 
-                                                      vj2->stop_time_list.front()->arrival_time; 
-                    } else {
-                        return !vj1->stop_time_list.empty();
-                    }
-                    });
+                if(!vj1->stop_time_list.empty() && !vj2->stop_time_list.empty()) {
+                    return vj1->stop_time_list.front()->arrival_time < 
+                                                    vj2->stop_time_list.front()->arrival_time; 
+                } else {
+                    return !vj1->stop_time_list.empty();
+                }
+            });
 
             //On crée les connexions entre le dernier journey_pattern point et le premier journey_pattern point
             auto prec_vj = vjs.begin();
