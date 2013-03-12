@@ -226,9 +226,6 @@ nt::StopPoint StopPoint::get_navitia_type() const {
     if(this->physical_mode != NULL)
         nt_stop_point.physical_mode_idx = this->physical_mode->idx;
 
-    if(this->.commercial_mode != NULL)
-        nt_stop_point.physical_mode_idx = this->.commercial_mode->idx;
-
     if(this->city != NULL)
         nt_stop_point.city_idx = this->city->idx;
 
