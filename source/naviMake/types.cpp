@@ -223,9 +223,11 @@ nt::StopPoint StopPoint::Transformer::operator()(const StopPoint& stop_point){
     if(stop_point.stop_area != NULL)
         nt_stop_point.stop_area_idx = stop_point.stop_area->idx;
 
-
     if(stop_point.physical_mode != NULL)
         nt_stop_point.physical_mode_idx = stop_point.physical_mode->idx;
+
+    if(stop_point.commercial_mode != NULL)
+        nt_stop_point.physical_mode_idx = stop_point.commercial_mode->idx;
 
     if(stop_point.city != NULL)
         nt_stop_point.city_idx = stop_point.city->idx;

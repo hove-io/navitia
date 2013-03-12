@@ -26,8 +26,8 @@ nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     case pbnavitia::ROUTE: return nt::Type_e::eRoute; break;
     case pbnavitia::JOURNEY_PATTERN: return nt::Type_e::eJourneyPattern; break;
     case pbnavitia::NETWORK: return nt::Type_e::eNetwork; break;
-    case pbnavitia::COMMERCIAL_MODE: return nt::Type_e::ePhysicalMode; break;
-    case pbnavitia::PHYSICAL_MODE: return nt::Type_e::eCommercialMode; break;
+    case pbnavitia::COMMERCIAL_MODE: return nt::Type_e::eCommercialMode; break;
+    case pbnavitia::PHYSICAL_MODE: return nt::Type_e::ePhysicalMode; break;
     case pbnavitia::CONNECTION: return nt::Type_e::eConnection; break;
     case pbnavitia::JOURNEY_PATTERN_POINT: return nt::Type_e::eJourneyPatternPoint; break;
     case pbnavitia::COMPANY: return nt::Type_e::eCompany; break;
