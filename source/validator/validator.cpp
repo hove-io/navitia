@@ -98,7 +98,6 @@ int main(int argc, char** argv) {
 
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::stop_area_idx, d.pt_data.stop_areas);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::city_idx, d.pt_data.cities);
-    error_count += check_relations(d.pt_data.stop_points, &StopPoint::physical_mode_idx, d.pt_data.physical_modes);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::network_idx, d.pt_data.networks);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::journey_pattern_point_list, d.pt_data.journey_pattern_points);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::journey_pattern_point_list, d.pt_data.journey_pattern_points, &JourneyPatternPoint::stop_point_idx);
