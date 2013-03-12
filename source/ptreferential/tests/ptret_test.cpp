@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
     indexes = make_query(navitia::type::Type_e::VehicleJourney, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
      
-    indexes = make_query(navitia::type::Type_e::eRoute, "route.uri=route:A-1", data);
+    indexes = make_query(navitia::type::Type_e::Route, "route.uri=route:A-1", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 }
 
