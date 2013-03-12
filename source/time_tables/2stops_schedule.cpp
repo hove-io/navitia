@@ -14,7 +14,7 @@ std::unordered_map<type::idx_t, uint32_t>  get_arrival_order(const std::vector<t
 
 
     //On va chercher tous les journey_pattern points correspondant au deuxieme filtre
-    std::vector<type::idx_t > journey_pattern_points = navitia::ptref::make_query(type::Type_e::eJourneyPatternPoint, arrival_filter, data);
+    std::vector<type::idx_t > journey_pattern_points = navitia::ptref::make_query(type::Type_e::JourneyPatternPoint, arrival_filter, data);
 
     //On parcourt tous les journey_pattern points du deuxieme filtre
     for(type::idx_t rpidx : journey_pattern_points) {
@@ -36,7 +36,7 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
 
     std::vector<pair_dt_st> result;
     //On va chercher tous les journey_pattern points correspondant au deuxieme filtre
-    std::vector<type::idx_t > departure_journey_pattern_points_tmp = navitia::ptref::make_query(type::Type_e::eJourneyPatternPoint, departure_filter, data);
+    std::vector<type::idx_t > departure_journey_pattern_points_tmp = navitia::ptref::make_query(type::Type_e::JourneyPatternPoint, departure_filter, data);
 
     //On récupère maintenant l'intersection des deux filtre, on obtient un map entre un journey_pattern point de départ, et order d'arrivée
     auto departure_idx_arrival_order = get_arrival_order(departure_journey_pattern_points_tmp, arrival_filter, data);

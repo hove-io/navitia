@@ -97,44 +97,44 @@ BOOST_AUTO_TEST_CASE(sans_filtre) {
     navitia::type::Data data;
     b.build(data.pt_data);
 
-    auto indexes = make_query(navitia::type::Type_e::eLine, "", data);
+    auto indexes = make_query(navitia::type::Type_e::Line, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
 
-    indexes = make_query(navitia::type::Type_e::eJourneyPattern, "", data);
+    indexes = make_query(navitia::type::Type_e::JourneyPattern, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
 
-    indexes = make_query(navitia::type::Type_e::eStopPoint, "", data);
+    indexes = make_query(navitia::type::Type_e::StopPoint, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 4);
 
 
-    indexes = make_query(navitia::type::Type_e::eStopArea, "", data);
+    indexes = make_query(navitia::type::Type_e::StopArea, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 4);
 
 
-    indexes = make_query(navitia::type::Type_e::eNetwork, "", data);
+    indexes = make_query(navitia::type::Type_e::Network, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
 
-    indexes = make_query(navitia::type::Type_e::ePhysicalMode, "", data);
+    indexes = make_query(navitia::type::Type_e::PhysicalMode, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 8);
 
 
-    indexes = make_query(navitia::type::Type_e::eCommercialMode, "", data);
+    indexes = make_query(navitia::type::Type_e::CommercialMode, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 8);
 
 
-    indexes = make_query(navitia::type::Type_e::eCity, "", data);
+    indexes = make_query(navitia::type::Type_e::City, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
-    indexes = make_query(navitia::type::Type_e::eConnection, "", data);
+    indexes = make_query(navitia::type::Type_e::Connection, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
-    indexes = make_query(navitia::type::Type_e::eJourneyPatternPoint, "", data);
+    indexes = make_query(navitia::type::Type_e::JourneyPatternPoint, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 4);
 
-    indexes = make_query(navitia::type::Type_e::eVehicleJourney, "", data);
+    indexes = make_query(navitia::type::Type_e::VehicleJourney, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
-     
-    indexes = make_query(navitia::type::Type_e::eRoute, "", data);
+
+    indexes = make_query(navitia::type::Type_e::Route, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
 }
 
@@ -153,18 +153,18 @@ BOOST_AUTO_TEST_CASE(get_indexes_test){
 
     // On cherche à retrouver la ligne 1, en passant le stoparea en filtre
     Filter filter;
-    filter.navitia_type = Type_e::eStopArea;
+    filter.navitia_type = Type_e::StopArea;
     filter.attribute = "uri";
     filter.op = EQ;
     filter.value = "stop_area:stop1";
-    auto indexes = get_indexes<StopArea>(filter, Type_e::eLine, data);
+    auto indexes = get_indexes<StopArea>(filter, Type_e::Line, data);
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_CHECK_EQUAL(indexes[0], 0);
 
     // On cherche les stopareas de la ligneA
-    filter.navitia_type = Type_e::eLine;
+    filter.navitia_type = Type_e::Line;
     filter.value = "line:A";
-    indexes = get_indexes<Line>(filter, Type_e::eStopArea, data);
+    indexes = get_indexes<Line>(filter, Type_e::StopArea, data);
     BOOST_REQUIRE_EQUAL(indexes.size(), 2);
     BOOST_CHECK_EQUAL(indexes[0], 0);
     BOOST_CHECK_EQUAL(indexes[1], 1);
@@ -183,41 +183,41 @@ BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
     navitia::type::Data data;
     b.build(data.pt_data);
 
-    auto indexes = make_query(navitia::type::Type_e::eLine, "line.uri=line:A", data);
+    auto indexes = make_query(navitia::type::Type_e::Line, "line.uri=line:A", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
-     indexes = make_query(navitia::type::Type_e::eJourneyPattern, "journey_pattern.uri=journey_pattern:A-1", data);
+    indexes = make_query(navitia::type::Type_e::JourneyPattern, "journey_pattern.uri=journey_pattern:A-1", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
-     indexes = make_query(navitia::type::Type_e::eStopPoint, "stop_point.uri=stop_point:stop1", data);
-    BOOST_CHECK_EQUAL(indexes.size(), 1);
-
-
-     indexes = make_query(navitia::type::Type_e::eStopArea, "stop_area.uri=stop_area:stop1", data);
+    indexes = make_query(navitia::type::Type_e::StopPoint, "stop_point.uri=stop_point:stop1", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
 
-     indexes = make_query(navitia::type::Type_e::eNetwork, "network.uri=network:network:base_network", data);
+    indexes = make_query(navitia::type::Type_e::StopArea, "stop_area.uri=stop_area:stop1", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
 
-     indexes = make_query(navitia::type::Type_e::ePhysicalMode, "physical_mode.uri=physical_mode:0x3", data);
+    indexes = make_query(navitia::type::Type_e::Network, "network.uri=network:network:base_network", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
 
-     indexes = make_query(navitia::type::Type_e::eCommercialMode, "commercial_mode.uri=commercial_mode:0x3", data);
+    indexes = make_query(navitia::type::Type_e::PhysicalMode, "physical_mode.uri=physical_mode:0x3", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
 
-     indexes = make_query(navitia::type::Type_e::eCity, "city.uri=city:city:base_city", data);
+    indexes = make_query(navitia::type::Type_e::CommercialMode, "commercial_mode.uri=commercial_mode:0x3", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
-     indexes = make_query(navitia::type::Type_e::eConnection, "", data);
+
+    indexes = make_query(navitia::type::Type_e::City, "city.uri=city:city:base_city", data);
+    BOOST_CHECK_EQUAL(indexes.size(), 1);
+
+    indexes = make_query(navitia::type::Type_e::Connection, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
-     indexes = make_query(navitia::type::Type_e::eJourneyPatternPoint, "journey_pattern_point.uri=A-1:stop1:0", data);
+    indexes = make_query(navitia::type::Type_e::JourneyPatternPoint, "journey_pattern_point.uri=journey_pattern_point:A-1:stop1:0", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
-     indexes = make_query(navitia::type::Type_e::eVehicleJourney, "", data);
+    indexes = make_query(navitia::type::Type_e::VehicleJourney, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
      
     indexes = make_query(navitia::type::Type_e::eRoute, "route.uri=route:A-1", data);
@@ -225,13 +225,13 @@ BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
 }
 
 BOOST_AUTO_TEST_CASE(find_path_test){
-    auto res = find_path(navitia::type::Type_e::eRoute);
+    auto res = find_path(navitia::type::Type_e::Route);
     // Cas où on veut partir et arriver au même point
-    BOOST_CHECK(res[navitia::type::Type_e::eRoute] == navitia::type::Type_e::eRoute);
+    BOOST_CHECK(res[navitia::type::Type_e::Route] == navitia::type::Type_e::Route);
     // On regarde qu'il y a un semblant d'itinéraire pour chaque type : il faut un prédécesseur
     for(auto node_pred : res){
         // Route c'est lui même puisque c'est la source, et validity pattern est puni, donc il est seul dans son coin
-        if(node_pred.first != Type_e::eRoute && node_pred.first != Type_e::eValidityPattern)
+        if(node_pred.first != Type_e::Route && node_pred.first != Type_e::ValidityPattern)
             BOOST_CHECK(node_pred.first != node_pred.second);
     }
 
@@ -246,6 +246,6 @@ BOOST_AUTO_TEST_CASE(find_path_test){
     BOOST_CHECK_EQUAL(num, 2);
 
     // Type qui n'existe pas dans le graph : il n'y a pas de chemin
-    BOOST_CHECK_THROW(find_path(navitia::type::Type_e::eUnknown), ptref_error);
+    BOOST_CHECK_THROW(find_path(navitia::type::Type_e::Unknown), ptref_error);
 
 }

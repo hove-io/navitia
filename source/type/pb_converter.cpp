@@ -7,9 +7,33 @@ namespace nt = navitia::type;
 namespace pt = boost::posix_time;
 namespace navitia{
 
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::ValidityPattern* /*validity_pattern*/, int, const pt::ptime&, const pt::time_period& ){
+    nt::ValidityPattern vp = data.pt_data.validity_patterns.at(idx);
+}
+
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Department* department, int, const pt::ptime&, const pt::time_period& ){
+    nt::Department d = data.pt_data.departments.at(idx);
+    department->set_id(d.id);
+    department->set_uri(d.uri);
+    department->set_name(d.name);
+}
+
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::District* district, int, const pt::ptime&, const pt::time_period& ){
+    nt::District d = data.pt_data.districts.at(idx);
+    district->set_id(d.id);
+    district->set_uri(d.uri);
+    district->set_name(d.name);
+}
+
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Country* country, int, const pt::ptime&, const pt::time_period& ){
+    nt::Country c = data.pt_data.countries.at(idx);
+    country->set_id(c.id);
+    country->set_uri(c.uri);
+    country->set_name(c.name);
+}
+
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::City* city, int, const pt::ptime&, const pt::time_period& ){
     nt::City city_n = data.pt_data.cities.at(idx);
-    city->set_id(city_n.id);
     city->set_id(city_n.id);
     city->set_zip_code(city_n.main_postal_code);
     city->set_uri(city_n.uri);

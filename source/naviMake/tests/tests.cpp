@@ -32,8 +32,7 @@ BOOST_AUTO_TEST_CASE(city_transformer){
   //  city.postal_code_list.push_back("42001");
    // city.postal_code_list.push_back("42002");
 
-    navimake::types::City::Transformer transformer;
-    navitia::type::City city_n = transformer(city);
+    navitia::type::City city_n = city.get_navitia_type();
 
     BOOST_CHECK_EQUAL(city_n.idx, city.idx);
     BOOST_CHECK_EQUAL(city_n.id, city.id);
@@ -67,8 +66,7 @@ BOOST_AUTO_TEST_CASE(connection_transformer){
     connection.max_duration = 15;
     connection.connection_kind = navimake::types::Connection::LinkConnection;
 
-    navimake::types::Connection::Transformer transformer;
-    navitia::type::Connection connection_n = transformer(connection);
+    navitia::type::Connection connection_n = connection.get_navitia_type();
 
     BOOST_CHECK_EQUAL(connection_n.idx, connection.idx);
     BOOST_CHECK_EQUAL(connection_n.id, connection.id);
@@ -98,8 +96,7 @@ BOOST_AUTO_TEST_CASE(stop_area_transformer){
     stop_area.main_connection = true;
     stop_area.main_stop_area = true;
 
-    navimake::types::StopArea::Transformer transformer;
-    navitia::type::StopArea stop_area_n = transformer(stop_area);
+    navitia::type::StopArea stop_area_n = stop_area.get_navitia_type();
 
     BOOST_CHECK_EQUAL(stop_area_n.idx, stop_area.idx);
     BOOST_CHECK_EQUAL(stop_area_n.id, stop_area.id);

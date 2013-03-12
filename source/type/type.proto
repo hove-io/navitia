@@ -51,6 +51,7 @@ message GeographicalCoord {
 
 message Country {
     optional string id = 1;
+    optional string uri = 2;
     optional string name  = 3;
     optional GeographicalCoord coord = 6;
 }
@@ -202,22 +203,40 @@ message Address {
     optional int32 house_number = 2;
 }
 
+message District {
+    optional string id = 1;
+    optional string uri = 3;
+    optional string name = 4;
+}
+
+message ValidityPattern {
+}
+
+message Department{
+    optional string id = 1;
+    optional string uri = 3;
+    optional string name = 4;
+}
+
 
 message PTReferential {
-    repeated Country countries = 1;
-    repeated StopArea stop_areas = 2;
-    repeated StopPoint stop_points = 3;
-    repeated Line lines = 4;
-    repeated Route routes = 5;
-    repeated Network networks = 6;
-    repeated CommercialMode commercial_modes = 7;
+    repeated ValidityPattern validity_patterns = 20;
+    repeated Line lines = 1;
+    repeated JourneyPattern journey_patterns = 2;
+    repeated VehicleJourney vehicle_journeys = 3;
+    repeated StopPoint stop_points = 4;
+    repeated StopArea stop_areas = 5;
+    repeated Network networks = 7;
     repeated PhysicalMode physical_modes = 8;
-    repeated Connection connections = 9;
-    repeated JourneyPatternPoint journey_pattern_points = 11;
-    repeated City cities = 13;
+    repeated CommercialMode commercial_modes = 9;
+    repeated City cities = 10;
+    repeated Connection connections = 11;
+    repeated JourneyPatternPoint journey_pattern_points = 12;
+    repeated District districts = 13;
+    repeated Department departments = 14;
     repeated Company companies = 15;
-    repeated VehicleJourney vehicle_journeys = 16;
-    repeated JourneyPattern journey_patterns = 17;
+    repeated Country countries = 17;
+    repeated Route routes = 23;
 }
 
 message PlaceMark {

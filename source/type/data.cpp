@@ -32,8 +32,8 @@ Data& Data::operator=(Data&& other){
 
 void Data::set_cities(){
      for(navitia::georef::Way & way : geo_ref.ways) {
-        auto city_it = pt_data.city_map.find("city:"+way.city);
-        if(city_it != pt_data.city_map.end()) {
+        auto city_it = pt_data.cities_map.find("city:"+way.city);
+        if(city_it != pt_data.cities_map.end()) {
             way.city_idx = city_it->second;
         } else {
             way.city_idx = invalid_idx;

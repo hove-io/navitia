@@ -65,9 +65,9 @@ pbnavitia::Response line_schedule(const std::string & filter, const std::string 
     }
     Thermometer thermometer(d);
 
-    for(type::idx_t line_idx : navitia::ptref::make_query(type::Type_e::eLine, filter, d)) {
+    for(type::idx_t line_idx : navitia::ptref::make_query(type::Type_e::Line, filter, d)) {
         auto schedule = handler.pb_response.mutable_line_schedule()->add_schedules();
-        auto journey_patterns = d.pt_data.lines[line_idx].get(type::Type_e::eJourneyPattern, d.pt_data);
+        auto journey_patterns = d.pt_data.lines[line_idx].get(type::Type_e::JourneyPattern, d.pt_data);
         //On récupère les stop_times
         auto stop_times = get_all_stop_times(journey_patterns, handler.date_time, handler.max_datetime, d);
         std::vector<vector_idx> stop_points;
