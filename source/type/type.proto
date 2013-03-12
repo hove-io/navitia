@@ -39,8 +39,6 @@ message Message{
     optional string uri = 1;
     optional string message = 2;
     optional string title = 3;
-
-
 }
 
 message GeographicalCoord {
