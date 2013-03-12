@@ -1,0 +1,259 @@
+import "type.proto";
+
+package pbnavitia;
+
+message PTReferential {
+    repeated ValidityPattern validity_patterns = 20;
+    repeated Line lines = 1;
+    repeated JourneyPattern journey_patterns = 2;
+    repeated VehicleJourney vehicle_journeys = 3;
+    repeated StopPoint stop_points = 4;
+    repeated StopArea stop_areas = 5;
+    repeated Network networks = 7;
+    repeated PhysicalMode physical_modes = 8;
+    repeated CommercialMode commercial_modes = 9;
+    repeated City cities = 10;
+    repeated Connection connections = 11;
+    repeated JourneyPatternPoint journey_pattern_points = 12;
+    repeated District districts = 13;
+    repeated Department departments = 14;
+    repeated Company companies = 15;
+    repeated Country countries = 17;
+    repeated Route routes = 23;
+}
+
+message PlaceMark {
+    optional NavitiaType type = 1;
+    optional City city = 3;
+    optional StopArea stop_area = 4;
+    optional StopPoint stop_point = 6;
+    optional Address address = 7;
+}
+
+message AutocompleteItem {
+    optional string name = 1;
+    optional int32 quality = 2;
+    optional string uri = 3;
+    optional PlaceMark object = 4;
+}
+
+message Autocomplete {
+    repeated AutocompleteItem items = 1;
+    repeated string ignored_words = 2;
+    repeated string bad_words = 3;
+}
+
+message ProximityListItem {
+    optional string name = 1;
+    optional int32 distance = 2;
+    optional string uri = 3;
+    optional PlaceMark object = 4;
+}
+
+message ProximityList {
+    repeated ProximityListItem items = 1;
+}
+
+enum Direction {
+    TURN_RIGHT= 1;
+    TURN_LEFT= 2;
+}
+
+message PathItem {
+    optional string name = 1;
+    optional double length = 2;
+    optional Direction direction =3;
+}
+
+message StreetNetwork {
+    optional double length = 1;
+    repeated PathItem path_items = 2;
+    repeated GeographicalCoord coordinates = 3;
+}
+
+enum SectionType {
+    PUBLIC_TRANSPORT = 1;
+    STREET_NETWORK = 2;
+    WAITING = 3;
+    TRANSFER = 4;
+    BIRD_FLY = 5;
+}
+
+enum TransferType {
+    WALKING = 1;
+    GUARANTEED = 2;
+    EXTENSION = 3;
+}
+
+message PtDisplayInfo {
+    optional string network = 1;
+    optional string mode = 2;
+    optional string code = 3;
+    optional string headsign = 4;
+    optional string direction = 5;
+}
+
+message Section {
+    optional SectionType type = 1;
+    optional PlaceMark origin = 2;
+    optional PlaceMark destination = 3;
+
+// Si c'est du TC
+    optional PtDisplayInfo pt_display_informations = 4;
+    optional VehicleJourney vehicle_journey = 9;
+    repeated StopDateTime stop_date_times = 10;
+
+// Si c'est du routier
+    optional StreetNetwork street_network = 11;
+
+// Si c'est de l'attente
+    optional TransferType transfer_type = 12;
+
+// Dans tous les cas
+    optional string polyline = 13;
+    optional int32 duration = 14;
+}
+
+message Journey {
+    optional int32 duration = 1;
+    optional int32 nb_transfers = 2;
+    optional string departure_date_time = 3;
+    optional string arrival_date_time = 4;
+    optional string requested_date_time = 5;
+    repeated Section sections = 6;
+}
+
+enum ResponseType {
+    ITINERARY_FOUND = 1;
+    DATE_OUT_OF_BOUNDS = 2;
+    NO_ORIGIN_POINT = 3;
+    NO_DESTINATION_POINT = 4;
+    NO_ORIGIN_NOR_DESTINATION_POINT = 5;
+    NO_VIA_POINT = 6;
+    NO_SOLUTION = 7;
+    CONNECTION_LIMITATION = 8;
+    DURATION_LIMITATION = 9;
+}
+
+message Planner {
+    repeated Journey journeys = 1;
+    optional ResponseType response_type = 2;
+    optional string before = 3;
+    optional string after = 4;
+}
+
+message Status{
+    required string publication_date = 1;
+    required string start_production_date = 2;
+    required string end_production_date = 3;
+
+    optional int32 data_version = 4;
+    optional string navimake_version = 5;
+    optional string navitia_version = 6;
+
+    repeated string data_sources = 7;
+
+    optional string last_load_at = 8;
+
+    optional bool last_load_status = 9;
+    optional bool loaded = 10;
+
+    optional int32 nb_threads = 11;
+}
+
+message PairStopTime {
+    required StopDateTime first = 1;
+    required StopDateTime second = 2;
+}
+
+message TableLine {
+    required string stop_point = 1;
+    repeated string stop_times = 2;
+}
+
+message Table {
+    repeated TableLine lines = 1;
+}
+
+message LineScheduleHeaderItem {
+    required Line line = 1;
+}
+
+message LineScheduleHeader {
+    repeated LineScheduleHeaderItem items = 1;
+}
+
+message Schedule {
+    required Table table = 1;
+    required LineScheduleHeader header = 2;
+}
+
+message LineSchedule {
+    repeated Schedule schedules = 1;
+}
+
+message StopTimes {
+    repeated StopDateTime stop_date_times = 1;
+}
+
+message StopsSchedule {
+    repeated PairStopTime board_items = 1;
+}
+
+message BoardItem {
+    required string hour =1;
+    repeated string minutes = 2;
+}
+
+message Board {
+    required StopPoint stop_point = 1;
+    required Route route = 2;
+    repeated BoardItem board_items = 3;
+}
+
+message DepartureBoard {
+    repeated Board boards = 1;
+}
+
+message Load {
+    required bool ok = 1;
+}
+
+message IsochroneItem {
+    required StopDateTime stop_date_time = 1;
+    required int32 duration = 2;
+    required int32 nb_changes = 3;
+}
+
+message Isochrone {
+    repeated IsochroneItem items = 1;
+    optional ResponseType response_type = 2;
+}
+
+message Metadatas {
+    required string start_production_date = 1;
+    required string end_production_date = 2;
+    required string shape = 3;
+    required string status = 4;
+}
+
+message Response{
+    required API requested_api = 1;
+    optional string error = 2;
+
+    optional string info = 3;
+
+    optional Autocomplete autocomplete = 4;
+    optional PTReferential ptref = 5;
+    optional StreetNetwork street_network = 6;
+    optional Planner planner = 7;
+    optional ProximityList proximitylist = 8;
+    optional Status status = 9;
+    optional StopTimes nextstoptimes = 10;
+    optional StopsSchedule stops_schedule = 11;
+    optional LineSchedule line_schedule = 12;
+    optional DepartureBoard departure_board = 13;
+    optional Load load = 14;
+    optional Isochrone isochrone = 15;
+    optional Metadatas metadatas = 16;
+}
