@@ -54,11 +54,9 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32
         st->tmp_stop_point = new types::StopPoint();        
         st->tmp_stop_point->name = sp_name;
         st->tmp_stop_point->uri = sp_name;
-        if(!b.data.physical_modes.empty())
-            st->tmp_stop_point->physical_mode = b.data.physical_modes.front();
+
         if(!b.data.networks.empty())
             st->tmp_stop_point->network = b.data.networks.front();
-
 
         b.sps[sp_name] = st->tmp_stop_point;
         b.data.stop_points.push_back(st->tmp_stop_point);

@@ -206,6 +206,7 @@ nt::Company Company::get_navitia_type() const {
     nt_company.fax = this->fax;
     return nt_company;
 }
+
 nt::StopPoint StopPoint::get_navitia_type() const {
     nt::StopPoint nt_stop_point;
     nt_stop_point.id = this->id;
@@ -223,9 +224,6 @@ nt::StopPoint StopPoint::get_navitia_type() const {
     if(this->stop_area != NULL)
         nt_stop_point.stop_area_idx = this->stop_area->idx;
 
-    if(this->physical_mode != NULL)
-        nt_stop_point.physical_mode_idx = this->physical_mode->idx;
-
     if(this->city != NULL)
         nt_stop_point.city_idx = this->city->idx;
 
@@ -235,7 +233,6 @@ nt::StopPoint StopPoint::get_navitia_type() const {
     nt_stop_point.properties = this->properties;
 
     return nt_stop_point;
-
 }
 
 

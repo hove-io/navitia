@@ -498,15 +498,14 @@ struct StopPoint : public NavitiaHeader, Nameable, hasProperties{
 
     idx_t stop_area_idx;
     idx_t city_idx;
-    idx_t physical_mode_idx;
     idx_t network_idx;
     std::vector<idx_t> journey_pattern_point_list;
     bool wheelchair_boarding;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & uri & name & stop_area_idx & physical_mode_idx & coord & fare_zone & idx & journey_pattern_point_list & wheelchair_boarding;
+        ar & uri & name & stop_area_idx & coord & fare_zone & idx & journey_pattern_point_list & wheelchair_boarding;
     }
 
-    StopPoint(): fare_zone(0),  stop_area_idx(invalid_idx), city_idx(invalid_idx), physical_mode_idx(invalid_idx), network_idx(invalid_idx), wheelchair_boarding(false) {}
+    StopPoint(): fare_zone(0),  stop_area_idx(invalid_idx), city_idx(invalid_idx), network_idx(invalid_idx), wheelchair_boarding(false) {}
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 

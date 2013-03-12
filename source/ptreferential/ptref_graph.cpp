@@ -73,9 +73,8 @@ Jointures::Jointures() {
     boost::add_edge(vertex_map.at(Type_e::JourneyPattern), vertex_map.at(Type_e::JourneyPatternPoint), g);
     boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::JourneyPatternPoint), g);
 
-    // D'un stop point on obtient : le stop area, city, mode physique, journey pattern point et connection
+    // D'un stop point on obtient : le stop area, city, journey pattern point et connection
     boost::add_edge(vertex_map.at(Type_e::StopArea), vertex_map.at(Type_e::StopPoint), g);
-    boost::add_edge(vertex_map.at(Type_e::PhysicalMode), vertex_map.at(Type_e::StopPoint), g);
     boost::add_edge(vertex_map.at(Type_e::City), vertex_map.at(Type_e::StopPoint), g);
     boost::add_edge(vertex_map.at(Type_e::JourneyPatternPoint), vertex_map.at(Type_e::StopPoint), g);
     boost::add_edge(vertex_map.at(Type_e::Connection), vertex_map.at(Type_e::StopPoint), g);
