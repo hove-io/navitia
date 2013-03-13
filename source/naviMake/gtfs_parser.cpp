@@ -78,10 +78,10 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
         CsvReader csv(path+ "/" + filename_function.first, ',' , true);
         if(!csv.is_open()) {
             if(required_files.find(filename_function.first) != required_files.end()) {
-                LOG4CPLUS_FATAL(logger, "Impossible d'ouvrir" + filename_function.first);
+                LOG4CPLUS_FATAL(logger, "Impossible d'ouvrir " + filename_function.first);
                 throw FileNotFoundException(filename_function.first);
             } else {
-                LOG4CPLUS_WARN(logger, "Impossible d'ouvrir" + filename_function.first);
+                LOG4CPLUS_WARN(logger, "Impossible d'ouvrir " + filename_function.first);
             }
         } else {
             filename_function.second(this, data, csv);
@@ -89,9 +89,6 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
     }
 
     normalize_extcodes(data);
-    build_journey_patterns(data);
-    build_journey_pattern_points(data);
-    build_journey_pattern_point_connections(data);
 }
 
 
@@ -657,16 +654,6 @@ void GtfsParser::parse_frequencies(Data &, CsvReader &csv) {
 }
 
 
-// Compare si deux vehicle journey appartiennent à la même journey_pattern
-bool same_journey_pattern(nm::VehicleJourney * vj1, nm::VehicleJourney * vj2){
-    if(vj1->stop_time_list.size() != vj2->stop_time_list.size())
-        return false;
-    for(size_t i = 0; i < vj1->stop_time_list.size(); ++i)
-        if(vj1->stop_time_list[i]->tmp_stop_point != vj2->stop_time_list[i]->tmp_stop_point){
-            return false;
-        }
-    return true;
-}
 
 
 void normalize_extcodes(Data & data){
@@ -679,91 +666,6 @@ void normalize_extcodes(Data & data){
 }
 
 
-// TODO : pour l'instant on construit une route par journey pattern
-// Il faudrait factoriser les routes
-void build_journey_patterns(Data & data){
-    auto logger = log4cplus::Logger::getInstance("log");
-    LOG4CPLUS_TRACE(logger, "On calcule les journey_patterns");
-    // Associe à chaque line uri le nombre de journey_pattern trouvées jusqu'à present
-    std::map<std::string, int> line_journey_patterns_count;
-    for(auto it1 = data.vehicle_journeys.begin(); it1 != data.vehicle_journeys.end(); ++it1){
-        nm::VehicleJourney * vj1 = *it1;
-        // Si le vj n'appartient encore à aucune journey_pattern
-        if(vj1->journey_pattern == 0) {
-            auto it = line_journey_patterns_count.find(vj1->tmp_line->uri);
-            int count = 1;
-            if(it == line_journey_patterns_count.end()){
-                line_journey_patterns_count[vj1->tmp_line->uri] = count;
-            } else {
-                count = it->second + 1;
-                it->second = count;
-            }
-
-            nm::Route * route = new nm::Route();
-            nm::JourneyPattern * journey_pattern = new nm::JourneyPattern();
-            journey_pattern->uri = vj1->tmp_line->uri + "-" + boost::lexical_cast<std::string>(count);
-            journey_pattern->route = route;
-            journey_pattern->physical_mode = vj1->physical_mode;
-            vj1->journey_pattern = journey_pattern;
-            data.journey_patterns.push_back(journey_pattern);
-
-            route->line = vj1->tmp_line;
-            route->uri = journey_pattern->uri;
-            route->name = journey_pattern->name;
-            data.routes.push_back(route);
-
-            for(auto it2 = it1 + 1; it1 != data.vehicle_journeys.end() && it2 != data.vehicle_journeys.end(); ++it2){
-                nm::VehicleJourney * vj2 = *it2;
-                if(vj2->journey_pattern == 0 && same_journey_pattern(vj1, vj2)){
-                    vj2->journey_pattern = vj1->journey_pattern;
-                }
-            }
-        }
-    }
-    LOG4CPLUS_TRACE(logger, "Nombre de journey_patterns : " +boost::lexical_cast<std::string>(data.journey_patterns.size()));
-}
-
-
-void build_journey_pattern_points(Data & data){
-    auto logger = log4cplus::Logger::getInstance("log");
-    LOG4CPLUS_TRACE(logger, "Construction des journey_pattern points");
-    std::map<std::string, navimake::types::JourneyPatternPoint*> journey_pattern_point_map;
-
-    int stop_seq;
-    BOOST_FOREACH(nm::VehicleJourney * vj, data.vehicle_journeys){
-        stop_seq = 0;
-        BOOST_FOREACH(nm::StopTime * stop_time, vj->stop_time_list){
-            std::string journey_pattern_point_extcode = vj->journey_pattern->uri + ":" + stop_time->tmp_stop_point->uri+":"+boost::lexical_cast<std::string>(stop_seq);
-            auto journey_pattern_point_it = journey_pattern_point_map.find(journey_pattern_point_extcode);
-            nm::JourneyPatternPoint * journey_pattern_point;
-            if(journey_pattern_point_it == journey_pattern_point_map.end()) {
-                journey_pattern_point = new nm::JourneyPatternPoint();
-                journey_pattern_point->journey_pattern = vj->journey_pattern;
-                journey_pattern_point->journey_pattern->journey_pattern_point_list.push_back(journey_pattern_point);
-                journey_pattern_point->stop_point = stop_time->tmp_stop_point;
-                journey_pattern_point_map[journey_pattern_point_extcode] = journey_pattern_point;
-                journey_pattern_point->order = stop_seq;
-                journey_pattern_point->uri = journey_pattern_point_extcode;
-                data.journey_pattern_points.push_back(journey_pattern_point);
-            } else {
-                journey_pattern_point = journey_pattern_point_it->second;
-            }
-            ++stop_seq;
-            stop_time->journey_pattern_point = journey_pattern_point;
-        }
-    }
-
-    for(nm::JourneyPattern *journey_pattern : data.journey_patterns){
-        if(! journey_pattern->journey_pattern_point_list.empty()){
-            nm::JourneyPatternPoint * last = journey_pattern->journey_pattern_point_list.back();
-            if(last->stop_point->stop_area != NULL)
-                journey_pattern->name = last->stop_point->stop_area->name;
-            else
-                journey_pattern->name = last->stop_point->name;
-        }
-    }
-    LOG4CPLUS_TRACE(logger, "Nombre de journey_pattern points : "+ boost::lexical_cast<std::string>(data.journey_pattern_points.size()));
-}
 
 
 void GtfsParser::parse_stop_times(Data & data, CsvReader &csv) {
@@ -964,78 +866,6 @@ boost::gregorian::date_period GtfsParser::find_production_date(const std::string
         boost::gregorian::to_simple_string((start_date>b_date ? start_date : b_date)) 
         + " - " + boost::gregorian::to_simple_string(end_date));
     return boost::gregorian::date_period((start_date>b_date ? start_date : b_date), end_date);
-}
-
-
-void  add_journey_pattern_point_connection(nm::JourneyPatternPoint *rp1, nm::JourneyPatternPoint *rp2, int length,
-                           std::multimap<std::string, nm::JourneyPatternPointConnection> &journey_pattern_point_connections) {
-    //Si la connexion n'existe pas encore alors on va la créer, sinon on regarde sa durée, si elle est inférieure, on la modifie
-    auto pp = journey_pattern_point_connections.equal_range(rp1->uri);
-    bool find = false;
-    for(auto it_pp = pp.first; it_pp != pp.second; ++it_pp) {
-        if(it_pp->second.destination_journey_pattern_point->uri == rp2->uri) {
-            find = true;
-            if(it_pp->second.length > length)
-                it_pp->second.length = length;
-            break;
-        }
-    }
-    if(!find) {
-        nm::JourneyPatternPointConnection rpc;
-        rpc.departure_journey_pattern_point = rp1;
-        rpc.destination_journey_pattern_point = rp2;
-        rpc.journey_pattern_point_connection_kind = nm::JourneyPatternPointConnection::JourneyPatternPointConnectionKind::Extension;
-        rpc.length = length;
-        journey_pattern_point_connections.insert(std::make_pair(rp1->uri, rpc));
-
-    }
-}
-
-
-void build_journey_pattern_point_connections(Data & data) {
-    std::multimap<std::string, nm::VehicleJourney*> block_vj; 
-    std::multimap<std::string, nm::JourneyPatternPointConnection> journey_pattern_point_connections;
-    for(nm::VehicleJourney *vj: data.vehicle_journeys) {
-        if(vj->block_id != "")
-            block_vj.insert(std::make_pair(vj->block_id, vj));
-    }
-
-    std::string prec_block = "";
-    for(auto it = block_vj.begin(); it!=block_vj.end(); ++it) {
-        std::string block_id = it->first;
-        if(prec_block != block_id) {
-            auto pp = block_vj.equal_range(block_id);
-            //On trie les vj appartenant au meme bloc par leur premier stop time
-            std::vector<nm::VehicleJourney*> vjs;
-            for(auto it_sub = pp.first; it_sub != pp.second; ++it_sub) {
-                vjs.push_back(it_sub->second);
-            }
-            std::sort(vjs.begin(), vjs.end(), [](nm::VehicleJourney *  vj1, nm::VehicleJourney*vj2){
-                                               return vj1->stop_time_list.front()->arrival_time < 
-                                                      vj2->stop_time_list.front()->arrival_time; });
-
-            //On crée les connexions entre le dernier journey_pattern point et le premier journey_pattern point
-            auto prec_vj = vjs.begin();
-            auto it_vj =vjs.begin() + 1;
-
-            for(; it_vj!=vjs.end(); ++it_vj) {
-                auto &st1 = (*prec_vj)->stop_time_list.back(),
-                     &st2 = (*it_vj)->stop_time_list.front();
-                if((st2->departure_time - st1->arrival_time) >= 0) {
-                    add_journey_pattern_point_connection(st1->journey_pattern_point, st2->journey_pattern_point,
-                                               (st2->departure_time - st1->arrival_time),
-                                               journey_pattern_point_connections);
-                }
-                prec_vj = it_vj;
-            }
-            prec_block = block_id;
-        }
-    }
-
-    //On ajoute les journey_pattern points dans data
-    for(auto rpc : journey_pattern_point_connections) {
-        data.journey_pattern_point_connections.push_back(new nm::JourneyPatternPointConnection(rpc.second));
-    }
 }
 
 }}

@@ -1,9 +1,12 @@
-#include "line_schedule.h"
+#include "route_schedule.h"
 #include "thermometer.h"
 #include "request_handle.h"
 #include "type/pb_converter.h"
 #include "ptreferential/ptreferential.h"
 
+
+
+namespace pt = boost::posix_time;
 
 namespace navitia { namespace timetables {
 
@@ -56,33 +59,30 @@ std::vector<vector_string> make_matrice(const std::vector<vector_stopTime> & sto
 }
 
 
-pbnavitia::Response line_schedule(const std::string & filter, const std::string &str_dt, uint32_t duration, const uint32_t max_depth, type::Data &d) {
-    RequestHandle handler("LINE_SCHEDULE", "", str_dt, duration, d);
-    handler.pb_response.set_requested_api(pbnavitia::LINE_SCHEDULE);
+pbnavitia::Response route_schedule(const std::string & filter, const std::string &str_dt, uint32_t duration, const uint32_t max_depth, type::Data &d) {
+    RequestHandle handler("ROUTE_SCHEDULE", "", str_dt, duration, d);
+    handler.pb_response.set_requested_api(pbnavitia::ROUTE_SCHEDULE);
 
     if(handler.pb_response.has_error()) {
         return handler.pb_response;
     }
+    auto now = pt::second_clock::local_time();
+    pt::time_period action_period(to_posix_time(handler.date_time, d), to_posix_time(handler.max_datetime, d));
     Thermometer thermometer(d);
 
-    for(type::idx_t line_idx : navitia::ptref::make_query(type::Type_e::eLine, filter, d)) {
-        auto schedule = handler.pb_response.mutable_line_schedule()->add_schedules();
-        auto journey_patterns = d.pt_data.lines[line_idx].get(type::Type_e::eJourneyPattern, d.pt_data);
+    for(type::idx_t line_idx : navitia::ptref::make_query(type::Type_e::Line, filter, d)) {
+        auto schedule = handler.pb_response.mutable_route_schedule()->add_schedules();
+        auto journey_patterns = d.pt_data.lines[line_idx].get(type::Type_e::JourneyPattern, d.pt_data);
         //On récupère les stop_times
         auto stop_times = get_all_stop_times(journey_patterns, handler.date_time, handler.max_datetime, d);
-        std::vector<vector_idx> journey_pattern_point_journey_patterns;
+        std::vector<vector_idx> stop_points;
         for(auto journey_pattern_idx : journey_patterns) {
-            journey_pattern_point_journey_patterns.push_back(vector_idx());
-            for(auto rpidx : d.pt_data.journey_patterns[journey_pattern_idx].journey_pattern_point_list) {
-                journey_pattern_point_journey_patterns.back().push_back(d.pt_data.journey_pattern_points[rpidx].stop_point_idx);
+            stop_points.push_back(vector_idx());
+            for(auto jppidx : d.pt_data.journey_patterns[journey_pattern_idx].journey_pattern_point_list) {
+                stop_points.back().push_back(d.pt_data.journey_pattern_points[jppidx].stop_point_idx);
             }
         }
-        thermometer.generate_thermometer(journey_pattern_point_journey_patterns);
-        //On remplit l'objet header
-        pbnavitia::LineScheduleHeader *header = schedule->mutable_header();
-        for(vector_stopTime vec : stop_times) {
-            fill_pb_object(line_idx, d, header->add_items()->mutable_line(), max_depth-1);
-        }
+        thermometer.generate_thermometer(stop_points);
         //On génère la matrice
         std::vector<vector_string> matrice = make_matrice(stop_times, thermometer, d);
 
@@ -90,18 +90,14 @@ pbnavitia::Response line_schedule(const std::string & filter, const std::string 
         for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {
             type::idx_t spidx=thermometer.get_thermometer()[i];
             const type::StopPoint & sp = d.pt_data.stop_points[spidx];
-            pbnavitia::TableLine * line = table->add_lines();
-            line->set_stop_point(sp.name);
+            auto * row = table->add_rows();
+            fill_pb_object(sp.idx, d, row->mutable_stop_point(), 0, now, action_period);
 
             for(unsigned int j=0; j<stop_times.size(); ++j) {
-                line->add_stop_times(matrice[i][j]);
+                row->add_stop_times(matrice[i][j]);
             }
         }
-
-
     }
-
     return handler.pb_response;
-
 }
 }}

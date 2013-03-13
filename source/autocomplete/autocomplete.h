@@ -111,19 +111,19 @@ struct Autocomplete
     int penaltyByType(navitia::type::Type_e ntype){
         int result = 0;
         switch(ntype){
-        case navitia::type::Type_e::eCity:
+        case navitia::type::Type_e::City:
             result = 0;
             break;
-        case navitia::type::Type_e::eStopArea:
+        case navitia::type::Type_e::StopArea:
             result = 2;
             break;
-        case navitia::type::Type_e::eStopPoint:
+        case navitia::type::Type_e::StopPoint:
             result = 4;
             break;
-        case navitia::type::Type_e::ePOI:
+        case navitia::type::Type_e::POI:
             result = 6;
             break;
-        case navitia::type::Type_e::eAddress:
+        case navitia::type::Type_e::Address:
             result = 8;
             break;
         default:

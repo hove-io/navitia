@@ -1,5 +1,7 @@
 #pragma once
 #include "type/type.pb.h"
+#include "type/request.pb.h"
+#include "type/response.pb.h"
 
 namespace navitia {
 
@@ -11,5 +13,8 @@ struct GeographicalCoord;
 }
 
 namespace proximitylist {
-pbnavitia::Response find(type::GeographicalCoord coord, double distance, const std::vector<type::Type_e> & filter, const type::Data & data);
+pbnavitia::Response find(type::GeographicalCoord coord, double distance,
+                         const std::vector<type::Type_e> & filter,
+                         uint32_t depth,
+                         const type::Data & data);
 }} // namespace navitia::proximitylist

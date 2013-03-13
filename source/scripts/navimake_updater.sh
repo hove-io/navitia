@@ -61,7 +61,7 @@ do
 
     echo "binarisation de $file dans $temp_dir "
 
-    unzip $file -o -d $temp_dir >> "$temp_dir/bina.log" 2>&1
+    unzip -o $file -d $temp_dir >> "$temp_dir/bina.log" 2>&1
     if [ $? -ne 0 ]
     then
         mv $file $error_dir

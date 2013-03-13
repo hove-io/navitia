@@ -5,8 +5,8 @@
 #include "autocomplete/autocomplete_api.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential_api.h"
-#include "time_tables/line_schedule.h"
-#include "time_tables/next_stop_times.h"
+#include "time_tables/route_schedule.h"
+#include "time_tables/next_passages.h"
 #include "time_tables/2stops_schedule.h"
 #include "time_tables/departure_board.h"
 
@@ -18,22 +18,22 @@ namespace navitia {
 
 nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     switch(pb_type){
-    case pbnavitia::ADDRESS: return nt::Type_e::eAddress; break;
-    case pbnavitia::STOP_AREA: return nt::Type_e::eStopArea; break;
-    case pbnavitia::STOP_POINT: return nt::Type_e::eStopPoint; break;
-    case pbnavitia::CITY: return nt::Type_e::eCity; break;
-    case pbnavitia::LINE: return nt::Type_e::eLine; break;
-    case pbnavitia::ROUTE: return nt::Type_e::eRoute; break;
-    case pbnavitia::JOURNEY_PATTERN: return nt::Type_e::eJourneyPattern; break;
-    case pbnavitia::NETWORK: return nt::Type_e::eNetwork; break;
-    case pbnavitia::COMMERCIAL_MODE: return nt::Type_e::ePhysicalMode; break;
-    case pbnavitia::PHYSICAL_MODE: return nt::Type_e::eCommercialMode; break;
-    case pbnavitia::CONNECTION: return nt::Type_e::eConnection; break;
-    case pbnavitia::JOURNEY_PATTERN_POINT: return nt::Type_e::eJourneyPatternPoint; break;
-    case pbnavitia::COMPANY: return nt::Type_e::eCompany; break;
-    case pbnavitia::VEHICLE_JOURNEY: return nt::Type_e::eVehicleJourney; break;
-    case pbnavitia::POI: return nt::Type_e::ePOI; break;
-    default: return nt::Type_e::eUnknown;
+    case pbnavitia::ADDRESS: return nt::Type_e::Address; break;
+    case pbnavitia::STOP_AREA: return nt::Type_e::StopArea; break;
+    case pbnavitia::STOP_POINT: return nt::Type_e::StopPoint; break;
+    case pbnavitia::CITY: return nt::Type_e::City; break;
+    case pbnavitia::LINE: return nt::Type_e::Line; break;
+    case pbnavitia::ROUTE: return nt::Type_e::Route; break;
+    case pbnavitia::JOURNEY_PATTERN: return nt::Type_e::JourneyPattern; break;
+    case pbnavitia::NETWORK: return nt::Type_e::Network; break;
+    case pbnavitia::COMMERCIAL_MODE: return nt::Type_e::CommercialMode; break;
+    case pbnavitia::PHYSICAL_MODE: return nt::Type_e::PhysicalMode; break;
+    case pbnavitia::CONNECTION: return nt::Type_e::Connection; break;
+    case pbnavitia::JOURNEY_PATTERN_POINT: return nt::Type_e::JourneyPatternPoint; break;
+    case pbnavitia::COMPANY: return nt::Type_e::Company; break;
+    case pbnavitia::VEHICLE_JOURNEY: return nt::Type_e::VehicleJourney; break;
+	case pbnavitia::POI: return nt::Type_e::POI; break;
+    default: return nt::Type_e::Unknown;
     }
 }
 
@@ -109,7 +109,7 @@ pbnavitia::Response Worker::load() {
 
 pbnavitia::Response Worker::autocomplete(const pbnavitia::AutocompleteRequest & request) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
-    return navitia::autocomplete::autocomplete(request.name(), vector_of_pb_types(request), this->data);
+    return navitia::autocomplete::autocomplete(request.name(), vector_of_pb_types(request), request.depth(), this->data);
 }
 
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest & request, pbnavitia::API api) {
@@ -117,15 +117,15 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     this->init_worker_data();
     switch(api){
     case pbnavitia::NEXT_DEPARTURES:
-        return navitia::timetables::next_departures(request.departure_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), request.wheelchair(), this->data);
+        return navitia::timetables::next_departures(request.departure_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(),/* request.wheelchair()*/false, this->data);
     case pbnavitia::NEXT_ARRIVALS:
-        return navitia::timetables::next_arrivals(request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), request.wheelchair(), this->data);
+        return navitia::timetables::next_arrivals(request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), /*request.wheelchair()*/false, this->data);
     case pbnavitia::STOPS_SCHEDULE:
         return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), this->data);
     case pbnavitia::DEPARTURE_BOARD:
         return navitia::timetables::departure_board(request.departure_filter(), request.from_datetime(), request.duration(), this->data);
-    case pbnavitia::LINE_SCHEDULE:
-        return navitia::timetables::line_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
+    case pbnavitia::ROUTE_SCHEDULE:
+        return navitia::timetables::route_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
     default:
         LOG4CPLUS_WARN(logger, "On a reçu une requête time table inconnue");
         pbnavitia::Response response;
@@ -136,7 +136,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
 
 pbnavitia::Response Worker::proximity_list(const pbnavitia::ProximityListRequest &request) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
-    return navitia::proximitylist::find(type::GeographicalCoord(request.coord().lon(), request.coord().lat()), request.distance(), vector_of_pb_types(request), this->data);
+    return navitia::proximitylist::find(type::GeographicalCoord(request.coord().lon(), request.coord().lat()), request.distance(), vector_of_pb_types(request), request.depth(), this->data);
 }
 
 type::GeographicalCoord Worker::coord_of_address(const type::EntryPoint & entry_point) {
@@ -154,14 +154,14 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
     type::EntryPoint origin = type::EntryPoint(request.origin());
 
-    if (origin.type == type::Type_e::eAddress) {
+    if (origin.type == type::Type_e::Address) {
         origin.coordinates = this->coord_of_address(origin);
     }
 
     type::EntryPoint destination;
     if(api != pbnavitia::ISOCHRONE) {
         destination = type::EntryPoint(request.destination());
-        if (destination.type == type::Type_e::eAddress) {
+        if (destination.type == type::Type_e::Address) {
             destination.coordinates = this->coord_of_address(destination);
         }
     }
@@ -175,11 +175,11 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
     if(api != pbnavitia::ISOCHRONE){
         return routing::raptor::make_response(*calculateur, origin, destination, datetimes,
-                                              request.clockwise(), request.walking_speed(), request.walking_distance(), request.wheelchair(),
+                                              request.clockwise(), request.walking_speed(), request.walking_distance(), /*request.wheelchair()*/false,
                                               forbidden, *street_network_worker);
     } else {
         return navitia::routing::raptor::make_isochrone(*calculateur, origin, request.datetimes(0),
-                                                        request.clockwise(), request.walking_speed(), request.walking_distance(), request.wheelchair(),
+                                                        request.clockwise(), request.walking_speed(), request.walking_distance(), /*request.wheelchair()*/false,
                                                         forbidden, *street_network_worker);
     }
 }
@@ -197,7 +197,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
     case pbnavitia::STATUS: return status(); break;
     case pbnavitia::LOAD: return load(); break;
     case pbnavitia::AUTOCOMPLETE: return autocomplete(request.autocomplete()); break;
-    case pbnavitia::LINE_SCHEDULE:
+    case pbnavitia::ROUTE_SCHEDULE:
     case pbnavitia::NEXT_DEPARTURES:
     case pbnavitia::NEXT_ARRIVALS:
     case pbnavitia::STOPS_SCHEDULE:

@@ -318,14 +318,14 @@ void GeoRef::build_proximity_list(){
 void GeoRef::build_autocomplete_list(){
     int pos = 0;
     for(Way way : ways){
-        fl_way.add_string(way.way_type +" "+ way.name, pos,type::Type_e::eAddress, alias);
+        fl_way.add_string(way.way_type +" "+ way.name, pos,type::Type_e::Address, alias);
         pos++;
     }
     fl_way.build();
 
     //Remplir les poi dans la liste autocompletion
     for(POI poi : pois){
-        fl_poi.add_string(poi.name, poi.idx ,type::Type_e::ePOI, alias);
+        fl_poi.add_string(poi.name, poi.idx ,type::Type_e::POI, alias);
     }
     fl_poi.build();
 }

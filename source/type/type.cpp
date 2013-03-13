@@ -134,38 +134,32 @@ static_data * static_data::get() {
         static_data* temp = new static_data();
 
         boost::assign::insert(temp->types_string)
-                (Type_e::eValidityPattern, "validity_pattern")
-                (Type_e::eLine, "line")
-                (Type_e::eJourneyPattern, "journey_pattern")
-                (Type_e::eVehicleJourney, "vehicle_journey")
-                (Type_e::eStopPoint, "stop_point")
-                (Type_e::eStopArea, "stop_area")
-                (Type_e::eStopTime, "stop_time")
-                (Type_e::eNetwork, "network")
-                (Type_e::ePhysicalMode, "physical_mode")
-                (Type_e::eCommercialMode, "commercial_mode")
-                (Type_e::eCity, "city")
-                (Type_e::eConnection, "connection")
-                (Type_e::eJourneyPatternPoint, "journey_pattern_point")
-                (Type_e::eDistrict, "district")
-                (Type_e::eDepartment, "department")
-                (Type_e::eCompany, "company")
-                (Type_e::eVehicle, "vehicle")
-                (Type_e::eCountry, "country")
-                (Type_e::eWay, "way")
-                (Type_e::eCoord, "coord")
-                (Type_e::eAddress, "address")
-                (Type_e::eRoute, "route");
+                (Type_e::ValidityPattern, "validity_pattern")
+                (Type_e::Line, "line")
+                (Type_e::JourneyPattern, "journey_pattern")
+                (Type_e::VehicleJourney, "vehicle_journey")
+                (Type_e::StopPoint, "stop_point")
+                (Type_e::StopArea, "stop_area")
+                (Type_e::Network, "network")
+                (Type_e::PhysicalMode, "physical_mode")
+                (Type_e::CommercialMode, "commercial_mode")
+                (Type_e::City, "city")
+                (Type_e::Connection, "connection")
+                (Type_e::JourneyPatternPoint, "journey_pattern_point")
+                (Type_e::District, "district")
+                (Type_e::Department, "department")
+                (Type_e::Company, "company")
+                (Type_e::Country, "country")
+                (Type_e::Way, "way")
+                (Type_e::Coord, "coord")
+                (Type_e::Address, "address")
+                (Type_e::Route, "route");
 
         instance = temp;
 
     }
     return instance;
 }
-
-//std::string static_data::getListNameByType(Type_e type){
-//    return instance->types_string.left.at(type) + "_list";
-//}
 
 Type_e static_data::typeByCaption(const std::string & type_str) {
     return instance->types_string.right.at(type_str);
@@ -178,7 +172,7 @@ std::string static_data::captionByType(Type_e type){
 std::vector<idx_t> Country::get(Type_e type, const PT_Data &)  const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eDistrict: return district_list; break;
+    case Type_e::District: return district_list; break;
     default: break;
     }
     return result;
@@ -188,8 +182,8 @@ std::vector<idx_t> Country::get(Type_e type, const PT_Data &)  const {
 std::vector<idx_t> District::get(Type_e type, const PT_Data &)  const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eCountry: result.push_back(country_idx) ; break;
-    case Type_e::eDepartment: return department_list; break;
+    case Type_e::Country: result.push_back(country_idx) ; break;
+    case Type_e::Department: return department_list; break;
     default: break;
     }
     return result;
@@ -198,8 +192,8 @@ std::vector<idx_t> District::get(Type_e type, const PT_Data &)  const {
 std::vector<idx_t> Department::get(Type_e type, const PT_Data &)  const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eDistrict:  result.push_back(district_idx); break;
-    case Type_e::eCity: return city_list; break;
+    case Type_e::District:  result.push_back(district_idx); break;
+    case Type_e::City: return city_list; break;
     default: break;
     }
     return result;
@@ -208,8 +202,8 @@ std::vector<idx_t> Department::get(Type_e type, const PT_Data &)  const {
 std::vector<idx_t> City::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eStopPoint: return stop_point_list; break;
-    case Type_e::eDepartment: result.push_back(department_idx); break;
+    case Type_e::StopPoint: return stop_point_list; break;
+    case Type_e::Department: result.push_back(department_idx); break;
     default: break;
     }
     return result;
@@ -218,8 +212,8 @@ std::vector<idx_t> City::get(Type_e type, const PT_Data &) const {
 std::vector<idx_t> StopArea::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eStopPoint: return this->stop_point_list; break;
-    case Type_e::eCity: result.push_back(city_idx); break;
+    case Type_e::StopPoint: return this->stop_point_list; break;
+    case Type_e::City: result.push_back(city_idx); break;
     default: break;
     }
     return result;
@@ -228,7 +222,7 @@ std::vector<idx_t> StopArea::get(Type_e type, const PT_Data &) const {
 std::vector<idx_t> Network::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eLine: return line_list; break;
+    case Type_e::Line: return line_list; break;
     default: break;
     }
     return result;
@@ -238,7 +232,7 @@ std::vector<idx_t> Network::get(Type_e type, const PT_Data &) const {
 std::vector<idx_t> Company::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eLine: return line_list; break;
+    case Type_e::Line: return line_list; break;
     default: break;
     }
     return result;
@@ -247,7 +241,7 @@ std::vector<idx_t> Company::get(Type_e type, const PT_Data &) const {
 std::vector<idx_t> CommercialMode::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eLine: return line_list; break;
+    case Type_e::Line: return line_list; break;
     default: break;
     }
     return result;
@@ -256,7 +250,7 @@ std::vector<idx_t> CommercialMode::get(Type_e type, const PT_Data &) const {
 std::vector<idx_t> PhysicalMode::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
-        case Type_e::eVehicleJourney:
+        case Type_e::VehicleJourney:
             for(auto vj : data.vehicle_journeys) {
                 if(vj.physical_mode_idx == this->idx)
                     result.push_back(vj.idx);
@@ -270,10 +264,10 @@ std::vector<idx_t> PhysicalMode::get(Type_e type, const PT_Data & data) const {
 std::vector<idx_t> Line::get(Type_e type, const PT_Data&) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eCommercialMode: result.push_back(commercial_mode_idx); break;
-    case Type_e::eCompany: return company_list; break;
-    case Type_e::eNetwork: result.push_back(network_idx); break;
-    case Type_e::eRoute: return route_list; break;
+    case Type_e::CommercialMode: result.push_back(commercial_mode_idx); break;
+    case Type_e::Company: return company_list; break;
+    case Type_e::Network: result.push_back(network_idx); break;
+    case Type_e::Route: return route_list; break;
     default: break;
     }
     return result;
@@ -282,8 +276,8 @@ std::vector<idx_t> Line::get(Type_e type, const PT_Data&) const {
 std::vector<idx_t> Route::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eLine: result.push_back(line_idx); break;
-    case Type_e::eJourneyPattern: return journey_pattern_list; break;
+    case Type_e::Line: result.push_back(line_idx); break;
+    case Type_e::JourneyPattern: return journey_pattern_list; break;
     default: break;
     }
     return result;
@@ -292,10 +286,10 @@ std::vector<idx_t> Route::get(Type_e type, const PT_Data &) const {
 std::vector<idx_t> JourneyPattern::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eRoute: result.push_back(route_idx); break;
-    case Type_e::eCommercialMode: result.push_back(commercial_mode_idx); break;
-    case Type_e::eJourneyPatternPoint: return journey_pattern_point_list; break;
-    case Type_e::eVehicleJourney: return vehicle_journey_list; break;
+    case Type_e::Route: result.push_back(route_idx); break;
+    case Type_e::CommercialMode: result.push_back(commercial_mode_idx); break;
+    case Type_e::JourneyPatternPoint: return journey_pattern_point_list; break;
+    case Type_e::VehicleJourney: return vehicle_journey_list; break;
     default: break;
     }
     return result;
@@ -305,10 +299,10 @@ std::vector<idx_t> JourneyPattern::get(Type_e type, const PT_Data &) const {
 std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eJourneyPattern: result.push_back(journey_pattern_idx); break;
-    case Type_e::eCompany: result.push_back(company_idx); break;
-    case Type_e::ePhysicalMode: result.push_back(physical_mode_idx); break;
-    case Type_e::eValidityPattern: result.push_back(validity_pattern_idx); break;
+    case Type_e::JourneyPattern: result.push_back(journey_pattern_idx); break;
+    case Type_e::Company: result.push_back(company_idx); break;
+    case Type_e::PhysicalMode: result.push_back(physical_mode_idx); break;
+    case Type_e::ValidityPattern: result.push_back(validity_pattern_idx); break;
     default: break;
     }
     return result;
@@ -317,8 +311,8 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data &) const {
 std::vector<idx_t> JourneyPatternPoint::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eJourneyPattern: result.push_back(journey_pattern_idx); break;
-    case Type_e::eStopPoint: result.push_back(stop_point_idx); break;
+    case Type_e::JourneyPattern: result.push_back(journey_pattern_idx); break;
+    case Type_e::StopPoint: result.push_back(stop_point_idx); break;
     default: break;
     }
     return result;
@@ -327,11 +321,10 @@ std::vector<idx_t> JourneyPatternPoint::get(Type_e type, const PT_Data &) const 
 std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eStopArea: result.push_back(stop_area_idx); break;
-    case Type_e::eCity: result.push_back(city_idx); break;
-    case Type_e::ePhysicalMode: result.push_back(physical_mode_idx); break;
-    case Type_e::eJourneyPatternPoint: return journey_pattern_point_list; break;
-    case Type_e::eConnection: for(const Connection & conn : data.stop_point_connections[idx]) {
+    case Type_e::StopArea: result.push_back(stop_area_idx); break;
+    case Type_e::City: result.push_back(city_idx); break;
+    case Type_e::JourneyPatternPoint: return journey_pattern_point_list; break;
+    case Type_e::Connection: for(const Connection & conn : data.stop_point_connections[idx]) {
             result.push_back(conn.idx);
         }
             break;
@@ -343,7 +336,7 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data & data) const {
 std::vector<idx_t> Connection::get(Type_e type, const PT_Data & ) const {
     std::vector<idx_t> result;
     switch(type) {
-    case Type_e::eStopPoint:
+    case Type_e::StopPoint:
         result.push_back(this->departure_stop_point_idx);
         result.push_back(this->destination_stop_point_idx);
         break;
@@ -356,13 +349,13 @@ std::vector<idx_t> Connection::get(Type_e type, const PT_Data & ) const {
 EntryPoint::EntryPoint(const std::string &uri) : uri(uri) {
        size_t pos = uri.find(":");
        if(pos == std::string::npos)
-           type = Type_e::eUnknown;
+           type = Type_e::Unknown;
        else {
            type = static_data::get()->typeByCaption(uri.substr(0,pos));
        }
 
        // Gestion des adresses
-       if (type == Type_e::eAddress){
+       if (type == Type_e::Address){
            std::vector<std::string> vect;
            vect = split_string(uri, ":");
            if(vect.size() == 3){
@@ -371,7 +364,7 @@ EntryPoint::EntryPoint(const std::string &uri) : uri(uri) {
            }
        }
 
-       if(type == Type_e::eCoord){
+       if(type == Type_e::Coord){
            size_t pos2 = uri.find(":", pos+1);
            try{
                if(pos2 != std::string::npos) {

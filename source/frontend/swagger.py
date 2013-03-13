@@ -1,7 +1,6 @@
-from werkzeug.wrappers import Response
-import json
 from validate import *
 from instance_manager import NavitiaManager
+import copy
 
 def convertType(validator):
     if validator == str :
@@ -16,7 +15,7 @@ def convertType(validator):
         return "float"
     elif validator == boolean:
         return "boolean"
-    elif validator == entrypoint:
+    elif validator == entrypoint():
         return '<a href="http://www.navitia.io/#entrypoints">entrypoint</a>'
     elif validator == filter:
         return '<a href="http://www.navitia.io/#filter">filter</a>'
@@ -61,7 +60,7 @@ def api_doc(apis, api = None) :
             version['allowMultiple'] = False
             params.append(version)
             path += "{version}/"
-            
+
             if not("regions" in apis[api]) or apis[api]["regions"]:
                 regions = {}
                 regions['name'] = 'region'
@@ -86,16 +85,17 @@ def api_doc(apis, api = None) :
                             "nickname" : api,
                             "responseClass" : "void",
                             "parameters" : params,
-                            }
-                            ]
+                            }]
             })
             if "universal" in apis[api] and apis[api]["universal"]:
-                for param in params : 
-                    if(param['dataType'] == convertType(entrypoint)):
+                params_universal = copy.deepcopy(params)
+                i = 0
+                for param in params_universal : 
+                    if param['dataType'] == convertType(entrypoint):
                         param['description'] += " (can only be a coord)"
-
-
-                params.pop()
+                    if param['name'] == 'region':
+                        del params_universal[i]
+                    i+=1                
                 response['apis'].append({
                         "path" : "/{version}/"+api+".format",
                         "description" : apis[api]["description"] if "description" in apis[api] else "",
@@ -104,7 +104,7 @@ def api_doc(apis, api = None) :
                             "summary" : apis[api]["description"] if "description" in apis[api] else "",
                             "nickname" : api+"_universal",
                             "responseClass" : "void",
-                            "parameters" : params,
+                            "parameters" : params_universal,
                             }]
                 })
 

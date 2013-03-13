@@ -69,11 +69,19 @@ def datetime_validator(value):
         raise ValidationTypeException("datetime")
 
     return value
-valid_types = ("validity_pattern", "line", "route", "vehicle_journey",
+
+    
+def entrypoint(valid_types = None):
+    if valid_types == None:
+        types = ("validity_pattern", "line", "route", "vehicle_journey",
         "stop_point", "stop_area", "stop_time", "network", "mode", "commercial_mode",
         "city", "connection", "route_point", "district", "department", "company", " vehicle", "country", "way", "coord", "address")
+    else:
+        types  = valid_types
+    return lambda value : entrypoint_validator(value, types)
 
-def entrypoint(value):
+
+def entrypoint_validator(value, valid_types=None):
     m = re.match(r"^(?P<type>(\w)+):", value)
     if not m or m.groupdict()["type"] not in valid_types:
         raise ValidationTypeException("entrypoint")
@@ -122,9 +130,6 @@ def validate_arguments(request, validation_dict) :
                 response.details[key] = {"status", "missing"}
             else:
                 response.arguments[key] = value.defaultValue
-    
-
-
 
     return response
 

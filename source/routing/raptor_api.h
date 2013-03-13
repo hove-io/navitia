@@ -1,6 +1,8 @@
 #pragma once
 #include "raptor.h"
 #include "type/type.pb.h"
+#include "type/response.pb.h"
+#include "type/request.pb.h"
 #include "boost/date_time/posix_time/ptime.hpp"
 #include "georef/street_network.h"
 

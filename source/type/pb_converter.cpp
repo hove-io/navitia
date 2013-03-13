@@ -7,10 +7,38 @@ namespace nt = navitia::type;
 namespace pt = boost::posix_time;
 namespace navitia{
 
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::ValidityPattern* /*validity_pattern*/, int, const pt::ptime&, const pt::time_period& ){
+    const nt::ValidityPattern &vp = data.pt_data.validity_patterns.at(idx);
+}
+
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Department* department, int, const pt::ptime&, const pt::time_period& ){
+    if(idx == type::invalid_idx)
+        return ;
+    const nt::Department &d = data.pt_data.departments.at(idx);
+    department->set_uri(d.uri);
+    department->set_name(d.name);
+}
+
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::District* district, int, const pt::ptime&, const pt::time_period& ){
+    if(idx == type::invalid_idx)
+        return ;
+    const nt::District &d = data.pt_data.districts.at(idx);
+    district->set_uri(d.uri);
+    district->set_name(d.name);
+}
+
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Country* country, int, const pt::ptime&, const pt::time_period& ){
+    if(idx == type::invalid_idx)
+        return ;
+    const nt::Country &c = data.pt_data.countries.at(idx);
+    country->set_uri(c.uri);
+    country->set_name(c.name);
+}
+
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::City* city, int, const pt::ptime&, const pt::time_period& ){
-    nt::City city_n = data.pt_data.cities.at(idx);
-    city->set_id(city_n.id);
-    city->set_id(city_n.id);
+    if(idx == type::invalid_idx)
+        return ;
+    const nt::City &city_n = data.pt_data.cities.at(idx);
     city->set_zip_code(city_n.main_postal_code);
     city->set_uri(city_n.uri);
     city->set_name(city_n.name);
@@ -20,8 +48,9 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::City* city, 
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* stop_area, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period){
-    nt::StopArea sa = data.pt_data.stop_areas.at(idx);
-    stop_area->set_id(sa.id);
+    if(idx == type::invalid_idx)
+        return ;
+    const nt::StopArea &sa = data.pt_data.stop_areas.at(idx);
     stop_area->set_uri(sa.uri);
     stop_area->set_name(sa.name);
     stop_area->mutable_coord()->set_lon(sa.coord.lon());
@@ -36,8 +65,9 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* st
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* stop_point, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period){
-    nt::StopPoint sp = data.pt_data.stop_points.at(idx);
-    stop_point->set_id(sp.id);
+    if(idx == type::invalid_idx)
+        return ;
+    const nt::StopPoint &sp = data.pt_data.stop_points.at(idx);
     stop_point->set_uri(sp.uri);
     stop_point->set_name(sp.name);
     stop_point->mutable_coord()->set_lon(sp.coord.lon());
@@ -55,6 +85,8 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * address, int house_number,
         type::GeographicalCoord& coord, int max_depth, const pt::ptime& now, const pt::time_period& action_period){
+    if(idx == type::invalid_idx)
+        return ;
     navitia::georef::Way way = data.geo_ref.ways.at(idx);
     address->set_name(way.name);
     if(house_number >= 0){
@@ -69,6 +101,8 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * ad
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line, int depth,
         const pt::ptime&, const pt::time_period&){
+    if(idx == type::invalid_idx)
+        return ;
     navitia::type::Line l = data.pt_data.lines.at(idx);
     line->set_code(l.code);
     line->set_color(l.color);
@@ -83,9 +117,10 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line,
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::JourneyPattern * journey_pattern, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period){
+    if(idx == type::invalid_idx)
+        return ;
     navitia::type::JourneyPattern r = data.pt_data.journey_patterns.at(idx);
     journey_pattern->set_name(r.name);
-    journey_pattern->set_id(r.id);
     journey_pattern->set_uri(r.uri);
     if(max_depth > 0 && r.route_idx != type::invalid_idx)
         fill_pb_object(r.route_idx, data, journey_pattern->mutable_route(), max_depth - 1, now, action_period);
@@ -97,47 +132,54 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::JourneyPatte
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Route * route, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period){
+    if(idx == type::invalid_idx)
+        return ;
     navitia::type::Route r = data.pt_data.routes.at(idx);
     route->set_name(r.name);
     route->set_uri(r.uri);
-    route->set_id(r.id);
     if(max_depth > 0 && r.line_idx != type::invalid_idx)
         fill_pb_object(r.line_idx, data, route->mutable_line(), max_depth - 1, now, action_period);
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Network * network, int,
         const pt::ptime&, const pt::time_period&){
+    if(idx == type::invalid_idx)
+        return ;
     navitia::type::Network n = data.pt_data.networks.at(idx);
     network->set_name(n.name);
-    network->set_id(n.id);
     network->set_uri(n.uri);
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::CommercialMode * commercial_mode,
         int, const pt::ptime&, const pt::time_period&){
+    if(idx == type::invalid_idx)
+        return ;
     navitia::type::CommercialMode m = data.pt_data.commercial_modes.at(idx);
     commercial_mode->set_name(m.name);
-    commercial_mode->set_id(m.id);
     commercial_mode->set_uri(m.uri);
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::PhysicalMode * physical_mode, int,
         const pt::ptime&, const pt::time_period&){
+    if(idx == type::invalid_idx)
+        return ;
     navitia::type::PhysicalMode m = data.pt_data.physical_modes.at(idx);
     physical_mode->set_name(m.name);
-    physical_mode->set_id(m.id);
     physical_mode->set_uri(m.uri);
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Company * company, int, const pt::ptime&, const pt::time_period&){
+    if(idx == type::invalid_idx)
+        return ;
     navitia::type::Company c = data.pt_data.companies.at(idx);
     company->set_name(c.name);
-    company->set_id(c.id);
     company->set_uri(c.uri);
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Connection * connection, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period){
+    if(idx == type::invalid_idx)
+        return ;
     navitia::type::Connection c = data.pt_data.connections.at(idx);
     connection->set_seconds(c.duration);
     if(c.departure_stop_point_idx != type::invalid_idx && c.destination_stop_point_idx != type::invalid_idx && max_depth > 0){
@@ -148,6 +190,8 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Connection *
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::VehicleJourney * vehicle_journey, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period){
+    if(idx == type::invalid_idx)
+        return ;
     navitia::type::VehicleJourney vj = data.pt_data.vehicle_journeys.at(idx);
     vehicle_journey->set_name(vj.name);
     vehicle_journey->set_uri(vj.uri);
@@ -158,6 +202,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::VehicleJourn
         for(type::idx_t stop_time_idx : vj.stop_time_list) {
             fill_pb_object(stop_time_idx, data, vehicle_journey->add_stop_times(), max_depth -1, now, action_period);
         }
+        fill_pb_object(vj.physical_mode_idx, data, vehicle_journey->mutable_physical_mode(), max_depth-1, now, action_period);
     }
 
     BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(vj.uri, now, action_period)){
@@ -167,6 +212,8 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::VehicleJourn
 
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopTime *stop_time, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period) {
+    if(idx == type::invalid_idx)
+        return ;
     navitia::type::StopTime st = data.pt_data.stop_times.at(idx);
     boost::posix_time::ptime d = boost::posix_time::from_iso_string("19700101");
     boost::posix_time::ptime p = d +  boost::posix_time::seconds(st.arrival_time);
@@ -184,8 +231,9 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopTime
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::JourneyPatternPoint * journey_pattern_point, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period){
+    if(idx == type::invalid_idx)
+        return ;
     navitia::type::JourneyPatternPoint rp = data.pt_data.journey_pattern_points.at(idx);
-    journey_pattern_point->set_id(rp.id);
     journey_pattern_point->set_uri(rp.uri);
     journey_pattern_point->set_order(rp.order);
     if(rp.stop_point_idx != type::invalid_idx && max_depth > 0)

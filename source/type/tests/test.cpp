@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(uri_sa) {
     std::string uri("stop_area:moo:uri");
     EntryPoint ep(uri);
 
-    BOOST_CHECK(ep.type == Type_e::eStopArea);
+    BOOST_CHECK(ep.type == Type_e::StopArea);
 
     // On garde le prefixe de type
     BOOST_CHECK_EQUAL(ep.uri, "stop_area:moo:uri");
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(uri_coord) {
     std::string uri("coord:2.2:4.42");
     EntryPoint ep(uri);
 
-    BOOST_CHECK(ep.type == Type_e::eCoord);
+    BOOST_CHECK(ep.type == Type_e::Coord);
     BOOST_CHECK_CLOSE(ep.coordinates.lon(), 2.2, 1e-6);
     BOOST_CHECK_CLOSE(ep.coordinates.lat(), 4.42, 1e-6);
 

@@ -19,18 +19,10 @@ void fill_section(pbnavitia::Section *pb_section, navitia::type::idx_t vj_idx,
     const type::JourneyPattern & jp = d.pt_data.journey_patterns[vj.journey_pattern_idx];
     const type::Route & route = d.pt_data.routes[jp.route_idx];
     const type::Line & line = d.pt_data.lines[route.line_idx];
-    if(line.network_idx != type::invalid_idx)
-        pb_section->set_network(d.pt_data.networks[line.network_idx].name );
-    else
-        pb_section->set_network("");
-    if(vj.physical_mode_idx != type::invalid_idx)
-        pb_section->set_mode(d.pt_data.physical_modes[vj.physical_mode_idx].name);
-    pb_section->set_code(line.code);
-    pb_section->set_headsign(vj.name);
-    pb_section->set_direction(route.name);
     fill_pb_object(vj_idx, d, pb_section->mutable_vehicle_journey(), 0, now, action_period);
     fill_pb_object(route.idx, d, pb_section->mutable_vehicle_journey()->mutable_route(), 0, now, action_period);
     fill_pb_object(line.idx, d, pb_section->mutable_vehicle_journey()->mutable_route()->mutable_line(), 0, now, action_period);
+    fill_pb_object(vj.physical_mode_idx, d, pb_section->mutable_vehicle_journey()->mutable_physical_mode(), 0, now, action_period);
 }
 
 pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths, const nt::Data & d, streetnetwork::StreetNetwork & worker) {
@@ -144,24 +136,24 @@ get_stop_points(const type::EntryPoint &ep, const type::Data & data,
     std::vector<std::pair<type::idx_t, double> > result;
 
     switch(ep.type) {
-    case navitia::type::Type_e::eStopArea:
+    case navitia::type::Type_e::StopArea:
     {
-        auto it = data.pt_data.stop_area_map.find(ep.uri);
-        if(it!= data.pt_data.stop_area_map.end()) {
+        auto it = data.pt_data.stop_areas_map.find(ep.uri);
+        if(it!= data.pt_data.stop_areas_map.end()) {
             for(auto spidx : data.pt_data.stop_areas[it->second].stop_point_list) {
                 result.push_back(std::make_pair(spidx, 0));
             }
         }
     } break;
-    case type::Type_e::eStopPoint: {
-        auto it = data.pt_data.stop_point_map.find(ep.uri);
-        if(it != data.pt_data.stop_point_map.end()){
+    case type::Type_e::StopPoint: {
+        auto it = data.pt_data.stop_points_map.find(ep.uri);
+        if(it != data.pt_data.stop_points_map.end()){
             result.push_back(std::make_pair(data.pt_data.stop_points[it->second].idx, 0));
         }
     } break;
         // AA gestion des adresses
-    case type::Type_e::eAddress:
-    case type::Type_e::eCoord: {
+    case type::Type_e::Address:
+    case type::Type_e::Coord: {
         result = worker.find_nearest_stop_points(ep.coordinates, data.pt_data.stop_point_proximity_list, walking_distance, use_second);
     } break;
     default: break;

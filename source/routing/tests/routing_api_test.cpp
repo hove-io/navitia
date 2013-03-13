@@ -15,6 +15,7 @@ BOOST_AUTO_TEST_CASE(simple_journey){
     navimake::builder b("20120614");
     b.vj("A")("stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
     type::Data data;
+    b.generate_dummy_basis();
     b.build(data.pt_data);
     data.build_raptor();
     data.meta.production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -53,6 +54,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
     b.vj("A")("stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
     b.vj("A")("stop1", 9*3600 +10*60, 9*3600 + 11 * 60)("stop2",  9*3600 + 20 * 60 ,9*3600 + 21*60);
     type::Data data;
+    b.generate_dummy_basis();
     b.build(data.pt_data);
     data.build_raptor();
     data.meta.production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));

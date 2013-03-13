@@ -5,6 +5,8 @@ import ConfigParser
 import zmq
 from threading import Lock, Thread, Event
 import type_pb2
+import request_pb2
+import response_pb2
 import glob
 from singleton import singleton
 
@@ -79,7 +81,7 @@ class NavitiaManager:
             if socks.get(instance.socket) == zmq.POLLIN:
                 pb = instance.socket.recv()
                 instance.lock.release()
-                resp = type_pb2.Response()
+                resp = response_pb2.Response()
                 resp.ParseFromString(pb)
                 return resp
             else :
@@ -97,7 +99,7 @@ class NavitiaManager:
 
 
     def thread_ping(self, timer=1):
-        req = type_pb2.Request()
+        req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
         while not self.thread_event.is_set():
             for key, instance in self.instances.iteritems():

@@ -1,68 +1,23 @@
 #pragma once
 #include "data.h"
 #include "type/type.pb.h"
-
+#include "type/response.pb.h"
 
 #define null_time_period boost::posix_time::time_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0))
 
 namespace navitia{
-void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::City* city, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+#define FILL_PB_CONSTRUCTOR(type_name, collection_name)\
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::type_name *, int max_depth = 0,\
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,\
         const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopArea* stop_area, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopPoint* stop_point, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
+    ITERATE_NAVITIA_PT_TYPES(FILL_PB_CONSTRUCTOR)
+#undef FILL_PB_CONSTRUCTOR
 
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Address* address, int house_number,type::GeographicalCoord& coord,
         int max_depth = 0, const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Line* line, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::JourneyPattern* journey_pattern, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Route* journey_pattern, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Network* network, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::CommercialMode * commercial_mode, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::PhysicalMode * physical_mode, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Connection * connection, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::JourneyPatternPoint * journey_pattern_point, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Company * company, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
-
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopDateTime *stop_time, int max_depth = 0,
-        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-        const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::VehicleJourney *vehicle_journey, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 

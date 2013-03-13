@@ -1,5 +1,7 @@
 # coding=utf-8
 import type_pb2
+import request_pb2
+import response_pb2
 import json
 import dict2xml
 import copy
@@ -20,7 +22,7 @@ def on_index(request, version = None, region = None ):
 def on_regions(request, version, format):
     response = {'requested_api': 'REGIONS', 'regions': []}
     for region in NavitiaManager().instances.keys() : 
-        req = type_pb2.Request()
+        req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
         try:
             resp = NavitiaManager().send_and_receive(req, region)
@@ -37,13 +39,13 @@ def on_regions(request, version, format):
 
 
 def on_status(request_args, request, region):
-    req = type_pb2.Request()
+    req = request_pb2.Request()
     req.requested_api = type_pb2.STATUS
     resp = NavitiaManager().send_and_receive(req, region)
     return resp
 
 def on_metadatas(request_args, request, region):
-    req = type_pb2.Request()
+    req = request_pb2.Request()
     req.requested_api = type_pb2.METADATAS
     resp = NavitiaManager().send_and_receive(req, region)
     return resp
@@ -51,7 +53,7 @@ def on_metadatas(request_args, request, region):
 
 
 def on_load(request, region, format):
-    req = type_pb2.Request()
+    req = request_pb2.Request()
     req.requested_api = type_pb2.LOAD
     resp = NavitiaManager().send_and_receive(req, region)
     return render_from_protobuf(resp, format, request.args.get('callback'))
@@ -66,9 +68,10 @@ pb_type = {
         }
 
 def on_autocomplete(request_args, version, region):
-    req = type_pb2.Request()
+    req = request_pb2.Request()
     req.requested_api = type_pb2.AUTOCOMPLETE
     req.autocomplete.name = request_args['name']
+    req.autocomplete.depth = request_args['depth']
     for object_type in request_args["object_type[]"]:
         req.autocomplete.types.append(pb_type[object_type])
 
@@ -77,7 +80,7 @@ def on_autocomplete(request_args, version, region):
 
 
 def stop_times(request_args, version, region, departure_filter, arrival_filter, api):
-    req = type_pb2.Request()
+    req = request_pb2.Request()
     req.requested_api = api
     req.next_stop_times.departure_filter = departure_filter
     req.next_stop_times.arrival_filter = arrival_filter
@@ -86,7 +89,6 @@ def stop_times(request_args, version, region, departure_filter, arrival_filter, 
     req.next_stop_times.duration = request_args["duration"]
     req.next_stop_times.depth = request_args["depth"]
     req.next_stop_times.nb_stoptimes = request_args["nb_stoptimes"] if "nb_stoptimes" in request_args else 0
-    req.next_stop_times.wheelchair = request_args["wheelchair"]
     resp = NavitiaManager().send_and_receive(req, region)
     return resp
 
@@ -107,11 +109,12 @@ def on_departure_board(request_args, version, region):
     return stop_times(request_args, version, region, request_args["filter"], "", type_pb2.DEPARTURE_BOARD)
 
 def on_proximity_list(request_args, version, region):
-    req = type_pb2.Request()
+    req = request_pb2.Request()
     req.requested_api = type_pb2.PROXIMITY_LIST
     req.proximity_list.coord.lon = request_args["lon"]
     req.proximity_list.coord.lat = request_args["lat"]
     req.proximity_list.distance = request_args["distance"]
+    req.proximity_list.depth = request_args["depth"]
     for object_type in request_args["object_type[]"]:
         req.proximity_list.types.append(pb_type[object_type])
     resp = NavitiaManager().send_and_receive(req, region)
@@ -119,7 +122,7 @@ def on_proximity_list(request_args, version, region):
 
 
 def journeys(requested_type, request_args, version, region):
-    req = type_pb2.Request()
+    req = request_pb2.Request()
     req.requested_api = requested_type
 
     req.journeys.origin = request_args["origin"]
@@ -131,7 +134,6 @@ def journeys(requested_type, request_args, version, region):
     #req.journeys.forbiddenroute += request.args.getlist('forbiddenroute[]')
     req.journeys.walking_speed = request_args["walking_speed"]
     req.journeys.walking_distance = request_args["walking_distance"]
-    req.journeys.wheelchair = request_args["wheelchair"]
     resp = NavitiaManager().send_and_receive(req, region)
     return resp
 
@@ -148,7 +150,7 @@ def on_journeys(requested_type):
 
 
 def ptref(requested_type, request_args, version, region):
-    req = type_pb2.Request()
+    req = request_pb2.Request()
     req.requested_api = type_pb2.PTREFERENTIAL
 
     req.ptref.requested_type = requested_type

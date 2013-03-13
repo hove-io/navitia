@@ -155,20 +155,8 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
     std::vector<idx_t> indexes;
     for(const Filter & filter : filters){
         switch(filter.navitia_type){
-        case Type_e::eLine: indexes = get_indexes<Line>(filter, requested_type, data); break;
-        case Type_e::eValidityPattern: indexes = get_indexes<ValidityPattern>(filter, requested_type, data); break;
-        case Type_e::eJourneyPattern: indexes = get_indexes<JourneyPattern>(filter, requested_type, data); break;
-        case Type_e::eStopPoint: indexes = get_indexes<StopPoint>(filter, requested_type, data); break;
-        case Type_e::eStopArea: indexes = get_indexes<StopArea>(filter, requested_type, data); break;
-        case Type_e::eNetwork: indexes = get_indexes<Network>(filter, requested_type, data); break;
-        case Type_e::ePhysicalMode: indexes = get_indexes<PhysicalMode>(filter, requested_type, data); break;
-        case Type_e::eCommercialMode: indexes = get_indexes<CommercialMode>(filter, requested_type, data); break;
-        case Type_e::eCity: indexes = get_indexes<City>(filter, requested_type, data); break;
-        case Type_e::eConnection: indexes = get_indexes<Connection>(filter, requested_type, data); break;
-        case Type_e::eJourneyPatternPoint: indexes = get_indexes<JourneyPatternPoint>(filter, requested_type, data); break;
-        case Type_e::eCompany: indexes = get_indexes<Company>(filter, requested_type, data); break;
-        case Type_e::eVehicleJourney : indexes = get_indexes<VehicleJourney>(filter, requested_type, data); break;
-        case Type_e::eRoute: indexes = get_indexes<Route>(filter, requested_type, data); break;
+#define GET_INDEXES(type_name, collection_name) case Type_e::type_name: indexes = get_indexes<type_name>(filter, requested_type, data); break;
+        ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
         default:
             throw parsing_error(parsing_error::partial_error,"Filter: Unable to find the requested type. Not parsed: >>" + nt::static_data::get()->captionByType(filter.navitia_type) + "<<");
         }

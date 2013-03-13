@@ -20,12 +20,12 @@ BOOST_AUTO_TEST_CASE(parse_state_test){
     std::map<std::string, std::string> alias;
 
     Autocomplete<unsigned int> ac;
-    ac.add_string("rue jean jaures", 0, navitia::type::Type_e::eStopArea, alias);
-    ac.add_string("place jean jaures", 1, navitia::type::Type_e::eStopArea, alias);
-    ac.add_string("rue jeanne d'arc", 2, navitia::type::Type_e::eStopPoint, alias);
-    ac.add_string("avenue jean jaures", 3, navitia::type::Type_e::eStopPoint, alias);
-    ac.add_string("boulevard poniatowski", 4, navitia::type::Type_e::eStopPoint, alias);
-    ac.add_string("pente de Bray", 5, navitia::type::Type_e::eStopPoint, alias);
+    ac.add_string("rue jean jaures", 0, navitia::type::Type_e::StopArea, alias);
+    ac.add_string("place jean jaures", 1, navitia::type::Type_e::StopArea, alias);
+    ac.add_string("rue jeanne d'arc", 2, navitia::type::Type_e::StopPoint, alias);
+    ac.add_string("avenue jean jaures", 3, navitia::type::Type_e::StopPoint, alias);
+    ac.add_string("boulevard poniatowski", 4, navitia::type::Type_e::StopPoint, alias);
+    ac.add_string("pente de Bray", 5, navitia::type::Type_e::StopPoint, alias);
     ac.build();    
 
     auto res = ac.find("rue jean jaures");
@@ -119,12 +119,12 @@ BOOST_AUTO_TEST_CASE(parse_state_nb_found_test){
         Autocomplete<unsigned int> ac;
 
 
-        ac.add_string("place jean jaures", 0, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("rue jeanne d'arc", 1, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("avenue jean jaures", 2, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("boulevard poniatowski", 3, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("pente de Bray", 4, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("rue jean jaures", 5, navitia::type::Type_e::eStopArea, alias);
+        ac.add_string("place jean jaures", 0, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("rue jeanne d'arc", 1, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("avenue jean jaures", 2, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("boulevard poniatowski", 3, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("pente de Bray", 4, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("rue jean jaures", 5, navitia::type::Type_e::StopArea, alias);
 
         ac.build();
 
@@ -166,15 +166,15 @@ BOOST_AUTO_TEST_CASE(autocomplete_find_quality_test){
         int word_weight = 5;
 
         Autocomplete<unsigned int> ac;
-        ac.add_string("rue jeanne d'arc", 0, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("place jean jaures", 1, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("rue jean paul gaultier paris", 2, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("avenue jean jaures", 3, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("boulevard poniatowski", 4, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("pente de Bray", 5, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("rue jean jaures", 6, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("rue jean zay ", 7, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("place jean paul gaultier ", 8, navitia::type::Type_e::eStopArea, alias);
+        ac.add_string("rue jeanne d'arc", 0, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("place jean jaures", 1, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("rue jean paul gaultier paris", 2, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("avenue jean jaures", 3, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("boulevard poniatowski", 4, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("pente de Bray", 5, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("rue jean jaures", 6, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("rue jean zay ", 7, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("place jean paul gaultier ", 8, navitia::type::Type_e::StopArea, alias);
 
         ac.build();
 
@@ -223,16 +223,16 @@ BOOST_AUTO_TEST_CASE(autocomplete_alias_and_weight_test){
         alias["pl"]="place";
 
         Autocomplete<unsigned int> ac;
-        ac.add_string("rue jeanne d'arc", 0, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("place jean jaures", 1, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("rue jean paul gaultier paris", 2, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("avenue jean jaures", 3, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("boulevard poniatowski", 4, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("pente de Bray", 5, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("rue jean jaures", 6, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("rue jean zay ", 7, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("place jean paul gaultier ", 8, navitia::type::Type_e::eStopArea, alias);
-        ac.add_string("hopital paul gaultier", 8, navitia::type::Type_e::ePOI, alias);
+        ac.add_string("rue jeanne d'arc", 0, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("place jean jaures", 1, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("rue jean paul gaultier paris", 2, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("avenue jean jaures", 3, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("boulevard poniatowski", 4, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("pente de Bray", 5, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("rue jean jaures", 6, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("rue jean zay ", 7, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("place jean paul gaultier ", 8, navitia::type::Type_e::StopArea, alias);
+        ac.add_string("hopital paul gaultier", 8, navitia::type::Type_e::POI, alias);
 
         ac.build();
 

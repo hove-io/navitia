@@ -120,6 +120,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
     for(const type::JourneyPattern & journey_pattern : data.journey_patterns) {
         first_stop_time.push_back(arrival_times.size());
         nb_trips.push_back(journey_pattern.vehicle_journey_list.size());
+        // On regroupe ensemble tous les horaires de tous les journey_pattern_point
         for(unsigned int i=0; i < journey_pattern.journey_pattern_point_list.size(); ++i) {
             std::vector<type::idx_t> vec_stdix;
             for(type::idx_t vjidx : journey_pattern.vehicle_journey_list) {

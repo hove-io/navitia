@@ -51,7 +51,7 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
 
     pbnavitia::DepartureBoard * dep_board = handler.pb_response.mutable_departure_board();
 
-    std::map<stop_point_line, vector_dt_st> map_line_stop_point;
+    std::map<stop_point_line, vector_dt_st> map_route_stop_point;
     // On regroupe entre eux les stop_times appartenant au meme couple (stop_point, route)
     // On veut en effet afficher les départs regroupés par route (une route étant une vague direction commerciale
     for(type::idx_t journey_pattern_point_idx : handler.journey_pattern_points) {
@@ -61,9 +61,9 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
         auto stop_times = get_stop_times({journey_pattern_point_idx}, handler.date_time, handler.max_datetime, std::numeric_limits<int>::max(), data);
 
         auto key = std::make_pair(stop_point_idx, route_idx);
-        auto iter = map_line_stop_point.find(key);
-        if(iter == map_line_stop_point.end()) {
-            iter = map_line_stop_point.insert(std::make_pair(key, vector_dt_st())).first;
+        auto iter = map_route_stop_point.find(key);
+        if(iter == map_route_stop_point.end()) {
+            iter = map_route_stop_point.insert(std::make_pair(key, vector_dt_st())).first;
         }
 
         iter->second.insert(iter->second.end(), stop_times.begin(), stop_times.end());
@@ -72,11 +72,11 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
     auto current_time = pt::second_clock::local_time();
     pt::time_period action_period(to_posix_time(handler.date_time, data), to_posix_time(handler.max_datetime, data));
 
-    for(auto id_vec : map_line_stop_point) {
+    for(auto id_vec : map_route_stop_point) {
 
         auto board = dep_board->add_boards();
         fill_pb_object(id_vec.first.first, data, board->mutable_stop_point(), 0, current_time, action_period);
-        fill_pb_object(id_vec.first.second, data, board->mutable_line(), 0, current_time, action_period);
+        fill_pb_object(id_vec.first.second, data, board->mutable_route(), 0, current_time, action_period);
 
         auto vec_st = id_vec.second;
         std::sort(vec_st.begin(), vec_st.end(),
