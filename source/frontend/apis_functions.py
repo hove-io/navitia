@@ -61,7 +61,8 @@ pb_type = {
         'stop_area': type_pb2.STOP_AREA,
         'stop_point': type_pb2.STOP_POINT,
         'city': type_pb2.CITY,
-        'address': type_pb2.ADDRESS
+        'address': type_pb2.ADDRESS,
+	'poi': type_pb2.POI 
         }
 
 def on_autocomplete(request_args, version, region):
