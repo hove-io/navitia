@@ -16,6 +16,7 @@ enum NavitiaType {
     COUNTRY = 17;
     ADDRESS = 22;
     ROUTE = 23;
+    POI = 24;
 }
 
 
@@ -144,6 +145,14 @@ message City {
     optional string zip_code = 2;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
+}
+
+message Poi {
+    optional string id = 1;
+    optional string uri = 3;
+    optional string name = 4;
+    optional GeographicalCoord coord = 6;
+    optional City city = 5;
 }
 
 message Network {

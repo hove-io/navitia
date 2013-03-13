@@ -13,7 +13,7 @@ PT_Data& PT_Data::operator=(PT_Data&& other){
     // First letter
     stop_area_autocomplete = other.stop_area_autocomplete;
     city_autocomplete = other.city_autocomplete;
-    stop_point_autocomplete = other.stop_point_autocomplete;
+    stop_point_autocomplete = other.stop_point_autocomplete;    
 
     // Proximity list
     stop_area_proximity_list = other.stop_area_proximity_list;
@@ -71,28 +71,28 @@ std::vector<idx_t> PT_Data::get_all_index(Type_e type) const {
 ITERATE_NAVITIA_PT_TYPES(GET_DATA)
 
 
-void PT_Data::build_autocomplete(){
+void PT_Data::build_autocomplete(const std::map<std::string, std::string> & map_alias){
     for(const StopArea & sa : this->stop_areas){
         if(sa.city_idx < this->cities.size())
-            this->stop_area_autocomplete.add_string(sa.name + " " + cities[sa.city_idx].name, sa.idx);
+            this->stop_area_autocomplete.add_string(sa.name + " " + cities[sa.city_idx].name, sa.idx,type::Type_e::StopArea, map_alias);
         else
-            this->stop_area_autocomplete.add_string(sa.name, sa.idx);
+            this->stop_area_autocomplete.add_string(sa.name, sa.idx,type::Type_e::StopArea, map_alias);
     }
 
     this->stop_area_autocomplete.build();
 
     for(const StopPoint & sp : this->stop_points){
         if(sp.city_idx < this->cities.size())
-            this->stop_point_autocomplete.add_string(sp.name + " " + cities[sp.city_idx].name, sp.idx);
+            this->stop_point_autocomplete.add_string(sp.name + " " + cities[sp.city_idx].name, sp.idx, type::Type_e::StopPoint, map_alias);
         else
-            this->stop_point_autocomplete.add_string(sp.name, sp.idx);
+            this->stop_point_autocomplete.add_string(sp.name, sp.idx, type::Type_e::StopPoint, map_alias);
     }
 
     this->stop_point_autocomplete.build();
 
 
     for(const City & city : cities){
-        this->city_autocomplete.add_string(city.name, city.idx);
+        this->city_autocomplete.add_string(city.name, city.idx, type::Type_e::City, map_alias);
     }
     this->city_autocomplete.build();
 }
