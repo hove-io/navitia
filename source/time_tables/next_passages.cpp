@@ -1,12 +1,17 @@
-#include "next_stop_times.h"
+#include "next_passages.h"
 #include "get_stop_times.h"
 #include "request_handle.h"
+#include "boost/date_time/posix_time/posix_time.hpp"
 
+namespace pt = boost::posix_time;
 
 namespace navitia { namespace timetables {
 
 template<typename Visitor>
-pbnavitia::Response next_stop_times(const std::string &request, const std::string &str_dt, uint32_t duration, uint32_t nb_stoptimes, const int depth, const bool wheelchair, type::Data & data, Visitor vis) {
+pbnavitia::Response 
+next_passages(const std::string &request, const std::string &str_dt,
+              uint32_t duration, uint32_t nb_stoptimes, const int depth,
+              const bool wheelchair, type::Data & data, Visitor vis) {
     RequestHandle handler(vis.api_str, request, str_dt, duration,data);
 
     handler.pb_response.set_requested_api(vis.api_pb);
@@ -18,13 +23,22 @@ pbnavitia::Response next_stop_times(const std::string &request, const std::strin
 
     auto departures_dt_idx = get_stop_times(handler.journey_pattern_points, handler.date_time, handler.max_datetime, nb_stoptimes, data, wheelchair);
 
+    auto now = pt::second_clock::local_time();
+    pt::time_period action_period(to_posix_time(handler.date_time, data), to_posix_time(handler.max_datetime, data));
+    
     for(auto dt_idx : departures_dt_idx) {
-        pbnavitia::StopDateTime * stoptime = handler.pb_response.mutable_nextstoptimes()->add_stop_date_times();
-        stoptime->set_departure_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
-        stoptime->set_arrival_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
+        pbnavitia::Passage * passage = handler.pb_response.mutable_next_passages()->add_passages();
+        passage->mutable_stop_date_time()->set_departure_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
+        passage->mutable_stop_date_time()->set_arrival_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
         const auto &rp = data.pt_data.journey_pattern_points[data.pt_data.stop_times[dt_idx.second].journey_pattern_point_idx];
-
-        fill_pb_object(rp.stop_point_idx, data, stoptime->mutable_stop_point(), depth);
+        fill_pb_object(rp.stop_point_idx, data, passage->mutable_stop_point(), depth, now, action_period);
+        const type::VehicleJourney & vj = data.pt_data.vehicle_journeys[data.pt_data.stop_times[dt_idx.second].vehicle_journey_idx];
+        const type::JourneyPattern & jp = data.pt_data.journey_patterns[vj.journey_pattern_idx];
+        const type::Route & route = data.pt_data.routes[jp.route_idx];
+        const type::Line & line = data.pt_data.lines[route.line_idx];
+        fill_pb_object(vj.idx, data, passage->mutable_vehicle_journey(), 0, now, action_period);
+        fill_pb_object(route.idx, data, passage->mutable_vehicle_journey()->mutable_route(), 0, now, action_period);
+        fill_pb_object(line.idx, data, passage->mutable_vehicle_journey()->mutable_route()->mutable_line(), 0, now, action_period);
     }
     return handler.pb_response;
 }
@@ -46,7 +60,7 @@ pbnavitia::Response next_departures(const std::string &request, const std::strin
         vis_next_departures(type::Data& data) : api_str("NEXT_DEPARTURES"), api_pb(pbnavitia::NEXT_DEPARTURES), predicate(data) {}
     };
     vis_next_departures vis(data);
-    return next_stop_times(request, str_dt, duration, nb_stoptimes, depth, wheelchair, data, vis);
+    return next_passages(request, str_dt, duration, nb_stoptimes, depth, wheelchair, data, vis);
 }
 
 
@@ -66,7 +80,7 @@ pbnavitia::Response next_arrivals(const std::string &request, const std::string 
         vis_next_arrivals(type::Data& data) : api_str("NEXT_ARRIVALS"), api_pb(pbnavitia::NEXT_ARRIVALS), predicate(data) {}
     };
     vis_next_arrivals vis(data);
-    return next_stop_times(request, str_dt, duration, nb_stoptimes, depth, wheelchair, data, vis);
+    return next_passages(request, str_dt, duration, nb_stoptimes, depth, wheelchair, data, vis);
 }
 
 

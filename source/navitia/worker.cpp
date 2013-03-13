@@ -6,7 +6,7 @@
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential_api.h"
 #include "time_tables/line_schedule.h"
-#include "time_tables/next_stop_times.h"
+#include "time_tables/next_passages.h"
 #include "time_tables/2stops_schedule.h"
 #include "time_tables/departure_board.h"
 
