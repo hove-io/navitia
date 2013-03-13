@@ -45,12 +45,13 @@ bool Data::load(const std::string & filename) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     try {
         this->load_lz4(filename);
-        this->build_raptor();
+        this->geo_ref.read_alias();
+        this->build_raptor();        
         last_load_at = pt::microsec_clock::local_time();
         for(size_t i = 0; i < this->pt_data.stop_times.size(); ++i)
             this->pt_data.stop_times[i].idx = i;
         last_load = true;
-        loaded = true;
+        loaded = true;        
     } catch(std::exception& ex) {
         LOG4CPLUS_ERROR(logger, boost::format("le chargement des données à échoué: %s") % ex.what());
         last_load = false;
@@ -97,15 +98,10 @@ void Data::build_proximity_list(){
 
 
 void Data::build_autocomplete(){
-    pt_data.build_autocomplete();
-
-    for(auto way : geo_ref.ways){
-        if(way.city_idx < pt_data.cities.size())
-            geo_ref.fl.add_string(way.name + " " + pt_data.cities[way.city_idx].name, way.idx);
-        else
-            geo_ref.fl.add_string(way.name, way.idx);
-    }
-    this->geo_ref.fl.build();
+    //
+    geo_ref.read_alias();
+    pt_data.build_autocomplete(geo_ref.alias);
+    geo_ref.build_autocomplete_list();
 }
 
 void Data::build_raptor() {

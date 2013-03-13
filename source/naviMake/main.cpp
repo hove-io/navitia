@@ -17,7 +17,7 @@ namespace pt = boost::posix_time;
 
 int main(int argc, char * argv[])
 {
-    std::string type, input, output, date, topo_path, osm_filename;
+    std::string type, input, output, date, topo_path, osm_filename, poi_path;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
@@ -26,8 +26,8 @@ int main(int argc, char * argv[])
         ("topo", po::value<std::string>(&topo_path), "Repertoire contenant la bd topo")
         ("osm", po::value<std::string>(&osm_filename), "Fichier OpenStreetMap au format pbf")
         ("output,o", po::value<std::string>(&output)->default_value("data.nav"), "Fichier de sortie")
-        ("version,v", "Affiche la version");
-
+        ("version,v", "Affiche la version")
+        ("poi", po::value<std::string>(&poi_path), "Repertoire des fichiers POI et POIType au format txt");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -67,6 +67,10 @@ int main(int argc, char * argv[])
         navitia::georef::fill_from_osm(nav_data.geo_ref, osm_filename);
     }
 
+    if (vm.count("poi")){
+        navitia::georef::fill_from_poi(nav_data.geo_ref, poi_path);
+    }
+
     sn = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 
@@ -85,7 +89,8 @@ int main(int argc, char * argv[])
     std::cout << "line: " << data.lines.size() << std::endl;
     std::cout << "journey_pattern: " << data.journey_patterns.size() << std::endl;
     std::cout << "stoparea: " << data.stop_areas.size() << std::endl;
-    std::cout << "stoppoint: " << data.stop_points.size() << std::endl;
+    std::cout << "stoppoint: " << data.stop_points
+                 .size() << std::endl;
     std::cout << "vehiclejourney: " << data.vehicle_journeys.size() << std::endl;
     std::cout << "stop: " << data.stops.size() << std::endl;
     std::cout << "connection: " << data.connections.size() << std::endl;
