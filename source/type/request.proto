@@ -4,6 +4,7 @@ package pbnavitia;
 message AutocompleteRequest {
     required string name = 1;
     repeated NavitiaType types = 2;
+    required int32 depth = 3;
 }
 
 message NextStopTimeRequest {
