@@ -30,6 +30,7 @@ message ProximityListRequest {
     required GeographicalCoord coord = 1;
     required double distance = 2;
     repeated NavitiaType types = 3;
+    required int32 depth = 4;
 }
 
 message PTRefRequest {

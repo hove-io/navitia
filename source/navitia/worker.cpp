@@ -135,7 +135,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
 
 pbnavitia::Response Worker::proximity_list(const pbnavitia::ProximityListRequest &request) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
-    return navitia::proximitylist::find(type::GeographicalCoord(request.coord().lon(), request.coord().lat()), request.distance(), vector_of_pb_types(request), this->data);
+    return navitia::proximitylist::find(type::GeographicalCoord(request.coord().lon(), request.coord().lat()), request.distance(), vector_of_pb_types(request), request.depth(), this->data);
 }
 
 type::GeographicalCoord Worker::coord_of_address(const type::EntryPoint & entry_point) {

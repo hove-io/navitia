@@ -113,6 +113,7 @@ def on_proximity_list(request_args, version, region):
     req.proximity_list.coord.lon = request_args["lon"]
     req.proximity_list.coord.lat = request_args["lat"]
     req.proximity_list.distance = request_args["distance"]
+    req.proximity_list.depth = request_args["depth"]
     for object_type in request_args["object_type[]"]:
         req.proximity_list.types.append(pb_type[object_type])
     resp = NavitiaManager().send_and_receive(req, region)
