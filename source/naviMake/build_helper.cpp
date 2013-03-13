@@ -41,6 +41,8 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     }
     vj->block_id = block_id;
     vj->wheelchair_boarding = wheelchair_boarding;
+    if(!b.data.physical_modes.empty())
+        vj->physical_mode = b.data.physical_modes.front();
 
     if(!b.data.companies.empty())
         vj->company = b.data.companies.front();
