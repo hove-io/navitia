@@ -264,6 +264,7 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Poi* poi
         const pt::ptime& now, const pt::time_period& action_period){
     navitia::georef::POI geopoi = data.geo_ref.pois.at(idx);
     poi->set_name(geopoi.name);
+    poi->set_uri(geopoi.uri);
     poi->mutable_coord()->set_lat(geopoi.coord.lat());
     poi->mutable_coord()->set_lon(geopoi.coord.lon());
 

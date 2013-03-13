@@ -8,7 +8,7 @@ namespace navitia { namespace autocomplete {
  *
  */
 void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result, const nt::Type_e type, const nt::Data& data, pbnavitia::Autocomplete& pb_fl){
-    BOOST_FOREACH(auto result_item, result){
+    for(auto result_item : result){
         pbnavitia::AutocompleteItem* item = pb_fl.add_items();
         pbnavitia::PlaceMark* place_mark = item->mutable_object();
         switch(type){
@@ -41,6 +41,13 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result, c
             item->set_uri(data.geo_ref.ways[result_item.idx].uri+":"+boost::lexical_cast<std::string>(result_item.house_number));
             item->set_quality(result_item.quality);
             break;
+        case nt::Type_e::ePOI:
+            place_mark->set_type(pbnavitia::POI);
+            fill_pb_object(result_item.idx, data, place_mark->mutable_poi(), 2);
+            item->set_name(data.geo_ref.pois[result_item.idx].name);
+            item->set_uri(data.geo_ref.pois[result_item.idx].uri);
+            item->set_quality(result_item.quality);
+            break;
 
         default:
             break;
@@ -57,18 +64,20 @@ pbnavitia::Response autocomplete(const std::string &name, const std::vector<nt::
     BOOST_FOREACH(nt::Type_e type, filter){
         switch(type){
         case nt::Type_e::eStopArea:
-            result = d.pt_data.stop_area_autocomplete.find_complete(name);
+            result = d.pt_data.stop_area_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.word_weight);
             break;
         case nt::Type_e::eStopPoint:
-            result = d.pt_data.stop_point_autocomplete.find_complete(name);
+            result = d.pt_data.stop_point_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.word_weight);
             break;
         case nt::Type_e::eCity:
-            result = d.pt_data.city_autocomplete.find_complete(name);
+            result = d.pt_data.city_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.word_weight);
             break;
         case nt::Type_e::eAddress:
             //result = d.geo_ref.fl.find_complete(name);
             result = d.geo_ref.find_ways(name);
             break;
+        case nt::Type_e::ePOI:
+            result = d.geo_ref.fl_poi.find_complete(name, d.geo_ref.alias, d.geo_ref.word_weight);
         default: break;
         }
         create_pb(result, type, d, *pb);

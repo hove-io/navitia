@@ -10,7 +10,6 @@
 #include <map>
 #include <unordered_map>
 #include <set>
-
 #include "type/type.h"
 
 namespace navitia { namespace autocomplete {
@@ -30,22 +29,30 @@ struct Autocomplete
     struct fl_quality{
         T idx;
         int nb_found;
+        int word_len;
         int quality;
+        int penalty;
         navitia::type::GeographicalCoord coord;
         int house_number;
 
-        fl_quality(){
-            nb_found = 0;
-            quality = 0;
-            house_number = -1;
-        }
-
+        fl_quality() :nb_found(0), word_len(0), quality(0),house_number(-1) {}
         bool operator<(const fl_quality & other) const{
             return this->quality > other.quality;
         }
 
     };
 
+    /// Structure temporaire pour garder les informations sur chaque ObjetTC:
+    struct word_quality{
+        int word_count;
+        int word_distance;
+        int penalty;
+
+        word_quality():word_count(0), word_distance(0), penalty(0){}
+        template<class Archive> void serialize(Archive & ar, const unsigned int) {
+            ar & word_count & word_distance & penalty;
+        }
+    };
 
     /// Structure temporaire pour construire l'indexe
     std::map<std::string, std::set<T> > map;
@@ -56,11 +63,11 @@ struct Autocomplete
     /// Structure principale de notre indexe
     std::vector<vec_elt> vec_map;
 
-    /// Structure pour garder le nombre des mots dans chaque Autocomplete (Position)
-    std::map<T, int> word_count;
+    /// Structure pour garder les informations comme nombre des mots, la distance des mots...dans chaque Autocomplete (Position)
+    std::map<T, word_quality> ac_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & vec_map & word_count;
+        ar & vec_map & ac_list;
     }
 
     // Méthodes permettant de construire l'indexe
@@ -69,15 +76,25 @@ struct Autocomplete
       * – on découpe en mots la chaîne (tokens)
       * — on rajoute la position à la liste de chaque mot
       */
-    void add_string(std::string str, T position){
+    void add_string(std::string str, T position, navitia::type::Type_e ntype, const std::map<std::string, std::string> & map_alias){
+        word_quality wc;
         int count = 0;
+        int distance = 0;
+
+        //Appeler la méthode pour traiter les alias avant de les ajouter dans le dictionaire:
         boost::to_lower(str);
+        str = get_alias(str, map_alias);
+
         boost::tokenizer<> tokens(str);
         for(auto token: tokens){
             map[token].insert(position);
             count++;
+            distance += token.size();
         }
-        word_count[position] = count;
+        wc.word_count = count;
+        wc.word_distance = distance;
+        wc.penalty = penaltyByType(ntype);
+        ac_list[position] = wc;
     }
 
     /** Construit la structure finale
@@ -89,6 +106,30 @@ struct Autocomplete
         for(auto key_val: map){
             vec_map.push_back(std::make_pair(key_val.first, std::vector<T>(key_val.second.begin(), key_val.second.end())));
         }
+    }
+
+    int penaltyByType(navitia::type::Type_e ntype){
+        int result = 0;
+        switch(ntype){
+        case navitia::type::Type_e::eCity:
+            result = 0;
+            break;
+        case navitia::type::Type_e::eStopArea:
+            result = 2;
+            break;
+        case navitia::type::Type_e::eStopPoint:
+            result = 4;
+            break;
+        case navitia::type::Type_e::ePOI:
+            result = 6;
+            break;
+        case navitia::type::Type_e::eAddress:
+            result = 8;
+            break;
+        default:
+            break;
+        }
+        return result;
     }
 
 
@@ -176,33 +217,33 @@ struct Autocomplete
         bool operator()(T a, T b) const{
             return fl_result.at(a).quality > fl_result.at(b).quality;
         }
-
     };
 
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant au moins un des mots*/
-    std::vector<fl_quality> find_partial(std::string str) const {
-        int wordCount = 0;
+    std::vector<fl_quality> find_partial(std::string str, const std::map<std::string, std::string> & map_alias, int wordweight) const {
+        int wordLength = 0;
         std::unordered_map<T, fl_quality> fl_result;
         boost::to_lower(str);
+        str = get_alias(str, map_alias);
         std::vector<T> index_result;
 
         // Créer un vector de réponse:
         std::vector<fl_quality> vec_quality;
         fl_quality quality;
+        wordLength = lettercount(str);
+
 
         boost::tokenizer<> tokens(str);
         auto token_it = tokens.begin();
         if(token_it != tokens.end()){
             // Premier résultat. Il y aura au plus ces indexes
             index_result = match(*token_it);
-            wordCount++;
 
             //incrémenter la propriété "nb_found" pour chaque index des mots autocomplete dans vec_map
             add_word_quality(fl_result,index_result);
 
             //Recherche des mots qui restent
             for(++token_it; token_it != tokens.end(); ++token_it){
-                wordCount++;
                 index_result = match(*token_it);
 
                 //incrémenter la propriété "nb_found" pour chaque index des mots autocomplete dans vec_map
@@ -213,7 +254,8 @@ struct Autocomplete
             for(auto pair : fl_result){
                 quality.idx = pair.first;
                 quality.nb_found = pair.second.nb_found;
-                quality.quality = calc_quality(quality);
+                quality.word_len = wordLength;
+                quality.quality = calc_quality(quality, wordweight);
                 vec_quality.push_back(quality);
             }
 
@@ -224,25 +266,29 @@ struct Autocomplete
     }
 
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant au moins un des mots*/
-    std::vector<fl_quality> find_complete(const std::string & str) const{
+    std::vector<fl_quality> find_complete(const std::string & str, const std::map<std::string, std::string> & map_alias, int wordweight) const{
+        std::string searchStr = str;
         int wordCount = 0;
+        int wordLength = 0;
         fl_quality quality;
         std::vector<T> index_result;
-        index_result = find(str);
-        wordCount = count(str);
+        boost::to_lower(searchStr);
+        searchStr = get_alias(searchStr, map_alias);
+        index_result = find(searchStr);
+        wordCount = count(searchStr);
+        wordLength = lettercount(searchStr);
 
         // Créer un vector de réponse:
         std::vector<fl_quality> vec_quality;
-
         for(auto i : index_result){
             quality.idx = i;
             quality.nb_found = wordCount;
-            quality.quality = calc_quality(quality);
+            quality.word_len = wordLength;
+            quality.quality = calc_quality(quality, wordweight);
             vec_quality.push_back(quality);
         }
 
         std::sort(vec_quality.begin(), vec_quality.end());
-
         return vec_quality;
     }
 
@@ -252,12 +298,24 @@ struct Autocomplete
     void add_word_quality(std::unordered_map<T, fl_quality> & fl_result, const std::vector<T> &found) const{
         for(auto i : found){
             fl_result[i].nb_found++;
-
         }
     }
 
-    int calc_quality(const fl_quality & ql) const {
-        return ql.nb_found * 100 / std::max(word_count.at(ql.idx), 1);
+    int calc_quality(const fl_quality & ql, int wordweight) const {
+        int result = 100;
+
+        //Qualité sur le nombres des mot trouvé
+        result -= (ac_list.at(ql.idx).word_count - ql.nb_found) * wordweight;//coeff  WordFound
+
+        //Qualité sur la distance globale des mots.
+        result -= (ac_list.at(ql.idx).word_distance - ql.word_len);//Coeff de la distance = 1
+
+        //Qualité sur la pénalité:
+        if (result != 100){
+            result -= ac_list.at(ql.idx).penalty;// Pénalité sur le type
+        }
+
+        return result;
     }
 
     int count(const std::string &str) const {
@@ -270,9 +328,19 @@ struct Autocomplete
         return result;
     }
 
+    int lettercount(const std::string &str) const {
+        int result = 0;
+        boost::tokenizer <> tokens(str);
+
+        for (auto token_it: tokens){
+            result += token_it.size();
+        }
+        return result;
+    }
+
     /** Méthode pour récuperer le mot alias (Ghostword, alias et ShortName sont géré ici)*/
     /** Si le mot cherché n'est pas trouvé alors envoyer le même mot*/
-    std::string get_alias(const std::string & str, const std::map<std::string, std::string> & map_alias) const{
+    std::string alias_word(const std::string & str, const std::map<std::string, std::string> & map_alias) const{
         std::map<std::string, std::string>::const_iterator it = map_alias.find(str);
         if (it!= map_alias.end()){
             return it->second;
@@ -281,6 +349,16 @@ struct Autocomplete
             return str;
         }
     }
+
+    std::string get_alias(const std::string & str, const std::map<std::string, std::string> & map_alias) const{
+        std::string result = "";
+        boost::tokenizer <> tokens(str);
+        for (auto token_it: tokens){
+            result += " " + alias_word(token_it, map_alias);
+        }
+        return result;
+    }
+
 };
 
 }} // namespace navitia::autocomplete
