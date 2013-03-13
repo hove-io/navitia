@@ -89,18 +89,7 @@ public:
 /// Normalise les external code des stop_point et stop_areas
 void normalize_extcodes(Data & data);
 
-/// Construit les journey_patterns en retrouvant les paterns à partir des VJ
-void build_journey_patterns(Data & data);
 
-/// Construit les journey_patternpoint
-void build_journey_pattern_points(Data & data);
-
-/// Ajoute une connection entre deux journey_pattern_point
-void add_journey_pattern_point_connection(navimake::types::JourneyPatternPoint *rp1, navimake::types::JourneyPatternPoint *rp2, int length,
-                                std::multimap<std::string, navimake::types::JourneyPatternPointConnection> &journey_pattern_point_connections);
-
-/// Construit les connections pour les correspondances garanties
-void build_journey_pattern_point_connections(Data & data);
 
 /** Convertit une chaine de charactères du type 8:12:31 en secondes depuis minuit
   *

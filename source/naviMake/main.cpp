@@ -79,6 +79,7 @@ int main(int argc, char * argv[])
     connector.fill(data, date);
     nav_data.meta.production_date = connector.production_date;
 
+    data.normalize_uri();
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 
