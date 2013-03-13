@@ -22,6 +22,7 @@ void fill_section(pbnavitia::Section *pb_section, navitia::type::idx_t vj_idx,
     fill_pb_object(vj_idx, d, pb_section->mutable_vehicle_journey(), 0, now, action_period);
     fill_pb_object(route.idx, d, pb_section->mutable_vehicle_journey()->mutable_route(), 0, now, action_period);
     fill_pb_object(line.idx, d, pb_section->mutable_vehicle_journey()->mutable_route()->mutable_line(), 0, now, action_period);
+    fill_pb_object(vj.physical_mode_idx, d, pb_section->mutable_vehicle_journey()->mutable_physical_mode(), 0, now, action_period);
 }
 
 pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths, const nt::Data & d, streetnetwork::StreetNetwork & worker) {

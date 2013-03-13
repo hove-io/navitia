@@ -36,9 +36,11 @@ next_passages(const std::string &request, const std::string &str_dt,
         const type::JourneyPattern & jp = data.pt_data.journey_patterns[vj.journey_pattern_idx];
         const type::Route & route = data.pt_data.routes[jp.route_idx];
         const type::Line & line = data.pt_data.lines[route.line_idx];
+        const type::PhysicalMode & physical_mode = data.pt_data.physical_modes[vj.physical_mode_idx];
         fill_pb_object(vj.idx, data, passage->mutable_vehicle_journey(), 0, now, action_period);
         fill_pb_object(route.idx, data, passage->mutable_vehicle_journey()->mutable_route(), 0, now, action_period);
         fill_pb_object(line.idx, data, passage->mutable_vehicle_journey()->mutable_route()->mutable_line(), 0, now, action_period);
+        fill_pb_object(physical_mode.idx, data, passage->mutable_vehicle_journey()->mutable_physical_mode(), 0, now, action_period);
     }
     return handler.pb_response;
 }

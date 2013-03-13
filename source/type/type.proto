@@ -123,8 +123,9 @@ message VehicleJourney {
     repeated StopTime stop_times = 6;
     optional Route route = 7;
     optional JourneyPattern journey_pattern = 8;
+    optional PhysicalMode physical_mode = 9;
 
-    repeated Message messages = 9;
+    repeated Message messages = 10;
 }
 
 message JourneyPatternPoint{
