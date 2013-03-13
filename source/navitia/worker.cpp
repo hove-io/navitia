@@ -5,7 +5,7 @@
 #include "autocomplete/autocomplete_api.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential_api.h"
-#include "time_tables/line_schedule.h"
+#include "time_tables/route_schedule.h"
 #include "time_tables/next_passages.h"
 #include "time_tables/2stops_schedule.h"
 #include "time_tables/departure_board.h"
@@ -123,8 +123,8 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
         return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), this->data);
     case pbnavitia::DEPARTURE_BOARD:
         return navitia::timetables::departure_board(request.departure_filter(), request.from_datetime(), request.duration(), this->data);
-    case pbnavitia::LINE_SCHEDULE:
-        return navitia::timetables::line_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
+    case pbnavitia::ROUTE_SCHEDULE:
+        return navitia::timetables::route_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
     default:
         LOG4CPLUS_WARN(logger, "On a reçu une requête time table inconnue");
         pbnavitia::Response response;
@@ -196,7 +196,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
     case pbnavitia::STATUS: return status(); break;
     case pbnavitia::LOAD: return load(); break;
     case pbnavitia::AUTOCOMPLETE: return autocomplete(request.autocomplete()); break;
-    case pbnavitia::LINE_SCHEDULE:
+    case pbnavitia::ROUTE_SCHEDULE:
     case pbnavitia::NEXT_DEPARTURES:
     case pbnavitia::NEXT_ARRIVALS:
     case pbnavitia::STOPS_SCHEDULE:
