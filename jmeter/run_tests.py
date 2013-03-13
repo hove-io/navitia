@@ -14,12 +14,6 @@ if len(sys.argv) != 2:
     print("Utilisation : ", sys.argv[0], " depot_navitia")
     sys.exit(1)
 
-print("Création d'un repertoire build")
-shutil.rmtree("build", ignore_errors=True)
-os.mkdir("build")
-os.chdir("build")
-print
-
 print("Clone du dépot")
 shutil.rmtree("navitia_git", ignore_errors=True)
 res = subprocess.call(["git", "clone", "--recursive", sys.argv[1], "navitia_git"])
@@ -28,6 +22,11 @@ if res != 0:
     sys.exit(1)
 print
 
+print("Création d'un repertoire build")
+shutil.rmtree("build", ignore_errors=True)
+os.mkdir("build")
+os.chdir("build")
+print
 
 print("Cmake")
 res = subprocess.call(["cmake", "-DCMAKE_BUILD_TYPE=Release", "../navitia_git/source/"])
