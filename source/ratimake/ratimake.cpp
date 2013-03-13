@@ -14,6 +14,7 @@ namespace nt = navitia::type;
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
+
 po::variables_map load_config(int argc, const char** argv){
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -55,7 +56,12 @@ void generate(const po::variables_map& params, const pt::ptime& now){
     navitia::AtLoader loader;
     std::map<std::string, std::vector<navitia::type::Message>> messages;
 
-    messages = loader.load(params, now);
+    navitia::AtLoader::Config config;
+    config.connect_string = params["connect-string"].as<std::string>();
+    config.media_lang = params["media-lang"].as<std::string>();
+    config.media_media = params["media-media"].as<std::string>();
+
+    messages = loader.load(config, now);
 
     nt::MessageHolder holder;
     holder.messages = messages;

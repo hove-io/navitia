@@ -40,6 +40,7 @@ class JourneyPatternPointConnection;
 class StopTime;
 
 struct Country : public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::Country;
     City* main_city;
 
     std::vector<District*> district_list;
@@ -49,6 +50,7 @@ struct Country : public TransmodelHeader, Nameable{
 };
 
 struct District: public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::District;
     City* main_city;
     Country* country;
 
@@ -58,6 +60,7 @@ struct District: public TransmodelHeader, Nameable{
 };
 
 struct Department: public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::Department;
     City* main_city;
     District *district;
     bool operator<(const Department& other) const;
@@ -67,6 +70,7 @@ struct Department: public TransmodelHeader, Nameable{
 
 
 struct City : public TransmodelHeader, Nameable {
+    const static nt::Type_e type = nt::Type_e::City;
     std::string main_postal_code;
     bool main_city;
     bool use_main_stop_area_property;
@@ -84,6 +88,7 @@ struct City : public TransmodelHeader, Nameable {
 };
 
 struct Connection: public TransmodelHeader, hasProperties {
+    const static nt::Type_e type = nt::Type_e::Connection;
     enum ConnectionKind{
         AddressConnection,           //Jonction adresse / arrêt commercial
         SiteConnection,              //Jonction Lieu public / arrêt commercial
@@ -139,6 +144,7 @@ struct JourneyPatternPointConnection: public TransmodelHeader {
 
 
 struct StopArea : public TransmodelHeader, Nameable, hasProperties{
+    const static nt::Type_e type = nt::Type_e::StopArea;
     nt::GeographicalCoord coord;
     std::string additional_data;
 
@@ -154,6 +160,7 @@ struct StopArea : public TransmodelHeader, Nameable, hasProperties{
 };
 
 struct Network : public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::Network;
     std::string address_name;
     std::string address_number;
     std::string address_type_name;
@@ -168,6 +175,7 @@ struct Network : public TransmodelHeader, Nameable{
 };
 
 struct Company : public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::Company;
     idx_t city_idx;
     std::string address_name;
     std::string address_number;
@@ -183,12 +191,14 @@ struct Company : public TransmodelHeader, Nameable{
 };
 
 struct CommercialMode : public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::CommercialMode;
     nt::CommercialMode get_navitia_type() const;
 
     bool operator<(const CommercialMode& other)const ;
 };
 
 struct PhysicalMode : public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::PhysicalMode;
     PhysicalMode() {}
 
     nt::PhysicalMode get_navitia_type() const;
@@ -197,6 +207,7 @@ struct PhysicalMode : public TransmodelHeader, Nameable{
 };
 
 struct Line : public TransmodelHeader, Nameable {
+    const static nt::Type_e type = nt::Type_e::Line;
     std::string code;
     std::string forward_name;
     std::string backward_name;
@@ -217,6 +228,7 @@ struct Line : public TransmodelHeader, Nameable {
 };
 
 struct Route : public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::Route;
     Line * line;
 
     navitia::type::Route get_navitia_type() const;
@@ -225,6 +237,7 @@ struct Route : public TransmodelHeader, Nameable{
 };
 
 struct JourneyPattern : public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::JourneyPattern;
     bool is_frequence;
     Route* route;
     PhysicalMode* physical_mode;
@@ -238,6 +251,7 @@ struct JourneyPattern : public TransmodelHeader, Nameable{
  };
 
 struct VehicleJourney: public TransmodelHeader, Nameable, hasProperties{
+    const static nt::Type_e type = nt::Type_e::VehicleJourney;
     JourneyPattern* journey_pattern;
     Company* company;
     PhysicalMode* physical_mode;
@@ -274,6 +288,7 @@ struct Equipement : public TransmodelHeader {
 };
 
 struct JourneyPatternPoint : public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::JourneyPatternPoint;
     int order;
     bool main_stop_point;
     int fare_section;
@@ -288,6 +303,7 @@ struct JourneyPatternPoint : public TransmodelHeader, Nameable{
 };
 
 struct ValidityPattern: public TransmodelHeader {
+    const static nt::Type_e type = nt::Type_e::ValidityPattern;
 private:
     bool is_valid(int duration);
 public:
@@ -309,6 +325,7 @@ public:
 };
 
 struct StopPoint : public TransmodelHeader, Nameable, hasProperties{
+    const static nt::Type_e type = nt::Type_e::StopPoint;
     nt::GeographicalCoord coord;
     int fare_zone;
 

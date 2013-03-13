@@ -26,6 +26,7 @@ message PlaceMark {
     optional NavitiaType type = 1;
     optional City city = 3;
     optional StopArea stop_area = 4;
+    optional Poi poi = 5;
     optional StopPoint stop_point = 6;
     optional Address address = 7;
 }
@@ -91,6 +92,8 @@ message PtDisplayInfo {
     optional string code = 3;
     optional string headsign = 4;
     optional string direction = 5;
+    optional string color = 6;
+    optional string uri = 7;
 }
 
 message Section {
@@ -166,34 +169,32 @@ message PairStopTime {
     required StopDateTime second = 2;
 }
 
-message TableLine {
-    required string stop_point = 1;
+message RouteScheduleRow {
+    required StopPoint stop_point = 1;
     repeated string stop_times = 2;
 }
 
 message Table {
-    repeated TableLine lines = 1;
-}
-
-message LineScheduleHeaderItem {
-    required Line line = 1;
-}
-
-message LineScheduleHeader {
-    repeated LineScheduleHeaderItem items = 1;
+    repeated RouteScheduleRow rows = 1;
 }
 
 message Schedule {
     required Table table = 1;
-    required LineScheduleHeader header = 2;
 }
 
-message LineSchedule {
+message RouteSchedule {
     repeated Schedule schedules = 1;
 }
 
-message StopTimes {
-    repeated StopDateTime stop_date_times = 1;
+message Passage {
+    required StopDateTime stop_date_time = 1;
+    required StopPoint stop_point = 2;
+    optional PtDisplayInfo pt_display_informations = 3;
+    optional VehicleJourney vehicle_journey = 4;
+}
+
+message Passages {
+    repeated Passage passages = 1;
 }
 
 message StopsSchedule {
@@ -249,9 +250,9 @@ message Response{
     optional Planner planner = 7;
     optional ProximityList proximitylist = 8;
     optional Status status = 9;
-    optional StopTimes nextstoptimes = 10;
+    optional Passages next_passages = 10;
     optional StopsSchedule stops_schedule = 11;
-    optional LineSchedule line_schedule = 12;
+    optional RouteSchedule route_schedule = 12;
     optional DepartureBoard departure_board = 13;
     optional Load load = 14;
     optional Isochrone isochrone = 15;

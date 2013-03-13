@@ -63,13 +63,15 @@ pb_type = {
         'stop_area': type_pb2.STOP_AREA,
         'stop_point': type_pb2.STOP_POINT,
         'city': type_pb2.CITY,
-        'address': type_pb2.ADDRESS
+        'address': type_pb2.ADDRESS,
+	'poi': type_pb2.POI 
         }
 
 def on_autocomplete(request_args, version, region):
     req = request_pb2.Request()
     req.requested_api = type_pb2.AUTOCOMPLETE
     req.autocomplete.name = request_args['name']
+    req.autocomplete.depth = request_args['depth']
     for object_type in request_args["object_type[]"]:
         req.autocomplete.types.append(pb_type[object_type])
 
@@ -112,6 +114,7 @@ def on_proximity_list(request_args, version, region):
     req.proximity_list.coord.lon = request_args["lon"]
     req.proximity_list.coord.lat = request_args["lat"]
     req.proximity_list.distance = request_args["distance"]
+    req.proximity_list.depth = request_args["depth"]
     for object_type in request_args["object_type[]"]:
         req.proximity_list.types.append(pb_type[object_type])
     resp = NavitiaManager().send_and_receive(req, region)

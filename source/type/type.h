@@ -57,6 +57,7 @@ enum class Type_e {
     Company = 15,
     Country = 17,
     Route = 23,
+    POI = 24,
 
     // Objets spéciaux qui ne font pas partie du référentiel TC
     eStopTime = 6,

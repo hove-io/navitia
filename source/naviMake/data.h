@@ -10,10 +10,25 @@ namespace nt = navitia::type;
 /** Ce namespace contient toutes les structures de données \b temporaires, à remplir par le connecteur */
 namespace navimake{
 
+template<typename T>
+void normalize_uri(std::vector<T*>& vec){
+    std::string prefix = navitia::type::static_data::get()->captionByType(T::type);
+    for(auto* element : vec){
+        element->uri = prefix + ":" + element->uri;
+    }
+}
+
+bool same_journey_pattern(types::VehicleJourney * vj1, types::VehicleJourney * vj2);
+
+/// Ajoute une connection entre deux journey_pattern_point
+void  add_journey_pattern_point_connection(types::JourneyPatternPoint *rp1, types::JourneyPatternPoint *rp2, int length,
+                           std::multimap<std::string, types::JourneyPatternPointConnection> &journey_pattern_point_connections);
+
 /** Structure de donnée temporaire destinée à être remplie par un connecteur
       *
       * Les vecteurs contiennent des pointeurs vers un objet TC.
       * Les relations entre objets TC sont gèrés par des pointeurs
+      *
       */
 class Data{
 public:
@@ -127,6 +142,17 @@ public:
         }
     };
 
+    /// Construit les journey_patterns en retrouvant les paterns à partir des VJ
+    void build_journey_patterns();
+
+    /// Construit les journey_patternpoint
+    void build_journey_pattern_points();
+
+    /// Construit les connections pour les correspondances garanties
+    void build_journey_pattern_point_connections();
+
+    void normalize_uri();
+
     /**
      * Ajoute des objets
      */
@@ -134,8 +160,8 @@ public:
 
 
     /**
-         * supprime les objets inutiles
-         */
+     * supprime les objets inutiles
+     */
     void clean();
 
     /**
@@ -148,7 +174,7 @@ public:
           */
     void build_relations(navitia::type::PT_Data & data);
 
-    /// Construit le contour de la région à partir des stops points    
+    /// Construit le contour de la région à partir des stops points
     std::string find_shape(navitia::type::PT_Data &data);
     ~Data(){
 #define DELETE_ALL_ELEMENTS(type_name, collection_name) for(auto element : collection_name) delete element;

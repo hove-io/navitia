@@ -3,6 +3,8 @@
 #include <unordered_map>
 #include "utils/functions.h"
 #include "georef.h"
+#include "utils/csv.h"
+#include "utils/configuration.h"
 
 using navitia::type::idx_t;
 
@@ -316,10 +318,16 @@ void GeoRef::build_proximity_list(){
 void GeoRef::build_autocomplete_list(){
     int pos = 0;
     for(Way way : ways){
-        fl.add_string(way.way_type +" "+ way.name, pos);
+        fl_way.add_string(way.way_type +" "+ way.name, pos,type::Type_e::Address, alias);
         pos++;
     }
-    fl.build();
+    fl_way.build();
+
+    //Remplir les poi dans la liste autocompletion
+    for(POI poi : pois){
+        fl_poi.add_string(poi.name, poi.idx ,type::Type_e::POI, alias);
+    }
+    fl_poi.build();
 }
 
 /** Chargement de la liste way_map : mappage entre codes externes et idx des rues*/
@@ -336,6 +344,46 @@ void GeoRef::normalize_extcode_way(){
     }
     this->build_ways();
 }
+
+/** Chargement de la liste poitype_map : mappage entre codes externes et idx des POITypes*/
+void GeoRef::build_poitypes(){
+   for(auto ptype : poitypes){
+       this->poitype_map[ptype.uri] = ptype.idx;
+   }
+}
+
+/** Chargement de la liste poi_map : mappage entre codes externes et idx des POIs*/
+void GeoRef::build_pois(){
+   for(auto poi : pois){
+       this->poi_map[poi.uri] = poi.idx;
+   }
+}
+
+void GeoRef::read_alias(){
+    //Configuration *    conf = Configuration::get();
+    word_weight =  Configuration::get()->get_as<int>("AUTOCOMPLETE", "wordweight", 5);
+    std::string filename = Configuration::get()->get_as<std::string>("AUTOCOMPLETE", "alias", "");
+    CsvReader csv(filename, '=', true);
+
+    std::vector<std::string> mandatory_headers = {"key" , "value"};
+    if(!csv.validate(mandatory_headers)) {
+        std::cout << "Erreur lors du parsing de " << csv.filename
+                  <<". Il manque les colonnes : "
+                  << csv.missing_headers(mandatory_headers);
+    }
+
+    int key_c = csv.get_pos_col("key"), value_c = csv.get_pos_col("value");
+    while(!csv.eof()){
+        auto row = csv.next();
+        if (!row.empty()){
+            if (key_c != -1){
+                alias[row[key_c]]=row[value_c];
+            }
+        }
+    }
+
+}
+
 
 
 /**
@@ -359,7 +407,7 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std
     }else{
         search_str = str;
     }
-    to_return = fl.find_complete(search_str);
+    to_return = fl_way.find_complete(search_str, alias, word_weight);
 
     /// récupération des coordonnées du numéro recherché pour chaque rue
     for(auto &result_item  : to_return){

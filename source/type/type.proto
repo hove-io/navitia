@@ -16,6 +16,7 @@ enum NavitiaType {
     COUNTRY = 17;
     ADDRESS = 22;
     ROUTE = 23;
+    POI = 24;
 }
 
 
@@ -29,7 +30,7 @@ enum API {
     NEXT_DEPARTURES = 8;
     NEXT_ARRIVALS = 9;
     DEPARTURE_BOARD = 10;
-    LINE_SCHEDULE = 11;
+    ROUTE_SCHEDULE = 11;
     STOPS_SCHEDULE = 12;
     ISOCHRONE = 13;
     METADATAS = 14;
@@ -123,8 +124,9 @@ message VehicleJourney {
     repeated StopTime stop_times = 6;
     optional Route route = 7;
     optional JourneyPattern journey_pattern = 8;
+    optional PhysicalMode physical_mode = 9;
 
-    repeated Message messages = 9;
+    repeated Message messages = 10;
 }
 
 message JourneyPatternPoint{
@@ -143,6 +145,14 @@ message City {
     optional string zip_code = 2;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
+}
+
+message Poi {
+    optional string id = 1;
+    optional string uri = 3;
+    optional string name = 4;
+    optional GeographicalCoord coord = 6;
+    optional City city = 5;
 }
 
 message Network {

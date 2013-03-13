@@ -41,6 +41,8 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     }
     vj->block_id = block_id;
     vj->wheelchair_boarding = wheelchair_boarding;
+    if(!b.data.physical_modes.empty())
+        vj->physical_mode = b.data.physical_modes.front();
 
     if(!b.data.companies.empty())
         vj->company = b.data.companies.front();
@@ -235,10 +237,8 @@ void builder::connection(const std::string & name1, const std::string & name2, f
  }
 
  void builder::build(navitia::type::PT_Data & pt_data) {
-    connectors::build_journey_patterns(data);
-    connectors::build_journey_pattern_points(data);
-    connectors::build_journey_pattern_point_connections(data);
-
+    data.normalize_uri();
+    data.complete();
     data.clean();
     data.sort();
     data.transform(pt_data);

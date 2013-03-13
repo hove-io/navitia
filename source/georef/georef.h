@@ -78,6 +78,36 @@ struct HouseNumber{
     }
 };
 
+/** Nommage d'un POI (point of interest). **/
+struct POIType : public nt::Nameable, nt::NavitiaHeader{
+public:
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar &idx &uri &name;
+    }
+private:
+};
+
+
+/** Nommage d'un POI (point of interest). **/
+struct POI : public nt::Nameable, nt::NavitiaHeader{
+public:
+    int weight;
+    nt::GeographicalCoord coord;
+    std::string city;
+    nt::idx_t city_idx;
+    std::string poitype;
+    nt::idx_t poitype_idx;
+
+    POI(): weight(0), city(""), city_idx(-1), poitype(""), poitype_idx(-1){}
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar &idx & uri & idx &name & weight & coord & city & city_idx & poitype & poitype_idx;
+    }
+
+private:
+};
+
+
 /** Nommage d'une voie (anciennement "adresse").
     Typiquement le nom de rue **/
 struct Way :public nt::Nameable, nt::NavitiaHeader{
@@ -124,12 +154,21 @@ class ProjectionData;
 /** Structure contenant tout ce qu'il faut savoir sur le référentiel de voirie */
 struct GeoRef {
 
+    ///Liste des POIType et POI
+    std::vector<POIType> poitypes;
+    std::map<std::string, nt::idx_t> poitype_map;
+    std::vector<POI> pois;
+    std::map<std::string, nt::idx_t> poi_map;
+
     /// Liste des voiries
     std::vector<Way> ways;
     std::map<std::string, nt::idx_t> way_map;
 
     /// Indexe sur les noms de voirie
-    autocomplete::Autocomplete<unsigned int> fl;
+    autocomplete::Autocomplete<unsigned int> fl_way;
+
+    /// Indexe sur les pois
+    autocomplete::Autocomplete<unsigned int> fl_poi;
 
     /// Indexe tous les nœuds
     proximitylist::ProximityList<vertex_t> pl;
@@ -140,15 +179,20 @@ struct GeoRef {
     /// Graphe pour effectuer le calcul d'itinéraire
     Graph graph;
 
+    /// Liste des alias (Pas serialisé)
+    std::map<std::string, std::string> alias;
+    int word_weight;
+
+
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & ways & way_map & graph & fl & pl & projected_stop_points;
+        ar & ways & way_map & graph & fl_way & pl & projected_stop_points & pois & fl_poi & poitypes &poitype_map & poi_map & alias & word_weight;
     }
 
     template<class Archive> void load(Archive & ar, const unsigned int) {
         // La désérialisation d'une boost adjacency list ne vide pas le graphe
         // On avait donc une fuite de mémoire
         graph.clear();
-        ar & ways & way_map & graph & fl & pl & projected_stop_points;
+        ar & ways & way_map & graph & fl_way & pl & projected_stop_points & pois & fl_poi & poitypes &poitype_map & poi_map & alias & word_weight;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
@@ -163,6 +207,10 @@ struct GeoRef {
     void normalize_extcode_way();
     /// Chargement de la liste map code externe idx
     void build_ways();
+    ///Chargement de la liste map code externe idx sur poitype et poi
+    void build_poitypes();
+    void build_pois();
+    void read_alias();
 
     /// Recherche d'une adresse avec un numéro en utilisant Autocomplete
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str) const;

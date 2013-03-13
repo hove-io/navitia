@@ -5,8 +5,8 @@
 #include "autocomplete/autocomplete_api.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential_api.h"
-#include "time_tables/line_schedule.h"
-#include "time_tables/next_stop_times.h"
+#include "time_tables/route_schedule.h"
+#include "time_tables/next_passages.h"
 #include "time_tables/2stops_schedule.h"
 #include "time_tables/departure_board.h"
 
@@ -32,6 +32,7 @@ nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     case pbnavitia::JOURNEY_PATTERN_POINT: return nt::Type_e::JourneyPatternPoint; break;
     case pbnavitia::COMPANY: return nt::Type_e::Company; break;
     case pbnavitia::VEHICLE_JOURNEY: return nt::Type_e::VehicleJourney; break;
+	case pbnavitia::POI: return nt::Type_e::POI; break;
     default: return nt::Type_e::Unknown;
     }
 }
@@ -108,7 +109,7 @@ pbnavitia::Response Worker::load() {
 
 pbnavitia::Response Worker::autocomplete(const pbnavitia::AutocompleteRequest & request) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
-    return navitia::autocomplete::autocomplete(request.name(), vector_of_pb_types(request), this->data);
+    return navitia::autocomplete::autocomplete(request.name(), vector_of_pb_types(request), request.depth(), this->data);
 }
 
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest & request, pbnavitia::API api) {
@@ -123,8 +124,8 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
         return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), this->data);
     case pbnavitia::DEPARTURE_BOARD:
         return navitia::timetables::departure_board(request.departure_filter(), request.from_datetime(), request.duration(), this->data);
-    case pbnavitia::LINE_SCHEDULE:
-        return navitia::timetables::line_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
+    case pbnavitia::ROUTE_SCHEDULE:
+        return navitia::timetables::route_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
     default:
         LOG4CPLUS_WARN(logger, "On a reçu une requête time table inconnue");
         pbnavitia::Response response;
@@ -135,7 +136,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
 
 pbnavitia::Response Worker::proximity_list(const pbnavitia::ProximityListRequest &request) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
-    return navitia::proximitylist::find(type::GeographicalCoord(request.coord().lon(), request.coord().lat()), request.distance(), vector_of_pb_types(request), this->data);
+    return navitia::proximitylist::find(type::GeographicalCoord(request.coord().lon(), request.coord().lat()), request.distance(), vector_of_pb_types(request), request.depth(), this->data);
 }
 
 type::GeographicalCoord Worker::coord_of_address(const type::EntryPoint & entry_point) {
@@ -196,7 +197,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
     case pbnavitia::STATUS: return status(); break;
     case pbnavitia::LOAD: return load(); break;
     case pbnavitia::AUTOCOMPLETE: return autocomplete(request.autocomplete()); break;
-    case pbnavitia::LINE_SCHEDULE:
+    case pbnavitia::ROUTE_SCHEDULE:
     case pbnavitia::NEXT_DEPARTURES:
     case pbnavitia::NEXT_ARRIVALS:
     case pbnavitia::STOPS_SCHEDULE:

@@ -82,8 +82,12 @@ class Arguments:
 @singleton
 class Apis:
     apis = {
-        "autocomplete" : {"endpoint" : on_autocomplete, "arguments" : {"name" : Argument("The data to search", str, True, False, order = 1),
-                                                                       "object_type[]" : Argument("The type of datas you want in return", str, False, True, ["stop_area", "stop_point", "address"], 2,["stop_area", "stop_point", "address"])},
+        "autocomplete" : {"endpoint" : on_autocomplete, "arguments" :
+                          {"name" : Argument("The data to search", str, True, False, order = 1),
+                           "object_type[]" : Argument("The type of datas you want in return", str, False, True, 
+                                                    ["stop_area", "stop_point", "address", "poi"], 2,["stop_area", "stop_point", "address", "poi"]),
+                            "depth" : Argument("Maximum depth on objects", int, False, False, 1)
+                           },
                           "description" : "Retrieves the objects which contains in their name the \"name\"",
                           "order":2},
         "next_departures" : {"endpoint" : on_next_departures, "arguments" :
@@ -165,7 +169,8 @@ class Apis:
                 "lon" : Argument("Longitude of the point from where you want objects", float, True, False, order=0),
                 "lat" : Argument("Latitude of the point from where you want objects", float, True, False, order=1),
                 "distance" : Argument("Distance range of the query", int, False, False, 1000, order=3),
-                "object_type[]" : Argument("Type of the objects you want to have in return", str, False, True, ["stop_area", "stop_point"], order=4)
+                "object_type[]" : Argument("Type of the objects you want to have in return", str, False, True, ["stop_area", "stop_point"], order=4),
+                "depth" : Argument("Maximum depth on objects", int, False, False, 1)
                 },
             "description" : "Retrieves all the objects around a point within the given distance",
             "order" : 1.1, "universal" : True},
