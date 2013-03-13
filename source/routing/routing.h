@@ -93,7 +93,7 @@ public :
 
 /** Classe abstraite que tous les calculateurs doivent implémenter */
 struct AbstractRouter {
-    virtual std::vector<Path> compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day, bool clockwise = true, const bool wheelchair = false) = 0;
+    virtual std::vector<Path> compute(idx_t departure_idx, idx_t destination_idx, int departure_hour, int departure_day, bool clockwise = true, const type::Properties &required_properties=0) = 0;
     virtual ~AbstractRouter() {}
 };
 

@@ -3,9 +3,12 @@
 namespace navitia { namespace routing {
 
 
-std::pair<type::idx_t, uint32_t> earliest_trip(const type::JourneyPattern & journey_pattern, const unsigned int order, const navitia::type::DateTime &dt, const type::Data &data, const bool wheelchair) {
-    /*if(wheelchair)
-        return std::make_pair(type::invalid_idx, 0);*/
+std::pair<type::idx_t, uint32_t> 
+    earliest_trip(const type::JourneyPattern & journey_pattern, const unsigned int order,
+                  const navitia::type::DateTime &dt, const type::Data &data, 
+                  const type::Properties &required_properties) {
+    if(!data.pt_data.stop_points[journey_pattern.journey_pattern_point_list[order]].accessible(required_properties))
+        return std::make_pair(type::invalid_idx, 0);
 
 
     //On cherche le plus petit stop time de la journey_pattern >= dt.hour()
@@ -25,7 +28,8 @@ std::pair<type::idx_t, uint32_t> earliest_trip(const type::JourneyPattern & jour
     for(; it != end; ++it) {
         const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]];
         if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date)
-                && st.pick_up_allowed() /*&& !wheelchair*/
+                && st.pick_up_allowed() 
+                && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties)
                 && (!st.is_frequency() || ((st.start_time%raptor::dataRAPTOR::SECONDS_PER_DAY<st.end_time%raptor::dataRAPTOR::SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
                                        || ((st.start_time%raptor::dataRAPTOR::SECONDS_PER_DAY>st.end_time%raptor::dataRAPTOR::SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour())))) {
             return std::make_pair(st.vehicle_journey_idx,
@@ -35,14 +39,13 @@ std::pair<type::idx_t, uint32_t> earliest_trip(const type::JourneyPattern & jour
     }
 
     //Si on en a pas trouvé, on cherche le lendemain
-
     ++date;
-
     idx = begin - data.dataRaptor.departure_times.begin();
     for(it = begin; it != end; ++it) {
         const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]];
         if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date)
-                && st.pick_up_allowed() /*&& !wheelchair*/
+                && st.pick_up_allowed() 
+                && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties)
                 && (!st.is_frequency() || ((st.start_time%raptor::dataRAPTOR::SECONDS_PER_DAY<st.end_time%raptor::dataRAPTOR::SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
                                        || ((st.start_time%raptor::dataRAPTOR::SECONDS_PER_DAY>st.end_time%raptor::dataRAPTOR::SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
             return std::make_pair(st.vehicle_journey_idx,
@@ -55,17 +58,12 @@ std::pair<type::idx_t, uint32_t> earliest_trip(const type::JourneyPattern & jour
 }
 
 
-
-
-
-
-
-
-
-
-std::pair<type::idx_t, uint32_t> tardiest_trip(const type::JourneyPattern & journey_pattern, const unsigned int order, const navitia::type::DateTime &dt, const type::Data &data, const bool wheelchair) {
-//    if(wheelchair)
-//        return std::make_pair(type::invalid_idx, 0);
+std::pair<type::idx_t, uint32_t> 
+tardiest_trip(const type::JourneyPattern & journey_pattern, const unsigned int order,
+              const navitia::type::DateTime &dt, const type::Data &data,
+              const type::Properties &required_properties) {
+    if(!data.pt_data.stop_points[journey_pattern.journey_pattern_point_list[order]].accessible(required_properties))
+        return std::make_pair(type::invalid_idx, 0);
     //On cherche le plus grand stop time de la journey_pattern <= dt.hour()
     const auto begin = data.dataRaptor.arrival_times.begin() +
                        data.dataRaptor.first_stop_time[journey_pattern.idx] +
@@ -83,7 +81,8 @@ std::pair<type::idx_t, uint32_t> tardiest_trip(const type::JourneyPattern & jour
     for(; it != end; ++it) {
         const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]];
         if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date)
-                && st.drop_off_allowed() /*&& !wheelchair*/
+                && st.drop_off_allowed() 
+                && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties)
                 && (!st.is_frequency() || ((st.start_time%data.dataRaptor.SECONDS_PER_DAY<st.end_time%data.dataRaptor.SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
                     || ((st.start_time%data.dataRaptor.SECONDS_PER_DAY>st.end_time%data.dataRaptor.SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
             return std::make_pair(st.vehicle_journey_idx,
@@ -98,7 +97,8 @@ std::pair<type::idx_t, uint32_t> tardiest_trip(const type::JourneyPattern & jour
         for(it = begin; it != end; ++it) {
             const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]];
             if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date)
-                    && st.drop_off_allowed() /*&& !wheelchair*/
+                    && st.drop_off_allowed()
+                    && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties)
                     && (!st.is_frequency() || ((st.start_time%data.dataRaptor.SECONDS_PER_DAY<st.end_time%data.dataRaptor.SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
                         || ((st.start_time%data.dataRaptor.SECONDS_PER_DAY>st.end_time%data.dataRaptor.SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
                 return std::make_pair(st.vehicle_journey_idx,
@@ -107,12 +107,8 @@ std::pair<type::idx_t, uint32_t> tardiest_trip(const type::JourneyPattern & jour
         }
     }
 
-
     //Cette journey_pattern ne comporte aucun trip compatible
     return std::make_pair(type::invalid_idx, 0);
 }
-
-
-
 }}
 

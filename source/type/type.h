@@ -85,12 +85,20 @@ struct NavitiaHeader{
     std::vector<idx_t> get(Type_e, const PT_Data &) const {return std::vector<idx_t>();}
 
 };
-
+typedef std::bitset<7> Properties;
 struct hasProperties {
-    std::bitset<7> properties;
+    Properties properties;
     static const int WHEELCHAIR_BOARDING = 0;
 
     bool wheelchair_boarding() {return properties[WHEELCHAIR_BOARDING];}
+    bool accessible(const Properties &required_properties) const{
+        auto mismatched = required_properties & ~properties;
+        return !mismatched.any();
+    }
+    bool accessible(const Properties &required_properties) {
+        auto mismatched = required_properties & ~properties;
+        return !mismatched.any();
+    }
 };
 
 
@@ -509,6 +517,12 @@ struct StopPoint : public NavitiaHeader, Nameable, hasProperties{
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
+    /*bool accessible(const Properties & required_properties) { 
+        return hasProperties::accessible(required_properties);
+    }
+    bool accessible(const Properties & required_properties)const { 
+        return hasProperties::accessible(required_properties);
+    }*/
 };
 
 struct StopTime {

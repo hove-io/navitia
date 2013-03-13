@@ -32,3 +32,7 @@ add_executable(datetime_test tests/datetime.cpp)
 target_link_libraries(datetime_test ${Boost_LIBRARIES})
 ADD_TEST(datetime_test ${EXECUTABLE_OUTPUT_PATH}/datetime_test --report_level=no)
 
+
+add_executable(accessible_test tests/accessible.cpp)
+target_link_libraries(accessible_test ${Boost_LIBRARIES})
+ADD_TEST(accessible_test ${EXECUTABLE_OUTPUT_PATH}/accessible_test --report_level=no)
