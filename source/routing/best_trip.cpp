@@ -63,7 +63,7 @@ std::pair<type::idx_t, uint32_t>
 tardiest_trip(const type::JourneyPattern & journey_pattern, const unsigned int order,
               const navitia::type::DateTime &dt, const type::Data &data,
               const type::Properties &required_properties) {
-    if(!data.pt_data.stop_points[journey_pattern.journey_pattern_point_list[order]].accessible(required_properties))
+    if(!data.pt_data.stop_points[data.pt_data.journey_pattern_points[journey_pattern.journey_pattern_point_list[order]].stop_point_idx].accessible(required_properties))
         return std::make_pair(type::invalid_idx, 0);
     //On cherche le plus grand stop time de la journey_pattern <= dt.hour()
     const auto begin = data.dataRaptor.arrival_times.begin() +

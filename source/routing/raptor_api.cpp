@@ -199,7 +199,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               const type::EntryPoint &destination, 
               const std::vector<std::string> &datetimes_str, bool clockwise,
               const float walking_speed, const int walking_distance, const bool wheelchair,
-              std::multimap<std::string, std::string> forbidden,
+              std::vector<std::string> forbidden,
               streetnetwork::StreetNetwork & worker) {
 
     pbnavitia::Response response;
@@ -280,7 +280,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    type::EntryPoint origin,
                                    const std::string &datetime_str,bool clockwise,
                                    float walking_speed, int walking_distance,  bool wheelchair,
-                                   std::multimap<std::string, std::string> forbidden,
+                                   std::vector<std::string> forbidden,
                                    streetnetwork::StreetNetwork & worker, int max_duration) {
     
     pbnavitia::Response response;

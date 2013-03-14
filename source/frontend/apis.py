@@ -28,7 +28,6 @@ class Arguments:
                                                       True, False,order=0),
         "arrival_filter" : Argument("The filter of your arrival point", filter,
                                                       True, False,order=1)
-
     }
 
     nextTimesArguments = {
@@ -55,9 +54,9 @@ class Arguments:
         "destination" : Argument("Destination Point" , entrypoint(), True, False, order = 1),
         "datetime" : Argument("The time from which you want to arrive (or arrive before depending on the value of clockwise)", datetime_validator, True, False, order = 2),
         "clockwise" : Argument("true if you want to have a journey that starts after datetime, false if you a journey that arrives before datetime", boolean, False, False, True, order = 3),
-        #"forbiddenline" : Argument("Forbidden lines identified by their external codes",  str, False, True, ""),
-        #"forbiddenmode" : Argument("Forbidden modes identified by their external codes", str, False, True, ""),
-        #"forbiddenroute" : Argument("Forbidden routes identified by their external codes", str, False, True, ""),
+        "max_duration" : Argument("Maximum duratioon of the isochrone", int,
+                                  False, False, order=4, defaultValue = 36000),
+        "forbidden_uris[]" : Argument("Forbidden uris",  str, False, True, ""),
         "walking_speed" : Argument("Walking speed in m/s", float, False, False, 1.38),
         "walking_distance" : Argument("Maximum walking distance in meters", int,
                                       False, False, 1000),
@@ -69,17 +68,14 @@ class Arguments:
         "origin" : Argument("Departure Point", entrypoint(), True, False, order = 0),
         "datetime" : Argument("The time from which you want to arrive (or arrive before depending on the value of clockwise)", datetime_validator, True, False, order = 2),
         "clockwise" : Argument("true if you want to have a journey that starts after datetime, false if you a journey that arrives before datetime", boolean, False, False, True, order = 3),
-        #"forbiddenline" : Argument("Forbidden lines identified by their external codes",  str, False, True, ""),
-        #"forbiddenmode" : Argument("Forbidden modes identified by their external codes", str, False, True, ""),
-        #"forbiddenroute" : Argument("Forbidden routes identified by their external codes", str, False, True, ""),
+        "max_duration" : Argument("Maximum duratioon of the isochrone", int,
+                                  False, False, order=4, defaultValue = 3600),
+        "forbidden_uris[]" : Argument("Forbidden uris",  str, False, True, ""),
         "walking_speed" : Argument("Walking speed in m/s", float, False, False, 1.38),
         "walking_distance" : Argument("Maximum walking distance in meters", int,
                                       False, False, 1000),
         "wheelchair" : Argument("Does the journey has to be accessible?",
-                                boolean, False, False, False),
-        "max_duration" : Argument("Maximum duratioon of the isochrone", int,
-                                  False, False, order=4, defaultValue = 3600)
-        }
+                                boolean, False, False, False)        }
 
 @singleton
 class Apis:

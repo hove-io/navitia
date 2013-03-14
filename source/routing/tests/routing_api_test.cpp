@@ -11,7 +11,7 @@ using namespace routing::raptor;
 using namespace boost::posix_time;
 
 BOOST_AUTO_TEST_CASE(simple_journey){
-    std::multimap<std::string, std::string> forbidden;
+    std::vector<std::string> forbidden;
     navimake::builder b("20120614");
     b.vj("A")("stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
     type::Data data;
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(simple_journey){
 }
 
 BOOST_AUTO_TEST_CASE(journey_array){
-    std::multimap<std::string, std::string> forbidden;
+    std::vector<std::string> forbidden;
     navimake::builder b("20120614");
     b.vj("A")("stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
     b.vj("A")("stop1", 9*3600 +10*60, 9*3600 + 11 * 60)("stop2",  9*3600 + 20 * 60 ,9*3600 + 21*60);

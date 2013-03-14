@@ -194,7 +194,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                     const navitia::type::DateTime &dt_depart,
                     const navitia::type::DateTime &borne, const float walking_speed,
                     const int walking_distance, const type::Properties &required_properties,
-                    const std::multimap<std::string, std::string> & forbidden,
+                    const std::vector<std::string> & forbidden,
                     Visitor vis) {
     std::vector<Path> result;
     std::vector<init::Departure_Type> departures;
@@ -256,7 +256,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                     const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne,
                     const float walking_speed, const int walking_distance,
                     const type::Properties &required_properties,
-                    const std::multimap<std::string, std::string> & forbidden) {
+                    const std::vector<std::string> & forbidden) {
 
     return compute_all(departs, destinations, dt_depart, borne, walking_speed, walking_distance,
                        required_properties, forbidden, visitor_clockwise());
@@ -272,7 +272,7 @@ RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &
                             const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne,
                             float walking_speed, int walking_distance,
                             const type::Properties &required_properties,
-                            const std::multimap<std::string, std::string> & forbidden) {
+                            const std::vector<std::string> & forbidden) {
     return compute_all(departs, destinations, dt_depart, borne, walking_speed, walking_distance,
                        required_properties, forbidden, visitor_anti_clockwise());
 }
@@ -380,7 +380,7 @@ void
 RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
           const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne,
           float walking_speed, int walking_distance, const type::Properties &required_properties,
-          const std::multimap<std::string, std::string> & forbidden,
+          const std::vector<std::string> & forbidden,
           bool clockwise) {
 
     std::vector<idx_label> result;
@@ -398,22 +398,24 @@ RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
 
 
 
-void RAPTOR::set_journey_patterns_valides(uint32_t date, const std::multimap<std::string, std::string> & forbidden) {
+void RAPTOR::set_journey_patterns_valides(uint32_t date, const std::vector<std::string> & forbidden) {
     journey_patterns_valides.clear();
     journey_patterns_valides.resize(data.pt_data.journey_patterns.size());
     for(const auto & journey_pattern : data.pt_data.journey_patterns) {
         const navitia::type::Route & route = data.pt_data.routes[journey_pattern.route_idx];
         const navitia::type::Line & line = data.pt_data.lines[route.line_idx];
-        const navitia::type::CommercialMode & mode = data.pt_data.commercial_modes[journey_pattern.commercial_mode_idx];
+        const navitia::type::CommercialMode & commercial_mode = data.pt_data.commercial_modes[journey_pattern.commercial_mode_idx];
 
         // On gère la liste des interdits
         bool forbidden_journey_pattern = false;
-        for(auto pair : forbidden){
-            if(pair.first == "line" && pair.second == line.uri)
+        for(auto forbid_uri : forbidden){
+            if(forbid_uri == line.uri)
                 forbidden_journey_pattern = true;
-            if(pair.first == "journey_pattern" && pair.second == journey_pattern.uri)
+            if(forbid_uri == route.uri)
                 forbidden_journey_pattern = true;
-            if(pair.first == "mode" && pair.second == mode.uri)
+            if(forbid_uri == journey_pattern.uri)
+                forbidden_journey_pattern = true;
+            if(forbid_uri == commercial_mode.uri)
                 forbidden_journey_pattern = true;
         }
 
