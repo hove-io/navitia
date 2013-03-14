@@ -180,6 +180,7 @@ message Table {
 
 message Schedule {
     required Table table = 1;
+    required Route route = 2;
 }
 
 message RouteSchedule {

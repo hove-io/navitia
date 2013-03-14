@@ -134,11 +134,16 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Route * rout
         const pt::ptime& now, const pt::time_period& action_period){
     if(idx == type::invalid_idx)
         return ;
+
     navitia::type::Route r = data.pt_data.routes.at(idx);
     route->set_name(r.name);
     route->set_uri(r.uri);
     if(max_depth > 0 && r.line_idx != type::invalid_idx)
         fill_pb_object(r.line_idx, data, route->mutable_line(), max_depth - 1, now, action_period);
+
+    BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(r.uri, now, action_period)){
+        fill_message(message, data, route->add_messages(), max_depth-1, now, action_period);
+    }
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Network * network, int,
