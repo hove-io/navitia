@@ -53,7 +53,7 @@ FIND_PACKAGE(Boost 1.40.0 REQUIRED)
 
 SET(NAVITIA_VERSION_MAJOR 0)
 SET(NAVITIA_VERSION_MINOR 53)
-SET(NAVITIA_VERSION_PATCH a)
+SET(NAVITIA_VERSION_PATCH b)
 
 #ajout a l'include path le repertoirre de compilation, pour géré le config.h
 include_directories (${CMAKE_CURRENT_BINARY_DIR}

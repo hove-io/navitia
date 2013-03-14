@@ -1,12 +1,7 @@
 #!/bin/bash
 case "$1" in
     configure)
-        if [ -z $2 ]; then
-            # au premier lancement on fixe les droits
-            chmod +x /usr/share/navitia/scripts/{navimake_updater,update_data}.sh
-            chown root:www-data /usr/share/navitia/scripts/{navimake_updater,update_data}.sh
-            chown -R www-data:www-data /var/log/gunicorn/
-        fi
+        chmod +x /usr/share/navitia/scripts/{navimake_updater,update_data}.sh
         chown root:www-data /usr/share/navitia/scripts/{navimake_updater,update_data}.sh
         chown -R www-data:www-data /var/log/gunicorn/
         ;;
