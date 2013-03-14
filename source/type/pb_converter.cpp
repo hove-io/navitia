@@ -7,8 +7,7 @@ namespace nt = navitia::type;
 namespace pt = boost::posix_time;
 namespace navitia{
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::ValidityPattern* /*validity_pattern*/, int, const pt::ptime&, const pt::time_period& ){
-    const nt::ValidityPattern &vp = data.pt_data.validity_patterns.at(idx);
+void fill_pb_object(nt::idx_t /*idx*/, const nt::Data& /*data*/, pbnavitia::ValidityPattern* /*validity_pattern*/, int, const pt::ptime&, const pt::time_period& ){
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Department* department, int, const pt::ptime&, const pt::time_period& ){
