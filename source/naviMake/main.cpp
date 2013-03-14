@@ -121,7 +121,7 @@ int main(int argc, char * argv[])
     transform = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     std::cout << "Construction des contours de la région" << std::endl;
-    nav_data.meta.shape = data.find_shape(nav_data.pt_data);
+    nav_data.meta.shape = data.compute_bounding_box(nav_data.pt_data);
 
     start = pt::microsec_clock::local_time();
     std::cout << "Construction de proximity list" << std::endl;

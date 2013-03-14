@@ -310,7 +310,7 @@ void Data::build_relations(navitia::type::PT_Data &data){
    //for(navitia::type::Company & company : data.companies) {}
 }
 
-std::string Data::find_shape(navitia::type::PT_Data &data) {
+std::string Data::compute_bounding_box(navitia::type::PT_Data &data) {
 
     std::vector<navitia::type::GeographicalCoord> bag;
     for(navitia::type::StopPoint sp : data.stop_points) {

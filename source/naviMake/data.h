@@ -49,8 +49,8 @@ public:
     std::vector<types::District*> districts;
     std::vector<types::Department*> departments;
     std::vector<types::ValidityPattern*> validity_patterns;
-    std::vector<types::JourneyPatternPointConnection*> journey_pattern_point_connections;
     std::vector<types::Route*> routes;
+    std::vector<types::JourneyPatternPointConnection*> journey_pattern_point_connections;
 
 
     /** Foncteur permettant de comparer les objets en passant des pointeurs vers ces objets */
@@ -175,7 +175,7 @@ public:
     void build_relations(navitia::type::PT_Data & data);
 
     /// Construit le contour de la région à partir des stops points
-    std::string find_shape(navitia::type::PT_Data &data);
+    std::string compute_bounding_box(navitia::type::PT_Data &data);
     ~Data(){
 #define DELETE_ALL_ELEMENTS(type_name, collection_name) for(auto element : collection_name) delete element;
         ITERATE_NAVITIA_PT_TYPES(DELETE_ALL_ELEMENTS)
