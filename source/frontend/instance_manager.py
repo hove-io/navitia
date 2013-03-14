@@ -78,7 +78,7 @@ class NavitiaManager:
             instance = self.instances[region]
             instance.lock.acquire()
             instance.socket.send(request.SerializeToString())#, zmq.NOBLOCK, copy=False)
-            socks = dict(instance.poller.poll(1000))
+            socks = dict(instance.poller.poll(10000))
             if socks.get(instance.socket) == zmq.POLLIN:
                 pb = instance.socket.recv()
                 instance.lock.release()
