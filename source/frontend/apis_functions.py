@@ -1,15 +1,7 @@
 # coding=utf-8
 import type_pb2
 import request_pb2
-import response_pb2
-import json
-import dict2xml
-import copy
-import re
-import sys
-import signal
 from protobuf_to_dict import protobuf_to_dict
-from werkzeug.wrappers import Request, Response
 
 from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
 from renderers import render, render_from_protobuf
