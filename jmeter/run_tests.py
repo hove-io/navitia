@@ -52,7 +52,7 @@ print
 os.chdir("..")
 
 print "Binarisation de Nantes"
-res = subprocess.call(["./build/naviMake/navimake", "--osm", "../data_sources/Nantes/nantes.pbf", "-i", "../data_sources/Nantes/", "-o", "nantes.nav.lz4"])
+res = subprocess.call(["./build/naviMake/navimake", "--osm", "./data_sources/Nantes/nantes.pbf", "-i", "./data_sources/Nantes/", "-o", "nantes.nav.lz4"])
 if res != 0:
     print "Il y a eu des soucis avec la binarisation, code retour : ", str(res)
     sys.exit(1)
