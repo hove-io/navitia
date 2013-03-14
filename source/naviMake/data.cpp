@@ -321,12 +321,12 @@ std::string Data::compute_bounding_box(navitia::type::PT_Data &data) {
     boost::geometry::buffer(envelope, buffer, 0.01);
 
     std::ostringstream os;
-    os << "{\"type\": \"Polygon\", \"coordinates\": [";
+    os << "{\"type\": \"Polygon\", \"coordinates\": [[";
     typedef boost::geometry::box_view<decltype(buffer)> box_view;
     std::string sep = "";
     auto functor = [&os, &sep](navitia::type::GeographicalCoord coord){os << sep << "[" << coord.lon() << ", " << coord.lat() << "]"; sep = ",";};
     boost::geometry::for_each_point(box_view(buffer), functor);
-    os << "]}";
+    os << "]]}";
     return os.str();
 }
 
