@@ -32,24 +32,9 @@ void  add_journey_pattern_point_connection(types::JourneyPatternPoint *rp1, type
       */
 class Data{
 public:
-    std::vector<types::Network*> networks;
-    std::vector<types::Company*> companies;
-    std::vector<types::CommercialMode*> commercial_modes;
-    std::vector<types::Line*> lines;
-    std::vector<types::PhysicalMode*> physical_modes;
-    std::vector<types::City*> cities;
-    std::vector<types::Country*> countries;
-    std::vector<types::StopArea*> stop_areas;
-    std::vector<types::StopPoint*> stop_points;
-    std::vector<types::VehicleJourney*> vehicle_journeys;
-    std::vector<types::JourneyPattern*> journey_patterns;
+#define NAVIMAKE_COLLECTIONS(type_name, collection_name) std::vector<types::type_name*> collection_name;
+    ITERATE_NAVITIA_PT_TYPES(NAVIMAKE_COLLECTIONS)
     std::vector<types::StopTime*> stops;
-    std::vector<types::Connection*> connections;
-    std::vector<types::JourneyPatternPoint*> journey_pattern_points;
-    std::vector<types::District*> districts;
-    std::vector<types::Department*> departments;
-    std::vector<types::ValidityPattern*> validity_patterns;
-    std::vector<types::Route*> routes;
     std::vector<types::JourneyPatternPointConnection*> journey_pattern_point_connections;
 
 
