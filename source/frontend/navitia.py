@@ -1,12 +1,6 @@
 # coding=utf-8
-import type_pb2
-import json
-import dict2xml
-import copy
-import re
 import sys
 import signal
-from protobuf_to_dict import protobuf_to_dict
 from werkzeug.wrappers import Request, Response
 from werkzeug.wsgi import responder
 from werkzeug.routing import Map, Rule
