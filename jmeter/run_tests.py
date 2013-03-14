@@ -49,29 +49,24 @@ if res != 0:
     sys.exit(1)
 print
 
+os.chdir("..")
+
 print "Binarisation de Nantes"
-res = subprocess.call(["./naviMake/navimake", "--osm", "../data_sources/Nantes/nantes.pbf", "-i", "../data_sources/Nantes/", "-o", "nantes.nav.lz4"])
+res = subprocess.call(["./build/naviMake/navimake", "--osm", "../data_sources/Nantes/nantes.pbf", "-i", "../data_sources/Nantes/", "-o", "nantes.nav.lz4"])
 if res != 0:
     print "Il y a eu des soucis avec la binarisation, code retour : ", str(res)
     sys.exit(1)
 print
 
-print "Création des fichiers de configuration"
+print "Création du fichier de configuration Navitia"
 f = open('navitia.ini', 'w+') # ça tronque le fichier
 f.write(
 """[GENERAL]
 database=nantes.nav.lz4""")
 f.close() # ça tronque le fichier
-f = open('Jörmungandr.ini', 'w+') # ça tronque le fichier
-f.write(
-"""[instance]
-socket=ipc:///tmp/default_navitia
-key=moo""")
-f.close()
-
 
 print "Instanciation de navitia"
-navitia = subprocess.Popen(["./navitia/navitia"])
+navitia = subprocess.Popen(["./build/navitia/navitia"])
 #On laisse le temps que les données soient effectivement chargée
 time.sleep(5)
 navitia.poll()
@@ -79,7 +74,14 @@ if navitia.returncode != None:
     print "Impossible d'instancier navitia, code de retour : ", str(navitia.returncode)
 print
 
-os.chdir("..")
+
+print "Création du fichier de configuration Jörmungandr"
+f = open('Jörmungandr.ini', 'w+') # ça tronque le fichier
+f.write(
+"""[instance]
+socket=ipc:///tmp/default_navitia
+key=moo""")
+f.close()
 
 print "Instanciation de Jörmungandr"
 jormungandr = subprocess.Popen(["python", "./navitia_git/source/frontend/navitia.py"])
@@ -89,6 +91,7 @@ jormungandr.poll()
 if jormungandr.returncode != None:
     print "Impossible d'instancier Jörmungandr, code de retour : ", str(navitia.jormungandr)
 print
+
 
 print "Lancement des tests jmeter"
 if os.path.isfile(jmeter_result):
