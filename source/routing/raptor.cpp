@@ -389,9 +389,9 @@ RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
     clear_and_init(departures, {}, borne, true, true, walking_speed, walking_distance);
 
     if(clockwise) {
-        boucleRAPTOR(required_properties);
+        boucleRAPTOR(required_properties, true);
     } else {
-        boucleRAPTORreverse(required_properties);
+        boucleRAPTORreverse(required_properties, true);
     }
 }
 

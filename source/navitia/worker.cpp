@@ -180,7 +180,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     } else {
         return navitia::routing::raptor::make_isochrone(*calculateur, origin, request.datetimes(0),
                                                         request.clockwise(), request.walking_speed(), request.walking_distance(), /*request.wheelchair()*/false,
-                                                        forbidden, *street_network_worker);
+                                                        forbidden, *street_network_worker, request.max_duration());
     }
 }
 

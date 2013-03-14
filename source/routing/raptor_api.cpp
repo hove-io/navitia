@@ -301,12 +301,12 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
         return response;
     }
     
-    navitia::type::DateTime bound = clockwise ? navitia::type::DateTime::inf : navitia::type::DateTime::min;
     
     std::vector<idx_label> tmp;
     int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
     int time = datetime.time_of_day().total_seconds();
     navitia::type::DateTime init_dt = navitia::type::DateTime(day, time);
+    navitia::type::DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
 
     raptor.isochrone(departures, init_dt, bound,
                            walking_speed, walking_distance, wheelchair, forbidden, clockwise);

@@ -76,7 +76,9 @@ class Arguments:
         "walking_distance" : Argument("Maximum walking distance in meters", int,
                                       False, False, 1000),
         "wheelchair" : Argument("Does the journey has to be accessible?",
-                                boolean, False, False, False)
+                                boolean, False, False, False),
+        "max_duration" : Argument("Maximum duratioon of the isochrone", int,
+                                  False, False, order=4, defaultValue = 3600)
         }
 
 @singleton

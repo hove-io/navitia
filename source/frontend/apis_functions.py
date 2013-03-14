@@ -134,6 +134,7 @@ def journeys(requested_type, request_args, version, region):
     #req.journeys.forbiddenroute += request.args.getlist('forbiddenroute[]')
     req.journeys.walking_speed = request_args["walking_speed"]
     req.journeys.walking_distance = request_args["walking_distance"]
+    req.journeys.max_duration = request_args["max_duration"]
     resp = NavitiaManager().send_and_receive(req, region)
     return resp
 
