@@ -24,6 +24,7 @@ message JourneysRequest {
     repeated string forbidden_uris = 7;
     required double walking_speed = 8;
     required int32 walking_distance =10;
+    optional int32 max_duration = 11;
 }
 
 message ProximityListRequest {

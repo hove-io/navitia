@@ -166,7 +166,9 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
         }
     }
 
-    std::multimap<std::string, std::string> forbidden;
+    std::vector<std::string> forbidden;
+    for(int i = 0; i < request.forbidden_uris_size(); ++i)
+        forbidden.push_back(request.forbidden_uris(i));
 
     std::vector<std::string> datetimes;
     for(int i = 0; i < request.datetimes_size(); ++i)
@@ -180,7 +182,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     } else {
         return navitia::routing::raptor::make_isochrone(*calculateur, origin, request.datetimes(0),
                                                         request.clockwise(), request.walking_speed(), request.walking_distance(), /*request.wheelchair()*/false,
-                                                        forbidden, *street_network_worker);
+                                                        forbidden, *street_network_worker, request.max_duration());
     }
 }
 

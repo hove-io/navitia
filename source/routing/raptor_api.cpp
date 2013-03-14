@@ -199,7 +199,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               const type::EntryPoint &destination, 
               const std::vector<std::string> &datetimes_str, bool clockwise,
               const float walking_speed, const int walking_distance, const bool wheelchair,
-              std::multimap<std::string, std::string> forbidden,
+              std::vector<std::string> forbidden,
               streetnetwork::StreetNetwork & worker) {
 
     pbnavitia::Response response;
@@ -280,7 +280,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    type::EntryPoint origin,
                                    const std::string &datetime_str,bool clockwise,
                                    float walking_speed, int walking_distance,  bool wheelchair,
-                                   std::multimap<std::string, std::string> forbidden,
+                                   std::vector<std::string> forbidden,
                                    streetnetwork::StreetNetwork & worker, int max_duration) {
     
     pbnavitia::Response response;
@@ -301,12 +301,12 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
         return response;
     }
     
-    navitia::type::DateTime bound = clockwise ? navitia::type::DateTime::inf : navitia::type::DateTime::min;
     
     std::vector<idx_label> tmp;
     int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
     int time = datetime.time_of_day().total_seconds();
     navitia::type::DateTime init_dt = navitia::type::DateTime(day, time);
+    navitia::type::DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
 
     raptor.isochrone(departures, init_dt, bound,
                            walking_speed, walking_distance, wheelchair, forbidden, clockwise);

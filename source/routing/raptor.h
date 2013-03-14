@@ -69,7 +69,7 @@ struct RAPTOR : public AbstractRouter
                                   const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne,
                                   const float walking_speed, const int walking_distance,
                                   const type::Properties &required_properties,
-                                  const std::multimap<std::string, std::string> & forbidden,
+                                  const std::vector<std::string> & forbidden,
                                   Visitor vis);
 
     /** Calcul d'itinéraires dans le sens horaire à partir de plusieurs 
@@ -81,7 +81,7 @@ struct RAPTOR : public AbstractRouter
                 const std::vector<std::pair<type::idx_t, double> > &destinations,
                 const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne = navitia::type::DateTime::inf,
                 const float walking_speed=1.38, const int walking_distance = 1000, const type::Properties &required_properties = 0,
-                const std::multimap<std::string, std::string> & forbidden = std::multimap<std::string, std::string>());
+                const std::vector<std::string> & forbidden = std::vector<std::string>());
 
     /** Calcul d'itinéraires dans le sens horaire à partir de plusieurs 
      *  stop points de départs, vers plusieurs stoppoints d'arrivée, 
@@ -113,7 +113,7 @@ struct RAPTOR : public AbstractRouter
                         const std::vector<std::pair<type::idx_t, double> > &destinations,
                         const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne = navitia::type::DateTime::min, float walking_speed=1.38,
                         int walking_distance = 1000, const type::Properties &required_properties = 0,
-                        const std::multimap<std::string, std::string> & forbidden = std::multimap<std::string, std::string>());
+                        const std::vector<std::string> & forbidden = std::vector<std::string>());
     
     /** Calcul l'isochrone à partir de tous les points contenus dans departs,
      *  vers tous les autres points.
@@ -123,13 +123,13 @@ struct RAPTOR : public AbstractRouter
     isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
               const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne = navitia::type::DateTime::min,
               float walking_speed=1.38, int walking_distance = 1000, const type::Properties &required_properties = 0,
-              const std::multimap<std::string, std::string> & forbidden = std::multimap<std::string, std::string>(),
+              const std::vector<std::string>& forbidden = std::vector<std::string>(),
               bool clockwise = true);
 
 
     /// Désactive les journey_patterns qui n'ont pas de vj valides la veille, le jour, et le lendemain du calcul
     /// Gère également les lignes, modes, journey_patterns et VJ interdits
-    void set_journey_patterns_valides(uint32_t date, const std::multimap<std::string, std::string> & forbidden);
+    void set_journey_patterns_valides(uint32_t date, const std::vector<std::string> & forbidden);
 
     ///Boucle principale, parcourt les journey_patterns,
     void boucleRAPTOR(const type::Properties &required_properties, bool global_pruning = true);
