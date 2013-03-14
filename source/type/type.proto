@@ -89,6 +89,7 @@ message Route {
     optional bool is_frequence = 5;
     optional Line line = 7;
     repeated JourneyPattern journey_patterns = 8;
+    repeated Message messages = 9;
 }
 
 message JourneyPattern {

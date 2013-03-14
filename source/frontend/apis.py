@@ -98,9 +98,9 @@ class Apis:
                             Arguments.nextTimesArguments,
                            "description" : "Retrieves the departures after datetime at the stop points filtered with filter",
                           "order":3},
-        "line_schedule" : {"endpoint" : on_line_schedule, "arguments" :
+        "route_schedule" : {"endpoint" : on_route_schedule, "arguments" :
                            Arguments.scheduleArguments,
-                           "description" : "Retrieves the schedule of line at the day datetime",
+                           "description" : "Retrieves the schedule of route at the day datetime",
                           "order":4},
         "stops_schedule" : {"endpoint" : on_stops_schedule, "arguments" :
                             Arguments.stopsScheduleArguments,
