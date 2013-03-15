@@ -79,8 +79,11 @@ message Line {
     optional string code = 5;
     optional string color = 9;
     repeated Route routes = 10;
+    optional CommercialMode commercial_mode = 11;
+    repeated PhysicalMode physical_mode = 12;
+    optional Network network = 13;
 
-    repeated Message messages = 11;
+    repeated Message messages = 14;
 }
 
 message Route {
