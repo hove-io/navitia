@@ -544,6 +544,7 @@ struct StopTime {
     uint32_t local_traffic_zone;
 
     std::bitset<8> properties;
+
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}

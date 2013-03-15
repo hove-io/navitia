@@ -36,7 +36,6 @@ void Data::normalize_uri(){
 }
 
 void Data::complete(){
-    //@TODO il faut ajouter la création des excode pour tout ce qui est lié au journey pattern
     build_journey_patterns();
     build_journey_pattern_points();
     build_journey_pattern_point_connections();
