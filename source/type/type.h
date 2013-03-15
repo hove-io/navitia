@@ -593,7 +593,6 @@ struct EntryPoint {
     EntryPoint(const std::string & uri);
 
     EntryPoint() : type(Type_e::Unknown), uri("") {}
-
 };
 
 } } //namespace navitia::type

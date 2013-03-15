@@ -107,7 +107,10 @@ class NavitiaManager:
                 try:
                     resp = self.send_and_receive(req, key)
                     if resp:
-                        parsed = json.loads(resp.metadatas.shape)
+                        try:
+                            parsed = json.loads(resp.metadatas.shape)
+                        except:
+                            print resp.metadatas.shape
                         instance.geom = geometry.shape(parsed)
                 except DeadSocketException, e:
                     print e

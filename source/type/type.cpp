@@ -371,10 +371,7 @@ EntryPoint::EntryPoint(const std::string &uri) : uri(uri) {
                    this->coordinates.set_lon(boost::lexical_cast<double>(uri.substr(pos+1, pos2 - pos - 1)));
                    this->coordinates.set_lat(boost::lexical_cast<double>(uri.substr(pos2+1)));
                }
-           }catch(boost::bad_lexical_cast){
-               this->coordinates.set_lon(0);
-               this->coordinates.set_lat(0);
-           }
+           }catch(boost::bad_lexical_cast){}
        }
    }
 }} //namespace navitia::type
