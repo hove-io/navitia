@@ -237,11 +237,12 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopTime
     if(idx == type::invalid_idx)
         return ;
     navitia::type::StopTime st = data.pt_data.stop_times.at(idx);
-    boost::posix_time::ptime d = boost::posix_time::from_iso_string("19700101");
-    boost::posix_time::ptime p = d +  boost::posix_time::seconds(st.arrival_time);
+    boost::posix_time::time_duration p = boost::posix_time::seconds(st.arrival_time);
+
     stop_time->set_arrival_time(boost::posix_time::to_iso_string(p));
-    p = d +  boost::posix_time::seconds(st.departure_time);
-    stop_time->set_arrival_time(boost::posix_time::to_iso_string(p));
+
+    p = boost::posix_time::seconds(st.departure_time);
+    stop_time->set_departure_time(boost::posix_time::to_iso_string(p));
     stop_time->set_pickup_allowed(st.pick_up_allowed());
     stop_time->set_drop_off_allowed(st.drop_off_allowed());
     if(st.journey_pattern_point_idx != type::invalid_idx && max_depth > 0)

@@ -264,7 +264,14 @@ struct VehicleJourney: public TransmodelHeader, Nameable, hasProperties{
     StopTime * first_stop_time;
     std::string block_id;
 
-    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), wheelchair_boarding(false), validity_pattern(NULL), stop_time_list(), block_id(""){}
+    bool is_adapted;
+    ValidityPattern* adapted_validity_pattern;
+    std::vector<VehicleJourney*> adapted_vehicle_journey_list;
+    VehicleJourney* theoric_vehicle_journey;
+
+
+    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), wheelchair_boarding(false), 
+    validity_pattern(NULL), is_adapted(false), adapted_validity_pattern(NULL), theoric_vehicle_journey(NULL){}
 
     navitia::type::VehicleJourney get_navitia_type() const;
 
@@ -284,7 +291,7 @@ struct Equipement : public TransmodelHeader {
     };
 
     std::bitset<9> equipement_kind;
-    
+
 };
 
 struct JourneyPatternPoint : public TransmodelHeader, Nameable{
@@ -322,6 +329,7 @@ public:
     nt::ValidityPattern get_navitia_type() const;
 
     bool operator<(const ValidityPattern& other) const;
+    bool operator==(const ValidityPattern& other) const;
 };
 
 struct StopPoint : public TransmodelHeader, Nameable, hasProperties{
@@ -335,7 +343,7 @@ struct StopPoint : public TransmodelHeader, Nameable, hasProperties{
 
     StopArea* stop_area;
     City* city;
-    Network* network; 
+    Network* network;
 
     bool wheelchair_boarding;
 

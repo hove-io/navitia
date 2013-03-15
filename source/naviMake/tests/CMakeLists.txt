@@ -19,3 +19,8 @@ add_executable(gtfs_parser_test gtfsparser_test.cpp)
 target_link_libraries(gtfs_parser_test connectors types utils ${Boost_LIBRARIES})
 
 ADD_TEST(gtfs_parser_test ${EXECUTABLE_OUTPUT_PATH}/gtfs_parser_test --report_level=no)
+
+add_executable(adapted_test adapted_test.cpp)
+target_link_libraries(adapted_test connectors types utils data ${Boost_LIBRARIES})
+
+ADD_TEST(adapted_test ${EXECUTABLE_OUTPUT_PATH}/adapted_test --report_level=no)

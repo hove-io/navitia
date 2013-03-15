@@ -166,10 +166,9 @@ class Apis:
                        "description" : "Computes and retrieves an isochrone",
                           "order":1, "universal" : True},
         "proximity_list" : {"endpoint" : on_proximity_list, "arguments" : {
-                "lon" : Argument("Longitude of the point from where you want objects", float, True, False, order=0),
-                "lat" : Argument("Latitude of the point from where you want objects", float, True, False, order=1),
+                "uri" : Argument("uri arround which you want to look for objects. Not all objects make sense (e.g. a mode).", entrypoint(), True, False, order=0),
                 "distance" : Argument("Distance range of the query", int, False, False, 1000, order=3),
-                "object_type[]" : Argument("Type of the objects you want to have in return", str, False, True, ["stop_area", "stop_point"], order=4),
+                "object_type[]" : Argument("Type of the objects to return", str, False, True, ["stop_area", "stop_point"], order=4),
                 "depth" : Argument("Maximum depth on objects", int, False, False, 1)
                 },
             "description" : "Retrieves all the objects around a point within the given distance",
