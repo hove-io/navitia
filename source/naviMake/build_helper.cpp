@@ -16,7 +16,7 @@ VJ & VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs
 }
 
 
-VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string &block_id, bool wheelchair_boarding) : b(b){
+VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string &block_id, bool wheelchair_boarding, const std::string& uri) : b(b){
     vj = new types::VehicleJourney();
     b.data.vehicle_journeys.push_back(vj);
 
@@ -41,6 +41,7 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     }
     vj->block_id = block_id;
     vj->wheelchair_boarding = wheelchair_boarding;
+    vj->uri = uri;
     if(!b.data.physical_modes.empty())
         vj->physical_mode = b.data.physical_modes.front();
 
@@ -53,7 +54,7 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32
     b.data.stops.push_back(st);
     auto it = b.sps.find(sp_name);
     if(it == b.sps.end()){
-        st->tmp_stop_point = new types::StopPoint();        
+        st->tmp_stop_point = new types::StopPoint();
         st->tmp_stop_point->name = sp_name;
         st->tmp_stop_point->uri = sp_name;
 
@@ -118,8 +119,8 @@ SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelc
     return *this;
 }
 
-VJ builder::vj(const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, const bool wheelchair_boarding){
-    return VJ(*this, line_name, validity_pattern, block_id, wheelchair_boarding);
+VJ builder::vj(const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, const bool wheelchair_boarding, const std::string& uri){
+    return VJ(*this, line_name, validity_pattern, block_id, wheelchair_boarding, uri);
 }
 
 SA builder::sa(const std::string &name, double x, double y, const bool wheelchair_boarding){

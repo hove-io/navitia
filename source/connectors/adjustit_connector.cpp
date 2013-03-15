@@ -104,7 +104,7 @@ QSqlQuery AtLoader::find_disrupt(const Config& params, const boost::posix_time::
             "convert(varchar, impact.impact_dailyenddate, 108) AS application_daily_end_hour, "//7
             "impact.impact_activedays AS active_days, "//8
             "tcobjectref.tcobjectcodeext AS object_external_code, "//9
-            "tcobjectref.tcobjecttype AS object_type, "//10
+            "tcobjectref.tcobjecttype AS object_type "//10
             //"impactBroadcast.impact_title AS title, "//11
             //"ImpactBroadcast.impact_msg AS message "//12
         "FROM "
@@ -114,7 +114,7 @@ QSqlQuery AtLoader::find_disrupt(const Config& params, const boost::posix_time::
         "WHERE "
             "event.event_publicationenddate >= CONVERT(DATETIME, :date_pub, 126) "
             "AND (event.event_closedate IS NULL OR event.event_closedate > CONVERT(DATETIME, :date_clo, 126)) "
-            "AND state = 'disrupt'"
+            "AND impact_state = 'disrupt'"
     );
 
     if(!result){

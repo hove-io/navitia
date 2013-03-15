@@ -11,6 +11,9 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+#include "utils/exception.h"
+#include "connectors/adjustit_connector.h"
+#include "adapted.h"
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
@@ -27,21 +30,37 @@ int main(int argc, char * argv[])
         ("osm", po::value<std::string>(&osm_filename), "Fichier OpenStreetMap au format pbf")
         ("output,o", po::value<std::string>(&output)->default_value("data.nav"), "Fichier de sortie")
         ("version,v", "Affiche la version")
-        ("poi", po::value<std::string>(&poi_path), "Repertoire des fichiers POI et POIType au format txt");
+        ("poi", po::value<std::string>(&poi_path), "Repertoire des fichiers POI et POIType au format txt")
+        ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
+        ("at-connection-string", po::value<std::string>(), "parametres de connection à la base de données : DRIVER=FreeTDS;SERVER=;UID=;PWD=;DATABASE=;TDS_Version=8.0;Port=1433;ClientCharset=UTF-8");
+
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
 
     if(vm.count("version")){
         std::cout << argv[0] << " V" << NAVITIA_VERSION << " " << NAVITIA_BUILD_TYPE << std::endl;
         return 0;
     }
 
+
+    if(vm.count("config-file")){
+        std::ifstream stream;
+        stream.open(vm["config-file"].as<std::string>());
+        if(!stream.is_open()){
+            throw navitia::exception("loading config file failed");
+        }else{
+            po::store(po::parse_config_file(stream, desc), vm);
+        }
+    }
+
     if(vm.count("help") || !vm.count("input")) {
         std::cout << desc <<  "\n";
         return 1;
     }
+
+    po::notify(vm);
+
     if(!vm.count("topo") && !vm.count("osm")) {
         std::cout << "Pas de topologie chargee" << std::endl;
     }
@@ -53,7 +72,7 @@ int main(int argc, char * argv[])
 
 
     nav_data.meta.publication_date = pt::microsec_clock::local_time();
-    
+
     // Est-ce que l'on charge la carto ?
     start = pt::microsec_clock::local_time();
     if(vm.count("topo")){
@@ -85,6 +104,18 @@ int main(int argc, char * argv[])
 
     data.normalize_uri();
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+
+    if(vm.count("at-connection-string")){
+        navitia::AtLoader::Config conf;
+        conf.connect_string = vm["at-connection-string"].as<std::string>();
+        navitia::AtLoader loader;
+        std::map<std::string, std::vector<navitia::type::Message>> messages;
+        messages = loader.load_disrupt(conf, pt::second_clock::local_time());
+        std::cout << "nombre d'objet impactés: " << messages.size() << std::endl;
+        navimake::AtAdaptedLoader adapter;
+        adapter.apply(messages, data);
+    }
 
 
     std::cout << "line: " << data.lines.size() << std::endl;
@@ -150,6 +181,6 @@ int main(int argc, char * argv[])
     std::cout << "\t street network " << sn << "ms" << std::endl;
     std::cout << "\t construction de autocomplete " << autocomplete << "ms" << std::endl;
     std::cout << "\t serialization " << save << "ms" << std::endl;
-    
+
     return 0;
 }
