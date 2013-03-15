@@ -24,5 +24,6 @@ namespace navitia { namespace routing {
     makePathesreverse(std::vector<std::pair<type::idx_t, double> > destinations,
                       navitia::type::DateTime dt, const float walking_speed,
                       const RAPTOR &raptor_);
+    void patch_datetimes(Path &path);
 
 }}}

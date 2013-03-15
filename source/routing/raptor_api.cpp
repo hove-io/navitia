@@ -54,6 +54,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                     departure_time = path.items.front().departure - temp.length/1.38;
                 }
             }
+            
 
             // La partie TC et correspondances
             for(PathItem & item : path.items){
@@ -81,8 +82,6 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                         // L'heure d'arrivée au dernier stop point
                         arrival_ptime = to_posix_time(arr_time, d);
                     }
-
-
                     if( item.vj_idx != type::invalid_idx){ // TODO : réfléchir si ça peut vraiment arriver
                         boost::posix_time::time_period action_period(departure_ptime, arrival_ptime); 
                         fill_section(pb_section, item.vj_idx, d, now, action_period);
@@ -95,6 +94,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                     switch(item.type) {
                         case extension : pb_section->set_transfer_type(pbnavitia::EXTENSION); break;
                         case guarantee : pb_section->set_transfer_type(pbnavitia::GUARANTEED); break;
+                        case waiting : pb_section->set_type(pbnavitia::WAITING); break;
                         default :pb_section->set_transfer_type(pbnavitia::WALKING); break;
                     }
 
@@ -102,12 +102,17 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                     fill_pb_placemark(d.pt_data.stop_points[item.stop_points.front()], d, pb_section->mutable_origin(), 1, now, action_period);
                     fill_pb_placemark(d.pt_data.stop_points[item.stop_points.back()], d, pb_section->mutable_destination(), 1, now, action_period);
                 }
+                auto dep_time = item.departure;
+                pb_section->set_begin_datetime(iso_string(d, dep_time.date(), dep_time.hour()));
+                auto arr_time = item.arrival;
+                pb_section->set_end_datetime(iso_string(d, arr_time.date(), arr_time.hour()));
+
                 pb_section->set_duration(item.arrival - item.departure);
                 if(departure_time == navitia::type::DateTime::inf)
                     departure_time = item.departure;
                 arrival_time = item.arrival;
-                pb_journey->set_duration(arrival_time - departure_time);
             }
+            pb_journey->set_duration(arrival_time - departure_time);
 
 
 

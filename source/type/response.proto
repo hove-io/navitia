@@ -115,6 +115,9 @@ message Section {
 // Dans tous les cas
     optional string polyline = 13;
     optional int32 duration = 14;
+
+    optional string begin_datetime = 15;
+    optional string end_datetime = 16;
 }
 
 message Journey {
