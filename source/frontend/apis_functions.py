@@ -5,6 +5,7 @@ from protobuf_to_dict import protobuf_to_dict
 
 from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
 from renderers import render, render_from_protobuf
+from werkzeug.wrappers import Response
 
 
 def on_index(request, version = None, region = None ):
