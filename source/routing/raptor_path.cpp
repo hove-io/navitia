@@ -98,7 +98,6 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
             } else {
                 item = PathItem(l.departure, r2.arrival);
             }
-
             item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_rpid].stop_point_idx);
             item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[l.rpid_embarquement].stop_point_idx);
             if(l.type == connection)
@@ -107,17 +106,17 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                 item.type = extension;
             else if(l.type == connection_guarantee)
                 item.type = guarantee;
-
             result.items.push_back(item);
-
             rpid_embarquement = navitia::type::invalid_idx;
             current_rpid = l.rpid_embarquement;
+       
         } else { // Sinon c'est un trajet TC
             // Est-ce que qu'on a à faire à un nouveau trajet ?
             if(rpid_embarquement == navitia::type::invalid_idx) {
                 l = raptor_.labels[countb][current_rpid];
                 rpid_embarquement = l.rpid_embarquement;
                 current_st = raptor_.data.pt_data.stop_times.at(l.stop_time_idx);
+                //Sert pour les horaires en  fréquences
                 uint32_t gap = l.arrival.hour() - current_st.arrival_time%raptor_.data.dataRaptor.SECONDS_PER_DAY;
 
                 item = PathItem();
@@ -214,11 +213,38 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                 ++ result.nb_changes;
         }
     }
+    patch_datetimes(result);
 
     return result;
 }
 
+ void patch_datetimes(Path &path){
+    PathItem previous_item;
+    std::vector<std::pair<int, PathItem>> to_insert;
+    for(auto item = path.items.begin(); item!= path.items.end(); ++item) {
+        if(previous_item.departure != type::DateTime::inf) {
+            if(item->type == walking || item->type == extension || item->type == guarantee) {
+                auto duration = item->arrival - item->departure;
+                item->departure = previous_item.arrival;
+                item->arrival = item->departure + duration;
+            } else {
+                PathItem waitingItem=PathItem();
+                waitingItem.departure = previous_item.arrival;
+                waitingItem.arrival = item->departure;
+                waitingItem.type = waiting;
+                waitingItem.stop_points.push_back(previous_item.stop_points.front());
+                to_insert.push_back(std::make_pair(item-path.items.begin(), waitingItem));
+            }
+            previous_item = *item;
+        } else if(item->type == public_transport) {
+            previous_item = *item;
+        }
+    }
 
+    std::reverse(to_insert.begin(), to_insert.end());
+    for(auto pos_value : to_insert)
+        path.items.insert(path.items.begin()+pos_value.first, pos_value.second);
+}
 
 
 

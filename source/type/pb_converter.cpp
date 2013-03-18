@@ -109,8 +109,26 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line,
     line->set_uri(l.uri);
 
     if(depth>0){
-        for(nt::idx_t route_idx : l.route_list)
+        std::vector<nt::idx_t> physical_mode_idxes;
+        for(nt::idx_t route_idx : l.route_list) {
             fill_pb_object(route_idx, data, line->add_routes(), depth-1);
+            
+            const auto &route = data.pt_data.routes[route_idx];
+            for(auto journey_pattern_idx : route.journey_pattern_list) {
+                const auto &jp = data.pt_data.journey_patterns[journey_pattern_idx];
+                for(auto vjidx : jp.vehicle_journey_list) {
+                    const auto &vj = data.pt_data.vehicle_journeys[vjidx];
+                    if(std::find(physical_mode_idxes.begin(), physical_mode_idxes.end(), vj.physical_mode_idx) == physical_mode_idxes.end()) {
+                        physical_mode_idxes.push_back(vj.physical_mode_idx);
+                    }
+                }
+            }
+        }
+        for(nt::idx_t physical_mode_idx : physical_mode_idxes)
+            fill_pb_object(physical_mode_idx, data, line->add_physical_mode(), depth-1);
+        
+        fill_pb_object(l.commercial_mode_idx, data, line->mutable_commercial_mode(), depth-1);
+        fill_pb_object(l.network_idx, data, line->mutable_network(), depth-1);
     }
 }
 

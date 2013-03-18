@@ -29,9 +29,9 @@ enum API {
     STATUS = 7;
     NEXT_DEPARTURES = 8;
     NEXT_ARRIVALS = 9;
-    DEPARTURE_BOARD = 10;
-    ROUTE_SCHEDULE = 11;
-    STOPS_SCHEDULE = 12;
+    DEPARTURE_BOARDS = 10;
+    ROUTE_SCHEDULES = 11;
+    STOPS_SCHEDULES = 12;
     ISOCHRONE = 13;
     METADATAS = 14;
 }
@@ -79,8 +79,11 @@ message Line {
     optional string code = 5;
     optional string color = 9;
     repeated Route routes = 10;
+    optional CommercialMode commercial_mode = 11;
+    repeated PhysicalMode physical_mode = 12;
+    optional Network network = 13;
 
-    repeated Message messages = 11;
+    repeated Message messages = 14;
 }
 
 message Route {

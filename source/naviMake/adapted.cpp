@@ -40,6 +40,9 @@ void delete_vj(types::VehicleJourney* vehicle_journey, const nt::Message& messag
 void AtAdaptedLoader::init_map(const Data& data){
     for(auto* vj : data.vehicle_journeys){
         vj_map[vj->uri] = vj;
+        if(vj->tmp_line != NULL){
+            line_vj_map[vj->tmp_line->uri].push_back(vj);
+        }
     }
 }
 
@@ -50,6 +53,12 @@ std::vector<types::VehicleJourney*> AtAdaptedLoader::reconcile_impact_with_vj(co
         if(vj_map.find(message.object_uri) != vj_map.end()){
             //cas simple; le message pointe sur un seul vj
             result.push_back(vj_map[message.object_uri]);
+        }
+    }
+    if(message.object_type == navitia::type::Type_e::Line){
+        if(line_vj_map.find(message.object_uri) != line_vj_map.end()){
+            //on à deja le mapping line => vjs
+            return line_vj_map[message.object_uri];
         }
     }
 //

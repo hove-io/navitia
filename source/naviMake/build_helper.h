@@ -26,6 +26,9 @@ struct VJ {
     VJ& operator()(const std::string &stopPoint, int arrivee, int depart = -1, uint32_t local_traffic_zone = std::numeric_limits<uint32_t>::max(),
                    bool drop_off_allowed = true, bool pick_up_allowed = true);
 
+    VJ& operator()(const std::string &stopPoint, const std::string& arrivee, const std::string& depart,
+            uint32_t local_traffic_zone = std::numeric_limits<uint32_t>::max(), bool drop_off_allowed = true, bool pick_up_allowed = true);
+
     /// Transforme les horaires en horaire entre start_time et end_time, toutes les headways secs
     VJ & frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs);
 

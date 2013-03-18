@@ -33,7 +33,8 @@ enum ItemType {
     public_transport,
     walking,
     extension,
-    guarantee
+    guarantee,
+    waiting
 };
 
 /** Étape d'un itinéraire*/
