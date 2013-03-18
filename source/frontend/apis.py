@@ -49,7 +49,11 @@ class Arguments:
         "filter" : Argument("Conditions to filter the returned objects", filter,
                             False, False, "", order=0),
         "depth" : Argument("Maximum depth on objects", int, False, False, 1,
-                           order = 50)
+                           order = 50),
+        "count" : Argument("Number of elements per page", int, False, False,
+                           50),
+        "startPage" : Argument("The page number of the ptref result", int,
+                               False, False, 0)
         }
     journeyArguments = {
         "origin" : Argument("Departure Point", entrypoint(), True, False, order = 0),

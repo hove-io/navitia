@@ -1,6 +1,7 @@
 # coding=utf-8
 import type_pb2
 import request_pb2
+import response_pb2
 from protobuf_to_dict import protobuf_to_dict
 
 from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
@@ -149,6 +150,29 @@ def ptref(requested_type, request_args, version, region):
     req.ptref.filter = request_args["filter"]
     req.ptref.depth = request_args["depth"]
     resp = NavitiaManager().send_and_receive(req, region)
+    pagination = response_pb2.Pagination()
+    pagination.startPage = request_args["startPage"]
+    pagination.itemsPerPage = request_args["count"]
+
+    objects = resp.ptref.ListFields()[0][1]
+    pagination.totalResult = len(objects)
+
+    begin = int(pagination.startPage) * int(pagination.itemsPerPage)
+    end = begin + int(pagination.itemsPerPage) 
+    if end > pagination.totalResult:
+        end = pagination.totalResult -1
+    
+
+    toDelete = [] 
+    if begin < pagination.totalResult :
+        toDelete = range(0, begin) + range(end, pagination.totalResult)
+    else:
+        toDelete = range(0, pagination.totalResult)
+
+    toDelete.reverse()
+    for i in toDelete:
+        del objects[i]
+    resp.pagination.CopyFrom(pagination)
     return resp
 
 
