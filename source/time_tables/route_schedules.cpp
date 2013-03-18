@@ -1,4 +1,4 @@
-#include "route_schedule.h"
+#include "route_schedules.h"
 #include "thermometer.h"
 #include "request_handle.h"
 #include "type/pb_converter.h"
@@ -61,7 +61,7 @@ std::vector<vector_string> make_matrice(const std::vector<vector_stopTime> & sto
 
 pbnavitia::Response route_schedule(const std::string & filter, const std::string &str_dt, uint32_t duration, const uint32_t max_depth, type::Data &d) {
     RequestHandle handler("ROUTE_SCHEDULE", "", str_dt, duration, d);
-    handler.pb_response.set_requested_api(pbnavitia::ROUTE_SCHEDULE);
+    handler.pb_response.set_requested_api(pbnavitia::ROUTE_SCHEDULES);
 
     if(handler.pb_response.has_error()) {
         return handler.pb_response;

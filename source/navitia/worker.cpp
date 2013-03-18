@@ -5,10 +5,10 @@
 #include "autocomplete/autocomplete_api.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential_api.h"
-#include "time_tables/route_schedule.h"
+#include "time_tables/route_schedules.h"
 #include "time_tables/next_passages.h"
-#include "time_tables/2stops_schedule.h"
-#include "time_tables/departure_board.h"
+#include "time_tables/2stops_schedules.h"
+#include "time_tables/departure_boards.h"
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -120,11 +120,11 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
         return navitia::timetables::next_departures(request.departure_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(),/* request.wheelchair()*/false, this->data);
     case pbnavitia::NEXT_ARRIVALS:
         return navitia::timetables::next_arrivals(request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), /*request.wheelchair()*/false, this->data);
-    case pbnavitia::STOPS_SCHEDULE:
+    case pbnavitia::STOPS_SCHEDULES:
         return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), this->data);
-    case pbnavitia::DEPARTURE_BOARD:
+    case pbnavitia::DEPARTURE_BOARDS:
         return navitia::timetables::departure_board(request.departure_filter(), request.from_datetime(), request.duration(), this->data);
-    case pbnavitia::ROUTE_SCHEDULE:
+    case pbnavitia::ROUTE_SCHEDULES:
         return navitia::timetables::route_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
     default:
         LOG4CPLUS_WARN(logger, "On a reçu une requête time table inconnue");
@@ -215,11 +215,11 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
     case pbnavitia::STATUS: return status(); break;
     case pbnavitia::LOAD: return load(); break;
     case pbnavitia::AUTOCOMPLETE: return autocomplete(request.autocomplete()); break;
-    case pbnavitia::ROUTE_SCHEDULE:
+    case pbnavitia::ROUTE_SCHEDULES:
     case pbnavitia::NEXT_DEPARTURES:
     case pbnavitia::NEXT_ARRIVALS:
-    case pbnavitia::STOPS_SCHEDULE:
-    case pbnavitia::DEPARTURE_BOARD:
+    case pbnavitia::STOPS_SCHEDULES:
+    case pbnavitia::DEPARTURE_BOARDS:
         return next_stop_times(request.next_stop_times(), request.requested_api()); break;
     case pbnavitia::ISOCHRONE:
     case pbnavitia::PLANNER: return journeys(request.journeys(), request.requested_api()); break;

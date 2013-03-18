@@ -1,4 +1,4 @@
-#include "2stops_schedule.h"
+#include "2stops_schedules.h"
 
 namespace pt = boost::posix_time;
 namespace navitia { namespace timetables {
@@ -84,7 +84,7 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
         return pb_response;
     }
 
-    pb_response.set_requested_api(pbnavitia::DEPARTURE_BOARD);
+    pb_response.set_requested_api(pbnavitia::STOPS_SCHEDULES);
     auto current_time = pt::second_clock::local_time();
     pt::time_period action_period(to_posix_time(dt, data), to_posix_time(max_dt, data));
 
