@@ -13,7 +13,7 @@ from find_extrem_datetimes import *
 def pagination(request_pagination, objects, request):
     count = request_pagination.itemsPerPage
     startPage = request_pagination.startPage
-    totalResult = request_pagination.totalResult
+    totalResult = request_pagination.totalResult = len(objects)
     begin = int(startPage) * int(count)
     end = begin + int(count) 
 
@@ -24,6 +24,7 @@ def pagination(request_pagination, objects, request):
         toDelete = range(0, begin) + range(end, totalResult)
     else:
         toDelete = range(0, totalResult)
+    print "toDelete %i"%(len(toDelete))
     toDelete.reverse()
     for i in toDelete:
         del objects[i]
@@ -33,7 +34,12 @@ def pagination(request_pagination, objects, request):
     query_args = ""
     for key, value in request.iteritems():
         if key != "startPage":
-            query_args += key + "=" +str(value) + "&"
+            if type(value) == type([]):
+                for v in value:
+                    query_args += key + "=" +str(v) + "&"
+            else:
+                query_args += key + "=" +str(value) + "&"
+
 
     if startPage > 0:
         request_pagination.previousPage = query_args+"startPage=%i"%(startPage-1)
@@ -103,6 +109,17 @@ def on_autocomplete(request_args, version, region):
         req.autocomplete.types.append(pb_type[object_type])
 
     resp = NavitiaManager().send_and_receive(req, region)
+    pagination_resp = response_pb2.Pagination()
+    pagination_resp.startPage = request_args["startPage"]
+    pagination_resp.itemsPerPage = request_args["count"]
+    if resp.autocomplete.items:
+        print "Je suis la"
+        objects = resp.autocomplete.items
+        pagination(pagination_resp, objects, request_args)
+    else:
+        print "Je suis ici"
+        pagination_resp.totalResult = 0
+    resp.pagination.CopyFrom(pagination_resp)
     return resp
 
 
@@ -147,9 +164,8 @@ def on_proximity_list(request_args, version, region):
     pagination_resp = response_pb2.Pagination()
     pagination_resp.startPage = request_args["startPage"]
     pagination_resp.itemsPerPage = request_args["count"]
-    if resp.proximitylist.ListFields():
-        objects = resp.proximitylist.ListFields()[0][1]
-        pagination_resp.totalResult = len(objects)
+    if resp.proximitylist.items:
+        objects = resp.proximitylist.items
         pagination(pagination_resp, objects, request_args)
     else:
         pagination_resp.totalResult = 0
@@ -201,7 +217,6 @@ def ptref(requested_type, request_args, version, region):
     pagination_resp.itemsPerPage = request_args["count"]
     if resp.ptref.ListFields():
         objects = resp.ptref.ListFields()[0][1]
-        pagination_resp.totalResult = len(objects)
         pagination(pagination_resp, objects, request_args)
     else:
         pagination_resp.totalResult = 0
