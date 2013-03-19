@@ -1,12 +1,14 @@
 from datetime import datetime, timedelta
 from operator import attrgetter
+import sys
 def extremes(resp, request): 
     before = None
     after = None
 
     try:
-        asap_journey = min([journey for journey in resp.planner.journey if resp.planner.journey.arrival_date_time != ''], key=attrgetter('arrival_date_time'))
+        asap_journey = min([journey for journey in resp.planner.journeys if journey.arrival_date_time != ''], key=attrgetter('arrival_date_time'))
     except:
+        print "Unexpected error:", sys.exc_info()[0]
         return (None, None)
 
     query_args = ""

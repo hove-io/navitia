@@ -171,11 +171,13 @@ def journeys(requested_type, request_args, version, region):
     for forbidden_uri in request_args["forbidden_uris[]"]:
         req.journeys.forbidden_uris.append(forbidden_uri)
     resp = NavitiaManager().send_and_receive(req, region)
-    return resp
 
-
+    (before, after) = extremes(resp, request_args)
+    print before
+    print after
     if before and after:
-        resp.planner.before, resp.planner.after
+        resp.planner.before = before
+        resp.planner.after = after
 
     return resp
 
