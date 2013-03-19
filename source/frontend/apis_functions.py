@@ -7,6 +7,39 @@ from protobuf_to_dict import protobuf_to_dict
 from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
 from renderers import render, render_from_protobuf
 from werkzeug.wrappers import Response
+from find_extrem_datetimes import *
+
+
+def pagination(request_pagination, objects, request):
+    count = request_pagination.itemsPerPage
+    startPage = request_pagination.startPage
+    totalResult = request_pagination.totalResult
+    begin = int(startPage) * int(count)
+    end = begin + int(count) 
+
+    if end > totalResult:
+        end = totalResult
+    toDelete = [] 
+    if begin < totalResult :
+        toDelete = range(0, begin) + range(end, totalResult)
+    else:
+        toDelete = range(0, totalResult)
+    toDelete.reverse()
+    for i in toDelete:
+        del objects[i]
+    previousPage = None
+    nextPage = None
+    query_args = ""
+    for key, value in request.iteritems():
+        if key != "startPage":
+            query_args += key + "=" +str(value) + "&"
+
+    if startPage > 0:
+        request_pagination.previousPage = query_args+"startPage=%i"%(startPage-1)
+
+    if end<totalResult:
+        request_pagination.nextPage = query_args+"startPage=%i"%(startPage+1)
+
 
 
 def on_index(request, version = None, region = None ):
@@ -60,7 +93,6 @@ pb_type = {
         'address': type_pb2.ADDRESS,
 	'poi': type_pb2.POI 
         }
-
 def on_autocomplete(request_args, version, region):
     req = request_pb2.Request()
     req.requested_api = type_pb2.AUTOCOMPLETE
@@ -111,6 +143,17 @@ def on_proximity_list(request_args, version, region):
     for object_type in request_args["object_type[]"]:
         req.proximity_list.types.append(pb_type[object_type])
     resp = NavitiaManager().send_and_receive(req, region)
+    pagination_resp = response_pb2.Pagination()
+    pagination_resp.startPage = request_args["startPage"]
+    pagination_resp.itemsPerPage = request_args["count"]
+    if resp.proximitylist.ListFields():
+        objects = resp.proximitylist.ListFields()[0][1]
+        pagination_resp.totalResult = len(objects)
+        pagination(pagination_resp, objects, request_args)
+    else:
+        pagination_resp.totalResult = 0
+    resp.pagination.CopyFrom(pagination_resp)
+
     return resp
 
 
@@ -150,29 +193,17 @@ def ptref(requested_type, request_args, version, region):
     req.ptref.filter = request_args["filter"]
     req.ptref.depth = request_args["depth"]
     resp = NavitiaManager().send_and_receive(req, region)
-    pagination = response_pb2.Pagination()
-    pagination.startPage = request_args["startPage"]
-    pagination.itemsPerPage = request_args["count"]
-
-    objects = resp.ptref.ListFields()[0][1]
-    pagination.totalResult = len(objects)
-
-    begin = int(pagination.startPage) * int(pagination.itemsPerPage)
-    end = begin + int(pagination.itemsPerPage) 
-    if end > pagination.totalResult:
-        end = pagination.totalResult -1
-    
-
-    toDelete = [] 
-    if begin < pagination.totalResult :
-        toDelete = range(0, begin) + range(end, pagination.totalResult)
+    pagination_resp = response_pb2.Pagination()
+    pagination_resp.startPage = request_args["startPage"]
+    pagination_resp.itemsPerPage = request_args["count"]
+    if resp.ptref.ListFields():
+        objects = resp.ptref.ListFields()[0][1]
+        pagination_resp.totalResult = len(objects)
+        pagination(pagination_resp, objects, request_args)
     else:
-        toDelete = range(0, pagination.totalResult)
-
-    toDelete.reverse()
-    for i in toDelete:
-        del objects[i]
-    resp.pagination.CopyFrom(pagination)
+        pagination_resp.totalResult = 0
+    resp.pagination.CopyFrom(pagination_resp)
+    
     return resp
 
 
