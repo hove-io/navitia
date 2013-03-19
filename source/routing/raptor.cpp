@@ -405,6 +405,7 @@ void RAPTOR::set_journey_patterns_valides(uint32_t date, const std::vector<std::
         const navitia::type::Route & route = data.pt_data.routes[journey_pattern.route_idx];
         const navitia::type::Line & line = data.pt_data.lines[route.line_idx];
         const navitia::type::CommercialMode & commercial_mode = data.pt_data.commercial_modes[journey_pattern.commercial_mode_idx];
+        const navitia::type::Network & network = data.pt_data.networks[line.network_idx];
 
         // On gère la liste des interdits
         bool forbidden_journey_pattern = false;
@@ -416,6 +417,8 @@ void RAPTOR::set_journey_patterns_valides(uint32_t date, const std::vector<std::
             if(forbid_uri == journey_pattern.uri)
                 forbidden_journey_pattern = true;
             if(forbid_uri == commercial_mode.uri)
+                forbidden_journey_pattern = true;
+            if(forbid_uri == network.uri)
                 forbidden_journey_pattern = true;
         }
 

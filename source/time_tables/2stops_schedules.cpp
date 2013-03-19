@@ -3,51 +3,31 @@
 namespace pt = boost::posix_time;
 namespace navitia { namespace timetables {
 
-std::unordered_map<type::idx_t, uint32_t>  get_arrival_order(const std::vector<type::idx_t> &departure_journey_patternpoint, const std::string &arrival_filter, type::Data & data) {
-    std::unordered_map<type::idx_t, uint32_t> result;
-    std::unordered_map<type::idx_t, type::idx_t> departure_journey_pattern_journey_patternpoint;
-    //On les ajoute dans un map ayant pour clé la journey_pattern
-    for(type::idx_t rpidx : departure_journey_patternpoint) {
-        auto rp = data.pt_data.journey_pattern_points[rpidx];
-        departure_journey_pattern_journey_patternpoint.insert(std::make_pair(rp.journey_pattern_idx, rp.idx));
-    }
-
-
-    //On va chercher tous les journey_pattern points correspondant au deuxieme filtre
-    std::vector<type::idx_t > journey_pattern_points = navitia::ptref::make_query(type::Type_e::JourneyPatternPoint, arrival_filter, data);
-
-    //On parcourt tous les journey_pattern points du deuxieme filtre
-    for(type::idx_t rpidx : journey_pattern_points) {
-
-        auto it_rp = departure_journey_pattern_journey_patternpoint.find(data.pt_data.journey_pattern_points[rpidx].journey_pattern_idx);
-        //Si un journey_pattern point du premier filtre a la meme journey_pattern, et que son ordre est inferieur à l'ordre de celui du deuxieme filtre alors on ajoute au résultat
-        if((it_rp != departure_journey_pattern_journey_patternpoint.end()) && (data.pt_data.journey_pattern_points[it_rp->second].order < data.pt_data.journey_pattern_points[rpidx].order)) {
-            result.insert(std::make_pair(data.pt_data.journey_pattern_points[it_rp->second].idx, data.pt_data.journey_pattern_points[rpidx].order));
-        }
-    }
-    //On retourne les pairs obtenues
-    return result;
-}
-
 
 std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
-                                        const type::DateTime &datetime, const type::DateTime &max_datetime, const int nb_stoptimes,
+                                        const type::DateTime &datetime, const type::DateTime &max_datetime,
                                         type::Data & data) {
 
     std::vector<pair_dt_st> result;
     //On va chercher tous les journey_pattern points correspondant au deuxieme filtre
-    std::vector<type::idx_t > departure_journey_pattern_points_tmp = navitia::ptref::make_query(type::Type_e::JourneyPatternPoint, departure_filter, data);
+    std::vector<type::idx_t> departure_journey_pattern_points = navitia::ptref::make_query(type::Type_e::JourneyPatternPoint, departure_filter, data);
+    std::vector<type::idx_t> arrival_journey_pattern_points = navitia::ptref::make_query(type::Type_e::JourneyPatternPoint, arrival_filter, data);
 
-    //On récupère maintenant l'intersection des deux filtre, on obtient un map entre un journey_pattern point de départ, et order d'arrivée
-    auto departure_idx_arrival_order = get_arrival_order(departure_journey_pattern_points_tmp, arrival_filter, data);
-
-    std::vector<type::idx_t> departure_journey_pattern_points;
-    for(auto dep_order : departure_idx_arrival_order)
-        departure_journey_pattern_points.push_back(dep_order.first);
+    std::/*unordered_*/map<type::idx_t, size_t> departure_idx_arrival_order;
+    for(type::idx_t idx : departure_journey_pattern_points) {
+        const auto & jpp = data.pt_data.journey_pattern_points[idx];
+        auto it_idx = std::find_if(arrival_journey_pattern_points.begin(), arrival_journey_pattern_points.end(),
+                                  [&](type::idx_t idx2)
+                                  {return data.pt_data.journey_pattern_points[idx2].journey_pattern_idx == jpp.journey_pattern_idx;});
+        if(it_idx != arrival_journey_pattern_points.end() && jpp.order < data.pt_data.journey_pattern_points[*it_idx].order)
+            departure_idx_arrival_order.insert(std::make_pair(idx, data.pt_data.journey_pattern_points[*it_idx].order));
+    }
+    //On ne garde que departure qui sont dans les deux sets, et dont l'ordre est bon.
+    std::remove_if(departure_journey_pattern_points.begin(), departure_journey_pattern_points.end(),
+               [&](type::idx_t idx){return departure_idx_arrival_order.find(idx) != departure_idx_arrival_order.end(); });
 
     //On demande tous les next_departures
-    auto departure_dt_st = get_stop_times(departure_journey_pattern_points, datetime, max_datetime, nb_stoptimes, data);
-
+    auto departure_dt_st = get_stop_times(departure_journey_pattern_points, datetime, max_datetime, std::numeric_limits<int>::max(), data);
 
     //On va chercher les retours
     for(auto dep_dt_st : departure_dt_st) {
@@ -66,8 +46,7 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
 
 
 pbnavitia::Response stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
-                                    const std::string &str_dt, uint32_t duration, 
-                                    uint32_t nb_stoptimes, uint32_t depth, type::Data & data) {
+                                    const std::string &str_dt, uint32_t duration, uint32_t depth, type::Data & data) {
     pbnavitia::Response pb_response;
 
     boost::posix_time::ptime ptime;
@@ -78,7 +57,7 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
     max_dt = dt + duration;
     std::vector<pair_dt_st> board;
     try {
-        board = stops_schedule(departure_filter, arrival_filter, dt, max_dt, nb_stoptimes, data);
+        board = stops_schedule(departure_filter, arrival_filter, dt, max_dt, data);
     } catch(ptref::parsing_error parse_error) {
         pb_response.set_error(parse_error.more);
         return pb_response;
