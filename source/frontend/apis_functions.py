@@ -27,6 +27,7 @@ def pagination(request_pagination, objects, request):
     toDelete.reverse()
     for i in toDelete:
         del objects[i]
+    request_pagination.itemOnPage = len(objects)
     previousPage = None
     nextPage = None
     query_args = ""
