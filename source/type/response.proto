@@ -242,6 +242,15 @@ message Metadatas {
     required string status = 4;
 }
 
+message Pagination {
+    required int32 totalResult = 1;
+    required int32 startPage = 2;
+    required int32 itemsPerPage = 3;
+    required int32 itemOnPage = 4;
+    optional string nextPage = 5;
+    optional string previousPage = 6;
+}
+
 message Response{
     required API requested_api = 1;
     optional string error = 2;
@@ -261,4 +270,5 @@ message Response{
     optional Load load = 14;
     optional Isochrone isochrone = 15;
     optional Metadatas metadatas = 16;
+    optional Pagination pagination = 17;
 }

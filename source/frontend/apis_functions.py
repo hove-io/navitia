@@ -1,11 +1,52 @@
 # coding=utf-8
 import type_pb2
 import request_pb2
+import response_pb2
 from protobuf_to_dict import protobuf_to_dict
 
 from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
 from renderers import render, render_from_protobuf
 from werkzeug.wrappers import Response
+from find_extrem_datetimes import *
+
+
+def pagination(request_pagination, objects, request):
+    count = request_pagination.itemsPerPage
+    startPage = request_pagination.startPage
+    totalResult = request_pagination.totalResult = len(objects)
+    begin = int(startPage) * int(count)
+    end = begin + int(count) 
+
+    if end > totalResult:
+        end = totalResult
+    toDelete = [] 
+    if begin < totalResult :
+        toDelete = range(0, begin) + range(end, totalResult)
+    else:
+        toDelete = range(0, totalResult)
+    print "toDelete %i"%(len(toDelete))
+    toDelete.reverse()
+    for i in toDelete:
+        del objects[i]
+    request_pagination.itemOnPage = len(objects)
+    previousPage = None
+    nextPage = None
+    query_args = ""
+    for key, value in request.iteritems():
+        if key != "startPage":
+            if type(value) == type([]):
+                for v in value:
+                    query_args += key + "=" +str(v) + "&"
+            else:
+                query_args += key + "=" +str(value) + "&"
+
+
+    if startPage > 0:
+        request_pagination.previousPage = query_args+"startPage=%i"%(startPage-1)
+
+    if end<totalResult:
+        request_pagination.nextPage = query_args+"startPage=%i"%(startPage+1)
+
 
 
 def on_index(request, version = None, region = None ):
@@ -59,7 +100,6 @@ pb_type = {
         'address': type_pb2.ADDRESS,
 	'poi': type_pb2.POI 
         }
-
 def on_autocomplete(request_args, version, region):
     req = request_pb2.Request()
     req.requested_api = type_pb2.AUTOCOMPLETE
@@ -69,6 +109,17 @@ def on_autocomplete(request_args, version, region):
         req.autocomplete.types.append(pb_type[object_type])
 
     resp = NavitiaManager().send_and_receive(req, region)
+    pagination_resp = response_pb2.Pagination()
+    pagination_resp.startPage = request_args["startPage"]
+    pagination_resp.itemsPerPage = request_args["count"]
+    if resp.autocomplete.items:
+        print "Je suis la"
+        objects = resp.autocomplete.items
+        pagination(pagination_resp, objects, request_args)
+    else:
+        print "Je suis ici"
+        pagination_resp.totalResult = 0
+    resp.pagination.CopyFrom(pagination_resp)
     return resp
 
 
@@ -110,6 +161,16 @@ def on_proximity_list(request_args, version, region):
     for object_type in request_args["object_type[]"]:
         req.proximity_list.types.append(pb_type[object_type])
     resp = NavitiaManager().send_and_receive(req, region)
+    pagination_resp = response_pb2.Pagination()
+    pagination_resp.startPage = request_args["startPage"]
+    pagination_resp.itemsPerPage = request_args["count"]
+    if resp.proximitylist.items:
+        objects = resp.proximitylist.items
+        pagination(pagination_resp, objects, request_args)
+    else:
+        pagination_resp.totalResult = 0
+    resp.pagination.CopyFrom(pagination_resp)
+
     return resp
 
 
@@ -127,11 +188,13 @@ def journeys(requested_type, request_args, version, region):
     for forbidden_uri in request_args["forbidden_uris[]"]:
         req.journeys.forbidden_uris.append(forbidden_uri)
     resp = NavitiaManager().send_and_receive(req, region)
-    return resp
 
-
+    (before, after) = extremes(resp, request_args)
+    print before
+    print after
     if before and after:
-        resp.planner.before, resp.planner.after
+        resp.planner.before = before
+        resp.planner.after = after
 
     return resp
 
@@ -149,6 +212,16 @@ def ptref(requested_type, request_args, version, region):
     req.ptref.filter = request_args["filter"]
     req.ptref.depth = request_args["depth"]
     resp = NavitiaManager().send_and_receive(req, region)
+    pagination_resp = response_pb2.Pagination()
+    pagination_resp.startPage = request_args["startPage"]
+    pagination_resp.itemsPerPage = request_args["count"]
+    if resp.ptref.ListFields():
+        objects = resp.ptref.ListFields()[0][1]
+        pagination(pagination_resp, objects, request_args)
+    else:
+        pagination_resp.totalResult = 0
+    resp.pagination.CopyFrom(pagination_resp)
+    
     return resp
 
 

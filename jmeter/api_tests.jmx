@@ -642,19 +642,12 @@ AssertionResult.setFailure(true);
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="ProximityList" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
             <collectionProp name="Arguments.arguments">
-              <elementProp name="lat" elementType="HTTPArgument">
+              <elementProp name="uri" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">47.20704484</stringProp>
+                <stringProp name="Argument.value">coord:-1.57309458:47.20704484</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">lat</stringProp>
-              </elementProp>
-              <elementProp name="lon" elementType="HTTPArgument">
-                <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">-1.57309458</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-                <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">lon</stringProp>
+                <stringProp name="Argument.name">uri</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
@@ -729,19 +722,12 @@ previous_dist = item.distance;
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="ProximityList with no region" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
             <collectionProp name="Arguments.arguments">
-              <elementProp name="lat" elementType="HTTPArgument">
+              <elementProp name="uri" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">47.20704484</stringProp>
+                <stringProp name="Argument.value">coord:-1.57309458:47.20704484</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">lat</stringProp>
-              </elementProp>
-              <elementProp name="lon" elementType="HTTPArgument">
-                <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">-1.57309458</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-                <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">lon</stringProp>
+                <stringProp name="Argument.name">uri</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
@@ -823,19 +809,12 @@ previous_dist = item.distance;
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
                 <stringProp name="Argument.name">distance</stringProp>
               </elementProp>
-              <elementProp name="lat" elementType="HTTPArgument">
+              <elementProp name="uri" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">47.20704484</stringProp>
+                <stringProp name="Argument.value">coord:-1.57309458:47.20704484</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">lat</stringProp>
-              </elementProp>
-              <elementProp name="lon" elementType="HTTPArgument">
-                <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">-1.57309458</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-                <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">lon</stringProp>
+                <stringProp name="Argument.name">uri</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
@@ -917,19 +896,12 @@ previous_dist = item.distance;
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
                 <stringProp name="Argument.name">object_type[]</stringProp>
               </elementProp>
-              <elementProp name="lat" elementType="HTTPArgument">
+              <elementProp name="uri" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">47.20704484</stringProp>
+                <stringProp name="Argument.value">coord:-1.57309458:47.20704484</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">lat</stringProp>
-              </elementProp>
-              <elementProp name="lon" elementType="HTTPArgument">
-                <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">-1.57309458</stringProp>
-                <stringProp name="Argument.metadata">=</stringProp>
-                <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">lon</stringProp>
+                <stringProp name="Argument.name">uri</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
