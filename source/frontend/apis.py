@@ -87,7 +87,7 @@ class Arguments:
 class Apis:
     apis = {
         "autocomplete" : {"endpoint" : on_autocomplete, "arguments" :
-                          {"name" : Argument("The data to search", str, True, False, order = 1),
+                          {"name" : Argument("The data to search", unicode, True, False, order = 1),
                            "object_type[]" : Argument("The type of datas you want in return", str, False, True, 
                                                     ["stop_area", "stop_point", "address", "poi"], 2,["stop_area", "stop_point", "address", "poi"]),
                             "depth" : Argument("Maximum depth on objects", int, False, False, 1),
@@ -209,7 +209,7 @@ class Apis:
                 except RegionNotFound, e:
                     return Response(e, status=404)
             else:
-                return Response("Invalid arguments: " + str(v.details), status=400)
+                return Response("Invalid arguments: " + unicode(v.details), status=400)
         else:
             return Response("Unknown api: " + api, status=404)
 
