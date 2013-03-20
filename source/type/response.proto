@@ -246,7 +246,7 @@ message Pagination {
     required int32 totalResult = 1;
     required int32 startPage = 2;
     required int32 itemsPerPage = 3;
-    required int32 itemOnPage = 4;
+    required int32 itemsOnPage = 4;
     optional string nextPage = 5;
     optional string previousPage = 6;
 }

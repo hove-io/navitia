@@ -11,41 +11,34 @@ from find_extrem_datetimes import *
 
 
 def pagination(request_pagination, objects, request):
-    count = request_pagination.itemsPerPage
-    startPage = request_pagination.startPage
-    totalResult = request_pagination.totalResult = len(objects)
-    begin = int(startPage) * int(count)
-    end = begin + int(count) 
+    begin = int(request_pagination.startPage) * int(request_pagination.itemsPerPage)
+    end = begin + int(request_pagination.itemsPerPage) 
+    if end > request_pagination.totalResult:
+        end = request_pagination.totalResult
 
-    if end > totalResult:
-        end = totalResult
     toDelete = [] 
-    if begin < totalResult :
-        toDelete = range(0, begin) + range(end, totalResult)
+    if begin < request_pagination.totalResult :
+        toDelete = range(0, begin) + range(end, request_pagination.totalResult)
     else:
-        toDelete = range(0, totalResult)
-    print "toDelete %i"%(len(toDelete))
+        toDelete = range(0, request_pagination.totalResult)
     toDelete.reverse()
     for i in toDelete:
         del objects[i]
-    request_pagination.itemOnPage = len(objects)
-    previousPage = None
-    nextPage = None
+    request_pagination.itemsOnPage = len(objects)
     query_args = ""
     for key, value in request.iteritems():
-        if key != "startPage":
+        if key != "request_pagination.startPage":
             if type(value) == type([]):
                 for v in value:
-                    query_args += key + "=" +str(v) + "&"
+                    query_args += key + "=" +unicode(v) + "&"
             else:
-                query_args += key + "=" +str(value) + "&"
+                query_args += key + "=" +unicode(value) + "&"
+    if request_pagination.startPage > 0:
+        request_pagination.previousPage = query_args+"request_pagination.startPage=%i"%(request_pagination.startPage-1)
 
-
-    if startPage > 0:
-        request_pagination.previousPage = query_args+"startPage=%i"%(startPage-1)
-
-    if end<totalResult:
-        request_pagination.nextPage = query_args+"startPage=%i"%(startPage+1)
+    if end<request_pagination.totalResult:
+        request_pagination.nextPage = query_args+"request_pagination.startPage=%i"%(request_pagination.startPage+1)
+    
 
 
 
@@ -113,11 +106,10 @@ def on_autocomplete(request_args, version, region):
     pagination_resp.startPage = request_args["startPage"]
     pagination_resp.itemsPerPage = request_args["count"]
     if resp.autocomplete.items:
-        print "Je suis la"
         objects = resp.autocomplete.items
+        pagination_resp.totalResult = len(objects)
         pagination(pagination_resp, objects, request_args)
     else:
-        print "Je suis ici"
         pagination_resp.totalResult = 0
     resp.pagination.CopyFrom(pagination_resp)
     return resp
@@ -166,6 +158,7 @@ def on_proximity_list(request_args, version, region):
     pagination_resp.itemsPerPage = request_args["count"]
     if resp.proximitylist.items:
         objects = resp.proximitylist.items
+        pagination_resp.totalResult = len(objects)
         pagination(pagination_resp, objects, request_args)
     else:
         pagination_resp.totalResult = 0
@@ -190,8 +183,6 @@ def journeys(requested_type, request_args, version, region):
     resp = NavitiaManager().send_and_receive(req, region)
 
     (before, after) = extremes(resp, request_args)
-    print before
-    print after
     if before and after:
         resp.planner.before = before
         resp.planner.after = after
@@ -217,6 +208,7 @@ def ptref(requested_type, request_args, version, region):
     pagination_resp.itemsPerPage = request_args["count"]
     if resp.ptref.ListFields():
         objects = resp.ptref.ListFields()[0][1]
+        pagination_resp.totalResult = len(objects)
         pagination(pagination_resp, objects, request_args)
     else:
         pagination_resp.totalResult = 0
