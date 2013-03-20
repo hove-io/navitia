@@ -9,7 +9,7 @@ def render(dico, format, callback):
     if format == 'json':
         json_str = json.dumps(dico, ensure_ascii=False)
         if callback == '' or callback == None:
-            result = Response(json_str, mimetype='application/json')
+            result = Response(json_str, mimetype='application/json;charset=utf-8')
         else:
             result = Response(callback + '(' + json_str + ')', mimetype='application/json;charset=utf-8')
     elif format == 'txt':
