@@ -50,12 +50,48 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
             item->set_uri(data.geo_ref.pois[result_item.idx].uri);
             item->set_quality(result_item.quality);
             break;
-
         default:
             break;
         }
     }
 }
+
+int penalty_by_type(navitia::type::Type_e ntype, bool Is_address_type) {
+    // Ordre de tri :
+    // Add, SA, POI, SP, City : si présence de addressType dans le recherche
+    // City, SA, POI, Add, SP : si non
+    int result = 0;
+    switch(ntype){
+    case navitia::type::Type_e::City:
+        result = Is_address_type ? 8 : 0;
+        break;
+    case navitia::type::Type_e::StopArea:
+        result = 2;
+        break;
+    case navitia::type::Type_e::POI:
+        result = 4;
+        break;
+    case navitia::type::Type_e::Address:
+        result = Is_address_type ? 0 : 6;
+        break;
+    case navitia::type::Type_e::StopPoint:
+        result = 8;
+        result = Is_address_type ? 6 : 8;
+        break;
+    default:
+        break;
+    }
+    return result;
+}
+
+void Update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result, navitia::type::Type_e ntype, bool Is_address_type){
+    //Mettre à jour la qualité sur la pénalité par type
+    int penalty = penalty_by_type(ntype, Is_address_type);
+    for(auto &item : ac_result){
+        item.quality -= penalty;
+    }
+}
+
 
 pbnavitia::Response autocomplete(const std::string &name,
                                  const std::vector<nt::Type_e> &filter,
@@ -66,25 +102,26 @@ pbnavitia::Response autocomplete(const std::string &name,
     pbnavitia::Response pb_response;
     pb_response.set_requested_api(pbnavitia::AUTOCOMPLETE);
 
+    bool addType = d.pt_data.stop_area_autocomplete.is_address_type(name, d.geo_ref.alias, d.geo_ref.synonymes);
     std::vector<Autocomplete<nt::idx_t>::fl_quality> result;
     pbnavitia::Autocomplete* pb = pb_response.mutable_autocomplete();
     BOOST_FOREACH(nt::Type_e type, filter){
         switch(type){
         case nt::Type_e::StopArea:
-            result = d.pt_data.stop_area_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.word_weight);
+            result = d.pt_data.stop_area_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight);
             break;
         case nt::Type_e::StopPoint:
-            result = d.pt_data.stop_point_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.word_weight);
+            result = d.pt_data.stop_point_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight);
             break;
         case nt::Type_e::City:
-            result = d.pt_data.city_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.word_weight);
+            result = d.pt_data.city_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight);
             break;
         case nt::Type_e::Address:
             //result = d.geo_ref.fl.find_complete(name);
             result = d.geo_ref.find_ways(name);
             break;
         case nt::Type_e::POI:
-            result = d.geo_ref.fl_poi.find_complete(name, d.geo_ref.alias, d.geo_ref.word_weight);
+            result = d.geo_ref.fl_poi.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight);
         default: break;
         }
 

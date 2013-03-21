@@ -71,28 +71,28 @@ std::vector<idx_t> PT_Data::get_all_index(Type_e type) const {
 ITERATE_NAVITIA_PT_TYPES(GET_DATA)
 
 
-void PT_Data::build_autocomplete(const std::map<std::string, std::string> & map_alias){
+void PT_Data::build_autocomplete(const std::map<std::string, std::string> & map_alias, const std::map<std::string, std::string> & map_synonymes){
     for(const StopArea & sa : this->stop_areas){
         if(sa.city_idx < this->cities.size())
-            this->stop_area_autocomplete.add_string(sa.name + " " + cities[sa.city_idx].name, sa.idx,type::Type_e::StopArea, map_alias);
+            this->stop_area_autocomplete.add_string(sa.name + " " + cities[sa.city_idx].name, sa.idx,map_alias, map_synonymes);
         else
-            this->stop_area_autocomplete.add_string(sa.name, sa.idx,type::Type_e::StopArea, map_alias);
+            this->stop_area_autocomplete.add_string(sa.name, sa.idx,map_alias, map_synonymes);
     }
 
     this->stop_area_autocomplete.build();
 
     for(const StopPoint & sp : this->stop_points){
         if(sp.city_idx < this->cities.size())
-            this->stop_point_autocomplete.add_string(sp.name + " " + cities[sp.city_idx].name, sp.idx, type::Type_e::StopPoint, map_alias);
+            this->stop_point_autocomplete.add_string(sp.name + " " + cities[sp.city_idx].name, sp.idx, map_alias, map_synonymes);
         else
-            this->stop_point_autocomplete.add_string(sp.name, sp.idx, type::Type_e::StopPoint, map_alias);
+            this->stop_point_autocomplete.add_string(sp.name, sp.idx, map_alias, map_synonymes);
     }
 
     this->stop_point_autocomplete.build();
 
 
     for(const City & city : cities){
-        this->city_autocomplete.add_string(city.name, city.idx, type::Type_e::City, map_alias);
+        this->city_autocomplete.add_string(city.name, city.idx, map_alias, map_synonymes);
     }
     this->city_autocomplete.build();
 }

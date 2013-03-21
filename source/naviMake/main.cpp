@@ -11,13 +11,14 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
+#include "poi_parser.h"
 
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
 int main(int argc, char * argv[])
 {
-    std::string type, input, output, date, topo_path, osm_filename, poi_path;
+    std::string type, input, output, date, topo_path, osm_filename, poi_path, alias_path;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
@@ -27,7 +28,8 @@ int main(int argc, char * argv[])
         ("osm", po::value<std::string>(&osm_filename), "Fichier OpenStreetMap au format pbf")
         ("output,o", po::value<std::string>(&output)->default_value("data.nav"), "Fichier de sortie")
         ("version,v", "Affiche la version")
-        ("poi", po::value<std::string>(&poi_path), "Repertoire des fichiers POI et POIType au format txt");
+        ("poi", po::value<std::string>(&poi_path), "Repertoire des fichiers POI et POIType au format txt")
+        ("alias",po::value<std::string>(&alias_path), "Repertoire des fichiers alias et synonymes au format txt pour autocompletion");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -68,7 +70,17 @@ int main(int argc, char * argv[])
     }
 
     if (vm.count("poi")){
-        navitia::georef::fill_from_poi(nav_data.geo_ref, poi_path);
+        //navitia::georef::fill_from_poi(nav_data.geo_ref, poi_path);
+        navitia::georef::PoiParser poiparser(poi_path);
+        poiparser.fill(nav_data.geo_ref);
+        std::cout << "POI : " << nav_data.geo_ref.poi_map.size() << std::endl;
+    }
+
+    if (vm.count("alias")){
+        navitia::georef::PoiParser aliasparser(alias_path);
+        aliasparser.fill_alias_synonyme(nav_data.geo_ref);
+        std::cout << "alias : " << nav_data.geo_ref.alias.size() << std::endl;
+        std::cout << "synonymes : " << nav_data.geo_ref.synonymes.size() << std::endl;
     }
 
     sn = (pt::microsec_clock::local_time() - start).total_milliseconds();

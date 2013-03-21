@@ -60,7 +60,7 @@ struct PT_Data : boost::noncopyable{
     void build_uri();
 
     /** Construit l'indexe Autocomplete */
-    void build_autocomplete(const std::map<std::string, std::string> & map_alias);
+    void build_autocomplete(const std::map<std::string, std::string> & map_alias,const std::map<std::string, std::string> & map_synonymes);
 
     /** Construit l'indexe ProximityList */
     void build_proximity_list();

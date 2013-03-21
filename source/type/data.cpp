@@ -45,8 +45,7 @@ bool Data::load(const std::string & filename) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     try {
         this->load_lz4(filename);
-        this->geo_ref.read_alias();
-        this->build_raptor();        
+        this->build_raptor();
         last_load_at = pt::microsec_clock::local_time();
         for(size_t i = 0; i < this->pt_data.stop_times.size(); ++i)
             this->pt_data.stop_times[i].idx = i;
@@ -98,9 +97,7 @@ void Data::build_proximity_list(){
 
 
 void Data::build_autocomplete(){
-    //
-    geo_ref.read_alias();
-    pt_data.build_autocomplete(geo_ref.alias);
+    pt_data.build_autocomplete(geo_ref.alias, geo_ref.synonymes);
     geo_ref.build_autocomplete_list();
 }
 
