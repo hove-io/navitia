@@ -60,6 +60,7 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
 pbnavitia::Response autocomplete(const std::string &name,
                                  const std::vector<nt::Type_e> &filter,
                                  uint32_t depth,
+                                 uint32_t nbmax,
                                  const navitia::type::Data &d){
 
     pbnavitia::Response pb_response;
@@ -86,6 +87,10 @@ pbnavitia::Response autocomplete(const std::string &name,
             result = d.geo_ref.fl_poi.find_complete(name, d.geo_ref.alias, d.geo_ref.word_weight);
         default: break;
         }
+
+        if (result.size() > nbmax){result.resize(nbmax);}
+        Update_quality(result, type, addType);
+
         create_pb(result, type, depth, d, *pb);
     }
     return pb_response;
