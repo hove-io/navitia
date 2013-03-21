@@ -130,6 +130,17 @@ pbnavitia::Response autocomplete(const std::string &name,
 
         create_pb(result, type, depth, d, *pb);
     }
+
+    auto compare = [](pbnavitia::AutocompleteItem a, pbnavitia::AutocompleteItem b){
+            return a.quality() > b.quality();
+    };
+
+    std::sort(pb_response.mutable_autocomplete()->mutable_items()->begin(), pb_response.mutable_autocomplete()->mutable_items()->end(),compare);
+
+    while (pb_response.mutable_autocomplete()->mutable_items()->size() > nbmax){
+        pb_response.mutable_autocomplete()->mutable_items()->RemoveLast();
+    }
+
     return pb_response;
 }
 
