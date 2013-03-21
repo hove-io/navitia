@@ -94,7 +94,8 @@ class Apis:
                             "count" : Argument("Number of elements per page", int, False, False,
                                             50),
                             "startPage" : Argument("The page number of the ptref result", int,
-                                                False, False, 0)
+                                                False, False, 0),
+			    			"nbmax" : Argument("Maximum number of objects in the response", int, False, False, 10)
                            },
                           "description" : "Retrieves the objects which contains in their name the \"name\"",
                           "order":2},

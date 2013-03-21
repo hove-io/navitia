@@ -1,4 +1,4 @@
-FIND_PACKAGE(Boost 1.44 COMPONENTS unit_test_framework thread REQUIRED)
+FIND_PACKAGE(Boost 1.44 COMPONENTS unit_test_framework thread regex REQUIRED)
 
 
 SET(GEOREF_SRC_TEST

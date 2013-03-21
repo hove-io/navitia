@@ -98,6 +98,7 @@ def on_autocomplete(request_args, version, region):
     req.requested_api = type_pb2.AUTOCOMPLETE
     req.autocomplete.name = request_args['name']
     req.autocomplete.depth = request_args['depth']
+    req.autocomplete.nbmax = request_args['nbmax']
     for object_type in request_args["object_type[]"]:
         req.autocomplete.types.append(pb_type[object_type])
 

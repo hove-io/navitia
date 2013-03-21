@@ -75,6 +75,7 @@ public:
             LOG4CPLUS_TRACE(logger, "On tente de charger le fichier de configuration général : " + conf_file);
             conf->load_ini(conf_file);
             nb_threads = conf->get_as<int>("GENERAL", "nb_threads", 1);
+            geo_ref.word_weight =  conf->get_as<int>("AUTOCOMPLETE", "wordweight", 5);
         }
     }
 

@@ -8,7 +8,7 @@
 #include "osm_tags_reader.h"
 #include "georef/georef.h"
 #include "utils/functions.h"
-#include "utils/csv.h"
+//#include "utils/csv.h"
 
 namespace navitia { namespace georef {
 
@@ -204,104 +204,6 @@ void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filenam
     v.edges();
     v.HouseNumbers();    
     std::cout << "On a " << v.total_house_number << " adresses" << std::endl;
-}
-
-void fill_from_poi(GeoRef & geo_ref_to_fill, const std::string & poi_dirname){
-    // Lire les fichiers poi-type.txt
-    fill_poi_type(geo_ref_to_fill, poi_dirname);
-    std::cout << "On a " << geo_ref_to_fill.poitypes.size() << " POITypes" << std::endl;
-
-    // Lire les fichiers poi.txt
-    fill_poi(geo_ref_to_fill, poi_dirname);
-    std::cout << "On a " << geo_ref_to_fill.pois.size() << " POIs" << std::endl;
-}
-
-void fill_poi_type(GeoRef & geo_ref_to_fill, const std::string & poi_dirname){
-    // Verification des entêtes:
-    CsvReader csv(poi_dirname + "/" + "poi_type.txt", ',', true);
-    std::vector<std::string> mandatory_headers = {"poi_type_id" , "poi_type_name"};
-    if(!csv.validate(mandatory_headers)) {
-        std::cout << "Erreur lors du parsing de " << csv.filename
-                     <<". Il manque les colonnes : "
-                     << csv.missing_headers(mandatory_headers);
-    }
-
-    int id_c = csv.get_pos_col("poi_type_id"), name_c = csv.get_pos_col("poi_type_name");
-
-    int id = 1;
-    while(!csv.eof()){
-
-        auto row = csv.next();
-        if (!row.empty()){
-            georef::POIType ptype;
-            ptype.idx = id-1;
-            if (id_c != -1 && row[id_c]!= "")
-                ptype.uri = row[id_c];
-            else
-                ptype.uri = boost::lexical_cast<std::string>(id);
-            ptype.name = row[name_c];
-            geo_ref_to_fill.poitypes.push_back(ptype);
-            ++id;
-        }
-    }
-
-    //Chargement de la liste poitype_map
-    geo_ref_to_fill.build_poitypes();
-}
-
-void fill_poi(GeoRef & geo_ref_to_fill, const std::string & poi_dirname){
-    // Verification des entêtes:
-    CsvReader csv(poi_dirname + "/" + "poi.txt", ',', true);
-    std::vector<std::string> mandatory_headers = {"poi_id", "poi_name", "poi_lat", "poi_lon"};
-    if(!csv.validate(mandatory_headers)) {
-        std::cout <<  "Erreur lors du parsing de " << csv.filename
-                  <<". Il manque les colonnes : "
-                  << csv.missing_headers(mandatory_headers);
-    }
-    int id_c = csv.get_pos_col("poi_id"), name_c = csv.get_pos_col("poi_name"), weight_c = csv.get_pos_col("poi_weight"),
-            lat_c = csv.get_pos_col("poi_lat"), lon_c = csv.get_pos_col("poi_lon"), type_c = csv.get_pos_col("poi_type_id");
-
-    int id = 1;
-    while (!csv.eof()){
-        auto row = csv.next();
-        if (!row.empty()){
-            georef::POI poi;
-            poi.idx = id-1;
-            if (id_c != -1 && row[id_c] != "")
-                poi.uri = row[id_c];
-            else
-                poi.uri = boost::lexical_cast<std::string>(id);
-            poi.name = row[name_c];
-            if (weight_c != -1 && row[weight_c] != "")
-                poi.weight = boost::lexical_cast<int>(row[weight_c]);
-            else
-                poi.weight = 0;
-
-            try{
-                poi.coord.set_lon(boost::lexical_cast<double>(row[lon_c]));
-                poi.coord.set_lat(boost::lexical_cast<double>(row[lat_c]));
-            }
-            catch(boost::bad_lexical_cast ) {
-                std::cout << "Impossible de parser les coordonnées pour "
-                          << row[id_c] << " " << row[name_c];
-            }
-
-            // Lire la référence du type de POI
-            poi.poitype = row[type_c];
-            auto ptype = geo_ref_to_fill.poitype_map.find(row[type_c]);
-            if (ptype == geo_ref_to_fill.poitype_map.end()){
-                // ajouter l'Index par défaut ??
-                poi.poitype_idx = -1;
-            }
-            else
-                poi.poitype_idx = ptype->second;
-            geo_ref_to_fill.pois.push_back(poi);
-            ++id;
-        }
-    }
-    //Chargement de la liste poitype_map
-    geo_ref_to_fill.build_pois();
-
 }
 
 }}

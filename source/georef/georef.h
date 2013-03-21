@@ -179,20 +179,21 @@ struct GeoRef {
     /// Graphe pour effectuer le calcul d'itinéraire
     Graph graph;
 
-    /// Liste des alias (Pas serialisé)
+    /// Liste des alias
     std::map<std::string, std::string> alias;
-    int word_weight;
+    std::map<std::string, std::string> synonymes;
+    int word_weight;//(Pas serialisé)
 
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & ways & way_map & graph & fl_way & pl & projected_stop_points & pois & fl_poi & poitypes &poitype_map & poi_map & alias & word_weight;
+        ar & ways & way_map & graph & fl_way & pl & projected_stop_points & pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes;
     }
 
     template<class Archive> void load(Archive & ar, const unsigned int) {
         // La désérialisation d'une boost adjacency list ne vide pas le graphe
         // On avait donc une fuite de mémoire
         graph.clear();
-        ar & ways & way_map & graph & fl_way & pl & projected_stop_points & pois & fl_poi & poitypes &poitype_map & poi_map & alias & word_weight;
+        ar & ways & way_map & graph & fl_way & pl & projected_stop_points & pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
@@ -210,7 +211,6 @@ struct GeoRef {
     ///Chargement de la liste map code externe idx sur poitype et poi
     void build_poitypes();
     void build_pois();
-    void read_alias();
 
     /// Recherche d'une adresse avec un numéro en utilisant Autocomplete
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str) const;

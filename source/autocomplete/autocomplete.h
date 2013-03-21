@@ -6,6 +6,10 @@
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/map.hpp>
 #include <algorithm>
+#include <regex>
+#include <boost/regex.hpp>
+
+
 
 #include <map>
 #include <unordered_map>
@@ -31,7 +35,7 @@ struct Autocomplete
         int nb_found;
         int word_len;
         int quality;
-        int penalty;
+        //int penalty;
         navitia::type::GeographicalCoord coord;
         int house_number;
 
@@ -46,11 +50,10 @@ struct Autocomplete
     struct word_quality{
         int word_count;
         int word_distance;
-        int penalty;
 
-        word_quality():word_count(0), word_distance(0), penalty(0){}
+        word_quality():word_count(0), word_distance(0){}
         template<class Archive> void serialize(Archive & ar, const unsigned int) {
-            ar & word_count & word_distance & penalty;
+            ar & word_count & word_distance;
         }
     };
 
@@ -75,25 +78,23 @@ struct Autocomplete
     /** Étant donné une chaîne de caractères et la position de l'élément qui nous intéresse :
       * – on découpe en mots la chaîne (tokens)
       * — on rajoute la position à la liste de chaque mot
-      */
-    void add_string(std::string str, T position, navitia::type::Type_e ntype, const std::map<std::string, std::string> & map_alias){
+      */    
+    void add_string(std::string str, T position, const std::map<std::string, std::string> & map_alias,
+                    const std::map<std::string, std::string> & map_synonymes){
         word_quality wc;
-        int count = 0;
         int distance = 0;
 
         //Appeler la méthode pour traiter les alias avant de les ajouter dans le dictionaire:
-        boost::to_lower(str);
-        str = get_alias(str, map_alias);
-
-        boost::tokenizer<> tokens(str);
-        for(auto token: tokens){
-            map[token].insert(position);
-            count++;
-            distance += token.size();
+        std::vector<std::string> vec_word = tokenize(str, map_alias, map_synonymes);
+        int count = vec_word.size();
+        auto vec = vec_word.begin();
+        while(vec != vec_word.end()){
+            map[*vec].insert(position);
+            distance += (*vec).size();
+            ++vec;
         }
         wc.word_count = count;
         wc.word_distance = distance;
-        wc.penalty = penaltyByType(ntype);
         ac_list[position] = wc;
     }
 
@@ -106,35 +107,10 @@ struct Autocomplete
         for(auto key_val: map){
             vec_map.push_back(std::make_pair(key_val.first, std::vector<T>(key_val.second.begin(), key_val.second.end())));
         }
-    }
-
-    int penaltyByType(navitia::type::Type_e ntype){
-        int result = 0;
-        switch(ntype){
-        case navitia::type::Type_e::City:
-            result = 0;
-            break;
-        case navitia::type::Type_e::StopArea:
-            result = 2;
-            break;
-        case navitia::type::Type_e::StopPoint:
-            result = 4;
-            break;
-        case navitia::type::Type_e::POI:
-            result = 6;
-            break;
-        case navitia::type::Type_e::Address:
-            result = 8;
-            break;
-        default:
-            break;
-        }
-        return result;
-    }
+    }    
 
 
     // Méthodes premettant de retrouver nos éléments
-
     /** Définit un fonctor permettant de parcourir notre structure un peu particulière */
     struct comp{
         /** Utilisé pour trouver la borne inf. Quand on cherche av, on veux que avenue soit également trouvé
@@ -169,19 +145,17 @@ struct Autocomplete
     }
 
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant tous ces mots*/
-    std::vector<T> find(std::string str) const {
-        boost::to_lower(str);
+    std::vector<T> find(std::vector<std::string> vecStr) const {
         std::vector<T> result;
-        boost::tokenizer<> tokens(str);
-        auto token_it = tokens.begin();
-        if(token_it != tokens.end()){
+        auto vec = vecStr.begin();
+        if(vec != vecStr.end()){
             // Premier résultat. Il y aura au plus ces indexes
-            result = match(*token_it);
+            result = match(*vec);
 
-            for(++token_it; token_it != tokens.end(); ++token_it){
+            for(++vec; vec != vecStr.end(); ++vec){
                 std::vector<T> new_result;
-                std::sort(result.begin(), result.end());                
-                for(auto i : match(*token_it)){
+                std::sort(result.begin(), result.end());
+                for(auto i : match(*vec)){
                     // Binary search fait une recherche dichotomique pour savoir si l'élément i existe
                     // S'il existe dans les deux cas, on le garde
                     if(binary_search(result.begin(), result.end(), i)){
@@ -266,17 +240,16 @@ struct Autocomplete
     }
 
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant au moins un des mots*/
-    std::vector<fl_quality> find_complete(const std::string & str, const std::map<std::string, std::string> & map_alias, int wordweight) const{
-        std::string searchStr = str;
+    std::vector<fl_quality> find_complete(const std::string & str, const std::map<std::string, std::string> & map_alias,
+                                                    const std::map<std::string, std::string> & map_synonymes, const int wordweight) const{
+        std::vector<std::string> vec = tokenize(str, map_alias, map_synonymes);
         int wordCount = 0;
         int wordLength = 0;
         fl_quality quality;
         std::vector<T> index_result;
-        boost::to_lower(searchStr);
-        searchStr = get_alias(searchStr, map_alias);
-        index_result = find(searchStr);
-        wordCount = count(searchStr);
-        wordLength = lettercount(searchStr);
+        index_result = find(vec);
+        wordCount = vec.size();
+        wordLength = wordcount(vec);
 
         // Créer un vector de réponse:
         std::vector<fl_quality> vec_quality;
@@ -308,23 +281,8 @@ struct Autocomplete
         result -= (ac_list.at(ql.idx).word_count - ql.nb_found) * wordweight;//coeff  WordFound
 
         //Qualité sur la distance globale des mots.
-        result -= (ac_list.at(ql.idx).word_distance - ql.word_len);//Coeff de la distance = 1
+        result -= (ac_list.at(ql.idx).word_distance - ql.word_len);//Coeff de la distance = 1        
 
-        //Qualité sur la pénalité:
-        if (result != 100){
-            result -= ac_list.at(ql.idx).penalty;// Pénalité sur le type
-        }
-
-        return result;
-    }
-
-    int count(const std::string &str) const {
-        int result = 0;
-        boost::tokenizer <> tokens(str);
-
-        for (auto token_it = tokens.begin(); token_it != tokens.end(); ++token_it){
-            ++result;
-        }
         return result;
     }
 
@@ -336,6 +294,16 @@ struct Autocomplete
             result += token_it.size();
         }
         return result;
+    }
+
+    int wordcount(std::vector<std::string> & words) const{
+        int distance = 0;
+        auto vec = words.begin();
+        while(vec != words.end()){
+            distance += (*vec).size();
+            ++vec;
+        }
+        return distance;
     }
 
     /** Méthode pour récuperer le mot alias (Ghostword, alias et ShortName sont géré ici)*/
@@ -350,6 +318,7 @@ struct Autocomplete
         }
     }
 
+    // à supprimer plus tard -> utilisé que par find_partial
     std::string get_alias(const std::string & str, const std::map<std::string, std::string> & map_alias) const{
         std::string result = "";
         boost::tokenizer <> tokens(str);
@@ -359,6 +328,52 @@ struct Autocomplete
         return result;
     }
 
+    std::vector<std::string> tokenize(const std::string & str,  const std::map<std::string, std::string> & map_alias,
+                                      const std::map<std::string, std::string> & map_synonymes) const{
+        std::vector<std::string> vec;
+        std::string strToken;
+        std::string strFind = str;
+        boost::to_lower(strFind);
+
+        // Remplacer les synonymes qui existent dans le MAP
+        std::map<std::string, std::string>::const_iterator it = map_synonymes.begin();
+        while (it != map_synonymes.end()){
+            //boost::replace_all(strFind,it->first, it->second);
+            strFind = boost::regex_replace(strFind,boost::regex("\\<" + it->first + "\\>"), it->second);
+            ++it;
+        }        
+
+        boost::tokenizer <> tokens(strFind);
+        for (auto token_it: tokens){
+            strToken = alias_word(token_it, map_alias);
+            if (!strToken.empty()){
+                vec.push_back(strToken);
+            }
+
+        }
+        return vec;
+    }
+
+    bool is_address_type(const std::string & str,  const std::map<std::string, std::string> & map_alias,
+                          const std::map<std::string, std::string> & map_synonymes) const{
+        bool result = false;
+        std::vector<std::string> vec_token = tokenize(str, map_alias, map_synonymes);
+        std::vector<std::string> vecTpye = {"rue", "avenue", "place", "boulevard","chemin", "impasse"};
+        auto vtok = vec_token.begin();
+        while(vtok != vec_token.end() && (result == false)){
+            //Comparer avec le vectorType:
+            auto vtype = vecTpye.begin();
+            while(vtype != vecTpye.end() && (result == false)){
+                if (*vtok == *vtype){
+                    result = true;
+
+                }
+                ++vtype;
+            }
+            ++vtok;
+        }
+        return result;
+    }
 };
 
 }} // namespace navitia::autocomplete
