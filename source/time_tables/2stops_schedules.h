@@ -31,7 +31,7 @@ std::unordered_map<type::idx_t, uint32_t> get_arrival_order(const std::vector<ty
  * @return : Un vecteur de paires de DateTime/StopTime
  */
 std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
-                                        const type::DateTime &datetime, const type::DateTime &max_datetime, const int nb_departures,
+                                        const type::DateTime &datetime, const type::DateTime &max_datetime,
                                         type::Data & data);
 
 /**
@@ -47,7 +47,6 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
  * @return : Un object protobuff de type DEPARTURE_BOARD
  */
 pbnavitia::Response stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
-                                    const std::string &str_dt, uint32_t duration,
-                                    uint32_t nb_stoptimes, uint32_t depth, type::Data & data);
+                                    const std::string &str_dt, uint32_t duration, uint32_t depth, type::Data & data);
 
 }}

@@ -1,6 +1,7 @@
 # coding=utf-8
 
-from shapely import wkt, geometry, geos
+import json
+from shapely import geometry, geos
 import ConfigParser
 import zmq
 from threading import Lock, Thread, Event
@@ -77,7 +78,7 @@ class NavitiaManager:
             instance = self.instances[region]
             instance.lock.acquire()
             instance.socket.send(request.SerializeToString())#, zmq.NOBLOCK, copy=False)
-            socks = dict(instance.poller.poll(1000))
+            socks = dict(instance.poller.poll(10000))
             if socks.get(instance.socket) == zmq.POLLIN:
                 pb = instance.socket.recv()
                 instance.lock.release()
@@ -106,10 +107,15 @@ class NavitiaManager:
                 try:
                     resp = self.send_and_receive(req, key)
                     if resp:
-                        instance.geom = wkt.loads(resp.metadatas.shape)
+                        try:
+                            parsed = json.loads(resp.metadatas.shape)
+                        except:
+                            print resp.metadatas.shape
+                        instance.geom = geometry.shape(parsed)
                 except DeadSocketException, e:
                     print e
                 except geos.ReadingError:
+                    print "reading error"
                     instance.geom = None
 
             self.thread_event.wait(timer)

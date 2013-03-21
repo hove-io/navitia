@@ -36,7 +36,6 @@ void Data::normalize_uri(){
 }
 
 void Data::complete(){
-    //@TODO il faut ajouter la création des excode pour tout ce qui est lié au journey pattern
     build_journey_patterns();
     build_journey_pattern_points();
     build_journey_pattern_point_connections();
@@ -310,7 +309,7 @@ void Data::build_relations(navitia::type::PT_Data &data){
    //for(navitia::type::Company & company : data.companies) {}
 }
 
-std::string Data::find_shape(navitia::type::PT_Data &data) {
+std::string Data::compute_bounding_box(navitia::type::PT_Data &data) {
 
     std::vector<navitia::type::GeographicalCoord> bag;
     for(navitia::type::StopPoint sp : data.stop_points) {
@@ -321,7 +320,12 @@ std::string Data::find_shape(navitia::type::PT_Data &data) {
     boost::geometry::buffer(envelope, buffer, 0.01);
 
     std::ostringstream os;
-    os << boost::geometry::wkt(buffer);
+    os << "{\"type\": \"Polygon\", \"coordinates\": [[";
+    typedef boost::geometry::box_view<decltype(buffer)> box_view;
+    std::string sep = "";
+    auto functor = [&os, &sep](navitia::type::GeographicalCoord coord){os << sep << "[" << coord.lon() << ", " << coord.lat() << "]"; sep = ",";};
+    boost::geometry::for_each_point(box_view(buffer), functor);
+    os << "]]}";
     return os.str();
 }
 

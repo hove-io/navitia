@@ -115,6 +115,9 @@ message Section {
 // Dans tous les cas
     optional string polyline = 13;
     optional int32 duration = 14;
+
+    optional string begin_datetime = 15;
+    optional string end_datetime = 16;
 }
 
 message Journey {
@@ -180,6 +183,7 @@ message Table {
 
 message Schedule {
     required Table table = 1;
+    required Route route = 2;
 }
 
 message RouteSchedule {
@@ -238,6 +242,15 @@ message Metadatas {
     required string status = 4;
 }
 
+message Pagination {
+    required int32 totalResult = 1;
+    required int32 startPage = 2;
+    required int32 itemsPerPage = 3;
+    required int32 itemsOnPage = 4;
+    optional string nextPage = 5;
+    optional string previousPage = 6;
+}
+
 message Response{
     required API requested_api = 1;
     optional string error = 2;
@@ -257,4 +270,5 @@ message Response{
     optional Load load = 14;
     optional Isochrone isochrone = 15;
     optional Metadatas metadatas = 16;
+    optional Pagination pagination = 17;
 }

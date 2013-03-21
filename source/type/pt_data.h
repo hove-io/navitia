@@ -124,14 +124,6 @@ struct PT_Data : boost::noncopyable{
 
     PT_Data& operator=(PT_Data&& other);
 
-    int connection_duration(idx_t origin_journey_pattern_point, idx_t destination_journey_pattern_point){
-        const JourneyPatternPoint & origin = journey_pattern_points[origin_journey_pattern_point];
-        const JourneyPatternPoint & destination = journey_pattern_points[destination_journey_pattern_point];
-        if(origin.stop_point_idx == destination.stop_point_idx)
-            return 120;
-        else
-            return 180;
-    }
 };
 
 }}

@@ -54,6 +54,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                     departure_time = path.items.front().departure - temp.length/1.38;
                 }
             }
+            
 
             // La partie TC et correspondances
             for(PathItem & item : path.items){
@@ -81,8 +82,6 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                         // L'heure d'arrivée au dernier stop point
                         arrival_ptime = to_posix_time(arr_time, d);
                     }
-
-
                     if( item.vj_idx != type::invalid_idx){ // TODO : réfléchir si ça peut vraiment arriver
                         boost::posix_time::time_period action_period(departure_ptime, arrival_ptime); 
                         fill_section(pb_section, item.vj_idx, d, now, action_period);
@@ -95,6 +94,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                     switch(item.type) {
                         case extension : pb_section->set_transfer_type(pbnavitia::EXTENSION); break;
                         case guarantee : pb_section->set_transfer_type(pbnavitia::GUARANTEED); break;
+                        case waiting : pb_section->set_type(pbnavitia::WAITING); break;
                         default :pb_section->set_transfer_type(pbnavitia::WALKING); break;
                     }
 
@@ -102,12 +102,17 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                     fill_pb_placemark(d.pt_data.stop_points[item.stop_points.front()], d, pb_section->mutable_origin(), 1, now, action_period);
                     fill_pb_placemark(d.pt_data.stop_points[item.stop_points.back()], d, pb_section->mutable_destination(), 1, now, action_period);
                 }
+                auto dep_time = item.departure;
+                pb_section->set_begin_datetime(iso_string(d, dep_time.date(), dep_time.hour()));
+                auto arr_time = item.arrival;
+                pb_section->set_end_datetime(iso_string(d, arr_time.date(), arr_time.hour()));
+
                 pb_section->set_duration(item.arrival - item.departure);
                 if(departure_time == navitia::type::DateTime::inf)
                     departure_time = item.departure;
                 arrival_time = item.arrival;
-                pb_journey->set_duration(arrival_time - departure_time);
             }
+            pb_journey->set_duration(arrival_time - departure_time);
 
 
 
@@ -135,27 +140,23 @@ get_stop_points(const type::EntryPoint &ep, const type::Data & data,
                 const int walking_distance = 1000){
     std::vector<std::pair<type::idx_t, double> > result;
 
+    std::map<std::string, type::idx_t>::const_iterator it;
     switch(ep.type) {
     case navitia::type::Type_e::StopArea:
-    {
-        auto it = data.pt_data.stop_areas_map.find(ep.uri);
+        it = data.pt_data.stop_areas_map.find(ep.uri);
         if(it!= data.pt_data.stop_areas_map.end()) {
             for(auto spidx : data.pt_data.stop_areas[it->second].stop_point_list) {
                 result.push_back(std::make_pair(spidx, 0));
             }
-        }
-    } break;
-    case type::Type_e::StopPoint: {
-        auto it = data.pt_data.stop_points_map.find(ep.uri);
+        } break;
+    case type::Type_e::StopPoint:
+        it = data.pt_data.stop_points_map.find(ep.uri);
         if(it != data.pt_data.stop_points_map.end()){
             result.push_back(std::make_pair(data.pt_data.stop_points[it->second].idx, 0));
-        }
-    } break;
-        // AA gestion des adresses
+        } break;
     case type::Type_e::Address:
-    case type::Type_e::Coord: {
-        result = worker.find_nearest_stop_points(ep.coordinates, data.pt_data.stop_point_proximity_list, walking_distance, use_second);
-    } break;
+    case type::Type_e::Coord:
+        result = worker.find_nearest_stop_points(ep.coordinates, data.pt_data.stop_point_proximity_list, walking_distance, use_second); break;
     default: break;
     }
     return result;
@@ -199,7 +200,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               const type::EntryPoint &destination, 
               const std::vector<std::string> &datetimes_str, bool clockwise,
               const float walking_speed, const int walking_distance, const bool wheelchair,
-              std::multimap<std::string, std::string> forbidden,
+              std::vector<std::string> forbidden,
               streetnetwork::StreetNetwork & worker) {
 
     pbnavitia::Response response;
@@ -280,7 +281,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    type::EntryPoint origin,
                                    const std::string &datetime_str,bool clockwise,
                                    float walking_speed, int walking_distance,  bool wheelchair,
-                                   std::multimap<std::string, std::string> forbidden,
+                                   std::vector<std::string> forbidden,
                                    streetnetwork::StreetNetwork & worker, int max_duration) {
     
     pbnavitia::Response response;
@@ -301,12 +302,12 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
         return response;
     }
     
-    navitia::type::DateTime bound = clockwise ? navitia::type::DateTime::inf : navitia::type::DateTime::min;
     
     std::vector<idx_label> tmp;
     int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
     int time = datetime.time_of_day().total_seconds();
     navitia::type::DateTime init_dt = navitia::type::DateTime(day, time);
+    navitia::type::DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
 
     raptor.isochrone(departures, init_dt, bound,
                            walking_speed, walking_distance, wheelchair, forbidden, clockwise);

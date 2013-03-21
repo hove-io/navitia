@@ -60,8 +60,8 @@ private:
                                                                            std::map<type::idx_t, ng::ProjectionData> & idx_proj);
 
 
-    /// Point de départ et d'arrivée fourni par la requête
-    ng::ProjectionData start;
+    /// Points de départ et d'arrivée fournis par la requête
+    ng::ProjectionData departure;
     ng::ProjectionData destination;
 
     // Les données sont doublées pour garder les données au départ et à l'arrivée

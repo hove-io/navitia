@@ -7,8 +7,7 @@ namespace nt = navitia::type;
 namespace pt = boost::posix_time;
 namespace navitia{
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::ValidityPattern* /*validity_pattern*/, int, const pt::ptime&, const pt::time_period& ){
-    const nt::ValidityPattern &vp = data.pt_data.validity_patterns.at(idx);
+void fill_pb_object(nt::idx_t /*idx*/, const nt::Data& /*data*/, pbnavitia::ValidityPattern* /*validity_pattern*/, int, const pt::ptime&, const pt::time_period& ){
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Department* department, int, const pt::ptime&, const pt::time_period& ){
@@ -110,8 +109,26 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line,
     line->set_uri(l.uri);
 
     if(depth>0){
-        for(nt::idx_t route_idx : l.route_list)
+        std::vector<nt::idx_t> physical_mode_idxes;
+        for(nt::idx_t route_idx : l.route_list) {
             fill_pb_object(route_idx, data, line->add_routes(), depth-1);
+            
+            const auto &route = data.pt_data.routes[route_idx];
+            for(auto journey_pattern_idx : route.journey_pattern_list) {
+                const auto &jp = data.pt_data.journey_patterns[journey_pattern_idx];
+                for(auto vjidx : jp.vehicle_journey_list) {
+                    const auto &vj = data.pt_data.vehicle_journeys[vjidx];
+                    if(std::find(physical_mode_idxes.begin(), physical_mode_idxes.end(), vj.physical_mode_idx) == physical_mode_idxes.end()) {
+                        physical_mode_idxes.push_back(vj.physical_mode_idx);
+                    }
+                }
+            }
+        }
+        for(nt::idx_t physical_mode_idx : physical_mode_idxes)
+            fill_pb_object(physical_mode_idx, data, line->add_physical_mode(), depth-1);
+        
+        fill_pb_object(l.commercial_mode_idx, data, line->mutable_commercial_mode(), depth-1);
+        fill_pb_object(l.network_idx, data, line->mutable_network(), depth-1);
     }
 }
 
@@ -134,11 +151,16 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Route * rout
         const pt::ptime& now, const pt::time_period& action_period){
     if(idx == type::invalid_idx)
         return ;
+
     navitia::type::Route r = data.pt_data.routes.at(idx);
     route->set_name(r.name);
     route->set_uri(r.uri);
     if(max_depth > 0 && r.line_idx != type::invalid_idx)
         fill_pb_object(r.line_idx, data, route->mutable_line(), max_depth - 1, now, action_period);
+
+    BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(r.uri, now, action_period)){
+        fill_message(message, data, route->add_messages(), max_depth-1, now, action_period);
+    }
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Network * network, int,
@@ -215,11 +237,12 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopTime
     if(idx == type::invalid_idx)
         return ;
     navitia::type::StopTime st = data.pt_data.stop_times.at(idx);
-    boost::posix_time::ptime d = boost::posix_time::from_iso_string("19700101");
-    boost::posix_time::ptime p = d +  boost::posix_time::seconds(st.arrival_time);
+    boost::posix_time::time_duration p = boost::posix_time::seconds(st.arrival_time);
+
     stop_time->set_arrival_time(boost::posix_time::to_iso_string(p));
-    p = d +  boost::posix_time::seconds(st.departure_time);
-    stop_time->set_arrival_time(boost::posix_time::to_iso_string(p));
+
+    p = boost::posix_time::seconds(st.departure_time);
+    stop_time->set_departure_time(boost::posix_time::to_iso_string(p));
     stop_time->set_pickup_allowed(st.pick_up_allowed());
     stop_time->set_drop_off_allowed(st.drop_off_allowed());
     if(st.journey_pattern_point_idx != type::invalid_idx && max_depth > 0)

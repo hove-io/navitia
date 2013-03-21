@@ -20,8 +20,8 @@ bool StreetNetwork::arrival_launched() {return arrival_launch;}
 
 std::vector< std::pair<type::idx_t, double> > StreetNetwork::find_nearest_stop_points(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius, bool use_second){
     // On cherche le segment le plus proche des coordonnées
-    ng::ProjectionData start_edge = ng::ProjectionData(start_coord, this->geo_ref, this->geo_ref.pl);
-    if(!start_edge.found)
+    ng::ProjectionData nearest_edge = ng::ProjectionData(start_coord, this->geo_ref, this->geo_ref.pl);
+    if(!nearest_edge.found)
         return std::vector< std::pair<nt::idx_t, double> >();
 
     // On trouve tous les élements à moins radius mètres en vol d'oiseau
@@ -33,18 +33,22 @@ std::vector< std::pair<type::idx_t, double> > StreetNetwork::find_nearest_stop_p
     // Les résultats sont gardés pour reconstruire l'itinéraire routier après avoir calculé l'itinéraire TC
     if(!use_second) {
         departure_launch = true;
-        return find_nearest_stop_points(start_edge, radius, elements, distances, predecessors, idx_projection);
+        this->departure = nearest_edge;
+        return find_nearest_stop_points(nearest_edge, radius, elements, distances, predecessors, idx_projection);
     }
     else{
         arrival_launch = true;
-        return find_nearest_stop_points(start_edge, radius, elements, distances2, predecessors2, idx_projection2);
+        this->destination = nearest_edge;
+        return find_nearest_stop_points(nearest_edge, radius, elements, distances2, predecessors2, idx_projection2);
     }
 }
 
-std::vector< std::pair<type::idx_t, double> > StreetNetwork::find_nearest_stop_points(const ng::ProjectionData & start, double radius, const std::vector< std::pair<type::idx_t, type::GeographicalCoord> > & elements,
-                                                                                            std::vector<float> & dist,
-                                                                                            std::vector<ng::vertex_t> & preds,
-                                                                                            std::map<type::idx_t, ng::ProjectionData> & idx_proj){
+std::vector< std::pair<type::idx_t, double> >
+StreetNetwork::find_nearest_stop_points(const ng::ProjectionData & start, double radius,
+                                        const std::vector< std::pair<type::idx_t, type::GeographicalCoord> > & elements,
+                                        std::vector<float> & dist,
+                                        std::vector<ng::vertex_t> & preds,
+                                        std::map<type::idx_t, ng::ProjectionData> & idx_proj){
     std::vector< std::pair<type::idx_t, double> > result;
     geo_ref.init(dist, preds);
     idx_proj.clear();
@@ -99,7 +103,7 @@ ng::Path StreetNetwork::get_path(type::idx_t idx, bool use_second){
             result = this->geo_ref.build_path(projection.target, this->predecessors);
             result.length = distances[projection.target] + projection.target_distance;
         }
-        result.coordinates.push_front(start.projected);
+        result.coordinates.push_front(departure.projected);
     } else {
         if(!arrival_launched() || (distances2[idx] == std::numeric_limits<float>::max() && this->idx_projection2.find(idx) == idx_projection2.end()))
             return result;
@@ -153,7 +157,7 @@ ng::Path StreetNetwork::get_direct_path() {
         }
     }
 
-    result.coordinates.push_front(start.projected);
+    result.coordinates.push_front(departure.projected);
     result.coordinates.push_back(destination.projected);
     return result;
 }

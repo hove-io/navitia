@@ -1,4 +1,5 @@
 #include "csv.h"
+#include <utils/logger.h>
 #include <exception>
 #include <iostream>
 #include <fstream>
@@ -122,10 +123,15 @@ std::vector<std::string> CsvReader::next(){
 
     boost::trim(line);
     std::vector<std::string> vec;
-    Tokenizer tok(line, functor);
-    vec.assign(tok.begin(), tok.end());
-    for(auto &s: vec)
-        boost::trim(s);
+    try {
+        Tokenizer tok(line, functor);
+        vec.assign(tok.begin(), tok.end());
+        for(auto &s: vec)
+            boost::trim(s);
+    } catch(...) {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log") ,"Impossible de parser la ligne :  " + line);
+        return next();
+    }
 
     return vec;
 }

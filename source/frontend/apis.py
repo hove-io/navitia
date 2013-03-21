@@ -1,7 +1,9 @@
+import copy
 from validate import *
 from apis_functions import *
 from singleton import singleton
 from instance_manager import DeadSocketException, RegionNotFound
+from werkzeug.wrappers import Response
 
 
 class Arguments:
@@ -28,7 +30,6 @@ class Arguments:
                                                       True, False,order=0),
         "arrival_filter" : Argument("The filter of your arrival point", filter,
                                                       True, False,order=1)
-
     }
 
     nextTimesArguments = {
@@ -48,16 +49,20 @@ class Arguments:
         "filter" : Argument("Conditions to filter the returned objects", filter,
                             False, False, "", order=0),
         "depth" : Argument("Maximum depth on objects", int, False, False, 1,
-                           order = 50)
+                           order = 50),
+        "count" : Argument("Number of elements per page", int, False, False,
+                           50),
+        "startPage" : Argument("The page number of the ptref result", int,
+                               False, False, 0)
         }
     journeyArguments = {
         "origin" : Argument("Departure Point", entrypoint(), True, False, order = 0),
         "destination" : Argument("Destination Point" , entrypoint(), True, False, order = 1),
         "datetime" : Argument("The time from which you want to arrive (or arrive before depending on the value of clockwise)", datetime_validator, True, False, order = 2),
         "clockwise" : Argument("true if you want to have a journey that starts after datetime, false if you a journey that arrives before datetime", boolean, False, False, True, order = 3),
-        #"forbiddenline" : Argument("Forbidden lines identified by their external codes",  str, False, True, ""),
-        #"forbiddenmode" : Argument("Forbidden modes identified by their external codes", str, False, True, ""),
-        #"forbiddenroute" : Argument("Forbidden routes identified by their external codes", str, False, True, ""),
+        "max_duration" : Argument("Maximum duratioon of the isochrone", int,
+                                  False, False, order=4, defaultValue = 36000),
+        "forbidden_uris[]" : Argument("Forbidden uris",  str, False, True, ""),
         "walking_speed" : Argument("Walking speed in m/s", float, False, False, 1.38),
         "walking_distance" : Argument("Maximum walking distance in meters", int,
                                       False, False, 1000),
@@ -69,25 +74,28 @@ class Arguments:
         "origin" : Argument("Departure Point", entrypoint(), True, False, order = 0),
         "datetime" : Argument("The time from which you want to arrive (or arrive before depending on the value of clockwise)", datetime_validator, True, False, order = 2),
         "clockwise" : Argument("true if you want to have a journey that starts after datetime, false if you a journey that arrives before datetime", boolean, False, False, True, order = 3),
-        #"forbiddenline" : Argument("Forbidden lines identified by their external codes",  str, False, True, ""),
-        #"forbiddenmode" : Argument("Forbidden modes identified by their external codes", str, False, True, ""),
-        #"forbiddenroute" : Argument("Forbidden routes identified by their external codes", str, False, True, ""),
+        "max_duration" : Argument("Maximum duratioon of the isochrone", int,
+                                  False, False, order=4, defaultValue = 3600),
+        "forbidden_uris[]" : Argument("Forbidden uris",  str, False, True, ""),
         "walking_speed" : Argument("Walking speed in m/s", float, False, False, 1.38),
         "walking_distance" : Argument("Maximum walking distance in meters", int,
                                       False, False, 1000),
         "wheelchair" : Argument("Does the journey has to be accessible?",
-                                boolean, False, False, False)
-        }
+                                boolean, False, False, False)        }
 
 @singleton
 class Apis:
     apis = {
         "autocomplete" : {"endpoint" : on_autocomplete, "arguments" :
-                          {"name" : Argument("The data to search", str, True, False, order = 1),
+                          {"name" : Argument("The data to search", unicode, True, False, order = 1),
                            "object_type[]" : Argument("The type of datas you want in return", str, False, True, 
                                                     ["stop_area", "stop_point", "address", "poi"], 2,["stop_area", "stop_point", "address", "poi"]),
                             "depth" : Argument("Maximum depth on objects", int, False, False, 1),
-			    "nbmax" : Argument("Maximum number of objects in the response", int, False, False, 10)
+                            "count" : Argument("Number of elements per page", int, False, False,
+                                            50),
+                            "startPage" : Argument("The page number of the ptref result", int,
+                                                False, False, 0),
+			    			"nbmax" : Argument("Maximum number of objects in the response", int, False, False, 10)
                            },
                           "description" : "Retrieves the objects which contains in their name the \"name\"",
                           "order":2},
@@ -99,15 +107,15 @@ class Apis:
                             Arguments.nextTimesArguments,
                            "description" : "Retrieves the departures after datetime at the stop points filtered with filter",
                           "order":3},
-        "line_schedule" : {"endpoint" : on_line_schedule, "arguments" :
+        "route_schedules" : {"endpoint" : on_route_schedule, "arguments" :
                            Arguments.scheduleArguments,
-                           "description" : "Retrieves the schedule of line at the day datetime",
+                           "description" : "Retrieves the schedule of route at the day datetime",
                           "order":4},
-        "stops_schedule" : {"endpoint" : on_stops_schedule, "arguments" :
+        "stops_schedules" : {"endpoint" : on_stops_schedule, "arguments" :
                             Arguments.stopsScheduleArguments,
                             "description" : "Retrieves the schedule for 2 stops points",
                           "order":4},
-        "departure_board" : {"endpoint" : on_departure_board,
+        "departure_boards" : {"endpoint" : on_departure_board,
                              "arguments":Arguments.scheduleArguments,
                              "description" : "Give all the departures of filter at datetime",
                           "order":4},
@@ -167,11 +175,14 @@ class Apis:
                        "description" : "Computes and retrieves an isochrone",
                           "order":1, "universal" : True},
         "proximity_list" : {"endpoint" : on_proximity_list, "arguments" : {
-                "lon" : Argument("Longitude of the point from where you want objects", float, True, False, order=0),
-                "lat" : Argument("Latitude of the point from where you want objects", float, True, False, order=1),
+                "uri" : Argument("uri arround which you want to look for objects. Not all objects make sense (e.g. a mode).", entrypoint(), True, False, order=0),
                 "distance" : Argument("Distance range of the query", int, False, False, 1000, order=3),
-                "object_type[]" : Argument("Type of the objects you want to have in return", str, False, True, ["stop_area", "stop_point"], order=4),
-                "depth" : Argument("Maximum depth on objects", int, False, False, 1)
+                "object_type[]" : Argument("Type of the objects to return", str, False, True, ["stop_area", "stop_point"], order=4),
+                "depth" : Argument("Maximum depth on objects", int, False, False, 1),
+                "count" : Argument("Number of elements per page", int, False, False,
+                                50),
+                "startPage" : Argument("The page number of the ptref result", int,
+                                    False, False, 0)
                 },
             "description" : "Retrieves all the objects around a point within the given distance",
             "order" : 1.1, "universal" : True},
@@ -199,7 +210,7 @@ class Apis:
                 except RegionNotFound, e:
                     return Response(e, status=404)
             else:
-                return Response("Invalid arguments: " + str(v.details), status=400)
+                return Response("Invalid arguments: " + unicode(v.details), status=400)
         else:
             return Response("Unknown api: " + api, status=404)
 

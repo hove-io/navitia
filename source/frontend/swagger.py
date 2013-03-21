@@ -75,9 +75,25 @@ def api_doc(apis, api = None) :
                 params.append(regions)
                 path += "{region}/"
             response['resourcePath'] = api
+
+            if api == "regions":
+                path += "regions.json"
+            else:
+                path += api+".{contentType}"
+                formats = {}
+                formats['name'] = 'contentType'
+                formats['paramType'] = 'path'
+                formats['description'] = 'The type of data you want to have'
+                formats['dataType'] = 'String'
+                formats['required'] = 'True'
+                formats['allowMultiple'] = False
+                formats['allowableValues'] = {'valueType':'LIST', "values":
+                                              ['json', 'xml', 'pb']}
+                params.append(formats)
+
             
             response['apis'].append({
-                    "path" : path+api+".{format}",
+                    "path" : path,
                     "description" : apis[api]["description"] if "description" in apis[api] else "",
                     "operations" : [{
                             "httpMethod" : "GET",
@@ -97,7 +113,7 @@ def api_doc(apis, api = None) :
                         del params_universal[i]
                     i+=1                
                 response['apis'].append({
-                        "path" : "/{version}/"+api+".format",
+                        "path" : "/{version}/"+api+".{contentType}",
                         "description" : apis[api]["description"] if "description" in apis[api] else "",
                         "operations" : [{
                             "httpMethod" : "GET",

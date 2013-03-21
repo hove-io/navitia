@@ -1,4 +1,4 @@
-#include "route_schedule.h"
+#include "route_schedules.h"
 #include "thermometer.h"
 #include "request_handle.h"
 #include "type/pb_converter.h"
@@ -61,7 +61,7 @@ std::vector<vector_string> make_matrice(const std::vector<vector_stopTime> & sto
 
 pbnavitia::Response route_schedule(const std::string & filter, const std::string &str_dt, uint32_t duration, const uint32_t max_depth, type::Data &d) {
     RequestHandle handler("ROUTE_SCHEDULE", "", str_dt, duration, d);
-    handler.pb_response.set_requested_api(pbnavitia::ROUTE_SCHEDULE);
+    handler.pb_response.set_requested_api(pbnavitia::ROUTE_SCHEDULES);
 
     if(handler.pb_response.has_error()) {
         return handler.pb_response;
@@ -70,9 +70,8 @@ pbnavitia::Response route_schedule(const std::string & filter, const std::string
     pt::time_period action_period(to_posix_time(handler.date_time, d), to_posix_time(handler.max_datetime, d));
     Thermometer thermometer(d);
 
-    for(type::idx_t line_idx : navitia::ptref::make_query(type::Type_e::Line, filter, d)) {
-        auto schedule = handler.pb_response.mutable_route_schedule()->add_schedules();
-        auto journey_patterns = d.pt_data.lines[line_idx].get(type::Type_e::JourneyPattern, d.pt_data);
+    for(type::idx_t route_idx : navitia::ptref::make_query(type::Type_e::Route, filter, d)) {
+        auto journey_patterns = d.pt_data.routes[route_idx].get(type::Type_e::JourneyPattern, d.pt_data);
         //On récupère les stop_times
         auto stop_times = get_all_stop_times(journey_patterns, handler.date_time, handler.max_datetime, d);
         std::vector<vector_idx> stop_points;
@@ -86,12 +85,14 @@ pbnavitia::Response route_schedule(const std::string & filter, const std::string
         //On génère la matrice
         std::vector<vector_string> matrice = make_matrice(stop_times, thermometer, d);
 
+        auto schedule = handler.pb_response.mutable_route_schedule()->add_schedules();
         pbnavitia::Table *table = schedule->mutable_table();
+        fill_pb_object(route_idx, d, schedule->mutable_route(), max_depth, now, action_period);
         for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {
             type::idx_t spidx=thermometer.get_thermometer()[i];
             const type::StopPoint & sp = d.pt_data.stop_points[spidx];
             auto * row = table->add_rows();
-            fill_pb_object(sp.idx, d, row->mutable_stop_point(), 0, now, action_period);
+            fill_pb_object(sp.idx, d, row->mutable_stop_point(), max_depth, now, action_period);
 
             for(unsigned int j=0; j<stop_times.size(); ++j) {
                 row->add_stop_times(matrice[i][j]);

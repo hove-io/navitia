@@ -68,6 +68,8 @@ pbnavitia::Response find(type::GeographicalCoord coord, double distance,
         }
         create_pb(result, type, depth, data, *pb, coord);
     }
+    std::sort(pb->mutable_items()->begin(), pb->mutable_items()->end(),
+              [](pbnavitia::ProximityListItem a, pbnavitia::ProximityListItem b){return a.distance() < b.distance();});
     return response;
 }
 }} // namespace navitia::proximitylist

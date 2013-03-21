@@ -1,4 +1,4 @@
-#include "departure_board.h"
+#include "departure_boards.h"
 #include "request_handle.h"
 #include "get_stop_times.h"
 #include "type/pb_converter.h"
@@ -42,7 +42,7 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
     RequestHandle handler("DEPARTURE_BOARD", request, date,  duration, data);
 
 
-    handler.pb_response.set_requested_api(pbnavitia::DEPARTURE_BOARD);
+    handler.pb_response.set_requested_api(pbnavitia::DEPARTURE_BOARDS);
     if(handler.pb_response.has_error())
         return handler.pb_response;
 
@@ -76,7 +76,7 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
 
         auto board = dep_board->add_boards();
         fill_pb_object(id_vec.first.first, data, board->mutable_stop_point(), 0, current_time, action_period);
-        fill_pb_object(id_vec.first.second, data, board->mutable_route(), 0, current_time, action_period);
+        fill_pb_object(id_vec.first.second, data, board->mutable_route(), 2, current_time, action_period);
 
         auto vec_st = id_vec.second;
         std::sort(vec_st.begin(), vec_st.end(),

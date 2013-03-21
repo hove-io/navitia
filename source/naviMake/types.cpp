@@ -17,6 +17,10 @@ bool ValidityPattern::is_valid(int duration){
     return true;
 }
 
+bool ValidityPattern::operator==(const ValidityPattern& other)const{
+    return ((this->beginning_date == other.beginning_date) && (this->days == other.days));
+}
+
 void ValidityPattern::add(boost::gregorian::date day){
     long duration = (day - beginning_date).days();
     if(is_valid(duration))

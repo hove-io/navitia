@@ -5,10 +5,10 @@
 #include "autocomplete/autocomplete_api.h"
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential_api.h"
-#include "time_tables/route_schedule.h"
+#include "time_tables/route_schedules.h"
 #include "time_tables/next_passages.h"
-#include "time_tables/2stops_schedule.h"
-#include "time_tables/departure_board.h"
+#include "time_tables/2stops_schedules.h"
+#include "time_tables/departure_boards.h"
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -120,11 +120,11 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
         return navitia::timetables::next_departures(request.departure_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(),/* request.wheelchair()*/false, this->data);
     case pbnavitia::NEXT_ARRIVALS:
         return navitia::timetables::next_arrivals(request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), /*request.wheelchair()*/false, this->data);
-    case pbnavitia::STOPS_SCHEDULE:
-        return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), this->data);
-    case pbnavitia::DEPARTURE_BOARD:
+    case pbnavitia::STOPS_SCHEDULES:
+        return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
+    case pbnavitia::DEPARTURE_BOARDS:
         return navitia::timetables::departure_board(request.departure_filter(), request.from_datetime(), request.duration(), this->data);
-    case pbnavitia::ROUTE_SCHEDULE:
+    case pbnavitia::ROUTE_SCHEDULES:
         return navitia::timetables::route_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
     default:
         LOG4CPLUS_WARN(logger, "On a reçu une requête time table inconnue");
@@ -136,14 +136,30 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
 
 pbnavitia::Response Worker::proximity_list(const pbnavitia::ProximityListRequest &request) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
-    return navitia::proximitylist::find(type::GeographicalCoord(request.coord().lon(), request.coord().lat()), request.distance(), vector_of_pb_types(request), request.depth(), this->data);
+    type::EntryPoint ep(request.uri());
+    auto coord = this->coord_of_entry_point(ep);
+    return navitia::proximitylist::find(coord, request.distance(), vector_of_pb_types(request), request.depth(), this->data);
 }
 
-type::GeographicalCoord Worker::coord_of_address(const type::EntryPoint & entry_point) {
+type::GeographicalCoord Worker::coord_of_entry_point(const type::EntryPoint & entry_point) {
     type::GeographicalCoord result;
-    auto way = this->data.geo_ref.way_map.find(entry_point.uri);
-    if (way != this->data.geo_ref.way_map.end()){
-        result = this->data.geo_ref.ways[way->second].nearest_coord(entry_point.house_number, this->data.geo_ref.graph);
+    if(entry_point.type == Type_e::Address){
+        auto way = this->data.geo_ref.way_map.find(entry_point.uri);
+        if (way != this->data.geo_ref.way_map.end()){
+            result = this->data.geo_ref.ways[way->second].nearest_coord(entry_point.house_number, this->data.geo_ref.graph);
+        }
+    } else if (entry_point.type == Type_e::StopPoint) {
+        auto sp_it = this->data.pt_data.stop_points_map.find(entry_point.uri);
+        if(sp_it != this->data.pt_data.stop_points_map.end()) {
+            result = this->data.pt_data.stop_points[sp_it->second].coord;
+        }
+    } else if (entry_point.type == Type_e::StopArea) {
+           auto sp_it = this->data.pt_data.stop_areas_map.find(entry_point.uri);
+           if(sp_it != this->data.pt_data.stop_areas_map.end()) {
+               result = this->data.pt_data.stop_areas[sp_it->second].coord;
+           }
+    } else if (entry_point.type == Type_e::Coord) {
+        result = entry_point.coordinates;
     }
     return result;
 }
@@ -155,18 +171,20 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     type::EntryPoint origin = type::EntryPoint(request.origin());
 
     if (origin.type == type::Type_e::Address) {
-        origin.coordinates = this->coord_of_address(origin);
+        origin.coordinates = this->coord_of_entry_point(origin);
     }
 
     type::EntryPoint destination;
     if(api != pbnavitia::ISOCHRONE) {
         destination = type::EntryPoint(request.destination());
         if (destination.type == type::Type_e::Address) {
-            destination.coordinates = this->coord_of_address(destination);
+            destination.coordinates = this->coord_of_entry_point(destination);
         }
     }
 
-    std::multimap<std::string, std::string> forbidden;
+    std::vector<std::string> forbidden;
+    for(int i = 0; i < request.forbidden_uris_size(); ++i)
+        forbidden.push_back(request.forbidden_uris(i));
 
     std::vector<std::string> datetimes;
     for(int i = 0; i < request.datetimes_size(); ++i)
@@ -180,7 +198,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     } else {
         return navitia::routing::raptor::make_isochrone(*calculateur, origin, request.datetimes(0),
                                                         request.clockwise(), request.walking_speed(), request.walking_distance(), /*request.wheelchair()*/false,
-                                                        forbidden, *street_network_worker);
+                                                        forbidden, *street_network_worker, request.max_duration());
     }
 }
 
@@ -197,11 +215,11 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
     case pbnavitia::STATUS: return status(); break;
     case pbnavitia::LOAD: return load(); break;
     case pbnavitia::AUTOCOMPLETE: return autocomplete(request.autocomplete()); break;
-    case pbnavitia::ROUTE_SCHEDULE:
+    case pbnavitia::ROUTE_SCHEDULES:
     case pbnavitia::NEXT_DEPARTURES:
     case pbnavitia::NEXT_ARRIVALS:
-    case pbnavitia::STOPS_SCHEDULE:
-    case pbnavitia::DEPARTURE_BOARD:
+    case pbnavitia::STOPS_SCHEDULES:
+    case pbnavitia::DEPARTURE_BOARDS:
         return next_stop_times(request.next_stop_times(), request.requested_api()); break;
     case pbnavitia::ISOCHRONE:
     case pbnavitia::PLANNER: return journeys(request.journeys(), request.requested_api()); break;

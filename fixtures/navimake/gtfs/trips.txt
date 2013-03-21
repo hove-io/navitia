@@ -2,4 +2,5 @@
 "a","WE", "ignore",,,,
 1,"pouet", "ignore",,,,
 1,"WE", "myonetruetrip","My one true headsign",0,0,
+ARR|10534,"WE", 80|ARR|HW|6149|122|10534|1002,"pipe",,,,
 
