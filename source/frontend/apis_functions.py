@@ -34,10 +34,10 @@ def pagination(request_pagination, objects, request):
             else:
                 query_args += key + "=" +unicode(value) + "&"
     if request_pagination.startPage > 0:
-        request_pagination.previousPage = query_args+"request_pagination.startPage=%i"%(request_pagination.startPage-1)
+        request_pagination.previousPage = query_args+"startPage=%i"%(request_pagination.startPage-1)
 
     if end<request_pagination.totalResult:
-        request_pagination.nextPage = query_args+"request_pagination.startPage=%i"%(request_pagination.startPage+1)
+        request_pagination.nextPage = query_args+"startPage=%i"%(request_pagination.startPage+1)
     
 
 
