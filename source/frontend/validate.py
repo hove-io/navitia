@@ -88,7 +88,7 @@ def entrypoint_validator(value, valid_types=None):
     return value
 
 def filter(value):
-    return value
+    return unicode(value)
 
 
 def validate_arguments(request, validation_dict) :
@@ -120,8 +120,7 @@ def validate_arguments(request, validation_dict) :
                             response.details[key] = {"status" : "not in allowable values", "value":parsed_val}
                 except:
                     print "Unexpected error:", sys.exc_info()[0]
-                    if validation_dict[key].required:
-                        response.valid = False
+                    response.valid = False
                     response.details[key] = {"status" : "notvalid", "value" : val }
     for key, value in validation_dict.iteritems():
         if not(key in request.args) :
