@@ -342,8 +342,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
 
 BOOST_AUTO_TEST_CASE(validity_pattern){
     navimake::builder b("20120614");
-    b.vj("D", "0")("stop1", 8000)("stop2", 8200);
-    b.vj("C", "1")("stop1", 9000)("stop2", 9200);
+    b.vj("D", "0", "", true)("stop1", 8000)("stop2", 8200);
+    b.vj("C", "1", "", true)("stop1", 9000)("stop2", 9200);
     type::Data data;
     b.build(data.pt_data);
     data.build_raptor();
@@ -386,8 +386,8 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
 
 BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
     navimake::builder b("20120614");
-    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
-    b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
+    b.vj("A", "11111111", "", true)("stop1", 8000,8050)("stop2", 8200,8250);
+    b.vj("B", "11111111", "", true)("stop3", 9000,9050)("stop4", 9200,9250);
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
     type::Data data;
@@ -661,8 +661,8 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
 
 BOOST_AUTO_TEST_CASE(pam_veille) {
     navimake::builder b("20120614");
-    b.vj("A")("stop1", 3*60)("stop2", 20*60);
-    b.vj("B", "01")("stop0", 23*3600)("stop2", 24*3600 + 30*60)("stop3", 24*3600 + 40*60);
+    b.vj("A", "11111111", "", true)("stop1", 3*60)("stop2", 20*60);
+    b.vj("B", "01", "", true)("stop0", 23*3600)("stop2", 24*3600 + 30*60)("stop3", 24*3600 + 40*60);
     type::Data data;
     b.build(data.pt_data);
     data.build_raptor();
@@ -698,8 +698,8 @@ BOOST_AUTO_TEST_CASE(pam_3) {
 
 BOOST_AUTO_TEST_CASE(sn_debut) {
     navimake::builder b("20120614");
-    b.vj("A")("stop1", 8*3600)("stop2", 8*3600 + 20*60);
-    b.vj("B")("stop1", 9*3600)("stop2", 9*3600 + 20*60);
+    b.vj("A","11111111", "", true)("stop1", 8*3600)("stop2", 8*3600 + 20*60);
+    b.vj("B","11111111", "", true)("stop1", 9*3600)("stop2", 9*3600 + 20*60);
 
     std::vector<std::pair<navitia::type::idx_t, double>> departs, destinations;
     departs.push_back(std::make_pair(0, 10 * 60));
@@ -717,8 +717,8 @@ BOOST_AUTO_TEST_CASE(sn_debut) {
 
 BOOST_AUTO_TEST_CASE(prolongement_service) {
     navimake::builder b("20120614");
-    b.vj("A", "1111111", "block1")("stop1", 8*3600)("stop2", 8*3600+10*60);
-    b.vj("B", "1111111", "block1")("stop4", 8*3600+10*60)("stop3", 8*3600 + 20*60);
+    b.vj("A", "1111111", "block1", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
+    b.vj("B", "1111111", "block1", true)("stop4", 8*3600+10*60)("stop3", 8*3600 + 20*60);
     type::Data data;
     b.build(data.pt_data);
     data.build_raptor();

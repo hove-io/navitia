@@ -19,6 +19,7 @@ struct VJ {
 
     /// Construit un nouveau vehicle journey
     VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, bool is_adapted = true, const std::string& uri="");
+    VJ(builder & b, const std::string &network_name, const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, bool is_adapted = true, const std::string& uri="");
 
     /// Ajout un nouveau stopTime
     /// Lorsque le depart n'est pas specifié, on suppose que c'est le même qu'à l'arrivée
@@ -46,12 +47,12 @@ struct SA {
 };
 
 
-
 struct builder{
     std::map<std::string, types::Line *> lines;
     std::map<std::string, types::ValidityPattern *> vps;
     std::map<std::string, types::StopArea *> sas;
     std::map<std::string, types::StopPoint *> sps;
+    std::map<std::string, types::Network *> nts;
     boost::gregorian::date begin;
 
     Data data;
@@ -64,6 +65,7 @@ struct builder{
 
     /// Crée un vehicle journey
     VJ vj(const std::string &line_name, const std::string &validity_pattern = "11111111", const std::string & block_id="", const bool wheelchair_boarding = true, const std::string& uri="");
+    VJ vj(const std::string &network_name, const std::string &line_name, const std::string &validity_pattern = "11111111", const std::string & block_id="", const bool wheelchair_boarding = true, const std::string& uri="");
 
     /// Crée un nouveau stop area
     SA sa(const std::string & name, double x = 0, double y = 0, const bool is_adapted = true);

@@ -42,6 +42,9 @@ void AtAdaptedLoader::init_map(const Data& data){
         vj_map[vj->uri] = vj;
         if(vj->tmp_line != NULL){
             line_vj_map[vj->tmp_line->uri].push_back(vj);
+            if(vj->tmp_line->network != NULL){
+                network_vj_map[vj->tmp_line->network->uri].push_back(vj);
+            }
         }
     }
 }
@@ -61,6 +64,11 @@ std::vector<types::VehicleJourney*> AtAdaptedLoader::reconcile_impact_with_vj(co
             return line_vj_map[message.object_uri];
         }
     }
+    if(message.object_type == navitia::type::Type_e::Network){
+        if(network_vj_map.find(message.object_uri) != network_vj_map.end()){
+            return network_vj_map[message.object_uri];
+        }
+    }
 //
     return result;
 }
@@ -69,7 +77,7 @@ void AtAdaptedLoader::apply(const std::map<std::string, std::vector<navitia::typ
     init_map(data);
     //on construit la liste des impacts pour chacun des vj impacté
     std::map<types::VehicleJourney*, std::vector<navitia::type::Message>> vj_messages_mapping;
-    for(std::pair<std::string, std::vector<navitia::type::Message>> message_list : messages){
+    for(const std::pair<std::string, std::vector<navitia::type::Message>> & message_list : messages){
         for(auto message : message_list.second){
             for(auto* vj : reconcile_impact_with_vj(message, data)){
                 vj_messages_mapping[vj].push_back(message);
@@ -86,7 +94,7 @@ void AtAdaptedLoader::apply(const std::map<std::string, std::vector<navitia::typ
 void AtAdaptedLoader::apply_on_vj(types::VehicleJourney* vehicle_journey, const std::vector<navitia::type::Message>& messages, Data& data){
     for(nt::Message m : messages){
         if(m.object_type == nt::Type_e::VehicleJourney || m.object_type == nt::Type_e::Line
-                || m.object_type == nt::Type_e::Route){
+                || m.object_type == nt::Type_e::Route || m.object_type == nt::Type_e::Network){
             if(vehicle_journey->stop_time_list.size() > 0){
                 delete_vj(vehicle_journey, m, data);
 

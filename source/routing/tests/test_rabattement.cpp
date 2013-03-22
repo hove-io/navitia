@@ -253,8 +253,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
 
 BOOST_AUTO_TEST_CASE(validity_pattern){
     navimake::builder b("20120614");
-    b.vj("D", "0")("stop1", 8000)("stop2", 8200);
-    b.vj("C", "1")("stop1", 9000)("stop2", 9200);
+    b.vj("D", "0", "", true)("stop1", 8000)("stop2", 8200);
+    b.vj("C", "1", "", true)("stop1", 9000)("stop2", 9200);
     type::Data data;
     b.build(data.pt_data);
     data.build_raptor();
