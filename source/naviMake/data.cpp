@@ -428,7 +428,7 @@ void Data::build_journey_pattern_point_connections(){
     std::string prec_block = "";
     for(auto it = block_vj.begin(); it!=block_vj.end(); ++it) {
         std::string block_id = it->first;
-        if(prec_block != block_id) {
+        if(block_id != "" && prec_block != block_id) {
             auto pp = block_vj.equal_range(block_id);
             //On trie les vj appartenant au meme bloc par leur premier stop time
             std::vector<types::VehicleJourney*> vjs;
