@@ -1,4 +1,4 @@
-FIND_PACKAGE(Boost 1.40.0 COMPONENTS unit_test_framework iostreams serialization date_time thread REQUIRED)
+FIND_PACKAGE(Boost 1.40.0 COMPONENTS unit_test_framework iostreams serialization date_time thread regex REQUIRED)
 
 add_executable(get_stop_times get_stop_times.cpp)
 target_link_libraries(get_stop_times time_tables connectors data georef routing types utils ${Boost_LIBRARIES})

@@ -22,7 +22,7 @@ SET(DATA_SRC
 
 add_library(data ${DATA_SRC})
 
-FIND_PACKAGE(Boost 1.48.0 COMPONENTS serialization unit_test_framework  date_time filesystem system REQUIRED)
+FIND_PACKAGE(Boost 1.48.0 COMPONENTS serialization unit_test_framework  date_time filesystem system regex REQUIRED)
 add_executable(type_test tests/test.cpp)
 target_link_libraries(type_test types data utils ${Boost_LIBRARIES})
 

@@ -138,32 +138,27 @@ The filter parameter
 The filter argument used for requesting public transport object are defined by the grammar defined below. See the previous examples
 `Exploring the public transport objects`_ to know how to use it
 
+**filter**
 .. figure:: ptref_grammar/filter.png
-    :legend: filter
 
+**selector**
 .. figure:: ptref_grammar/selector.png
 
-    selector
-
+**object**
 .. figure:: ptref_grammar/object.png
     
-    object
-
+**attribute**
 .. figure:: ptref_grammar/attribute.png
-    
-    attribute
 
+**bin_op**
 .. figure:: ptref_grammar/bin_op.png
     
-    bin_op
 
+**value**
 .. figure:: ptref_grammar/value.png
-    
-    value
 
+**escaped_value**
 .. figure:: ptref_grammar/escaped_value.png
-    
-    escaped_value
 
 Getting help
 ------------
