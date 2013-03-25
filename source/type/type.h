@@ -13,6 +13,7 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/register/linestring.hpp>
+
 namespace mpl = boost::mpl;
 
 namespace navitia { namespace type {
@@ -83,6 +84,8 @@ struct GeographicalCoord{
 
     /// Ordre des coordonnées utilisé par ProximityList
     bool operator<(GeographicalCoord other) const {return this->_lon < other._lon;}
+    bool operator != (GeographicalCoord other) const {return this->_lon != other._lon;}
+
 
     constexpr static double DEG_TO_RAD = 0.01745329238;
     constexpr static double M_TO_DEG = 1.0/111319.9;

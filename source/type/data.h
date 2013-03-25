@@ -10,6 +10,7 @@
 #include "meta_data.h"
 #include <boost/format.hpp>
 #include "routing/dataraptor.h"
+#include "georef/adminref.h"
 
 namespace navitia { namespace type {
 
@@ -43,6 +44,9 @@ public:
     /// streetnetwork
     //navitia::streetnetwork::StreetNetwork street_network;
     navitia::georef::GeoRef geo_ref;
+
+//    / Référentiel administratif
+//    navitia::georef::AdminRef admin_ref;
 
     /// Données précalculées pour le raptor
     routing::raptor::dataRAPTOR dataRaptor;

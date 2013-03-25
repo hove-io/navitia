@@ -3,6 +3,9 @@
 #include <unordered_map>
 #include "utils/functions.h"
 #include "georef.h"
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
 
 using navitia::type::idx_t;
 
@@ -306,6 +309,28 @@ Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::Ge
 
 
 
+std::vector<Admin> GeoRef::Within(const type::GeographicalCoord &coord){
+    std::vector<Admin> to_return;
+
+    for(Admin admin : admins){
+        boost::geometry::model::polygon<boost::geometry::model::d2::point_xy<double> > poly;
+
+
+        for(type::GeographicalCoord coord_admin : admin.boundary){
+             boost::geometry::model::d2::point_xy<double> p;
+            p.x(coord_admin.lon());
+            p.y(coord_admin.lat());
+            boost::geometry::append(poly, p);
+        }
+         boost::geometry::model::d2::point_xy<double> p;
+        p.x(coord.lon());
+        p.y(coord.lat());
+        if (boost::geometry::within(p, poly)){
+            to_return.push_back(admin);
+        }
+    }
+    return to_return;
+}
 
 void GeoRef::build_proximity_list(){
     pl.clear(); // vider avant de reconstruire

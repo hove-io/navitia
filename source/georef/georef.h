@@ -2,6 +2,7 @@
 
 #include "first_letter/first_letter.h"
 #include "proximity_list/proximity_list.h"
+#include "adminref.h"
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adj_list_serialize.hpp>
@@ -127,6 +128,8 @@ struct GeoRef {
     /// Liste des voiries
     std::vector<Way> ways;
     std::map<std::string, nt::idx_t> way_map;
+    /// données administratives
+    std::vector<Admin> admins;
 
     /// Indexe sur les noms de voirie
     firstletter::FirstLetter<unsigned int> fl;
@@ -141,18 +144,18 @@ struct GeoRef {
     Graph graph;
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & ways & way_map & graph & fl & pl & projected_stop_points;
+        ar & ways & way_map & admins & graph & fl & pl & projected_stop_points;
     }
 
     template<class Archive> void load(Archive & ar, const unsigned int) {
         // La désérialisation d'une boost adjacency list ne vide pas le graphe
         // On avait donc une fuite de mémoire
         graph.clear();
-        ar & ways & way_map & graph & fl & pl & projected_stop_points;
+        ar & ways & way_map & admins & graph & fl & pl & projected_stop_points;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
-
-
+    /// Récupération des la listes des admins à partir des cooredonnées
+    std::vector<Admin> Within(const type::GeographicalCoord &);
     /** Construit l'indexe spatial */
     void build_proximity_list();
 
