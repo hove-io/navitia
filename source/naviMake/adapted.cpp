@@ -9,13 +9,13 @@ namespace navimake{
 
 
 void delete_vj(types::VehicleJourney* vehicle_journey, const nt::Message& message, Data& data){
-    //TODO on duplique les validitypattern à tord et à travers la, va falloir les mutualiser
+    //TODO on duplique les validitypattern à tort et à travers la, va falloir les mutualiser
     types::ValidityPattern* vp = NULL;
-    if(vehicle_journey->adapted_validity_pattern == NULL){//on duplique le validity pattern
-        vp = new types::ValidityPattern(*vehicle_journey->validity_pattern);
-    }else{
-        vp = new types::ValidityPattern(*vehicle_journey->adapted_validity_pattern);
-    }
+//    if(vehicle_journey->adapted_validity_pattern == NULL){//on duplique le validity pattern
+//        vp = new types::ValidityPattern(*vehicle_journey->validity_pattern);
+//    }else{
+    vp = new types::ValidityPattern(*vehicle_journey->adapted_validity_pattern);
+//    }
     data.validity_patterns.push_back(vp);
     vehicle_journey->adapted_validity_pattern = vp;
 
