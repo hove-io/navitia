@@ -16,7 +16,8 @@ namespace autocomplete {
 pbnavitia::Response autocomplete(const std::string &name,
                                  const std::vector<navitia::type::Type_e> &filter,
                                  uint32_t depth,
-                                 uint32_t nbmax, const type::Data &d);
+                                 int nbmax,
+                                 const type::Data &d);
 
 
 }}
