@@ -599,6 +599,7 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                     else
                         vj->name = vj->uri;
                     vj->validity_pattern = vp_xx;
+                    vj->adapted_validity_pattern = vp_xx;
                     vj->journey_pattern = 0;
                     vj->tmp_line = line;
                     vj->physical_mode = itm->second;
