@@ -34,14 +34,14 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         vj->tmp_line = it->second;
     }
 
-    auto vp_it = b.vps.find(validity_pattern);
-    if(vp_it == b.vps.end()){
+//    auto vp_it = b.vps.find(validity_pattern);
+//    if(vp_it == b.vps.end()){
         vj->validity_pattern = new types::ValidityPattern(b.begin, validity_pattern);
         b.vps[validity_pattern] = vj->validity_pattern;
         b.data.validity_patterns.push_back(vj->validity_pattern);
-    } else {
-        vj->validity_pattern = vp_it->second;
-    }
+//    } else {
+//        vj->validity_pattern = vp_it->second;
+//    }
     vj->block_id = block_id;
     vj->wheelchair_boarding = wheelchair_boarding;
     vj->uri = uri;
