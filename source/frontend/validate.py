@@ -119,7 +119,7 @@ def validate_arguments(request, validation_dict) :
                             response.valid=False
                             response.details[key] = {"status" : "not in allowable values", "value":parsed_val}
                 except:
-                    print "Unexpected error:", sys.exc_info()[0]
+                    print "Unexpected error in validate_arguments:", sys.exc_info()[0]
                     response.valid = False
                     response.details[key] = {"status" : "notvalid", "value" : val }
     for key, value in validation_dict.iteritems():

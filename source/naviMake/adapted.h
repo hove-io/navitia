@@ -11,6 +11,7 @@ struct AtAdaptedLoader{
 private:
     std::unordered_map<std::string, types::VehicleJourney*> vj_map;
     std::unordered_map<std::string, std::vector<types::VehicleJourney*>> line_vj_map;
+    std::unordered_map<std::string, std::vector<types::VehicleJourney*>> network_vj_map;
 
     void init_map(const Data& data);
     std::vector<types::VehicleJourney*> reconcile_impact_with_vj(const navitia::type::Message& messages, const Data& data);

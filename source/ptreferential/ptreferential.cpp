@@ -17,13 +17,6 @@
 #include <boost/spirit/home/phoenix/object/construct.hpp>
 
 
-//TODO: change!
-using namespace navitia::type;
-using namespace navitia::ptref;
-
-namespace qi = boost::spirit::qi;
-
-
 namespace navitia{ namespace ptref{
 using namespace navitia::type;
 
@@ -34,30 +27,29 @@ namespace qi = boost::spirit::qi;
         struct select_r
             : qi::grammar<Iterator, std::vector<Filter>(), qi::space_type>
 {
-    qi::rule<Iterator, std::string(), qi::space_type> txt, txt2; // Match une string
-    qi::rule<Iterator, std::string()> txt3;
-    qi::rule<Iterator, float, qi::space_type> fl1; 
+    qi::rule<Iterator, std::string(), qi::space_type> word, text; // Match un mot simple, une chaine échappée par des "" et entourée de ()
+    qi::rule<Iterator, std::string()> escaped_string, bracket_string;
     qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
-    qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter, pre_filter, a_filter; // La string complète a parser
-    qi::rule<Iterator, Filter(), qi::space_type> filter1, filter2, filter3; // La string complète à parser
+    qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter; // La string complète a parser
+    qi::rule<Iterator, Filter(), qi::space_type> single_clause, having_clause; // La string complète à parser
 
     select_r() : select_r::base_type(filter) {
-        txt = qi::lexeme[+(qi::alnum|qi::char_("_:-"))];
-        txt2 = qi::lexeme[+(qi::alnum|qi::char_("_:-=.<> "))];
-        txt3 = '"' >> qi::lexeme[+(qi::alnum|qi::char_("_:- &"))] >> '"';
+        // Attention, le - dans un qi::char_ *peut* avoir une signification particulière telle que a-z
+        word = qi::lexeme[+(qi::alnum|qi::char_("_:-"))];
+        text = qi::lexeme[+(qi::alnum|qi::char_("_:-=.<> "))];
+        escaped_string = '"' >> qi::lexeme[+(qi::alnum|qi::char_("_: &.-"))] >> '"';
+        bracket_string = '(' >> qi::lexeme[+(qi::alnum|qi::char_("_: &,.-"))] >> ')';
         bin_op =  qi::string("<=")[qi::_val = LEQ]
                 | qi::string(">=")[qi::_val = GEQ]
                 | qi::string("<>")[qi::_val = NEQ]
                 | qi::string("<") [qi::_val = LT]
                 | qi::string(">") [qi::_val = GT]
-                | qi::string("=") [qi::_val = EQ];
+                | qi::string("=") [qi::_val = EQ]
+                | qi::string("DWITHIN") [qi::_val = DWITHIN];
 
-        filter1 = (txt >> "." >> txt >> bin_op >> (txt|txt3))[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3, qi::_4)];
-        filter2 = (txt >> "HAVING" >> '(' >> txt2 >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
-        filter3 = ("AROUND"  >> qi::double_ >> ':' >> qi::double_ >> "WITHIN" >> qi::int_ ) [qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3)];
-        pre_filter %= (filter1 | filter2) % (qi::lexeme["and"] | qi::lexeme["AND"]);
-        a_filter = pre_filter >> -filter3;
-        filter = (a_filter | filter3);
+        single_clause = (word >> "." >> word >> bin_op >> (word|escaped_string|bracket_string))[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3, qi::_4)];
+        having_clause = (word >> "HAVING" >> '(' >> text >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
+        filter %= (single_clause | having_clause) % (qi::lexeme["and"] | qi::lexeme["AND"]);
     }
 
 };
@@ -68,15 +60,12 @@ template<class T>
 WhereWrapper<T> build_clause(std::vector<Filter> filters) {
     WhereWrapper<T> wh(new BaseWhere<T>());
     for(const Filter & filter : filters) {
-        if(filter.attribute == "id")
-            wh = wh && WHERE(ptr_id<T>(), filter.op, filter.value);
-        else if(filter.attribute == "idx")
-            wh = wh && WHERE(ptr_idx<T>(), filter.op, filter.value);
-        else if(filter.attribute == "uri")
+        if(filter.attribute == "uri") {
             wh = wh && WHERE(ptr_uri<T>(), filter.op, filter.value);
-        else if(filter.attribute == "name")
+        } else if(filter.attribute == "name") {
             wh = wh && WHERE(ptr_name<T>(), filter.op, filter.value);
         }
+    }
     return wh;
 }
 
@@ -98,12 +87,34 @@ template<typename T>
 std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
     auto & data = d.pt_data.get_data<T>();
     std::vector<idx_t> indexes;
-    if(filter.op == AROUND) {
-        type::GeographicalCoord coord(filter.lon, filter.lat);
-        auto tmp = d.pt_data.stop_point_proximity_list.find_within(coord, filter.distance);
-        for(auto idx_coord : tmp)
-            indexes.push_back(idx_coord.first);
-    } else if( filter.op == HAVING ) {
+    if(filter.op == DWITHIN) {
+        std::vector<std::string> splited;
+        boost::algorithm::split(splited, filter.value, boost::algorithm::is_any_of(","));
+        GeographicalCoord coord;
+        float distance;
+        if(splited.size() == 3) {
+            try {
+                std::string slon = boost::trim_copy(splited[0]);
+                std::string slat = boost::trim_copy(splited[1]);
+                std::string sdist = boost::trim_copy(splited[2]);
+                coord = type::GeographicalCoord(boost::lexical_cast<double>(slon), boost::lexical_cast<double>(slat) );
+                distance = boost::lexical_cast<float>(sdist);
+            } catch (...) {
+                throw parsing_error(parsing_error::partial_error, "Unable to parse the DWITHIN parameter " + filter.value);
+            }
+            std::vector<std::pair<idx_t, GeographicalCoord> > tmp;
+            switch(filter.navitia_type){
+            case Type_e::StopPoint: tmp = d.pt_data.stop_point_proximity_list.find_within(coord, distance); break;
+            case Type_e::StopArea: tmp = d.pt_data.stop_area_proximity_list.find_within(coord, distance);break;
+            default: throw ptref_error("The requested object can not be used a DWITHIN clause");
+            }
+            for(auto pair : tmp) {
+                indexes.push_back(pair.first);
+            }
+        }
+    }
+
+    else if( filter.op == HAVING ) {
         indexes = make_query(nt::static_data::get()->typeByCaption(filter.object), filter.value, d);
     } else {
         indexes = filtered_indexes(data, build_clause<T>({filter}));
@@ -129,7 +140,7 @@ std::vector<Filter> parse(std::string request){
             throw parsing_error(parsing_error::partial_error, "Filter: Unable to parse the whole string. Not parsed: >>" + unparsed + "<<");
         }
     } else {
-        throw parsing_error(parsing_error::global_error, "Filter: unable to parse");
+        throw parsing_error(parsing_error::global_error, "Filter: unable to parse " + request);
     }
     return filters;
 }

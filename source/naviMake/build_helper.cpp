@@ -52,6 +52,22 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         vj->company = b.data.companies.front();
 }
 
+VJ::VJ(builder & b, const std::string &network_name, const std::string &line_name, const std::string &validity_pattern, const std::string &block_id, bool wheelchair_boarding, const std::string& uri) : b(b){
+    VJ(b, line_name, validity_pattern, block_id, wheelchair_boarding, uri);
+    vj = b.data.vehicle_journeys.back();
+    auto it = b.nts.find(network_name);
+    if(it == b.nts.end()){
+        vj->tmp_line->network = new types::Network();
+        vj->tmp_line->network->uri = network_name;
+        vj->tmp_line->network->name = network_name;
+        b.nts[network_name] = vj->tmp_line->network;
+        b.data.networks.push_back(vj->tmp_line->network);
+    } else {
+        vj->tmp_line->network = it->second;
+    }
+}
+
+
 VJ& VJ::operator()(const std::string &stopPoint, const std::string& arrivee, const std::string& depart,
             uint32_t local_traffic_zone, bool drop_off_allowed, bool pick_up_allowed){
     return (*this)(stopPoint, pt::duration_from_string(arrivee).total_seconds(), pt::duration_from_string(depart).total_seconds(), local_traffic_zone, drop_off_allowed, pick_up_allowed);
@@ -128,8 +144,13 @@ SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelc
     return *this;
 }
 
+
 VJ builder::vj(const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, const bool wheelchair_boarding, const std::string& uri){
     return VJ(*this, line_name, validity_pattern, block_id, wheelchair_boarding, uri);
+}
+
+VJ builder::vj(const std::string &network_name, const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, const bool wheelchair_boarding, const std::string& uri){
+    return VJ(*this, network_name, line_name, validity_pattern, block_id, wheelchair_boarding, uri);
 }
 
 SA builder::sa(const std::string &name, double x, double y, const bool wheelchair_boarding){

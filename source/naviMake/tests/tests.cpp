@@ -107,3 +107,11 @@ BOOST_AUTO_TEST_CASE(stop_area_transformer){
     BOOST_CHECK_EQUAL(stop_area_n.coord.lat(), stop_area.coord.lat());
     BOOST_CHECK_EQUAL(stop_area_n.additional_data, stop_area.additional_data);
 }
+
+BOOST_AUTO_TEST_CASE(validity_pattern){
+    boost::gregorian::date begin;
+    begin=boost::gregorian::date_from_iso_string("201303011T1739");
+    navimake::types::ValidityPattern *vp;
+    vp = new  navimake::types::ValidityPattern(begin, "01");
+    BOOST_CHECK_EQUAL(vp->days.to_ulong(), 1);
+}
