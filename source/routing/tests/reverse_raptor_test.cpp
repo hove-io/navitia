@@ -328,8 +328,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
 
 BOOST_AUTO_TEST_CASE(validity_pattern){
     navimake::builder b("20120614");
-    b.vj("D", "00")("stop1", 8000)("stop2", 8200);
-    b.vj("C", "10")("stop1", 9000)("stop2", 9200);
+    b.vj("D", "00", "", true)("stop1", 8000)("stop2", 8200);
+    b.vj("C", "10", "", true)("stop1", 9000)("stop2", 9200);
     type::Data data;
     b.build(data.pt_data);
     data.build_raptor();
@@ -344,8 +344,8 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
 
 BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
     navimake::builder b("20120614");
-    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
-    b.vj("B")("stop3", 10000, 19050)("stop4", 19200, 19250);
+    b.vj("A", "11111111", "", true)("stop1", 8000,8050)("stop2", 8200,8250);
+    b.vj("B", "11111111", "", true)("stop3", 10000, 19050)("stop4", 19200, 19250);
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
     type::Data data;
@@ -386,8 +386,8 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
 
 BOOST_AUTO_TEST_CASE(marche_a_pied_fin){
     navimake::builder b("20120614");
-    b.vj("A")("stop1", 8000)("stop2", 8200);
-    b.vj("B")("stop3", 30000)("stop4",40000);
+    b.vj("A", "11111111", "", true)("stop1", 8000)("stop2", 8200);
+    b.vj("B", "11111111", "", true)("stop3", 30000)("stop4",40000);
     b.connection("stop2", "stop3", 10*60);
 
     type::Data data;
@@ -539,8 +539,8 @@ BOOST_AUTO_TEST_CASE(sn_fin) {
 
 BOOST_AUTO_TEST_CASE(prolongement_service) {
     navimake::builder b("20120614");
-    b.vj("A", "1111111", "block1")("stop1", 8*3600)("stop2", 8*3600+10*60);
-    b.vj("B", "1111111", "block1")("stop4", 8*3600+10*60)("stop3", 8*3600 + 20*60);
+    b.vj("A", "1111111", "block1", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
+    b.vj("B", "1111111", "block1", true)("stop4", 8*3600+10*60)("stop3", 8*3600 + 20*60);
     type::Data data;
     b.build(data.pt_data);
     data.build_raptor();
