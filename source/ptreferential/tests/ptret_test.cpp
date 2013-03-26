@@ -61,11 +61,39 @@ BOOST_AUTO_TEST_CASE(having) {
     BOOST_CHECK_EQUAL(filters[1].op,  GEQ);
 }
 
+
+BOOST_AUTO_TEST_CASE(escaped_value){
+    std::vector<Filter> filters = parse("stop_areas.uri=\"42\"");
+    BOOST_REQUIRE_EQUAL(filters.size(), 1);
+    BOOST_CHECK_EQUAL(filters[0].value, "42");
+
+    filters = parse("stop_areas.uri=\"4-2\"");
+    BOOST_REQUIRE_EQUAL(filters.size(), 1);
+    BOOST_CHECK_EQUAL(filters[0].value, "4-2");
+
+    filters = parse("stop_areas.uri=\"42.\"");
+    BOOST_REQUIRE_EQUAL(filters.size(), 1);
+    BOOST_CHECK_EQUAL(filters[0].value, "42.");
+
+    filters = parse("stop_areas.uri=\"42 12\"");
+    BOOST_REQUIRE_EQUAL(filters.size(), 1);
+    BOOST_CHECK_EQUAL(filters[0].value, "42 12");
+
+    filters = parse("stop_areas.uri=\"  42  \"");
+    BOOST_REQUIRE_EQUAL(filters.size(), 1);
+    BOOST_CHECK_EQUAL(filters[0].value, "  42  ");
+
+    filters = parse("stop_areas.uri=\"4&2\"");
+    BOOST_REQUIRE_EQUAL(filters.size(), 1);
+    BOOST_CHECK_EQUAL(filters[0].value, "4&2");
+}
+
 BOOST_AUTO_TEST_CASE(exception){
     BOOST_CHECK_THROW(parse(""), parsing_error);
     BOOST_CHECK_THROW(parse("mouuuhh bliiii"), parsing_error);
     BOOST_CHECK_THROW(parse("stop_areas.uri==42"), parsing_error);
 }
+
 
 struct Moo {
     int bli;
