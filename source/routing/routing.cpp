@@ -2,19 +2,6 @@
 
 namespace navitia { namespace routing {
 
-DateTime DateTime::inf = DateTime::infinity();
-DateTime DateTime::min = DateTime::minimity();
-
-std::ostream & operator<<(std::ostream & os, const DateTime & dt){
-    os << "D=" << dt.date() << " " << dt.hour()/(3600) << ":";
-    if((dt.hour()%3600)/60 < 10)
-        os << "0" << (dt.hour()%3600)/60;
-    else
-        os << (dt.hour()%3600)/60;
-    return os;
-}
-
-
 std::string PathItem::print(const navitia::type::PT_Data & data) const {
     std::stringstream ss;
 
@@ -39,18 +26,20 @@ std::string PathItem::print(const navitia::type::PT_Data & data) const {
 
     if(type == public_transport && vj_idx != navitia::type::invalid_idx){
         const navitia::type::VehicleJourney & vj = data.vehicle_journeys[vj_idx];
-        const navitia::type::Route & route = data.routes[vj.route_idx];
+        const navitia::type::JourneyPattern & journey_pattern = data.journey_patterns[vj.journey_pattern_idx];
+        const navitia::type::Route & route = data.routes[journey_pattern.route_idx];
         const navitia::type::Line & line = data.lines[route.line_idx];
-        ss << "Ligne : " << line.name  << " (" << line.external_code << " " << line.idx << "), "
-           << "Route : " << route.name << " (" << route.external_code << " " << route.idx << "), "
+        ss << "Ligne : " << line.name  << " (" << line.uri << " " << line.idx << "), "
+           << "Route : " << route.name  << " (" << route.uri << " " << route.idx << "), "
+           << "JourneyPattern : " << journey_pattern.name << " (" << journey_pattern.uri << " " << journey_pattern.idx << "), "
            << "Vehicle journey " << vj_idx << "\n";
     }
-    ss << "Départ de " << start.name << "(" << start.external_code << " " << start.idx << ") à " << departure << "\n";
+    ss << "Départ de " << start.name << "(" << start.uri << " " << start.idx << ") à " << departure << "\n";
     for(auto sp_idx : stop_points){
         navitia::type::StopPoint sp = data.stop_points[sp_idx];
-        ss << "    " << sp.name << " (" << sp.external_code << " " << sp.idx << ")" << "\n";
+        ss << "    " << sp.name << " (" << sp.uri << " " << sp.idx << ")" << "\n";
     }
-    ss << "Arrivée à " << dest.name << "(" << dest.external_code << " " << dest.idx << ") à " << arrival << "\n";
+    ss << "Arrivée à " << dest.name << "(" << dest.uri << " " << dest.idx << ") à " << arrival << "\n";
     return ss.str();
 }
 
@@ -59,7 +48,7 @@ bool Verification::verif(Path path) {
 }
 
 bool Verification::croissance(Path path) {
-    DateTime precdt = DateTime::min;
+    navitia::type::DateTime precdt = navitia::type::DateTime::min;
     for(PathItem item : path.items) {
         if(precdt > item.departure) {
             std::cout << "Erreur dans la vérification de la croissance des horaires : " << precdt  << " >  " << item.departure << std::endl;
@@ -95,7 +84,7 @@ bool Verification::appartenance_rp(Path path) {
 
             for(auto spidx : item.stop_points) {
                 if(std::find_if(vj.stop_time_list.begin(), vj.stop_time_list.end(),
-                                [&](int stidx){ return (data.route_points[data.stop_times[stidx].route_point_idx].stop_point_idx == spidx);}) == vj.stop_time_list.end()) {
+                                [&](int stidx){ return (data.journey_pattern_points[data.stop_times[stidx].journey_pattern_point_idx].stop_point_idx == spidx);}) == vj.stop_time_list.end()) {
                     std::cout << "Le stop point : " << spidx << " n'appartient pas au vj : " << item.vj_idx << std::endl;
                     return false;
                 }
@@ -117,7 +106,7 @@ bool Verification::check_correspondances(Path path) {
             conn.duration = item.arrival - item.departure;
             stop_point_list.push_back(conn);
         }
-        if(precitem.arrival != DateTime::inf) {
+        if(precitem.arrival != navitia::type::DateTime::inf) {
             if(precitem.type == public_transport && item.type == public_transport) {
                 conn.departure_stop_point_idx = precitem.stop_points.back();
                 conn.destination_stop_point_idx =  item.stop_points.front();

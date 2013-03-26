@@ -18,6 +18,10 @@ struct Nameable{
     std::string comment;
 };
 
+struct hasProperties {
+    std::bitset<7>  const properties;
+};
+
 /** En tête de tous les objets TC.
   *
   * Cette classe est héritée par \b tous les objets TC
@@ -25,64 +29,48 @@ struct Nameable{
 struct TransmodelHeader{
     std::string id; //< Identifiant de l'objet par le fournisseur de la donnée
     idx_t idx; //< Indexe de l'objet dans le tableau
-    std::string external_code; //< Code pérène
+    std::string uri; //< Code pérène
     TransmodelHeader() : idx(0){}
 };
 
 
-//forward declare
-class District;
-class Department;
-class City;
-class Connection;
-class RoutePointConnection;
-class StopArea;
-class Network;
-class Company;
-class ModeType;
-class Mode;
-class Line;
-class Route;
-class VehicleJourney;
-class ValidityPattern;
-class Equipement;
-class RoutePoint;
-class StopPoint;
+#define FORWARD_CLASS_DECLARE(type_name, collection_name) class type_name;
+ITERATE_NAVITIA_PT_TYPES(FORWARD_CLASS_DECLARE)
+class JourneyPatternPointConnection;
 class StopTime;
 
-
 struct Country : public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::Country;
     City* main_city;
+
+    std::vector<District*> district_list;
     bool operator<(const Country& other){ return this->name < other.name;}
 
+    navitia::type::Country get_navitia_type() const;
 };
 
 struct District: public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::District;
     City* main_city;
     Country* country;
 
     bool operator<(const District& other) const;
 
-    struct Transformer{
-        inline navitia::type::District operator()(const District* district){return this->operator()(*district);}
-        navitia::type::District operator()(const District& district);
-    };
+    navitia::type::District get_navitia_type() const;
 };
 
 struct Department: public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::Department;
     City* main_city;
     District *district;
-
     bool operator<(const Department& other) const;
 
-    struct Transformer{
-        inline navitia::type::Department operator()(const Department* department){return this->operator()(*department);}
-        navitia::type::Department operator()(const Department& department);
-    };
+    navitia::type::Department get_navitia_type() const;
 };
 
 
 struct City : public TransmodelHeader, Nameable {
+    const static nt::Type_e type = nt::Type_e::City;
     std::string main_postal_code;
     bool main_city;
     bool use_main_stop_area_property;
@@ -90,10 +78,7 @@ struct City : public TransmodelHeader, Nameable {
     Department* department;
     nt::GeographicalCoord coord;
 
-    struct Transformer{
-        inline navitia::type::City operator()(const City* city){return this->operator()(*city);}
-        navitia::type::City operator()(const City& city);
-    };
+    navitia::type::City get_navitia_type() const;
 
     City() : main_city(false), use_main_stop_area_property(false), department(NULL) {};
 
@@ -102,7 +87,8 @@ struct City : public TransmodelHeader, Nameable {
 
 };
 
-struct Connection: public TransmodelHeader {
+struct Connection: public TransmodelHeader, hasProperties {
+    const static nt::Type_e type = nt::Type_e::Connection;
     enum ConnectionKind{
         AddressConnection,           //Jonction adresse / arrêt commercial
         SiteConnection,              //Jonction Lieu public / arrêt commercial
@@ -127,10 +113,7 @@ struct Connection: public TransmodelHeader {
     int max_duration;
     ConnectionKind connection_kind;
 
-    struct Transformer{
-        inline navitia::type::Connection operator()(const Connection* connection){return this->operator()(*connection);}
-        navitia::type::Connection operator()(const Connection& connection);
-    };
+    navitia::type::Connection get_navitia_type() const;
 
     Connection() : departure_stop_point(NULL), destination_stop_point(NULL), duration(0),
         max_duration(0), connection_kind(DefaultConnection){}
@@ -139,51 +122,45 @@ struct Connection: public TransmodelHeader {
 
 };
 
-struct RoutePointConnection: public TransmodelHeader {
-    enum RoutePointConnectionKind {
+struct JourneyPatternPointConnection: public TransmodelHeader {
+    enum JourneyPatternPointConnectionKind {
         Extension,  //Prolongement de service
         Guarantee,   //Correspondance garantie
-        UndefinedRoutePointConnectionKind
+        UndefinedJourneyPatternPointConnectionKind
     };
 
-    RoutePoint *departure_route_point;
-    RoutePoint *destination_route_point;
-    RoutePointConnectionKind route_point_connection_kind;
+    JourneyPatternPoint *departure_journey_pattern_point;
+    JourneyPatternPoint *destination_journey_pattern_point;
+    JourneyPatternPointConnectionKind journey_pattern_point_connection_kind;
+    int length;
 
-    struct Transformer {
-        inline navitia::type::RoutePointConnection operator()(const RoutePointConnection* route_point_connection) 
-        {return this->operator()(*route_point_connection);}
-        navitia::type::RoutePointConnection operator()(const RoutePointConnection &route_point_connection);
-    };
+    navitia::type::JourneyPatternPointConnection get_navitia_type() const;
 
+    JourneyPatternPointConnection() : departure_journey_pattern_point(NULL), destination_journey_pattern_point(NULL),
+                            journey_pattern_point_connection_kind(UndefinedJourneyPatternPointConnectionKind), length(0) {}
 
-    RoutePointConnection() : departure_route_point(NULL), destination_route_point(NULL),
-                             route_point_connection_kind(UndefinedRoutePointConnectionKind) {}
-
-    bool operator<(const RoutePointConnection &other) const;
+    bool operator<(const JourneyPatternPointConnection &other) const;
 };
 
 
-struct StopArea : public TransmodelHeader, Nameable{
+struct StopArea : public TransmodelHeader, Nameable, hasProperties{
+    const static nt::Type_e type = nt::Type_e::StopArea;
     nt::GeographicalCoord coord;
-    int properties;
     std::string additional_data;
 
     bool main_stop_area;
     bool main_connection;
+    bool wheelchair_boarding;
 
-    struct Transformer{
-        inline navitia::type::StopArea operator()(const StopArea* stop_area){return this->operator()(*stop_area);}
-        navitia::type::StopArea operator()(const StopArea& stop_area);
-    };
+    navitia::type::StopArea get_navitia_type() const;
 
-
-    StopArea(): properties(0), main_stop_area(false), main_connection(false) {}
+    StopArea(): main_stop_area(false), main_connection(false), wheelchair_boarding(false) {}
 
     bool operator<(const StopArea& other) const;
 };
 
 struct Network : public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::Network;
     std::string address_name;
     std::string address_number;
     std::string address_type_name;
@@ -192,17 +169,13 @@ struct Network : public TransmodelHeader, Nameable{
     std::string website;
     std::string fax;
 
-    struct Transformer{
-        inline navitia::type::Network operator()(const Network* network){return this->operator()(*network);}
-        navitia::type::Network operator()(const Network& network);
-    };
+    navitia::type::Network get_navitia_type() const;
 
     bool operator<(const Network& other)const{ return this->name < other.name;}
-
-
 };
 
 struct Company : public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::Company;
     idx_t city_idx;
     std::string address_name;
     std::string address_number;
@@ -211,32 +184,30 @@ struct Company : public TransmodelHeader, Nameable{
     std::string mail;
     std::string website;
     std::string fax;
+
+    nt::Company get_navitia_type() const;
+
+    bool operator<(const Company& other)const{ return this->name < other.name;}
 };
 
-struct ModeType : public TransmodelHeader, Nameable{
+struct CommercialMode : public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::CommercialMode;
+    nt::CommercialMode get_navitia_type() const;
 
-    struct Transformer{
-        inline nt::ModeType operator()(const ModeType* mode_type){return this->operator()(*mode_type);}   
-        nt::ModeType operator()(const ModeType& mode_type);   
-    };
-
-    bool operator<(const ModeType& other)const ;
+    bool operator<(const CommercialMode& other)const ;
 };
 
-struct Mode : public TransmodelHeader, Nameable{
-    ModeType* mode_type;
+struct PhysicalMode : public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::PhysicalMode;
+    PhysicalMode() {}
 
-    struct Transformer{
-        inline nt::Mode operator()(const Mode* mode){return this->operator()(*mode);}   
-        nt::Mode operator()(const Mode& mode);   
-    };
+    nt::PhysicalMode get_navitia_type() const;
 
-    Mode(): mode_type(NULL){}
-
-    bool operator<(const Mode& other) const;
+    bool operator<(const PhysicalMode& other) const;
 };
 
 struct Line : public TransmodelHeader, Nameable {
+    const static nt::Type_e type = nt::Type_e::Line;
     std::string code;
     std::string forward_name;
     std::string backward_name;
@@ -245,62 +216,64 @@ struct Line : public TransmodelHeader, Nameable {
     std::string color;
     int sort;
     
-    ModeType* mode_type;
-
+    CommercialMode* commercial_mode;
     Network* network;
+    Company* company;
 
-    StopPoint* forward_direction;
+    Line(): color(""), sort(0), commercial_mode(NULL), network(NULL), company(NULL){}
 
-    StopPoint* backward_direction;
-
-    struct Transformer{
-        inline nt::Line operator()(const Line* line){return this->operator()(*line);}   
-        nt::Line operator()(const Line& line);   
-    };
-
-    Line(): sort(0), mode_type(NULL), network(NULL), forward_direction(NULL), backward_direction(NULL){}
+    nt::Line get_navitia_type() const;
 
     bool operator<(const Line & other) const;
-
 };
 
 struct Route : public TransmodelHeader, Nameable{
-    bool is_frequence;
-    bool is_forward;
-    bool is_adapted;
-    Line* line;
-    Mode* mode;   
-    std::vector<RoutePoint*> route_point_list;
+    const static nt::Type_e type = nt::Type_e::Route;
+    Line * line;
 
-    struct Transformer{
-        inline navitia::type::Route operator()(const Route* route){return this->operator()(*route);}
-        navitia::type::Route operator()(const Route& route);
-    };
-
-    Route(): is_frequence(false), is_forward(false), is_adapted(false), line(NULL), mode(NULL){};
+    navitia::type::Route get_navitia_type() const;
 
     bool operator<(const Route& other) const;
+};
 
- };
-struct VehicleJourney: public TransmodelHeader, Nameable{
+struct JourneyPattern : public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::JourneyPattern;
+    bool is_frequence;
     Route* route;
+    PhysicalMode* physical_mode;
+    std::vector<JourneyPatternPoint*> journey_pattern_point_list;
+
+    JourneyPattern(): is_frequence(false), route(NULL), physical_mode(NULL){};
+
+    navitia::type::JourneyPattern get_navitia_type() const;
+
+    bool operator<(const JourneyPattern& other) const;
+ };
+
+struct VehicleJourney: public TransmodelHeader, Nameable, hasProperties{
+    const static nt::Type_e type = nt::Type_e::VehicleJourney;
+    JourneyPattern* journey_pattern;
     Company* company;
-    Mode* mode;
+    PhysicalMode* physical_mode;
     Line * tmp_line; // N'est pas à remplir obligatoirement
     //Vehicle* vehicle;
-    bool is_adapted;
+    bool wheelchair_boarding;
 
     ValidityPattern* validity_pattern;
     std::vector<StopTime*> stop_time_list; // N'est pas à remplir obligatoirement
     StopTime * first_stop_time;
     std::string block_id;
 
-    struct Transformer{
-        inline navitia::type::VehicleJourney operator()(const VehicleJourney* vj){return this->operator()(*vj);}
-        navitia::type::VehicleJourney operator()(const VehicleJourney& vj);
-    };
+    bool is_adapted;
+    ValidityPattern* adapted_validity_pattern;
+    std::vector<VehicleJourney*> adapted_vehicle_journey_list;
+    VehicleJourney* theoric_vehicle_journey;
 
-    VehicleJourney(): route(NULL), company(NULL), mode(NULL), is_adapted(false), validity_pattern(NULL), stop_time_list(), block_id(""){}
+
+    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), wheelchair_boarding(false), 
+    validity_pattern(NULL), is_adapted(false), adapted_validity_pattern(NULL), theoric_vehicle_journey(NULL){}
+
+    navitia::type::VehicleJourney get_navitia_type() const;
 
     bool operator<(const VehicleJourney& other) const;
 };
@@ -318,28 +291,26 @@ struct Equipement : public TransmodelHeader {
     };
 
     std::bitset<9> equipement_kind;
-    
+
 };
 
-struct RoutePoint : public TransmodelHeader, Nameable{
+struct JourneyPatternPoint : public TransmodelHeader, Nameable{
+    const static nt::Type_e type = nt::Type_e::JourneyPatternPoint;
     int order;
     bool main_stop_point;
     int fare_section;
-    Route* route;
+    JourneyPattern* journey_pattern;
     StopPoint* stop_point;
 
-    struct Transformer{
-        inline nt::RoutePoint operator()(const RoutePoint* route_point){return this->operator()(*route_point);}   
-        nt::RoutePoint operator()(const RoutePoint& route_point);
-    };
+    nt::JourneyPatternPoint get_navitia_type() const;
 
-    RoutePoint() : order(0), main_stop_point(false), fare_section(0), route(NULL), stop_point(NULL){}
+    JourneyPatternPoint() : order(0), main_stop_point(false), fare_section(0), journey_pattern(NULL), stop_point(NULL){}
 
-    bool operator<(const RoutePoint& other) const;
-
+    bool operator<(const JourneyPatternPoint& other) const;
 };
 
 struct ValidityPattern: public TransmodelHeader {
+    const static nt::Type_e type = nt::Type_e::ValidityPattern;
 private:
     bool is_valid(int duration);
 public:
@@ -355,17 +326,14 @@ public:
 
     bool check(int day) const;
 
-    struct Transformer{
-        inline nt::ValidityPattern operator()(const ValidityPattern* validity_pattern){return this->operator()(*validity_pattern);}
-        nt::ValidityPattern operator()(const ValidityPattern& validity_pattern);
-    };
+    nt::ValidityPattern get_navitia_type() const;
 
     bool operator<(const ValidityPattern& other) const;
-
-
+    bool operator==(const ValidityPattern& other) const;
 };
 
-struct StopPoint : public TransmodelHeader, Nameable{
+struct StopPoint : public TransmodelHeader, Nameable, hasProperties{
+    const static nt::Type_e type = nt::Type_e::StopPoint;
     nt::GeographicalCoord coord;
     int fare_zone;
 
@@ -374,41 +342,43 @@ struct StopPoint : public TransmodelHeader, Nameable{
     std::string address_type_name;
 
     StopArea* stop_area;
-    Mode* mode;
     City* city;
+    Network* network;
 
-    struct Transformer{
-        inline nt::StopPoint operator()(const StopPoint* stop_point){return this->operator()(*stop_point);}   
-        nt::StopPoint operator()(const StopPoint& stop_point);   
-    };
+    bool wheelchair_boarding;
 
-    StopPoint(): fare_zone(0), stop_area(NULL), mode(NULL), city(NULL) {}
+    StopPoint(): fare_zone(0), stop_area(NULL), city(NULL), network(NULL), wheelchair_boarding(false) {}
+
+    nt::StopPoint get_navitia_type() const;
 
     bool operator<(const StopPoint& other) const;
-
 };
 
 struct StopTime {
     int idx;
     int arrival_time; ///< En secondes depuis minuit
     int departure_time; ///< En secondes depuis minuit
+    int start_time; /// Si horaire en fréquence
+    int end_time; /// Si horaire en fréquence
+    int headway_secs; /// Si horaire en fréquence
     VehicleJourney* vehicle_journey;
-    RoutePoint* route_point;
+    JourneyPatternPoint* journey_pattern_point;
     StopPoint * tmp_stop_point;// ne pas remplir obligatoirement
     int order;
     bool ODT;
     bool pick_up_allowed;
     bool drop_off_allowed;
+    bool is_frequency;
+    bool wheelchair_boarding;
+    
     uint32_t local_traffic_zone;
 
-    struct Transformer{
-        inline navitia::type::StopTime operator()(const StopTime* stop){return this->operator()(*stop);}
-        navitia::type::StopTime operator()(const StopTime& stop);
-    };
+    StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<int>::max()), end_time(std::numeric_limits<int>::max()),
+        headway_secs(std::numeric_limits<int>::max()), vehicle_journey(NULL), journey_pattern_point(NULL), order(0),
+        ODT(false), pick_up_allowed(false), drop_off_allowed(false), is_frequency(false), wheelchair_boarding(false),
+                local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
 
-    StopTime(): arrival_time(0), departure_time(0), vehicle_journey(NULL), route_point(NULL), order(0), 
-        ODT(false), pick_up_allowed(false), drop_off_allowed(false), local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
-
+    navitia::type::StopTime get_navitia_type() const;
 
     bool operator<(const StopTime& other) const;
 };

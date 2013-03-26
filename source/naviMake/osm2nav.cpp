@@ -9,6 +9,7 @@
 #include "georef/georef.h"
 #include "georef/adminref.h"
 #include "utils/functions.h"
+//#include "utils/csv.h"
 
 namespace navitia { namespace georef {
 
@@ -113,7 +114,7 @@ struct Visitor{
         if(properties.any()){
             georef::Way gr_way;
             gr_way.idx = w.idx;
-            gr_way.external_code = std::to_string(w.idx);
+            gr_way.uri = std::to_string(w.idx);
             gr_way.city_idx = type::invalid_idx;
             if(tags.find("name") != tags.end())
                 gr_way.name = tags.at("name");
@@ -166,7 +167,7 @@ struct Visitor{
                     type::GeographicalCoord current(current_node.lon(), current_node.lat());
                     length += current.distance_to(prev);
                     prev = current;
-                    // If a node is used more than once, it is an intersection, hence it's a node of the road network graph
+                    // If a node is used more than once, it is an intersection, hence it's a node of the street network graph
                     if(current_node.uses > 1){
                         type::idx_t target = current_node.idx;
                         georef::Edge e;
@@ -174,8 +175,11 @@ struct Visitor{
                         e.way_idx = w.second.idx;
                         e.cyclable = w.second.properties[CYCLE_FWD];
                         boost::add_edge(source, target, e, geo_ref.graph);
+                        geo_ref.ways[e.way_idx].edges.push_back(std::make_pair(source, target));
+
                         e.cyclable = w.second.properties[CYCLE_BWD];
                         boost::add_edge(target, source, e, geo_ref.graph);
+                        geo_ref.ways[e.way_idx].edges.push_back(std::make_pair(target, source));
                         source = target;
                         length = 0;
                     }
@@ -373,11 +377,12 @@ void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filenam
     std::cout << v.nodes.size() << " nodes, " << v.ways.size() << " ways/" << v.total_ways << std::endl;
     v.count_nodes_uses();
     v.edges();
-    v.HouseNumbers();
+    v.HouseNumbers();    
     v.AdminRef();
     std::cout << "On a : " << v.total_house_number << " adresses" << std::endl;
     std::cout << "On a : " << v.geo_ref.admins.size() << " données administratives" << std::endl;
 }
+
 }}
 
 

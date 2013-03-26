@@ -52,8 +52,8 @@ FIND_PACKAGE(Boost 1.40.0 REQUIRED)
 
 
 SET(NAVITIA_VERSION_MAJOR 0)
-SET(NAVITIA_VERSION_MINOR 4.5)
-SET(NAVITIA_VERSION_PATCH dev)
+SET(NAVITIA_VERSION_MINOR 54)
+SET(NAVITIA_VERSION_PATCH e)
 
 #ajout a l'include path le repertoirre de compilation, pour géré le config.h
 include_directories (${CMAKE_CURRENT_BINARY_DIR}
@@ -68,14 +68,11 @@ ENABLE_TESTING()
 
 add_subdirectory(WS_commons)
 add_subdirectory(type)
-add_subdirectory(interface)
 add_subdirectory(ptreferential)
-add_subdirectory(first_letter)
+add_subdirectory(autocomplete)
 add_subdirectory(naviMake)
 add_subdirectory(fare)
-#add_subdirectory(gateway_mod)
 add_subdirectory(visu)
-#add_subdirectory(street_network)
 add_subdirectory(proximity_list)
 add_subdirectory(navitia)
 add_subdirectory(vptranslator)
@@ -83,9 +80,11 @@ add_subdirectory(utils)
 add_subdirectory(lz4_filter)
 add_subdirectory(routing)
 add_subdirectory(georef)
-add_subdirectory(geo_dispatcher)
 add_subdirectory(validator)
 add_subdirectory(time_tables)
+add_subdirectory(frontend)
+add_subdirectory(connectors)
+add_subdirectory(ratimake)
 
 add_subdirectory(scripts)
 
@@ -94,5 +93,17 @@ configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 SET(CPACK_PACKAGE_VERSION_MAJOR ${NAVITIA_VERSION_MAJOR})
 SET(CPACK_PACKAGE_VERSION_MINOR ${NAVITIA_VERSION_MINOR})
 SET(CPACK_PACKAGE_VERSION_PATCH ${NAVITIA_VERSION_PATCH})
-SET(CPACK_GENERATOR TGZ)
+SET(CPACK_GENERATOR DEB)
+
+set(CPACK_PACKAGING_INSTALL_PREFIX "/")
+SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Tristram Gräbener<tristram.grabener@canaltp.fr>")
+SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
+SET(CPACK_DEBIAN_PACKAGE_NAME "navitia")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Navitia navimake Jörmungandr")
+
+SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.48.0, libboost-serialization1.48.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.48.0, libboost-program-options1.48.0, libboost-filesystem1.48.0, gunicorn, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql")
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/debian/postinst;")
+
+
+
 INCLUDE(CPack)

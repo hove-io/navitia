@@ -22,6 +22,8 @@
 #include "dummy.h"
 #elif WS_TYPE==4
 #include "qt/main.h"
+#elif WS_TYPE==5
+#include "zmq.h"
 #endif
 
 namespace webservice

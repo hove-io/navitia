@@ -1,0 +1,9 @@
+"route_id","service_id","trip_id","trip_headsign","direction_id","block_id","shape_id"
+4,"FULLW",41,"Porte de Clignancourt",0,,
+4,"FULLW",42,"Porte D'orléans",1,,
+4,"FULLW",43,"Porte de Clignancourt",0,,
+4,"FULLW",44,"Porte D'orléans",1,,
+5,"FULLW",51,"Bobigny",0,,
+5,"FULLW",52,"Place d'italie",1,,
+5,"FULLW",53,"Bobigny",0,,
+5,"FULLW",54,"Place d'italie",1,,

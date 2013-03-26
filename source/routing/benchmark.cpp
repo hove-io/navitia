@@ -1,6 +1,4 @@
-#include "time_dependent.h"
 #include "raptor.h"
-//#include "static_raptor.h"
 #include "type/data.h"
 #include "utils/timer.h"
 #include <boost/program_options.hpp>
@@ -12,6 +10,12 @@
 using namespace navitia;
 using namespace routing;
 namespace po = boost::program_options;
+
+std::string iso_string(const nt::Data & d, int date, int hour){
+    boost::posix_time::ptime date_time(d.meta.production_date.begin() + boost::gregorian::days(date));
+    date_time += boost::posix_time::seconds(hour);
+    return boost::posix_time::to_iso_string(date_time);
+}
 
 struct PathDemand {
     type::idx_t start;
@@ -37,12 +41,10 @@ struct Result {
 
 int main(int argc, char** argv){
     po::options_description desc("Options de l'outil de benchmark");
-    std::vector<std::string> algos;
     std::string file, output;
     int iterations;
     desc.add_options()
             ("help", "Affiche l'aide")
-            ("algo,a", po::value<decltype(algos)>(&algos), "Algorithme(s) à utiliser : raptor, time_dep")
             ("interations,i", po::value<int>(&iterations)->default_value(100), "Nombre d'itérations (10 calculs par itération)")
             ("file,f", po::value<std::string>(&file)->default_value("data.nav.lz4"), "Données en entrée")
             ("output,o", po::value<std::string>(&output)->default_value("benchmark.csv"), "Fichier de sortie");
@@ -57,14 +59,14 @@ int main(int argc, char** argv){
 
     type::Data data;
     {
-        Timer t("Charegement des données : " + file);
-        data.load_lz4(file);
+        Timer t("Chargement des données : " + file);
+        data.load(file);
     }
 
     // Génération des instances
     std::random_device rd;
     std::mt19937 rng(31442);
-    std::uniform_int_distribution<> gen(0,data.pt_data.stop_areas.size());
+    std::uniform_int_distribution<> gen(0,data.pt_data.stop_areas.size()-1);
 
     std::vector<PathDemand> demands;
     for(int i = 0; i < iterations; ++i) {
@@ -89,75 +91,62 @@ int main(int argc, char** argv){
             }
         }
     }
-
     // Calculs des itinéraires
-    std::map<std::string, std::vector<Result> > results;
-    for(auto algo : algos){
-        AbstractRouter * router;
-        if(algo == "raptor"){        
-            data.build_raptor();
-            router = new raptor::RAPTOR(data);
-        } else if(algo == "time_dep"){
-            router = new timedependent::TimeDependent(data);
-    //    } else if(algo == "static"){
-    //        router = new StaticRaptor(data);
-        } else {
-            std::cerr << "Algorithme inconnu : " << algo << std::endl;
-            return 1;
+    std::vector<Result> results;
+    AbstractRouter * router;
+    data.build_raptor();
+    router = new raptor::RAPTOR(data);
+
+    std::cout << "On lance le benchmark de l'algo " << std::endl;
+    boost::progress_display show_progress(demands.size());
+    Timer t("Calcul avec l'algorithme ");
+    //ProfilerStart("bench.prof");
+    for(auto demand : demands){
+        ++show_progress;
+        Timer t2;
+        //            CALLGRIND_START_INSTRUMENTATION;
+
+        auto res = router->compute(demand.start, demand.target, demand.hour, demand.date);
+        //            CALLGRIND_STOP_INSTRUMENTATION;
+
+        Path path;
+        if(res.size() > 0) {
+            path = res[0];
         }
 
-        std::cout << "On lance le benchmark de l'algo " << algo << std::endl;
-        boost::progress_display show_progress(demands.size());
-        Timer t("Calcul avec l'algorithme " + algo);
-        //ProfilerStart("bench.prof");
-        for(auto demand : demands){
-            ++show_progress;
-            Timer t2;
-            //CALLGRIND_START_INSTRUMENTATION;
-
-            auto res = router->compute(demand.start, demand.target, demand.hour, demand.date);
-            //CALLGRIND_STOP_INSTRUMENTATION;
-
-            Path path;
-            if(res.size() > 0) {
-                path = res[0];
-            }
-
-            Result result(path);
-            result.time = t2.ms();
-            results[algo].push_back(result);
-        }
-        //ProfilerStop();
-        delete router;
+        Result result(path);
+        result.time = t2.ms();
+        results.push_back(result);
     }
+    //ProfilerStop();
+    delete router;
+
 
     Timer ecriture("Écriture du fichier de résultats");
     std::fstream out_file(output, std::ios::out);
     out_file << "Start, Target, Day, Hour";
-    for(auto algo : algos){
         out_file << ", "
-                 << algo << "_arrival, "
-                 << algo << "_duration, "
-                 << algo << "_nb_change, "
-                 << algo << "_visited, "
-                 << algo << "_time";
-    }
+                 << "arrival, "
+                 << "duration, "
+                 << "nb_change, "
+                 << "visited, "
+                 << "time";
     out_file << "\n";
 
     for(size_t i = 0; i < demands.size(); ++i){
         PathDemand demand = demands[i];
-        out_file << data.pt_data.stop_areas[demand.start].external_code
-                 << ", " << data.pt_data.stop_areas[demand.target].external_code
+        out_file << data.pt_data.stop_points[demand.start].uri
+                 << ", " << data.pt_data.stop_points[demand.target].uri
                  << ", " << demand.date
                  << ", " << demand.hour;
-        for(auto algo : algos){
-            out_file << ", "
-                     << results[algo][i].arrival << ", "
-                     << results[algo][i].duration << ", "
-                     << results[algo][i].nb_changes << ", "
-                     << results[algo][i].visited << ", "
-                     << results[algo][i].time;
-        }
+
+        out_file << ", "
+                 << results[i].arrival << ", "
+                 << results[i].duration << ", "
+                 << results[i].nb_changes << ", "
+                 << results[i].visited << ", "
+                 << results[i].time;
+
         out_file << "\n";
     }
     out_file.close();

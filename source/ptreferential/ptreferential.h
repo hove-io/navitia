@@ -20,18 +20,16 @@
 
 #include "type/data.h"
 #include "where.h"
-namespace pbnavitia { struct Response;}
-
 
 
 using navitia::type::Type_e;
 namespace navitia{ namespace ptref{
 
-// Un filter est du type stop_area.external_code = "kikoolol"
+// Un filter est du type stop_area.uri = "kikoolol"
 struct Filter {
     navitia::type::Type_e navitia_type; //< Le type parsé
     std::string object; //< L'objet sous forme de chaîne de caractère ("stop_area")
-    std::string attribute; //< L'attribu ("external code")
+    std::string attribute; //< L'attribu ("uri")
     Operator_e op; //< la comparaison ("=")
     std::string value; //< la valeur comparée ("kikoolol")
 
@@ -40,8 +38,17 @@ struct Filter {
     Filter() {}
 };
 
+struct ptref_error : public std::exception {
+    std::string more;
 
-struct ptref_parsing_error : public std::exception{
+    ptref_error(const std::string & more) : more(more) {}
+    virtual const char* what() const throw() {
+        return this->more.c_str();
+    }
+    ~ptref_error() throw(){}
+};
+
+struct parsing_error : public ptref_error{
     enum error_type {
         global_error ,
         partial_error,
@@ -49,23 +56,18 @@ struct ptref_parsing_error : public std::exception{
     };
 
     error_type type;
-    std::string more;
 
-    ~ptref_parsing_error() throw() {}
+    parsing_error(error_type type, const std::string & str) : ptref_error(str), type(type) {}
+
+    ~parsing_error() throw() {}
 };
 
-/// Execute une requête et génère la sortie protobuf 
-pbnavitia::Response query_pb(type::Type_e type, std::string request, const int depth, type::Data & data);
-
 /// Exécute une requête sur les données Data : retourne les idx des objets demandés
-std::vector<type::idx_t> make_query(type::Type_e requested_type, std::string request, type::Data & data);
-
-/// Construit la réponse proto buf, une fois que l'on trouvé les indices
-pbnavitia::Response extract_data(type::Data & data, Type_e requested_type, std::vector<type::idx_t> & rows, const int depth);
+std::vector<type::idx_t> make_query(type::Type_e requested_type, std::string request, const type::Data &data);
 
 
 /// Trouve le chemin d'un type de données à un autre
-/// Par exemple StopArea → StopPoint → RoutePoint
+/// Par exemple StopArea → StopPoint → JourneyPatternPoint
 std::map<Type_e,Type_e> find_path(Type_e source);
 
 /// À parti d'un élément, on veut retrouver tous ceux de destination

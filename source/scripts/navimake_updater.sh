@@ -61,7 +61,7 @@ do
 
     echo "binarisation de $file dans $temp_dir "
 
-    unzip $file -d $temp_dir >> "$temp_dir/bina.log" 2>&1
+    unzip -o $file -d $temp_dir >> "$temp_dir/bina.log" 2>&1
     if [ $? -ne 0 ]
     then
         mv $file $error_dir
@@ -70,15 +70,20 @@ do
         exit 4
     fi
 
-    if [ -d "$bd_topo" ]
+    if [ -d "$street_network" ]
     then
-        navimake_options=" --topo $bd_topo "
-    else
-        echo "bd_topo ($bd_topo) non trouvé"
+        navimake_options=" --topo $street_network "
+    else 
+        if [ -r "$street_network" ] 
+        then
+            navimake_options=" --osm $street_network "
+        else
+            echo "street_network ($street_network) non trouvé"
+        fi 
     fi
     
 
-    `$navimake -t gtfs -i $temp_dir -o $data_dir/$data_filename $navimake_options >> "$temp_dir/bina.log" 2>&1`
+    `$navimake -i $temp_dir -o $data_dir/$data_filename $navimake_options >> "$temp_dir/bina.log" 2>&1`
     if [ $? -ne 0 ]
     then
         mv $file $error_dir

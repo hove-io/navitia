@@ -10,6 +10,7 @@
 #include "meta_data.h"
 #include <boost/format.hpp>
 #include "routing/dataraptor.h"
+#include <atomic>
 #include "georef/adminref.h"
 
 namespace navitia { namespace type {
@@ -17,22 +18,22 @@ namespace navitia { namespace type {
 /** Contient toutes les données théoriques du référentiel transport en communs
   *
   * Il existe trois formats de stockage : texte, binaire, binaire compressé
-  * Il est conseillé de toujours utiliser le format compressé (la compression a un surcoût quasiment nul et
+  * Il est conseillé de toujours utiliser le format compressé (la compression a un surcout quasiment nul et
   * peut même (sur des disques lents) accélerer le chargement).
   */
 class Data : boost::noncopyable{
 public:
 
-    static const unsigned int data_version = 11; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
+    static const unsigned int data_version = 17; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
     int nb_threads; //< Nombre de threads. IMPORTANT ! Sans cette variable, ça ne compile pas
     unsigned int version; //< Numéro de version des données chargées
-    bool loaded; //< Est-ce que lse données ont été chargées
+    std::atomic<bool> loaded; //< Est-ce que lse données ont été chargées
 
     MetaData meta;
 
     /** Le map qui contient la liste des Alias utilisé par
           * 1. module de binarisation des données ou le module de chargement.
-            2. Module firstletter à chaque appel.
+            2. Module autocomplete à chaque appel.
           */
     std::map<std::string, std::string> Alias_List;
 
@@ -58,14 +59,15 @@ public:
     boost::shared_mutex load_mutex;
 
     friend class boost::serialization::access;
-    
+
     bool last_load;
     boost::posix_time::ptime last_load_at;
 
-    public:
+    std::atomic<bool> to_load;
+
 
     /// Constructeur de data, définit le nombre de threads, charge les données
-    Data() : nb_threads(8), loaded(false), last_load(true){
+    Data() : nb_threads(8), loaded(false), last_load(true), to_load(true){
         if(Configuration::is_instanciated()){
             init_logger();
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -77,6 +79,7 @@ public:
             LOG4CPLUS_TRACE(logger, "On tente de charger le fichier de configuration général : " + conf_file);
             conf->load_ini(conf_file);
             nb_threads = conf->get_as<int>("GENERAL", "nb_threads", 1);
+            geo_ref.word_weight =  conf->get_as<int>("AUTOCOMPLETE", "wordweight", 5);
         }
     }
 
@@ -96,39 +99,17 @@ public:
         ar & pt_data & geo_ref & meta;
     }
 
-    /** Sauvegarde la structure de fichier au format texte
-      *
-      * Le format est plus portable que la version binaire
-      */
+    /** Charge les données et effectue les initialisations nécessaires */
+    bool load(const std::string & filename);
+
+    /** Sauvegarde les données */
     void save(const std::string & filename);
 
-    /** Charge la structure de données du fichier au format texte */
-    void load(const std::string & filename);
-
-    /** Charge les données binaires compressées en FastLZ
-      *
-      * La compression FastLZ est extrèmement rapide mais moyennement performante
-      * Le but est que la lecture du fichier compression soit aussi rapide que sans compression
-      */
-    void load_lz4(const std::string & filename);
-
-    /** Sauvegarde les données en binaire compressé avec FastLZ*/
-    void lz4(const std::string & filename);
-
-    /** Sauvegarde la structure de fichier au format binaire
-      *
-      * Attention à la portabilité
-      */
-    void save_bin(const std::string & filename);
-
-    /** Charge la structure de données depuis un fichier au format binaire */
-    void load_bin(const std::string & filename);
-
     /** Construit l'indexe ExternelCode */
-    void build_external_code();
+    void build_uri();
 
-    /** Construit l'indexe FirstLetter */
-    void build_first_letter();
+    /** Construit l'indexe Autocomplete */
+    void build_autocomplete();
 
     /** Construit l'indexe ProximityList */
     void build_proximity_list();
@@ -136,10 +117,18 @@ public:
     /** Construit les données raptor */
     void build_raptor();
 
-
     Data& operator=(Data&& other);
 
+private:
+    /** Charge les données binaires compressées en LZ4
+      *
+      * La compression LZ4 est extrèmement rapide mais moyennement performante
+      * Le but est que la lecture du fichier compression soit aussi rapide que sans compression
+      */
+    void load_lz4(const std::string & filename);
 
+    /** Sauvegarde les données en binaire compressé avec LZ4*/
+    void save_lz4(const std::string & filename);
 
 };
 

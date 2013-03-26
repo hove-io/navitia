@@ -1,28 +1,45 @@
 package pbnavitia;
 
 enum NavitiaType {
-    STOPPOINT = 4;
-    STOPAREA = 5;
+    LINE = 1;
+    JOURNEY_PATTERN = 2;
+    STOP_POINT = 4;
+    STOP_AREA = 5;
+    NETWORK = 7;
+    PHYSICAL_MODE = 8;
+    COMMERCIAL_MODE = 9;
     CITY = 10;
+    CONNECTION = 11;
+    JOURNEY_PATTERN_POINT = 12;
+    VEHICLE_JOURNEY = 13;
+    COMPANY = 15;
     COUNTRY = 17;
-    SITE = 20;
-    ADDRESS = 30;
+    ADDRESS = 22;
+    ROUTE = 23;
+    POI = 24;
 }
 
 
 enum API {
-    FIRSTLETTER = 1;
+    AUTOCOMPLETE = 1;
     PTREFERENTIAL = 2;
-    STREET_NETWORK = 3;
-    PLANNER = 4;	
+    PLANNER = 4;
     LOAD = 5;
-    PROXIMITYLIST = 6;
+    PROXIMITY_LIST = 6;
     STATUS = 7;
     NEXT_DEPARTURES = 8;
     NEXT_ARRIVALS = 9;
-    DEPARTURE_BOARD = 10;
-    LINE_SCHEDULE = 11;
-    STOPS_SCHEDULE = 12;
+    DEPARTURE_BOARDS = 10;
+    ROUTE_SCHEDULES = 11;
+    STOPS_SCHEDULES = 12;
+    ISOCHRONE = 13;
+    METADATAS = 14;
+}
+
+message Message{
+    optional string uri = 1;
+    optional string message = 2;
+    optional string title = 3;
 }
 
 message GeographicalCoord {
@@ -32,103 +49,135 @@ message GeographicalCoord {
 
 message Country {
     optional string id = 1;
+    optional string uri = 2;
     optional string name  = 3;
     optional GeographicalCoord coord = 6;
 }
 
 message StopArea {
-    optional string id = 1;
     optional string name = 3;
-    optional string external_code = 4;
+    optional string uri = 4;
     optional GeographicalCoord coord = 5;
     optional City city = 6;
+    repeated StopPoint stop_points = 8;
+    repeated Message messages = 9;
 }
 
 message StopPoint {
-    optional string id = 1;
     optional string name = 3;
     optional City city = 4;
-    optional string external_code = 5;
-    optional GeographicalCoord coord = 6; 
+    optional string uri = 5;
+    optional GeographicalCoord coord = 6;
     optional StopArea stop_area = 7;
+
+    repeated Message messages = 9;
 }
 
 message Line {
-    optional string id = 1;
     optional string name = 3;
-    optional string external_code = 4;
+    optional string uri = 4;
     optional string code = 5;
-    optional string forward_name = 6;
-    optional string backward_name = 7;
-    optional string additional_data = 8;
     optional string color = 9;
+    repeated Route routes = 10;
+    optional CommercialMode commercial_mode = 11;
+    repeated PhysicalMode physical_mode = 12;
+    optional Network network = 13;
+
+    repeated Message messages = 14;
 }
 
 message Route {
-    optional string id = 1;
     optional string name = 3;
-    optional string external_code = 4;
+    optional string uri = 4;
     optional bool is_frequence = 5;
-    optional bool is_adapted = 6;
     optional Line line = 7;
+    repeated JourneyPattern journey_patterns = 8;
+    repeated Message messages = 9;
 }
 
-message StopTime {
+message JourneyPattern {
+    optional string name = 3;
+    optional string uri = 4;
+    optional bool is_frequence = 5;
+    optional Route route = 7;
+    repeated JourneyPatternPoint journey_pattern_points = 8;
+
+    repeated Message messages = 9;
+}
+
+message StopDateTime {
     optional string arrival_date_time = 1;
     optional string departure_date_time = 2;
     optional StopPoint stop_point = 3;
-    optional Line line = 4;
 }
+
+message StopTime {
+    optional string arrival_time = 1;
+    optional string departure_time = 3;
+    optional VehicleJourney vehicle_journey = 4;
+    optional JourneyPatternPoint journey_pattern_point = 5;
+    optional bool pickup_allowed = 6;
+    optional bool drop_off_allowed = 7;
+}
+
 
 message VehicleJourney {
     optional string id = 1;
     optional string name = 3;
-    optional string external_code = 4;
-    optional bool is_adapted = 5;
+    optional string uri = 4;
+    repeated StopTime stop_times = 6;
+    optional Route route = 7;
+    optional JourneyPattern journey_pattern = 8;
+    optional PhysicalMode physical_mode = 9;
+
+    repeated Message messages = 10;
 }
 
-message RoutePoint{
+message JourneyPatternPoint{
     optional string id = 1;
-    optional string external_code = 3;
+    optional string uri = 3;
     optional int32 order = 4;
     optional StopPoint stop_point = 5;
-    optional Route route = 6;
+    optional JourneyPattern journey_pattern = 6;
+
+    repeated Message messages = 7;
 }
 
 message City {
     optional string id = 1;
-    optional string external_code = 3;
+    optional string uri = 3;
     optional string zip_code = 2;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
 }
 
-message Site {
+message Poi {
     optional string id = 1;
-    optional string external_code = 3;
+    optional string uri = 3;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
+    optional City city = 5;
 }
 
 message Network {
     optional string id = 1;
-    optional string external_code = 3;
+    optional string uri = 3;
     optional string name = 4;
-    repeated Line line = 5;
+    repeated Line lines = 5;
 }
 
 message PhysicalMode {
     optional string id = 1;
-    optional string external_code = 3;
+    optional string uri = 3;
     optional string name = 4;
-    repeated CommercialMode commercial_mode = 5;
+    repeated CommercialMode commercial_modes = 5;
 }
 
 message CommercialMode {
     optional string id = 1;
-    optional string external_code = 3;
+    optional string uri = 3;
     optional string name = 4;
-    repeated PhysicalMode physical_mode = 5;
+    repeated PhysicalMode physical_modes = 5;
 }
 
 message Connection {
@@ -139,236 +188,30 @@ message Connection {
 
 message Company {
     optional string id = 1;
-    optional string external_code = 3;
+    optional string uri = 3;
     optional string name = 4;
 }
 
 message Address {
     optional string id = 1;
-    optional string external_code = 3;
+    optional string uri = 3;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
     optional City city = 7;
     optional int32 house_number = 2;
 }
 
-
-message PTReferential {
-    repeated Country country =1;
-    repeated StopArea stop_area = 2;
-    repeated StopPoint stop_point = 3;
-    repeated Line line = 4;
-    repeated Route route = 5;
-    repeated Network network = 6;
-    repeated CommercialMode commercial_mode = 7;
-    repeated PhysicalMode physical_mode = 8;
-    repeated Connection connection = 9;
-    repeated RoutePoint route_point = 11;
-    repeated City city = 13;
-    repeated Site site = 14;
-    repeated Company company = 15;
-}
-
-message PlaceMark {
-    optional NavitiaType type = 1;
-    optional City city = 3;
-    optional StopArea stop_area = 4;
-    optional Site site = 5;
-    optional StopPoint stop_point = 6;
-    optional Address address = 7;
-}
-
-message FirstLetterItem {
-    optional string name = 1;
-    optional int32 quality = 2;
+message District {
+    optional string id = 1;
     optional string uri = 3;
-    optional PlaceMark object = 4;
+    optional string name = 4;
 }
 
-message FirstLetter {
-    repeated FirstLetterItem items = 1;
-    repeated string ignored_word = 2;
-    repeated string bad_word = 3;
+message ValidityPattern {
 }
 
-message ProximityListItem {
-    optional string name = 1;
-    optional int32 distance = 2;
+message Department{
+    optional string id = 1;
     optional string uri = 3;
-    optional PlaceMark object = 4;
-}
-
-message ProximityList {
-    repeated ProximityListItem items = 1;
-}
-
-
-message PathItem {
-    optional string name = 1;
-    optional double length = 2;
-}
-
-message StreetNetwork {
-    optional double length = 1;
-    repeated PathItem path_item = 2;
-    repeated GeographicalCoord coordinate = 3;
-}
-
-enum SectionType {
-    PUBLIC_TRANSPORT = 1;
-    ROAD_NETWORK = 2;
-    WAITING = 3;
-    TRANSFER = 4;
-    BIRD_FLY = 5;
-}
-
-message Section {
-    optional SectionType type = 1;
-    optional PlaceMark origin = 2;
-    optional PlaceMark destination = 3;
-
-
-// Si c'est du TC
-    optional string network = 4;
-    optional string mode = 5;
-    optional string code = 6;
-    optional string headsign = 7;
-    optional string direction = 8;
-    optional Line line = 9;
-    repeated StopTime stop_time = 10;
-
-// Si c'est du routier
-    optional StreetNetwork street_network = 11;
-
-// Si c'est de l'attente il n'y a rien
-
-// Dans tous les cas
-    optional string polyline = 12;
-    optional int32 duration = 13;
-
-}
-
-message Journey {
-    optional int32 duration = 1;
-    optional int32 nb_transfers = 2;
-    optional string departure_date_time = 3;
-    optional string arrival_date_time = 4;
-    optional string requested_date_time = 5;
-    repeated Section section = 6;
-    optional string call_before = 7;
-    optional string call_after = 8;
-}
-
-enum ResponseType {
-    ITINERARY_FOUND = 1;
-    DATE_OUT_OF_BOUNDS = 2;
-    NO_ORIGIN_POINT = 3;
-    NO_DESTINATION_POINT = 4;
-    NO_ORIGIN_NOR_DESTINATION_POINT = 5;
-    NO_VIA_POINT = 6;
-    NO_SOLUTION = 7;
-    CONNECTION_LIMITATION = 8;
-    DURATION_LIMITATION = 9;
-}
-
-message Planner {
-	repeated Journey journey = 1;
-    optional ResponseType response_type = 2;
-}
-
-message Status{
-    required string publication_date = 1;
-    required string start_production_date = 2;
-    required string end_production_date = 3;
-
-    optional int32 data_version = 4;
-    optional string navimake_version = 5;
-    optional string navitia_version = 6;
-
-    repeated string data_sources = 7;
-
-    optional string last_load_at = 8;
-
-    optional bool last_load_status = 9;
-    optional bool loaded = 10;
-
-    optional int32 nb_threads = 11;
-}
-
-message PairStopTime {
-    required StopTime first = 1;
-    required StopTime second = 2;
-}
-
-message TableLine {
-    required string stop_point = 1;
-    repeated string stop_time = 2;
-}
-
-message Table {
-    repeated TableLine line = 1;
-}
-
-
-message LineScheduleHeaderItem {
-    required Line line = 1;
-}
-
-message LineScheduleHeader {
-    repeated LineScheduleHeaderItem item = 1;
-}
-
-message LineSchedule {
-    required Table table = 1;
-    required LineScheduleHeader header = 2;
-}
-
-message StopTimes {
-    repeated StopTime stoptime = 1;
-}
-
-message StopsSchedule {
-    repeated PairStopTime board_item = 1;
-}
-
-message BoardItem {
-    required string hour =1;
-    repeated string minute = 2;
-}
-
-message Board {
-    repeated BoardItem board_item = 1;
-}
-
-message DepartureBoard {
-    required StopPoint stop_point = 1;
-    required Line line = 2;
-    required Board board = 3;
-}
-
-message Response{
-    required API requested_api = 1;
-    optional string error = 2;
-
-    optional string info = 3;
-
-    optional FirstLetter firstletter = 4;
-
-    optional PTReferential ptref = 5;
-
-    optional StreetNetwork street_network = 6;
- 
-    optional Planner planner = 7;	
-
-    optional ProximityList proximitylist = 8;
-
-    optional Status status = 9;
-
-    optional StopTimes nextstoptimes = 10;
-
-    optional StopsSchedule stops_schedule = 11;
-
-    optional LineSchedule line_schedule = 12;
-
-    optional DepartureBoard departure_board = 13;
+    optional string name = 4;
 }

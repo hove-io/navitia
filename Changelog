@@ -1,3 +1,15 @@
+22/02/2012
+— homogénisation des enums (ex STOPPOINT est devenu STOP_POINT)
+
+12/02/2012
+— renommage systématique des external_code en uri
+— suppression du geo_dispatcher en C++ (maintenant en python)
+— changement de l'api firstletter en autocomplete
+— remplacement de road_network par street_network
+— amélioration de départure board
+— calcul automatique des shapes
+— ajout de l'api metadatas
+
 31/08/2012 : Release 2, Auber
 =============================
 

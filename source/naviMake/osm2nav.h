@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "utils/csv.h"
 
 namespace navitia { namespace georef {
 class GeoRef;

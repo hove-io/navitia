@@ -2,8 +2,8 @@
 
 using namespace navitia::type;
 
-template<typename T> bool valid_ext_code(const T & a){
-    if(a.external_code.empty()){
+template<typename T> bool valid_uri(const T & a){
+    if(a.uri.empty()){
         std::cout << "    Code externe non renseigné : " << a.idx << std::endl;
         return false;
     } else {
@@ -26,7 +26,7 @@ template<typename T> int general_check(const std::vector<T> & elements){
     int error_count = 0;
     for(size_t i = 0; i < elements.size(); ++i) {
         const T & el = elements[i];
-        if(!valid_ext_code(el)) ++error_count;
+        if(!valid_uri(el)) ++error_count;
         if(!valid_idx(el, i)) ++error_count;
     }
     std::cout << "    Nombre d'erreurs : " << error_count << std::endl;
@@ -86,37 +86,33 @@ int main(int argc, char** argv) {
 
     Data d;
     std::cout << "Chargement des données : " << argv[1] << std::endl;
-    d.load_lz4(argv[1]);
+    d.load(argv[1]);
     int error_count = 0;
 
-    error_count += general_check(d.pt_data.stop_areas);
+#define GENERAL_CHECK(type_name, collection_name) error_count += general_check(d.pt_data.collection_name);
+    ITERATE_NAVITIA_PT_TYPES(GENERAL_CHECK)
+
     error_count += check_relations(d.pt_data.stop_areas, &StopArea::city_idx, d.pt_data.cities);
     error_count += check_relations(d.pt_data.stop_areas, &StopArea::stop_point_list, d.pt_data.stop_points);
     error_count += check_relations(d.pt_data.stop_areas, &StopArea::stop_point_list, d.pt_data.stop_points, &StopPoint::stop_area_idx);
 
-    error_count += general_check(d.pt_data.stop_points);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::stop_area_idx, d.pt_data.stop_areas);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::city_idx, d.pt_data.cities);
-    error_count += check_relations(d.pt_data.stop_points, &StopPoint::mode_idx, d.pt_data.modes);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::network_idx, d.pt_data.networks);
-    error_count += check_relations(d.pt_data.stop_points, &StopPoint::route_point_list, d.pt_data.route_points);
-    error_count += check_relations(d.pt_data.stop_points, &StopPoint::route_point_list, d.pt_data.route_points, &RoutePoint::stop_point_idx);
+    error_count += check_relations(d.pt_data.stop_points, &StopPoint::journey_pattern_point_list, d.pt_data.journey_pattern_points);
+    error_count += check_relations(d.pt_data.stop_points, &StopPoint::journey_pattern_point_list, d.pt_data.journey_pattern_points, &JourneyPatternPoint::stop_point_idx);
 
-    error_count += general_check(d.pt_data.lines);
     error_count += check_relations(d.pt_data.lines, &Line::company_list, d.pt_data.companies);
 
-    error_count += general_check(d.pt_data.routes);
+    error_count += check_relations(d.pt_data.journey_patterns, &JourneyPattern::route_idx, d.pt_data.routes);
     error_count += check_relations(d.pt_data.routes, &Route::line_idx, d.pt_data.lines);
-    error_count += check_relations(d.pt_data.routes, &Route::route_point_list, d.pt_data.route_points);
-    error_count += check_relations(d.pt_data.routes, &Route::vehicle_journey_list, d.pt_data.vehicle_journeys);
-    error_count += check_relations(d.pt_data.routes, &Route::vehicle_journey_list, d.pt_data.vehicle_journeys, &VehicleJourney::route_idx);
+    error_count += check_relations(d.pt_data.journey_patterns, &JourneyPattern::journey_pattern_point_list, d.pt_data.journey_pattern_points);
+    error_count += check_relations(d.pt_data.journey_patterns, &JourneyPattern::vehicle_journey_list, d.pt_data.vehicle_journeys);
+    error_count += check_relations(d.pt_data.journey_patterns, &JourneyPattern::vehicle_journey_list, d.pt_data.vehicle_journeys, &VehicleJourney::journey_pattern_idx);
 
-    error_count += general_check(d.pt_data.route_points);
-    error_count += check_relations(d.pt_data.route_points, &RoutePoint::stop_point_idx, d.pt_data.stop_points);
+    error_count += check_relations(d.pt_data.journey_pattern_points, &JourneyPatternPoint::stop_point_idx, d.pt_data.stop_points);
 
-    error_count += general_check(d.pt_data.vehicle_journeys);
-    error_count += check_relations(d.pt_data.vehicle_journeys, &VehicleJourney::route_idx, d.pt_data.routes);
-    error_count += check_relations(d.pt_data.vehicle_journeys, &VehicleJourney::vehicle_idx, d.pt_data.vehicles);
+    error_count += check_relations(d.pt_data.vehicle_journeys, &VehicleJourney::journey_pattern_idx, d.pt_data.journey_patterns);
     for(const VehicleJourney &vj: d.pt_data.vehicle_journeys){
         for(idx_t idx : vj.stop_time_list){
             if(idx > d.pt_data.stop_times.size()){
@@ -127,22 +123,14 @@ int main(int argc, char** argv) {
         for(size_t i = 1; i < vj.stop_time_list.size(); ++i){
             StopTime st1 = d.pt_data.stop_times[vj.stop_time_list[i-1]];
             StopTime st2 = d.pt_data.stop_times[vj.stop_time_list[i]];
-            RoutePoint rp1 = d.pt_data.route_points[st1.route_point_idx];
-            RoutePoint rp2 = d.pt_data.route_points[st2.route_point_idx];
+            JourneyPatternPoint rp1 = d.pt_data.journey_pattern_points[st1.journey_pattern_point_idx];
+            JourneyPatternPoint rp2 = d.pt_data.journey_pattern_points[st2.journey_pattern_point_idx];
             if(rp1.order + 1!=  rp2.order){
                 std::cout << "Problème de tri des stop_time du vj " << vj.idx << std::endl;
                 error_count++;
             }
         }
     }
-
-    error_count += general_check(d.pt_data.cities);
-    error_count += general_check(d.pt_data.companies);
-    error_count += general_check(d.pt_data.countries);
-    error_count += general_check(d.pt_data.departments);
-    error_count += general_check(d.pt_data.modes);
-    error_count += general_check(d.pt_data.mode_types);
-    error_count += general_check(d.pt_data.vehicles);
 
     std::cout << "Vérification des stop_times" << std::endl;
     for(size_t i = 0; i < d.pt_data.stop_times.size(); ++i){

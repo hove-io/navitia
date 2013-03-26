@@ -8,3 +8,4 @@ documentation/build
 *.swp
 source/CMakeLists.txt.user
 tags
+*.pyc

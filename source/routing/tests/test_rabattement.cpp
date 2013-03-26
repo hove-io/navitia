@@ -60,20 +60,22 @@ BOOST_AUTO_TEST_CASE(change){
 
 
 
-    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 4);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 1);
     BOOST_CHECK_EQUAL(res.items[2].stop_points[0], 1);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], 2);
+    BOOST_CHECK_EQUAL(res.items[3].stop_points[0], 1);
+    BOOST_CHECK_EQUAL(res.items[3].stop_points[1], 2);
+
     BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 8*3600 + 35*60);
-
-    BOOST_CHECK_EQUAL(res.items[1].departure.hour(), 9*3600 + 10*60 - 60 * 2);
-    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 9*3600 + 10*60);
-
-    BOOST_CHECK_EQUAL(res.items[2].departure.hour(), 9*3600 + 15*60);
-    BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 9*3600 + 20*60);
+    BOOST_CHECK_EQUAL(res.items[1].departure.hour(), 8*3600 + 40*60);
+    BOOST_CHECK_EQUAL(res.items[1].arrival.hour(), 8*3600 + 42*60);
+    BOOST_CHECK_EQUAL(res.items[2].departure.hour(), 8*3600 + 42*60);
+    BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 9*3600 + 15*60);
+    BOOST_CHECK_EQUAL(res.items[3].departure.hour(), 9*3600 + 15*60);
+    BOOST_CHECK_EQUAL(res.items[3].arrival.hour(), 9*3600 + 20*60);
     BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
     BOOST_CHECK_EQUAL(res.items[0].arrival.date(), 0);
     BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 0);
@@ -144,13 +146,14 @@ BOOST_AUTO_TEST_CASE(passe_minuit){
     auto res = res1.back();
 
 
-    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 4);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 1);
     BOOST_CHECK_EQUAL(res.items[2].stop_points[0], 1);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], 2);
+    BOOST_CHECK_EQUAL(res.items[3].stop_points[0], 1);
+    BOOST_CHECK_EQUAL(res.items[3].stop_points[1], 2);
     BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
     BOOST_CHECK_EQUAL(res.items[1].arrival.date(), 1);
 }
@@ -170,16 +173,21 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2){
     auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
+
+    for(auto & r : res1) {
+        r.print(d);
+    }
     auto res = res1.back();
 
 
-    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 4);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 1);
     BOOST_CHECK_EQUAL(res.items[2].stop_points[0], 1);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], 2);
+    BOOST_CHECK_EQUAL(res.items[3].stop_points[0], 1);
+    BOOST_CHECK_EQUAL(res.items[3].stop_points[1], 2);
     BOOST_CHECK_EQUAL(res.items[0].departure.date(), 0);
     BOOST_CHECK_EQUAL(res.items[2].arrival.date(), 1);
 }
@@ -204,13 +212,14 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3){
     auto res = res1.back();
 
 
-    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 4);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[0], 0);
     BOOST_CHECK_EQUAL(res.items[0].stop_points[1], 1);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[0], 1);
     BOOST_CHECK_EQUAL(res.items[1].stop_points[1], 1);
     BOOST_CHECK_EQUAL(res.items[2].stop_points[0], 1);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], 2);
+    BOOST_CHECK_EQUAL(res.items[3].stop_points[0], 1);
+    BOOST_CHECK_EQUAL(res.items[3].stop_points[1], 2);
     BOOST_CHECK_EQUAL(res.items[0].departure.date(), 1);
     BOOST_CHECK_EQUAL(res.items[0].departure.hour(), 0);
     BOOST_CHECK_EQUAL(res.items[0].arrival.hour(), 7*60);
@@ -230,9 +239,6 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
     auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[2].idx, 22*3600, 0);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
 
-    for(auto & r : res1) {
-        r.print(d);
-    }
 
     auto res = res1.back();
 
@@ -247,8 +253,8 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
 
 BOOST_AUTO_TEST_CASE(validity_pattern){
     navimake::builder b("20120614");
-    b.vj("D", "0")("stop1", 8000)("stop2", 8200);
-    b.vj("C", "1")("stop1", 9000)("stop2", 9200);
+    b.vj("D", "0", "", true)("stop1", 8000)("stop2", 8200);
+    b.vj("C", "1", "", true)("stop1", 9000)("stop2", 9200);
     type::Data data;
     b.build(data.pt_data);
     data.build_raptor();
@@ -288,8 +294,8 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
 
     auto res = res1.back();
 
-    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
-    BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 9200);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 4);
+    BOOST_CHECK_EQUAL(res.items[3].arrival.hour(), 9200);
 }
 
 
@@ -332,10 +338,10 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
     auto res = res1.back();
 
 
-    BOOST_REQUIRE_EQUAL(res.items.size(), 3);
-    BOOST_CHECK_EQUAL(res.items[2].stop_points[1], 3);
-    BOOST_CHECK_EQUAL(res.items[2].arrival.hour(), 2*3600+20);
-    BOOST_CHECK_EQUAL(res.items[2].arrival.date(), 1);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 4);
+    BOOST_CHECK_EQUAL(res.items[3].stop_points[1], 3);
+    BOOST_CHECK_EQUAL(res.items[3].arrival.hour(), 2*3600+20);
+    BOOST_CHECK_EQUAL(res.items[3].arrival.date(), 1);
 }
 
 
@@ -352,12 +358,14 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
     type::PT_Data & d = data.pt_data;
     auto res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(3).idx, 1600, 0);
 
-    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+    BOOST_REQUIRE_EQUAL(res1.size(), 3);
+
+
 
     auto res = res1.back();
 
-    BOOST_REQUIRE_EQUAL(res.items.size(), 5);
-    BOOST_CHECK_EQUAL(res.items[4].stop_points[1], 3);
-    BOOST_CHECK_EQUAL(res.items[4].arrival.hour(), 4500);
+    BOOST_REQUIRE_EQUAL(res.items.size(), 7);
+    BOOST_CHECK_EQUAL(res.items[6].stop_points[1], 3);
+    BOOST_CHECK_EQUAL(res.items[6].arrival.hour(), 4500);
 
 }

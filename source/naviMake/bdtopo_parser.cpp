@@ -16,27 +16,25 @@ BDTopoParser::BDTopoParser(const std::string& path): path(path){}
 
 void BDTopoParser::load_city(navimake::Data& data){
     
-    CsvReader reader(path + "/commune.txt");
-    std::map<std::string, int> cols;
-
+    CsvReader reader(path + "/commune.txt", true);
+    
     std::vector<std::string> row = reader.next();
-    int col_count = boost::lexical_cast<int>(row.size());
-    for(int i=0; i < col_count; i++){
-        cols[row[i]] = i;
-    }
-
-    int name = reader.get_pos_col("nom", cols);
-    int insee = reader.get_pos_col("code_insee", cols);
-    int x = reader.get_pos_col("x", cols);
-    int y = reader.get_pos_col("y", cols);
+    
+    int name = reader.get_pos_col("nom");
+    int insee = reader.get_pos_col("code_insee");
+    int x = reader.get_pos_col("x");
+    int y = reader.get_pos_col("y");
     
     for(row = reader.next(); !reader.eof() ;row = reader.next()){
         if(row.size() < 2)
             continue;
         navimake::types::City* city = new navimake::types::City();
-        city->external_code = row[insee];
-        city->name = row[name];
-        city->coord = navitia::type::GeographicalCoord(str_to_double(row[x]),
+        if(insee != -1)
+            city->uri = row[insee];
+        if(name != -1)
+            city->name = row[name];
+        if(x!=-1 && y!=-1)
+            city->coord = navitia::type::GeographicalCoord(str_to_double(row[x]),
                                                                         str_to_double(row[y]));
         data.cities.push_back(city);
     }
@@ -70,29 +68,22 @@ void add_way(std::unordered_map<std::string, navitia::georef::Way>& way_map,
 void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
     using namespace navitia::georef;
 
-    CsvReader reader(path + "/route_adresse.txt");
-    std::map<std::string, int> cols;
+    CsvReader reader(path + "/route_adresse.txt", true);
 
     std::vector<std::string> row = reader.next();
-    int col_count = boost::lexical_cast<int>(row.size());
-    for(int i=0; i < col_count; i++){
-        boost::to_lower(row[i]);
-        cols[row[i]] = i;
-    }
 
-
-    int type = reader.get_pos_col("typ_adres", cols);
-    int nom = reader.get_pos_col("nom_rue_d", cols);
-    int x1 = reader.get_pos_col("x_debut", cols);
-    int y1 = reader.get_pos_col("y_debut", cols);
-    int x2 = reader.get_pos_col("x_fin", cols);
-    int y2 = reader.get_pos_col("y_fin", cols);
-    int l = reader.get_pos_col("longueur", cols);
-    int insee = reader.get_pos_col("inseecom_g", cols);    
-    int n_deb_d = reader.get_pos_col("bornedeb_d", cols);
-    int n_deb_g = reader.get_pos_col("bornedeb_g", cols);
-    int n_fin_d = reader.get_pos_col("bornefin_d", cols);
-    int n_fin_g = reader.get_pos_col("bornefin_g", cols);
+    int type = reader.get_pos_col("typ_adres");
+    int nom = reader.get_pos_col("nom_rue_d");
+    int x1 = reader.get_pos_col("x_debut");
+    int y1 = reader.get_pos_col("y_debut");
+    int x2 = reader.get_pos_col("x_fin");
+    int y2 = reader.get_pos_col("y_fin");
+    int l = reader.get_pos_col("longueur");
+    int insee = reader.get_pos_col("inseecom_g");    
+    int n_deb_d = reader.get_pos_col("bornedeb_d");
+    int n_deb_g = reader.get_pos_col("bornedeb_g");
+    int n_fin_d = reader.get_pos_col("bornefin_d");
+    int n_fin_g = reader.get_pos_col("bornefin_g");
 
     std::unordered_map<std::string, vertex_t> vertex_map;
     std::unordered_map<std::string, Way> way_map;    
@@ -171,7 +162,7 @@ void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
         if(way_it == way_map.end()){
             way_map[way_key].name = row[nom];
             way_map[way_key].city = row[insee];
-            way_map[way_key].external_code = way_key;
+            way_map[way_key].uri = way_key;
             if (type > -1){
                 way_map[way_key].way_type = row[type];
             }

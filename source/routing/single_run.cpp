@@ -39,7 +39,7 @@ int main(int argc, char** argv){
         type::Data data;
         {
             Timer t("Charegement des données : " + file);
-            data.load_lz4(file);
+            data.load(file);
         }
 
         type::idx_t start_idx, target_idx;

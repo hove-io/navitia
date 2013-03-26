@@ -12,7 +12,7 @@
 # serve to show the default.
 
 import sys, os
-
+import sphinx_bootstrap_theme
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -40,7 +40,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'NAViTiA2'
-copyright = u'2012, Canal TP'
+copyright = u'2013, Canal TP'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -91,7 +91,8 @@ highlight_language = 'c++'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+html_theme = 'bootstrap'
+html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -104,13 +105,13 @@ html_theme_options = {
 #        'headtextcolor': '#ff6600'
 
 # Si la charte Canal TP reste orange, on peut mettre ça:
-        'sidebarbgcolor' : '#ffEEDD',
-        'sidebartextcolor' : '#BB4400',
-        'sidebarlinkcolor' : '#DD5500',
-        'relbarbgcolor' : '#ff6600',
-        'headbgcolor': '#ffEEDD',
-        'headtextcolor' : '#994400',
-        'linkcolor' : '#994400',
+#        'sidebarbgcolor' : '#ffEEDD',
+#        'sidebartextcolor' : '#BB4400',
+#        'sidebarlinkcolor' : '#DD5500',
+#        'relbarbgcolor' : '#ff6600',
+#        'headbgcolor': '#ffEEDD',
+#        'headtextcolor' : '#994400',
+#        'linkcolor' : '#994400',
 #        'visitedlinkcolor' : '#994400'
         }
 
@@ -145,7 +146,7 @@ html_static_path = ['_static']
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
-#html_use_smartypants = True
+html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
@@ -187,7 +188,7 @@ htmlhelp_basename = 'NAViTiA2doc'
 # -- Options for LaTeX output --------------------------------------------------
 
 # The paper size ('letter' or 'a4').
-#latex_paper_size = 'letter'
+latex_paper_size = 'a4'
 
 # The font size ('10pt', '11pt' or '12pt').
 #latex_font_size = '10pt'

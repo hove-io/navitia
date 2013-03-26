@@ -16,7 +16,9 @@ BOOST_AUTO_TEST_CASE(t1) {
     Thermometer t(data);
     std::vector<vector_idx> req;
     req.push_back({0,1,2});
-    auto result = t.get_thermometer(req);
+    t.generate_thermometer(req);
+    auto result = t.get_thermometer();
+
 
     BOOST_REQUIRE_EQUAL(result.size(), 3);
 
@@ -35,7 +37,9 @@ BOOST_AUTO_TEST_CASE(t1) {
         std::vector<vector_idx> req;
         req.push_back({0,1,2});
         req.push_back({3,4,5});
-        auto result = t.get_thermometer(req);
+
+        t.generate_thermometer(req);
+        auto result = t.get_thermometer();
 
         BOOST_REQUIRE_EQUAL(result.size(), 6);
 
@@ -54,7 +58,9 @@ BOOST_AUTO_TEST_CASE(t2) {
     Thermometer t(data);
     std::vector<vector_idx> req;
     req.push_back({0,1,2,1,3});
-    auto result = t.get_thermometer(req);
+
+    t.generate_thermometer(req);
+    auto result = t.get_thermometer();
 
     BOOST_REQUIRE_EQUAL(result.size(), 5);
 
@@ -77,7 +83,9 @@ BOOST_AUTO_TEST_CASE(t3) {
     Thermometer t(data);
     std::vector<vector_idx> req;
     req.push_back({0,1,2,3,0});
-    auto result = t.get_thermometer(req);
+
+    t.generate_thermometer(req);
+    auto result = t.get_thermometer();
 
     BOOST_REQUIRE_EQUAL(result.size(), 5);
 
@@ -100,7 +108,9 @@ BOOST_AUTO_TEST_CASE(t4) {
     Thermometer t(data);
     std::vector<vector_idx> req;
     req.push_back({0,1,2,3,0,4});
-    auto result = t.get_thermometer(req);
+
+    t.generate_thermometer(req);
+    auto result = t.get_thermometer();
 
 
     BOOST_REQUIRE_EQUAL(result.size(), 6);
@@ -127,7 +137,9 @@ BOOST_AUTO_TEST_CASE(t5) {
     Thermometer t(data);
     std::vector<vector_idx> req;
     req.push_back({0,1,2,1,3,0,4});
-    auto result = t.get_thermometer(req);
+
+    t.generate_thermometer(req);
+    auto result = t.get_thermometer();
 
     BOOST_REQUIRE_EQUAL(result.size(), 7);
 
@@ -154,7 +166,9 @@ BOOST_AUTO_TEST_CASE(t6) {
     std::vector<vector_idx> req;
     req.push_back({0,1,2});
     req.push_back({0,2,1});
-    auto result = t.get_thermometer(req);
+
+    t.generate_thermometer(req);
+    auto result = t.get_thermometer();
 
     BOOST_REQUIRE_EQUAL(result.size(), 4);
 
@@ -184,7 +198,9 @@ BOOST_AUTO_TEST_CASE(t7) {
     std::vector<vector_idx> req;
     req.push_back({0,1,2,3,4});
     req.push_back({4,5,2,6,0});
-    auto result = t.get_thermometer(req);
+
+    t.generate_thermometer(req);
+    auto result = t.get_thermometer();
 
     BOOST_REQUIRE_EQUAL(result.size(), 9);
 }
@@ -196,7 +212,9 @@ BOOST_AUTO_TEST_CASE(t8) {
     std::vector<vector_idx> req;
     req.push_back({0,1,2,3,4,5,6,7,8,9});
     req.push_back({4,5,2,6,0,11,5,47,9});
-    auto result = t.get_thermometer(req);
+
+    t.generate_thermometer(req);
+    auto result = t.get_thermometer();
 
 
 
@@ -212,7 +230,9 @@ BOOST_AUTO_TEST_CASE(t9) {
     req.push_back({5,4,2,6,0,115,5,47,9});
     req.push_back({4,5,2,65,0,11,5,47,9});
     req.push_back({4,5,2,6,05,11,5,457,9});
-    auto result = t.get_thermometer(req);
+
+    t.generate_thermometer(req);
+    auto result = t.get_thermometer();
 
     BOOST_REQUIRE_EQUAL(result.size(), 21);
 }
@@ -247,40 +267,22 @@ std::vector<vector_idx> vec_tmp = {
     {489,5,2,6,0,11,5,47,1,23,1,810,12,30,14,989,5,2,3,17,3,0}
     };
 
-    auto result = t.get_thermometer(vec_tmp);
 
-    BOOST_REQUIRE_EQUAL(t.get_thermometer().size(), 96);
+    t.generate_thermometer(vec_tmp);
+    auto result = t.get_thermometer();
+    bool error = false;
+    for(auto journey_pattern : vec_tmp) {
+        try {
+            t.match_journey_pattern(journey_pattern);
+        } catch(Thermometer::cant_match cm) {
+            error = true;
+        }
+    }
+
+    BOOST_REQUIRE_EQUAL(t.get_thermometer().size(), 97);
+    BOOST_REQUIRE_EQUAL(error, false);
 }
 
-    BOOST_AUTO_TEST_CASE(regroupement) {
-
-        srand(time(NULL));
-        navitia::type::Data data;
-
-        Thermometer t(data);
-        std::vector<vector_idx> req;
-        req.push_back({1});
-        req.push_back({2});
-        req.push_back({1,2});
-        auto result = t.get_thermometer(req);
-
-        auto posA = distance(result.begin(), std::find(result.begin(), result.end(), 1));
-        auto posB = distance(result.begin(), std::find(result.begin(), result.end(), 2));
-        BOOST_REQUIRE_EQUAL(posA, 0);
-        BOOST_REQUIRE_EQUAL(posB, 1);
-
-        req.clear();
-
-        req.push_back({2});
-        req.push_back({1});
-        req.push_back({1,2});
-        result = t.get_thermometer(req);
-
-        posA = distance(result.begin(), std::find(result.begin(), result.end(), 1));
-        posB = distance(result.begin(), std::find(result.begin(), result.end(), 2));
-        BOOST_REQUIRE_EQUAL(posA, 0);
-        BOOST_REQUIRE_EQUAL(posB, 1);
-    }
 
     BOOST_AUTO_TEST_CASE(t12) {
         srand(time(NULL));
@@ -291,16 +293,21 @@ std::vector<vector_idx> vec_tmp = {
         req.push_back({4,5,6});
         req.push_back({5,7,4});
 
-        auto tp = t.get_thermometer(req);
+
+        t.generate_thermometer(req);
+        auto tp = t.get_thermometer();
         req.clear();
         req.push_back(tp);
         req.push_back({4,8,9});
-        tp = t.get_thermometer(req);
+
+        t.generate_thermometer(req);
+        tp = t.get_thermometer();
         req.clear();
         req.push_back(tp);
         req.push_back({8,7,5});
-        auto result = t.get_thermometer(req);
 
+        t.generate_thermometer(req);
+        auto result = t.get_thermometer();
 
         BOOST_REQUIRE_LT(result.size(), 87*111);
 
@@ -314,7 +321,9 @@ std::vector<vector_idx> vec_tmp = {
         std::vector<vector_idx> req;
         req.push_back({0,1,2,3,4});
         req.push_back({4,5,2,6,0,11});
-        auto result = t.get_thermometer(req);
+
+        t.generate_thermometer(req);
+        auto result = t.get_thermometer();
 
 
         BOOST_REQUIRE_EQUAL(result.size(), 10);

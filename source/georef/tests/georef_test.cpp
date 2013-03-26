@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(compute_coord){
 
 BOOST_AUTO_TEST_CASE(compute_nearest){
     using namespace navitia::type;
-    //StreetNetwork sn;
+
     GeoRef sn;
     GraphBuilder b(sn);
 
@@ -235,28 +235,31 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     GeographicalCoord c1(50,10, false);
     GeographicalCoord c2(350,20, false);
     navitia::proximitylist::ProximityList<idx_t> pl;
-    pl.add(c1, 1);
-    pl.add(c2, 2);
+    pl.add(c1, 0);
+    pl.add(c2, 1);
     pl.build();
+
+    sn.projected_stop_points.push_back(ProjectionData(c1, sn, sn.pl));
+    sn.projected_stop_points.push_back(ProjectionData(c2, sn, sn.pl));
 
     GeographicalCoord o(0,0);
 
     StreetNetwork w(sn);
 
-    auto res = w.find_nearest(o, pl, 10);
+    auto res = w.find_nearest_stop_points(o, pl, 10);
     BOOST_CHECK_EQUAL(res.size(), 0);
 
-    res = w.find_nearest(o, pl, 100);
+    res = w.find_nearest_stop_points(o, pl, 100);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
-    BOOST_CHECK_EQUAL(res[0].first , 1);
+    BOOST_CHECK_EQUAL(res[0].first , 0);
     BOOST_CHECK_CLOSE(res[0].second, 50, 1);
 
-    res = w.find_nearest(o, pl, 1000);
+    res = w.find_nearest_stop_points(o, pl, 1000);
     std::sort(res.begin(), res.end());
     BOOST_CHECK_EQUAL(res.size(), 2);
-    BOOST_CHECK_EQUAL(res[0].first , 1);
+    BOOST_CHECK_EQUAL(res[0].first , 0);
     BOOST_CHECK_CLOSE(res[0].second, 50, 1);
-    BOOST_CHECK_EQUAL(res[1].first , 2);
+    BOOST_CHECK_EQUAL(res[1].first , 1);
     BOOST_CHECK_CLOSE(res[1].second, 350, 1);
 }
 
@@ -343,11 +346,11 @@ BOOST_AUTO_TEST_CASE(numero_impair){
 
 // liste des numéros pair est vide ==> Calcul du barycentre de la rue
    result = way.nearest_coord(40, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1,26.8224299065421));
+   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1,28)); // 3 + 25
 // les deux listes des numéros pair et impair sont vides ==> Calcul du barycentre de la rue
    way.house_number_left.clear();
    result = way.nearest_coord(9, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1,25.7894736842105));
+   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(1,28));
 
 }
 
@@ -432,12 +435,12 @@ BOOST_AUTO_TEST_CASE(numero_pair){
 
 // liste des numéros impair est vide ==> Calcul du barycentre de la rue
    result = way.nearest_coord(41, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2,27.8224299065421));
+   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2,29)); // 4+25
 
 // les deux listes des numéros pair et impair sont vides ==> Calcul du barycentre de la rue
    way.house_number_right.clear();
    result = way.nearest_coord(10, graph);
-   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2,26.7894736842105));
+   BOOST_CHECK_EQUAL(result, nt::GeographicalCoord(2,29));
 }
 
 // Recherche d'un numéro à partir des coordonnées
@@ -493,8 +496,8 @@ BOOST_AUTO_TEST_CASE(coord){
     BOOST_CHECK_EQUAL(result, -1);
 
 }
-// Test de firstletter
-BOOST_AUTO_TEST_CASE(build_first_letter_test){
+// Test de autocomplete
+BOOST_AUTO_TEST_CASE(build_autocomplete_test){
 
         navitia::georef::GeoRef geo_ref;
         navitia::georef::Way way;
@@ -503,7 +506,8 @@ BOOST_AUTO_TEST_CASE(build_first_letter_test){
         vertex_t debut, fin;
         Vertex v;
         navitia::georef::Edge e1;
-        std::vector<nf::FirstLetter<nt::idx_t>::fl_quality> result;
+        std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> result;
+        int nbmax = 10;
 
         way.name = "jeanne d'arc";
         way.way_type = "rue";
@@ -592,9 +596,9 @@ BOOST_AUTO_TEST_CASE(build_first_letter_test){
         way.way_type = "place";
         geo_ref.ways.push_back(way);
 
-        geo_ref.build_firstletter_list();
+        geo_ref.build_autocomplete_list();
 
-        result = geo_ref.find_ways("10 rue jean jaures");
+        result = geo_ref.find_ways("10 rue jean jaures", nbmax);
         if (result.empty())
             result.clear();
 

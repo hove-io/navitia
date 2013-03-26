@@ -6,6 +6,8 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
+#include "utils/csv.h"
+#include "utils/configuration.h"
 
 using navitia::type::idx_t;
 
@@ -111,10 +113,10 @@ nt::GeographicalCoord Way::nearest_coord(const int number, const Graph& graph){
     /// "house_number_left" doit contenir les numéros impairs
     /// et les deux listes doivent être trier par numéro croissant
 
-    if (((this->house_number_right.size() == 0) && (this->house_number_left.size() == 0))
-        || ((this->house_number_right.size() == 0) && (number % 2 == 0))
-        || ((this->house_number_left.size() == 0) && (number % 2 != 0))
-            || (number <= 0))
+    if (( this->house_number_right.empty() && this->house_number_left.empty() )
+            || (this->house_number_right.empty() && number % 2 == 0)
+            || (this->house_number_left.empty() && number % 2 != 0)
+            || number <= 0)
         return barycentre(graph);
 
     if (number % 2 == 0) // Pair
@@ -128,15 +130,13 @@ nt::GeographicalCoord Way::barycentre(const Graph& graph){
     std::vector<nt::GeographicalCoord> line;
     nt::GeographicalCoord centroid;
 
-    for(auto hn: this->house_number_right){
-        line.push_back(hn.coord);
-    }
-    for(auto hn: this->house_number_left){
-        line.push_back(hn.coord);
-    }
+    std::pair<vertex_t, vertex_t> previous(type::invalid_idx, type::invalid_idx);
     for(auto edge : this->edges){
-        line.push_back(graph[edge.first].coord);
-        line.push_back(graph[edge.second].coord);
+        if(edge.first != previous.second || edge.second != previous.first ){
+            line.push_back(graph[edge.first].coord);
+            line.push_back(graph[edge.second].coord);
+        }
+        previous = edge;
     }
     boost::geometry::centroid(line, centroid);
     return centroid;
@@ -340,28 +340,48 @@ void GeoRef::build_proximity_list(){
     pl.build();
 }
 
-void GeoRef::build_firstletter_list(){
+void GeoRef::build_autocomplete_list(){
     int pos = 0;
     for(Way way : ways){
-        fl.add_string(way.way_type +" "+ way.name, pos);
+        fl_way.add_string(way.way_type +" "+ way.name, pos,alias, synonymes);
         pos++;
     }
-    fl.build();
+    fl_way.build();
+
+    //Remplir les poi dans la liste autocompletion
+    for(POI poi : pois){
+        fl_poi.add_string(poi.name, poi.idx ,alias, synonymes);
+    }
+    fl_poi.build();
 }
 
 /** Chargement de la liste way_map : mappage entre codes externes et idx des rues*/
 void GeoRef::build_ways(){
    for(auto way : ways){
-       this->way_map[way.external_code] = way.idx;
+       this->way_map[way.uri] = way.idx;
    }
 }
 
 /** Normalisation des codes externes des rues*/
 void GeoRef::normalize_extcode_way(){
     for(Way & way : ways){
-        way.external_code = "address:"+ way.external_code;
+        way.uri = "address:"+ way.uri;
     }
     this->build_ways();
+}
+
+/** Chargement de la liste poitype_map : mappage entre codes externes et idx des POITypes*/
+void GeoRef::build_poitypes(){
+   for(auto ptype : poitypes){
+       this->poitype_map[ptype.uri] = ptype.idx;
+   }
+}
+
+/** Chargement de la liste poi_map : mappage entre codes externes et idx des POIs*/
+void GeoRef::build_pois(){
+   for(auto poi : pois){
+       this->poi_map[poi.uri] = poi.idx;
+   }
 }
 
 
@@ -371,22 +391,22 @@ void GeoRef::normalize_extcode_way(){
     * Si le numéro est rensigné, on renvoie les coordonnées les plus proches
     * Sinon le barycentre de la rue
 */
-std::vector<nf::FirstLetter<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string & str) const{
-    std::vector<nf::FirstLetter<nt::idx_t>::fl_quality> to_return;
+std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string & str, const int nbmax) const{
+    std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> to_return;
     boost::tokenizer<> tokens(str);
-    auto token_it = tokens.begin();
-    int search_number = str_to_int(*token_it);
+
+    int search_number = str_to_int(*tokens.begin());
     std::string search_str;
 
     if (search_number != -1){
         search_str = "";
-        for(++token_it; token_it != tokens.end(); ++token_it){
-            search_str = search_str + " " + (*token_it);
+        for(auto token : tokens){
+            search_str = search_str + " " + token;
         }
     }else{
         search_str = str;
     }
-    to_return = fl.find_complete(search_str);
+    to_return = fl_way.find_complete(search_str, alias, synonymes, word_weight, nbmax);
 
     /// récupération des coordonnées du numéro recherché pour chaque rue
     for(auto &result_item  : to_return){

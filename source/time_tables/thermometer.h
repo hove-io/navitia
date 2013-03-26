@@ -4,17 +4,17 @@
 namespace navitia { namespace timetables {
 
 typedef std::vector<type::idx_t> vector_idx;
-typedef std::vector<size_t> vector_size;
+typedef std::vector<uint16_t> vector_size;
 
 struct Thermometer {
     type::Data& d;
 
     Thermometer(type::Data &d) : d(d), filter("") {}
 
-    vector_idx get_thermometer(std::string filter = "");
-    vector_idx get_thermometer(std::vector<vector_idx> routes);
-    std::vector<uint32_t> match_route(const type::Route & route);
-    std::vector<uint32_t> match_route(const vector_idx &route);
+    void generate_thermometer(const std::vector<vector_idx> &journey_patterns);
+    vector_idx get_thermometer();
+    std::vector<uint32_t> match_journey_pattern(const type::JourneyPattern & journey_pattern);
+    std::vector<uint32_t> match_journey_pattern(const vector_idx &journey_pattern);
 
     void set_thermometer(const vector_idx &thermometer_) {//Pour debug
         thermometer = thermometer_;
@@ -33,13 +33,13 @@ private :
     std::string filter;
     int debug_nb_branches, debug_nb_cuts, upper_cut, nb_opt;
 
-    void generate_thermometer(std::vector<vector_idx> &routes);
-    std::vector<uint32_t> untail(std::vector<vector_idx> &routes, type::idx_t spidx, std::vector<vector_size> &pre_computed_lb);
-    void retail(std::vector<vector_idx> &routes, type::idx_t spidx, const std::vector<uint32_t> &to_retail, std::vector<vector_size> &pre_computed_lb);
-    vector_idx generate_possibilities(const std::vector<vector_idx> &routes, std::vector<vector_size> &pre_computed_lb);
-    std::pair<vector_idx, bool> recc(std::vector<vector_idx> &routes, std::vector<vector_size> &pre_computed_lb, type::idx_t max_sp, const uint32_t lower_bound_ = std::numeric_limits<uint32_t>::min(), const uint32_t upper_bound_ = std::numeric_limits<uint32_t>::max(), int depth = 0);
+    std::vector<uint32_t> untail(std::vector<vector_idx> &journey_patterns, type::idx_t spidx, std::vector<vector_size> &pre_computed_lb);
+    void retail(std::vector<vector_idx> &journey_patterns, type::idx_t spidx, const std::vector<uint32_t> &to_retail, std::vector<vector_size> &pre_computed_lb);
+    vector_idx generate_possibilities(const std::vector<vector_idx> &journey_patterns, std::vector<vector_size> &pre_computed_lb);
+    std::pair<vector_idx, bool> recc(std::vector<vector_idx> &journey_patterns, std::vector<vector_size> &pre_computed_lb, const uint32_t lower_bound_,type::idx_t max_sp, const uint32_t upper_bound_ = std::numeric_limits<uint32_t>::max(), int depth = 0);
+
 };
-uint32_t get_lower_bound(std::vector<vector_size> &pre_computed_lb);
+uint32_t get_lower_bound(std::vector<vector_size> &pre_computed_lb, vector_size mins, type::idx_t max_sp);
 
 
 

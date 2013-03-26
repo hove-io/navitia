@@ -17,6 +17,10 @@ bool ValidityPattern::is_valid(int duration){
     return true;
 }
 
+bool ValidityPattern::operator==(const ValidityPattern& other)const{
+    return ((this->beginning_date == other.beginning_date) && (this->days == other.days));
+}
+
 void ValidityPattern::add(boost::gregorian::date day){
     long duration = (day - beginning_date).days();
     if(is_valid(duration))
@@ -30,6 +34,16 @@ void ValidityPattern::add(int duration){
         days[duration] = true;
 }
 
+void ValidityPattern::add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days){
+    for(long i=0; i < (end - start).days(); ++i){
+        boost::gregorian::date current_date = beginning_date + boost::gregorian::days(i);
+        if(active_days[current_date.day_of_week()]){
+            add(current_date);
+        }else{
+            remove(current_date);
+        }
+    };
+}
 
 
 void ValidityPattern::remove(boost::gregorian::date date){
@@ -55,46 +69,48 @@ bool District::operator<(const District& other) const {
 }
 
 
-bool ModeType::operator<(const ModeType& other) const {
+bool CommercialMode::operator<(const CommercialMode& other) const {
     return this->name < other.name;
 }
 
-bool Mode::operator<(const Mode& other) const {
-    if(this->mode_type == other.mode_type || this->mode_type == NULL){
-        return this->name < other.name;
-    }else{
-        return *(this->mode_type) < *(other.mode_type);
-    }
+bool PhysicalMode::operator<(const PhysicalMode& other) const {
+    return this->name < other.name;
 }
 
 bool Line::operator<(const Line& other) const {
-    if(this->mode_type == NULL && other.mode_type != NULL){
+    if(this->commercial_mode == NULL && other.commercial_mode != NULL){
         return true;
-    }else if(other.mode_type == NULL && this->mode_type != NULL){
+    }else if(other.commercial_mode == NULL && this->commercial_mode != NULL){
         return false;
     }
-    if(this->mode_type == other.mode_type){
-        return this->external_code < other.external_code;
+    if(this->commercial_mode == other.commercial_mode){
+        return this->uri < other.uri;
     }else{
-        return *(this->mode_type) < *(other.mode_type);
+        return *(this->commercial_mode) < *(other.commercial_mode);
     }
 }
 
-
-
 bool Route::operator<(const Route& other) const {
     if(this->line == other.line){
-        return this->external_code <  other.external_code;
+        return this->uri <  other.uri;
     }else{
         return *(this->line) < *(other.line);
     }
 }
 
-bool RoutePoint::operator<(const RoutePoint& other) const {
+bool JourneyPattern::operator<(const JourneyPattern& other) const {
     if(this->route == other.route){
-        return this->order < other.order;
+        return this->uri <  other.uri;
     }else{
         return *(this->route) < *(other.route);
+    }
+}
+
+bool JourneyPatternPoint::operator<(const JourneyPatternPoint& other) const {
+    if(this->journey_pattern == other.journey_pattern){
+        return this->order < other.order;
+    }else{
+        return *(this->journey_pattern) < *(other.journey_pattern);
     }
 
 }
@@ -102,7 +118,7 @@ bool RoutePoint::operator<(const RoutePoint& other) const {
 
 bool StopArea::operator<(const StopArea& other) const {
     //@TODO géré la gestion de la city
-    return this->external_code < other.external_code;
+    return this->uri < other.uri;
 }
 
 
@@ -113,7 +129,7 @@ bool StopPoint::operator<(const StopPoint& other) const {
     else if(!other.stop_area)
         return true;
     else if(this->stop_area == other.stop_area){
-        return this->external_code < other.external_code;
+        return this->uri < other.uri;
     }else{
         return *(this->stop_area) < *(other.stop_area);
     }
@@ -121,11 +137,11 @@ bool StopPoint::operator<(const StopPoint& other) const {
 
 
 bool VehicleJourney::operator<(const VehicleJourney& other) const {
-    if(this->route == other.route){
+    if(this->journey_pattern == other.journey_pattern){
         // On compare les pointeurs pour avoir un ordre total (fonctionnellement osef du tri, mais techniquement c'est important)
         return this->stop_time_list.front() < other.stop_time_list.front();
     }else{
-        return *(this->route) < *(other.route);
+        return *(this->journey_pattern) < *(other.journey_pattern);
     }
 }
 
@@ -137,12 +153,12 @@ bool Connection::operator<(const Connection& other) const{
     return *(this->departure_stop_point) < *(other.departure_stop_point);
 }
 
-bool RoutePointConnection::operator<(const RoutePointConnection& other) const {
-    return *(this->departure_route_point) < *(other.departure_route_point);
+bool JourneyPatternPointConnection::operator<(const JourneyPatternPointConnection& other) const {
+    return *(this->departure_journey_pattern_point) < *(other.departure_journey_pattern_point);
 }
 bool StopTime::operator<(const StopTime& other) const {
     if(this->vehicle_journey == other.vehicle_journey){
-        return this->route_point->order < other.route_point->order;
+        return this->journey_pattern_point->order < other.journey_pattern_point->order;
     } else {
         return *this->vehicle_journey < *other.vehicle_journey;
     }
@@ -154,271 +170,310 @@ bool Department::operator <(const Department & other) const {
     return this->district < other.district || ((this->district == other.district) && (this->name < other.name));
 }
 
-navitia::type::StopArea StopArea::Transformer::operator()(const StopArea& stop_area){
+navitia::type::StopArea StopArea::get_navitia_type() const {
     navitia::type::StopArea sa;
-    sa.id = stop_area.id;
-    sa.idx = stop_area.idx;
-    sa.external_code = stop_area.external_code;
-    sa.coord = stop_area.coord;
-    sa.comment = stop_area.comment;
-    sa.name = stop_area.name;
+    sa.id = this->id;
+    sa.idx = this->idx;
+    sa.uri = this->uri;
+    sa.coord = this->coord;
+    sa.comment = this->comment;
+    sa.name = this->name;
+    sa.wheelchair_boarding = this->wheelchair_boarding;
 
-    sa.additional_data = stop_area.additional_data;
-    sa.properties = stop_area.properties;
+    sa.additional_data = this->additional_data;
+    sa.properties = this->properties;
     return sa;
 }
 
 
-nt::Mode Mode::Transformer::operator()(const Mode& mode){
-    nt::Mode nt_mode;
-    nt_mode.id = mode.id;
-    nt_mode.idx = mode.idx;
-    nt_mode.external_code = mode.external_code;
-    nt_mode.name = mode.name;
-    nt_mode.mode_type_idx = mode.mode_type->idx;
+nt::PhysicalMode PhysicalMode::get_navitia_type() const {
+    nt::PhysicalMode nt_mode;
+    nt_mode.id = this->id;
+    nt_mode.idx = this->idx;
+    nt_mode.uri = this->uri;
+    nt_mode.name = this->name;
     return nt_mode;
-
 }
 
 
-nt::ModeType ModeType::Transformer::operator()(const ModeType& mode_type){
-    nt::ModeType nt_mode_type;
-    nt_mode_type.id = mode_type.id;
-    nt_mode_type.idx = mode_type.idx;
-    nt_mode_type.external_code = mode_type.external_code;
-    nt_mode_type.name = mode_type.name;
-    return nt_mode_type;
+nt::CommercialMode CommercialMode::get_navitia_type() const {
+    nt::CommercialMode nt_commercial_mode;
+    nt_commercial_mode.id = this->id;
+    nt_commercial_mode.idx = this->idx;
+    nt_commercial_mode.uri = this->uri;
+    nt_commercial_mode.name = this->name;
+    return nt_commercial_mode;
 }
 
-nt::StopPoint StopPoint::Transformer::operator()(const StopPoint& stop_point){
+nt::Company Company::get_navitia_type() const {
+    nt::Company nt_company;
+    nt_company.id = this->id;
+    nt_company.idx = this->idx;
+    nt_company.name = this->name;
+    nt_company.uri = this->uri;
+    nt_company.address_name = this->address_name;
+    nt_company.address_number = this->address_number;
+    nt_company.address_type_name = this->address_type_name;
+    nt_company.phone_number = this->phone_number;
+    nt_company.mail = this->mail;
+    nt_company.website = this->website;
+    nt_company.fax = this->fax;
+    return nt_company;
+}
+
+nt::StopPoint StopPoint::get_navitia_type() const {
     nt::StopPoint nt_stop_point;
-    nt_stop_point.id = stop_point.id;
-    nt_stop_point.idx = stop_point.idx;
-    nt_stop_point.external_code = stop_point.external_code;
-    nt_stop_point.name = stop_point.name;
-    nt_stop_point.coord = stop_point.coord;
-    nt_stop_point.fare_zone = stop_point.fare_zone;
+    nt_stop_point.id = this->id;
+    nt_stop_point.idx = this->idx;
+    nt_stop_point.uri = this->uri;
+    nt_stop_point.name = this->name;
+    nt_stop_point.coord = this->coord;
+    nt_stop_point.fare_zone = this->fare_zone;
 
-    nt_stop_point.address_name      = stop_point.address_name;
-    nt_stop_point.address_number    = stop_point.address_number;       
-    nt_stop_point.address_type_name = stop_point.address_type_name;
+    nt_stop_point.address_name      = this->address_name;
+    nt_stop_point.address_number    = this->address_number;
+    nt_stop_point.address_type_name = this->address_type_name;
     
-    if(stop_point.stop_area != NULL)
-        nt_stop_point.stop_area_idx = stop_point.stop_area->idx;
+    nt_stop_point.wheelchair_boarding = this->wheelchair_boarding;
+    if(this->stop_area != NULL)
+        nt_stop_point.stop_area_idx = this->stop_area->idx;
 
+    if(this->city != NULL)
+        nt_stop_point.city_idx = this->city->idx;
 
-    if(stop_point.mode != NULL)
-        nt_stop_point.mode_idx = stop_point.mode->idx;
+    if(this->network != NULL)
+        nt_stop_point.network_idx = this->network->idx;
 
-    if(stop_point.city != NULL)
-        nt_stop_point.city_idx = stop_point.city->idx;
+    nt_stop_point.properties = this->properties;
 
     return nt_stop_point;
-
 }
 
 
-nt::Line Line::Transformer::operator()(const Line& line){
+nt::Line Line::get_navitia_type() const {
     navitia::type::Line nt_line;
-    nt_line.id = line.id;
-    nt_line.idx = line.idx;
-    nt_line.external_code = line.external_code;
-    nt_line.name = line.name;
-    nt_line.code = line.code;
-    nt_line.color = line.color;
-    nt_line.sort = line.sort;
-    nt_line.backward_name = line.backward_name;
-    nt_line.forward_name = line.forward_name;
-    nt_line.additional_data = line.additional_data;
+    nt_line.id = this->id;
+    nt_line.idx = this->idx;
+    nt_line.uri = this->uri;
+    nt_line.name = this->name;
+    nt_line.code = this->code;
+    nt_line.color = this->color;
+    nt_line.sort = this->sort;
+    nt_line.backward_name = this->backward_name;
+    nt_line.forward_name = this->forward_name;
+    nt_line.additional_data = this->additional_data;
 
-    if(line.mode_type != NULL)
-        nt_line.mode_type_idx = line.mode_type->idx;
+    if(this->commercial_mode != NULL)
+        nt_line.commercial_mode_idx = this->commercial_mode->idx;
 
-    if(line.network != NULL)
-        nt_line.network_idx = line.network->idx;
+    if(this->network != NULL)
+        nt_line.network_idx = this->network->idx;
 
-    if(line.backward_direction != NULL)
-        nt_line.backward_direction_idx = line.backward_direction->idx;
-
-    if(line.forward_direction != NULL)
-        nt_line.forward_direction_idx = line.forward_direction->idx;
-
-    
     return nt_line;
 }
 
-nt::City City::Transformer::operator()(const City& city){
+nt::City City::get_navitia_type() const {
     navitia::type::City nt_city;
-    nt_city.id = city.id;
-    nt_city.idx = city.idx;
-    nt_city.external_code = city.external_code;
-    nt_city.name = city.name;
-    nt_city.comment = city.comment;
-    nt_city.coord = city.coord;
-    nt_city.main_postal_code = city.main_postal_code;
-    nt_city.use_main_stop_area_property = city.use_main_stop_area_property;
-    nt_city.main_city = city.main_city;
-    if(city.department != NULL)
-        nt_city.department_idx = city.department->idx;
-    else
-        nt_city.department_idx = nt::invalid_idx;
-    
+    nt_city.id = this->id;
+    nt_city.idx = this->idx;
+    nt_city.uri = this->uri;
+    nt_city.name = this->name;
+    nt_city.comment = this->comment;
+    nt_city.coord = this->coord;
+    nt_city.main_postal_code = this->main_postal_code;
+    nt_city.use_main_stop_area_property = this->use_main_stop_area_property;
+    nt_city.main_city = this->main_city;
+    if(this->department != NULL)
+        nt_city.department_idx = this->department->idx;
+
     return nt_city;
 }
 
-nt::Department Department::Transformer::operator()(const Department& department){
+nt::Department Department::get_navitia_type() const {
     navitia::type::Department nt_department;
-    nt_department.id = department.id;
-    nt_department.idx = department.idx;
-    nt_department.external_code = department.external_code;
-    nt_department.name = department.name;
+    nt_department.id = this->id;
+    nt_department.idx = this->idx;
+    nt_department.uri = this->uri;
+    nt_department.name = this->name;
 
-    if(department.district != NULL)
-        nt_department.district_idx = department.district->idx;
-    else
-        nt_department.district_idx = nt::invalid_idx;
+    if(this->district != NULL)
+        nt_department.district_idx = this->district->idx;
 
     return nt_department;
 }
 
-
-nt::District District::Transformer::operator()(const District& district){
-    navitia::type::District nt_district;
-    nt_district.id = district.id;
-    nt_district.idx = district.idx;
-    nt_district.external_code = district.external_code;
-    nt_district.name = district.name;
-
-    return nt_district;
-}
-
-nt::Network Network::Transformer::operator()(const Network& network){
-    nt::Network nt_network;
-    nt_network.id = network.id;
-    nt_network.idx = network.idx;
-    nt_network.external_code = network.external_code;
-    nt_network.name = network.name;
-
-    nt_network.address_name      = network.address_name;
-    nt_network.address_number    = network.address_number;       
-    nt_network.address_type_name = network.address_type_name;
-    nt_network.fax = network.fax;
-    nt_network.phone_number = network.phone_number;
-    nt_network.mail = network.mail;
-    nt_network.website = network.website;
-    return nt_network;
-}
-
-nt::Route Route::Transformer::operator()(const Route& route){
-    nt::Route nt_route;
-    nt_route.id = route.id;
-    nt_route.idx = route.idx;
-    nt_route.external_code = route.external_code;
-    nt_route.name = route.name;
-    nt_route.is_frequence = route.is_frequence;
-    nt_route.is_forward = route.is_forward;
-    nt_route.is_adapted = route.is_adapted;
-    
-    if(route.line != NULL)
-        nt_route.line_idx = route.line->idx;
-
-    if(route.mode != NULL && route.mode->mode_type != NULL)
-        nt_route.mode_type_idx = route.mode->mode_type->idx;
+nt::Route Route::get_navitia_type() const {
+    navitia::type::Route nt_route;
+    nt_route.id = this->id;
+    nt_route.idx = this->idx;
+    nt_route.uri = this->uri;
+    nt_route.name = this->name;
+    if(this->line != NULL)
+        nt_route.line_idx = this->line->idx;
 
     return nt_route;
 }
 
-nt::StopTime StopTime::Transformer::operator()(const StopTime& stop){
-    nt::StopTime nt_stop;
-    nt_stop.idx = stop.idx;
-    nt_stop.arrival_time = stop.arrival_time;
-    nt_stop.departure_time = stop.departure_time;
-    nt_stop.properties[nt::StopTime::ODT] = stop.ODT;
-    nt_stop.properties[nt::StopTime::DROP_OFF] = stop.drop_off_allowed;
-    nt_stop.properties[nt::StopTime::PICK_UP] = stop.pick_up_allowed;
-    nt_stop.local_traffic_zone = stop.local_traffic_zone;
+nt::District District::get_navitia_type() const {
+    navitia::type::District nt_district;
+    nt_district.id = this->id;
+    nt_district.idx = this->idx;
+    nt_district.uri = this->uri;
+    nt_district.name = this->name;
+    if(this->country != NULL)
+        nt_district.country_idx = this->country->idx;
 
-    nt_stop.route_point_idx = stop.route_point->idx;
-    nt_stop.vehicle_journey_idx = stop.vehicle_journey->idx;
+    return nt_district;
+}
+
+nt::Country Country::get_navitia_type() const {
+    navitia::type::Country nt_country;
+    nt_country.id = this->id;
+    nt_country.idx = this->idx;
+    nt_country.uri = this->uri;
+    nt_country.name = this->name;
+    
+    for(auto district : this->district_list)
+        nt_country.district_list.push_back(district->idx);
+
+    return nt_country;
+}
+
+nt::Network Network::get_navitia_type() const {
+    nt::Network nt_network;
+    nt_network.id = this->id;
+    nt_network.idx = this->idx;
+    nt_network.uri = this->uri;
+    nt_network.name = this->name;
+
+    nt_network.address_name      = this->address_name;
+    nt_network.address_number    = this->address_number;
+    nt_network.address_type_name = this->address_type_name;
+    nt_network.fax = this->fax;
+    nt_network.phone_number = this->phone_number;
+    nt_network.mail = this->mail;
+    nt_network.website = this->website;
+    return nt_network;
+}
+
+nt::JourneyPattern JourneyPattern::get_navitia_type() const {
+    nt::JourneyPattern nt_journey_pattern;
+    nt_journey_pattern.id = this->id;
+    nt_journey_pattern.idx = this->idx;
+    nt_journey_pattern.uri = this->uri;
+    nt_journey_pattern.name = this->name;
+    nt_journey_pattern.is_frequence = this->is_frequence;
+    
+    if(this->route != NULL)
+        nt_journey_pattern.route_idx = this->route->idx;
+
+    if(this->physical_mode != NULL)
+        nt_journey_pattern.commercial_mode_idx = this->physical_mode->idx;
+
+    return nt_journey_pattern;
+}
+
+nt::StopTime StopTime::get_navitia_type() const {
+    nt::StopTime nt_stop;
+    nt_stop.idx = this->idx;
+    nt_stop.arrival_time = this->arrival_time;
+    nt_stop.departure_time = this->departure_time;
+    nt_stop.start_time = this->start_time;
+    nt_stop.end_time = this->end_time;
+    nt_stop.headway_secs = this->headway_secs;
+    nt_stop.properties[nt::StopTime::ODT] = this->ODT;
+    nt_stop.properties[nt::StopTime::DROP_OFF] = this->drop_off_allowed;
+    nt_stop.properties[nt::StopTime::PICK_UP] = this->pick_up_allowed;
+    nt_stop.properties[nt::StopTime::IS_FREQUENCY] = this->is_frequency;
+    nt_stop.properties[nt::StopTime::WHEELCHAIR_BOARDING] = this->wheelchair_boarding;
+
+    nt_stop.local_traffic_zone = this->local_traffic_zone;
+
+    nt_stop.journey_pattern_point_idx = this->journey_pattern_point->idx;
+    nt_stop.vehicle_journey_idx = this->vehicle_journey->idx;
     return nt_stop;
 
 }
 
-nt::Connection Connection::Transformer::operator()(const Connection& connection){
+nt::Connection Connection::get_navitia_type() const {
     nt::Connection nt_connection;
-    nt_connection.id = connection.id;
-    nt_connection.idx = connection.idx;
-    nt_connection.external_code = connection.external_code;
-    nt_connection.departure_stop_point_idx = connection.departure_stop_point->idx;
-    nt_connection.destination_stop_point_idx = connection.destination_stop_point->idx;
-    nt_connection.duration = connection.duration;
-    nt_connection.max_duration = connection.max_duration;
+    nt_connection.id = this->id;
+    nt_connection.idx = this->idx;
+    nt_connection.uri = this->uri;
+    nt_connection.departure_stop_point_idx = this->departure_stop_point->idx;
+    nt_connection.destination_stop_point_idx = this->destination_stop_point->idx;
+    nt_connection.duration = this->duration;
+    nt_connection.max_duration = this->max_duration;
+    nt_connection.properties = this->properties;
     return nt_connection;
 }
 
-nt::RoutePointConnection 
-    RoutePointConnection::Transformer::operator()(const RoutePointConnection& route_point_connection) {
-    nt::RoutePointConnection nt_rpc;
-    nt_rpc.id = route_point_connection.id;
-    nt_rpc.idx = route_point_connection.idx;
-    nt_rpc.external_code = route_point_connection.external_code;
-    nt_rpc.departure_route_point_idx = route_point_connection.departure_route_point->idx;
-    nt_rpc.destination_route_point_idx = route_point_connection.destination_route_point->idx;    
-    switch(route_point_connection.route_point_connection_kind) {
+nt::JourneyPatternPointConnection 
+    JourneyPatternPointConnection::get_navitia_type() const {
+    nt::JourneyPatternPointConnection nt_rpc;
+    nt_rpc.id = this->id;
+    nt_rpc.idx = this->idx;
+    nt_rpc.uri = this->uri;
+    nt_rpc.departure_journey_pattern_point_idx = this->departure_journey_pattern_point->idx;
+    nt_rpc.destination_journey_pattern_point_idx = this->destination_journey_pattern_point->idx;
+    nt_rpc.length = this->length;
+    switch(this->journey_pattern_point_connection_kind) {
         case Extension: nt_rpc.connection_kind = nt::ConnectionKind::extension; break;
         case Guarantee: nt_rpc.connection_kind = nt::ConnectionKind::guarantee; break;
-        case UndefinedRoutePointConnectionKind: nt_rpc.connection_kind = nt::ConnectionKind::undefined; break;
+        case UndefinedJourneyPatternPointConnectionKind: nt_rpc.connection_kind = nt::ConnectionKind::undefined; break;
     };
 
     return nt_rpc;
 }
 
-nt::RoutePoint RoutePoint::Transformer::operator()(const RoutePoint& route_point){
-    nt::RoutePoint nt_route_point;
-    nt_route_point.id = route_point.id;
-    nt_route_point.idx = route_point.idx;
-    nt_route_point.external_code = route_point.external_code;
-    nt_route_point.order = route_point.order;
-    nt_route_point.main_stop_point = route_point.main_stop_point;
-    nt_route_point.fare_section = route_point.fare_section;
+nt::JourneyPatternPoint JourneyPatternPoint::get_navitia_type() const {
+    nt::JourneyPatternPoint nt_journey_pattern_point;
+    nt_journey_pattern_point.id = this->id;
+    nt_journey_pattern_point.idx = this->idx;
+    nt_journey_pattern_point.uri = this->uri;
+    nt_journey_pattern_point.order = this->order;
+    nt_journey_pattern_point.main_stop_point = this->main_stop_point;
+    nt_journey_pattern_point.fare_section = this->fare_section;
     
-    nt_route_point.stop_point_idx = route_point.stop_point->idx;
-    nt_route_point.route_idx = route_point.route->idx;
-    return nt_route_point;
+    nt_journey_pattern_point.stop_point_idx = this->stop_point->idx;
+    nt_journey_pattern_point.journey_pattern_idx = this->journey_pattern->idx;
+    return nt_journey_pattern_point;
 }
 
-nt::VehicleJourney VehicleJourney::Transformer::operator()(const VehicleJourney& vj){
+nt::VehicleJourney VehicleJourney::get_navitia_type() const {
     nt::VehicleJourney nt_vj;
-    nt_vj.id = vj.id;
-    nt_vj.idx = vj.idx;
-    nt_vj.name = vj.name;
-    nt_vj.external_code = vj.external_code;
-    nt_vj.comment = vj.comment;
-    nt_vj.is_adapted = vj.is_adapted;
+    nt_vj.id = this->id;
+    nt_vj.idx = this->idx;
+    nt_vj.name = this->name;
+    nt_vj.uri = this->uri;
+    nt_vj.comment = this->comment;
 
-    if(vj.company != NULL)
-        nt_vj.company_idx = vj.company->idx;
+    if(this->company != NULL)
+        nt_vj.company_idx = this->company->idx;
 
-    if(vj.mode != NULL)
-        nt_vj.mode_idx = vj.mode->idx;
+    if(this->physical_mode != NULL)
+        nt_vj.physical_mode_idx = this->physical_mode->idx;
 
-    nt_vj.route_idx = vj.route->idx;
+    nt_vj.journey_pattern_idx = this->journey_pattern->idx;
 
-    if(vj.validity_pattern != NULL)
-        nt_vj.validity_pattern_idx = vj.validity_pattern->idx;
+    if(this->validity_pattern != NULL)
+        nt_vj.validity_pattern_idx = this->validity_pattern->idx;
+
+    nt_vj.wheelchair_boarding = this->wheelchair_boarding;
+    nt_vj.properties = this->properties;
 
     return nt_vj;
 }
-nt::ValidityPattern ValidityPattern::Transformer::operator()(const ValidityPattern& vp){
+nt::ValidityPattern ValidityPattern::get_navitia_type() const {
     nt::ValidityPattern nt_vp;
 
-    nt_vp.id = vp.id;
-    nt_vp.idx = vp.idx;
-    nt_vp.external_code = vp.external_code;
-    nt_vp.beginning_date = vp.beginning_date;
+    nt_vp.id = this->id;
+    nt_vp.idx = this->idx;
+    nt_vp.uri = this->uri;
+    nt_vp.beginning_date = this->beginning_date;
 
     for(int i=0;i< 366;++i)
-        if(vp.days[i])
+        if(this->days[i])
             nt_vp.add(i);
         else
             nt_vp.remove(i);

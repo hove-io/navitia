@@ -1,45 +1,57 @@
-Journeys
-========
+Le calcul d'itinéraire
+=========================
 
-La fonction Journeys est en charge des calculs d'itinéraires multi-modaux, multi-transporteur.
+Le service Journeys est en charge des calculs d'itinéraires multi-modaux, multi-transporteur.
 Cette fonction est exposé sous différentes API de type GET
 
   * journeys: retourne les différents types d'itinéraires pertinents par rapport à une demande
-  * journeysarray: retourne la liste des itinéraires "arrivée au plus tôt" pour une liste d'horaire. Pour chaque horaire, une seule réponse sera fournit, celle-ci pouvant être "pas de solution".
+  * journeysarray: retourne une liste d'itinéraires "arrivée au plus tôt" associé à une liste d'horaire demandé. Pour chaque horaire, une seule réponse sera fournit, celle-ci pouvant être "pas de solution".
 
 Paramètres d'entrée
 *******************
 
-Comme toute les fonctions exposées de NAViTiA, le calcul d'itinéraire accepte des requêtes GET ou POST. 
+Comme tous les services exposés de NAViTiA, le calcul d'itinéraire accepte des requêtes GET ou POST. 
 Il est toutefois conseillé d'utiliser la méthode POST sur ce type de requête, les URI pouvant être assez longue.
 
-Certains paramètres sont partagés pour toutes les API de calcul d'itinéraire. 
+Certains paramètres sont partagés sur les 2 API de calcul d'itinéraire. 
 
 Paramètres généraux
 -------------------
 
-+-------------+------------------------+-------------------------------------+---------------------------------+
-| Paramètre   | Type                   | Remarque                            | Exemple                         |
-+=============+========================+=====================================+=================================+
-| origin      | Appel par coordonnées: | Coordonnées en WGS84                | &origin=coord:48.8299:2.391     |
-|             |    coord:<lon>:<lat>   | Ne pas confondre lat et lon ;-)     |                                 |
-|             +------------------------+-------------------------------------+---------------------------------+
-|             | Appel par code unique  | URI issue du retour d'un appel      | &origin=stop_area:TCL-0722      |
-|             |                        |   à un autre service                |                                 |
-|             |                        |   (firstLetter, ptreferential...)   |                                 |
-+-------------+------------------------+-------------------------------------+---------------------------------+
-| destination | Appel par coordonnées: | Coordonnées en WGS84                | &destination=coord:48.840:2.319 |
-|             |    coord:<lon>:<lat>   | Ne pas confondre lat et lon ;-)     |                                 |
-|             +------------------------+-------------------------------------+---------------------------------+
-|             | Appel par code unique  | URI issue du retour d'un appel      | &destination=stop_area:5555555  |
-|             |                        |   à un autre service                |                                 |
-|             |                        |   (firstLetter, ptreferential...)   |                                 |
-+-------------+------------------------+-------------------------------------+---------------------------------+
-| clockwise   | booléen                | &ClockWise=1, on veut partir après  | &clockwise=1                    |
-|             |                        |       l'heure indiquée              |                                 |
-|             |                        | &ClockWise=0, on veut arriver avant |                                 |
-|             |                        |       l'heure indiquée              |                                 |
-+-------------+------------------------+-------------------------------------+---------------------------------+
++------------------+------------------------+-------------------------------------+---------------------------------+
+| Paramètre        | Type                   | Remarque                            | Exemple                         |
++==================+========================+=====================================+=================================+
+| origin           | Appel par coordonnées: | Coordonnées en WGS84                | &origin=coord:48.8299:2.391     |
+|                  |    coord:<lon>:<lat>   | Ne pas confondre lat et lon ;-)     |                                 |
+|                  +------------------------+-------------------------------------+---------------------------------+
+|                  | Appel par code unique  | URI issue du retour d'un appel      | &origin=stop_area:TCL-0722      |
+|                  |                        |   à un autre service                |                                 |
+|                  |                        |   (firstLetter, ptreferential...)   |                                 |
++------------------+------------------------+-------------------------------------+---------------------------------+
+| destination      | Appel par coordonnées: | Coordonnées en WGS84                | &destination=coord:48.840:2.319 |
+|                  |    coord:<lon>:<lat>   | Ne pas confondre lat et lon ;-)     |                                 |
+|                  +------------------------+-------------------------------------+---------------------------------+
+|                  | Appel par code unique  | URI issue du retour d'un appel      | &destination=stop_area:5555555  |
+|                  |                        |   à un autre service                |                                 |
+|                  |                        |   (firstLetter, ptreferential...)   |                                 |
++------------------+------------------------+-------------------------------------+---------------------------------+
+| clockwise        | booléen                | &clockwise=1, on veut partir après  | &clockwise=1                    |
+|                  |                        |       l'heure indiquée              |                                 |
+|                  |                        | &clockwise=0, on veut arriver avant |                                 |
+|                  |                        |       l'heure indiquée              |                                 |
++------------------+------------------------+-------------------------------------+---------------------------------+
+| walking_speed    | double                 | Vitesse de marche à pied en m/s     | &walking_speed=1.2              |
+|                  |                        | 1.38 par défaut                     |                                 |
++------------------+------------------------+-------------------------------------+---------------------------------+
+| walking_distance | int                    | Distance maximale de marche en      | &walking_distance=1000          |
+|                  |                        | mètres                              |                                 |
+|                  |                        | 1000 par défaut                     |                                 |
++------------------+------------------------+-------------------------------------+---------------------------------+
+| wheelchair       | booléen                | &wheelchair=1 on veut que le trajet | &wheelchair=1                   |
+|                  |                        | soit adapté aux fauteuils roulants  |                                 |
+|                  |                        | &wheelchair=0 on ne prend pas en    |                                 |
+|                  |                        | l'accessibilité                     |                                 |
++------------------+------------------------+-------------------------------------+---------------------------------+
 
 Les paramètres origin et destination peuvent accueillir au choix une URI issue d'une autre API 
 (par exemple firstletter ou PTReferential) ou des coordonnées au format WGS84. Ces 2 paramètres sont obligatoires sous une de ces 2 formes.
