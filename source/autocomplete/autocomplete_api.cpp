@@ -96,36 +96,33 @@ void Update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result,
 pbnavitia::Response autocomplete(const std::string &name,
                                  const std::vector<nt::Type_e> &filter,
                                  uint32_t depth,
-                                 uint32_t nbmax,
+                                 int nbmax,
                                  const navitia::type::Data &d){
 
     pbnavitia::Response pb_response;
     pb_response.set_requested_api(pbnavitia::AUTOCOMPLETE);
-
     bool addType = d.pt_data.stop_area_autocomplete.is_address_type(name, d.geo_ref.alias, d.geo_ref.synonymes);
     std::vector<Autocomplete<nt::idx_t>::fl_quality> result;
     pbnavitia::Autocomplete* pb = pb_response.mutable_autocomplete();
     BOOST_FOREACH(nt::Type_e type, filter){
         switch(type){
         case nt::Type_e::StopArea:
-            result = d.pt_data.stop_area_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight);
+            result = d.pt_data.stop_area_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
             break;
         case nt::Type_e::StopPoint:
-            result = d.pt_data.stop_point_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight);
+            result = d.pt_data.stop_point_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
             break;
         case nt::Type_e::City:
-            result = d.pt_data.city_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight);
+            result = d.pt_data.city_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
             break;
         case nt::Type_e::Address:
-            //result = d.geo_ref.fl.find_complete(name);
-            result = d.geo_ref.find_ways(name);
+            result = d.geo_ref.find_ways(name, nbmax);
             break;
         case nt::Type_e::POI:
-            result = d.geo_ref.fl_poi.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight);
+            result = d.geo_ref.fl_poi.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
         default: break;
         }
 
-        if (result.size() > nbmax){result.resize(nbmax);}
         Update_quality(result, type, addType);
 
         create_pb(result, type, depth, d, *pb);
@@ -135,12 +132,14 @@ pbnavitia::Response autocomplete(const std::string &name,
             return a.quality() > b.quality();
     };
 
-    std::sort(pb_response.mutable_autocomplete()->mutable_items()->begin(), pb_response.mutable_autocomplete()->mutable_items()->end(),compare);
+    //Trier la partiallement jusqu'au nbmax elément.
+    int result_size = std::min(nbmax, pb_response.mutable_autocomplete()->mutable_items()->size());
+    std::partial_sort(pb_response.mutable_autocomplete()->mutable_items()->begin(),pb_response.mutable_autocomplete()->mutable_items()->begin() + result_size,
+                      pb_response.mutable_autocomplete()->mutable_items()->end(),compare);
 
-    while (pb_response.mutable_autocomplete()->mutable_items()->size() > nbmax){
+    while (pb_response.mutable_autocomplete()->mutable_items()->size() > (unsigned)nbmax){
         pb_response.mutable_autocomplete()->mutable_items()->RemoveLast();
     }
-
     return pb_response;
 }
 

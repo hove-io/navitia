@@ -182,10 +182,11 @@ def journeys(requested_type, request_args, version, region):
         req.journeys.forbidden_uris.append(forbidden_uri)
     resp = NavitiaManager().send_and_receive(req, region)
 
-    (before, after) = extremes(resp, request_args)
-    if before and after:
-        resp.planner.before = before
-        resp.planner.after = after
+    if requested_type == type_pb2.PLANNER:
+        (before, after) = extremes(resp, request_args)
+        if before and after:
+            resp.planner.before = before
+            resp.planner.after = after
 
     return resp
 

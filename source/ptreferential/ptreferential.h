@@ -32,12 +32,9 @@ struct Filter {
     std::string attribute; //< L'attribu ("uri")
     Operator_e op; //< la comparaison ("=")
     std::string value; //< la valeur comparée ("kikoolol")
-    double lon, lat;
-    int distance;
 
     Filter(std::string object, std::string attribute, Operator_e op, std::string value) : object(object), attribute(attribute), op(op), value(value) {}
     Filter(std::string object, std::string value) : object(object), op(HAVING), value(value) {}
-    Filter(double lon, double lat, int distance): object("stop_point"), op(AROUND), lon(lon), lat(lat), distance(distance) {}
     Filter() {}
 };
 
