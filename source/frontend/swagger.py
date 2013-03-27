@@ -79,9 +79,9 @@ def api_doc(apis, api = None) :
             if api == "regions":
                 path += "regions.json"
             else:
-                path += api+".{contentType}"
+                path += api+".{content-type}"
                 formats = {}
-                formats['name'] = 'contentType'
+                formats['name'] = 'content-type'
                 formats['paramType'] = 'path'
                 formats['description'] = 'The type of data you want to have'
                 formats['dataType'] = 'String'
@@ -113,7 +113,7 @@ def api_doc(apis, api = None) :
                         del params_universal[i]
                     i+=1                
                 response['apis'].append({
-                        "path" : "/{version}/"+api+".{contentType}",
+                        "path" : "/{version}/"+api+".{content-type}",
                         "description" : apis[api]["description"] if "description" in apis[api] else "",
                         "operations" : [{
                             "httpMethod" : "GET",
