@@ -71,7 +71,7 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
     filename_function_list.push_back(std::make_pair("frequencies.txt", &GtfsParser::parse_frequencies));
     
     std::set<std::string> required_files = {"agency.txt", "stops.txt", 
-        "routes.txt", "trips.txt", "stop_times.txt", "calendar.txt"};
+        "routes.txt", "trips.txt", "stop_times.txt"};
     
     for(auto filename_function : filename_function_list) {
         LOG4CPLUS_TRACE(logger, "On parse : " + filename_function.first);
@@ -792,72 +792,77 @@ boost::gregorian::date_period GtfsParser::find_production_date(const std::string
         if(!row.empty() && trips.find(row[trip_c]) != trips.end())
             services.insert(std::make_pair(row[service_c], true));
     }
+    boost::gregorian::date start_date(boost::gregorian::max_date_time), end_date(boost::gregorian::min_date_time);
+    
     filename = path + "/calendar.txt";
     CsvReader csv3(filename, ',' , true);
+    bool calendar_txt_exists = false;
     if(!csv3.is_open()) {
         LOG4CPLUS_WARN(logger, "Aucun fichier " + filename);
-        return basic_production_date(beginning_date);
-    }
+    } else {
+        calendar_txt_exists = true;
+        mandatory_headers = {"start_date" , "end_date", "service_id"};
+        if(!csv3.validate(mandatory_headers)) {
+            LOG4CPLUS_WARN(logger, "Erreur lors du parsing de " + filename 
+                    + ". Il manque les colonnes : " 
+                    + csv3.missing_headers(mandatory_headers));
+            return basic_production_date(beginning_date);
+        }
 
-    mandatory_headers = {"start_date" , "end_date", "service_id"};
-    if(!csv3.validate(mandatory_headers)) {
-        LOG4CPLUS_WARN(logger, "Erreur lors du parsing de " + filename 
-                  + ". Il manque les colonnes : " 
-                  + csv3.missing_headers(mandatory_headers));
-        return basic_production_date(beginning_date);
-    }
-
-    boost::gregorian::date start_date(boost::gregorian::max_date_time), end_date(boost::gregorian::min_date_time);
-    int start_date_c = csv3.get_pos_col("start_date"), end_date_c = csv3.get_pos_col("end_date");
-    service_c = csv3.get_pos_col("service_id");
+        int start_date_c = csv3.get_pos_col("start_date"), end_date_c = csv3.get_pos_col("end_date");
+        service_c = csv3.get_pos_col("service_id");
 
 
-    while(!csv3.eof()) {
-        auto row = csv3.next();
-        if(!row.empty()) {
-            if(services.find(row[service_c]) != services.end()) {
-                boost::gregorian::date current_start_date = boost::gregorian::from_undelimited_string(row[start_date_c]);
-                boost::gregorian::date current_end_date = boost::gregorian::from_undelimited_string(row[end_date_c]);
+        while(!csv3.eof()) {
+            auto row = csv3.next();
+            if(!row.empty()) {
+                if(services.find(row[service_c]) != services.end()) {
+                    boost::gregorian::date current_start_date = boost::gregorian::from_undelimited_string(row[start_date_c]);
+                    boost::gregorian::date current_end_date = boost::gregorian::from_undelimited_string(row[end_date_c]);
 
-                if(current_start_date < start_date){
-                    start_date = current_start_date;
-                }
-                if(current_end_date > end_date){
-                    end_date = current_end_date;
+                    if(current_start_date < start_date){
+                        start_date = current_start_date;
+                    }
+                    if(current_end_date > end_date){
+                        end_date = current_end_date;
+                    }
                 }
             }
         }
     }
+
     filename = path + "/calendar_dates.txt";
     CsvReader csv4(filename, ',' , true);
     if(!csv4.is_open()) {
-        LOG4CPLUS_WARN(logger, "Aucun fichier " + filename);
-        return basic_production_date(beginning_date);
-    }
-
-    mandatory_headers = {"service_id" , "date", "exception_type"};
-    if(!csv4.validate(mandatory_headers)) {
-        LOG4CPLUS_WARN(logger, "Erreur lors du parsing de " + filename 
-                  + ". Il manque les colonnes : " 
-                  + csv4.missing_headers(mandatory_headers));
-        return basic_production_date(beginning_date);
-    }
-
-    int date_c = csv4.get_pos_col("date");
-        service_c = csv4.get_pos_col("service_id");
-
-    while(!csv4.eof()) {
-        auto row = csv4.next();
-        if(!row.empty() && services.find(row[service_c]) != services.end()) {
-            boost::gregorian::date current_date = boost::gregorian::from_undelimited_string(row[date_c]);
-            if(current_date < start_date){
-                start_date = current_date;
-            }
-            if(current_date > end_date){
-                end_date = current_date;
+        if(calendar_txt_exists)
+            LOG4CPLUS_WARN(logger, "Aucun fichier " + filename);
+        else
+            LOG4CPLUS_FATAL(logger, "Aucun fichiers " + filename + " ni calendar.txt");
+    } else {
+        mandatory_headers = {"service_id" , "date", "exception_type"};
+        if(!csv4.validate(mandatory_headers)) {
+            LOG4CPLUS_WARN(logger, "Erreur lors du parsing de " + filename 
+                    + ". Il manque les colonnes : " 
+                    + csv4.missing_headers(mandatory_headers));
+            return basic_production_date(beginning_date);
+        }
+        int date_c = csv4.get_pos_col("date");
+            service_c = csv4.get_pos_col("service_id");
+        while(!csv4.eof()) {
+            auto row = csv4.next();
+            if(!row.empty() && services.find(row[service_c]) != services.end()) {
+                boost::gregorian::date current_date = boost::gregorian::from_undelimited_string(row[date_c]);
+                if(current_date < start_date){
+                    start_date = current_date;
+                }
+                if(current_date > end_date){
+                    end_date = current_date;
+                }
             }
         }
+
     }
+ 
 
     boost::gregorian::date b_date(boost::gregorian::min_date_time);
     if(beginning_date != "")
