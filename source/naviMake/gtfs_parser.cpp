@@ -220,7 +220,7 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
     while(!csv.eof()) {
         auto row = csv.next();
         if(row.empty())
-            break;
+            continue;
         nm::StopPoint * sp = new nm::StopPoint();
         try{
             sp->coord.set_lon(boost::lexical_cast<double>(row[lon_c]));
@@ -233,12 +233,12 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
 
         sp->name = row[name_c];
         sp->uri = row[id_c];
-
-        if((!data.stop_points.empty() && stop_map.find(sp->uri) != stop_map.end()) ||
-           (!data.stop_areas.empty() && stop_area_map.find(sp->uri) != stop_area_map.end())     ) {
+        //On teste si c'est un doublon, daqns gtfs le meme fichier contient stoparea et stoppoint
+        if(stop_map.find(sp->uri) != stop_map.end() ||
+           stop_area_map.find(sp->uri) != stop_area_map.end()) {
+            LOG4CPLUS_WARN(logger, "Le stop " + sp->uri +" a ete ignore");
             ignored++;
-        }
-        else {
+        } else {
             // Si c'est un stopArea
             if(type_c != -1 && row[type_c] == "1") {
                 nm::StopArea * sa = new nm::StopArea();
@@ -323,10 +323,10 @@ void GtfsParser::parse_transfers(Data & data, CsvReader & csv) {
     while(!csv.eof()) {
         auto row = csv.next();
         if(row.empty())
-            break;
-        typedef boost::unordered_map<std::string, navimake::types::StopPoint*>::iterator sp_iterator;
+            continue;
+        typedef std::unordered_map<std::string, navimake::types::StopPoint*>::iterator sp_iterator;
         vector_sp departures, arrivals;
-        boost::unordered_map<std::string, navimake::types::StopPoint*>::iterator it;
+        std::unordered_map<std::string, navimake::types::StopPoint*>::iterator it;
         it = this->stop_map.find(row[from_c]);
         if(it == this->stop_map.end()){
             std::unordered_map<std::string, vector_sp>::iterator it_sa = this->sa_spmap.find(row[from_c]);
@@ -404,7 +404,7 @@ void GtfsParser::parse_calendar(Data & data, CsvReader & csv) {
             break;
         nblignes ++;
         nm::ValidityPattern * vp;
-        boost::unordered_map<std::string, nm::ValidityPattern*>::iterator it= vp_map.find(row[id_c]);
+        std::unordered_map<std::string, nm::ValidityPattern*>::iterator it= vp_map.find(row[id_c]);
         if(it == vp_map.end()){
             //On initialise la semaine
             week[1] = (row[monday_c] == "1");
@@ -464,7 +464,7 @@ void GtfsParser::parse_calendar_dates(Data & data, CsvReader & csv){
         if(row.empty())
             break;
         nm::ValidityPattern * vp;
-        boost::unordered_map<std::string, nm::ValidityPattern*>::iterator it= vp_map.find(row[id_c]);
+        std::unordered_map<std::string, nm::ValidityPattern*>::iterator it= vp_map.find(row[id_c]);
         if(it == vp_map.end()){
             vp = new nm::ValidityPattern(production_date.begin());
             vp_map[row[id_c]] = vp;
@@ -516,7 +516,7 @@ void GtfsParser::parse_lines(Data & data, CsvReader &csv){
                 line->color = row[color_c];
             line->additional_data = row[long_name_c];
 
-            boost::unordered_map<std::string, nm::CommercialMode*>::iterator it= commercial_mode_map.find(row[type_c]);
+            std::unordered_map<std::string, nm::CommercialMode*>::iterator it= commercial_mode_map.find(row[type_c]);
             if(it != commercial_mode_map.end())
                 line->commercial_mode = it->second;
             if(agency_c != -1) {
@@ -566,7 +566,8 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
         auto row = csv.next();
         if(row.empty())
             break;
-        boost::unordered_map<std::string, nm::Line*>::iterator it = line_map.find(row[id_c]);
+
+        std::unordered_map<std::string, nm::Line*>::iterator it = line_map.find(row[id_c]);
         if(it == line_map.end()){
             LOG4CPLUS_WARN(logger, "Impossible de trouver la Route (au sens GTFS) " + row[id_c]
                       + " référencée par trip " + row[trip_c]);
@@ -574,14 +575,14 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
         }
         else {
             nm::Line * line = it->second;
-            boost::unordered_map<std::string, nm::PhysicalMode*>::iterator itm = mode_map.find(line->commercial_mode->id);
-            if(itm == mode_map.end()){
+            std::unordered_map<std::string, nm::PhysicalMode*>::iterator itm = mode_map.find(line->commercial_mode->id);
+            if(itm == mode_map.end()) {
                 LOG4CPLUS_WARN(logger, "Impossible de trouver le mode (au sens GTFS) " + line->commercial_mode->id
                           + " référencée par trip " + row[trip_c]);
                 ignored++;
             } else {
                 nm::ValidityPattern * vp_xx;
-                boost::unordered_map<std::string, nm::ValidityPattern*>::iterator vp_it = vp_map.find(row[service_c]);
+                std::unordered_map<std::string, nm::ValidityPattern*>::iterator vp_it = vp_map.find(row[service_c]);
                 if(vp_it == vp_map.end()) {
                     ignored++;
                     continue;
@@ -590,7 +591,7 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                     vp_xx = vp_it->second;
                 }
 
-                boost::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(row[trip_c]);
+                std::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(row[trip_c]);
                 if(vj_it == vj_map.end()) {
                     nm::VehicleJourney * vj = new nm::VehicleJourney();
                     vj->uri = row[trip_c];
@@ -640,7 +641,7 @@ void GtfsParser::parse_frequencies(Data &, CsvReader &csv) {
         auto row = csv.next();
         if(row.empty())
             break;
-        boost::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(row[trip_id_c]);
+        std::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(row[trip_id_c]);
         if(vj_it != vj_map.end()) {
             int begin = vj_it->second->stop_time_list.front()->arrival_time;
             for(auto st_it = vj_it->second->stop_time_list.begin(); st_it != vj_it->second->stop_time_list.end(); ++st_it) {
