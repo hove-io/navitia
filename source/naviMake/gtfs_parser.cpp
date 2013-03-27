@@ -71,7 +71,7 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
     filename_function_list.push_back(std::make_pair("frequencies.txt", &GtfsParser::parse_frequencies));
     
     std::set<std::string> required_files = {"agency.txt", "stops.txt", 
-        "routes.txt", "trips.txt", "stop_times.txt", "calendar.txt"};
+        "routes.txt", "trips.txt", "stop_times.txt"};
     
     for(auto filename_function : filename_function_list) {
         LOG4CPLUS_TRACE(logger, "On parse : " + filename_function.first);
@@ -220,7 +220,7 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
     while(!csv.eof()) {
         auto row = csv.next();
         if(row.empty())
-            break;
+            continue;
         nm::StopPoint * sp = new nm::StopPoint();
         try{
             sp->coord.set_lon(boost::lexical_cast<double>(row[lon_c]));
@@ -233,12 +233,12 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
 
         sp->name = row[name_c];
         sp->uri = row[id_c];
-
-        if((!data.stop_points.empty() && stop_map.find(sp->uri) != stop_map.end()) ||
-           (!data.stop_areas.empty() && stop_area_map.find(sp->uri) != stop_area_map.end())     ) {
+        //On teste si c'est un doublon, daqns gtfs le meme fichier contient stoparea et stoppoint
+        if(stop_map.find(sp->uri) != stop_map.end() ||
+           stop_area_map.find(sp->uri) != stop_area_map.end()) {
+            LOG4CPLUS_WARN(logger, "Le stop " + sp->uri +" a ete ignore");
             ignored++;
-        }
-        else {
+        } else {
             // Si c'est un stopArea
             if(type_c != -1 && row[type_c] == "1") {
                 nm::StopArea * sa = new nm::StopArea();
@@ -263,10 +263,11 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
                 stop_map[sp->uri] = sp;
                 data.stop_points.push_back(sp);
                 if(parent_c!=-1 && row[parent_c] != "") {// On sauvegarde la référence à la zone d'arrêt
-                    if(sa_spmap.find(row[parent_c]) == sa_spmap.end()) {
-                        sa_spmap.insert(std::make_pair(row[parent_c], vector_sp()));
+                    auto it = sa_spmap.find(row[parent_c]);
+                    if( it == sa_spmap.end()) {
+                        it = sa_spmap.insert(std::make_pair(row[parent_c], vector_sp())).first;
                     }
-                    sa_spmap[row[parent_c]].push_back(sp);
+                    it->second.push_back(sp);
                 }
             }
         }
@@ -274,8 +275,10 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
 
     // On reboucle pour récupérer les stop areas de tous les stop points
     for(auto sa_sps : sa_spmap) {
-        if(stop_area_map.find(sa_sps.first) != stop_area_map.end()) {
-            auto it = stop_area_map.find(sa_sps.first);
+        if(sa_sps.first == "VTN|SevTur|parent")
+            std::cout << "DEBUG" << std::endl;
+        auto it = stop_area_map.find(sa_sps.first);
+        if(it != stop_area_map.end()) {
             for(auto sp : sa_sps.second) {
                 sp->stop_area = it->second;
             }
@@ -323,10 +326,10 @@ void GtfsParser::parse_transfers(Data & data, CsvReader & csv) {
     while(!csv.eof()) {
         auto row = csv.next();
         if(row.empty())
-            break;
-        typedef boost::unordered_map<std::string, navimake::types::StopPoint*>::iterator sp_iterator;
+            continue;
+        typedef std::unordered_map<std::string, navimake::types::StopPoint*>::iterator sp_iterator;
         vector_sp departures, arrivals;
-        boost::unordered_map<std::string, navimake::types::StopPoint*>::iterator it;
+        std::unordered_map<std::string, navimake::types::StopPoint*>::iterator it;
         it = this->stop_map.find(row[from_c]);
         if(it == this->stop_map.end()){
             std::unordered_map<std::string, vector_sp>::iterator it_sa = this->sa_spmap.find(row[from_c]);
@@ -401,10 +404,10 @@ void GtfsParser::parse_calendar(Data & data, CsvReader & csv) {
     while(!csv.eof()) {
         auto row = csv.next();
         if(row.empty())
-            break;
+            continue;
         nblignes ++;
         nm::ValidityPattern * vp;
-        boost::unordered_map<std::string, nm::ValidityPattern*>::iterator it= vp_map.find(row[id_c]);
+        std::unordered_map<std::string, nm::ValidityPattern*>::iterator it= vp_map.find(row[id_c]);
         if(it == vp_map.end()){
             //On initialise la semaine
             week[1] = (row[monday_c] == "1");
@@ -440,10 +443,10 @@ void GtfsParser::parse_calendar(Data & data, CsvReader & csv) {
             vp = it->second;
         }
     }
-    BOOST_ASSERT(data.validity_patterns.size() == vp_map.size());
     LOG4CPLUS_TRACE(logger, "Nombre de validity patterns : " +
             boost::lexical_cast<std::string>(data.validity_patterns.size())+"nb lignes : " +
             boost::lexical_cast<std::string>(nblignes));
+    BOOST_ASSERT(data.validity_patterns.size() == vp_map.size());
 
 }
 
@@ -462,9 +465,9 @@ void GtfsParser::parse_calendar_dates(Data & data, CsvReader & csv){
     while(!csv.eof()) {
         auto row = csv.next();
         if(row.empty())
-            break;
+            continue;
         nm::ValidityPattern * vp;
-        boost::unordered_map<std::string, nm::ValidityPattern*>::iterator it= vp_map.find(row[id_c]);
+        std::unordered_map<std::string, nm::ValidityPattern*>::iterator it= vp_map.find(row[id_c]);
         if(it == vp_map.end()){
             vp = new nm::ValidityPattern(production_date.begin());
             vp_map[row[id_c]] = vp;
@@ -482,8 +485,11 @@ void GtfsParser::parse_calendar_dates(Data & data, CsvReader & csv){
         else
             LOG4CPLUS_WARN(logger, "Exception pour le service " + row[id_c] + " inconnue : " + row[e_type_c]);
     }
-    BOOST_ASSERT(data.validity_patterns.size() == vp_map.size());
     LOG4CPLUS_TRACE(logger, "Nombre de validity patterns : " + boost::lexical_cast<std::string>(data.validity_patterns.size()));
+    BOOST_ASSERT(data.validity_patterns.size() == vp_map.size());
+    if(data.validity_patterns.empty())
+        LOG4CPLUS_FATAL(logger, "Pas de validity_patterns");
+
 }
 
 
@@ -516,7 +522,7 @@ void GtfsParser::parse_lines(Data & data, CsvReader &csv){
                 line->color = row[color_c];
             line->additional_data = row[long_name_c];
 
-            boost::unordered_map<std::string, nm::CommercialMode*>::iterator it= commercial_mode_map.find(row[type_c]);
+            std::unordered_map<std::string, nm::CommercialMode*>::iterator it= commercial_mode_map.find(row[type_c]);
             if(it != commercial_mode_map.end())
                 line->commercial_mode = it->second;
             if(agency_c != -1) {
@@ -566,7 +572,8 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
         auto row = csv.next();
         if(row.empty())
             break;
-        boost::unordered_map<std::string, nm::Line*>::iterator it = line_map.find(row[id_c]);
+
+        std::unordered_map<std::string, nm::Line*>::iterator it = line_map.find(row[id_c]);
         if(it == line_map.end()){
             LOG4CPLUS_WARN(logger, "Impossible de trouver la Route (au sens GTFS) " + row[id_c]
                       + " référencée par trip " + row[trip_c]);
@@ -574,14 +581,14 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
         }
         else {
             nm::Line * line = it->second;
-            boost::unordered_map<std::string, nm::PhysicalMode*>::iterator itm = mode_map.find(line->commercial_mode->id);
-            if(itm == mode_map.end()){
+            std::unordered_map<std::string, nm::PhysicalMode*>::iterator itm = mode_map.find(line->commercial_mode->id);
+            if(itm == mode_map.end()) {
                 LOG4CPLUS_WARN(logger, "Impossible de trouver le mode (au sens GTFS) " + line->commercial_mode->id
                           + " référencée par trip " + row[trip_c]);
                 ignored++;
             } else {
                 nm::ValidityPattern * vp_xx;
-                boost::unordered_map<std::string, nm::ValidityPattern*>::iterator vp_it = vp_map.find(row[service_c]);
+                std::unordered_map<std::string, nm::ValidityPattern*>::iterator vp_it = vp_map.find(row[service_c]);
                 if(vp_it == vp_map.end()) {
                     ignored++;
                     continue;
@@ -590,7 +597,7 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                     vp_xx = vp_it->second;
                 }
 
-                boost::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(row[trip_c]);
+                std::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(row[trip_c]);
                 if(vj_it == vj_map.end()) {
                     nm::VehicleJourney * vj = new nm::VehicleJourney();
                     vj->uri = row[trip_c];
@@ -640,7 +647,7 @@ void GtfsParser::parse_frequencies(Data &, CsvReader &csv) {
         auto row = csv.next();
         if(row.empty())
             break;
-        boost::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(row[trip_id_c]);
+        std::unordered_map<std::string, nm::VehicleJourney*>::iterator vj_it = vj_map.find(row[trip_id_c]);
         if(vj_it != vj_map.end()) {
             int begin = vj_it->second->stop_time_list.front()->arrival_time;
             for(auto st_it = vj_it->second->stop_time_list.begin(); st_it != vj_it->second->stop_time_list.end(); ++st_it) {
@@ -792,72 +799,77 @@ boost::gregorian::date_period GtfsParser::find_production_date(const std::string
         if(!row.empty() && trips.find(row[trip_c]) != trips.end())
             services.insert(std::make_pair(row[service_c], true));
     }
+    boost::gregorian::date start_date(boost::gregorian::max_date_time), end_date(boost::gregorian::min_date_time);
+    
     filename = path + "/calendar.txt";
     CsvReader csv3(filename, ',' , true);
+    bool calendar_txt_exists = false;
     if(!csv3.is_open()) {
         LOG4CPLUS_WARN(logger, "Aucun fichier " + filename);
-        return basic_production_date(beginning_date);
-    }
+    } else {
+        calendar_txt_exists = true;
+        mandatory_headers = {"start_date" , "end_date", "service_id"};
+        if(!csv3.validate(mandatory_headers)) {
+            LOG4CPLUS_WARN(logger, "Erreur lors du parsing de " + filename 
+                    + ". Il manque les colonnes : " 
+                    + csv3.missing_headers(mandatory_headers));
+            return basic_production_date(beginning_date);
+        }
 
-    mandatory_headers = {"start_date" , "end_date", "service_id"};
-    if(!csv3.validate(mandatory_headers)) {
-        LOG4CPLUS_WARN(logger, "Erreur lors du parsing de " + filename 
-                  + ". Il manque les colonnes : " 
-                  + csv3.missing_headers(mandatory_headers));
-        return basic_production_date(beginning_date);
-    }
-
-    boost::gregorian::date start_date(boost::gregorian::max_date_time), end_date(boost::gregorian::min_date_time);
-    int start_date_c = csv3.get_pos_col("start_date"), end_date_c = csv3.get_pos_col("end_date");
-    service_c = csv3.get_pos_col("service_id");
+        int start_date_c = csv3.get_pos_col("start_date"), end_date_c = csv3.get_pos_col("end_date");
+        service_c = csv3.get_pos_col("service_id");
 
 
-    while(!csv3.eof()) {
-        auto row = csv3.next();
-        if(!row.empty()) {
-            if(services.find(row[service_c]) != services.end()) {
-                boost::gregorian::date current_start_date = boost::gregorian::from_undelimited_string(row[start_date_c]);
-                boost::gregorian::date current_end_date = boost::gregorian::from_undelimited_string(row[end_date_c]);
+        while(!csv3.eof()) {
+            auto row = csv3.next();
+            if(!row.empty()) {
+                if(services.find(row[service_c]) != services.end()) {
+                    boost::gregorian::date current_start_date = boost::gregorian::from_undelimited_string(row[start_date_c]);
+                    boost::gregorian::date current_end_date = boost::gregorian::from_undelimited_string(row[end_date_c]);
 
-                if(current_start_date < start_date){
-                    start_date = current_start_date;
-                }
-                if(current_end_date > end_date){
-                    end_date = current_end_date;
+                    if(current_start_date < start_date){
+                        start_date = current_start_date;
+                    }
+                    if(current_end_date > end_date){
+                        end_date = current_end_date;
+                    }
                 }
             }
         }
     }
+
     filename = path + "/calendar_dates.txt";
     CsvReader csv4(filename, ',' , true);
     if(!csv4.is_open()) {
-        LOG4CPLUS_WARN(logger, "Aucun fichier " + filename);
-        return basic_production_date(beginning_date);
-    }
-
-    mandatory_headers = {"service_id" , "date", "exception_type"};
-    if(!csv4.validate(mandatory_headers)) {
-        LOG4CPLUS_WARN(logger, "Erreur lors du parsing de " + filename 
-                  + ". Il manque les colonnes : " 
-                  + csv4.missing_headers(mandatory_headers));
-        return basic_production_date(beginning_date);
-    }
-
-    int date_c = csv4.get_pos_col("date");
-        service_c = csv4.get_pos_col("service_id");
-
-    while(!csv4.eof()) {
-        auto row = csv4.next();
-        if(!row.empty() && services.find(row[service_c]) != services.end()) {
-            boost::gregorian::date current_date = boost::gregorian::from_undelimited_string(row[date_c]);
-            if(current_date < start_date){
-                start_date = current_date;
-            }
-            if(current_date > end_date){
-                end_date = current_date;
+        if(calendar_txt_exists)
+            LOG4CPLUS_WARN(logger, "Aucun fichier " + filename);
+        else
+            LOG4CPLUS_FATAL(logger, "Aucun fichiers " + filename + " ni calendar.txt");
+    } else {
+        mandatory_headers = {"service_id" , "date", "exception_type"};
+        if(!csv4.validate(mandatory_headers)) {
+            LOG4CPLUS_WARN(logger, "Erreur lors du parsing de " + filename 
+                    + ". Il manque les colonnes : " 
+                    + csv4.missing_headers(mandatory_headers));
+            return basic_production_date(beginning_date);
+        }
+        int date_c = csv4.get_pos_col("date");
+            service_c = csv4.get_pos_col("service_id");
+        while(!csv4.eof()) {
+            auto row = csv4.next();
+            if(!row.empty() && services.find(row[service_c]) != services.end()) {
+                boost::gregorian::date current_date = boost::gregorian::from_undelimited_string(row[date_c]);
+                if(current_date < start_date){
+                    start_date = current_date;
+                }
+                if(current_date > end_date){
+                    end_date = current_date;
+                }
             }
         }
+
     }
+ 
 
     boost::gregorian::date b_date(boost::gregorian::min_date_time);
     if(beginning_date != "")
