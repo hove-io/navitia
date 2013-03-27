@@ -35,7 +35,6 @@ struct Autocomplete
         int nb_found;
         int word_len;
         int quality;
-        //int penalty;
         navitia::type::GeographicalCoord coord;
         int house_number;
 
@@ -241,7 +240,7 @@ struct Autocomplete
 
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant au moins un des mots*/
     std::vector<fl_quality> find_complete(const std::string & str, const std::map<std::string, std::string> & map_alias,
-                                                    const std::map<std::string, std::string> & map_synonymes, const int wordweight) const{
+                                                    const std::map<std::string, std::string> & map_synonymes, const int wordweight, const int nbmax) const{
         std::vector<std::string> vec = tokenize(str, map_alias, map_synonymes);
         int wordCount = 0;
         int wordLength = 0;
@@ -260,9 +259,18 @@ struct Autocomplete
             quality.quality = calc_quality(quality, wordweight);
             vec_quality.push_back(quality);
         }
+        typename std::vector<fl_quality>::iterator middle_iterator;
+        if((unsigned)nbmax < vec_quality.size())
+            middle_iterator = vec_quality.begin() + nbmax;
+        else
+            middle_iterator = vec_quality.end();
+        std::partial_sort(vec_quality.begin(), middle_iterator, vec_quality.end());
 
-        std::sort(vec_quality.begin(), vec_quality.end());
+        //TODO truncate avec nbmax
+        if (vec_quality.size() > (unsigned)nbmax){vec_quality.resize(nbmax);}
+
         return vec_quality;
+
     }
 
 

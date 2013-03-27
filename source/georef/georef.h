@@ -213,7 +213,7 @@ struct GeoRef {
     void build_pois();
 
     /// Recherche d'une adresse avec un numéro en utilisant Autocomplete
-    std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str) const;
+    std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax) const;
 
 
     /** Projete chaque stop_point sur le filaire de voirie */

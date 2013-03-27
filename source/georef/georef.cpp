@@ -110,10 +110,10 @@ nt::GeographicalCoord Way::nearest_coord(const int number, const Graph& graph){
     /// "house_number_left" doit contenir les numéros impairs
     /// et les deux listes doivent être trier par numéro croissant
 
-    if (((this->house_number_right.size() == 0) && (this->house_number_left.size() == 0))
-        || ((this->house_number_right.size() == 0) && (number % 2 == 0))
-        || ((this->house_number_left.size() == 0) && (number % 2 != 0))
-            || (number <= 0))
+    if (( this->house_number_right.empty() && this->house_number_left.empty() )
+            || (this->house_number_right.empty() && number % 2 == 0)
+            || (this->house_number_left.empty() && number % 2 != 0)
+            || number <= 0)
         return barycentre(graph);
 
     if (number % 2 == 0) // Pair
@@ -366,22 +366,22 @@ void GeoRef::build_pois(){
     * Si le numéro est rensigné, on renvoie les coordonnées les plus proches
     * Sinon le barycentre de la rue
 */
-std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string & str) const{
+std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string & str, const int nbmax) const{
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> to_return;
     boost::tokenizer<> tokens(str);
-    auto token_it = tokens.begin();
-    int search_number = str_to_int(*token_it);
+
+    int search_number = str_to_int(*tokens.begin());
     std::string search_str;
 
     if (search_number != -1){
         search_str = "";
-        for(++token_it; token_it != tokens.end(); ++token_it){
-            search_str = search_str + " " + (*token_it);
+        for(auto token : tokens){
+            search_str = search_str + " " + token;
         }
     }else{
         search_str = str;
     }
-    to_return = fl_way.find_complete(search_str, alias, synonymes, word_weight);
+    to_return = fl_way.find_complete(search_str, alias, synonymes, word_weight, nbmax);
 
     /// récupération des coordonnées du numéro recherché pour chaque rue
     for(auto &result_item  : to_return){
