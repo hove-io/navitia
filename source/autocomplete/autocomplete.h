@@ -336,12 +336,38 @@ struct Autocomplete
         return result;
     }
 
+    std::string strip_accents(std::string str) const {
+        std::vector< std::pair<std::string, std::string> > vec_str;
+        vec_str.push_back(std::make_pair("à","a"));
+        vec_str.push_back(std::make_pair("â","a"));
+        vec_str.push_back(std::make_pair("æ","ae"));
+        vec_str.push_back(std::make_pair("é","e"));
+        vec_str.push_back(std::make_pair("è","e"));
+        vec_str.push_back(std::make_pair("ê","e"));
+        vec_str.push_back(std::make_pair("ô","o"));
+        vec_str.push_back(std::make_pair("û","u"));
+        vec_str.push_back(std::make_pair("ù","u"));
+        vec_str.push_back(std::make_pair("ç","c"));
+        vec_str.push_back(std::make_pair("ï","i"));
+        vec_str.push_back(std::make_pair("œ","oe"));
+
+        auto vec = vec_str.begin();
+        while(vec != vec_str.end()){
+            boost::algorithm::replace_all(str, vec->first, vec->second);
+            ++vec;
+        }
+        return str;
+    }
+
     std::vector<std::string> tokenize(const std::string & str,  const std::map<std::string, std::string> & map_alias,
                                       const std::map<std::string, std::string> & map_synonymes) const{
         std::vector<std::string> vec;
         std::string strToken;
         std::string strFind = str;
         boost::to_lower(strFind);
+
+        //traiter les caractères accentués
+        strFind = strip_accents(strFind);
 
         // Remplacer les synonymes qui existent dans le MAP
         std::map<std::string, std::string>::const_iterator it = map_synonymes.begin();
@@ -361,6 +387,7 @@ struct Autocomplete
         }
         return vec;
     }
+
 
     bool is_address_type(const std::string & str,  const std::map<std::string, std::string> & map_alias,
                           const std::map<std::string, std::string> & map_synonymes) const{
