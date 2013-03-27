@@ -263,10 +263,11 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
                 stop_map[sp->uri] = sp;
                 data.stop_points.push_back(sp);
                 if(parent_c!=-1 && row[parent_c] != "") {// On sauvegarde la référence à la zone d'arrêt
-                    if(sa_spmap.find(row[parent_c]) == sa_spmap.end()) {
-                        sa_spmap.insert(std::make_pair(row[parent_c], vector_sp()));
+                    auto it = sa_spmap.find(row[parent_c]);
+                    if( it == sa_spmap.end()) {
+                        it = sa_spmap.insert(std::make_pair(row[parent_c], vector_sp())).first;
                     }
-                    sa_spmap[row[parent_c]].push_back(sp);
+                    it->second.push_back(sp);
                 }
             }
         }
@@ -274,8 +275,10 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
 
     // On reboucle pour récupérer les stop areas de tous les stop points
     for(auto sa_sps : sa_spmap) {
-        if(stop_area_map.find(sa_sps.first) != stop_area_map.end()) {
-            auto it = stop_area_map.find(sa_sps.first);
+        if(sa_sps.first == "VTN|SevTur|parent")
+            std::cout << "DEBUG" << std::endl;
+        auto it = stop_area_map.find(sa_sps.first);
+        if(it != stop_area_map.end()) {
             for(auto sp : sa_sps.second) {
                 sp->stop_area = it->second;
             }
@@ -401,7 +404,7 @@ void GtfsParser::parse_calendar(Data & data, CsvReader & csv) {
     while(!csv.eof()) {
         auto row = csv.next();
         if(row.empty())
-            break;
+            continue;
         nblignes ++;
         nm::ValidityPattern * vp;
         std::unordered_map<std::string, nm::ValidityPattern*>::iterator it= vp_map.find(row[id_c]);
@@ -440,10 +443,10 @@ void GtfsParser::parse_calendar(Data & data, CsvReader & csv) {
             vp = it->second;
         }
     }
-    BOOST_ASSERT(data.validity_patterns.size() == vp_map.size());
     LOG4CPLUS_TRACE(logger, "Nombre de validity patterns : " +
             boost::lexical_cast<std::string>(data.validity_patterns.size())+"nb lignes : " +
             boost::lexical_cast<std::string>(nblignes));
+    BOOST_ASSERT(data.validity_patterns.size() == vp_map.size());
 
 }
 
@@ -462,7 +465,7 @@ void GtfsParser::parse_calendar_dates(Data & data, CsvReader & csv){
     while(!csv.eof()) {
         auto row = csv.next();
         if(row.empty())
-            break;
+            continue;
         nm::ValidityPattern * vp;
         std::unordered_map<std::string, nm::ValidityPattern*>::iterator it= vp_map.find(row[id_c]);
         if(it == vp_map.end()){
@@ -482,8 +485,11 @@ void GtfsParser::parse_calendar_dates(Data & data, CsvReader & csv){
         else
             LOG4CPLUS_WARN(logger, "Exception pour le service " + row[id_c] + " inconnue : " + row[e_type_c]);
     }
-    BOOST_ASSERT(data.validity_patterns.size() == vp_map.size());
     LOG4CPLUS_TRACE(logger, "Nombre de validity patterns : " + boost::lexical_cast<std::string>(data.validity_patterns.size()));
+    BOOST_ASSERT(data.validity_patterns.size() == vp_map.size());
+    if(data.validity_patterns.empty())
+        LOG4CPLUS_FATAL(logger, "Pas de validity_patterns");
+
 }
 
 
