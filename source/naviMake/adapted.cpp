@@ -36,6 +36,59 @@ void delete_vj(types::VehicleJourney* vehicle_journey, const nt::Message& messag
 
 }
 
+std::vector<types::StopTime*> get_stop_from_impact(const navitia::type::Message& message, bg::date current_date, std::vector<types::StopTime*> stoplist){
+    std::vector<types::StopTime*> result;
+    pt::ptime currenttime;
+    if(message.object_type == navitia::type::Type_e::StopPoint){
+        for(auto stop : stoplist){
+            currenttime = pt::ptime(current_date, pt::seconds(stop->departure_time));
+            if((stop->tmp_stop_point->uri == message.object_uri) && (message.is_applicable(pt::time_period(currenttime, pt::seconds(1))))){
+                result.push_back(stop);
+            }
+        }
+    }
+    if(message.object_type == navitia::type::Type_e::StopArea){
+        for(auto stop : stoplist){
+            currenttime = pt::ptime(current_date, pt::seconds(stop->departure_time));
+            if((stop->tmp_stop_point->stop_area->uri == message.object_uri)&& (message.is_applicable(pt::time_period(currenttime, pt::seconds(1))))){
+                result.push_back(stop);
+            }
+        }
+    }
+    return result;
+}
+
+void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& message, Data& data){
+    types::VehicleJourney* vjadapted = NULL;
+    for(size_t i=0; i < vehicle_journey->validity_pattern->days.size(); ++i){
+        bg::date current_date = vehicle_journey->validity_pattern->beginning_date + bg::days(i);
+        if(!vehicle_journey->validity_pattern->check(i) || current_date < message.application_period.begin().date()
+                || current_date > message.application_period.end().date()){
+            continue;
+        }
+
+        std::vector<types::StopTime*> impacted_stop = get_stop_from_impact(message, current_date, vehicle_journey->stop_time_list);
+        if((vjadapted == NULL) && (impacted_stop.size()!=0)){
+            vjadapted = new types::VehicleJourney(*vehicle_journey);
+            data.vehicle_journeys.push_back(vjadapted);
+            vjadapted->is_adapted = true;
+            vjadapted->theoric_vehicle_journey = vehicle_journey;
+            vehicle_journey->adapted_vehicle_journey_list.push_back(vjadapted);
+            vjadapted->validity_pattern = new types::ValidityPattern(vehicle_journey->validity_pattern->beginning_date);
+            data.validity_patterns.push_back(vjadapted->validity_pattern);
+
+            vjadapted->adapted_validity_pattern = new types::ValidityPattern(vjadapted->validity_pattern->beginning_date);
+            data.validity_patterns.push_back(vjadapted->adapted_validity_pattern);
+        }
+        for(auto stoptmp : impacted_stop){
+            std::vector<types::StopTime*>::iterator it = std::find(vjadapted->stop_time_list.begin(), vjadapted->stop_time_list.end(), stoptmp);
+            if(it != vjadapted->stop_time_list.end()){
+                vjadapted->stop_time_list.erase(it);
+            }
+        }
+        vjadapted->adapted_validity_pattern->remove(current_date);
+    }
+}
 
 void AtAdaptedLoader::init_map(const Data& data){
     for(auto* vj : data.vehicle_journeys){
@@ -86,22 +139,99 @@ void AtAdaptedLoader::apply(const std::map<std::string, std::vector<navitia::typ
     }
     std::cout << "nombre de VJ impactés: " << vj_messages_mapping.size() << std::endl;
     for(auto pair : vj_messages_mapping){
-        apply_on_vj(pair.first, pair.second, data);
+        apply_on_vj(pair.first, pair.second, data, false);
     }
 
 }
 
-void AtAdaptedLoader::apply_on_vj(types::VehicleJourney* vehicle_journey, const std::vector<navitia::type::Message>& messages, Data& data){
+void AtAdaptedLoader::apply_on_vj(types::VehicleJourney* vehicle_journey, const std::vector<navitia::type::Message>& messages, Data& data, const bool& duplicatevj){
     for(nt::Message m : messages){
-        if(m.object_type == nt::Type_e::VehicleJourney || m.object_type == nt::Type_e::Line
-                || m.object_type == nt::Type_e::Route || m.object_type == nt::Type_e::Network){
-            if(vehicle_journey->stop_time_list.size() > 0){
-                delete_vj(vehicle_journey, m, data);
-
+        if(vehicle_journey->stop_time_list.size() > 0){
+            delete_vj(vehicle_journey, m, data);
+            if(duplicatevj){
+                duplicate_vj(vehicle_journey, m, data);
             }
         }
     }
+}
 
+std::vector<types::VehicleJourney*> AtAdaptedLoader::get_vj_from_stoppoint(std::string stoppoint_uri, const Data& data){
+    std::vector<types::VehicleJourney*> result;
+    for(navimake::types::JourneyPatternPoint* jpp : data.journey_pattern_points){
+        if(jpp->stop_point->uri == stoppoint_uri){
+            //le journeypattern posséde le StopPoint
+            navimake::types::JourneyPattern* jp = jpp->journey_pattern;
+            //on récupere tous les vj qui posséde ce journeypattern
+            for(navimake::types::VehicleJourney* vj : data.vehicle_journeys){
+                if(vj->journey_pattern == jp){
+                    result.push_back(vj);
+                }
+            }
+        }
+    }
+    return result;
+}
+
+std::vector<types::VehicleJourney*> AtAdaptedLoader::get_vj_from_impact(const navitia::type::Message& message, const Data& data){
+    std::vector<types::VehicleJourney*> result;
+    if(message.object_type == navitia::type::Type_e::StopPoint){
+        auto tmp = get_vj_from_stoppoint(message.object_uri, data);
+        std::vector<types::VehicleJourney*>::iterator it;
+        result.insert(it, tmp.begin(), tmp.end());
+    }
+    if(message.object_type == navitia::type::Type_e::StopArea){
+        for(navimake::types::StopPoint* stp : data.stop_points){
+            if(message.object_uri == stp->stop_area->uri){
+                auto tmp = get_vj_from_stoppoint(stp->uri, data);
+                std::vector<types::VehicleJourney*>::iterator it;
+                result.insert(it, tmp.begin(), tmp.end());
+            }
+        }
+    }
+    return result;
+}
+
+
+
+
+void AtAdaptedLoader::dispatch_message(const std::map<std::string, std::vector<navitia::type::Message>>& messages, const Data& data){
+    for(const std::pair<std::string, std::vector<navitia::type::Message>> & message_list : messages){
+        for(auto m : message_list.second){
+            //on recupére la liste des VJ associé(s) a l'uri du message
+            if(m.object_type == nt::Type_e::VehicleJourney || m.object_type == nt::Type_e::Route
+               || m.object_type == nt::Type_e::Line || m.object_type == nt::Type_e::Network){
+                std::vector<navimake::types::VehicleJourney*> vj_list = reconcile_impact_with_vj(m, data);
+                //on parcourt la liste des VJ associée au message
+                //et on associe le message au vehiclejourney
+                for(auto vj  : vj_list){
+                    update_vj_map[vj].push_back(m);
+                }
+
+            }else{
+                if(m.object_type == nt::Type_e::JourneyPatternPoint || m.object_type == nt::Type_e::StopPoint
+                   || m.object_type == nt::Type_e::StopArea){
+                    std::vector<navimake::types::VehicleJourney*> vj_list = get_vj_from_impact(m, data);
+                    for(auto vj  : vj_list){
+                        duplicate_vj_map[vj].push_back(m);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void AtAdaptedLoader::apply_b(const std::map<std::string, std::vector<navitia::type::Message>>& messages, Data& data){
+    init_map(data);
+
+    dispatch_message(messages, data);
+
+    std::cout << "nombre de VJ adaptés: " << update_vj_map.size() << std::endl;
+    for(auto pair : update_vj_map){
+        apply_on_vj(pair.first, pair.second, data, false);
+    }
+    for(auto pair : duplicate_vj_map){
+        apply_on_vj(pair.first, pair.second, data, true);
+    }
 }
 
 }//namespace
