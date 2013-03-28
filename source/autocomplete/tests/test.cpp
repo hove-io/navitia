@@ -63,6 +63,7 @@ BOOST_AUTO_TEST_CASE(parse_find_with_alias_and_synonymes_test){
     ac.add_string("boulevard poniatowski", 4, alias, synonymes);
     ac.add_string("pente de Bray", 5, alias, synonymes);
     ac.add_string("Centre Commercial Caluire 2", 6, alias, synonymes);
+    ac.add_string("Rue René", 7, alias, synonymes);
     ac.build();
 
     //Dans le dictionnaire : "hotel de ville paris" -> "mairie paris"
@@ -94,7 +95,13 @@ BOOST_AUTO_TEST_CASE(parse_find_with_alias_and_synonymes_test){
     BOOST_REQUIRE_EQUAL(res3.size(), 1);
     BOOST_REQUIRE_EQUAL(res3.at(0).quality, 95);
 
+    auto res4 = ac.find_complete("rue rene",alias, synonymes,word_weight, nbmax);
+    BOOST_REQUIRE_EQUAL(res4.size(), 1);
+    BOOST_REQUIRE_EQUAL(res4.at(0).quality, 100);
 
+    auto res5 = ac.find_complete("rue rené",alias, synonymes,word_weight, nbmax);
+    BOOST_REQUIRE_EQUAL(res5.size(), 1);
+    BOOST_REQUIRE_EQUAL(res5.at(0).quality, 100);
 }
 
 BOOST_AUTO_TEST_CASE(regex_tests){
@@ -106,6 +113,14 @@ BOOST_AUTO_TEST_CASE(regex_tests){
     BOOST_CHECK(!boost::regex_search("c ca", re));
     BOOST_CHECK(boost::regex_search("c c'a", re));
     BOOST_CHECK(boost::regex_search("a c c a", re));
+}
+
+BOOST_AUTO_TEST_CASE(regex_strip_accents_tests){
+    std::map<char, char> map_accents;
+
+    Autocomplete<unsigned int> ac;
+    std::string test("républiquê");
+    BOOST_CHECK_EQUAL(ac.strip_accents(test) ,"republique");
 }
 
 
@@ -146,7 +161,7 @@ BOOST_AUTO_TEST_CASE(regex_toknize_tests){
     vec = ac.tokenize("cc Carré de Soie", alias, synonymes);
     BOOST_CHECK_EQUAL(vec[0], "centre");
     BOOST_CHECK_EQUAL(vec[1], "commercial");
-    BOOST_CHECK_EQUAL(vec[2], "carré");
+    BOOST_CHECK_EQUAL(vec[2], "carre");
     BOOST_CHECK_EQUAL(vec[3], "soie");
 
     vec.clear();
@@ -155,7 +170,7 @@ BOOST_AUTO_TEST_CASE(regex_toknize_tests){
     vec = ac.tokenize("c c Carré de Soie", alias, synonymes);
     BOOST_CHECK_EQUAL(vec[0], "centre");
     BOOST_CHECK_EQUAL(vec[1], "commercial");
-    BOOST_CHECK_EQUAL(vec[2], "carré");
+    BOOST_CHECK_EQUAL(vec[2], "carre");
     BOOST_CHECK_EQUAL(vec[3], "soie");
 }
 
