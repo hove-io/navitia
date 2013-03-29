@@ -86,7 +86,9 @@ void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& mes
                 vjadapted->stop_time_list.erase(it);
             }
         }
-        vjadapted->adapted_validity_pattern->remove(current_date);
+        if(impacted_stop.size()!=0){
+            vjadapted->adapted_validity_pattern->add(current_date);
+        }
     }
 }
 
