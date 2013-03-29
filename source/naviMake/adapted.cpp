@@ -64,7 +64,10 @@ void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& mes
     //faux car on ne pas appilquer 2 messages différent sur un même jour, mais comment détecter le vj supprimé
     for(size_t i=0; i < vehicle_journey->validity_pattern->days.size(); ++i){
         bg::date current_date = vehicle_journey->validity_pattern->beginning_date + bg::days(i);
-        if(!vehicle_journey->validity_pattern->check(i) || current_date < message.application_period.begin().date()
+        if(!vehicle_journey->validity_pattern->check(i) ||
+                //le vj a été supprimé par un message de suppression
+                (!vehicle_journey->adapted_validity_pattern->check((current_date- vehicle_journey->adapted_validity_pattern->beginning_date).days()) && (vehicle_journey->adapted_vehicle_journey_list.size()==0))
+                || current_date < message.application_period.begin().date()
                 || current_date > message.application_period.end().date()){
             continue;
         }
