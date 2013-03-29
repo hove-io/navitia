@@ -308,7 +308,7 @@ struct ProjectionData {
     ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, const proximitylist::ProximityList<vertex_t> &prox);
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & source & target & projected & source_distance & target_distance;
+        ar & source & target & projected & source_distance & target_distance & found;
     }
 };
 
