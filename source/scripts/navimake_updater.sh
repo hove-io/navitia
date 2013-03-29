@@ -82,6 +82,10 @@ do
         fi 
     fi
     
+    if [ -d "$alias" ]
+    then
+        navimake_options = "$navimake_options --alias $navimake_options "
+    fi
 
     `$navimake -i $temp_dir -o $data_dir/$data_filename $navimake_options >> "$temp_dir/bina.log" 2>&1`
     if [ $? -ne 0 ]
