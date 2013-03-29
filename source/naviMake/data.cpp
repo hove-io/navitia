@@ -230,10 +230,6 @@ void Data::build_relations(navitia::type::PT_Data &data){
             navitia::type::StopArea & sa = data.stop_areas[sp.stop_area_idx];
             sa.stop_point_list.push_back(sp.idx);
         }
-        if(sp.city_idx != navitia::type::invalid_idx) {
-            navitia::type::City & city = data.cities.at(sp.city_idx);
-            city.stop_point_list.push_back(sp.idx);
-        }
     }
 
     BOOST_FOREACH(navitia::type::Line & line, data.lines){
@@ -424,6 +420,7 @@ void Data::build_journey_pattern_point_connections(){
         if(vj->block_id != "")
             block_vj.insert(std::make_pair(vj->block_id, vj));
     }
+    // Gestion des admins
 
     std::string prec_block = "";
     for(auto it = block_vj.begin(); it!=block_vj.end(); ++it) {

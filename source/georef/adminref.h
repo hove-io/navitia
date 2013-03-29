@@ -2,10 +2,13 @@
 #include <unordered_map>
 #include "type/type.h"
 
+
+
 namespace nt = navitia::type;
 namespace navitia {
 
     namespace georef {
+        typedef boost::geometry::model::polygon<navitia::type::GeographicalCoord> polygon_type;
         struct Levels{
             std::map<std::string, std::string> LevelList;
             Levels(){
@@ -13,7 +16,7 @@ namespace navitia {
 //                LevelList["4"]="Région";
 //                LevelList["6"]="Département";
                 LevelList["8"]="Commune";
-//                LevelList["10"]="Quartier";
+                LevelList["10"]="Quartier";
             }
         };
 
@@ -29,7 +32,7 @@ namespace navitia {
             std::string post_code;
             std::string insee;
             nt::GeographicalCoord coord;
-            std::vector<nt::GeographicalCoord> boundary;            
+            polygon_type boundary;
 
             Admin():level(-1){}
             Admin(int lev):level(lev){}
@@ -37,16 +40,5 @@ namespace navitia {
                 ar & idx & level & post_code & insee & name & idx & uri & coord ;
             }
         };
-/*
-
-
-        struct AdminRef{
-            std::vector<Admin> admin;
-
-            AdminRef(){}
-            template<class Archive> void serialize(Archive & ar, const unsigned int ){
-                ar & admin;
-            }
-        };*/
     }
 }

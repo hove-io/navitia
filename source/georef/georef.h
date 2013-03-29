@@ -12,6 +12,7 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <map>
 
+
 namespace nt = navitia::type;
 namespace nf = navitia::autocomplete;
 
@@ -62,6 +63,7 @@ typedef boost::graph_traits<Graph>::vertex_iterator vertex_iterator;
 /// Type itérateur sur les arcs du graphe
 typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
 
+
 /** le numéro de la maison :
     il représente un point dans la rue, voie */
 struct HouseNumber{
@@ -94,15 +96,16 @@ struct POI : public nt::Nameable, nt::NavitiaHeader{
 public:
     int weight;
     nt::GeographicalCoord coord;
-    std::string city;
-    nt::idx_t city_idx;
+//    std::string city;
+//    nt::idx_t city_idx;
+    std::vector<nt::idx_t> admins;
     std::string poitype;
     nt::idx_t poitype_idx;
 
-    POI(): weight(0), city(""), city_idx(-1), poitype(""), poitype_idx(-1){}
+    POI(): weight(0), poitype(""), poitype_idx(-1){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar &idx & uri & idx &name & weight & coord & city & city_idx & poitype & poitype_idx;
+        ar &idx & uri & idx &name & weight & coord & admins & poitype & poitype_idx;
     }
 
 private:
@@ -114,8 +117,9 @@ private:
 struct Way :public nt::Nameable, nt::NavitiaHeader{
 public:
     std::string way_type;
-    std::string city;
-    nt::idx_t city_idx;
+    // liste des admins
+    std::vector<nt::idx_t> admins;
+
     std::vector< HouseNumber > house_number_left;
     std::vector< HouseNumber > house_number_right;
     std::vector< std::pair<vertex_t, vertex_t> > edges;
@@ -125,7 +129,7 @@ public:
     int nearest_number(const nt::GeographicalCoord& );
     nt::GeographicalCoord barycentre(const Graph& );
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-      ar & idx & name & comment & uri & way_type & city & city_idx & house_number_left & house_number_right & edges;
+      ar & idx & name & comment & uri & way_type & admins & house_number_left & house_number_right & edges;
     }
 
 private:
@@ -165,7 +169,11 @@ struct GeoRef {
     std::vector<Way> ways;
     std::map<std::string, nt::idx_t> way_map;
     /// données administratives
+    std::map<std::string, nt::idx_t> admin_map;
     std::vector<Admin> admins;
+
+    /// Indexe sur les noms de voirie
+    autocomplete::Autocomplete<unsigned int> fl_admin;
 
     /// Indexe sur les noms de voirie
     autocomplete::Autocomplete<unsigned int> fl_way;
@@ -189,18 +197,20 @@ struct GeoRef {
 
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & ways & way_map & graph & fl_way & pl & projected_stop_points & admins &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes;
+        ar & ways & way_map & graph & fl_admin & fl_way & pl & projected_stop_points & admins &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes;
     }
 
     template<class Archive> void load(Archive & ar, const unsigned int) {
         // La désérialisation d'une boost adjacency list ne vide pas le graphe
         // On avait donc une fuite de mémoire
         graph.clear();
-        ar & ways & way_map & graph & fl_way & pl & projected_stop_points & admins &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes;
+        ar & ways & way_map & graph & fl_admin &fl_way & pl & projected_stop_points & admins &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
+
     /// Récupération des la listes des admins à partir des cooredonnées
-    std::vector<Admin> Within(const type::GeographicalCoord &);
+    std::vector<navitia::type::idx_t> Within(const type::GeographicalCoord &);
+
     /** Construit l'indexe spatial */
     void build_proximity_list();
 
@@ -209,11 +219,15 @@ struct GeoRef {
 
     /// Normalisation des codes externes
     void normalize_extcode_way();
+    /// Normalisation des codes externes des admins
+    void normalize_extcode_admin();
     /// Chargement de la liste map code externe idx
     void build_ways();
     ///Chargement de la liste map code externe idx sur poitype et poi
     void build_poitypes();
     void build_pois();
+    /// Chargement de la liste map code externe idx
+    void build_admins();
 
     /// Recherche d'une adresse avec un numéro en utilisant Autocomplete
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax) const;

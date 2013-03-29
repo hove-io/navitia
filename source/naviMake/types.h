@@ -342,12 +342,11 @@ struct StopPoint : public TransmodelHeader, Nameable, hasProperties{
     std::string address_type_name;
 
     StopArea* stop_area;
-    City* city;
     Network* network;
 
     bool wheelchair_boarding;
 
-    StopPoint(): fare_zone(0), stop_area(NULL), city(NULL), network(NULL), wheelchair_boarding(false) {}
+    StopPoint(): fare_zone(0), stop_area(NULL), network(NULL), wheelchair_boarding(false) {}
 
     nt::StopPoint get_navitia_type() const;
 

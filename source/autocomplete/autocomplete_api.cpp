@@ -28,6 +28,11 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
             item->set_uri(data.pt_data.cities[result_item.idx].uri);
             item->set_quality(result_item.quality);
             break;
+        case nt::Type_e::Admin:
+            place_mark->set_type(pbnavitia::ADMIN);
+            fill_pb_object(result_item.idx, data, place_mark->mutable_admin(), depth);
+            item->set_quality(result_item.quality);
+            break;
         case nt::Type_e::StopPoint:
             place_mark->set_type(pbnavitia::STOP_POINT);
             fill_pb_object(result_item.idx, data, place_mark->mutable_stop_point(), depth);
@@ -37,7 +42,6 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
             break;
         case nt::Type_e::Address:
             place_mark->set_type(pbnavitia::ADDRESS);
-            //fill_pb_object(result_item.idx, data, place_mark->mutable_way(), 2);
             fill_pb_object(result_item.idx, data, place_mark->mutable_address(), result_item.house_number,result_item.coord, depth);
             item->set_name(data.geo_ref.ways[result_item.idx].name);
             item->set_uri(data.geo_ref.ways[result_item.idx].uri+":"+boost::lexical_cast<std::string>(result_item.house_number));
@@ -114,6 +118,9 @@ pbnavitia::Response autocomplete(const std::string &name,
             break;
         case nt::Type_e::City:
             result = d.pt_data.city_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
+            break;
+        case nt::Type_e::Admin:
+            result = d.geo_ref.fl_admin.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
             break;
         case nt::Type_e::Address:
             result = d.geo_ref.find_ways(name, nbmax);

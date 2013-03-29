@@ -13,11 +13,14 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/register/linestring.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+
 
 namespace mpl = boost::mpl;
 
 namespace navitia { namespace type {
 typedef uint32_t idx_t;
+
 const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
 
 // Types qui sont exclus : JourneyPatternPointConnection
@@ -65,7 +68,8 @@ enum class Type_e {
     Address = 22,
     Coord = 20,
     Unknown = 18,
-    Way = 19
+    Way = 19,
+    Admin=21
 };
 struct PT_Data;
 template<class T> std::string T::* name_getter(){return &T::name;}
@@ -282,15 +286,15 @@ struct StopArea : public NavitiaHeader, Nameable, hasProperties{
     const static Type_e type = Type_e::StopArea;
     GeographicalCoord coord;
     std::string additional_data;
-    idx_t city_idx;
+    std::vector<idx_t> admin_list;
     bool wheelchair_boarding;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & uri & name & city_idx & coord & stop_point_list &
+        ar & id & idx & uri & name & coord & stop_point_list & admin_list &
             wheelchair_boarding;
     }
 
-    StopArea(): city_idx(invalid_idx), wheelchair_boarding(false) {}
+    StopArea(): wheelchair_boarding(false) {}
 
     std::vector<idx_t> stop_point_list;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -509,15 +513,16 @@ struct StopPoint : public NavitiaHeader, Nameable, hasProperties{
     std::string address_type_name;
 
     idx_t stop_area_idx;
-    idx_t city_idx;
+//    idx_t city_idx;
+    std::vector<idx_t> admin_list;
     idx_t network_idx;
     std::vector<idx_t> journey_pattern_point_list;
     bool wheelchair_boarding;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & uri & name & stop_area_idx & coord & fare_zone & idx & journey_pattern_point_list & wheelchair_boarding;
+        ar & uri & name & stop_area_idx & coord & fare_zone & idx & journey_pattern_point_list & wheelchair_boarding & admin_list;
     }
 
-    StopPoint(): fare_zone(0),  stop_area_idx(invalid_idx), city_idx(invalid_idx), network_idx(invalid_idx), wheelchair_boarding(false) {}
+    StopPoint(): fare_zone(0),  stop_area_idx(invalid_idx), network_idx(invalid_idx), wheelchair_boarding(false) {}
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
