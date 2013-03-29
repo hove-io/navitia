@@ -225,7 +225,7 @@ void Data::transform(navitia::type::PT_Data& data){
 }
 
 void Data::build_relations(navitia::type::PT_Data &data){
-    BOOST_FOREACH(navitia::type::StopPoint & sp, data.stop_points){
+    for(navitia::type::StopPoint & sp : data.stop_points){
         if(sp.stop_area_idx != navitia::type::invalid_idx) {
             navitia::type::StopArea & sa = data.stop_areas[sp.stop_area_idx];
             sa.stop_point_list.push_back(sp.idx);
@@ -236,24 +236,24 @@ void Data::build_relations(navitia::type::PT_Data &data){
         }
     }
 
-    BOOST_FOREACH(navitia::type::Line & line, data.lines){
+    for(navitia::type::Line & line : data.lines){
         if(line.commercial_mode_idx != navitia::type::invalid_idx)
             data.commercial_modes.at(line.commercial_mode_idx).line_list.push_back(line.idx);
         if(line.network_idx != navitia::type::invalid_idx)
             data.networks.at(line.network_idx).line_list.push_back(line.idx);
     }
 
-    BOOST_FOREACH(navitia::type::City & city, data.cities){
+    for(navitia::type::City & city : data.cities){
         if(city.department_idx != navitia::type::invalid_idx)
             data.departments.at(city.department_idx).city_list.push_back(city.idx);
     }
 
-    BOOST_FOREACH(navitia::type::District & district, data.districts){
+    for(navitia::type::District & district : data.districts){
         if(district.country_idx != navitia::type::invalid_idx)
             data.countries.at(district.country_idx).district_list.push_back(district.idx);
     }
 
-    BOOST_FOREACH(navitia::type::Department & department, data.departments) {
+    for(navitia::type::Department & department : data.departments) {
         if(department.district_idx != navitia::type::invalid_idx)
             data.districts.at(department.district_idx).department_list.push_back(department.idx);
     }
@@ -262,16 +262,16 @@ void Data::build_relations(navitia::type::PT_Data &data){
 
     //BOOST_FOREACH(navitia::type::Connection & connection, data.connections){}
 
-    BOOST_FOREACH(navitia::type::JourneyPatternPoint & journey_pattern_point, data.journey_pattern_points){
+    for(navitia::type::JourneyPatternPoint & journey_pattern_point : data.journey_pattern_points){
         data.journey_patterns.at(journey_pattern_point.journey_pattern_idx).journey_pattern_point_list.push_back(journey_pattern_point.idx);
         data.stop_points.at(journey_pattern_point.stop_point_idx).journey_pattern_point_list.push_back(journey_pattern_point.idx);
     }
 
-    BOOST_FOREACH(navitia::type::StopTime & st, data.stop_times){
+    for(navitia::type::StopTime & st : data.stop_times){
         data.vehicle_journeys.at(st.vehicle_journey_idx).stop_time_list.push_back(st.idx);
     }
 
-    BOOST_FOREACH(navitia::type::JourneyPattern & journey_pattern, data.journey_patterns){
+    for(navitia::type::JourneyPattern & journey_pattern : data.journey_patterns){
         if(journey_pattern.route_idx != navitia::type::invalid_idx)
             data.routes.at(journey_pattern.route_idx).journey_pattern_list.push_back(journey_pattern.idx);
         std::sort(journey_pattern.journey_pattern_point_list.begin(), journey_pattern.journey_pattern_point_list.end(), sort_journey_pattern_points_list(data));
@@ -283,7 +283,7 @@ void Data::build_relations(navitia::type::PT_Data &data){
             data.lines.at(route.line_idx).route_list.push_back(route.idx);
     }
 
-    BOOST_FOREACH(navitia::type::VehicleJourney & vj, data.vehicle_journeys){
+    for(navitia::type::VehicleJourney & vj : data.vehicle_journeys){
         data.journey_patterns[vj.journey_pattern_idx].vehicle_journey_list.push_back(vj.idx);
 
 
@@ -381,9 +381,9 @@ void Data::build_journey_pattern_points(){
     std::map<std::string, navimake::types::JourneyPatternPoint*> journey_pattern_point_map;
 
     int stop_seq;
-    BOOST_FOREACH(types::VehicleJourney * vj, this->vehicle_journeys){
+    for(types::VehicleJourney * vj : this->vehicle_journeys){
         stop_seq = 0;
-        BOOST_FOREACH(types::StopTime * stop_time, vj->stop_time_list){
+        for(types::StopTime * stop_time : vj->stop_time_list){
             std::string journey_pattern_point_extcode = vj->journey_pattern->uri + ":" + stop_time->tmp_stop_point->uri+":"+boost::lexical_cast<std::string>(stop_seq);
             auto journey_pattern_point_it = journey_pattern_point_map.find(journey_pattern_point_extcode);
             types::JourneyPatternPoint * journey_pattern_point;
