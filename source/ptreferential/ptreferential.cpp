@@ -35,9 +35,9 @@ namespace qi = boost::spirit::qi;
 
     select_r() : select_r::base_type(filter) {
         // Attention, le - dans un qi::char_ *peut* avoir une signification particulière telle que a-z
-        word = qi::lexeme[+(qi::alnum|qi::char_("_:-"))];
-        text = qi::lexeme[+(qi::alnum|qi::char_("_:-=.<> "))];
-        escaped_string = '"' >> qi::lexeme[+(qi::alnum|qi::char_("_: &.-"))] >> '"';
+        word = qi::lexeme[+(qi::alnum|qi::char_("_:\x7c-"))];
+        text = qi::lexeme[+(qi::alnum|qi::char_("_:-=.<> \x7c"))];
+        escaped_string = '"' >> qi::lexeme[+(qi::alnum|qi::char_("_: &.\x7c-"))] >> '"';
         bracket_string = '(' >> qi::lexeme[+(qi::alnum|qi::char_("_: &,.-"))] >> ')';
         bin_op =  qi::string("<=")[qi::_val = LEQ]
                 | qi::string(">=")[qi::_val = GEQ]

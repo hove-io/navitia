@@ -65,6 +65,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_0){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     vj = b.vj("A", "", "", true, "vj2")("stop1", 9000,9050)("stop2", 9200,9250).vj;
     //construction du validityPattern du vj2: 1110011 (1er mars est un vendredi)
@@ -76,6 +77,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_0){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     b.data.normalize_uri();
 
@@ -94,7 +96,6 @@ BOOST_AUTO_TEST_CASE(impact_vj_0){
     loader.apply(messages, b.data);
 
     vj = b.data.vehicle_journeys[0];
-
     BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1");
 
 //    BOOST_CHECK_EQUAL(*vj->validity_pattern,  ValidityPattern(b.begin, "1111111"));
@@ -167,8 +168,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_0){
     testdate = bg::date_from_iso_string("20130307T1739");
     BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
 
-
-    BOOST_CHECK(vj->adapted_validity_pattern == NULL);
+    BOOST_CHECK_EQUAL(*vj->adapted_validity_pattern, *vj->validity_pattern);
     BOOST_CHECK_EQUAL(b.data.vehicle_journeys.size(), 2);
 }
 
@@ -191,6 +191,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_1){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     vj = b.vj("A", "", "", true, "vj2")("stop1", 9000,9050)("stop2", 9200,9250).vj;
     //construction du validityPattern du vj2: 1110011 (1er mars est un vendredi)
@@ -202,6 +203,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_1){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     b.data.normalize_uri();
 
@@ -293,7 +295,8 @@ BOOST_AUTO_TEST_CASE(impact_vj_1){
     testdate = bg::date_from_iso_string("20130307T1739");
     BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
 
-    BOOST_CHECK(vj->adapted_validity_pattern == NULL);
+    BOOST_CHECK_EQUAL(*vj->adapted_validity_pattern, *vj->validity_pattern);
+
     BOOST_CHECK_EQUAL(b.data.vehicle_journeys.size(), 2);
 }
 
@@ -317,6 +320,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_2){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     vj = b.vj("A", "", "", true, "vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
     //construction du validityPattern du vj2: 1110011 (1er mars est un vendredi)
@@ -328,6 +332,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_2){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     b.data.normalize_uri();
 
@@ -465,6 +470,7 @@ BOOST_AUTO_TEST_CASE(impact_line_0){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     vj = b.vj("A", "1110011", "", true, "vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
     //construction du validityPattern du vj2: 1110011
@@ -476,6 +482,7 @@ BOOST_AUTO_TEST_CASE(impact_line_0){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     vj = b.vj("B", "1111111", "", true, "vj3")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj;
     //construction du validityPattern du vj3: 1111111
@@ -487,6 +494,7 @@ BOOST_AUTO_TEST_CASE(impact_line_0){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     b.data.normalize_uri();
 
@@ -620,7 +628,7 @@ BOOST_AUTO_TEST_CASE(impact_line_0){
     testdate = bg::date_from_iso_string("20130306T1739");
     BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
 
-    BOOST_CHECK(vj->adapted_validity_pattern == NULL);
+    BOOST_CHECK_EQUAL(*vj->adapted_validity_pattern, *vj->validity_pattern);
 
     BOOST_CHECK_EQUAL(b.data.vehicle_journeys.size(), 3);
 }
@@ -642,6 +650,7 @@ BOOST_AUTO_TEST_CASE(impact_line_1){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     vj = b.vj("A", "1110011", "", true, "vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
     //construction du validityPattern du vj2: 1110011
@@ -653,6 +662,7 @@ BOOST_AUTO_TEST_CASE(impact_line_1){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     vj = b.vj("B", "1111111", "", true, "vj3")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
     //construction du validityPattern du vj3: 1111111
@@ -779,7 +789,8 @@ BOOST_AUTO_TEST_CASE(impact_line_1){
 
     BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj3");
     BOOST_CHECK_EQUAL(*vj->validity_pattern,  ValidityPattern(b.begin, "1111111"));
-    BOOST_CHECK(vj->adapted_validity_pattern == NULL);
+
+    BOOST_CHECK_EQUAL(*vj->adapted_validity_pattern, *vj->validity_pattern);
 
     BOOST_CHECK_EQUAL(b.data.vehicle_journeys.size(), 3);
 }
@@ -799,6 +810,7 @@ BOOST_AUTO_TEST_CASE(impact_network_0){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     vj = b.vj("A", "A", "1110011", "", true, "vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
     //construction du validityPattern du vj2: 1110011
@@ -810,6 +822,7 @@ BOOST_AUTO_TEST_CASE(impact_network_0){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     vj = b.vj("B", "B", "1111111", "", true, "vj3")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
     //construction du validityPattern du vj3: 1111111
@@ -821,6 +834,7 @@ BOOST_AUTO_TEST_CASE(impact_network_0){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     b.data.normalize_uri();
 
@@ -957,7 +971,7 @@ BOOST_AUTO_TEST_CASE(impact_network_0){
     testdate = bg::date_from_iso_string("20130307T1739");
     BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
 
-    BOOST_CHECK(vj->adapted_validity_pattern == NULL);
+    BOOST_CHECK_EQUAL(*vj->adapted_validity_pattern, *vj->validity_pattern);
 
     BOOST_CHECK_EQUAL(b.data.vehicle_journeys.size(), 3);
 }
@@ -978,6 +992,7 @@ BOOST_AUTO_TEST_CASE(impact_network_1){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     vj = b.vj("A", "A", "", "", true, "vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
     //construction du validityPattern du vj2: 1110011
@@ -989,6 +1004,7 @@ BOOST_AUTO_TEST_CASE(impact_network_1){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     vj = b.vj("B", "B", "1111111", "", true, "vj3")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
     //construction du validityPattern du vj3: 1111111
@@ -1000,6 +1016,7 @@ BOOST_AUTO_TEST_CASE(impact_network_1){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     b.data.normalize_uri();
 
@@ -1136,7 +1153,7 @@ BOOST_AUTO_TEST_CASE(impact_network_1){
     testdate = bg::date_from_iso_string("20130307T1739");
     BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
 
-    BOOST_CHECK(vj->adapted_validity_pattern == NULL);
+    BOOST_CHECK_EQUAL(*vj->adapted_validity_pattern, *vj->validity_pattern);
 
     BOOST_CHECK_EQUAL(b.data.vehicle_journeys.size(), 3);
 }
@@ -1157,6 +1174,7 @@ BOOST_AUTO_TEST_CASE(impact_network_2){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     vj = b.vj("A", "A", "1110011", "", true, "vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
     //construction du validityPattern du vj2: 1110011
@@ -1168,6 +1186,7 @@ BOOST_AUTO_TEST_CASE(impact_network_2){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     vj = b.vj("B", "B", "1111111", "", true, "vj3")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
     //construction du validityPattern du vj3: 1111111
@@ -1179,6 +1198,7 @@ BOOST_AUTO_TEST_CASE(impact_network_2){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     b.data.normalize_uri();
 
@@ -1325,7 +1345,7 @@ BOOST_AUTO_TEST_CASE(impact_network_2){
     testdate = bg::date_from_iso_string("20130307T1739");
     BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
 
-    BOOST_CHECK(vj->adapted_validity_pattern == NULL);
+    BOOST_CHECK_EQUAL(*vj->adapted_validity_pattern, *vj->validity_pattern);
 
     BOOST_CHECK_EQUAL(b.data.vehicle_journeys.size(), 3);
 }
@@ -1346,6 +1366,7 @@ BOOST_AUTO_TEST_CASE(impact_network_3){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     vj = b.vj("A", "A", "1110011", "", true, "vj2")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
     //construction du validityPattern du vj2: 1110011
@@ -1357,6 +1378,7 @@ BOOST_AUTO_TEST_CASE(impact_network_3){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     vj = b.vj("B", "B", "1111111", "", true, "vj3")("stop1", "10:50","11:00")("stop2","13:00","13:02").vj;
     //construction du validityPattern du vj3: 1111111
@@ -1368,6 +1390,7 @@ BOOST_AUTO_TEST_CASE(impact_network_3){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
 
     b.data.normalize_uri();
 
@@ -1514,7 +1537,7 @@ BOOST_AUTO_TEST_CASE(impact_network_3){
     testdate = bg::date_from_iso_string("20130307T1739");
     BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
 
-    BOOST_CHECK(vj->adapted_validity_pattern == NULL);
+    BOOST_CHECK_EQUAL(*vj->adapted_validity_pattern, *vj->validity_pattern);
 
     BOOST_CHECK_EQUAL(b.data.vehicle_journeys.size(), 3);
 }
