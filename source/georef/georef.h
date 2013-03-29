@@ -303,7 +303,7 @@ struct ProjectionData {
     double source_distance;
     double target_distance;
 
-    ProjectionData() : source_distance(-1), target_distance(-1){}
+    ProjectionData() : found(false), source_distance(-1), target_distance(-1){}
     /// Initialise la structure à partir d'une coordonnée et d'un graphe sur lequel on projette
     ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, const proximitylist::ProximityList<vertex_t> &prox);
 
