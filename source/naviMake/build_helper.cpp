@@ -39,6 +39,11 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
         vj->validity_pattern = new types::ValidityPattern(b.begin, validity_pattern);
         b.vps[validity_pattern] = vj->validity_pattern;
         b.data.validity_patterns.push_back(vj->validity_pattern);
+
+        vj->adapted_validity_pattern = new types::ValidityPattern(b.begin, validity_pattern);
+        b.vps[validity_pattern] = vj->adapted_validity_pattern;
+        b.data.validity_patterns.push_back(vj->adapted_validity_pattern);
+
 //    } else {
 //        vj->validity_pattern = vp_it->second;
 //    }
