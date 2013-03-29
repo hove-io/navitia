@@ -89,7 +89,7 @@ class Apis:
         "autocomplete" : {"endpoint" : on_autocomplete, "arguments" :
                           {"name" : Argument("The data to search", unicode, True, False, order = 1),
                            "object_type[]" : Argument("The type of datas you want in return", str, False, True, 
-                                                    ["stop_area", "stop_point", "address", "poi"], 2,["stop_area", "stop_point", "address", "poi"]),
+                                                    ["stop_area", "stop_point", "address", "poi", "admin"], 2,["stop_area", "stop_point", "address", "poi", "admin"]),
                             "depth" : Argument("Maximum depth on objects", int, False, False, 1),
                             "count" : Argument("Number of elements per page", int, False, False,
                                             50),

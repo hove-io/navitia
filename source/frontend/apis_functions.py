@@ -90,7 +90,8 @@ pb_type = {
         'stop_point': type_pb2.STOP_POINT,
         'city': type_pb2.CITY,
         'address': type_pb2.ADDRESS,
-	'poi': type_pb2.POI 
+	'poi': type_pb2.POI ,
+	'admin' : type_pb2.ADMIN
         }
 def on_autocomplete(request_args, version, region):
     req = request_pb2.Request()

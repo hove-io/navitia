@@ -1,8 +1,10 @@
 #include <boost/foreach.hpp>
 #include <fstream>
 #include <unordered_map>
+#include <utils/logger.h>
 #include "utils/functions.h"
 #include "georef.h"
+
 #include "utils/csv.h"
 #include "utils/configuration.h"
 
@@ -135,7 +137,12 @@ nt::GeographicalCoord Way::barycentre(const Graph& graph){
         }
         previous = edge;
     }
-    boost::geometry::centroid(line, centroid);
+    try{
+        boost::geometry::centroid(line, centroid);
+    }catch(...){
+      LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log") ,"Impossible de trouver le barycentre de la rue :  " + this->name);
+    }
+
     return centroid;
 }
 
@@ -306,6 +313,15 @@ Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::Ge
 
 
 
+std::vector<navitia::type::idx_t> GeoRef::Within(const type::GeographicalCoord &coord){
+    std::vector<navitia::type::idx_t> to_return;
+    for(Admin admin : admins){
+        if (boost::geometry::within(coord, admin.boundary)){
+            to_return.push_back(admin.idx);
+        }
+    }
+    return to_return;
+}
 
 void GeoRef::build_proximity_list(){
     pl.clear(); // vider avant de reconstruire
@@ -318,16 +334,40 @@ void GeoRef::build_proximity_list(){
 void GeoRef::build_autocomplete_list(){
     int pos = 0;
     for(Way way : ways){
-        fl_way.add_string(way.way_type +" "+ way.name, pos,alias, synonymes);
+        std::string key="";
+        for(auto idx : way.admins){
+            Admin admin = admins.at(idx);
+            if(key.empty()){                
+                key = admin.name;
+            }else{
+                key = key + " " + admin.name;
+            }
+        }
+        fl_way.add_string(way.way_type +" "+ way.name + " " + key, pos,alias, synonymes);
         pos++;
     }
     fl_way.build();
 
     //Remplir les poi dans la liste autocompletion
     for(POI poi : pois){
-        fl_poi.add_string(poi.name, poi.idx ,alias, synonymes);
+        std::string key="";
+        for(auto idx : poi.admins){
+            Admin admin = admins.at(idx);
+            if(key.empty()){
+                key = admin.name;
+            }else{
+                key = key + " " + admin.name;
+            }
+        }
+        fl_poi.add_string(poi.name + " " + key, poi.idx ,alias, synonymes);
     }
     fl_poi.build();
+
+    // les données administratives
+    for(Admin admin : admins){
+        fl_admin.add_string(admin.name, admin.idx ,alias, synonymes);
+    }
+    fl_admin.build();
 }
 
 /** Chargement de la liste way_map : mappage entre codes externes et idx des rues*/
@@ -335,6 +375,28 @@ void GeoRef::build_ways(){
    for(auto way : ways){
        this->way_map[way.uri] = way.idx;
    }
+}
+
+/** Chargement de la liste poitype_map : mappage entre codes externes et idx des POITypes*/
+void GeoRef::build_poitypes(){
+
+   for(auto ptype : poitypes){
+
+       this->poitype_map[ptype.uri] = ptype.idx;
+
+   }
+
+}
+
+/** Chargement de la liste poi_map : mappage entre codes externes et idx des POIs*/
+void GeoRef::build_pois(){
+
+   for(auto poi : pois){
+
+       this->poi_map[poi.uri] = poi.idx;
+
+   }
+
 }
 
 /** Normalisation des codes externes des rues*/
@@ -345,20 +407,18 @@ void GeoRef::normalize_extcode_way(){
     this->build_ways();
 }
 
-/** Chargement de la liste poitype_map : mappage entre codes externes et idx des POITypes*/
-void GeoRef::build_poitypes(){
-   for(auto ptype : poitypes){
-       this->poitype_map[ptype.uri] = ptype.idx;
-   }
+void GeoRef::build_admins(){
+     for(Admin& admin : admins){
+        this->admin_map[admin.uri] = admin.idx;
+    }
 }
 
-/** Chargement de la liste poi_map : mappage entre codes externes et idx des POIs*/
-void GeoRef::build_pois(){
-   for(auto poi : pois){
-       this->poi_map[poi.uri] = poi.idx;
-   }
+void GeoRef::normalize_extcode_admin(){
+    for(Admin& admin : admins){
+        admin.uri = "admin" + admin.uri;
+    }
+    this->build_admins();
 }
-
 
 /**
     * Recherche les voies avec le nom, ce dernier peut contenir : [Numéro de rue] + [Type de la voie ] + [Nom de la voie] + [Nom de la commune]

@@ -45,6 +45,16 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::City* city, 
     city->mutable_coord()->set_lat(city_n.coord.lat());
 }
 
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Admin* admin, int, const pt::ptime&, const pt::time_period& ){
+    navitia::georef::Admin adm = data.geo_ref.admins.at(idx);
+    admin->set_name(adm.name);
+    admin->set_uri(adm.uri);
+    admin->set_zip_code(adm.post_code);
+    admin->set_level(adm.level);
+    admin->mutable_coord()->set_lat(adm.coord.lat());
+    admin->mutable_coord()->set_lon(adm.coord.lon());
+}
+
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* stop_area, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period){
     if(idx == type::invalid_idx)
@@ -54,8 +64,11 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* st
     stop_area->set_name(sa.name);
     stop_area->mutable_coord()->set_lon(sa.coord.lon());
     stop_area->mutable_coord()->set_lat(sa.coord.lat());
-    if(max_depth > 0 && sa.city_idx != nt::invalid_idx)
-        fill_pb_object(sa.city_idx, data, stop_area->mutable_city(), max_depth-1, now, action_period);
+    if(max_depth > 0){
+        for(nt::idx_t idx : sa.admin_list){
+            fill_pb_object(idx, data,  stop_area->add_admin(), max_depth-1, now, action_period);
+        }
+    }
 
     BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(sa.uri, now, action_period)){
         fill_message(message, data, stop_area->add_messages(), max_depth-1, now, action_period);
@@ -71,8 +84,13 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
     stop_point->set_name(sp.name);
     stop_point->mutable_coord()->set_lon(sp.coord.lon());
     stop_point->mutable_coord()->set_lat(sp.coord.lat());
-    if(max_depth > 0 && sp.city_idx != nt::invalid_idx)
-        fill_pb_object(sp.city_idx, data, stop_point->mutable_city(), max_depth-1, now, action_period);
+
+    if(max_depth > 0){
+        for(nt::idx_t idx : sp.admin_list){
+            fill_pb_object(idx, data,  stop_point->add_admin(), max_depth-1, now, action_period);
+        }
+    }
+
     if(max_depth > 0 && sp.stop_area_idx != nt::invalid_idx)
         fill_pb_object(sp.stop_area_idx, data, stop_point->mutable_stop_area(), max_depth-1, now, action_period);
 
@@ -94,8 +112,12 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * ad
     address->mutable_coord()->set_lon(coord.lon());
     address->mutable_coord()->set_lat(coord.lat());
     address->set_uri(way.uri);
-    if(max_depth > 0 and way.city_idx != nt::invalid_idx)
-        fill_pb_object(way.city_idx, data,  address->mutable_city(), max_depth-1, now, action_period);
+
+    if(max_depth > 0){
+        for(nt::idx_t idx : way.admins){
+            fill_pb_object(idx, data,  address->add_admin(), max_depth-1, now, action_period);
+        }
+    }
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line, int depth,
@@ -305,7 +327,6 @@ void fill_street_section(const georef::Path &path, const type::Data &data, pbnav
 
 void fill_message(const type::Message & message, const type::Data&, pbnavitia::Message* pb_message, int,
         const boost::posix_time::ptime&, const boost::posix_time::time_period&){
-
     pb_message->set_uri(message.uri);
     pb_message->set_message(message.message);
     pb_message->set_title(message.title);
@@ -339,8 +360,11 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Poi* poi
     poi->mutable_coord()->set_lat(geopoi.coord.lat());
     poi->mutable_coord()->set_lon(geopoi.coord.lon());
 
-    if(max_depth > 0 and geopoi.city_idx != nt::invalid_idx)
-            fill_pb_object(geopoi.city_idx, data,  poi->mutable_city(), max_depth-1, now, action_period);
+    if(max_depth > 0){
+        for(nt::idx_t idx : geopoi.admins){
+            fill_pb_object(idx, data,  poi->add_admin(), max_depth-1, now, action_period);
+        }
+    }
 }
 
 

@@ -92,12 +92,12 @@ int main(int argc, char** argv) {
 #define GENERAL_CHECK(type_name, collection_name) error_count += general_check(d.pt_data.collection_name);
     ITERATE_NAVITIA_PT_TYPES(GENERAL_CHECK)
 
-    error_count += check_relations(d.pt_data.stop_areas, &StopArea::city_idx, d.pt_data.cities);
+//    error_count += check_relations(d.pt_data.stop_areas, &StopArea::admin_list, d.geo_ref.admins);
     error_count += check_relations(d.pt_data.stop_areas, &StopArea::stop_point_list, d.pt_data.stop_points);
     error_count += check_relations(d.pt_data.stop_areas, &StopArea::stop_point_list, d.pt_data.stop_points, &StopPoint::stop_area_idx);
 
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::stop_area_idx, d.pt_data.stop_areas);
-    error_count += check_relations(d.pt_data.stop_points, &StopPoint::city_idx, d.pt_data.cities);
+//    error_count += check_relations(d.pt_data.stop_points, &StopPoint::admin_list, d.geo_ref.admins);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::network_idx, d.pt_data.networks);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::journey_pattern_point_list, d.pt_data.journey_pattern_points);
     error_count += check_relations(d.pt_data.stop_points, &StopPoint::journey_pattern_point_list, d.pt_data.journey_pattern_points, &JourneyPatternPoint::stop_point_idx);

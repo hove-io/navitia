@@ -238,13 +238,8 @@ nt::StopPoint StopPoint::get_navitia_type() const {
     if(this->stop_area != NULL)
         nt_stop_point.stop_area_idx = this->stop_area->idx;
 
-    if(this->city != NULL)
-        nt_stop_point.city_idx = this->city->idx;
-
     if(this->network != NULL)
         nt_stop_point.network_idx = this->network->idx;
-
-    nt_stop_point.properties = this->properties;
 
     return nt_stop_point;
 }

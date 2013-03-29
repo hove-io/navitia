@@ -3,6 +3,8 @@ SET(GEOREF_SRC
     georef.cpp
     street_network.h
     street_network.cpp
+    adminref.h
+    adminref.cpp
 )
 
 add_library(georef ${GEOREF_SRC})
