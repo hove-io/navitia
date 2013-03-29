@@ -71,6 +71,10 @@ BOOST_AUTO_TEST_CASE(escaped_value){
     BOOST_REQUIRE_EQUAL(filters.size(), 1);
     BOOST_CHECK_EQUAL(filters[0].value, "4-2");
 
+    filters = parse("stop_areas.uri=\"4|2\"");
+    BOOST_REQUIRE_EQUAL(filters.size(), 1);
+    BOOST_CHECK_EQUAL(filters[0].value, "4|2");
+
     filters = parse("stop_areas.uri=\"42.\"");
     BOOST_REQUIRE_EQUAL(filters.size(), 1);
     BOOST_CHECK_EQUAL(filters[0].value, "42.");

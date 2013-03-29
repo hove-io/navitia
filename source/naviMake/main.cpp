@@ -117,16 +117,6 @@ int main(int argc, char * argv[])
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 
-    if(vm.count("at-connection-string")){
-        navitia::AtLoader::Config conf;
-        conf.connect_string = vm["at-connection-string"].as<std::string>();
-        navitia::AtLoader loader;
-        std::map<std::string, std::vector<navitia::type::Message>> messages;
-        messages = loader.load_disrupt(conf, pt::second_clock::local_time());
-        std::cout << "nombre d'objet impactés: " << messages.size() << std::endl;
-        navimake::AtAdaptedLoader adapter;
-        adapter.apply(messages, data);
-    }
 
 
     std::cout << "line: " << data.lines.size() << std::endl;
@@ -151,6 +141,20 @@ int main(int argc, char * argv[])
     start = pt::microsec_clock::local_time();
     data.clean();
     clean = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+
+    if(vm.count("at-connection-string")){
+        navitia::AtLoader::Config conf;
+        conf.connect_string = vm["at-connection-string"].as<std::string>();
+        navitia::AtLoader loader;
+        std::map<std::string, std::vector<navitia::type::Message>> messages;
+        messages = loader.load_disrupt(conf, pt::second_clock::local_time());
+        std::cout << "nombre d'objet impactés: " << messages.size() << std::endl;
+        navimake::AtAdaptedLoader adapter;
+        adapter.apply(messages, data);
+    }
+
+
 
     start = pt::microsec_clock::local_time();
     data.sort();

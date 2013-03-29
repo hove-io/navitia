@@ -20,9 +20,13 @@ void PoiParser::fill_poi_type(GeoRef & georef_to_fill)
 {
     // Verification des entêtes:
     CsvReader csv(path + "/" + "poi_type.txt", ',', true);
+    if(!csv.is_open()) {
+        LOG4CPLUS_WARN(logger, "le fichier " + csv.filename +" n'existe pas ");
+        return;
+    }
     std::vector<std::string> mandatory_headers = {"poi_type_id" , "poi_type_name"};
     if(!csv.validate(mandatory_headers)) {
-        LOG4CPLUS_FATAL(logger, "Erreur lors du parsing de " + csv.filename +" . Il manque les colonnes : " + csv.missing_headers(mandatory_headers));
+        LOG4CPLUS_ERROR(logger, "Erreur lors du parsing de " + csv.filename +" . Il manque les colonnes : " + csv.missing_headers(mandatory_headers));
     }
 
     int id_c = csv.get_pos_col("poi_type_id"), name_c = csv.get_pos_col("poi_type_name");
@@ -46,17 +50,20 @@ void PoiParser::fill_poi_type(GeoRef & georef_to_fill)
 
     //Chargement de la liste poitype_map
     georef_to_fill.build_poitypes();
-
-
 }
 
 void PoiParser::fill_poi(GeoRef & georef_to_fill)
 {
     // Verification des entêtes:
     CsvReader csv(path + "/" + "poi.txt", ',', true);
+    if(!csv.is_open()) {
+        LOG4CPLUS_WARN(logger, "Le fichier " + csv.filename +" n'existe pas");
+        return;
+    }
+
     std::vector<std::string> mandatory_headers = {"poi_id", "poi_name", "poi_lat", "poi_lon"};
     if(!csv.validate(mandatory_headers)) {
-        LOG4CPLUS_FATAL(logger, "Erreur lors du parsing de " + csv.filename +" . Il manque les colonnes : " + csv.missing_headers(mandatory_headers));
+        LOG4CPLUS_ERROR(logger, "Erreur lors du parsing de " + csv.filename +" . Il manque les colonnes : " + csv.missing_headers(mandatory_headers));
     }
     int id_c = csv.get_pos_col("poi_id"), name_c = csv.get_pos_col("poi_name"), weight_c = csv.get_pos_col("poi_weight"),
             lat_c = csv.get_pos_col("poi_lat"), lon_c = csv.get_pos_col("poi_lon"), type_c = csv.get_pos_col("poi_type_id");
@@ -121,7 +128,7 @@ void PoiParser::fill_alias(GeoRef & georef_to_fill){
     CsvReader csv(path + "/" + "alias.txt", '=', true);
     std::vector<std::string> mandatory_headers = {"key" , "value"};
     if(!csv.validate(mandatory_headers)) {
-        LOG4CPLUS_FATAL(logger, "Erreur lors du parsing de " + csv.filename +" . Il manque les colonnes : " + csv.missing_headers(mandatory_headers));
+        LOG4CPLUS_FATAL(logger, "Erreur lors du parsing de fill_alias " + csv.filename +" . Il manque les colonnes : " + csv.missing_headers(mandatory_headers));
     }
 
     int key_c = csv.get_pos_col("key"), value_c = csv.get_pos_col("value");

@@ -18,12 +18,11 @@ def pagination(request_pagination, objects, request):
 
     toDelete = [] 
     if begin < request_pagination.totalResult :
-        toDelete = range(0, begin) + range(end, request_pagination.totalResult)
+        del objects[end:]# todo -1 valable ?
+        del objects[0:begin]
     else:
-        toDelete = range(0, request_pagination.totalResult)
-    toDelete.reverse()
-    for i in toDelete:
-        del objects[i]
+        del objects[0:]
+    
     request_pagination.itemsOnPage = len(objects)
     query_args = ""
     for key, value in request.iteritems():
