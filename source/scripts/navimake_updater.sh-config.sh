@@ -13,5 +13,3 @@ data_dir=/tmp/data
 data_filename=data.nav.lz4
 
 street_network='/home/kinou/workspace/navitia/data/IdF/BD_TOPO_STIF'
-
-alias='/home/kinou/workspace/navitia/data/Idf/alias'
