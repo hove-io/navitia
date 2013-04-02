@@ -4,6 +4,8 @@
 #include "proximity_list/proximity_list.h"
 #include "adminref.h"
 
+#include "third_party/RTree/RTree.h"
+
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adj_list_serialize.hpp>
 #include <boost/serialization/serialization.hpp>
@@ -156,6 +158,21 @@ struct Path {
 
 class ProjectionData;
 
+/** Rectangle utilisé par RTree pour indexer spatialement les communes */
+struct Rect{
+    double min[2];
+    double max[2];
+    Rect() {}
+
+    Rect(double a_minX, double a_minY, double a_maxX, double a_maxY){
+        min[0] = a_minX;
+        min[1] = a_minY;
+
+        max[0] = a_maxX;
+        max[1] = a_maxY;
+    }
+};
+
 /** Structure contenant tout ce qu'il faut savoir sur le référentiel de voirie */
 struct GeoRef {
 
@@ -171,6 +188,8 @@ struct GeoRef {
     /// données administratives
     std::map<std::string, nt::idx_t> admin_map;
     std::vector<Admin> admins;
+
+    RTree<nt::idx_t, double, 2> rtree;
 
     /// Indexe sur les noms de voirie
     autocomplete::Autocomplete<unsigned int> fl_admin;
