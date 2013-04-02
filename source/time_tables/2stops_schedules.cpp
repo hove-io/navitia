@@ -13,7 +13,7 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
     std::vector<type::idx_t> departure_journey_pattern_points = navitia::ptref::make_query(type::Type_e::JourneyPatternPoint, departure_filter, data);
     std::vector<type::idx_t> arrival_journey_pattern_points = navitia::ptref::make_query(type::Type_e::JourneyPatternPoint, arrival_filter, data);
 
-    std::/*unordered_*/map<type::idx_t, size_t> departure_idx_arrival_order;
+    std::unordered_map<type::idx_t, size_t> departure_idx_arrival_order;
     for(type::idx_t idx : departure_journey_pattern_points) {
         const auto & jpp = data.pt_data.journey_pattern_points[idx];
         auto it_idx = std::find_if(arrival_journey_pattern_points.begin(), arrival_journey_pattern_points.end(),
@@ -24,7 +24,7 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
     }
     //On ne garde que departure qui sont dans les deux sets, et dont l'ordre est bon.
     std::remove_if(departure_journey_pattern_points.begin(), departure_journey_pattern_points.end(),
-               [&](type::idx_t idx){return departure_idx_arrival_order.find(idx) != departure_idx_arrival_order.end(); });
+               [&](type::idx_t idx){return departure_idx_arrival_order.find(idx) == departure_idx_arrival_order.end(); });
 
     //On demande tous les next_departures
     auto departure_dt_st = get_stop_times(departure_journey_pattern_points, datetime, max_datetime, std::numeric_limits<int>::max(), data);

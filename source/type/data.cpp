@@ -29,7 +29,7 @@ Data& Data::operator=(Data&& other){
     return *this;
 }
 
-
+/*
 void Data::set_cities(){
      for(navitia::georef::Way & way : geo_ref.ways) {
         auto city_it = pt_data.cities_map.find("city:"+way.city);
@@ -37,6 +37,29 @@ void Data::set_cities(){
             way.city_idx = city_it->second;
         } else {
             way.city_idx = invalid_idx;
+        }
+    }
+}*/
+void Data::set_admins(){
+    // les points d'arrêts
+    for(StopPoint & stop_point : pt_data.stop_points){
+        std::vector<navitia::type::idx_t> admins=geo_ref.Within(stop_point.coord);
+        for(navitia::type::idx_t idx : admins){
+            stop_point.admin_list.push_back(idx);
+        }
+    }
+    // les zones d'arrêts
+    for(StopArea & stop_area : pt_data.stop_areas){
+        std::vector<navitia::type::idx_t> admins=geo_ref.Within(stop_area.coord);
+        for(navitia::type::idx_t idx : admins){
+            stop_area.admin_list.push_back(idx);
+        }
+    }
+    // POI
+    for (navitia::georef::POI& poi : geo_ref.pois){
+        std::vector<navitia::type::idx_t> admins=geo_ref.Within(poi.coord);
+        for(navitia::type::idx_t idx : admins){
+            poi.admins.push_back(idx);
         }
     }
 }
@@ -87,6 +110,7 @@ void Data::save_lz4(const std::string & filename) {
 void Data::build_uri(){
     this->pt_data.build_uri();
     geo_ref.normalize_extcode_way();
+    geo_ref.normalize_extcode_admin();
 }
 
 void Data::build_proximity_list(){
@@ -98,7 +122,8 @@ void Data::build_proximity_list(){
 
 
 void Data::build_autocomplete(){
-    pt_data.build_autocomplete(geo_ref.alias, geo_ref.synonymes);
+//    pt_data.build_autocomplete(geo_ref.alias, geo_ref.synonymes);
+    pt_data.build_autocomplete(geo_ref);
     geo_ref.build_autocomplete_list();
 }
 
