@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_0){
     messages[m.object_uri].push_back(m);
 
     AtAdaptedLoader loader;
-    loader.apply_b(messages, b.data);
+    loader.apply(messages, b.data);
 
     vj = b.data.vehicle_journeys[0];
     BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1");
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_1){
     messages[m.object_uri].push_back(m);
 
     AtAdaptedLoader loader;
-    loader.apply_b(messages, b.data);
+    loader.apply(messages, b.data);
 
     vj = b.data.vehicle_journeys[0];
 
@@ -348,7 +348,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_2){
     messages[m.object_uri].push_back(m);
 
     AtAdaptedLoader loader;
-    loader.apply_b(messages, b.data);
+    loader.apply(messages, b.data);
 
     vj = b.data.vehicle_journeys[0];
 
@@ -508,7 +508,7 @@ BOOST_AUTO_TEST_CASE(impact_line_0){
     messages[m.object_uri].push_back(m);
 
     AtAdaptedLoader loader;
-    loader.apply_b(messages, b.data);
+    loader.apply(messages, b.data);
 
     vj = b.data.vehicle_journeys[0];
 
@@ -689,7 +689,7 @@ BOOST_AUTO_TEST_CASE(impact_line_1){
     messages[m.object_uri].push_back(m);
 
     AtAdaptedLoader loader;
-    loader.apply_b(messages, b.data);
+    loader.apply(messages, b.data);
 
     vj = b.data.vehicle_journeys[0];
 
@@ -852,7 +852,7 @@ BOOST_AUTO_TEST_CASE(impact_network_0){
     messages[m.object_uri].push_back(m);
 
     AtAdaptedLoader loader;
-    loader.apply_b(messages, b.data);
+    loader.apply(messages, b.data);
 
     vj = b.data.vehicle_journeys[0];
 
@@ -1036,7 +1036,7 @@ BOOST_AUTO_TEST_CASE(impact_network_1){
     messages[m.object_uri].push_back(m);
 
     AtAdaptedLoader loader;
-    loader.apply_b(messages, b.data);
+    loader.apply(messages, b.data);
 
     vj = b.data.vehicle_journeys[0];
 
@@ -1229,7 +1229,7 @@ BOOST_AUTO_TEST_CASE(impact_network_2){
     messages[m.object_uri].push_back(m);
 
     AtAdaptedLoader loader;
-    loader.apply_b(messages, b.data);
+    loader.apply(messages, b.data);
 
     vj = b.data.vehicle_journeys[0];
 
@@ -1423,7 +1423,7 @@ BOOST_AUTO_TEST_CASE(impact_network_3){
     messages[m.object_uri].push_back(m);
 
     AtAdaptedLoader loader;
-    loader.apply_b(messages, b.data);
+    loader.apply(messages, b.data);
 
     vj = b.data.vehicle_journeys[0];
 
@@ -1583,7 +1583,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
     messages[m.object_uri].push_back(m);
 
     AtAdaptedLoader loader;
-    loader.apply_b(messages, b.data);
+    loader.apply(messages, b.data);
 
     vj = b.data.vehicle_journeys[0];
     BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1");
@@ -1732,7 +1732,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_1){
     messages[m.object_uri].push_back(m);
 
     AtAdaptedLoader loader;
-    loader.apply_b(messages, b.data);
+    loader.apply(messages, b.data);
 
     vj = b.data.vehicle_journeys[0];
     BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1");
@@ -1828,7 +1828,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_2){
     messages[m.object_uri].push_back(m);
 
     AtAdaptedLoader loader;
-    loader.apply_b(messages, b.data);
+    loader.apply(messages, b.data);
 
     vj = b.data.vehicle_journeys[0];
     BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1");

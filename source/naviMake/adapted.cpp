@@ -11,11 +11,7 @@ namespace navimake{
 void delete_vj(types::VehicleJourney* vehicle_journey, const nt::Message& message, Data& data){
     //TODO on duplique les validitypattern à tort et à travers la, va falloir les mutualiser
     types::ValidityPattern* vp = NULL;
-//    if(vehicle_journey->adapted_validity_pattern == NULL){//on duplique le validity pattern
-//        vp = new types::ValidityPattern(*vehicle_journey->validity_pattern);
-//    }else{
     vp = new types::ValidityPattern(*vehicle_journey->adapted_validity_pattern);
-//    }
     data.validity_patterns.push_back(vp);
     vehicle_journey->adapted_validity_pattern = vp;
 
@@ -74,7 +70,7 @@ void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& mes
 
         std::vector<types::StopTime*> impacted_stop = get_stop_from_impact(message, current_date, vehicle_journey->stop_time_list);
         //ICI il faut récupérer la liste des vjadapted déjà crées actif sur current_date afin de leur appliquer le nouveau message
-        if((vjadapted == NULL) && (impacted_stop.size()!=0)){
+        if((vjadapted == NULL) && (impacted_stop.size() != 0)){
             vjadapted = new types::VehicleJourney(*vehicle_journey);
             data.vehicle_journeys.push_back(vjadapted);
             vjadapted->is_adapted = true;
@@ -135,23 +131,6 @@ std::vector<types::VehicleJourney*> AtAdaptedLoader::reconcile_impact_with_vj(co
     return result;
 }
 
-void AtAdaptedLoader::apply(const std::map<std::string, std::vector<navitia::type::Message>>& messages, Data& data){
-    init_map(data);
-    //on construit la liste des impacts pour chacun des vj impacté
-    std::map<types::VehicleJourney*, std::vector<navitia::type::Message>> vj_messages_mapping;
-    for(const std::pair<std::string, std::vector<navitia::type::Message>> & message_list : messages){
-        for(auto message : message_list.second){
-            for(auto* vj : reconcile_impact_with_vj(message, data)){
-                vj_messages_mapping[vj].push_back(message);
-            }
-        }
-    }
-    std::cout << "nombre de VJ impactés: " << vj_messages_mapping.size() << std::endl;
-    for(auto pair : vj_messages_mapping){
-        apply_deletion_on_vj(pair.first, pair.second, data);
-    }
-
-}
 
 void AtAdaptedLoader::apply_deletion_on_vj(types::VehicleJourney* vehicle_journey, const std::vector<navitia::type::Message>& messages, Data& data){
     for(nt::Message m : messages){
@@ -206,14 +185,12 @@ std::vector<types::VehicleJourney*> AtAdaptedLoader::get_vj_from_impact(const na
 }
 
 
-
-
 void AtAdaptedLoader::dispatch_message(const std::map<std::string, std::vector<navitia::type::Message>>& messages, const Data& data){
     for(const std::pair<std::string, std::vector<navitia::type::Message>> & message_list : messages){
         for(auto m : message_list.second){
             //on recupére la liste des VJ associé(s) a l'uri du message
             if(m.object_type == nt::Type_e::VehicleJourney || m.object_type == nt::Type_e::Route
-               || m.object_type == nt::Type_e::Line || m.object_type == nt::Type_e::Network){
+                    || m.object_type == nt::Type_e::Line || m.object_type == nt::Type_e::Network){
                 std::vector<navimake::types::VehicleJourney*> vj_list = reconcile_impact_with_vj(m, data);
                 //on parcourt la liste des VJ associée au message
                 //et on associe le message au vehiclejourney
@@ -223,7 +200,7 @@ void AtAdaptedLoader::dispatch_message(const std::map<std::string, std::vector<n
 
             }else{
                 if(m.object_type == nt::Type_e::JourneyPatternPoint || m.object_type == nt::Type_e::StopPoint
-                   || m.object_type == nt::Type_e::StopArea){
+                        || m.object_type == nt::Type_e::StopArea){
                     std::vector<navimake::types::VehicleJourney*> vj_list = get_vj_from_impact(m, data);
                     for(auto vj  : vj_list){
                         duplicate_vj_map[vj].push_back(m);
@@ -234,7 +211,7 @@ void AtAdaptedLoader::dispatch_message(const std::map<std::string, std::vector<n
     }
 }
 
-void AtAdaptedLoader::apply_b(const std::map<std::string, std::vector<navitia::type::Message>>& messages, Data& data){
+void AtAdaptedLoader::apply(const std::map<std::string, std::vector<navitia::type::Message>>& messages, Data& data){
     init_map(data);
 
     dispatch_message(messages, data);

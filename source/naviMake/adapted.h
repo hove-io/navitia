@@ -32,7 +32,6 @@ private:
 
 public:
     void apply(const std::map<std::string, std::vector<navitia::type::Message>>& messages, Data& data);
-    void apply_b(const std::map<std::string, std::vector<navitia::type::Message>>& messages, Data& data);
 
 
 };
