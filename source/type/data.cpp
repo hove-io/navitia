@@ -92,7 +92,8 @@ void Data::build_uri(){
 void Data::build_proximity_list(){
     this->pt_data.build_proximity_list();
     this->geo_ref.build_proximity_list();
-    this->geo_ref.project_stop_points(this->pt_data.stop_points);
+    int nb_matched = this->geo_ref.project_stop_points(this->pt_data.stop_points);
+    std::cout << "Nombre de stop_points accrochés au filaire de voirie : " << nb_matched << " sur " << this->pt_data.stop_points.size() << std::endl;
 }
 
 
