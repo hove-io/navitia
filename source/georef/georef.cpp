@@ -453,11 +453,16 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std
     return to_return;
 }
 
-void GeoRef::project_stop_points(const std::vector<type::StopPoint> & stop_points){
+int GeoRef::project_stop_points(const std::vector<type::StopPoint> & stop_points){
+    int matched = 0;
     this->projected_stop_points.reserve(stop_points.size());
     for(type::StopPoint stop_point : stop_points){
-        this->projected_stop_points.push_back(ProjectionData(stop_point.coord, *this, this->pl));
+        ProjectionData proj(stop_point.coord, *this, this->pl);
+        this->projected_stop_points.push_back(proj);
+        if(proj.found)
+            matched++;
     }
+    return matched;
 }
 
 edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates) const {
