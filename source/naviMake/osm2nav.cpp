@@ -258,65 +258,64 @@ struct Visitor{
         return best;
     }
 
-    /// récupération des noeuds des rues
-    void get_list_ways(const References & refs, std::unordered_map<uint64_t,std::vector<Node>> & node_list){
+    /// Retourne les nœuds des rues
+    std::unordered_map<uint64_t,std::vector<Node> >get_list_ways(const References & refs){
+        std::unordered_map<uint64_t,std::vector<Node> >  node_list;
         for(Reference ref : refs){
+            uint64_t osmid = boost::lexical_cast<uint64_t>(ref.member_id);
             if (ref.member_type == OSMPBF::Relation_MemberType_WAY){
-                uint64_t osmid = boost::lexical_cast<uint64_t>(ref.member_id);
 
                 auto osmway_it = ways.find(ref.member_id);
                 if(osmway_it == ways.end()){
-                    std::cout<<"Rue introuvable :"+boost::lexical_cast<std::string>(osmid)<<std::endl;
+                    std::cout << "Rue introuvable :"+ std::to_string(osmid) << std::endl;
                 }else{
-                if (node_list.size() == 0){
-                    std::vector<Node> Current_List;
-                    for(auto node : osmway_it->second.refs){
-                        Current_List.push_back(nodes[node]);
-                    }
-                    node_list[osmid] = Current_List;
-                }else{
-                    auto wt_node = node_list.find(osmid);
-                    if(wt_node == node_list.end()){
+                    if (node_list.size() == 0){
                         std::vector<Node> Current_List;
                         for(auto node : osmway_it->second.refs){
-                             Current_List.push_back(nodes[node]);
-                         }
-                         node_list[osmid] = Current_List;
+                            Current_List.push_back(nodes[node]);
+                        }
+                        node_list[osmid] = Current_List;
+                    }else{
+                        auto wt_node = node_list.find(osmid);
+                        if(wt_node == node_list.end()){
+                            std::vector<Node> Current_List;
+                            for(auto node : osmway_it->second.refs){
+                                Current_List.push_back(nodes[node]);
+                            }
+                            node_list[osmid] = Current_List;
+                        }
                     }
-                }
                 }
 
             }else{
-                if ((ref.member_type == OSMPBF::Relation_MemberType_RELATION) && (ref.role != "subarea")){
-                     get_list_ways(references.at( boost::lexical_cast<uint64_t>(ref.member_id)), node_list);
+                if (ref.member_type == OSMPBF::Relation_MemberType_RELATION && ref.role != "subarea"){
+                    for(auto pair : get_list_ways(references.at(osmid))){
+                        node_list[pair.first].insert(node_list[pair.first].end(), pair.second.begin(), pair.second.end());
+                    }
                 }
             }
         }
+        return node_list;
     }
 
-/// Ajout des limites de la commune
-void add_boundary(std::vector<Node>& nodes, navitia::georef::Admin& admin){
-    for(Node node : nodes){
-        boost::geometry::append(admin.boundary, node.coord);
-    }
-}
 
 /// Ordonner les nœuds et les rues
-void order_nodes(std::unordered_map<uint64_t,std::vector<Node>> & node_list, std::vector<uint64_t>& Added){
-    for(auto & jt : node list) {
-        Added.push_back(jt->first);
+std::vector<uint64_t> order_nodes(std::unordered_map<uint64_t, std::vector<Node> > & node_list){
+    std::vector<uint64_t> added;
+    for(auto & jt : node_list) {
+        added.push_back(jt.first);
     }
 
-    for(size_t i = 1; i<Added.size(); ++i){
-        std::vector<Node> & vect1 = node_list.at(Added[i-1]);
-        for(size_t j = i; j<Added.size(); ++j){
-            std::vector<Node> & vect2 = node_list.at(Added[j]);
-            if((vect1.back().ref_node == vect2.front().ref_node) || (vect1.back().ref_node == vect2.back().ref_node)){
+    for(size_t i = 1; i < added.size(); ++i){
+        std::vector<Node> & vect1 = node_list.at(added[i-1]);
+        for(size_t j = i; j< added.size(); ++j){
+            std::vector<Node> & vect2 = node_list.at(added[j]);
+            if( vect1.back().ref_node == vect2.front().ref_node || vect1.back().ref_node == vect2.back().ref_node){
                 if(i != j){
                     if(vect1.back().ref_node == vect2.back().ref_node){
                         std::reverse(vect2.begin(), vect2.end());
                     }
-                    std::swap(Added[i], Added[j]);
+                    std::swap(added[i], added[j]);
                     break;
                 }else{
                     if(vect1.back().ref_node == vect2.back().ref_node){
@@ -326,18 +325,17 @@ void order_nodes(std::unordered_map<uint64_t,std::vector<Node>> & node_list, std
             }
         }
     }
+    return added;
 }
 
 /// Gestion des limites des communes
 void manage_boundary(const References & refs, navitia::georef::Admin& admin){
-    std::unordered_map<uint64_t,std::vector<Node>> node_list;   // Identifiant de la rue
-                                                                // liste des nodes dans l'ordre
-    std::vector<uint64_t> Added;
-    get_list_ways(refs, node_list);
-    order_nodes(node_list, Added);
+    std::unordered_map<uint64_t,std::vector<Node>> node_list = get_list_ways(refs);
+    std::vector<uint64_t> Added = order_nodes(node_list);
     for(auto osmid : Added){
-        std::vector<Node> vect = node_list.at(osmid);
-        add_boundary(vect, admin);
+        for(Node & node : node_list.at(osmid)) {
+            boost::geometry::append(admin.boundary, node.coord);
+        }
     }
 }
 
