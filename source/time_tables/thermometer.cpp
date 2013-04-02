@@ -1,8 +1,6 @@
 #include "thermometer.h"
 #include "ptreferential/ptreferential.h"
 #include "time.h"
-#include <boost/graph/graphviz.hpp> //DEBUG
-
 
 namespace navitia { namespace timetables {
 
