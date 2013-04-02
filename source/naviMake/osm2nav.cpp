@@ -301,11 +301,9 @@ void add_boundary(std::vector<Node>& nodes, navitia::georef::Admin& admin){
     }
 }
 
-/// Ordonner les noueuds et les rues
+/// Ordonner les nœuds et les rues
 void order_nodes(std::unordered_map<uint64_t,std::vector<Node>> & node_list, std::vector<uint64_t>& Added){
-
-    typedef std::unordered_map<uint64_t, std::vector<Node>> map_vect;
-    for(map_vect::iterator jt=node_list.begin(); jt!=node_list.end(); ++jt){
+    for(auto & jt : node list) {
         Added.push_back(jt->first);
     }
 
