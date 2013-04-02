@@ -309,10 +309,7 @@ void reverse(std::vector<Node> & nodes){
 /// Ajout des limites de la commune
 void add_boundary(std::vector<Node>& nodes, navitia::georef::Admin& admin){
     for(Node node : nodes){
-        navitia::type::GeographicalCoord coord;        
-        coord.set_lon(node.coord.lon());
-        coord.set_lat(node.coord.lat());
-        boost::geometry::append(admin.boundary, coord);
+        boost::geometry::append(admin.boundary, node.coord);
     }
 }
 
