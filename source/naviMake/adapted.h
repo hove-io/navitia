@@ -23,7 +23,8 @@ private:
 
     void init_map(const Data& data);
     std::vector<types::VehicleJourney*> reconcile_impact_with_vj(const navitia::type::Message& messages, const Data& data);
-    void apply_on_vj(types::VehicleJourney* vehicle_journey, const std::vector<navitia::type::Message>& messages, Data& data, const bool& duplicatevj);
+    void apply_deletion_on_vj(types::VehicleJourney* vehicle_journey, const std::vector<navitia::type::Message>& messages, Data& data);
+    void apply_update_on_vj(types::VehicleJourney* vehicle_journey, const std::vector<navitia::type::Message>& messages, Data& data);
 
     std::vector<types::VehicleJourney*> get_vj_from_stoppoint(std::string stoppoint_uri, const Data& data);
     std::vector<types::VehicleJourney*> get_vj_from_impact(const navitia::type::Message& message, const Data& data);
