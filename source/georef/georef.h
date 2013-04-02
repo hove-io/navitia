@@ -252,8 +252,11 @@ struct GeoRef {
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax) const;
 
 
-    /** Projete chaque stop_point sur le filaire de voirie */
-    void project_stop_points(const std::vector<type::StopPoint> & stop_points);
+    /** Projete chaque stop_point sur le filaire de voirie
+
+        Retourne le nombre de stop_points effectivement accrochés
+    */
+    int project_stop_points(const std::vector<type::StopPoint> & stop_points);
 
     /** Calcule le meilleur itinéraire entre deux listes de nœuds
      *
