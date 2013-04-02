@@ -213,7 +213,8 @@ std::vector<idx_t> StopArea::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::StopPoint: return this->stop_point_list; break;
-    case Type_e::City: result.push_back(city_idx); break;
+//    case Type_e::City: result.push_back(city_idx); break;
+    case Type_e::Admin: return this->admin_list; break;
     default: break;
     }
     return result;
@@ -322,7 +323,7 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data & data) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::StopArea: result.push_back(stop_area_idx); break;
-    case Type_e::City: result.push_back(city_idx); break;
+    case Type_e::Admin: return this->admin_list; break;
     case Type_e::JourneyPatternPoint: return journey_pattern_point_list; break;
     case Type_e::Connection: for(const Connection & conn : data.stop_point_connections[idx]) {
             result.push_back(conn.idx);

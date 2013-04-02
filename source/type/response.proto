@@ -29,6 +29,7 @@ message PlaceMark {
     optional Poi poi = 5;
     optional StopPoint stop_point = 6;
     optional Address address = 7;
+    optional Admin admin = 8;
 }
 
 message AutocompleteItem {

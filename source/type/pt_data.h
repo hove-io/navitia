@@ -1,5 +1,7 @@
 #pragma once
 #include "type.h"
+#include "georef/georef.h"
+#include "georef/adminref.h"
 #include "type/message.h"
 #include "autocomplete/autocomplete.h"
 #include "proximity_list/proximity_list.h"
@@ -60,7 +62,8 @@ struct PT_Data : boost::noncopyable{
     void build_uri();
 
     /** Construit l'indexe Autocomplete */
-    void build_autocomplete(const std::map<std::string, std::string> & map_alias,const std::map<std::string, std::string> & map_synonymes);
+//    void build_autocomplete(const std::map<std::string, std::string> & map_alias,const std::map<std::string, std::string> & map_synonymes);
+    void build_autocomplete(const navitia::georef::GeoRef&);
 
     /** Construit l'indexe ProximityList */
     void build_proximity_list();

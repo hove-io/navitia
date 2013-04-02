@@ -71,29 +71,42 @@ std::vector<idx_t> PT_Data::get_all_index(Type_e type) const {
 ITERATE_NAVITIA_PT_TYPES(GET_DATA)
 
 
-void PT_Data::build_autocomplete(const std::map<std::string, std::string> & map_alias, const std::map<std::string, std::string> & map_synonymes){
+//void PT_Data::build_autocomplete(const std::map<std::string, std::string> & map_alias, const std::map<std::string, std::string> & map_synonymes){
+void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     for(const StopArea & sa : this->stop_areas){
-        if(sa.city_idx < this->cities.size())
-            this->stop_area_autocomplete.add_string(sa.name + " " + cities[sa.city_idx].name, sa.idx,map_alias, map_synonymes);
-        else
-            this->stop_area_autocomplete.add_string(sa.name, sa.idx,map_alias, map_synonymes);
+        std::string key;
+        for(idx_t idx : sa.admin_list){
+            navitia::georef::Admin admin = georef.admins.at(idx);
+            if(key.empty()) {
+                key = admin.name;
+            }else{
+                key = key + " " + admin.name;
+            }
+        }
+        this->stop_area_autocomplete.add_string(sa.name + " " + key, sa.idx,georef.alias, georef.synonymes);        
     }
 
     this->stop_area_autocomplete.build();
 
     for(const StopPoint & sp : this->stop_points){
-        if(sp.city_idx < this->cities.size())
-            this->stop_point_autocomplete.add_string(sp.name + " " + cities[sp.city_idx].name, sp.idx, map_alias, map_synonymes);
-        else
-            this->stop_point_autocomplete.add_string(sp.name, sp.idx, map_alias, map_synonymes);
+        std::string key;
+        for(idx_t idx : sp.admin_list){
+            navitia::georef::Admin admin = georef.admins.at(idx);
+            if(key.empty()) {
+                key = admin.name;
+            }else{
+                key = key + " " + admin.name;
+            }
+        }
+        this->stop_point_autocomplete.add_string(sp.name + " " + key, sp.idx, georef.alias, georef.synonymes);        
     }
 
     this->stop_point_autocomplete.build();
 
-
-    for(const City & city : cities){
-        this->city_autocomplete.add_string(city.name, city.idx, map_alias, map_synonymes);
+    for(const navitia::georef::Admin & admin : georef.admins){
+        this->city_autocomplete.add_string(admin.name, admin.idx, georef.alias, georef.synonymes);
     }
+
     this->city_autocomplete.build();
 }
 

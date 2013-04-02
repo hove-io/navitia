@@ -90,7 +90,8 @@ pb_type = {
         'stop_point': type_pb2.STOP_POINT,
         'city': type_pb2.CITY,
         'address': type_pb2.ADDRESS,
-	'poi': type_pb2.POI 
+	'poi': type_pb2.POI ,
+	'admin' : type_pb2.ADMIN
         }
 def on_autocomplete(request_args, version, region):
     req = request_pb2.Request()
@@ -182,7 +183,7 @@ def journeys(requested_type, request_args, version, region):
         req.journeys.forbidden_uris.append(forbidden_uri)
     resp = NavitiaManager().send_and_receive(req, region)
 
-    if requested_type == type_pb2.PLANNER:
+    if resp.planner.journeys:
         (before, after) = extremes(resp, request_args)
         if before and after:
             resp.planner.before = before

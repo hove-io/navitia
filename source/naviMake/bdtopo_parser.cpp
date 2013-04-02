@@ -161,7 +161,7 @@ void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
         auto way_it = way_map.find(way_key);
         if(way_it == way_map.end()){
             way_map[way_key].name = row[nom];
-            way_map[way_key].city = row[insee];
+//            way_map[way_key].city = row[insee];
             way_map[way_key].uri = way_key;
             if (type > -1){
                 way_map[way_key].way_type = row[type];

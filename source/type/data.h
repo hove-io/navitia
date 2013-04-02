@@ -11,6 +11,7 @@
 #include <boost/format.hpp>
 #include "routing/dataraptor.h"
 #include <atomic>
+#include "georef/adminref.h"
 
 namespace navitia { namespace type {
 
@@ -41,15 +42,15 @@ public:
     /// Référentiel de transport en commun
     PT_Data pt_data;
 
-    /// streetnetwork
-    //navitia::streetnetwork::StreetNetwork street_network;
+
     navitia::georef::GeoRef geo_ref;
 
     /// Données précalculées pour le raptor
     routing::raptor::dataRAPTOR dataRaptor;
 
     /// Fixe les villes des voiries du filaire
-    void set_cities();
+    // les admins des objets
+    void set_admins();
 
     /// Mutex servant à protéger le load des données
     boost::shared_mutex load_mutex;
@@ -91,7 +92,6 @@ public:
             LOG4CPLUS_WARN(logger, boost::format("Attention le fichier de données est à la version %u (version actuelle : %d)") % version % v);
         }
 
-        //ar & pt_data & street_network & meta;
         ar & pt_data & geo_ref & meta;
     }
 

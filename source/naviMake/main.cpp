@@ -33,7 +33,7 @@ int main(int argc, char * argv[])
         ("version,v", "Affiche la version")
         ("poi", po::value<std::string>(&poi_path), "Repertoire des fichiers POI et POIType au format txt")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
-        ("at-connection-string", po::value<std::string>(), "parametres de connection à la base de données : DRIVER=FreeTDS;SERVER=;UID=;PWD=;DATABASE=;TDS_Version=8.0;Port=1433;ClientCharset=UTF-8")		
+        ("at-connection-string", po::value<std::string>(), "parametres de connexion à la base de données : DRIVER=FreeTDS;SERVER=;UID=;PWD=;DATABASE=;TDS_Version=8.0;Port=1433;ClientCharset=UTF-8")		
         ("alias",po::value<std::string>(&alias_path), "Repertoire des fichiers alias et synonymes au format txt pour autocompletion");
 
 
@@ -122,8 +122,7 @@ int main(int argc, char * argv[])
     std::cout << "line: " << data.lines.size() << std::endl;
     std::cout << "journey_pattern: " << data.journey_patterns.size() << std::endl;
     std::cout << "stoparea: " << data.stop_areas.size() << std::endl;
-    std::cout << "stoppoint: " << data.stop_points
-                 .size() << std::endl;
+    std::cout << "stoppoint: " << data.stop_points.size() << std::endl;
     std::cout << "vehiclejourney: " << data.vehicle_journeys.size() << std::endl;
     std::cout << "stop: " << data.stops.size() << std::endl;
     std::cout << "connection: " << data.connections.size() << std::endl;
@@ -166,6 +165,9 @@ int main(int argc, char * argv[])
 
     transform = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
+    // Début d'affectation des données administratives
+    nav_data.set_admins();
+
     std::cout << "Construction des contours de la région" << std::endl;
     nav_data.meta.shape = data.compute_bounding_box(nav_data.pt_data);
 
@@ -175,14 +177,16 @@ int main(int argc, char * argv[])
     std::cout << "Construction de external code" << std::endl;
     nav_data.build_uri();
     std::cout << "Assigne les villes aux voiries du filaire" << std::endl;
-    nav_data.set_cities(); // Assigne les villes aux voiries du filaire [depend des uri]
+    //nav_data.set_cities(); // Assigne les villes aux voiries du filaire [depend des uri]
     std::cout << "Construction de first letter" << std::endl;
     nav_data.build_autocomplete();
     std::cout << "On va construire les correspondances" << std::endl;
     {Timer t("Construction des correspondances");  nav_data.pt_data.build_connections();}
     autocomplete = (pt::microsec_clock::local_time() - start).total_milliseconds();
     std::cout <<"Debut sauvegarde ..." << std::endl;
+
     start = pt::microsec_clock::local_time();
+
 
     nav_data.save(output);
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
