@@ -308,21 +308,21 @@ void order_nodes(std::unordered_map<uint64_t,std::vector<Node>> & node_list, std
     for(map_vect::iterator jt=node_list.begin(); jt!=node_list.end(); ++jt){
         Added.push_back(jt->first);
     }
-    std::vector<Node> vect1, vect2;
+
     for(size_t i = 1; i<Added.size(); ++i){
-        vect1 = node_list.at(Added[i-1]);
+        std::vector<Node> & vect1 = node_list.at(Added[i-1]);
         for(size_t j = i; j<Added.size(); ++j){
-            vect2 = node_list.at(Added[j]);
+            std::vector<Node> & vect2 = node_list.at(Added[j]);
             if((vect1.back().ref_node == vect2.front().ref_node) || (vect1.back().ref_node == vect2.back().ref_node)){
                 if(i != j){
                     if(vect1.back().ref_node == vect2.back().ref_node){
-                        std::reverse(node_list.at(Added[j]).begin(), node_list.at(Added[j]).end());
+                        std::reverse(vect2.begin(), vect2.end());
                     }
                     std::swap(Added[i], Added[j]);
                     break;
                 }else{
                     if(vect1.back().ref_node == vect2.back().ref_node){
-                        std::reverse(node_list.at(Added[j]).begin(),  node_list.at(Added[j]).end());
+                        std::reverse(vect2.begin(),  vect2.end());
                     }
                 }
             }
