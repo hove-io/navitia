@@ -420,7 +420,7 @@ void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filenam
     std::cout<<"Chargement des données administratives"<<std::endl;
     v.AdminRef();
     std::cout<<"Chargement des données administratives des adresses"<<std::endl;
-    v.fillAdminWay();
+    //v.fillAdminWay();
     std::cout << "On a : " << v.total_house_number << " adresses" << std::endl;
     std::cout << "On a : " << v.geo_ref.admins.size() << " données administratives" << std::endl;
 }
