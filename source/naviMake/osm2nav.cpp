@@ -29,6 +29,9 @@ public:
     navitia::type::GeographicalCoord coord;
     Node() : uses(0), idx(-1),ref_node(-1){}
 
+    /// Incrémente le nombre d'utilisations, on lui passe l'index qu'il devra avoit
+    /// Retourne vrai si c'est un nouveau nœud (càd utilisé au moins 2 fois et n'avait pas encore d'idx)
+    /// Ca permet d'éviter d'utiliser deux fois le même nœud
     bool increment_use(int idx){
         uses++;
         if(this->idx == -1 && uses > 1){
@@ -47,11 +50,16 @@ struct OSMWay {
     const static uint8_t CAR_BWD = 3;
     const static uint8_t FOOT_FWD = 4;
     const static uint8_t FOOT_BWD = 5;
-    std::vector<uint64_t> refs;
-    std::bitset<8> properties;    
-    type::idx_t idx;
-    type::idx_t id;// représente la position dans la liste des rues de georef
 
+    /// Propriétés du way : est-ce qu'on peut "circuler" dessus
+    std::bitset<8> properties;
+
+    /// Nodes qui composent le way
+    std::vector<uint64_t> refs;
+
+    /// Idx du way dans navitia
+    /// N'est pas toujours renseigné car tous les ways dans OSM ne sont pas des rues
+    navitia::type::idx_t idx;
 };
 
 using namespace CanalTP;
@@ -68,6 +76,7 @@ struct OSMAdminRef{
 
 
 struct Visitor{
+    log4cplus::Logger logger;
     std::unordered_map<uint64_t,References> references;
     std::unordered_map<uint64_t, Node> nodes;
     std::unordered_map<uint64_t, OSMHouseNumber> housenumbers;
@@ -104,20 +113,20 @@ struct Visitor{
 
     void way_callback(uint64_t osmid, const Tags &tags, const std::vector<uint64_t> &refs){
         total_ways++;
-        std::bitset<8> properties = parse_way_tags(tags);
 
         OSMWay w;
-        w.idx = osmid;
         w.refs = refs;
-        if(properties.any()){
-            w.id = geo_ref.ways.size();
+        w.properties = parse_way_tags(tags);
+        // Est-ce que au moins une propriété fait que la rue est empruntable (voiture, vélo, piéton)
+        // Alors on le garde comme way navitia
+        if(w.properties.any()){
             georef::Way gr_way;
-            gr_way.idx = w.id;
-            gr_way.id = boost::lexical_cast<std::string>(osmid);
+            gr_way.idx = geo_ref.ways.size();
             gr_way.uri = std::to_string(w.idx);
             if(tags.find("name") != tags.end())
                 gr_way.name = tags.at("name");
             geo_ref.ways.push_back(gr_way);
+            w.idx = gr_way.idx;
         }else{
             // Dans le cas où la maison est dessinée par un way et non pas juste par un node
              add_osm_housenumber(refs.front(), tags);
@@ -127,28 +136,34 @@ struct Visitor{
 
     // Once all the ways and nodes are read, we count how many times a node is used to detect intersections
     void count_nodes_uses() {
-        int count = 0;        
-        for(auto w : ways){
-            for(uint64_t ref : w.second.refs){
-                if(nodes[ref].increment_use(count)){
+        int node_idx = 0;
+        for(const auto & w : ways){
+            if(w.second.properties.any()) {
+                for(uint64_t ref : w.second.refs){
+                    if(nodes[ref].increment_use(node_idx)){
+                        Vertex v;
+                        node_idx++;
+                        v.coord = nodes[ref].coord;
+                        boost::add_vertex(v, geo_ref.graph);
+                    }
+                }
+
+                uint64_t ref = w.second.refs.front();
+                // make sure that the last node is considered as an extremity
+                if(nodes[ref].increment_use(node_idx)){
+                    node_idx++;
                     Vertex v;
-                    count++;
-                    v.coord = type::GeographicalCoord( nodes[ref].coord.lon(), nodes[ref].coord.lat());
+                    v.coord =  nodes[ref].coord;
                     boost::add_vertex(v, geo_ref.graph);
                 }
-            }
-            // make sure that the last node is considered as an extremity
-            if(nodes[w.second.refs.front()].increment_use(count)){
-                count++;
-                Vertex v;
-                v.coord = type::GeographicalCoord(nodes[w.second.refs.front()].coord.lon(), nodes[w.second.refs.front()].coord.lat());
-                boost::add_vertex(v, geo_ref.graph);
-            }
-            if(nodes[w.second.refs.back()].increment_use(count)){
-                count++;
-                Vertex v;
-                v.coord = type::GeographicalCoord(nodes[w.second.refs.back()].coord.lon(), nodes[w.second.refs.back()].coord.lat());
-                boost::add_vertex(v, geo_ref.graph);
+
+                ref = w.second.refs.back();
+                if(nodes[ref].increment_use(node_idx)){
+                    node_idx++;
+                    Vertex v;
+                    v.coord =  nodes[ref].coord;
+                    boost::add_vertex(v, geo_ref.graph);
+                }
             }
         }
         std::cout << "On a : " << boost::num_vertices(geo_ref.graph) << " nœuds" << std::endl;
@@ -156,15 +171,15 @@ struct Visitor{
 
     // Returns the source and target node of the edges
     void edges(){
-        for(auto w : ways){
-            if(w.second.refs.size() > 0){
+        for(const auto & w : ways){
+            if(w.second.properties.any() && w.second.refs.size() > 0){
                 Node n = nodes[w.second.refs[0]];
                 type::idx_t source = n.idx;
-                type::GeographicalCoord prev(n.coord.lon(), n.coord.lat());
+                type::GeographicalCoord prev = n.coord;
                 float length = 0;
                 for(size_t i = 1; i < w.second.refs.size(); ++i){
                     Node current_node = nodes[w.second.refs[i]];
-                    type::GeographicalCoord current(current_node.coord.lon(), current_node.coord.lat());
+                    type::GeographicalCoord current = current_node.coord;
                     length += current.distance_to(prev);
                     prev = current;
                     // If a node is used more than once, it is an intersection, hence it's a node of the street network graph
@@ -173,7 +188,7 @@ struct Visitor{
                             type::idx_t target = current_node.idx;
                             georef::Edge e;
                             e.length = length;
-                            e.way_idx = w.second.id;
+                            e.way_idx = w.second.idx;
                             e.cyclable = w.second.properties[CYCLE_FWD];
                             boost::add_edge(source, target, e, geo_ref.graph);
                             geo_ref.ways[e.way_idx].edges.push_back(std::make_pair(source, target));
@@ -185,7 +200,7 @@ struct Visitor{
                             length = 0;
                         }
                     }catch(...){
-                        std::cout << "Attention, l'arc n'est pas importée car la rue : [" << w.first<< "] n'existe pas." << std::endl;
+                        LOG4CPLUS_WARN(logger, "L'arc n'est pas importée car la rue : [" + std::to_string(w.first) + "] n'existe pas.");
                     }
                 }
             }
