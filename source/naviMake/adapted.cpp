@@ -54,44 +54,66 @@ std::vector<types::StopTime*> get_stop_from_impact(const navitia::type::Message&
     return result;
 }
 
+std::string make_adapted_uri(const types::VehicleJourney* vj, const Data& data){
+    //@TODO: impleménter une régle intéligente
+    return vj->uri + ":adapted";
+}
+
 void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& message, Data& data){
-    types::VehicleJourney* vjadapted = NULL;
+    types::VehicleJourney* vj_adapted = NULL;
     //on teste le validitypattern adapté car si le VJ est déjà supprimé le traitement n'est pas nécessaire
-    //faux car on ne pas appilquer 2 messages différent sur un même jour, mais comment détecter le vj supprimé
+    //@TODO: faux car on ne pas appilquer 2 messages différent sur un même jour, mais comment détecter le vj supprimé
     for(size_t i=0; i < vehicle_journey->validity_pattern->days.size(); ++i){
         bg::date current_date = vehicle_journey->validity_pattern->beginning_date + bg::days(i);
-        if(!vehicle_journey->validity_pattern->check(i) ||
-                //le vj a été supprimé par un message de suppression
-                (!vehicle_journey->adapted_validity_pattern->check((current_date- vehicle_journey->adapted_validity_pattern->beginning_date).days()) && (vehicle_journey->adapted_vehicle_journey_list.size()==0))
-                || current_date < message.application_period.begin().date()
+        //on est en dehors la plage d'application du message
+        if(current_date < message.application_period.begin().date()
                 || current_date > message.application_period.end().date()){
             continue;
         }
 
-        std::vector<types::StopTime*> impacted_stop = get_stop_from_impact(message, current_date, vehicle_journey->stop_time_list);
-        //ICI il faut récupérer la liste des vjadapted déjà crées actif sur current_date afin de leur appliquer le nouveau message
-        if((vjadapted == NULL) && (impacted_stop.size() != 0)){
-            vjadapted = new types::VehicleJourney(*vehicle_journey);
-            data.vehicle_journeys.push_back(vjadapted);
-            vjadapted->is_adapted = true;
-            vjadapted->theoric_vehicle_journey = vehicle_journey;
-            vehicle_journey->adapted_vehicle_journey_list.push_back(vjadapted);
-            vjadapted->validity_pattern = new types::ValidityPattern(vehicle_journey->validity_pattern->beginning_date);
-            data.validity_patterns.push_back(vjadapted->validity_pattern);
-
-            vjadapted->adapted_validity_pattern = new types::ValidityPattern(vjadapted->validity_pattern->beginning_date);
-            data.validity_patterns.push_back(vjadapted->adapted_validity_pattern);
-        }
-        for(auto stoptmp : impacted_stop){
-            std::vector<types::StopTime*>::iterator it = std::find(vjadapted->stop_time_list.begin(), vjadapted->stop_time_list.end(), stoptmp);
-            if(it != vjadapted->stop_time_list.end()){
-                vjadapted->stop_time_list.erase(it);
+        if(vehicle_journey->validity_pattern->check(i) &&
+                !vehicle_journey->adapted_validity_pattern->check(i)){
+            //le VJ théorique ne circule pas: on recherche le vj adapté qui circule ce jour:
+            for(auto* vj: vehicle_journey->adapted_vehicle_journey_list){
+                if(vj->adapted_validity_pattern->check(i)){
+                    vj_adapted = vj;
+                    break;
+                }
+            }
+            //si on n'a pas trouver de VJ adapté circulant, c'est qu'il a été supprimé
+            if(vj_adapted == NULL){
+                continue;
             }
         }
-        if(impacted_stop.size()!=0){
-            vjadapted->adapted_validity_pattern->add(current_date);
-            vehicle_journey->adapted_validity_pattern->remove(current_date);
+        //@TODO: faudrait probalement utilisé l'impact_list qui est utilisé en modéle
+        std::vector<types::StopTime*> impacted_stop = get_stop_from_impact(message, current_date, vehicle_journey->stop_time_list);
+        if(impacted_stop.size() < 1){
+            continue;
         }
+
+        if((vj_adapted == NULL)){
+            vj_adapted = new types::VehicleJourney(*vehicle_journey);
+            vj_adapted->theoric_vehicle_journey = vehicle_journey;
+            vehicle_journey->adapted_vehicle_journey_list.push_back(vj_adapted);
+            vj_adapted->uri = make_adapted_uri(vehicle_journey, data);
+            data.vehicle_journeys.push_back(vj_adapted);
+            vj_adapted->is_adapted = true;
+            vj_adapted->validity_pattern = new types::ValidityPattern(vehicle_journey->validity_pattern->beginning_date);
+            data.validity_patterns.push_back(vj_adapted->validity_pattern);
+
+            vj_adapted->adapted_validity_pattern = new types::ValidityPattern(vj_adapted->validity_pattern->beginning_date);
+            data.validity_patterns.push_back(vj_adapted->adapted_validity_pattern);
+        }
+
+
+        for(auto* stoptmp : impacted_stop){
+            auto it = std::find(vj_adapted->stop_time_list.begin(), vj_adapted->stop_time_list.end(), stoptmp);
+            if(it != vj_adapted->stop_time_list.end()){
+                vj_adapted->stop_time_list.erase(it);
+            }
+        }
+        vj_adapted->adapted_validity_pattern->add(current_date);
+        vehicle_journey->adapted_validity_pattern->remove(current_date);
     }
 }
 

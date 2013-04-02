@@ -1639,7 +1639,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
 
 
     vj = b.data.vehicle_journeys[1];
-    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1");
+    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted");
     BOOST_CHECK_EQUAL(vj->is_adapted,  true);
 
     testdate = bg::date_from_iso_string("20130301T1739");
@@ -1884,7 +1884,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_2){
 
 
     vj = b.data.vehicle_journeys[1];
-    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1");
+    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted");
     BOOST_CHECK_EQUAL(vj->is_adapted,  true);
 
     testdate = bg::date_from_iso_string("20130301T1739");
@@ -1931,5 +1931,144 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_2){
     BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), false);
 
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 0);
+    BOOST_CHECK_EQUAL(b.data.vehicle_journeys.size(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(impact_stoppoint_passe_minuit){
+    navimake::builder b("20130301T1739");
+    bg::date end_date = bg::date_from_iso_string("20130308T1739");
+    b.generate_dummy_basis();
+    VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", "23:30", "23:40")("stop2", "25:00", "25:10").vj;
+    //construction du validityPattern du vj1: 1111111
+    std::bitset<7> validedays;
+    validedays[bt::Sunday] = true;
+    validedays[bt::Monday] = true;
+    validedays[bt::Tuesday] = true;
+    validedays[bt::Wednesday] = true;
+    validedays[bt::Thursday] = true;
+    validedays[bt::Friday] = true;
+    validedays[bt::Saturday] = true;
+    vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
+
+    b.data.normalize_uri();
+
+    b.data.complete();
+
+    std::map<std::string, std::vector<nt::Message>> messages;
+    nt::Message m;
+    m.object_type = nt::Type_e::StopPoint;
+    m.object_uri = "stop_point:stop1";
+    m.application_period = pt::time_period(pt::time_from_string("2013-03-02 00:00:00"), pt::time_from_string("2013-03-02 23:59:00"));
+    m.active_days = nt::Lun | nt::Mar | nt::Mer | nt::Jeu | nt::Ven | nt::Sam | nt::Dim;
+    m.application_daily_start_hour = pt::duration_from_string("00:00");
+    m.application_daily_end_hour = pt::duration_from_string("23:59");
+
+    messages[m.object_uri].push_back(m);
+
+    AtAdaptedLoader loader;
+    loader.apply(messages, b.data);
+
+    vj = b.data.vehicle_journeys[0];
+    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1");
+
+//    BOOST_CHECK_EQUAL(*vj->validity_pattern,  ValidityPattern(b.begin, "1111111"));
+    bg::date testdate = bg::date_from_iso_string("20130301T1739");
+    BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
+
+    testdate = bg::date_from_iso_string("20130302T1739");
+    BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
+
+    testdate = bg::date_from_iso_string("20130303T1739");
+    BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
+
+    testdate = bg::date_from_iso_string("20130304T1739");
+    BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
+
+    testdate = bg::date_from_iso_string("20130305T1739");
+    BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
+
+    testdate = bg::date_from_iso_string("20130306T1739");
+    BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
+
+    testdate = bg::date_from_iso_string("20130307T1739");
+    BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
+
+//    BOOST_CHECK_EQUAL(*vj->adapted_validity_pattern,  ValidityPattern(b.begin, "1111110"));
+    testdate = bg::date_from_iso_string("20130301T1739");
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
+
+    testdate = bg::date_from_iso_string("20130302T1739");
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), false);
+
+    testdate = bg::date_from_iso_string("20130303T1739");
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
+
+    testdate = bg::date_from_iso_string("20130304T1739");
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
+
+    testdate = bg::date_from_iso_string("20130305T1739");
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
+
+    testdate = bg::date_from_iso_string("20130306T1739");
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
+
+    testdate = bg::date_from_iso_string("20130307T1739");
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
+
+    BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 2);
+
+
+
+
+
+    vj = b.data.vehicle_journeys[1];
+    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted");
+    BOOST_CHECK_EQUAL(vj->is_adapted,  true);
+
+    testdate = bg::date_from_iso_string("20130301T1739");
+    BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), false);
+
+    testdate = bg::date_from_iso_string("20130302T1739");
+    BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), false);
+
+    testdate = bg::date_from_iso_string("20130303T1739");
+    BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), false);
+
+    testdate = bg::date_from_iso_string("20130304T1739");
+    BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), false);
+
+    testdate = bg::date_from_iso_string("20130305T1739");
+    BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), false);
+
+    testdate = bg::date_from_iso_string("20130306T1739");
+    BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), false);
+
+    testdate = bg::date_from_iso_string("20130307T1739");
+    BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), false);
+
+
+    testdate = bg::date_from_iso_string("20130301T1739");
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), false);
+
+    testdate = bg::date_from_iso_string("20130302T1739");
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), true);
+
+    testdate = bg::date_from_iso_string("20130303T1739");
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), false);
+
+    testdate = bg::date_from_iso_string("20130304T1739");
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), false);
+
+    testdate = bg::date_from_iso_string("20130305T1739");
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), false);
+
+    testdate = bg::date_from_iso_string("20130306T1739");
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), false);
+
+    testdate = bg::date_from_iso_string("20130307T1739");
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), false);
+
+    BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 1);
     BOOST_CHECK_EQUAL(b.data.vehicle_journeys.size(), 2);
 }
