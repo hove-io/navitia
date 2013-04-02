@@ -415,14 +415,14 @@ void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filenam
     std::cout << v.nodes.size() << " nodes, " << v.ways.size() << " ways/" << v.total_ways << std::endl;
     v.count_nodes_uses();    
     v.edges();
-    std::cout<<"Chargement des adresses"<<std::endl;
+   /* std::cout<<"Chargement des adresses"<<std::endl;
     v.HouseNumbers();
     std::cout<<"Chargement des données administratives"<<std::endl;
     v.AdminRef();
     std::cout<<"Chargement des données administratives des adresses"<<std::endl;
     //v.fillAdminWay();
     std::cout << "On a : " << v.total_house_number << " adresses" << std::endl;
-    std::cout << "On a : " << v.geo_ref.admins.size() << " données administratives" << std::endl;
+    std::cout << "On a : " << v.geo_ref.admins.size() << " données administratives" << std::endl;*/
 }
 
 }}

@@ -60,14 +60,20 @@ std::vector<types::StopTime*> get_stop_from_impact(const navitia::type::Message&
 
 void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& message, Data& data){
     types::VehicleJourney* vjadapted = NULL;
+    //on teste le validitypattern adapté car si le VJ est déjà supprimé le traitement n'est pas nécessaire
+    //faux car on ne pas appilquer 2 messages différent sur un même jour, mais comment détecter le vj supprimé
     for(size_t i=0; i < vehicle_journey->validity_pattern->days.size(); ++i){
         bg::date current_date = vehicle_journey->validity_pattern->beginning_date + bg::days(i);
-        if(!vehicle_journey->validity_pattern->check(i) || current_date < message.application_period.begin().date()
+        if(!vehicle_journey->validity_pattern->check(i) ||
+                //le vj a été supprimé par un message de suppression
+                (!vehicle_journey->adapted_validity_pattern->check((current_date- vehicle_journey->adapted_validity_pattern->beginning_date).days()) && (vehicle_journey->adapted_vehicle_journey_list.size()==0))
+                || current_date < message.application_period.begin().date()
                 || current_date > message.application_period.end().date()){
             continue;
         }
 
         std::vector<types::StopTime*> impacted_stop = get_stop_from_impact(message, current_date, vehicle_journey->stop_time_list);
+        //ICI il faut récupérer la liste des vjadapted déjà crées actif sur current_date afin de leur appliquer le nouveau message
         if((vjadapted == NULL) && (impacted_stop.size()!=0)){
             vjadapted = new types::VehicleJourney(*vehicle_journey);
             data.vehicle_journeys.push_back(vjadapted);
@@ -86,7 +92,10 @@ void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& mes
                 vjadapted->stop_time_list.erase(it);
             }
         }
-        vjadapted->adapted_validity_pattern->remove(current_date);
+        if(impacted_stop.size()!=0){
+            vjadapted->adapted_validity_pattern->add(current_date);
+            vehicle_journey->adapted_validity_pattern->remove(current_date);
+        }
     }
 }
 
@@ -139,18 +148,23 @@ void AtAdaptedLoader::apply(const std::map<std::string, std::vector<navitia::typ
     }
     std::cout << "nombre de VJ impactés: " << vj_messages_mapping.size() << std::endl;
     for(auto pair : vj_messages_mapping){
-        apply_on_vj(pair.first, pair.second, data, false);
+        apply_deletion_on_vj(pair.first, pair.second, data);
     }
 
 }
 
-void AtAdaptedLoader::apply_on_vj(types::VehicleJourney* vehicle_journey, const std::vector<navitia::type::Message>& messages, Data& data, const bool& duplicatevj){
+void AtAdaptedLoader::apply_deletion_on_vj(types::VehicleJourney* vehicle_journey, const std::vector<navitia::type::Message>& messages, Data& data){
     for(nt::Message m : messages){
         if(vehicle_journey->stop_time_list.size() > 0){
             delete_vj(vehicle_journey, m, data);
-            if(duplicatevj){
-                duplicate_vj(vehicle_journey, m, data);
-            }
+        }
+    }
+}
+
+void AtAdaptedLoader::apply_update_on_vj(types::VehicleJourney* vehicle_journey, const std::vector<navitia::type::Message>& messages, Data& data){
+    for(nt::Message m : messages){
+        if(vehicle_journey->stop_time_list.size() > 0){
+            duplicate_vj(vehicle_journey, m, data);
         }
     }
 }
@@ -227,10 +241,10 @@ void AtAdaptedLoader::apply_b(const std::map<std::string, std::vector<navitia::t
 
     std::cout << "nombre de VJ adaptés: " << update_vj_map.size() << std::endl;
     for(auto pair : update_vj_map){
-        apply_on_vj(pair.first, pair.second, data, false);
+        apply_deletion_on_vj(pair.first, pair.second, data);
     }
     for(auto pair : duplicate_vj_map){
-        apply_on_vj(pair.first, pair.second, data, true);
+        apply_update_on_vj(pair.first, pair.second, data);
     }
 }
 
