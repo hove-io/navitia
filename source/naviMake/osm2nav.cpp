@@ -268,30 +268,15 @@ struct Visitor{
                 auto osmway_it = ways.find(ref.member_id);
                 if(osmway_it == ways.end()){
                     std::cout << "Rue introuvable :"+ std::to_string(osmid) << std::endl;
-                }else{
-                    if (node_list.size() == 0){
-                        std::vector<Node> Current_List;
-                        for(auto node : osmway_it->second.refs){
-                            Current_List.push_back(nodes[node]);
-                        }
-                        node_list[osmid] = Current_List;
-                    }else{
-                        auto wt_node = node_list.find(osmid);
-                        if(wt_node == node_list.end()){
-                            std::vector<Node> Current_List;
-                            for(auto node : osmway_it->second.refs){
-                                Current_List.push_back(nodes[node]);
-                            }
-                            node_list[osmid] = Current_List;
-                        }
+                } else if(node_list.find(osmid) == node_list.end()){
+                    std::vector<Node> & current_List = node_list[osmid];
+                    for(auto node : osmway_it->second.refs){
+                        current_List.push_back(nodes[node]);
                     }
                 }
-
-            }else{
-                if (ref.member_type == OSMPBF::Relation_MemberType_RELATION && ref.role != "subarea"){
-                    for(auto pair : get_list_ways(references.at(osmid))){
-                        node_list[pair.first].insert(node_list[pair.first].end(), pair.second.begin(), pair.second.end());
-                    }
+            } else if (ref.member_type == OSMPBF::Relation_MemberType_RELATION && ref.role != "subarea"){
+                for(auto pair : get_list_ways(references.at(osmid))){
+                    node_list[pair.first].insert(node_list[pair.first].end(), pair.second.begin(), pair.second.end());
                 }
             }
         }
