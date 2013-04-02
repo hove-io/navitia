@@ -293,18 +293,6 @@ struct Visitor{
             }
         }
     }
-    /// Inversers le vecteur des noeuds
-void reverse(std::vector<Node> & nodes){
-    int i = 0;
-    int j = nodes.size() -1 ;
-    while (i<j){
-        Node temp = nodes[i];
-        nodes[i] = nodes[j];
-        nodes[j] = temp;
-        ++i;
-        --j;
-    }
-}
 
 /// Ajout des limites de la commune
 void add_boundary(std::vector<Node>& nodes, navitia::georef::Admin& admin){
@@ -329,13 +317,13 @@ void order_nodes(std::unordered_map<uint64_t,std::vector<Node>> & node_list, std
                 if((vect1.back().ref_node == vect2.front().ref_node) || (vect1.back().ref_node == vect2.back().ref_node)){
                     if(i != j){
                         if(vect1.back().ref_node == vect2.back().ref_node){
-                            reverse(node_list.at(Added[j]));
+                            std::reverse(node_list.at(Added[j]).begin(), node_list.at(Added[j]).end());
                         }
                         std::swap(Added[i], Added[j]);
                         break;
                     }else{
                         if(vect1.back().ref_node == vect2.back().ref_node){
-                            reverse(node_list.at(Added[j]));
+                            std::reverse(node_list.at(Added[j]).begin(),  node_list.at(Added[j]).end());
                         }
                     }
                 }
