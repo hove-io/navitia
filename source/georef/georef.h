@@ -240,13 +240,10 @@ struct GeoRef {
     void normalize_extcode_way();
     /// Normalisation des codes externes des admins
     void normalize_extcode_admin();
-    /// Chargement de la liste map code externe idx
-    void build_ways();
+
     /// Chargement de la liste map code externe idx sur poitype et poi
     void build_poitypes();
     void build_pois();
-    /// Chargement de la liste map code externe idx
-    void build_admins();
 
     /// Construit l’indexe spatial permettant de retrouver plus vite la commune à une coordonnées
     void build_rtree();

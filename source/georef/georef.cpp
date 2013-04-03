@@ -370,12 +370,6 @@ void GeoRef::build_autocomplete_list(){
     fl_admin.build();
 }
 
-/** Chargement de la liste way_map : mappage entre codes externes et idx des rues*/
-void GeoRef::build_ways(){
-   for(auto way : ways){
-       this->way_map[way.uri] = way.idx;
-   }
-}
 
 /** Chargement de la liste poitype_map : mappage entre codes externes et idx des POITypes*/
 void GeoRef::build_poitypes(){
@@ -404,21 +398,16 @@ void GeoRef::build_rtree() {
 void GeoRef::normalize_extcode_way(){
     for(Way & way : ways){
         way.uri = "address:"+ way.uri;
+        this->way_map[way.uri] = way.idx;
     }
-    this->build_ways();
 }
 
-void GeoRef::build_admins(){
-     for(Admin& admin : admins){
-        this->admin_map[admin.uri] = admin.idx;
-    }
-}
 
 void GeoRef::normalize_extcode_admin(){
     for(Admin& admin : admins){
         admin.uri = "admin" + admin.uri;
+        this->admin_map[admin.uri] = admin.idx;
     }
-    this->build_admins();
 }
 
 /**
