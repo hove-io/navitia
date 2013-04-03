@@ -55,7 +55,7 @@ std::vector<types::StopTime*> get_stop_from_impact(const navitia::type::Message&
 }
 
 std::string make_adapted_uri(const types::VehicleJourney* vj, const Data& data){
-    //@TODO: impleménter une régle intéligente
+    //@TODO: impleménter une régle intélligente
     return vj->uri + ":adapted";
 }
 
@@ -64,10 +64,10 @@ void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& mes
     //on teste le validitypattern adapté car si le VJ est déjà supprimé le traitement n'est pas nécessaire
     //@TODO: faux car on ne pas appilquer 2 messages différent sur un même jour, mais comment détecter le vj supprimé
     for(size_t i=0; i < vehicle_journey->validity_pattern->days.size(); ++i){
-        bg::date current_date = vehicle_journey->validity_pattern->beginning_date + bg::days(i);
+        pt::time_period current_period(pt::ptime(vehicle_journey->validity_pattern->beginning_date + bg::days(i), pt::seconds(0)),
+                std::max(pt::seconds(86400), pt::seconds(vehicle_journey->stop_time_list.back()->arrival_time)));
         //on est en dehors la plage d'application du message
-        if(current_date < message.application_period.begin().date()
-                || current_date > message.application_period.end().date()){
+        if(!current_period.intersects(message.application_period)){
             continue;
         }
 
@@ -86,7 +86,7 @@ void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& mes
             }
         }
         //@TODO: faudrait probalement utilisé l'impact_list qui est utilisé en modéle
-        std::vector<types::StopTime*> impacted_stop = get_stop_from_impact(message, current_date, vehicle_journey->stop_time_list);
+        std::vector<types::StopTime*> impacted_stop = get_stop_from_impact(message, current_period.begin().date(), vehicle_journey->stop_time_list);
         if(impacted_stop.size() < 1){
             continue;
         }
@@ -112,8 +112,8 @@ void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& mes
                 vj_adapted->stop_time_list.erase(it);
             }
         }
-        vj_adapted->adapted_validity_pattern->add(current_date);
-        vehicle_journey->adapted_validity_pattern->remove(current_date);
+        vj_adapted->adapted_validity_pattern->add(current_period.begin().date());
+        vehicle_journey->adapted_validity_pattern->remove(current_period.begin().date());
     }
 }
 
