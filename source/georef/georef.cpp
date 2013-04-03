@@ -379,24 +379,25 @@ void GeoRef::build_ways(){
 
 /** Chargement de la liste poitype_map : mappage entre codes externes et idx des POITypes*/
 void GeoRef::build_poitypes(){
-
    for(auto ptype : poitypes){
-
        this->poitype_map[ptype.uri] = ptype.idx;
-
    }
-
 }
 
 /** Chargement de la liste poi_map : mappage entre codes externes et idx des POIs*/
 void GeoRef::build_pois(){
-
    for(auto poi : pois){
-
        this->poi_map[poi.uri] = poi.idx;
-
    }
+}
 
+void GeoRef::build_rtree() {
+    typedef boost::geometry::model::box<type::GeographicalCoord> box;
+    for(const Admin & admin : this->admins){
+        auto envelope = boost::geometry::return_envelope<box>(admin.boundary);
+        Rect r(envelope.min_corner().lon(), envelope.min_corner().lat(), envelope.max_corner().lon(), envelope.max_corner().lat());
+        this->rtree.Insert(r.min, r.max, admin.idx);
+    }
 }
 
 /** Normalisation des codes externes des rues*/

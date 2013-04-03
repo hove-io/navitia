@@ -242,11 +242,14 @@ struct GeoRef {
     void normalize_extcode_admin();
     /// Chargement de la liste map code externe idx
     void build_ways();
-    ///Chargement de la liste map code externe idx sur poitype et poi
+    /// Chargement de la liste map code externe idx sur poitype et poi
     void build_poitypes();
     void build_pois();
     /// Chargement de la liste map code externe idx
     void build_admins();
+
+    /// Construit l’indexe spatial permettant de retrouver plus vite la commune à une coordonnées
+    void build_rtree();
 
     /// Recherche d'une adresse avec un numéro en utilisant Autocomplete
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax) const;
