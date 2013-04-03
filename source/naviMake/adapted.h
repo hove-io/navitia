@@ -9,6 +9,12 @@ void delete_vj(types::VehicleJourney* vehicle_journey, const nt::Message& messag
 std::vector<types::StopTime*> get_stop_from_impact(const navitia::type::Message& message, boost::gregorian::date current_date, std::vector<types::StopTime*> stoplist);
 void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& message, Data& data);
 
+std::string make_adapted_uri(const types::VehicleJourney* vj, const Data& data);
+
+types::VehicleJourney* create_adapted_vj(types::VehicleJourney* current_vj, types::VehicleJourney* theorical_vj,  Data& data);
+std::pair<bool, types::VehicleJourney*> find_reference_vj(types::VehicleJourney* vehicle_journey, int day_index);
+
+
 struct AtAdaptedLoader{
 private:
     std::unordered_map<std::string, types::VehicleJourney*> vj_map;
