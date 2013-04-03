@@ -12,7 +12,6 @@ from instance_manager import NavitiaManager
 from find_extrem_datetimes import extremes
 
 from apis import *
-from apis_functions import *
 from renderers import render
 from universals import *
 
@@ -23,6 +22,28 @@ def on_summary_doc(request) :
 
 def on_doc(request, api):
     return render(api_doc(Apis().apis_all, api), 'json', request.args.get('callback'))
+
+def on_index(request, version = None, region = None ):
+    return Response('Welcome to the navitia API. Have a look at http://www.navitia.io to learn how to use it.')
+
+
+def on_regions(request, version, format):
+    response = {'requested_api': 'REGIONS', 'regions': []}
+    for region in NavitiaManager().instances.keys() : 
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.METADATAS
+        try:
+            resp = NavitiaManager().send_and_receive(req, region)
+            resp_dict = protobuf_to_dict(resp) 
+            if 'metadatas' in resp_dict.keys():
+                resp_dict['metadatas']['region_id'] = region                
+                response['regions'].append(resp_dict['metadatas'])
+        except DeadSocketException :
+            response['regions'].append({"region_id" : region, "status" : "not running"})
+        except RegionNotFound:
+            response['regions'].append({"region_id" : region, "status" : "not found"})
+
+    return render(response, format,  request.args.get('callback'))
 
 url_map = Map([
     Rule('/', endpoint=on_index),

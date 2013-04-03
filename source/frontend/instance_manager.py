@@ -10,6 +10,7 @@ import request_pb2
 import response_pb2
 import glob
 from singleton import singleton
+import importlib
 
 
 class Instance:
@@ -19,6 +20,7 @@ class Instance:
         self.socket_path = None
         self.poller = zmq.Poller()
         self.lock = Lock()
+        self.script = None
 
 class DeadSocketException(Exception):
     def __init__(self, message):
@@ -30,6 +32,9 @@ class RegionNotFound(Exception):
     def __init__(self, message):
         Exception.__init__(self, message)
 
+class ApiNotFound(Exception):
+    def __init__(self, message):
+        Exception.__init__(self, message)
 
 @singleton
 class NavitiaManager:
@@ -66,12 +71,24 @@ class NavitiaManager:
             instance.socket = self.context.socket(zmq.REQ)
             instance.socket.connect(instance.socket_path)
             instance.poller.register(instance.socket, zmq.POLLIN)
+            if conf.has_option('instance', 'script') :
+                instance.script = importlib.import_module(conf.get('instance','script')).Script()
+            else:
+                instance.script = importlib.import_module("scripts.default").Script()
             self.instances[conf.get('instance' , 'key')] = instance
-
-
         self.thread_event = Event()
         self.thread = Thread(target = self.thread_ping)
         self.thread.start()
+
+
+    def dispatch(self, api, request, version, region):
+        if region in self.instances:
+            try:
+                return getattr(self.instances[region].script, api)(request, version, region)
+            except AttributeError:
+                raise ApiNotFound(api + " not found ")
+        else:
+             raise RegionNotFound(region + " not found")
 
     def send_and_receive(self, request, region = None):
         if region in self.instances:
