@@ -12,3 +12,15 @@
     </script>
 {{ super() }}
 {% endblock %}
+
+{%- block content %}
+<div class="container">
+  {{ navBar() }}
+  <div class="row">
+    <div class="span8 offset2">
+      {% block body %}{% endblock %}
+    </div>
+  </div>
+</div>
+{%- endblock %}
+

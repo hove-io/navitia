@@ -32,7 +32,7 @@ The filter parameter
 
 
 The filter argument used for requesting public transport object are defined by the grammar defined below. See the previous examples
-`Exploring the public transport objects`_ to know how to use it
+:ref:`pt_introduction` to know how to use it.
 
 **filter**
 
