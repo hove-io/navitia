@@ -19,8 +19,8 @@ public:
     void fill_poi_type(GeoRef & georef_to_fill);
     void fill_poi(GeoRef & georef_to_fill);
     void fill(GeoRef & georef_to_fill);
-    void fill_alias(GeoRef & georef_to_fill);
-    void fill_synonymes(GeoRef & georef_to_fill);
+    void fill_aliases(GeoRef & georef_to_fill);
+    void fill_synonyms(GeoRef & georef_to_fill);
     void fill_alias_synonyme(GeoRef & georef_to_fill);
 };
 }}

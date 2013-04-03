@@ -122,13 +122,13 @@ void PoiParser::fill(GeoRef & georef_to_fill)
     LOG4CPLUS_TRACE(logger, "On a  " + boost::lexical_cast<std::string>(georef_to_fill.pois.size())+ " POIs");
 }
 
-void PoiParser::fill_alias(GeoRef & georef_to_fill){
+void PoiParser::fill_aliases(GeoRef & georef_to_fill){
     // Verification des entêtes:
     std::string key, value;
     CsvReader csv(path + "/" + "alias.txt", '=', true);
     std::vector<std::string> mandatory_headers = {"key" , "value"};
     if(!csv.validate(mandatory_headers)) {
-        LOG4CPLUS_FATAL(logger, "Erreur lors du parsing de fill_alias " + csv.filename +" . Il manque les colonnes : " + csv.missing_headers(mandatory_headers));
+        LOG4CPLUS_FATAL(logger, "Erreur lors du parsing de fill_aliases " + csv.filename +" . Il manque les colonnes : " + csv.missing_headers(mandatory_headers));
     }
 
     int key_c = csv.get_pos_col("key"), value_c = csv.get_pos_col("value");
@@ -146,7 +146,7 @@ void PoiParser::fill_alias(GeoRef & georef_to_fill){
     }
 }
 
-void PoiParser::fill_synonymes(GeoRef &georef_to_fill)
+void PoiParser::fill_synonyms(GeoRef &georef_to_fill)
 {
     std::string key, value;
     CsvReader csv(path + "/" + "synonyme.txt", '=', true);
@@ -173,11 +173,11 @@ void PoiParser::fill_synonymes(GeoRef &georef_to_fill)
 void PoiParser::fill_alias_synonyme(GeoRef &georef_to_fill)
 {
     // Lire les fichiers poi-type.txt
-    fill_alias(georef_to_fill);
+    fill_aliases(georef_to_fill);
     LOG4CPLUS_TRACE(logger, "On a  " + boost::lexical_cast<std::string>(georef_to_fill.alias.size())+ " alias");
 
     // Lire les fichiers poi-type.txt
-    fill_synonymes(georef_to_fill);
+    fill_synonyms(georef_to_fill);
     LOG4CPLUS_TRACE(logger, "On a  " + boost::lexical_cast<std::string>(georef_to_fill.synonymes.size())+ " synonymes");
 }
 
