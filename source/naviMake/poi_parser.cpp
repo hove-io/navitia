@@ -126,6 +126,10 @@ void PoiParser::fill_aliases(GeoRef & georef_to_fill){
     // Verification des entêtes:
     std::string key, value;
     CsvReader csv(path + "/" + "alias.txt", '=', true);
+    if(!csv.is_open()) {
+        LOG4CPLUS_FATAL(logger, "Impossible d'ouvrir le fichier " + csv.filename +" dans fill_aliases");
+        return;
+    }
     std::vector<std::string> mandatory_headers = {"key" , "value"};
     if(!csv.validate(mandatory_headers)) {
         LOG4CPLUS_FATAL(logger, "Erreur lors du parsing de fill_aliases " + csv.filename +" . Il manque les colonnes : " + csv.missing_headers(mandatory_headers));
@@ -150,6 +154,10 @@ void PoiParser::fill_synonyms(GeoRef &georef_to_fill)
 {
     std::string key, value;
     CsvReader csv(path + "/" + "synonyme.txt", '=', true);
+    if(!csv.is_open()) {
+        LOG4CPLUS_FATAL(logger, "Impossible d'ouvrir le fichier " + csv.filename +" dans fill_synonyms");
+        return;
+    }
     std::vector<std::string> mandatory_headers = {"key" , "value"};
     if(!csv.validate(mandatory_headers)) {
         LOG4CPLUS_FATAL(logger, "Erreur lors du parsing de " + csv.filename +" . Il manque les colonnes : " + csv.missing_headers(mandatory_headers));
