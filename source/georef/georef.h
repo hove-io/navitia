@@ -227,8 +227,8 @@ struct GeoRef {
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
-    /// Récupération des la listes des admins à partir des cooredonnées
-    std::vector<navitia::type::idx_t> Within(const type::GeographicalCoord &);
+    /// Récupération de la liste des admins à partir des coordonnées
+    std::vector<navitia::type::idx_t> find_admins(const type::GeographicalCoord &);
 
     /** Construit l'indexe spatial */
     void build_proximity_list();

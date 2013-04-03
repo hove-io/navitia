@@ -343,7 +343,7 @@ void AdminRef(){
 void fillAdminWay(){
     for(navitia::georef::Way& way : geo_ref.ways){
         navitia::type::GeographicalCoord coord = way.barycentre(geo_ref.graph);
-        std::vector<navitia::type::idx_t> vect_idx = geo_ref.Within(coord);
+        std::vector<navitia::type::idx_t> vect_idx = geo_ref.find_admins(coord);
         for(navitia::type::idx_t id : vect_idx){
             way.admins.push_back(id);
         }

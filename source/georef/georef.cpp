@@ -313,7 +313,7 @@ Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::Ge
 
 
 
-std::vector<navitia::type::idx_t> GeoRef::Within(const type::GeographicalCoord &coord){
+std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCoord &coord){
     std::vector<navitia::type::idx_t> to_return;
     for(Admin admin : admins){
         if (boost::geometry::within(coord, admin.boundary)){
