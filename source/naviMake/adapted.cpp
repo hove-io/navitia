@@ -134,8 +134,8 @@ void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& mes
         if(impacted_stop.size() < 1){
             continue;
         }
-        // vj_adapted n'est pas réinitialisé à NULL, donc si l'impact est actif 2 jours, on ne recrée pas un autre vj
-        // sauf si le VJ de référence à changer entre temps
+        // vj_adapted n'est pas réinitialisé à NULL, donc si l'impact est actif plusieurs jours, on ne recrée pas un autre vj
+        // sauf si le VJ de référence a changé entre temps
         if((vj_adapted == NULL) || prec_vj != current_vj){
             vj_adapted = create_adapted_vj(current_vj, vehicle_journey, data);
         }
@@ -257,13 +257,11 @@ void AtAdaptedLoader::dispatch_message(const std::map<std::string, std::vector<n
                     update_vj_map[vj].push_back(m);
                 }
 
-            }else{
-                if(m.object_type == nt::Type_e::JourneyPatternPoint || m.object_type == nt::Type_e::StopPoint
-                        || m.object_type == nt::Type_e::StopArea){
-                    std::vector<navimake::types::VehicleJourney*> vj_list = get_vj_from_impact(m, data);
-                    for(auto vj  : vj_list){
-                        duplicate_vj_map[vj].push_back(m);
-                    }
+            }else if(m.object_type == nt::Type_e::JourneyPatternPoint || m.object_type == nt::Type_e::StopPoint
+                    || m.object_type == nt::Type_e::StopArea){
+                std::vector<navimake::types::VehicleJourney*> vj_list = get_vj_from_impact(m, data);
+                for(auto vj : vj_list){
+                    duplicate_vj_map[vj].push_back(m);
                 }
             }
         }
