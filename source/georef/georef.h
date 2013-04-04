@@ -164,6 +164,13 @@ struct Rect{
     double max[2];
     Rect() {}
 
+    Rect(const type::GeographicalCoord & coord) {
+        min[0] = coord.lon();
+        min[1] = coord.lat();
+        max[0] = coord.lon();
+        max[1] = coord.lat();
+    }
+
     Rect(double a_minX, double a_minY, double a_maxX, double a_maxY){
         min[0] = a_minX;
         min[1] = a_minY;
