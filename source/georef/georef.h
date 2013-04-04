@@ -219,7 +219,7 @@ struct GeoRef {
     /// Liste des alias
     std::map<std::string, std::string> alias;
     std::map<std::string, std::string> synonymes;
-    int word_weight;//(Pas serialisé)
+    int word_weight; //Pas serialisé : lu dans le fichier ini
 
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {

@@ -311,25 +311,17 @@ Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::Ge
     }
 }
 
-bool MySearchCallback(idx_t id, void* )
-{
-  std::cout << "Hit data rect " <<  id << std::endl;
-  return true; // keep going
-}
-
-
 
 std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCoord &coord){
     std::vector<navitia::type::idx_t> to_return;
-    navitia::georef::Rect search_rect(coord.lon(), coord.lat(), coord.lon(), coord.lat());
+    navitia::georef::Rect search_rect(coord);
 
     std::vector<idx_t> result;
-    auto callback = [](idx_t id, void*)->bool{/*result.push_back(id);*/ return true;};
-    int nhits = this->rtree.Search(search_rect.min, search_rect.max, callback, NULL);
-    std::cout << "Nombre trouvé : " << result.size() << " vs " << nhits << std::endl;
-    for(Admin admin : admins){
-        if (boost::geometry::within(coord, admin.boundary)){
-            to_return.push_back(admin.idx);
+    auto callback = [](idx_t id, void* vec)->bool{reinterpret_cast<std::vector<idx_t>*>(vec)->push_back(id); return true;};
+    this->rtree.Search(search_rect.min, search_rect.max, callback, &result);
+    for(idx_t admin_idx : result) {
+        if (boost::geometry::within(coord, admins[admin_idx].boundary)){
+            to_return.push_back(admin_idx);
         }
     }
     return to_return;
