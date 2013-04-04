@@ -138,9 +138,6 @@ int main(int argc, char * argv[])
     data.complete();
     complete = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
-    start = pt::microsec_clock::local_time();
-    data.clean();
-    clean = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 
     if(vm.count("at-connection-string")){
@@ -154,6 +151,9 @@ int main(int argc, char * argv[])
         adapter.apply(messages, data);
     }
 
+    start = pt::microsec_clock::local_time();
+    data.clean();
+    clean = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 
     start = pt::microsec_clock::local_time();
