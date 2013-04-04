@@ -23,4 +23,7 @@ ADD_TEST(gtfs_parser_test ${EXECUTABLE_OUTPUT_PATH}/gtfs_parser_test --report_le
 add_executable(adapted_test adapted_test.cpp)
 target_link_libraries(adapted_test connectors types utils data ${Boost_LIBRARIES})
 
+add_executable(osm_test osm_test.cpp)
+target_link_libraries(osm_test connectors osmpbf types data georef pb_lib utils routing ${Boost_LIBRARIES})
+
 ADD_TEST(adapted_test ${EXECUTABLE_OUTPUT_PATH}/adapted_test --report_level=no)
