@@ -29,17 +29,6 @@ Data& Data::operator=(Data&& other){
     return *this;
 }
 
-/*
-void Data::set_cities(){
-     for(navitia::georef::Way & way : geo_ref.ways) {
-        auto city_it = pt_data.cities_map.find("city:"+way.city);
-        if(city_it != pt_data.cities_map.end()) {
-            way.city_idx = city_it->second;
-        } else {
-            way.city_idx = invalid_idx;
-        }
-    }
-}*/
 void Data::set_admins(){
     // les points d'arrêts
     for(StopPoint & stop_point : pt_data.stop_points){
