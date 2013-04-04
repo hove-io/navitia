@@ -54,7 +54,7 @@ std::vector<types::StopTime*> get_stop_from_impact(const navitia::type::Message&
     return result;
 }
 
-std::string make_adapted_uri(const types::VehicleJourney* vj, const Data& data){
+std::string make_adapted_uri(const types::VehicleJourney* vj, const Data&){
     //@TODO: impleménter une régle intélligente
     return vj->uri + ":adapted:" + boost::lexical_cast<std::string>(vj->adapted_vehicle_journey_list.size());
 }
@@ -103,13 +103,12 @@ std::pair<bool, types::VehicleJourney*> find_reference_vj(types::VehicleJourney*
 }
 
 void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& message, Data& data){
-    types::VehicleJourney* vj_adapted = NULL;
-    types::VehicleJourney* prec_vj = NULL;
+    //map contenant le mapping entre un vj de référence et le vj adapté qui lui est lié
+    //ceci permet de ne pas recréer un vj adapté à chaque fois que l'on change de vj de référence
+    std::map<types::VehicleJourney*, types::VehicleJourney*> prec_vjs;
     //on teste le validitypattern adapté car si le VJ est déjà supprimé le traitement n'est pas nécessaire
-    //@TODO: faux car on ne pas appilquer 2 messages différent sur un même jour, mais comment détecter le vj supprimé
     for(size_t i=0; i < vehicle_journey->validity_pattern->days.size(); ++i){
-        //VJ de référence pour ce jour, par défaut c'est le vj théorique (celui dont l'uri est spécifié dans l'impact)
-
+        types::VehicleJourney* vj_adapted = NULL;
         //construction de la période de circulation du VJ entre [current_date minuit] et [current_date 23H59] dans le cas d'une
         //circulation normal, ou, l'heure d'arrivé dans le cas d'un train passe minuit (période plus de 24H)
         pt::time_period current_period(pt::ptime(vehicle_journey->validity_pattern->beginning_date + bg::days(i), pt::seconds(0)),
@@ -134,9 +133,11 @@ void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& mes
         if(impacted_stop.size() < 1){
             continue;
         }
-        // vj_adapted n'est pas réinitialisé à NULL, donc si l'impact est actif plusieurs jours, on ne recrée pas un autre vj
-        // sauf si le VJ de référence a changé entre temps
-        if((vj_adapted == NULL) || prec_vj != current_vj){
+        //si on à deja utilisé ce vj de référence donc on reprend le vj adapté qui lui correspond
+        if(prec_vjs.find(current_vj) != prec_vjs.end()){
+            vj_adapted = prec_vjs[current_vj];
+        }else{
+            //si on à jamais utilisé ce vj, on construit un nouveau vj adapté
             vj_adapted = create_adapted_vj(current_vj, vehicle_journey, data);
         }
 
@@ -150,7 +151,7 @@ void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& mes
         vj_adapted->adapted_validity_pattern->add(current_period.begin().date());
         current_vj->adapted_validity_pattern->remove(current_period.begin().date());
 
-        prec_vj = current_vj;
+        prec_vjs[current_vj] = vj_adapted;
     }
 }
 
@@ -166,7 +167,7 @@ void AtAdaptedLoader::init_map(const Data& data){
     }
 }
 
-std::vector<types::VehicleJourney*> AtAdaptedLoader::reconcile_impact_with_vj(const navitia::type::Message& message, const Data& data){
+std::vector<types::VehicleJourney*> AtAdaptedLoader::reconcile_impact_with_vj(const navitia::type::Message& message, const Data&){
     std::vector<types::VehicleJourney*> result;
 
     if(message.object_type == navitia::type::Type_e::VehicleJourney){
@@ -229,14 +230,13 @@ std::vector<types::VehicleJourney*> AtAdaptedLoader::get_vj_from_impact(const na
     if(message.object_type == navitia::type::Type_e::StopPoint){
         auto tmp = get_vj_from_stoppoint(message.object_uri, data);
         std::vector<types::VehicleJourney*>::iterator it;
-        result.insert(it, tmp.begin(), tmp.end());
+        result.insert(result.end(), tmp.begin(), tmp.end());
     }
     if(message.object_type == navitia::type::Type_e::StopArea){
         for(navimake::types::StopPoint* stp : data.stop_points){
             if(message.object_uri == stp->stop_area->uri){
                 auto tmp = get_vj_from_stoppoint(stp->uri, data);
-                std::vector<types::VehicleJourney*>::iterator it;
-                result.insert(it, tmp.begin(), tmp.end());
+                result.insert(result.end(), tmp.begin(), tmp.end());
             }
         }
     }
@@ -273,7 +273,6 @@ void AtAdaptedLoader::apply(const std::map<std::string, std::vector<navitia::typ
 
     dispatch_message(messages, data);
 
-    std::cout << "nombre de VJ adaptés: " << update_vj_map.size() << std::endl;
     for(auto pair : update_vj_map){
         apply_deletion_on_vj(pair.first, pair.second, data);
     }
