@@ -2305,6 +2305,9 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
     BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), false);
 
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 2);
+    for(unsigned int i=0; i < vj->stop_time_list.size(); ++i){
+        BOOST_CHECK_EQUAL(vj->stop_time_list[i]->order, i);
+    }
 
 
 
@@ -2348,6 +2351,9 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
     BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), false);
 
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 1);
+    for(unsigned int i=0; i < vj->stop_time_list.size(); ++i){
+        BOOST_CHECK_EQUAL(vj->stop_time_list[i]->order, i);
+    }
 
     vj = b.data.vehicle_journeys[2];
     BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:2");
@@ -2389,6 +2395,9 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
     BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), false);
 
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 1);
+    for(unsigned int i=0; i < vj->stop_time_list.size(); ++i){
+        BOOST_CHECK_EQUAL(vj->stop_time_list[i]->order, i);
+    }
 
     vj = b.data.vehicle_journeys[3];
     BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:3");

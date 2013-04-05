@@ -249,6 +249,12 @@ void AtAdaptedLoader::apply_update_on_vj(types::VehicleJourney* vehicle_journey,
             duplicate_vj(vehicle_journey, m, data);
         }
     }
+    //une fois tous les messages traités pour un vj, on renumérote les horaires des vj adapté
+    for(types::VehicleJourney* vj : vehicle_journey->adapted_vehicle_journey_list){
+        for(int i=0; i < vj->stop_time_list.size(); i++){
+            vj->stop_time_list[i]->order = i;
+        }
+    }
 }
 
 std::vector<types::VehicleJourney*> AtAdaptedLoader::get_vj_from_stoppoint(std::string stoppoint_uri){
