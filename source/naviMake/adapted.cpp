@@ -164,6 +164,14 @@ void AtAdaptedLoader::init_map(const Data& data){
                 network_vj_map[vj->tmp_line->network->uri].push_back(vj);
             }
         }
+        for(auto* stop : vj->stop_time_list){
+            assert(stop->tmp_stop_point != NULL);
+            stop_point_vj_map[stop->tmp_stop_point->uri].push_back(vj);
+        }
+    }
+    for(auto* sp : data.stop_points){
+        assert(sp->stop_area != NULL);
+        stop_area_to_stop_point_map[sp->stop_area->uri].push_back(sp);
     }
 }
 
@@ -208,19 +216,15 @@ void AtAdaptedLoader::apply_update_on_vj(types::VehicleJourney* vehicle_journey,
     }
 }
 
-std::vector<types::VehicleJourney*> AtAdaptedLoader::get_vj_from_stoppoint(std::string stoppoint_uri, const Data& data){
+std::vector<types::VehicleJourney*> AtAdaptedLoader::get_vj_from_stoppoint(std::string stoppoint_uri){
+    return stop_point_vj_map[stoppoint_uri];
+}
+
+std::vector<types::VehicleJourney*> AtAdaptedLoader::get_vj_from_stop_area(std::string stop_area_uri){
     std::vector<types::VehicleJourney*> result;
-    for(navimake::types::JourneyPatternPoint* jpp : data.journey_pattern_points){
-        if(jpp->stop_point->uri == stoppoint_uri){
-            //le journeypattern posséde le StopPoint
-            navimake::types::JourneyPattern* jp = jpp->journey_pattern;
-            //on récupere tous les vj qui posséde ce journeypattern
-            for(navimake::types::VehicleJourney* vj : data.vehicle_journeys){
-                if(vj->journey_pattern == jp){
-                    result.push_back(vj);
-                }
-            }
-        }
+    for(types::StopPoint* sp : stop_area_to_stop_point_map[stop_area_uri]){
+        auto tmp = get_vj_from_stoppoint(sp->uri);
+        result.insert(result.end(), tmp.begin(), tmp.end());
     }
     return result;
 }
@@ -228,17 +232,12 @@ std::vector<types::VehicleJourney*> AtAdaptedLoader::get_vj_from_stoppoint(std::
 std::vector<types::VehicleJourney*> AtAdaptedLoader::get_vj_from_impact(const navitia::type::Message& message, const Data& data){
     std::vector<types::VehicleJourney*> result;
     if(message.object_type == navitia::type::Type_e::StopPoint){
-        auto tmp = get_vj_from_stoppoint(message.object_uri, data);
-        std::vector<types::VehicleJourney*>::iterator it;
+        auto tmp = get_vj_from_stoppoint(message.object_uri);
         result.insert(result.end(), tmp.begin(), tmp.end());
     }
     if(message.object_type == navitia::type::Type_e::StopArea){
-        for(navimake::types::StopPoint* stp : data.stop_points){
-            if(message.object_uri == stp->stop_area->uri){
-                auto tmp = get_vj_from_stoppoint(stp->uri, data);
-                result.insert(result.end(), tmp.begin(), tmp.end());
-            }
-        }
+        auto tmp = get_vj_from_stop_area(message.object_uri);
+        result.insert(result.end(), tmp.begin(), tmp.end());
     }
     return result;
 }
@@ -269,6 +268,9 @@ void AtAdaptedLoader::dispatch_message(const std::map<std::string, std::vector<n
 }
 
 void AtAdaptedLoader::apply(const std::map<std::string, std::vector<navitia::type::Message>>& messages, Data& data){
+    if(messages.size() < 1){
+        return;
+    }
     init_map(data);
 
     dispatch_message(messages, data);

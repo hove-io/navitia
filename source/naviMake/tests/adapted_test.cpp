@@ -1770,7 +1770,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_2){
     navimake::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
-    VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", 8000,8050)("stop2", 8200,8250).vj;
+    VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", 8000,8050)("stop2", 8200, 8400).vj;
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[bt::Sunday] = true;
@@ -2433,6 +2433,4 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
     BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), true);
 
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 0);
-
-
 }
