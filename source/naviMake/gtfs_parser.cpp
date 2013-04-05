@@ -680,8 +680,8 @@ void GtfsParser::parse_stop_times(Data & data, CsvReader &csv) {
     std::vector<std::string> mandatory_headers = {"trip_id" , "arrival_time",
         "departure_time", "stop_id", "stop_sequence"};
     if(!csv.validate(mandatory_headers)) {
-        LOG4CPLUS_FATAL(logger, "Erreur lors du parsing de " + csv.filename 
-                  + ". Il manque les colonnes : " 
+        LOG4CPLUS_FATAL(logger, "Erreur lors du parsing de " + csv.filename
+                  + ". Il manque les colonnes : "
                   + csv.missing_headers(mandatory_headers));
         throw InvalidHeaders(csv.filename);
     }
