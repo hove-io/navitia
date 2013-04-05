@@ -165,7 +165,6 @@ bool StopTime::operator<(const StopTime& other) const {
 }
 
 
-
 bool Department::operator <(const Department & other) const {
     return this->district < other.district || ((this->district == other.district) && (this->name < other.name));
 }

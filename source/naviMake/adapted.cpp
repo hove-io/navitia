@@ -73,6 +73,15 @@ types::VehicleJourney* create_adapted_vj(types::VehicleJourney* current_vj, type
 
     vj_adapted->adapted_validity_pattern = new types::ValidityPattern(vj_adapted->validity_pattern->beginning_date);
     data.validity_patterns.push_back(vj_adapted->adapted_validity_pattern);
+
+    vj_adapted->stop_time_list = std::vector<types::StopTime*>();
+    for(auto* stop : current_vj->stop_time_list){
+        types::StopTime* new_stop = new types::StopTime(*stop);
+        new_stop->vehicle_journey = vj_adapted;
+        vj_adapted->stop_time_list.push_back(new_stop);
+        data.stops.push_back(new_stop);
+    }
+
     return vj_adapted;
 
 }
@@ -103,6 +112,7 @@ std::pair<bool, types::VehicleJourney*> find_reference_vj(types::VehicleJourney*
 }
 
 void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& message, Data& data){
+    std::vector<types::StopTime*> stop_to_delete;
     //map contenant le mapping entre un vj de référence et le vj adapté qui lui est lié
     //ceci permet de ne pas recréer un vj adapté à chaque fois que l'on change de vj de référence
     std::map<types::VehicleJourney*, types::VehicleJourney*> prec_vjs;
@@ -142,8 +152,13 @@ void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& mes
         }
 
         for(auto* stoptmp : impacted_stop){
-            auto it = std::find(vj_adapted->stop_time_list.begin(), vj_adapted->stop_time_list.end(), stoptmp);
+            auto it = std::find_if(vj_adapted->stop_time_list.begin(), vj_adapted->stop_time_list.end(),
+                    [&stoptmp](types::StopTime* s1){
+                        return (s1->arrival_time == stoptmp->arrival_time && s1->departure_time == stoptmp->departure_time
+                            && s1->tmp_stop_point == stoptmp->tmp_stop_point);
+                    });
             if(it != vj_adapted->stop_time_list.end()){
+                stop_to_delete.push_back(*it);
                 vj_adapted->stop_time_list.erase(it);
             }
         }
@@ -152,6 +167,15 @@ void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& mes
         current_vj->adapted_validity_pattern->remove(current_period.begin().date());
 
         prec_vjs[current_vj] = vj_adapted;
+    }
+
+    for(auto* stop : stop_to_delete){
+        auto it = std::find(data.stops.begin(), data.stops.end(), stop);
+        if(it != data.stops.end()){
+            data.stops.erase(it);
+        }
+        delete stop;
+        stop = NULL;
     }
 }
 

@@ -117,8 +117,6 @@ int main(int argc, char * argv[])
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 
-
-
     std::cout << "line: " << data.lines.size() << std::endl;
     std::cout << "journey_pattern: " << data.journey_patterns.size() << std::endl;
     std::cout << "stoparea: " << data.stop_areas.size() << std::endl;

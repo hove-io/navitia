@@ -1572,8 +1572,12 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
 
     messages[m.object_uri].push_back(m);
 
+    BOOST_CHECK_EQUAL(b.data.stops.size(), 2);
+
     AtAdaptedLoader loader;
     loader.apply(messages, b.data);
+
+    BOOST_CHECK_EQUAL(b.data.stops.size(), 3);
 
     vj = b.data.vehicle_journeys[0];
     BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1");
@@ -1700,8 +1704,12 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_1){
 
     messages[m.object_uri].push_back(m);
 
+    BOOST_CHECK_EQUAL(b.data.stops.size(), 2);
+
     AtAdaptedLoader loader;
     loader.apply(messages, b.data);
+
+    BOOST_CHECK_EQUAL(b.data.stops.size(), 2);
 
     vj = b.data.vehicle_journeys[0];
     BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1");
@@ -1795,8 +1803,10 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_2){
 
     messages[m.object_uri].push_back(m);
 
+    BOOST_CHECK_EQUAL(b.data.stops.size(), 2);
     AtAdaptedLoader loader;
     loader.apply(messages, b.data);
+    BOOST_CHECK_EQUAL(b.data.stops.size(), 3);
 
     vj = b.data.vehicle_journeys[0];
     BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1");
@@ -2223,8 +2233,10 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
     m.active_days = nt::Ven | nt::Lun;
     messages[m.object_uri].push_back(m);
 
+    BOOST_CHECK_EQUAL(b.data.stops.size(), 2);
     AtAdaptedLoader loader;
     loader.apply(messages, b.data);
+    BOOST_CHECK_EQUAL(b.data.stops.size(), 4);
 
     BOOST_CHECK_EQUAL(b.data.vehicle_journeys.size(), 4);
 
