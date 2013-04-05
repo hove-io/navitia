@@ -134,12 +134,6 @@ int main(int argc, char * argv[])
     std::cout << "voies (rues) : " << nav_data.geo_ref.ways.size() << std::endl;
 
 
-    start = pt::microsec_clock::local_time();
-    data.complete();
-    complete = (pt::microsec_clock::local_time() - start).total_milliseconds();
-
-
-
     if(vm.count("at-connection-string")){
         navitia::AtLoader::Config conf;
         conf.connect_string = vm["at-connection-string"].as<std::string>();
@@ -150,6 +144,10 @@ int main(int argc, char * argv[])
         navimake::AtAdaptedLoader adapter;
         adapter.apply(messages, data);
     }
+
+    start = pt::microsec_clock::local_time();
+    data.complete();
+    complete = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     start = pt::microsec_clock::local_time();
     data.clean();

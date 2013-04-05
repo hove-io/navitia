@@ -71,7 +71,6 @@ BOOST_AUTO_TEST_CASE(impact_vj_0){
 
     b.data.normalize_uri();
 
-    b.data.complete();
 
     std::map<std::string, std::vector<nt::Message>> messages;
     nt::Message m;
@@ -199,7 +198,6 @@ BOOST_AUTO_TEST_CASE(impact_vj_1){
 
     b.data.normalize_uri();
 
-    b.data.complete();
 
     std::map<std::string, std::vector<nt::Message>> messages;
     nt::Message m;
@@ -330,7 +328,6 @@ BOOST_AUTO_TEST_CASE(impact_vj_2){
 
     b.data.normalize_uri();
 
-    b.data.complete();
 
     std::map<std::string, std::vector<nt::Message>> messages;
     nt::Message m;
@@ -494,7 +491,6 @@ BOOST_AUTO_TEST_CASE(impact_line_0){
 
     b.data.normalize_uri();
 
-    b.data.complete();
 
     std::map<std::string, std::vector<nt::Message>> messages;
     nt::Message m;
@@ -675,7 +671,6 @@ BOOST_AUTO_TEST_CASE(impact_line_1){
 
     b.data.normalize_uri();
 
-    b.data.complete();
 
     std::map<std::string, std::vector<nt::Message>> messages;
     nt::Message m;
@@ -838,7 +833,6 @@ BOOST_AUTO_TEST_CASE(impact_network_0){
 
     b.data.normalize_uri();
 
-    b.data.complete();
 
     std::map<std::string, std::vector<nt::Message>> messages;
     nt::Message m;
@@ -1022,7 +1016,6 @@ BOOST_AUTO_TEST_CASE(impact_network_1){
 
     b.data.normalize_uri();
 
-    b.data.complete();
 
     std::map<std::string, std::vector<nt::Message>> messages;
     nt::Message m;
@@ -1206,7 +1199,6 @@ BOOST_AUTO_TEST_CASE(impact_network_2){
 
     b.data.normalize_uri();
 
-    b.data.complete();
 
     std::map<std::string, std::vector<nt::Message>> messages;
     nt::Message m;
@@ -1400,7 +1392,6 @@ BOOST_AUTO_TEST_CASE(impact_network_3){
 
     b.data.normalize_uri();
 
-    b.data.complete();
 
     std::map<std::string, std::vector<nt::Message>> messages;
     nt::Message m;
@@ -1569,7 +1560,6 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
 
     b.data.normalize_uri();
 
-    b.data.complete();
 
     std::map<std::string, std::vector<nt::Message>> messages;
     nt::Message m;
@@ -1689,7 +1679,6 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_1){
 
     b.data.normalize_uri();
 
-    b.data.complete();
 
     std::map<std::string, std::vector<nt::Message>> messages;
     nt::Message m;
@@ -1785,7 +1774,6 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_2){
 
     b.data.normalize_uri();
 
-    b.data.complete();
 
     std::map<std::string, std::vector<nt::Message>> messages;
     nt::Message m;
@@ -1918,7 +1906,6 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_passe_minuit){
 
     b.data.normalize_uri();
 
-    b.data.complete();
 
     std::map<std::string, std::vector<nt::Message>> messages;
     nt::Message m;
@@ -2034,7 +2021,6 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_3){
 
     b.data.normalize_uri();
 
-    b.data.complete();
 
     std::map<std::string, std::vector<nt::Message>> messages;
     nt::Message m;
@@ -2220,7 +2206,6 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
 
     b.data.normalize_uri();
 
-    b.data.complete();
 
     std::map<std::string, std::vector<nt::Message>> messages;
     nt::Message m;
