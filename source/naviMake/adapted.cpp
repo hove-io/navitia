@@ -251,7 +251,7 @@ void AtAdaptedLoader::apply_update_on_vj(types::VehicleJourney* vehicle_journey,
     }
     //une fois tous les messages traités pour un vj, on renumérote les horaires des vj adapté
     for(types::VehicleJourney* vj : vehicle_journey->adapted_vehicle_journey_list){
-        for(int i=0; i < vj->stop_time_list.size(); i++){
+        for(unsigned int i=0; i < vj->stop_time_list.size(); i++){
             vj->stop_time_list[i]->order = i;
         }
     }
@@ -270,7 +270,7 @@ std::vector<types::VehicleJourney*> AtAdaptedLoader::get_vj_from_stop_area(std::
     return result;
 }
 
-std::vector<types::VehicleJourney*> AtAdaptedLoader::get_vj_from_impact(const navitia::type::Message& message, const Data& data){
+std::vector<types::VehicleJourney*> AtAdaptedLoader::get_vj_from_impact(const navitia::type::Message& message){
     std::vector<types::VehicleJourney*> result;
     if(message.object_type == navitia::type::Type_e::StopPoint){
         auto tmp = get_vj_from_stoppoint(message.object_uri);
@@ -299,7 +299,7 @@ void AtAdaptedLoader::dispatch_message(const std::map<std::string, std::vector<n
 
             }else if(m.object_type == nt::Type_e::JourneyPatternPoint || m.object_type == nt::Type_e::StopPoint
                     || m.object_type == nt::Type_e::StopArea){
-                std::vector<navimake::types::VehicleJourney*> vj_list = get_vj_from_impact(m, data);
+                std::vector<navimake::types::VehicleJourney*> vj_list = get_vj_from_impact(m);
                 for(auto vj : vj_list){
                     duplicate_vj_map[vj].push_back(m);
                 }

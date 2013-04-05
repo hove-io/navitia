@@ -38,7 +38,7 @@ private:
 
     std::vector<types::VehicleJourney*> get_vj_from_stop_area(std::string stop_area_uri);
     std::vector<types::VehicleJourney*> get_vj_from_stoppoint(std::string stoppoint_uri);
-    std::vector<types::VehicleJourney*> get_vj_from_impact(const navitia::type::Message& message, const Data& data);
+    std::vector<types::VehicleJourney*> get_vj_from_impact(const navitia::type::Message& message);
     void dispatch_message(const std::map<std::string, std::vector<navitia::type::Message>>& messages, const Data& data);
 
 public:
