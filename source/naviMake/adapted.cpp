@@ -28,25 +28,37 @@ void delete_vj(types::VehicleJourney* vehicle_journey, const nt::Message& messag
         }
 
     }
+}
 
+pt::time_period build_stop_period(const types::StopTime& stop, const bg::date& date){
+    pt::ptime departure, arrival;
+    if(stop.departure_time < 0 || !stop.pick_up_allowed){
+        departure = pt::ptime(date, pt::seconds(stop.arrival_time + 1));
+    }else{
+        departure = pt::ptime(date, pt::seconds(stop.departure_time));
+    }
 
+    if(stop.arrival_time < 0 || !stop.drop_off_allowed){
+        arrival = pt::ptime(date, pt::seconds(stop.departure_time - 1));
+    }else{
+        arrival = pt::ptime(date, pt::seconds(stop.arrival_time));
+    }
+
+    return pt::time_period(arrival, departure);
 }
 
 std::vector<types::StopTime*> get_stop_from_impact(const navitia::type::Message& message, bg::date current_date, std::vector<types::StopTime*> stoplist){
     std::vector<types::StopTime*> result;
-    pt::ptime currenttime;
     if(message.object_type == navitia::type::Type_e::StopPoint){
         for(auto stop : stoplist){
-            currenttime = pt::ptime(current_date, pt::seconds(stop->departure_time));
-            if((stop->tmp_stop_point->uri == message.object_uri) && (message.is_applicable(pt::time_period(currenttime, pt::seconds(1))))){
+            if((stop->tmp_stop_point->uri == message.object_uri) && (message.is_applicable(build_stop_period(*stop, current_date)))){
                 result.push_back(stop);
             }
         }
     }
     if(message.object_type == navitia::type::Type_e::StopArea){
         for(auto stop : stoplist){
-            currenttime = pt::ptime(current_date, pt::seconds(stop->departure_time));
-            if((stop->tmp_stop_point->stop_area->uri == message.object_uri)&& (message.is_applicable(pt::time_period(currenttime, pt::seconds(1))))){
+            if((stop->tmp_stop_point->stop_area->uri == message.object_uri)&& (message.is_applicable(build_stop_period(*stop, current_date)))){
                 result.push_back(stop);
             }
         }
@@ -55,7 +67,6 @@ std::vector<types::StopTime*> get_stop_from_impact(const navitia::type::Message&
 }
 
 std::string make_adapted_uri(const types::VehicleJourney* vj, const Data&){
-    //@TODO: impleménter une régle intélligente
     return vj->uri + ":adapted:" + boost::lexical_cast<std::string>(vj->adapted_vehicle_journey_list.size());
 }
 

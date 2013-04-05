@@ -1545,7 +1545,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
     navimake::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
-    VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", 8000,8050)("stop2", 8200,8250).vj;
+    VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", -1,8050)("stop2", 8200)("stop3", 8200,8250).vj;
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[bt::Sunday] = true;
@@ -1572,12 +1572,12 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
 
     messages[m.object_uri].push_back(m);
 
-    BOOST_CHECK_EQUAL(b.data.stops.size(), 2);
+    BOOST_CHECK_EQUAL(b.data.stops.size(), 3);
 
     AtAdaptedLoader loader;
     loader.apply(messages, b.data);
 
-    BOOST_CHECK_EQUAL(b.data.stops.size(), 3);
+    BOOST_CHECK_EQUAL(b.data.stops.size(), 5);
 
     vj = b.data.vehicle_journeys[0];
     BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1");
@@ -1626,7 +1626,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
     testdate = bg::date_from_iso_string("20130307T1739");
     BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
 
-    BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 2);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 3);
 
 
 
@@ -1659,7 +1659,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
     testdate = bg::date_from_iso_string("20130307T1739");
     BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), false);
 
-    BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 1);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 2);
     BOOST_CHECK_EQUAL(b.data.vehicle_journeys.size(), 2);
 }
 
@@ -1767,7 +1767,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_2){
     navimake::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
-    VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", 8000,8050)("stop2", 8200, 8400).vj;
+    VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", 8000,8050)("stop2", 8200, 8250).vj;
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[bt::Sunday] = true;

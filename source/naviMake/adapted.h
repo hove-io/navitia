@@ -14,6 +14,7 @@ std::string make_adapted_uri(const types::VehicleJourney* vj, const Data& data);
 types::VehicleJourney* create_adapted_vj(types::VehicleJourney* current_vj, types::VehicleJourney* theorical_vj,  Data& data);
 std::pair<bool, types::VehicleJourney*> find_reference_vj(types::VehicleJourney* vehicle_journey, int day_index);
 
+boost::posix_time::time_period build_stop_period(const types::StopTime& stop, const boost::gregorian::date& date);
 
 struct AtAdaptedLoader{
 private:
