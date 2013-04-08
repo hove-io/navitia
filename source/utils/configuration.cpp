@@ -1,5 +1,4 @@
 #include "configuration.h"
-#include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
@@ -32,8 +31,8 @@ void Configuration::load_ini(const std::string & filename){
     boost::property_tree::ptree pt;
     boost::property_tree::read_ini(filename, pt);
 
-    BOOST_FOREACH(auto section, pt) {
-        BOOST_FOREACH(auto key_val, pt.get_child(section.first)) {
+    for(auto section : pt) {
+        for(auto key_val : pt.get_child(section.first)) {
             std::string key = key_val.first;
             std::string value = key_val.second.data();
             instance->ini[section.first][key] = value;

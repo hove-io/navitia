@@ -8,9 +8,19 @@ Welcome to navitia.io API
 
 *navitia.io* is an API to build cool stuff with public transport. We provide journeys computation, line schedules, easy access to anything related to public transport and sexy things such as isochrones.
 
-
 Getting started
 ---------------
+
+The easiest is probably to jump to `Examples`_ below.
+
+At some point you will want to read:
+
+.. toctree::
+    :maxdepth: 1
+
+    public_transport
+    details
+
         
 Our APIs are available at the following url: http://api.navitia.io.
         
@@ -23,6 +33,8 @@ There are no restriction in using our API. However, please don't make more than 
 
 .. warning::
     This API is experimental. The parameters and responses are not definite as we will listen to your feedbacks to improve it.
+
+    If you plan to build something successful, contact us to an access with more vitamines and even more support.
 
 Let us know if you build something with our API. We will be happy hilight it on this page. The more feedback we get, the more cities you will get
 and the more effort we will put to make the API durable.
@@ -49,7 +61,7 @@ The arguments are the following:
 * ``destination=coord:-122.402770:37.794682``
 * ``datetime=20130218T0800``
 
-Hence, the complete URL : http://api.navitia.io/v0/journeys.json?origin=coord:-122.4752:37.80826&destination=coord:-122.402770:37.794682&datetime=20130218T0800.
+Hence, the complete URL : http://api.navitia.io/v0/journeys.json?origin=coord:-122.4752:37.80826&destination=coord:-122.402770:37.794682&datetime=20130418T0800.
 
 
 
@@ -89,76 +101,21 @@ Compared to the ``journeys`` API, only one result is returned for every stop poi
 
 Here is an example url :
 
-http://api.navitia.io/v0/isochrone.json?origin=coord:-122.4752:37.80826&datetime=20130218T0800">http://api.navitia.io/v0/isochrone.json?origin=coord:-122.4752:37.80826&datetime=20130218T0800
+http://api.navitia.io/v0/isochrone.json?origin=coord:-122.4752:37.80826&datetime=20130418T0800
 
 Exploring the public transport objects
 **************************************
 
 *navitia* allows to request the objects and filter them by an other object. Every object has his own API,
-but they all share the same filter argument. It is a very powerful requesting tool and its grammar is detailed in the `The filter parameter`_ section.
-
-
-.. warning::
-    on large networks, requesting all objects can result in big results (many Mb). Be careful!
+but they all share the same filter argument. It is a very powerful requesting tool and its grammar is detailed in the :ref:`filter` section.
 
 
 * Get all the stop_points of San Francisco : http://api.navitia.io/v0/sf/stop_points.json
 * Get all the lines that go through the stop point with the uri ``stop_point:6526`` http://api.navitia.io/v0/sf/lines.json?filter=stop_point.uri=stop_point:6526
-* Get all the route point that belong to the stop point with the uri ``stop_point:6526`` and to the line with the uri ``line:1045`` http://api.navitia.io/v0/sf/route_points.json?filter=stop_point.uri=stop_point:6526+and+line.uri=line:1045
+* Get all the routes that belong to the stop point with the uri ``stop_point:6526`` and to the line with the uri ``line:1045`` http://api.navitia.io/v0/sf/routes.json?filter=stop_point.uri=stop_point:6526+and+line.uri=line:1045
 
-
-Some important details
-----------------------
-
-Working on a specific region
-****************************
-
-In the first examples, the positions are given by coordinates and no network is specified.
-
-
-However when no coordinates are provided, you need to provide on what region you want to request.
-
-The list of region covered by *navitia* are available at
-http://api.navitia.io/v0/regions.json">http://api.navitia.io/v0/regions.json .
-
-
-More about entry points
-***********************
-
-In the first example, we used coordinates. If you want to use any other point (e.g. a stop point), just
-use its uri. The uri of the different objects are returned by APIs as proximity list.
-
-
-You should not try to build an uri by yourself, but only re-use those provided by an API. The only
-exceptions are coordinates that have the following syntax ``coord:lon:lat``.
-
-The filter parameter
-********************
-
-The filter argument used for requesting public transport object are defined by the grammar defined below. See the previous examples
-`Exploring the public transport objects`_ to know how to use it
-
-**filter**
-.. figure:: ptref_grammar/filter.png
-
-**selector**
-.. figure:: ptref_grammar/selector.png
-
-**object**
-.. figure:: ptref_grammar/object.png
-    
-**attribute**
-.. figure:: ptref_grammar/attribute.png
-
-**bin_op**
-.. figure:: ptref_grammar/bin_op.png
-    
-
-**value**
-.. figure:: ptref_grammar/value.png
-
-**escaped_value**
-.. figure:: ptref_grammar/escaped_value.png
+.. note::
+    The results are paginated to avoid crashing your parser. The parameters to get the next page are within the result.
 
 Getting help
 ------------

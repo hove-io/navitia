@@ -266,7 +266,7 @@ struct Autocomplete
             middle_iterator = vec_quality.end();
         std::partial_sort(vec_quality.begin(), middle_iterator, vec_quality.end());
 
-        //TODO truncate avec nbmax
+
         if (vec_quality.size() > (unsigned)nbmax){vec_quality.resize(nbmax);}
 
         return vec_quality;

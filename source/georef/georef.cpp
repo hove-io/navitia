@@ -1,12 +1,12 @@
-#include <boost/foreach.hpp>
-#include <fstream>
-#include <unordered_map>
-#include <utils/logger.h>
-#include "utils/functions.h"
 #include "georef.h"
 
+#include "utils/logger.h"
+#include "utils/functions.h"
 #include "utils/csv.h"
 #include "utils/configuration.h"
+
+#include <unordered_map>
+#include <boost/foreach.hpp>
 
 using navitia::type::idx_t;
 
@@ -312,12 +312,16 @@ Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::Ge
 }
 
 
-
-std::vector<navitia::type::idx_t> GeoRef::Within(const type::GeographicalCoord &coord){
+std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCoord &coord){
     std::vector<navitia::type::idx_t> to_return;
-    for(Admin admin : admins){
-        if (boost::geometry::within(coord, admin.boundary)){
-            to_return.push_back(admin.idx);
+    navitia::georef::Rect search_rect(coord);
+
+    std::vector<idx_t> result;
+    auto callback = [](idx_t id, void* vec)->bool{reinterpret_cast<std::vector<idx_t>*>(vec)->push_back(id); return true;};
+    this->rtree.Search(search_rect.min, search_rect.max, callback, &result);
+    for(idx_t admin_idx : result) {
+        if (boost::geometry::within(coord, admins[admin_idx].boundary)){
+            to_return.push_back(admin_idx);
         }
     }
     return to_return;
@@ -370,54 +374,44 @@ void GeoRef::build_autocomplete_list(){
     fl_admin.build();
 }
 
-/** Chargement de la liste way_map : mappage entre codes externes et idx des rues*/
-void GeoRef::build_ways(){
-   for(auto way : ways){
-       this->way_map[way.uri] = way.idx;
-   }
-}
 
 /** Chargement de la liste poitype_map : mappage entre codes externes et idx des POITypes*/
 void GeoRef::build_poitypes(){
-
    for(auto ptype : poitypes){
-
        this->poitype_map[ptype.uri] = ptype.idx;
-
    }
-
 }
 
 /** Chargement de la liste poi_map : mappage entre codes externes et idx des POIs*/
 void GeoRef::build_pois(){
-
    for(auto poi : pois){
-
        this->poi_map[poi.uri] = poi.idx;
-
    }
+}
 
+void GeoRef::build_rtree() {
+    typedef boost::geometry::model::box<type::GeographicalCoord> box;
+    for(const Admin & admin : this->admins){
+        auto envelope = boost::geometry::return_envelope<box>(admin.boundary);
+        Rect r(envelope.min_corner().lon(), envelope.min_corner().lat(), envelope.max_corner().lon(), envelope.max_corner().lat());
+        this->rtree.Insert(r.min, r.max, admin.idx);
+    }
 }
 
 /** Normalisation des codes externes des rues*/
 void GeoRef::normalize_extcode_way(){
     for(Way & way : ways){
         way.uri = "address:"+ way.uri;
+        this->way_map[way.uri] = way.idx;
     }
-    this->build_ways();
 }
 
-void GeoRef::build_admins(){
-     for(Admin& admin : admins){
-        this->admin_map[admin.uri] = admin.idx;
-    }
-}
 
 void GeoRef::normalize_extcode_admin(){
     for(Admin& admin : admins){
         admin.uri = "admin" + admin.uri;
+        this->admin_map[admin.uri] = admin.idx;
     }
-    this->build_admins();
 }
 
 /**

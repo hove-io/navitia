@@ -2,7 +2,6 @@
 #define BOOST_TEST_MODULE test_proximity_list
 
 #include <boost/test/unit_test.hpp>
-#include <boost/foreach.hpp>
 #include "type/type.h"
 #include "type/message.h"
 #include "type/data.h"

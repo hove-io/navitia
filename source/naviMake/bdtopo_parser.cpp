@@ -2,14 +2,11 @@
 #include "utils/csv.h"
 #include "utils/functions.h"
 
-#include <boost/lexical_cast.hpp>
-#include<boost/functional/hash.hpp>
 #include <unordered_map>
 
 namespace navimake{ namespace connectors{
 
 namespace nt = navitia::type;
-//namespace ns = navitia::streetnetwork;
 namespace ns = navitia::georef;
 
 BDTopoParser::BDTopoParser(const std::string& path): path(path){}
@@ -155,13 +152,9 @@ void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
         else
             way_key = row[nom] + row[insee];
 
-
-        way_key = boost::lexical_cast<std::string>(boost::hash_value(way_key));
-
         auto way_it = way_map.find(way_key);
         if(way_it == way_map.end()){
             way_map[way_key].name = row[nom];
-//            way_map[way_key].city = row[insee];
             way_map[way_key].uri = way_key;
             if (type > -1){
                 way_map[way_key].way_type = row[type];
@@ -183,7 +176,7 @@ void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
      for(auto way : way_map){
         geo_ref.ways.push_back(way.second);
         geo_ref.ways.back().idx = idx;        
-        BOOST_FOREACH(auto node_pair, geo_ref.ways.back().edges){
+        for(auto node_pair : geo_ref.ways.back().edges){
             edge_t e = boost::edge(node_pair.first, node_pair.second, geo_ref.graph).first;
             geo_ref.graph[e].way_idx = idx;            
         }
