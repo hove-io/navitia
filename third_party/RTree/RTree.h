@@ -64,7 +64,7 @@ public:
   enum
   {
     MAXNODES = TMAXNODES,                         ///< Max elements in node
-    MINNODES = TMINNODES,                         ///< Min elements in node
+    MINNODES = TMINNODES                         ///< Min elements in node
   };
 
   typedef bool (*t_resultCallback)(DATATYPE, void*);
