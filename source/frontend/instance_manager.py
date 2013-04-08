@@ -10,6 +10,9 @@ import request_pb2
 import response_pb2
 import glob
 from singleton import singleton
+import importlib
+from renderers import render_from_protobuf
+from werkzeug.wrappers import Response
 
 
 class Instance:
@@ -19,6 +22,7 @@ class Instance:
         self.socket_path = None
         self.poller = zmq.Poller()
         self.lock = Lock()
+        self.script = None
 
 class DeadSocketException(Exception):
     def __init__(self, message):
@@ -30,6 +34,13 @@ class RegionNotFound(Exception):
     def __init__(self, message):
         Exception.__init__(self, message)
 
+class ApiNotFound(Exception):
+    def __init__(self, message):
+        Exception.__init__(self, message)
+
+class InvalidArguments(Exception):
+    def __init__(self, message):
+        Exception.__init__(self, message)
 
 @singleton
 class NavitiaManager:
@@ -40,7 +51,7 @@ class NavitiaManager:
     De plus il est possible de définir la zone géographique (au format WKT) couverte par un identifiant
     """
 
-    def __init__(self, ini_file=None):
+    def initialisation(self, ini_file=None):
         """ Charge la configuration à partir d'un fichier ini indiquant les chemins des fichiers contenant :
         - géométries de la région sur laquelle s'applique le moteur
         - la socket pour chaque identifiant navitia
@@ -50,7 +61,6 @@ class NavitiaManager:
 
         self.context = zmq.Context()
         self.default_socket = None
-
 
         ini_files = []
         if ini_file == None :
@@ -66,12 +76,47 @@ class NavitiaManager:
             instance.socket = self.context.socket(zmq.REQ)
             instance.socket.connect(instance.socket_path)
             instance.poller.register(instance.socket, zmq.POLLIN)
+            if conf.has_option('instance', 'script') :
+                instance.script = importlib.import_module(conf.get('instance','script')).Script()
+            else:
+                instance.script = importlib.import_module("scripts.default").Script()
+
+            for section in conf.sections():
+                if section in instance.script.apis:
+                    api = instance.script.apis[section]
+                    for option in conf.options(section):
+                        if option in api["arguments"]:
+                            argument = api["arguments"][option]
+                            if type(argument.defaultValue) == type(True):
+                                argument.defaultValue = conf.getboolean(section, option)
+                            elif type(argument.defaultValue) == type(1.0):
+                                argument.defaultValue = conf.getfloat(section, option)
+                            elif type(argument.defaultValue) == type(1):
+                                argument.defaultValue = conf.getint(section, option)
+                            else:
+                                argument.defaultValue = conf.get(section, option)
+
             self.instances[conf.get('instance' , 'key')] = instance
-
-
         self.thread_event = Event()
         self.thread = Thread(target = self.thread_ping)
         self.thread.start()
+
+    def dispatch(self, request, version, region, api, format):
+        if version != "v0":
+            return Response("Unknown version: " + version, status=404)
+        if region in self.instances:
+            try:
+                api_func = getattr(self.instances[region].script, api)
+                api_answer = api_func(request, version, region)
+                return render_from_protobuf(api_answer, format, request.args.get("callback"))
+            except InvalidArguments, e:
+                return Response(e, status=400)
+            except DeadSocketException, e:
+                return Response(e, status=503)
+            except AttributeError:
+                return Response("Unknown api : " + api, status=404)
+        else:
+             return Response(region + " not found", status=404)
 
     def send_and_receive(self, request, region = None):
         if region in self.instances:

@@ -20,7 +20,7 @@ def find_region(uri):
 def universal_journeys(api, request, version, format):
     region = find_region(request.args.get("origin", ""))
     if region:
-        return Apis().on_api(request, version, region, api, format)
+        return NavitiaManager().dispatch(request, version, region, api, format)
     else:
         return Response("Journeys without specifying a region only accept coordinates as origin and destination", status=400)
 
@@ -30,7 +30,7 @@ def on_universal_journeys(api):
 def on_universal_proximity_list(request, version, format):
     region = find_region(request.args.get("uri", ""))
     if region:
-        return Apis().on_api(request, version, region, "proximity_list", format)
+        return NavitiaManager().dispatch(request, version, region, "proximity_list", format)
     else:
         return Response("Unable to deduce the region from the uri. Is it a valid coordinate?", status=404)
    
