@@ -1,6 +1,5 @@
 #include "autocomplete_api.h"
 #include "type/pb_converter.h"
-#include <boost/foreach.hpp>
 
 namespace navitia { namespace autocomplete {
 /**
@@ -108,7 +107,7 @@ pbnavitia::Response autocomplete(const std::string &name,
     bool addType = d.pt_data.stop_area_autocomplete.is_address_type(name, d.geo_ref.alias, d.geo_ref.synonymes);
     std::vector<Autocomplete<nt::idx_t>::fl_quality> result;
     pbnavitia::Autocomplete* pb = pb_response.mutable_autocomplete();
-    BOOST_FOREACH(nt::Type_e type, filter){
+    for(nt::Type_e type : filter){
         switch(type){
         case nt::Type_e::StopArea:
             result = d.pt_data.stop_area_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);

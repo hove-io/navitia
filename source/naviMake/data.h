@@ -1,6 +1,5 @@
 #pragma once
 #include "types.h"
-#include <boost/foreach.hpp>
 
 #include "type/type.h"
 #include "type/data.h"

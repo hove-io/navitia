@@ -262,7 +262,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     this->data.commercial_modes.push_back(commercial_mode);
 
 
-    BOOST_FOREACH(types::CommercialMode *mt, this->data.commercial_modes) {
+    for(types::CommercialMode *mt : this->data.commercial_modes) {
         types::PhysicalMode* mode = new types::PhysicalMode();
         mode->id = mt->id;
         mode->name = mt->name;
