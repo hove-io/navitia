@@ -1,7 +1,7 @@
 import copy
 from validate import *
 from singleton import singleton
-from instance_manager import DeadSocketException, RegionNotFound, ApiNotFound, NavitiaManager
+from instance_manager import DeadSocketException, RegionNotFound, ApiNotFound, InvalidArguments, NavitiaManager
 from werkzeug.wrappers import Response
 from renderers import render, render_from_protobuf
 
@@ -82,7 +82,6 @@ class Arguments:
         "wheelchair" : Argument("Does the journey has to be accessible?",
                                 boolean, False, False, False)        }
 
-@singleton
 class Apis:
     apis = {
         "autocomplete" : {
@@ -215,18 +214,25 @@ class Apis:
         if version != "v0":
             return Response("Unknown version: " + version, status=404)
         if api in self.apis:
-            v = validate_arguments(request, self.apis[api]["arguments"])
-            if v.valid:
                 try:
-                    return render_from_protobuf(NavitiaManager().dispatch(api, v.arguments, version, region), format, request.args.get("callback"))
+                    return render_from_protobuf(NavitiaManager().dispatch(request, version, region, api, format), request.args.get("callback"))
                 except DeadSocketException, e:
                     return Response(e, status=503)
                 except RegionNotFound, e:
                     return Response(e, status=404)
                 except ApiNotFound, e:
                     return Response(e, status=404)
-            else:
-                return Response("Invalid arguments: " + unicode(v.details), status=400)
         else:
             return Response("Unknown api: " + api, status=404)
+
+
+def validation_decorator(func):
+    api = func.__name__
+    def wrapped(self, request_args, version, region):
+        self.v = validate_arguments(request_args, self.apis[api]["arguments"])
+        if not self.v.valid:
+            raise InvalidArguments(unicode(self.v.details))
+        else:
+            return func(self, request_args, version, region)
+    return wrapped
 

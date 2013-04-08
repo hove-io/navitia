@@ -15,7 +15,7 @@ from apis import *
 from renderers import render
 from universals import *
 
-
+import request_pb2
 
 def on_summary_doc(request) :
     return render(api_doc(Apis().apis_all), 'json',  request.args.get('callback'))
@@ -53,7 +53,7 @@ url_map = Map([
     Rule('/<version>/isochrone.<format>', endpoint = on_universal_journeys("isochrone")),
     Rule('/<version>/proximity_list.<format>', endpoint = on_universal_proximity_list),
     Rule('/<version>/<region>/', endpoint = on_index),
-    Rule('/<version>/<region>/<api>.<format>', endpoint = Apis().on_api),
+    Rule('/<version>/<region>/<api>.<format>', endpoint = NavitiaManager().dispatch),
     Rule('/doc.json', endpoint = on_summary_doc),
     Rule('/doc.json/<api>', endpoint = on_doc)
     ])

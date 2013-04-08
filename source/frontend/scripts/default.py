@@ -3,6 +3,7 @@ import type_pb2
 import request_pb2
 import response_pb2
 from protobuf_to_dict import protobuf_to_dict
+from apis import Apis, validation_decorator
 
 from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
 from renderers import render, render_from_protobuf
@@ -19,7 +20,11 @@ pb_type = {
         }
 
 class Script:
-    def pagination(self, request_pagination, objects, request):
+    def __init__(self):
+        self.apis = Apis().apis
+
+
+    def __pagination(self, request_pagination, objects, request):
         begin = int(request_pagination.startPage) * int(request_pagination.itemsPerPage)
         end = begin + int(request_pagination.itemsPerPage) 
         if end > request_pagination.totalResult:
@@ -57,7 +62,7 @@ class Script:
         resp = NavitiaManager().send_and_receive(req, region)
         return resp
 
-    def metadatas(request_args, request, region):
+    def metadatas(self, request_args, request, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
         resp = NavitiaManager().send_and_receive(req, region)
@@ -72,30 +77,31 @@ class Script:
         return render_from_protobuf(resp, format, request.args.get('callback'))
 
 
+    @validation_decorator
     def autocomplete(self, request_args, version, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.AUTOCOMPLETE
-        req.autocomplete.name = request_args['name']
-        req.autocomplete.depth = request_args['depth']
-        req.autocomplete.nbmax = request_args['nbmax']
-        for object_type in request_args["object_type[]"]:
+        req.autocomplete.name = self.v.arguments['name']
+        req.autocomplete.depth = self.v.arguments['depth']
+        req.autocomplete.nbmax = self.v.arguments['nbmax']
+        for object_type in self.v.arguments["object_type[]"]:
             req.autocomplete.types.append(pb_type[object_type])
 
         resp = NavitiaManager().send_and_receive(req, region)
         pagination_resp = response_pb2.Pagination()
-        pagination_resp.startPage = request_args["startPage"]
-        pagination_resp.itemsPerPage = request_args["count"]
+        pagination_resp.startPage = self.v.arguments["startPage"]
+        pagination_resp.itemsPerPage = self.v.arguments["count"]
         if resp.autocomplete.items:
             objects = resp.autocomplete.items
             pagination_resp.totalResult = len(objects)
-            self.pagination(pagination_resp, objects, request_args)
+            self.__pagination(pagination_resp, objects, request_args)
         else:
             pagination_resp.totalResult = 0
         resp.pagination.CopyFrom(pagination_resp)
         return resp
 
 
-    def stop_times(self, request_args, version, region, departure_filter, arrival_filter, api):
+    def __stop_times(self, request_args, version, region, departure_filter, arrival_filter, api):
         req = request_pb2.Request()
         req.requested_api = api
         req.next_stop_times.departure_filter = departure_filter
@@ -108,44 +114,50 @@ class Script:
         return resp
 
 
+    @validation_decorator
     def route_schedule(self, request_args, version, region):
-        return stop_times(request_args, version, region, request_args["filter"], "", type_pb2.ROUTE_SCHEDULES)
+        return v__stop_times(self.v.arguments, version, region, self.v.arguments["filter"], "", type_pb2.ROUTE_SCHEDULES)
 
+    @validation_decorator
     def next_arrivals(self, request_args, version, region):
-        return stop_times(request_args, version, region, "", request_args["filter"], type_pb2.NEXT_ARRIVALS)
+        return v__stop_times(self.v.arguments, version, region, "", self.v.arguments["filter"], type_pb2.NEXT_ARRIVALS)
 
+    @validation_decorator
     def next_departures(self, request_args, version, region):
-        return stop_times(request_args, version, region, request_args["filter"], "", type_pb2.NEXT_DEPARTURES)
+        return v__stop_times(self.v.arguments, version, region, self.v.arguments["filter"], "", type_pb2.NEXT_DEPARTURES)
 
+    @validation_decorator
     def stops_schedule(self, request_args, version, region):
-        return stop_times(request_args, version, region, request_args["departure_filter"], request_args["arrival_filter"],type_pb2.STOPS_SCHEDULES)
+        return v__stop_times(self.v.arguments, version, region, self.v.arguments["departure_filter"], self.v.arguments["arrival_filter"],type_pb2.STOPS_SCHEDULES)
 
+    @validation_decorator
     def departure_board(self, request_args, version, region):
-        return stop_times(request_args, version, region, request_args["filter"], "", type_pb2.DEPARTURE_BOARDS)
+        return v__stop_times(self.v.arguments, version, region, self.v.arguments["filter"], "", type_pb2.DEPARTURE_BOARDS)
 
     
+    @validation_decorator
     def proximity_list(self, request_args, version, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.PROXIMITY_LIST
-        req.proximity_list.uri = request_args["uri"]
-        req.proximity_list.distance = request_args["distance"]
-        req.proximity_list.depth = request_args["depth"]
-        for object_type in request_args["object_type[]"]:
+        req.proximity_list.uri = self.v.arguments["uri"]
+        req.proximity_list.distance = self.v.arguments["distance"]
+        req.proximity_list.depth = self.v.arguments["depth"]
+        for object_type in self.v.arguments["object_type[]"]:
             req.proximity_list.types.append(pb_type[object_type])
         resp = NavitiaManager().send_and_receive(req, region)
         pagination_resp = response_pb2.Pagination()
-        pagination_resp.startPage = request_args["startPage"]
-        pagination_resp.itemsPerPage = request_args["count"]
+        pagination_resp.startPage = self.v.arguments["startPage"]
+        pagination_resp.itemsPerPage = self.v.arguments["count"]
         if resp.proximitylist.items:
             objects = resp.proximitylist.items
             pagination_resp.totalResult = len(objects)
-            self.pagination(pagination_resp, objects, request_args)
+            self.__pagination(pagination_resp, objects, self.v.arguments)
         else:
             pagination_resp.totalResult = 0
         return resp
 
 
-    def on_journeys(self, requested_type, request_args, version, region):
+    def __on_journeys(self, requested_type, request_args, version, region):
         req = request_pb2.Request()
         req.requested_api = requested_type
 
@@ -169,14 +181,16 @@ class Script:
         return resp
 
 
+    @validation_decorator
     def journeys(self, request_args, version, region):
-        return self.on_journeys(type_pb2.PLANNER, request_args, version, region)
+        return self.__on_journeys(type_pb2.PLANNER, self.v.arguments, version, region)
 
     
+    @validation_decorator
     def isochrone(self, request_args, version, region):
-        return self.on_journeys(type_pb2.ISOCHRONE, request_args, version, region)
+        return self.__on_journeys(type_pb2.ISOCHRONE, self.v.arguments, version, region)
 
-    def on_ptref(self, requested_type, request_args, version, region):
+    def __on_ptref(self, requested_type, request_args, version, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.PTREFERENTIAL
 
@@ -190,45 +204,57 @@ class Script:
         if resp.ptref.ListFields():
             objects = resp.ptref.ListFields()[0][1]
             pagination_resp.totalResult = len(objects)
-            self.pagination(pagination_resp, objects, request_args)
+            self.__pagination(pagination_resp, objects, request_args)
         else:
             pagination_resp.totalResult = 0
         resp.pagination.CopyFrom(pagination_resp)
         
         return resp
 
+    @validation_decorator
     def stop_areas(self, request_args, version, region):
-        return self.on_ptref(type_pb2.STOP_AREA, request_args, version, region)
+        return self.__on_ptref(type_pb2.STOP_AREA, self.v.arguments, version, region)
 
+    @validation_decorator
     def stop_points(self, request_args, version, region):
-        return self.on_ptref(type_pb2.STOP_POINT, request_args, version, region)
+        return self.__on_ptref(type_pb2.STOP_POINT, self.v.arguments, version, region)
 
+    @validation_decorator
     def lines(self, request_args, version, region):
-        return self.on_ptref(type_pb2.LINE, request_args, version, region)
+        return self.__on_ptref(type_pb2.LINE, self.v.arguments, version, region)
 
+    @validation_decorator
     def routes(self, request_args, version, region):
-        return self.on_ptref(type_pb2.ROUTE, request_args, version, region)
+        return self.__on_ptref(type_pb2.ROUTE, self.v.arguments,  version, region)
 
+    @validation_decorator
     def networks(self, request_args, version, region):
-        return self.on_ptref(type_pb2.NETWORK, request_args, version, region)
+        return self.__on_ptref(type_pb2.NETWORK, self.v.arguments, version, region)
 
+    @validation_decorator
     def physical_modes(self, request_args, version, region):
-        return self.on_ptref(type_pb2.PHYSICAL_MODE, request_args, version, region)
+        return self.__on_ptref(type_pb2.PHYSICAL_MODE, self.v.arguments, version, region)
 
+    @validation_decorator
     def commercial_modes(self, request_args, version, region):
-        return self.on_ptref(type_pb2.COMMERCIAL_MODE, request_args, version, region)
+        return self.__on_ptref(type_pb2.COMMERCIAL_MODE, self.v.arguments, version, region)
 
+    @validation_decorator
     def connections(self, request_args, version, region):
-        return self.on_ptref(self, type_pb2.CONNECTION, request_args, version, region)
+        return self.__on_ptref(type_pb2.CONNECTION, self.v.arguments, version, region)
 
+    @validation_decorator
     def journey_pattern_points(request_args, version, region):
-        return self.on_ptref(self, type_pb2.JOURNEY_PATTERN_POINT, request_args, version, region)
+        return self.__on_ptref(type_pb2.JOURNEY_PATTERN_POINT, self.v.arguments,  version, region)
 
+    @validation_decorator
     def journey_patterns(request_args, version, region):
-        return self.on_ptref(self, type_pb2.JOURNEY_PATTERNS, request_args, version, region)
+        return self.__on_ptref(type_pb2.JOURNEY_PATTERNS, self.v.arguments, version, region)
 
+    @validation_decorator
     def companies(self, request_args, version, region):
-        return self.on_ptref(type_pb2.COMPANY, request_args, version, region)
+        return self.__on_ptref(type_pb2.COMPANY, self.v.arguments, version, region)
 
+    @validation_decorator
     def vehicle_journeys(self, request_args, version, region):
-        return self.on_ptref(type_pb2.VEHICLE_JOURNEY, request_args, version, region)
+        return self.__on_ptref(type_pb2.VEHICLE_JOURNEY, self.v.arguments, version, region)

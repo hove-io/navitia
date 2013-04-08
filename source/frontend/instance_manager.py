@@ -11,6 +11,8 @@ import response_pb2
 import glob
 from singleton import singleton
 import importlib
+from renderers import render_from_protobuf
+from werkzeug.wrappers import Response
 
 
 class Instance:
@@ -33,6 +35,10 @@ class RegionNotFound(Exception):
         Exception.__init__(self, message)
 
 class ApiNotFound(Exception):
+    def __init__(self, message):
+        Exception.__init__(self, message)
+
+class InvalidArguments(Exception):
     def __init__(self, message):
         Exception.__init__(self, message)
 
@@ -80,15 +86,22 @@ class NavitiaManager:
         self.thread = Thread(target = self.thread_ping)
         self.thread.start()
 
-
-    def dispatch(self, api, request, version, region):
+    def dispatch(self, request, version, region, api, format):
+        if version != "v0":
+            return Response("Unknown version: " + version, status=404)
         if region in self.instances:
             try:
-                return getattr(self.instances[region].script, api)(request, version, region)
-            except AttributeError:
-                raise ApiNotFound(api + " not found ")
+                api_func = getattr(self.instances[region].script, api)
+                api_answer = api_func(request, version, region)
+                return render_from_protobuf(api_answer, format, request.args.get("callback"))
+            except InvalidArguments, e:
+                return Response(e, status=400)
+            except DeadSocketException, e:
+                return Response(e, status=503)
+#except AttributeError:
+#                return Response(api + " not found ", status=404)
         else:
-             raise RegionNotFound(region + " not found")
+             return Response(region + " not found", status=404)
 
     def send_and_receive(self, request, region = None):
         if region in self.instances:
