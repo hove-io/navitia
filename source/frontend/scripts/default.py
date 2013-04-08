@@ -94,7 +94,7 @@ class Script:
         if resp.autocomplete.items:
             objects = resp.autocomplete.items
             pagination_resp.totalResult = len(objects)
-            self.__pagination(pagination_resp, objects, request_args)
+            self.__pagination(pagination_resp, objects, self.v.arguments)
         else:
             pagination_resp.totalResult = 0
         resp.pagination.CopyFrom(pagination_resp)
