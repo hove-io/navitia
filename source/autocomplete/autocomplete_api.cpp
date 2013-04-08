@@ -31,6 +31,8 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
             place_mark->set_type(pbnavitia::ADMIN);
             fill_pb_object(result_item.idx, data, place_mark->mutable_admin(), depth);
             item->set_quality(result_item.quality);
+            item->set_uri(data.geo_ref.admins[result_item.idx].uri);
+            item->set_name(data.geo_ref.admins[result_item.idx].name);
             break;
         case nt::Type_e::StopPoint:
             place_mark->set_type(pbnavitia::STOP_POINT);
@@ -143,7 +145,7 @@ pbnavitia::Response autocomplete(const std::string &name,
     std::partial_sort(pb_response.mutable_autocomplete()->mutable_items()->begin(),pb_response.mutable_autocomplete()->mutable_items()->begin() + result_size,
                       pb_response.mutable_autocomplete()->mutable_items()->end(),compare);
 
-    while (pb_response.mutable_autocomplete()->mutable_items()->size() > (unsigned)nbmax){
+    while (pb_response.mutable_autocomplete()->mutable_items()->size() > nbmax){
         pb_response.mutable_autocomplete()->mutable_items()->RemoveLast();
     }
     return pb_response;
