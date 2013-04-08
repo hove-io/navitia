@@ -80,8 +80,23 @@ class NavitiaManager:
                 instance.script = importlib.import_module(conf.get('instance','script')).Script()
             else:
                 instance.script = importlib.import_module("scripts.default").Script()
+
+            for section in conf.sections():
+                if section in instance.script.apis:
+                    api = instance.script.apis[section]
+                    for option in conf.options(section):
+                        if option in api["arguments"]:
+                            argument = api["arguments"][option]
+                            if type(argument.defaultValue) == type(True):
+                                argument.defaultValue = conf.getboolean(section, option)
+                            elif type(argument.defaultValue) == type(1.0):
+                                argument.defaultValue = conf.getfloat(section, option)
+                            elif type(argument.defaultValue) == type(1):
+                                argument.defaultValue = conf.getint(section, option)
+                            else:
+                                argument.defaultValue = conf.get(section, option)
+
             self.instances[conf.get('instance' , 'key')] = instance
-            print "Instanciation de ", conf.get('instance' , 'key'), "sur le socket ", conf.get('instance' , 'socket')
         self.thread_event = Event()
         self.thread = Thread(target = self.thread_ping)
         self.thread.start()
