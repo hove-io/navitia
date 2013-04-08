@@ -99,7 +99,7 @@ class NavitiaManager:
             except DeadSocketException, e:
                 return Response(e, status=503)
             except AttributeError:
-                return Response(api + " not found ", status=404)
+                return Response("Unknown api : " + api, status=404)
         else:
              return Response(region + " not found", status=404)
 
