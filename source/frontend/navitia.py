@@ -77,7 +77,7 @@ signal.signal(signal.SIGINT, kill_thread)
 signal.signal(signal.SIGTERM, kill_thread)
 
 if __name__ == '__main__':
-    NavitiaManager('Jörmungandr.ini')
+    NavitiaManager().initialisation('Jörmungandr.ini')
     v = validate_apis(Apis().apis_all)
     if not(v.valid):
         for apiname, details in v.details.iteritems():
@@ -90,5 +90,5 @@ if __name__ == '__main__':
     httpd.serve_forever()
 
 else:
-    NavitiaManager()
+    NavitiaManager().initialisation()
 

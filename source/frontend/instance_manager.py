@@ -51,7 +51,7 @@ class NavitiaManager:
     De plus il est possible de définir la zone géographique (au format WKT) couverte par un identifiant
     """
 
-    def __init__(self, ini_file=None):
+    def initialisation(self, ini_file=None):
         """ Charge la configuration à partir d'un fichier ini indiquant les chemins des fichiers contenant :
         - géométries de la région sur laquelle s'applique le moteur
         - la socket pour chaque identifiant navitia
@@ -61,7 +61,6 @@ class NavitiaManager:
 
         self.context = zmq.Context()
         self.default_socket = None
-
 
         ini_files = []
         if ini_file == None :
