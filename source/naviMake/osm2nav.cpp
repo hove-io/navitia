@@ -32,7 +32,7 @@ void Visitor::way_callback(uint64_t osmid, const CanalTP::Tags &tags, const std:
     if(w.properties.any()){
         georef::Way gr_way;
         gr_way.idx = geo_ref.ways.size();
-        gr_way.uri = std::to_string(w.idx);
+        gr_way.uri = std::to_string(osmid);
         if(tags.find("name") != tags.end())
             gr_way.name = tags.at("name");
         geo_ref.ways.push_back(gr_way);
