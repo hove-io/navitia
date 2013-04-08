@@ -67,7 +67,7 @@ int main(int argc, char * argv[])
         std::cout << "Pas de topologie chargee" << std::endl;
     }
     pt::ptime start, end;
-    int read, complete, clean, sort, transform, save, autocomplete, sn;
+    int read, complete, clean, sort, transform, save, autocomplete, sn, apply_adapted_duration;
 
     navimake::Data data; // Structure temporaire
     navitia::type::Data nav_data; // Structure définitive
@@ -132,6 +132,7 @@ int main(int argc, char * argv[])
     std::cout << "voies (rues) : " << nav_data.geo_ref.ways.size() << std::endl;
 
 
+    start = pt::microsec_clock::local_time();
     if(vm.count("at-connection-string")){
         navitia::AtLoader::Config conf;
         conf.connect_string = vm["at-connection-string"].as<std::string>();
@@ -142,6 +143,7 @@ int main(int argc, char * argv[])
         navimake::AtAdaptedLoader adapter;
         adapter.apply(messages, data);
     }
+    apply_adapted_duration = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     start = pt::microsec_clock::local_time();
     data.complete();
@@ -189,6 +191,7 @@ int main(int argc, char * argv[])
 
     std::cout << "temps de traitement" << std::endl;
     std::cout << "\t lecture des fichiers " << read << "ms" << std::endl;
+    std::cout << "\t application des données adaptées " << apply_adapted_duration << "ms" << std::endl;
     std::cout << "\t completion des données " << complete << "ms" << std::endl;
     std::cout << "\t netoyage des données " << clean << "ms" << std::endl;
     std::cout << "\t trie des données " << sort << "ms" << std::endl;

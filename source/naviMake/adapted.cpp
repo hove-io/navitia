@@ -40,6 +40,9 @@ pt::time_period build_stop_period(const types::StopTime& stop, const bg::date& d
 
     if(stop.arrival_time < 0 || !stop.drop_off_allowed){
         arrival = pt::ptime(date, pt::seconds(stop.departure_time - 1));
+    }else if(stop.arrival_time == stop.departure_time){
+        //si l'heure d'arrivée et égal à l'heure de départ (typiquement donnée urbaine) on soustrait une seconde pour avoir une période non nulle
+        arrival = pt::ptime(date, pt::seconds(stop.arrival_time - 1));
     }else{
         arrival = pt::ptime(date, pt::seconds(stop.arrival_time));
     }
@@ -235,7 +238,7 @@ std::vector<types::VehicleJourney*> AtAdaptedLoader::reconcile_impact_with_vj(co
 }
 
 
-void AtAdaptedLoader::apply_deletion_on_vj(types::VehicleJourney* vehicle_journey, const std::vector<navitia::type::Message>& messages, Data& data){
+void AtAdaptedLoader::apply_deletion_on_vj(types::VehicleJourney* vehicle_journey, const std::set<navitia::type::Message>& messages, Data& data){
     for(nt::Message m : messages){
         if(vehicle_journey->stop_time_list.size() > 0){
             delete_vj(vehicle_journey, m, data);
@@ -243,7 +246,7 @@ void AtAdaptedLoader::apply_deletion_on_vj(types::VehicleJourney* vehicle_journe
     }
 }
 
-void AtAdaptedLoader::apply_update_on_vj(types::VehicleJourney* vehicle_journey, const std::vector<navitia::type::Message>& messages, Data& data){
+void AtAdaptedLoader::apply_update_on_vj(types::VehicleJourney* vehicle_journey, const std::set<navitia::type::Message>& messages, Data& data){
     for(nt::Message m : messages){
         if(vehicle_journey->stop_time_list.size() > 0){
             duplicate_vj(vehicle_journey, m, data);
@@ -294,14 +297,14 @@ void AtAdaptedLoader::dispatch_message(const std::map<std::string, std::vector<n
                 //on parcourt la liste des VJ associée au message
                 //et on associe le message au vehiclejourney
                 for(auto vj  : vj_list){
-                    update_vj_map[vj].push_back(m);
+                    update_vj_map[vj].insert(m);
                 }
 
             }else if(m.object_type == nt::Type_e::JourneyPatternPoint || m.object_type == nt::Type_e::StopPoint
                     || m.object_type == nt::Type_e::StopArea){
                 std::vector<navimake::types::VehicleJourney*> vj_list = get_vj_from_impact(m);
                 for(auto vj : vj_list){
-                    duplicate_vj_map[vj].push_back(m);
+                    duplicate_vj_map[vj].insert(m);
                 }
             }
         }
@@ -313,8 +316,11 @@ void AtAdaptedLoader::apply(const std::map<std::string, std::vector<navitia::typ
         return;
     }
     init_map(data);
-
+    unsigned int vj_count = data.vehicle_journeys.size();
     dispatch_message(messages, data);
+
+    std::cout << "update_vj_map: " << update_vj_map.size() << std::endl;
+    std::cout << "duplicate_vj_map: " << duplicate_vj_map.size() << std::endl;
 
     for(auto pair : update_vj_map){
         apply_deletion_on_vj(pair.first, pair.second, data);
@@ -322,6 +328,7 @@ void AtAdaptedLoader::apply(const std::map<std::string, std::vector<navitia::typ
     for(auto pair : duplicate_vj_map){
         apply_update_on_vj(pair.first, pair.second, data);
     }
+    std::cout << (data.vehicle_journeys.size() - vj_count) << " vj ajoutés lors de l'application des données adaptées" << std::endl;
 }
 
 }//namespace

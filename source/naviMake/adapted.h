@@ -25,16 +25,16 @@ private:
     std::unordered_map<std::string, std::vector<types::StopPoint*>> stop_area_to_stop_point_map;
 
 
-    std::unordered_map<types::VehicleJourney*, std::vector<navitia::type::Message>> duplicate_vj_map;
-    std::unordered_map<types::VehicleJourney*, std::vector<navitia::type::Message>> update_vj_map;
+    std::unordered_map<types::VehicleJourney*, std::set<navitia::type::Message>> duplicate_vj_map;
+    std::unordered_map<types::VehicleJourney*, std::set<navitia::type::Message>> update_vj_map;
 
 
 
 
     void init_map(const Data& data);
     std::vector<types::VehicleJourney*> reconcile_impact_with_vj(const navitia::type::Message& messages, const Data& data);
-    void apply_deletion_on_vj(types::VehicleJourney* vehicle_journey, const std::vector<navitia::type::Message>& messages, Data& data);
-    void apply_update_on_vj(types::VehicleJourney* vehicle_journey, const std::vector<navitia::type::Message>& messages, Data& data);
+    void apply_deletion_on_vj(types::VehicleJourney* vehicle_journey, const std::set<navitia::type::Message>& messages, Data& data);
+    void apply_update_on_vj(types::VehicleJourney* vehicle_journey, const std::set<navitia::type::Message>& messages, Data& data);
 
     std::vector<types::VehicleJourney*> get_vj_from_stop_area(std::string stop_area_uri);
     std::vector<types::VehicleJourney*> get_vj_from_stoppoint(std::string stoppoint_uri);

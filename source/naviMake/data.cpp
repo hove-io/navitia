@@ -203,7 +203,7 @@ void Data::clean(){
 
     std::cout << "J'ai supprimé " << erase_overlap << "vehicle journey pour cause de dépassement, " <<
                  erase_emptiness << " car il n'y avait pas de stop time dans le clean, et "
-                 << erase_no_circulation << " car il ne circulait jamais." << std::endl;
+                 << erase_no_circulation << " car ils ne circulaient jamais." << std::endl;
 
 }
 

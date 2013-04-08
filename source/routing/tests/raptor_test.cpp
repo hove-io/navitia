@@ -1,6 +1,6 @@
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE test_navimake
+#define BOOST_TEST_MODULE test_raptor
 #include <boost/test/unit_test.hpp>
 
 #include "routing/raptor.h"
@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_interne){
 
 BOOST_AUTO_TEST_CASE(validity_pattern){
     navimake::builder b("20120614");
-    b.vj("D", "0", "", true)("stop1", 8000)("stop2", 8200);
+    b.vj("D", "10", "", true)("stop1", 8000)("stop2", 8200);
     b.vj("C", "1", "", true)("stop1", 9000)("stop2", 9200);
     type::Data data;
     b.build(data.pt_data);
@@ -379,7 +379,7 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
     
     
     
-    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 1);
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 2);
     BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
 

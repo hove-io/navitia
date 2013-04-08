@@ -342,6 +342,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_2){
 
 
     m.object_uri = "vehicle_journey:vj2";
+    m.uri = "2";
     messages[m.object_uri].push_back(m);
 
     AtAdaptedLoader loader;
@@ -1211,6 +1212,7 @@ BOOST_AUTO_TEST_CASE(impact_network_2){
 
     messages[m.object_uri].push_back(m);
 
+    m.uri = "2";
     m.object_type = nt::Type_e::VehicleJourney;
     m.object_uri = "vehicle_journey:vj1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-04 23:59:00"));
@@ -1404,6 +1406,7 @@ BOOST_AUTO_TEST_CASE(impact_network_3){
 
     messages[m.object_uri].push_back(m);
 
+    m.uri = "2";
     m.object_type = nt::Type_e::VehicleJourney;
     m.object_uri = "vehicle_journey:vj1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
@@ -1695,6 +1698,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_1){
 
     messages[m.object_uri].push_back(m);
 
+    m.uri = "2";
     m.object_type = nt::Type_e::VehicleJourney;
     m.object_uri = "vehicle_journey:vj1";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
@@ -1794,6 +1798,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_2){
 
     messages[m.object_uri].push_back(m);
 
+    m.uri = "3";
     m.object_type = nt::Type_e::StopPoint;
     m.object_uri = "stop_point:stop2";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-03 23:59:00"));
@@ -1901,7 +1906,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_passe_minuit){
     navimake::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
-    VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", "23:30", "23:40")("stop2", "25:00", "25:10")("stop3", "26:00", "26:10").vj;
+    VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", "23:30", "23:40")("stop2", "25:00", "25:00")("stop3", "26:00", "26:10").vj;
     //construction du validityPattern du vj1: 1111111
     std::bitset<7> validedays;
     validedays[bt::Sunday] = true;
@@ -2043,6 +2048,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_3){
 
     messages[m.object_uri].push_back(m);
 
+    m.uri = "3";
     m.object_type = nt::Type_e::StopPoint;
     m.object_uri = "stop_point:stop2";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-02 00:00:00"), pt::time_from_string("2013-03-05 23:59:00"));
@@ -2228,6 +2234,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
 
     messages[m.object_uri].push_back(m);
 
+    m.uri = "2";
     m.object_uri = "stop_point:stop2";
     m.application_period = pt::time_period(pt::time_from_string("2013-03-01 00:00:00"), pt::time_from_string("2013-03-15 23:59:00"));
     m.active_days = nt::Ven | nt::Lun;
