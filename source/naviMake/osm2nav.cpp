@@ -285,7 +285,7 @@ void Visitor::AdminRef(){
 void Visitor::set_admin_of_ways(){
     for(navitia::georef::Way& way : geo_ref.ways){
         navitia::type::GeographicalCoord coord = way.barycentre(geo_ref.graph);
-        std::vector<navitia::type::idx_t> vect_idx = geo_ref.Within(coord);
+        std::vector<navitia::type::idx_t> vect_idx = geo_ref.find_admins(coord);
         for(navitia::type::idx_t id : vect_idx){
             way.admins.push_back(id);
         }
@@ -305,9 +305,11 @@ void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filenam
     std::cout<<"Chargement des données administratives"<<std::endl;
     v.AdminRef();
     std::cout<<"Chargement des données administratives des adresses"<<std::endl;
+    geo_ref_to_fill.build_rtree();
     //v.set_admin_of_ways();
     std::cout << "On a : " << v.total_house_number << " adresses" << std::endl;
     std::cout << "On a : " << v.geo_ref.admins.size() << " données administratives" << std::endl;
+
 }
 
 }}

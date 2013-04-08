@@ -1,4 +1,4 @@
-.. _details::
+.. _details:
 
 Some important details
 ----------------------
@@ -25,11 +25,14 @@ use its uri. The uri of the different objects are returned by APIs as proximity 
 You should not try to build an uri by yourself, but only re-use those provided by an API. The only
 exceptions are coordinates that have the following syntax ``coord:lon:lat``.
 
+.. _filter:
+
 The filter parameter
 ********************
 
+
 The filter argument used for requesting public transport object are defined by the grammar defined below. See the previous examples
-`Exploring the public transport objects`_ to know how to use it
+:ref:`pt_introduction` to know how to use it.
 
 **filter**
 
