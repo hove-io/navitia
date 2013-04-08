@@ -82,6 +82,7 @@ class NavitiaManager:
             else:
                 instance.script = importlib.import_module("scripts.default").Script()
             self.instances[conf.get('instance' , 'key')] = instance
+            print "Instanciation de ", conf.get('instance' , 'key'), "sur le socket ", conf.get('instance' , 'socket')
         self.thread_event = Event()
         self.thread = Thread(target = self.thread_ping)
         self.thread.start()

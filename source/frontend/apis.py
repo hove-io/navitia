@@ -210,22 +210,6 @@ class Apis:
                           "order":0}
 
 
-    def on_api(self, request, version, region, api, format):
-        if version != "v0":
-            return Response("Unknown version: " + version, status=404)
-        if api in self.apis:
-                try:
-                    return render_from_protobuf(NavitiaManager().dispatch(request, version, region, api, format), request.args.get("callback"))
-                except DeadSocketException, e:
-                    return Response(e, status=503)
-                except RegionNotFound, e:
-                    return Response(e, status=404)
-                except ApiNotFound, e:
-                    return Response(e, status=404)
-        else:
-            return Response("Unknown api: " + api, status=404)
-
-
 def validation_decorator(func):
     api = func.__name__
     def wrapped(self, request_args, version, region):

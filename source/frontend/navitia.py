@@ -14,8 +14,9 @@ from find_extrem_datetimes import extremes
 from apis import *
 from renderers import render
 from universals import *
+from protobuf_to_dict import protobuf_to_dict
 
-import request_pb2
+import request_pb2, type_pb2
 
 def on_summary_doc(request) :
     return render(api_doc(Apis().apis_all), 'json',  request.args.get('callback'))
