@@ -19,10 +19,17 @@ void fill_section(pbnavitia::Section *pb_section, navitia::type::idx_t vj_idx,
     const type::JourneyPattern & jp = d.pt_data.journey_patterns[vj.journey_pattern_idx];
     const type::Route & route = d.pt_data.routes[jp.route_idx];
     const type::Line & line = d.pt_data.lines[route.line_idx];
-    fill_pb_object(vj_idx, d, pb_section->mutable_vehicle_journey(), 0, now, action_period);
-    fill_pb_object(route.idx, d, pb_section->mutable_vehicle_journey()->mutable_route(), 0, now, action_period);
-    fill_pb_object(line.idx, d, pb_section->mutable_vehicle_journey()->mutable_route()->mutable_line(), 0, now, action_period);
-    fill_pb_object(vj.physical_mode_idx, d, pb_section->mutable_vehicle_journey()->mutable_physical_mode(), 0, now, action_period);
+
+    auto mvj = pb_section->mutable_vehicle_journey();
+    auto mroute = mvj->mutable_route();
+    auto mline = mroute->mutable_line();
+
+    fill_pb_object(vj_idx, d, mvj, 0, now, action_period);
+    fill_pb_object(route.idx, d, mroute, 0, now, action_period);
+    fill_pb_object(line.idx, d, mline, 0, now, action_period);
+    fill_pb_object(line.network_idx, d, mline->mutable_network(), 0, now, action_period);
+    fill_pb_object(line.commercial_mode_idx, d, mline->mutable_commercial_mode(), 0, now, action_period);
+    fill_pb_object(vj.physical_mode_idx, d, mvj->mutable_physical_mode(), 0, now, action_period);
 }
 
 pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths, const nt::Data & d, streetnetwork::StreetNetwork & worker) {
@@ -103,9 +110,9 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                     fill_pb_placemark(d.pt_data.stop_points[item.stop_points.back()], d, pb_section->mutable_destination(), 1, now, action_period);
                 }
                 auto dep_time = item.departure;
-                pb_section->set_begin_datetime(iso_string(d, dep_time.date(), dep_time.hour()));
+                pb_section->set_begin_date_time(iso_string(d, dep_time.date(), dep_time.hour()));
                 auto arr_time = item.arrival;
-                pb_section->set_end_datetime(iso_string(d, arr_time.date(), arr_time.hour()));
+                pb_section->set_end_date_time(iso_string(d, arr_time.date(), arr_time.hour()));
 
                 pb_section->set_duration(item.arrival - item.departure);
                 if(departure_time == navitia::type::DateTime::inf)

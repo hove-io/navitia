@@ -48,9 +48,16 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
 pbnavitia::Response stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
                                     const std::string &str_dt, uint32_t duration, uint32_t depth, type::Data & data) {
     pbnavitia::Response pb_response;
+    pb_response.set_requested_api(pbnavitia::STOPS_SCHEDULES);
 
     boost::posix_time::ptime ptime;
-    ptime = boost::posix_time::from_iso_string(str_dt);
+    try{
+        ptime = boost::posix_time::from_iso_string(str_dt);
+    } catch(boost::bad_lexical_cast) {
+        pb_response.set_error("DateTime " + str_dt + " is in a bad format should be YYYYMMddThhmmss ");
+        return pb_response;
+    }
+
     type::DateTime dt((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
 
     type::DateTime max_dt;
@@ -63,7 +70,6 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
         return pb_response;
     }
 
-    pb_response.set_requested_api(pbnavitia::STOPS_SCHEDULES);
     auto current_time = pt::second_clock::local_time();
     pt::time_period action_period(to_posix_time(dt, data), to_posix_time(max_dt, data));
 
