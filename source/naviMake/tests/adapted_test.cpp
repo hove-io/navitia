@@ -324,8 +324,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_2){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
-    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
-
+    vj->adapted_validity_pattern = vj->validity_pattern;
     b.data.normalize_uri();
 
 
@@ -1559,7 +1558,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
     validedays[bt::Friday] = true;
     validedays[bt::Saturday] = true;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
-    vj->adapted_validity_pattern->add(vj->adapted_validity_pattern->beginning_date, end_date, validedays);
+    vj->adapted_validity_pattern = vj->validity_pattern;
 
     b.data.normalize_uri();
 

@@ -78,6 +78,12 @@ types::VehicleJourney* create_adapted_vj(types::VehicleJourney* current_vj, type
     //le nouveau VJ garde bien une référence vers le théorique, et non pas sur le VJ adapté dont il est issu.
     vj_adapted->theoric_vehicle_journey = theorical_vj;
     theorical_vj->adapted_vehicle_journey_list.push_back(vj_adapted);
+    //si on pointe vers le meme validity pattern pour l'adapté et le théorique, on duplique
+    if(theorical_vj->adapted_validity_pattern == theorical_vj->validity_pattern){
+        theorical_vj->adapted_validity_pattern = new types::ValidityPattern(*theorical_vj->validity_pattern);
+        data.validity_patterns.push_back(theorical_vj->adapted_validity_pattern);
+
+    }
 
     vj_adapted->uri = make_adapted_uri(theorical_vj, data);
     data.vehicle_journeys.push_back(vj_adapted);
