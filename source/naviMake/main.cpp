@@ -174,8 +174,7 @@ int main(int argc, char * argv[])
     nav_data.build_proximity_list();
     std::cout << "Construction de external code" << std::endl;
     nav_data.build_uri();
-    std::cout << "Assigne les villes aux voiries du filaire" << std::endl;
-    //nav_data.set_cities(); // Assigne les villes aux voiries du filaire [depend des uri]
+
     std::cout << "Construction de first letter" << std::endl;
     nav_data.build_autocomplete();
     std::cout << "On va construire les correspondances" << std::endl;

@@ -4,6 +4,8 @@
 #include "proximity_list/proximity_list.h"
 #include "adminref.h"
 
+#include "third_party/RTree/RTree.h"
+
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/adj_list_serialize.hpp>
 #include <boost/serialization/serialization.hpp>
@@ -56,12 +58,6 @@ typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
 
 /// Représentation d'un arc dans le graphe
 typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
-
-/// Type Itérateur sur les nœuds du graphe
-typedef boost::graph_traits<Graph>::vertex_iterator vertex_iterator;
-
-/// Type itérateur sur les arcs du graphe
-typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
 
 
 /** le numéro de la maison :
@@ -156,6 +152,28 @@ struct Path {
 
 class ProjectionData;
 
+/** Rectangle utilisé par RTree pour indexer spatialement les communes */
+struct Rect{
+    double min[2];
+    double max[2];
+    Rect() {}
+
+    Rect(const type::GeographicalCoord & coord) {
+        min[0] = coord.lon();
+        min[1] = coord.lat();
+        max[0] = coord.lon();
+        max[1] = coord.lat();
+    }
+
+    Rect(double a_minX, double a_minY, double a_maxX, double a_maxY){
+        min[0] = a_minX;
+        min[1] = a_minY;
+
+        max[0] = a_maxX;
+        max[1] = a_maxY;
+    }
+};
+
 /** Structure contenant tout ce qu'il faut savoir sur le référentiel de voirie */
 struct GeoRef {
 
@@ -171,6 +189,8 @@ struct GeoRef {
     /// données administratives
     std::map<std::string, nt::idx_t> admin_map;
     std::vector<Admin> admins;
+
+    RTree<nt::idx_t, double, 2> rtree;
 
     /// Indexe sur les noms de voirie
     autocomplete::Autocomplete<unsigned int> fl_admin;
@@ -193,7 +213,7 @@ struct GeoRef {
     /// Liste des alias
     std::map<std::string, std::string> alias;
     std::map<std::string, std::string> synonymes;
-    int word_weight;//(Pas serialisé)
+    int word_weight; //Pas serialisé : lu dans le fichier ini
 
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
@@ -208,8 +228,8 @@ struct GeoRef {
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
-    /// Récupération des la listes des admins à partir des cooredonnées
-    std::vector<navitia::type::idx_t> Within(const type::GeographicalCoord &);
+    /// Récupération de la liste des admins à partir des coordonnées
+    std::vector<navitia::type::idx_t> find_admins(const type::GeographicalCoord &);
 
     /** Construit l'indexe spatial */
     void build_proximity_list();
@@ -221,13 +241,13 @@ struct GeoRef {
     void normalize_extcode_way();
     /// Normalisation des codes externes des admins
     void normalize_extcode_admin();
-    /// Chargement de la liste map code externe idx
-    void build_ways();
-    ///Chargement de la liste map code externe idx sur poitype et poi
+
+    /// Chargement de la liste map code externe idx sur poitype et poi
     void build_poitypes();
     void build_pois();
-    /// Chargement de la liste map code externe idx
-    void build_admins();
+
+    /// Construit l’indexe spatial permettant de retrouver plus vite la commune à une coordonnées
+    void build_rtree();
 
     /// Recherche d'une adresse avec un numéro en utilisant Autocomplete
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax) const;

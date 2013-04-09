@@ -29,35 +29,24 @@ Data& Data::operator=(Data&& other){
     return *this;
 }
 
-/*
-void Data::set_cities(){
-     for(navitia::georef::Way & way : geo_ref.ways) {
-        auto city_it = pt_data.cities_map.find("city:"+way.city);
-        if(city_it != pt_data.cities_map.end()) {
-            way.city_idx = city_it->second;
-        } else {
-            way.city_idx = invalid_idx;
-        }
-    }
-}*/
 void Data::set_admins(){
     // les points d'arrêts
     for(StopPoint & stop_point : pt_data.stop_points){
-        std::vector<navitia::type::idx_t> admins=geo_ref.Within(stop_point.coord);
+        std::vector<navitia::type::idx_t> admins=geo_ref.find_admins(stop_point.coord);
         for(navitia::type::idx_t idx : admins){
             stop_point.admin_list.push_back(idx);
         }
     }
     // les zones d'arrêts
     for(StopArea & stop_area : pt_data.stop_areas){
-        std::vector<navitia::type::idx_t> admins=geo_ref.Within(stop_area.coord);
+        std::vector<navitia::type::idx_t> admins=geo_ref.find_admins(stop_area.coord);
         for(navitia::type::idx_t idx : admins){
             stop_area.admin_list.push_back(idx);
         }
     }
     // POI
     for (navitia::georef::POI& poi : geo_ref.pois){
-        std::vector<navitia::type::idx_t> admins=geo_ref.Within(poi.coord);
+        std::vector<navitia::type::idx_t> admins=geo_ref.find_admins(poi.coord);
         for(navitia::type::idx_t idx : admins){
             poi.admins.push_back(idx);
         }
