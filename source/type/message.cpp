@@ -1,7 +1,5 @@
 #include "type/message.h"
 
-
-
 #include <log4cplus/logger.h>
 
 #include <boost/format.hpp>
@@ -11,7 +9,6 @@
 #include "third_party/eos_portable_archive/portable_iarchive.hpp"
 #include "third_party/eos_portable_archive/portable_oarchive.hpp"
 #include "lz4_filter/filter.h"
-#include <boost/foreach.hpp>
 
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
@@ -68,7 +65,7 @@ std::vector<Message> MessageHolder::find_messages(const std::string& uri, const 
     std::vector<Message> result;
     auto it = messages.find(uri);
     if(it != messages.end()){
-        BOOST_FOREACH(auto m, it->second){
+        for(auto m : it->second){
             if(m.is_valid(now, action_period)){
                 result.push_back(m);
             }

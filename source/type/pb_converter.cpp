@@ -1,7 +1,7 @@
 #include "pb_converter.h"
 #include "georef/georef.h"
 #include "georef/street_network.h"
-#include <boost/foreach.hpp>
+
 namespace nt = navitia::type;
 
 namespace pt = boost::posix_time;
@@ -70,7 +70,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* st
         }
     }
 
-    BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(sa.uri, now, action_period)){
+    for(auto message : data.pt_data.message_holder.find_messages(sa.uri, now, action_period)){
         fill_message(message, data, stop_area->add_messages(), max_depth-1, now, action_period);
     }
 }
@@ -95,7 +95,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
         fill_pb_object(sp.stop_area_idx, data, stop_point->mutable_stop_area(), max_depth-1, now, action_period);
 
 
-    BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(sp.uri, now, action_period)){
+    for(auto message : data.pt_data.message_holder.find_messages(sp.uri, now, action_period)){
         fill_message(message, data, stop_point->add_messages(), max_depth-1, now, action_period);
     }
 }
@@ -164,7 +164,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::JourneyPatte
     if(max_depth > 0 && r.route_idx != type::invalid_idx)
         fill_pb_object(r.route_idx, data, journey_pattern->mutable_route(), max_depth - 1, now, action_period);
 
-    BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(r.uri, now, action_period)){
+    for(auto message : data.pt_data.message_holder.find_messages(r.uri, now, action_period)){
         fill_message(message, data, journey_pattern->add_messages(), max_depth-1, now, action_period);
     }
 }
@@ -180,7 +180,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Route * rout
     if(max_depth > 0 && r.line_idx != type::invalid_idx)
         fill_pb_object(r.line_idx, data, route->mutable_line(), max_depth - 1, now, action_period);
 
-    BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(r.uri, now, action_period)){
+    for(auto message : data.pt_data.message_holder.find_messages(r.uri, now, action_period)){
         fill_message(message, data, route->add_messages(), max_depth-1, now, action_period);
     }
 }
@@ -249,7 +249,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::VehicleJourn
         fill_pb_object(vj.physical_mode_idx, data, vehicle_journey->mutable_physical_mode(), max_depth-1, now, action_period);
     }
 
-    BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(vj.uri, now, action_period)){
+    for(auto message : data.pt_data.message_holder.find_messages(vj.uri, now, action_period)){
         fill_message(message, data, vehicle_journey->add_messages(), max_depth-1, now, action_period);
     }
 }
@@ -286,7 +286,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::JourneyPatte
     if(rp.journey_pattern_idx != type::invalid_idx && max_depth > 0)
         fill_pb_object(rp.journey_pattern_idx, data, journey_pattern_point->mutable_journey_pattern(), max_depth - 1, now, action_period);
 
-    BOOST_FOREACH(auto message, data.pt_data.message_holder.find_messages(rp.uri, now, action_period)){
+    for(auto message : data.pt_data.message_holder.find_messages(rp.uri, now, action_period)){
         fill_message(message, data, journey_pattern_point->add_messages(), max_depth-1, now, action_period);
     }
 }

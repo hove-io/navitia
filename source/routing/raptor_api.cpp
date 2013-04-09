@@ -194,7 +194,6 @@ parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str,
 }
 
 
-
 pbnavitia::Response 
 make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               const type::EntryPoint &destination, 
@@ -290,7 +289,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     boost::posix_time::ptime datetime;
     auto tmp_datetime = parse_datetimes(raptor, {datetime_str}, response, clockwise);
     if(response.has_error() || tmp_datetime.size() == 0 ||
-       response.planner().response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
+       response.isochrone().response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
         return response;
     }
     datetime = tmp_datetime.front();

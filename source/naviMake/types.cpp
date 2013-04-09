@@ -1,17 +1,12 @@
 #include "types.h"
-#include <iostream>
-#include <boost/assign.hpp>
-#include <boost/foreach.hpp>
 
 using namespace navimake::types;
 
 bool ValidityPattern::is_valid(int duration){
     if(duration < 0){
-        std::cerr << "La date est avant le début de période " << beginning_date << " " << duration <<  std::endl;
         return false;
     }
     else if(duration > 366){
-        std::cerr << "La date dépasse la fin de période" << std::endl;
         return false;
     }
     return true;
@@ -25,8 +20,6 @@ void ValidityPattern::add(boost::gregorian::date day){
     long duration = (day - beginning_date).days();
     if(is_valid(duration))
         add(duration);
-    else
-        std::cerr << day << " " << beginning_date << " " <<  std::flush;
 }
 
 void ValidityPattern::add(int duration){

@@ -12,17 +12,39 @@ from instance_manager import NavitiaManager
 from find_extrem_datetimes import extremes
 
 from apis import *
-from apis_functions import *
 from renderers import render
 from universals import *
+from protobuf_to_dict import protobuf_to_dict
 
-
+import request_pb2, type_pb2
 
 def on_summary_doc(request) :
     return render(api_doc(Apis().apis_all), 'json',  request.args.get('callback'))
 
 def on_doc(request, api):
     return render(api_doc(Apis().apis_all, api), 'json', request.args.get('callback'))
+
+def on_index(request, version = None, region = None ):
+    return Response('Welcome to the navitia API. Have a look at http://www.navitia.io to learn how to use it.')
+
+
+def on_regions(request, version, format):
+    response = {'requested_api': 'REGIONS', 'regions': []}
+    for region in NavitiaManager().instances.keys() : 
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.METADATAS
+        try:
+            resp = NavitiaManager().send_and_receive(req, region)
+            resp_dict = protobuf_to_dict(resp) 
+            if 'metadatas' in resp_dict.keys():
+                resp_dict['metadatas']['region_id'] = region                
+                response['regions'].append(resp_dict['metadatas'])
+        except DeadSocketException :
+            response['regions'].append({"region_id" : region, "status" : "not running"})
+        except RegionNotFound:
+            response['regions'].append({"region_id" : region, "status" : "not found"})
+
+    return render(response, format,  request.args.get('callback'))
 
 url_map = Map([
     Rule('/', endpoint=on_index),
@@ -32,7 +54,7 @@ url_map = Map([
     Rule('/<version>/isochrone.<format>', endpoint = on_universal_journeys("isochrone")),
     Rule('/<version>/proximity_list.<format>', endpoint = on_universal_proximity_list),
     Rule('/<version>/<region>/', endpoint = on_index),
-    Rule('/<version>/<region>/<api>.<format>', endpoint = Apis().on_api),
+    Rule('/<version>/<region>/<api>.<format>', endpoint = NavitiaManager().dispatch),
     Rule('/doc.json', endpoint = on_summary_doc),
     Rule('/doc.json/<api>', endpoint = on_doc)
     ])
@@ -55,7 +77,7 @@ signal.signal(signal.SIGINT, kill_thread)
 signal.signal(signal.SIGTERM, kill_thread)
 
 if __name__ == '__main__':
-    NavitiaManager('Jörmungandr.ini')
+    NavitiaManager().initialisation('Jörmungandr.ini')
     v = validate_apis(Apis().apis_all)
     if not(v.valid):
         for apiname, details in v.details.iteritems():
@@ -68,5 +90,5 @@ if __name__ == '__main__':
     httpd.serve_forever()
 
 else:
-    NavitiaManager()
+    NavitiaManager().initialisation()
 

@@ -1,12 +1,12 @@
-#include <boost/foreach.hpp>
-#include <fstream>
-#include <unordered_map>
-#include <utils/logger.h>
-#include "utils/functions.h"
 #include "georef.h"
 
+#include "utils/logger.h"
+#include "utils/functions.h"
 #include "utils/csv.h"
 #include "utils/configuration.h"
+
+#include <unordered_map>
+#include <boost/foreach.hpp>
 
 using navitia::type::idx_t;
 

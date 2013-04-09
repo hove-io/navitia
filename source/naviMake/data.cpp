@@ -254,9 +254,9 @@ void Data::build_relations(navitia::type::PT_Data &data){
             data.districts.at(department.district_idx).department_list.push_back(department.idx);
     }
 
-    //BOOST_FOREACH(navitia::type::Network & network, data.networks){}
+    //for(navitia::type::Network & network: data.networks){}
 
-    //BOOST_FOREACH(navitia::type::Connection & connection, data.connections){}
+    //for(navitia::type::Connection & connection: data.connections){}
 
     for(navitia::type::JourneyPatternPoint & journey_pattern_point : data.journey_pattern_points){
         data.journey_patterns.at(journey_pattern_point.journey_pattern_idx).journey_pattern_point_list.push_back(journey_pattern_point.idx);
