@@ -139,6 +139,10 @@ void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& mes
     //on teste le validitypattern adapté car si le VJ est déjà supprimé le traitement n'est pas nécessaire
     for(size_t i=0; i < vehicle_journey->validity_pattern->days.size(); ++i){
         types::VehicleJourney* vj_adapted = NULL;
+        if(!vehicle_journey->validity_pattern->check(i)){
+            //si le vj théorique ne circule pas ne circule pas, on a rien  à faire
+            continue;
+        }
         //construction de la période de circulation du VJ entre [current_date minuit] et [current_date 23H59] dans le cas d'une
         //circulation normal, ou, l'heure d'arrivé dans le cas d'un train passe minuit (période plus de 24H)
         pt::time_period current_period(pt::ptime(vehicle_journey->validity_pattern->beginning_date + bg::days(i), pt::seconds(0)),

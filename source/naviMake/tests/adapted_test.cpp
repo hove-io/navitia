@@ -1556,7 +1556,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
     validedays[bt::Wednesday] = true;
     validedays[bt::Thursday] = true;
     validedays[bt::Friday] = true;
-    validedays[bt::Saturday] = true;
+    validedays[bt::Saturday] = false;
     vj->validity_pattern->add(vj->validity_pattern->beginning_date, end_date, validedays);
     vj->adapted_validity_pattern = vj->validity_pattern;
 
@@ -1589,7 +1589,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
     BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
 
     testdate = bg::date_from_iso_string("20130302T1739");
-    BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
+    BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), false);
 
     testdate = bg::date_from_iso_string("20130303T1739");
     BOOST_CHECK_EQUAL(vj->validity_pattern->check((testdate - vj->validity_pattern->beginning_date).days()), true);
@@ -1644,7 +1644,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
     BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), true);
 
     testdate = bg::date_from_iso_string("20130302T1739");
-    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), true);
+    BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), false);
 
     testdate = bg::date_from_iso_string("20130303T1739");
     BOOST_CHECK_EQUAL(vj->adapted_validity_pattern->check((testdate - vj->adapted_validity_pattern->beginning_date).days()), true);
