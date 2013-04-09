@@ -1,17 +1,12 @@
 #include "gtfs_parser.h"
 #include <boost/tokenizer.hpp>
-#include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/foreach.hpp>
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <fstream>
 #include <iostream>
-#include <deque>
 #include <set>
 #include "utils/encoding_converter.h"
 #include "utils/csv.h"
-#include <utils/logger.h>
+#include "utils/logger.h"
 
 namespace nm = navimake::types;
 typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
@@ -149,7 +144,7 @@ void GtfsParser::fill_modes(Data & data) {
     data.commercial_modes.push_back(commercial_mode);
     commercial_mode_map[commercial_mode->id] = commercial_mode;
 
-    BOOST_FOREACH(navimake::types::CommercialMode *mt, data.commercial_modes) {
+    for(navimake::types::CommercialMode *mt : data.commercial_modes) {
         navimake::types::PhysicalMode* mode = new navimake::types::PhysicalMode();
         mode->id = mt->id;
         mode->name = mt->name;

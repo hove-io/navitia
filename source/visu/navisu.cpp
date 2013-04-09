@@ -2,7 +2,6 @@
 #include "visu/ui_navisu.h"
 
 #include <iostream>
-#include <boost/foreach.hpp>
 #include <QFileDialog>
 #include <QErrorMessage>
 using namespace navitia::type;
@@ -106,7 +105,7 @@ void navisu::show_stop_area(){
     resetTable(7, d.pt_data.stop_areas.size());
     ui->tableWidget->setHorizontalHeaderLabels(QStringList() << "External Code" << "Id" <<"Name" <<"City" << "id" << "X" << "Y");
     int count = 0;
-    BOOST_FOREACH(StopArea & sa, d.pt_data.stop_areas){
+    for(StopArea & sa : d.pt_data.stop_areas){
 
         setItem(count ,0, sa.uri);
         setItem(count, 1, sa.id);

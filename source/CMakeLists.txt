@@ -39,7 +39,8 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     SET(CMAKE_C_FLAGS "-ferror-limit=10 -I/usr/local/include/c++/v1 -pthread")
 endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1")
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1  -O1 -fno-omit-frame-pointer")
+
 
 
 #gestion des fixtures pour les test unitaire
@@ -52,8 +53,8 @@ FIND_PACKAGE(Boost 1.40.0 REQUIRED)
 
 
 SET(NAVITIA_VERSION_MAJOR 0)
-SET(NAVITIA_VERSION_MINOR 55)
-SET(NAVITIA_VERSION_PATCH c)
+SET(NAVITIA_VERSION_MINOR 56)
+SET(NAVITIA_VERSION_PATCH g)
 
 #ajout a l'include path le repertoirre de compilation, pour géré le config.h
 include_directories (${CMAKE_CURRENT_BINARY_DIR}

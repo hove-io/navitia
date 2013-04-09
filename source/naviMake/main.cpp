@@ -1,6 +1,5 @@
 #include "config.h"
 #include <iostream>
-#include <boost/foreach.hpp>
 
 #include "gtfs_parser.h"
 #include "bdtopo_parser.h"
