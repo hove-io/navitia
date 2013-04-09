@@ -6,6 +6,7 @@ message AutocompleteRequest {
     repeated NavitiaType types = 2;
     required int32 depth = 3;
     required int32 nbmax = 4;
+    repeated string admin_uri = 5;
 }
 
 message NextStopTimeRequest {

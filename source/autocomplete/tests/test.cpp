@@ -21,6 +21,8 @@ BOOST_AUTO_TEST_CASE(parse_find_with_alias_and_synonymes_test){
     int word_weight = 5;
     int nbmax = 10;
     std::map<std::string, std::string> alias;
+    std::vector<std::string> admins;
+    std::string admin_uri = "";
     alias["de"]="";
     alias["la"]="";
     alias["les"]="";
@@ -56,21 +58,21 @@ BOOST_AUTO_TEST_CASE(parse_find_with_alias_and_synonymes_test){
 
 
     Autocomplete<unsigned int> ac;
-    ac.add_string("hotel de ville paris", 0, alias, synonymes);
-    ac.add_string("r jean jaures", 1, alias, synonymes);
-    ac.add_string("rue jeanne d'arc", 2, alias, synonymes);
-    ac.add_string("avenue jean jaures", 3, alias, synonymes);
-    ac.add_string("boulevard poniatowski", 4, alias, synonymes);
-    ac.add_string("pente de Bray", 5, alias, synonymes);
-    ac.add_string("Centre Commercial Caluire 2", 6, alias, synonymes);
-    ac.add_string("Rue René", 7, alias, synonymes);
+    ac.add_string("hotel de ville paris", 0, alias, synonymes, admin_uri);
+    ac.add_string("r jean jaures", 1, alias, synonymes, admin_uri);
+    ac.add_string("rue jeanne d'arc", 2, alias, synonymes, admin_uri);
+    ac.add_string("avenue jean jaures", 3, alias, synonymes, admin_uri);
+    ac.add_string("boulevard poniatowski", 4, alias, synonymes, admin_uri);
+    ac.add_string("pente de Bray", 5, alias, synonymes, admin_uri);
+    ac.add_string("Centre Commercial Caluire 2", 6, alias, synonymes, admin_uri);
+    ac.add_string("Rue René", 7, alias, synonymes, admin_uri);
     ac.build();
 
     //Dans le dictionnaire : "hotel de ville paris" -> "mairie paris"
     //Recherche : "mai paris" -> "mai paris"
     // distance = 3 / word_weight = 0*5 = 0
     // Qualité = 100 - (3 + 0) = 97
-    auto res = ac.find_complete("mai paris",alias, synonymes,word_weight, nbmax);
+    auto res = ac.find_complete("mai paris",alias, synonymes,word_weight, admins, nbmax);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_REQUIRE_EQUAL(res.at(0).quality, 97);
 
@@ -78,7 +80,7 @@ BOOST_AUTO_TEST_CASE(parse_find_with_alias_and_synonymes_test){
     //Recherche : "hotel de ville par" -> "mairie par"
     // distance = 3 / word_weight = 0*5 = 0
     // Qualité = 100 - (2 + 0) = 98
-    auto res1 = ac.find_complete("hotel de ville par",alias, synonymes,word_weight, nbmax);
+    auto res1 = ac.find_complete("hotel de ville par",alias, synonymes,word_weight, admins, nbmax);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_REQUIRE_EQUAL(res1.at(0).quality, 98);
 
@@ -87,19 +89,19 @@ BOOST_AUTO_TEST_CASE(parse_find_with_alias_and_synonymes_test){
     // distance = 5 / word_weight = 0*5 = 0
     // Qualité = 100 - (5 + 0) = 95
 
-    auto res2 = ac.find_complete("c c ca 2",alias, synonymes,word_weight, nbmax);
+    auto res2 = ac.find_complete("c c ca 2",alias, synonymes,word_weight, admins, nbmax);
     BOOST_REQUIRE_EQUAL(res2.size(), 1);
     BOOST_REQUIRE_EQUAL(res2.at(0).quality, 95);
 
-    auto res3 = ac.find_complete("cc ca 2",alias, synonymes,word_weight, nbmax);
+    auto res3 = ac.find_complete("cc ca 2",alias, synonymes,word_weight, admins, nbmax);
     BOOST_REQUIRE_EQUAL(res3.size(), 1);
     BOOST_REQUIRE_EQUAL(res3.at(0).quality, 95);
 
-    auto res4 = ac.find_complete("rue rene",alias, synonymes,word_weight, nbmax);
+    auto res4 = ac.find_complete("rue rene",alias, synonymes,word_weight, admins, nbmax);
     BOOST_REQUIRE_EQUAL(res4.size(), 1);
     BOOST_REQUIRE_EQUAL(res4.at(0).quality, 100);
 
-    auto res5 = ac.find_complete("rue rené",alias, synonymes,word_weight, nbmax);
+    auto res5 = ac.find_complete("rue rené",alias, synonymes,word_weight, admins, nbmax);
     BOOST_REQUIRE_EQUAL(res5.size(), 1);
     BOOST_REQUIRE_EQUAL(res5.at(0).quality, 100);
 }
@@ -202,14 +204,15 @@ BOOST_AUTO_TEST_CASE(parse_find_with_name_in_vector_test){
     std::map<std::string, std::string> alias;
     std::map<std::string, std::string> synonymes;
     std::vector<std::string> vec;
+    std::string admin_uri = "";
 
     Autocomplete<unsigned int> ac;
-    ac.add_string("rue jean jaures", 0, alias, synonymes);
-    ac.add_string("place jean jaures", 1, alias, synonymes);
-    ac.add_string("rue jeanne d'arc", 2, alias, synonymes);
-    ac.add_string("avenue jean jaures", 3, alias, synonymes);
-    ac.add_string("boulevard poniatowski", 4, alias, synonymes);
-    ac.add_string("pente de Bray", 5, alias, synonymes);
+    ac.add_string("rue jean jaures", 0, alias, synonymes, admin_uri);
+    ac.add_string("place jean jaures", 1, alias, synonymes, admin_uri);
+    ac.add_string("rue jeanne d'arc", 2, alias, synonymes, admin_uri);
+    ac.add_string("avenue jean jaures", 3, alias, synonymes, admin_uri);
+    ac.add_string("boulevard poniatowski", 4, alias, synonymes, admin_uri);
+    ac.add_string("pente de Bray", 5, alias, synonymes, admin_uri);
     ac.build();    
 
     vec.push_back("rue");
@@ -314,19 +317,20 @@ BOOST_AUTO_TEST_CASE(alias_test){
 BOOST_AUTO_TEST_CASE(parse_state_nb_found_test){
         /// Liste des alias (Pas serialisé)
         std::map<std::string, std::string> alias;
-         std::map<std::string, std::string> synonymes;
+        std::map<std::string, std::string> synonymes;
+        std::string admin_uri = "";
         int word_weight = 5;
 
 
         Autocomplete<unsigned int> ac;
 
 
-        ac.add_string("place jean jaures", 0, alias, synonymes);
-        ac.add_string("rue jeanne d'arc", 1, alias, synonymes);
-        ac.add_string("avenue jean jaures", 2, alias, synonymes);
-        ac.add_string("boulevard poniatowski", 3, alias, synonymes);
-        ac.add_string("pente de Bray", 4, alias, synonymes);
-        ac.add_string("rue jean jaures", 5, alias, synonymes);
+        ac.add_string("place jean jaures", 0, alias, synonymes, admin_uri);
+        ac.add_string("rue jeanne d'arc", 1, alias, synonymes, admin_uri);
+        ac.add_string("avenue jean jaures", 2, alias, synonymes, admin_uri);
+        ac.add_string("boulevard poniatowski", 3, alias, synonymes, admin_uri);
+        ac.add_string("pente de Bray", 4, alias, synonymes, admin_uri);
+        ac.add_string("rue jean jaures", 5, alias, synonymes, admin_uri);
 
         ac.build();
 
@@ -366,23 +370,25 @@ BOOST_AUTO_TEST_CASE(autocomplete_find_quality_test){
         /// Liste des alias (Pas serialisé)
         std::map<std::string, std::string> alias;
         std::map<std::string, std::string> synonymes;
+        std::vector<std::string> admins;
+        std::string admin_uri = "";
         int word_weight = 5;
         int nbmax = 10;
 
         Autocomplete<unsigned int> ac;
-        ac.add_string("rue jeanne d'arc", 0, alias, synonymes);
-        ac.add_string("place jean jaures", 1, alias, synonymes);
-        ac.add_string("rue jean paul gaultier paris", 2, alias, synonymes);
-        ac.add_string("avenue jean jaures", 3, alias, synonymes);
-        ac.add_string("boulevard poniatowski", 4, alias, synonymes);
-        ac.add_string("pente de Bray", 5, alias, synonymes);
-        ac.add_string("rue jean jaures", 6, alias, synonymes);
-        ac.add_string("rue jean zay ", 7, alias, synonymes);
-        ac.add_string("place jean paul gaultier ", 8, alias, synonymes);
+        ac.add_string("rue jeanne d'arc", 0, alias, synonymes, admin_uri);
+        ac.add_string("place jean jaures", 1, alias, synonymes, admin_uri);
+        ac.add_string("rue jean paul gaultier paris", 2, alias, synonymes, admin_uri);
+        ac.add_string("avenue jean jaures", 3, alias, synonymes, admin_uri);
+        ac.add_string("boulevard poniatowski", 4, alias, synonymes, admin_uri);
+        ac.add_string("pente de Bray", 5, alias, synonymes, admin_uri);
+        ac.add_string("rue jean jaures", 6, alias, synonymes, admin_uri);
+        ac.add_string("rue jean zay ", 7, alias, synonymes, admin_uri);
+        ac.add_string("place jean paul gaultier ", 8, alias, synonymes, admin_uri);
 
         ac.build();
 
-        auto res = ac.find_complete("rue jean", alias, synonymes, word_weight, nbmax);
+        auto res = ac.find_complete("rue jean", alias, synonymes, word_weight, admins, nbmax);
         std::vector<int> expected = {6,7,0,2};
         BOOST_REQUIRE_EQUAL(res.size(), 4);
         BOOST_REQUIRE_EQUAL(res.at(0).quality, 92);
@@ -400,6 +406,8 @@ BOOST_AUTO_TEST_CASE(autocomplete_alias_and_weight_test){
         /// Liste des alias (Pas serialisé)
         std::map<std::string, std::string> alias;
         std::map<std::string, std::string> synonymes;
+        std::vector<std::string> admins;
+        std::string admin_uri;
         int word_weight = 5;
         int nbmax = 10;
 
@@ -429,29 +437,29 @@ BOOST_AUTO_TEST_CASE(autocomplete_alias_and_weight_test){
         alias["pl"]="place";
 
         Autocomplete<unsigned int> ac;
-        ac.add_string("rue jeanne d'arc", 0, alias, synonymes);
-        ac.add_string("place jean jaures", 1, alias, synonymes);
-        ac.add_string("rue jean paul gaultier paris", 2, alias, synonymes);
-        ac.add_string("avenue jean jaures", 3, alias, synonymes);
-        ac.add_string("boulevard poniatowski", 4, alias, synonymes);
-        ac.add_string("pente de Bray", 5, alias, synonymes);
-        ac.add_string("rue jean jaures", 6, alias, synonymes);
-        ac.add_string("rue jean zay ", 7, alias, synonymes);
-        ac.add_string("place jean paul gaultier ", 8, alias, synonymes);
-        ac.add_string("hopital paul gaultier", 8, alias, synonymes);
+        ac.add_string("rue jeanne d'arc", 0, alias, synonymes, admin_uri);
+        ac.add_string("place jean jaures", 1, alias, synonymes, admin_uri);
+        ac.add_string("rue jean paul gaultier paris", 2, alias, synonymes, admin_uri);
+        ac.add_string("avenue jean jaures", 3, alias, synonymes, admin_uri);
+        ac.add_string("boulevard poniatowski", 4, alias, synonymes, admin_uri);
+        ac.add_string("pente de Bray", 5, alias, synonymes, admin_uri);
+        ac.add_string("rue jean jaures", 6, alias, synonymes, admin_uri);
+        ac.add_string("rue jean zay ", 7, alias, synonymes, admin_uri);
+        ac.add_string("place jean paul gaultier ", 8, alias, synonymes, admin_uri);
+        ac.add_string("hopital paul gaultier", 8, alias, synonymes, admin_uri);
 
         ac.build();
 
-        auto res = ac.find_complete("rue jean", alias, synonymes, word_weight, nbmax);
+        auto res = ac.find_complete("rue jean", alias, synonymes, word_weight, admins, nbmax);
         BOOST_REQUIRE_EQUAL(res.size(), 4);
         BOOST_REQUIRE_EQUAL(res.at(0).quality, 92);
 
-        auto res1 = ac.find_complete("r jean", alias, synonymes, word_weight, nbmax);
+        auto res1 = ac.find_complete("r jean", alias, synonymes, word_weight, admins, nbmax);
         BOOST_REQUIRE_EQUAL(res1.size(), 4);
 
         BOOST_REQUIRE_EQUAL(res1.at(0).quality, 92);
 
-        auto res2 = ac.find_complete("av jean", alias, synonymes, word_weight, nbmax);
+        auto res2 = ac.find_complete("av jean", alias, synonymes, word_weight, admins, nbmax);
         BOOST_REQUIRE_EQUAL(res2.size(), 1);
         //rue jean zay
         // distance = 6 / word_weight = 1*5 = 5
@@ -459,7 +467,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_alias_and_weight_test){
         BOOST_REQUIRE_EQUAL(res2.at(0).quality, 89);
 
         word_weight = 10;
-        auto res3 = ac.find_complete("av jean", alias, synonymes, word_weight, nbmax);
+        auto res3 = ac.find_complete("av jean", alias, synonymes, word_weight, admins, nbmax);
         BOOST_REQUIRE_EQUAL(res3.size(), 1);
         //rue jean zay
         // distance = 6 / word_weight = 1*10 = 10
@@ -467,7 +475,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_alias_and_weight_test){
         BOOST_REQUIRE_EQUAL(res3.at(0).quality, 84);
 
         word_weight = 10;
-        auto res4 = ac.find_complete("chu gau", alias, synonymes, word_weight, nbmax);
+        auto res4 = ac.find_complete("chu gau", alias, synonymes, word_weight, admins, nbmax);
         BOOST_REQUIRE_EQUAL(res4.size(), 1);
         //hopital paul gaultier
         // distance = 9 / word_weight = 1*10 = 10

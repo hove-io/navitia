@@ -101,6 +101,7 @@ pbnavitia::Response autocomplete(const std::string &name,
                                  const std::vector<nt::Type_e> &filter,
                                  uint32_t depth,
                                  int nbmax,
+                                 const std::vector<std::string> &admins,
                                  const navitia::type::Data &d){
 
     pbnavitia::Response pb_response;
@@ -111,22 +112,22 @@ pbnavitia::Response autocomplete(const std::string &name,
     BOOST_FOREACH(nt::Type_e type, filter){
         switch(type){
         case nt::Type_e::StopArea:
-            result = d.pt_data.stop_area_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
+            result = d.pt_data.stop_area_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, admins, nbmax);
             break;
         case nt::Type_e::StopPoint:
-            result = d.pt_data.stop_point_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
+            result = d.pt_data.stop_point_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, admins, nbmax);
             break;
         case nt::Type_e::City:
-            result = d.pt_data.city_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
+            result = d.pt_data.city_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, admins, nbmax);
             break;
         case nt::Type_e::Admin:
-            result = d.geo_ref.fl_admin.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
+            result = d.geo_ref.fl_admin.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, admins, nbmax);
             break;
         case nt::Type_e::Address:
-            result = d.geo_ref.find_ways(name, nbmax);
+            result = d.geo_ref.find_ways(name, admins, nbmax);
             break;
         case nt::Type_e::POI:
-            result = d.geo_ref.fl_poi.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
+            result = d.geo_ref.fl_poi.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, admins, nbmax);
         default: break;
         }
 

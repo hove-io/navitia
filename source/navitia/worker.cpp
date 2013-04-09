@@ -47,6 +47,15 @@ std::vector<nt::Type_e> vector_of_pb_types(const T & pb_object){
     return result;
 }
 
+template<class T>
+std::vector<std::string> vector_of_admins(const T & admin){
+    std::vector<std::string> result;
+    for (int i = 0; i < admin.admin_uri_size(); ++i){
+        result.push_back(admin.admin_uri(i));
+    }
+    return result;
+}
+
 pbnavitia::Response Worker::status() {
     pbnavitia::Response result;
     result.set_requested_api(pbnavitia::STATUS);
@@ -110,7 +119,7 @@ pbnavitia::Response Worker::load() {
 
 pbnavitia::Response Worker::autocomplete(const pbnavitia::AutocompleteRequest & request) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
-    return navitia::autocomplete::autocomplete(request.name(), vector_of_pb_types(request), request.depth(), request.nbmax(), this->data);
+    return navitia::autocomplete::autocomplete(request.name(), vector_of_pb_types(request), request.depth(), request.nbmax(), vector_of_admins(request), this->data);
 }
 
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest & request, pbnavitia::API api) {

@@ -75,36 +75,51 @@ ITERATE_NAVITIA_PT_TYPES(GET_DATA)
 void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     for(const StopArea & sa : this->stop_areas){
         std::string key;
+        std::string admin_uris = "";
         for(idx_t idx : sa.admin_list){
             navitia::georef::Admin admin = georef.admins.at(idx);
             if(key.empty()) {
                 key = admin.name;
             }else{
                 key = key + " " + admin.name;
+                //Ajouter uri de tous les admins (plusieurs niveaux) séparés par ";"
+                admin_uris += ";" + admin.uri;
             }
+            //Ajouter ";" à la fin
+            if (!admin_uris.empty()){
+                admin_uris += ";";
+            }
+
         }
-        this->stop_area_autocomplete.add_string(sa.name + " " + key, sa.idx,georef.alias, georef.synonymes);        
+        this->stop_area_autocomplete.add_string(sa.name + " " + key, sa.idx,georef.alias, georef.synonymes, admin_uris);
     }
 
     this->stop_area_autocomplete.build();
 
     for(const StopPoint & sp : this->stop_points){
         std::string key;
+        std::string admin_uris = "";
         for(idx_t idx : sp.admin_list){
             navitia::georef::Admin admin = georef.admins.at(idx);
             if(key.empty()) {
                 key = admin.name;
             }else{
                 key = key + " " + admin.name;
+                //Ajouter uri de tous les admins (plusieurs niveaux) séparés par ";"
+                admin_uris += ";" + admin.uri;
+            }
+            //Ajouter ";" à la fin
+            if (!admin_uris.empty()){
+                admin_uris += ";";
             }
         }
-        this->stop_point_autocomplete.add_string(sp.name + " " + key, sp.idx, georef.alias, georef.synonymes);        
+        this->stop_point_autocomplete.add_string(sp.name + " " + key, sp.idx, georef.alias, georef.synonymes, admin_uris);
     }
 
     this->stop_point_autocomplete.build();
 
     for(const navitia::georef::Admin & admin : georef.admins){
-        this->city_autocomplete.add_string(admin.name, admin.idx, georef.alias, georef.synonymes);
+        this->city_autocomplete.add_string(admin.name, admin.idx, georef.alias, georef.synonymes, ";" + admin.uri + ";");
     }
 
     this->city_autocomplete.build();

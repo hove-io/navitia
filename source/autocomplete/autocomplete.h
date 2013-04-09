@@ -49,10 +49,11 @@ struct Autocomplete
     struct word_quality{
         int word_count;
         int word_distance;
+        std::string admin_uri;
 
-        word_quality():word_count(0), word_distance(0){}
+        word_quality():word_count(0), word_distance(0), admin_uri(""){}
         template<class Archive> void serialize(Archive & ar, const unsigned int) {
-            ar & word_count & word_distance;
+            ar & word_count & word_distance & admin_uri;
         }
     };
 
@@ -79,7 +80,7 @@ struct Autocomplete
       * — on rajoute la position à la liste de chaque mot
       */    
     void add_string(std::string str, T position, const std::map<std::string, std::string> & map_alias,
-                    const std::map<std::string, std::string> & map_synonymes){
+                    const std::map<std::string, std::string> & map_synonymes ,std::string admin_uri){
         word_quality wc;
         int distance = 0;
 
@@ -94,6 +95,7 @@ struct Autocomplete
         }
         wc.word_count = count;
         wc.word_distance = distance;
+        wc.admin_uri = admin_uri;
         ac_list[position] = wc;
     }
 
@@ -240,7 +242,9 @@ struct Autocomplete
 
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant au moins un des mots*/
     std::vector<fl_quality> find_complete(const std::string & str, const std::map<std::string, std::string> & map_alias,
-                                                    const std::map<std::string, std::string> & map_synonymes, const int wordweight, const int nbmax) const{
+                                          const std::map<std::string, std::string> & map_synonymes,const int wordweight,
+                                          const std::vector<std::string> &vec_admin_uri,
+                                          const int nbmax) const{
         std::vector<std::string> vec = tokenize(str, map_alias, map_synonymes);
         int wordCount = 0;
         int wordLength = 0;
@@ -256,8 +260,10 @@ struct Autocomplete
             quality.idx = i;
             quality.nb_found = wordCount;
             quality.word_len = wordLength;
-            quality.quality = calc_quality(quality, wordweight);
-            vec_quality.push_back(quality);
+            if (is_admin_valid(quality, vec_admin_uri) == true){
+                quality.quality = calc_quality(quality, wordweight);
+                vec_quality.push_back(quality);
+            }
         }
         typename std::vector<fl_quality>::iterator middle_iterator;
         if((unsigned)nbmax < vec_quality.size())
@@ -282,7 +288,7 @@ struct Autocomplete
         }
     }
 
-    int calc_quality(const fl_quality & ql, int wordweight) const {
+    int calc_quality(const fl_quality & ql,  int wordweight) const {
         int result = 100;
 
         //Qualité sur le nombres des mot trouvé
@@ -291,6 +297,23 @@ struct Autocomplete
         //Qualité sur la distance globale des mots.
         result -= (ac_list.at(ql.idx).word_distance - ql.word_len);//Coeff de la distance = 1        
 
+        return result;
+    }
+
+    bool is_admin_valid(const fl_quality & ql, const std::vector<std::string> &vec_admin_uri) const{
+        bool result;
+        if (vec_admin_uri.size() == 0){
+            result = true;
+        }else{
+            //result = (vec_admin_uri.size() == 0)? true:false;
+            for (size_t i = 0; i < vec_admin_uri.size(); ++i){
+                result = ac_list.at(ql.idx).admin_uri.find(";" + vec_admin_uri[i] + ";");
+                //result = (vec_admin_uri[i] == ac_list.at(ql.idx).admin_uri);
+                if (result == true){
+                    break;
+                }
+            }
+        }
         return result;
     }
 

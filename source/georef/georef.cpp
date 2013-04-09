@@ -339,15 +339,22 @@ void GeoRef::build_autocomplete_list(){
     int pos = 0;
     for(Way way : ways){
         std::string key="";
+        std::string admin_uris = "";
         for(auto idx : way.admins){
             Admin admin = admins.at(idx);
             if(key.empty()){                
                 key = admin.name;
             }else{
                 key = key + " " + admin.name;
+                //Ajouter uri de tous les admins (plusieurs niveaux) séparés par ";"
+                admin_uris += ";" + admin.uri;
             }
         }
-        fl_way.add_string(way.way_type +" "+ way.name + " " + key, pos,alias, synonymes);
+        //Ajouter ";" à la fin
+        if (!admin_uris.empty()){
+            admin_uris += ";";
+        }
+        fl_way.add_string(way.way_type +" "+ way.name + " " + key, pos,alias, synonymes, admin_uris);
         pos++;
     }
     fl_way.build();
@@ -355,21 +362,28 @@ void GeoRef::build_autocomplete_list(){
     //Remplir les poi dans la liste autocompletion
     for(POI poi : pois){
         std::string key="";
+        std::string admin_uris = "";
         for(auto idx : poi.admins){
             Admin admin = admins.at(idx);
             if(key.empty()){
                 key = admin.name;
             }else{
                 key = key + " " + admin.name;
+                //Ajouter uri de tous les admins (plusieurs niveaux) séparés par ";"
+                admin_uris += ";" + admin.uri;
             }
         }
-        fl_poi.add_string(poi.name + " " + key, poi.idx ,alias, synonymes);
+        //Ajouter ";" à la fin
+        if (!admin_uris.empty()){
+            admin_uris += ";";
+        }
+        fl_poi.add_string(poi.name + " " + key, poi.idx ,alias, synonymes, admin_uris);
     }
     fl_poi.build();
 
     // les données administratives
     for(Admin admin : admins){
-        fl_admin.add_string(admin.name, admin.idx ,alias, synonymes);
+        fl_admin.add_string(admin.name, admin.idx ,alias, synonymes, ";" + admin.uri + ";");
     }
     fl_admin.build();
 }
@@ -420,7 +434,7 @@ void GeoRef::normalize_extcode_admin(){
     * Si le numéro est rensigné, on renvoie les coordonnées les plus proches
     * Sinon le barycentre de la rue
 */
-std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string & str, const int nbmax) const{
+std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string & str, const std::vector<std::string> &admins, const int nbmax) const{
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> to_return;
     boost::tokenizer<> tokens(str);
 
@@ -435,7 +449,7 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std
     }else{
         search_str = str;
     }
-    to_return = fl_way.find_complete(search_str, alias, synonymes, word_weight, nbmax);
+    to_return = fl_way.find_complete(search_str, alias, synonymes, word_weight, admins, nbmax);
 
     /// récupération des coordonnées du numéro recherché pour chaque rue
     for(auto &result_item  : to_return){

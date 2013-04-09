@@ -95,7 +95,8 @@ class Apis:
                                             50),
                             "startPage" : Argument("The page number of the ptref result", int,
                                                 False, False, 0),
-			    			"nbmax" : Argument("Maximum number of objects in the response", int, False, False, 10)
+			    "nbmax" : Argument("Maximum number of objects in the response", int, False, False, 10),
+			    "admin_uri[]" : Argument("code uri of admin", str, False, True, [])
                            },
                           "description" : "Retrieves the objects which contains in their name the \"name\"",
                           "order":2},
