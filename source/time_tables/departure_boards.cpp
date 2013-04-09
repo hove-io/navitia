@@ -75,7 +75,7 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
     for(auto id_vec : map_route_stop_point) {
 
         auto board = dep_board->add_boards();
-        fill_pb_object(id_vec.first.first, data, board->mutable_stop_point(), 0, current_time, action_period);
+        fill_pb_object(id_vec.first.first, data, board->mutable_stop_point(), 1, current_time, action_period);
         fill_pb_object(id_vec.first.second, data, board->mutable_route(), 2, current_time, action_period);
 
         auto vec_st = id_vec.second;
