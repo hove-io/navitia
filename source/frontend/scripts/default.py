@@ -157,6 +157,29 @@ class Script:
         return resp
 
 
+    def __fill_display_and_uris(self, resp):
+        for journey in resp.planner.journeys:
+            for section in journey.sections:
+                if section.type == response_pb2.PUBLIC_TRANSPORT:
+                    section.pt_display_informations.physical_mode = section.vehicle_journey.physical_mode.name
+                    section.pt_display_informations.commercial_mode = section.vehicle_journey.route.line.commercial_mode.name
+                    section.pt_display_informations.network = section.vehicle_journey.route.line.network.name
+                    section.pt_display_informations.code = section.vehicle_journey.route.line.code
+                    section.pt_display_informations.headsign = section.vehicle_journey.route.name
+                    if section.destination.type == type_pb2.STOP_POINT:
+                        section.pt_display_informations.direction = section.destination.stop_point.name
+                    section.pt_display_informations.color = section.vehicle_journey.route.line.color
+                    section.uris.vehicle_journey = section.vehicle_journey.uri
+                    section.uris.line = section.vehicle_journey.route.line.uri
+                    section.uris.route = section.vehicle_journey.route.uri
+                    section.uris.commercial_mode = section.vehicle_journey.route.line.commercial_mode.uri
+                    section.uris.physical_mode = section.vehicle_journey.physical_mode.uri
+                    section.uris.network = section.vehicle_journey.route.line.network.uri
+                    section.vehicle_journey.Clear()
+
+
+
+
     def __on_journeys(self, requested_type, request_args, version, region):
         req = request_pb2.Request()
         req.requested_api = requested_type
@@ -177,6 +200,10 @@ class Script:
             if before and after:
                 resp.planner.before = before
                 resp.planner.after = after
+
+        self.__fill_display_and_uris(resp)
+        
+        
 
         return resp
 
