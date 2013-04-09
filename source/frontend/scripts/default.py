@@ -87,6 +87,9 @@ class Script:
         for object_type in self.v.arguments["object_type[]"]:
             req.autocomplete.types.append(pb_type[object_type])
 
+        for admin_uri in self.v.arguments["admin_uri[]"]:
+            req.autocomplete.admin_uris.append(admin_uri)
+
         resp = NavitiaManager().send_and_receive(req, region)
         pagination_resp = response_pb2.Pagination()
         pagination_resp.startPage = self.v.arguments["startPage"]
