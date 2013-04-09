@@ -263,6 +263,12 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::VehicleJourn
     for(auto message : data.pt_data.message_holder.find_messages(vj.uri, now, action_period)){
         fill_message(message, data, vehicle_journey->add_messages(), max_depth-1, now, action_period);
     }
+    //si on a un vj théorique rataché à notre vj, on récupére les messages qui le concerne
+    if(vj.theoric_vehicle_journey_idx != nt::invalid_idx){
+        for(auto message : data.pt_data.message_holder.find_messages(data.pt_data.vehicle_journeys[vj.theoric_vehicle_journey_idx].uri, now, action_period)){
+            fill_message(message, data, vehicle_journey->add_messages(), max_depth-1, now, action_period);
+        }
+    }
 }
 
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopTime *stop_time, int max_depth,
