@@ -114,7 +114,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * ad
     address->set_uri(way.uri);
 
     if(max_depth > 0){
-        for(nt::idx_t idx : way.admins){
+        for(nt::idx_t idx : way.admin_list){
             fill_pb_object(idx, data,  address->add_admin(), max_depth-1, now, action_period);
         }
     }
@@ -361,7 +361,7 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Poi* poi
     poi->mutable_coord()->set_lon(geopoi.coord.lon());
 
     if(max_depth > 0){
-        for(nt::idx_t idx : geopoi.admins){
+        for(nt::idx_t idx : geopoi.admin_list){
             fill_pb_object(idx, data,  poi->add_admin(), max_depth-1, now, action_period);
         }
     }

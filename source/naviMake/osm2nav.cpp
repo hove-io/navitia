@@ -277,6 +277,7 @@ void Visitor::AdminRef(){
         admin.name = ar.second.name;
         admin.level = boost::lexical_cast<int>( ar.second.level);
         admin.coord = admin_centre_coord(ar.second.refs);
+        admin.id = boost::lexical_cast<std::string>(ar.first);
         manage_admin_boundary(ar.second.refs, admin);
         geo_ref.admins.push_back(admin);
     }
@@ -287,7 +288,7 @@ void Visitor::set_admin_of_ways(){
         navitia::type::GeographicalCoord coord = way.barycentre(geo_ref.graph);
         std::vector<navitia::type::idx_t> vect_idx = geo_ref.find_admins(coord);
         for(navitia::type::idx_t id : vect_idx){
-            way.admins.push_back(id);
+            way.admin_list.push_back(id);
         }
     }
 }

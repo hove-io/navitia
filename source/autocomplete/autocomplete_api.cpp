@@ -97,6 +97,44 @@ void Update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result,
     }
 }
 
+template<class T>
+struct ValidAdmin {
+    const std::vector<T> & objects;
+    std::vector<type::idx_t> required_admins;
+
+    ValidAdmin(const std::vector<T> & objects, std::vector<type::idx_t> required_admins) : objects(objects), required_admins(required_admins) {}
+
+    bool operator()(type::idx_t idx) const {
+        const T & object = objects[idx];
+        if (required_admins.size() == 0){
+            return true;
+        }
+
+        for(type::idx_t admin : required_admins) {
+            if(std::find(object.admin_list.begin(), object.admin_list.end(), admin) != object.admin_list.end())
+                return true;
+        }
+
+        return false;
+    }
+};
+
+template<class T> ValidAdmin<T> valid_admin (const std::vector<T> & objects, std::vector<type::idx_t> required_admins)  {
+    return ValidAdmin<T>(objects, required_admins);
+}
+
+std::vector<type::idx_t> admin_uris_to_idx(const std::vector<std::string> &admin_uris, const navitia::type::Data &d){
+    std::vector<type::idx_t> admin_idxs;
+    for (auto admin_uri : admin_uris){
+        for (navitia::georef::Admin admin : d.geo_ref.admins){
+            if (admin_uri == admin.uri){
+                admin_idxs.push_back(admin.idx);
+            }
+        }
+    }
+
+    return admin_idxs;
+}
 
 pbnavitia::Response autocomplete(const std::string &name,
                                  const std::vector<nt::Type_e> &filter,
@@ -105,30 +143,31 @@ pbnavitia::Response autocomplete(const std::string &name,
                                  const std::vector<std::string> &admins,
                                  const navitia::type::Data &d){
 
-    pbnavitia::Response pb_response;
+    pbnavitia::Response pb_response;    
     pb_response.set_requested_api(pbnavitia::AUTOCOMPLETE);
     bool addType = d.pt_data.stop_area_autocomplete.is_address_type(name, d.geo_ref.alias, d.geo_ref.synonymes);
     std::vector<Autocomplete<nt::idx_t>::fl_quality> result;
     pbnavitia::Autocomplete* pb = pb_response.mutable_autocomplete();
+    std::vector<type::idx_t> admin_idxs = admin_uris_to_idx(admins, d);
     for(nt::Type_e type : filter){
         switch(type){
         case nt::Type_e::StopArea:
-            result = d.pt_data.stop_area_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, admins, nbmax);
+            result = d.pt_data.stop_area_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin(d.pt_data.stop_areas, admin_idxs));
             break;
         case nt::Type_e::StopPoint:
-            result = d.pt_data.stop_point_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, admins, nbmax);
+            result = d.pt_data.stop_point_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax,  valid_admin(d.pt_data.stop_points, admin_idxs));
             break;
-        case nt::Type_e::City:
-            result = d.pt_data.city_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, admins, nbmax);
-            break;
+//        case nt::Type_e::City:
+//            result = d.pt_data.city_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax,  keep);
+//            break;
         case nt::Type_e::Admin:
-            result = d.geo_ref.fl_admin.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, admins, nbmax);
+            result = d.geo_ref.fl_admin.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax,  valid_admin(d.geo_ref.admins, admin_idxs));
             break;
         case nt::Type_e::Address:
-            result = d.geo_ref.find_ways(name, admins, nbmax);
+            result = d.geo_ref.find_ways(name, nbmax, valid_admin(d.geo_ref.ways, admin_idxs));
             break;
         case nt::Type_e::POI:
-            result = d.geo_ref.fl_poi.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, admins, nbmax);
+            result = d.geo_ref.fl_poi.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax,  valid_admin(d.geo_ref.pois, admin_idxs));
         default: break;
         }
 

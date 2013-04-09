@@ -94,14 +94,14 @@ public:
     nt::GeographicalCoord coord;
 //    std::string city;
 //    nt::idx_t city_idx;
-    std::vector<nt::idx_t> admins;
+    std::vector<nt::idx_t> admin_list;
     std::string poitype;
     nt::idx_t poitype_idx;
 
     POI(): weight(0), poitype(""), poitype_idx(-1){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar &idx & uri & idx &name & weight & coord & admins & poitype & poitype_idx;
+        ar &idx & uri & idx &name & weight & coord & admin_list & poitype & poitype_idx;
     }
 
 private:
@@ -114,7 +114,7 @@ struct Way :public nt::Nameable, nt::NavitiaHeader{
 public:
     std::string way_type;
     // liste des admins
-    std::vector<nt::idx_t> admins;
+    std::vector<nt::idx_t> admin_list;
 
     std::vector< HouseNumber > house_number_left;
     std::vector< HouseNumber > house_number_right;
@@ -125,7 +125,7 @@ public:
     int nearest_number(const nt::GeographicalCoord& );
     nt::GeographicalCoord barycentre(const Graph& );
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-      ar & idx & name & comment & uri & way_type & admins & house_number_left & house_number_right & edges;
+      ar & idx & name & comment & uri & way_type & admin_list & house_number_left & house_number_right & edges;
     }
 
 private:
@@ -250,7 +250,7 @@ struct GeoRef {
     void build_rtree();
 
     /// Recherche d'une adresse avec un numéro en utilisant Autocomplete
-    std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const std::vector<std::string> &admins, const int nbmax) const;
+    std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax, std::function<bool(nt::idx_t)> keep_element) const;
 
 
     /** Projete chaque stop_point sur le filaire de voirie

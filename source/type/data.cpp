@@ -48,7 +48,7 @@ void Data::set_admins(){
     for (navitia::georef::POI& poi : geo_ref.pois){
         std::vector<navitia::type::idx_t> admins=geo_ref.find_admins(poi.coord);
         for(navitia::type::idx_t idx : admins){
-            poi.admins.push_back(idx);
+            poi.admin_list.push_back(idx);
         }
     }
 }

@@ -32,12 +32,13 @@ namespace navitia {
             std::string post_code;
             std::string insee;
             nt::GeographicalCoord coord;
-            polygon_type boundary;
+            polygon_type boundary;            
+            std::vector<nt::idx_t> admin_list;
 
             Admin():level(-1){}
             Admin(int lev):level(lev){}
             template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-                ar & idx & level & post_code & insee & name & idx & uri & coord ;
+                ar & idx & level & post_code & insee & name & uri & coord &admin_list;
             }
         };
     }

@@ -49,11 +49,10 @@ struct Autocomplete
     struct word_quality{
         int word_count;
         int word_distance;
-        std::string admin_uri;
 
-        word_quality():word_count(0), word_distance(0), admin_uri(""){}
+        word_quality():word_count(0), word_distance(0){}
         template<class Archive> void serialize(Archive & ar, const unsigned int) {
-            ar & word_count & word_distance & admin_uri;
+            ar & word_count & word_distance;
         }
     };
 
@@ -80,7 +79,7 @@ struct Autocomplete
       * — on rajoute la position à la liste de chaque mot
       */    
     void add_string(std::string str, T position, const std::map<std::string, std::string> & map_alias,
-                    const std::map<std::string, std::string> & map_synonymes ,std::string admin_uri){
+                    const std::map<std::string, std::string> & map_synonymes){
         word_quality wc;
         int distance = 0;
 
@@ -95,7 +94,6 @@ struct Autocomplete
         }
         wc.word_count = count;
         wc.word_distance = distance;
-        wc.admin_uri = admin_uri;
         ac_list[position] = wc;
     }
 
@@ -240,11 +238,24 @@ struct Autocomplete
         return vec_quality;
     }
 
+    std::vector<fl_quality> sort_and_truncate(std::vector<fl_quality> input, size_t nbmax) const {
+        typename std::vector<fl_quality>::iterator middle_iterator;
+        if(nbmax < input.size())
+            middle_iterator = input.begin() + nbmax;
+        else
+            middle_iterator = input.end();
+        std::partial_sort(input.begin(), middle_iterator, input.end());
+
+        if (input.size() > nbmax){input.resize(nbmax);}
+        return input;
+    }
+
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant au moins un des mots*/
     std::vector<fl_quality> find_complete(const std::string & str, const std::map<std::string, std::string> & map_alias,
                                           const std::map<std::string, std::string> & map_synonymes,const int wordweight,
-                                          const std::vector<std::string> &vec_admin_uri,
-                                          const int nbmax) const{
+                                          size_t nbmax,
+                                          std::function<bool(T)> keep_element)
+                                          const{
         std::vector<std::string> vec = tokenize(str, map_alias, map_synonymes);
         int wordCount = 0;
         int wordLength = 0;
@@ -256,27 +267,18 @@ struct Autocomplete
 
         // Créer un vector de réponse:
         std::vector<fl_quality> vec_quality;
+
         for(auto i : index_result){
-            quality.idx = i;
-            quality.nb_found = wordCount;
-            quality.word_len = wordLength;
-            if (is_admin_valid(quality, vec_admin_uri) == true){
+            if(keep_element(i)) {
+                quality.idx = i;
+                quality.nb_found = wordCount;
+                quality.word_len = wordLength;
                 quality.quality = calc_quality(quality, wordweight);
                 vec_quality.push_back(quality);
             }
         }
-        typename std::vector<fl_quality>::iterator middle_iterator;
-        if((unsigned)nbmax < vec_quality.size())
-            middle_iterator = vec_quality.begin() + nbmax;
-        else
-            middle_iterator = vec_quality.end();
-        std::partial_sort(vec_quality.begin(), middle_iterator, vec_quality.end());
 
-
-        if (vec_quality.size() > (unsigned)nbmax){vec_quality.resize(nbmax);}
-
-        return vec_quality;
-
+        return sort_and_truncate(vec_quality, nbmax);
     }
 
 
@@ -300,22 +302,6 @@ struct Autocomplete
         return result;
     }
 
-    bool is_admin_valid(const fl_quality & ql, const std::vector<std::string> &vec_admin_uri) const{
-        bool result;
-        if (vec_admin_uri.size() == 0){
-            result = true;
-        }else{
-            //result = (vec_admin_uri.size() == 0)? true:false;
-            for (size_t i = 0; i < vec_admin_uri.size(); ++i){
-                result = ac_list.at(ql.idx).admin_uri.find(";" + vec_admin_uri[i] + ";");
-                //result = (vec_admin_uri[i] == ac_list.at(ql.idx).admin_uri);
-                if (result == true){
-                    break;
-                }
-            }
-        }
-        return result;
-    }
 
     int lettercount(const std::string &str) const {
         int result = 0;
