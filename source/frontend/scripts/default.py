@@ -115,24 +115,24 @@ class Script:
 
 
     @validation_decorator
-    def route_schedule(self, request_args, version, region):
-        return v__stop_times(self.v.arguments, version, region, self.v.arguments["filter"], "", type_pb2.ROUTE_SCHEDULES)
+    def route_schedules(self, request_args, version, region):
+        return self.__stop_times(self.v.arguments, version, region, self.v.arguments["filter"], "", type_pb2.ROUTE_SCHEDULES)
 
     @validation_decorator
     def next_arrivals(self, request_args, version, region):
-        return v__stop_times(self.v.arguments, version, region, "", self.v.arguments["filter"], type_pb2.NEXT_ARRIVALS)
+        return self.__stop_times(self.v.arguments, version, region, "", self.v.arguments["filter"], type_pb2.NEXT_ARRIVALS)
 
     @validation_decorator
     def next_departures(self, request_args, version, region):
-        return v__stop_times(self.v.arguments, version, region, self.v.arguments["filter"], "", type_pb2.NEXT_DEPARTURES)
+        return self.__stop_times(self.v.arguments, version, region, self.v.arguments["filter"], "", type_pb2.NEXT_DEPARTURES)
 
     @validation_decorator
-    def stops_schedule(self, request_args, version, region):
-        return v__stop_times(self.v.arguments, version, region, self.v.arguments["departure_filter"], self.v.arguments["arrival_filter"],type_pb2.STOPS_SCHEDULES)
+    def stops_schedules(self, request_args, version, region):
+        return self.__stop_times(self.v.arguments, version, region, self.v.arguments["departure_filter"], self.v.arguments["arrival_filter"],type_pb2.STOPS_SCHEDULES)
 
     @validation_decorator
-    def departure_board(self, request_args, version, region):
-        return v__stop_times(self.v.arguments, version, region, self.v.arguments["filter"], "", type_pb2.DEPARTURE_BOARDS)
+    def departure_boards(self, request_args, version, region):
+        return self.__stop_times(self.v.arguments, version, region, self.v.arguments["filter"], "", type_pb2.DEPARTURE_BOARDS)
 
     
     @validation_decorator
@@ -244,12 +244,12 @@ class Script:
         return self.__on_ptref(type_pb2.CONNECTION, self.v.arguments, version, region)
 
     @validation_decorator
-    def journey_pattern_points(request_args, version, region):
+    def journey_pattern_points(self, request_args, version, region):
         return self.__on_ptref(type_pb2.JOURNEY_PATTERN_POINT, self.v.arguments,  version, region)
 
     @validation_decorator
-    def journey_patterns(request_args, version, region):
-        return self.__on_ptref(type_pb2.JOURNEY_PATTERNS, self.v.arguments, version, region)
+    def journey_patterns(self, request_args, version, region):
+        return self.__on_ptref(type_pb2.JOURNEY_PATTERN, self.v.arguments, version, region)
 
     @validation_decorator
     def companies(self, request_args, version, region):
