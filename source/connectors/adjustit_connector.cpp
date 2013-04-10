@@ -58,13 +58,23 @@ navitia::type::Type_e parse_object_type(std::string object_type){
 
 }
 
+std::map<std::string, int> AtLoader::get_mapping(const QSqlRecord& record){
+    std::map<std::string, int> result;
+    for(int i=0; i<record.count(); ++i){
+        result[record.fieldName(i).toStdString()] = i;
+    }
+    return result;
+
+}
+
 std::map<std::string, std::vector<navitia::type::Message>> AtLoader::load(const Config& params, const boost::posix_time::ptime& now){
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
     std::map<std::string, std::vector<navitia::type::Message>> messages;
     QSqlQuery result = find_all(params, now);
+    auto field_mapping = get_mapping(result.record());
     while(result.next()){
         try{
-            nt::Message m = parse_message(result);
+            nt::Message m = parse_message(result, field_mapping);
             messages[m.object_uri].push_back(m);
         }catch(const std::exception& e){
             LOG4CPLUS_WARN(logger, e.what());
@@ -78,9 +88,10 @@ std::map<std::string, std::vector<navitia::type::Message>> AtLoader::load_disrup
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
     std::map<std::string, std::vector<navitia::type::Message>> messages;
     QSqlQuery result = find_disrupt(params, now);
+    auto field_mapping = get_mapping(result.record());
     while(result.next()){
         try{
-            nt::Message m = parse_message(result);
+            nt::Message m = parse_message(result, field_mapping);
             messages[m.object_uri].push_back(m);
         }catch(const std::exception& e){
             LOG4CPLUS_WARN(logger, e.what());
@@ -178,50 +189,72 @@ QSqlQuery AtLoader::find_all(const Config& params, const pt::ptime& now){
     return requester;
 }
 
-navitia::type::Message AtLoader::parse_message(const QSqlQuery& requester){
+std::string get_string_field(const std::string& field, const QSqlQuery& requester, const std::map<std::string, int>& mapping,
+        const std::string& default_value){
+    auto it = mapping.find(field);
+    if(it == mapping.end() || requester.isNull(it->second)){
+        return default_value;
+    }
+    return requester.value(it->second).toString().toStdString();
+}
+
+int get_int_field(const std::string& field, const QSqlQuery& requester, const std::map<std::string, int>& mapping,
+        int default_value){
+    auto it = mapping.find(field);
+    if(it == mapping.end() || requester.isNull(it->second)){
+        return default_value;
+    }
+    return requester.value(it->second).toInt();
+}
+
+navitia::type::Message AtLoader::parse_message(const QSqlQuery& requester, const std::map<std::string, int>& mapping){
     navitia::type::Message message;
 
-    message.uri = (boost::format("message:%d:%d") % requester.value(0).toInt() % requester.value(1).toInt()).str();
+    int event_id = get_int_field("event_id", requester, mapping);
+    int impact_id = get_int_field("impact_id", requester, mapping);
 
-    if(!requester.isNull(2) && !requester.isNull(3)){
-        pt::ptime start_date = pt::time_from_string(requester.value(2).toString().toStdString());
-        pt::ptime end_date = pt::time_from_string(requester.value(3).toString().toStdString());
+    message.uri = (boost::format("message:%d:%d") % event_id % impact_id).str();
+
+    std::string begin = get_string_field("publication_start_date", requester, mapping);
+    std::string end = get_string_field("publication_end_date", requester, mapping);
+
+
+    if(begin != "" && end != ""){
+        pt::ptime start_date = pt::time_from_string(begin);
+        pt::ptime end_date = pt::time_from_string(end);
 
         message.publication_period = pt::time_period(start_date, end_date);
     }
 
 
-    if(!requester.isNull(4) && !requester.isNull(5)){
-        pt::ptime start_date = pt::time_from_string(requester.value(4).toString().toStdString());
-        pt::ptime end_date = pt::time_from_string(requester.value(5).toString().toStdString());
+    begin = get_string_field("application_start_date", requester, mapping);
+    end = get_string_field("application_end_date", requester, mapping);
+
+    if(begin != "" && end != ""){
+        pt::ptime start_date = pt::time_from_string(begin);
+        pt::ptime end_date = pt::time_from_string(end);
 
         message.application_period = pt::time_period(start_date, end_date);
     }
 
+    begin = get_string_field("application_daily_start_hour", requester, mapping);
+    if(begin != "")
+        message.application_daily_start_hour = pt::duration_from_string(begin);
 
-    if(!requester.isNull(6))
-        message.application_daily_start_hour = pt::duration_from_string(requester.value(6).toString().toStdString());
 
-    if(!requester.isNull(7))
-        message.application_daily_end_hour = pt::duration_from_string(requester.value(7).toString().toStdString());
+    end = get_string_field("application_daily_end_hour", requester, mapping);
+    if(end != "")
+        message.application_daily_end_hour = pt::duration_from_string(end);
 
-    if(!requester.isNull(8)){
-        message.active_days =  requester.value(8).toInt();
-    }
+    message.active_days = get_int_field("active_days", requester, mapping, 127);
 
-    if(!requester.isNull(9)){
-        message.object_uri = requester.value(9).toString().toStdString();
-    }
+    message.object_uri = get_string_field("object_external_code", requester, mapping);
 
-    if(!requester.isNull(10)){
-        message.object_type = parse_object_type(requester.value(10).toString().toStdString());
-    }
-    if(!requester.isNull(11)){
-        message.title = requester.value(11).toString().toStdString();
-    }
-    if(!requester.isNull(12)){
-        message.message = requester.value(12).toString().toStdString();
-    }
+    message.object_type = parse_object_type(get_string_field("object_type", requester, mapping));
+
+    message.title = get_string_field("title", requester, mapping);
+
+    message.message = get_string_field("message", requester, mapping);
 
     return message;
 }
