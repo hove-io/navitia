@@ -16,6 +16,7 @@ namespace navitia {
 //                LevelList["4"]="Région";
 //                LevelList["6"]="Département";
                 LevelList["8"]="Commune";
+                LevelList["9"]="Arrondissement";
                 LevelList["10"]="Quartier";
             }
         };
