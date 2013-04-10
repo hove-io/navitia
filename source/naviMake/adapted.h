@@ -7,7 +7,9 @@ namespace navimake{
 
 void delete_vj(types::VehicleJourney* vehicle_journey, const nt::Message& message, Data& data);
 std::vector<types::StopTime*> get_stop_from_impact(const navitia::type::Message& message, boost::gregorian::date current_date, std::vector<types::StopTime*> stoplist);
-void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& message, Data& data);
+
+/// retourne la liste des StopTime à supprimer
+std::vector<types::StopTime*> duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& message, Data& data);
 
 std::string make_adapted_uri(const types::VehicleJourney* vj, const Data& data);
 
@@ -28,7 +30,7 @@ private:
     std::unordered_map<types::VehicleJourney*, std::set<navitia::type::Message>> duplicate_vj_map;
     std::unordered_map<types::VehicleJourney*, std::set<navitia::type::Message>> update_vj_map;
 
-
+    std::vector<types::StopTime*> stop_to_delete;
 
 
     void init_map(const Data& data);
@@ -40,6 +42,8 @@ private:
     std::vector<types::VehicleJourney*> get_vj_from_stoppoint(std::string stoppoint_uri);
     std::vector<types::VehicleJourney*> get_vj_from_impact(const navitia::type::Message& message);
     void dispatch_message(const std::map<std::string, std::vector<navitia::type::Message>>& messages, const Data& data);
+
+    void clean(Data& data);
 
 public:
     void apply(const std::map<std::string, std::vector<navitia::type::Message>>& messages, Data& data);

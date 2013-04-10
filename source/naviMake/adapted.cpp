@@ -131,7 +131,7 @@ std::pair<bool, types::VehicleJourney*> find_reference_vj(types::VehicleJourney*
     return std::make_pair(found, reference_vj);
 }
 
-void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& message, Data& data){
+std::vector<types::StopTime*> duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& message, Data& data){
     std::vector<types::StopTime*> stop_to_delete;
     //map contenant le mapping entre un vj de référence et le vj adapté qui lui est lié
     //ceci permet de ne pas recréer un vj adapté à chaque fois que l'on change de vj de référence
@@ -164,7 +164,7 @@ void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& mes
 
         // on utilise la stop_time_list du vj de référence: ce n'est pas forcément le vj théorique!
         std::vector<types::StopTime*> impacted_stop = get_stop_from_impact(message, current_period.begin().date(), current_vj->stop_time_list);
-        if(impacted_stop.size() < 1){
+        if(impacted_stop.empty()){
             continue;
         }
         //si on à deja utilisé ce vj de référence donc on reprend le vj adapté qui lui correspond
@@ -193,14 +193,7 @@ void duplicate_vj(types::VehicleJourney* vehicle_journey, const nt::Message& mes
         prec_vjs[current_vj] = vj_adapted;
     }
 
-    for(auto* stop : stop_to_delete){
-        auto it = std::find(data.stops.begin(), data.stops.end(), stop);
-        if(it != data.stops.end()){
-            data.stops.erase(it);
-        }
-        delete stop;
-        stop = NULL;
-    }
+    return stop_to_delete;
 }
 
 void AtAdaptedLoader::init_map(const Data& data){
@@ -259,7 +252,8 @@ void AtAdaptedLoader::apply_deletion_on_vj(types::VehicleJourney* vehicle_journe
 void AtAdaptedLoader::apply_update_on_vj(types::VehicleJourney* vehicle_journey, const std::set<navitia::type::Message>& messages, Data& data){
     for(nt::Message m : messages){
         if(vehicle_journey->stop_time_list.size() > 0){
-            duplicate_vj(vehicle_journey, m, data);
+            auto tmp = duplicate_vj(vehicle_journey, m, data);
+            stop_to_delete.insert(stop_to_delete.end(), tmp.begin(), tmp.end());
         }
     }
     //une fois tous les messages traités pour un vj, on renumérote les horaires des vj adapté
@@ -321,6 +315,42 @@ void AtAdaptedLoader::dispatch_message(const std::map<std::string, std::vector<n
     }
 }
 
+void AtAdaptedLoader::clean(Data& data){
+    std::sort(stop_to_delete.begin(), stop_to_delete.end());
+    std::unique(stop_to_delete.begin(), stop_to_delete.end());
+
+    std::sort(data.stops.begin(), data.stops.end());
+
+
+
+    size_t original_size = data.stops.size();
+    size_t count = data.stops.size();
+
+    std::cout << "nb stop: " << data.stops.size() << std::endl;
+    std::cout << "nb stop to delete : " << stop_to_delete.size() << std::endl;
+
+    int stop_index = data.stops.size() -1;
+    int to_delete_index = stop_to_delete.size() -1;
+
+    while(stop_index >= 0 && to_delete_index >= 0){
+        if(data.stops[stop_index] < stop_to_delete[to_delete_index]){
+            --to_delete_index;
+            continue;
+        }
+        if(data.stops[stop_index] == stop_to_delete[to_delete_index]){
+            delete data.stops[stop_index];
+            data.stops[stop_index] = data.stops[count - 1];
+            --count;
+        }
+
+        --stop_index;
+    }
+    data.stops.resize(count);
+    assert(data.stops.size() == (original_size - stop_to_delete.size()));
+
+
+}
+
 void AtAdaptedLoader::apply(const std::map<std::string, std::vector<navitia::type::Message>>& messages, Data& data){
     if(messages.size() < 1){
         return;
@@ -332,12 +362,14 @@ void AtAdaptedLoader::apply(const std::map<std::string, std::vector<navitia::typ
     std::cout << "update_vj_map: " << update_vj_map.size() << std::endl;
     std::cout << "duplicate_vj_map: " << duplicate_vj_map.size() << std::endl;
 
+    std::vector<types::StopTime*> stop_to_delete;
     for(auto pair : update_vj_map){
         apply_deletion_on_vj(pair.first, pair.second, data);
     }
     for(auto pair : duplicate_vj_map){
         apply_update_on_vj(pair.first, pair.second, data);
     }
+    this->clean(data);
     std::cout << (data.vehicle_journeys.size() - vj_count) << " vj ajoutés lors de l'application des données adaptées" << std::endl;
 }
 
