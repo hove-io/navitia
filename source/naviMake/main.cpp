@@ -32,7 +32,7 @@ int main(int argc, char * argv[])
         ("version,v", "Affiche la version")
         ("poi", po::value<std::string>(&poi_path), "Repertoire des fichiers POI et POIType au format txt")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
-        ("at-connection-string", po::value<std::string>(), "parametres de connexion à la base de données : DRIVER=FreeTDS;SERVER=;UID=;PWD=;DATABASE=;TDS_Version=8.0;Port=1433;ClientCharset=UTF-8")		
+        ("at-connection-string", po::value<std::string>(), "parametres de connexion à la base de données : DRIVER=FreeTDS;SERVER=;UID=;PWD=;DATABASE=;TDS_Version=8.0;Port=1433;ClientCharset=UTF-8")
         ("alias",po::value<std::string>(&alias_path), "Repertoire des fichiers alias et synonymes au format txt pour autocompletion");
 
 

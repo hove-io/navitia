@@ -78,11 +78,11 @@ types::VehicleJourney* create_adapted_vj(types::VehicleJourney* current_vj, type
     //le nouveau VJ garde bien une référence vers le théorique, et non pas sur le VJ adapté dont il est issu.
     vj_adapted->theoric_vehicle_journey = theorical_vj;
     theorical_vj->adapted_vehicle_journey_list.push_back(vj_adapted);
+
     //si on pointe vers le meme validity pattern pour l'adapté et le théorique, on duplique
     if(theorical_vj->adapted_validity_pattern == theorical_vj->validity_pattern){
         theorical_vj->adapted_validity_pattern = new types::ValidityPattern(*theorical_vj->validity_pattern);
         data.validity_patterns.push_back(theorical_vj->adapted_validity_pattern);
-
     }
 
     vj_adapted->uri = make_adapted_uri(theorical_vj, data);
@@ -103,7 +103,6 @@ types::VehicleJourney* create_adapted_vj(types::VehicleJourney* current_vj, type
     }
 
     return vj_adapted;
-
 }
 
 std::pair<bool, types::VehicleJourney*> find_reference_vj(types::VehicleJourney* vehicle_journey, int day_index){
@@ -161,7 +160,6 @@ std::vector<types::StopTime*> duplicate_vj(types::VehicleJourney* vehicle_journe
             continue;
         }
 
-
         // on utilise la stop_time_list du vj de référence: ce n'est pas forcément le vj théorique!
         std::vector<types::StopTime*> impacted_stop = get_stop_from_impact(message, current_period.begin().date(), current_vj->stop_time_list);
         if(impacted_stop.empty()){
@@ -210,6 +208,7 @@ void AtAdaptedLoader::init_map(const Data& data){
             stop_point_vj_map[stop->tmp_stop_point->uri].push_back(vj);
         }
     }
+
     for(auto* sp : data.stop_points){
         assert(sp->stop_area != NULL);
         stop_area_to_stop_point_map[sp->stop_area->uri].push_back(sp);
@@ -293,21 +292,21 @@ std::vector<types::VehicleJourney*> AtAdaptedLoader::get_vj_from_impact(const na
 
 void AtAdaptedLoader::dispatch_message(const std::map<std::string, std::vector<navitia::type::Message>>& messages, const Data& data){
     for(const std::pair<std::string, std::vector<navitia::type::Message>> & message_list : messages){
-        for(auto m : message_list.second){
+        for(const auto& m : message_list.second){
             //on recupére la liste des VJ associé(s) a l'uri du message
             if(m.object_type == nt::Type_e::VehicleJourney || m.object_type == nt::Type_e::Route
                     || m.object_type == nt::Type_e::Line || m.object_type == nt::Type_e::Network){
                 std::vector<navimake::types::VehicleJourney*> vj_list = reconcile_impact_with_vj(m, data);
                 //on parcourt la liste des VJ associée au message
                 //et on associe le message au vehiclejourney
-                for(auto vj  : vj_list){
+                for(auto* vj  : vj_list){
                     update_vj_map[vj].insert(m);
                 }
 
             }else if(m.object_type == nt::Type_e::JourneyPatternPoint || m.object_type == nt::Type_e::StopPoint
                     || m.object_type == nt::Type_e::StopArea){
                 std::vector<navimake::types::VehicleJourney*> vj_list = get_vj_from_impact(m);
-                for(auto vj : vj_list){
+                for(auto* vj : vj_list){
                     duplicate_vj_map[vj].insert(m);
                 }
             }
@@ -321,17 +320,14 @@ void AtAdaptedLoader::clean(Data& data){
 
     std::sort(data.stops.begin(), data.stops.end());
 
-
-
     size_t original_size = data.stops.size();
     size_t count = data.stops.size();
 
-    std::cout << "nb stop: " << data.stops.size() << std::endl;
-    std::cout << "nb stop to delete : " << stop_to_delete.size() << std::endl;
 
     int stop_index = data.stops.size() -1;
     int to_delete_index = stop_to_delete.size() -1;
 
+    //on itére une seule fois sur les stops; on met à la fin ceux à supprimer, puis on redimensionne le tableau
     while(stop_index >= 0 && to_delete_index >= 0){
         if(data.stops[stop_index] < stop_to_delete[to_delete_index]){
             --to_delete_index;
@@ -347,8 +343,6 @@ void AtAdaptedLoader::clean(Data& data){
     }
     data.stops.resize(count);
     assert(data.stops.size() == (original_size - stop_to_delete.size()));
-
-
 }
 
 void AtAdaptedLoader::apply(const std::map<std::string, std::vector<navitia::type::Message>>& messages, Data& data){
