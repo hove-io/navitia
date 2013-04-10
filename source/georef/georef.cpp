@@ -346,6 +346,10 @@ void GeoRef::build_autocomplete_list(){
             }else{
                 key = key + " " + admin.name;
             }
+            //Ajoute le code postal si ça existe
+            if (!admin.post_code.empty()){
+                key += " "+ admin.post_code;
+            }
         }
         fl_way.add_string(way.way_type +" "+ way.name + " " + key, pos,alias, synonymes);
         pos++;
