@@ -89,11 +89,27 @@ int penalty_by_type(navitia::type::Type_e ntype, bool Is_address_type) {
     return result;
 }
 
-void Update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result, navitia::type::Type_e ntype, bool Is_address_type){
-    //Mettre à jour la qualité sur la pénalité par type
+///Mettre à jour la qualité sur le poid de POI
+void update_quality_by_poi_type(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result, const navitia::type::Data &d){
+    for(auto &item : ac_result){
+        int poi_weight = 0;
+        poi_weight = item.quality + d.geo_ref.pois[item.idx].weight * 2;
+        item.quality = std::min(poi_weight, 100);
+    }
+}
+
+void Update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result, navitia::type::Type_e ntype,
+                    bool Is_address_type,
+                    const navitia::type::Data &d){
+    //Mettre à jour la qualité sur la pénalité par type d'adresse
     int penalty = penalty_by_type(ntype, Is_address_type);
     for(auto &item : ac_result){
         item.quality -= penalty;
+    }
+
+    //Mettre à jour la qualité sur le poid de POI
+    if (ntype ==navitia::type::Type_e::POI){
+        update_quality_by_poi_type(ac_result, d);
     }
 }
 
@@ -157,9 +173,6 @@ pbnavitia::Response autocomplete(const std::string &name,
         case nt::Type_e::StopPoint:
             result = d.pt_data.stop_point_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax,  valid_admin(d.pt_data.stop_points, admin_idxs));
             break;
-//        case nt::Type_e::City:
-//            result = d.pt_data.city_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax,  keep);
-//            break;
         case nt::Type_e::Admin:
             result = d.geo_ref.fl_admin.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax,  valid_admin(d.geo_ref.admins, admin_idxs));
             break;
@@ -171,7 +184,8 @@ pbnavitia::Response autocomplete(const std::string &name,
         default: break;
         }
 
-        Update_quality(result, type, addType);
+        //Mettre à jour les qualités en implémentant un ou plusieurs règles.
+        Update_quality(result, type, addType, d);
 
         create_pb(result, type, depth, d, *pb);
     }
