@@ -20,13 +20,6 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
             item->set_uri(data.pt_data.stop_areas[result_item.idx].uri);
             item->set_quality(result_item.quality);
             break;
-        case nt::Type_e::City:
-            place_mark->set_type(pbnavitia::CITY);
-            fill_pb_object(result_item.idx, data, place_mark->mutable_city(), depth);
-            item->set_name(data.pt_data.cities[result_item.idx].name);
-            item->set_uri(data.pt_data.cities[result_item.idx].uri);
-            item->set_quality(result_item.quality);
-            break;
         case nt::Type_e::Admin:
             place_mark->set_type(pbnavitia::ADMIN);
             fill_pb_object(result_item.idx, data, place_mark->mutable_admin(), depth);
@@ -63,11 +56,11 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
 
 int penalty_by_type(navitia::type::Type_e ntype, bool Is_address_type) {
     // Ordre de tri :
-    // Add, SA, POI, SP, City : si présence de addressType dans le recherche
-    // City, SA, POI, Add, SP : si non
+    // Add, SA, POI, SP, Admin : si présence de addressType dans le recherche
+    // Admin, SA, POI, Add, SP : si non
     int result = 0;
     switch(ntype){
-    case navitia::type::Type_e::City:
+    case navitia::type::Type_e::Admin:
         result = Is_address_type ? 8 : 0;
         break;
     case navitia::type::Type_e::StopArea:
