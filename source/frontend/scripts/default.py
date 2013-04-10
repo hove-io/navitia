@@ -115,24 +115,24 @@ class Script:
 
 
     @validation_decorator
-    def route_schedule(self, request_args, version, region):
-        return v__stop_times(self.v.arguments, version, region, self.v.arguments["filter"], "", type_pb2.ROUTE_SCHEDULES)
+    def route_schedules(self, request_args, version, region):
+        return self.__stop_times(self.v.arguments, version, region, self.v.arguments["filter"], "", type_pb2.ROUTE_SCHEDULES)
 
     @validation_decorator
     def next_arrivals(self, request_args, version, region):
-        return v__stop_times(self.v.arguments, version, region, "", self.v.arguments["filter"], type_pb2.NEXT_ARRIVALS)
+        return self.__stop_times(self.v.arguments, version, region, "", self.v.arguments["filter"], type_pb2.NEXT_ARRIVALS)
 
     @validation_decorator
     def next_departures(self, request_args, version, region):
-        return v__stop_times(self.v.arguments, version, region, self.v.arguments["filter"], "", type_pb2.NEXT_DEPARTURES)
+        return self.__stop_times(self.v.arguments, version, region, self.v.arguments["filter"], "", type_pb2.NEXT_DEPARTURES)
 
     @validation_decorator
-    def stops_schedule(self, request_args, version, region):
-        return v__stop_times(self.v.arguments, version, region, self.v.arguments["departure_filter"], self.v.arguments["arrival_filter"],type_pb2.STOPS_SCHEDULES)
+    def stops_schedules(self, request_args, version, region):
+        return self.__stop_times(self.v.arguments, version, region, self.v.arguments["departure_filter"], self.v.arguments["arrival_filter"],type_pb2.STOPS_SCHEDULES)
 
     @validation_decorator
-    def departure_board(self, request_args, version, region):
-        return v__stop_times(self.v.arguments, version, region, self.v.arguments["filter"], "", type_pb2.DEPARTURE_BOARDS)
+    def departure_boards(self, request_args, version, region):
+        return self.__stop_times(self.v.arguments, version, region, self.v.arguments["filter"], "", type_pb2.DEPARTURE_BOARDS)
 
     
     @validation_decorator
@@ -157,6 +157,29 @@ class Script:
         return resp
 
 
+    def __fill_display_and_uris(self, resp):
+        for journey in resp.planner.journeys:
+            for section in journey.sections:
+                if section.type == response_pb2.PUBLIC_TRANSPORT:
+                    section.pt_display_informations.physical_mode = section.vehicle_journey.physical_mode.name
+                    section.pt_display_informations.commercial_mode = section.vehicle_journey.route.line.commercial_mode.name
+                    section.pt_display_informations.network = section.vehicle_journey.route.line.network.name
+                    section.pt_display_informations.code = section.vehicle_journey.route.line.code
+                    section.pt_display_informations.headsign = section.vehicle_journey.route.name
+                    if section.destination.type == type_pb2.STOP_POINT:
+                        section.pt_display_informations.direction = section.destination.stop_point.name
+                    section.pt_display_informations.color = section.vehicle_journey.route.line.color
+                    section.uris.vehicle_journey = section.vehicle_journey.uri
+                    section.uris.line = section.vehicle_journey.route.line.uri
+                    section.uris.route = section.vehicle_journey.route.uri
+                    section.uris.commercial_mode = section.vehicle_journey.route.line.commercial_mode.uri
+                    section.uris.physical_mode = section.vehicle_journey.physical_mode.uri
+                    section.uris.network = section.vehicle_journey.route.line.network.uri
+                    section.vehicle_journey.Clear()
+
+
+
+
     def __on_journeys(self, requested_type, request_args, version, region):
         req = request_pb2.Request()
         req.requested_api = requested_type
@@ -177,6 +200,10 @@ class Script:
             if before and after:
                 resp.planner.before = before
                 resp.planner.after = after
+
+        self.__fill_display_and_uris(resp)
+        
+        
 
         return resp
 
@@ -244,12 +271,12 @@ class Script:
         return self.__on_ptref(type_pb2.CONNECTION, self.v.arguments, version, region)
 
     @validation_decorator
-    def journey_pattern_points(request_args, version, region):
+    def journey_pattern_points(self, request_args, version, region):
         return self.__on_ptref(type_pb2.JOURNEY_PATTERN_POINT, self.v.arguments,  version, region)
 
     @validation_decorator
-    def journey_patterns(request_args, version, region):
-        return self.__on_ptref(type_pb2.JOURNEY_PATTERNS, self.v.arguments, version, region)
+    def journey_patterns(self, request_args, version, region):
+        return self.__on_ptref(type_pb2.JOURNEY_PATTERN, self.v.arguments, version, region)
 
     @validation_decorator
     def companies(self, request_args, version, region):
