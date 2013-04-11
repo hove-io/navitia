@@ -36,7 +36,7 @@ DECL_HAS_MEMBER(id)
 DECL_HAS_MEMBER(idx)
 DECL_HAS_MEMBER(name)
 DECL_HAS_MEMBER(validity_pattern)
-    
+
 /// Wrapper pour éviter de devoir définir explicitement le type
 template<class T>
 col_t get_value(T& object, const std::string & name){

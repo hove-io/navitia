@@ -43,11 +43,17 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
             break;
         case nt::Type_e::POI:
             place_mark->set_type(pbnavitia::POI);
-            fill_pb_object(result_item.idx, data, place_mark->mutable_poi(), 2);
+            fill_pb_object(result_item.idx, data, place_mark->mutable_poi(), depth);
             item->set_name(data.geo_ref.pois[result_item.idx].name);
             item->set_uri(data.geo_ref.pois[result_item.idx].uri);
             item->set_quality(result_item.quality);
             break;
+        case nt::Type_e::Line:
+            place_mark->set_type(pbnavitia::LINE);
+            fill_pb_object(result_item.idx, data, place_mark->mutable_line(), depth);
+            item->set_name(data.pt_data.lines[result_item.idx].name);
+            item->set_uri(data.pt_data.lines[result_item.idx].uri);
+            item->set_quality(result_item.quality);
         default:
             break;
         }
@@ -174,6 +180,10 @@ pbnavitia::Response autocomplete(const std::string &name,
             break;
         case nt::Type_e::POI:
             result = d.geo_ref.fl_poi.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax,  valid_admin(d.geo_ref.pois, admin_idxs));
+            break;
+        case nt::Type_e::Line:
+            result = d.pt_data.line_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, [](type::idx_t){return true;});
+            break;
         default: break;
         }
 

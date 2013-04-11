@@ -143,6 +143,10 @@ message VehicleJourney {
     optional PhysicalMode physical_mode = 9;
 
     repeated Message messages = 10;
+
+    optional bool is_adapted = 11;
+    optional ValidityPattern validity_pattern = 12;
+    optional ValidityPattern adapted_validity_pattern = 13;
 }
 
 message JourneyPatternPoint{
@@ -222,6 +226,8 @@ message District {
 }
 
 message ValidityPattern {
+    optional string beginning_date = 1;
+    optional string days = 2;
 }
 
 message Department{

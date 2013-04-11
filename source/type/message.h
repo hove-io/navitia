@@ -69,6 +69,11 @@ struct Message{
     bool is_publishable(const boost::posix_time::ptime& time) const;
     bool is_applicable(const boost::posix_time::time_period& time) const;
 
+
+    bool operator<(const Message& other) const {
+        return (this->uri < other.uri);
+    }
+
 };
 
 struct MessageHolder{

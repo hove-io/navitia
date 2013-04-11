@@ -123,7 +123,7 @@ void Data::clean(){
         journey_pattern_vj[(*it)->journey_pattern->uri].push_back((*it));
     }
 
-    int erase_overlap = 0, erase_emptiness = 0;
+    int erase_overlap = 0, erase_emptiness = 0, erase_no_circulation = 0;
 
     for(auto it1 = journey_pattern_vj.begin(); it1 != journey_pattern_vj.end(); ++it1) {
 
@@ -131,6 +131,11 @@ void Data::clean(){
             if((*vj1)->stop_time_list.size() == 0) {
                 toErase.insert((*vj1)->uri);
                 ++erase_emptiness;
+                continue;
+            }
+            if((*vj1)->validity_pattern->days.none() && (*vj1)->adapted_validity_pattern->days.none()){
+                toErase.insert((*vj1)->uri);
+                ++erase_no_circulation;
                 continue;
             }
             for(auto vj2 = (vj1+1); vj2 != it1->second.end(); ++vj2) {
@@ -196,8 +201,9 @@ void Data::clean(){
     }
     vehicle_journeys.resize(num_elements);
 
-    std::cout << "J'ai supprimé " << erase_overlap << "vehicle journey pour cause de dépassement, et " <<
-                 erase_emptiness << " car il n'y avait pas de stop time dans le clean" << std::endl;
+    std::cout << "J'ai supprimé " << erase_overlap << "vehicle journey pour cause de dépassement, " <<
+                 erase_emptiness << " car il n'y avait pas de stop time dans le clean, et "
+                 << erase_no_circulation << " car ils ne circulaient jamais." << std::endl;
 
 }
 
@@ -432,7 +438,7 @@ void Data::build_journey_pattern_point_connections(){
             for(auto it_sub = pp.first; it_sub != pp.second; ++it_sub) {
                 vjs.push_back(it_sub->second);
             }
-            std::sort(vjs.begin(), vjs.end(), [](types::VehicleJourney *  vj1, types::VehicleJourney*vj2){
+            std::sort(vjs.begin(), vjs.end(), [](types::VehicleJourney *  vj1, types::VehicleJourney*vj2)->bool{
                 if(!vj1->stop_time_list.empty() && !vj2->stop_time_list.empty()) {
                     return (vj1->stop_time_list.front()->arrival_time < vj2->stop_time_list.front()->arrival_time);
                 } else {

@@ -158,7 +158,6 @@ bool StopTime::operator<(const StopTime& other) const {
 }
 
 
-
 bool Department::operator <(const Department & other) const {
     return this->district < other.district || ((this->district == other.district) && (this->name < other.name));
 }
@@ -422,7 +421,7 @@ nt::JourneyPatternPoint JourneyPatternPoint::get_navitia_type() const {
     nt_journey_pattern_point.order = this->order;
     nt_journey_pattern_point.main_stop_point = this->main_stop_point;
     nt_journey_pattern_point.fare_section = this->fare_section;
-    
+
     nt_journey_pattern_point.stop_point_idx = this->stop_point->idx;
     nt_journey_pattern_point.journey_pattern_idx = this->journey_pattern->idx;
     return nt_journey_pattern_point;
@@ -449,6 +448,19 @@ nt::VehicleJourney VehicleJourney::get_navitia_type() const {
 
     nt_vj.wheelchair_boarding = this->wheelchair_boarding;
     nt_vj.properties = this->properties;
+
+    nt_vj.is_adapted = this->is_adapted;
+
+    if(this->adapted_validity_pattern != NULL)
+        nt_vj.adapted_validity_pattern_idx = this->adapted_validity_pattern->idx;
+
+    if(this->theoric_vehicle_journey != NULL){
+        nt_vj.theoric_vehicle_journey_idx = this->theoric_vehicle_journey->idx;
+    }
+
+    for(auto* avj : this->adapted_vehicle_journey_list){
+        nt_vj.adapted_vehicle_journey_list.push_back(avj->idx);
+    }
 
     return nt_vj;
 }

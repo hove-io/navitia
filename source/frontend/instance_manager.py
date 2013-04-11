@@ -154,9 +154,9 @@ class NavitiaManager:
                     if resp:
                         try:
                             parsed = json.loads(resp.metadatas.shape)
+                            instance.geom = geometry.shape(parsed)
                         except:
                             print resp.metadatas.shape
-                        instance.geom = geometry.shape(parsed)
                 except DeadSocketException, e:
                     print e
                 except geos.ReadingError:

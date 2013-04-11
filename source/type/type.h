@@ -434,9 +434,16 @@ struct VehicleJourney: public NavitiaHeader, Nameable, hasProperties{
     bool wheelchair_boarding;
     std::vector<idx_t> stop_time_list;
 
-    VehicleJourney(): journey_pattern_idx(invalid_idx), company_idx(invalid_idx), physical_mode_idx(invalid_idx), /*vehicle_idx(invalid_idx), */validity_pattern_idx(invalid_idx) , wheelchair_boarding(false){}
+
+    bool is_adapted;
+    idx_t adapted_validity_pattern_idx;
+    std::vector<idx_t> adapted_vehicle_journey_list;
+    idx_t theoric_vehicle_journey_idx;
+
+    VehicleJourney(): journey_pattern_idx(invalid_idx), company_idx(invalid_idx), physical_mode_idx(invalid_idx), /*vehicle_idx(invalid_idx), */validity_pattern_idx(invalid_idx) , wheelchair_boarding(false), is_adapted(false), adapted_validity_pattern_idx(invalid_idx), theoric_vehicle_journey_idx(invalid_idx){}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & uri & journey_pattern_idx & company_idx & physical_mode_idx & validity_pattern_idx & idx & wheelchair_boarding & stop_time_list;
+        ar & name & uri & journey_pattern_idx & company_idx & physical_mode_idx & validity_pattern_idx & idx & wheelchair_boarding & stop_time_list
+            & is_adapted & adapted_validity_pattern_idx & adapted_vehicle_journey_list & theoric_vehicle_journey_idx;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
@@ -469,7 +476,7 @@ struct JourneyPatternPoint : public NavitiaHeader{
     JourneyPatternPoint() : order(0), main_stop_point(false), fare_section(0), journey_pattern_idx(invalid_idx), stop_point_idx(invalid_idx){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & id & idx & uri & order & main_stop_point & fare_section & journey_pattern_idx 
+        ar & id & idx & uri & order & main_stop_point & fare_section & journey_pattern_idx
                 & stop_point_idx & order ;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;

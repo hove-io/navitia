@@ -7,9 +7,6 @@ namespace nt = navitia::type;
 namespace pt = boost::posix_time;
 namespace navitia{
 
-void fill_pb_object(nt::idx_t /*idx*/, const nt::Data& /*data*/, pbnavitia::ValidityPattern* /*validity_pattern*/, int, const pt::ptime&, const pt::time_period& ){
-}
-
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Department* department, int, const pt::ptime&, const pt::time_period& ){
     if(idx == type::invalid_idx)
         return ;
@@ -232,6 +229,15 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Connection *
     }
 }
 
+
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::ValidityPattern* validity_pattern, int, const pt::ptime&, const pt::time_period&){
+    if(idx == type::invalid_idx)
+        return;
+    navitia::type::ValidityPattern vp = data.pt_data.validity_patterns.at(idx);
+    validity_pattern->set_beginning_date(boost::gregorian::to_iso_string(vp.beginning_date));
+    validity_pattern->set_days(vp.days.to_string());
+}
+
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::VehicleJourney * vehicle_journey, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period){
     if(idx == type::invalid_idx)
@@ -239,6 +245,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::VehicleJourn
     navitia::type::VehicleJourney vj = data.pt_data.vehicle_journeys.at(idx);
     vehicle_journey->set_name(vj.name);
     vehicle_journey->set_uri(vj.uri);
+    vehicle_journey->set_is_adapted(vj.is_adapted);
     if(vj.journey_pattern_idx != type::invalid_idx && max_depth > 0)
         fill_pb_object(vj.journey_pattern_idx, data, vehicle_journey->mutable_journey_pattern(), max_depth-1, now, action_period);
 
@@ -247,10 +254,20 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::VehicleJourn
             fill_pb_object(stop_time_idx, data, vehicle_journey->add_stop_times(), max_depth -1, now, action_period);
         }
         fill_pb_object(vj.physical_mode_idx, data, vehicle_journey->mutable_physical_mode(), max_depth-1, now, action_period);
+
+        fill_pb_object(vj.validity_pattern_idx, data, vehicle_journey->mutable_validity_pattern(), max_depth-1);
+        fill_pb_object(vj.adapted_validity_pattern_idx, data, vehicle_journey->mutable_adapted_validity_pattern(), max_depth-1);
+
     }
 
     for(auto message : data.pt_data.message_holder.find_messages(vj.uri, now, action_period)){
         fill_message(message, data, vehicle_journey->add_messages(), max_depth-1, now, action_period);
+    }
+    //si on a un vj théorique rataché à notre vj, on récupére les messages qui le concerne
+    if(vj.theoric_vehicle_journey_idx != nt::invalid_idx){
+        for(auto message : data.pt_data.message_holder.find_messages(data.pt_data.vehicle_journeys[vj.theoric_vehicle_journey_idx].uri, now, action_period)){
+            fill_message(message, data, vehicle_journey->add_messages(), max_depth-1, now, action_period);
+        }
     }
 }
 

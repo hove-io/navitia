@@ -16,7 +16,8 @@ pb_type = {
         'city': type_pb2.CITY,
         'address': type_pb2.ADDRESS,
         'poi': type_pb2.POI ,
-        'admin' : type_pb2.ADMIN
+        'admin' : type_pb2.ADMIN,
+        'line' : type_pb2.LINE
         }
 
 class Script:

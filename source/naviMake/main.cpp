@@ -32,7 +32,7 @@ int main(int argc, char * argv[])
         ("version,v", "Affiche la version")
         ("poi", po::value<std::string>(&poi_path), "Repertoire des fichiers POI et POIType au format txt")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
-        ("at-connection-string", po::value<std::string>(), "parametres de connexion à la base de données : DRIVER=FreeTDS;SERVER=;UID=;PWD=;DATABASE=;TDS_Version=8.0;Port=1433;ClientCharset=UTF-8")		
+        ("at-connection-string", po::value<std::string>(), "parametres de connexion à la base de données : DRIVER=FreeTDS;SERVER=;UID=;PWD=;DATABASE=;TDS_Version=8.0;Port=1433;ClientCharset=UTF-8")
         ("alias",po::value<std::string>(&alias_path), "Repertoire des fichiers alias et synonymes au format txt pour autocompletion");
 
 
@@ -66,7 +66,7 @@ int main(int argc, char * argv[])
         std::cout << "Pas de topologie chargee" << std::endl;
     }
     pt::ptime start, end;
-    int read, complete, clean, sort, transform, save, autocomplete, sn;
+    int read, complete, clean, sort, transform, save, autocomplete, sn, apply_adapted_duration;
 
     navimake::Data data; // Structure temporaire
     navitia::type::Data nav_data; // Structure définitive
@@ -116,8 +116,6 @@ int main(int argc, char * argv[])
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 
-
-
     std::cout << "line: " << data.lines.size() << std::endl;
     std::cout << "journey_pattern: " << data.journey_patterns.size() << std::endl;
     std::cout << "stoparea: " << data.stop_areas.size() << std::endl;
@@ -134,14 +132,6 @@ int main(int argc, char * argv[])
 
 
     start = pt::microsec_clock::local_time();
-    data.complete();
-    complete = (pt::microsec_clock::local_time() - start).total_milliseconds();
-
-    start = pt::microsec_clock::local_time();
-    data.clean();
-    clean = (pt::microsec_clock::local_time() - start).total_milliseconds();
-
-
     if(vm.count("at-connection-string")){
         navitia::AtLoader::Config conf;
         conf.connect_string = vm["at-connection-string"].as<std::string>();
@@ -152,7 +142,15 @@ int main(int argc, char * argv[])
         navimake::AtAdaptedLoader adapter;
         adapter.apply(messages, data);
     }
+    apply_adapted_duration = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
+    start = pt::microsec_clock::local_time();
+    data.complete();
+    complete = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+    start = pt::microsec_clock::local_time();
+    data.clean();
+    clean = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 
     start = pt::microsec_clock::local_time();
@@ -191,6 +189,7 @@ int main(int argc, char * argv[])
 
     std::cout << "temps de traitement" << std::endl;
     std::cout << "\t lecture des fichiers " << read << "ms" << std::endl;
+    std::cout << "\t application des données adaptées " << apply_adapted_duration << "ms" << std::endl;
     std::cout << "\t completion des données " << complete << "ms" << std::endl;
     std::cout << "\t netoyage des données " << clean << "ms" << std::endl;
     std::cout << "\t trie des données " << sort << "ms" << std::endl;

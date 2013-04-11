@@ -13,7 +13,8 @@ PT_Data& PT_Data::operator=(PT_Data&& other){
     // First letter
     stop_area_autocomplete = other.stop_area_autocomplete;
     city_autocomplete = other.city_autocomplete;
-    stop_point_autocomplete = other.stop_point_autocomplete;    
+    stop_point_autocomplete = other.stop_point_autocomplete;
+    line_autocomplete = other.line_autocomplete;
 
     // Proximity list
     stop_area_proximity_list = other.stop_area_proximity_list;
@@ -85,7 +86,6 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
         }
         this->stop_area_autocomplete.add_string(sa.name + " " + key, sa.idx,georef.alias, georef.synonymes);
     }
-
     this->stop_area_autocomplete.build();
 
     for(const StopPoint & sp : this->stop_points){
@@ -100,14 +100,18 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
         }
         this->stop_point_autocomplete.add_string(sp.name + " " + key, sp.idx, georef.alias, georef.synonymes);
     }
-
     this->stop_point_autocomplete.build();
 
     for(const navitia::georef::Admin & admin : georef.admins){
         this->city_autocomplete.add_string(admin.name, admin.idx, georef.alias, georef.synonymes);
     }
-
     this->city_autocomplete.build();
+
+    for(const Line & line : this->lines){
+        this->line_autocomplete.add_string(line.name, line.idx, georef.alias, georef.synonymes);
+    }
+    this->line_autocomplete.build();
+
 }
 
 void PT_Data::build_proximity_list() {
