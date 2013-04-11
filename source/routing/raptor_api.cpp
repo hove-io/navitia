@@ -254,14 +254,10 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
     }
 
     for(boost::posix_time::ptime datetime : datetimes){
-        std::vector<Path> tmp;
         int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
         int time = datetime.time_of_day().total_seconds();
 
-        if(clockwise)
-            tmp = raptor.compute_all(departures, destinations, navitia::type::DateTime(day, time), borne, walking_speed, walking_distance, wheelchair, forbidden);
-        else
-            tmp = raptor.compute_reverse_all(departures, destinations, navitia::type::DateTime(day, time), borne, walking_speed, walking_distance, wheelchair, forbidden);
+        std::vector<Path> tmp = raptor.compute_all(departures, destinations, navitia::type::DateTime(day, time), borne, walking_speed, walking_distance, wheelchair, forbidden, clockwise);
 
         // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
         if(datetimes.size() == 1){

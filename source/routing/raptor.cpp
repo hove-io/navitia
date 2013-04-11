@@ -187,7 +187,6 @@ void RAPTOR::clear_and_init(std::vector<init::Departure_Type> departs,
 }
 
 
-template<typename Visitor>
 std::vector<Path>
 RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                     const std::vector<std::pair<type::idx_t, double> > &destinations,
@@ -195,48 +194,38 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                     const navitia::type::DateTime &borne, const float walking_speed,
                     const int walking_distance, const type::Properties &required_properties,
                     const std::vector<std::string> & forbidden,
-                    Visitor vis) {
+                    bool clockwise) {
     std::vector<Path> result;
-    std::vector<init::Departure_Type> departures;
-
     set_journey_patterns_valides(dt_depart.date(), forbidden);
-    if(vis.first_phase_clockwise) {
-        departures = init::getDepartures(departs, dt_depart, vis.first_phase_clockwise, data, walking_speed);
-        clear_and_init(departures, destinations, borne, vis.first_phase_clockwise, true, walking_speed, walking_distance);
-        boucleRAPTOR(required_properties/*, false*/);
-    } else {
-        departures = init::getDepartures(destinations, dt_depart, vis.first_phase_clockwise, data, walking_speed);
-        clear_and_init(departures, departs, borne, vis.first_phase_clockwise, true, walking_speed, walking_distance);
-        boucleRAPTORreverse(required_properties/*, false*/);
-    }
 
+    auto calc_dep = clockwise ? departs : destinations;
+    auto calc_dest = clockwise ? destinations : departs;
 
+    std::vector<init::Departure_Type> departures = init::getDepartures(calc_dep, dt_depart, clockwise, data, walking_speed);
+    clear_and_init(departures, calc_dest, borne, clockwise, true, walking_speed, walking_distance);
+
+    boucleRAPTOR(required_properties, clockwise, false);
+
+    // Aucune solution n’a pas été trouvée :'(
     if(b_dest.best_now.type == uninitialized) {
         return result;
     }
 
-    //Second passe
-    if(vis.second_phase_clockwise)
-        departures = init::getDepartures(destinations, departs, vis.second_phase_clockwise, this->labels, data, walking_speed);
-    else
-        departures = init::getDepartures(departs, destinations, vis.second_phase_clockwise, this->labels, data, walking_speed);
+
+    //Second passe : permet d’optimiser les temps de correspondance
+    departures = init::getDepartures(calc_dep, calc_dest, !clockwise, this->labels, data, walking_speed);
 
     for(auto departure : departures) {
-        if(vis.second_phase_clockwise) {
-            clear_and_init({departure}, destinations, dt_depart, vis.second_phase_clockwise, true, walking_speed, walking_distance);
-            boucleRAPTOR(required_properties, false);
-        }
-        else {
-            clear_and_init({departure}, departs, dt_depart, vis.second_phase_clockwise, true, walking_speed, walking_distance);
-            boucleRAPTORreverse(required_properties, true);
-        }
+        clear_and_init({departure}, calc_dep, dt_depart, !clockwise, true, walking_speed, walking_distance);
+
+        boucleRAPTOR(required_properties, !clockwise);
 
         if(b_dest.best_now.type != uninitialized) {
             std::vector<Path> temp;
-            if(vis.second_phase_clockwise)
-                temp = makePathes(destinations, dt_depart, walking_speed, *this);
-            else
+            if(clockwise)
                 temp = makePathesreverse(departs, dt_depart, walking_speed, *this);
+            else
+                temp = makePathes(destinations, dt_depart, walking_speed, *this);
             result.insert(result.end(), temp.begin(), temp.end());
         }
     }
@@ -244,85 +233,6 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
     return result;
 }
 
-
-struct visitor_clockwise {
-    static constexpr bool first_phase_clockwise = true;
-    static constexpr bool second_phase_clockwise = false;
-};
-
-std::vector<Path>
-RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
-                    const std::vector<std::pair<type::idx_t, double> > &destinations,
-                    const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne,
-                    const float walking_speed, const int walking_distance,
-                    const type::Properties &required_properties,
-                    const std::vector<std::string> & forbidden) {
-
-    return compute_all(departs, destinations, dt_depart, borne, walking_speed, walking_distance,
-                       required_properties, forbidden, visitor_clockwise());
-}
-
-struct visitor_anti_clockwise {
-    static constexpr bool first_phase_clockwise = false;
-    static constexpr bool second_phase_clockwise = true;
-};
-std::vector<Path>
-RAPTOR::compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
-                            const std::vector<std::pair<type::idx_t, double> > &destinations,
-                            const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne,
-                            float walking_speed, int walking_distance,
-                            const type::Properties &required_properties,
-                            const std::vector<std::string> & forbidden) {
-    return compute_all(departs, destinations, dt_depart, borne, walking_speed, walking_distance,
-                       required_properties, forbidden, visitor_anti_clockwise());
-}
-
-
-
-std::vector<Path>
-RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
-                    const std::vector<std::pair<type::idx_t, double> > &destinations,
-                    std::vector<navitia::type::DateTime> dt_departs, const navitia::type::DateTime &borne,
-                    float walking_speed, int walking_distance, const type::Properties required_properties) {
-    std::vector<Path> result;
-    std::vector<best_dest> bests;
-
-    std::sort(dt_departs.begin(), dt_departs.end(), 
-              [](navitia::type::DateTime dt1, navitia::type::DateTime dt2) {return dt1 > dt2;});
-
-    // Attention ! Et si les départs ne sont pas le même jour ?
-    //set_journey_patterns_valides(dt_departs.front());
-
-    bool reset = true;
-    for(auto dep : dt_departs) {
-        auto departures = init::getDepartures(departs, dep, true, data, walking_speed);
-        clear_and_init(departures, destinations, borne, true, reset, walking_speed, walking_distance);
-        boucleRAPTOR(required_properties);
-        bests.push_back(b_dest);
-        reset = false;
-    }
-
-    for(unsigned int i=0; i<dt_departs.size(); ++i) {
-        auto b = bests[i];
-        auto dt_depart = dt_departs[i];
-        if(b.best_now.type != uninitialized) {
-            init::Departure_Type d;
-            d.rpidx = b.best_now_rpid;
-            d.arrival = b.best_now.arrival;
-            clear_and_init({d}, departs, dt_depart, false, true, walking_speed, walking_distance);
-            boucleRAPTORreverse(required_properties);
-            if(b_dest.best_now.type != uninitialized){
-                auto temp = makePathesreverse(departs, dt_depart, walking_speed, *this);
-                auto path = temp.back();
-                path.request_time = boost::posix_time::ptime(data.meta.production_date.begin(),
-                boost::posix_time::seconds(dt_depart.hour()));
-                result.push_back(path);
-            }
-        }
-    }
-
-    return result;
-}
 
 
 
@@ -339,11 +249,7 @@ RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
     auto departures = init::getDepartures(departs, dt_depart, true, data, walking_speed);
     clear_and_init(departures, {}, borne, true, true, walking_speed, walking_distance);
 
-    if(clockwise) {
-        boucleRAPTOR(required_properties, true);
-    } else {
-        boucleRAPTORreverse(required_properties, true);
-    }
+    boucleRAPTOR(required_properties, clockwise, true);
 }
 
 
@@ -624,16 +530,13 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::Properties &required_prope
     }
 }
 
-void RAPTOR::boucleRAPTOR(const type::Properties &required_properties, bool global_pruning){
-    auto visitor = raptor_visitor(*this);
-    raptor_loop(visitor, required_properties, global_pruning);
+void RAPTOR::boucleRAPTOR(const type::Properties &required_properties, bool clockwise, bool global_pruning){
+    if(clockwise) {
+        raptor_loop(raptor_visitor(*this), required_properties, global_pruning);
+    } else {
+        raptor_loop(raptor_reverse_visitor(*this), required_properties, global_pruning);
+    }
 }
-
-void RAPTOR::boucleRAPTORreverse(const type::Properties &required_properties, bool global_pruning){
-    auto visitor = raptor_reverse_visitor(*this);
-    raptor_loop(visitor, required_properties, global_pruning);
-}
-
 
 
 
@@ -652,10 +555,7 @@ std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, in
         destinations.push_back(std::make_pair(spidx, 0));
     }
 
-    if(clockwise)
-        return compute_all(departs, destinations, navitia::type::DateTime(departure_day, departure_hour), borne, 1, 1000, required_properties);
-    else
-        return compute_reverse_all(departs, destinations, navitia::type::DateTime(departure_day, departure_hour), borne, 1, 1000, required_properties);
+    return compute_all(departs, destinations, navitia::type::DateTime(departure_day, departure_hour), borne, 1, 1000, required_properties, {}, clockwise);
 }
 
 
