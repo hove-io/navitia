@@ -102,6 +102,14 @@ class Script:
         else:
             pagination_resp.totalResult = 0
         resp.pagination.CopyFrom(pagination_resp)
+	
+	for item in resp.autocomplete.items:
+	    if item.object.type == type_pb2.ADDRESS:
+	        post_code = item.object.address.name
+		for ad in item.object.address.admin:
+		    post_code = post_code + " " + ad.zip_code + " " + ad.name
+		item.name = post_code
+
         return resp
 
 
