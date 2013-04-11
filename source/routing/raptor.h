@@ -14,7 +14,7 @@
 namespace navitia { namespace routing { namespace raptor {
 
 /** Worker Raptor : une instance par thread, les données sont modifiées par le calcul */
-struct RAPTOR : public AbstractRouter
+struct RAPTOR
 {
     const navitia::type::Data & data;
 
@@ -32,7 +32,7 @@ struct RAPTOR : public AbstractRouter
     boost::dynamic_bitset<> marked_sp;
     ///La journey_pattern est elle valide ?
     boost::dynamic_bitset<> journey_patterns_valides;
-    ///L'ordre du premier journey_pattern point de la journey_pattern
+    ///L'ordre du premier j: public AbstractRouterourney_pattern point de la journey_pattern
     queue_t Q;
 
     //Constructeur
@@ -53,10 +53,10 @@ struct RAPTOR : public AbstractRouter
               const type::Properties &properties = 0);
 
     ///Lance un calcul d'itinéraire entre deux stop areas
-    std::vector<Path> 
+    /*std::vector<Path>
     compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
             int departure_day, bool clockwise = true,
-            const type::Properties &required_properties = 0);
+            const type::Properties &required_properties = 0);*/
     ///Lance un calcul d'itinéraire entre deux stop areas avec aussi une borne
     std::vector<Path> 
     compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
@@ -93,16 +93,7 @@ struct RAPTOR : public AbstractRouter
                 std::vector<navitia::type::DateTime> dt_departs, const navitia::type::DateTime &borne, 
                 const float walking_speed=1.38, const int walking_distance = 1000, const type::Properties required_properties = 0);
 
-    /** Calcul d'itinéraires dans le sens horaire inversé à partir de plusieurs
-     *  stop points de départs, vers plusieurs stoppoints d'arrivée,
-     *  à une heure donnée.
-     */
-    std::vector<Path> 
-    compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
-                        const std::vector<std::pair<type::idx_t, double> > &destinations,
-                        std::vector<navitia::type::DateTime> dt_departs, const navitia::type::DateTime &borne,
-                        float walking_speed=1.38, int walking_distance = 1000,
-                        const type::Properties &required_properties = 0);
+
 
     /** Calcul d'itinéraires dans le sens horaire inversé à partir de plusieurs
      *  stop points de départs, vers plusieurs stoppoints d'arrivée,

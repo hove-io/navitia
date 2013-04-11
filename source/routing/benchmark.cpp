@@ -93,9 +93,8 @@ int main(int argc, char** argv){
     }
     // Calculs des itinéraires
     std::vector<Result> results;
-    AbstractRouter * router;
     data.build_raptor();
-    router = new raptor::RAPTOR(data);
+    raptor::RAPTOR router(data);
 
     std::cout << "On lance le benchmark de l'algo " << std::endl;
     boost::progress_display show_progress(demands.size());
@@ -106,7 +105,7 @@ int main(int argc, char** argv){
         Timer t2;
         //            CALLGRIND_START_INSTRUMENTATION;
 
-        auto res = router->compute(demand.start, demand.target, demand.hour, demand.date);
+        auto res = router.compute(demand.start, demand.target, demand.hour, demand.date, navitia::type::DateTime::inf);
         //            CALLGRIND_STOP_INSTRUMENTATION;
 
         Path path;
@@ -119,7 +118,6 @@ int main(int argc, char** argv){
         results.push_back(result);
     }
     //ProfilerStop();
-    delete router;
 
 
     Timer ecriture("Écriture du fichier de résultats");
