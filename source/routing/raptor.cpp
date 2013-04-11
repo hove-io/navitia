@@ -211,7 +211,6 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
         return result;
     }
 
-
     //Second passe : permet d’optimiser les temps de correspondance
     departures = getDepartures(calc_dep, calc_dest, !clockwise, this->labels, data, walking_speed);
 
@@ -221,11 +220,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
         boucleRAPTOR(required_properties, !clockwise);
 
         if(b_dest.best_now.type != uninitialized) {
-            std::vector<Path> temp;
-            if(clockwise)
-                temp = makePathesreverse(departs, dt_depart, walking_speed, *this);
-            else
-                temp = makePathes(destinations, dt_depart, walking_speed, *this);
+            std::vector<Path> temp = makePathes(departs, dt_depart, walking_speed, *this, !clockwise);
             result.insert(result.end(), temp.begin(), temp.end());
         }
     }
@@ -234,25 +229,18 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
 }
 
 
-
-
-
 void
 RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
           const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne,
           float walking_speed, int walking_distance, const type::Properties &required_properties,
           const std::vector<std::string> & forbidden,
           bool clockwise) {
-
-    std::vector<idx_label> result;
     set_journey_patterns_valides(dt_depart.date(), forbidden);
     auto departures = getDepartures(departs, dt_depart, true, data, walking_speed);
     clear_and_init(departures, {}, borne, true, true, walking_speed, walking_distance);
 
     boucleRAPTOR(required_properties, clockwise, true);
 }
-
-
 
 
 void RAPTOR::set_journey_patterns_valides(uint32_t date, const std::vector<std::string> & forbidden) {
@@ -530,6 +518,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::Properties &required_prope
     }
 }
 
+
 void RAPTOR::boucleRAPTOR(const type::Properties &required_properties, bool clockwise, bool global_pruning){
     if(clockwise) {
         raptor_loop(raptor_visitor(*this), required_properties, global_pruning);
@@ -537,9 +526,6 @@ void RAPTOR::boucleRAPTOR(const type::Properties &required_properties, bool cloc
         raptor_loop(raptor_reverse_visitor(*this), required_properties, global_pruning);
     }
 }
-
-
-
 
 
 std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
