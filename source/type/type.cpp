@@ -143,13 +143,9 @@ static_data * static_data::get() {
                 (Type_e::Network, "network")
                 (Type_e::PhysicalMode, "physical_mode")
                 (Type_e::CommercialMode, "commercial_mode")
-                (Type_e::City, "city")
                 (Type_e::Connection, "connection")
                 (Type_e::JourneyPatternPoint, "journey_pattern_point")
-                (Type_e::District, "district")
-                (Type_e::Department, "department")
                 (Type_e::Company, "company")
-                (Type_e::Country, "country")
                 (Type_e::Way, "way")
                 (Type_e::Coord, "coord")
                 (Type_e::Address, "address")
@@ -169,45 +165,6 @@ std::string static_data::captionByType(Type_e type){
     return instance->types_string.left.at(type);
 }
 
-std::vector<idx_t> Country::get(Type_e type, const PT_Data &)  const {
-    std::vector<idx_t> result;
-    switch(type) {
-    case Type_e::District: return district_list; break;
-    default: break;
-    }
-    return result;
-}
-
-
-std::vector<idx_t> District::get(Type_e type, const PT_Data &)  const {
-    std::vector<idx_t> result;
-    switch(type) {
-    case Type_e::Country: result.push_back(country_idx) ; break;
-    case Type_e::Department: return department_list; break;
-    default: break;
-    }
-    return result;
-}
-
-std::vector<idx_t> Department::get(Type_e type, const PT_Data &)  const {
-    std::vector<idx_t> result;
-    switch(type) {
-    case Type_e::District:  result.push_back(district_idx); break;
-    case Type_e::City: return city_list; break;
-    default: break;
-    }
-    return result;
-}
-
-std::vector<idx_t> City::get(Type_e type, const PT_Data &) const {
-    std::vector<idx_t> result;
-    switch(type) {
-    case Type_e::StopPoint: return stop_point_list; break;
-    case Type_e::Department: result.push_back(department_idx); break;
-    default: break;
-    }
-    return result;
-}
 
 std::vector<idx_t> StopArea::get(Type_e type, const PT_Data &) const {
     std::vector<idx_t> result;
