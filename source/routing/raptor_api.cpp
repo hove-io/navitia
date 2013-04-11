@@ -4,7 +4,7 @@
 
 //#include "street_network/street_network_api.h"
 
-namespace navitia { namespace routing { namespace raptor {
+namespace navitia { namespace routing {
 
 std::string iso_string(const nt::Data & d, int date, int hour){
     boost::posix_time::ptime date_time(d.meta.production_date.begin() + boost::gregorian::days(date));
@@ -330,7 +330,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
             type::idx_t initial_rp;
             type::DateTime initial_dt;
             int round = raptor.best_round(best_rp);
-            boost::tie(initial_rp, initial_dt) = init::getFinalRpidAndDate(round, best_rp, raptor.labels, clockwise, raptor.data);
+            boost::tie(initial_rp, initial_dt) = getFinalRpidAndDate(round, best_rp, raptor.labels, clockwise, raptor.data);
 
             int duration = ::abs(label.arrival - init_dt);
 
@@ -356,4 +356,4 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
 }
 
 
-}}}
+}}

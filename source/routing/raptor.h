@@ -11,7 +11,7 @@
 #include "raptor_init.h"
 #include "raptor_path.h"
 
-namespace navitia { namespace routing { namespace raptor {
+namespace navitia { namespace routing {
 
 /** Worker Raptor : une instance par thread, les données sont modifiées par le calcul */
 struct RAPTOR
@@ -46,7 +46,7 @@ struct RAPTOR
     }
 
     ///Initialise les structure retour et b_dest
-    void clear_and_init(std::vector<init::Departure_Type> departs,
+    void clear_and_init(std::vector<Departure_Type> departs,
               std::vector<std::pair<type::idx_t, double> > destinations,
               navitia::type::DateTime borne, const bool clockwise, const bool clear,
               const float walking_speed, const int walking_distance,
@@ -117,4 +117,4 @@ struct RAPTOR
 
 
 
-}}}
+}}

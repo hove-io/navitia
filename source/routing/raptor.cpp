@@ -1,7 +1,7 @@
 #include "raptor.h"
 #include <boost/foreach.hpp>
 
-namespace navitia { namespace routing { namespace raptor{
+namespace navitia { namespace routing {
 
 void RAPTOR::make_queue() {
     marked_rp.reset();
@@ -121,7 +121,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
 
 
 
-void RAPTOR::clear_and_init(std::vector<init::Departure_Type> departs,
+void RAPTOR::clear_and_init(std::vector<Departure_Type> departs,
                   std::vector<std::pair<type::idx_t, double> > destinations,
                   navitia::type::DateTime borne,  const bool clockwise, const bool clear,
                   const float walking_speed, const int walking_distance,
@@ -150,7 +150,7 @@ void RAPTOR::clear_and_init(std::vector<init::Departure_Type> departs,
     }
 
 
-    for(init::Departure_Type item : departs) {
+    for(Departure_Type item : departs) {
         const type::StopPoint& stop_point = data.pt_data.stop_points[data.pt_data.journey_pattern_points[item.rpidx].stop_point_idx];
         if(stop_point.accessible(required_properties)) {
             labels[0][item.rpidx] = label(item.arrival, item.arrival);
@@ -201,7 +201,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
     auto calc_dep = clockwise ? departs : destinations;
     auto calc_dest = clockwise ? destinations : departs;
 
-    std::vector<init::Departure_Type> departures = init::getDepartures(calc_dep, dt_depart, clockwise, data, walking_speed);
+    std::vector<Departure_Type> departures = getDepartures(calc_dep, dt_depart, clockwise, data, walking_speed);
     clear_and_init(departures, calc_dest, borne, clockwise, true, walking_speed, walking_distance);
 
     boucleRAPTOR(required_properties, clockwise, false);
@@ -213,7 +213,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
 
 
     //Second passe : permet d’optimiser les temps de correspondance
-    departures = init::getDepartures(calc_dep, calc_dest, !clockwise, this->labels, data, walking_speed);
+    departures = getDepartures(calc_dep, calc_dest, !clockwise, this->labels, data, walking_speed);
 
     for(auto departure : departures) {
         clear_and_init({departure}, calc_dep, dt_depart, !clockwise, true, walking_speed, walking_distance);
@@ -246,7 +246,7 @@ RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
 
     std::vector<idx_label> result;
     set_journey_patterns_valides(dt_depart.date(), forbidden);
-    auto departures = init::getDepartures(departs, dt_depart, true, data, walking_speed);
+    auto departures = getDepartures(departs, dt_depart, true, data, walking_speed);
     clear_and_init(departures, {}, borne, true, true, walking_speed, walking_distance);
 
     boucleRAPTOR(required_properties, clockwise, true);
@@ -569,4 +569,4 @@ int RAPTOR::best_round(type::idx_t journey_pattern_point_idx){
     return -1;
 }
 
-}}}
+}}

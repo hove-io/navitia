@@ -8,7 +8,7 @@
 
 
 using namespace navitia;
-using namespace routing::raptor;
+using namespace routing;
 
 BOOST_AUTO_TEST_CASE(direct){
     navimake::builder b("20120614");
@@ -845,14 +845,14 @@ BOOST_AUTO_TEST_CASE(freq_vj_pam) {
             r.print(d);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1[0].items[0].arrival.date(), 1);
-    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), (24*3600 + 10*60)%data.dataRaptor.SECONDS_PER_DAY);
+    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), (24*3600 + 10*60)% type::DateTime::SECONDS_PER_DAY);
 
     /*auto*/ res1 = raptor.compute(d.stop_areas.at(0).idx, d.stop_areas.at(1).idx, 25*3600, 0, navitia::type::DateTime::inf);
     for(auto r : res1)
         r.print(d);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
     BOOST_CHECK_EQUAL(res1[0].items[0].arrival.date(), 1);
-    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), (25*3600 + 10*60)%data.dataRaptor.SECONDS_PER_DAY);
+    BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), (25*3600 + 10*60)% type::DateTime::SECONDS_PER_DAY);
 }
 
 /*

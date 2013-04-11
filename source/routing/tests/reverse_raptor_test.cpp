@@ -7,7 +7,7 @@
 #include "naviMake/build_helper.h"
 
 using namespace navitia;
-using namespace routing::raptor;
+using namespace routing;
 
 
 BOOST_AUTO_TEST_CASE(direct){

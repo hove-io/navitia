@@ -94,7 +94,7 @@ int main(int argc, char** argv){
     // Calculs des itinéraires
     std::vector<Result> results;
     data.build_raptor();
-    raptor::RAPTOR router(data);
+    RAPTOR router(data);
 
     std::cout << "On lance le benchmark de l'algo " << std::endl;
     boost::progress_display show_progress(demands.size());

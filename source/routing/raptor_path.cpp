@@ -1,6 +1,6 @@
 #include "raptor_path.h"
 #include "raptor.h"
-namespace navitia { namespace routing { namespace raptor {
+namespace navitia { namespace routing {
 
     
 std::vector<Path> 
@@ -117,7 +117,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                 rpid_embarquement = l.rpid_embarquement;
                 current_st = raptor_.data.pt_data.stop_times.at(l.stop_time_idx);
                 //Sert pour les horaires en  fréquences
-                uint32_t gap = l.arrival.hour() - current_st.arrival_time%raptor_.data.dataRaptor.SECONDS_PER_DAY;
+                uint32_t gap = l.arrival.hour() - current_st.arrival_time%type::DateTime::SECONDS_PER_DAY;
 
                 item = PathItem();
                 item.type = public_transport;
@@ -255,5 +255,4 @@ makePathreverse(unsigned int destination_idx, unsigned int countb,
 }
 
 
-
-} } }
+}}
