@@ -115,9 +115,6 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
 }
 
 void PT_Data::build_proximity_list() {
-    for(const City & city : this->cities){
-        this->city_proximity_list.add(city.coord, city.idx);
-    }
     this->city_proximity_list.build();
 
     for(const StopArea &stop_area : this->stop_areas){

@@ -22,13 +22,6 @@ void create_pb(const std::vector<std::pair<type::idx_t, type::GeographicalCoord>
             item->set_uri(data.pt_data.stop_areas[result_item.first].uri);
             item->set_distance(coord.distance_to(result_item.second));
             break;
-        case nt::Type_e::City:
-            place_mark->set_type(pbnavitia::CITY);
-            fill_pb_object(result_item.first, data, place_mark->mutable_city(), depth, current_date);
-            item->set_name(data.pt_data.cities[result_item.first].name);
-            item->set_uri(data.pt_data.cities[result_item.first].uri);
-            item->set_distance(coord.distance_to(result_item.second));
-            break;
         case nt::Type_e::StopPoint:
             place_mark->set_type(pbnavitia::STOP_POINT);
             fill_pb_object(result_item.first, data, place_mark->mutable_stop_point(), depth, current_date);
@@ -60,9 +53,6 @@ pbnavitia::Response find(type::GeographicalCoord coord, double distance,
             break;
         case nt::Type_e::StopPoint:
             result = data.pt_data.stop_point_proximity_list.find_within(coord, distance);
-            break;
-        case nt::Type_e::City:
-            result = data.pt_data.city_proximity_list.find_within(coord, distance);
             break;
         default: break;
         }

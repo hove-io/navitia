@@ -3,7 +3,7 @@ SET(SOURCE_LIB
         data.cpp 
         types.cpp 
         gtfs_parser.cpp
-        bdtopo_parser.cpp
+        #bdtopo_parser.cpp
         build_helper.cpp
         osm2nav.cpp
         osm_tags_reader.cpp

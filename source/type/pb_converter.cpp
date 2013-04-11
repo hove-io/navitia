@@ -7,40 +7,6 @@ namespace nt = navitia::type;
 namespace pt = boost::posix_time;
 namespace navitia{
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Department* department, int, const pt::ptime&, const pt::time_period& ){
-    if(idx == type::invalid_idx)
-        return ;
-    const nt::Department &d = data.pt_data.departments.at(idx);
-    department->set_uri(d.uri);
-    department->set_name(d.name);
-}
-
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::District* district, int, const pt::ptime&, const pt::time_period& ){
-    if(idx == type::invalid_idx)
-        return ;
-    const nt::District &d = data.pt_data.districts.at(idx);
-    district->set_uri(d.uri);
-    district->set_name(d.name);
-}
-
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Country* country, int, const pt::ptime&, const pt::time_period& ){
-    if(idx == type::invalid_idx)
-        return ;
-    const nt::Country &c = data.pt_data.countries.at(idx);
-    country->set_uri(c.uri);
-    country->set_name(c.name);
-}
-
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::City* city, int, const pt::ptime&, const pt::time_period& ){
-    if(idx == type::invalid_idx)
-        return ;
-    const nt::City &city_n = data.pt_data.cities.at(idx);
-    city->set_zip_code(city_n.main_postal_code);
-    city->set_uri(city_n.uri);
-    city->set_name(city_n.name);
-    city->mutable_coord()->set_lon(city_n.coord.lon());
-    city->mutable_coord()->set_lat(city_n.coord.lat());
-}
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Admin* admin, int, const pt::ptime&, const pt::time_period& ){
     navitia::georef::Admin adm = data.geo_ref.admins.at(idx);

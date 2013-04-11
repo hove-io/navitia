@@ -2,7 +2,6 @@
 #include <iostream>
 
 #include "gtfs_parser.h"
-#include "bdtopo_parser.h"
 #include "osm2nav.h"
 #include "utils/timer.h"
 
@@ -77,12 +76,7 @@ int main(int argc, char * argv[])
     // Est-ce que l'on charge la carto ?
     start = pt::microsec_clock::local_time();
     if(vm.count("topo")){
-        nav_data.meta.data_sources.push_back(boost::filesystem::absolute(topo_path).native());
-
-        navimake::connectors::BDTopoParser topo_parser(topo_path);
-        //gtfs ne contient pas le référentiel des villes, on le charges depuis la BDTOPO
-        topo_parser.load_city(data);
-        topo_parser.load_georef(nav_data.geo_ref);
+        std::cerr << "Support BDTOPO désactivé" << std::endl;
     } else if(vm.count("osm")){
         navitia::georef::fill_from_osm(nav_data.geo_ref, osm_filename);
     }
@@ -124,7 +118,6 @@ int main(int argc, char * argv[])
     std::cout << "stop: " << data.stops.size() << std::endl;
     std::cout << "connection: " << data.connections.size() << std::endl;
     std::cout << "journey_pattern points: " << data.journey_pattern_points.size() << std::endl;
-    std::cout << "city: " << data.cities.size() << std::endl;
     std::cout << "modes: " << data.physical_modes.size() << std::endl;
     std::cout << "validity pattern : " << data.validity_patterns.size() << std::endl;
     std::cout << "journey_pattern point connections : " << data.journey_pattern_point_connections.size() << std::endl;

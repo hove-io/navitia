@@ -39,54 +39,6 @@ ITERATE_NAVITIA_PT_TYPES(FORWARD_CLASS_DECLARE)
 class JourneyPatternPointConnection;
 class StopTime;
 
-struct Country : public TransmodelHeader, Nameable{
-    const static nt::Type_e type = nt::Type_e::Country;
-    City* main_city;
-
-    std::vector<District*> district_list;
-    bool operator<(const Country& other){ return this->name < other.name;}
-
-    navitia::type::Country get_navitia_type() const;
-};
-
-struct District: public TransmodelHeader, Nameable{
-    const static nt::Type_e type = nt::Type_e::District;
-    City* main_city;
-    Country* country;
-
-    bool operator<(const District& other) const;
-
-    navitia::type::District get_navitia_type() const;
-};
-
-struct Department: public TransmodelHeader, Nameable{
-    const static nt::Type_e type = nt::Type_e::Department;
-    City* main_city;
-    District *district;
-    bool operator<(const Department& other) const;
-
-    navitia::type::Department get_navitia_type() const;
-};
-
-
-struct City : public TransmodelHeader, Nameable {
-    const static nt::Type_e type = nt::Type_e::City;
-    std::string main_postal_code;
-    bool main_city;
-    bool use_main_stop_area_property;
-
-    Department* department;
-    nt::GeographicalCoord coord;
-
-    navitia::type::City get_navitia_type() const;
-
-    City() : main_city(false), use_main_stop_area_property(false), department(NULL) {};
-
-    bool operator<(const City& other) const {return this->name < other.name;}
-
-
-};
-
 struct Connection: public TransmodelHeader, hasProperties {
     const static nt::Type_e type = nt::Type_e::Connection;
     enum ConnectionKind{
@@ -176,7 +128,6 @@ struct Network : public TransmodelHeader, Nameable{
 
 struct Company : public TransmodelHeader, Nameable{
     const static nt::Type_e type = nt::Type_e::Company;
-    idx_t city_idx;
     std::string address_name;
     std::string address_number;
     std::string address_type_name;

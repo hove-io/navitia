@@ -48,12 +48,6 @@ message GeographicalCoord {
     required double lat = 2;
 }
 
-message Country {
-    optional string id = 1;
-    optional string uri = 2;
-    optional string name  = 3;
-    optional GeographicalCoord coord = 6;
-}
 
 message Admin {
     optional string id = 1;
@@ -68,7 +62,6 @@ message StopArea {
     optional string name = 3;
     optional string uri = 4;
     optional GeographicalCoord coord = 5;
-    optional City city = 6;
     repeated Admin admin = 10;
     repeated StopPoint stop_points = 8;
     repeated Message messages = 9;
@@ -76,7 +69,6 @@ message StopArea {
 
 message StopPoint {
     optional string name = 3;
-    optional City city = 4;
     repeated Admin admin = 10;
     optional string uri = 5;
     optional GeographicalCoord coord = 6;
@@ -159,20 +151,12 @@ message JourneyPatternPoint{
     repeated Message messages = 7;
 }
 
-message City {
-    optional string id = 1;
-    optional string uri = 3;
-    optional string zip_code = 2;
-    optional string name = 4;
-    optional GeographicalCoord coord = 6;
-}
 
 message Poi {
     optional string id = 1;
     optional string uri = 3;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
-    optional City city = 5;
     repeated Admin admin = 10;
 }
 
@@ -214,24 +198,13 @@ message Address {
     optional string uri = 3;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
-    optional City city = 7;
     repeated Admin admin = 10;
     optional int32 house_number = 2;
 }
 
-message District {
-    optional string id = 1;
-    optional string uri = 3;
-    optional string name = 4;
-}
 
 message ValidityPattern {
     optional string beginning_date = 1;
     optional string days = 2;
 }
 
-message Department{
-    optional string id = 1;
-    optional string uri = 3;
-    optional string name = 4;
-}

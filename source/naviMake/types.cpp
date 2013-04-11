@@ -53,13 +53,6 @@ bool ValidityPattern::check(int day) const {
     return days[day];
 }
 
-bool District::operator<(const District& other) const {
-    if(this->country == other.country || this->country == NULL){
-        return this->name < other.name;
-    }else{
-        return *this->country < *other.country;
-    }
-}
 
 
 bool CommercialMode::operator<(const CommercialMode& other) const {
@@ -158,10 +151,6 @@ bool StopTime::operator<(const StopTime& other) const {
 }
 
 
-bool Department::operator <(const Department & other) const {
-    return this->district < other.district || ((this->district == other.district) && (this->name < other.name));
-}
-
 navitia::type::StopArea StopArea::get_navitia_type() const {
     navitia::type::StopArea sa;
     sa.id = this->id;
@@ -259,35 +248,6 @@ nt::Line Line::get_navitia_type() const {
     return nt_line;
 }
 
-nt::City City::get_navitia_type() const {
-    navitia::type::City nt_city;
-    nt_city.id = this->id;
-    nt_city.idx = this->idx;
-    nt_city.uri = this->uri;
-    nt_city.name = this->name;
-    nt_city.comment = this->comment;
-    nt_city.coord = this->coord;
-    nt_city.main_postal_code = this->main_postal_code;
-    nt_city.use_main_stop_area_property = this->use_main_stop_area_property;
-    nt_city.main_city = this->main_city;
-    if(this->department != NULL)
-        nt_city.department_idx = this->department->idx;
-
-    return nt_city;
-}
-
-nt::Department Department::get_navitia_type() const {
-    navitia::type::Department nt_department;
-    nt_department.id = this->id;
-    nt_department.idx = this->idx;
-    nt_department.uri = this->uri;
-    nt_department.name = this->name;
-
-    if(this->district != NULL)
-        nt_department.district_idx = this->district->idx;
-
-    return nt_department;
-}
 
 nt::Route Route::get_navitia_type() const {
     navitia::type::Route nt_route;
@@ -299,31 +259,6 @@ nt::Route Route::get_navitia_type() const {
         nt_route.line_idx = this->line->idx;
 
     return nt_route;
-}
-
-nt::District District::get_navitia_type() const {
-    navitia::type::District nt_district;
-    nt_district.id = this->id;
-    nt_district.idx = this->idx;
-    nt_district.uri = this->uri;
-    nt_district.name = this->name;
-    if(this->country != NULL)
-        nt_district.country_idx = this->country->idx;
-
-    return nt_district;
-}
-
-nt::Country Country::get_navitia_type() const {
-    navitia::type::Country nt_country;
-    nt_country.id = this->id;
-    nt_country.idx = this->idx;
-    nt_country.uri = this->uri;
-    nt_country.name = this->name;
-    
-    for(auto district : this->district_list)
-        nt_country.district_list.push_back(district->idx);
-
-    return nt_country;
 }
 
 nt::Network Network::get_navitia_type() const {
@@ -395,7 +330,7 @@ nt::Connection Connection::get_navitia_type() const {
     return nt_connection;
 }
 
-nt::JourneyPatternPointConnection 
+nt::JourneyPatternPointConnection
     JourneyPatternPointConnection::get_navitia_type() const {
     nt::JourneyPatternPointConnection nt_rpc;
     nt_rpc.id = this->id;
@@ -464,6 +399,7 @@ nt::VehicleJourney VehicleJourney::get_navitia_type() const {
 
     return nt_vj;
 }
+
 nt::ValidityPattern ValidityPattern::get_navitia_type() const {
     nt::ValidityPattern nt_vp;
 

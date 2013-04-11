@@ -17,23 +17,8 @@ Jointures::Jointures() {
 #define VERTEX_MAP(type_name, collection_name) vertex_map[Type_e::type_name] = boost::add_vertex(Type_e::type_name, g);
     ITERATE_NAVITIA_PT_TYPES(VERTEX_MAP)
 
-    // À partir d'une city, on peut avoir son departement et ses stop_points
-    boost::add_edge(vertex_map.at(Type_e::Department), vertex_map.at(Type_e::City), g);
-    boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::City), g);
 
-    // À partir d'un country, on peut avoir ses districts
-    boost::add_edge(vertex_map.at(Type_e::District), vertex_map.at(Type_e::Country), g);
-
-    // À partir d'un district, on peut avoir son country et ses départements
-    boost::add_edge(vertex_map.at(Type_e::Country), vertex_map.at(Type_e::District),  g);
-    boost::add_edge(vertex_map.at(Type_e::Department), vertex_map.at(Type_e::District), g);
-
-    // À partir d'un département, on peut avoir son district et ses citys
-    boost::add_edge(vertex_map.at(Type_e::District), vertex_map.at(Type_e::Department), g);
-    boost::add_edge(vertex_map.at(Type_e::City), vertex_map.at(Type_e::Department), g);
-
-    // À partir d'un stop area, on peut avoir ses stop points et sa city
-    boost::add_edge(vertex_map.at(Type_e::City), vertex_map.at(Type_e::StopArea), g);
+    // À partir d'un stop area, on peut avoir ses stop points
     boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::StopArea), g);
 
     // À partir d'un network on peut avoir ses lignes
@@ -75,7 +60,6 @@ Jointures::Jointures() {
 
     // D'un stop point on obtient : le stop area, city, journey pattern point et connection
     boost::add_edge(vertex_map.at(Type_e::StopArea), vertex_map.at(Type_e::StopPoint), g);
-    boost::add_edge(vertex_map.at(Type_e::City), vertex_map.at(Type_e::StopPoint), g);
     boost::add_edge(vertex_map.at(Type_e::JourneyPatternPoint), vertex_map.at(Type_e::StopPoint), g);
     boost::add_edge(vertex_map.at(Type_e::Connection), vertex_map.at(Type_e::StopPoint), g);
 

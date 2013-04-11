@@ -34,13 +34,9 @@ const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
     FUN(Network, networks)\
     FUN(PhysicalMode, physical_modes)\
     FUN(CommercialMode, commercial_modes)\
-    FUN(City, cities)\
     FUN(Connection, connections)\
     FUN(JourneyPatternPoint, journey_pattern_points)\
-    FUN(District, districts)\
-    FUN(Department, departments)\
     FUN(Company, companies)\
-    FUN(Country, countries)\
     FUN(Route, routes)
 
 enum class Type_e {
@@ -174,65 +170,6 @@ std::ostream & operator<<(std::ostream &_os, const GeographicalCoord & coord);
 /** Deux points sont considérés comme étant égaux s'ils sont à moins de 0.1m */
 bool operator==(const GeographicalCoord & a, const GeographicalCoord & b);
 
-struct Country: public NavitiaHeader, Nameable {
-    const static Type_e type = Type_e::Country;
-    idx_t main_city_idx;
-    std::vector<idx_t> district_list;
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & main_city_idx & district_list & idx;
-    }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-
-    Country() : main_city_idx(invalid_idx) {}
-};
-
-struct District : public NavitiaHeader, Nameable {
-    const static Type_e type = Type_e::District;
-    idx_t main_city_idx;
-    idx_t country_idx;
-    std::vector<idx_t> department_list;
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & main_city_idx & country_idx & department_list & idx;
-    }
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-
-    District() : main_city_idx(invalid_idx), country_idx(invalid_idx) {}
-};
-
-struct Department : public NavitiaHeader, Nameable {
-    const static Type_e type = Type_e::Department;
-    idx_t main_city_idx;
-    idx_t district_idx;
-    std::vector<idx_t> city_list;
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & main_city_idx & district_idx & city_list & idx & id;
-    }
-
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-    
-    Department() : main_city_idx(invalid_idx), district_idx(invalid_idx) {}
-};
-
-
-struct City : public NavitiaHeader, Nameable {
-    const static Type_e type = Type_e::City;
-    std::string main_postal_code;
-    bool main_city;
-    bool use_main_stop_area_property;
-
-    idx_t department_idx;
-    GeographicalCoord coord;
-
-    std::vector<idx_t> stop_point_list;
-
-    City() : main_city(false), use_main_stop_area_property(false), department_idx(invalid_idx){}
-
-    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & department_idx & coord & idx & uri & main_postal_code & main_city & id;
-    }
-
-    std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-};
 
 enum ConnectionType {
     eStopPointConnection,
@@ -313,7 +250,7 @@ struct Network : public NavitiaHeader, Nameable{
     std::vector<idx_t> line_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & uri & address_name & address_number & address_type_name 
+        ar & idx & id & name & uri & address_name & address_number & address_type_name
             & mail & website & fax & line_list;
     }
 

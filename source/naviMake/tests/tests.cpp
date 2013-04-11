@@ -10,45 +10,6 @@
 const std::string gtfs_path = "/navimake/gtfs";
 
 
-
-
-BOOST_AUTO_TEST_CASE(city_transformer){
-    navimake::types::City city;
-    navimake::types::Department* dep = new navimake::types::Department();
-    dep->idx = 7;
-    city.name = "city";
-    city.comment = "test city";
-    city.id = "1";
-    city.idx = 1;
-    city.uri = "city01";
-    city.main_postal_code = "42000";
-    city.main_city = true;
-    city.use_main_stop_area_property = false;
-
-    city.department = dep;
-    city.coord.set_lon(-54.08523);
-    city.coord.set_lat(5.59273);
-
-  //  city.postal_code_list.push_back("42001");
-   // city.postal_code_list.push_back("42002");
-
-    navitia::type::City city_n = city.get_navitia_type();
-
-    BOOST_CHECK_EQUAL(city_n.idx, city.idx);
-    BOOST_CHECK_EQUAL(city_n.id, city.id);
-    BOOST_CHECK_EQUAL(city_n.uri, city.uri);
-    BOOST_CHECK_EQUAL(city_n.comment, city.comment);
-    BOOST_CHECK_EQUAL(city_n.name, city.name);
-    BOOST_CHECK_EQUAL(city_n.main_postal_code, city.main_postal_code);
-    BOOST_CHECK_EQUAL(city_n.main_city, city.main_city);
-    BOOST_CHECK_EQUAL(city_n.use_main_stop_area_property, city.use_main_stop_area_property);
-    BOOST_CHECK_EQUAL(city_n.department_idx , city.department->idx);
-    BOOST_CHECK_EQUAL(city_n.coord.lon() , city.coord.lon());
-    BOOST_CHECK_EQUAL(city_n.coord.lat() , city.coord.lat());
-
-    delete dep;
-}
-
 BOOST_AUTO_TEST_CASE(connection_transformer){
     navimake::types::Connection connection;
     navimake::types::StopPoint* origin = new navimake::types::StopPoint();
