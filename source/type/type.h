@@ -250,7 +250,7 @@ struct Network : public NavitiaHeader, Nameable{
     std::vector<idx_t> line_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & idx & id & name & uri & address_name & address_number & address_type_name 
+        ar & idx & id & name & uri & address_name & address_number & address_type_name
             & mail & website & fax & line_list;
     }
 
