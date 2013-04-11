@@ -128,7 +128,6 @@ struct Network : public TransmodelHeader, Nameable{
 
 struct Company : public TransmodelHeader, Nameable{
     const static nt::Type_e type = nt::Type_e::Company;
-    idx_t city_idx;
     std::string address_name;
     std::string address_number;
     std::string address_type_name;
