@@ -154,10 +154,6 @@ BOOST_AUTO_TEST_CASE(sans_filtre) {
     indexes = make_query(navitia::type::Type_e::CommercialMode, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 8);
 
-
-    indexes = make_query(navitia::type::Type_e::City, "", data);
-    BOOST_CHECK_EQUAL(indexes.size(), 1);
-
     indexes = make_query(navitia::type::Type_e::Connection, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
     indexes = make_query(navitia::type::Type_e::JourneyPatternPoint, "", data);
@@ -240,9 +236,6 @@ BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
     indexes = make_query(navitia::type::Type_e::CommercialMode, "commercial_mode.uri=commercial_mode:0x3", data);
     BOOST_CHECK_EQUAL(indexes.size(), 1);
 
-
-    indexes = make_query(navitia::type::Type_e::City, "city.uri=city:city:base_city", data);
-    BOOST_CHECK_EQUAL(indexes.size(), 1);
 
     indexes = make_query(navitia::type::Type_e::Connection, "", data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);

@@ -25,13 +25,9 @@ void Data::normalize_uri(){
     ::navimake::normalize_uri(commercial_modes);
     ::navimake::normalize_uri(lines);
     ::navimake::normalize_uri(physical_modes);
-    ::navimake::normalize_uri(cities);
-    ::navimake::normalize_uri(countries);
     ::navimake::normalize_uri(stop_areas);
     ::navimake::normalize_uri(stop_points);
     ::navimake::normalize_uri(vehicle_journeys);
-    ::navimake::normalize_uri(districts);
-    ::navimake::normalize_uri(departments);
     ::navimake::normalize_uri(validity_patterns);
 }
 
@@ -243,21 +239,6 @@ void Data::build_relations(navitia::type::PT_Data &data){
             data.commercial_modes.at(line.commercial_mode_idx).line_list.push_back(line.idx);
         if(line.network_idx != navitia::type::invalid_idx)
             data.networks.at(line.network_idx).line_list.push_back(line.idx);
-    }
-
-    for(navitia::type::City & city : data.cities){
-        if(city.department_idx != navitia::type::invalid_idx)
-            data.departments.at(city.department_idx).city_list.push_back(city.idx);
-    }
-
-    for(navitia::type::District & district : data.districts){
-        if(district.country_idx != navitia::type::invalid_idx)
-            data.countries.at(district.country_idx).district_list.push_back(district.idx);
-    }
-
-    for(navitia::type::Department & department : data.departments) {
-        if(department.district_idx != navitia::type::invalid_idx)
-            data.districts.at(department.district_idx).department_list.push_back(department.idx);
     }
 
     //for(navitia::type::Network & network: data.networks){}

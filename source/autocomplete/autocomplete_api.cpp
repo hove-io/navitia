@@ -20,13 +20,6 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
             item->set_uri(data.pt_data.stop_areas[result_item.idx].uri);
             item->set_quality(result_item.quality);
             break;
-        case nt::Type_e::City:
-            place_mark->set_type(pbnavitia::CITY);
-            fill_pb_object(result_item.idx, data, place_mark->mutable_city(), depth);
-            item->set_name(data.pt_data.cities[result_item.idx].name);
-            item->set_uri(data.pt_data.cities[result_item.idx].uri);
-            item->set_quality(result_item.quality);
-            break;
         case nt::Type_e::Admin:
             place_mark->set_type(pbnavitia::ADMIN);
             fill_pb_object(result_item.idx, data, place_mark->mutable_admin(), depth);

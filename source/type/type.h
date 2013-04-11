@@ -34,13 +34,9 @@ const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
     FUN(Network, networks)\
     FUN(PhysicalMode, physical_modes)\
     FUN(CommercialMode, commercial_modes)\
-    FUN(City, cities)\
     FUN(Connection, connections)\
     FUN(JourneyPatternPoint, journey_pattern_points)\
-    FUN(District, districts)\
-    FUN(Department, departments)\
     FUN(Company, companies)\
-    FUN(Country, countries)\
     FUN(Route, routes)
 
 enum class Type_e {

@@ -177,30 +177,6 @@ void builder::connection(const std::string & name1, const std::string & name2, f
 }
 
  void builder::generate_dummy_basis() {
-    types::Country *country = new types::Country();
-    this->data.countries.push_back(country);
-    country->name = "base_country";
-    country->uri = "country:base_country";
-
-    types::District *district = new types::District();
-    this->data.districts.push_back(district);
-    district->name = "base_district";
-    district->uri = "district:base_district";
-    district->country = country;
-     
-
-    types::Department *department = new types::Department();
-    this->data.departments.push_back(department);
-    department->name= "base_department";
-    department->uri = "department:base_department";
-    department->district = district;    
-
-    types::City *city = new types::City();
-    this->data.cities.push_back(city);
-    city->name = "base_city";
-    city->uri = "city:base_city";
-    city->department = department;
-
     types::Company *company = new types::Company();
     this->data.companies.push_back(company);
     company->name = "base_company";
