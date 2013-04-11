@@ -220,7 +220,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
         boucleRAPTOR(required_properties, !clockwise);
 
         if(b_dest.best_now.type != uninitialized) {
-            std::vector<Path> temp = makePathes(departs, dt_depart, walking_speed, *this, !clockwise);
+            std::vector<Path> temp = makePathes(calc_dep, dt_depart, walking_speed, *this, !clockwise);
             result.insert(result.end(), temp.begin(), temp.end());
         }
     }
