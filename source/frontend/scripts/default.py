@@ -107,7 +107,10 @@ class Script:
 	    if item.object.type == type_pb2.ADDRESS:
 	        post_code = item.object.address.name
 		for ad in item.object.address.admin:
-		    post_code = post_code + " " + ad.zip_code + " " + ad.name
+		    if ad.zip_code != "":
+		        post_code = post_code + ", " + ad.zip_code + " " + ad.name
+		    else:
+			post_code = post_code + ", " + ad.name
 		item.name = post_code
 
         return resp
