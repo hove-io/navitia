@@ -179,8 +179,6 @@ class Script:
                     section.vehicle_journey.Clear()
 
 
-
-
     def __on_journeys(self, requested_type, request_args, version, region):
         req = request_pb2.Request()
         req.requested_api = requested_type
@@ -203,9 +201,6 @@ class Script:
                 resp.planner.after = after
 
         self.__fill_display_and_uris(resp)
-        
-        
-
         return resp
 
 
