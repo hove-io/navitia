@@ -287,13 +287,13 @@ void Visitor::set_admin_of_ways(){
     for(navitia::georef::Way& way : geo_ref.ways){
         navitia::type::GeographicalCoord coord = way.barycentre(geo_ref.graph);
         std::vector<navitia::type::idx_t> vect_idx = geo_ref.find_admins(coord);
+        std::sort(vect_idx.begin(), vect_idx.end(),[&](navitia::type::idx_t idx1, navitia::type::idx_t idx2)
+        {return geo_ref.admins.at(idx1).level > geo_ref.admins.at(idx2).level;});
         for(navitia::type::idx_t id : vect_idx){
             way.admin_list.push_back(id);
         }
     }
 }
-
-
 
 void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filename){
     Visitor v(geo_ref_to_fill);
