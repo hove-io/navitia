@@ -49,7 +49,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
 
     for(auto stop_point_idx = marked_sp.find_first(); stop_point_idx != marked_sp.npos; 
         stop_point_idx = marked_sp.find_next(stop_point_idx)) {
-        //On cherche le plus petit rp du sp 
+        //On cherche le plus petit jpp du sp 
         navitia::type::DateTime best_arrival = v.worst();
         type::idx_t best_rp = navitia::type::invalid_idx;
         const type::StopPoint & stop_point = data.pt_data.stop_points[stop_point_idx];
@@ -65,11 +65,11 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                 //On marque tous les journey_pattern points du stop point
                 for(auto rpidx : stop_point.journey_pattern_point_list) {
                     if(rpidx != best_rp && v.comp(best_departure, best_labels[rpidx].*Visitor::instant) ) {
-                       const label nLavel= label(best_departure, best_departure, best_rp);
-                       best_labels[rpidx] = nLavel;
-                       labels[count][rpidx] = nLavel;
+                       const label nLabel= label(best_departure, best_departure, best_r;
+                       best_labels[rpidx] = nLabel;
+                       labels[count][rpidx] = nLabel;
                        const auto & journey_pattern_point = data.pt_data.journey_pattern_points[rpidx];
-                       if(!b_dest.add_best(rpidx, nLavel, count, v.clockwise) && v.comp(journey_pattern_point.order, Q[journey_pattern_point.journey_pattern_idx]) ) {
+                       if(!b_dest.add_best(rpidx, nLabel, count, v.clockwise) && v.comp(journey_pattern_point.order, Q[journey_pattern_point.journey_pattern_idx]) ) {
         //                   marked_rp.set(rpidx);
                            Q[journey_pattern_point.journey_pattern_idx] = journey_pattern_point.order;
                        }
