@@ -106,6 +106,9 @@ class Script:
 	for item in resp.autocomplete.items:
 	    if item.object.type == type_pb2.ADDRESS:
 	        post_code = item.object.address.name
+		if item.object.address.house_number > 0:
+		   post_code = str(item.object.address.house_number) + " " + item.object.address.name 
+		
 		for ad in item.object.address.admin:
 		    if ad.zip_code != "":
 		        post_code = post_code + ", " + ad.zip_code + " " + ad.name
