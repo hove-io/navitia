@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(connection_transformer){
     connection.destination_stop_point = destination;
     connection.duration = 10;
     connection.max_duration = 15;
-    connection.connection_kind = navimake::types::Connection::LinkConnection;
+    connection.connection_kind = navimake::types::ConnectionType::Walking;
 
     navitia::type::Connection connection_n = connection.get_navitia_type();
 
@@ -53,9 +53,6 @@ BOOST_AUTO_TEST_CASE(stop_area_transformer){
 
     stop_area.coord.set_lon(-54.08523);
     stop_area.coord.set_lat(5.59273);
-    stop_area.additional_data = "other data";
-    stop_area.main_connection = true;
-    stop_area.main_stop_area = true;
 
     navitia::type::StopArea stop_area_n = stop_area.get_navitia_type();
 
@@ -66,7 +63,6 @@ BOOST_AUTO_TEST_CASE(stop_area_transformer){
     BOOST_CHECK_EQUAL(stop_area_n.comment, stop_area.comment);
     BOOST_CHECK_EQUAL(stop_area_n.coord.lon(), stop_area.coord.lon());
     BOOST_CHECK_EQUAL(stop_area_n.coord.lat(), stop_area.coord.lat());
-    BOOST_CHECK_EQUAL(stop_area_n.additional_data, stop_area.additional_data);
 }
 
 BOOST_AUTO_TEST_CASE(validity_pattern){

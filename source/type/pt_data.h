@@ -24,16 +24,12 @@ struct PT_Data : boost::noncopyable{
 
     // First letter
     autocomplete::Autocomplete<idx_t> stop_area_autocomplete;
-    autocomplete::Autocomplete<idx_t> city_autocomplete;
     autocomplete::Autocomplete<idx_t> stop_point_autocomplete;
     autocomplete::Autocomplete<idx_t> line_autocomplete;
-
-
 
     // Proximity list
     proximitylist::ProximityList<idx_t> stop_area_proximity_list;
     proximitylist::ProximityList<idx_t> stop_point_proximity_list;
-    proximitylist::ProximityList<idx_t> city_proximity_list;
 
     //Message
     MessageHolder message_holder;
@@ -48,9 +44,9 @@ struct PT_Data : boost::noncopyable{
                 ITERATE_NAVITIA_PT_TYPES(SERIALIZE_ELEMENTS)
                 & stop_times
                 // Les firstLetter
-                & stop_area_autocomplete & city_autocomplete & stop_point_autocomplete
+                & stop_area_autocomplete & stop_point_autocomplete
                 // Les proximity list
-                & stop_area_proximity_list & stop_point_proximity_list & city_proximity_list & line_autocomplete
+                & stop_area_proximity_list & stop_point_proximity_list & line_autocomplete
                 // Les types un peu spéciaux
                 & stop_point_connections & journey_pattern_point_connections;
     }
@@ -124,7 +120,7 @@ struct PT_Data : boost::noncopyable{
     Connection journey_pattern_point_connection(idx_t, idx_t){
         Connection result;
         result.duration = 120;
-        result.connection_type = eStopPointConnection;
+        result.connection_type = ConnectionType::StopPoint;
         return result;
     }
 

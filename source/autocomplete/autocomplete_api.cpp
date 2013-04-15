@@ -66,7 +66,7 @@ int penalty_by_type(navitia::type::Type_e ntype, bool Is_address_type) {
     // City, SA, POI, Add, SP : si non
     int result = 0;
     switch(ntype){
-    case navitia::type::Type_e::City:
+    case navitia::type::Type_e::Admin:
         result = Is_address_type ? 8 : 0;
         break;
     case navitia::type::Type_e::StopArea:
@@ -115,9 +115,6 @@ pbnavitia::Response autocomplete(const std::string &name,
             break;
         case nt::Type_e::StopPoint:
             result = d.pt_data.stop_point_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
-            break;
-        case nt::Type_e::City:
-            result = d.pt_data.city_autocomplete.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
             break;
         case nt::Type_e::Admin:
             result = d.geo_ref.fl_admin.find_complete(name, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);

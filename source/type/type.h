@@ -49,13 +49,9 @@ enum class Type_e {
     Network = 7,
     PhysicalMode = 8,
     CommercialMode = 9,
-    City = 10,
     Connection = 11,
     JourneyPatternPoint = 12,
-    District = 13,
-    Department = 14,
-    Company = 15,
-    Country = 17,
+    Company = 15,   
     Route = 23,
     POI = 24,
 
@@ -78,29 +74,53 @@ struct Nameable{
 };
 
 
-
-struct NavitiaHeader{
+struct Header{
     std::string id;
     idx_t idx;
     std::string uri;
-    NavitiaHeader() : idx(invalid_idx){}
+    Header() : idx(invalid_idx){}
     std::vector<idx_t> get(Type_e, const PT_Data &) const {return std::vector<idx_t>();}
 
 };
+
+
 typedef std::bitset<7> Properties;
 struct hasProperties {
-    Properties properties;
-    static const int WHEELCHAIR_BOARDING = 0;
+    static const uint8_t WHEELCHAIR_BOARDING = 0;
 
-    bool wheelchair_boarding() {return properties[WHEELCHAIR_BOARDING];}
+    bool wheelchair_boarding() {return _properties[WHEELCHAIR_BOARDING];}
     bool accessible(const Properties &required_properties) const{
-        auto mismatched = required_properties & ~properties;
-        return !mismatched.any();
+        auto mismatched = required_properties & ~_properties;
+        return mismatched.none();
     }
     bool accessible(const Properties &required_properties) {
-        auto mismatched = required_properties & ~properties;
-        return !mismatched.any();
+        auto mismatched = required_properties & ~_properties;
+        return mismatched.none();
     }
+
+    void set_property(uint8_t property) {
+        _properties.set(property, true);
+    }
+
+    void set_properties(const Properties &other) {
+        this->_properties = other;
+    }
+
+    Properties properties() const {
+        return this->_properties;
+    }
+
+    void unset_property(uint8_t property) {
+        _properties.set(property, false);
+    }
+
+    bool property(uint8_t property) const {
+        return _properties[property];
+    }
+
+
+private:
+    Properties _properties;
 };
 
 
@@ -171,16 +191,17 @@ std::ostream & operator<<(std::ostream &_os, const GeographicalCoord & coord);
 bool operator==(const GeographicalCoord & a, const GeographicalCoord & b);
 
 
-enum ConnectionType {
-    eStopPointConnection,
-    eStopAreaConnection,
-    eWalkingConnection,
-    eVJConnection,
-    eGuaranteedConnection
-
+enum class ConnectionType {
+    StopPoint = 0,
+    StopArea = 1,
+    Walking = 2,
+    VJ = 3,
+    Guaranteed = 4,
+    Default = 5
 };
 
-struct Connection: public NavitiaHeader, hasProperties{
+
+struct Connection: public Header, hasProperties{
     const static Type_e type = Type_e::Connection;
     idx_t departure_stop_point_idx;
     idx_t destination_stop_point_idx;
@@ -204,7 +225,7 @@ enum ConnectionKind {
  undefined
 };
 
-struct JourneyPatternPointConnection : public NavitiaHeader {
+struct JourneyPatternPointConnection : public Header {
       idx_t departure_journey_pattern_point_idx;
       idx_t destination_journey_pattern_point_idx;
       ConnectionKind connection_kind;
@@ -219,7 +240,7 @@ struct JourneyPatternPointConnection : public NavitiaHeader {
 };
  
 
-struct StopArea : public NavitiaHeader, Nameable, hasProperties{
+struct StopArea : public Header, Nameable, hasProperties{
     const static Type_e type = Type_e::StopArea;
     GeographicalCoord coord;
     std::string additional_data;
@@ -237,7 +258,7 @@ struct StopArea : public NavitiaHeader, Nameable, hasProperties{
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
-struct Network : public NavitiaHeader, Nameable{
+struct Network : public Header, Nameable{
     const static Type_e type = Type_e::Network;
     std::string address_name;
     std::string address_number;
@@ -257,7 +278,7 @@ struct Network : public NavitiaHeader, Nameable{
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
-struct Company : public NavitiaHeader, Nameable{
+struct Company : public Header, Nameable{
     const static Type_e type = Type_e::Company;
     std::string address_name;
     std::string address_number;
@@ -276,7 +297,7 @@ struct Company : public NavitiaHeader, Nameable{
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
-struct CommercialMode : public NavitiaHeader, Nameable{
+struct CommercialMode : public Header, Nameable{
     const static Type_e type = Type_e::CommercialMode;
     std::vector<idx_t> line_list;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -285,7 +306,7 @@ struct CommercialMode : public NavitiaHeader, Nameable{
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
-struct PhysicalMode : public NavitiaHeader, Nameable{
+struct PhysicalMode : public Header, Nameable{
     const static Type_e type = Type_e::PhysicalMode;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -296,7 +317,7 @@ struct PhysicalMode : public NavitiaHeader, Nameable{
     PhysicalMode() {}
 };
 
-struct Line : public NavitiaHeader, Nameable {
+struct Line : public Header, Nameable {
     const static Type_e type = Type_e::Line;
     std::string code;
     std::string forward_name;
@@ -323,7 +344,7 @@ struct Line : public NavitiaHeader, Nameable {
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
-struct Route : public NavitiaHeader, Nameable {
+struct Route : public Header, Nameable {
     const static Type_e type = Type_e::Route;
     idx_t line_idx;
     std::vector<idx_t> journey_pattern_list;
@@ -337,7 +358,7 @@ struct Route : public NavitiaHeader, Nameable {
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
-struct JourneyPattern : public NavitiaHeader, Nameable{
+struct JourneyPattern : public Header, Nameable{
     const static Type_e type = Type_e::JourneyPattern;
     bool is_frequence;
     idx_t route_idx;
@@ -362,7 +383,7 @@ struct JourneyPattern : public NavitiaHeader, Nameable{
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
-struct VehicleJourney: public NavitiaHeader, Nameable, hasProperties{
+struct VehicleJourney: public Header, Nameable, hasProperties{
     const static Type_e type = Type_e::VehicleJourney;
     idx_t journey_pattern_idx;
     idx_t company_idx;
@@ -386,23 +407,8 @@ struct VehicleJourney: public NavitiaHeader, Nameable, hasProperties{
 };
 
 
-struct Equipement : public NavitiaHeader {
-    enum EquipementKind{ Sheltred, 
-                         MIPAccess,
-                         Escalator,
-                         BikeAccepted,
-                         BikeDepot,
-                         VisualAnnouncement,
-                         AudibleAnnoucement,
-                         AppropriateEscort,
-                         AppropriateSignage
-                       };
 
-    std::bitset<9> equipement_kind;
-    
-};
-
-struct JourneyPatternPoint : public NavitiaHeader{
+struct JourneyPatternPoint : public Header{
     const static Type_e type = Type_e::JourneyPatternPoint;
     int order;
     bool main_stop_point;
@@ -419,7 +425,7 @@ struct JourneyPatternPoint : public NavitiaHeader{
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 };
 
-struct ValidityPattern : public NavitiaHeader {
+struct ValidityPattern : public Header {
     const static Type_e type = Type_e::ValidityPattern;
 private:
     bool is_valid(int duration) const;
@@ -447,35 +453,24 @@ public:
     //void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
 };
 
-struct StopPoint : public NavitiaHeader, Nameable, hasProperties{
+struct StopPoint : public Header, Nameable, hasProperties{
     const static Type_e type = Type_e::StopPoint;
     GeographicalCoord coord;
     int fare_zone;
 
-    std::string address_name;
-    std::string address_number;
-    std::string address_type_name;
-
     idx_t stop_area_idx;
-//    idx_t city_idx;
     std::vector<idx_t> admin_list;
     idx_t network_idx;
     std::vector<idx_t> journey_pattern_point_list;
-    bool wheelchair_boarding;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & uri & name & stop_area_idx & coord & fare_zone & idx & journey_pattern_point_list & wheelchair_boarding & admin_list;
+        ar & uri & name & stop_area_idx & coord & fare_zone & idx & journey_pattern_point_list & admin_list;
     }
 
-    StopPoint(): fare_zone(0),  stop_area_idx(invalid_idx), network_idx(invalid_idx), wheelchair_boarding(false) {}
+    StopPoint(): fare_zone(0),  stop_area_idx(invalid_idx), network_idx(invalid_idx) {}
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
-    /*bool accessible(const Properties & required_properties) { 
-        return hasProperties::accessible(required_properties);
-    }
-    bool accessible(const Properties & required_properties)const { 
-        return hasProperties::accessible(required_properties);
-    }*/
 };
 
 struct StopTime {
