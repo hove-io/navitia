@@ -62,14 +62,14 @@ message StopArea {
     optional string name = 3;
     optional string uri = 4;
     optional GeographicalCoord coord = 5;
-    repeated Admin admin = 10;
+    repeated Admin admins = 10;
     repeated StopPoint stop_points = 8;
     repeated Message messages = 9;
 }
 
 message StopPoint {
     optional string name = 3;
-    repeated Admin admin = 10;
+    repeated Admin admins = 10;
     optional string uri = 5;
     optional GeographicalCoord coord = 6;
     optional StopArea stop_area = 7;
@@ -157,7 +157,7 @@ message Poi {
     optional string uri = 3;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
-    repeated Admin admin = 10;
+    repeated Admin admins = 10;
 }
 
 message Network {
@@ -198,7 +198,7 @@ message Address {
     optional string uri = 3;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
-    repeated Admin admin = 10;
+    repeated Admin admins = 10;
     optional int32 house_number = 2;
 }
 
