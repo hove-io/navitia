@@ -49,7 +49,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
 
     for(auto stop_point_idx = marked_sp.find_first(); stop_point_idx != marked_sp.npos; 
         stop_point_idx = marked_sp.find_next(stop_point_idx)) {
-        //On cherche le plus petit rp du sp 
+        //On cherche le plus petit jpp du sp 
         navitia::type::DateTime best_arrival = v.worst();
         type::idx_t best_rp = navitia::type::invalid_idx;
         const type::StopPoint & stop_point = data.pt_data.stop_points[stop_point_idx];
@@ -65,11 +65,11 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                 //On marque tous les journey_pattern points du stop point
                 for(auto rpidx : stop_point.journey_pattern_point_list) {
                     if(rpidx != best_rp && v.comp(best_departure, best_labels[rpidx].*Visitor::instant) ) {
-                       const label nLavel= label(best_departure, best_departure, best_rp);
-                       best_labels[rpidx] = nLavel;
-                       labels[count][rpidx] = nLavel;
+                       const label nLabel= label(best_departure, best_departure, best_r;
+                       best_labels[rpidx] = nLabel;
+                       labels[count][rpidx] = nLabel;
                        const auto & journey_pattern_point = data.pt_data.journey_pattern_points[rpidx];
-                       if(!b_dest.add_best(rpidx, nLavel, count, v.clockwise) && v.comp(journey_pattern_point.order, Q[journey_pattern_point.journey_pattern_idx]) ) {
+                       if(!b_dest.add_best(rpidx, nLabel, count, v.clockwise) && v.comp(journey_pattern_point.order, Q[journey_pattern_point.journey_pattern_idx]) ) {
         //                   marked_rp.set(rpidx);
                            Q[journey_pattern_point.journey_pattern_idx] = journey_pattern_point.order;
                        }
@@ -220,7 +220,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
         boucleRAPTOR(required_properties, !clockwise);
 
         if(b_dest.best_now.type != uninitialized) {
-            std::vector<Path> temp = makePathes(departs, dt_depart, walking_speed, *this, !clockwise);
+            std::vector<Path> temp = makePathes(calc_dep, dt_depart, walking_speed, *this, !clockwise);
             result.insert(result.end(), temp.begin(), temp.end());
         }
     }
@@ -455,14 +455,14 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::Properties &required_prope
                 workingDt = visitor.worst();
                 decltype(visitor.first_stoptime(0)) it_st;
                 int gap = 0;
-                BOOST_FOREACH(const type::JourneyPatternPoint & rp, visitor.journey_pattern_points(journey_pattern, Q[journey_pattern.idx])) {
+                BOOST_FOREACH(const type::JourneyPatternPoint & jpp, visitor.journey_pattern_points(journey_pattern, Q[journey_pattern.idx])) {
                     if(t != type::invalid_idx) {
                         ++it_st;
                         if(l_zone == std::numeric_limits<uint32_t>::max() || l_zone != it_st->local_traffic_zone) {
                             //On stocke le meilleur label, et on marque pour explorer par la suite
                             label bound;
-                            if(visitor.better(best_labels[rp.idx], b_dest.best_now) || !global_pruning)
-                                bound = best_labels[rp.idx];
+                            if(visitor.better(best_labels[jpp.idx], b_dest.best_now) || !global_pruning)
+                                bound = best_labels[jpp.idx];
                             else
                                 bound = b_dest.best_now;
                             const navitia::type::StopTime &st = *it_st;
@@ -470,36 +470,36 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::Properties &required_prope
                             auto & working_labels = this->labels[this->count];
                             workingDt.update(!st.is_frequency()? st.section_end_time(visitor.clockwise) : st.start_time + gap, visitor.clockwise);
                             if(visitor.comp(workingDt, bound.*visitor.instant) && st.valid_end(visitor.clockwise)) {
-                                working_labels[rp.idx] = label(st, workingDt, embarquement, visitor.clockwise, gap);
-                                this->best_labels[rp.idx] = working_labels[rp.idx];
-                                if(!this->b_dest.add_best(rp.idx, working_labels[rp.idx], this->count, visitor.clockwise)) {
-                                    this->marked_rp.set(rp.idx);
-                                    this->marked_sp.set(this->data.pt_data.journey_pattern_points[rp.idx].stop_point_idx);
+                                working_labels[jpp.idx] = label(st, workingDt, embarquement, visitor.clockwise, gap);
+                                this->best_labels[jpp.idx] = working_labels[jpp.idx];
+                                if(!this->b_dest.add_best(jpp.idx, working_labels[jpp.idx], this->count, visitor.clockwise)) {
+                                    this->marked_rp.set(jpp.idx);
+                                    this->marked_sp.set(this->data.pt_data.journey_pattern_points[jpp.idx].stop_point_idx);
                                     end = false;
                                 }
                             } else if(workingDt == bound.*visitor.instant &&
-                                      this->labels[this->count-1][rp.idx].type == uninitialized) {
+                                      this->labels[this->count-1][jpp.idx].type == uninitialized) {
                                 auto l = label(st, workingDt, embarquement, visitor.clockwise, gap);
-                                if(this->b_dest.add_best(rp.idx, l, this->count, visitor.clockwise)) {
-                                    working_labels[rp.idx] = l;
-                                    this->best_labels[rp.idx] = l;
+                                if(this->b_dest.add_best(jpp.idx, l, this->count, visitor.clockwise)) {
+                                    working_labels[jpp.idx] = l;
+                                    this->best_labels[jpp.idx] = l;
                                 }
                             }
                         }
                     }
 
                     //Si on peut arriver plus tôt à l'arrêt en passant par une autre journey_pattern
-                    const label & labels_temp = prec_labels[rp.idx];
+                    const label & labels_temp = prec_labels[jpp.idx];
                     if(labels_temp.type != uninitialized &&
                        (t == type::invalid_idx || visitor.better_or_equal(labels_temp, workingDt, *it_st))) {
 
                         type::idx_t etemp;
-                        std::tie(etemp, gap) = visitor.best_trip(journey_pattern, rp.order, labels_temp.*visitor.instant, required_properties);
+                        std::tie(etemp, gap) = visitor.best_trip(journey_pattern, jpp.order, labels_temp.*visitor.instant, required_properties);
 
                         if(etemp != type::invalid_idx && t != etemp) {
                             t = etemp;
-                            embarquement = rp.idx;
-                            it_st = visitor.first_stoptime(data.pt_data.vehicle_journeys[t].stop_time_list[rp.order]);
+                            embarquement = jpp.idx;
+                            it_st = visitor.first_stoptime(data.pt_data.vehicle_journeys[t].stop_time_list[jpp.order]);
                             workingDt = labels_temp.*visitor.instant;
                             visitor.update(workingDt, *it_st, gap);
                             l_zone = it_st->local_traffic_zone;
