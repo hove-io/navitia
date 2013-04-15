@@ -20,7 +20,7 @@ namespace navitia {
             }
         };
 
-        struct Admin : nt::NavitiaHeader, nt::Nameable {
+        struct Admin : nt::Header, nt::Nameable {
             /**
               Level = 2  : Pays
               Level = 4  : Région

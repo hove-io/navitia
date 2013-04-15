@@ -21,7 +21,6 @@ nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     case pbnavitia::ADDRESS: return nt::Type_e::Address; break;
     case pbnavitia::STOP_AREA: return nt::Type_e::StopArea; break;
     case pbnavitia::STOP_POINT: return nt::Type_e::StopPoint; break;
-    case pbnavitia::CITY: return nt::Type_e::City; break;
     case pbnavitia::LINE: return nt::Type_e::Line; break;
     case pbnavitia::ROUTE: return nt::Type_e::Route; break;
     case pbnavitia::JOURNEY_PATTERN: return nt::Type_e::JourneyPattern; break;

@@ -240,8 +240,8 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
                 sa->coord = sp->coord;
                 sa->name = sp->name;
                 sa->uri = sp->uri;
-                if(wheelchair_c != -1)
-                    sa->wheelchair_boarding = row[wheelchair_c] == "1";
+                if(wheelchair_c != -1 && row[wheelchair_c] == "1")
+                    sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
                 stop_area_map[sa->uri] = sa;
                 data.stop_areas.push_back(sa);
                 delete sp;
@@ -251,8 +251,8 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
                 if(wheelchair_c != -1) {
                     if(row[wheelchair_c] == "0") {
                         wheelchair_heritance.push_back(sp);
-                    } else {
-                        sp->wheelchair_boarding = row[wheelchair_c] == "1";
+                    } else if(row[wheelchair_c] == "1"){
+                        sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
                     }
                 }
                 stop_map[sp->uri] = sp;
@@ -290,8 +290,8 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
 
     //On va chercher l'accessibilité pour les stop points qui hérite de l'accessibilité de leur stop area
     for(auto sp : wheelchair_heritance) {
-        if(sp->stop_area != 0) {
-            sp->wheelchair_boarding = sp->stop_area->wheelchair_boarding;
+        if(sp->stop_area != 0 && sp->stop_area->property(navitia::type::hasProperties::WHEELCHAIR_BOARDING)) {
+            sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
         } else {
             LOG4CPLUS_WARN(logger, "Impossible de récuperer l'accessibilité du stop area pour le stop point " + sp->uri);
         }
@@ -356,7 +356,7 @@ void GtfsParser::parse_transfers(Data & data, CsvReader & csv) {
                 nm::Connection * connection = new nm::Connection();
                 connection->departure_stop_point = from_sp;
                 connection->destination_stop_point  = to_sp;
-                connection->connection_kind = nm::Connection::LinkConnection;
+                connection->connection_kind = types::ConnectionType::Walking;
                 if(time_c != -1) {
                     try{
                         connection->duration = boost::lexical_cast<int>(row[time_c]);

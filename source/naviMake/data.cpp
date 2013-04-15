@@ -74,7 +74,7 @@ void Data::complete(){
                             types::Connection * connection = new types::Connection();
                             connection->departure_stop_point = it->second;
                             connection->destination_stop_point  = it2->second;
-                            connection->connection_kind = types::Connection::StopAreaConnection;
+                            connection->connection_kind = types::ConnectionType::StopArea;
                             connection->duration = 120;
                             connections.push_back(connection);
                         }
@@ -92,7 +92,7 @@ void Data::complete(){
                             types::Connection * connection = new types::Connection();
                             connection->departure_stop_point = it2->second;
                             connection->destination_stop_point  = it->second;
-                            connection->connection_kind = types::Connection::StopAreaConnection;
+                            connection->connection_kind = types::ConnectionType::StopArea;
                             connection->duration = 120;
                             connections.push_back(connection);
                         }
