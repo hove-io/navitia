@@ -78,7 +78,7 @@ struct HouseNumber{
 };
 
 /** Nommage d'un POI (point of interest). **/
-struct POIType : public nt::Nameable, nt::NavitiaHeader{
+struct POIType : public nt::Nameable, nt::Header{
 public:
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar &idx &uri &name;
@@ -88,7 +88,7 @@ private:
 
 
 /** Nommage d'un POI (point of interest). **/
-struct POI : public nt::Nameable, nt::NavitiaHeader{
+struct POI : public nt::Nameable, nt::Header{
 public:
     int weight;
     nt::GeographicalCoord coord;
@@ -110,7 +110,7 @@ private:
 
 /** Nommage d'une voie (anciennement "adresse").
     Typiquement le nom de rue **/
-struct Way :public nt::Nameable, nt::NavitiaHeader{
+struct Way :public nt::Nameable, nt::Header{
 public:
     std::string way_type;
     // liste des admins

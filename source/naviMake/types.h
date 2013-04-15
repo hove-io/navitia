@@ -12,26 +12,10 @@ using nt::idx_t;
 
 namespace navimake{ namespace types{
 
-/** En-tête commun pour tous les objets TC portant un nom*/
-struct Nameable{
-    std::string name;
-    std::string comment;
-};
-
-struct hasProperties {
-    std::bitset<7>  const properties;
-};
-
-/** En tête de tous les objets TC.
-  *
-  * Cette classe est héritée par \b tous les objets TC
-  */
-struct TransmodelHeader{
-    std::string id; //< Identifiant de l'objet par le fournisseur de la donnée
-    idx_t idx; //< Indexe de l'objet dans le tableau
-    std::string uri; //< Code pérène
-    TransmodelHeader() : idx(0){}
-};
+// On importe quelques éléments de Navitia::type pour éviter les redondances
+using nt::Nameable;
+using nt::Header;
+using nt::hasProperties;
 
 
 #define FORWARD_CLASS_DECLARE(type_name, collection_name) class type_name;
@@ -39,42 +23,26 @@ ITERATE_NAVITIA_PT_TYPES(FORWARD_CLASS_DECLARE)
 class JourneyPatternPointConnection;
 class StopTime;
 
-struct Connection: public TransmodelHeader, hasProperties {
+using nt::ConnectionType;
+struct Connection: public Header, hasProperties {
     const static nt::Type_e type = nt::Type_e::Connection;
-    enum ConnectionKind{
-        AddressConnection,           //Jonction adresse / arrêt commercial
-        SiteConnection,              //Jonction Lieu public / arrêt commercial
-        StopAreaConnection,          //Correspondance intra arrêt commercial, entre 2 arrêts phy distincts
-        StopPointConnection,         //Correspondance intra-arrêt phy
-        VehicleJourneyConnection,    //Liaison en transport en commun
-        ProlongationConnection,      //Liaison en transport en commun / prolongement de service
-        LinkConnection,              //Liaison marche à pied
-        WalkConnection,              //Trajet a pied
-        PersonnalCarConnection,      //Liaison en transport personnel (voiture)
-        UndefinedConnection,
-        BicycleConnection,
-        CabConnection,
-        ODTConnection,
-        VLSConnection,
-        DefaultConnection
-    };
 
     StopPoint* departure_stop_point;
     StopPoint* destination_stop_point;
     int duration;
     int max_duration;
-    ConnectionKind connection_kind;
+    ConnectionType connection_kind;
 
     navitia::type::Connection get_navitia_type() const;
 
     Connection() : departure_stop_point(NULL), destination_stop_point(NULL), duration(0),
-        max_duration(0), connection_kind(DefaultConnection){}
+        max_duration(0), connection_kind(ConnectionType::Default){}
 
    bool operator<(const Connection& other) const;
 
 };
 
-struct JourneyPatternPointConnection: public TransmodelHeader {
+struct JourneyPatternPointConnection: public Header {
     enum JourneyPatternPointConnectionKind {
         Extension,  //Prolongement de service
         Guarantee,   //Correspondance garantie
@@ -95,23 +63,18 @@ struct JourneyPatternPointConnection: public TransmodelHeader {
 };
 
 
-struct StopArea : public TransmodelHeader, Nameable, hasProperties{
+struct StopArea : public Header, Nameable, hasProperties{
     const static nt::Type_e type = nt::Type_e::StopArea;
     nt::GeographicalCoord coord;
-    std::string additional_data;
-
-    bool main_stop_area;
-    bool main_connection;
-    bool wheelchair_boarding;
 
     navitia::type::StopArea get_navitia_type() const;
 
-    StopArea(): main_stop_area(false), main_connection(false), wheelchair_boarding(false) {}
+    StopArea() {}
 
     bool operator<(const StopArea& other) const;
 };
 
-struct Network : public TransmodelHeader, Nameable{
+struct Network : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Network;
     std::string address_name;
     std::string address_number;
@@ -126,7 +89,7 @@ struct Network : public TransmodelHeader, Nameable{
     bool operator<(const Network& other)const{ return this->name < other.name;}
 };
 
-struct Company : public TransmodelHeader, Nameable{
+struct Company : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Company;
     std::string address_name;
     std::string address_number;
@@ -141,14 +104,14 @@ struct Company : public TransmodelHeader, Nameable{
     bool operator<(const Company& other)const{ return this->name < other.name;}
 };
 
-struct CommercialMode : public TransmodelHeader, Nameable{
+struct CommercialMode : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::CommercialMode;
     nt::CommercialMode get_navitia_type() const;
 
     bool operator<(const CommercialMode& other)const ;
 };
 
-struct PhysicalMode : public TransmodelHeader, Nameable{
+struct PhysicalMode : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::PhysicalMode;
     PhysicalMode() {}
 
@@ -157,7 +120,7 @@ struct PhysicalMode : public TransmodelHeader, Nameable{
     bool operator<(const PhysicalMode& other) const;
 };
 
-struct Line : public TransmodelHeader, Nameable {
+struct Line : public Header, Nameable {
     const static nt::Type_e type = nt::Type_e::Line;
     std::string code;
     std::string forward_name;
@@ -178,7 +141,7 @@ struct Line : public TransmodelHeader, Nameable {
     bool operator<(const Line & other) const;
 };
 
-struct Route : public TransmodelHeader, Nameable{
+struct Route : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Route;
     Line * line;
 
@@ -187,7 +150,7 @@ struct Route : public TransmodelHeader, Nameable{
     bool operator<(const Route& other) const;
 };
 
-struct JourneyPattern : public TransmodelHeader, Nameable{
+struct JourneyPattern : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::JourneyPattern;
     bool is_frequence;
     Route* route;
@@ -201,7 +164,7 @@ struct JourneyPattern : public TransmodelHeader, Nameable{
     bool operator<(const JourneyPattern& other) const;
  };
 
-struct VehicleJourney: public TransmodelHeader, Nameable, hasProperties{
+struct VehicleJourney: public Header, Nameable, hasProperties{
     const static nt::Type_e type = nt::Type_e::VehicleJourney;
     JourneyPattern* journey_pattern;
     Company* company;
@@ -229,7 +192,7 @@ struct VehicleJourney: public TransmodelHeader, Nameable, hasProperties{
     bool operator<(const VehicleJourney& other) const;
 };
 
-struct Equipement : public TransmodelHeader {
+struct Equipement : public Header {
     enum EquipementKind{ Sheltred, 
                             MIPAccess, 
                             Escalator, 
@@ -245,7 +208,7 @@ struct Equipement : public TransmodelHeader {
 
 };
 
-struct JourneyPatternPoint : public TransmodelHeader, Nameable{
+struct JourneyPatternPoint : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::JourneyPatternPoint;
     int order;
     bool main_stop_point;
@@ -260,7 +223,7 @@ struct JourneyPatternPoint : public TransmodelHeader, Nameable{
     bool operator<(const JourneyPatternPoint& other) const;
 };
 
-struct ValidityPattern: public TransmodelHeader {
+struct ValidityPattern: public Header {
     const static nt::Type_e type = nt::Type_e::ValidityPattern;
 private:
     bool is_valid(int duration);
@@ -283,7 +246,7 @@ public:
     bool operator==(const ValidityPattern& other) const;
 };
 
-struct StopPoint : public TransmodelHeader, Nameable, hasProperties{
+struct StopPoint : public Header, Nameable, hasProperties{
     const static nt::Type_e type = nt::Type_e::StopPoint;
     nt::GeographicalCoord coord;
     int fare_zone;
@@ -295,9 +258,7 @@ struct StopPoint : public TransmodelHeader, Nameable, hasProperties{
     StopArea* stop_area;
     Network* network;
 
-    bool wheelchair_boarding;
-
-    StopPoint(): fare_zone(0), stop_area(NULL), network(NULL), wheelchair_boarding(false) {}
+    StopPoint(): fare_zone(0), stop_area(NULL), network(NULL) {}
 
     nt::StopPoint get_navitia_type() const;
 
