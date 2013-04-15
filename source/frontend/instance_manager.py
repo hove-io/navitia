@@ -117,7 +117,7 @@ class NavitiaManager:
                 except AttributeError:
                     return Response("Unknown api : " + api, status=404)
             else:
-                return Response(api + " not found", status=404)
+                return Response("Unknown api : " + api, status=404)
         else:
              return Response(region + " not found", status=404)
 
