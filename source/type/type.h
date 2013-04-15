@@ -363,21 +363,15 @@ struct JourneyPattern : public Header, Nameable{
     bool is_frequence;
     idx_t route_idx;
     idx_t commercial_mode_idx;
-    
+
     std::vector<idx_t> journey_pattern_point_list;
-    std::vector<idx_t> freq_journey_pattern_point_list;
-    std::vector<idx_t> freq_setting_list;
     std::vector<idx_t> vehicle_journey_list;
-
-    std::vector<idx_t> vehicle_journey_list_arrival;
-
 
     JourneyPattern(): is_frequence(false), route_idx(invalid_idx), commercial_mode_idx(invalid_idx) {};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & uri & is_frequence & route_idx & commercial_mode_idx
-                & journey_pattern_point_list & freq_journey_pattern_point_list & freq_setting_list
-                & vehicle_journey_list & vehicle_journey_list_arrival;
+                & journey_pattern_point_list & vehicle_journey_list;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
