@@ -93,7 +93,8 @@ add_subdirectory(scripts)
 execute_process(COMMAND lsb_release -a
     COMMAND grep Codename
     COMMAND sed -e "s/.*:\\s\\([:alpha:]*\\)/\\1/"
-    OUTPUT_VARIABLE lsb_release)
+    OUTPUT_VARIABLE lsb_release
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 #on génére le fichier config.h
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
@@ -108,8 +109,7 @@ SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
 SET(CPACK_DEBIAN_PACKAGE_NAME "navitia")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Navitia navimake Jörmungandr")
 
-#attention au \n sinon ça ne marche pas
-IF(${lsb_release} STREQUAL "precise\n")
+IF(${lsb_release} STREQUAL "precise")
     SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.48.0, libboost-serialization1.48.0, libboost-regex1.48.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.48.0, libboost-program-options1.48.0, libboost-filesystem1.48.0, gunicorn, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql")
 ELSE()
     SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, gunicorn, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql")
