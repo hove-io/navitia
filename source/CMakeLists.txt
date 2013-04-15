@@ -53,8 +53,8 @@ FIND_PACKAGE(Boost 1.40.0 REQUIRED)
 
 
 SET(NAVITIA_VERSION_MAJOR 0)
-SET(NAVITIA_VERSION_MINOR 56)
-SET(NAVITIA_VERSION_PATCH g)
+SET(NAVITIA_VERSION_MINOR 57)
+SET(NAVITIA_VERSION_PATCH d)
 
 #ajout a l'include path le repertoirre de compilation, pour géré le config.h
 include_directories (${CMAKE_CURRENT_BINARY_DIR}
@@ -112,7 +112,7 @@ SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Navitia navimake Jörmungandr")
 IF(${lsb_release} STREQUAL "precise")
     SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.48.0, libboost-serialization1.48.0, libboost-regex1.48.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.48.0, libboost-program-options1.48.0, libboost-filesystem1.48.0, gunicorn, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql")
 ELSE()
-    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, gunicorn, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql")
+    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.48.0, libboost-serialization1.48.0, libboost-regex1.48.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.48.0, libboost-program-options1.48.0, libboost-filesystem1.48.0, gunicorn, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql")
 ENDIF()
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/debian/postinst;")
 
