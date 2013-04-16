@@ -5,7 +5,7 @@ case "$1" in
         chmod +x /usr/share/navitia/scripts/
         chmod +x /usr/share/navitia/scripts/{navimake_updater,update_data}.sh
         chmod +r -R /usr/share/navitia/
-        chmod +rx -R /srv/jormungandr/scripts
+        chmod +rx -R /srv/jormungandr/
         chown root:www-data /usr/share/navitia/scripts/{navimake_updater,update_data}.sh
         chown -R www-data:www-data /var/log/gunicorn/
         ;;
