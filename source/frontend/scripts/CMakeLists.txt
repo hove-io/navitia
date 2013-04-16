@@ -1,1 +1,1 @@
-INSTALL_FILES(__init__.py default.py)
+INSTALL_FILES(/srv/jormungandr/scripts __init__.py default.py)
