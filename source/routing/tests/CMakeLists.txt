@@ -8,10 +8,6 @@ add_executable(reverse_raptor_test reverse_raptor_test.cpp)
 target_link_libraries(reverse_raptor_test connectors data routing georef utils ${Boost_LIBRARIES} )
 ADD_TEST(reverse_raptor ${EXECUTABLE_OUTPUT_PATH}/reverse_raptor_test --report_level=no)
 
-add_executable(rab_raptor_test test_rabattement.cpp)
-target_link_libraries(rab_raptor_test connectors data georef utils  routing ${Boost_LIBRARIES} )
-ADD_TEST(rab_raptor_test ${EXECUTABLE_OUTPUT_PATH}/rab_raptor_test --report_level=no)
-
 add_executable(routing_api_test routing_api_test.cpp)
 target_link_libraries(routing_api_test connectors data types routing pb_lib georef utils  ${Boost_LIBRARIES})
 ADD_TEST(routing_api_test ${EXECUTABLE_OUTPUT_PATH}/routing_api_test --report_level=no)

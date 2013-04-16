@@ -159,10 +159,8 @@ navitia::type::StopArea StopArea::get_navitia_type() const {
     sa.coord = this->coord;
     sa.comment = this->comment;
     sa.name = this->name;
-    sa.wheelchair_boarding = this->wheelchair_boarding;
 
-    sa.additional_data = this->additional_data;
-    sa.properties = this->properties;
+    sa.set_properties(this->properties());
     return sa;
 }
 
@@ -209,13 +207,8 @@ nt::StopPoint StopPoint::get_navitia_type() const {
     nt_stop_point.uri = this->uri;
     nt_stop_point.name = this->name;
     nt_stop_point.coord = this->coord;
-    nt_stop_point.fare_zone = this->fare_zone;
-
-    nt_stop_point.address_name      = this->address_name;
-    nt_stop_point.address_number    = this->address_number;
-    nt_stop_point.address_type_name = this->address_type_name;
+    nt_stop_point.fare_zone = this->fare_zone;    
     
-    nt_stop_point.wheelchair_boarding = this->wheelchair_boarding;
     if(this->stop_area != NULL)
         nt_stop_point.stop_area_idx = this->stop_area->idx;
 
@@ -326,7 +319,7 @@ nt::Connection Connection::get_navitia_type() const {
     nt_connection.destination_stop_point_idx = this->destination_stop_point->idx;
     nt_connection.duration = this->duration;
     nt_connection.max_duration = this->max_duration;
-    nt_connection.properties = this->properties;
+    nt_connection.set_properties(this->properties());
     return nt_connection;
 }
 
@@ -382,7 +375,7 @@ nt::VehicleJourney VehicleJourney::get_navitia_type() const {
         nt_vj.validity_pattern_idx = this->validity_pattern->idx;
 
     nt_vj.wheelchair_boarding = this->wheelchair_boarding;
-    nt_vj.properties = this->properties;
+    nt_vj.set_properties(this->properties());
 
     nt_vj.is_adapted = this->is_adapted;
 

@@ -21,7 +21,6 @@ nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     case pbnavitia::ADDRESS: return nt::Type_e::Address; break;
     case pbnavitia::STOP_AREA: return nt::Type_e::StopArea; break;
     case pbnavitia::STOP_POINT: return nt::Type_e::StopPoint; break;
-    case pbnavitia::CITY: return nt::Type_e::City; break;
     case pbnavitia::LINE: return nt::Type_e::Line; break;
     case pbnavitia::ROUTE: return nt::Type_e::Route; break;
     case pbnavitia::JOURNEY_PATTERN: return nt::Type_e::JourneyPattern; break;
@@ -89,7 +88,7 @@ pbnavitia::Response Worker::metadatas() {
 
 void Worker::init_worker_data(){
     if(this->data.last_load_at != this->last_load_at || !calculateur){
-        calculateur = std::unique_ptr<navitia::routing::raptor::RAPTOR>(new navitia::routing::raptor::RAPTOR(this->data));
+        calculateur = std::unique_ptr<navitia::routing::RAPTOR>(new navitia::routing::RAPTOR(this->data));
         street_network_worker = std::unique_ptr<navitia::streetnetwork::StreetNetwork>(new navitia::streetnetwork::StreetNetwork(this->data.geo_ref));
         this->last_load_at = this->data.last_load_at;
 
@@ -110,7 +109,7 @@ pbnavitia::Response Worker::load() {
 
 pbnavitia::Response Worker::autocomplete(const pbnavitia::AutocompleteRequest & request) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
-    return navitia::autocomplete::autocomplete(request.name(), vector_of_pb_types(request), request.depth(), request.nbmax(), this->data);
+    return navitia::autocomplete::autocomplete(request.q(), vector_of_pb_types(request), request.depth(), request.nbmax(), this->data);
 }
 
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest & request, pbnavitia::API api) {
@@ -193,13 +192,13 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
 
     if(api != pbnavitia::ISOCHRONE){
-        return routing::raptor::make_response(*calculateur, origin, destination, datetimes,
-                                              request.clockwise(), request.walking_speed(), request.walking_distance(), /*request.wheelchair()*/false,
-                                              forbidden, *street_network_worker);
+        return routing::make_response(*calculateur, origin, destination, datetimes,
+                                      request.clockwise(), request.walking_speed(), request.walking_distance(), /*request.wheelchair()*/false,
+                                      forbidden, *street_network_worker);
     } else {
-        return navitia::routing::raptor::make_isochrone(*calculateur, origin, request.datetimes(0),
-                                                        request.clockwise(), request.walking_speed(), request.walking_distance(), /*request.wheelchair()*/false,
-                                                        forbidden, *street_network_worker, request.max_duration());
+        return navitia::routing::make_isochrone(*calculateur, origin, request.datetimes(0),
+                                                request.clockwise(), request.walking_speed(), request.walking_distance(), /*request.wheelchair()*/false,
+                                                forbidden, *street_network_worker, request.max_duration());
     }
 }
 

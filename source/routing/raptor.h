@@ -11,10 +11,10 @@
 #include "raptor_init.h"
 #include "raptor_path.h"
 
-namespace navitia { namespace routing { namespace raptor {
+namespace navitia { namespace routing {
 
 /** Worker Raptor : une instance par thread, les données sont modifiées par le calcul */
-struct RAPTOR : public AbstractRouter
+struct RAPTOR
 {
     const navitia::type::Data & data;
 
@@ -32,7 +32,7 @@ struct RAPTOR : public AbstractRouter
     boost::dynamic_bitset<> marked_sp;
     ///La journey_pattern est elle valide ?
     boost::dynamic_bitset<> journey_patterns_valides;
-    ///L'ordre du premier journey_pattern point de la journey_pattern
+    ///L'ordre du premier j: public AbstractRouterourney_pattern point de la journey_pattern
     queue_t Q;
 
     //Constructeur
@@ -46,31 +46,19 @@ struct RAPTOR : public AbstractRouter
     }
 
     ///Initialise les structure retour et b_dest
-    void clear_and_init(std::vector<init::Departure_Type> departs,
+    void clear_and_init(std::vector<Departure_Type> departs,
               std::vector<std::pair<type::idx_t, double> > destinations,
               navitia::type::DateTime borne, const bool clockwise, const bool clear,
               const float walking_speed, const int walking_distance,
               const type::Properties &properties = 0);
 
-    ///Lance un calcul d'itinéraire entre deux stop areas
-    std::vector<Path> 
-    compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
-            int departure_day, bool clockwise = true,
-            const type::Properties &required_properties = 0);
+
     ///Lance un calcul d'itinéraire entre deux stop areas avec aussi une borne
     std::vector<Path> 
     compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
             int departure_day, navitia::type::DateTime borne, bool clockwise = true,
             const type::Properties &required_properties = 0);
 
-    template<typename Visitor>
-    std::vector<Path> compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
-                                  const std::vector<std::pair<type::idx_t, double> > &destinations,
-                                  const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne,
-                                  const float walking_speed, const int walking_distance,
-                                  const type::Properties &required_properties,
-                                  const std::vector<std::string> & forbidden,
-                                  Visitor vis);
 
     /** Calcul d'itinéraires dans le sens horaire à partir de plusieurs 
      *  stop points de départs, vers plusieurs stoppoints d'arrivée,
@@ -81,39 +69,9 @@ struct RAPTOR : public AbstractRouter
                 const std::vector<std::pair<type::idx_t, double> > &destinations,
                 const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne = navitia::type::DateTime::inf,
                 const float walking_speed=1.38, const int walking_distance = 1000, const type::Properties &required_properties = 0,
-                const std::vector<std::string> & forbidden = std::vector<std::string>());
+                const std::vector<std::string> & forbidden = std::vector<std::string>(), bool clockwise = true);
 
-    /** Calcul d'itinéraires dans le sens horaire à partir de plusieurs 
-     *  stop points de départs, vers plusieurs stoppoints d'arrivée, 
-     *  à partir d'une collection horaires.
-     */
-    std::vector<Path> 
-    compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
-                const std::vector<std::pair<type::idx_t, double> > &destinations,
-                std::vector<navitia::type::DateTime> dt_departs, const navitia::type::DateTime &borne, 
-                const float walking_speed=1.38, const int walking_distance = 1000, const type::Properties required_properties = 0);
 
-    /** Calcul d'itinéraires dans le sens horaire inversé à partir de plusieurs
-     *  stop points de départs, vers plusieurs stoppoints d'arrivée,
-     *  à une heure donnée.
-     */
-    std::vector<Path> 
-    compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
-                        const std::vector<std::pair<type::idx_t, double> > &destinations,
-                        std::vector<navitia::type::DateTime> dt_departs, const navitia::type::DateTime &borne,
-                        float walking_speed=1.38, int walking_distance = 1000,
-                        const type::Properties &required_properties = 0);
-
-    /** Calcul d'itinéraires dans le sens horaire inversé à partir de plusieurs
-     *  stop points de départs, vers plusieurs stoppoints d'arrivée,
-     *  à partir d'une collection horaires.
-     */
-    std::vector<Path> 
-    compute_reverse_all(const std::vector<std::pair<type::idx_t, double> > &departs,
-                        const std::vector<std::pair<type::idx_t, double> > &destinations,
-                        const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne = navitia::type::DateTime::min, float walking_speed=1.38,
-                        int walking_distance = 1000, const type::Properties &required_properties = 0,
-                        const std::vector<std::string> & forbidden = std::vector<std::string>());
     
     /** Calcul l'isochrone à partir de tous les points contenus dans departs,
      *  vers tous les autres points.
@@ -132,7 +90,7 @@ struct RAPTOR : public AbstractRouter
     void set_journey_patterns_valides(uint32_t date, const std::vector<std::string> & forbidden);
 
     ///Boucle principale, parcourt les journey_patterns,
-    void boucleRAPTOR(const type::Properties &required_properties, bool global_pruning = true);
+    void boucleRAPTOR(const type::Properties &required_properties, bool clockwise, bool global_pruning = true);
 
     /// Fonction générique pour la marche à pied
     /// Il faut spécifier le visiteur selon le sens souhaité
@@ -143,9 +101,6 @@ struct RAPTOR : public AbstractRouter
 
     ///Trouve pour chaque journey_pattern, le premier journey_pattern point auquel on peut embarquer, se sert de marked_rp
     void make_queue();
-
-    ///JourneyPattern parcourant dans le sens anti-horaire
-    void boucleRAPTORreverse(const type::Properties &required_properties, bool global_pruning = true);
 
     ///Boucle principale
     template<typename Visitor>
@@ -162,4 +117,4 @@ struct RAPTOR : public AbstractRouter
 
 
 
-}}}
+}}

@@ -7,7 +7,7 @@
 
 
 using namespace navitia;
-using namespace routing::raptor;
+using namespace routing;
 using namespace boost::posix_time;
 
 BOOST_AUTO_TEST_CASE(simple_journey){

@@ -105,15 +105,18 @@ class NavitiaManager:
         if version != "v0":
             return Response("Unknown version: " + version, status=404)
         if region in self.instances:
-            try:
-                api_func = getattr(self.instances[region].script, api)
-                api_answer = api_func(request, version, region)
-                return render_from_protobuf(api_answer, format, request.args.get("callback"))
-            except InvalidArguments, e:
-                return Response(e, status=400)
-            except DeadSocketException, e:
-                return Response(e, status=503)
-            except AttributeError:
+            if api in self.instances[region].script.apis:
+                try:
+                    api_func = getattr(self.instances[region].script, api)
+                    api_answer = api_func(request, version, region)
+                    return render_from_protobuf(api_answer, format, request.args.get("callback"))
+                except InvalidArguments, e:
+                    return Response(e, status=400)
+                except DeadSocketException, e:
+                    return Response(e, status=503)
+                except AttributeError:
+                    return Response("Unknown api : " + api, status=404)
+            else:
                 return Response("Unknown api : " + api, status=404)
         else:
              return Response(region + " not found", status=404)

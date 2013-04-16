@@ -1,11 +1,11 @@
 #include "raptor_path.h"
 #include "raptor.h"
-namespace navitia { namespace routing { namespace raptor {
+namespace navitia { namespace routing {
 
     
 std::vector<Path> 
 makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
-           navitia::type::DateTime dt, const float walking_speed, const RAPTOR &raptor_ ) {
+           navitia::type::DateTime dt, const float walking_speed, const RAPTOR &raptor_, bool clockwise) {
     std::vector<Path> result;
     navitia::type::DateTime best_dt = dt;
     for(unsigned int i=1;i<=raptor_.count;++i) {
@@ -13,57 +13,23 @@ makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
         for(auto spid_dist : destinations) {
             for(auto dest : raptor_.data.pt_data.stop_points[spid_dist.first].journey_pattern_point_list) {
                 if(raptor_.labels[i][dest].type != uninitialized) {
-                    navitia::type::DateTime current_dt = raptor_.labels[i][dest].departure + (spid_dist.second/walking_speed);
-                    if(current_dt <= best_dt) {
-                        best_dt = current_dt;
+                    navitia::type::DateTime current_dt = raptor_.labels[i][dest].departure;
+                    if(clockwise && current_dt + spid_dist.second/walking_speed <= best_dt){
+                        best_dt = current_dt + spid_dist.second/walking_speed;
+                        best_rp = dest;
+                    } else if(!clockwise && current_dt - (spid_dist.second/walking_speed) >= best_dt){
+                        best_dt = current_dt - (spid_dist.second/walking_speed);
                         best_rp = dest;
                     }
                 }
             }
         }
         if(best_rp != type::invalid_idx)
-            result.push_back(makePath(best_rp, i, true, raptor_));
+            result.push_back(makePath(best_rp, i, clockwise, raptor_));
     }
 
     return result;
 }
-
-
-
-
-
-std::vector<Path> 
-makePathesreverse(std::vector<std::pair<type::idx_t, double> > destinations,
-                          navitia::type::DateTime dt, const float walking_speed,
-                          const RAPTOR &raptor_) {
-    std::vector<Path> result;
-
-    navitia::type::DateTime best_dt = dt;
-
-    for(unsigned int i=1;i<=raptor_.count;++i) {
-        type::idx_t best_rp = type::invalid_idx;
-        for(auto spid_dist : destinations) {
-            for(auto dest : raptor_.data.pt_data.stop_points[spid_dist.first].journey_pattern_point_list) {
-                if(raptor_.labels[i][dest].type != uninitialized) {
-                    navitia::type::DateTime current_dt = raptor_.labels[i][dest].departure - (spid_dist.second/walking_speed);
-                    if(current_dt >= best_dt) {
-                        best_dt = current_dt;
-                        best_rp = dest;
-                    }
-                }
-            }
-        }
-
-        if(best_rp != type::invalid_idx)
-            result.push_back(makePath(best_rp, i, false, raptor_));
-    }
-    return result;
-}
-
-
-
-
-
 
 
 Path 
@@ -117,7 +83,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                 rpid_embarquement = l.rpid_embarquement;
                 current_st = raptor_.data.pt_data.stop_times.at(l.stop_time_idx);
                 //Sert pour les horaires en  fréquences
-                uint32_t gap = l.arrival.hour() - current_st.arrival_time%raptor_.data.dataRaptor.SECONDS_PER_DAY;
+                uint32_t gap = l.arrival.hour() - current_st.arrival_time%type::DateTime::SECONDS_PER_DAY;
 
                 item = PathItem();
                 item.type = public_transport;
@@ -255,5 +221,4 @@ makePathreverse(unsigned int destination_idx, unsigned int countb,
 }
 
 
-
-} } }
+}}

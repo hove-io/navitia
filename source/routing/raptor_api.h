@@ -6,7 +6,7 @@
 #include "boost/date_time/posix_time/ptime.hpp"
 #include "georef/street_network.h"
 
-namespace navitia { namespace routing { namespace raptor {
+namespace navitia { namespace routing {
 
 pbnavitia::Response make_response(RAPTOR &raptor,
                                   const type::EntryPoint &origin,
@@ -26,4 +26,4 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    streetnetwork::StreetNetwork & worker, int max_duration = 3600);
 
 
-}}}
+}}

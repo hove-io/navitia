@@ -92,8 +92,8 @@ public:
             if((data.vehicle_journeys.at(i).stop_time_list.size() > 0) && (data.vehicle_journeys.at(j).stop_time_list.size() > 0)) {
                 navitia::type::idx_t i_stop_time_idx =  data.vehicle_journeys.at(i).stop_time_list.at(order);
                 navitia::type::idx_t j_stop_time_idx =  data.vehicle_journeys.at(j).stop_time_list.at(order);
-                unsigned int dt1 = data.stop_times.at(i_stop_time_idx).departure_time % nt::DateTime::NB_SECONDS_DAY;
-                unsigned int dt2 = data.stop_times.at(j_stop_time_idx).departure_time % nt::DateTime::NB_SECONDS_DAY;
+                unsigned int dt1 = data.stop_times.at(i_stop_time_idx).departure_time % nt::DateTime::SECONDS_PER_DAY;
+                unsigned int dt2 = data.stop_times.at(j_stop_time_idx).departure_time % nt::DateTime::SECONDS_PER_DAY;
                 return dt1 < dt2;
             } else
                 return false;
@@ -110,8 +110,8 @@ public:
             if((data.vehicle_journeys.at(i).stop_time_list.size() > 0) && (data.vehicle_journeys.at(j).stop_time_list.size() > 0)) {
                 navitia::type::idx_t i_stop_time_idx =  data.vehicle_journeys.at(i).stop_time_list.at(order);
                 navitia::type::idx_t j_stop_time_idx =  data.vehicle_journeys.at(j).stop_time_list.at(order);
-                unsigned int dt1 = data.stop_times.at(i_stop_time_idx).arrival_time % nt::DateTime::NB_SECONDS_DAY;
-                unsigned int dt2 = data.stop_times.at(j_stop_time_idx).arrival_time % nt::DateTime::NB_SECONDS_DAY;
+                unsigned int dt1 = data.stop_times.at(i_stop_time_idx).arrival_time % nt::DateTime::SECONDS_PER_DAY;
+                unsigned int dt2 = data.stop_times.at(j_stop_time_idx).arrival_time % nt::DateTime::SECONDS_PER_DAY;
                 return dt1 < dt2;
             } else
                 return false;

@@ -31,8 +31,8 @@ std::pair<type::idx_t, uint32_t>
         if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date)
                 && st.pick_up_allowed() 
                 && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties)
-                && (!st.is_frequency() || ((st.start_time%raptor::dataRAPTOR::SECONDS_PER_DAY<st.end_time%raptor::dataRAPTOR::SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
-                                       || ((st.start_time%raptor::dataRAPTOR::SECONDS_PER_DAY>st.end_time%raptor::dataRAPTOR::SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour())))) {
+                && (!st.is_frequency() || ((st.start_time%type::DateTime::SECONDS_PER_DAY<st.end_time%type::DateTime::SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
+                                       || ((st.start_time%type::DateTime::SECONDS_PER_DAY>st.end_time%type::DateTime::SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour())))) {
             return std::make_pair(st.vehicle_journey_idx,
                                   !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
         }
@@ -47,8 +47,8 @@ std::pair<type::idx_t, uint32_t>
         if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date)
                 && st.pick_up_allowed() 
                 && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties)
-                && (!st.is_frequency() || ((st.start_time%raptor::dataRAPTOR::SECONDS_PER_DAY<st.end_time%raptor::dataRAPTOR::SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
-                                       || ((st.start_time%raptor::dataRAPTOR::SECONDS_PER_DAY>st.end_time%raptor::dataRAPTOR::SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
+                && (!st.is_frequency() || ((st.start_time%type::DateTime::SECONDS_PER_DAY<st.end_time%type::DateTime::SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
+                                       || ((st.start_time%type::DateTime::SECONDS_PER_DAY>st.end_time%type::DateTime::SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
             return std::make_pair(st.vehicle_journey_idx,
                                   !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
         ++idx;
@@ -84,8 +84,8 @@ tardiest_trip(const type::JourneyPattern & journey_pattern, const unsigned int o
         if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date)
                 && st.drop_off_allowed() 
                 && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties)
-                && (!st.is_frequency() || ((st.start_time%data.dataRaptor.SECONDS_PER_DAY<st.end_time%data.dataRaptor.SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
-                    || ((st.start_time%data.dataRaptor.SECONDS_PER_DAY>st.end_time%data.dataRaptor.SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
+                && (!st.is_frequency() || ((st.start_time%type::DateTime::SECONDS_PER_DAY<st.end_time%type::DateTime::SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
+                    || ((st.start_time%type::DateTime::SECONDS_PER_DAY>st.end_time%type::DateTime::SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
             return std::make_pair(st.vehicle_journey_idx,
                                   !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
         ++idx;
@@ -100,8 +100,8 @@ tardiest_trip(const type::JourneyPattern & journey_pattern, const unsigned int o
             if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date)
                     && st.drop_off_allowed()
                     && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties)
-                    && (!st.is_frequency() || ((st.start_time%data.dataRaptor.SECONDS_PER_DAY<st.end_time%data.dataRaptor.SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
-                        || ((st.start_time%data.dataRaptor.SECONDS_PER_DAY>st.end_time%data.dataRaptor.SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
+                    && (!st.is_frequency() || ((st.start_time%type::DateTime::SECONDS_PER_DAY<st.end_time%type::DateTime::SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
+                        || ((st.start_time%type::DateTime::SECONDS_PER_DAY>st.end_time%type::DateTime::SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
                 return std::make_pair(st.vehicle_journey_idx,
                                       !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
             ++idx;
