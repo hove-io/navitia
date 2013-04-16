@@ -110,9 +110,9 @@ SET(CPACK_DEBIAN_PACKAGE_NAME "navitia")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Navitia navimake Jörmungandr")
 
 IF(${lsb_release} STREQUAL "precise")
-    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.48.0, libboost-serialization1.48.0, libboost-regex1.48.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.48.0, libboost-program-options1.48.0, libboost-filesystem1.48.0, gunicorn, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql")
+    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.48.0, libboost-serialization1.48.0, libboost-regex1.48.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.48.0, libboost-program-options1.48.0, libboost-filesystem1.48.0, gunicorn, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql python-protobuf")
 ELSE()
-    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, gunicorn, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql")
+    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, gunicorn, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql python-protobuf")
 ENDIF()
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/debian/postinst;")
 
