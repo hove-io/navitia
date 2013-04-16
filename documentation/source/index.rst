@@ -9,7 +9,11 @@ Bienvenue à la documentation de navitia2
 Cette documentation est à destination de toute personne souhaitant comprendre le fonctionnement de navitia.
 
 Elle n’est pas destinée à une personne souhaitant intégrer rapidement navitia ou
-simplement avoir une vision globale des fonctionnalités.
+simplement avoir une vision globale des fonctionnalités. Elle se découpe en trois guides selon le public :
+
+    * Guide des fonctionnalités
+    * Guide d’administration
+    * Guide du développeur de navitia
 
 Afin de comprendre succintement les possibilités offertes par navitia et les intégrer rapidement, il est conseillé de commencer
 par visiter http://navitia.io.
@@ -23,7 +27,12 @@ Table des matières :
    :numbered:
 
    introduction
-   pre_requis
+   fonctions
+   administration
+   dev
+
+   
+.. pre_requis
    interface
    hub_navitia
    dev
