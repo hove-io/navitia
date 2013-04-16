@@ -1,5 +1,0 @@
-Spécifications générales
-========================
-
-
-
