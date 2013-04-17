@@ -54,14 +54,6 @@ struct DateTime {
         return this->datetime >= other.datetime;
     }
 
-    static DateTime infinity() {
-        return DateTime();
-    }
-
-    static DateTime minimity() {
-        return DateTime(0,0);
-    }
-
     bool operator==(DateTime other) const {
         return this->datetime == other.datetime;
     }

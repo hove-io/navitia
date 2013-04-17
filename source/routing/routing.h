@@ -47,7 +47,7 @@ struct PathItem{
     std::vector<type::idx_t> stop_points;
     ItemType type;
 
-    PathItem(navitia::type::DateTime departure = navitia::type::DateTime::infinity(), navitia::type::DateTime arrival = navitia::type::DateTime::infinity(),
+    PathItem(navitia::type::DateTime departure = navitia::type::DateTime::inf, navitia::type::DateTime arrival = navitia::type::DateTime::inf,
             type::idx_t vj_idx = type::invalid_idx) :
         arrival(arrival), departure(departure), vj_idx(vj_idx) {
             if(departure != navitia::type::DateTime::inf)
