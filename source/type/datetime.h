@@ -141,7 +141,7 @@ template <>
 class numeric_limits<navitia::type::DateTime> {
 public:
     static navitia::type::DateTime max() {
-        return navitia::type::DateTime::infinity();
+        return navitia::type::DateTime::inf;
     }
 };
 }
