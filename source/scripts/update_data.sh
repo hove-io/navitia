@@ -46,11 +46,11 @@ then
 
     if [ -r $data_source ]
     then
-        scp $data_source $destination
+        cp $data_source $destination
     else
         wget -O $destination $data_source
     fi
-    `$init_file reload`
+    sudo $init_file reload
 
 fi
 
