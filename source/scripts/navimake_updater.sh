@@ -1,52 +1,60 @@
 #!/bin/bash
 
-#si le fichier de lock existe, un traitement est deja en cours, on arréte
-lock_file="$0.lock"
-if [ -f "$lock_file" ]
-then
-    echo "binarisation deja en cours"
-    exit 0
-fi
-
 config_file="$0-config.sh"
-
+#equivalent à "source" mais portable sur sh
+. "$config_file"
 
 if [ ! -r "$config_file" ]
 then
     echo "$config_file n'existe  pas ou n'est pas lisible"
+    echo "=================================================" >> $log_file
     exit 1
 fi
 
-#equivalent à "source" mais portable sur sh
-. "$config_file"
+
+#si le fichier de lock existe, un traitement est deja en cours, on arréte
+lock_file="$0.lock"
+if [ -f "$lock_file" ]
+then
+    echo "binarisation deja en cours" >> $log_file
+    echo "=================================================" >> $log_file
+    exit 0
+fi
+
+
 
 if [ ! -d "$source_dir" ] 
 then
-    echo "source_dir ($source_dir) n'est pas un répertoire"
+    echo "source_dir ($source_dir) n'est pas un répertoire" >> $log_file
+    echo "=================================================" >> $log_file
     exit 2
 fi
 
 if [ ! -d "$destination_dir" ]
 then
-    echo "destination_dir ($destination_dir) n'est pas un répertoire"
+    echo "destination_dir ($destination_dir) n'est pas un répertoire" >> $log_file
+    echo "=================================================" >> $log_file
     exit 2
 fi
 
 if [ ! -d "$error_dir" ]
 then
-    echo "error_dir ($error_dir) n'est pas un répertoire"
+    echo "error_dir ($error_dir) n'est pas un répertoire" >> $log_file
+    echo "=================================================" >> $log_file
     exit 2
 fi
 
 if [ ! -d "$data_dir" ]
 then
-    echo "data_dir ($data_dir) n'est pas un répertoire"
+    echo "data_dir ($data_dir) n'est pas un répertoire" >> $log_file
+    echo "=================================================" >> $log_file
     exit 2
 fi
 
 if [ ! -x "$navimake" ]
 then
-    echo "navimake ($navimake) n'est pas executable"
+    echo "navimake ($navimake) n'est pas executable" >> $log_file
+    echo "=================================================" >> $log_file
     exit 2
 fi
 
@@ -63,12 +71,13 @@ do
 
     echo "binarisation de $file dans $temp_dir "
 
-    unzip -o "$file" -d "$temp_dir" >> "$temp_dir/bina.log" 2>&1
+    unzip -o "$file" -d "$temp_dir" >>  $log_file 2>&1
     if [ $? -ne 0 ]
     then
         mv "$file" "$error_dir"
         rm -f "$lock_file"
-        echo "impossible de dézipper $file"
+        echo "impossible de dézipper $file" >> $log_file
+        echo "=================================================" >> $log_file
         exit 4
     fi
 
@@ -80,7 +89,7 @@ do
         then
             navimake_options=" --osm $street_network "
         else
-            echo "street_network ('$street_network') non trouvé"
+            echo "street_network ('$street_network') non trouvé" >> $log_file
         fi 
     fi
     
@@ -90,12 +99,13 @@ do
     fi
 
     
-    `$navimake -i "$temp_dir" -o "$data_dir/$data_filename" $navimake_options >> "$temp_dir/bina.log" 2>&1`
+    `$navimake -i "$temp_dir" -o "$data_dir/$data_filename" $navimake_options  >> $log_file 2>&1`
     if [ $? -ne 0 ]
     then
         mv "$file" "$error_dir"
         rm -f "$lock_file"
-        echo "erreurs lors de la binarisation"
+        echo "erreurs lors de la binarisation" >> $log_file
+        echo "=================================================" >> $log_file
         exit 3
     fi
     echo "generation du checksum"
@@ -106,3 +116,4 @@ do
 done
 
 rm -f "$lock_file"
+echo "=================================================" >> $log_file
