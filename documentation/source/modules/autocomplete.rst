@@ -1,9 +1,9 @@
-First Letter
-============
+Autocompletion
+==============
 
-Le module firstletter permet de retrouver des objets de transport en commun à partir de quelques lettres.
+L'autocomplétion permet de retrouver des objets de transport en commun à partir de quelques lettres.
 
-L'utilisation typique est l'auto-complétion pour la saisie d'un point d'entrée pour un itinéraire. Ainsi
+L'utilisation typique est l'autocomplétion pour la saisie d'un point d'entrée pour un itinéraire. Ainsi
 lorsque l'utilisateur tape « pyr » on lui proposera aussi bien « métro Pyramides » « métro Pyrénées » ou
 « Rue des Pyrénées ».
 
@@ -52,5 +52,3 @@ La pertinence des résultats dépend bien évidemment de la requête de l'utilis
  * Nombre de caractères manquant (en demandant « rue py », favoriser « rue de la py  » à « rue des pyrénées »
  * Position géographique (« gare de lyon » n'a pas le même sens si on habite à Lyon ou à Paris)
 
-Benchmarks
-----------
