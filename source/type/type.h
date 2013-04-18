@@ -71,6 +71,8 @@ template<class T> int T::* idx_getter(){return &T::idx;}
 struct Nameable{
     std::string name;
     std::string comment;
+    bool visible;
+    Nameable():visible(true){}
 };
 
 
