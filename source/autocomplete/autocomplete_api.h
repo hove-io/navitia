@@ -12,8 +12,8 @@ enum class Type_e;
 
 namespace autocomplete {
 
-/** Trouve tous les objets définis par filter dont le nom contient name */
-pbnavitia::Response autocomplete(const std::string &name,
+/** Trouve tous les objets définis par filter dont le nom contient q */
+pbnavitia::Response autocomplete(const std::string &q,
                                  const std::vector<navitia::type::Type_e> &filter,
                                  uint32_t depth,
                                  int nbmax,

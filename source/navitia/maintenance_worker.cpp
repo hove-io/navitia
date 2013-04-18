@@ -65,8 +65,6 @@ void MaintenanceWorker::load_rt(){
             data.pt_data.message_holder = std::move(holder);
 
             LOG4CPLUS_TRACE(logger, "chargement des messages AT fini!");
-        }else{
-            LOG4CPLUS_TRACE(logger, "chargement des messages AT desactivé");
         }
         next_rt_load = pt::microsec_clock::universal_time() + pt::minutes(1);
     }

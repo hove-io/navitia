@@ -81,8 +81,8 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
         auto vec_st = id_vec.second;
         std::sort(vec_st.begin(), vec_st.end(),
                   [&](dt_st d1, dt_st d2) {
-                    return std::abs((d1.first.hour() % type::DateTime::NB_SECONDS_DAY)-handler.date_time.hour())
-                        <  std::abs((d2.first.hour() % type::DateTime::NB_SECONDS_DAY)-handler.date_time.hour());
+                    return std::abs((d1.first.hour() % type::DateTime::SECONDS_PER_DAY)-handler.date_time.hour())
+                        <  std::abs((d2.first.hour() % type::DateTime::SECONDS_PER_DAY)-handler.date_time.hour());
                   });
 
         for(auto vec : make_columuns(vec_st)) {

@@ -40,7 +40,7 @@ public:
     navitia::georef::GeoRef geo_ref;
 
     /// Données précalculées pour le raptor
-    routing::raptor::dataRAPTOR dataRaptor;
+    routing::dataRAPTOR dataRaptor;
 
     /// Fixe les villes des voiries du filaire
     // les admins des objets

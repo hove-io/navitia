@@ -723,7 +723,7 @@ void GtfsParser::parse_stop_times(Data & data, CsvReader &csv) {
                 stop_time->drop_off_allowed = row[drop_off_c] != "1";
             else
                 stop_time->drop_off_allowed = true;
-            if(itl_c != -1)
+            if(itl_c != -1 && boost::lexical_cast<int>(row[itl_c])!=0)
                 stop_time->local_traffic_zone = boost::lexical_cast<int>(row[itl_c]);
             else
                 stop_time->local_traffic_zone = std::numeric_limits<uint32_t>::max();

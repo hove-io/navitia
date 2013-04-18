@@ -5,7 +5,7 @@
 #include "raptor_utils.h"
 
 
-namespace navitia { namespace routing { namespace raptor{ namespace init {
+namespace navitia { namespace routing {
 
 struct Departure_Type {
     type::idx_t rpidx;
@@ -27,9 +27,5 @@ std::vector<Departure_Type> getParetoFront(bool clockwise, const std::vector<std
 std::pair<type::idx_t, navitia::type::DateTime>  getFinalRpidAndDate(int count, type::idx_t rpid, const map_labels_t &labels, bool clockwise, const type::Data &data);
 
 float getWalkingTime(int count, type::idx_t rpid, const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations, bool clockwise, const map_labels_t &labels, const type::Data &data);
-}
 
-
-
-
-}}}
+}}

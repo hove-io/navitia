@@ -29,7 +29,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* st
     stop_area->mutable_coord()->set_lat(sa.coord.lat());
     if(max_depth > 0){
         for(nt::idx_t idx : sa.admin_list){
-            fill_pb_object(idx, data,  stop_area->add_admin(), max_depth-1, now, action_period);
+            fill_pb_object(idx, data,  stop_area->add_admins(), max_depth-1, now, action_period);
         }
     }
 
@@ -50,7 +50,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
 
     if(max_depth > 0){
         for(nt::idx_t idx : sp.admin_list){
-            fill_pb_object(idx, data,  stop_point->add_admin(), max_depth-1, now, action_period);
+            fill_pb_object(idx, data,  stop_point->add_admins(), max_depth-1, now, action_period);
         }
     }
 
@@ -78,7 +78,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * ad
 
     if(max_depth > 0){
         for(nt::idx_t idx : way.admin_list){
-            fill_pb_object(idx, data,  address->add_admin(), max_depth-1, now, action_period);
+            fill_pb_object(idx, data,  address->add_admins(), max_depth-1, now, action_period);
         }
     }
 }
@@ -345,7 +345,7 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Poi* poi
 
     if(max_depth > 0){
         for(nt::idx_t idx : geopoi.admin_list){
-            fill_pb_object(idx, data,  poi->add_admin(), max_depth-1, now, action_period);
+            fill_pb_object(idx, data,  poi->add_admins(), max_depth-1, now, action_period);
         }
     }
 }

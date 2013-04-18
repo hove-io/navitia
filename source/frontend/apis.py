@@ -86,7 +86,7 @@ class Apis:
     apis = {
         "autocomplete" : {
             "arguments" :{
-                "name" : Argument("The data to search", unicode, True, False, order = 1),
+                "q" : Argument("The data to search", unicode, True, False, order = 1),
                 "object_type[]" : Argument("The type of datas you want in return", str, False, True, 
                                            ["stop_area", "stop_point", "address", "poi", "admin"], 2,["stop_area", "stop_point", "address", "poi", "admin", "line"]),
                 "depth" : Argument("Maximum depth on objects", int, False, False, 1),
