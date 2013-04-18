@@ -19,7 +19,6 @@ Data& Data::operator=(Data&& other){
     version = other.version;
     loaded.store(other.loaded.load());
     meta = other.meta;
-    Alias_List = other.Alias_List;
     pt_data = std::move(other.pt_data);
     geo_ref = other.geo_ref;
     dataRaptor = other.dataRaptor;
@@ -111,7 +110,6 @@ void Data::build_proximity_list(){
 
 
 void Data::build_autocomplete(){
-//    pt_data.build_autocomplete(geo_ref.alias, geo_ref.synonymes);
     pt_data.build_autocomplete(geo_ref);
     geo_ref.build_autocomplete_list();
 }

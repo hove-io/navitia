@@ -92,16 +92,13 @@ struct POI : public nt::Nameable, nt::Header{
 public:
     int weight;
     nt::GeographicalCoord coord;
-//    std::string city;
-//    nt::idx_t city_idx;
     std::vector<nt::idx_t> admin_list;
-    std::string poitype;
     nt::idx_t poitype_idx;
 
-    POI(): weight(0), poitype(""), poitype_idx(-1){}
+    POI(): weight(0), poitype_idx(type::invalid_idx){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar &idx & uri & idx &name & weight & coord & admin_list & poitype & poitype_idx;
+        ar &idx & uri & idx &name & weight & coord & admin_list & poitype_idx;
     }
 
 private:
