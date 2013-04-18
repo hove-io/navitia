@@ -355,11 +355,14 @@ void GeoRef::build_autocomplete_list(){
     //Remplir les poi dans la liste autocompletion
     for(POI poi : pois){
         std::string key="";
-        for(auto idx : poi.admin_list){
-            Admin admin = admins.at(idx);
-            key += " " + admin.name;
+        if (poi.visible){
+            for(auto idx : poi.admin_list){
+                Admin admin = admins.at(idx);
+                key += " " + admin.name;
+            }
+
+            fl_poi.add_string(poi.name + " " + key, poi.idx ,alias, synonymes);
         }
-        fl_poi.add_string(poi.name + " " + key, poi.idx ,alias, synonymes);
     }
     fl_poi.build();
 
