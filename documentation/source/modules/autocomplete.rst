@@ -37,11 +37,11 @@ Pertinence des objets en amont
 Lors de la binarisation, une pertinence « par défaut » des objets est calculée (ou définie manuellement). Cela permet
 de favoriser certains objets par rapport à d'autres. Voici la liste des paramètres pouvant intervenir :
 
- * Nature de l'objet : ville, POI, zone d'arrêt, adresse (métro Pyrénées avant rue des Pyrénées)
+ * Nature de l'objet : admin (quartier, arrondissement ou ville), zone d'arrêt, lieux remarquables (POI), adresse (métro Pyrénées avant rue des Pyrénées), point d'arrêt
  * Commune de l'objet (rue des Pyrénées à Paris avant rue des Pyrénées à Argenteuil)
  * Importance de l'objet (une station de métro avant une station de bus, un boulevard avant une rue)
  * Taille de l'objet (nombre de lignes passant par le stopArea, longueur de la rue…)
- * Critère arbitraire défini manuellement (mettre un POI en avant)
+ * Priorisation des lieux remarquables (POI) par leur type (lieu touristique avant parc d'attraction)
 
 Note des objets à la requête
 ----------------------------
@@ -50,5 +50,6 @@ La pertinence des résultats dépend bien évidemment de la requête de l'utilis
 
  * Nombre de mots matchés (en demandant « rue jacques » favoriser « rue saint Jacques » à « rue du faubourg Saint Jacques »
  * Nombre de caractères manquant (en demandant « rue py », favoriser « rue de la py  » à « rue des pyrénées »
+ * Adresstype présent dans la requête : adresse, zone d'arrêt (rue des Pyrénées avant métro Pyrénées), POI, point d'arrêt, admin (quartier, arrondissement ou ville)
  * Position géographique (« gare de lyon » n'a pas le même sens si on habite à Lyon ou à Paris)
 
