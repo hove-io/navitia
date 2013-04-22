@@ -290,7 +290,10 @@ ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoR
     }
 }
 
-
+void ProjectionData::inc_vertex(const vertex_t value){
+    this->source += value;
+    this->target += value;
+}
 
 Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord) const{
     ProjectionData start(start_coord, *this, this->pl);
@@ -327,10 +330,23 @@ std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCo
     return to_return;
 }
 
+void GeoRef::init_offset(nt::idx_t value){
+    bike_offset = value;
+    car_offset = 2 * value;
+}
+
 void GeoRef::build_proximity_list(){
     pl.clear(); // vider avant de reconstruire
-    BOOST_FOREACH(vertex_t u, boost::vertices(this->graph)){
-        pl.add(graph[u].coord, u);
+
+    if(this->bike_offset == 0){
+        BOOST_FOREACH(vertex_t u, boost::vertices(this->graph)){
+            pl.add(graph[u].coord, u);
+        }
+    }else{
+        // Ne pas construire le proximitylist avec les noeuds utilisés par les arcs pour la recherche vélo
+        for(vertex_t v = 0; v < this->bike_offset; ++v){
+            pl.add(graph[v].coord, v);
+        }
     }
     pl.build();
 }

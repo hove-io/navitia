@@ -6,6 +6,7 @@
 #include "naviMake/build_helper.h"
 
 
+
 using namespace navitia;
 using namespace routing::raptor;
 using namespace boost::posix_time;
@@ -67,6 +68,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
 
     // On met les horaires dans le desordre pour voir s'ils sont bien trié comme attendu
     std::vector<std::string> datetimes{"20120614T080000", "20120614T090000"};
+
     pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, false, forbidden, sn_worker);
 
     BOOST_REQUIRE(resp.has_requested_api());
@@ -99,3 +101,4 @@ BOOST_AUTO_TEST_CASE(journey_array){
     BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T091100");
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T092000");
 }
+

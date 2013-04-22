@@ -24,6 +24,13 @@ namespace navitia { namespace georef {
 struct Vertex {
     type::GeographicalCoord coord;
 
+    Vertex(){}
+    Vertex(double x, double y, bool is_meters = false) : coord(x, y){
+        if(is_meters) {
+            coord.set_xy(x, y);
+        }
+    }
+
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & coord;
     }
@@ -34,13 +41,12 @@ struct Vertex {
 struct Edge {
     nt::idx_t way_idx; //< indexe vers le nom de rue
     float length; //< longeur en mètres de l'arc
-    bool cyclable; //< est-ce que le segment est accessible à vélo ?
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & way_idx & length & cyclable;
+        ar & way_idx & length;
     }
-
-    Edge() : way_idx(0), length(0), cyclable(false){}
+    Edge(nt::idx_t wid, float len) : way_idx(wid), length(len){}
+    Edge() : way_idx(0), length(0){}
 };
 
 // Plein de typedefs pour nous simpfilier un peu la vie
@@ -210,21 +216,27 @@ struct GeoRef {
     /// Graphe pour effectuer le calcul d'itinéraire
     Graph graph;
 
+    nt::idx_t bike_offset; // Vélo
+    nt::idx_t car_offset; // voiture
+
     /// Liste des alias
     std::map<std::string, std::string> alias;
     std::map<std::string, std::string> synonymes;
     int word_weight; //Pas serialisé : lu dans le fichier ini
 
+    GeoRef(): bike_offset(0), car_offset(0){}
+
+    void init_offset(nt::idx_t);
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & ways & way_map & graph & fl_admin & fl_way & pl & projected_stop_points & admins &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes;
+        ar & ways & way_map & graph & car_offset & bike_offset & fl_admin & fl_way & pl & projected_stop_points & admins &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes;
     }
 
     template<class Archive> void load(Archive & ar, const unsigned int) {
         // La désérialisation d'une boost adjacency list ne vide pas le graphe
         // On avait donc une fuite de mémoire
         graph.clear();
-        ar & ways & way_map & graph & fl_admin &fl_way & pl & projected_stop_points & admins &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes;
+        ar & ways & way_map & graph & car_offset & bike_offset & fl_admin &fl_way & pl & projected_stop_points & admins &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
@@ -346,7 +358,8 @@ struct ProjectionData {
     ProjectionData() : found(false), source_distance(-1), target_distance(-1){}
     /// Initialise la structure à partir d'une coordonnée et d'un graphe sur lequel on projette
     ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, const proximitylist::ProximityList<vertex_t> &prox);
-
+    /// Incrémentation des noeuds suivant le mode de transport au début et à la fin : marche, vélo ou voiture
+    void inc_vertex(const vertex_t);
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & source & target & projected & source_distance & target_distance & found;
     }

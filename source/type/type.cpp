@@ -151,6 +151,10 @@ static_data * static_data::get() {
                 (Type_e::Address, "address")
                 (Type_e::Route, "route");
 
+        boost::assign::insert(temp->modes_string)
+                (Mode_e::Walking, "walking")
+                (Mode_e::Bike, "bike")
+                (Mode_e::Car, "car");
         instance = temp;
 
     }
@@ -163,6 +167,10 @@ Type_e static_data::typeByCaption(const std::string & type_str) {
 
 std::string static_data::captionByType(Type_e type){
     return instance->types_string.left.at(type);
+}
+
+Mode_e static_data::modeByCaption(const std::string & mode_str) {
+    return instance->modes_string.right.at(mode_str);
 }
 
 

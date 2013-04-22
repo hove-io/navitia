@@ -18,15 +18,26 @@ message NextStopTimeRequest {
     required int32 nb_stoptimes = 7;
 }
 
+message StreetNetworkParams{
+    required string origin_mode = 1;
+    required string destination_mode = 2;
+    optional double walking_speed = 3;
+    optional int32 walking_distance =4;
+    optional double bike_speed = 5;
+    optional int32 bike_distance =6;
+    optional double car_speed = 7;
+    optional int32 car_distance =8;
+}
+
+
 message JourneysRequest {
     required string origin = 1;
     required string destination = 2;
     repeated string datetimes = 3;
     required bool clockwise = 4;
     repeated string forbidden_uris = 7;
-    required double walking_speed = 8;
-    required int32 walking_distance =10;
     optional int32 max_duration = 11;
+    required StreetNetworkParams streetnetwork_params = 13;
 }
 
 message ProximityListRequest {

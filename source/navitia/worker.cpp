@@ -174,6 +174,34 @@ type::GeographicalCoord Worker::coord_of_entry_point(const type::EntryPoint & en
     return result;
 }
 
+type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams & request, const bool origin){
+    type::StreetNetworkParams result;
+
+    if(origin){
+        result.mode = type::static_data::get()->modeByCaption(request.origin_mode());
+    }else{
+        result.mode = type::static_data::get()->modeByCaption(request.destination_mode());
+    }
+    switch(result.mode){
+        case type::Mode_e::Bike:
+            result.offset = data.geo_ref.bike_offset;
+            result.distance = request.bike_distance();
+            result.speed = request.bike_speed();
+            break;
+        case type::Mode_e::Car:
+            result.offset = data.geo_ref.car_offset;
+            result.distance = request.car_distance();
+            result.speed = request.car_speed();
+            break;
+        default:
+            result.offset = 0;
+            result.distance = request.walking_distance();
+            result.speed = request.walking_speed();
+            break;
+    }
+    return result;
+}
+
 pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
     this->init_worker_data();
@@ -200,14 +228,21 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     for(int i = 0; i < request.datetimes_size(); ++i)
         datetimes.push_back(request.datetimes(i));
 
+    // Récupération des paramètres de rabattement
+    if ((origin.type == type::Type_e::Address) || (origin.type == type::Type_e::Coord)){
+        origin.rabattement = this->streetnetwork_params_of_entry_point(request.streetnetwork_params());
+    }
+    if ((destination.type == type::Type_e::Address) || (destination.type == type::Type_e::Coord)){
+        destination.rabattement = this->streetnetwork_params_of_entry_point(request.streetnetwork_params());
+    }
 
     if(api != pbnavitia::ISOCHRONE){
         return routing::raptor::make_response(*calculateur, origin, destination, datetimes,
-                                              request.clockwise(), request.walking_speed(), request.walking_distance(), /*request.wheelchair()*/false,
+                                              request.clockwise(), request.streetnetwork_params().walking_speed()/*request.walking_speed()*/, request.streetnetwork_params().walking_distance()/*request.walking_distance()*/, /*request.wheelchair()*/false,
                                               forbidden, *street_network_worker);
     } else {
         return navitia::routing::raptor::make_isochrone(*calculateur, origin, request.datetimes(0),
-                                                        request.clockwise(), request.walking_speed(), request.walking_distance(), /*request.wheelchair()*/false,
+                                                        request.clockwise(), request.streetnetwork_params().walking_speed()/*request.walking_speed()*/, request.streetnetwork_params().walking_distance()/*request.walking_distance()*/, /*request.wheelchair()*/false,
                                                         forbidden, *street_network_worker, request.max_duration());
     }
 }

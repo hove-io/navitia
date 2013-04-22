@@ -67,6 +67,13 @@ enum class Type_e {
     Way = 19,
     Admin=21
 };
+
+enum class Mode_e{
+    Walking = 0,    // Marche à pied
+    Bike = 1,       // Vélo
+    Car = 2         // Voiture
+};
+
 struct PT_Data;
 template<class T> std::string T::* name_getter(){return &T::name;}
 template<class T> int T::* idx_getter(){return &T::idx;}
@@ -527,8 +534,26 @@ public:
     static Type_e typeByCaption(const std::string & type_str);
     static std::string captionByType(Type_e type);
     boost::bimap<Type_e, std::string> types_string;
+    static Mode_e modeByCaption(const std::string & mode_str);
+    boost::bimap<Mode_e, std::string> modes_string;
 };
 
+/**
+
+Gestion des paramètres de rabattement
+
+*/
+struct StreetNetworkParams{
+    Mode_e mode;
+    idx_t offset;
+    float speed;
+    int distance;
+    StreetNetworkParams():
+                mode(Mode_e::Walking),
+                offset(0),
+                speed(10),
+                distance(10){}
+};
 
 /** Type pour gérer le polymorphisme en entrée de l'API
   *
@@ -540,7 +565,8 @@ struct EntryPoint {
     Type_e type;//< Le type de l'objet
     std::string uri; //< Le code externe de l'objet
     int house_number;
-    GeographicalCoord coordinates; //< coordonnées du point d'entrée
+    GeographicalCoord coordinates;  // < coordonnées du point d'entrée
+    StreetNetworkParams rabattement;        // < paramètres de rabatement du point d'entrée
 
     /// Construit le type à partir d'une chaîne
     EntryPoint(const std::string & uri);

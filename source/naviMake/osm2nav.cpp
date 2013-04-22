@@ -111,7 +111,8 @@ void Visitor::count_nodes_uses() {
     std::cout << "On a : " << boost::num_vertices(geo_ref.graph) << " nœuds" << std::endl;
 }
 
-void Visitor::edges(){
+void Visitor::edges(){    
+    geo_ref.init_offset(nodes.size());
     for(const auto & w : ways){
         if(w.second.properties.any() && w.second.refs.size() > 0){
             Node n = nodes[w.second.refs[0]];
@@ -130,12 +131,23 @@ void Visitor::edges(){
                         georef::Edge e;
                         e.length = length;
                         e.way_idx = w.second.idx;
-                        e.cyclable = w.second.properties[CYCLE_FWD];
+
                         boost::add_edge(source, target, e, geo_ref.graph);
+                        if(w.second.properties[CYCLE_FWD]){ // arc cyclable
+                            boost::add_edge(source + geo_ref.bike_offset, target + geo_ref.bike_offset, e, geo_ref.graph);
+                        }
+                        if(w.second.properties[CAR_FWD]){ // arc accessible en voiture
+                            boost::add_edge(source + geo_ref.car_offset, target + geo_ref.car_offset, e, geo_ref.graph);
+                        }
                         geo_ref.ways[e.way_idx].edges.push_back(std::make_pair(source, target));
 
-                        e.cyclable = w.second.properties[CYCLE_BWD];
                         boost::add_edge(target, source, e, geo_ref.graph);
+                        if(w.second.properties[CYCLE_BWD]){
+                            boost::add_edge(target + geo_ref.bike_offset, source + geo_ref.bike_offset, e, geo_ref.graph);
+                        }
+                        if(w.second.properties[CAR_BWD]){ // arc accessible en voiture
+                            boost::add_edge(source + geo_ref.car_offset, target + geo_ref.car_offset, e, geo_ref.graph);
+                        }
                         geo_ref.ways[e.way_idx].edges.push_back(std::make_pair(target, source));
                         source = target;
                         length = 0;
@@ -178,7 +190,7 @@ void Visitor::HouseNumbers(){
             ++Count;
         }
     }
-    std::cout<<"Nombre d'adresses non importées : "<<Count<<std::endl;
+    std::cout<<"Nombre d'adresses non importées : "<<Count<<"/"<<housenumbers.size()<<std::endl;
 }
 
 type::GeographicalCoord Visitor::admin_centre_coord(const CanalTP::References & refs){

@@ -25,6 +25,7 @@ class Worker {
         pbnavitia::Response dispatch(const pbnavitia::Request & request);
 
         type::GeographicalCoord coord_of_entry_point(const type::EntryPoint & entry_point);
+        type::StreetNetworkParams streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams & request, const bool origin = true);
 
         void init_worker_data();
 

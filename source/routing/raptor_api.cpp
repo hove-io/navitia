@@ -142,7 +142,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
 }
 
 std::vector<std::pair<type::idx_t, double> > 
-get_stop_points(const type::EntryPoint &ep, const type::Data & data,
+get_stop_points( const type::EntryPoint &ep, const type::Data & data,
                 streetnetwork::StreetNetwork & worker, bool use_second = false,
                 const int walking_distance = 1000){
     std::vector<std::pair<type::idx_t, double> > result;
@@ -163,7 +163,7 @@ get_stop_points(const type::EntryPoint &ep, const type::Data & data,
         } break;
     case type::Type_e::Address:
     case type::Type_e::Coord:
-        result = worker.find_nearest_stop_points(ep.coordinates, data.pt_data.stop_point_proximity_list, walking_distance, use_second); break;
+        result = worker.find_nearest_stop_points(ep.coordinates, data.pt_data.stop_point_proximity_list, walking_distance, use_second, ep.rabattement.offset); break;
     default: break;
     }
     return result;
@@ -202,7 +202,8 @@ parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str,
 
 
 pbnavitia::Response 
-make_response(RAPTOR &raptor, const type::EntryPoint &origin,
+make_response(RAPTOR &raptor,
+              const type::EntryPoint &origin,
               const type::EntryPoint &destination, 
               const std::vector<std::string> &datetimes_str, bool clockwise,
               const float walking_speed, const int walking_distance, const bool wheelchair,
