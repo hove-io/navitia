@@ -18,7 +18,7 @@ tardiest_trip(const type::JourneyPattern & journey_pattern, const unsigned int o
 
 /// Calcule le gap pour les horaires en fréquences
 inline uint32_t compute_gap(uint32_t hour, uint32_t start_time, uint32_t headway_secs) {
-    float tmp = hour-start_time + (hour>start_time?0:raptor::dataRAPTOR::SECONDS_PER_DAY);
+    float tmp = hour-start_time + (hour>start_time ? 0 : type::DateTime::SECONDS_PER_DAY);
 
     return std::ceil(tmp/headway_secs)*headway_secs;
 }

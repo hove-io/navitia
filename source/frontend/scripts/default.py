@@ -82,7 +82,7 @@ class Script:
     def autocomplete(self, request_args, version, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.AUTOCOMPLETE
-        req.autocomplete.name = self.v.arguments['name']
+        req.autocomplete.q = self.v.arguments['q']
         req.autocomplete.depth = self.v.arguments['depth']
         req.autocomplete.nbmax = self.v.arguments['nbmax']
         for object_type in self.v.arguments["object_type[]"]:
@@ -106,6 +106,9 @@ class Script:
 	for item in resp.autocomplete.items:
 	    if item.object.type == type_pb2.ADDRESS:
 	        post_code = item.object.address.name
+		if item.object.address.house_number > 0:
+		   post_code = str(item.object.address.house_number) + " " + item.object.address.name 
+		
 		for ad in item.object.address.admin:
 		    if ad.zip_code != "":
 		        post_code = post_code + ", " + ad.zip_code + " " + ad.name
@@ -193,8 +196,6 @@ class Script:
                     section.vehicle_journey.Clear()
 
 
-
-
     def __on_journeys(self, requested_type, request_args, version, region):
         req = request_pb2.Request()
         req.requested_api = requested_type
@@ -223,9 +224,6 @@ class Script:
                 resp.planner.after = after
 
         self.__fill_display_and_uris(resp)
-        
-        
-
         return resp
 
 

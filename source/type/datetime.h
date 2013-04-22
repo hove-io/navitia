@@ -20,21 +20,21 @@ struct DateTime {
 
     uint32_t datetime;
 
-    static const uint32_t NB_SECONDS_DAY = 86400;
+    static const uint32_t SECONDS_PER_DAY = 86400;
 
     static DateTime inf;
     static DateTime min;
 
     DateTime() : datetime(std::numeric_limits<uint32_t>::max()){}
-    DateTime(int date, int hour) : datetime(date*NB_SECONDS_DAY + hour) {}
+    DateTime(int date, int hour) : datetime(date*SECONDS_PER_DAY + hour) {}
     DateTime(const DateTime & dt) : datetime(dt.datetime) {}
 
     uint32_t hour() const {
-        return datetime%NB_SECONDS_DAY;
+        return datetime%SECONDS_PER_DAY;
     }
 
     uint32_t date() const {
-        return datetime/NB_SECONDS_DAY;
+        return datetime/SECONDS_PER_DAY;
     }
 
 
@@ -54,14 +54,6 @@ struct DateTime {
         return this->datetime >= other.datetime;
     }
 
-    static DateTime infinity() {
-        return DateTime();
-    }
-
-    static DateTime minimity() {
-        return DateTime(0,0);
-    }
-
     bool operator==(DateTime other) const {
         return this->datetime == other.datetime;
     }
@@ -76,16 +68,16 @@ struct DateTime {
     }
 
     void update(uint32_t hour, bool clockwise = true) {
-        if(hour>=NB_SECONDS_DAY)
-            hour -= NB_SECONDS_DAY;
+        if(hour>=SECONDS_PER_DAY)
+            hour -= SECONDS_PER_DAY;
         if(clockwise){
-            datetime += ((hour>=this->hour())?0:NB_SECONDS_DAY) + hour - this->hour();
+            datetime += ((hour>=this->hour())?0:SECONDS_PER_DAY) + hour - this->hour();
         } else {
             if(hour<=this->hour())
                 datetime += hour - this->hour();
             else {
                 if(this->date() > 0)
-                    datetime += hour - this->hour() - NB_SECONDS_DAY;
+                    datetime += hour - this->hour() - SECONDS_PER_DAY;
                 else
                     datetime = 0;
             }
@@ -103,12 +95,12 @@ struct DateTime {
 
     void date_decrement(){
         //datetime -= 1 << date_offset;
-        datetime -= NB_SECONDS_DAY;
+        datetime -= SECONDS_PER_DAY;
     }
 
     void date_increment(){
         //datetime += 1 << date_offset;
-        datetime += NB_SECONDS_DAY;
+        datetime += SECONDS_PER_DAY;
     }
 
 
@@ -149,7 +141,7 @@ template <>
 class numeric_limits<navitia::type::DateTime> {
 public:
     static navitia::type::DateTime max() {
-        return navitia::type::DateTime::infinity();
+        return navitia::type::DateTime::inf;
     }
 };
 }

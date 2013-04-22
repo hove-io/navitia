@@ -1,6 +1,6 @@
 #include "dataraptor.h"
 #include "routing.h"
-namespace navitia { namespace routing { namespace raptor {
+namespace navitia { namespace routing {
 
 void dataRAPTOR::load(const type::PT_Data &data)
 {
@@ -132,11 +132,11 @@ void dataRAPTOR::load(const type::PT_Data &data)
                         const type::StopTime & st2 = data.stop_times[stidx2];
                         uint32_t time1, time2;
                         if(!st1.is_frequency())
-                            time1 = st1.departure_time % SECONDS_PER_DAY;
+                            time1 = st1.departure_time % type::DateTime::SECONDS_PER_DAY;
                         else
                             time1 = st1.end_time;
                         if(!st2.is_frequency())
-                            time2 = st2.departure_time % SECONDS_PER_DAY;
+                            time2 = st2.departure_time %type::DateTime::SECONDS_PER_DAY;
                         else
                             time2 = st2.end_time;
 
@@ -149,11 +149,11 @@ void dataRAPTOR::load(const type::PT_Data &data)
                 const auto & st = data.stop_times[stidx];
                 uint32_t time;
                 if(!st.is_frequency())
-                    time = st.departure_time % SECONDS_PER_DAY;
+                    time = st.departure_time %type::DateTime::SECONDS_PER_DAY;
                 else
                     time = st.end_time;
                 departure_times.push_back(time);
-                if(st.departure_time > SECONDS_PER_DAY) {
+                if(st.departure_time >type::DateTime::SECONDS_PER_DAY) {
                     auto vp = data.validity_patterns[data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx].days;
                     vp <<=1;
                     auto it = std::find(validity_patterns.begin(), validity_patterns.end(), vp);
@@ -174,11 +174,11 @@ void dataRAPTOR::load(const type::PT_Data &data)
                       const type::StopTime & st2 = data.stop_times[stidx2];
                       uint32_t time1, time2;
                       if(!st1.is_frequency())
-                          time1 = st1.arrival_time % SECONDS_PER_DAY;
+                          time1 = st1.arrival_time %type::DateTime::SECONDS_PER_DAY;
                       else
                           time1 = st1.start_time;
                       if(!st2.is_frequency())
-                          time2 = st2.arrival_time% SECONDS_PER_DAY;
+                          time2 = st2.arrival_time%type::DateTime::SECONDS_PER_DAY;
                       else
                           time2 = st2.start_time;
 
@@ -190,11 +190,11 @@ void dataRAPTOR::load(const type::PT_Data &data)
                 const auto & st = data.stop_times[stidx];
                 uint32_t time;
                 if(!st.is_frequency())
-                    time = st.arrival_time % SECONDS_PER_DAY;
+                    time = st.arrival_time %type::DateTime::SECONDS_PER_DAY;
                 else
                     time = st.start_time;
                 arrival_times.push_back(time);
-                if(st.arrival_time > SECONDS_PER_DAY) {
+                if(st.arrival_time >type::DateTime::SECONDS_PER_DAY) {
                     auto vp = data.validity_patterns[data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx].days;
                     vp <<=1;;
                     auto it = std::find(validity_patterns.begin(), validity_patterns.end(), vp);
@@ -216,4 +216,4 @@ void dataRAPTOR::load(const type::PT_Data &data)
 }
 
 
-}}}
+}}

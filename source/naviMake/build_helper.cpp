@@ -98,16 +98,15 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32
             st->tmp_stop_point->stop_area = new types::StopArea();
             st->tmp_stop_point->stop_area->name = sp_name;
             st->tmp_stop_point->stop_area->uri = sp_name;
-            st->tmp_stop_point->stop_area->wheelchair_boarding = true;
+            st->tmp_stop_point->stop_area->set_property(types::hasProperties::WHEELCHAIR_BOARDING);
             b.sas[sp_name] = st->tmp_stop_point->stop_area;
             b.data.stop_areas.push_back(st->tmp_stop_point->stop_area);
-            st->tmp_stop_point->wheelchair_boarding = true;
         } else {
             st->tmp_stop_point->stop_area = sa_it->second;
             st->tmp_stop_point->coord.set_lat(st->tmp_stop_point->stop_area->coord.lat());
             st->tmp_stop_point->coord.set_lon(st->tmp_stop_point->stop_area->coord.lon());
-            st->tmp_stop_point->wheelchair_boarding = st->tmp_stop_point->stop_area->wheelchair_boarding;
         }
+        st->tmp_stop_point->set_properties(st->tmp_stop_point->stop_area->properties());
     } else {
         st->tmp_stop_point = it->second;
     }
@@ -133,7 +132,8 @@ SA::SA(builder & b, const std::string & sa_name, double x, double y, bool wheelc
     sa->uri = sa_name;
     sa->coord.set_lon(x);
     sa->coord.set_lat(y);
-    sa->wheelchair_boarding = wheelchair_boarding;
+    if(wheelchair_boarding)
+        sa->set_property(types::hasProperties::WHEELCHAIR_BOARDING);
     b.sas[sa_name] = sa;
 }
 
@@ -142,10 +142,11 @@ SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelc
     b.data.stop_points.push_back(sp);
     sp->name = sp_name;
     sp->uri = sp_name;
-    sp->wheelchair_boarding = wheelchair_boarding;
+    if(wheelchair_boarding)
+        sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
     sa->coord.set_lon(x);
     sa->coord.set_lat(y);
-    sp->wheelchair_boarding = wheelchair_boarding;
+
     sp->stop_area = this->sa;
     b.sps[sp_name] = sp;
     return *this;
@@ -171,7 +172,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     connexion->departure_stop_point = (*(sps.find(name1))).second;
     connexion->destination_stop_point = (*(sps.find(name2))).second;
 
-    connexion->connection_kind = types::Connection::LinkConnection;
+    connexion->connection_kind = types::ConnectionType::Walking;
     connexion->duration = length;
 
     data.connections.push_back(connexion);

@@ -2,7 +2,7 @@ import "type.proto";
 package pbnavitia;
 
 message AutocompleteRequest {
-    required string name = 1;
+    required string q = 1;
     repeated NavitiaType types = 2;
     required int32 depth = 3;
     required int32 nbmax = 4;

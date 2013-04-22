@@ -1,5 +1,5 @@
-GeoRef
-======
+Référentiel géographique
+========================
 
 Le module GeoRef est en charge de gérer le référentiel des données géographiques.
 

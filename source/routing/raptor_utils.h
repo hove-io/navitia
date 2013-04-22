@@ -1,7 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include "routing/routing.h"
-namespace navitia { namespace routing { namespace raptor{
+namespace navitia { namespace routing {
 //Forward Declaration
 struct label;
 
@@ -137,4 +137,4 @@ struct best_dest {
 
 };
 
-}}}
+}}

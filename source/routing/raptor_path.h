@@ -3,7 +3,6 @@
 #include "routing/routing.h"
 #include <vector>
 namespace navitia { namespace routing {
-    namespace raptor {
     class RAPTOR;
      ///Construit un chemin, utilisé lorsque l'algorithme a été fait en sens anti-horaire
     Path makePathreverse(unsigned int destination_idx, unsigned int countb,
@@ -17,13 +16,9 @@ namespace navitia { namespace routing {
     ///Construit tous chemins trouvés
     std::vector<Path> 
     makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
-               navitia::type::DateTime dt, const float walking_speed, 
-               const RAPTOR &raptor_);
-    ///Construit tous les chemins trouvés, lorsque le calcul est lancé dans le sens inverse
-    std::vector<Path> 
-    makePathesreverse(std::vector<std::pair<type::idx_t, double> > destinations,
-                      navitia::type::DateTime dt, const float walking_speed,
-                      const RAPTOR &raptor_);
-    void patch_datetimes(Path &path);
+               navitia::type::DateTime dt, const float walking_speed,
+               const RAPTOR &raptor_, bool clockwise);
 
-}}}
+    /// Ajuste les temps d’attente
+    void patch_datetimes(Path &path);
+}}

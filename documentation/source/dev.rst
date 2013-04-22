@@ -7,6 +7,16 @@ de NAViTiA.
 Architecture générale
 *********************
 
+navitia se compose du cœur appelé *krakken* et du frontend appelé *Jörmungandr*.
+
+Le cœur est développé en C++ et le frontend en python.
+
+Les deux composants communiquent entre eux au travers de message *protocol buffers* transmis avec
+`ZMQ <http://www.zeromq.org/>`_.
+
+Afin de gérer des requêtes multiples, krakken instancie *n* threads. Les threads ne peuvent pas communiquer entre-eux.
+
+
 Tests unitaires
 ***************
 
@@ -37,7 +47,8 @@ Il y a deux pièges classiques à éviter :
 Dépôt de code
 *************
 
-Nous utilisons GIT.
+Nous utilisons GIT. La branche de développement est ``dev``. Cependant le travail se fait sur une branche à part.
+
 
 Normes de codage
 ****************

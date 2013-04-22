@@ -20,7 +20,7 @@ At some point you will want to read:
 
     public_transport
     details
-
+    API Reference <http://doc.navitia.io>
         
 Our APIs are available at the following url: http://api.navitia.io.
         

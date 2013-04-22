@@ -1,5 +1,5 @@
 #include "raptor_init.h"
-namespace navitia { namespace routing { namespace raptor { namespace init {
+namespace navitia { namespace routing {
 
 std::vector<Departure_Type> getDepartures(const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations,
                                           bool clockwise, const map_labels_t &labels, const type::Data &data, const float walking_speed) {
@@ -247,5 +247,5 @@ float getWalkingTime(int count, type::idx_t rpid, const std::vector<std::pair<ty
     return walking_time;
 }
 
-}}}}
+}}
 

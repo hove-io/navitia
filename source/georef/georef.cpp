@@ -358,11 +358,7 @@ void GeoRef::build_autocomplete_list(){
         std::string key="";
         for(auto idx : way.admin_list){
             Admin admin = admins.at(idx);
-            if(key.empty()){                
-                key = admin.name;
-            }else{
-                key = key + " " + admin.name;
-            }
+            key+= " " + admin.name;
             //Ajoute le code postal si ça existe
             if (!admin.post_code.empty()){
                 key += " "+ admin.post_code;
@@ -376,15 +372,14 @@ void GeoRef::build_autocomplete_list(){
     //Remplir les poi dans la liste autocompletion
     for(POI poi : pois){
         std::string key="";
-        for(auto idx : poi.admin_list){
-            Admin admin = admins.at(idx);
-            if(key.empty()){
-                key = admin.name;
-            }else{
-                key = key + " " + admin.name;
+        if (poi.visible){
+            for(auto idx : poi.admin_list){
+                Admin admin = admins.at(idx);
+                key += " " + admin.name;
             }
+
+            fl_poi.add_string(poi.name + " " + key, poi.idx ,alias, synonymes);
         }
-        fl_poi.add_string(poi.name + " " + key, poi.idx ,alias, synonymes);
     }
     fl_poi.build();
 
@@ -448,11 +443,16 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std
     int search_number = str_to_int(*tokens.begin());
     std::string search_str;
 
+    //Si un numero existe au début de la chaine alors il faut l'exclure.
     if (search_number != -1){
         search_str = "";
+        int i = 0;
         for(auto token : tokens){
-            search_str = search_str + " " + token;
-        }
+            if (i != 0){
+                search_str = search_str + " " + token;
+            }
+            ++i;
+           }
     }else{
         search_str = str;
     }
