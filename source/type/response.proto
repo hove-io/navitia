@@ -63,10 +63,17 @@ message PathItem {
     optional Direction direction =3;
 }
 
+enum StreetNetworkMode {
+    Walking = 0;
+    Bike = 1;
+    Car = 3;
+}
+
 message StreetNetwork {
     optional double length = 1;
-    repeated PathItem path_items = 2;
-    repeated GeographicalCoord coordinates = 3;
+    optional StreetNetworkMode mode = 2;
+    repeated PathItem path_items = 3;
+    repeated GeographicalCoord coordinates = 4;
 }
 
 enum SectionType {

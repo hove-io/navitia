@@ -566,7 +566,7 @@ struct EntryPoint {
     std::string uri; //< Le code externe de l'objet
     int house_number;
     GeographicalCoord coordinates;  // < coordonnées du point d'entrée
-    StreetNetworkParams rabattement;        // < paramètres de rabatement du point d'entrée
+    StreetNetworkParams streetnetwork_params;        // < paramètres de rabatement du point d'entrée
 
     /// Construit le type à partir d'une chaîne
     EntryPoint(const std::string & uri);

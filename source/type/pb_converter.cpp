@@ -281,12 +281,13 @@ void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &dat
     fill_pb_object(stop_point.idx, data, pm->mutable_stop_point(), max_depth, now, action_period);
 }
 
-void fill_street_section(const georef::Path &path, const type::Data &data, pbnavitia::Section* section,
+void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &path, const type::Data &data, pbnavitia::Section* section,
         int max_depth, const pt::ptime& now, const pt::time_period& action_period){
     if(path.path_items.size() > 0) {
         section->set_type(pbnavitia::STREET_NETWORK);
         pbnavitia::StreetNetwork * sn = section->mutable_street_network();
-        create_pb(path, data, sn);
+        create_pb(ori_dest, path, data, sn);
+
         pbnavitia::PlaceMark* pm;
         navitia::georef::Way way;
         type::GeographicalCoord coord;
@@ -315,9 +316,21 @@ void fill_message(const type::Message & message, const type::Data&, pbnavitia::M
     pb_message->set_title(message.title);
 }
 
-void create_pb(const navitia::georef::Path& path, const navitia::type::Data& data, pbnavitia::StreetNetwork* sn,
+void create_pb(const type::EntryPoint &ori_dest, const navitia::georef::Path& path, const navitia::type::Data& data, pbnavitia::StreetNetwork* sn,
         const pt::ptime&, const pt::time_period&){
     sn->set_length(path.length);
+
+    switch(ori_dest.streetnetwork_params.mode){
+        case type::Mode_e::Bike:
+            sn->set_mode(pbnavitia::Bike);
+            break;
+        case type::Mode_e::Car:
+            sn->set_mode(pbnavitia::Car);
+            break;
+        default :
+            sn->set_mode(pbnavitia::Walking);
+    }    
+
     for(auto item : path.path_items){
         if(item.way_idx < data.geo_ref.ways.size()){
             pbnavitia::PathItem * path_item = sn->add_path_items();

@@ -19,8 +19,8 @@ message NextStopTimeRequest {
 }
 
 message StreetNetworkParams{
-    required string origin_mode = 1;
-    required string destination_mode = 2;
+    optional string origin_mode = 1;
+    optional string destination_mode = 2;
     optional double walking_speed = 3;
     optional int32 walking_distance =4;
     optional double bike_speed = 5;
@@ -37,7 +37,7 @@ message JourneysRequest {
     required bool clockwise = 4;
     repeated string forbidden_uris = 7;
     optional int32 max_duration = 11;
-    required StreetNetworkParams streetnetwork_params = 13;
+    optional StreetNetworkParams streetnetwork_params = 13;
 }
 
 message ProximityListRequest {

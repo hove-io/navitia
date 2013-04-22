@@ -73,7 +73,7 @@ VJ::VJ(builder & b, const std::string &network_name, const std::string &line_nam
 }
 
 
-VJ& VJ::operator()(const std::string &stopPoint, const std::string& arrivee, const std::string& depart,
+VJ& VJ::operator()(const std::string &stopPoint,const std::string& arrivee, const std::string& depart,
             uint32_t local_traffic_zone, bool drop_off_allowed, bool pick_up_allowed){
     return (*this)(stopPoint, pt::duration_from_string(arrivee).total_seconds(), pt::duration_from_string(depart).total_seconds(), local_traffic_zone, drop_off_allowed, pick_up_allowed);
 
@@ -104,6 +104,8 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32
             st->tmp_stop_point->wheelchair_boarding = true;
         } else {
             st->tmp_stop_point->stop_area = sa_it->second;
+            st->tmp_stop_point->coord.set_lat(st->tmp_stop_point->stop_area->coord.lat());
+            st->tmp_stop_point->coord.set_lon(st->tmp_stop_point->stop_area->coord.lon());
             st->tmp_stop_point->wheelchair_boarding = st->tmp_stop_point->stop_area->wheelchair_boarding;
         }
     } else {

@@ -31,6 +31,8 @@ struct Vertex {
         }
     }
 
+    Vertex(const type::GeographicalCoord& other) : coord(other.lon(), other.lat()){}
+
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & coord;
     }
@@ -359,7 +361,7 @@ struct ProjectionData {
     /// Initialise la structure à partir d'une coordonnée et d'un graphe sur lequel on projette
     ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, const proximitylist::ProximityList<vertex_t> &prox);
     /// Incrémentation des noeuds suivant le mode de transport au début et à la fin : marche, vélo ou voiture
-    void inc_vertex(const vertex_t);
+    void inc_vertex(const vertex_t);    
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & source & target & projected & source_distance & target_distance & found;
     }

@@ -39,7 +39,7 @@ std::vector< std::pair<type::idx_t, double> > StreetNetwork::find_nearest_stop_p
     if(elements.empty())
         return std::vector< std::pair<nt::idx_t, double> >();
 
-    // Incérmentation de début d'exploration dans graphe selon le mode : marche, vélo ou voiture
+    /// Incérmentation de début d'exploration dans graphe selon le mode : marche, vélo ou voiture
     nearest_edge.inc_vertex(offset);
 
     // Est-ce qu'on calcule au départ ou à l'arrivée
@@ -84,7 +84,7 @@ StreetNetwork::find_nearest_stop_points(const ng::ProjectionData & start, double
         ng::ProjectionData projection = geo_ref.projected_stop_points[element.first];
         // Est-ce que le stop point a pu être raccroché au street network
         if(projection.found){
-            // Incérmentation de début d'exploration dans graphe selon le mode : marche, vélo ou voiture
+            /// Incérmentation de début d'exploration dans graphe selon le mode : marche, vélo ou voiture
             projection.inc_vertex(offset);
             double best_dist = max;
             if(dist[projection.source] < max){
@@ -102,14 +102,13 @@ StreetNetwork::find_nearest_stop_points(const ng::ProjectionData & start, double
     return result;
 }
 
-
 ng::Path StreetNetwork::get_path(type::idx_t idx, bool use_second){
     ng::Path result;
     if(!use_second){
         if(!departure_launched() || (distances[idx] == std::numeric_limits<float>::max() && this->idx_projection.find(idx) == idx_projection.end()))
             return result;
 
-        ng::ProjectionData projection = idx_projection[idx];
+        ng::ProjectionData projection = idx_projection[idx];        
 
         if(distances[projection.source] + projection.source_distance < distances[projection.target] + projection.target_distance){
             result = this->geo_ref.build_path(projection.source, this->predecessors);

@@ -32,7 +32,9 @@ void fill_section(pbnavitia::Section *pb_section, navitia::type::idx_t vj_idx,
     fill_pb_object(vj.physical_mode_idx, d, mvj->mutable_physical_mode(), 0, now, action_period);
 }
 
-pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths, const nt::Data & d, streetnetwork::StreetNetwork & worker) {
+pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths, const nt::Data & d, streetnetwork::StreetNetwork & worker,
+                                const type::EntryPoint &origin,
+                                const type::EntryPoint &destination) {
     pbnavitia::Response pb_response;
     pb_response.set_requested_api(pbnavitia::PLANNER);
     boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
@@ -45,7 +47,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
         if(temp.path_items.size() > 0) {
             pbnavitia::Journey * pb_journey = planner->add_journeys();
             pb_journey->set_duration(temp.length);
-            fill_street_section(temp, d, pb_journey->add_sections(), 1);
+            fill_street_section(origin, temp, d, pb_journey->add_sections(), 1);
         }
         for(Path path : paths) {
             navitia::type::DateTime departure_time = navitia::type::DateTime::inf, arrival_time = navitia::type::DateTime::inf;
@@ -57,7 +59,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             if(path.items.size() > 0 && path.items.front().stop_points.size() > 0 && path.items.front().stop_points.size() > 0){
                 const auto temp = worker.get_path(path.items.front().stop_points.front());
                 if(temp.path_items.size() > 0) {
-                    fill_street_section(temp , d, pb_journey->add_sections(), 1);
+                    fill_street_section(origin, temp , d, pb_journey->add_sections(), 1);
                     departure_time = path.items.front().departure - temp.length/1.38;
                 }
             }
@@ -127,7 +129,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             if(path.items.size() > 0 && path.items.back().stop_points.size() > 0 && path.items.back().stop_points.size()>0){
                 auto temp = worker.get_path(path.items.back().stop_points.back(), true);
                 if(temp.path_items.size() > 0) {
-                    fill_street_section(temp, d, pb_journey->add_sections(), 1);
+                    fill_street_section(destination, temp, d, pb_journey->add_sections(), 1);
                     arrival_time =  arrival_time + temp.length/1.38;
                 }
             }
@@ -143,8 +145,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
 
 std::vector<std::pair<type::idx_t, double> > 
 get_stop_points( const type::EntryPoint &ep, const type::Data & data,
-                streetnetwork::StreetNetwork & worker, bool use_second = false,
-                const int walking_distance = 1000){
+                streetnetwork::StreetNetwork & worker, bool use_second = false/*,
+                const int walking_distance = 1000*/){
     std::vector<std::pair<type::idx_t, double> > result;
 
     std::map<std::string, type::idx_t>::const_iterator it;
@@ -163,7 +165,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data & data,
         } break;
     case type::Type_e::Address:
     case type::Type_e::Coord:
-        result = worker.find_nearest_stop_points(ep.coordinates, data.pt_data.stop_point_proximity_list, walking_distance, use_second, ep.rabattement.offset); break;
+        result = worker.find_nearest_stop_points(ep.coordinates, data.pt_data.stop_point_proximity_list, ep.streetnetwork_params.distance, use_second, ep.streetnetwork_params.offset); break;
     default: break;
     }
     return result;
@@ -281,7 +283,7 @@ make_response(RAPTOR &raptor,
     if(clockwise)
         std::reverse(result.begin(), result.end());
 
-    return make_pathes(result, raptor.data, worker);
+    return make_pathes(result, raptor.data, worker, origin, destination);
 }
 
 pbnavitia::Response make_isochrone(RAPTOR &raptor,

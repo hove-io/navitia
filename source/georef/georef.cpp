@@ -295,6 +295,7 @@ void ProjectionData::inc_vertex(const vertex_t value){
     this->target += value;
 }
 
+
 Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord) const{
     ProjectionData start(start_coord, *this, this->pl);
     ProjectionData dest(dest_coord, *this, this->pl);
@@ -343,7 +344,7 @@ void GeoRef::build_proximity_list(){
             pl.add(graph[u].coord, u);
         }
     }else{
-        // Ne pas construire le proximitylist avec les noeuds utilisés par les arcs pour la recherche vélo
+        // Ne pas construire le proximitylist avec les noeuds utilisés par les arcs pour la recherche vélo, voiture
         for(vertex_t v = 0; v < this->bike_offset; ++v){
             pl.add(graph[v].coord, v);
         }

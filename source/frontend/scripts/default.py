@@ -203,8 +203,14 @@ class Script:
         req.journeys.destination = request_args["destination"] if "destination" in request_args else ""
         req.journeys.datetimes.append(request_args["datetime"])
         req.journeys.clockwise = request_args["clockwise"]
-        req.journeys.walking_speed = request_args["walking_speed"]
-        req.journeys.walking_distance = request_args["walking_distance"]
+        req.journeys.streetnetwork_params.walking_speed = request_args["walking_speed"]
+        req.journeys.streetnetwork_params.walking_distance = request_args["walking_distance"]
+        req.journeys.streetnetwork_params.origin_mode = request_args["origin_mode"]
+        req.journeys.streetnetwork_params.destination_mode = request_args["destination_mode"]
+        req.journeys.streetnetwork_params.bike_speed = request_args["bike_speed"]
+        req.journeys.streetnetwork_params.bike_distance = request_args["bike_distance"]
+        req.journeys.streetnetwork_params.car_speed = request_args["car_speed"]
+        req.journeys.streetnetwork_params.car_distance = request_args["car_distance"]
         req.journeys.max_duration = request_args["max_duration"]
         for forbidden_uri in request_args["forbidden_uris[]"]:
             req.journeys.forbidden_uris.append(forbidden_uri)
