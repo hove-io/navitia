@@ -3,10 +3,25 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to navitia.io API
-=========================
+Welcome to navitia.io
+=====================
 
-*navitia.io* is an API to build cool stuff with public transport. We provide journeys computation, line schedules, easy access to anything related to public transport and sexy things such as isochrones.
+an API to build cool stuff with public transport
+-------------------------------------------------
+
+We provide:
+
+* journeys computation
+* line schedules
+* next departures
+* explore public transport data
+* sexy things such as isochrones
+
+.. note::
+
+    We are gradually supporting more and more cities. If your city has open public transport data and is missing, drop us a note.
+    We will add it to navitia.io
+
 
 Getting started
 ---------------
@@ -24,8 +39,9 @@ At some point you will want to read:
         
 Our APIs are available at the following url: http://api.navitia.io.
         
-Requests have the following structure : 
-``http://api.navitia.io/v0/[region/]api.format?arg=val``. Have a look at the examples below to learn what API we provide and how to use them.
+Requests have the following structure :  ``http://api.navitia.io/v0/[region/]api.format?arg=val``.
+
+Have a look at the examples below to learn what API we provide and how to use them.
 
 The region can be left out for requests that are based on coordinates. The format is one of json, xml or pb (for a result in Protocol Buffers).
 
@@ -34,7 +50,7 @@ There are no restriction in using our API. However, please don't make more than 
 .. warning::
     This API is experimental. The parameters and responses are not definite as we will listen to your feedbacks to improve it.
 
-    If you plan to build something successful, contact us to an access with more vitamines and even more support.
+    If you plan to build something successful, contact us to get an access with more vitamines and even more support.
 
 Let us know if you build something with our API. We will be happy hilight it on this page. The more feedback we get, the more cities you will get
 and the more effort we will put to make the API durable.
@@ -47,7 +63,7 @@ This chapter shows some usages with the minimal required arguments. However, thi
 A simple route computation
 **************************
 
-Let's find out how to get from the view point of the Golden Gate bridge to the Transamerica Pyramid in San Francisco the 18th of February at 08:00 AM.
+Let's find out how to get from the view point of the Golden Gate bridge to the Transamerica Pyramid in San Francisco the 18th of April at 08:00 AM.
 We need to use the ``journeys`` API.
 
 
@@ -59,7 +75,7 @@ The arguments are the following:
 
 * ``origin=coord:-122.4752:37.80826``
 * ``destination=coord:-122.402770:37.794682``
-* ``datetime=20130218T0800``
+* ``datetime=20130418T0800``
 
 Hence, the complete URL : http://api.navitia.io/v0/journeys.json?origin=coord:-122.4752:37.80826&destination=coord:-122.402770:37.794682&datetime=20130418T0800.
 
