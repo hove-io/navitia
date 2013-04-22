@@ -88,6 +88,9 @@ class Script:
         for object_type in self.v.arguments["object_type[]"]:
             req.autocomplete.types.append(pb_type[object_type])
 
+        for admin_uri in self.v.arguments["admin_uri[]"]:
+            req.autocomplete.admin_uris.append(admin_uri)
+
         resp = NavitiaManager().send_and_receive(req, region)
         pagination_resp = response_pb2.Pagination()
         pagination_resp.startPage = self.v.arguments["startPage"]
@@ -99,6 +102,20 @@ class Script:
         else:
             pagination_resp.totalResult = 0
         resp.pagination.CopyFrom(pagination_resp)
+	
+	for item in resp.autocomplete.items:
+	    if item.object.type == type_pb2.ADDRESS:
+	        post_code = item.object.address.name
+		if item.object.address.house_number > 0:
+		   post_code = str(item.object.address.house_number) + " " + item.object.address.name 
+		
+		for ad in item.object.address.admin:
+		    if ad.zip_code != "":
+		        post_code = post_code + ", " + ad.zip_code + " " + ad.name
+		    else:
+			post_code = post_code + ", " + ad.name
+		item.name = post_code
+
         return resp
 
 
@@ -187,8 +204,14 @@ class Script:
         req.journeys.destination = request_args["destination"] if "destination" in request_args else ""
         req.journeys.datetimes.append(request_args["datetime"])
         req.journeys.clockwise = request_args["clockwise"]
-        req.journeys.walking_speed = request_args["walking_speed"]
-        req.journeys.walking_distance = request_args["walking_distance"]
+        req.journeys.streetnetwork_params.walking_speed = request_args["walking_speed"]
+        req.journeys.streetnetwork_params.walking_distance = request_args["walking_distance"]
+        req.journeys.streetnetwork_params.origin_mode = request_args["origin_mode"]
+        req.journeys.streetnetwork_params.destination_mode = request_args["destination_mode"]
+        req.journeys.streetnetwork_params.bike_speed = request_args["bike_speed"]
+        req.journeys.streetnetwork_params.bike_distance = request_args["bike_distance"]
+        req.journeys.streetnetwork_params.car_speed = request_args["car_speed"]
+        req.journeys.streetnetwork_params.car_distance = request_args["car_distance"]
         req.journeys.max_duration = request_args["max_duration"]
         for forbidden_uri in request_args["forbidden_uris[]"]:
             req.journeys.forbidden_uris.append(forbidden_uri)

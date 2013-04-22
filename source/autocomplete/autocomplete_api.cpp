@@ -62,8 +62,8 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
 
 int penalty_by_type(navitia::type::Type_e ntype, bool Is_address_type) {
     // Ordre de tri :
-    // Add, SA, POI, SP, City : si présence de addressType dans le recherche
-    // City, SA, POI, Add, SP : si non
+    // Add, SA, POI, SP, Admin : si présence de addressType dans le recherche
+    // Admin, SA, POI, Add, SP : si non
     int result = 0;
     switch(ntype){
     case navitia::type::Type_e::Admin:
@@ -88,50 +88,107 @@ int penalty_by_type(navitia::type::Type_e ntype, bool Is_address_type) {
     return result;
 }
 
-void Update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result, navitia::type::Type_e ntype, bool Is_address_type){
-    //Mettre à jour la qualité sur la pénalité par type
+///Mettre à jour la qualité sur le poid de POI
+void update_quality_by_poi_type(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result, const navitia::type::Data &d){
+    for(auto &item : ac_result){
+        int poi_weight = 0;
+        poi_weight = item.quality + d.geo_ref.pois[item.idx].weight * 2;
+        item.quality = std::min(poi_weight, 100);
+    }
+}
+
+void Update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result, navitia::type::Type_e ntype,
+                    bool Is_address_type,
+                    const navitia::type::Data &d){
+    //Mettre à jour la qualité sur la pénalité par type d'adresse
     int penalty = penalty_by_type(ntype, Is_address_type);
     for(auto &item : ac_result){
         item.quality -= penalty;
     }
+
+    //Mettre à jour la qualité sur le poid de POI
+    if (ntype ==navitia::type::Type_e::POI){
+        update_quality_by_poi_type(ac_result, d);
+    }
 }
 
+template<class T>
+struct ValidAdmin {
+    const std::vector<T> & objects;
+    std::vector<type::idx_t> required_admins;
+
+    ValidAdmin(const std::vector<T> & objects, std::vector<type::idx_t> required_admins) : objects(objects), required_admins(required_admins) {}
+
+    bool operator()(type::idx_t idx) const {
+        const T & object = objects[idx];
+        if (required_admins.size() == 0){
+            return true;
+        }
+
+        for(type::idx_t admin : required_admins) {
+            if(std::find(object.admin_list.begin(), object.admin_list.end(), admin) != object.admin_list.end())
+                return true;
+        }
+
+        return false;
+    }
+};
+
+template<class T> ValidAdmin<T> valid_admin (const std::vector<T> & objects, std::vector<type::idx_t> required_admins)  {
+    return ValidAdmin<T>(objects, required_admins);
+}
+
+std::vector<type::idx_t> admin_uris_to_idx(const std::vector<std::string> &admin_uris, const navitia::type::Data &d){
+    std::vector<type::idx_t> admin_idxs;
+    for (auto admin_uri : admin_uris){
+        for (navitia::georef::Admin admin : d.geo_ref.admins){
+            if (admin_uri == admin.uri){
+                admin_idxs.push_back(admin.idx);
+            }
+        }
+    }
+
+    return admin_idxs;
+}
 
 pbnavitia::Response autocomplete(const std::string &q,
                                  const std::vector<nt::Type_e> &filter,
                                  uint32_t depth,
                                  int nbmax,
+                                 const std::vector<std::string> &admins,
                                  const navitia::type::Data &d){
 
-    pbnavitia::Response pb_response;
+    pbnavitia::Response pb_response;    
     pb_response.set_requested_api(pbnavitia::AUTOCOMPLETE);
     bool addType = d.pt_data.stop_area_autocomplete.is_address_type(q, d.geo_ref.alias, d.geo_ref.synonymes);
     std::vector<Autocomplete<nt::idx_t>::fl_quality> result;
     pbnavitia::Autocomplete* pb = pb_response.mutable_autocomplete();
+    std::vector<type::idx_t> admin_idxs = admin_uris_to_idx(admins, d);
     for(nt::Type_e type : filter){
         switch(type){
         case nt::Type_e::StopArea:
-            result = d.pt_data.stop_area_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
+            result = d.pt_data.stop_area_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin(d.pt_data.stop_areas, admin_idxs));
             break;
         case nt::Type_e::StopPoint:
-            result = d.pt_data.stop_point_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
+            result = d.pt_data.stop_point_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin(d.pt_data.stop_points, admin_idxs));
             break;
         case nt::Type_e::Admin:
-            result = d.geo_ref.fl_admin.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
+            result = d.geo_ref.fl_admin.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax,  valid_admin(d.geo_ref.admins, admin_idxs));
             break;
         case nt::Type_e::Address:
-            result = d.geo_ref.find_ways(q, nbmax);
+            result = d.geo_ref.find_ways(q, nbmax, valid_admin(d.geo_ref.ways, admin_idxs));
             break;
         case nt::Type_e::POI:
-            result = d.geo_ref.fl_poi.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
+            result = d.geo_ref.fl_poi.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax,  valid_admin(d.geo_ref.pois, admin_idxs));
             break;
         case nt::Type_e::Line:
-            result = d.pt_data.line_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax);
+            result = d.pt_data.line_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, [](type::idx_t){return true;});
             break;
         default: break;
         }
 
-        Update_quality(result, type, addType);
+        //Mettre à jour les qualités en implémentant un ou plusieurs règles.
+        Update_quality(result, type, addType, d);
 
         create_pb(result, type, depth, d, *pb);
     }

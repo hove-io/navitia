@@ -46,6 +46,15 @@ std::vector<nt::Type_e> vector_of_pb_types(const T & pb_object){
     return result;
 }
 
+template<class T>
+std::vector<std::string> vector_of_admins(const T & admin){
+    std::vector<std::string> result;
+    for (int i = 0; i < admin.admin_uris_size(); ++i){
+        result.push_back(admin.admin_uris(i));
+    }
+    return result;
+}
+
 pbnavitia::Response Worker::status() {
     pbnavitia::Response result;
     result.set_requested_api(pbnavitia::STATUS);
@@ -109,7 +118,7 @@ pbnavitia::Response Worker::load() {
 
 pbnavitia::Response Worker::autocomplete(const pbnavitia::AutocompleteRequest & request) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
-    return navitia::autocomplete::autocomplete(request.q(), vector_of_pb_types(request), request.depth(), request.nbmax(), this->data);
+    return navitia::autocomplete::autocomplete(request.q(), vector_of_pb_types(request), request.depth(), request.nbmax(), vector_of_admins(request), this->data);
 }
 
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest & request, pbnavitia::API api) {
@@ -164,6 +173,34 @@ type::GeographicalCoord Worker::coord_of_entry_point(const type::EntryPoint & en
     return result;
 }
 
+type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams & request, const bool use_second){
+    type::StreetNetworkParams result;
+
+    if(use_second){
+        result.mode = type::static_data::get()->modeByCaption(request.origin_mode());
+    }else{
+        result.mode = type::static_data::get()->modeByCaption(request.destination_mode());
+    }
+    switch(result.mode){
+        case type::Mode_e::Bike:
+            result.offset = data.geo_ref.bike_offset;
+            result.distance = request.bike_distance();
+            result.speed = request.bike_speed();
+            break;
+        case type::Mode_e::Car:
+            result.offset = data.geo_ref.car_offset;
+            result.distance = request.car_distance();
+            result.speed = request.car_speed();
+            break;
+        default:
+            result.offset = 0;
+            result.distance = request.walking_distance();
+            result.speed = request.walking_speed();
+            break;
+    }
+    return result;
+}
+
 pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
     this->init_worker_data();
@@ -190,15 +227,23 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     for(int i = 0; i < request.datetimes_size(); ++i)
         datetimes.push_back(request.datetimes(i));
 
+    /// Récupération des paramètres de rabattement au départ
+    if ((origin.type == type::Type_e::Address) || (origin.type == type::Type_e::Coord)){
+        origin.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params());
+    }
+    /// Récupération des paramètres de rabattement à l'arrivée
+    if ((destination.type == type::Type_e::Address) || (destination.type == type::Type_e::Coord)){
+        destination.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params(), false);
+    }
 
     if(api != pbnavitia::ISOCHRONE){
         return routing::make_response(*calculateur, origin, destination, datetimes,
-                                      request.clockwise(), request.walking_speed(), request.walking_distance(), /*request.wheelchair()*/false,
-                                      forbidden, *street_network_worker);
+                                              request.clockwise(), request.streetnetwork_params().walking_speed(), request.streetnetwork_params().walking_distance(), /*request.wheelchair()*/false,
+                                              forbidden, *street_network_worker);
     } else {
         return navitia::routing::make_isochrone(*calculateur, origin, request.datetimes(0),
-                                                request.clockwise(), request.walking_speed(), request.walking_distance(), /*request.wheelchair()*/false,
-                                                forbidden, *street_network_worker, request.max_duration());
+                                                        request.clockwise(), request.streetnetwork_params().walking_speed(), request.streetnetwork_params().walking_distance(), /*request.wheelchair()*/false,
+                                                        forbidden, *street_network_worker, request.max_duration());
     }
 }
 

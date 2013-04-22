@@ -238,9 +238,24 @@ struct Autocomplete
         return vec_quality;
     }
 
+    std::vector<fl_quality> sort_and_truncate(std::vector<fl_quality> input, size_t nbmax) const {
+        typename std::vector<fl_quality>::iterator middle_iterator;
+        if(nbmax < input.size())
+            middle_iterator = input.begin() + nbmax;
+        else
+            middle_iterator = input.end();
+        std::partial_sort(input.begin(), middle_iterator, input.end());
+
+        if (input.size() > nbmax){input.resize(nbmax);}
+        return input;
+    }
+
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant au moins un des mots*/
     std::vector<fl_quality> find_complete(const std::string & str, const std::map<std::string, std::string> & map_alias,
-                                                    const std::map<std::string, std::string> & map_synonymes, const int wordweight, const int nbmax) const{
+                                          const std::map<std::string, std::string> & map_synonymes,const int wordweight,
+                                          size_t nbmax,
+                                          std::function<bool(T)> keep_element)
+                                          const{
         std::vector<std::string> vec = tokenize(str, map_alias, map_synonymes);
         int wordCount = 0;
         int wordLength = 0;
@@ -252,25 +267,18 @@ struct Autocomplete
 
         // Créer un vector de réponse:
         std::vector<fl_quality> vec_quality;
+
         for(auto i : index_result){
-            quality.idx = i;
-            quality.nb_found = wordCount;
-            quality.word_len = wordLength;
-            quality.quality = calc_quality(quality, wordweight);
-            vec_quality.push_back(quality);
+            if(keep_element(i)) {
+                quality.idx = i;
+                quality.nb_found = wordCount;
+                quality.word_len = wordLength;
+                quality.quality = calc_quality(quality, wordweight);
+                vec_quality.push_back(quality);
+            }
         }
-        typename std::vector<fl_quality>::iterator middle_iterator;
-        if((unsigned)nbmax < vec_quality.size())
-            middle_iterator = vec_quality.begin() + nbmax;
-        else
-            middle_iterator = vec_quality.end();
-        std::partial_sort(vec_quality.begin(), middle_iterator, vec_quality.end());
 
-
-        if (vec_quality.size() > (unsigned)nbmax){vec_quality.resize(nbmax);}
-
-        return vec_quality;
-
+        return sort_and_truncate(vec_quality, nbmax);
     }
 
 
@@ -282,7 +290,7 @@ struct Autocomplete
         }
     }
 
-    int calc_quality(const fl_quality & ql, int wordweight) const {
+    int calc_quality(const fl_quality & ql,  int wordweight) const {
         int result = 100;
 
         //Qualité sur le nombres des mot trouvé
@@ -293,6 +301,7 @@ struct Autocomplete
 
         return result;
     }
+
 
     int lettercount(const std::string &str) const {
         int result = 0;

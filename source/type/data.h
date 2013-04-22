@@ -31,12 +31,6 @@ public:
 
     MetaData meta;
 
-    /** Le map qui contient la liste des Alias utilisé par
-          * 1. module de binarisation des données ou le module de chargement.
-            2. Module autocomplete à chaque appel.
-          */
-    std::map<std::string, std::string> Alias_List;
-
     // Référentiels de données
 
     /// Référentiel de transport en commun

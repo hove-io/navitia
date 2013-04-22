@@ -2,6 +2,7 @@
 # coding=utf-8
 import sys
 import signal
+import os
 from werkzeug.wrappers import Request, Response
 from werkzeug.wsgi import responder
 from werkzeug.routing import Map, Rule
@@ -26,7 +27,9 @@ def on_doc(request, api):
     return render(api_doc(Apis().apis_all, api), 'json', request.args.get('callback'))
 
 def on_index(request, version = None, region = None ):
-    return Response('Welcome to the navitia API. Have a look at http://www.navitia.io to learn how to use it.')
+    path = os.path.join(os.path.dirname(__file__), 'static','lost.html')
+    file = open(path, 'r')
+    return Response(file.read(), mimetype='text/html;charset=utf-8')
 
 
 def on_regions(request, version, format):

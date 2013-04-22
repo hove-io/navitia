@@ -245,16 +245,15 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     GeographicalCoord o(0,0);
 
     StreetNetwork w(sn);
-
-    auto res = w.find_nearest_stop_points(o, pl, 10);
+    auto res = w.find_nearest_stop_points(o, pl, 10, false,0);
     BOOST_CHECK_EQUAL(res.size(), 0);
 
-    res = w.find_nearest_stop_points(o, pl, 100);
+    res = w.find_nearest_stop_points(o, pl, 100, false,0);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].first , 0);
     BOOST_CHECK_CLOSE(res[0].second, 50, 1);
 
-    res = w.find_nearest_stop_points(o, pl, 1000);
+    res = w.find_nearest_stop_points(o, pl, 1000, false,0);
     std::sort(res.begin(), res.end());
     BOOST_CHECK_EQUAL(res.size(), 2);
     BOOST_CHECK_EQUAL(res[0].first , 0);
@@ -598,7 +597,7 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
 
         geo_ref.build_autocomplete_list();
 
-        result = geo_ref.find_ways("10 rue jean jaures", nbmax);
+        result = geo_ref.find_ways("10 rue jean jaures", nbmax, [](int){return true;});
         if (result.empty())
             result.clear();
 

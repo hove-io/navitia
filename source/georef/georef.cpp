@@ -290,6 +290,10 @@ ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoR
     }
 }
 
+void ProjectionData::inc_vertex(const vertex_t value){
+    this->source += value;
+    this->target += value;
+}
 
 
 Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord) const{
@@ -327,10 +331,23 @@ std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCo
     return to_return;
 }
 
+void GeoRef::init_offset(nt::idx_t value){
+    bike_offset = value;
+    car_offset = 2 * value;
+}
+
 void GeoRef::build_proximity_list(){
     pl.clear(); // vider avant de reconstruire
-    BOOST_FOREACH(vertex_t u, boost::vertices(this->graph)){
-        pl.add(graph[u].coord, u);
+
+    if(this->bike_offset == 0){
+        BOOST_FOREACH(vertex_t u, boost::vertices(this->graph)){
+            pl.add(graph[u].coord, u);
+        }
+    }else{
+        // Ne pas construire le proximitylist avec les noeuds utilisés par les arcs pour la recherche vélo, voiture
+        for(vertex_t v = 0; v < this->bike_offset; ++v){
+            pl.add(graph[v].coord, v);
+        }
     }
     pl.build();
 }
@@ -339,12 +356,12 @@ void GeoRef::build_autocomplete_list(){
     int pos = 0;
     for(Way way : ways){
         std::string key="";
-        for(auto idx : way.admins){
+        for(auto idx : way.admin_list){
             Admin admin = admins.at(idx);
-            if(key.empty()){                
-                key = admin.name;
-            }else{
-                key = key + " " + admin.name;
+            key+= " " + admin.name;
+            //Ajoute le code postal si ça existe
+            if (!admin.post_code.empty()){
+                key += " "+ admin.post_code;
             }
         }
         fl_way.add_string(way.way_type +" "+ way.name + " " + key, pos,alias, synonymes);
@@ -355,15 +372,14 @@ void GeoRef::build_autocomplete_list(){
     //Remplir les poi dans la liste autocompletion
     for(POI poi : pois){
         std::string key="";
-        for(auto idx : poi.admins){
-            Admin admin = admins.at(idx);
-            if(key.empty()){
-                key = admin.name;
-            }else{
-                key = key + " " + admin.name;
+        if (poi.visible){
+            for(auto idx : poi.admin_list){
+                Admin admin = admins.at(idx);
+                key += " " + admin.name;
             }
+
+            fl_poi.add_string(poi.name + " " + key, poi.idx ,alias, synonymes);
         }
-        fl_poi.add_string(poi.name + " " + key, poi.idx ,alias, synonymes);
     }
     fl_poi.build();
 
@@ -409,7 +425,7 @@ void GeoRef::normalize_extcode_way(){
 
 void GeoRef::normalize_extcode_admin(){
     for(Admin& admin : admins){
-        admin.uri = "admin" + admin.uri;
+        admin.uri = "admin:" + admin.id;
         this->admin_map[admin.uri] = admin.idx;
     }
 }
@@ -420,22 +436,27 @@ void GeoRef::normalize_extcode_admin(){
     * Si le numéro est rensigné, on renvoie les coordonnées les plus proches
     * Sinon le barycentre de la rue
 */
-std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string & str, const int nbmax) const{
+std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std::string & str, const int nbmax, std::function<bool(nt::idx_t)> keep_element) const{
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> to_return;
     boost::tokenizer<> tokens(str);
 
     int search_number = str_to_int(*tokens.begin());
     std::string search_str;
 
+    //Si un numero existe au début de la chaine alors il faut l'exclure.
     if (search_number != -1){
         search_str = "";
+        int i = 0;
         for(auto token : tokens){
-            search_str = search_str + " " + token;
-        }
+            if (i != 0){
+                search_str = search_str + " " + token;
+            }
+            ++i;
+           }
     }else{
         search_str = str;
     }
-    to_return = fl_way.find_complete(search_str, alias, synonymes, word_weight, nbmax);
+    to_return = fl_way.find_complete(search_str, alias, synonymes, word_weight, nbmax, keep_element);
 
     /// récupération des coordonnées du numéro recherché pour chaque rue
     for(auto &result_item  : to_return){

@@ -66,6 +66,7 @@ void PoiParser::fill_poi(GeoRef & georef_to_fill)
         LOG4CPLUS_ERROR(logger, "Erreur lors du parsing de " + csv.filename +" . Il manque les colonnes : " + csv.missing_headers(mandatory_headers));
     }
     int id_c = csv.get_pos_col("poi_id"), name_c = csv.get_pos_col("poi_name"), weight_c = csv.get_pos_col("poi_weight"),
+            visible_c = csv.get_pos_col("poi_visible"),
             lat_c = csv.get_pos_col("poi_lat"), lon_c = csv.get_pos_col("poi_lon"), type_c = csv.get_pos_col("poi_type_id");
 
     int id = 1;
@@ -94,7 +95,6 @@ void PoiParser::fill_poi(GeoRef & georef_to_fill)
             }
 
             // Lire la référence du type de POI
-            poi.poitype = row[type_c];
             auto ptype = georef_to_fill.poitype_map.find(row[type_c]);
             if (ptype == georef_to_fill.poitype_map.end()){
                 // ajouter l'Index par défaut ??
@@ -102,6 +102,9 @@ void PoiParser::fill_poi(GeoRef & georef_to_fill)
             }
             else
                 poi.poitype_idx = ptype->second;
+
+            if (visible_c != -1 && row[visible_c] != "")
+                poi.visible = boost::lexical_cast<bool>(row[visible_c]);
             georef_to_fill.pois.push_back(poi);
             ++id;
         }

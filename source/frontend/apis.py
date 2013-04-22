@@ -66,7 +66,18 @@ class Arguments:
         "walking_distance" : Argument("Maximum walking distance in meters", int,
                                       False, False, 1000),
         "wheelchair" : Argument("Does the journey has to be accessible?",
-                                boolean, False, False, False)
+                                boolean, False, False, False),
+        "origin_mode" : Argument("Transportation mode to reach public transport",
+                                str, False, False, "walking",allowableValues=["walking", "bike","car"]),
+        "destination_mode" : Argument("Transportation mode after public transport",
+                                str, False, False, "walking",allowableValues=["walking", "bike","car"]),
+        "bike_speed" : Argument("Biking speed in m/s", float, False, False, 3.38),
+        "bike_distance" : Argument("Maximum biking distance in meters", int,
+                                      False, False, 4000),
+        "car_speed" : Argument("Car speed in m/s", float, False, False, 13.38),
+        "car_distance" : Argument("Maximum car distance in meters", int,
+                                      False, False, 10000),
+
         }
 
     isochroneArguments ={
@@ -80,7 +91,16 @@ class Arguments:
         "walking_distance" : Argument("Maximum walking distance in meters", int,
                                       False, False, 1000),
         "wheelchair" : Argument("Does the journey has to be accessible?",
-                                boolean, False, False, False)        }
+                                boolean, False, False, False),
+    	"origin_mode" : Argument("Transportation mode to reach public transport",
+                                str, False, False, "walking",allowableValues=["walking", "bike","car"]),
+        "bike_speed" : Argument("Biking speed in m/s", float, False, False, 3.38),
+        "bike_distance" : Argument("Maximum biking distance in meters", int,
+                                      False, False, 4000),
+        "car_speed" : Argument("Car speed in m/s", float, False, False, 13.38),
+        "car_distance" : Argument("Maximum car distance in meters", int,
+                                      False, False, 10000),
+        }
 
 class Apis:
     apis = {
@@ -94,7 +114,8 @@ class Apis:
                                     50),
                 "startPage" : Argument("The page number of the ptref result", int,
                                         False, False, 0),
-		"nbmax" : Argument("Maximum number of objects in the response", int, False, False, 10)
+		        "nbmax" : Argument("Maximum number of objects in the response", int, False, False, 10),
+                "admin_uri[]" : Argument("code uri of admin", str, False, True, [])
             },
             "description" : "Retrieves the objects which contains in their name the \"name\"",
             "order":2},
