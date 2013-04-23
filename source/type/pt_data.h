@@ -19,7 +19,7 @@ struct PT_Data : boost::noncopyable{
 #define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name> collection_name; ExtCodeMap collection_name##_map;
     ITERATE_NAVITIA_PT_TYPES(COLLECTION_AND_MAP)
     std::vector<StopTime> stop_times;
-    std::vector<JourneyPatternPointConnection> journey_pattern_point_connections;
+    std::vector<Connection> journey_pattern_point_connections;
     std::vector<std::vector<Connection> > stop_point_connections;
 
     // First letter

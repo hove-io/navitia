@@ -189,9 +189,9 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Connection *
         return ;
     navitia::type::Connection c = data.pt_data.connections.at(idx);
     connection->set_seconds(c.duration);
-    if(c.departure_stop_point_idx != type::invalid_idx && c.destination_stop_point_idx != type::invalid_idx && max_depth > 0){
-        fill_pb_object(c.departure_stop_point_idx, data, connection->mutable_origin(), max_depth - 1, now, action_period);
-        fill_pb_object(c.destination_stop_point_idx, data, connection->mutable_destination(), max_depth - 1, now, action_period);
+    if(c.departure_idx != type::invalid_idx && c.destination_idx != type::invalid_idx && max_depth > 0){
+        fill_pb_object(c.departure_idx, data, connection->mutable_origin(), max_depth - 1, now, action_period);
+        fill_pb_object(c.destination_idx, data, connection->mutable_destination(), max_depth - 1, now, action_period);
     }
 }
 

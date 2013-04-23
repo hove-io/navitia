@@ -206,46 +206,29 @@ enum class ConnectionType {
     Walking = 2,
     VJ = 3,
     Guaranteed = 4,
-    Default = 5
+    Default = 5,
+    extension,
+    guarantee,
+    undefined
 };
 
 
 struct Connection: public Header, hasProperties{
     const static Type_e type = Type_e::Connection;
-    idx_t departure_stop_point_idx;
-    idx_t destination_stop_point_idx;
+    idx_t departure_idx;
+    idx_t destination_idx;
     int duration;
     int max_duration;
     ConnectionType connection_type;
 
-    Connection() : departure_stop_point_idx(invalid_idx), destination_stop_point_idx(invalid_idx), duration(0),
+    Connection() : departure_idx(invalid_idx), destination_idx(invalid_idx), duration(0),
         max_duration(0){};
     
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & uri & departure_stop_point_idx & destination_stop_point_idx & duration & max_duration;
+        ar & id & idx & uri & departure_idx & destination_idx & duration & max_duration;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
-};
-
-enum ConnectionKind {
- extension,
- guarantee,
- undefined
-};
-
-struct JourneyPatternPointConnection : public Header {
-      idx_t departure_journey_pattern_point_idx;
-      idx_t destination_journey_pattern_point_idx;
-      ConnectionKind connection_kind;
-      int length;
-  
-      JourneyPatternPointConnection() : departure_journey_pattern_point_idx(invalid_idx),  destination_journey_pattern_point_idx(invalid_idx),
-                            connection_kind(undefined), length(0){}
-  
-      template<class Archive> void serialize(Archive & ar, const unsigned int) {
-          ar & id & idx & uri & departure_journey_pattern_point_idx & destination_journey_pattern_point_idx & connection_kind & length;
-      }
 };
  
 

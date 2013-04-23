@@ -303,8 +303,8 @@ std::vector<idx_t> Connection::get(Type_e type, const PT_Data & ) const {
     std::vector<idx_t> result;
     switch(type) {
     case Type_e::StopPoint:
-        result.push_back(this->departure_stop_point_idx);
-        result.push_back(this->destination_stop_point_idx);
+        result.push_back(this->departure_idx);
+        result.push_back(this->destination_idx);
         break;
     default: break;
     }

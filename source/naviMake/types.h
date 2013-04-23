@@ -54,7 +54,7 @@ struct JourneyPatternPointConnection: public Header {
     JourneyPatternPointConnectionKind journey_pattern_point_connection_kind;
     int length;
 
-    navitia::type::JourneyPatternPointConnection get_navitia_type() const;
+    navitia::type::Connection get_navitia_type() const;
 
     JourneyPatternPointConnection() : departure_journey_pattern_point(NULL), destination_journey_pattern_point(NULL),
                             journey_pattern_point_connection_kind(UndefinedJourneyPatternPointConnectionKind), length(0) {}
