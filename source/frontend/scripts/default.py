@@ -207,7 +207,7 @@ class Script:
         req.journeys.streetnetwork_params.walking_speed = request_args["walking_speed"]
         req.journeys.streetnetwork_params.walking_distance = request_args["walking_distance"]
         req.journeys.streetnetwork_params.origin_mode = request_args["origin_mode"]
-        req.journeys.streetnetwork_params.destination_mode = request_args["destination_mode"]
+        req.journeys.streetnetwork_params.destination_mode = request_args["destination_mode"] if "destination_mode" in request_args else ""
         req.journeys.streetnetwork_params.bike_speed = request_args["bike_speed"]
         req.journeys.streetnetwork_params.bike_distance = request_args["bike_distance"]
         req.journeys.streetnetwork_params.car_speed = request_args["car_speed"]
