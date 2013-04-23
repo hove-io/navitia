@@ -39,7 +39,7 @@ if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     SET(CMAKE_C_FLAGS "-ferror-limit=10 -I/usr/local/include/c++/v1 -pthread")
 endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1  -O1 -fno-omit-frame-pointer")
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1")
 
 
 
