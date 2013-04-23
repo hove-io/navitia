@@ -1,9 +1,7 @@
 #include "osm2nav.h"
 #include <stdio.h>
-
 #include <iostream>
 #include <boost/lexical_cast.hpp>
-
 
 #include "osm_tags_reader.h"
 #include "georef/georef.h"
@@ -193,10 +191,10 @@ void Visitor::HouseNumbers(){
                 } // Message ?
             }
         } catch(navitia::proximitylist::NotFound) {
-            std::cout << "Attention, l'adresse n'est pas importée dont le numéro et les coordonnées sont : [" << gr_hn.number<<";"<< gr_hn.coord.lon()<< ";"<< gr_hn.coord.lat()<< "] Impossible de trouver le segment le plus proche.  " << std::endl;
+            LOG4CPLUS_WARN(logger, "Attention, l'adresse n'est pas importée dont le numéro et les coordonnées sont : [" << gr_hn.number<<";"<< gr_hn.coord.lon()<< ";"<< gr_hn.coord.lat()<< "] Impossible de trouver le segment le plus proche.");
             ++Count;
         }catch(...){
-            std::cout << "Attention, l'adresse n'est pas importée dont le numéro et les coordonnées sont : [" << gr_hn.number<<";"<< gr_hn.coord.lon()<< ";"<< gr_hn.coord.lat()<< "].  " << std::endl;
+            LOG4CPLUS_WARN(logger, "Attention, l'adresse n'est pas importée dont le numéro et les coordonnées sont : [" << gr_hn.number<<";"<< gr_hn.coord.lon()<< ";"<< gr_hn.coord.lat()<< "].");
             ++Count;
         }
     }
@@ -213,7 +211,7 @@ type::GeographicalCoord Visitor::admin_centre_coord(const CanalTP::References & 
                 best.set_lat(n.coord.lat());
                 break;
             }catch(...){
-                std::cout << "AttenReferencestion, le noued  : [" << ref.member_id<< " est introuvable].  " << std::endl;;
+                LOG4CPLUS_WARN(logger, "Attention, le noued  : [" << ref.member_id<< " est introuvable].");
             }
         }
     }
@@ -260,7 +258,7 @@ std::vector<uint64_t> Visitor::nodes_of_relation(const CanalTP::References & ref
                 if (ref.member_type == OSMPBF::Relation_MemberType_WAY){
                     auto osmway_it = ways.find(ref.member_id);
                     if(osmway_it == ways.end()){
-                        std::cout << "Rue introuvable :"+ std::to_string(ref.member_id) << std::endl;
+                        LOG4CPLUS_WARN(logger, "Rue introuvable :"+ std::to_string(ref.member_id));
                     } else {
                         current_nodes = osmway_it->second.refs;
                     }

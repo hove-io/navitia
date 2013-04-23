@@ -82,7 +82,10 @@ struct Visitor{
     navitia::georef::Levels levellist;
     std::map<std::string,std::string>::iterator iter;
 
-    Visitor(GeoRef & to_fill) : total_ways(0), total_house_number(0), geo_ref(to_fill){}
+    Visitor(GeoRef & to_fill) : total_ways(0), total_house_number(0), geo_ref(to_fill){
+        init_logger();
+        logger = log4cplus::Logger::getInstance("log");
+    }
 
     void node_callback(uint64_t osmid, double lon, double lat, const CanalTP::Tags & tags);
     void way_callback(uint64_t osmid, const CanalTP::Tags &tags, const std::vector<uint64_t> &refs);
