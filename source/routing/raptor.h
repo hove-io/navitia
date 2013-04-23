@@ -1,15 +1,16 @@
 #pragma once
 #include "type/type.h"
 #include "type/data.h"
+#include "type/datetime.h"
 #include "routing.h"
 #include "utils/timer.h"
 #include <unordered_map>
 #include "boost/dynamic_bitset.hpp"
-#include "routing/raptor_utils.h"
-#include "routing/dataraptor.h"
+#include "dataraptor.h"
 #include "best_trip.h"
-#include "raptor_init.h"
 #include "raptor_path.h"
+#include "raptor_init.h"
+#include "raptor_utils.h"
 
 namespace navitia { namespace routing {
 
@@ -19,7 +20,8 @@ struct RAPTOR
     const navitia::type::Data & data;
 
     ///Contient les heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point à chaque tour
-    map_labels_t labels;
+    std::vector<label_vector_t> labels;
+    std::vector<vector_idx> boardings;
     ///Contient les meilleures heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point
     label_vector_t best_labels;
     ///Contient tous les points d'arrivée, et la meilleure façon dont on est arrivé à destination
@@ -45,6 +47,8 @@ struct RAPTOR
             labels.assign(20, data.dataRaptor.labels_const);
     }
 
+
+//    struct Departure_Type;
     ///Initialise les structure retour et b_dest
     void clear_and_init(std::vector<Departure_Type> departs,
               std::vector<std::pair<type::idx_t, double> > destinations,
@@ -110,6 +114,21 @@ struct RAPTOR
     /// Retourne à quel tour on a trouvé la meilleure solution pour ce journey_patternpoint
     /// Retourne -1 s'il n'existe pas de meilleure solution
     int best_round(type::idx_t journey_pattern_point_idx);
+
+    inline boarding_type get_type(size_t count, type::idx_t journey_pattern_point) const {
+        return navitia::routing::get_type(count, journey_pattern_point, labels, boardings, data);
+    }
+
+    inline type::idx_t get_boarding_jpp(size_t count, type::idx_t journey_pattern_point) const {
+        return navitia::routing::get_boarding_jpp(count, journey_pattern_point, labels, boardings, data);
+    }
+    inline std::pair<type::idx_t, uint32_t> get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const type::Properties &required_properties, bool clockwise) const {
+        return navitia::routing::get_current_stidx_gap(count, journey_pattern_point, labels, boardings, required_properties, clockwise, data);
+    }
+
+
+
+
 
     ~RAPTOR() {}
 

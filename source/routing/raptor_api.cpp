@@ -12,6 +12,7 @@ std::string iso_string(const nt::Data & d, int date, int hour){
     return boost::posix_time::to_iso_string(date_time);
 }
 
+
 void fill_section(pbnavitia::Section *pb_section, navitia::type::idx_t vj_idx,
         const nt::Data & d, boost::posix_time::ptime now, boost::posix_time::time_period action_period) {
 
@@ -31,6 +32,7 @@ void fill_section(pbnavitia::Section *pb_section, navitia::type::idx_t vj_idx,
     fill_pb_object(line.commercial_mode_idx, d, mline->mutable_commercial_mode(), 0, now, action_period);
     fill_pb_object(vj.physical_mode_idx, d, mvj->mutable_physical_mode(), 0, now, action_period);
 }
+
 
 pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths, const nt::Data & d, streetnetwork::StreetNetwork & worker,
                                 const type::EntryPoint &origin,
@@ -143,7 +145,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
     return pb_response;
 }
 
-std::vector<std::pair<type::idx_t, double> > 
+
+std::vector<std::pair<type::idx_t, double> >
 get_stop_points( const type::EntryPoint &ep, const type::Data & data,
                 streetnetwork::StreetNetwork & worker, bool use_second = false/*,
                 const int walking_distance = 1000*/){
@@ -204,8 +207,7 @@ parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str,
 
 
 pbnavitia::Response 
-make_response(RAPTOR &raptor,
-              const type::EntryPoint &origin,
+make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               const type::EntryPoint &destination, 
               const std::vector<std::string> &datetimes_str, bool clockwise,
               const float walking_speed, const int walking_distance, const bool wheelchair,
@@ -282,6 +284,7 @@ make_response(RAPTOR &raptor,
     return make_pathes(result, raptor.data, worker, origin, destination);
 }
 
+
 pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    type::EntryPoint origin,
                                    const std::string &datetime_str,bool clockwise,
@@ -322,8 +325,8 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
         navitia::type::DateTime best = bound;
         type::idx_t best_rp = type::invalid_idx;
         for(type::idx_t rpidx : sp.journey_pattern_point_list) {
-            if(raptor.best_labels[rpidx].arrival < best) {
-                best = raptor.best_labels[rpidx].arrival;
+            if(raptor.best_labels[rpidx] < best) {
+                best = raptor.best_labels[rpidx];
                 best_rp = rpidx;
             }
         }
@@ -333,15 +336,15 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
             type::idx_t initial_rp;
             type::DateTime initial_dt;
             int round = raptor.best_round(best_rp);
-            boost::tie(initial_rp, initial_dt) = getFinalRpidAndDate(round, best_rp, raptor.labels, clockwise, raptor.data);
+            boost::tie(initial_rp, initial_dt) = getFinalRpidAndDate(round, best_rp, clockwise, raptor.labels, raptor.boardings, raptor.data);
 
-            int duration = ::abs(label.arrival - init_dt);
+            int duration = ::abs(label - init_dt);
 
             if(duration <= max_duration) {
                 auto pb_item = response.mutable_isochrone()->add_items();
                 auto pb_stop_date_time = pb_item->mutable_stop_date_time();
-                pb_stop_date_time->set_arrival_date_time(iso_string(raptor.data, label.arrival.date(), label.arrival.hour()));
-                pb_stop_date_time->set_departure_date_time(iso_string(raptor.data, label.departure.date(), label.departure.hour()));
+                pb_stop_date_time->set_arrival_date_time(iso_string(raptor.data, label.date(), label.hour()));
+                pb_stop_date_time->set_departure_date_time(iso_string(raptor.data, label.date(), label.hour()));
                 pb_item->set_duration(duration);
                 pb_item->set_nb_changes(round);
                 fill_pb_object(raptor.data.pt_data.journey_pattern_points[best_rp].stop_point_idx, raptor.data, pb_stop_date_time->mutable_stop_point(), 0);

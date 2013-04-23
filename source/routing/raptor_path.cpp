@@ -5,27 +5,29 @@ namespace navitia { namespace routing {
     
 std::vector<Path> 
 makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
-           navitia::type::DateTime dt, const float walking_speed, const RAPTOR &raptor_, bool clockwise) {
+           type::DateTime dt, const float walking_speed, const type::Properties &required_properties, const RAPTOR &raptor_, bool clockwise) {
     std::vector<Path> result;
-    navitia::type::DateTime best_dt = dt;
+    navitia::type::DateTime best_dt = clockwise ? type::DateTime::inf : type::DateTime::min;
     for(unsigned int i=1;i<=raptor_.count;++i) {
         type::idx_t best_rp = type::invalid_idx;
         for(auto spid_dist : destinations) {
             for(auto dest : raptor_.data.pt_data.stop_points[spid_dist.first].journey_pattern_point_list) {
-                if(raptor_.labels[i][dest].type != uninitialized) {
-                    navitia::type::DateTime current_dt = raptor_.labels[i][dest].departure;
-                    if(clockwise && current_dt + spid_dist.second/walking_speed <= best_dt){
-                        best_dt = current_dt + spid_dist.second/walking_speed;
-                        best_rp = dest;
-                    } else if(!clockwise && current_dt - (spid_dist.second/walking_speed) >= best_dt){
-                        best_dt = current_dt - (spid_dist.second/walking_speed);
+                if(raptor_.get_type(i, dest) != boarding_type::uninitialized) {
+                    navitia::type::DateTime current_dt = raptor_.labels[i][dest];
+                    if(clockwise)
+                        current_dt = current_dt + spid_dist.second/walking_speed;
+                    else
+                        current_dt = current_dt - spid_dist.second/walking_speed;
+                    if(        (clockwise && ((best_dt == type::DateTime::inf && current_dt <= dt) || (best_dt != type::DateTime::inf && current_dt < best_dt)))
+                            ||(!clockwise && ((best_dt == type::DateTime::min && current_dt >= dt) || (best_dt != type::DateTime::min && current_dt > best_dt))) ){
+                        best_dt = current_dt ;
                         best_rp = dest;
                     }
                 }
             }
         }
         if(best_rp != type::invalid_idx)
-            result.push_back(makePath(best_rp, i, clockwise, raptor_));
+            result.push_back(makePath(best_rp, i, clockwise, required_properties, raptor_));
     }
 
     return result;
@@ -33,81 +35,74 @@ makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
 
 
 Path 
-makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
+makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,  const type::Properties &required_properties,
          const RAPTOR &raptor_) {
     Path result;
-    unsigned int current_rpid = destination_idx;
-    label l = raptor_.labels[countb][current_rpid];
-    navitia::type::DateTime workingDate;
-    if(clockwise)
-        workingDate = l.arrival;
-    else
-        workingDate = l.departure;
+    unsigned int current_jpp = destination_idx;
+    type::DateTime l = raptor_.labels[countb][current_jpp],
+                   workingDate = l;
 
-    navitia::type::StopTime current_st;
-    navitia::type::idx_t rpid_embarquement = navitia::type::invalid_idx;
+    type::StopTime current_st;
+    type::idx_t boarding_jpp = navitia::type::invalid_idx;
 
     bool stop = false;
 
     PathItem item;
     // On boucle tant
     while(!stop) {
-
         // Est-ce qu'on a une section marche à pied ?
-        if(raptor_.labels[countb][current_rpid].type == connection ||
-           raptor_.labels[countb][current_rpid].type == connection_extension ||
-           raptor_.labels[countb][current_rpid].type == connection_guarantee) {
-            l = raptor_.labels[countb][current_rpid];
-            auto r2 = raptor_.labels[countb][l.rpid_embarquement];
+        if(raptor_.get_type(countb, current_jpp) == boarding_type::connection ||
+           raptor_.get_type(countb, current_jpp) == boarding_type::connection_extension ||
+           raptor_.get_type(countb, current_jpp) == boarding_type::connection_guarantee) {
+            l = raptor_.labels[countb][current_jpp];
+            auto r2 = raptor_.labels[countb][raptor_.get_boarding_jpp(countb, current_jpp)];
             if(clockwise) {
-                item = PathItem(r2.arrival, l.departure);
+                item = PathItem(r2, l);
             } else {
-                item = PathItem(l.departure, r2.arrival);
+                item = PathItem(l, r2);
             }
-            item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_rpid].stop_point_idx);
-            item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[l.rpid_embarquement].stop_point_idx);
-            if(l.type == connection)
+            item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_jpp].stop_point_idx);
+            item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[raptor_.get_boarding_jpp(countb, current_jpp)].stop_point_idx);
+            if(raptor_.get_type(countb, current_jpp) == boarding_type::connection)
                 item.type = walking;
-            else if(l.type == connection_extension)
-                item.type = extension;
-            else if(l.type == connection_guarantee)
-                item.type = guarantee;
+//            else if(get_type(countb, current_jpp) == connection_extension)
+//                item.type = extension;
+//            else if(get_type(countb, current_jpp) == connection_guarantee)
+//                item.type = guarantee;
             result.items.push_back(item);
-            rpid_embarquement = navitia::type::invalid_idx;
-            current_rpid = l.rpid_embarquement;
+            boarding_jpp = type::invalid_idx;
+            current_jpp = raptor_.get_boarding_jpp(countb, current_jpp);
        
         } else { // Sinon c'est un trajet TC
             // Est-ce que qu'on a à faire à un nouveau trajet ?
-            if(rpid_embarquement == navitia::type::invalid_idx) {
-                l = raptor_.labels[countb][current_rpid];
-                rpid_embarquement = l.rpid_embarquement;
-                current_st = raptor_.data.pt_data.stop_times.at(l.stop_time_idx);
+            if(boarding_jpp == type::invalid_idx) {
+                l = raptor_.labels[countb][current_jpp];
+                boarding_jpp = raptor_.get_boarding_jpp(countb, current_jpp);
+                uint32_t gap_frep;
+                type::idx_t stidx;
+                std::tie(stidx, gap_frep) = raptor_.get_current_stidx_gap(countb, current_jpp, required_properties, clockwise);
+                current_st = raptor_.data.pt_data.stop_times.at(stidx);
                 //Sert pour les horaires en  fréquences
-                uint32_t gap = l.arrival.hour() - current_st.arrival_time%type::DateTime::SECONDS_PER_DAY;
 
                 item = PathItem();
                 item.type = public_transport;
 
-                if(clockwise) {
-                    workingDate = l.departure;
-                }
-                else {
-                    workingDate = l.arrival;
-                }
+                workingDate = l;
+                workingDate.update((clockwise?current_st.departure_time:current_st.arrival_time), clockwise);
                 item.vj_idx = current_st.vehicle_journey_idx;
-                while(rpid_embarquement != current_rpid) {
+                while(boarding_jpp != current_jpp) {
 
                     //On stocke le sp, et les temps
-                    item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_rpid].stop_point_idx);
+                    item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_jpp].stop_point_idx);
                     if(clockwise) {
-                        workingDate.update(current_st.departure_time+gap, false);
+                        workingDate.update(current_st.departure_time+gap_frep, !clockwise);
                         item.departures.push_back(workingDate);
-                        workingDate.update(current_st.arrival_time+gap, false);
+                        workingDate.update(current_st.arrival_time+gap_frep, !clockwise);
                         item.arrivals.push_back(workingDate);
                     } else {
-                        workingDate.update(current_st.arrival_time+gap);
+                        workingDate.update(current_st.arrival_time+gap_frep, !clockwise);
                         item.arrivals.push_back(workingDate);
-                        workingDate.update(current_st.departure_time+gap);
+                        workingDate.update(current_st.departure_time+gap_frep, !clockwise);
                         item.departures.push_back(workingDate);
                     }
 
@@ -118,21 +113,21 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                         current_st = raptor_.data.pt_data.stop_times.at(current_st.idx + 1);
 
                     //Est-ce que je suis sur un journey_pattern point de fin 
-                    current_rpid = current_st.journey_pattern_point_idx;
+                    current_jpp = current_st.journey_pattern_point_idx;
                 }
                 // Je stocke le dernier stop point, et ses temps d'arrivée et de départ
-                item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_rpid].stop_point_idx);
+                item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_jpp].stop_point_idx);
                 if(clockwise) {
-                    workingDate.update(current_st.departure_time+gap, false);
+                    workingDate.update(current_st.departure_time+gap_frep, !clockwise);
                     item.departures.push_back(workingDate);
-                    workingDate.update(current_st.arrival_time+gap, false);
+                    workingDate.update(current_st.arrival_time+gap_frep,  !clockwise);
                     item.arrivals.push_back(workingDate);
                     item.arrival = item.arrivals.front();
                     item.departure = item.departures.back();
                 } else {
-                    workingDate.update(current_st.arrival_time+gap);
+                    workingDate.update(current_st.arrival_time+gap_frep, !clockwise);
                     item.arrivals.push_back(workingDate);
-                    workingDate.update(current_st.departure_time+gap);
+                    workingDate.update(current_st.departure_time+gap_frep, !clockwise);
                     item.departures.push_back(workingDate);
                     item.arrival = item.arrivals.back();
                     item.departure = item.departures.front();
@@ -142,11 +137,11 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                 result.items.push_back(item);
 
                 --countb;
-                rpid_embarquement = navitia::type::invalid_idx ;
+                boarding_jpp = navitia::type::invalid_idx ;
 
             }
         }
-        if(raptor_.labels[countb][current_rpid].type == depart)
+        if(raptor_.get_type(countb, current_jpp) == boarding_type::departure)
             stop = true;
 
     }
@@ -165,11 +160,11 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
     else
         result.duration = 0;
     int count_visites = 0;
-    for(auto t: raptor_.best_labels) {
-        if(t.type != uninitialized) {
-            ++count_visites;
-        }
-    }
+//    for(auto t: raptor_.best_labels) {
+//        if(t.type != uninitialized) {
+//            ++count_visites;
+//        }
+//    }
     result.percent_visited = 100*count_visites / raptor_.data.pt_data.stop_points.size();
 
     result.nb_changes = 0;
@@ -215,9 +210,9 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
 
 
 Path 
-makePathreverse(unsigned int destination_idx, unsigned int countb,
+makePathreverse(unsigned int destination_idx, unsigned int countb,  const type::Properties &required_properties,
                 const RAPTOR &raptor_) {
-    return makePath(destination_idx, countb, false, raptor_);
+    return makePath(destination_idx, countb, false, required_properties, raptor_);
 }
 
 

@@ -2,6 +2,17 @@
 
 namespace navitia { namespace routing {
 
+std::pair<type::idx_t, uint32_t>
+best_trip(const type::JourneyPattern & journey_pattern, const unsigned int order,
+          const navitia::type::DateTime &dt,
+          const type::Properties &required_properties,
+          const bool clockwise, const type::Data &data) {
+    if(clockwise)
+        return earliest_trip(journey_pattern, order, dt, data, required_properties);
+    else
+        return tardiest_trip(journey_pattern, order, dt, data, required_properties);
+}
+
 
 std::pair<type::idx_t, uint32_t> 
     earliest_trip(const type::JourneyPattern & journey_pattern, const unsigned int order,
