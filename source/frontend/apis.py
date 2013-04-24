@@ -104,11 +104,11 @@ class Arguments:
 
 class Apis:
     apis = {
-        "autocomplete" : {
+        "places" : {
             "arguments" :{
                 "q" : Argument("The data to search", unicode, True, False, order = 1),
-                "object_type[]" : Argument("The type of datas you want in return", str, False, True, 
-                                           ["stop_area", "stop_point", "address", "poi", "admin"], 2,["stop_area", "stop_point", "address", "poi", "admin", "line"]),
+                "type[]" : Argument("The type of datas you want in return", str, False, True, 
+                                           ["stop_area", "stop_point", "address", "poi", "administrative_region"], 2,["stop_area", "stop_point", "address", "poi", "admin", "line"]),
                 "depth" : Argument("Maximum depth on objects", int, False, False, 1),
                 "count" : Argument("Number of elements per page", int, False, False,
                                     50),
@@ -117,7 +117,7 @@ class Apis:
 		        "nbmax" : Argument("Maximum number of objects in the response", int, False, False, 10),
                 "admin_uri[]" : Argument("code uri of admin", str, False, True, [])
             },
-            "description" : "Retrieves the objects which contains in their name the \"name\"",
+            "description" : "Retrieves the places which contains in their name the \"name\"",
             "order":2},
         "next_departures" : {
             "arguments" : Arguments.nextTimesArguments, 

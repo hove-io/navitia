@@ -8,52 +8,45 @@ namespace navitia { namespace autocomplete {
  */
 void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
                const nt::Type_e type, uint32_t depth, const nt::Data& data,
-               pbnavitia::Autocomplete& pb_fl){
+               pbnavitia::Response & pb_response){
     for(auto result_item : result){
-        pbnavitia::AutocompleteItem* item = pb_fl.add_items();
-        pbnavitia::PlaceMark* place_mark = item->mutable_object();
+        pbnavitia::Place* place = pb_response.add_places();
         switch(type){
         case nt::Type_e::StopArea:
-            place_mark->set_type(pbnavitia::STOP_AREA);
-            fill_pb_object(result_item.idx, data, place_mark->mutable_stop_area(), depth);
-            item->set_name(data.pt_data.stop_areas[result_item.idx].name);
-            item->set_uri(data.pt_data.stop_areas[result_item.idx].uri);
-            item->set_quality(result_item.quality);
+            fill_pb_object(result_item.idx, data, place->mutable_stop_area(), depth);
+            place->set_name(data.pt_data.stop_areas[result_item.idx].name);
+            place->set_uri(data.pt_data.stop_areas[result_item.idx].uri);
+            place->set_quality(result_item.quality);
             break;
         case nt::Type_e::Admin:
-            place_mark->set_type(pbnavitia::ADMIN);
-            fill_pb_object(result_item.idx, data, place_mark->add_admins(), depth);
-            item->set_quality(result_item.quality);
-            item->set_uri(data.geo_ref.admins[result_item.idx].uri);
-            item->set_name(data.geo_ref.admins[result_item.idx].name);
+            fill_pb_object(result_item.idx, data, place->mutable_administrative_region(), depth);
+            place->set_quality(result_item.quality);
+            place->set_uri(data.geo_ref.admins[result_item.idx].uri);
+            place->set_name(data.geo_ref.admins[result_item.idx].name);
             break;
         case nt::Type_e::StopPoint:
-            place_mark->set_type(pbnavitia::STOP_POINT);
-            fill_pb_object(result_item.idx, data, place_mark->mutable_stop_point(), depth);
-            item->set_name(data.pt_data.stop_points[result_item.idx].name);
-            item->set_uri(data.pt_data.stop_points[result_item.idx].uri);
-            item->set_quality(result_item.quality);
+            fill_pb_object(result_item.idx, data, place->mutable_stop_point(), depth);
+            place->set_name(data.pt_data.stop_points[result_item.idx].name);
+            place->set_uri(data.pt_data.stop_points[result_item.idx].uri);
+            place->set_quality(result_item.quality);
             break;
         case nt::Type_e::Address:
-            place_mark->set_type(pbnavitia::ADDRESS);
-            fill_pb_object(result_item.idx, data, place_mark->mutable_address(), result_item.house_number,result_item.coord, depth);
-            item->set_name(data.geo_ref.ways[result_item.idx].name);
-            item->set_uri(data.geo_ref.ways[result_item.idx].uri+":"+boost::lexical_cast<std::string>(result_item.house_number));
-            item->set_quality(result_item.quality);
+            fill_pb_object(result_item.idx, data, place->mutable_address(), result_item.house_number,result_item.coord, depth);
+            place->set_name(data.geo_ref.ways[result_item.idx].name);
+            place->set_uri(data.geo_ref.ways[result_item.idx].uri+":"+boost::lexical_cast<std::string>(result_item.house_number));
+            place->set_quality(result_item.quality);
             break;
         case nt::Type_e::POI:
-            place_mark->set_type(pbnavitia::POI);
-            fill_pb_object(result_item.idx, data, place_mark->mutable_poi(), depth);
-            item->set_name(data.geo_ref.pois[result_item.idx].name);
-            item->set_uri(data.geo_ref.pois[result_item.idx].uri);
-            item->set_quality(result_item.quality);
+            fill_pb_object(result_item.idx, data, place->mutable_poi(), depth);
+            place->set_name(data.geo_ref.pois[result_item.idx].name);
+            place->set_uri(data.geo_ref.pois[result_item.idx].uri);
+            place->set_quality(result_item.quality);
             break;
         case nt::Type_e::Line:
-            place_mark->set_type(pbnavitia::LINE);
-            fill_pb_object(result_item.idx, data, place_mark->mutable_line(), depth);
-            item->set_name(data.pt_data.lines[result_item.idx].name);
-            item->set_uri(data.pt_data.lines[result_item.idx].uri);
-            item->set_quality(result_item.quality);
+            fill_pb_object(result_item.idx, data, place->mutable_line(), depth);
+            place->set_name(data.pt_data.lines[result_item.idx].name);
+            place->set_uri(data.pt_data.lines[result_item.idx].uri);
+            place->set_quality(result_item.quality);
         default:
             break;
         }
@@ -88,7 +81,7 @@ int penalty_by_type(navitia::type::Type_e ntype, bool Is_address_type) {
     return result;
 }
 
-///Mettre à jour la qualité sur le poid de POI
+///Mettre à jour la qualité sur le poids de POI
 void update_quality_by_poi_type(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result, const navitia::type::Data &d){
     for(auto &item : ac_result){
         int poi_weight = 0;
@@ -97,7 +90,7 @@ void update_quality_by_poi_type(std::vector<Autocomplete<nt::idx_t>::fl_quality>
     }
 }
 
-void Update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result, navitia::type::Type_e ntype,
+void update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result, navitia::type::Type_e ntype,
                     bool Is_address_type,
                     const navitia::type::Data &d){
     //Mettre à jour la qualité sur la pénalité par type d'adresse
@@ -106,7 +99,7 @@ void Update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result,
         item.quality -= penalty;
     }
 
-    //Mettre à jour la qualité sur le poid de POI
+    //Mettre à jour la qualité sur le poids de POI
     if (ntype ==navitia::type::Type_e::POI){
         update_quality_by_poi_type(ac_result, d);
     }
@@ -156,13 +149,12 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  uint32_t depth,
                                  int nbmax,
                                  const std::vector<std::string> &admins,
-                                 const navitia::type::Data &d){
+                                 const navitia::type::Data &d) {
 
     pbnavitia::Response pb_response;    
-    pb_response.set_requested_api(pbnavitia::AUTOCOMPLETE);
+    pb_response.set_requested_api(pbnavitia::places);
     bool addType = d.pt_data.stop_area_autocomplete.is_address_type(q, d.geo_ref.alias, d.geo_ref.synonymes);
     std::vector<Autocomplete<nt::idx_t>::fl_quality> result;
-    pbnavitia::Autocomplete* pb = pb_response.mutable_autocomplete();
     std::vector<type::idx_t> admin_idxs = admin_uris_to_idx(admins, d);
     for(nt::Type_e type : filter){
         switch(type){
@@ -187,23 +179,23 @@ pbnavitia::Response autocomplete(const std::string &q,
         default: break;
         }
 
-        //Mettre à jour les qualités en implémentant un ou plusieurs règles.
-        Update_quality(result, type, addType, d);
+        //Mettre à jour les qualités en implémentant une ou plusieurs règles.
+        update_quality(result, type, addType, d);
 
-        create_pb(result, type, depth, d, *pb);
+        create_pb(result, type, depth, d, pb_response);
     }
 
-    auto compare = [](pbnavitia::AutocompleteItem a, pbnavitia::AutocompleteItem b){
+    auto compare = [](pbnavitia::Place a, pbnavitia::Place b){
             return a.quality() > b.quality();
     };
 
     //Trier la partiallement jusqu'au nbmax elément.
-    int result_size = std::min(nbmax, pb_response.mutable_autocomplete()->mutable_items()->size());
-    std::partial_sort(pb_response.mutable_autocomplete()->mutable_items()->begin(),pb_response.mutable_autocomplete()->mutable_items()->begin() + result_size,
-                      pb_response.mutable_autocomplete()->mutable_items()->end(),compare);
+    int result_size = std::min(nbmax, pb_response.mutable_places()->size());
+    std::partial_sort(pb_response.mutable_places()->begin(),pb_response.mutable_places()->begin() + result_size,
+                      pb_response.mutable_places()->end(),compare);
 
-    while (pb_response.mutable_autocomplete()->mutable_items()->size() > nbmax){
-        pb_response.mutable_autocomplete()->mutable_items()->RemoveLast();
+    while (pb_response.mutable_places()->size() > nbmax){
+        pb_response.mutable_places()->RemoveLast();
     }
     return pb_response;
 }

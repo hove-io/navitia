@@ -116,7 +116,7 @@ pbnavitia::Response Worker::load() {
 
 
 
-pbnavitia::Response Worker::autocomplete(const pbnavitia::AutocompleteRequest & request) {
+pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & request) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
     return navitia::autocomplete::autocomplete(request.q(), vector_of_pb_types(request), request.depth(), request.nbmax(), vector_of_admins(request), this->data);
 }
@@ -259,7 +259,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
     switch(request.requested_api()){
     case pbnavitia::STATUS: return status(); break;
     case pbnavitia::LOAD: return load(); break;
-    case pbnavitia::AUTOCOMPLETE: return autocomplete(request.autocomplete()); break;
+    case pbnavitia::places: return autocomplete(request.places()); break;
     case pbnavitia::ROUTE_SCHEDULES:
     case pbnavitia::NEXT_DEPARTURES:
     case pbnavitia::NEXT_ARRIVALS:

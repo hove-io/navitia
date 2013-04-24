@@ -22,7 +22,7 @@ enum NavitiaType {
 
 
 enum API {
-    AUTOCOMPLETE = 1;
+    places = 1;
     PTREFERENTIAL = 2;
     PLANNER = 4;
     LOAD = 5;

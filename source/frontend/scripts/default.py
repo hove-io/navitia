@@ -16,7 +16,7 @@ pb_type = {
         'city': type_pb2.CITY,
         'address': type_pb2.ADDRESS,
         'poi': type_pb2.POI ,
-        'admin' : type_pb2.ADMIN,
+        'administrative_region' : type_pb2.ADMIN,
         'line' : type_pb2.LINE
         }
 
@@ -79,42 +79,42 @@ class Script:
 
 
     @validation_decorator
-    def autocomplete(self, request_args, version, region):
+    def places(self, request_args, version, region):
         req = request_pb2.Request()
-        req.requested_api = type_pb2.AUTOCOMPLETE
-        req.autocomplete.q = self.v.arguments['q']
-        req.autocomplete.depth = self.v.arguments['depth']
-        req.autocomplete.nbmax = self.v.arguments['nbmax']
-        for object_type in self.v.arguments["object_type[]"]:
-            req.autocomplete.types.append(pb_type[object_type])
+        req.requested_api = type_pb2.places
+        req.places.q = self.v.arguments['q']
+        req.places.depth = self.v.arguments['depth']
+        req.places.nbmax = self.v.arguments['nbmax']
+        for type in self.v.arguments["type[]"]:
+            req.places.types.append(pb_type[type])
 
         for admin_uri in self.v.arguments["admin_uri[]"]:
-            req.autocomplete.admin_uris.append(admin_uri)
+            req.places.admin_uris.append(admin_uri)
 
         resp = NavitiaManager().send_and_receive(req, region)
         pagination_resp = response_pb2.Pagination()
         pagination_resp.startPage = self.v.arguments["startPage"]
         pagination_resp.itemsPerPage = self.v.arguments["count"]
-        if resp.autocomplete.items:
-            objects = resp.autocomplete.items
+        if resp.places:
+            objects = resp.places
             pagination_resp.totalResult = len(objects)
             self.__pagination(pagination_resp, objects, self.v.arguments)
         else:
             pagination_resp.totalResult = 0
         resp.pagination.CopyFrom(pagination_resp)
 	
-	for item in resp.autocomplete.items:
-	    if item.object.type == type_pb2.ADDRESS:
-	        post_code = item.object.address.name
-		if item.object.address.house_number > 0:
-		   post_code = str(item.object.address.house_number) + " " + item.object.address.name 
+	for place in resp.places:
+	    if place.HasField("address"):
+	        post_code = place.address.name
+		if place.address.house_number > 0:
+		   post_code = str(place.address.house_number) + " " + place.address.name 
 		
-		for ad in item.object.address.admin:
+		for ad in place.address.administrative_regions:
 		    if ad.zip_code != "":
 		        post_code = post_code + ", " + ad.zip_code + " " + ad.name
 		    else:
 			post_code = post_code + ", " + ad.name
-		item.name = post_code
+		place.name = post_code
 
         return resp
 
