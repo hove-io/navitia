@@ -236,7 +236,7 @@ class Script:
     def isochrone(self, request_args, version, region):
         return self.__on_journeys(type_pb2.ISOCHRONE, self.v.arguments, version, region)
 
-    def __on_ptref(self, requested_type, request_args, version, region):
+    def __on_ptref(self, ressource_name, requested_type, request_args, version, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.PTREFERENTIAL
 
@@ -248,9 +248,10 @@ class Script:
         pagination_resp.startPage = request_args["startPage"]
         pagination_resp.itemsPerPage = request_args["count"]
         if resp.ListFields():
-            objects = resp.ListFields()[1][1]
-            pagination_resp.totalResult = len(objects)
-            self.__pagination(pagination_resp, objects, request_args)
+            for fd in resp.ListFields():
+                if fd[0].name == ressource_name:
+                    pagination_resp.totalResult = len(fd[1])
+                    self.__pagination(pagination_resp, fd[1], request_args)
         else:
             pagination_resp.totalResult = 0
         resp.pagination.CopyFrom(pagination_resp)
@@ -259,48 +260,48 @@ class Script:
 
     @validation_decorator
     def stop_areas(self, request_args, version, region):
-        return self.__on_ptref(type_pb2.STOP_AREA, self.v.arguments, version, region)
+        return self.__on_ptref("stop_areas", type_pb2.STOP_AREA, self.v.arguments, version, region)
 
     @validation_decorator
     def stop_points(self, request_args, version, region):
-        return self.__on_ptref(type_pb2.STOP_POINT, self.v.arguments, version, region)
+        return self.__on_ptref("stop_points", type_pb2.STOP_POINT, self.v.arguments, version, region)
 
     @validation_decorator
     def lines(self, request_args, version, region):
-        return self.__on_ptref(type_pb2.LINE, self.v.arguments, version, region)
+        return self.__on_ptref("lines", type_pb2.LINE, self.v.arguments, version, region)
 
     @validation_decorator
     def routes(self, request_args, version, region):
-        return self.__on_ptref(type_pb2.ROUTE, self.v.arguments,  version, region)
+        return self.__on_ptref("routes", type_pb2.ROUTE, self.v.arguments,  version, region)
 
     @validation_decorator
     def networks(self, request_args, version, region):
-        return self.__on_ptref(type_pb2.NETWORK, self.v.arguments, version, region)
+        return self.__on_ptref("networks", type_pb2.NETWORK, self.v.arguments, version, region)
 
     @validation_decorator
     def physical_modes(self, request_args, version, region):
-        return self.__on_ptref(type_pb2.PHYSICAL_MODE, self.v.arguments, version, region)
+        return self.__on_ptref("physical_modes", type_pb2.PHYSICAL_MODE, self.v.arguments, version, region)
 
     @validation_decorator
     def commercial_modes(self, request_args, version, region):
-        return self.__on_ptref(type_pb2.COMMERCIAL_MODE, self.v.arguments, version, region)
+        return self.__on_ptref("commercial_modes", type_pb2.COMMERCIAL_MODE, self.v.arguments, version, region)
 
     @validation_decorator
     def connections(self, request_args, version, region):
-        return self.__on_ptref(type_pb2.CONNECTION, self.v.arguments, version, region)
+        return self.__on_ptref("connections", type_pb2.CONNECTION, self.v.arguments, version, region)
 
     @validation_decorator
     def journey_pattern_points(self, request_args, version, region):
-        return self.__on_ptref(type_pb2.JOURNEY_PATTERN_POINT, self.v.arguments,  version, region)
+        return self.__on_ptref("journey_pattern_points", type_pb2.JOURNEY_PATTERN_POINT, self.v.arguments,  version, region)
 
     @validation_decorator
     def journey_patterns(self, request_args, version, region):
-        return self.__on_ptref(type_pb2.JOURNEY_PATTERN, self.v.arguments, version, region)
+        return self.__on_ptref("journey_patterns", type_pb2.JOURNEY_PATTERN, self.v.arguments, version, region)
 
     @validation_decorator
     def companies(self, request_args, version, region):
-        return self.__on_ptref(type_pb2.COMPANY, self.v.arguments, version, region)
+        return self.__on_ptref("companies", type_pb2.COMPANY, self.v.arguments, version, region)
 
     @validation_decorator
     def vehicle_journeys(self, request_args, version, region):
-        return self.__on_ptref(type_pb2.VEHICLE_JOURNEY, self.v.arguments, version, region)
+        return self.__on_ptref("vehicle_journeys", type_pb2.VEHICLE_JOURNEY, self.v.arguments, version, region)
