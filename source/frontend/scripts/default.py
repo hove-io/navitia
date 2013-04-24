@@ -247,8 +247,8 @@ class Script:
         pagination_resp = response_pb2.Pagination()
         pagination_resp.startPage = request_args["startPage"]
         pagination_resp.itemsPerPage = request_args["count"]
-        if resp.ptref.ListFields():
-            objects = resp.ptref.ListFields()[0][1]
+        if resp.ListFields():
+            objects = resp.ListFields()[1][1]
             pagination_resp.totalResult = len(objects)
             self.__pagination(pagination_resp, objects, request_args)
         else:
