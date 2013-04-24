@@ -117,7 +117,7 @@ AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-if(!resp.ptref.stop_points){
+if(!resp.stop_points){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribu stop_points&quot;) ;
 AssertionResult.setFailure(true);
 }</stringProp>
@@ -178,8 +178,8 @@ AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-for(var i = 0; i &lt; resp.ptref.stop_points.length; i++){
-  var stop_point = resp.ptref.stop_points[i];
+for(var i = 0; i &lt; resp.stop_points.length; i++){
+  var stop_point = resp.stop_points[i];
   if(stop_point.stop_area){
 AssertionResult.setFailureMessage(&quot;Un stop_point a un stop_area alors que le depth=0, uri du coupable : &quot;  + stop_point.uri) ;
 AssertionResult.setFailure(true);
@@ -242,8 +242,8 @@ AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-for(var i = 0; i &lt; resp.ptref.stop_points.length; i++){
-  var stop_point = resp.ptref.stop_points[i];
+for(var i = 0; i &lt; resp.stop_points.length; i++){
+  var stop_point = resp.stop_points[i];
   if(stop_point.stop_area.uri != &apos;stop_area:COMM&apos;){
 AssertionResult.setFailureMessage(&quot;Un stop_point a un stop_area qui n&apos;aurait pas du apparaitre &quot; + stop_point.stop_area.uri + &quot; uri du stop_point :&quot; + stop_point.uri) ;
 AssertionResult.setFailure(true);
@@ -302,7 +302,7 @@ AssertionResult.setFailure(true);
           </BSFAssertion>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Autocomplete" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Places" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
             <collectionProp name="Arguments.arguments">
               <elementProp name="q" elementType="HTTPArgument">
@@ -320,7 +320,7 @@ AssertionResult.setFailure(true);
           <stringProp name="HTTPSampler.response_timeout"></stringProp>
           <stringProp name="HTTPSampler.protocol"></stringProp>
           <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-          <stringProp name="HTTPSampler.path">/v0/moo/autocomplete.json</stringProp>
+          <stringProp name="HTTPSampler.path">/v0/moo/places.json</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -350,12 +350,12 @@ AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-if(resp.requested_api != &quot;AUTOCOMPLETE&quot;){
+if(resp.requested_api != &quot;places&quot;){
 AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-if(resp.autocomplete.items.length &lt;= 0){
+if(resp.places.length &lt;= 0){
 AssertionResult.setFailureMessage(&quot;On a trouvé aucun élément dans autocomplete&quot;) ;
 AssertionResult.setFailure(true);
 }</stringProp>
@@ -363,7 +363,7 @@ AssertionResult.setFailure(true);
           </BSFAssertion>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Autocomplete with object type" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Places with type" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
             <collectionProp name="Arguments.arguments">
               <elementProp name="q" elementType="HTTPArgument">
@@ -373,12 +373,12 @@ AssertionResult.setFailure(true);
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
                 <stringProp name="Argument.name">q</stringProp>
               </elementProp>
-              <elementProp name="object_type[]" elementType="HTTPArgument">
+              <elementProp name="type[]" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.value">stop_area</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">object_type[]</stringProp>
+                <stringProp name="Argument.name">type[]</stringProp>
               </elementProp>
             </collectionProp>
           </elementProp>
@@ -388,7 +388,7 @@ AssertionResult.setFailure(true);
           <stringProp name="HTTPSampler.response_timeout"></stringProp>
           <stringProp name="HTTPSampler.protocol"></stringProp>
           <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-          <stringProp name="HTTPSampler.path">/v0/moo/autocomplete.json</stringProp>
+          <stringProp name="HTTPSampler.path">/v0/moo/places.json</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -418,14 +418,14 @@ AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-if(resp.requested_api != &quot;AUTOCOMPLETE&quot;){
+if(resp.requested_api != &quot;places&quot;){
 AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-for(var i = 0; i &lt; resp.autocomplete.items.length; i++ ){
-var item = resp.autocomplete.items[i];
-if(item.object.type != &quot;STOP_AREA&quot;){
+for(var i = 0; i &lt; resp.places.length; i++ ){
+var item = resp.places[i];
+if(!item.stop_area){
 AssertionResult.setFailureMessage(&quot;On a trouvé un élément qui n&apos;est pas un stop area, uri : &quot; + item.uri) ;
 AssertionResult.setFailure(true);
   }
@@ -639,7 +639,7 @@ AssertionResult.setFailure(true);
           </ResponseAssertion>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="ProximityList" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Places nearby" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
             <collectionProp name="Arguments.arguments">
               <elementProp name="uri" elementType="HTTPArgument">
@@ -657,7 +657,7 @@ AssertionResult.setFailure(true);
           <stringProp name="HTTPSampler.response_timeout"></stringProp>
           <stringProp name="HTTPSampler.protocol"></stringProp>
           <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-          <stringProp name="HTTPSampler.path">/v0/moo/proximity_list.json</stringProp>
+          <stringProp name="HTTPSampler.path">/v0/moo/places_nearby.json</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -677,24 +677,19 @@ AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-if(resp.requested_api != &quot;PROXIMITY_LIST&quot;){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
+if(resp.requested_api != &quot;places_nearby&quot;){
+AssertionResult.setFailureMessage(&quot;Variable requested_type != places_nearby&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-if(!resp.proximitylist){
-AssertionResult.setFailureMessage(&quot;Pas de variable proximitylist&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(!resp.proximitylist.items){
-AssertionResult.setFailureMessage(&quot;Pas de variable proximitylist.items&quot;) ;
+if(!resp.places_nearby){
+AssertionResult.setFailureMessage(&quot;Pas de variable places_nearby&quot;) ;
 AssertionResult.setFailure(true);
 }
 
 var previous_dist = 0;
-for(var i = 0; i &lt; resp.proximitylist.items.length; i++){
-var item = resp.proximitylist.items[i];
+for(var i = 0; i &lt; resp.places_nearby.length; i++){
+var item = resp.places_nearby[i];
 if(item.distance &gt; 1000){
 AssertionResult.setFailureMessage(&quot;Distance trop grande : &quot; + item.distance + &quot; uri : &quot; + item.uri) ;
 AssertionResult.setFailure(true);
@@ -719,7 +714,7 @@ previous_dist = item.distance;
           </ResponseAssertion>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="ProximityList with no region" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Places nearby with no region" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
             <collectionProp name="Arguments.arguments">
               <elementProp name="uri" elementType="HTTPArgument">
@@ -737,7 +732,7 @@ previous_dist = item.distance;
           <stringProp name="HTTPSampler.response_timeout"></stringProp>
           <stringProp name="HTTPSampler.protocol"></stringProp>
           <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-          <stringProp name="HTTPSampler.path">/v0/proximity_list.json</stringProp>
+          <stringProp name="HTTPSampler.path">/v0/places_nearby.json</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -757,24 +752,19 @@ AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-if(resp.requested_api != &quot;PROXIMITY_LIST&quot;){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
+if(resp.requested_api != &quot;places_nearby&quot;){
+AssertionResult.setFailureMessage(&quot;Variable requested_type != places_nearby&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-if(!resp.proximitylist){
-AssertionResult.setFailureMessage(&quot;Pas de variable proximitylist&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(!resp.proximitylist.items){
-AssertionResult.setFailureMessage(&quot;Pas de variable proximitylist.items&quot;) ;
+if(!resp.places_nearby){
+AssertionResult.setFailureMessage(&quot;Pas de variable places_nearby&quot;) ;
 AssertionResult.setFailure(true);
 }
 
 var previous_dist = 0;
-for(var i = 0; i &lt; resp.proximitylist.items.length; i++){
-var item = resp.proximitylist.items[i];
+for(var i = 0; i &lt; resp.places_nearby.length; i++){
+var item = resp.places_nearby[i];
 if(item.distance &gt; 1000){
 AssertionResult.setFailureMessage(&quot;Distance trop grande : &quot; + item.distance + &quot; uri : &quot; + item.uri) ;
 AssertionResult.setFailure(true);
@@ -799,7 +789,7 @@ previous_dist = item.distance;
           </ResponseAssertion>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="ProximityList with radius" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Places nearby with radius" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
             <collectionProp name="Arguments.arguments">
               <elementProp name="distance" elementType="HTTPArgument">
@@ -824,7 +814,7 @@ previous_dist = item.distance;
           <stringProp name="HTTPSampler.response_timeout"></stringProp>
           <stringProp name="HTTPSampler.protocol"></stringProp>
           <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-          <stringProp name="HTTPSampler.path">/v0/moo/proximity_list.json</stringProp>
+          <stringProp name="HTTPSampler.path">/v0/moo/places_nearby.json</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -844,24 +834,19 @@ AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-if(resp.requested_api != &quot;PROXIMITY_LIST&quot;){
+if(resp.requested_api != &quot;places_nearby&quot;){
 AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-if(!resp.proximitylist){
-AssertionResult.setFailureMessage(&quot;Pas de variable proximitylist&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(!resp.proximitylist.items){
-AssertionResult.setFailureMessage(&quot;Pas de variable proximitylist.items&quot;) ;
+if(!resp.places_nearby){
+AssertionResult.setFailureMessage(&quot;Pas de variable places_nearby&quot;) ;
 AssertionResult.setFailure(true);
 }
 
 var previous_dist = 0;
-for(var i = 0; i &lt; resp.proximitylist.items.length; i++){
-var item = resp.proximitylist.items[i];
+for(var i = 0; i &lt; resp.places_nearby.length; i++){
+var item = resp.places_nearby[i];
 if(item.distance &gt; 200){
 AssertionResult.setFailureMessage(&quot;Distance trop grande : &quot; + item.distance + &quot; uri : &quot; + item.uri) ;
 AssertionResult.setFailure(true);
@@ -886,15 +871,15 @@ previous_dist = item.distance;
           </ResponseAssertion>
           <hashTree/>
         </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="ProximityList with object type" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Places nearby with type" enabled="true">
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
             <collectionProp name="Arguments.arguments">
-              <elementProp name="object_type[]" elementType="HTTPArgument">
+              <elementProp name="type[]" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.value">stop_point</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
-                <stringProp name="Argument.name">object_type[]</stringProp>
+                <stringProp name="Argument.name">type[]</stringProp>
               </elementProp>
               <elementProp name="uri" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
@@ -911,7 +896,7 @@ previous_dist = item.distance;
           <stringProp name="HTTPSampler.response_timeout"></stringProp>
           <stringProp name="HTTPSampler.protocol"></stringProp>
           <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-          <stringProp name="HTTPSampler.path">/v0/moo/proximity_list.json</stringProp>
+          <stringProp name="HTTPSampler.path">/v0/moo/places_nearby.json</stringProp>
           <stringProp name="HTTPSampler.method">GET</stringProp>
           <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
           <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
@@ -931,26 +916,22 @@ AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-if(resp.requested_api != &quot;PROXIMITY_LIST&quot;){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
+if(resp.requested_api != &quot;places_nearby&quot;){
+AssertionResult.setFailureMessage(&quot;Variable requested_type != places_nearby&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-if(!resp.proximitylist){
+if(!resp.places_nearby){
 AssertionResult.setFailureMessage(&quot;Pas de variable proximitylist&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-if(!resp.proximitylist.items){
-AssertionResult.setFailureMessage(&quot;Pas de variable proximitylist.items&quot;) ;
-AssertionResult.setFailure(true);
-}
 
 var previous_dist = 0;
-for(var i = 0; i &lt; resp.proximitylist.items.length; i++){
-var item = resp.proximitylist.items[i];
-if(item.object.type != &quot;STOP_POINT&quot;){
-AssertionResult.setFailureMessage(&quot;Type non demandé : &quot; + item.object.type + &quot; uri : &quot; + item.uri) ;
+for(var i = 0; i &lt; resp.places_nearby.length; i++){
+var item = resp.places_nearby[i];
+if(!item.stop_point){
+AssertionResult.setFailureMessage(&quot;Type non demandé : &quot;  + item.uri) ;
 AssertionResult.setFailure(true);
 }
 if(item.distance &lt; previous_dist){
@@ -1231,7 +1212,7 @@ AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; +
 AssertionResult.setFailure(true);
 }
 
-if(!resp.ptref.networks){
+if(!resp.networks){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut networks&quot;) ;
 AssertionResult.setFailure(true);
 }</stringProp>
@@ -1292,8 +1273,8 @@ AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; +
 AssertionResult.setFailure(true);
 }
 
-if(!resp.ptref.vehicle_journeys){
-AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut networks&quot;) ;
+if(!resp.vehicle_journeys){
+AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut vehicle_journeys&quot;) ;
 AssertionResult.setFailure(true);
 }</stringProp>
             <stringProp name="scriptLanguage">javascript</stringProp>
@@ -1345,8 +1326,8 @@ AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; +
 AssertionResult.setFailure(true);
 }
 
-if(!resp.ptref.connections){
-AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut networks&quot;) ;
+if(!resp.connections){
+AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut connections&quot;) ;
 AssertionResult.setFailure(true);
 }</stringProp>
             <stringProp name="scriptLanguage">javascript</stringProp>
@@ -1398,7 +1379,7 @@ AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; +
 AssertionResult.setFailure(true);
 }
 
-if(!resp.ptref.commercial_modes){
+if(!resp.commercial_modes){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut commercial modes&quot;) ;
 AssertionResult.setFailure(true);
 }</stringProp>
@@ -1451,7 +1432,7 @@ AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; +
 AssertionResult.setFailure(true);
 }
 
-if(!resp.ptref.physical_modes){
+if(!resp.physical_modes){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut physical modes&quot;) ;
 AssertionResult.setFailure(true);
 }</stringProp>
@@ -1606,7 +1587,7 @@ AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; +
 AssertionResult.setFailure(true);
 }
 
-if(!resp.ptref.routes){
+if(!resp.routes){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut routes&quot;) ;
 AssertionResult.setFailure(true);
 }</stringProp>
@@ -1659,7 +1640,7 @@ AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; +
 AssertionResult.setFailure(true);
 }
 
-if(!resp.ptref.lines){
+if(!resp.lines){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut lines&quot;) ;
 AssertionResult.setFailure(true);
 }</stringProp>
