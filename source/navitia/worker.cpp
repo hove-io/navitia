@@ -143,7 +143,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     }
 }
 
-pbnavitia::Response Worker::proximity_list(const pbnavitia::ProximityListRequest &request) {
+pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest &request) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
     type::EntryPoint ep(request.uri());
     auto coord = this->coord_of_entry_point(ep);
@@ -268,7 +268,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
         return next_stop_times(request.next_stop_times(), request.requested_api()); break;
     case pbnavitia::ISOCHRONE:
     case pbnavitia::PLANNER: return journeys(request.journeys(), request.requested_api()); break;
-    case pbnavitia::PROXIMITY_LIST: return proximity_list(request.proximity_list()); break;
+    case pbnavitia::places_nearby: return proximity_list(request.places_nearby()); break;
     case pbnavitia::PTREFERENTIAL: return pt_ref(request.ptref()); break;
     case pbnavitia::METADATAS : return metadatas(); break;
     default: break;

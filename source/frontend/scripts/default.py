@@ -154,20 +154,20 @@ class Script:
 
     
     @validation_decorator
-    def proximity_list(self, request_args, version, region):
+    def places_nearby(self, request_args, version, region):
         req = request_pb2.Request()
-        req.requested_api = type_pb2.PROXIMITY_LIST
-        req.proximity_list.uri = self.v.arguments["uri"]
-        req.proximity_list.distance = self.v.arguments["distance"]
-        req.proximity_list.depth = self.v.arguments["depth"]
-        for object_type in self.v.arguments["object_type[]"]:
-            req.proximity_list.types.append(pb_type[object_type])
+        req.requested_api = type_pb2.places_nearby
+        req.places_nearby.uri = self.v.arguments["uri"]
+        req.places_nearby.distance = self.v.arguments["distance"]
+        req.places_nearby.depth = self.v.arguments["depth"]
+        for type in self.v.arguments["type[]"]:
+            req.places_nearby.types.append(pb_type[type])
         resp = NavitiaManager().send_and_receive(req, region)
         pagination_resp = response_pb2.Pagination()
         pagination_resp.startPage = self.v.arguments["startPage"]
         pagination_resp.itemsPerPage = self.v.arguments["count"]
-        if resp.proximitylist.items:
-            objects = resp.proximitylist.items
+        if resp.places_nearby:
+            objects = resp.places_nearby
             pagination_resp.totalResult = len(objects)
             self.__pagination(pagination_resp, objects, self.v.arguments)
         else:

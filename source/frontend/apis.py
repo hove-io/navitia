@@ -199,18 +199,18 @@ class Apis:
             "description" : "Computes and retrieves an isochrone",
             "order":1, 
             "universal" : True},
-        "proximity_list" : {
+        "places_nearby" : {
             "arguments" : {
                 "uri" : Argument("uri arround which you want to look for objects. Not all objects make sense (e.g. a mode).", entrypoint(), True, False, order=0),
                 "distance" : Argument("Distance range of the query", int, False, False, 1000, order=3),
-                "object_type[]" : Argument("Type of the objects to return", str, False, True, ["stop_area", "stop_point"], order=4),
+                "type[]" : Argument("Type of the objects to return", str, False, True, ["stop_area", "stop_point"], order=4),
                 "depth" : Argument("Maximum depth on objects", int, False, False, 1),
                 "count" : Argument("Number of elements per page", int, False, False,
                                 50),
                 "startPage" : Argument("The page number of the ptref result", int,
                                     False, False, 0)
             },
-            "description" : "Retrieves all the objects around a point within the given distance",
+            "description" : "Retrieves all the places nearby a point within the given distance",
             "order" : 1.1, 
             "universal" : True},
         "metadatas" : {
