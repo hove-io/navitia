@@ -25,33 +25,47 @@ class Script:
         self.apis = Apis().apis
 
 
-    def __pagination(self, request_pagination, objects, request):
-        begin = int(request_pagination.startPage) * int(request_pagination.itemsPerPage)
-        end = begin + int(request_pagination.itemsPerPage) 
-        if end > request_pagination.totalResult:
-            end = request_pagination.totalResult
-
-        toDelete = [] 
-        if begin < request_pagination.totalResult :
-            del objects[end:]# todo -1 valable ?
-            del objects[0:begin]
+    def __pagination(self, request_args, ressource_name, resp):
+        request_pagination = response_pb2.Pagination()
+        request_pagination.startPage = request_args["startPage"]
+        request_pagination.itemsPerPage = request_args["count"]
+        objects = None
+        if resp.ListFields():
+            for fd in resp.ListFields():
+                if fd[0].name == ressource_name:
+                    objects = fd[1]
+                    request_pagination.totalResult = len(fd[1])
         else:
-            del objects[0:]
-        
-        request_pagination.itemsOnPage = len(objects)
-        query_args = ""
-        for key, value in request.iteritems():
-            if key != "request_pagination.startPage":
-                if type(value) == type([]):
-                    for v in value:
-                        query_args += key + "=" +unicode(v) + "&"
-                else:
-                    query_args += key + "=" +unicode(value) + "&"
-        if request_pagination.startPage > 0:
-            request_pagination.previousPage = query_args+"startPage=%i"%(request_pagination.startPage-1)
+            pagination_resp.totalResult = 0
 
-        if end<request_pagination.totalResult:
-            request_pagination.nextPage = query_args+"startPage=%i"%(request_pagination.startPage+1)
+        if objects : 
+            begin = int(request_pagination.startPage) * int(request_pagination.itemsPerPage)
+            end = begin + int(request_pagination.itemsPerPage) 
+            if end > request_pagination.totalResult:
+                end = request_pagination.totalResult
+
+            toDelete = [] 
+            if begin < request_pagination.totalResult :
+                del objects[end:]# todo -1 valable ?
+                del objects[0:begin]
+            else:
+                del objects[0:]
+            
+            request_pagination.itemsOnPage = len(objects)
+            query_args = ""
+            for key, value in request_args.iteritems():
+                if key != "request_pagination.startPage":
+                    if type(value) == type([]):
+                        for v in value:
+                            query_args += key + "=" +unicode(v) + "&"
+                    else:
+                        query_args += key + "=" +unicode(value) + "&"
+            if request_pagination.startPage > 0:
+                request_pagination.previousPage = query_args+"startPage=%i"%(request_pagination.startPage-1)
+
+            if end<request_pagination.totalResult:
+                request_pagination.nextPage = query_args+"startPage=%i"%(request_pagination.startPage+1)
+        resp.pagination.CopyFrom(request_pagination)
 
 
     
@@ -92,17 +106,8 @@ class Script:
             req.places.admin_uris.append(admin_uri)
 
         resp = NavitiaManager().send_and_receive(req, region)
-        pagination_resp = response_pb2.Pagination()
-        pagination_resp.startPage = self.v.arguments["startPage"]
-        pagination_resp.itemsPerPage = self.v.arguments["count"]
-        if resp.places:
-            objects = resp.places
-            pagination_resp.totalResult = len(objects)
-            self.__pagination(pagination_resp, objects, self.v.arguments)
-        else:
-            pagination_resp.totalResult = 0
-        resp.pagination.CopyFrom(pagination_resp)
-	
+        self.__pagination(self.v.arguments, "places", resp)
+
 	for place in resp.places:
 	    if place.HasField("address"):
 	        post_code = place.address.name
@@ -163,15 +168,7 @@ class Script:
         for type in self.v.arguments["type[]"]:
             req.places_nearby.types.append(pb_type[type])
         resp = NavitiaManager().send_and_receive(req, region)
-        pagination_resp = response_pb2.Pagination()
-        pagination_resp.startPage = self.v.arguments["startPage"]
-        pagination_resp.itemsPerPage = self.v.arguments["count"]
-        if resp.places_nearby:
-            objects = resp.places_nearby
-            pagination_resp.totalResult = len(objects)
-            self.__pagination(pagination_resp, objects, self.v.arguments)
-        else:
-            pagination_resp.totalResult = 0
+        self.__pagination(self.v.arguments, "places_nearby", resp)
         return resp
 
 
@@ -244,18 +241,7 @@ class Script:
         req.ptref.filter = request_args["filter"]
         req.ptref.depth = request_args["depth"]
         resp = NavitiaManager().send_and_receive(req, region)
-        pagination_resp = response_pb2.Pagination()
-        pagination_resp.startPage = request_args["startPage"]
-        pagination_resp.itemsPerPage = request_args["count"]
-        if resp.ListFields():
-            for fd in resp.ListFields():
-                if fd[0].name == ressource_name:
-                    pagination_resp.totalResult = len(fd[1])
-                    self.__pagination(pagination_resp, fd[1], request_args)
-        else:
-            pagination_resp.totalResult = 0
-        resp.pagination.CopyFrom(pagination_resp)
-        
+        self.__pagination(request_args, ressource_name, resp) 
         return resp
 
     @validation_decorator
