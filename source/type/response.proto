@@ -18,38 +18,17 @@ message PTReferential {
     repeated Route routes = 23;
 }
 
-message PlaceMark {
-    optional NavitiaType type = 1;
+message Place {
+    required string name = 1;
+    required string uri = 2;
     optional StopArea stop_area = 4;
     optional Poi poi = 5;
     optional StopPoint stop_point = 6;
     optional Address address = 7;
-    repeated Admin admins = 8;
     optional Line line = 9;
-}
-
-message AutocompleteItem {
-    optional string name = 1;
-    optional int32 quality = 2;
-    optional string uri = 3;
-    optional PlaceMark object = 4;
-}
-
-message Autocomplete {
-    repeated AutocompleteItem items = 1;
-    repeated string ignored_words = 2;
-    repeated string bad_words = 3;
-}
-
-message ProximityListItem {
-    optional string name = 1;
-    optional int32 distance = 2;
-    optional string uri = 3;
-    optional PlaceMark object = 4;
-}
-
-message ProximityList {
-    repeated ProximityListItem items = 1;
+    optional AdministrativeRegion administrative_region = 10;
+    optional int32 distance = 11;
+    optional int32 quality = 12;
 }
 
 enum Direction {
@@ -112,8 +91,8 @@ message Uris {
 
 message Section {
     optional SectionType type = 1;
-    optional PlaceMark origin = 2;
-    optional PlaceMark destination = 3;
+    optional Place origin = 2;
+    optional Place destination = 3;
 
 // Si c'est du TC
     optional PtDisplayInfo pt_display_informations = 4;

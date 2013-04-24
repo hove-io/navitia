@@ -275,10 +275,9 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::JourneyPatte
 }
 
 
-void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth,
+void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &data, pbnavitia::Place* place, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period){
-    pm->set_type(pbnavitia::STOP_POINT);
-    fill_pb_object(stop_point.idx, data, pm->mutable_stop_point(), max_depth, now, action_period);
+    fill_pb_object(stop_point.idx, data, place->mutable_stop_point(), max_depth, now, action_period);
 }
 
 void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &path, const type::Data &data, pbnavitia::Section* section,
@@ -288,7 +287,7 @@ void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &p
         pbnavitia::StreetNetwork * sn = section->mutable_street_network();
         create_pb(ori_dest, path, data, sn);
 
-        pbnavitia::PlaceMark* pm;
+        pbnavitia::Place* place;
         navitia::georef::Way way;
         type::GeographicalCoord coord;
 
@@ -296,15 +295,13 @@ void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &p
 
             way = data.geo_ref.ways[path.path_items.front().way_idx];
             coord = path.coordinates.front();
-            pm = section->mutable_origin();
-            pm->set_type(pbnavitia::ADDRESS);
-            fill_pb_object(way.idx, data, pm->mutable_address(), way.nearest_number(coord),coord , max_depth, now, action_period);
+            place = section->mutable_origin();
+            fill_pb_object(way.idx, data, place->mutable_address(), way.nearest_number(coord),coord , max_depth, now, action_period);
 
             way = data.geo_ref.ways[path.path_items.back().way_idx];
             coord = path.coordinates.back();
-            pm = section->mutable_destination();
-            pm->set_type(pbnavitia::ADDRESS);
-            fill_pb_object(way.idx, data, pm->mutable_address(), way.nearest_number(coord),coord , max_depth, now, action_period);
+            place = section->mutable_destination();
+            fill_pb_object(way.idx, data, place->mutable_address(), way.nearest_number(coord),coord , max_depth, now, action_period);
         }
     }
 }
@@ -358,7 +355,7 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Poi* poi
 
     if(max_depth > 0){
         for(nt::idx_t idx : geopoi.admin_list){
-            fill_pb_object(idx, data,  poi->add_admins(), max_depth-1, now, action_period);
+            fill_pb_object(idx, data,  poi->add_administrative_regions(), max_depth-1, now, action_period);
         }
     }
 }
