@@ -10,7 +10,7 @@ void create_pb(const std::vector<std::pair<type::idx_t, type::GeographicalCoord>
           const nt::Type_e type, uint32_t depth, const nt::Data& data,
           pbnavitia::Response& pb_response,type::GeographicalCoord coord){
     for(auto result_item : result){
-        pbnavitia::Place* place = pb_response.add_places();
+        pbnavitia::Place* place = pb_response.add_places_nearby();
         //on récupére la date pour les impacts
         auto current_date = boost::posix_time::second_clock::local_time();
         switch(type){
@@ -54,7 +54,7 @@ pbnavitia::Response find(type::GeographicalCoord coord, double distance,
         }
         create_pb(result, type, depth, data, response, coord);
     }
-    std::sort(response.mutable_places()->begin(), response.mutable_places()->end(),
+    std::sort(response.mutable_places_nearby()->begin(), response.mutable_places_nearby()->end(),
               [](pbnavitia::Place a, pbnavitia::Place b){return a.distance() < b.distance();});
     return response;
 }
