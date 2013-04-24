@@ -193,7 +193,7 @@ class Script:
                     section.uris.commercial_mode = section.vehicle_journey.route.line.commercial_mode.uri
                     section.uris.physical_mode = section.vehicle_journey.physical_mode.uri
                     section.uris.network = section.vehicle_journey.route.line.network.uri
-                    section.vehicle_journey.Clear()
+                    section.ClearField("vehicle_journey")
 
 
     def __on_journeys(self, requested_type, request_args, version, region):
