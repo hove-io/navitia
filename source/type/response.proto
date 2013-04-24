@@ -248,23 +248,14 @@ message Pagination {
 message Response{
     required API requested_api = 1;
     optional string error = 2;
-
     optional string info = 3;
 
-    optional Autocomplete autocomplete = 4;
-    optional PTReferential ptref = 5;
-    optional StreetNetwork street_network = 6;
-    optional Planner planner = 7;
-    optional ProximityList proximitylist = 8;
-    optional Status status = 9;
-    optional Passages next_passages = 10;
-    optional StopsSchedule stops_schedule = 11;
-    optional RouteSchedule route_schedule = 12;
-    optional DepartureBoard departure_board = 13;
-    optional Load load = 14;
-    optional Isochrone isochrone = 15;
-    optional Metadatas metadatas = 16;
-    optional Pagination pagination = 17;
+    //Places
+    repeated string ignored_words = 11;
+    repeated string bad_words = 12;
+    repeated Place places = 13;
+    repeated Place places_nearby = 14;
+    
     //Ptref
     repeated ValidityPattern validity_patterns = 15;
     repeated Line lines = 16;
@@ -279,4 +270,16 @@ message Response{
     repeated JourneyPatternPoint journey_pattern_points = 25;
     repeated Company companies = 26;
     repeated Route routes = 27;
+    
+    optional Planner planner = 28;
+    
+    optional Status status = 29;
+    optional Passages next_passages = 30;
+    optional StopsSchedule stops_schedule = 31;
+    optional RouteSchedule route_schedule = 32;
+    optional DepartureBoard departure_board = 33;
+    optional Load load = 34;
+    optional Isochrone isochrone = 35;
+    optional Metadatas metadatas = 36;
+    optional Pagination pagination = 37;
 }
