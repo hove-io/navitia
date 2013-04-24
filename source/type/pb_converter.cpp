@@ -1,12 +1,12 @@
 #include "pb_converter.h"
 #include "georef/georef.h"
 #include "georef/street_network.h"
+#include "boost/lexical_cast.hpp"
 
 namespace nt = navitia::type;
-
 namespace pt = boost::posix_time;
-namespace navitia{
 
+namespace navitia{
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::AdministrativeRegion* admin, int, const pt::ptime&, const pt::time_period& ){
     navitia::georef::Admin adm = data.geo_ref.admins.at(idx);
@@ -299,11 +299,23 @@ void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &p
             coord = path.coordinates.front();
             place = section->mutable_origin();
             fill_pb_object(way.idx, data, place->mutable_address(), way.nearest_number(coord),coord , max_depth, now, action_period);
+            if(place->address().has_house_number())
+                place->set_name(boost::lexical_cast<std::string>(place->address().house_number()) + ", ");
+            place->set_name(place->name() + place->address().name());
+            for(auto admin : place->address().administrative_regions())
+                place->set_name(place->name() + ", " + admin.name());
+            place->set_uri(place->address().uri());
 
             way = data.geo_ref.ways[path.path_items.back().way_idx];
             coord = path.coordinates.back();
             place = section->mutable_destination();
             fill_pb_object(way.idx, data, place->mutable_address(), way.nearest_number(coord),coord , max_depth, now, action_period);
+            if(place->address().has_house_number())
+                place->set_name(boost::lexical_cast<std::string>(place->address().house_number()) + ", ");
+            place->set_name(place->name() + place->address().name());
+            for(auto admin : place->address().administrative_regions())
+                place->set_name(place->name() + ", " + admin.name());
+            place->set_uri(place->address().uri());
         }
     }
 }
