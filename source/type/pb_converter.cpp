@@ -278,6 +278,8 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::JourneyPatte
 void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &data, pbnavitia::Place* place, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period){
     fill_pb_object(stop_point.idx, data, place->mutable_stop_point(), max_depth, now, action_period);
+    place->set_name(stop_point.name);
+    place->set_uri(stop_point.uri);
 }
 
 void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &path, const type::Data &data, pbnavitia::Section* section,
