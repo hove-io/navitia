@@ -8,7 +8,7 @@ namespace pt = boost::posix_time;
 namespace navitia{
 
 
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Admin* admin, int, const pt::ptime&, const pt::time_period& ){
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::AdministrativeRegion* admin, int, const pt::ptime&, const pt::time_period& ){
     navitia::georef::Admin adm = data.geo_ref.admins.at(idx);
     admin->set_name(adm.name);
     admin->set_uri(adm.uri);
@@ -29,7 +29,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* st
     stop_area->mutable_coord()->set_lat(sa.coord.lat());
     if(max_depth > 0){
         for(nt::idx_t idx : sa.admin_list){
-            fill_pb_object(idx, data,  stop_area->add_admins(), max_depth-1, now, action_period);
+            fill_pb_object(idx, data,  stop_area->add_administrative_regions(), max_depth-1, now, action_period);
         }
     }
 
@@ -50,7 +50,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
 
     if(max_depth > 0){
         for(nt::idx_t idx : sp.admin_list){
-            fill_pb_object(idx, data,  stop_point->add_admins(), max_depth-1, now, action_period);
+            fill_pb_object(idx, data,  stop_point->add_administrative_regions(), max_depth-1, now, action_period);
         }
     }
 
@@ -78,7 +78,7 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * ad
 
     if(max_depth > 0){
         for(nt::idx_t idx : way.admin_list){
-            fill_pb_object(idx, data,  address->add_admins(), max_depth-1, now, action_period);
+            fill_pb_object(idx, data,  address->add_administrative_regions(), max_depth-1, now, action_period);
         }
     }
 }
