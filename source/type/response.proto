@@ -286,4 +286,18 @@ message Response{
     optional Isochrone isochrone = 15;
     optional Metadatas metadatas = 16;
     optional Pagination pagination = 17;
+    //Ptref
+    repeated ValidityPattern validity_patterns = 15;
+    repeated Line lines = 16;
+    repeated JourneyPattern journey_patterns = 17;
+    repeated VehicleJourney vehicle_journeys = 18;
+    repeated StopPoint stop_points = 19;
+    repeated StopArea stop_areas = 20;
+    repeated Network networks = 21;
+    repeated PhysicalMode physical_modes = 22;
+    repeated CommercialMode commercial_modes = 23;
+    repeated Connection connections = 24;
+    repeated JourneyPatternPoint journey_pattern_points = 25;
+    repeated Company companies = 26;
+    repeated Route routes = 27;
 }

@@ -452,9 +452,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     section = journey.sections(0);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
-    BOOST_REQUIRE_EQUAL(section.origin().type(), pbnavitia::ADDRESS);
     BOOST_REQUIRE_EQUAL(section.origin().address().name(), "rue kb");
-    BOOST_REQUIRE_EQUAL(section.destination().type(), pbnavitia::ADDRESS);
     BOOST_REQUIRE_EQUAL(section.destination().address().name(), "rue ag");
     BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 10);
     BOOST_REQUIRE_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Bike);
@@ -491,9 +489,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     section = journey.sections(0);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
-    BOOST_REQUIRE_EQUAL(section.origin().type(), pbnavitia::ADDRESS);
     BOOST_REQUIRE_EQUAL(section.origin().address().name(), "rue cb");
-    BOOST_REQUIRE_EQUAL(section.destination().type(), pbnavitia::ADDRESS);
     BOOST_REQUIRE_EQUAL(section.destination().address().name(), "rue ae");
     BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 8);
     BOOST_REQUIRE_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Car);
