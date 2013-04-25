@@ -12,10 +12,13 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Administrati
     navitia::georef::Admin adm = data.geo_ref.admins.at(idx);
     admin->set_name(adm.name);
     admin->set_uri(adm.uri);
-    admin->set_zip_code(adm.post_code);
+    if(adm.post_code != "")
+        admin->set_zip_code(adm.post_code);
     admin->set_level(adm.level);
-    admin->mutable_coord()->set_lat(adm.coord.lat());
-    admin->mutable_coord()->set_lon(adm.coord.lon());
+    if(adm.coord.is_initialized()) {
+        admin->mutable_coord()->set_lat(adm.coord.lat());
+        admin->mutable_coord()->set_lon(adm.coord.lon());
+    }
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* stop_area, int max_depth,
@@ -25,8 +28,10 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* st
     const nt::StopArea &sa = data.pt_data.stop_areas.at(idx);
     stop_area->set_uri(sa.uri);
     stop_area->set_name(sa.name);
-    stop_area->mutable_coord()->set_lon(sa.coord.lon());
-    stop_area->mutable_coord()->set_lat(sa.coord.lat());
+    if(sa.coord.is_initialized()) {
+        stop_area->mutable_coord()->set_lon(sa.coord.lon());
+        stop_area->mutable_coord()->set_lat(sa.coord.lat());
+    }
     if(max_depth > 0){
         for(nt::idx_t idx : sa.admin_list){
             fill_pb_object(idx, data,  stop_area->add_administrative_regions(), max_depth-1, now, action_period);
@@ -45,8 +50,10 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
     const nt::StopPoint &sp = data.pt_data.stop_points.at(idx);
     stop_point->set_uri(sp.uri);
     stop_point->set_name(sp.name);
-    stop_point->mutable_coord()->set_lon(sp.coord.lon());
-    stop_point->mutable_coord()->set_lat(sp.coord.lat());
+    if(sp.coord.is_initialized()) {
+        stop_point->mutable_coord()->set_lon(sp.coord.lon());
+        stop_point->mutable_coord()->set_lat(sp.coord.lat());
+    }
 
     if(max_depth > 0){
         for(nt::idx_t idx : sp.admin_list){
@@ -72,8 +79,10 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * ad
     if(house_number >= 0){
         address->set_house_number(house_number);
     }
-    address->mutable_coord()->set_lon(coord.lon());
-    address->mutable_coord()->set_lat(coord.lat());
+    if(coord.is_initialized()) {
+        address->mutable_coord()->set_lon(coord.lon());
+        address->mutable_coord()->set_lat(coord.lat());
+    }
     address->set_uri(way.uri);
 
     if(max_depth > 0){
@@ -88,8 +97,10 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line,
     if(idx == type::invalid_idx)
         return ;
     navitia::type::Line l = data.pt_data.lines.at(idx);
-    line->set_code(l.code);
-    line->set_color(l.color);
+    if(l.code != "")
+        line->set_code(l.code);
+    if(l.color != "")
+        line->set_color(l.color);
     line->set_name(l.name);
     line->set_uri(l.uri);
 
@@ -353,9 +364,11 @@ void create_pb(const type::EntryPoint &ori_dest, const navitia::georef::Path& pa
 
     }
     for(auto coord : path.coordinates){
-        pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
-        pb_coord->set_lon(coord.lon());
-        pb_coord->set_lat(coord.lat());
+        if(coord.is_initialized()) {
+            pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
+            pb_coord->set_lon(coord.lon());
+            pb_coord->set_lat(coord.lat());
+        }
     }
 }
 
@@ -364,8 +377,10 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Poi* poi
     navitia::georef::POI geopoi = data.geo_ref.pois.at(idx);
     poi->set_name(geopoi.name);
     poi->set_uri(geopoi.uri);
-    poi->mutable_coord()->set_lat(geopoi.coord.lat());
-    poi->mutable_coord()->set_lon(geopoi.coord.lon());
+    if(geopoi.coord.is_initialized()) {
+        poi->mutable_coord()->set_lat(geopoi.coord.lat());
+        poi->mutable_coord()->set_lon(geopoi.coord.lon());
+    }
 
     if(max_depth > 0){
         for(nt::idx_t idx : geopoi.admin_list){

@@ -185,6 +185,10 @@ struct GeographicalCoord{
         return EARTH_RADIUS_IN_METERS_SQUARE * (latitudeArc*latitudeArc + tmp*tmp);
     }
 
+    bool is_initialized() const {
+        return distance_to(GeographicalCoord()) > 1;
+    }
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & _lon & _lat;
     }
