@@ -36,7 +36,7 @@ class Script:
                     objects = fd[1]
                     request_pagination.totalResult = len(fd[1])
         else:
-            pagination_resp.totalResult = 0
+            request_pagination.totalResult = 0
 
         if objects : 
             begin = int(request_pagination.startPage) * int(request_pagination.itemsPerPage)
