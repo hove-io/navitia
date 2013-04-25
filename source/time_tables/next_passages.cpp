@@ -26,7 +26,11 @@ next_passages(const std::string &request, const std::string &str_dt,
     pt::time_period action_period(to_posix_time(handler.date_time, data), to_posix_time(handler.max_datetime, data));
     
     for(auto dt_idx : departures_dt_idx) {
-        pbnavitia::Passage * passage = handler.pb_response.mutable_next_passages()->add_passages();
+        pbnavitia::Passage * passage;
+        if(vis.api_str == "NEXT_ARRIVALS")
+            passage = handler.pb_response.add_next_arrivals();
+        else
+            passage = handler.pb_response.add_next_departures();
         passage->mutable_stop_date_time()->set_departure_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
         passage->mutable_stop_date_time()->set_arrival_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
         const auto &rp = data.pt_data.journey_pattern_points[data.pt_data.stop_times[dt_idx.second].journey_pattern_point_idx];

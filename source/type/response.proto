@@ -162,8 +162,8 @@ message Status{
 }
 
 message PairStopTime {
-    required StopDateTime first = 1;
-    required StopDateTime second = 2;
+    required StopDateTime departure = 1;
+    required StopDateTime arrival = 2;
 }
 
 message RouteScheduleRow {
@@ -175,13 +175,9 @@ message Table {
     repeated RouteScheduleRow rows = 1;
 }
 
-message Schedule {
+message RouteSchedule {
     required Table table = 1;
     required Route route = 2;
-}
-
-message RouteSchedule {
-    repeated Schedule schedules = 1;
 }
 
 message Passage {
@@ -189,10 +185,6 @@ message Passage {
     required StopPoint stop_point = 2;
     optional PtDisplayInfo pt_display_informations = 3;
     optional VehicleJourney vehicle_journey = 4;
-}
-
-message Passages {
-    repeated Passage passages = 1;
 }
 
 message StopsSchedule {
@@ -204,14 +196,10 @@ message BoardItem {
     repeated string minutes = 2;
 }
 
-message Board {
+message DepartureBoard {
     required StopPoint stop_point = 1;
     required Route route = 2;
     repeated BoardItem board_items = 3;
-}
-
-message DepartureBoard {
-    repeated Board boards = 1;
 }
 
 message Load {
@@ -277,11 +265,12 @@ message Response{
     optional string next = 31;
     
     optional StopsSchedule stops_schedule = 32;
-    optional RouteSchedule route_schedule = 33;
-    optional DepartureBoard departure_board = 34;
-    optional Passages next_passages = 35;
-    optional Load load = 36;
-    optional Isochrone isochrone = 37;
-    optional Metadatas metadatas = 38;
-    optional Pagination pagination = 39;
+    repeated RouteSchedule route_schedules = 33;
+    repeated DepartureBoard departure_boards = 34;
+    repeated Passage next_departures = 35;
+    repeated Passage next_arrivals = 36;
+    optional Load load = 46;
+    optional Isochrone isochrone = 47;
+    optional Metadatas metadatas = 48;
+    optional Pagination pagination = 49;
 }
