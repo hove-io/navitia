@@ -41,15 +41,11 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
 
     RequestHandle handler("DEPARTURE_BOARD", request, date,  duration, data);
 
-
-    handler.pb_response.set_requested_api(pbnavitia::DEPARTURE_BOARDS);
     if(handler.pb_response.has_error())
         return handler.pb_response;
 
     if(handler.journey_pattern_points.size() == 0)
         return handler.pb_response;
-
-    pbnavitia::DepartureBoard * dep_board = handler.pb_response.mutable_departure_board();
 
     std::map<stop_point_line, vector_dt_st> map_route_stop_point;
     // On regroupe entre eux les stop_times appartenant au meme couple (stop_point, route)
@@ -74,7 +70,7 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
 
     for(auto id_vec : map_route_stop_point) {
 
-        auto board = dep_board->add_boards();
+        auto board = handler.pb_response.add_departure_boards();
         fill_pb_object(id_vec.first.first, data, board->mutable_stop_point(), 1, current_time, action_period);
         fill_pb_object(id_vec.first.second, data, board->mutable_route(), 2, current_time, action_period);
 

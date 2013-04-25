@@ -33,7 +33,7 @@ def on_index(request, version = None, region = None ):
 
 
 def on_regions(request, version, format):
-    response = {'requested_api': 'REGIONS', 'regions': []}
+    response = {'regions': []}
     for region in NavitiaManager().instances.keys() : 
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
@@ -56,7 +56,7 @@ url_map = Map([
     Rule('/<version>/regions.<format>', endpoint = on_regions),
     Rule('/<version>/journeys.<format>', endpoint = on_universal_journeys("journeys")),
     Rule('/<version>/isochrone.<format>', endpoint = on_universal_journeys("isochrone")),
-    Rule('/<version>/proximity_list.<format>', endpoint = on_universal_proximity_list),
+    Rule('/<version>/places_nearby.<format>', endpoint = on_universal_places_nearby),
     Rule('/<version>/<region>/', endpoint = on_index),
     Rule('/<version>/<region>/<api>.<format>', endpoint = NavitiaManager().dispatch),
     Rule('/doc.json', endpoint = on_summary_doc),

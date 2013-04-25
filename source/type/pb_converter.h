@@ -25,7 +25,7 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::StopTime
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth = 0,
+void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
@@ -45,7 +45,7 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Poi* poi
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
-void fill_pb_object(type::idx_t idx, const nt::Data& data, pbnavitia::Admin* admin, int max_depth = 0,
+void fill_pb_object(type::idx_t idx, const nt::Data& data, pbnavitia::AdministrativeRegion* admin, int max_depth = 0,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
                     const boost::posix_time::time_period& action_period = null_time_period );
 

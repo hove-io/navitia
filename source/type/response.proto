@@ -18,38 +18,17 @@ message PTReferential {
     repeated Route routes = 23;
 }
 
-message PlaceMark {
-    optional NavitiaType type = 1;
+message Place {
+    required string name = 1;
+    required string uri = 2;
     optional StopArea stop_area = 4;
     optional Poi poi = 5;
     optional StopPoint stop_point = 6;
     optional Address address = 7;
-    repeated Admin admins = 8;
     optional Line line = 9;
-}
-
-message AutocompleteItem {
-    optional string name = 1;
-    optional int32 quality = 2;
-    optional string uri = 3;
-    optional PlaceMark object = 4;
-}
-
-message Autocomplete {
-    repeated AutocompleteItem items = 1;
-    repeated string ignored_words = 2;
-    repeated string bad_words = 3;
-}
-
-message ProximityListItem {
-    optional string name = 1;
-    optional int32 distance = 2;
-    optional string uri = 3;
-    optional PlaceMark object = 4;
-}
-
-message ProximityList {
-    repeated ProximityListItem items = 1;
+    optional AdministrativeRegion administrative_region = 10;
+    optional int32 distance = 11;
+    optional int32 quality = 12;
 }
 
 enum Direction {
@@ -112,8 +91,8 @@ message Uris {
 
 message Section {
     optional SectionType type = 1;
-    optional PlaceMark origin = 2;
-    optional PlaceMark destination = 3;
+    optional Place origin = 2;
+    optional Place destination = 3;
 
 // Si c'est du TC
     optional PtDisplayInfo pt_display_informations = 4;
@@ -183,8 +162,8 @@ message Status{
 }
 
 message PairStopTime {
-    required StopDateTime first = 1;
-    required StopDateTime second = 2;
+    required StopDateTime departure = 1;
+    required StopDateTime arrival = 2;
 }
 
 message RouteScheduleRow {
@@ -196,13 +175,9 @@ message Table {
     repeated RouteScheduleRow rows = 1;
 }
 
-message Schedule {
+message RouteSchedule {
     required Table table = 1;
     required Route route = 2;
-}
-
-message RouteSchedule {
-    repeated Schedule schedules = 1;
 }
 
 message Passage {
@@ -210,10 +185,6 @@ message Passage {
     required StopPoint stop_point = 2;
     optional PtDisplayInfo pt_display_informations = 3;
     optional VehicleJourney vehicle_journey = 4;
-}
-
-message Passages {
-    repeated Passage passages = 1;
 }
 
 message StopsSchedule {
@@ -225,14 +196,10 @@ message BoardItem {
     repeated string minutes = 2;
 }
 
-message Board {
+message DepartureBoard {
     required StopPoint stop_point = 1;
     required Route route = 2;
     repeated BoardItem board_items = 3;
-}
-
-message DepartureBoard {
-    repeated Board boards = 1;
 }
 
 message Load {
@@ -267,23 +234,43 @@ message Pagination {
 }
 
 message Response{
-    required API requested_api = 1;
     optional string error = 2;
-
     optional string info = 3;
 
-    optional Autocomplete autocomplete = 4;
-    optional PTReferential ptref = 5;
-    optional StreetNetwork street_network = 6;
-    optional Planner planner = 7;
-    optional ProximityList proximitylist = 8;
-    optional Status status = 9;
-    optional Passages next_passages = 10;
-    optional StopsSchedule stops_schedule = 11;
-    optional RouteSchedule route_schedule = 12;
-    optional DepartureBoard departure_board = 13;
-    optional Load load = 14;
-    optional Isochrone isochrone = 15;
-    optional Metadatas metadatas = 16;
-    optional Pagination pagination = 17;
+    optional Status status = 4;
+    //Places
+    repeated string ignored_words = 11;
+    repeated string bad_words = 12;
+    repeated Place places = 13;
+    repeated Place places_nearby = 14;
+    
+    //Ptref
+    repeated ValidityPattern validity_patterns = 15;
+    repeated Line lines = 16;
+    repeated JourneyPattern journey_patterns = 17;
+    repeated VehicleJourney vehicle_journeys = 18;
+    repeated StopPoint stop_points = 19;
+    repeated StopArea stop_areas = 20;
+    repeated Network networks = 21;
+    repeated PhysicalMode physical_modes = 22;
+    repeated CommercialMode commercial_modes = 23;
+    repeated Connection connections = 24;
+    repeated JourneyPatternPoint journey_pattern_points = 25;
+    repeated Company companies = 26;
+    repeated Route routes = 27;
+    
+    repeated Journey journeys = 28;
+    optional ResponseType response_type = 29;
+    optional string prev = 30;
+    optional string next = 31;
+    
+    optional StopsSchedule stops_schedule = 32;
+    repeated RouteSchedule route_schedules = 33;
+    repeated DepartureBoard departure_boards = 34;
+    repeated Passage next_departures = 35;
+    repeated Passage next_arrivals = 36;
+    optional Load load = 46;
+    optional Isochrone isochrone = 47;
+    optional Metadatas metadatas = 48;
+    optional Pagination pagination = 49;
 }

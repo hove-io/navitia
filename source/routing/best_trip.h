@@ -16,6 +16,13 @@ tardiest_trip(const type::JourneyPattern & journey_pattern, const unsigned int o
               const navitia::type::DateTime &dt, const type::Data &data,
               const type::Properties &required_properties=0);
 
+
+std::pair<type::idx_t, uint32_t>
+best_trip(const type::JourneyPattern & journey_pattern, const unsigned int order,
+          const navitia::type::DateTime &dt,
+          const type::Properties &required_properties,
+          const bool clockwise, const type::Data &data);
+
 /// Calcule le gap pour les horaires en fréquences
 inline uint32_t compute_gap(uint32_t hour, uint32_t start_time, uint32_t headway_secs) {
     float tmp = hour-start_time + (hour>start_time ? 0 : type::DateTime::SECONDS_PER_DAY);

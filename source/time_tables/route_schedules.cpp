@@ -61,7 +61,6 @@ std::vector<vector_string> make_matrice(const std::vector<vector_stopTime> & sto
 
 pbnavitia::Response route_schedule(const std::string & filter, const std::string &str_dt, uint32_t duration, const uint32_t max_depth, type::Data &d) {
     RequestHandle handler("ROUTE_SCHEDULE", "", str_dt, duration, d);
-    handler.pb_response.set_requested_api(pbnavitia::ROUTE_SCHEDULES);
 
     if(handler.pb_response.has_error()) {
         return handler.pb_response;
@@ -85,7 +84,7 @@ pbnavitia::Response route_schedule(const std::string & filter, const std::string
         //On génère la matrice
         std::vector<vector_string> matrice = make_matrice(stop_times, thermometer, d);
 
-        auto schedule = handler.pb_response.mutable_route_schedule()->add_schedules();
+        auto schedule = handler.pb_response.add_route_schedules();
         pbnavitia::Table *table = schedule->mutable_table();
         fill_pb_object(route_idx, d, schedule->mutable_route(), max_depth, now, action_period);
         for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {

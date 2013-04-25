@@ -1,21 +1,13 @@
 #include "dataraptor.h"
 #include "routing.h"
+
 namespace navitia { namespace routing {
 
 void dataRAPTOR::load(const type::PT_Data &data)
 {
-    labels_const.resize(data.journey_pattern_points.size());
-    labels_const_reverse.resize(data.journey_pattern_points.size());
-
-    for(auto &r : labels_const_reverse) {
-        r.arrival = navitia::type::DateTime::min;
-        r.departure = navitia::type::DateTime::min;
-    }
-
-    for(auto &r : labels_const) {
-        r.arrival = navitia::type::DateTime::inf;
-        r.departure = navitia::type::DateTime::inf;
-    }
+    labels_const.assign(data.journey_pattern_points.size(), type::DateTime::inf);
+    labels_const_reverse.assign(data.journey_pattern_points.size(), type::DateTime::min);
+    boardings_const.assign(data.journey_pattern_points.size(), type::invalid_idx);
     
     foot_path_forward.clear();
     foot_path_backward.clear();
@@ -29,27 +21,27 @@ void dataRAPTOR::load(const type::PT_Data &data)
 
     //Construction des connexions entre journey_patternpoints
     //(sert pour les prolongements de service ainsi que les correpondances garanties
-    for(type::JourneyPatternPointConnection rpc : data.journey_pattern_point_connections) {
-        footpath_rp_forward.insert(std::make_pair(rpc.departure_journey_pattern_point_idx, rpc));        
-        footpath_rp_backward.insert(std::make_pair(rpc.destination_journey_pattern_point_idx, rpc));
+    for(type::Connection rpc : data.journey_pattern_point_connections) {
+        footpath_rp_forward.insert(std::make_pair(rpc.departure_idx, rpc));
+        footpath_rp_backward.insert(std::make_pair(rpc.destination_idx, rpc));
     }
 
     //Construction de la liste des marche à pied à partir des connexions renseignées
     for(type::Connection connection : data.connections) {
-        footpath_temp_forward[connection.departure_stop_point_idx][connection.destination_stop_point_idx] = connection;
+        footpath_temp_forward[connection.departure_idx][connection.destination_idx] = connection;
     }
 
     for(type::Connection connection : data.connections) {
-        if(footpath_temp_backward[connection.destination_stop_point_idx].find(connection.departure_stop_point_idx) ==
-           footpath_temp_backward[connection.destination_stop_point_idx].end() ) {
+        if(footpath_temp_backward[connection.destination_idx].find(connection.departure_idx) ==
+           footpath_temp_backward[connection.destination_idx].end() ) {
             
             type::Connection inverse;
             inverse.duration = connection.duration;
-            inverse.departure_stop_point_idx = connection.destination_stop_point_idx;
-            inverse.destination_stop_point_idx = connection.departure_stop_point_idx;
-            footpath_temp_backward[inverse.departure_stop_point_idx][inverse.destination_stop_point_idx] = inverse;
-        } else if(footpath_temp_backward[connection.destination_stop_point_idx][connection.departure_stop_point_idx].duration > connection.duration) {
-            footpath_temp_backward[connection.destination_stop_point_idx][connection.departure_stop_point_idx].duration = connection.duration;
+            inverse.departure_idx = connection.destination_idx;
+            inverse.destination_idx = connection.departure_idx;
+            footpath_temp_backward[inverse.departure_idx][inverse.destination_idx] = inverse;
+        } else if(footpath_temp_backward[connection.destination_idx][connection.departure_idx].duration > connection.duration) {
+            footpath_temp_backward[connection.destination_idx][connection.departure_idx].duration = connection.duration;
         }
 
     }
@@ -76,8 +68,8 @@ void dataRAPTOR::load(const type::PT_Data &data)
             for(type::idx_t spidx2 : sa.stop_point_list) {
                 if(sp.idx != spidx2) {
                     type::Connection c;
-                    c.departure_stop_point_idx = sp.idx;
-                    c.destination_stop_point_idx = spidx2;
+                    c.departure_idx = sp.idx;
+                    c.destination_idx = spidx2;
                     c.duration = 2 * 60;
                     if(footpath_temp_forward[sp.idx].find(spidx2) == footpath_temp_forward[sp.idx].end()) {
                         foot_path_forward.push_back(c);
