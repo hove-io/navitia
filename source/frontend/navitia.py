@@ -33,7 +33,7 @@ def on_index(request, version = None, region = None ):
 
 
 def on_regions(request, version, format):
-    response = {'requested_api': 'REGIONS', 'regions': []}
+    response = {'regions': []}
     for region in NavitiaManager().instances.keys() : 
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS

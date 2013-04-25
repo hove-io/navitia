@@ -249,6 +249,7 @@ message Response{
     optional string error = 2;
     optional string info = 3;
 
+    optional Status status = 4;
     //Places
     repeated string ignored_words = 11;
     repeated string bad_words = 12;
@@ -270,15 +271,17 @@ message Response{
     repeated Company companies = 26;
     repeated Route routes = 27;
     
-    optional Planner planner = 28;
+    repeated Journey journeys = 28;
+    optional ResponseType response_type = 29;
+    optional string prev = 30;
+    optional string next = 31;
     
-    optional Status status = 29;
-    optional Passages next_passages = 30;
-    optional StopsSchedule stops_schedule = 31;
-    optional RouteSchedule route_schedule = 32;
-    optional DepartureBoard departure_board = 33;
-    optional Load load = 34;
-    optional Isochrone isochrone = 35;
-    optional Metadatas metadatas = 36;
-    optional Pagination pagination = 37;
+    optional StopsSchedule stops_schedule = 32;
+    optional RouteSchedule route_schedule = 33;
+    optional DepartureBoard departure_board = 34;
+    optional Passages next_passages = 35;
+    optional Load load = 36;
+    optional Isochrone isochrone = 37;
+    optional Metadatas metadatas = 38;
+    optional Pagination pagination = 39;
 }

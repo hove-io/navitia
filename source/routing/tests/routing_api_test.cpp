@@ -27,11 +27,9 @@ BOOST_AUTO_TEST_CASE(simple_journey){
     streetnetwork::StreetNetwork sn_worker(data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T021000"}, true, 1.38, 1000, false, forbidden, sn_worker);
 
-    BOOST_REQUIRE(resp.has_planner());
-    pbnavitia::Planner planner = resp.planner();
-    BOOST_REQUIRE_EQUAL(planner.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(planner.journeys_size(), 1);
-    pbnavitia::Journey journey = planner.journeys(0);
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    pbnavitia::Journey journey = resp.journeys(0);
 
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     pbnavitia::Section section = journey.sections(0);
@@ -67,12 +65,10 @@ BOOST_AUTO_TEST_CASE(journey_array){
 
     pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, false, forbidden, sn_worker);
 
-    BOOST_REQUIRE(resp.has_planner());
-    pbnavitia::Planner planner = resp.planner();
-    BOOST_REQUIRE_EQUAL(planner.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(planner.journeys_size(), 2);
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
 
-    pbnavitia::Journey journey = planner.journeys(0);
+    pbnavitia::Journey journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     pbnavitia::Section section = journey.sections(0);
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
@@ -83,7 +79,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
     BOOST_CHECK_EQUAL(st1.departure_date_time(), "20120614T081100");
     BOOST_CHECK_EQUAL(st2.arrival_date_time(), "20120614T082000");
 
-    journey = planner.journeys(1);
+    journey = resp.journeys(1);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     section = journey.sections(0);
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
@@ -415,10 +411,8 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, false, forbidden, sn_worker);
 
 // Marche à pied
-    pbnavitia::Planner planner = resp.planner();
-    BOOST_REQUIRE_EQUAL(planner.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(planner.journeys_size(), 3);
-    pbnavitia::Journey journey = planner.journeys(0);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 3);
+    pbnavitia::Journey journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     pbnavitia::Section section = journey.sections(0);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
@@ -439,10 +433,9 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     destination.streetnetwork_params.distance = 5;
     resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, false, forbidden, sn_worker);
 
-    planner = resp.planner();
-    BOOST_REQUIRE_EQUAL(planner.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(planner.journeys_size(), 3);
-    journey = planner.journeys(0);
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 3);
+    journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     section = journey.sections(0);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
@@ -476,10 +469,9 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     destination.streetnetwork_params.distance = 5;
     resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, false, forbidden, sn_worker);
 
-    planner = resp.planner();
-    BOOST_REQUIRE_EQUAL(planner.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(planner.journeys_size(), 3);
-    journey = planner.journeys(0);
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 3);
+    journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     section = journey.sections(0);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);

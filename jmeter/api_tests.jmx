@@ -953,12 +953,12 @@ AssertionResult.setFailure(true);
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
 
-if(resp.planner.response_type != &apos;ITINERARY_FOUND&apos;){
+if(resp.response_type != &apos;ITINERARY_FOUND&apos;){
 AssertionResult.setFailureMessage(&quot;On a pas le bon response_type&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-if(resp.planner.journeys.length &lt;= 0){
+if(resp.journeys.length &lt;= 0){
 AssertionResult.setFailureMessage(&quot;On a aucune solution&quot;) ;
 AssertionResult.setFailure(true);
 }</stringProp>
@@ -1024,12 +1024,12 @@ AssertionResult.setFailure(true);
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
 
-if(resp.planner.response_type != &apos;ITINERARY_FOUND&apos;){
+if(resp.response_type != &apos;ITINERARY_FOUND&apos;){
 AssertionResult.setFailureMessage(&quot;On a pas le bon response_type&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-if(resp.planner.journeys.length &lt;= 0){
+if(resp.journeys.length &lt;= 0){
 AssertionResult.setFailureMessage(&quot;On a aucune solution&quot;) ;
 AssertionResult.setFailure(true);
 }</stringProp>

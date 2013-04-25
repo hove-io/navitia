@@ -173,7 +173,7 @@ class Script:
 
 
     def __fill_display_and_uris(self, resp):
-        for journey in resp.planner.journeys:
+        for journey in resp.journeys:
             for section in journey.sections:
                 if section.type == response_pb2.PUBLIC_TRANSPORT:
                     section.pt_display_informations.physical_mode = section.vehicle_journey.physical_mode.name
@@ -214,11 +214,11 @@ class Script:
             req.journeys.forbidden_uris.append(forbidden_uri)
         resp = NavitiaManager().send_and_receive(req, region)
 
-        if resp.planner.journeys:
+        if resp.journeys:
             (before, after) = extremes(resp, request_args)
             if before and after:
-                resp.planner.before = before
-                resp.planner.after = after
+                resp.prev = before
+                resp.next = after
 
         self.__fill_display_and_uris(resp)
         return resp
