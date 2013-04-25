@@ -261,10 +261,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
 
 if(!resp.metadatas){
 AssertionResult.setFailureMessage(&quot;Pas de variable metadatas&quot;) ;
@@ -1304,11 +1300,7 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-
-if(!resp.ptref.companies){
-AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut companies&quot;) ;
-AssertionResult.setFailure(true);
-}</stringProp>
+</stringProp>
             <stringProp name="scriptLanguage">javascript</stringProp>
           </BSFAssertion>
           <hashTree/>
@@ -1439,50 +1431,6 @@ eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
 
 if(!resp.lines){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut lines&quot;) ;
-AssertionResult.setFailure(true);
-}</stringProp>
-            <stringProp name="scriptLanguage">javascript</stringProp>
-          </BSFAssertion>
-          <hashTree/>
-        </hashTree>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Metadatas" enabled="true">
-          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
-            <collectionProp name="Arguments.arguments"/>
-          </elementProp>
-          <stringProp name="HTTPSampler.domain"></stringProp>
-          <stringProp name="HTTPSampler.port"></stringProp>
-          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
-          <stringProp name="HTTPSampler.response_timeout"></stringProp>
-          <stringProp name="HTTPSampler.protocol"></stringProp>
-          <stringProp name="HTTPSampler.contentEncoding"></stringProp>
-          <stringProp name="HTTPSampler.path">/v0/moo/metadatas.json</stringProp>
-          <stringProp name="HTTPSampler.method">GET</stringProp>
-          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
-          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-          <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-          <boolProp name="HTTPSampler.monitor">false</boolProp>
-          <stringProp name="HTTPSampler.embedded_url_re"></stringProp>
-        </HTTPSamplerProxy>
-        <hashTree>
-          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Headers Assertion" enabled="true">
-            <collectionProp name="Asserion.test_strings">
-              <stringProp name="2066544187">Content-Type: application/json</stringProp>
-              <stringProp name="1477249802">200 OK</stringProp>
-            </collectionProp>
-            <stringProp name="Assertion.test_field">Assertion.response_headers</stringProp>
-            <boolProp name="Assertion.assume_success">false</boolProp>
-            <intProp name="Assertion.test_type">2</intProp>
-          </ResponseAssertion>
-          <hashTree/>
-          <BSFAssertion guiclass="TestBeanGUI" testclass="BSFAssertion" testname="JSON Tests" enabled="true">
-            <stringProp name="filename"></stringProp>
-            <stringProp name="parameters"></stringProp>
-            <stringProp name="script">// On met le résultat dans une variable resp
-eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-
-if(!resp.metadatas){
-AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut metadatas&quot;) ;
 AssertionResult.setFailure(true);
 }</stringProp>
             <stringProp name="scriptLanguage">javascript</stringProp>
