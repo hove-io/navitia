@@ -57,7 +57,6 @@ std::vector<std::string> vector_of_admins(const T & admin){
 
 pbnavitia::Response Worker::status() {
     pbnavitia::Response result;
-    result.set_requested_api(pbnavitia::STATUS);
 
     auto status = result.mutable_status();
 
@@ -83,15 +82,13 @@ pbnavitia::Response Worker::status() {
 
 pbnavitia::Response Worker::metadatas() {
     pbnavitia::Response result;
-    result.set_requested_api(pbnavitia::METADATAS);
-
     auto metadatas = result.mutable_metadatas();
-
+    
     metadatas->set_start_production_date(bg::to_iso_string(data.meta.production_date.begin()));
     metadatas->set_end_production_date(bg::to_iso_string(data.meta.production_date.end()));
     metadatas->set_shape(data.meta.shape);
     metadatas->set_status("running");
-
+    
     return result;
 }
 
@@ -107,7 +104,6 @@ void Worker::init_worker_data(){
 
 pbnavitia::Response Worker::load() {
     pbnavitia::Response result;
-    result.set_requested_api(pbnavitia::LOAD);
     data.to_load = true;
     result.mutable_load()->set_ok(true);
 
@@ -255,7 +251,6 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
 
 pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
     pbnavitia::Response result;
-    result.set_requested_api(request.requested_api());
     switch(request.requested_api()){
     case pbnavitia::STATUS: return status(); break;
     case pbnavitia::LOAD: return load(); break;

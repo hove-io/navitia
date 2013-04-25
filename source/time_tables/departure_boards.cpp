@@ -41,8 +41,6 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
 
     RequestHandle handler("DEPARTURE_BOARD", request, date,  duration, data);
 
-
-    handler.pb_response.set_requested_api(pbnavitia::DEPARTURE_BOARDS);
     if(handler.pb_response.has_error())
         return handler.pb_response;
 

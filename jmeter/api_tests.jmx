@@ -107,15 +107,6 @@
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;PTREFERENTIAL&quot;){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
 
 if(!resp.stop_points){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribu stop_points&quot;) ;
@@ -168,15 +159,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;PTREFERENTIAL&quot;){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
 
 for(var i = 0; i &lt; resp.stop_points.length; i++){
   var stop_point = resp.stop_points[i];
@@ -232,15 +214,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;PTREFERENTIAL&quot;){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
 
 for(var i = 0; i &lt; resp.stop_points.length; i++){
   var stop_point = resp.stop_points[i];
@@ -293,8 +266,8 @@ AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
 AssertionResult.setFailure(true);
 }
 
-if(resp.requested_api != &quot;METADATAS&quot;){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
+if(!resp.metadatas){
+AssertionResult.setFailureMessage(&quot;Pas de variable metadatas&quot;) ;
 AssertionResult.setFailure(true);
 }
 </stringProp>
@@ -345,15 +318,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;places&quot;){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
 
 if(resp.places.length &lt;= 0){
 AssertionResult.setFailureMessage(&quot;On a trouvé aucun élément dans autocomplete&quot;) ;
@@ -413,15 +377,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;places&quot;){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
 
 for(var i = 0; i &lt; resp.places.length; i++ ){
 var item = resp.places[i];
@@ -484,15 +439,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;ISOCHRONE&quot;){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
 
 if(resp.isochrone.items.length &lt;= 0){
 AssertionResult.setFailureMessage(&quot;On a aucune solution&quot;) ;
@@ -567,15 +513,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;ISOCHRONE&quot;){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
 
 if(resp.isochrone.items.length &lt;= 0){
 AssertionResult.setFailureMessage(&quot;On a aucune solution&quot;) ;
@@ -672,15 +609,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;places_nearby&quot;){
-AssertionResult.setFailureMessage(&quot;Variable requested_type != places_nearby&quot;) ;
-AssertionResult.setFailure(true);
-}
 
 if(!resp.places_nearby){
 AssertionResult.setFailureMessage(&quot;Pas de variable places_nearby&quot;) ;
@@ -747,15 +675,6 @@ previous_dist = item.distance;
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;places_nearby&quot;){
-AssertionResult.setFailureMessage(&quot;Variable requested_type != places_nearby&quot;) ;
-AssertionResult.setFailure(true);
-}
 
 if(!resp.places_nearby){
 AssertionResult.setFailureMessage(&quot;Pas de variable places_nearby&quot;) ;
@@ -829,15 +748,6 @@ previous_dist = item.distance;
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;places_nearby&quot;){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
 
 if(!resp.places_nearby){
 AssertionResult.setFailureMessage(&quot;Pas de variable places_nearby&quot;) ;
@@ -911,15 +821,6 @@ previous_dist = item.distance;
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;places_nearby&quot;){
-AssertionResult.setFailureMessage(&quot;Variable requested_type != places_nearby&quot;) ;
-AssertionResult.setFailure(true);
-}
 
 if(!resp.places_nearby){
 AssertionResult.setFailureMessage(&quot;Pas de variable proximitylist&quot;) ;
@@ -989,15 +890,6 @@ previous_dist = item.distance;
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;REGIONS&quot;){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
 
 if(resp.regions[0].status != &quot;running&quot;){
 AssertionResult.setFailureMessage(&quot;Region pas marquée comme running&quot;) ;
@@ -1064,15 +956,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;PLANNER&quot;){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
 
 if(resp.planner.response_type != &apos;ITINERARY_FOUND&apos;){
 AssertionResult.setFailureMessage(&quot;On a pas le bon response_type&quot;) ;
@@ -1144,15 +1027,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;PLANNER&quot;){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
 
 if(resp.planner.response_type != &apos;ITINERARY_FOUND&apos;){
 AssertionResult.setFailureMessage(&quot;On a pas le bon response_type&quot;) ;
@@ -1202,15 +1076,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;PTREFERENTIAL&quot;){
-AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; + resp.requested_api) ;
-AssertionResult.setFailure(true);
-}
 
 if(!resp.networks){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut networks&quot;) ;
@@ -1263,15 +1128,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;PTREFERENTIAL&quot;){
-AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; + resp.requested_api) ;
-AssertionResult.setFailure(true);
-}
 
 if(!resp.vehicle_journeys){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut vehicle_journeys&quot;) ;
@@ -1316,15 +1172,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;PTREFERENTIAL&quot;){
-AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; + resp.requested_api) ;
-AssertionResult.setFailure(true);
-}
 
 if(!resp.connections){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut connections&quot;) ;
@@ -1369,15 +1216,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;PTREFERENTIAL&quot;){
-AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; + resp.requested_api) ;
-AssertionResult.setFailure(true);
-}
 
 if(!resp.commercial_modes){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut commercial modes&quot;) ;
@@ -1422,15 +1260,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;PTREFERENTIAL&quot;){
-AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; + resp.requested_api) ;
-AssertionResult.setFailure(true);
-}
 
 if(!resp.physical_modes){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut physical modes&quot;) ;
@@ -1475,16 +1304,11 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
 
-if(resp.requested_api != &quot;PTREFERENTIAL&quot;){
-AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; + resp.requested_api) ;
+if(!resp.ptref.companies){
+AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut companies&quot;) ;
 AssertionResult.setFailure(true);
-}
-</stringProp>
+}</stringProp>
             <stringProp name="scriptLanguage">javascript</stringProp>
           </BSFAssertion>
           <hashTree/>
@@ -1524,15 +1348,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;PTREFERENTIAL&quot;){
-AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; + resp.requested_api) ;
-AssertionResult.setFailure(true);
-}
 
 if(!resp.ptref.stop_areas){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut stop_areas&quot;) ;
@@ -1577,15 +1392,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;PTREFERENTIAL&quot;){
-AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; + resp.requested_api) ;
-AssertionResult.setFailure(true);
-}
 
 if(!resp.routes){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut routes&quot;) ;
@@ -1630,15 +1436,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;PTREFERENTIAL&quot;){
-AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; + resp.requested_api) ;
-AssertionResult.setFailure(true);
-}
 
 if(!resp.lines){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut lines&quot;) ;
@@ -1683,15 +1480,6 @@ AssertionResult.setFailure(true);
             <stringProp name="parameters"></stringProp>
             <stringProp name="script">// On met le résultat dans une variable resp
 eval(&apos;var resp = &apos; + prev.getResponseDataAsString());
-if(!resp.requested_api){
-AssertionResult.setFailureMessage(&quot;Pas de variable requested_type&quot;) ;
-AssertionResult.setFailure(true);
-}
-
-if(resp.requested_api != &quot;METADATAS&quot;){
-AssertionResult.setFailureMessage(&quot;On a pas le bon requested_api : &quot; + resp.requested_api) ;
-AssertionResult.setFailure(true);
-}
 
 if(!resp.metadatas){
 AssertionResult.setFailureMessage(&quot;On a pas d&apos;attribut metadatas&quot;) ;

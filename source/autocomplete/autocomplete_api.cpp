@@ -152,7 +152,6 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  const navitia::type::Data &d) {
 
     pbnavitia::Response pb_response;    
-    pb_response.set_requested_api(pbnavitia::places);
     bool addType = d.pt_data.stop_area_autocomplete.is_address_type(q, d.geo_ref.alias, d.geo_ref.synonymes);
     std::vector<Autocomplete<nt::idx_t>::fl_quality> result;
     std::vector<type::idx_t> admin_idxs = admin_uris_to_idx(admins, d);

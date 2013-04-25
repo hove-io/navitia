@@ -8,7 +8,6 @@ namespace navitia{ namespace ptref{
 
 pbnavitia::Response extract_data(const type::Data & data, type::Type_e requested_type, std::vector<type::idx_t> & rows, const int depth) {
     pbnavitia::Response result;
-    result.set_requested_api(pbnavitia::PTREFERENTIAL);
 
     //on utilise la date courante pour choisir si on doit afficher les  messages de perturbation
     pt::ptime today = pt::second_clock::local_time();
@@ -26,7 +25,6 @@ pbnavitia::Response extract_data(const type::Data & data, type::Type_e requested
 pbnavitia::Response query_pb(type::Type_e requested_type, std::string request, const int depth, const type::Data &data){
     std::vector<type::idx_t> final_indexes;
     pbnavitia::Response pb_response;
-    pb_response.set_requested_api(pbnavitia::PTREFERENTIAL);
     try {
         final_indexes = make_query(requested_type, request, data);
     } catch(parsing_error parse_error) {

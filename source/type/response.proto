@@ -246,7 +246,6 @@ message Pagination {
 }
 
 message Response{
-    required API requested_api = 1;
     optional string error = 2;
     optional string info = 3;
 

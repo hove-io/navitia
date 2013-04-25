@@ -39,7 +39,6 @@ pbnavitia::Response find(type::GeographicalCoord coord, double distance,
                          uint32_t depth,
                          const type::Data & data) {
     pbnavitia::Response response;
-    response.set_requested_api(pbnavitia::places_nearby);
 
     std::vector<std::pair<type::idx_t, type::GeographicalCoord> > result;
     for(nt::Type_e type : filter){

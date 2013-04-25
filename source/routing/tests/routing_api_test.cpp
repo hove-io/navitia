@@ -27,9 +27,6 @@ BOOST_AUTO_TEST_CASE(simple_journey){
     streetnetwork::StreetNetwork sn_worker(data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T021000"}, true, 1.38, 1000, false, forbidden, sn_worker);
 
-    BOOST_REQUIRE(resp.has_requested_api());
-    BOOST_CHECK_EQUAL(resp.requested_api(), pbnavitia::PLANNER);
-
     BOOST_REQUIRE(resp.has_planner());
     pbnavitia::Planner planner = resp.planner();
     BOOST_REQUIRE_EQUAL(planner.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -69,9 +66,6 @@ BOOST_AUTO_TEST_CASE(journey_array){
     std::vector<std::string> datetimes{"20120614T080000", "20120614T090000"};
 
     pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, false, forbidden, sn_worker);
-
-    BOOST_REQUIRE(resp.has_requested_api());
-    BOOST_CHECK_EQUAL(resp.requested_api(), pbnavitia::PLANNER);
 
     BOOST_REQUIRE(resp.has_planner());
     pbnavitia::Planner planner = resp.planner();

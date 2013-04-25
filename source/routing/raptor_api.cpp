@@ -38,7 +38,6 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                                 const type::EntryPoint &origin,
                                 const type::EntryPoint &destination) {
     pbnavitia::Response pb_response;
-    pb_response.set_requested_api(pbnavitia::PLANNER);
     boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 
 
@@ -177,7 +176,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data & data,
 
 std::vector<boost::posix_time::ptime> 
 parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str, 
-                pbnavitia::Response &response, bool clockwise) {
+                pbnavitia::Response &response, pbnavitia::API requested_api, bool clockwise) {
     std::vector<boost::posix_time::ptime> datetimes;
 
     for(std::string datetime: datetimes_str){
@@ -185,9 +184,9 @@ parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str,
             boost::posix_time::ptime ptime;
             ptime = boost::posix_time::from_iso_string(datetime);
             if(!raptor.data.meta.production_date.contains(ptime.date())) {
-                if(response.requested_api() == pbnavitia::PLANNER)
+                if(requested_api == pbnavitia::PLANNER)
                     response.mutable_planner()->set_response_type(pbnavitia::DATE_OUT_OF_BOUNDS);
-                else if(response.requested_api() == pbnavitia::ISOCHRONE)
+                else if(requested_api == pbnavitia::ISOCHRONE)
                     response.mutable_isochrone()->set_response_type(pbnavitia::DATE_OUT_OF_BOUNDS);
             }
             datetimes.push_back(ptime);
@@ -215,10 +214,9 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               streetnetwork::StreetNetwork & worker) {
 
     pbnavitia::Response response;
-    response.set_requested_api(pbnavitia::PLANNER);
 
     std::vector<boost::posix_time::ptime> datetimes;
-    datetimes = parse_datetimes(raptor, datetimes_str, response, clockwise);
+    datetimes = parse_datetimes(raptor, datetimes_str, response, pbnavitia::PLANNER, clockwise);
     if(response.error() != "" || response.planner().response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
         return response;
     }
@@ -293,10 +291,9 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    streetnetwork::StreetNetwork & worker, int max_duration) {
     
     pbnavitia::Response response;
-    response.set_requested_api(pbnavitia::ISOCHRONE);
 
     boost::posix_time::ptime datetime;
-    auto tmp_datetime = parse_datetimes(raptor, {datetime_str}, response, clockwise);
+    auto tmp_datetime = parse_datetimes(raptor, {datetime_str}, response, pbnavitia::ISOCHRONE, clockwise);
     if(response.has_error() || tmp_datetime.size() == 0 ||
        response.isochrone().response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
         return response;

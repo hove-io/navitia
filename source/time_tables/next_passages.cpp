@@ -14,7 +14,6 @@ next_passages(const std::string &request, const std::string &str_dt,
               const bool wheelchair, type::Data & data, Visitor vis) {
     RequestHandle handler(vis.api_str, request, str_dt, duration,data);
 
-    handler.pb_response.set_requested_api(vis.api_pb);
     if(handler.pb_response.has_error()) {
         return handler.pb_response;
     }

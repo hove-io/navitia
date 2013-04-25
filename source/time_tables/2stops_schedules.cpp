@@ -48,7 +48,6 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
 pbnavitia::Response stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
                                     const std::string &str_dt, uint32_t duration, uint32_t depth, type::Data & data) {
     pbnavitia::Response pb_response;
-    pb_response.set_requested_api(pbnavitia::STOPS_SCHEDULES);
 
     boost::posix_time::ptime ptime;
     try{
