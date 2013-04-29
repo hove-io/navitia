@@ -94,17 +94,27 @@ If you are wondering why the origin and destination have such a syntax, it's bec
 to provide an address or a specific station as input. But we will see more about that later in the
 section about entry points.
 
+What places have a name that start with 'trans'
+***********************************************
 
-What stations are within 1000 meters
-************************************
+The ``places`` API finds any object whose name matches the first letters of the query.
 
-The ``proximity_list`` API finds any object within a certain radius as a crow flies.
+http://api.navitia.io/v0/sf/autocomplete.json?q=trans
+
+This API is fast enough to use it for autocompleting an user request.
+
+What places are within 1000 meters
+**********************************
+
+The ``nearby_places`` API finds any object within a certain radius as a crow flies.
 
 Only the coordinates an ``uri`` is mandatory. Optionally you can select what object types to
 return and change the radius. The URI must be a geographical coord or a stop point. Asking the stations arround
 a network doesnot make much sense. Does it?
 
-All stations arround the Transamerica Pyramid can be fetched with the following request : http://api.navitia.io/v0/proximity_list.json?uri=coord:-122.402770:37.794682.
+All stations arround the Transamerica Pyramid can be fetched with the following request : http://api.navitia.io/v0/places_nearby.json?uri=coord:-122.402770:37.794682.
+
+
 
 What stations can be reached in the next 60 minutes
 ***************************************************
