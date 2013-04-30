@@ -80,7 +80,7 @@ void Visitor::add_osm_housenumber(uint64_t osmid, const CanalTP::Tags & tags){
 
 void Visitor::add_osm_poi(const navitia::type::GeographicalCoord& coord, const CanalTP::Tags & tags){
     if(tags.find("amenity") != tags.end()){
-        std::string value = tags.at("amenity");
+        std::string value = "POITYPE:"+tags.at("amenity");
         auto it = geo_ref.poitype_map.find(value);
         if(it != geo_ref.poitype_map.end()){
             if(tags.find("name") != tags.end()){
@@ -89,7 +89,7 @@ void Visitor::add_osm_poi(const navitia::type::GeographicalCoord& coord, const C
                 poi.name = tags.at("name");
                 poi.coord = coord;
                 poi.idx = geo_ref.pois.size();
-                poi.uri = boost::lexical_cast<std::string>(poi.idx);
+                poi.uri = "POI:"+ boost::lexical_cast<std::string>(poi.idx);
                 geo_ref.pois.push_back(poi);
             }else{
                 LOG4CPLUS_WARN(logger, "Attention, le site ayant comme type ["+value+"] car il n'a pas de nom.");
@@ -341,17 +341,18 @@ void Visitor::fillPoiType(){
     for(auto pt : poilist.PoiList){
         POIType poitype;
         poitype.name = pt.second;
-        poitype.uri =  pt.first;
         poitype.idx = geo_ref.poitypes.size();
-        geo_ref.poitypes.push_back(poitype);
-        geo_ref.poitype_map[poitype.uri] = poitype.idx;
+        poitype.uri = "POITYPE:"+pt.first;
+        geo_ref.poitypes.push_back(poitype);        
     }
+    geo_ref.build_poitypes();
 }
 
 void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filename){
     Visitor v(geo_ref_to_fill);
-    v.fillPoiType();
+    v.fillPoiType();    
     CanalTP::read_osm_pbf(osm_pbf_filename, v);
+    v.geo_ref.build_pois();
     std::cout << v.nodes.size() << " nodes, " << v.ways.size() << " ways/" << v.total_ways << std::endl;
     v.count_nodes_uses();
     v.edges();
