@@ -855,6 +855,25 @@ BOOST_AUTO_TEST_CASE(freq_vj_pam) {
     BOOST_CHECK_EQUAL(res1[0].items[0].arrival.hour(), (25*3600 + 10*60)% type::DateTime::SECONDS_PER_DAY);
 }
 
+BOOST_AUTO_TEST_CASE(max_duration){
+    navimake::builder b("20120614");
+    b.vj("A")("stop1", 8000, 8050)("stop2", 8100,8150);
+    type::Data data;
+    b.build(data.pt_data);
+    data.build_raptor();
+    RAPTOR raptor(data);
+
+    type::PT_Data & d = data.pt_data;
+
+    auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 0, navitia::type::DateTime::inf);
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 0, type::DateTime(0, 8101));
+    BOOST_REQUIRE_EQUAL(res1.size(), 1);
+
+    res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 7900, 0, type::DateTime(0, 8099));
+    BOOST_REQUIRE_EQUAL(res1.size(), 0);
+}
 /*
 BOOST_AUTO_TEST_CASE(adapted) {
     navimake::builder b("20120614");
