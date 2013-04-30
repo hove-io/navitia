@@ -89,6 +89,7 @@ void Visitor::add_osm_poi(const navitia::type::GeographicalCoord& coord, const C
                 poi.name = tags.at("name");
                 poi.coord = coord;
                 poi.idx = geo_ref.pois.size();
+                poi.uri = boost::lexical_cast<std::string>(poi.idx);
                 geo_ref.pois.push_back(poi);
             }else{
                 LOG4CPLUS_WARN(logger, "Attention, le site ayant comme type ["+value+"] car il n'a pas de nom.");
