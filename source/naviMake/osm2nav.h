@@ -1,6 +1,7 @@
 #pragma once
 #include "type/data.h"
 #include "third_party/osmpbfreader/osmpbfreader.h"
+#include "georef/pois.h"
 
 namespace navitia { namespace georef {
 class GeoRef;
@@ -66,6 +67,12 @@ struct OSMAdminRef{
     CanalTP::References refs;
 };
 
+struct OSMAPoi{
+    std::string key;
+    std::string name;
+    type::GeographicalCoord coord;
+};
+
 /** Structure appelée par parseur OSM PBF */
 struct Visitor{
     log4cplus::Logger logger;
@@ -73,6 +80,7 @@ struct Visitor{
     std::unordered_map<uint64_t, Node> nodes;
     std::unordered_map<uint64_t, OSMHouseNumber> housenumbers;
     std::unordered_map<uint64_t, OSMAdminRef> OSMAdminRefs;
+    std::unordered_map<uint64_t, OSMAPoi> OSMAPois;
     int total_ways;
     int total_house_number;
 
@@ -80,6 +88,8 @@ struct Visitor{
     georef::GeoRef & geo_ref;
     //Pour charger les données administratives
     navitia::georef::Levels levellist;
+    // Pour charger les pois
+    navitia::georef::Pois poilist;
     std::map<std::string,std::string>::iterator iter;
 
     Visitor(GeoRef & to_fill) : total_ways(0), total_house_number(0), geo_ref(to_fill){
@@ -93,6 +103,7 @@ struct Visitor{
 
     void add_osm_housenumber(uint64_t osmid, const CanalTP::Tags & tags);
 
+    void add_osm_poi(const navitia::type::GeographicalCoord& coord, const CanalTP::Tags & tags);
     /// Once all the ways and nodes are read, we count how many times a node is used to detect intersections
     void count_nodes_uses();
 
@@ -116,6 +127,9 @@ struct Visitor{
 
     /// Associe des communes des rues
     void set_admin_of_ways();
+
+    /// cahrgement des PoiType
+    void fillPoiType();
 };
 
 }}

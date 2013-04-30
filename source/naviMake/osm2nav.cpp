@@ -17,6 +17,7 @@ void Visitor::node_callback(uint64_t osmid, double lon, double lat, const CanalT
     node.ref_node = osmid;
     this->nodes[osmid] = node;
     add_osm_housenumber(osmid, tags);
+    add_osm_poi(node.coord, tags);
 }
 
 void Visitor::way_callback(uint64_t osmid, const CanalTP::Tags &tags, const std::vector<uint64_t> &refs){
@@ -38,6 +39,8 @@ void Visitor::way_callback(uint64_t osmid, const CanalTP::Tags &tags, const std:
     }else{
         // Dans le cas où la maison est dessinée par un way et non pas juste par un node
         add_osm_housenumber(refs.front(), tags);
+        navitia::type::GeographicalCoord coord;
+        add_osm_poi(coord, tags);
     }
     ways[osmid] = w;
 }
@@ -71,6 +74,25 @@ void Visitor::add_osm_housenumber(uint64_t osmid, const CanalTP::Tags & tags){
         osm_hn.number = str_to_int(tags.at("addr:housenumber"));
         if (osm_hn.number > 0 ){
             this->housenumbers[osmid] = osm_hn;
+        }
+    }
+}
+
+void Visitor::add_osm_poi(const navitia::type::GeographicalCoord& coord, const CanalTP::Tags & tags){
+    if(tags.find("amenity") != tags.end()){
+        std::string value = tags.at("amenity");
+        auto it = geo_ref.poitype_map.find(value);
+        if(it != geo_ref.poitype_map.end()){
+            if(tags.find("name") != tags.end()){
+                POI poi;
+                poi.poitype_idx = it->second;
+                poi.name = tags.at("name");
+                poi.coord = coord;
+                poi.idx = geo_ref.pois.size();
+                geo_ref.pois.push_back(poi);
+            }else{
+                LOG4CPLUS_WARN(logger, "Attention, le site ayant comme type ["+value+"] car il n'a pas de nom.");
+            }
         }
     }
 }
@@ -314,9 +336,20 @@ void Visitor::set_admin_of_ways(){
         }
     }
 }
+void Visitor::fillPoiType(){
+    for(auto pt : poilist.PoiList){
+        POIType poitype;
+        poitype.name = pt.second;
+        poitype.uri =  pt.first;
+        poitype.idx = geo_ref.poitypes.size();
+        geo_ref.poitypes.push_back(poitype);
+        geo_ref.poitype_map[poitype.uri] = poitype.idx;
+    }
+}
 
 void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filename){
     Visitor v(geo_ref_to_fill);
+    v.fillPoiType();
     CanalTP::read_osm_pbf(osm_pbf_filename, v);
     std::cout << v.nodes.size() << " nodes, " << v.ways.size() << " ways/" << v.total_ways << std::endl;
     v.count_nodes_uses();
@@ -330,6 +363,8 @@ void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filenam
     v.set_admin_of_ways();
     std::cout << "On a : " << v.total_house_number << " adresses" << std::endl;
     std::cout << "On a : " << v.geo_ref.admins.size() << " données administratives" << std::endl;
+    std::cout << "On a : " << v.geo_ref.poitypes.size() << " types de site" << std::endl;
+    std::cout << "On a : " << v.geo_ref.pois.size() << " sites" << std::endl;
 
 }
 

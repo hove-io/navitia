@@ -5,6 +5,8 @@ SET(GEOREF_SRC
     street_network.cpp
     adminref.h
     adminref.cpp
+    pois.h
+    pois.cpp
 )
 
 add_library(georef ${GEOREF_SRC})
