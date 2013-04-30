@@ -235,7 +235,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     if(api != pbnavitia::ISOCHRONE){
         return routing::make_response(*calculateur, origin, destination, datetimes,
                                               request.clockwise(), request.streetnetwork_params().walking_speed(), request.streetnetwork_params().walking_distance(), /*request.wheelchair()*/false,
-                                              forbidden, *street_network_worker);
+                                              forbidden, *street_network_worker, request.max_duration());
     } else {
         return navitia::routing::make_isochrone(*calculateur, origin, request.datetimes(0),
                                                         request.clockwise(), request.streetnetwork_params().walking_speed(), request.streetnetwork_params().walking_distance(), /*request.wheelchair()*/false,
