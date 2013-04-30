@@ -1,7 +1,7 @@
 import "type.proto";
 package pbnavitia;
 
-message AutocompleteRequest {
+message PlacesRequest {
     required string q = 1;
     repeated NavitiaType types = 2;
     required int32 depth = 3;
@@ -40,7 +40,7 @@ message JourneysRequest {
     optional StreetNetworkParams streetnetwork_params = 13;
 }
 
-message ProximityListRequest {
+message PlacesNearbyRequest {
     required string uri = 1;
     required double distance = 2;
     repeated NavitiaType types = 3;
@@ -56,9 +56,9 @@ message PTRefRequest {
 message Request {
     required API requested_api = 1;
 
-    optional AutocompleteRequest autocomplete = 2;
+    optional PlacesRequest places = 2;
     optional NextStopTimeRequest next_stop_times = 4;
-    optional ProximityListRequest proximity_list = 5;
+    optional PlacesNearbyRequest places_nearby = 5;
     optional JourneysRequest journeys = 6;
     optional PTRefRequest ptref = 7;
 }

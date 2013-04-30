@@ -32,8 +32,8 @@ BOOST_AUTO_TEST_CASE(connection_transformer){
     BOOST_CHECK_EQUAL(connection_n.idx, connection.idx);
     BOOST_CHECK_EQUAL(connection_n.id, connection.id);
     BOOST_CHECK_EQUAL(connection_n.uri, connection.uri);
-    BOOST_CHECK_EQUAL(connection_n.departure_stop_point_idx, origin->idx);
-    BOOST_CHECK_EQUAL(connection_n.destination_stop_point_idx, destination->idx);
+    BOOST_CHECK_EQUAL(connection_n.departure_idx, origin->idx);
+    BOOST_CHECK_EQUAL(connection_n.destination_idx, destination->idx);
     BOOST_CHECK_EQUAL(connection_n.duration, connection.duration);
     BOOST_CHECK_EQUAL(connection_n.max_duration, connection.max_duration);
 

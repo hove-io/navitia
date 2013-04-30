@@ -120,8 +120,8 @@ void PT_Data::build_uri() {
 void PT_Data::build_connections() {
     stop_point_connections.resize(stop_points.size());
     for(Connection &conn : this->connections){
-        const StopPoint & dep = this->stop_points[conn.departure_stop_point_idx];
-        const StopPoint & arr = this->stop_points[conn.destination_stop_point_idx];
+        const StopPoint & dep = this->stop_points[conn.departure_idx];
+        const StopPoint & arr = this->stop_points[conn.destination_idx];
         if(dep.stop_area_idx == arr.stop_area_idx)
             conn.connection_type = ConnectionType::StopArea;
         else

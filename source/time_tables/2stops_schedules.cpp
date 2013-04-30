@@ -48,7 +48,6 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
 pbnavitia::Response stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
                                     const std::string &str_dt, uint32_t duration, uint32_t depth, type::Data & data) {
     pbnavitia::Response pb_response;
-    pb_response.set_requested_api(pbnavitia::STOPS_SCHEDULES);
 
     boost::posix_time::ptime ptime;
     try{
@@ -75,14 +74,14 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
 
     for(auto pair_dt_idx : board) {
         pbnavitia::PairStopTime * pair_stoptime = pb_response.mutable_stops_schedule()->add_board_items();
-        auto stoptime = pair_stoptime->mutable_first();
+        auto stoptime = pair_stoptime->mutable_departure();
         const auto &dt_idx = pair_dt_idx.first;
         stoptime->set_departure_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
         stoptime->set_arrival_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
         const auto &rp = data.pt_data.journey_pattern_points[data.pt_data.stop_times[dt_idx.second].journey_pattern_point_idx];
         fill_pb_object(rp.stop_point_idx, data, stoptime->mutable_stop_point(), depth, current_time, action_period);
 
-        stoptime = pair_stoptime->mutable_second();
+        stoptime = pair_stoptime->mutable_arrival();
         const auto &dt_idx2 = pair_dt_idx.second;
         stoptime->set_departure_date_time(type::iso_string(dt_idx2.first.date(),  dt_idx2.first.hour(), data));
         stoptime->set_arrival_date_time(type::iso_string(dt_idx2.first.date(),  dt_idx2.first.hour(), data));

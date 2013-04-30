@@ -8,26 +8,23 @@ namespace navitia { namespace proximitylist {
  */
 void create_pb(const std::vector<std::pair<type::idx_t, type::GeographicalCoord> >& result,
           const nt::Type_e type, uint32_t depth, const nt::Data& data,
-          pbnavitia::ProximityList& pb_pl,type::GeographicalCoord coord){
+          pbnavitia::Response& pb_response,type::GeographicalCoord coord){
     for(auto result_item : result){
-        pbnavitia::ProximityListItem* item = pb_pl.add_items();
-        pbnavitia::PlaceMark* place_mark = item->mutable_object();
+        pbnavitia::Place* place = pb_response.add_places_nearby();
         //on récupére la date pour les impacts
         auto current_date = boost::posix_time::second_clock::local_time();
         switch(type){
         case nt::Type_e::StopArea:
-            place_mark->set_type(pbnavitia::STOP_AREA);
-            fill_pb_object(result_item.first, data, place_mark->mutable_stop_area(), depth, current_date);
-            item->set_name(data.pt_data.stop_areas[result_item.first].name);
-            item->set_uri(data.pt_data.stop_areas[result_item.first].uri);
-            item->set_distance(coord.distance_to(result_item.second));
+            fill_pb_object(result_item.first, data, place->mutable_stop_area(), depth, current_date);
+            place->set_name(data.pt_data.stop_areas[result_item.first].name);
+            place->set_uri(data.pt_data.stop_areas[result_item.first].uri);
+            place->set_distance(coord.distance_to(result_item.second));
             break;
         case nt::Type_e::StopPoint:
-            place_mark->set_type(pbnavitia::STOP_POINT);
-            fill_pb_object(result_item.first, data, place_mark->mutable_stop_point(), depth, current_date);
-            item->set_name(data.pt_data.stop_points[result_item.first].name);
-            item->set_uri(data.pt_data.stop_points[result_item.first].uri);
-            item->set_distance(coord.distance_to(result_item.second));
+            fill_pb_object(result_item.first, data, place->mutable_stop_point(), depth, current_date);
+            place->set_name(data.pt_data.stop_points[result_item.first].name);
+            place->set_uri(data.pt_data.stop_points[result_item.first].uri);
+            place->set_distance(coord.distance_to(result_item.second));
             break;
 
         default:
@@ -42,10 +39,8 @@ pbnavitia::Response find(type::GeographicalCoord coord, double distance,
                          uint32_t depth,
                          const type::Data & data) {
     pbnavitia::Response response;
-    response.set_requested_api(pbnavitia::PROXIMITY_LIST);
 
     std::vector<std::pair<type::idx_t, type::GeographicalCoord> > result;
-    pbnavitia::ProximityList* pb = response.mutable_proximitylist();
     for(nt::Type_e type : filter){
         switch(type){
         case nt::Type_e::StopArea:
@@ -56,10 +51,10 @@ pbnavitia::Response find(type::GeographicalCoord coord, double distance,
             break;
         default: break;
         }
-        create_pb(result, type, depth, data, *pb, coord);
+        create_pb(result, type, depth, data, response, coord);
     }
-    std::sort(pb->mutable_items()->begin(), pb->mutable_items()->end(),
-              [](pbnavitia::ProximityListItem a, pbnavitia::ProximityListItem b){return a.distance() < b.distance();});
+    std::sort(response.mutable_places_nearby()->begin(), response.mutable_places_nearby()->end(),
+              [](pbnavitia::Place a, pbnavitia::Place b){return a.distance() < b.distance();});
     return response;
 }
 }} // namespace navitia::proximitylist

@@ -101,15 +101,15 @@ bool Verification::check_correspondances(Path path) {
     for(PathItem item : path.items) {
         navitia::type::Connection conn;
         if(item.type == walking) {
-            conn.departure_stop_point_idx = item.stop_points.front();
-            conn.destination_stop_point_idx =  item.stop_points.back();
+            conn.departure_idx = item.stop_points.front();
+            conn.destination_idx =  item.stop_points.back();
             conn.duration = item.arrival - item.departure;
             stop_point_list.push_back(conn);
         }
         if(precitem.arrival != navitia::type::DateTime::inf) {
             if(precitem.type == public_transport && item.type == public_transport) {
-                conn.departure_stop_point_idx = precitem.stop_points.back();
-                conn.destination_stop_point_idx =  item.stop_points.front();
+                conn.departure_idx = precitem.stop_points.back();
+                conn.destination_idx =  item.stop_points.front();
                 conn.duration = item.departure - precitem.arrival;
                 stop_point_list.push_back(conn);
             }
@@ -119,16 +119,15 @@ bool Verification::check_correspondances(Path path) {
     }
 
     for(navitia::type::Connection conn: data.connections) {
-
         auto it = std::find_if(stop_point_list.begin(), stop_point_list.end(),
-                               [&](navitia::type::Connection p){return (p.departure_stop_point_idx == conn.departure_stop_point_idx && p.destination_stop_point_idx == conn.destination_stop_point_idx)
-                               ||(p.destination_stop_point_idx == conn.departure_stop_point_idx && p.departure_stop_point_idx == conn.destination_stop_point_idx);});
+                               [&](navitia::type::Connection p){return (p.departure_idx == conn.departure_idx && p.destination_idx == conn.destination_idx)
+                               ||(p.destination_idx == conn.departure_idx && p.departure_idx == conn.destination_idx);});
 
 
     if(it != stop_point_list.end()) {
         if(it->duration != conn.duration) {
-            std::cout << "Le temps de correspondance de la connection " << data.stop_points[it->departure_stop_point_idx].name << "(" << it->departure_stop_point_idx << ") -> "
-                      << data.stop_points[it->destination_stop_point_idx].name << "(" << it->destination_stop_point_idx << ") ne correspond pas aux données : "
+            std::cout << "Le temps de correspondance de la connection " << data.stop_points[it->departure_idx].name << "(" << it->departure_idx << ") -> "
+                      << data.stop_points[it->destination_idx].name << "(" << it->destination_idx << ") ne correspond pas aux données : "
                       <<  it->duration << " != " <<  conn.duration << std::endl;
             return false;
         } else {
@@ -141,8 +140,8 @@ bool Verification::check_correspondances(Path path) {
 }
 bool toreturn = true;
 for(auto psp : stop_point_list) {
-    if(data.stop_points[psp.departure_stop_point_idx].stop_area_idx != data.stop_points[psp.destination_stop_point_idx].stop_area_idx) {
-        std::cout << "La correspondance " << psp.departure_stop_point_idx << " => " << psp.destination_stop_point_idx << " n'existe pas " << std::endl;
+    if(data.stop_points[psp.departure_idx].stop_area_idx != data.stop_points[psp.destination_idx].stop_area_idx) {
+        std::cout << "La correspondance " << psp.departure_idx << " => " << psp.destination_idx << " n'existe pas " << std::endl;
         toreturn = false;
     }
 

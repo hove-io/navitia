@@ -22,11 +22,11 @@ enum NavitiaType {
 
 
 enum API {
-    AUTOCOMPLETE = 1;
+    places = 1;
     PTREFERENTIAL = 2;
     PLANNER = 4;
     LOAD = 5;
-    PROXIMITY_LIST = 6;
+    places_nearby = 6;
     STATUS = 7;
     NEXT_DEPARTURES = 8;
     NEXT_ARRIVALS = 9;
@@ -49,7 +49,7 @@ message GeographicalCoord {
 }
 
 
-message Admin {
+message AdministrativeRegion {
     optional string id = 1;
     optional string uri = 2;
     optional string name  = 3;
@@ -62,14 +62,14 @@ message StopArea {
     optional string name = 3;
     optional string uri = 4;
     optional GeographicalCoord coord = 5;
-    repeated Admin admins = 10;
+    repeated AdministrativeRegion administrative_regions = 10;
     repeated StopPoint stop_points = 8;
     repeated Message messages = 9;
 }
 
 message StopPoint {
     optional string name = 3;
-    repeated Admin admins = 10;
+    repeated AdministrativeRegion administrative_regions = 10;
     optional string uri = 5;
     optional GeographicalCoord coord = 6;
     optional StopArea stop_area = 7;
@@ -157,7 +157,7 @@ message Poi {
     optional string uri = 3;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
-    repeated Admin admins = 10;
+    repeated AdministrativeRegion administrative_regions = 10;
 }
 
 message Network {
@@ -198,7 +198,7 @@ message Address {
     optional string uri = 3;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
-    repeated Admin admins = 10;
+    repeated AdministrativeRegion administrative_regions = 10;
     optional int32 house_number = 2;
 }
 

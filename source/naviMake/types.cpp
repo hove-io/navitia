@@ -315,27 +315,27 @@ nt::Connection Connection::get_navitia_type() const {
     nt_connection.id = this->id;
     nt_connection.idx = this->idx;
     nt_connection.uri = this->uri;
-    nt_connection.departure_stop_point_idx = this->departure_stop_point->idx;
-    nt_connection.destination_stop_point_idx = this->destination_stop_point->idx;
+    nt_connection.departure_idx = this->departure_stop_point->idx;
+    nt_connection.destination_idx = this->destination_stop_point->idx;
     nt_connection.duration = this->duration;
     nt_connection.max_duration = this->max_duration;
     nt_connection.set_properties(this->properties());
     return nt_connection;
 }
 
-nt::JourneyPatternPointConnection
+nt::Connection
     JourneyPatternPointConnection::get_navitia_type() const {
-    nt::JourneyPatternPointConnection nt_rpc;
+    nt::Connection nt_rpc;
     nt_rpc.id = this->id;
     nt_rpc.idx = this->idx;
     nt_rpc.uri = this->uri;
-    nt_rpc.departure_journey_pattern_point_idx = this->departure_journey_pattern_point->idx;
-    nt_rpc.destination_journey_pattern_point_idx = this->destination_journey_pattern_point->idx;
-    nt_rpc.length = this->length;
+    nt_rpc.departure_idx = this->departure_journey_pattern_point->idx;
+    nt_rpc.destination_idx = this->destination_journey_pattern_point->idx;
+    nt_rpc.duration = this->length;
     switch(this->journey_pattern_point_connection_kind) {
-        case Extension: nt_rpc.connection_kind = nt::ConnectionKind::extension; break;
-        case Guarantee: nt_rpc.connection_kind = nt::ConnectionKind::guarantee; break;
-        case UndefinedJourneyPatternPointConnectionKind: nt_rpc.connection_kind = nt::ConnectionKind::undefined; break;
+        case Extension: nt_rpc.connection_type = nt::ConnectionType::extension; break;
+        case Guarantee: nt_rpc.connection_type = nt::ConnectionType::guarantee; break;
+        case UndefinedJourneyPatternPointConnectionKind: nt_rpc.connection_type = nt::ConnectionType::undefined; break;
     };
 
     return nt_rpc;

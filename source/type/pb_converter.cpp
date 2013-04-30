@@ -1,21 +1,24 @@
 #include "pb_converter.h"
 #include "georef/georef.h"
 #include "georef/street_network.h"
+#include "boost/lexical_cast.hpp"
 
 namespace nt = navitia::type;
-
 namespace pt = boost::posix_time;
+
 namespace navitia{
 
-
-void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Admin* admin, int, const pt::ptime&, const pt::time_period& ){
+void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::AdministrativeRegion* admin, int, const pt::ptime&, const pt::time_period& ){
     navitia::georef::Admin adm = data.geo_ref.admins.at(idx);
     admin->set_name(adm.name);
     admin->set_uri(adm.uri);
-    admin->set_zip_code(adm.post_code);
+    if(adm.post_code != "")
+        admin->set_zip_code(adm.post_code);
     admin->set_level(adm.level);
-    admin->mutable_coord()->set_lat(adm.coord.lat());
-    admin->mutable_coord()->set_lon(adm.coord.lon());
+    if(adm.coord.is_initialized()) {
+        admin->mutable_coord()->set_lat(adm.coord.lat());
+        admin->mutable_coord()->set_lon(adm.coord.lon());
+    }
 }
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* stop_area, int max_depth,
@@ -25,11 +28,13 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopArea* st
     const nt::StopArea &sa = data.pt_data.stop_areas.at(idx);
     stop_area->set_uri(sa.uri);
     stop_area->set_name(sa.name);
-    stop_area->mutable_coord()->set_lon(sa.coord.lon());
-    stop_area->mutable_coord()->set_lat(sa.coord.lat());
+    if(sa.coord.is_initialized()) {
+        stop_area->mutable_coord()->set_lon(sa.coord.lon());
+        stop_area->mutable_coord()->set_lat(sa.coord.lat());
+    }
     if(max_depth > 0){
         for(nt::idx_t idx : sa.admin_list){
-            fill_pb_object(idx, data,  stop_area->add_admins(), max_depth-1, now, action_period);
+            fill_pb_object(idx, data,  stop_area->add_administrative_regions(), max_depth-1, now, action_period);
         }
     }
 
@@ -45,12 +50,14 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::StopPoint* s
     const nt::StopPoint &sp = data.pt_data.stop_points.at(idx);
     stop_point->set_uri(sp.uri);
     stop_point->set_name(sp.name);
-    stop_point->mutable_coord()->set_lon(sp.coord.lon());
-    stop_point->mutable_coord()->set_lat(sp.coord.lat());
+    if(sp.coord.is_initialized()) {
+        stop_point->mutable_coord()->set_lon(sp.coord.lon());
+        stop_point->mutable_coord()->set_lat(sp.coord.lat());
+    }
 
     if(max_depth > 0){
         for(nt::idx_t idx : sp.admin_list){
-            fill_pb_object(idx, data,  stop_point->add_admins(), max_depth-1, now, action_period);
+            fill_pb_object(idx, data,  stop_point->add_administrative_regions(), max_depth-1, now, action_period);
         }
     }
 
@@ -72,13 +79,15 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Address * ad
     if(house_number >= 0){
         address->set_house_number(house_number);
     }
-    address->mutable_coord()->set_lon(coord.lon());
-    address->mutable_coord()->set_lat(coord.lat());
+    if(coord.is_initialized()) {
+        address->mutable_coord()->set_lon(coord.lon());
+        address->mutable_coord()->set_lat(coord.lat());
+    }
     address->set_uri(way.uri);
 
     if(max_depth > 0){
         for(nt::idx_t idx : way.admin_list){
-            fill_pb_object(idx, data,  address->add_admins(), max_depth-1, now, action_period);
+            fill_pb_object(idx, data,  address->add_administrative_regions(), max_depth-1, now, action_period);
         }
     }
 }
@@ -88,8 +97,10 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Line * line,
     if(idx == type::invalid_idx)
         return ;
     navitia::type::Line l = data.pt_data.lines.at(idx);
-    line->set_code(l.code);
-    line->set_color(l.color);
+    if(l.code != "")
+        line->set_code(l.code);
+    if(l.color != "")
+        line->set_color(l.color);
     line->set_name(l.name);
     line->set_uri(l.uri);
 
@@ -189,9 +200,9 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::Connection *
         return ;
     navitia::type::Connection c = data.pt_data.connections.at(idx);
     connection->set_seconds(c.duration);
-    if(c.departure_stop_point_idx != type::invalid_idx && c.destination_stop_point_idx != type::invalid_idx && max_depth > 0){
-        fill_pb_object(c.departure_stop_point_idx, data, connection->mutable_origin(), max_depth - 1, now, action_period);
-        fill_pb_object(c.destination_stop_point_idx, data, connection->mutable_destination(), max_depth - 1, now, action_period);
+    if(c.departure_idx != type::invalid_idx && c.destination_idx != type::invalid_idx && max_depth > 0){
+        fill_pb_object(c.departure_idx, data, connection->mutable_origin(), max_depth - 1, now, action_period);
+        fill_pb_object(c.destination_idx, data, connection->mutable_destination(), max_depth - 1, now, action_period);
     }
 }
 
@@ -275,10 +286,11 @@ void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::JourneyPatte
 }
 
 
-void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &data, pbnavitia::PlaceMark* pm, int max_depth,
+void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &data, pbnavitia::Place* place, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period){
-    pm->set_type(pbnavitia::STOP_POINT);
-    fill_pb_object(stop_point.idx, data, pm->mutable_stop_point(), max_depth, now, action_period);
+    fill_pb_object(stop_point.idx, data, place->mutable_stop_point(), max_depth, now, action_period);
+    place->set_name(stop_point.name);
+    place->set_uri(stop_point.uri);
 }
 
 void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &path, const type::Data &data, pbnavitia::Section* section,
@@ -288,7 +300,7 @@ void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &p
         pbnavitia::StreetNetwork * sn = section->mutable_street_network();
         create_pb(ori_dest, path, data, sn);
 
-        pbnavitia::PlaceMark* pm;
+        pbnavitia::Place* place;
         navitia::georef::Way way;
         type::GeographicalCoord coord;
 
@@ -296,15 +308,25 @@ void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &p
 
             way = data.geo_ref.ways[path.path_items.front().way_idx];
             coord = path.coordinates.front();
-            pm = section->mutable_origin();
-            pm->set_type(pbnavitia::ADDRESS);
-            fill_pb_object(way.idx, data, pm->mutable_address(), way.nearest_number(coord),coord , max_depth, now, action_period);
+            place = section->mutable_origin();
+            fill_pb_object(way.idx, data, place->mutable_address(), way.nearest_number(coord),coord , max_depth, now, action_period);
+            if(place->address().has_house_number())
+                place->set_name(boost::lexical_cast<std::string>(place->address().house_number()) + ", ");
+            place->set_name(place->name() + place->address().name());
+            for(auto admin : place->address().administrative_regions())
+                place->set_name(place->name() + ", " + admin.name());
+            place->set_uri(place->address().uri());
 
             way = data.geo_ref.ways[path.path_items.back().way_idx];
             coord = path.coordinates.back();
-            pm = section->mutable_destination();
-            pm->set_type(pbnavitia::ADDRESS);
-            fill_pb_object(way.idx, data, pm->mutable_address(), way.nearest_number(coord),coord , max_depth, now, action_period);
+            place = section->mutable_destination();
+            fill_pb_object(way.idx, data, place->mutable_address(), way.nearest_number(coord),coord , max_depth, now, action_period);
+            if(place->address().has_house_number())
+                place->set_name(boost::lexical_cast<std::string>(place->address().house_number()) + ", ");
+            place->set_name(place->name() + place->address().name());
+            for(auto admin : place->address().administrative_regions())
+                place->set_name(place->name() + ", " + admin.name());
+            place->set_uri(place->address().uri());
         }
     }
 }
@@ -342,9 +364,11 @@ void create_pb(const type::EntryPoint &ori_dest, const navitia::georef::Path& pa
 
     }
     for(auto coord : path.coordinates){
-        pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
-        pb_coord->set_lon(coord.lon());
-        pb_coord->set_lat(coord.lat());
+        if(coord.is_initialized()) {
+            pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
+            pb_coord->set_lon(coord.lon());
+            pb_coord->set_lat(coord.lat());
+        }
     }
 }
 
@@ -353,12 +377,14 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Poi* poi
     navitia::georef::POI geopoi = data.geo_ref.pois.at(idx);
     poi->set_name(geopoi.name);
     poi->set_uri(geopoi.uri);
-    poi->mutable_coord()->set_lat(geopoi.coord.lat());
-    poi->mutable_coord()->set_lon(geopoi.coord.lon());
+    if(geopoi.coord.is_initialized()) {
+        poi->mutable_coord()->set_lat(geopoi.coord.lat());
+        poi->mutable_coord()->set_lon(geopoi.coord.lon());
+    }
 
     if(max_depth > 0){
         for(nt::idx_t idx : geopoi.admin_list){
-            fill_pb_object(idx, data,  poi->add_admins(), max_depth-1, now, action_period);
+            fill_pb_object(idx, data,  poi->add_administrative_regions(), max_depth-1, now, action_period);
         }
     }
 }

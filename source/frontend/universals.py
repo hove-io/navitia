@@ -27,10 +27,10 @@ def universal_journeys(api, request, version, format):
 def on_universal_journeys(api):
     return lambda request, version, format: universal_journeys(api, request, version, format)
 
-def on_universal_proximity_list(request, version, format):
+def on_universal_places_nearby(request, version, format):
     region = find_region(request.args.get("uri", ""))
     if region:
-        return NavitiaManager().dispatch(request, version, region, "proximity_list", format)
+        return NavitiaManager().dispatch(request, version, region, "places_nearby", format)
     else:
         return Response("Unable to deduce the region from the uri. Is it a valid coordinate?", status=404)
    

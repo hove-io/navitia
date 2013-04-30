@@ -57,7 +57,6 @@ std::vector<std::string> vector_of_admins(const T & admin){
 
 pbnavitia::Response Worker::status() {
     pbnavitia::Response result;
-    result.set_requested_api(pbnavitia::STATUS);
 
     auto status = result.mutable_status();
 
@@ -83,15 +82,13 @@ pbnavitia::Response Worker::status() {
 
 pbnavitia::Response Worker::metadatas() {
     pbnavitia::Response result;
-    result.set_requested_api(pbnavitia::METADATAS);
-
     auto metadatas = result.mutable_metadatas();
-
+    
     metadatas->set_start_production_date(bg::to_iso_string(data.meta.production_date.begin()));
     metadatas->set_end_production_date(bg::to_iso_string(data.meta.production_date.end()));
     metadatas->set_shape(data.meta.shape);
     metadatas->set_status("running");
-
+    
     return result;
 }
 
@@ -107,7 +104,6 @@ void Worker::init_worker_data(){
 
 pbnavitia::Response Worker::load() {
     pbnavitia::Response result;
-    result.set_requested_api(pbnavitia::LOAD);
     data.to_load = true;
     result.mutable_load()->set_ok(true);
 
@@ -116,7 +112,7 @@ pbnavitia::Response Worker::load() {
 
 
 
-pbnavitia::Response Worker::autocomplete(const pbnavitia::AutocompleteRequest & request) {
+pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & request) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
     return navitia::autocomplete::autocomplete(request.q(), vector_of_pb_types(request), request.depth(), request.nbmax(), vector_of_admins(request), this->data);
 }
@@ -143,7 +139,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     }
 }
 
-pbnavitia::Response Worker::proximity_list(const pbnavitia::ProximityListRequest &request) {
+pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest &request) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
     type::EntryPoint ep(request.uri());
     auto coord = this->coord_of_entry_point(ep);
@@ -255,11 +251,10 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
 
 pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
     pbnavitia::Response result;
-    result.set_requested_api(request.requested_api());
     switch(request.requested_api()){
     case pbnavitia::STATUS: return status(); break;
     case pbnavitia::LOAD: return load(); break;
-    case pbnavitia::AUTOCOMPLETE: return autocomplete(request.autocomplete()); break;
+    case pbnavitia::places: return autocomplete(request.places()); break;
     case pbnavitia::ROUTE_SCHEDULES:
     case pbnavitia::NEXT_DEPARTURES:
     case pbnavitia::NEXT_ARRIVALS:
@@ -268,7 +263,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
         return next_stop_times(request.next_stop_times(), request.requested_api()); break;
     case pbnavitia::ISOCHRONE:
     case pbnavitia::PLANNER: return journeys(request.journeys(), request.requested_api()); break;
-    case pbnavitia::PROXIMITY_LIST: return proximity_list(request.proximity_list()); break;
+    case pbnavitia::places_nearby: return proximity_list(request.places_nearby()); break;
     case pbnavitia::PTREFERENTIAL: return pt_ref(request.ptref()); break;
     case pbnavitia::METADATAS : return metadatas(); break;
     default: break;
