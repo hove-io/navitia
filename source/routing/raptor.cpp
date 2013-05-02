@@ -458,8 +458,8 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::Properties &required_prope
 
                         if(etemp != type::invalid_idx && t != etemp) {
                             t = etemp;
-                            it_st = visitor.first_stoptime(data.pt_data.vehicle_journeys[t].stop_time_list[jpp.order]);
-                            boarding = it_st->idx;
+                            boarding = data.pt_data.vehicle_journeys[t].stop_time_list[jpp.order];
+                            it_st = visitor.first_stoptime(boarding);
                             workingDt = labels_temp;
                             visitor.update(workingDt, *it_st, gap);
                             l_zone = it_st->local_traffic_zone;

@@ -22,11 +22,12 @@ std::vector<dt_st> get_stop_times(const std::vector<type::idx_t> &journey_patter
             const type::JourneyPatternPoint & rp = data.pt_data.journey_pattern_points[rp_idx];
             auto etemp = routing::earliest_trip(data.pt_data.journey_patterns[rp.journey_pattern_idx], rp.order, last_departure + 1, data, wheelchair);
             if(etemp.first != type::invalid_idx) {
-                auto st = data.pt_data.stop_times[data.pt_data.vehicle_journeys[etemp.first].stop_time_list[rp.order]];
+                type::idx_t stop_time_idx = data.pt_data.vehicle_journeys[etemp.first].stop_time_list[rp.order];
+                auto st = data.pt_data.stop_times[stop_time_idx];
                 type::DateTime dt_temp;
                 dt_temp = last_departure;
                 dt_temp.update(st.departure_time);
-                result_temp.insert(std::make_pair(dt_temp, st.idx));
+                result_temp.insert(std::make_pair(dt_temp, stop_time_idx));
                 test_add = true;
             }
         }

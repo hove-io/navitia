@@ -250,8 +250,10 @@ void Data::build_relations(navitia::type::PT_Data &data){
         data.stop_points.at(journey_pattern_point.stop_point_idx).journey_pattern_point_list.push_back(journey_pattern_point.idx);
     }
 
-    for(navitia::type::StopTime & st : data.stop_times){
-        data.vehicle_journeys.at(st.vehicle_journey_idx).stop_time_list.push_back(st.idx);
+    //for(navitia::type::StopTime & st : data.stop_times){
+    for(size_t i = 0; i < data.stop_times.size(); ++i){
+        auto & st = data.stop_times[i];
+        data.vehicle_journeys.at(st.vehicle_journey_idx).stop_time_list.push_back(i);
     }
 
     for(navitia::type::JourneyPattern & journey_pattern : data.journey_patterns){
