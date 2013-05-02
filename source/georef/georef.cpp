@@ -332,20 +332,36 @@ std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCo
 }
 
 void GeoRef::init_offset(nt::idx_t value){
-    bike_offset = value;
-    car_offset = 2 * value;
+    vls_offset = value;
+    bike_offset = 2 * value;
+    car_offset = 3 * value;
+
+    /// Pour la gestion du vls
+    for(vertex_t v = 0; v<value; ++v){
+        boost::add_vertex(graph[v], graph);
+    }
+
+    /// Pour la gestion du vélo
+    for(vertex_t v = 0; v<value; ++v){
+        boost::add_vertex(graph[v], graph);
+    }
+
+    /// Pour la gestion du voiture
+    for(vertex_t v = 0; v<value; ++v){
+        boost::add_vertex(graph[v], graph);
+    }
 }
 
 void GeoRef::build_proximity_list(){
     pl.clear(); // vider avant de reconstruire
 
-    if(this->bike_offset == 0){
+    if(this->vls_offset == 0){
         BOOST_FOREACH(vertex_t u, boost::vertices(this->graph)){
             pl.add(graph[u].coord, u);
         }
     }else{
         // Ne pas construire le proximitylist avec les noeuds utilisés par les arcs pour la recherche vélo, voiture
-        for(vertex_t v = 0; v < this->bike_offset; ++v){
+        for(vertex_t v = 0; v < this->vls_offset; ++v){
             pl.add(graph[v].coord, v);
         }
     }
@@ -484,14 +500,17 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates) const {
     return this->nearest_edge(coordinates, this->pl);
 }
 
-
-edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const {
+vertex_t GeoRef::nearest_vertex(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const {
     vertex_t u;
     try {
         u = prox.find_nearest(coordinates);
     } catch(proximitylist::NotFound) {
         throw proximitylist::NotFound();
     }
+    return u;
+}
+
+edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const vertex_t & u) const{
 
     type::GeographicalCoord coord_u, coord_v;
     coord_u = this->graph[u].coord;
@@ -513,5 +532,36 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const p
         throw proximitylist::NotFound();
     else
         return best;
+
+}
+edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const {
+    vertex_t u = nearest_vertex(coordinates, prox);
+//    try {
+//        u = prox.find_nearest(coordinates);
+//    } catch(proximitylist::NotFound) {
+//        throw proximitylist::NotFound();
+//    }
+
+//    type::GeographicalCoord coord_u, coord_v;
+//    coord_u = this->graph[u].coord;
+//    float dist = std::numeric_limits<float>::max();
+//    edge_t best;
+//    bool found = false;
+//    BOOST_FOREACH(edge_t e, boost::out_edges(u, this->graph)){
+//        vertex_t v = boost::target(e, this->graph);
+//        coord_v = this->graph[v].coord;
+//        // Petite approximation de la projection : on ne suit pas le tracé de la voirie !
+//        auto projected = coordinates.project(coord_u, coord_v);
+//        if(projected.second < dist){
+//            found = true;
+//            dist = projected.second;
+//            best = e;
+//        }
+//    }
+//    if(!found)
+//        throw proximitylist::NotFound();
+//    else
+//        return best;
+    return nearest_edge(coordinates, u);
 }
 }}

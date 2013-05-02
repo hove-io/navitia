@@ -154,7 +154,8 @@ static_data * static_data::get() {
         boost::assign::insert(temp->modes_string)
                 (Mode_e::Walking, "walking")
                 (Mode_e::Bike, "bike")
-                (Mode_e::Car, "car");
+                (Mode_e::Car, "car")
+                (Mode_e::Vls, "vls");
         instance = temp;
 
     }

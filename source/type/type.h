@@ -67,7 +67,8 @@ enum class Type_e {
 enum class Mode_e{
     Walking = 0,    // Marche à pied
     Bike = 1,       // Vélo
-    Car = 2         // Voiture
+    Car = 2,        // Voiture
+    Vls = 3         // Vls
 };
 
 struct PT_Data;
@@ -187,6 +188,9 @@ struct GeographicalCoord{
 
     bool is_initialized() const {
         return distance_to(GeographicalCoord()) > 1;
+    }
+    bool is_default_coord()const{
+        return ((this->lat() == 0) || (this->lon() == 0));
     }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {

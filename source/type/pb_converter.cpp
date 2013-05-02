@@ -349,6 +349,9 @@ void create_pb(const type::EntryPoint &ori_dest, const navitia::georef::Path& pa
         case type::Mode_e::Car:
             sn->set_mode(pbnavitia::Car);
             break;
+    case type::Mode_e::Vls:
+        sn->set_mode(pbnavitia::Vls);
+        break;
         default :
             sn->set_mode(pbnavitia::Walking);
     }    

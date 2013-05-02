@@ -188,6 +188,11 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
             result.distance = request.car_distance();
             result.speed = request.car_speed();
             break;
+        case type::Mode_e::Vls:
+            result.offset = data.geo_ref.vls_offset;
+            result.distance = request.vls_distance();
+            result.speed = request.vls_speed();
+            break;
         default:
             result.offset = 0;
             result.distance = request.walking_distance();

@@ -46,6 +46,7 @@ enum StreetNetworkMode {
     Walking = 0;
     Bike = 1;
     Car = 3;
+    Vls = 4;
 }
 
 message StreetNetwork {

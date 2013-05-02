@@ -79,20 +79,36 @@ void Visitor::add_osm_housenumber(uint64_t osmid, const CanalTP::Tags & tags){
 }
 
 void Visitor::add_osm_poi(const navitia::type::GeographicalCoord& coord, const CanalTP::Tags & tags){
-    if(tags.find("amenity") != tags.end()){
-        std::string value = "POITYPE:"+tags.at("amenity");
+    if(tags.find(poilist.poi_key) != tags.end()){
+        std::string value = "POITYPE:"+tags.at(poilist.poi_key);
+        bool to_add = true;
+        std::string name;
         auto it = geo_ref.poitype_map.find(value);
         if(it != geo_ref.poitype_map.end()){
-            if(tags.find("name") != tags.end()){
+            if(coord.is_default_coord()){ /// dans le cas où le POI n'a pas de coordonées, ne pas l'importer
+              LOG4CPLUS_WARN(logger, "Attention, le site ayant comme type ["+value+"] n'est pas importé car il n'a pas de coordonnées.");
+              to_add = false;
+            }else{
+                if(tags.find("name") == tags.end()){ /// dans le cas où le POI n'a pas de nom, ne pas l'importer si ce n'est pas station VLS
+                    if (value != "POITYPE:"+poilist.vls){
+                        LOG4CPLUS_WARN(logger, "Attention, le site ayant comme type ["+value+"] n'est pas importé car il n'a pas de nom.");
+                        to_add = false;
+                    }
+                }else{
+                    name = tags.at("name");
+                }
+            }
+            if (to_add){
                 POI poi;
                 poi.poitype_idx = it->second;
-                poi.name = tags.at("name");
                 poi.coord = coord;
                 poi.idx = geo_ref.pois.size();
                 poi.uri = "POI:"+ boost::lexical_cast<std::string>(poi.idx);
+                poi.name = name;
+                if (value == "POITYPE:"+poilist.vls){
+                    poi.visible = false;
+                }
                 geo_ref.pois.push_back(poi);
-            }else{
-                LOG4CPLUS_WARN(logger, "Attention, le site ayant comme type ["+value+"] car il n'a pas de nom.");
             }
         }
     }
@@ -131,14 +147,6 @@ void Visitor::count_nodes_uses() {
     }    
     vertex_t Conunt_v = boost::num_vertices(geo_ref.graph);
     geo_ref.init_offset(Conunt_v);
-    // Pour la gestion du vélo
-    for(vertex_t v = 0; v<Conunt_v; ++v){
-        boost::add_vertex(geo_ref.graph[v], geo_ref.graph);
-    }
-    // Pour la gestion du voiture
-    for(vertex_t v = 0; v<Conunt_v; ++v){
-        boost::add_vertex(geo_ref.graph[v], geo_ref.graph);
-    }
     std::cout << "On a : " << boost::num_vertices(geo_ref.graph) << " nœuds" << std::endl;
 }
 
@@ -188,16 +196,34 @@ void Visitor::edges(){
                 }
             }
         }
-    }
+    }    
     std::cout << "On a " << boost::num_edges(geo_ref.graph) << " arcs" << std::endl;
 }
 
+void Visitor::build_vls_edges(){
+    auto it = geo_ref.poitype_map.find("POITYPE:"+poilist.vls);
+    if(it != geo_ref.poitype_map.end()){
+        for(POI poi : geo_ref.pois){
+            if (it->second == poi.poitype_idx){
+                vertex_t u = geo_ref.nearest_vertex(poi.coord, geo_ref.pl);
+                edge_t e = geo_ref.nearest_edge(poi.coord, u);
+                georef::Edge edge;
+                edge.way_idx = geo_ref.graph[e].way_idx;
+                edge.length = 0;
+                edge.time = 120; // le temps nécessaire pour prendre le vélo
+                boost::add_edge(u + geo_ref.vls_offset, u + geo_ref.bike_offset, edge, geo_ref.graph);
+                edge.time = 180; // le temps nécessaire pour déposer le vélo
+                boost::add_edge(u + geo_ref.bike_offset, u + geo_ref.vls_offset, edge, geo_ref.graph);
+                ++total_vls_stations;
+            }
+        }
+    }
+}
 
 void Visitor::HouseNumbers(){
     type::idx_t idx;
     type::idx_t Count = 0; // Nombre d'adresses non importées
-    georef::HouseNumber gr_hn;
-    geo_ref.build_proximity_list();
+    georef::HouseNumber gr_hn;    
     for(auto hn : housenumbers){
         try{
             Node n = nodes[hn.first];
@@ -350,12 +376,16 @@ void Visitor::fillPoiType(){
 
 void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filename){
     Visitor v(geo_ref_to_fill);
-    v.fillPoiType();    
+    v.fillPoiType();
     CanalTP::read_osm_pbf(osm_pbf_filename, v);
     v.geo_ref.build_pois();
     std::cout << v.nodes.size() << " nodes, " << v.ways.size() << " ways/" << v.total_ways << std::endl;
     v.count_nodes_uses();
     v.edges();
+    std::cout<<"Construction de proximitylist"<<std::endl;
+    v.geo_ref.build_proximity_list();
+    std::cout<<"Construction du graphe VLS"<<std::endl;
+    v.build_vls_edges();
     std::cout<<"Chargement des adresses"<<std::endl;
     v.HouseNumbers();
     std::cout<<"Chargement des données administratives"<<std::endl;
@@ -367,6 +397,7 @@ void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filenam
     std::cout << "On a : " << v.geo_ref.admins.size() << " données administratives" << std::endl;
     std::cout << "On a : " << v.geo_ref.poitypes.size() << " types de site" << std::endl;
     std::cout << "On a : " << v.geo_ref.pois.size() << " sites" << std::endl;
+    std::cout << "On a : " << v.total_vls_stations << " stations vls" << std::endl;
 
 }
 

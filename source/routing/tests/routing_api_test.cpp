@@ -5,7 +5,6 @@
 #include "naviMake/build_helper.h"
 
 
-
 using namespace navitia;
 using namespace routing;
 using namespace boost::posix_time;
@@ -124,9 +123,9 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
       |                      /                                                                   |
       |                  /                                                                       |
       |             /                                                                            |
-  B   -------------------------------------------------------------------------------------------- C
+      B------------------------------------------------------------------------------------------- C
       |
-      |
+     |
       |
       S
 
@@ -152,6 +151,8 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
                         E(12, 5)    9
                         R(21, 8)    10
                         S(1, 1)     11
+
+
 
 */
     namespace ng = navitia::georef;
@@ -205,17 +206,12 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
 
     type::GeographicalCoord S(1, 1, false);
     boost::add_vertex(ng::Vertex(S),data.geo_ref.graph);
+    // Pour le vls
+    type::GeographicalCoord V(0.5, 1, false);
+    type::GeographicalCoord Q(18, 10, false);
 
     ng::vertex_t Conunt_v = boost::num_vertices(data.geo_ref.graph);
     data.geo_ref.init_offset(Conunt_v);
-    // Pour la gestion du vélo
-    for(ng::vertex_t v = 0; v<Conunt_v; ++v){
-        boost::add_vertex(data.geo_ref.graph[v], data.geo_ref.graph);
-    }
-    // Pour la gestion du voiture
-    for(ng::vertex_t v = 0; v<Conunt_v; ++v){
-        boost::add_vertex(data.geo_ref.graph[v], data.geo_ref.graph);
-    }
 
     way.name = "rue ab"; // A->B
     way.idx = 0;
@@ -487,4 +483,5 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     BOOST_REQUIRE_EQUAL(pathitem.name(), "rue fc");
     pathitem = section.street_network().path_items(2);
     BOOST_REQUIRE_EQUAL(pathitem.name(), "rue ef");
+
 }

@@ -209,6 +209,8 @@ class Script:
         req.journeys.streetnetwork_params.bike_distance = request_args["bike_distance"]
         req.journeys.streetnetwork_params.car_speed = request_args["car_speed"]
         req.journeys.streetnetwork_params.car_distance = request_args["car_distance"]
+        req.journeys.streetnetwork_params.vls_speed = request_args["vls_speed"]
+        req.journeys.streetnetwork_params.vls_distance = request_args["vls_distance"]
         req.journeys.max_duration = request_args["max_duration"]
         for forbidden_uri in request_args["forbidden_uris[]"]:
             req.journeys.forbidden_uris.append(forbidden_uri)

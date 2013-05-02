@@ -82,6 +82,7 @@ struct Visitor{
     std::unordered_map<uint64_t, OSMAdminRef> OSMAdminRefs;
     std::unordered_map<uint64_t, OSMAPoi> OSMAPois;
     int total_ways;
+    int total_vls_stations;
     int total_house_number;
 
     std::unordered_map<uint64_t, OSMWay> ways;
@@ -92,7 +93,7 @@ struct Visitor{
     navitia::georef::Pois poilist;
     std::map<std::string,std::string>::iterator iter;
 
-    Visitor(GeoRef & to_fill) : total_ways(0), total_house_number(0), geo_ref(to_fill){
+    Visitor(GeoRef & to_fill) : total_ways(0), total_vls_stations(0), total_house_number(0), geo_ref(to_fill){
         init_logger();
         logger = log4cplus::Logger::getInstance("log");
     }
@@ -109,6 +110,9 @@ struct Visitor{
 
     /// Calcule la source et cible des edges
     void edges();
+
+    /// Calcule la source et cible des edges pour le vls
+    void build_vls_edges();
 
     /// Chargement des adresses
     void HouseNumbers();

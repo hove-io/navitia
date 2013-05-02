@@ -27,6 +27,8 @@ message StreetNetworkParams{
     optional int32 bike_distance =6;
     optional double car_speed = 7;
     optional int32 car_distance =8;
+    optional double vls_speed = 9;
+    optional int32 vls_distance =10;
 }
 
 
