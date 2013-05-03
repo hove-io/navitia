@@ -107,10 +107,12 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,  cons
                     }
 
                     //On va chercher le prochain stop time
-                    if(clockwise)
-                        current_st = raptor_.data.pt_data.stop_times.at(current_st.idx - 1);
-                    else
-                        current_st = raptor_.data.pt_data.stop_times.at(current_st.idx + 1);
+                    if(clockwise){
+                        current_st = raptor_.data.pt_data.stop_times.at(--stidx);
+                    }
+                    else{
+                        current_st = raptor_.data.pt_data.stop_times.at(++stidx);
+                    }
 
                     //Est-ce que je suis sur un journey_pattern point de fin 
                     current_jpp = current_st.journey_pattern_point_idx;
