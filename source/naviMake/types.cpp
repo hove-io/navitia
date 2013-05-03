@@ -290,7 +290,6 @@ nt::JourneyPattern JourneyPattern::get_navitia_type() const {
 
 nt::StopTime StopTime::get_navitia_type() const {
     nt::StopTime nt_stop;
-    nt_stop.idx = this->idx;
     nt_stop.arrival_time = this->arrival_time;
     nt_stop.departure_time = this->departure_time;
     nt_stop.start_time = this->start_time;

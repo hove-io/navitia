@@ -470,12 +470,11 @@ struct StopTime {
     static const uint8_t IS_FREQUENCY = 3;
     static const uint8_t WHEELCHAIR_BOARDING = 4;
 
-    idx_t idx;
     uint32_t arrival_time; ///< En secondes depuis minuit
     uint32_t departure_time; ///< En secondes depuis minuit
-    uint32_t start_time; /// Si horaire en fréquence
-    uint32_t end_time; /// Si horaire en fréquence
-    uint32_t headway_secs; /// Si horaire en fréquence
+    uint32_t start_time; ///< Si horaire en fréquence
+    uint32_t end_time; ///< Si horaire en fréquence
+    uint32_t headway_secs; ///< Si horaire en fréquence
     idx_t vehicle_journey_idx;
     idx_t journey_pattern_point_idx;
     uint32_t local_traffic_zone;
@@ -496,8 +495,7 @@ struct StopTime {
         local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        // Les idx sont volontairement pas sérialisés. On les reconstruit. Ça permet de gagner 5Mo compressé pour l'Île-de-France
-            ar & arrival_time & departure_time & start_time & end_time & headway_secs & vehicle_journey_idx & journey_pattern_point_idx & properties & local_traffic_zone/*& idx*/;
+            ar & arrival_time & departure_time & start_time & end_time & headway_secs & vehicle_journey_idx & journey_pattern_point_idx & properties & local_traffic_zone;
     }
 };
 

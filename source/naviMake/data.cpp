@@ -13,7 +13,6 @@ void Data::sort(){
     ITERATE_NAVITIA_PT_TYPES(SORT_AND_INDEX)
 
     std::sort(stops.begin(), stops.end(), Less());
-    std::for_each(stops.begin(), stops.end(), Indexer());
 
     std::sort(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end(), Less());
     std::for_each(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end(), Indexer());
