@@ -15,6 +15,7 @@
 #include <boost/geometry/geometries/register/linestring.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 
+#include "datetime.h"
 
 namespace mpl = boost::mpl;
 
@@ -485,10 +486,28 @@ struct StopTime {
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}
     bool is_frequency() const{return properties[IS_FREQUENCY];}
+
     /// Est-ce qu'on peut finir par ce stop_time : dans le sens avant on veut descendre
     bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
+
     /// Heure de fin de stop_time : dans le sens avant, c'est la fin, sinon le départ
     uint32_t section_end_time(bool clockwise) const {return clockwise ? arrival_time : departure_time;}
+
+
+    /** Is this hour valid : only concerns frequency data
+     * Does the hour falls inside of the validity period of the frequency
+     * The difficult part is when the validity period goes over midnight */
+    bool valid_hour(uint hour) const {
+        if(!this->is_frequency())
+            return true;
+
+        auto mod_start = this->start_time % DateTime::SECONDS_PER_DAY;
+        auto mod_end = this->end_time % DateTime::SECONDS_PER_DAY;
+        if(mod_start < mod_end && this->start_time <= hour && this->end_time >= hour)
+            return true;
+
+        return mod_start > mod_end && !(this->end_time <= hour && this->start_time >= hour);
+    }
 
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<uint32_t>::max()), end_time(std::numeric_limits<uint32_t>::max()),
         headway_secs(std::numeric_limits<uint32_t>::max()), vehicle_journey_idx(invalid_idx), journey_pattern_point_idx(invalid_idx),

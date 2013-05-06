@@ -13,12 +13,41 @@ best_trip(const type::JourneyPattern & journey_pattern, const unsigned int order
         return tardiest_trip(journey_pattern, order, dt, data, required_properties);
 }
 
+/** Which is the first valid stop_time in this range ?
+ *  Returns invalid_idx is none is
+ */
+type::idx_t valid_pick_up(type::idx_t idx, type::idx_t end, uint32_t date, uint32_t hour, const type::Data &data, const type::Properties &required_properties){
+    for(; idx < end; ++idx) {
+        const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]];
+        bool valid_date = data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date);
+        bool accessible = data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties);
+
+        if( valid_date && st.pick_up_allowed() && accessible && st.valid_hour(hour)) {
+            return idx;
+        }
+    }
+    return type::invalid_idx;
+}
+
+type::idx_t valid_drop_off(type::idx_t idx, type::idx_t end, uint32_t date, uint32_t hour, const type::Data &data, const type::Properties &required_properties){
+    for(; idx < end; ++idx) {
+        const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]];
+        bool valid_date = data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date);
+        bool accessible = data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties);
+
+        if( valid_date && st.drop_off_allowed() && accessible && st.valid_hour(hour)) {
+            return idx;
+        }
+    }
+    return type::invalid_idx;
+}
 
 std::pair<type::idx_t, uint32_t> 
     earliest_trip(const type::JourneyPattern & journey_pattern, const unsigned int order,
                   const navitia::type::DateTime &dt, const type::Data &data, 
                   const type::Properties &required_properties) {
 
+    // If the stop_point doesn’t match the required properties, we don’t bother looking further
     if(!data.pt_data.stop_points[data.pt_data.journey_pattern_points[journey_pattern.journey_pattern_point_list[order]].stop_point_idx].accessible(required_properties))
         return std::make_pair(type::invalid_idx, 0);
 
@@ -33,36 +62,23 @@ std::pair<type::idx_t, uint32_t>
     auto it = std::lower_bound(begin, end, dt.hour(),
                                [](uint32_t departure_time, uint32_t hour){
                                return departure_time < hour;});
-    int idx = it - data.dataRaptor.departure_times.begin();
-    auto date = dt.date();
+
+    type::idx_t idx = it - data.dataRaptor.departure_times.begin();
+    type::idx_t end_idx = idx + data.dataRaptor.nb_trips[journey_pattern.idx];
 
     //On renvoie le premier trip valide
-    for(; it != end; ++it) {
-        const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]];
-        if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date)
-                && st.pick_up_allowed() 
-                && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties)
-                && (!st.is_frequency() || ((st.start_time%type::DateTime::SECONDS_PER_DAY<st.end_time%type::DateTime::SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
-                                       || ((st.start_time%type::DateTime::SECONDS_PER_DAY>st.end_time%type::DateTime::SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour())))) {
-            return std::make_pair(st.vehicle_journey_idx,
-                                  !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
-        }
-        ++idx;
+    type::idx_t first_st = valid_pick_up(idx, end_idx, dt.date(), dt.hour(), data, required_properties);
+
+    // If no trip was found, we look for the next day
+    if(first_st == type::invalid_idx){
+        idx = begin - data.dataRaptor.departure_times.begin();
+        first_st = valid_pick_up(idx, end_idx, dt.date() + 1, dt.hour(), data, required_properties);
     }
 
-    //Si on en a pas trouvé, on cherche le lendemain
-    ++date;
-    idx = begin - data.dataRaptor.departure_times.begin();
-    for(it = begin; it != end; ++it) {
-        const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]];
-        if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date)
-                && st.pick_up_allowed() 
-                && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties)
-                && (!st.is_frequency() || ((st.start_time%type::DateTime::SECONDS_PER_DAY<st.end_time%type::DateTime::SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
-                                       || ((st.start_time%type::DateTime::SECONDS_PER_DAY>st.end_time%type::DateTime::SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
-            return std::make_pair(st.vehicle_journey_idx,
-                                  !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
-        ++idx;
+    if(first_st != type::invalid_idx){
+        const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_forward[first_st]];
+        return std::make_pair(st.vehicle_journey_idx,
+                              !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
     }
 
     //Cette journey_pattern ne comporte aucun trip compatible
