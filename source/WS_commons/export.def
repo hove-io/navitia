@@ -1,7 +1,0 @@
-LIBRARY    "gateway"
-
-EXPORTS
-   HttpExtensionProc
-   GetExtensionVersion
-   TerminateExtension
-   DllMain
