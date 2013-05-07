@@ -64,7 +64,7 @@ std::pair<type::idx_t, uint32_t>
                                return departure_time < hour;});
 
     type::idx_t idx = it - data.dataRaptor.departure_times.begin();
-    type::idx_t end_idx = idx + data.dataRaptor.nb_trips[journey_pattern.idx];
+    type::idx_t end_idx = (begin - data.dataRaptor.departure_times.begin()) +  data.dataRaptor.nb_trips[journey_pattern.idx];
 
     //On renvoie le premier trip valide
     type::idx_t first_st = valid_pick_up(idx, end_idx, dt.date(), dt.hour(), data, required_properties);
@@ -103,36 +103,21 @@ tardiest_trip(const type::JourneyPattern & journey_pattern, const unsigned int o
                                   return arrival_time > hour;}
                               );
 
-    int idx = it - data.dataRaptor.arrival_times.begin();
-    auto date = dt.date();
-    //On renvoie le premier trip valide
-    for(; it != end; ++it) {
-        const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]];
-        if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date)
-                && st.drop_off_allowed() 
-                && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties)
-                && (!st.is_frequency() || ((st.start_time%type::DateTime::SECONDS_PER_DAY<st.end_time%type::DateTime::SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
-                    || ((st.start_time%type::DateTime::SECONDS_PER_DAY>st.end_time%type::DateTime::SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
-            return std::make_pair(st.vehicle_journey_idx,
-                                  !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
-        ++idx;
+    type::idx_t idx = it - data.dataRaptor.arrival_times.begin();
+    type::idx_t end_idx = (begin - data.dataRaptor.arrival_times.begin()) +  data.dataRaptor.nb_trips[journey_pattern.idx];
+
+    type::idx_t first_st = valid_drop_off(idx, end_idx, dt.date(), dt.hour(), data, required_properties);
+
+    // If no trip was found, we look for the next day
+    if(first_st == type::invalid_idx && dt.date() > 0){
+        idx = begin - data.dataRaptor.arrival_times.begin();
+        first_st = valid_drop_off(idx, end_idx, dt.date() -1, dt.hour(), data, required_properties);
     }
 
-    //Si on en a pas trouvé, on cherche la veille
-    if(date > 0) {
-        --date;
-        idx = begin - data.dataRaptor.arrival_times.begin();
-        for(it = begin; it != end; ++it) {
-            const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]];
-            if(data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date)
-                    && st.drop_off_allowed()
-                    && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties)
-                    && (!st.is_frequency() || ((st.start_time%type::DateTime::SECONDS_PER_DAY<st.end_time%type::DateTime::SECONDS_PER_DAY) && (st.start_time <= dt.hour() && st.end_time >= dt.hour()))
-                        || ((st.start_time%type::DateTime::SECONDS_PER_DAY>st.end_time%type::DateTime::SECONDS_PER_DAY) && !(st.end_time <= dt.hour() && st.start_time >= dt.hour()))))
-                return std::make_pair(st.vehicle_journey_idx,
-                                      !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
-            ++idx;
-        }
+    if(first_st != type::invalid_idx){
+        const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_backward[first_st]];
+        return std::make_pair(st.vehicle_journey_idx,
+                              !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
     }
 
     //Cette journey_pattern ne comporte aucun trip compatible
