@@ -2,18 +2,9 @@
 
 namespace navitia { namespace routing {
 
-boarding_type
-get_type(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<vector_idx> &boardings, const navitia::type::Data &data) {
-    if(labels[count][journey_pattern_point] == type::DateTime::inf || labels[count][journey_pattern_point] == type::DateTime::min) {
-        return boarding_type::uninitialized;
-    } else if(boardings[count][journey_pattern_point] == type::invalid_idx) {
-        return boarding_type::departure;
-    } else if(boardings[count][journey_pattern_point] < data.pt_data.stop_times.size()) {
-        return boarding_type::vj;
-    } else {
-        return boarding_type::connection;
-    }
-}
+//boarding_type
+//get_type(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<vector_idx> &boardings, const navitia::type::Data &data) {
+
 
 type::idx_t
 get_boarding_jpp(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<vector_idx> &boardings, const navitia::type::Data &data) {

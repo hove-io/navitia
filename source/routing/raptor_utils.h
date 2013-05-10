@@ -91,7 +91,23 @@ struct best_dest {
 
 };
 
-boarding_type get_type(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<vector_idx> &boardings, const navitia::type::Data &data);
+inline
+boarding_type get_type(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<vector_idx> &boardings, const navitia::type::Data &data){
+    const type::DateTime & date_time = labels[count][journey_pattern_point];
+    if(date_time == type::DateTime::inf || date_time == type::DateTime::min) {
+        return boarding_type::uninitialized;
+    } else {
+        type::idx_t boarding_jpp_idx = boardings[count][journey_pattern_point];
+        if(boarding_jpp_idx == type::invalid_idx) {
+            return boarding_type::departure;
+        } else if(boarding_jpp_idx < data.pt_data.stop_times.size()) {
+            return boarding_type::vj;
+        } else {
+            return boarding_type::connection;
+        }
+    }
+}
+
 type::idx_t get_boarding_jpp(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<vector_idx> &boardings, const navitia::type::Data &data);
 std::pair<type::idx_t, uint32_t> get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<vector_idx> &boardings, const type::Properties &required_properties, bool clockwise, const navitia::type::Data &data);
 
