@@ -280,16 +280,8 @@ void RAPTOR::set_journey_patterns_valides(uint32_t date, const std::vector<std::
 
 
 struct raptor_visitor {
-    RAPTOR & raptor;
-    raptor_visitor(RAPTOR & raptor) : raptor(raptor) {}
-
     bool better_or_equal(const type::DateTime &a, const type::DateTime &current_dt, const type::StopTime &st) {
         return a <= current_datetime(current_dt.date(), st);
-    }
-
-    void one_more_step() {
-        raptor.labels.push_back(raptor.data.dataRaptor.labels_const);
-        raptor.boardings.push_back(raptor.data.dataRaptor.boardings_const);
     }
 
     type::DateTime current_datetime(int date, const type::StopTime & stop_time) const {
@@ -297,13 +289,13 @@ struct raptor_visitor {
     }
 
     std::pair<std::vector<type::JourneyPatternPoint>::const_iterator, std::vector<type::JourneyPatternPoint>::const_iterator>
-    journey_pattern_points(const type::JourneyPattern &journey_pattern, size_t order) const {
-        return std::make_pair(raptor.data.pt_data.journey_pattern_points.begin() + journey_pattern.journey_pattern_point_list[order],
-                              raptor.data.pt_data.journey_pattern_points.begin() + journey_pattern.journey_pattern_point_list.back() + 1);
+    journey_pattern_points(const std::vector<type::JourneyPatternPoint> &journey_pattern_points, const type::JourneyPattern &journey_pattern, size_t order) const {
+        return std::make_pair(journey_pattern_points.begin() + journey_pattern.journey_pattern_point_list[order],
+                              journey_pattern_points.begin() + journey_pattern.journey_pattern_point_list.back() + 1);
     }
 
-    std::vector<type::StopTime>::const_iterator first_stoptime(size_t position) const {
-        return raptor.data.pt_data.stop_times.begin() + position;
+    std::vector<type::StopTime>::const_iterator first_stoptime(const std::vector<type::StopTime> & stop_times, size_t position) const {
+        return stop_times.begin() + position;
     }
 
     void update(type::DateTime & dt, const type::StopTime & st, const uint32_t gap) {
@@ -335,31 +327,23 @@ navitia::type::idx_t navitia::type::Connection::* raptor_visitor::journey_patter
 
 
 struct raptor_reverse_visitor {
-    RAPTOR & raptor;
-    raptor_reverse_visitor(RAPTOR & raptor) : raptor(raptor) {}
-
     bool better_or_equal(const type::DateTime &a, const type::DateTime &current_dt, const type::StopTime &st) {
         return a >= current_datetime(current_dt.date(), st);
     }
-
-    void one_more_step() {
-        raptor.labels.push_back(raptor.data.dataRaptor.labels_const_reverse);
-        raptor.boardings.push_back(raptor.data.dataRaptor.boardings_const);
-    }    
 
     type::DateTime current_datetime(int date, const type::StopTime & stop_time) const {
         return type::DateTime(date, stop_time.section_end_time(clockwise));
     }
 
     std::pair<std::vector<type::JourneyPatternPoint>::const_reverse_iterator, std::vector<type::JourneyPatternPoint>::const_reverse_iterator>
-    journey_pattern_points(const type::JourneyPattern &journey_pattern, size_t order) const {
-        const auto begin = raptor.data.pt_data.journey_pattern_points.rbegin() + raptor.data.pt_data.journey_pattern_points.size() - journey_pattern.journey_pattern_point_list[order] - 1;
+    journey_pattern_points(const std::vector<type::JourneyPatternPoint> &journey_pattern_points, const type::JourneyPattern &journey_pattern, size_t order) const {
+        const auto begin = journey_pattern_points.rbegin() + journey_pattern_points.size() - journey_pattern.journey_pattern_point_list[order] - 1;
         const auto end = begin + order + 1;
         return std::make_pair(begin, end);
     }
 
-    std::vector<type::StopTime>::const_reverse_iterator first_stoptime(size_t position) const {
-        return raptor.data.pt_data.stop_times.rbegin() + raptor.data.pt_data.stop_times.size() - position - 1;
+    std::vector<type::StopTime>::const_reverse_iterator first_stoptime(const std::vector<type::StopTime> & stop_times, size_t position) const {
+        return stop_times.rbegin() + stop_times.size() - position - 1;
     }
 
     void update(type::DateTime & dt, const type::StopTime & st, const uint32_t gap) {
@@ -403,8 +387,14 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::Properties &required_prope
     while(!end /*&& count < 5*/) {
         ++count;
         end = true;
-        if(count == labels.size())
-            visitor.one_more_step();
+        if(count == labels.size()) {
+            this->boardings.push_back(this->data.dataRaptor.boardings_const);
+            if(visitor.clockwise) {
+                this->labels.push_back(this->data.dataRaptor.labels_const);
+            } else {
+                this->labels.push_back(this->data.dataRaptor.labels_const_reverse);
+            }
+        }
         const auto & prec_labels= labels[count -1];
         this->make_queue();
         for(const auto & journey_pattern : data.pt_data.journey_patterns) {
@@ -412,9 +402,9 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::Properties &required_prope
                 t = type::invalid_idx;
                 boarding = type::invalid_idx;
                 workingDt = visitor.worst();
-                decltype(visitor.first_stoptime(0)) it_st;
+                decltype(visitor.first_stoptime(this->data.pt_data.stop_times, 0)) it_st;
                 int gap = 0;
-                BOOST_FOREACH(const type::JourneyPatternPoint & jpp, visitor.journey_pattern_points(journey_pattern, Q[journey_pattern.idx])) {
+                BOOST_FOREACH(const type::JourneyPatternPoint & jpp, visitor.journey_pattern_points(this->data.pt_data.journey_pattern_points, journey_pattern, Q[journey_pattern.idx])) {
                     if(t != type::invalid_idx) {
                         ++it_st;
                         if(l_zone == std::numeric_limits<uint32_t>::max() || l_zone != it_st->local_traffic_zone) {
@@ -459,7 +449,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::Properties &required_prope
                         if(etemp != type::invalid_idx && t != etemp) {
                             t = etemp;
                             boarding = data.pt_data.vehicle_journeys[t].stop_time_list[jpp.order];
-                            it_st = visitor.first_stoptime(boarding);
+                            it_st = visitor.first_stoptime(this->data.pt_data.stop_times, boarding);
                             workingDt = labels_temp;
                             visitor.update(workingDt, *it_st, gap);
                             l_zone = it_st->local_traffic_zone;
@@ -479,9 +469,9 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::Properties &required_prope
 
 void RAPTOR::boucleRAPTOR(const type::Properties &required_properties, bool clockwise, bool global_pruning){
     if(clockwise) {
-        raptor_loop(raptor_visitor(*this), required_properties, global_pruning);
+        raptor_loop(raptor_visitor(), required_properties, global_pruning);
     } else {
-        raptor_loop(raptor_reverse_visitor(*this), required_properties, global_pruning);
+        raptor_loop(raptor_reverse_visitor(), required_properties, global_pruning);
     }
 }
 
