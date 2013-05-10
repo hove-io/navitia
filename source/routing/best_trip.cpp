@@ -13,17 +13,22 @@ best_trip(const type::JourneyPattern & journey_pattern, const unsigned int order
         return tardiest_trip(journey_pattern, order, dt, data, required_properties);
 }
 
+
+
 /** Which is the first valid stop_time in this range ?
  *  Returns invalid_idx is none is
  */
 type::idx_t valid_pick_up(type::idx_t idx, type::idx_t end, uint32_t date, uint32_t hour, const type::Data &data, const type::Properties &required_properties){
     for(; idx < end; ++idx) {
-        const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_forward[idx]];
         bool valid_date = data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date);
-        bool accessible = data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties);
 
-        if( valid_date && st.pick_up_allowed() && accessible && st.valid_hour(hour)) {
-            return idx;
+        if (valid_date) {
+            type::idx_t st_idx = data.dataRaptor.st_idx_forward[idx];
+            const type::StopTime & st = data.pt_data.stop_times[st_idx];
+            if( st.pick_up_allowed() && st.valid_hour(hour)
+                    && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties) ){
+                return idx;
+            }
         }
     }
     return type::invalid_idx;
@@ -31,12 +36,15 @@ type::idx_t valid_pick_up(type::idx_t idx, type::idx_t end, uint32_t date, uint3
 
 type::idx_t valid_drop_off(type::idx_t idx, type::idx_t end, uint32_t date, uint32_t hour, const type::Data &data, const type::Properties &required_properties){
     for(; idx < end; ++idx) {
-        const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_backward[idx]];
         bool valid_date = data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date);
-        bool accessible = data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties);
 
-        if( valid_date && st.drop_off_allowed() && accessible && st.valid_hour(hour)) {
-            return idx;
+        if (valid_date) {
+            type::idx_t st_idx = data.dataRaptor.st_idx_backward[idx];
+            const type::StopTime & st = data.pt_data.stop_times[st_idx];
+            if( st.drop_off_allowed() && st.valid_hour(hour)
+                    && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties) ){
+                return idx;
+            }
         }
     }
     return type::invalid_idx;

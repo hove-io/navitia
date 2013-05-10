@@ -145,6 +145,8 @@ void dataRAPTOR::load(const type::PT_Data &data)
                 else
                     time = st.end_time;
                 departure_times.push_back(time);
+
+                // We create a new validity pattern for cross-midnight journeys
                 if(st.departure_time >type::DateTime::SECONDS_PER_DAY) {
                     auto vp = data.validity_patterns[data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx].days;
                     vp <<=1;
