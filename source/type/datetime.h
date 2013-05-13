@@ -22,11 +22,11 @@ struct DateTime {
 
     static const uint32_t SECONDS_PER_DAY = 86400;
 
-    static DateTime inf;
-    static DateTime min;
+    static const DateTime inf;
+    static const DateTime min;
 
-    DateTime() : datetime(std::numeric_limits<uint32_t>::max()){}
-    DateTime(int date, int hour) : datetime(date*SECONDS_PER_DAY + hour) {}
+    constexpr DateTime() : datetime(std::numeric_limits<uint32_t>::max()){}
+    constexpr DateTime(int date, int hour) : datetime(date*SECONDS_PER_DAY + hour) {}
     DateTime(const DateTime & dt) : datetime(dt.datetime) {}
 
     uint32_t hour() const {

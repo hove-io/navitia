@@ -3,8 +3,8 @@
 
 namespace navitia { namespace type {
 
-DateTime DateTime::inf = DateTime();
-DateTime DateTime::min = DateTime(0,0);
+const DateTime DateTime::inf = DateTime();
+const DateTime DateTime::min = DateTime(0,0);
 
 std::ostream & operator<<(std::ostream & os, const DateTime & dt){
     os << "D=" << dt.date() << " " << dt.hour()/(3600) << ":";
