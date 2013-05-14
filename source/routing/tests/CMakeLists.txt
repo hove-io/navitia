@@ -1,13 +1,13 @@
 FIND_PACKAGE(Boost 1.40.0 COMPONENTS unit_test_framework date_time REQUIRED)
 
 add_executable(raptor_test raptor_test.cpp)
-target_link_libraries(raptor_test ${Boost_LIBRARIES} connectors data routing georef utils ${Boost_LIBRARIES})
+target_link_libraries(raptor_test ${Boost_LIBRARIES} connectors data routing georef utils ${Boost_LIBRARIES} log4cplus)
 ADD_TEST(raptor ${EXECUTABLE_OUTPUT_PATH}/raptor_test --report_level=no)
 
 add_executable(reverse_raptor_test reverse_raptor_test.cpp)
-target_link_libraries(reverse_raptor_test connectors data routing georef utils ${Boost_LIBRARIES} )
+target_link_libraries(reverse_raptor_test connectors data routing georef utils ${Boost_LIBRARIES} log4cplus)
 ADD_TEST(reverse_raptor ${EXECUTABLE_OUTPUT_PATH}/reverse_raptor_test --report_level=no)
 
 add_executable(routing_api_test routing_api_test.cpp)
-target_link_libraries(routing_api_test connectors data types routing pb_lib georef utils  ${Boost_LIBRARIES})
+target_link_libraries(routing_api_test connectors data types routing pb_lib georef utils  ${Boost_LIBRARIES} log4cplus)
 ADD_TEST(routing_api_test ${EXECUTABLE_OUTPUT_PATH}/routing_api_test --report_level=no)
