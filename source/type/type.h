@@ -493,6 +493,8 @@ struct StopTime {
     /// Heure de fin de stop_time : dans le sens avant, c'est la fin, sinon le départ
     uint32_t section_end_time(bool clockwise) const {return clockwise ? arrival_time : departure_time;}
 
+    DateTime section_end_date(int date, bool clockwise) const {return type::DateTime(date, this->section_end_time(clockwise));}
+
 
     /** Is this hour valid : only concerns frequency data
      * Does the hour falls inside of the validity period of the frequency

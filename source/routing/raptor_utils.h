@@ -79,7 +79,7 @@ struct best_dest {
         max_walking = max_walking_;
     }
 
-    void reinit(size_t nb_rpid, const type::DateTime &borne, const bool /*clockwise*/, const float max_walking = 0) {
+    void reinit(size_t nb_rpid, const type::DateTime &borne, const float max_walking = 0) {
         reinit(nb_rpid, max_walking);
         best_now = borne;
     }
