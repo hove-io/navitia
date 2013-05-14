@@ -64,7 +64,7 @@ struct best_dest {
                 //best_now.departure = t.departure - rpidx_distance[rpid];
                 best_now_rpid = rpid;
                 count = cnt;
-                    return true;
+                return true;
                 }
             }
         return false;
