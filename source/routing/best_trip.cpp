@@ -3,14 +3,14 @@
 namespace navitia { namespace routing {
 
 std::pair<type::idx_t, uint32_t>
-best_trip(const type::JourneyPattern & journey_pattern, const unsigned int order,
+best_trip(const type::JourneyPatternPoint &jpp,
           const navitia::type::DateTime &dt,
           const type::Properties &required_properties,
           const bool clockwise, const type::Data &data) {
     if(clockwise)
-        return earliest_trip(journey_pattern, order, dt, data, required_properties);
+        return earliest_trip(jpp, dt, data, required_properties);
     else
-        return tardiest_trip(journey_pattern, order, dt, data, required_properties);
+        return tardiest_trip(jpp, dt, data, required_properties);
 }
 
 
@@ -51,20 +51,20 @@ type::idx_t valid_drop_off(type::idx_t idx, type::idx_t end, uint32_t date, uint
 }
 
 std::pair<type::idx_t, uint32_t> 
-    earliest_trip(const type::JourneyPattern & journey_pattern, const unsigned int order,
+    earliest_trip(const type::JourneyPatternPoint & jpp,
                   const navitia::type::DateTime &dt, const type::Data &data, 
                   const type::Properties &required_properties) {
 
     // If the stop_point doesn’t match the required properties, we don’t bother looking further
-    if(!data.pt_data.stop_points[data.pt_data.journey_pattern_points[journey_pattern.journey_pattern_point_list[order]].stop_point_idx].accessible(required_properties))
+    if(!data.pt_data.stop_points[jpp.stop_point_idx].accessible(required_properties))
         return std::make_pair(type::invalid_idx, 0);
 
 
     //On cherche le plus petit stop time de la journey_pattern >= dt.hour()
     std::vector<uint32_t>::const_iterator begin = data.dataRaptor.departure_times.begin() +
-            data.dataRaptor.first_stop_time[journey_pattern.idx] +
-            order * data.dataRaptor.nb_trips[journey_pattern.idx];
-    std::vector<uint32_t>::const_iterator end = begin + data.dataRaptor.nb_trips[journey_pattern.idx];
+            data.dataRaptor.first_stop_time[jpp.journey_pattern_idx] +
+            jpp.order * data.dataRaptor.nb_trips[jpp.journey_pattern_idx];
+    std::vector<uint32_t>::const_iterator end = begin + data.dataRaptor.nb_trips[jpp.journey_pattern_idx];
 
 
     auto it = std::lower_bound(begin, end, dt.hour(),
@@ -72,7 +72,7 @@ std::pair<type::idx_t, uint32_t>
                                return departure_time < hour;});
 
     type::idx_t idx = it - data.dataRaptor.departure_times.begin();
-    type::idx_t end_idx = (begin - data.dataRaptor.departure_times.begin()) +  data.dataRaptor.nb_trips[journey_pattern.idx];
+    type::idx_t end_idx = (begin - data.dataRaptor.departure_times.begin()) +  data.dataRaptor.nb_trips[jpp.journey_pattern_idx];
 
     //On renvoie le premier trip valide
     type::idx_t first_st = valid_pick_up(idx, end_idx, dt.date(), dt.hour(), data, required_properties);
@@ -95,16 +95,16 @@ std::pair<type::idx_t, uint32_t>
 
 
 std::pair<type::idx_t, uint32_t> 
-tardiest_trip(const type::JourneyPattern & journey_pattern, const unsigned int order,
+tardiest_trip(const type::JourneyPatternPoint & jpp,
               const navitia::type::DateTime &dt, const type::Data &data,
               const type::Properties &required_properties) {
-    if(!data.pt_data.stop_points[data.pt_data.journey_pattern_points[journey_pattern.journey_pattern_point_list[order]].stop_point_idx].accessible(required_properties))
+    if(!data.pt_data.stop_points[jpp.stop_point_idx].accessible(required_properties))
         return std::make_pair(type::invalid_idx, 0);
     //On cherche le plus grand stop time de la journey_pattern <= dt.hour()
     const auto begin = data.dataRaptor.arrival_times.begin() +
-                       data.dataRaptor.first_stop_time[journey_pattern.idx] +
-                       order * data.dataRaptor.nb_trips[journey_pattern.idx];
-    const auto end = begin + data.dataRaptor.nb_trips[journey_pattern.idx];
+                       data.dataRaptor.first_stop_time[jpp.journey_pattern_idx] +
+                       jpp.order * data.dataRaptor.nb_trips[jpp.journey_pattern_idx];
+    const auto end = begin + data.dataRaptor.nb_trips[jpp.journey_pattern_idx];
 
     auto it = std::lower_bound(begin, end, dt.hour(),
                                [](uint32_t arrival_time, uint32_t hour){
@@ -112,7 +112,7 @@ tardiest_trip(const type::JourneyPattern & journey_pattern, const unsigned int o
                               );
 
     type::idx_t idx = it - data.dataRaptor.arrival_times.begin();
-    type::idx_t end_idx = (begin - data.dataRaptor.arrival_times.begin()) +  data.dataRaptor.nb_trips[journey_pattern.idx];
+    type::idx_t end_idx = (begin - data.dataRaptor.arrival_times.begin()) +  data.dataRaptor.nb_trips[jpp.journey_pattern_idx];
 
     type::idx_t first_st = valid_drop_off(idx, end_idx, dt.date(), dt.hour(), data, required_properties);
 

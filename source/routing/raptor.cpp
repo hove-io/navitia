@@ -399,7 +399,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::Properties &required_prope
                        (t == type::invalid_idx || visitor.better_or_equal(labels_temp, workingDt, *it_st))) {
 
                         type::idx_t etemp;
-                        std::tie(etemp, gap) = best_trip(journey_pattern, jpp.order, labels_temp, required_properties, visitor.clockwise(), data);
+                        std::tie(etemp, gap) = best_trip(jpp, labels_temp, required_properties, visitor.clockwise(), data);
 
                         if(etemp != type::invalid_idx && t != etemp) {
                             t = etemp;

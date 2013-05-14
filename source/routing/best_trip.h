@@ -7,18 +7,18 @@
 namespace navitia { namespace routing {
 ///Cherche le premier trip partant apres dt sur la journey_pattern au journey_pattern point order
 std::pair<type::idx_t, uint32_t> 
-earliest_trip(const type::JourneyPattern & journey_pattern, 
-              const unsigned int order, const navitia::type::DateTime &dt,
+earliest_trip(const type::JourneyPatternPoint & jpp,
+              const navitia::type::DateTime &dt,
               const type::Data &data, const type::Properties &required_properties=0);
 ///Cherche le premier trip partant avant dt sur la journey_pattern au journey_pattern point order
 std::pair<type::idx_t, uint32_t> 
-tardiest_trip(const type::JourneyPattern & journey_pattern, const unsigned int order,
+tardiest_trip(const type::JourneyPatternPoint & jpp,
               const navitia::type::DateTime &dt, const type::Data &data,
               const type::Properties &required_properties=0);
 
 
 std::pair<type::idx_t, uint32_t>
-best_trip(const type::JourneyPattern & journey_pattern, const unsigned int order,
+best_trip(const type::JourneyPatternPoint & jpp,
           const navitia::type::DateTime &dt,
           const type::Properties &required_properties,
           const bool clockwise, const type::Data &data);
