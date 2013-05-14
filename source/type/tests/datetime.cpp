@@ -12,14 +12,6 @@ BOOST_AUTO_TEST_CASE(ctor){
     BOOST_CHECK_EQUAL(d.date(), 1);
 }
 
-BOOST_AUTO_TEST_CASE(date_incr_decr){
-    DateTime d(1,2);
-    d.date_increment();
-    BOOST_CHECK_EQUAL(d.date(), 2);
-    d.date_decrement();
-    BOOST_CHECK_EQUAL(d.date(), 1);
-}
-
 BOOST_AUTO_TEST_CASE(date_update){
     DateTime d(10, 10);
     d.update(100);
