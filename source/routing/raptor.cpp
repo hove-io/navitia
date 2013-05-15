@@ -383,7 +383,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::Properties &required_prope
                                     end = false;
                                 }
                             } else if(workingDt == bound &&
-                                      get_type(this->count-1, jpp.idx) == boarding_type::uninitialized) {
+                                      get_type(this->count-1, jpp.idx) == boarding_type::uninitialized && st.valid_end(visitor.clockwise())) {
                                 if(b_dest.add_best(jpp.idx, workingDt, this->count, visitor.clockwise())) {
                                     working_labels[jpp.idx] = workingDt;
                                     best_labels[jpp.idx] = workingDt;

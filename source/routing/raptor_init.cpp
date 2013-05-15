@@ -78,10 +78,12 @@ getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, double> 
                     best_jpp = jppidx;
                     best_dt_jpp = labels[round][jppidx];
                     if(type == boarding_type::vj) {
+                        // Dans le sens horaire : lors du calcul on gardé que l’heure de départ, mais on veut l’arrivée
+                        // Il faut donc retrouvé le bon VJ avec best_trip
                         type::idx_t t;
                         uint32_t gap;
                         const auto &jpp = data.pt_data.journey_pattern_points[jppidx];
-                        std::tie(t, gap) = best_trip(jpp, labels[round][jppidx], required_properties, !clockwise, data);
+                        std::tie(t, gap) = best_trip(jpp, labels[round][jppidx], required_properties, clockwise, data);
                         const auto &st = data.pt_data.stop_times[data.pt_data.vehicle_journeys[t].stop_time_list[jpp.order]];
                         if(clockwise) {
                             best_dt_jpp.update(st.arrival_time + gap, !clockwise);
