@@ -23,11 +23,11 @@ std::pair<type::idx_t, uint32_t>
 get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<vector_idx> &boardings,
                       const type::Properties &required_properties, bool clockwise,  const navitia::type::Data &data) {
     if(get_type(count, journey_pattern_point, labels, boardings, data) == boarding_type::vj) {
-        type::idx_t vj;
+        type::idx_t stop_time_idx;
         uint32_t gap;
         const type::JourneyPatternPoint & jpp = data.pt_data.journey_pattern_points[journey_pattern_point];
-        std::tie(vj, gap) = best_trip(jpp, labels[count][journey_pattern_point], required_properties, clockwise, data);
-        return std::make_pair(data.pt_data.vehicle_journeys[vj].stop_time_list[jpp.order], gap);
+        std::tie(stop_time_idx, gap) = best_stop_time(jpp, labels[count][journey_pattern_point], required_properties, clockwise, data);
+        return std::make_pair(stop_time_idx, gap);
     }
     return std::make_pair(type::invalid_idx, std::numeric_limits<uint32_t>::max());
 }

@@ -5,20 +5,21 @@
 
 
 namespace navitia { namespace routing {
-///Cherche le premier trip partant apres dt sur la journey_pattern au journey_pattern point order
-std::pair<type::idx_t, uint32_t> 
-earliest_trip(const type::JourneyPatternPoint & jpp,
+///Cherche le premier stop_time partant apres dt sur la journey_pattern au journey_pattern point order
+std::pair<type::idx_t, uint32_t>
+earliest_stop_time(const type::JourneyPatternPoint & jpp,
               const navitia::type::DateTime &dt,
               const type::Data &data, const type::Properties &required_properties=0);
-///Cherche le premier trip partant avant dt sur la journey_pattern au journey_pattern point order
-std::pair<type::idx_t, uint32_t> 
-tardiest_trip(const type::JourneyPatternPoint & jpp,
+///Cherche le premier stop_time partant avant dt sur la journey_pattern au journey_pattern point order
+std::pair<type::idx_t, uint32_t>
+tardiest_stop_time(const type::JourneyPatternPoint & jpp,
               const navitia::type::DateTime &dt, const type::Data &data,
               const type::Properties &required_properties=0);
 
-
+/// Returns the next stop time at given journey pattern point
+/// either a vehicle that leaves or that arrives depending on clockwise
 std::pair<type::idx_t, uint32_t>
-best_trip(const type::JourneyPatternPoint & jpp,
+best_stop_time(const type::JourneyPatternPoint & jpp,
           const navitia::type::DateTime &dt,
           const type::Properties &required_properties,
           const bool clockwise, const type::Data &data);

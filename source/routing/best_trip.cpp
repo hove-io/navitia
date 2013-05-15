@@ -3,14 +3,14 @@
 namespace navitia { namespace routing {
 
 std::pair<type::idx_t, uint32_t>
-best_trip(const type::JourneyPatternPoint &jpp,
+best_stop_time(const type::JourneyPatternPoint &jpp,
           const navitia::type::DateTime &dt,
           const type::Properties &required_properties,
           const bool clockwise, const type::Data &data) {
     if(clockwise)
-        return earliest_trip(jpp, dt, data, required_properties);
+        return earliest_stop_time(jpp, dt, data, required_properties);
     else
-        return tardiest_trip(jpp, dt, data, required_properties);
+        return tardiest_stop_time(jpp, dt, data, required_properties);
 }
 
 
@@ -27,7 +27,7 @@ type::idx_t valid_pick_up(type::idx_t idx, type::idx_t end, uint32_t date, uint3
             const type::StopTime & st = data.pt_data.stop_times[st_idx];
             if( st.pick_up_allowed() && st.valid_hour(hour)
                     && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties) ){
-                return idx;
+                return st_idx;
             }
         }
     }
@@ -43,7 +43,7 @@ type::idx_t valid_drop_off(type::idx_t idx, type::idx_t end, uint32_t date, uint
             const type::StopTime & st = data.pt_data.stop_times[st_idx];
             if( st.drop_off_allowed() && st.valid_hour(hour)
                     && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties) ){
-                return idx;
+                return st_idx;
             }
         }
     }
@@ -51,7 +51,7 @@ type::idx_t valid_drop_off(type::idx_t idx, type::idx_t end, uint32_t date, uint
 }
 
 std::pair<type::idx_t, uint32_t> 
-    earliest_trip(const type::JourneyPatternPoint & jpp,
+    earliest_stop_time(const type::JourneyPatternPoint & jpp,
                   const navitia::type::DateTime &dt, const type::Data &data, 
                   const type::Properties &required_properties) {
 
@@ -84,9 +84,8 @@ std::pair<type::idx_t, uint32_t>
     }
 
     if(first_st != type::invalid_idx){
-        const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_forward[first_st]];
-        return std::make_pair(st.vehicle_journey_idx,
-                              !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
+        const type::StopTime & st = data.pt_data.stop_times[first_st];
+        return std::make_pair(first_st, !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
     }
 
     //Cette journey_pattern ne comporte aucun trip compatible
@@ -95,7 +94,7 @@ std::pair<type::idx_t, uint32_t>
 
 
 std::pair<type::idx_t, uint32_t> 
-tardiest_trip(const type::JourneyPatternPoint & jpp,
+tardiest_stop_time(const type::JourneyPatternPoint & jpp,
               const navitia::type::DateTime &dt, const type::Data &data,
               const type::Properties &required_properties) {
     if(!data.pt_data.stop_points[jpp.stop_point_idx].accessible(required_properties))
@@ -123,9 +122,8 @@ tardiest_trip(const type::JourneyPatternPoint & jpp,
     }
 
     if(first_st != type::invalid_idx){
-        const type::StopTime & st = data.pt_data.stop_times[data.dataRaptor.st_idx_backward[first_st]];
-        return std::make_pair(st.vehicle_journey_idx,
-                              !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
+        const type::StopTime & st = data.pt_data.stop_times[first_st];
+        return std::make_pair(first_st, !st.is_frequency() ? 0 : compute_gap(dt.hour(), st.start_time, st.headway_secs));
     }
 
     //Cette journey_pattern ne comporte aucun trip compatible

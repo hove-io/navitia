@@ -399,11 +399,11 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::Properties &required_prope
                        (t == type::invalid_idx || visitor.better_or_equal(labels_temp, workingDt, *it_st))) {
 
                         type::idx_t etemp;
-                        std::tie(etemp, gap) = best_trip(jpp, labels_temp, required_properties, visitor.clockwise(), data);
+                        std::tie(etemp, gap) = best_stop_time(jpp, labels_temp, required_properties, visitor.clockwise(), data);
 
                         if(etemp != type::invalid_idx && t != etemp) {
                             t = etemp;
-                            boarding = data.pt_data.vehicle_journeys[t].stop_time_list[jpp.order];
+                            boarding = etemp;
                             it_st = visitor.first_stoptime(this->data.pt_data.stop_times, boarding);
                             const type::StopTime &st = *it_st;
                             workingDt = labels_temp;
