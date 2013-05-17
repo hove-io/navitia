@@ -236,7 +236,7 @@ def validation_decorator(func):
     def wrapped(self, request_args, version, region):
         self.v = validate_arguments(request_args, self.apis[api]["arguments"])
         if not self.v.valid:
-            raise InvalidArguments(unicode(self.v.details))
+            raise InvalidArguments(self.v.details)
         else:
             return func(self, request_args, version, region)
     return wrapped

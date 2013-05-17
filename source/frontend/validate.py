@@ -126,7 +126,7 @@ def validate_arguments(request, validation_dict) :
         if not(key in request.args) :
             if value.required:
                 response.valid = False
-                response.details[key] = {"status", "missing"}
+                response.details[key] = {"status": "missing"}
             else:
                 response.arguments[key] = value.defaultValue
 
