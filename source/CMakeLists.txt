@@ -53,7 +53,7 @@ FIND_PACKAGE(Boost 1.40.0 REQUIRED)
 
 
 SET(NAVITIA_VERSION_MAJOR 0)
-SET(NAVITIA_VERSION_MINOR 58)
+SET(NAVITIA_VERSION_MINOR 59)
 SET(NAVITIA_VERSION_PATCH 0)
 
 #ajout a l'include path le repertoirre de compilation, pour géré le config.h
