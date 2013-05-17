@@ -59,7 +59,7 @@ class Arguments:
         "destination" : Argument("Destination Point" , entrypoint(), True, False, order = 1),
         "datetime" : Argument("The time from which you want to arrive (or arrive before depending on the value of clockwise)", datetime_validator, True, False, order = 2),
         "clockwise" : Argument("true if you want to have a journey that starts after datetime, false if you a journey that arrives before datetime", boolean, False, False, True, order = 3),
-        "max_duration" : Argument("Maximum duratioon of the isochrone", int,
+        "max_duration" : Argument("Maximum duration of the journey in seconds", int,
                                   False, False, order=4, defaultValue = 36000),
         "forbidden_uris[]" : Argument("Forbidden uris",  str, False, True, ""),
         "walking_speed" : Argument("Walking speed in m/s", float, False, False, 1.38),

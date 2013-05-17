@@ -58,8 +58,6 @@ bool Data::load(const std::string & filename) {
         this->load_lz4(filename);
         this->build_raptor();
         last_load_at = pt::microsec_clock::local_time();
-        for(size_t i = 0; i < this->pt_data.stop_times.size(); ++i)
-            this->pt_data.stop_times[i].idx = i;
         last_load = true;
         loaded = true;        
     } catch(std::exception& ex) {

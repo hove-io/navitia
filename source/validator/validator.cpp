@@ -132,11 +132,5 @@ int main(int argc, char** argv) {
         }
     }
 
-    std::cout << "Vérification des stop_times" << std::endl;
-    for(size_t i = 0; i < d.pt_data.stop_times.size(); ++i){
-        if(!valid_idx(d.pt_data.stop_times[i], i)) ++error_count;
-    }
-
-
     return 0;
 }

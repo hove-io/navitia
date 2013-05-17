@@ -48,11 +48,13 @@ struct RAPTOR
     }
 
 
-//    struct Departure_Type;
+
+    void clear(const type::Data & data, bool clockwise, type::DateTime borne, int walking_duration);
+
     ///Initialise les structure retour et b_dest
     void clear_and_init(std::vector<Departure_Type> departs,
               std::vector<std::pair<type::idx_t, double> > destinations,
-              navitia::type::DateTime borne, const bool clockwise, const bool clear,
+              navitia::type::DateTime borne, const bool clockwise,
               const float walking_speed, const int walking_distance,
               const type::Properties &properties = 0);
 

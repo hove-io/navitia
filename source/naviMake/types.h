@@ -266,7 +266,6 @@ struct StopPoint : public Header, Nameable, hasProperties{
 };
 
 struct StopTime {
-    int idx;
     int arrival_time; ///< En secondes depuis minuit
     int departure_time; ///< En secondes depuis minuit
     int start_time; /// Si horaire en fréquence

@@ -15,6 +15,7 @@
 #include <boost/geometry/geometries/register/linestring.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 
+#include "datetime.h"
 
 namespace mpl = boost::mpl;
 
@@ -474,12 +475,11 @@ struct StopTime {
     static const uint8_t IS_FREQUENCY = 3;
     static const uint8_t WHEELCHAIR_BOARDING = 4;
 
-    idx_t idx;
     uint32_t arrival_time; ///< En secondes depuis minuit
     uint32_t departure_time; ///< En secondes depuis minuit
-    uint32_t start_time; /// Si horaire en fréquence
-    uint32_t end_time; /// Si horaire en fréquence
-    uint32_t headway_secs; /// Si horaire en fréquence
+    uint32_t start_time; ///< Si horaire en fréquence
+    uint32_t end_time; ///< Si horaire en fréquence
+    uint32_t headway_secs; ///< Si horaire en fréquence
     idx_t vehicle_journey_idx;
     idx_t journey_pattern_point_idx;
     uint32_t local_traffic_zone;
@@ -490,18 +490,37 @@ struct StopTime {
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}
     bool is_frequency() const{return properties[IS_FREQUENCY];}
+
     /// Est-ce qu'on peut finir par ce stop_time : dans le sens avant on veut descendre
     bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
+
     /// Heure de fin de stop_time : dans le sens avant, c'est la fin, sinon le départ
     uint32_t section_end_time(bool clockwise) const {return clockwise ? arrival_time : departure_time;}
+
+    DateTime section_end_date(int date, bool clockwise) const {return type::DateTime(date, this->section_end_time(clockwise));}
+
+
+    /** Is this hour valid : only concerns frequency data
+     * Does the hour falls inside of the validity period of the frequency
+     * The difficult part is when the validity period goes over midnight */
+    bool valid_hour(uint hour) const {
+        if(!this->is_frequency())
+            return true;
+
+        auto mod_start = this->start_time % DateTime::SECONDS_PER_DAY;
+        auto mod_end = this->end_time % DateTime::SECONDS_PER_DAY;
+        if(mod_start < mod_end && this->start_time <= hour && this->end_time >= hour)
+            return true;
+
+        return mod_start > mod_end && !(this->end_time <= hour && this->start_time >= hour);
+    }
 
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<uint32_t>::max()), end_time(std::numeric_limits<uint32_t>::max()),
         headway_secs(std::numeric_limits<uint32_t>::max()), vehicle_journey_idx(invalid_idx), journey_pattern_point_idx(invalid_idx),
         local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        // Les idx sont volontairement pas sérialisés. On les reconstruit. Ça permet de gagner 5Mo compressé pour l'Île-de-France
-            ar & arrival_time & departure_time & start_time & end_time & headway_secs & vehicle_journey_idx & journey_pattern_point_idx & properties & local_traffic_zone/*& idx*/;
+            ar & arrival_time & departure_time & start_time & end_time & headway_secs & vehicle_journey_idx & journey_pattern_point_idx & properties & local_traffic_zone;
     }
 };
 

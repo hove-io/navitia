@@ -99,7 +99,7 @@ What places have a name that start with 'trans'
 
 The ``places`` API finds any object whose name matches the first letters of the query.
 
-http://api.navitia.io/v0/sf/autocomplete.json?q=trans
+http://api.navitia.io/v0/sf/places.json?q=trans
 
 This API is fast enough to use it for autocompleting an user request.
 

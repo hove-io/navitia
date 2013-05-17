@@ -9,7 +9,7 @@ makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
     std::vector<Path> result;
     navitia::type::DateTime best_dt = clockwise ? type::DateTime::inf : type::DateTime::min;
     for(unsigned int i=1;i<=raptor_.count;++i) {
-        type::idx_t best_rp = type::invalid_idx;
+        type::idx_t best_jpp = type::invalid_idx;
         for(auto spid_dist : destinations) {
             for(auto dest : raptor_.data.pt_data.stop_points[spid_dist.first].journey_pattern_point_list) {
                 if(raptor_.get_type(i, dest) != boarding_type::uninitialized) {
@@ -21,13 +21,13 @@ makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
                     if(        (clockwise && ((best_dt == type::DateTime::inf && current_dt <= dt) || (best_dt != type::DateTime::inf && current_dt < best_dt)))
                             ||(!clockwise && ((best_dt == type::DateTime::min && current_dt >= dt) || (best_dt != type::DateTime::min && current_dt > best_dt))) ){
                         best_dt = current_dt ;
-                        best_rp = dest;
+                        best_jpp = dest;
                     }
                 }
             }
         }
-        if(best_rp != type::invalid_idx)
-            result.push_back(makePath(best_rp, i, clockwise, required_properties, raptor_));
+        if(best_jpp != type::invalid_idx)
+            result.push_back(makePath(best_jpp, i, clockwise, required_properties, raptor_));
     }
 
     return result;
@@ -107,10 +107,12 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,  cons
                     }
 
                     //On va chercher le prochain stop time
-                    if(clockwise)
-                        current_st = raptor_.data.pt_data.stop_times.at(current_st.idx - 1);
-                    else
-                        current_st = raptor_.data.pt_data.stop_times.at(current_st.idx + 1);
+                    if(clockwise){
+                        current_st = raptor_.data.pt_data.stop_times.at(--stidx);
+                    }
+                    else{
+                        current_st = raptor_.data.pt_data.stop_times.at(++stidx);
+                    }
 
                     //Est-ce que je suis sur un journey_pattern point de fin 
                     current_jpp = current_st.journey_pattern_point_idx;

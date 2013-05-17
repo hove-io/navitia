@@ -1,20 +1,19 @@
 #pragma once
 #include <cstdint>
-#include <limits>
 #include <string>
+#include <limits>
 #include <fstream>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
+//#include <boost/date_time/posix_time/posix_time.hpp>
+
+namespace boost{ namespace posix_time{ class ptime; }}
 
 namespace navitia { namespace type {
 
 struct Data;    
 /** On se crée une structure qui représente une date et heure
  *
- * Date : sous la forme d'un numéro de jour à chercher dans le validity pattern
- * Heure : entier en nombre de secondes depuis minuit. S'il dépasse minuit, on fait modulo 24h et on incrémente la date
- *
- * On utilise cette structure pendant le calcul d'itinéaire
+ * C’est représenté par le nombre de secondes à partir de la période de production
  */
 struct DateTime {
 
@@ -22,11 +21,11 @@ struct DateTime {
 
     static const uint32_t SECONDS_PER_DAY = 86400;
 
-    static DateTime inf;
-    static DateTime min;
+    static const DateTime inf;
+    static const DateTime min;
 
-    DateTime() : datetime(std::numeric_limits<uint32_t>::max()){}
-    DateTime(int date, int hour) : datetime(date*SECONDS_PER_DAY + hour) {}
+    constexpr DateTime() : datetime(std::numeric_limits<uint32_t>::max()){}
+    constexpr DateTime(int date, int hour) : datetime(date*SECONDS_PER_DAY + hour) {}
     DateTime(const DateTime & dt) : datetime(dt.datetime) {}
 
     uint32_t hour() const {
@@ -38,52 +37,47 @@ struct DateTime {
     }
 
 
-    bool operator<(DateTime other) const {
+    bool operator<(const DateTime &other) const {
         return this->datetime < other.datetime;
     }
 
-    bool operator<=(DateTime other) const {
+    bool operator<=(const DateTime &other) const {
         return this->datetime <= other.datetime;
     }
 
-    bool operator>(DateTime other) const {
-        return (this->datetime > other.datetime) && (other.datetime != std::numeric_limits<uint32_t>::max());
+    bool operator>(const DateTime  & other) const {
+        return this->datetime > other.datetime;
     }
 
-    bool operator>=(DateTime other) const {
+    bool operator>=(const DateTime &other) const {
         return this->datetime >= other.datetime;
     }
 
-    bool operator==(DateTime other) const {
+    bool operator==(const DateTime &other) const {
         return this->datetime == other.datetime;
     }
 
-    bool operator!=(DateTime other) const {
+    bool operator!=(const DateTime  &other) const {
         return this->datetime != other.datetime;
     }
 
-
-    uint32_t operator-(DateTime other) {
-        return datetime - other.datetime;
-    }
-
     void update(uint32_t hour, bool clockwise = true) {
+        uint32_t this_hour = this->hour();
         if(hour>=SECONDS_PER_DAY)
             hour -= SECONDS_PER_DAY;
         if(clockwise){
-            datetime += ((hour>=this->hour())?0:SECONDS_PER_DAY) + hour - this->hour();
+            datetime += ( hour>=this_hour ?0:SECONDS_PER_DAY) + hour - this_hour;
         } else {
-            if(hour<=this->hour())
-                datetime += hour - this->hour();
+            if(hour<=this_hour)
+                datetime += hour - this_hour;
             else {
                 if(this->date() > 0)
-                    datetime += hour - this->hour() - SECONDS_PER_DAY;
+                    datetime += hour - this_hour - SECONDS_PER_DAY;
                 else
                     datetime = 0;
             }
         }
     }
-
 
     void increment(uint32_t secs){
         datetime += secs;
@@ -92,18 +86,6 @@ struct DateTime {
     void decrement(uint32_t secs){
         datetime -= secs;
     }
-
-    void date_decrement(){
-        //datetime -= 1 << date_offset;
-        datetime -= SECONDS_PER_DAY;
-    }
-
-    void date_increment(){
-        //datetime += 1 << date_offset;
-        datetime += SECONDS_PER_DAY;
-    }
-
-
 };
 
 
@@ -115,10 +97,6 @@ inline DateTime operator+(DateTime dt, int seconds) {
 inline DateTime operator-(DateTime dt, int seconds) {
     dt.decrement(seconds);
     return dt;
-}
-
-inline int operator+(const DateTime &dt1, const DateTime &dt2) {
-    return dt1.datetime + dt2.datetime;
 }
 
 inline int operator-(const DateTime &dt1, const DateTime &dt2) {
@@ -133,15 +111,3 @@ std::string iso_string(DateTime &datetime, const Data &d);
 boost::posix_time::ptime to_posix_time(DateTime &datetime, const Data &d);
 
 } }
-
-
-
-namespace std {
-template <>
-class numeric_limits<navitia::type::DateTime> {
-public:
-    static navitia::type::DateTime max() {
-        return navitia::type::DateTime::inf;
-    }
-};
-}
