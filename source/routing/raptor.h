@@ -124,13 +124,10 @@ struct RAPTOR
     inline type::idx_t get_boarding_jpp(size_t count, type::idx_t journey_pattern_point) const {
         return navitia::routing::get_boarding_jpp(count, journey_pattern_point, labels, boardings, data);
     }
+
     inline std::pair<type::idx_t, uint32_t> get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const type::Properties &required_properties, bool clockwise) const {
         return navitia::routing::get_current_stidx_gap(count, journey_pattern_point, labels, boardings, required_properties, clockwise, data);
     }
-
-
-
-
 
     ~RAPTOR() {}
 
