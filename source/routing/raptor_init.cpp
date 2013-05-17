@@ -83,7 +83,7 @@ getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, double> 
                         type::idx_t stop_time_idx;
                         uint32_t gap;
                         const auto &jpp = data.pt_data.journey_pattern_points[jppidx];
-                        std::tie(stop_time_idx, gap) = best_stop_time(jpp, labels[round][jppidx], required_properties, !clockwise, data);
+                        std::tie(stop_time_idx, gap) = best_stop_time(jpp, labels[round][jppidx], required_properties, !clockwise, data, true);
                         const auto &st = data.pt_data.stop_times[stop_time_idx];
                         if(clockwise) {
                             best_dt_jpp.update(st.arrival_time + gap, !clockwise);

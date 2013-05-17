@@ -9,11 +9,11 @@ namespace navitia { namespace routing {
 std::pair<type::idx_t, uint32_t>
 earliest_stop_time(const type::JourneyPatternPoint & jpp,
               const navitia::type::DateTime &dt,
-              const type::Data &data, const type::Properties &required_properties=0);
+              const type::Data &data, bool reconstructing_path = false, const type::Properties &required_properties=0);
 ///Cherche le premier stop_time partant avant dt sur la journey_pattern au journey_pattern point order
 std::pair<type::idx_t, uint32_t>
 tardiest_stop_time(const type::JourneyPatternPoint & jpp,
-              const navitia::type::DateTime &dt, const type::Data &data,
+              const navitia::type::DateTime &dt, const type::Data &data, bool reconstructing_path,
               const type::Properties &required_properties=0);
 
 /// Returns the next stop time at given journey pattern point
@@ -22,7 +22,7 @@ std::pair<type::idx_t, uint32_t>
 best_stop_time(const type::JourneyPatternPoint & jpp,
           const navitia::type::DateTime &dt,
           const type::Properties &required_properties,
-          const bool clockwise, const type::Data &data);
+          const bool clockwise, const type::Data &data, bool reconstructing_path = false);
 
 /// Calcule le gap pour les horaires en fréquences
 inline uint32_t compute_gap(uint32_t hour, uint32_t start_time, uint32_t headway_secs) {

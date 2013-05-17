@@ -26,7 +26,7 @@ get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std
         type::idx_t stop_time_idx;
         uint32_t gap;
         const type::JourneyPatternPoint & jpp = data.pt_data.journey_pattern_points[journey_pattern_point];
-        std::tie(stop_time_idx, gap) = best_stop_time(jpp, labels[count][journey_pattern_point], required_properties, clockwise, data);
+        std::tie(stop_time_idx, gap) = best_stop_time(jpp, labels[count][journey_pattern_point], required_properties, clockwise, data, true);
         return std::make_pair(stop_time_idx, gap);
     }
     return std::make_pair(type::invalid_idx, std::numeric_limits<uint32_t>::max());
