@@ -76,8 +76,7 @@ nt::GeographicalCoord Way::extrapol_geographical_coord(int number){
 */
 
 nt::GeographicalCoord Way::get_geographical_coord(const std::vector< HouseNumber>& house_number_list, const int number){
-
-    if (house_number_list.size() > 0){
+    if (!house_number_list.empty()){
 
         /// Dans le cas où le numéro recherché est plus grand que tous les numéros de liste
         if (house_number_list.back().number <= number){

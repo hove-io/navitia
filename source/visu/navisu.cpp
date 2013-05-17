@@ -41,7 +41,7 @@ void navisu::menuAction(QAction * action){
             ui->statusbar->showMessage("Loading " + filename + "...");
             d.load_lz4(filename.toStdString());
             ui->statusbar->showMessage("Loading done " + filename);
-        }catch(std::exception e){
+        }catch(const std::exception &e){
             QErrorMessage * err = new QErrorMessage(this);
             err->showMessage(QString("Impossible d'ouvrir") + filename + " : " + e.what());
             ui->statusbar->showMessage("Load error " + filename);
@@ -86,7 +86,6 @@ void navisu::tableSelected(QString table){
     else if(table == "JourneyPattern") show_journey_pattern();
     else if(table == "VehicleJourney") show_vehicle_journey();
     else if(table == "StopPoint") show_stop_point();
-    else if(table == "StopArea") show_stop_area();
     else if(table == "StopTime") show_stop_time();
     else if(table == "Network") show_network();
     else if(table == "Mode") show_mode();

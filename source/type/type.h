@@ -568,7 +568,7 @@ struct EntryPoint {
     /// Construit le type à partir d'une chaîne
     EntryPoint(const std::string & uri);
 
-    EntryPoint() : type(Type_e::Unknown), uri("") {}
+    EntryPoint() : type(Type_e::Unknown), house_number(-1) {}
 };
 
 } } //namespace navitia::type

@@ -24,7 +24,7 @@ struct ValidityPatternTime {
         return hour < other.hour;
     }
 
-    ValidityPatternTime() {}
+    ValidityPatternTime() : vp_idx(type::invalid_idx), hour(-1) {}
     ValidityPatternTime(int vp_idx, int hour) : vp_idx(vp_idx), hour(hour){}
 };
 
@@ -49,7 +49,7 @@ struct PathItem{
 
     PathItem(navitia::type::DateTime departure = navitia::type::DateTime::inf, navitia::type::DateTime arrival = navitia::type::DateTime::inf,
             type::idx_t vj_idx = type::invalid_idx) :
-        arrival(arrival), departure(departure), vj_idx(vj_idx) {
+        arrival(arrival), departure(departure), vj_idx(vj_idx), type(public_transport) {
             if(departure != navitia::type::DateTime::inf)
                 departures.push_back(departure);
             if(arrival != navitia::type::DateTime::inf)

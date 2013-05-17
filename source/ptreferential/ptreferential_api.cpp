@@ -27,7 +27,7 @@ pbnavitia::Response query_pb(type::Type_e requested_type, std::string request, c
     pbnavitia::Response pb_response;
     try {
         final_indexes = make_query(requested_type, request, data);
-    } catch(parsing_error parse_error) {
+    } catch(const parsing_error &parse_error) {
         pb_response.set_error(parse_error.more);
         return pb_response;
     }

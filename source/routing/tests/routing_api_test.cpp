@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
     streetnetwork::StreetNetwork sn_worker(data.geo_ref);
 
     // On met les horaires dans le desordre pour voir s'ils sont bien trié comme attendu
-    std::vector<std::string> datetimes{"20120614T080000", "20120614T090000"};
+    std::vector<std::string> datetimes({"20120614T080000", "20120614T090000"});
 
     pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, false, forbidden, sn_worker);
 
@@ -407,7 +407,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     destination.streetnetwork_params.offset = 0;
     destination.streetnetwork_params.distance = 5;
     // On met les horaires dans le desordre pour voir s'ils sont bien trié comme attendu
-    std::vector<std::string> datetimes{"20120614T080000", "20120614T090000"};
+    std::vector<std::string> datetimes({"20120614T080000", "20120614T090000"});
     pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, false, forbidden, sn_worker);
 
 // Marche à pied

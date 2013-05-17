@@ -58,7 +58,7 @@ public:
 
 
     /// Constructeur de data, définit le nombre de threads, charge les données
-    Data() : nb_threads(8), loaded(false), last_load(true), to_load(true){
+    Data() : nb_threads(8), version(0), loaded(false), last_load(true), to_load(true){
         if(Configuration::is_instanciated()){
             init_logger();
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));

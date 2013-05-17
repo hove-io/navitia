@@ -39,7 +39,7 @@ struct RAPTOR
 
     //Constructeur
     RAPTOR(const navitia::type::Data &data) :  
-        data(data), best_labels(data.pt_data.journey_pattern_points.size()),
+        data(data), best_labels(data.pt_data.journey_pattern_points.size()), count(0),
         marked_rp(data.pt_data.journey_pattern_points.size()),
         marked_sp(data.pt_data.stop_points.size()),
         journey_patterns_valides(data.pt_data.journey_patterns.size()),

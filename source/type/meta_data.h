@@ -24,7 +24,7 @@ struct MetaData{
 
     std::string shape;
 
-    MetaData() : production_date(boost::gregorian::date(), boost::gregorian::date()), navimake_version(NAVITIA_VERSION) {}
+    MetaData() : version(0), production_date(boost::gregorian::date(), boost::gregorian::date()), navimake_version(NAVITIA_VERSION) {}
 
     /** Fonction qui permet de sérialiser (aka binariser la structure de données
       *

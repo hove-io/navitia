@@ -81,9 +81,9 @@ public:
     void parse_frequencies(Data & data, CsvReader &csv);
     //
     ///parse le fichier calendar.txt afin de trouver la période de validité des données
-    boost::gregorian::date_period find_production_date(const std::string beginning_date);
+    boost::gregorian::date_period find_production_date(const std::string &beginning_date);
 
-    boost::gregorian::date_period basic_production_date(const std::string beginning_date);
+    boost::gregorian::date_period basic_production_date(const std::string &beginning_date);
 };
 
 /// Normalise les external code des stop_point et stop_areas

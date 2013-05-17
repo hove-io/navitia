@@ -303,8 +303,6 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
 
 
 void GtfsParser::parse_transfers(Data & data, CsvReader & csv) {
-    std::string filename = path + "/transfers.txt";
-
     std::vector<std::string> mandatory_headers = {"from_stop_id", "to_stop_id"};
     if(!csv.validate(mandatory_headers)) {
         LOG4CPLUS_FATAL(logger, "Erreur lors du parsing de " + csv.filename 
@@ -736,7 +734,7 @@ void GtfsParser::parse_stop_times(Data & data, CsvReader &csv) {
     LOG4CPLUS_TRACE(logger, "Nombre d'horaires : " + boost::lexical_cast<std::string>(data.stops.size()));
 }
 
-boost::gregorian::date_period GtfsParser::basic_production_date(const std::string beginning_date) {
+boost::gregorian::date_period GtfsParser::basic_production_date(const std::string & beginning_date) {
     if(beginning_date == "") {
         throw UnableToFindProductionDateException();
     } else {
@@ -747,7 +745,7 @@ boost::gregorian::date_period GtfsParser::basic_production_date(const std::strin
     }
 }
 
-boost::gregorian::date_period GtfsParser::find_production_date(const std::string beginning_date) {
+boost::gregorian::date_period GtfsParser::find_production_date(const std::string &beginning_date) {
     std::string filename = path + "/stop_times.txt";
     CsvReader csv(filename, ',' , true);
     if(!csv.is_open()) {

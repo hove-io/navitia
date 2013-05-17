@@ -42,9 +42,9 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
 
 
     auto temp = worker.get_direct_path();
-    if(paths.size() > 0 || temp.path_items.size() > 0) {
+    if(!paths.empty() || !temp.path_items.empty()) {
         pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
-        if(temp.path_items.size() > 0) {
+        if(!temp.path_items.empty()) {
             pbnavitia::Journey * pb_journey = pb_response.add_journeys();
             pb_journey->set_duration(temp.length);
             fill_street_section(origin, temp, d, pb_journey->add_sections(), 1);
@@ -255,7 +255,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
             for(auto & path : result){
                 path.request_time = datetime;
             }
-        } else if(tmp.size() > 0) {
+        } else if(!tmp.empty()) {
             // Lorsqu'on demande plusieurs horaires, on garde que l'arrivée au plus tôt / départ au plus tard
             tmp.back().request_time = datetime;
             result.push_back(tmp.back());

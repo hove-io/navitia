@@ -6,7 +6,7 @@ namespace ng = navitia::georef;
 
 namespace navitia { namespace streetnetwork {
 
-StreetNetwork::StreetNetwork(const ng::GeoRef &geo_ref) : geo_ref(geo_ref){}
+StreetNetwork::StreetNetwork(const ng::GeoRef &geo_ref) : geo_ref(geo_ref), departure_launch(false), arrival_launch(false){}
 
 void StreetNetwork::init() {
     departure_launch = false;

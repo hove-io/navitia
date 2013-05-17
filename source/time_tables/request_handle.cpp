@@ -18,7 +18,7 @@ RequestHandle::RequestHandle(const std::string &API, const std::string &request,
         max_datetime = date_time + duration;
         journey_pattern_points = navitia::ptref::make_query(type::Type_e::JourneyPatternPoint, request, data);
 
-    } catch(ptref::parsing_error parse_error) {
+    } catch(const ptref::parsing_error &parse_error) {
         pb_response.set_error(parse_error.more);
     } catch(...) {
         pb_response.set_error(API + " Unable to parse Datetime: " + str_dt);
