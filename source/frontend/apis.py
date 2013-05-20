@@ -91,6 +91,8 @@ class Arguments:
         "clockwise" : Argument("true if you want to have a journey that starts after datetime, false if you a journey that arrives before datetime", boolean, False, False, True, order = 3),
         "max_duration" : Argument("Maximum duratioon of the isochrone", int,
                                   False, False, order=4, defaultValue = 3600),
+        "max_transfers" : Argument("Maximum number of transfers in a journey",
+                                   int, False, False, order=5, defaultValue=10),
         "forbidden_uris[]" : Argument("Forbidden uris",  str, False, True, ""),
         "walking_speed" : Argument("Walking speed in m/s", float, False, False, 1.38),
         "walking_distance" : Argument("Maximum walking distance in meters", int,

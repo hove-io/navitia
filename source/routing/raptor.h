@@ -88,7 +88,7 @@ struct RAPTOR
      */
     void
     isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
-              const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne = navitia::type::DateTime::min,
+              const navitia::type::DateTime &dt_depart, const navitia::type::DateTime &borne = navitia::type::DateTime::min, uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
               float walking_speed=1.38, int walking_distance = 1000, const type::Properties &required_properties = 0,
               const std::vector<std::string>& forbidden = std::vector<std::string>(),
               bool clockwise = true);

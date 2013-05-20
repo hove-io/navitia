@@ -218,7 +218,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
 
 void
 RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
-          const type::DateTime &dt_depart, const type::DateTime &borne,
+          const type::DateTime &dt_depart, const type::DateTime &borne, uint32_t max_transfers,
           float walking_speed, int walking_distance, const type::Properties &required_properties,
           const std::vector<std::string> & forbidden,
           bool clockwise) {
@@ -226,7 +226,7 @@ RAPTOR::isochrone(const std::vector<std::pair<type::idx_t, double> > &departs,
     auto departures = getDepartures(departs, dt_depart, true, walking_speed, data);
     clear_and_init(departures, {}, borne, true, walking_speed, walking_distance);
 
-    boucleRAPTOR(required_properties, clockwise, true);
+    boucleRAPTOR(required_properties, clockwise, true, max_transfers);
 }
 
 

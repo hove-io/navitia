@@ -244,7 +244,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     } else {
         return navitia::routing::make_isochrone(*calculateur, origin, request.datetimes(0),
                                                         request.clockwise(), request.streetnetwork_params().walking_speed(), request.streetnetwork_params().walking_distance(), /*request.wheelchair()*/false,
-                                                        forbidden, *street_network_worker, request.max_duration());
+                                                forbidden, *street_network_worker, request.max_duration(), request.max_transfers());
     }
 }
 

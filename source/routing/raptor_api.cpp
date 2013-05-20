@@ -275,7 +275,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    const std::string &datetime_str,bool clockwise,
                                    float walking_speed, int walking_distance,  bool wheelchair,
                                    std::vector<std::string> forbidden,
-                                   streetnetwork::StreetNetwork & worker, int max_duration) {
+                                   streetnetwork::StreetNetwork & worker, int max_duration, uint32_t max_transfers) {
     
     pbnavitia::Response response;
 
@@ -301,7 +301,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     type::DateTime init_dt = type::DateTime(day, time);
     type::DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
 
-    raptor.isochrone(departures, init_dt, bound,
+    raptor.isochrone(departures, init_dt, bound, max_transfers,
                            walking_speed, walking_distance, wheelchair, forbidden, clockwise);
 
 
