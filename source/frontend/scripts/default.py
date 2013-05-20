@@ -211,6 +211,7 @@ class Script:
         req.journeys.streetnetwork_params.car_speed = request_args["car_speed"]
         req.journeys.streetnetwork_params.car_distance = request_args["car_distance"]
         req.journeys.max_duration = request_args["max_duration"]
+        req.journeys.max_transfers = request_args["max_transfers"]
         for forbidden_uri in request_args["forbidden_uris[]"]:
             req.journeys.forbidden_uris.append(forbidden_uri)
         resp = NavitiaManager().send_and_receive(req, region)

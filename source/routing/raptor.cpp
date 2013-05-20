@@ -177,8 +177,8 @@ void RAPTOR::clear_and_init(std::vector<Departure_Type> departs,
 std::vector<Path>
 RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                     const std::vector<std::pair<type::idx_t, double> > &destinations,
-                    const type::DateTime &dt_depart,
-                    const type::DateTime &borne, const float walking_speed,
+                    const type::DateTime &dt_depart, const type::DateTime &borne,
+                    const uint32_t max_transfers, const float walking_speed,
                     const int walking_distance, const type::Properties &required_properties,
                     const std::vector<std::string> & forbidden,
                     bool clockwise) {
@@ -191,7 +191,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
     std::vector<Departure_Type> departures = getDepartures(calc_dep, dt_depart, clockwise, walking_speed, data);
     clear_and_init(departures, calc_dest, borne, clockwise, walking_speed, walking_distance);
 
-    boucleRAPTOR(required_properties, clockwise, false);
+    boucleRAPTOR(required_properties, clockwise, false, max_transfers);
 
     // Aucune solution n’a pas été trouvée :'(
     if(b_dest.best_now_rpid == type::invalid_idx) {
@@ -204,7 +204,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
     for(auto departure : departures) {
         clear_and_init({departure}, calc_dep, dt_depart, !clockwise, walking_speed, walking_distance);
 
-        boucleRAPTOR(required_properties, !clockwise, true);
+        boucleRAPTOR(required_properties, !clockwise, true, max_transfers);
 
         if(b_dest.best_now != type::DateTime::inf && b_dest.best_now != type::DateTime::min) {
             std::vector<Path> temp = makePathes(calc_dep, dt_depart, walking_speed, required_properties, *this, !clockwise);
@@ -329,7 +329,7 @@ struct raptor_reverse_visitor {
 
 
 template<typename Visitor>
-void RAPTOR::raptor_loop(Visitor visitor, const type::Properties &required_properties, bool global_pruning) {
+void RAPTOR::raptor_loop(Visitor visitor, const type::Properties &required_properties, bool global_pruning, uint32_t max_transfers) {
     bool end = false;
     count = 0;
     type::idx_t t= type::invalid_idx;
@@ -338,7 +338,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::Properties &required_prope
     uint32_t l_zone = std::numeric_limits<uint32_t>::max();
 
     this->foot_path(visitor, required_properties);
-    while(!end /*&& count < 5*/) {
+    while(!end && count <= max_transfers) {
         ++count;
         end = true;
         if(count == labels.size()) {
@@ -423,17 +423,18 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::Properties &required_prope
 }
 
 
-void RAPTOR::boucleRAPTOR(const type::Properties &required_properties, bool clockwise, bool global_pruning){
+void RAPTOR::boucleRAPTOR(const type::Properties &required_properties, bool clockwise, bool global_pruning, uint32_t max_transfers){
     if(clockwise) {
-        raptor_loop(raptor_visitor(), required_properties, global_pruning);
+        raptor_loop(raptor_visitor(), required_properties, global_pruning, max_transfers);
     } else {
-        raptor_loop(raptor_reverse_visitor(), required_properties, global_pruning);
+        raptor_loop(raptor_reverse_visitor(), required_properties, global_pruning, max_transfers);
     }
 }
 
 
 std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
-                                  int departure_day, type::DateTime borne, bool clockwise, const type::Properties &required_properties) {
+                                  int departure_day, type::DateTime borne, bool clockwise,
+                                  const type::Properties &required_properties, uint32_t max_transfers) {
     
     std::vector<std::pair<type::idx_t, double> > departs, destinations;
 
@@ -445,7 +446,7 @@ std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, in
         destinations.push_back(std::make_pair(spidx, 0));
     }
 
-    return compute_all(departs, destinations, type::DateTime(departure_day, departure_hour), borne, 1, 1000, required_properties, {}, clockwise);
+    return compute_all(departs, destinations, type::DateTime(departure_day, departure_hour), borne, max_transfers, 1, 1000, required_properties, {}, clockwise);
 }
 
 

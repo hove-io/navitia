@@ -15,7 +15,8 @@ pbnavitia::Response make_response(RAPTOR &raptor,
                                   bool clockwise, const float walking_speed,
                                   const int walking_distance, const bool wheelchair,
                                   std::vector<std::string> forbidden,
-                                  streetnetwork::StreetNetwork & worker, int max_duration = -1);
+                                  streetnetwork::StreetNetwork & worker, uint32_t max_duration=std::numeric_limits<uint32_t>::max(),
+                                  uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
 pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    type::EntryPoint origin,

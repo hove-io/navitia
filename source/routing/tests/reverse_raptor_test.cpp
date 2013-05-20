@@ -619,3 +619,26 @@ BOOST_AUTO_TEST_CASE(max_duration){
     res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 8200, 0, type::DateTime(0, 8051), false);
     BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
+
+BOOST_AUTO_TEST_CASE(max_transfers){
+    navimake::builder b("20120614");
+    b.vj("A")("stop1", 8000, 8050)("stop2", 81000,81500);
+    b.vj("B")("stop1",8000)("stop3",8500);
+    b.vj("C")("stop3",9000)("stop2",11000);
+    b.vj("D")("stop3",9000)("stop4",9500);
+    b.vj("E")("stop4",10000)("stop2",10500);
+    type::Data data;
+    b.build(data.pt_data);
+    data.build_raptor();
+    RAPTOR raptor(data);
+    type::PT_Data & d = data.pt_data;
+
+    for(uint32_t nb_transfers=0; nb_transfers<=2;++nb_transfers) {
+        type::Properties p;
+        auto res1 = raptor.compute(d.stop_areas[0].idx, d.stop_areas[1].idx, 86400, 0, navitia::type::DateTime::inf, true, p, nb_transfers);
+        BOOST_REQUIRE(res1.size()>=1);
+        for(auto r : res1) {
+            BOOST_REQUIRE(r.nb_changes <= nb_transfers);
+        }
+    }
+}
