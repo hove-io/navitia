@@ -183,7 +183,8 @@ class Script:
                     section.pt_display_informations.headsign = section.vehicle_journey.route.name
                     if section.destination.HasField("stop_point"):
                         section.pt_display_informations.direction = section.destination.stop_point.name
-                    section.pt_display_informations.color = section.vehicle_journey.route.line.color
+                    if section.vehicle_journey.route.line.color != "":
+                        section.pt_display_informations.color = section.vehicle_journey.route.line.color
                     section.uris.vehicle_journey = section.vehicle_journey.uri
                     section.uris.line = section.vehicle_journey.route.line.uri
                     section.uris.route = section.vehicle_journey.route.uri
