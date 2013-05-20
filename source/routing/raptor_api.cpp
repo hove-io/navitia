@@ -207,7 +207,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               const std::vector<std::string> &datetimes_str, bool clockwise,
               const float walking_speed, const int walking_distance, const bool wheelchair,
               std::vector<std::string> forbidden,
-              streetnetwork::StreetNetwork & worker, int max_duration) {
+              streetnetwork::StreetNetwork & worker, uint32_t max_duration, uint32_t max_transfers) {
 
     pbnavitia::Response response;
 
@@ -243,11 +243,11 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
         int time = datetime.time_of_day().total_seconds();
         type::DateTime init_dt = type::DateTime(day, time);
 
-        if(max_duration >= 0) {
+        if(max_duration!=std::numeric_limits<uint32_t>::max())  {
             bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
         }
 
-        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, bound, walking_speed, walking_distance, wheelchair, forbidden, clockwise);
+        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, bound, max_transfers, walking_speed, walking_distance, wheelchair, forbidden, clockwise);
 
         // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
         if(datetimes.size() == 1){
