@@ -498,17 +498,19 @@ struct StopTime {
 
     /** Is this hour valid : only concerns frequency data
      * Does the hour falls inside of the validity period of the frequency
-     * The difficult part is when the validity period goes over midnight */
-    bool valid_hour(uint hour) const {
+     * The difficult part is when the validity period goes over midnight
+    */
+    bool valid_hour(uint hour_) const {
         if(!this->is_frequency())
             return true;
 
+        uint hour = hour_ % DateTime::SECONDS_PER_DAY;
         auto mod_start = this->start_time % DateTime::SECONDS_PER_DAY;
         auto mod_end = this->end_time % DateTime::SECONDS_PER_DAY;
-        if(mod_start < mod_end && this->start_time <= hour && this->end_time >= hour)
-            return true;
-
-        return mod_start > mod_end && !(this->end_time <= hour && this->start_time >= hour);
+        if(mod_start < mod_end)
+            return mod_start <= hour && mod_end >= hour;
+        else
+            return hour <= mod_end || mod_start <= hour;
     }
 
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<uint32_t>::max()), end_time(std::numeric_limits<uint32_t>::max()),
