@@ -54,7 +54,7 @@ class Script:
             request_pagination.itemsOnPage = len(objects)
             query_args = ""
             for key, value in request_args.iteritems():
-                if key != "request_pagination.startPage":
+                if key != "startPage":
                     if type(value) == type([]):
                         for v in value:
                             query_args += key + "=" +unicode(v) + "&"
