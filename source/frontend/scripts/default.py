@@ -54,7 +54,7 @@ class Script:
             request_pagination.itemsOnPage = len(objects)
             query_args = ""
             for key, value in request_args.iteritems():
-                if key != "request_pagination.startPage":
+                if key != "startPage":
                     if type(value) == type([]):
                         for v in value:
                             query_args += key + "=" +unicode(v) + "&"
@@ -183,7 +183,8 @@ class Script:
                     section.pt_display_informations.headsign = section.vehicle_journey.route.name
                     if section.destination.HasField("stop_point"):
                         section.pt_display_informations.direction = section.destination.stop_point.name
-                    section.pt_display_informations.color = section.vehicle_journey.route.line.color
+                    if section.vehicle_journey.route.line.color != "":
+                        section.pt_display_informations.color = section.vehicle_journey.route.line.color
                     section.uris.vehicle_journey = section.vehicle_journey.uri
                     section.uris.line = section.vehicle_journey.route.line.uri
                     section.uris.route = section.vehicle_journey.route.uri
@@ -212,6 +213,7 @@ class Script:
         req.journeys.streetnetwork_params.vls_speed = request_args["vls_speed"]
         req.journeys.streetnetwork_params.vls_distance = request_args["vls_distance"]
         req.journeys.max_duration = request_args["max_duration"]
+        req.journeys.max_transfers = request_args["max_transfers"]
         for forbidden_uri in request_args["forbidden_uris[]"]:
             req.journeys.forbidden_uris.append(forbidden_uri)
         resp = NavitiaManager().send_and_receive(req, region)

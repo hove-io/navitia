@@ -25,7 +25,7 @@ type::idx_t valid_pick_up(type::idx_t idx, type::idx_t end, uint32_t date, uint3
         if (valid_date) {
             type::idx_t st_idx = data.dataRaptor.st_idx_forward[idx];
             const type::StopTime & st = data.pt_data.stop_times[st_idx];
-            if( st.valid_end(reconstructing_path) && st.valid_hour(hour)
+            if( st.valid_end(reconstructing_path) && st.valid_hour(hour, true)
                     && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties) ){
                 return st_idx;
             }
@@ -41,7 +41,7 @@ type::idx_t valid_drop_off(type::idx_t idx, type::idx_t end, uint32_t date, uint
         if (valid_date) {
             type::idx_t st_idx = data.dataRaptor.st_idx_backward[idx];
             const type::StopTime & st = data.pt_data.stop_times[st_idx];
-            if( st.valid_end(!reconstructing_path) && st.valid_hour(hour)
+            if( st.valid_end(!reconstructing_path) && st.valid_hour(hour, false)
                     && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties) ){
                 return st_idx;
             }
@@ -81,7 +81,7 @@ std::pair<type::idx_t, uint32_t>
     // If no trip was found, we look for the next day
     if(first_st == type::invalid_idx){
         idx = begin - data.dataRaptor.departure_times.begin();
-        first_st = valid_pick_up(idx, end_idx, dt.date() + 1, dt.hour(), data, reconstructing_path, required_properties);
+        first_st = valid_pick_up(idx, end_idx, dt.date() + 1, 0, data, reconstructing_path, required_properties);
     }
 
     if(first_st != type::invalid_idx){
@@ -120,7 +120,7 @@ tardiest_stop_time(const type::JourneyPatternPoint & jpp,
     // If no trip was found, we look for the next day
     if(first_st == type::invalid_idx && dt.date() > 0){
         idx = begin - data.dataRaptor.arrival_times.begin();
-        first_st = valid_drop_off(idx, end_idx, dt.date() -1, dt.hour(), data, reconstructing_path, required_properties);
+        first_st = valid_drop_off(idx, end_idx, dt.date() -1, type::DateTime::SECONDS_PER_DAY, data, reconstructing_path, required_properties);
     }
 
     if(first_st != type::invalid_idx){

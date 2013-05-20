@@ -18,8 +18,7 @@ struct VJ {
     types::VehicleJourney * vj;
 
     /// Construit un nouveau vehicle journey
-    VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, bool is_adapted = true, const std::string& uri="");
-    VJ(builder & b, const std::string &network_name, const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, bool is_adapted = true, const std::string& uri="");
+    VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, bool is_adapted = true, const std::string& uri="");   
 
     /// Ajout un nouveau stopTime
     /// Lorsque le depart n'est pas specifié, on suppose que c'est le même qu'à l'arrivée

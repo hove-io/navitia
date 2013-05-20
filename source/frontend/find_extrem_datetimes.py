@@ -23,9 +23,9 @@ def extremes(resp, request):
     if asap_journey.arrival_date_time and asap_journey.departure_date_time:
         minute = timedelta(minutes = 1)
         datetime_after = datetime.strptime(asap_journey.departure_date_time, "%Y%m%dT%H%M%S") + minute
-        before = query_args + "clockwise=true&datetime="+datetime_after.strftime("%Y%m%dT%H%M%S")
+        after = query_args + "clockwise=true&datetime="+datetime_after.strftime("%Y%m%dT%H%M%S")
 
         datetime_before = datetime.strptime(asap_journey.arrival_date_time, "%Y%m%dT%H%M%S") - minute
-        after = query_args +"clockwise=false&datetime="+datetime_before.strftime("%Y%m%dT%H%M%S")
+        before = query_args +"clockwise=false&datetime="+datetime_before.strftime("%Y%m%dT%H%M%S")
 
     return (before,after)

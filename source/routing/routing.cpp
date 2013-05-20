@@ -135,7 +135,7 @@ bool Verification::check_correspondances(Path path) {
         }
     }
 
-    if(stop_point_list.size() == 0)
+    if(stop_point_list.empty())
         return true;
 }
 bool toreturn = true;

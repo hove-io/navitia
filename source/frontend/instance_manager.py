@@ -111,7 +111,7 @@ class NavitiaManager:
                     api_answer = api_func(request, version, region)
                     return render_from_protobuf(api_answer, format, request.args.get("callback"))
                 except InvalidArguments, e:
-                    return Response(e, status=400)
+                    return Response(json.dumps(e.message), status=400,mimetype='application/json;charset=utf-8')
                 except DeadSocketException, e:
                     return Response(e, status=503)
                 except AttributeError:

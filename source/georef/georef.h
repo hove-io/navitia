@@ -162,7 +162,7 @@ class ProjectionData;
 struct Rect{
     double min[2];
     double max[2];
-    Rect() {}
+    Rect() : min{0,0}, max{0,0} {}
 
     Rect(const type::GeographicalCoord & coord) {
         min[0] = coord.lon();
@@ -231,7 +231,7 @@ struct GeoRef {
     std::map<std::string, std::string> synonymes;
     int word_weight; //Pas serialisé : lu dans le fichier ini
 
-    GeoRef(): vls_offset(0), bike_offset(0), car_offset(0){}
+    GeoRef(): vls_offset(0), bike_offset(0), car_offset(0), word_weight(0){}
 
     void init_offset(nt::idx_t);
 

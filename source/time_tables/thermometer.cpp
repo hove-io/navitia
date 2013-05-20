@@ -27,15 +27,15 @@ std::vector<vector_size> pre_compute_lower_bound(const std::vector<vector_idx> &
 
 std::pair<vector_idx, bool> Thermometer::recc(std::vector<vector_idx> &journey_patterns, std::vector<vector_size> &pre_computed_lb, const uint32_t lower_bound_, type::idx_t max_sp, const uint32_t upper_bound_, int depth) {
     ++depth;
-    ++debug_nb_branches;
+    ++nb_branches;
     uint32_t lower_bound = lower_bound_, upper_bound = upper_bound_;
     std::vector<type::idx_t> result;
 
 
     std::vector<type::idx_t> possibilities = generate_possibilities(journey_patterns, pre_computed_lb);
-    bool res_bool = possibilities.size() == 0;
+    bool res_bool = possibilities.empty();
     for(auto poss_spidx : possibilities) {
-        if(debug_nb_branches > 5000 && (result.size() > 0))
+        if(nb_branches > 5000 && !result.empty())
             break;
         int temp1 = std::max(pre_computed_lb[0][poss_spidx], pre_computed_lb[1][poss_spidx]);
         std::vector<uint32_t> to_retail = untail(journey_patterns, poss_spidx, pre_computed_lb);
@@ -49,7 +49,6 @@ std::pair<vector_idx, bool> Thermometer::recc(std::vector<vector_idx> &journey_p
             int temp = std::max(pre_computed_lb[0][poss_spidx], pre_computed_lb[1][poss_spidx]);
             retail(journey_patterns, poss_spidx, to_retail, pre_computed_lb);
             lower_bound = lower_bound - temp + std::max(pre_computed_lb[0][poss_spidx], pre_computed_lb[1][poss_spidx]);
-            upper_cut++;
         } else {
             std::pair<vector_idx, bool> tmp = recc(journey_patterns, pre_computed_lb, lower_bound, max_sp, u, depth);
             int temp = std::max(pre_computed_lb[0][poss_spidx], pre_computed_lb[1][poss_spidx]);
@@ -64,11 +63,8 @@ std::pair<vector_idx, bool> Thermometer::recc(std::vector<vector_idx> &journey_p
                 }
 
                 if(upper_bound == lower_bound) {
-                    ++debug_nb_cuts;
                     break;
                 }
-            } else {
-                upper_cut++;
             }
         }
     }
@@ -93,14 +89,14 @@ uint32_t get_max_sp(const std::vector<vector_idx> &journey_patterns) {
 void Thermometer::generate_thermometer(const std::vector<vector_idx> &journey_patterns) {
 
     uint32_t max_sp = get_max_sp(journey_patterns);
-    debug_nb_branches = 0; debug_nb_cuts = 0; upper_cut = 0;
+    nb_branches = 0;
     std::vector<vector_idx> req;
     if(journey_patterns.size() > 1) {
         for(auto v : journey_patterns) {
             if(req.empty())
                 req.push_back(v);
             else {
-                debug_nb_branches = 0; debug_nb_cuts = 0; upper_cut = 0;
+                nb_branches = 0;
                 req.push_back(v);
                 auto plb = pre_compute_lower_bound(req, max_sp);
                 uint32_t lowerbound = get_lower_bound(plb, max_sp);
@@ -151,23 +147,16 @@ std::vector<uint32_t> Thermometer::match_journey_pattern(const vector_idx &stop_
 vector_idx Thermometer::generate_possibilities(const std::vector<vector_idx> &journey_patterns, std::vector<vector_size> &pre_computed_lb) {
 
     //C'est qu'il n'y a pas de possibilités possibles
-    if(journey_patterns[0].size() == 0 && journey_patterns[1].size() == 0)
+    if(journey_patterns[0].empty() && journey_patterns[1].empty())
         return {};
 
 
     //Si la journey_pattern une est vide, ou bien si le dernier de la journey_pattern n'est pas présent dans la journey_pattern 0, on renvoie la tete de la journey_pattern 1
-    if((journey_patterns[0].size()==0) ||(journey_patterns[1].size() > 0 && pre_computed_lb[0][journey_patterns[1].back()] == 0) ) {
-        ++nb_opt;
+    if(journey_patterns[0].empty() || (!journey_patterns[1].empty() && pre_computed_lb[0][journey_patterns[1].back()] == 0) ) {
         return {journey_patterns[1].back()};
-    } else if((journey_patterns[1].size()==0)||(journey_patterns[0].size() > 0 && pre_computed_lb[1][journey_patterns[0].back()] == 0)) { //Même chose mais avec la journey_pattern 0
-        ++nb_opt;
+    } else if(journey_patterns[1].empty() ||(!journey_patterns[0].empty() && pre_computed_lb[1][journey_patterns[0].back()] == 0)) { //Même chose mais avec la journey_pattern 0
         return {journey_patterns[0].back()};
     }
-
-    vector_idx result;
-
-    std::vector<uint32_t> tmp;
-    std::unordered_map<type::idx_t, size_t> sp_count;
 
 
     auto count1 = std::count(journey_patterns[0].begin(), journey_patterns[0].end(), journey_patterns[1].back());

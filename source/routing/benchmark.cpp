@@ -31,11 +31,9 @@ struct Result {
     int arrival;
     int nb_changes;
 
-    Result(Path path) : duration(path.duration), visited(path.percent_visited), nb_changes(path.nb_changes) {
-        if(path.items.size() > 0)
+    Result(Path path) : duration(path.duration), visited(path.percent_visited), time(-1), arrival(-1), nb_changes(path.nb_changes) {
+        if(!path.items.empty())
             arrival = path.items.back().arrival.hour();
-        else
-            arrival = -1;
     }
 };
 
@@ -71,7 +69,7 @@ int main(int argc, char** argv){
     std::vector<PathDemand> demands;
     for(int i = 0; i < iterations; ++i) {
         std::vector<unsigned int> hours{0, 28800, 36000, 72000, 86000};
-        std::vector<unsigned int> days{7};
+        std::vector<unsigned int> days({7});
         if(data.pt_data.validity_patterns.front().beginning_date.day_of_week().as_number() == 6)
             days.push_back(8);
         else

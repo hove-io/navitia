@@ -502,17 +502,13 @@ struct StopTime {
 
     /** Is this hour valid : only concerns frequency data
      * Does the hour falls inside of the validity period of the frequency
-     * The difficult part is when the validity period goes over midnight */
-    bool valid_hour(uint hour) const {
+     * The difficult part is when the validity period goes over midnight
+    */
+    bool valid_hour(uint hour, bool clockwise) const {
         if(!this->is_frequency())
             return true;
-
-        auto mod_start = this->start_time % DateTime::SECONDS_PER_DAY;
-        auto mod_end = this->end_time % DateTime::SECONDS_PER_DAY;
-        if(mod_start < mod_end && this->start_time <= hour && this->end_time >= hour)
-            return true;
-
-        return mod_start > mod_end && !(this->end_time <= hour && this->start_time >= hour);
+        else
+            return clockwise ? hour <= this->end_time : this->start_time <= hour;
     }
 
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<uint32_t>::max()), end_time(std::numeric_limits<uint32_t>::max()),
@@ -572,7 +568,7 @@ struct EntryPoint {
     /// Construit le type à partir d'une chaîne
     EntryPoint(const std::string & uri);
 
-    EntryPoint() : type(Type_e::Unknown), uri("") {}
+    EntryPoint() : type(Type_e::Unknown), house_number(-1) {}
 };
 
 } } //namespace navitia::type

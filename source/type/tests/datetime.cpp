@@ -84,4 +84,35 @@ BOOST_AUTO_TEST_CASE(moins) {
     BOOST_CHECK_EQUAL(t2, 86400 - 3 * 3600);
 }
 
+BOOST_AUTO_TEST_CASE(freq_stop_time_validation){
+    StopTime st;
+    st.start_time = 8000;
+    st.end_time = 9000;
+    st.properties.set(StopTime::IS_FREQUENCY);
+    BOOST_CHECK(st.valid_hour(7999, true));
+    BOOST_CHECK(st.valid_hour(8000, true));
+    BOOST_CHECK(st.valid_hour(8500, true));
+    BOOST_CHECK(st.valid_hour(9000, true));
+    BOOST_CHECK(!st.valid_hour(9001, true));
+    BOOST_CHECK(!st.valid_hour(7999, false));
+    BOOST_CHECK(st.valid_hour(8000, false));
+    BOOST_CHECK(st.valid_hour(8500, false));
+    BOOST_CHECK(st.valid_hour(9000, false));
+    BOOST_CHECK(st.valid_hour(9001, false));
 
+    st.start_time = 23 * 3600;
+    st.end_time = 26 * 3600;
+    BOOST_CHECK(st.valid_hour(3600, true));
+    BOOST_CHECK(st.valid_hour(22*3600, true));
+    BOOST_CHECK(!st.valid_hour(22*3600 + 24*3600, true));
+    BOOST_CHECK(st.valid_hour(23*3600, true));
+    BOOST_CHECK(st.valid_hour(25*3600, true));
+    BOOST_CHECK(!st.valid_hour(27*3600, true));
+
+    BOOST_CHECK(!st.valid_hour(3600, false));
+    BOOST_CHECK(!st.valid_hour(22*3600, false));
+    BOOST_CHECK(st.valid_hour(22*3600 + 24*3600, false));
+    BOOST_CHECK(st.valid_hour(23*3600, false));
+    BOOST_CHECK(st.valid_hour(25*3600, false));
+    BOOST_CHECK(st.valid_hour(27*3600, false));
+}

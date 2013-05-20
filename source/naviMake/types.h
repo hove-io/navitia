@@ -184,8 +184,8 @@ struct VehicleJourney: public Header, Nameable, hasProperties{
     VehicleJourney* theoric_vehicle_journey;
 
 
-    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), wheelchair_boarding(false), 
-    validity_pattern(NULL), is_adapted(false), adapted_validity_pattern(NULL), theoric_vehicle_journey(NULL){}
+    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), tmp_line(NULL), wheelchair_boarding(false),
+    validity_pattern(NULL), first_stop_time(NULL), is_adapted(false), adapted_validity_pattern(NULL), theoric_vehicle_journey(NULL){}
 
     navitia::type::VehicleJourney get_navitia_type() const;
 
@@ -284,7 +284,7 @@ struct StopTime {
     uint32_t local_traffic_zone;
 
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<int>::max()), end_time(std::numeric_limits<int>::max()),
-        headway_secs(std::numeric_limits<int>::max()), vehicle_journey(NULL), journey_pattern_point(NULL), order(0),
+        headway_secs(std::numeric_limits<int>::max()), vehicle_journey(NULL), journey_pattern_point(NULL), tmp_stop_point(NULL), order(0),
         ODT(false), pick_up_allowed(false), drop_off_allowed(false), is_frequency(false), wheelchair_boarding(false),
                 local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
 

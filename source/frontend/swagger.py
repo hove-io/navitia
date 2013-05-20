@@ -107,8 +107,8 @@ def api_doc(apis, api = None) :
                 params_universal = copy.deepcopy(params)
                 i = 0
                 for param in params_universal : 
-                    if param['dataType'] == convertType(entrypoint):
-                        param['description'] += " (can only be a coord)"
+                    #if param['dataType'] == convertType(entrypoint):
+                    #    param['description'] += " (can only be a coord)"
                     if param['name'] == 'region':
                         del params_universal[i]
                     i+=1                
