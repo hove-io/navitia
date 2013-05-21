@@ -107,7 +107,7 @@ public:
     POI(): weight(0), poitype_idx(type::invalid_idx){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar &idx & uri & idx &name & weight & coord & admin_list & poitype_idx;
+        ar &idx & uri &name & weight & coord & admin_list & poitype_idx;
     }
 
 private:
