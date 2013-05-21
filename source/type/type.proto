@@ -50,7 +50,6 @@ message GeographicalCoord {
 
 
 message AdministrativeRegion {
-    optional string id = 1;
     optional string uri = 2;
     optional string name  = 3;
     optional string zip_code = 4;
@@ -126,7 +125,6 @@ message StopTime {
 
 
 message VehicleJourney {
-    optional string id = 1;
     optional string name = 3;
     optional string uri = 4;
     repeated StopTime stop_times = 6;
@@ -142,7 +140,6 @@ message VehicleJourney {
 }
 
 message JourneyPatternPoint{
-    optional string id = 1;
     optional string uri = 3;
     optional int32 order = 4;
     optional StopPoint stop_point = 5;
@@ -153,7 +150,6 @@ message JourneyPatternPoint{
 
 
 message Poi {
-    optional string id = 1;
     optional string uri = 3;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
@@ -161,21 +157,18 @@ message Poi {
 }
 
 message Network {
-    optional string id = 1;
     optional string uri = 3;
     optional string name = 4;
     repeated Line lines = 5;
 }
 
 message PhysicalMode {
-    optional string id = 1;
     optional string uri = 3;
     optional string name = 4;
     repeated CommercialMode commercial_modes = 5;
 }
 
 message CommercialMode {
-    optional string id = 1;
     optional string uri = 3;
     optional string name = 4;
     repeated PhysicalMode physical_modes = 5;
@@ -188,13 +181,11 @@ message Connection {
 }
 
 message Company {
-    optional string id = 1;
     optional string uri = 3;
     optional string name = 4;
 }
 
 message Address {
-    optional string id = 1;
     optional string uri = 3;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
