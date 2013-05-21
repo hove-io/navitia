@@ -1,5 +1,5 @@
 #include "get_stop_times.h"
-#include "routing/best_trip.h"
+#include "routing/best_stoptime.h"
 #include "type/pb_converter.h"
 namespace navitia { namespace timetables {
 

@@ -2,7 +2,7 @@
 #include <unordered_map>
 #include "type/data.h"
 #include "type/datetime.h"
-#include "best_trip.h"
+#include "best_stoptime.h"
 
 namespace navitia { namespace routing {
 

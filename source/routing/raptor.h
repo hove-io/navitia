@@ -8,7 +8,7 @@
 #include "utils/timer.h"
 #include "boost/dynamic_bitset.hpp"
 #include "dataraptor.h"
-#include "best_trip.h"
+#include "best_stoptime.h"
 #include "raptor_path.h"
 #include "raptor_init.h"
 #include "raptor_utils.h"
