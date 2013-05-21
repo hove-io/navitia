@@ -375,6 +375,13 @@ void create_pb(const type::EntryPoint &ori_dest, const navitia::georef::Path& pa
     }
 }
 
+void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::PoiType* poi_type, int,
+        const pt::ptime&, const pt::time_period&) {
+    navitia::georef::POIType geo_poi_type = data.geo_ref.poitypes.at(idx);
+    poi_type->set_name(geo_poi_type.name);
+    poi_type->set_uri(geo_poi_type.uri);
+}
+
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Poi* poi, int max_depth,
         const pt::ptime& now, const pt::time_period& action_period){
     navitia::georef::POI geopoi = data.geo_ref.pois.at(idx);
@@ -386,6 +393,7 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Poi* poi
     }
 
     if(max_depth > 0){
+        fill_pb_object(geopoi.poitype_idx, data, poi->mutable_poi_type(), max_depth-1, now, action_period);
         for(nt::idx_t idx : geopoi.admin_list){
             fill_pb_object(idx, data,  poi->add_administrative_regions(), max_depth-1, now, action_period);
         }

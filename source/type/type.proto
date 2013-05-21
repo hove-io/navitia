@@ -148,11 +148,16 @@ message JourneyPatternPoint{
     repeated Message messages = 7;
 }
 
+message PoiType {
+    optional string uri = 1;
+    optional string name = 2;
+}
 
 message Poi {
     optional string uri = 3;
     optional string name = 4;
     optional GeographicalCoord coord = 6;
+    optional PoiType poi_type = 7;
     repeated AdministrativeRegion administrative_regions = 10;
 }
 
