@@ -199,6 +199,14 @@ class Apis:
             "arguments" : Arguments.ptrefArguments,
             "description" :"Retrieves all the vehicle journeys filtered with filter" ,
             "order" : 5},
+        "pois" : {
+            "arguments" : Arguments.ptrefArguments,
+            "description" :"Retrieves all the pois filtered with filter" ,
+            "order" : 5},
+        "poi_types" : {
+            "arguments" : Arguments.ptrefArguments,
+            "description" :"Retrieves all the poi_types filtered with filter" ,
+            "order" : 5},
         "journeys" : {
             "arguments" : Arguments.journeyArguments,
             "description" : "Computes and retrieves a journey",

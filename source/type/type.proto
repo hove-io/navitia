@@ -17,7 +17,8 @@ enum NavitiaType {
     ADDRESS = 22;
     ROUTE = 23;
     POI = 24;
-    ADMIN = 25;
+    POITYPE = 25;
+    ADMIN = 26;
 }
 
 

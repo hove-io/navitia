@@ -259,17 +259,19 @@ message Response{
     repeated JourneyPatternPoint journey_pattern_points = 25;
     repeated Company companies = 26;
     repeated Route routes = 27;
+    repeated Poi pois = 28;
+    repeated PoiType poi_types = 29;
     
-    repeated Journey journeys = 28;
-    optional ResponseType response_type = 29;
-    optional string prev = 30;
-    optional string next = 31;
+    repeated Journey journeys = 30;
+    optional ResponseType response_type = 31;
+    optional string prev = 32;
+    optional string next = 33;
     
-    optional StopsSchedule stops_schedule = 32;
-    repeated RouteSchedule route_schedules = 33;
-    repeated DepartureBoard departure_boards = 34;
-    repeated Passage next_departures = 35;
-    repeated Passage next_arrivals = 36;
+    optional StopsSchedule stops_schedule = 34;
+    repeated RouteSchedule route_schedules = 35;
+    repeated DepartureBoard departure_boards = 36;
+    repeated Passage next_departures = 37;
+    repeated Passage next_arrivals = 38;
     optional Load load = 46;
     optional Isochrone isochrone = 47;
     optional Metadatas metadatas = 48;

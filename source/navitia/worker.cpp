@@ -31,7 +31,8 @@ nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     case pbnavitia::JOURNEY_PATTERN_POINT: return nt::Type_e::JourneyPatternPoint; break;
     case pbnavitia::COMPANY: return nt::Type_e::Company; break;
     case pbnavitia::VEHICLE_JOURNEY: return nt::Type_e::VehicleJourney; break;
-	case pbnavitia::POI: return nt::Type_e::POI; break;
+    case pbnavitia::POI: return nt::Type_e::POI; break;
+    case pbnavitia::POITYPE: return nt::Type_e::POIType; break;
     case pbnavitia::ADMIN: return nt::Type_e::Admin; break;
     default: return nt::Type_e::Unknown;
     }

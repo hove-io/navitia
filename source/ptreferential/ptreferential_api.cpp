@@ -16,6 +16,8 @@ pbnavitia::Response extract_data(const type::Data & data, type::Type_e requested
         switch(requested_type){
 #define FILL_PB_OBJECT(type_name, collection_name) case type::Type_e::type_name: fill_pb_object(idx, data, result.add_##collection_name(), depth, today); break;
         ITERATE_NAVITIA_PT_TYPES(FILL_PB_OBJECT)
+        case Type_e::POI: fill_pb_object(idx, data, result.add_pois(), depth); break;
+        case Type_e::POIType: fill_pb_object(idx, data, result.add_poi_types()); break;
         default: break;
         }
     }
@@ -30,6 +32,8 @@ pbnavitia::Response query_pb(type::Type_e requested_type, std::string request, c
     } catch(const parsing_error &parse_error) {
         pb_response.set_error(parse_error.more);
         return pb_response;
+    } catch(const ptref_error &pt_error) {
+        pb_response.set_error(pt_error.more);
     }
 
     return extract_data(data, requested_type, final_indexes, depth);

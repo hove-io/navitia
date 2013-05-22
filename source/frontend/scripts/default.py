@@ -295,3 +295,11 @@ class Script:
     @validation_decorator
     def vehicle_journeys(self, request_args, version, region):
         return self.__on_ptref("vehicle_journeys", type_pb2.VEHICLE_JOURNEY, self.v.arguments, version, region)
+    
+    @validation_decorator
+    def pois(self, request_args, version, region):
+        return self.__on_ptref("pois", type_pb2.POI, self.v.arguments, version, region)
+    
+    @validation_decorator
+    def poi_types(self, request_args, version, region):
+        return self.__on_ptref("poi_types", type_pb2.POITYPE, self.v.arguments, version, region)

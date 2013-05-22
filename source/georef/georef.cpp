@@ -365,6 +365,13 @@ void GeoRef::build_proximity_list(){
         }
     }
     pl.build();
+
+    poi_proximity_list.clear();
+
+    for(auto &poi : pois) {
+        poi_proximity_list.add(poi.coord, poi.idx);
+    }
+    poi_proximity_list.build();
 }
 
 void GeoRef::build_autocomplete_list(){
@@ -563,4 +570,27 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const p
 //        return best;
     return nearest_edge(coordinates, u);
 }
+
+std::vector<type::idx_t> POI::get(type::Type_e type, const GeoRef &) const {
+    switch(type) {
+    case type::Type_e::POIType : return {poitype_idx}; break;
+    default : return {};
+    }
+}
+
+std::vector<type::idx_t> POIType::get(type::Type_e type, const GeoRef & data) const {
+    std::vector<type::idx_t> result;
+    switch(type) {
+    case type::Type_e::POI:
+        for(auto &elem : data.pois) {
+            if(elem.poitype_idx == idx) {
+                result.push_back(elem.idx);
+            }
+        }
+        break;
+    default : break;
+    }
+    return result;
+}
+
 }}

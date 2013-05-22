@@ -47,22 +47,23 @@ enum class Type_e {
     VehicleJourney = 3,
     StopPoint = 4,
     StopArea = 5,
-    Network = 7,
-    PhysicalMode = 8,
-    CommercialMode = 9,
-    Connection = 11,
-    JourneyPatternPoint = 12,
-    Company = 15,   
-    Route = 23,
-    POI = 24,
+    Network = 6,
+    PhysicalMode = 7,
+    CommercialMode = 8,
+    Connection = 9,
+    JourneyPatternPoint = 10,
+    Company = 11,   
+    Route = 12,
+    POI = 13,
 
     // Objets spéciaux qui ne font pas partie du référentiel TC
-    eStopTime = 6,
-    Address = 22,
-    Coord = 20,
-    Unknown = 18,
-    Way = 19,
-    Admin=21
+    eStopTime = 14,
+    Address = 15,
+    Coord = 16,
+    Unknown = 17,
+    Way = 18,
+    Admin=19,
+    POIType=20
 };
 
 enum class Mode_e{
