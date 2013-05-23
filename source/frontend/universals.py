@@ -1,6 +1,6 @@
 import re
 from apis import Apis
-from werkzeug import Response
+from error import generate_error
 from instance_manager import NavitiaManager
 
 
@@ -22,7 +22,7 @@ def universal_journeys(api, request, version, format):
     if region:
         return NavitiaManager().dispatch(request, version, region, api, format)
     else:
-        return Response("Journeys without specifying a region only accept coordinates as origin and destination", status=400)
+        return generate_error("Unable to deduce the region from the uri. Is it a valid coordinate?", status=404)
 
 def on_universal_journeys(api):
     return lambda request, version, format: universal_journeys(api, request, version, format)
@@ -32,5 +32,5 @@ def on_universal_places_nearby(request, version, format):
     if region:
         return NavitiaManager().dispatch(request, version, region, "places_nearby", format)
     else:
-        return Response("Unable to deduce the region from the uri. Is it a valid coordinate?", status=404)
+        return generate_error("Unable to deduce the region from the uri. Is it a valid coordinate?", status=404)
    

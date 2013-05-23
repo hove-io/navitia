@@ -3,6 +3,7 @@ import json
 import dict2xml
 from protobuf_to_dict import protobuf_to_dict
 from werkzeug.wrappers import Response
+from error import generate_error
 
 
 def render(dico, format, callback):
@@ -17,9 +18,9 @@ def render(dico, format, callback):
     elif format == 'xml':
         result = Response('<?xml version="1.0" encoding="UTF-8"?>\n'+ dict2xml.dict2xml(dico, wrap="Response"), mimetype='application/xml;charset=utf-8')
     elif format == 'pb':
-        result = Response('Protocol buffer not supported for this request', status=404)
+        result = generate_error('Protocol buffer not supported for this request', status=404)
     else:
-        result = Response("Unknown file format format. Please choose .json, .txt, .xml or .pb", mimetype='text/plain;charset=utf-8', status=404)
+        result = generate_error("Unknown file format format. Please choose .json, .txt, .xml or .pb", status=404)
     result.headers.add('Access-Control-Allow-Origin', '*')
     return result
 
