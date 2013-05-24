@@ -50,21 +50,21 @@ void dataRAPTOR::load(const type::PT_Data &data)
     footpath_index_forward.resize(data.stop_points.size());
     footpath_index_backward.resize(data.stop_points.size());
     for(type::StopPoint sp : data.stop_points) {
+        footpath_index_forward[sp.idx].first = foot_path_forward.size();
+        footpath_index_backward[sp.idx].first = foot_path_backward.size();
+        int size_forward = 0, size_backward = 0;
+        for(auto conn : footpath_temp_forward[sp.idx]) {
+            foot_path_forward.push_back(conn.second);
+            ++size_forward;
+        }
+        for(auto conn : footpath_temp_backward[sp.idx]) {
+            foot_path_backward.push_back(conn.second);
+            ++size_backward;
+        }
+
+
         if(sp.stop_area_idx != type::invalid_idx) {
             type::StopArea sa = data.stop_areas[sp.stop_area_idx];
-            footpath_index_forward[sp.idx].first = foot_path_forward.size();
-            footpath_index_backward[sp.idx].first = foot_path_backward.size();
-            int size_forward = 0, size_backward = 0;
-            for(auto conn : footpath_temp_forward[sp.idx]) {
-                foot_path_forward.push_back(conn.second);
-                ++size_forward;
-            }
-            for(auto conn : footpath_temp_backward[sp.idx]) {
-                foot_path_backward.push_back(conn.second);
-                ++size_backward;
-            }
-
-
             for(type::idx_t spidx2 : sa.stop_point_list) {
                 if(sp.idx != spidx2) {
                     type::Connection c;
