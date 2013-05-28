@@ -251,11 +251,11 @@ class Apis:
 
 def validation_decorator(func):
     api = func.__name__
-    def wrapped(self, request_args, version, region):
+    def wrapped(self, request_args, region):
         self.v = validate_arguments(request_args, self.apis[api]["arguments"])
         if not self.v.valid:
             raise InvalidArguments(self.v.details)
         else:
-            return func(self, request_args, version, region)
+            return func(self, request_args, region)
     return wrapped
 

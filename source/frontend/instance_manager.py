@@ -100,14 +100,12 @@ class NavitiaManager:
         self.thread = Thread(target = self.thread_ping)
         self.thread.start()
 
-    def dispatch(self, request, version, region, api, format):
-        if version != "v0":
-            return generate_error("Unknown version: " + version, status=404)
+    def dispatch(self, request, region, api, format):
         if region in self.instances:
             if api in self.instances[region].script.apis:
                 try:
                     api_func = getattr(self.instances[region].script, api)
-                    api_answer = api_func(request, version, region)
+                    api_answer = api_func(request, region)
                     return render_from_protobuf(api_answer, format, request.args.get("callback"))
                 except InvalidArguments, e:
                     return generate_error(e.message)

@@ -17,20 +17,20 @@ def find_region(uri):
     return region
 
 
-def universal_journeys(api, request, version, format):
+def universal_journeys(api, request, format):
     region = find_region(request.args.get("origin", ""))
     if region:
-        return NavitiaManager().dispatch(request, version, region, api, format)
+        return NavitiaManager().dispatch(request, region, api, format)
     else:
         return generate_error("Unable to deduce the region from the uri. Is it a valid coordinate?", status=404)
 
 def on_universal_journeys(api):
-    return lambda request, version, format: universal_journeys(api, request, version, format)
+    return lambda request, format: universal_journeys(api, request, format)
 
-def on_universal_places_nearby(request, version, format):
+def on_universal_places_nearby(request, format):
     region = find_region(request.args.get("uri", ""))
     if region:
-        return NavitiaManager().dispatch(request, version, region, "places_nearby", format)
+        return NavitiaManager().dispatch(request, region, "places_nearby", format)
     else:
         return generate_error("Unable to deduce the region from the uri. Is it a valid coordinate?", status=404)
    
