@@ -31,7 +31,8 @@ nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     case pbnavitia::JOURNEY_PATTERN_POINT: return nt::Type_e::JourneyPatternPoint; break;
     case pbnavitia::COMPANY: return nt::Type_e::Company; break;
     case pbnavitia::VEHICLE_JOURNEY: return nt::Type_e::VehicleJourney; break;
-	case pbnavitia::POI: return nt::Type_e::POI; break;
+    case pbnavitia::POI: return nt::Type_e::POI; break;
+    case pbnavitia::POITYPE: return nt::Type_e::POIType; break;
     case pbnavitia::ADMIN: return nt::Type_e::Admin; break;
     default: return nt::Type_e::Unknown;
     }
@@ -188,6 +189,11 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
             result.distance = request.car_distance();
             result.speed = request.car_speed();
             break;
+        case type::Mode_e::Vls:
+            result.offset = data.geo_ref.vls_offset;
+            result.distance = request.vls_distance();
+            result.speed = request.vls_speed();
+            break;
         default:
             result.offset = 0;
             result.distance = request.walking_distance();
@@ -235,11 +241,11 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     if(api != pbnavitia::ISOCHRONE){
         return routing::make_response(*calculateur, origin, destination, datetimes,
                                               request.clockwise(), request.streetnetwork_params().walking_speed(), request.streetnetwork_params().walking_distance(), /*request.wheelchair()*/false,
-                                              forbidden, *street_network_worker, request.max_duration());
+                                              forbidden, *street_network_worker, request.max_duration(), request.max_transfers());
     } else {
         return navitia::routing::make_isochrone(*calculateur, origin, request.datetimes(0),
                                                         request.clockwise(), request.streetnetwork_params().walking_speed(), request.streetnetwork_params().walking_distance(), /*request.wheelchair()*/false,
-                                                        forbidden, *street_network_worker, request.max_duration());
+                                                forbidden, *street_network_worker, request.max_duration(), request.max_transfers());
     }
 }
 

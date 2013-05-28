@@ -5,7 +5,7 @@ import signal
 import os
 from werkzeug.wrappers import Request, Response
 from werkzeug.wsgi import responder
-from werkzeug.routing import Map, Rule
+from werkzeug.routing import Map, Rule, Submount
 from wsgiref.simple_server import make_server
 
 from validate import *
@@ -26,13 +26,13 @@ def on_summary_doc(request) :
 def on_doc(request, api):
     return render(api_doc(Apis().apis_all, api), 'json', request.args.get('callback'))
 
-def on_index(request, version = None, region = None ):
+def on_index(request, region = None ):
     path = os.path.join(os.path.dirname(__file__), 'static','lost.html')
     file = open(path, 'r')
     return Response(file.read(), mimetype='text/html;charset=utf-8')
 
 
-def on_regions(request, version, format):
+def on_regions(request, format):
     response = {'regions': []}
     for region in NavitiaManager().instances.keys() : 
         req = request_pb2.Request()
@@ -50,18 +50,23 @@ def on_regions(request, version, format):
 
     return render(response, format,  request.args.get('callback'))
 
+v0_rules = [
+    Rule('/', endpoint=on_index),
+    Rule('/regions.<format>', endpoint = on_regions),
+    Rule('/journeys.<format>', endpoint = on_universal_journeys("journeys")),
+    Rule('/isochrone.<format>', endpoint = on_universal_journeys("isochrone")),
+    Rule('/places_nearby.<format>', endpoint = on_universal_places_nearby),
+    Rule('/<region>/', endpoint = on_index),
+    Rule('/<region>/<api>.<format>', endpoint = NavitiaManager().dispatch),
+    ]
+
 url_map = Map([
     Rule('/', endpoint=on_index),
-    Rule('/<version>/', endpoint=on_index),
-    Rule('/<version>/regions.<format>', endpoint = on_regions),
-    Rule('/<version>/journeys.<format>', endpoint = on_universal_journeys("journeys")),
-    Rule('/<version>/isochrone.<format>', endpoint = on_universal_journeys("isochrone")),
-    Rule('/<version>/places_nearby.<format>', endpoint = on_universal_places_nearby),
-    Rule('/<version>/<region>/', endpoint = on_index),
-    Rule('/<version>/<region>/<api>.<format>', endpoint = NavitiaManager().dispatch),
     Rule('/doc.json', endpoint = on_summary_doc),
-    Rule('/doc.json/<api>', endpoint = on_doc)
-    ])
+    Rule('/doc.json/<api>', endpoint = on_doc),
+    Submount('/v0', v0_rules)
+    ]
+    )
 
 
 def kill_thread(signal, frame):

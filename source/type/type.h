@@ -47,28 +47,30 @@ enum class Type_e {
     VehicleJourney = 3,
     StopPoint = 4,
     StopArea = 5,
-    Network = 7,
-    PhysicalMode = 8,
-    CommercialMode = 9,
-    Connection = 11,
-    JourneyPatternPoint = 12,
-    Company = 15,   
-    Route = 23,
-    POI = 24,
+    Network = 6,
+    PhysicalMode = 7,
+    CommercialMode = 8,
+    Connection = 9,
+    JourneyPatternPoint = 10,
+    Company = 11,   
+    Route = 12,
+    POI = 13,
 
     // Objets spéciaux qui ne font pas partie du référentiel TC
-    eStopTime = 6,
-    Address = 22,
-    Coord = 20,
-    Unknown = 18,
-    Way = 19,
-    Admin=21
+    eStopTime = 14,
+    Address = 15,
+    Coord = 16,
+    Unknown = 17,
+    Way = 18,
+    Admin=19,
+    POIType=20
 };
 
 enum class Mode_e{
     Walking = 0,    // Marche à pied
     Bike = 1,       // Vélo
-    Car = 2         // Voiture
+    Car = 2,        // Voiture
+    Vls = 3         // Vls
 };
 
 struct PT_Data;
@@ -188,6 +190,9 @@ struct GeographicalCoord{
 
     bool is_initialized() const {
         return distance_to(GeographicalCoord()) > 1;
+    }
+    bool is_default_coord()const{
+        return ((this->lat() == 0) || (this->lon() == 0));
     }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -498,17 +503,13 @@ struct StopTime {
 
     /** Is this hour valid : only concerns frequency data
      * Does the hour falls inside of the validity period of the frequency
-     * The difficult part is when the validity period goes over midnight */
-    bool valid_hour(uint hour) const {
+     * The difficult part is when the validity period goes over midnight
+    */
+    bool valid_hour(uint hour, bool clockwise) const {
         if(!this->is_frequency())
             return true;
-
-        auto mod_start = this->start_time % DateTime::SECONDS_PER_DAY;
-        auto mod_end = this->end_time % DateTime::SECONDS_PER_DAY;
-        if(mod_start < mod_end && this->start_time <= hour && this->end_time >= hour)
-            return true;
-
-        return mod_start > mod_end && !(this->end_time <= hour && this->start_time >= hour);
+        else
+            return clockwise ? hour <= this->end_time : this->start_time <= hour;
     }
 
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<uint32_t>::max()), end_time(std::numeric_limits<uint32_t>::max()),

@@ -2,7 +2,6 @@
 #include "pt_data.h"
 #include <boost/serialization/version.hpp>
 #include <boost/thread/shared_mutex.hpp>
-//#include "street_network/types.h"
 #include "georef/georef.h"
 #include "utils/logger.h"
 #include "utils/configuration.h"
@@ -42,6 +41,28 @@ public:
     /// Données précalculées pour le raptor
     routing::dataRAPTOR dataRaptor;
 
+    /** Retourne la structure de données associée au type */
+    template<typename T>  std::vector<T> & get_data();
+    template<typename T>  std::vector<T> const & get_data() const;
+
+    /** Retourne tous les indices d'un type donné
+      *
+      * Concrètement, on a un tableau avec des éléments allant de 0 à (n-1) où n est le nombre d'éléments
+      */
+    std::vector<idx_t> get_all_index(Type_e type) const;
+
+
+    /** Étant donné une liste d'indexes pointant vers source,
+      * retourne une liste d'indexes pointant vers target
+      */
+    std::vector<idx_t> get_target_by_source(Type_e source, Type_e target, std::vector<idx_t> source_idx) const;
+
+    /** Étant donné un index pointant vers source,
+      * retourne une liste d'indexes pointant vers target
+      */
+    std::vector<idx_t> get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const ;
+    
+    
     /// Fixe les villes des voiries du filaire
     // les admins des objets
     void set_admins();
@@ -108,6 +129,7 @@ public:
     void build_raptor();
 
     Data& operator=(Data&& other);
+
 
 private:
     /** Charge les données binaires compressées en LZ4
