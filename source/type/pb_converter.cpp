@@ -303,13 +303,18 @@ void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &p
         pbnavitia::Place* place;
         navitia::georef::Way way;
         type::GeographicalCoord coord;
+        int house_number;
 
         if(path.path_items.size() > 1){
 
             way = data.geo_ref.ways[path.path_items.front().way_idx];
             coord = path.coordinates.front();
             place = section->mutable_origin();
-            fill_pb_object(way.idx, data, place->mutable_address(), way.nearest_number(coord),coord , max_depth, now, action_period);
+            if(ori_dest.type != type::Type_e::Address)
+                house_number = way.nearest_number(coord);
+            else
+                house_number = ori_dest.house_number;
+            fill_pb_object(way.idx, data, place->mutable_address(), house_number, coord, max_depth, now, action_period);
             if(place->address().has_house_number())
                 place->set_name(boost::lexical_cast<std::string>(place->address().house_number()) + ", ");
             place->set_name(place->name() + place->address().name());
@@ -361,8 +366,8 @@ void create_pb(const type::EntryPoint &ori_dest, const navitia::georef::Path& pa
         }else{
             std::cout << "Way étrange : " << item.way_idx << std::endl;
         }
-
     }
+
     for(auto coord : path.coordinates){
         if(coord.is_initialized()) {
             pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
