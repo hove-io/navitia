@@ -100,15 +100,13 @@ class NavitiaManager:
         self.thread = Thread(target = self.thread_ping)
         self.thread.start()
 
-    def dispatch(self, request, region, api, format):
+    def dispatch(self, request, region, api):
         if region in self.instances:
             if api in self.instances[region].script.apis:
                 try:
                     api_func = getattr(self.instances[region].script, api)
                     api_answer = api_func(request, region)
-                    return render_from_protobuf(api_answer, format, request.args.get("callback"))
-                except InvalidArguments, e:
-                    return generate_error(e.message)
+                    return api_func(request, region)
                 except DeadSocketException, e:
                     return generate_error(e.message, status=503)
                 except AttributeError:

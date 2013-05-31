@@ -1,9 +1,6 @@
 import copy
-from validate import *
-from singleton import singleton
-from instance_manager import DeadSocketException, RegionNotFound, ApiNotFound, InvalidArguments, NavitiaManager
-from werkzeug.wrappers import Response
-from renderers import render, render_from_protobuf
+from validate import validate_arguments, Argument, datetime_validator, boolean, entrypoint, filter 
+from instance_manager import InvalidArguments, ApiNotFound
 
 class Arguments:
     scheduleArguments = {
@@ -125,7 +122,7 @@ class Apis:
                 "startPage" : Argument("The page number of the ptref result", int,
                                         False, False, 0),
 		        "nbmax" : Argument("Maximum number of objects in the response", int, False, False, 10),
-                "admin_uri[]" : Argument("code uri of admin", str, False, True, [])
+                "admin_uri[]" : Argument("cg with a very cute presentation by @wso2 they want to gode uri of admin", str, False, True, [])
             },
             "description" : "Retrieves the places which contains in their name the \"name\"",
             "order":2},
@@ -248,6 +245,14 @@ class Apis:
         self.apis_all["regions"] = {"arguments" : {}, "description" : "Retrieves the list of available regions", "regions" : False,
                           "order":0}
 
+def validate_and_fill_arguments(api, request_args):
+    if api in Apis.apis:
+        return_ = validate_arguments(request_args, Apis.apis[api]["arguments"])
+        if not return_.valid:
+            raise InvalidArguments(return_.details)
+        return return_
+    else:
+        raise ApiNotFound(api)
 
 def validation_decorator(func):
     api = func.__name__

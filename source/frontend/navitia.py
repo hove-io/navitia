@@ -17,6 +17,8 @@ from apis import *
 from renderers import render
 from universals import *
 from protobuf_to_dict import protobuf_to_dict
+import interfaces.input_v1 
+import interfaces.input_v0
 
 import request_pb2, type_pb2
 
@@ -26,45 +28,35 @@ def on_summary_doc(request) :
 def on_doc(request, api):
     return render(api_doc(Apis().apis_all, api), 'json', request.args.get('callback'))
 
-def on_index(request, region = None ):
-    path = os.path.join(os.path.dirname(__file__), 'static','lost.html')
-    file = open(path, 'r')
-    return Response(file.read(), mimetype='text/html;charset=utf-8')
-
-
-def on_regions(request, format):
-    response = {'regions': []}
-    for region in NavitiaManager().instances.keys() : 
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.METADATAS
-        try:
-            resp = NavitiaManager().send_and_receive(req, region)
-            resp_dict = protobuf_to_dict(resp) 
-            if 'metadatas' in resp_dict.keys():
-                resp_dict['metadatas']['region_id'] = region                
-                response['regions'].append(resp_dict['metadatas'])
-        except DeadSocketException :
-            response['regions'].append({"region_id" : region, "status" : "not running"})
-        except RegionNotFound:
-            response['regions'].append({"region_id" : region, "status" : "not found"})
-
-    return render(response, format,  request.args.get('callback'))
 
 v0_rules = [
-    Rule('/', endpoint=on_index),
-    Rule('/regions.<format>', endpoint = on_regions),
-    Rule('/journeys.<format>', endpoint = on_universal_journeys("journeys")),
-    Rule('/isochrone.<format>', endpoint = on_universal_journeys("isochrone")),
-    Rule('/places_nearby.<format>', endpoint = on_universal_places_nearby),
-    Rule('/<region>/', endpoint = on_index),
-    Rule('/<region>/<api>.<format>', endpoint = NavitiaManager().dispatch),
+    Rule('/', endpoint=interfaces.input_v0.on_index),
+    Rule('/regions.<format>', endpoint = interfaces.input_v0.on_regions),
+    Rule('/journeys.<format>', endpoint = interfaces.input_v0.on_universal_journeys("journeys")),
+    Rule('/isochrone.<format>', endpoint = interfaces.input_v0.on_universal_journeys("isochrone")),
+    Rule('/places_nearby.<format>', endpoint = interfaces.input_v0.on_universal_places_nearby),
+    Rule('/<region>/', endpoint = interfaces.input_v0.on_index),
+    Rule('/<region>/<api>.<format>', endpoint =  interfaces.input_v0.on_api),
+    ]
+
+v1_rules = [
+    Rule('/', endpoint=interfaces.input_v1.regions),
+    Rule('/<path:uri>', endpoint=interfaces.input_v1.uri),
+    Rule('/<path:uri>/places', endpoint=interfaces.input_v1.places),
+    Rule('/<path:uri1>/journeys', endpoint=interfaces.input_v1.journeys),
+    Rule('/<path:uri1>/schedules', endpoint=interfaces.input_v1.schedules),
+    Rule('/<path:uri1>/<any(stop_areas,stop_points,lines):resource_type>/nearby', endpoint=interfaces.input_v1.nearby),
+    Rule('/<path:uri1>/journeys/<path:uri2>', endpoint=interfaces.input_v1.journeys),
+    Rule('/<path:uri1>/schedules/<path:uri2>', endpoint=interfaces.input_v1.schedules),
+    Rule('/<path:uri1>/nearby/<path:uri2>', endpoint=interfaces.input_v1.nearby),
     ]
 
 url_map = Map([
-    Rule('/', endpoint=on_index),
+    Rule('/', endpoint=interfaces.input_v0.on_index),
     Rule('/doc.json', endpoint = on_summary_doc),
     Rule('/doc.json/<api>', endpoint = on_doc),
-    Submount('/v0', v0_rules)
+    Submount('/v0', v0_rules),
+    Submount('/v1', v1_rules)
     ]
     )
 
