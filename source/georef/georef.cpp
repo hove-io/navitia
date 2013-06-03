@@ -413,16 +413,20 @@ void GeoRef::build_autocomplete_list(){
 }
 
 
-/** Chargement de la liste poitype_map : mappage entre codes externes et idx des POITypes*/
-void GeoRef::build_poitypes(){
-   for(auto ptype : poitypes){
+/** Normalisation des codes externes des PoiType*/
+void GeoRef::normalize_extcode_poitypes(){
+   this->poitype_map.clear();
+   for(POIType & ptype : poitypes){
+       ptype.uri = "poi_type:" + ptype.uri;
        this->poitype_map[ptype.uri] = ptype.idx;
    }
 }
 
-/** Chargement de la liste poi_map : mappage entre codes externes et idx des POIs*/
-void GeoRef::build_pois(){
-   for(auto poi : pois){
+/** Normalisation des codes externes des poi*/
+void GeoRef::normalize_extcode_pois(){
+   this->poi_map.clear();
+   for(POI &poi : pois){
+       poi.uri = "poi:" + poi.uri;
        this->poi_map[poi.uri] = poi.idx;
    }
 }
@@ -435,9 +439,16 @@ void GeoRef::build_rtree() {
         this->rtree.Insert(r.min, r.max, admin.idx);
     }
 }
+void GeoRef::normalize_uri(){
+    normalize_extcode_way();
+    normalize_extcode_admin();
+    normalize_extcode_poitypes();
+    normalize_extcode_pois();
+}
 
 /** Normalisation des codes externes des rues*/
 void GeoRef::normalize_extcode_way(){
+    this->way_map.clear();
     for(Way & way : ways){
         way.uri = "address:"+ way.uri;
         this->way_map[way.uri] = way.idx;
@@ -446,6 +457,7 @@ void GeoRef::normalize_extcode_way(){
 
 
 void GeoRef::normalize_extcode_admin(){
+    this->admin_map.clear();
     for(navitia::adminref::Admin& admin : admins){
         admin.uri = "admin:" + admin.id;
         this->admin_map[admin.uri] = admin.idx;

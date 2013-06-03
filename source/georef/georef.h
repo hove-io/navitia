@@ -237,13 +237,7 @@ struct GeoRef {
     void build_autocomplete_list();
 
     /// Normalisation des codes externes
-    void normalize_extcode_way();
-    /// Normalisation des codes externes des admins
-    void normalize_extcode_admin();
-
-    /// Chargement de la liste map code externe idx sur poitype et poi
-    void build_poitypes();
-    void build_pois();
+    void normalize_uri();
 
     /// Construit l’indexe spatial permettant de retrouver plus vite la commune à une coordonnées
     void build_rtree();
@@ -307,6 +301,15 @@ struct GeoRef {
 
     /// Reconstruit un itinéraire à partir de la destination et la liste des prédécesseurs
     Path build_path(vertex_t best_destination, std::vector<vertex_t> preds) const;
+
+ private :
+    /// Normalisation des codes externes
+    void normalize_extcode_way();
+    /// Normalisation des codes externes des admins
+    void normalize_extcode_admin();
+    /// Chargement de la liste map code externe idx sur poitype et poi
+    void normalize_extcode_poitypes();
+    void normalize_extcode_pois();
 };
 
 // Exception levée dès que l'on trouve une destination

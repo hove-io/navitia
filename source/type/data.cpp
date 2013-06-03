@@ -94,9 +94,8 @@ void Data::save_lz4(const std::string & filename) {
 }
 
 void Data::build_uri(){
-    this->pt_data.build_uri();
-    geo_ref.normalize_extcode_way();
-    geo_ref.normalize_extcode_admin();
+    this->pt_data.build_uri();    
+    geo_ref.normalize_uri();
 }
 
 void Data::build_proximity_list(){

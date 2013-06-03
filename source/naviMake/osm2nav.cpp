@@ -80,7 +80,7 @@ void Visitor::add_osm_housenumber(uint64_t osmid, const CanalTP::Tags & tags){
 
 void Visitor::add_osm_poi(const navitia::type::GeographicalCoord& coord, const CanalTP::Tags & tags){
     if(tags.find(poilist.poi_key) != tags.end()){
-        std::string value = "poi_type:"+tags.at(poilist.poi_key);
+        std::string value = tags.at(poilist.poi_key);
         bool to_add = true;
         std::string name;
         auto it = geo_ref.poitype_map.find(value);
@@ -90,7 +90,7 @@ void Visitor::add_osm_poi(const navitia::type::GeographicalCoord& coord, const C
               to_add = false;
             }else{
                 if(tags.find("name") == tags.end()){ /// dans le cas où le POI n'a pas de nom, ne pas l'importer si ce n'est pas station VLS
-                    if (value != "poi_type:"+poilist.vls){
+                    if (value != poilist.vls){
                         LOG4CPLUS_WARN(logger, "Attention, le site ayant comme type ["+value+"] n'est pas importé car il n'a pas de nom.");
                         to_add = false;
                     }
@@ -103,9 +103,9 @@ void Visitor::add_osm_poi(const navitia::type::GeographicalCoord& coord, const C
                 poi.poitype_idx = it->second;
                 poi.coord = coord;
                 poi.idx = geo_ref.pois.size();
-                poi.uri = "poi:"+ boost::lexical_cast<std::string>(poi.idx);
+                poi.uri = boost::lexical_cast<std::string>(poi.idx);
                 poi.name = name;
-                if (value == "poi_type:"+poilist.vls){
+                if (value == poilist.vls){
                     poi.visible = false;
                 }
                 geo_ref.pois.push_back(poi);
@@ -201,7 +201,7 @@ void Visitor::edges(){
 }
 
 void Visitor::build_vls_edges(){
-    auto it = geo_ref.poitype_map.find("poi_type:"+poilist.vls);
+    auto it = geo_ref.poitype_map.find(poilist.vls);
     if(it != geo_ref.poitype_map.end()){
         for(POI poi : geo_ref.pois){
             if (it->second == poi.poitype_idx){
@@ -368,17 +368,18 @@ void Visitor::fillPoiType(){
         POIType poitype;
         poitype.name = pt.second;
         poitype.idx = geo_ref.poitypes.size();
-        poitype.uri = "poi_type:"+pt.first;
+        poitype.uri = pt.first;
         geo_ref.poitypes.push_back(poitype);        
+        geo_ref.poitype_map[poitype.uri] = poitype.idx;
     }
-    geo_ref.build_poitypes();
+//    geo_ref.build_poitypes();
 }
 
 void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filename){
     Visitor v(geo_ref_to_fill);
     v.fillPoiType();
     CanalTP::read_osm_pbf(osm_pbf_filename, v);
-    v.geo_ref.build_pois();
+//    v.geo_ref.build_pois();
     std::cout << v.nodes.size() << " nodes, " << v.ways.size() << " ways/" << v.total_ways << std::endl;
     v.count_nodes_uses();
     v.edges();

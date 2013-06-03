@@ -772,12 +772,12 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
        ng::POIType poi_type;
 
        poi_type.idx=0;
-       poi_type.uri = "poi_type:0";
+       poi_type.uri = "0";
        poi_type.name = "Poste";
        data.geo_ref.poitypes.push_back(poi_type);
        poi.poitype_idx = 0;
        poi.idx = 0;
-       poi.uri = "poi:0";
+       poi.uri = "0";
        poi.name = "la poste n1";
        type::GeographicalCoord V(1, 1, false);
        poi.coord.set_lat(B.lat() + V.lat());
@@ -786,13 +786,13 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
        poi.coord.set_xy(A.lon()+1000,A.lat()+1000);
        poi.poitype_idx = 0;
        poi.idx = 1;
-       poi.uri = "poi:1";
+       poi.uri = "1";
        poi.name = "la poste n2";
        data.geo_ref.pois.push_back(poi);
 
        poi.poitype_idx = 0;
        poi.idx = 2;
-       poi.uri = "poi:2";
+       poi.uri = "2";
        poi.name = "la poste n3";
        data.geo_ref.pois.push_back(poi);
 
@@ -803,8 +803,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
        data.build_proximity_list();
        std::vector<std::string> forbidden;
        RAPTOR raptor(data);
-       data.geo_ref.build_poitypes();
-       data.geo_ref.build_pois();
+       data.geo_ref.normalize_uri();
        streetnetwork::StreetNetwork sn_worker(data.geo_ref);
 
         type::EntryPoint origin("coord:"+boost::lexical_cast<std::string>(Q.lon())+":"+boost::lexical_cast<std::string>(Q.lat()));
