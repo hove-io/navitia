@@ -9,7 +9,7 @@ namespace pt = boost::posix_time;
 namespace navitia{
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::AdministrativeRegion* admin, int, const pt::ptime&, const pt::time_period& ){
-    navitia::georef::Admin adm = data.geo_ref.admins.at(idx);
+    navitia::adminref::Admin adm = data.geo_ref.admins.at(idx);
     admin->set_name(adm.name);
     admin->set_uri(adm.uri);
     if(adm.post_code != "")

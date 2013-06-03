@@ -88,7 +88,7 @@ struct Visitor{
     std::unordered_map<uint64_t, OSMWay> ways;
     georef::GeoRef & geo_ref;
     //Pour charger les données administratives
-    navitia::georef::Levels levellist;
+    navitia::adminref::Levels levellist;
     // Pour charger les pois
     navitia::georef::Pois poilist;
     std::map<std::string,std::string>::iterator iter;
@@ -124,7 +124,7 @@ struct Visitor{
     std::vector<uint64_t> nodes_of_relation(const CanalTP::References & refs);
 
     /// gestion des limites des communes : création des polygons
-    void manage_admin_boundary(const CanalTP::References & refs, navitia::georef::Admin& admin);
+    void manage_admin_boundary(const CanalTP::References & refs, navitia::adminref::Admin& admin);
 
     /// construction des informations administratives
     void AdminRef();

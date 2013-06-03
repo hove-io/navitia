@@ -80,7 +80,7 @@ void Visitor::add_osm_housenumber(uint64_t osmid, const CanalTP::Tags & tags){
 
 void Visitor::add_osm_poi(const navitia::type::GeographicalCoord& coord, const CanalTP::Tags & tags){
     if(tags.find(poilist.poi_key) != tags.end()){
-        std::string value = "POITYPE:"+tags.at(poilist.poi_key);
+        std::string value = "poi_type:"+tags.at(poilist.poi_key);
         bool to_add = true;
         std::string name;
         auto it = geo_ref.poitype_map.find(value);
@@ -90,7 +90,7 @@ void Visitor::add_osm_poi(const navitia::type::GeographicalCoord& coord, const C
               to_add = false;
             }else{
                 if(tags.find("name") == tags.end()){ /// dans le cas où le POI n'a pas de nom, ne pas l'importer si ce n'est pas station VLS
-                    if (value != "POITYPE:"+poilist.vls){
+                    if (value != "poi_type:"+poilist.vls){
                         LOG4CPLUS_WARN(logger, "Attention, le site ayant comme type ["+value+"] n'est pas importé car il n'a pas de nom.");
                         to_add = false;
                     }
@@ -103,9 +103,9 @@ void Visitor::add_osm_poi(const navitia::type::GeographicalCoord& coord, const C
                 poi.poitype_idx = it->second;
                 poi.coord = coord;
                 poi.idx = geo_ref.pois.size();
-                poi.uri = "POI:"+ boost::lexical_cast<std::string>(poi.idx);
+                poi.uri = "poi:"+ boost::lexical_cast<std::string>(poi.idx);
                 poi.name = name;
-                if (value == "POITYPE:"+poilist.vls){
+                if (value == "poi_type:"+poilist.vls){
                     poi.visible = false;
                 }
                 geo_ref.pois.push_back(poi);
@@ -201,7 +201,7 @@ void Visitor::edges(){
 }
 
 void Visitor::build_vls_edges(){
-    auto it = geo_ref.poitype_map.find("POITYPE:"+poilist.vls);
+    auto it = geo_ref.poitype_map.find("poi_type:"+poilist.vls);
     if(it != geo_ref.poitype_map.end()){
         for(POI poi : geo_ref.pois){
             if (it->second == poi.poitype_idx){
@@ -268,7 +268,7 @@ type::GeographicalCoord Visitor::admin_centre_coord(const CanalTP::References & 
 }
 
 
-void Visitor::manage_admin_boundary(const CanalTP::References & refs, navitia::georef::Admin& admin){
+void Visitor::manage_admin_boundary(const CanalTP::References & refs, navitia::adminref::Admin& admin){
     std::vector<uint64_t> vec_id =  nodes_of_relation(refs);
 
     // Fermer le polygon ci ce n'est pas le cas:
@@ -339,7 +339,7 @@ std::vector<uint64_t> Visitor::nodes_of_relation(const CanalTP::References & ref
 
 void Visitor::AdminRef(){
     for(auto ar : OSMAdminRefs){
-        navitia::georef::Admin admin;
+        navitia::adminref::Admin admin;
         admin.insee = ar.second.insee;
         admin.idx = geo_ref.admins.size();
         admin.post_code = ar.second.postcode;
@@ -368,7 +368,7 @@ void Visitor::fillPoiType(){
         POIType poitype;
         poitype.name = pt.second;
         poitype.idx = geo_ref.poitypes.size();
-        poitype.uri = "POITYPE:"+pt.first;
+        poitype.uri = "poi_type:"+pt.first;
         geo_ref.poitypes.push_back(poitype);        
     }
     geo_ref.build_poitypes();

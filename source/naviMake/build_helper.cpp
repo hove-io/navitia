@@ -132,6 +132,9 @@ SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelc
     sa->coord.set_lon(x);
     sa->coord.set_lat(y);
 
+    sp->coord.set_lon(x);
+    sp->coord.set_lat(y);
+
     sp->stop_area = this->sa;
     b.sps[sp_name] = sp;
     return *this;

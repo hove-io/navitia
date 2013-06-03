@@ -134,7 +134,7 @@ template<class T> ValidAdmin<T> valid_admin (const std::vector<T> & objects, std
 std::vector<type::idx_t> admin_uris_to_idx(const std::vector<std::string> &admin_uris, const navitia::type::Data &d){
     std::vector<type::idx_t> admin_idxs;
     for (auto admin_uri : admin_uris){
-        for (navitia::georef::Admin admin : d.geo_ref.admins){
+        for (navitia::adminref::Admin admin : d.geo_ref.admins){
             if (admin_uri == admin.uri){
                 admin_idxs.push_back(admin.idx);
             }

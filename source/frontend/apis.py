@@ -82,6 +82,8 @@ class Arguments:
        "vls_speed" : Argument("Vls speed in m/s", float, False, False, 3.38),
         "vls_distance" : Argument("Maximum vls distance in meters", int,
                                       False, False, 4000),
+        "origin_filter" : Argument("Poi type nearest to departure point", str, False, False, ""),
+        "destination_filter" : Argument("Poi type nearest to destination Point ", str, False, False, ""),
 
         }
 
@@ -110,6 +112,8 @@ class Arguments:
         "vls_speed" : Argument("Vls speed in m/s", float, False, False, 3.38),
         "vls_distance" : Argument("Maximum vls distance in meters", int,
                                       False, False, 4000),
+        "origin_filter" : Argument("Poi type nearest to departure point", str,
+                                      False, False, ""),
         }
 
 class Apis:

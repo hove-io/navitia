@@ -172,11 +172,14 @@ type::GeographicalCoord Worker::coord_of_entry_point(const type::EntryPoint & en
 
 type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams & request, const bool use_second){
     type::StreetNetworkParams result;
+    std::string uri;
 
     if(use_second){
         result.mode = type::static_data::get()->modeByCaption(request.origin_mode());
+        result.set_filter(request.origin_filter());
     }else{
         result.mode = type::static_data::get()->modeByCaption(request.destination_mode());
+        result.set_filter(request.destination_filter());
     }
     switch(result.mode){
         case type::Mode_e::Bike:

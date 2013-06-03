@@ -29,6 +29,9 @@ message StreetNetworkParams{
     optional int32 car_distance =8;
     optional double vls_speed = 9;
     optional int32 vls_distance =10;
+    optional string origin_filter = 11;
+    optional string destination_filter = 12;
+    
 }
 
 

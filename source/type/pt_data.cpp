@@ -30,7 +30,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     for(const StopArea & sa : this->stop_areas){
         std::string key="";
         for(idx_t idx : sa.admin_list){
-            navitia::georef::Admin admin = georef.admins.at(idx);
+            navitia::adminref::Admin admin = georef.admins.at(idx);
             key +=" " + admin.name;
         }
         this->stop_area_autocomplete.add_string(sa.name + " " + key, sa.idx,georef.alias, georef.synonymes);
@@ -40,7 +40,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     for(const StopPoint & sp : this->stop_points){
         std::string key="";
         for(idx_t idx : sp.admin_list){
-            navitia::georef::Admin admin = georef.admins.at(idx);
+            navitia::adminref::Admin admin = georef.admins.at(idx);
             key += key + " " + admin.name;
         }
         this->stop_point_autocomplete.add_string(sp.name + " " + key, sp.idx, georef.alias, georef.synonymes);

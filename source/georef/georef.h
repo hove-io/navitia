@@ -173,7 +173,7 @@ struct GeoRef {
     std::map<std::string, nt::idx_t> way_map;
     /// données administratives
     std::map<std::string, nt::idx_t> admin_map;
-    std::vector<Admin> admins;
+    std::vector<navitia::adminref::Admin> admins;
 
     RTree<nt::idx_t, double, 2> rtree;
 
