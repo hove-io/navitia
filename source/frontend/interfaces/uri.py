@@ -18,6 +18,11 @@ class Uri:
 
     def __init__(self, string):
         self.uri = string
+        self.region_or_coord_part = None
+        self.params = None
+        self.region_ = None
+        self.lon = None
+        self.lat = None
         self.parse_region_coord()
         self.parse_params()
 

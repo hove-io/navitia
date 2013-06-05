@@ -28,6 +28,9 @@ def on_summary_doc(request) :
 def on_doc(request, api):
     return render(api_doc(Apis().apis_all, api), 'json', request.args.get('callback'))
 
+def a(b):
+    print b
+    return lambda request, uri1, uri2 : interfaces.input_v1.journeys(request, uri1, uri2)
 
 v0_rules = [
     Rule('/', endpoint=interfaces.input_v0.on_index),
@@ -43,10 +46,12 @@ v1_rules = [
     Rule('/', endpoint=interfaces.input_v1.regions),
     Rule('/<path:uri>', endpoint=interfaces.input_v1.uri),
     Rule('/<path:uri>/places', endpoint=interfaces.input_v1.places),
+    Rule('/<path:uri1>/nearby', endpoint=interfaces.input_v1.nearby),
     Rule('/<path:uri1>/journeys', endpoint=interfaces.input_v1.journeys),
     Rule('/<path:uri1>/schedules', endpoint=interfaces.input_v1.schedules),
-    Rule('/<path:uri1>/<any(stop_areas,stop_points,lines):resource_type>/nearby', endpoint=interfaces.input_v1.nearby),
     Rule('/<path:uri1>/journeys/<path:uri2>', endpoint=interfaces.input_v1.journeys),
+    Rule('/journeys/<path:uri1>/to/<path:uri2>', endpoint=interfaces.input_v1.journeys),
+    Rule('/journeys/<path:uri1>/to/<path:uri2>/at/<datetime>', endpoint=interfaces.input_v1.journeys),
     Rule('/<path:uri1>/schedules/<path:uri2>', endpoint=interfaces.input_v1.schedules),
     Rule('/<path:uri1>/nearby/<path:uri2>', endpoint=interfaces.input_v1.nearby),
     ]

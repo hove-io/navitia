@@ -67,17 +67,17 @@ class Arguments:
         "wheelchair" : Argument("Does the journey has to be accessible?",
                                 boolean, False, False, False),
         "origin_mode" : Argument("Transportation mode to reach public transport",
-                                str, False, False, "walking",allowableValues=["walking", "bike", "car", "vls"]),
+                                str, False, False, "walking",allowableValues=["walking", "bike", "car", "bike_rental"]),
         "destination_mode" : Argument("Transportation mode after public transport",
-                                str, False, False, "walking",allowableValues=["walking", "bike", "car", "vls"]),
+                                str, False, False, "walking",allowableValues=["walking", "bike", "car", "bike_rental"]),
         "bike_speed" : Argument("Biking speed in m/s", float, False, False, 3.38),
         "bike_distance" : Argument("Maximum biking distance in meters", int,
                                       False, False, 4000),
         "car_speed" : Argument("Car speed in m/s", float, False, False, 13.38),
         "car_distance" : Argument("Maximum car distance in meters", int,
                                       False, False, 10000),
-        "vls_speed" : Argument("Vls speed in m/s", float, False, False, 3.38),
-        "vls_distance" : Argument("Maximum vls distance in meters", int,
+        "br_speed" : Argument("Bike rental speed in m/s", float, False, False, 3.38),
+        "br_distance" : Argument("Maximum distance of a bike rental section in meters", int,
                                       False, False, 4000),
         "origin_filter" : Argument("Poi type of the arrival of the initial street section", str, False, False, ""),
         "destination_filter" : Argument("Poi type of the departure of the ending street section", str, False, False, ""),
@@ -106,8 +106,8 @@ class Arguments:
         "car_speed" : Argument("Car speed in m/s", float, False, False, 13.38),
         "car_distance" : Argument("Maximum car distance in meters", int,
                                       False, False, 10000),
-        "vls_speed" : Argument("Vls speed in m/s", float, False, False, 3.38),
-        "vls_distance" : Argument("Maximum vls distance in meters", int,
+        "br_speed" : Argument("Vls speed in m/s", float, False, False, 3.38),
+        "br_distance" : Argument("Maximum vls distance in meters", int,
                                       False, False, 4000),
         "origin_filter" : Argument("Poi type nearest to departure point", str,
                                       False, False, ""),
@@ -248,6 +248,12 @@ class Apis:
         self.apis_all = copy.copy(self.apis)
         self.apis_all["regions"] = {"arguments" : {}, "description" : "Retrieves the list of available regions", "regions" : False,
                           "order":0}
+
+def validate_pb_request(api, request_args):
+    arguments = {}
+    for key, val in request_args.args.iteritems():
+        arguments[key] = request_args.args.getlist(key)
+    return validate_and_fill_arguments(api, arguments)
 
 def validate_and_fill_arguments(api, request_args):
     if api in Apis.apis:

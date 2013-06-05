@@ -202,12 +202,17 @@ class Script:
         req.journeys.streetnetwork_params.bike_distance = request_args["bike_distance"]
         req.journeys.streetnetwork_params.car_speed = request_args["car_speed"]
         req.journeys.streetnetwork_params.car_distance = request_args["car_distance"]
-        req.journeys.streetnetwork_params.vls_speed = request_args["vls_speed"]
-        req.journeys.streetnetwork_params.vls_distance = request_args["vls_distance"]
+        req.journeys.streetnetwork_params.vls_speed = request_args["br_speed"]
+        req.journeys.streetnetwork_params.vls_distance = request_args["br_distance"]
 	req.journeys.streetnetwork_params.origin_filter = request_args["origin_filter"] if "origin_filter" in request_args else ""
 	req.journeys.streetnetwork_params.destination_filter = request_args["destination_filter"] if "destination_filter" in request_args else ""
         req.journeys.max_duration = request_args["max_duration"]
         req.journeys.max_transfers = request_args["max_transfers"]
+        if req.journeys.streetnetwork_params.origin_mode == "bike_rental":
+            req.journeys.streetnetwork_params.origin_mode = "vls"
+        if req.journeys.streetnetwork_params.destination_mode == "bike_rental":
+            req.journeys.streetnetwork_params.destination_mode = "vls"
+
         for forbidden_uri in request_args["forbidden_uris[]"]:
             req.journeys.forbidden_uris.append(forbidden_uri)
         resp = NavitiaManager().send_and_receive(req, region)

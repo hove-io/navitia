@@ -4,7 +4,7 @@ from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
 from error import generate_error
 import request_pb2, type_pb2
 from renderers import protobuf_to_dict, render, render_from_protobuf
-from apis import validate_and_fill_arguments, InvalidArguments, ApiNotFound
+from apis import validate_pb_request, InvalidArguments, ApiNotFound
 
 def on_index(request, region = None ):
     path = os.path.join(os.path.dirname(__file__), 'static','lost.html')
@@ -63,7 +63,7 @@ def on_api(request, region, api, format):
     arguments = None
     response = None
     try:
-        arguments = validate_and_fill_arguments(api, request)
+        arguments = validate_pb_request(api, request)
     except InvalidArguments, e:
         return generate_error(e.message)
     except ApiNotFound, e:
