@@ -16,7 +16,8 @@ namespace navitia { namespace ptref {
 Jointures::Jointures() {
 #define VERTEX_MAP(type_name, collection_name) vertex_map[Type_e::type_name] = boost::add_vertex(Type_e::type_name, g);
     ITERATE_NAVITIA_PT_TYPES(VERTEX_MAP)
-
+    vertex_map[Type_e::POI] = boost::add_vertex(Type_e::POI, g);
+    vertex_map[Type_e::POIType] = boost::add_vertex(Type_e::POIType, g);
 
     // À partir d'un stop area, on peut avoir ses stop points
     boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::StopArea), g);
@@ -65,6 +66,10 @@ Jointures::Jointures() {
 
     // D'une connection on a ses deux stop points
     boost::add_edge(vertex_map[Type_e::StopPoint], vertex_map[Type_e::Connection], g);
+
+    //De poi vers poi type et vice et versa
+    boost::add_edge(vertex_map[Type_e::POI], vertex_map[Type_e::POIType], g);
+    boost::add_edge(vertex_map[Type_e::POIType], vertex_map[Type_e::POI], g);
 }
 
 // Retourne un map qui indique pour chaque type par quel type on peut l'atteindre
@@ -82,6 +87,7 @@ std::map<Type_e,Type_e> find_path(Type_e source) {
 
 
     std::map<Type_e, Type_e> result;
+
 
     for(vertex_t u = 0; u < boost::num_vertices(j.g); ++u)
         result[j.g[u]] = j.g[predecessors[u]];

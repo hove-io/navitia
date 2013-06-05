@@ -1,9 +1,6 @@
 import copy
-from validate import *
-from singleton import singleton
-from instance_manager import DeadSocketException, RegionNotFound, ApiNotFound, InvalidArguments, NavitiaManager
-from werkzeug.wrappers import Response
-from renderers import render, render_from_protobuf
+from validate import validate_arguments, Argument, datetime_validator, boolean, entrypoint, filter 
+from instance_manager import InvalidArguments, ApiNotFound
 
 class Arguments:
     scheduleArguments = {
@@ -20,7 +17,7 @@ class Arguments:
     stopsScheduleArguments = {
         "from_datetime" : Argument("The date from which you want the times",
                               datetime_validator, True, False, order=10),
-        "duration" : Argument("Maximum duration between the datetime and the last  retrieved stop time",
+        "duration" : Argument("Maximum duration between the datetime and the last retrieved stop time",
                                   int, False, False, defaultValue=86400, order=20 ),        
         "wheelchair" : Argument("true if you want the times to have accessibility", boolean, False, False, defaultValue=False, order=50),
         "depth" : Argument("Maximal depth of the returned objects", int, False,
@@ -61,6 +58,8 @@ class Arguments:
         "clockwise" : Argument("true if you want to have a journey that starts after datetime, false if you a journey that arrives before datetime", boolean, False, False, True, order = 3),
         "max_duration" : Argument("Maximum duration of the journey in seconds", int,
                                   False, False, order=4, defaultValue = 36000),
+        "max_transfers" : Argument("Maximum number of transfers in a journey",
+                                   int, False, False, order=5, defaultValue=10),
         "forbidden_uris[]" : Argument("Forbidden uris",  str, False, True, ""),
         "walking_speed" : Argument("Walking speed in m/s", float, False, False, 1.38),
         "walking_distance" : Argument("Maximum walking distance in meters", int,
@@ -68,15 +67,20 @@ class Arguments:
         "wheelchair" : Argument("Does the journey has to be accessible?",
                                 boolean, False, False, False),
         "origin_mode" : Argument("Transportation mode to reach public transport",
-                                str, False, False, "walking",allowableValues=["walking", "bike", "car"]),
+                                str, False, False, "walking",allowableValues=["walking", "bike", "car", "bike_rental"]),
         "destination_mode" : Argument("Transportation mode after public transport",
-                                str, False, False, "walking",allowableValues=["walking", "bike", "car"]),
+                                str, False, False, "walking",allowableValues=["walking", "bike", "car", "bike_rental"]),
         "bike_speed" : Argument("Biking speed in m/s", float, False, False, 3.38),
         "bike_distance" : Argument("Maximum biking distance in meters", int,
                                       False, False, 4000),
         "car_speed" : Argument("Car speed in m/s", float, False, False, 13.38),
         "car_distance" : Argument("Maximum car distance in meters", int,
                                       False, False, 10000),
+        "br_speed" : Argument("Bike rental speed in m/s", float, False, False, 3.38),
+        "br_distance" : Argument("Maximum distance of a bike rental section in meters", int,
+                                      False, False, 4000),
+        "origin_filter" : Argument("Poi type of the arrival of the initial street section", str, False, False, ""),
+        "destination_filter" : Argument("Poi type of the departure of the ending street section", str, False, False, ""),
 
         }
 
@@ -86,6 +90,8 @@ class Arguments:
         "clockwise" : Argument("true if you want to have a journey that starts after datetime, false if you a journey that arrives before datetime", boolean, False, False, True, order = 3),
         "max_duration" : Argument("Maximum duratioon of the isochrone", int,
                                   False, False, order=4, defaultValue = 3600),
+        "max_transfers" : Argument("Maximum number of transfers in a journey",
+                                   int, False, False, order=5, defaultValue=10),
         "forbidden_uris[]" : Argument("Forbidden uris",  str, False, True, ""),
         "walking_speed" : Argument("Walking speed in m/s", float, False, False, 1.38),
         "walking_distance" : Argument("Maximum walking distance in meters", int,
@@ -93,13 +99,18 @@ class Arguments:
         "wheelchair" : Argument("Does the journey has to be accessible?",
                                 boolean, False, False, False),
     	"origin_mode" : Argument("Transportation mode to reach public transport",
-                                str, False, False, "walking",allowableValues=["walking", "bike","car"]),
+                                str, False, False, "walking",allowableValues=["walking", "bike","car", "vls"]),
         "bike_speed" : Argument("Biking speed in m/s", float, False, False, 3.38),
         "bike_distance" : Argument("Maximum biking distance in meters", int,
                                       False, False, 4000),
         "car_speed" : Argument("Car speed in m/s", float, False, False, 13.38),
         "car_distance" : Argument("Maximum car distance in meters", int,
                                       False, False, 10000),
+        "br_speed" : Argument("Vls speed in m/s", float, False, False, 3.38),
+        "br_distance" : Argument("Maximum vls distance in meters", int,
+                                      False, False, 4000),
+        "origin_filter" : Argument("Poi type nearest to departure point", str,
+                                      False, False, ""),
         }
 
 class Apis:
@@ -115,7 +126,7 @@ class Apis:
                 "startPage" : Argument("The page number of the ptref result", int,
                                         False, False, 0),
 		        "nbmax" : Argument("Maximum number of objects in the response", int, False, False, 10),
-                "admin_uri[]" : Argument("code uri of admin", str, False, True, [])
+                "admin_uri[]" : Argument("cg with a very cute presentation by @wso2 they want to gode uri of admin", str, False, True, [])
             },
             "description" : "Retrieves the places which contains in their name the \"name\"",
             "order":2},
@@ -189,6 +200,14 @@ class Apis:
             "arguments" : Arguments.ptrefArguments,
             "description" :"Retrieves all the vehicle journeys filtered with filter" ,
             "order" : 5},
+        "pois" : {
+            "arguments" : Arguments.ptrefArguments,
+            "description" :"Retrieves all the pois filtered with filter" ,
+            "order" : 5},
+        "poi_types" : {
+            "arguments" : Arguments.ptrefArguments,
+            "description" :"Retrieves all the poi_types filtered with filter" ,
+            "order" : 5},
         "journeys" : {
             "arguments" : Arguments.journeyArguments,
             "description" : "Computes and retrieves a journey",
@@ -230,14 +249,28 @@ class Apis:
         self.apis_all["regions"] = {"arguments" : {}, "description" : "Retrieves the list of available regions", "regions" : False,
                           "order":0}
 
+def validate_pb_request(api, request_args):
+    arguments = {}
+    for key, val in request_args.args.iteritems():
+        arguments[key] = request_args.args.getlist(key)
+    return validate_and_fill_arguments(api, arguments)
+
+def validate_and_fill_arguments(api, request_args):
+    if api in Apis.apis:
+        return_ = validate_arguments(request_args, Apis.apis[api]["arguments"])
+        if not return_.valid:
+            raise InvalidArguments(return_.details)
+        return return_
+    else:
+        raise ApiNotFound(api)
 
 def validation_decorator(func):
     api = func.__name__
-    def wrapped(self, request_args, version, region):
+    def wrapped(self, request_args, region):
         self.v = validate_arguments(request_args, self.apis[api]["arguments"])
         if not self.v.valid:
-            raise InvalidArguments(unicode(self.v.details))
+            raise InvalidArguments(self.v.details)
         else:
-            return func(self, request_args, version, region)
+            return func(self, request_args, region)
     return wrapped
 

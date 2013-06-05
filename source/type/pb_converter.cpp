@@ -9,7 +9,7 @@ namespace pt = boost::posix_time;
 namespace navitia{
 
 void fill_pb_object(nt::idx_t idx, const nt::Data& data, pbnavitia::AdministrativeRegion* admin, int, const pt::ptime&, const pt::time_period& ){
-    navitia::georef::Admin adm = data.geo_ref.admins.at(idx);
+    navitia::adminref::Admin adm = data.geo_ref.admins.at(idx);
     admin->set_name(adm.name);
     admin->set_uri(adm.uri);
     if(adm.post_code != "")
@@ -303,13 +303,18 @@ void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &p
         pbnavitia::Place* place;
         navitia::georef::Way way;
         type::GeographicalCoord coord;
+        int house_number;
 
         if(path.path_items.size() > 1){
 
             way = data.geo_ref.ways[path.path_items.front().way_idx];
             coord = path.coordinates.front();
             place = section->mutable_origin();
-            fill_pb_object(way.idx, data, place->mutable_address(), way.nearest_number(coord),coord , max_depth, now, action_period);
+            if(ori_dest.type != type::Type_e::Address)
+                house_number = way.nearest_number(coord);
+            else
+                house_number = ori_dest.house_number;
+            fill_pb_object(way.idx, data, place->mutable_address(), house_number, coord, max_depth, now, action_period);
             if(place->address().has_house_number())
                 place->set_name(boost::lexical_cast<std::string>(place->address().house_number()) + ", ");
             place->set_name(place->name() + place->address().name());
@@ -349,6 +354,9 @@ void create_pb(const type::EntryPoint &ori_dest, const navitia::georef::Path& pa
         case type::Mode_e::Car:
             sn->set_mode(pbnavitia::Car);
             break;
+    case type::Mode_e::Vls:
+        sn->set_mode(pbnavitia::Vls);
+        break;
         default :
             sn->set_mode(pbnavitia::Walking);
     }    
@@ -361,8 +369,8 @@ void create_pb(const type::EntryPoint &ori_dest, const navitia::georef::Path& pa
         }else{
             std::cout << "Way étrange : " << item.way_idx << std::endl;
         }
-
     }
+
     for(auto coord : path.coordinates){
         if(coord.is_initialized()) {
             pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
@@ -370,6 +378,13 @@ void create_pb(const type::EntryPoint &ori_dest, const navitia::georef::Path& pa
             pb_coord->set_lat(coord.lat());
         }
     }
+}
+
+void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::PoiType* poi_type, int,
+        const pt::ptime&, const pt::time_period&) {
+    navitia::georef::POIType geo_poi_type = data.geo_ref.poitypes.at(idx);
+    poi_type->set_name(geo_poi_type.name);
+    poi_type->set_uri(geo_poi_type.uri);
 }
 
 void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Poi* poi, int max_depth,
@@ -383,6 +398,7 @@ void fill_pb_object(type::idx_t idx, const type::Data &data, pbnavitia::Poi* poi
     }
 
     if(max_depth > 0){
+        fill_pb_object(geopoi.poitype_idx, data, poi->mutable_poi_type(), max_depth-1, now, action_period);
         for(nt::idx_t idx : geopoi.admin_list){
             fill_pb_object(idx, data,  poi->add_administrative_regions(), max_depth-1, now, action_period);
         }

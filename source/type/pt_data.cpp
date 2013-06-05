@@ -24,59 +24,13 @@ PT_Data& PT_Data::operator=(PT_Data&& other){
 }
 
 
-std::vector<idx_t> PT_Data::get_target_by_source(Type_e source, Type_e target, std::vector<idx_t> source_idx) const {
-    std::vector<idx_t> result;
-    result.reserve(source_idx.size());
-    for(idx_t idx : source_idx) {
-        std::vector<idx_t> tmp;
-        tmp = get_target_by_one_source(source, target, idx);
-        result.insert(result.end(), tmp.begin(), tmp.end());
-
-    }
-    return result;
-}
-
-std::vector<idx_t> PT_Data::get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const {
-    std::vector<idx_t> result;
-    if(source_idx == invalid_idx)
-        return result;
-    if(source == target){
-        result.push_back(source_idx);
-        return result;
-    }
-    switch(source) {
-#define GET_INDEXES(type_name, collection_name) case Type_e::type_name: result = collection_name[source_idx].get(target, *this);break;
-    ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
-        default: break;
-    }
-    return result;
-}
-
-std::vector<idx_t> PT_Data::get_all_index(Type_e type) const {
-    size_t num_elements = 0;
-    switch(type){
-#define GET_NUM_ELEMENTS(type_name, collection_name) case Type_e::type_name: num_elements = collection_name.size();break;
-    ITERATE_NAVITIA_PT_TYPES(GET_NUM_ELEMENTS)
-    default:  break;
-    }
-    std::vector<idx_t> indexes(num_elements);
-    for(size_t i=0; i < num_elements; i++)
-        indexes[i] = i;
-    return indexes;
-}
-
-#define GET_DATA(type_name, collection_name)\
-    template<> std::vector<type_name> & PT_Data::get_data<type_name>() {return collection_name;}\
-    template<> std::vector<type_name> const & PT_Data::get_data<type_name>() const {return collection_name;}
-ITERATE_NAVITIA_PT_TYPES(GET_DATA)
-
 
 //void PT_Data::build_autocomplete(const std::map<std::string, std::string> & map_alias, const std::map<std::string, std::string> & map_synonymes){
 void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     for(const StopArea & sa : this->stop_areas){
         std::string key="";
         for(idx_t idx : sa.admin_list){
-            navitia::georef::Admin admin = georef.admins.at(idx);
+            navitia::adminref::Admin admin = georef.admins.at(idx);
             key +=" " + admin.name;
         }
         this->stop_area_autocomplete.add_string(sa.name + " " + key, sa.idx,georef.alias, georef.synonymes);
@@ -86,7 +40,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     for(const StopPoint & sp : this->stop_points){
         std::string key="";
         for(idx_t idx : sp.admin_list){
-            navitia::georef::Admin admin = georef.admins.at(idx);
+            navitia::adminref::Admin admin = georef.admins.at(idx);
             key += key + " " + admin.name;
         }
         this->stop_point_autocomplete.add_string(sp.name + " " + key, sp.idx, georef.alias, georef.synonymes);
@@ -113,10 +67,9 @@ void PT_Data::build_proximity_list() {
 }
 
 void PT_Data::build_uri() {
-#define NORMALIZE_EXT_CODE(type_name, collection_name) normalize_extcode<type_name>(collection_name##_map);
+#define NORMALIZE_EXT_CODE(type_name, collection_name) for(auto &element : collection_name) collection_name##_map[element.uri] = element.idx;
     ITERATE_NAVITIA_PT_TYPES(NORMALIZE_EXT_CODE)
 }
-
 
 void PT_Data::build_connections() {
     stop_point_connections.resize(stop_points.size());

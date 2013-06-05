@@ -46,25 +46,24 @@ void dataRAPTOR::load(const type::PT_Data &data)
 
     }
 
-    //On rajoute des connexions entre les stops points d'un même stop area si elles n'existent pas
+
     footpath_index_forward.resize(data.stop_points.size());
     footpath_index_backward.resize(data.stop_points.size());
     for(type::StopPoint sp : data.stop_points) {
+        footpath_index_forward[sp.idx].first = foot_path_forward.size();
+        footpath_index_backward[sp.idx].first = foot_path_backward.size();
+        int size_forward = 0, size_backward = 0;
+        for(auto conn : footpath_temp_forward[sp.idx]) {
+            foot_path_forward.push_back(conn.second);
+            ++size_forward;
+        }
+        for(auto conn : footpath_temp_backward[sp.idx]) {
+            foot_path_backward.push_back(conn.second);
+            ++size_backward;
+        }
+        //On rajoute des connexions entre les stops points d'un même stop area si elles n'existent pas
         if(sp.stop_area_idx != type::invalid_idx) {
             type::StopArea sa = data.stop_areas[sp.stop_area_idx];
-            footpath_index_forward[sp.idx].first = foot_path_forward.size();
-            footpath_index_backward[sp.idx].first = foot_path_backward.size();
-            int size_forward = 0, size_backward = 0;
-            for(auto conn : footpath_temp_forward[sp.idx]) {
-                foot_path_forward.push_back(conn.second);
-                ++size_forward;
-            }
-            for(auto conn : footpath_temp_backward[sp.idx]) {
-                foot_path_backward.push_back(conn.second);
-                ++size_backward;
-            }
-
-
             for(type::idx_t spidx2 : sa.stop_point_list) {
                 if(sp.idx != spidx2) {
                     type::Connection c;
@@ -75,19 +74,16 @@ void dataRAPTOR::load(const type::PT_Data &data)
                         foot_path_forward.push_back(c);
                         ++size_forward;
                     }
-
                     if(footpath_temp_backward[spidx2].find(sp.idx) == footpath_temp_backward[spidx2].end()) {
                         foot_path_backward.push_back(c);
                         ++size_backward;
                     }
-
-
                 }
 
             }
-            footpath_index_forward[sp.idx].second = size_forward;
-            footpath_index_backward[sp.idx].second = size_backward;
         }
+        footpath_index_forward[sp.idx].second = size_forward;
+        footpath_index_backward[sp.idx].second = size_backward;
     }
 
 

@@ -94,9 +94,8 @@ void Data::save_lz4(const std::string & filename) {
 }
 
 void Data::build_uri(){
-    this->pt_data.build_uri();
-    geo_ref.normalize_extcode_way();
-    geo_ref.normalize_extcode_admin();
+    this->pt_data.build_uri();    
+    geo_ref.normalize_uri();
 }
 
 void Data::build_proximity_list(){
@@ -114,6 +113,65 @@ void Data::build_autocomplete(){
 
 void Data::build_raptor() {
     dataRaptor.load(this->pt_data);
+}
+
+#define GET_DATA(type_name, collection_name)\
+    template<> std::vector<type_name> & Data::get_data<type_name>() {return this->pt_data.collection_name;}\
+    template<> std::vector<type_name> const & Data::get_data<type_name>() const {return this->pt_data.collection_name;}
+
+ITERATE_NAVITIA_PT_TYPES(GET_DATA)
+
+    template<> std::vector<georef::POI> & Data::get_data<georef::POI>() {return this->geo_ref.pois;}\
+    template<> std::vector<georef::POI> const & Data::get_data<georef::POI>() const {return this->geo_ref.pois;}
+
+    template<> std::vector<georef::POIType> & Data::get_data<georef::POIType>() {return this->geo_ref.poitypes;}\
+    template<> std::vector<georef::POIType> const & Data::get_data<georef::POIType>() const {return this->geo_ref.poitypes;}
+
+
+std::vector<idx_t> Data::get_all_index(Type_e type) const {
+    size_t num_elements = 0;
+    switch(type){
+#define GET_NUM_ELEMENTS(type_name, collection_name) case Type_e::type_name: num_elements = this->pt_data.collection_name.size();break;
+    ITERATE_NAVITIA_PT_TYPES(GET_NUM_ELEMENTS)
+    case Type_e::POI: num_elements = this->geo_ref.pois.size(); break;
+    case Type_e::POIType: num_elements = this->geo_ref.poitypes.size(); break;
+    default:  break;
+    }
+    std::vector<idx_t> indexes(num_elements);
+    for(size_t i=0; i < num_elements; i++)
+        indexes[i] = i;
+    return indexes;
+}
+
+
+
+std::vector<idx_t> Data::get_target_by_source(Type_e source, Type_e target, std::vector<idx_t> source_idx) const {
+    std::vector<idx_t> result;
+    result.reserve(source_idx.size());
+    for(idx_t idx : source_idx) {
+        std::vector<idx_t> tmp;
+        tmp = get_target_by_one_source(source, target, idx);
+        result.insert(result.end(), tmp.begin(), tmp.end());
+    }
+    return result;
+}
+
+std::vector<idx_t> Data::get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const {
+    std::vector<idx_t> result;
+    if(source_idx == invalid_idx)
+        return result;
+    if(source == target){
+        result.push_back(source_idx);
+        return result;
+    }
+    switch(source) {
+#define GET_INDEXES(type_name, collection_name) case Type_e::type_name: result = pt_data.collection_name[source_idx].get(target, pt_data);break;
+    ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
+        case Type_e::POI: result = geo_ref.pois[source_idx].get(target, geo_ref);
+        case Type_e::POIType: result = geo_ref.poitypes[source_idx].get(target, geo_ref);
+        default: break;
+    }
+    return result;
 }
 
 }} //namespace navitia::type

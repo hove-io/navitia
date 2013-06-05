@@ -27,6 +27,11 @@ message StreetNetworkParams{
     optional int32 bike_distance =6;
     optional double car_speed = 7;
     optional int32 car_distance =8;
+    optional double vls_speed = 9;
+    optional int32 vls_distance =10;
+    optional string origin_filter = 11;
+    optional string destination_filter = 12;
+    
 }
 
 
@@ -36,7 +41,8 @@ message JourneysRequest {
     repeated string datetimes = 3;
     required bool clockwise = 4;
     repeated string forbidden_uris = 7;
-    optional int32 max_duration = 11;
+    required int32 max_duration = 11;
+    required int32 max_transfers = 12;
     optional StreetNetworkParams streetnetwork_params = 13;
 }
 

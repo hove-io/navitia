@@ -3,7 +3,7 @@
 #include "type/data.h"
 #include "routing.h"
 #include "raptor_utils.h"
-#include "best_trip.h"
+#include "best_stoptime.h"
 
 namespace navitia { namespace routing {
 

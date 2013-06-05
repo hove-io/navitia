@@ -43,12 +43,13 @@ struct Vertex {
 struct Edge {
     nt::idx_t way_idx; //< indexe vers le nom de rue
     float length; //< longeur en mètres de l'arc
+    float time; /// temps en second utilisé pour le VLS
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & way_idx & length;
+        ar & way_idx & length & time;
     }
-    Edge(nt::idx_t wid, float len) : way_idx(wid), length(len){}
-    Edge() : way_idx(0), length(0){}
+    Edge(nt::idx_t wid, float len) : way_idx(wid), length(len), time(std::numeric_limits<int>::max()){}
+    Edge() : way_idx(0), length(0),time(std::numeric_limits<int>::max()){}
 };
 
 // Plein de typedefs pour nous simpfilier un peu la vie
@@ -85,32 +86,7 @@ struct HouseNumber{
     }
 };
 
-/** Nommage d'un POI (point of interest). **/
-struct POIType : public nt::Nameable, nt::Header{
-public:
-    template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar &idx &uri &name;
-    }
-private:
-};
 
-
-/** Nommage d'un POI (point of interest). **/
-struct POI : public nt::Nameable, nt::Header{
-public:
-    int weight;
-    nt::GeographicalCoord coord;
-    std::vector<nt::idx_t> admin_list;
-    nt::idx_t poitype_idx;
-
-    POI(): weight(0), poitype_idx(type::invalid_idx){}
-
-    template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar &idx & uri & idx &name & weight & coord & admin_list & poitype_idx;
-    }
-
-private:
-};
 
 
 /** Nommage d'une voie (anciennement "adresse").
@@ -179,6 +155,10 @@ struct Rect{
     }
 };
 
+
+//Forward declarations
+struct POI;
+struct POIType;
 /** Structure contenant tout ce qu'il faut savoir sur le référentiel de voirie */
 struct GeoRef {
 
@@ -187,13 +167,13 @@ struct GeoRef {
     std::map<std::string, nt::idx_t> poitype_map;
     std::vector<POI> pois;
     std::map<std::string, nt::idx_t> poi_map;
-
+    proximitylist::ProximityList<type::idx_t> poi_proximity_list;
     /// Liste des voiries
     std::vector<Way> ways;
     std::map<std::string, nt::idx_t> way_map;
     /// données administratives
     std::map<std::string, nt::idx_t> admin_map;
-    std::vector<Admin> admins;
+    std::vector<navitia::adminref::Admin> admins;
 
     RTree<nt::idx_t, double, 2> rtree;
 
@@ -215,6 +195,14 @@ struct GeoRef {
     /// Graphe pour effectuer le calcul d'itinéraire
     Graph graph;
 
+    /*
+    Nous avons 4 graphes :
+        1) pour la gestion de la MAP
+        2) pour la gestion de VLS
+        3) pour la gestion du vélo
+        4) pour la gestion de la voiture
+    */
+    nt::idx_t vls_offset; // VLS
     nt::idx_t bike_offset; // Vélo
     nt::idx_t car_offset; // voiture
 
@@ -223,19 +211,19 @@ struct GeoRef {
     std::map<std::string, std::string> synonymes;
     int word_weight; //Pas serialisé : lu dans le fichier ini
 
-    GeoRef(): bike_offset(0), car_offset(0), word_weight(0){}
+    GeoRef(): vls_offset(0), bike_offset(0), car_offset(0), word_weight(0){}
 
     void init_offset(nt::idx_t);
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & ways & way_map & graph & car_offset & bike_offset & fl_admin & fl_way & pl & projected_stop_points & admins &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes;
+        ar & ways & way_map & graph & vls_offset & bike_offset & car_offset & fl_admin & fl_way & pl & projected_stop_points & admins &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
     }
 
     template<class Archive> void load(Archive & ar, const unsigned int) {
         // La désérialisation d'une boost adjacency list ne vide pas le graphe
         // On avait donc une fuite de mémoire
         graph.clear();
-        ar & ways & way_map & graph & car_offset & bike_offset & fl_admin &fl_way & pl & projected_stop_points & admins &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes;
+        ar & ways & way_map & graph & vls_offset & bike_offset & car_offset & fl_admin &fl_way & pl & projected_stop_points & admins &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
@@ -249,13 +237,7 @@ struct GeoRef {
     void build_autocomplete_list();
 
     /// Normalisation des codes externes
-    void normalize_extcode_way();
-    /// Normalisation des codes externes des admins
-    void normalize_extcode_admin();
-
-    /// Chargement de la liste map code externe idx sur poitype et poi
-    void build_poitypes();
-    void build_pois();
+    void normalize_uri();
 
     /// Construit l’indexe spatial permettant de retrouver plus vite la commune à une coordonnées
     void build_rtree();
@@ -288,7 +270,9 @@ struct GeoRef {
 
     edge_t nearest_edge(const type::GeographicalCoord &coordinates) const;
     edge_t nearest_edge(const type::GeographicalCoord &coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
+    vertex_t nearest_vertex(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
 
+    edge_t nearest_edge(const type::GeographicalCoord & coordinates, const vertex_t & u) const;
     /** Initialise les structures nécessaires à dijkstra
      *
      * Attention !!! Modifie distances et predecessors
@@ -317,6 +301,15 @@ struct GeoRef {
 
     /// Reconstruit un itinéraire à partir de la destination et la liste des prédécesseurs
     Path build_path(vertex_t best_destination, std::vector<vertex_t> preds) const;
+
+ private :
+    /// Normalisation des codes externes
+    void normalize_extcode_way();
+    /// Normalisation des codes externes des admins
+    void normalize_extcode_admin();
+    /// Chargement de la liste map code externe idx sur poitype et poi
+    void normalize_extcode_poitypes();
+    void normalize_extcode_pois();
 };
 
 // Exception levée dès que l'on trouve une destination
@@ -362,6 +355,38 @@ struct ProjectionData {
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & source & target & projected & source_distance & target_distance & found;
     }
+};
+
+/** Nommage d'un POI (point of interest). **/
+struct POIType : public nt::Nameable, nt::Header{
+    const static type::Type_e type = type::Type_e::POIType;
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar &idx &uri &name;
+    }
+
+    std::vector<type::idx_t> get(type::Type_e type, const GeoRef & data) const;
+
+    private:
+};
+
+
+/** Nommage d'un POI (point of interest). **/
+struct POI : public nt::Nameable, nt::Header{
+    const static type::Type_e type = type::Type_e::POI;
+    int weight;
+    nt::GeographicalCoord coord;
+    std::vector<nt::idx_t> admin_list;
+    nt::idx_t poitype_idx;
+
+    POI(): weight(0), poitype_idx(type::invalid_idx){}
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int) {
+        ar &idx & uri &name & weight & coord & admin_list & poitype_idx;
+    }
+
+    std::vector<type::idx_t> get(type::Type_e type, const GeoRef &) const;
+
+    private:
 };
 
 }} //namespace navitia::streetnetwork

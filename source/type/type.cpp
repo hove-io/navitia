@@ -149,12 +149,15 @@ static_data * static_data::get() {
                 (Type_e::Way, "way")
                 (Type_e::Coord, "coord")
                 (Type_e::Address, "address")
-                (Type_e::Route, "route");
+                (Type_e::Route, "route")
+                (Type_e::POI, "poi")
+                (Type_e::POIType, "poi_type");
 
         boost::assign::insert(temp->modes_string)
                 (Mode_e::Walking, "walking")
                 (Mode_e::Bike, "bike")
-                (Mode_e::Car, "car");
+                (Mode_e::Car, "car")
+                (Mode_e::Vls, "vls");
         instance = temp;
 
     }
@@ -343,4 +346,15 @@ EntryPoint::EntryPoint(const std::string &uri) : uri(uri) {
            }
        }
    }
+
+void StreetNetworkParams::set_filter(const std::string &param_uri){
+    size_t pos = param_uri.find(":");
+    if(pos == std::string::npos)
+        type_filter = Type_e::Unknown;
+    else {
+        uri_filter = param_uri;        
+        type_filter = static_data::get()->typeByCaption(param_uri.substr(0,pos));
+    }
+}
+
 }} //namespace navitia::type

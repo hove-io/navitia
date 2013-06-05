@@ -44,12 +44,13 @@ void PoiParser::fill_poi_type(GeoRef & georef_to_fill)
                 ptype.uri = boost::lexical_cast<std::string>(id);
             ptype.name = row[name_c];
             georef_to_fill.poitypes.push_back(ptype);
+            georef_to_fill.poitype_map[ptype.uri] = ptype.idx;
             ++id;
         }
     }
 
     //Chargement de la liste poitype_map
-    georef_to_fill.build_poitypes();
+//    georef_to_fill.normalize_extcode_poitypes();
 }
 
 void PoiParser::fill_poi(GeoRef & georef_to_fill)
@@ -110,7 +111,7 @@ void PoiParser::fill_poi(GeoRef & georef_to_fill)
         }
     }
     //Chargement de la liste poitype_map
-    georef_to_fill.build_pois();
+//    georef_to_fill.normalize_extcode_pois();
 
 }
 

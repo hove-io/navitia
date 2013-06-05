@@ -93,14 +93,13 @@ def filter(value):
 
 def validate_arguments(request, validation_dict) :
     response = Validation_Response() 
-    for key, value in request.args.iteritems() :
+    for key, value in request.iteritems() :
         if not (key in validation_dict) : 
-            response.details[key] = {"status" : "ignored", "value":value}
+            response.details[key] = {"status" : "ignored", "value":str(value)}
         else:
-            if not validation_dict[key].repeated and len(request.args.getlist(key)) > 1:
-                response.details[key] = {"status" : "multiple", "value":value}
-
-            for val in request.args.getlist(key) :
+            if not validation_dict[key].repeated and len(value) > 1:
+                response.details[key] = {"status" : "multiple", "value":str(value)}
+            for val in value :
                 try :
                     parsed_val = validation_dict[key].validator(val)
                     response.details[key] = {"status" : "valid", "value": val}
@@ -123,10 +122,10 @@ def validate_arguments(request, validation_dict) :
                     response.valid = False
                     response.details[key] = {"status" : "notvalid", "value" : val }
     for key, value in validation_dict.iteritems():
-        if not(key in request.args) :
+        if not(key in request) :
             if value.required:
                 response.valid = False
-                response.details[key] = {"status", "missing"}
+                response.details[key] = {"status": "missing"}
             else:
                 response.arguments[key] = value.defaultValue
 

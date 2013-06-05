@@ -1,7 +1,9 @@
 #include "ptreferential.h"
+#include "type/data.h"
 #include "reflexion.h"
 #include "where.h"
 #include "proximity_list/proximity_list.h"
+#include "georef/pois.h"
 
 #include <algorithm>
 #include <regex>
@@ -85,7 +87,7 @@ std::vector<idx_t> filtered_indexes(const std::vector<T> & data, const C & claus
 
 template<typename T>
 std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
-    auto & data = d.pt_data.get_data<T>();
+    auto & data = d.get_data<T>();
     std::vector<idx_t> indexes;
     if(filter.op == DWITHIN) {
         std::vector<std::string> splited;
@@ -106,6 +108,7 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
             switch(filter.navitia_type){
             case Type_e::StopPoint: tmp = d.pt_data.stop_point_proximity_list.find_within(coord, distance); break;
             case Type_e::StopArea: tmp = d.pt_data.stop_area_proximity_list.find_within(coord, distance);break;
+            case Type_e::POI: tmp = d.geo_ref.poi_proximity_list.find_within(coord, distance);break;
             default: throw ptref_error("The requested object can not be used a DWITHIN clause");
             }
             for(auto pair : tmp) {
@@ -123,7 +126,7 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
     Type_e current = filter.navitia_type;
     std::map<Type_e, Type_e> path = find_path(requested_type);
     while(path[current] != current){
-        indexes = d.pt_data.get_target_by_source(current, path[current], indexes);
+        indexes = d.get_target_by_source(current, path[current], indexes);
         current = path[current];
     }
 
@@ -162,12 +165,14 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
         }
     }
 
-    std::vector<idx_t> final_indexes = data.pt_data.get_all_index(requested_type);
+    std::vector<idx_t> final_indexes = data.get_all_index(requested_type);
     std::vector<idx_t> indexes;
     for(const Filter & filter : filters){
         switch(filter.navitia_type){
 #define GET_INDEXES(type_name, collection_name) case Type_e::type_name: indexes = get_indexes<type_name>(filter, requested_type, data); break;
         ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
+            case Type_e::POI: indexes = get_indexes<georef::POI>(filter, requested_type, data); break;
+            case Type_e::POIType: indexes = get_indexes<georef::POIType>(filter, requested_type, data); break;
         default:
             throw parsing_error(parsing_error::partial_error,"Filter: Unable to find the requested type. Not parsed: >>" + nt::static_data::get()->captionByType(filter.navitia_type) + "<<");
         }

@@ -60,7 +60,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                 const auto temp = worker.get_path(path.items.front().stop_points.front());
                 if(temp.path_items.size() > 0) {
                     fill_street_section(origin, temp , d, pb_journey->add_sections(), 1);
-                    departure_time = path.items.front().departure - temp.length/1.38;
+                    departure_time = path.items.front().departure - temp.length/origin.streetnetwork_params.speed;
                 }
             }
             
@@ -130,7 +130,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                 auto temp = worker.get_path(path.items.back().stop_points.back(), true);
                 if(temp.path_items.size() > 0) {
                     fill_street_section(destination, temp, d, pb_journey->add_sections(), 1);
-                    arrival_time =  arrival_time + temp.length/1.38;
+                    arrival_time =  arrival_time + temp.length/destination.streetnetwork_params.speed;
                 }
             }
             pb_journey->set_departure_date_time(iso_string(d, departure_time.date(), departure_time.hour()));
@@ -172,6 +172,43 @@ get_stop_points( const type::EntryPoint &ep, const type::Data & data,
     return result;
 }
 
+type::idx_t get_idx_by_type(const type::Data & data, const nt::Type_e type, const std::string &uri){
+    type::idx_t result;
+    switch(type){
+        case nt::Type_e::POIType:
+            result = data.geo_ref.poitype_map.at(uri);
+        break;
+       default: result = type::invalid_idx;
+                break;
+    }
+    return result;
+}
+
+/**
+    Cette fonction permet de récupérer les points d'arrêts les plus proche à une données ayant l'identifiant idx
+*/
+std::vector<std::pair<type::idx_t, double> >
+get_stop_points_by_filter(const type::Data & data, std::vector<std::pair<type::idx_t, double> > &stop_points, const type::StreetNetworkParams &streetnetwork_params){
+    std::vector<std::pair<type::idx_t, double> > result;
+    type::idx_t idx = get_idx_by_type(data, streetnetwork_params.type_filter, streetnetwork_params.uri_filter);
+    if (idx != type::invalid_idx){
+        for(auto stop_point : stop_points){
+            switch(streetnetwork_params.type_filter){
+                case nt::Type_e::POIType:{
+                    auto pois = data.geo_ref.poi_proximity_list.find_within(data.pt_data.stop_points[stop_point.first].coord, streetnetwork_params.radius_filter);
+                    for(auto poi : pois){
+                        if (data.geo_ref.pois.at(poi.first).poitype_idx == idx){
+                            result.push_back(std::make_pair(stop_point.first,stop_point.second));
+                            break;
+                        }
+                    }}
+                break;
+                default: break;
+            }
+        }
+    }
+    return result;
+}
 
 std::vector<boost::posix_time::ptime> 
 parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str, 
@@ -207,7 +244,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               const std::vector<std::string> &datetimes_str, bool clockwise,
               const float walking_speed, const int walking_distance, const bool wheelchair,
               std::vector<std::string> forbidden,
-              streetnetwork::StreetNetwork & worker, int max_duration) {
+              streetnetwork::StreetNetwork & worker, uint32_t max_duration, uint32_t max_transfers) {
 
     pbnavitia::Response response;
 
@@ -218,7 +255,13 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
     }
     worker.init();
     auto departures = get_stop_points(origin, raptor.data, worker);
+    if (origin.streetnetwork_params.type_filter != type::Type_e::Unknown){
+        departures = get_stop_points_by_filter(raptor.data,departures, origin.streetnetwork_params);
+    }
     auto destinations = get_stop_points(destination, raptor.data, worker, true);
+    if (destination.streetnetwork_params.type_filter != type::Type_e::Unknown){
+        destinations = get_stop_points_by_filter(raptor.data,destinations, destination.streetnetwork_params);
+    }
     if(departures.size() == 0 && destinations.size() == 0){
         response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         return response;
@@ -243,11 +286,11 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
         int time = datetime.time_of_day().total_seconds();
         type::DateTime init_dt = type::DateTime(day, time);
 
-        if(max_duration >= 0) {
+        if(max_duration!=std::numeric_limits<uint32_t>::max())  {
             bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
         }
 
-        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, bound, walking_speed, walking_distance, wheelchair, forbidden, clockwise);
+        std::vector<Path> tmp = raptor.compute_all(departures, destinations, init_dt, bound, max_transfers, walking_speed, walking_distance, wheelchair, forbidden, clockwise);
 
         // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
         if(datetimes.size() == 1){
@@ -275,7 +318,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    const std::string &datetime_str,bool clockwise,
                                    float walking_speed, int walking_distance,  bool wheelchair,
                                    std::vector<std::string> forbidden,
-                                   streetnetwork::StreetNetwork & worker, int max_duration) {
+                                   streetnetwork::StreetNetwork & worker, int max_duration, uint32_t max_transfers) {
     
     pbnavitia::Response response;
 
@@ -301,7 +344,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     type::DateTime init_dt = type::DateTime(day, time);
     type::DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
 
-    raptor.isochrone(departures, init_dt, bound,
+    raptor.isochrone(departures, init_dt, bound, max_transfers,
                            walking_speed, walking_distance, wheelchair, forbidden, clockwise);
 
 

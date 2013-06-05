@@ -1,6 +1,7 @@
 #pragma once
 #include "type/data.h"
 #include "third_party/osmpbfreader/osmpbfreader.h"
+#include "georef/pois.h"
 
 namespace navitia { namespace georef {
 class GeoRef;
@@ -66,6 +67,12 @@ struct OSMAdminRef{
     CanalTP::References refs;
 };
 
+struct OSMAPoi{
+    std::string key;
+    std::string name;
+    type::GeographicalCoord coord;
+};
+
 /** Structure appelée par parseur OSM PBF */
 struct Visitor{
     log4cplus::Logger logger;
@@ -73,16 +80,23 @@ struct Visitor{
     std::unordered_map<uint64_t, Node> nodes;
     std::unordered_map<uint64_t, OSMHouseNumber> housenumbers;
     std::unordered_map<uint64_t, OSMAdminRef> OSMAdminRefs;
+    std::unordered_map<uint64_t, OSMAPoi> OSMAPois;
     int total_ways;
+    int total_vls_stations;
     int total_house_number;
 
     std::unordered_map<uint64_t, OSMWay> ways;
     georef::GeoRef & geo_ref;
     //Pour charger les données administratives
-    navitia::georef::Levels levellist;
+    navitia::adminref::Levels levellist;
+    // Pour charger les pois
+    navitia::georef::Pois poilist;
     std::map<std::string,std::string>::iterator iter;
 
-    Visitor(GeoRef & to_fill) : total_ways(0), total_house_number(0), geo_ref(to_fill){}
+    Visitor(GeoRef & to_fill) : total_ways(0), total_vls_stations(0), total_house_number(0), geo_ref(to_fill){
+        init_logger();
+        logger = log4cplus::Logger::getInstance("log");
+    }
 
     void node_callback(uint64_t osmid, double lon, double lat, const CanalTP::Tags & tags);
     void way_callback(uint64_t osmid, const CanalTP::Tags &tags, const std::vector<uint64_t> &refs);
@@ -90,11 +104,15 @@ struct Visitor{
 
     void add_osm_housenumber(uint64_t osmid, const CanalTP::Tags & tags);
 
+    void add_osm_poi(const navitia::type::GeographicalCoord& coord, const CanalTP::Tags & tags);
     /// Once all the ways and nodes are read, we count how many times a node is used to detect intersections
     void count_nodes_uses();
 
     /// Calcule la source et cible des edges
     void edges();
+
+    /// Calcule la source et cible des edges pour le vls
+    void build_vls_edges();
 
     /// Chargement des adresses
     void HouseNumbers();
@@ -106,13 +124,16 @@ struct Visitor{
     std::vector<uint64_t> nodes_of_relation(const CanalTP::References & refs);
 
     /// gestion des limites des communes : création des polygons
-    void manage_admin_boundary(const CanalTP::References & refs, navitia::georef::Admin& admin);
+    void manage_admin_boundary(const CanalTP::References & refs, navitia::adminref::Admin& admin);
 
     /// construction des informations administratives
     void AdminRef();
 
     /// Associe des communes des rues
     void set_admin_of_ways();
+
+    /// cahrgement des PoiType
+    void fillPoiType();
 };
 
 }}

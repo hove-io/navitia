@@ -331,24 +331,47 @@ std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCo
 }
 
 void GeoRef::init_offset(nt::idx_t value){
-    bike_offset = value;
-    car_offset = 2 * value;
+    vls_offset = value;
+    bike_offset = 2 * value;
+    car_offset = 3 * value;
+
+    /// Pour la gestion du vls
+    for(vertex_t v = 0; v<value; ++v){
+        boost::add_vertex(graph[v], graph);
+    }
+
+    /// Pour la gestion du vélo
+    for(vertex_t v = 0; v<value; ++v){
+        boost::add_vertex(graph[v], graph);
+    }
+
+    /// Pour la gestion du voiture
+    for(vertex_t v = 0; v<value; ++v){
+        boost::add_vertex(graph[v], graph);
+    }
 }
 
 void GeoRef::build_proximity_list(){
     pl.clear(); // vider avant de reconstruire
 
-    if(this->bike_offset == 0){
+    if(this->vls_offset == 0){
         BOOST_FOREACH(vertex_t u, boost::vertices(this->graph)){
             pl.add(graph[u].coord, u);
         }
     }else{
         // Ne pas construire le proximitylist avec les noeuds utilisés par les arcs pour la recherche vélo, voiture
-        for(vertex_t v = 0; v < this->bike_offset; ++v){
+        for(vertex_t v = 0; v < this->vls_offset; ++v){
             pl.add(graph[v].coord, v);
         }
     }
     pl.build();
+
+    poi_proximity_list.clear();
+
+    for(auto &poi : pois) {
+        poi_proximity_list.add(poi.coord, poi.idx);
+    }
+    poi_proximity_list.build();
 }
 
 void GeoRef::build_autocomplete_list(){
@@ -356,7 +379,7 @@ void GeoRef::build_autocomplete_list(){
     for(Way way : ways){
         std::string key="";
         for(auto idx : way.admin_list){
-            Admin admin = admins.at(idx);
+            navitia::adminref::Admin admin = admins.at(idx);
             key+= " " + admin.name;
             //Ajoute le code postal si ça existe
             if (!admin.post_code.empty()){
@@ -373,7 +396,7 @@ void GeoRef::build_autocomplete_list(){
         std::string key="";
         if (poi.visible){
             for(auto idx : poi.admin_list){
-                Admin admin = admins.at(idx);
+                navitia::adminref::Admin admin = admins.at(idx);
                 key += " " + admin.name;
             }
 
@@ -383,38 +406,49 @@ void GeoRef::build_autocomplete_list(){
     fl_poi.build();
 
     // les données administratives
-    for(Admin admin : admins){
+    for(navitia::adminref::Admin admin : admins){
         fl_admin.add_string(admin.name, admin.idx ,alias, synonymes);
     }
     fl_admin.build();
 }
 
 
-/** Chargement de la liste poitype_map : mappage entre codes externes et idx des POITypes*/
-void GeoRef::build_poitypes(){
-   for(auto ptype : poitypes){
+/** Normalisation des codes externes des PoiType*/
+void GeoRef::normalize_extcode_poitypes(){
+   this->poitype_map.clear();
+   for(POIType & ptype : poitypes){
+       ptype.uri = "poi_type:" + ptype.uri;
        this->poitype_map[ptype.uri] = ptype.idx;
    }
 }
 
-/** Chargement de la liste poi_map : mappage entre codes externes et idx des POIs*/
-void GeoRef::build_pois(){
-   for(auto poi : pois){
+/** Normalisation des codes externes des poi*/
+void GeoRef::normalize_extcode_pois(){
+   this->poi_map.clear();
+   for(POI &poi : pois){
+       poi.uri = "poi:" + poi.uri;
        this->poi_map[poi.uri] = poi.idx;
    }
 }
 
 void GeoRef::build_rtree() {
     typedef boost::geometry::model::box<type::GeographicalCoord> box;
-    for(const Admin & admin : this->admins){
+    for(const navitia::adminref::Admin & admin : this->admins){
         auto envelope = boost::geometry::return_envelope<box>(admin.boundary);
         Rect r(envelope.min_corner().lon(), envelope.min_corner().lat(), envelope.max_corner().lon(), envelope.max_corner().lat());
         this->rtree.Insert(r.min, r.max, admin.idx);
     }
 }
+void GeoRef::normalize_uri(){
+    normalize_extcode_way();
+    normalize_extcode_admin();
+    normalize_extcode_poitypes();
+    normalize_extcode_pois();
+}
 
 /** Normalisation des codes externes des rues*/
 void GeoRef::normalize_extcode_way(){
+    this->way_map.clear();
     for(Way & way : ways){
         way.uri = "address:"+ way.uri;
         this->way_map[way.uri] = way.idx;
@@ -423,7 +457,8 @@ void GeoRef::normalize_extcode_way(){
 
 
 void GeoRef::normalize_extcode_admin(){
-    for(Admin& admin : admins){
+    this->admin_map.clear();
+    for(navitia::adminref::Admin& admin : admins){
         admin.uri = "admin:" + admin.id;
         this->admin_map[admin.uri] = admin.idx;
     }
@@ -483,14 +518,17 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates) const {
     return this->nearest_edge(coordinates, this->pl);
 }
 
-
-edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const {
+vertex_t GeoRef::nearest_vertex(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const {
     vertex_t u;
     try {
         u = prox.find_nearest(coordinates);
     } catch(proximitylist::NotFound) {
         throw proximitylist::NotFound();
     }
+    return u;
+}
+
+edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const vertex_t & u) const{
 
     type::GeographicalCoord coord_u, coord_v;
     coord_u = this->graph[u].coord;
@@ -512,5 +550,59 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const p
         throw proximitylist::NotFound();
     else
         return best;
+
 }
+edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const {
+    vertex_t u = nearest_vertex(coordinates, prox);
+//    try {
+//        u = prox.find_nearest(coordinates);
+//    } catch(proximitylist::NotFound) {
+//        throw proximitylist::NotFound();
+//    }
+
+//    type::GeographicalCoord coord_u, coord_v;
+//    coord_u = this->graph[u].coord;
+//    float dist = std::numeric_limits<float>::max();
+//    edge_t best;
+//    bool found = false;
+//    BOOST_FOREACH(edge_t e, boost::out_edges(u, this->graph)){
+//        vertex_t v = boost::target(e, this->graph);
+//        coord_v = this->graph[v].coord;
+//        // Petite approximation de la projection : on ne suit pas le tracé de la voirie !
+//        auto projected = coordinates.project(coord_u, coord_v);
+//        if(projected.second < dist){
+//            found = true;
+//            dist = projected.second;
+//            best = e;
+//        }
+//    }
+//    if(!found)
+//        throw proximitylist::NotFound();
+//    else
+//        return best;
+    return nearest_edge(coordinates, u);
+}
+
+std::vector<type::idx_t> POI::get(type::Type_e type, const GeoRef &) const {
+    switch(type) {
+    case type::Type_e::POIType : return {poitype_idx}; break;
+    default : return {};
+    }
+}
+
+std::vector<type::idx_t> POIType::get(type::Type_e type, const GeoRef & data) const {
+    std::vector<type::idx_t> result;
+    switch(type) {
+    case type::Type_e::POI:
+        for(auto &elem : data.pois) {
+            if(elem.poitype_idx == idx) {
+                result.push_back(elem.idx);
+            }
+        }
+        break;
+    default : break;
+    }
+    return result;
+}
+
 }}

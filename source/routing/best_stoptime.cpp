@@ -1,12 +1,12 @@
-#include "best_trip.h"
+#include "best_stoptime.h"
 
 namespace navitia { namespace routing {
 
 std::pair<type::idx_t, uint32_t>
 best_stop_time(const type::JourneyPatternPoint &jpp,
-          const navitia::type::DateTime &dt,
-          const type::Properties &required_properties,
-          const bool clockwise, const type::Data &data, bool reconstructing_path) {
+               const navitia::type::DateTime &dt,
+               const type::Properties &required_properties,
+               const bool clockwise, const type::Data &data, bool reconstructing_path) {
     if(clockwise)
         return earliest_stop_time(jpp, dt, data, reconstructing_path, required_properties);
     else
@@ -18,14 +18,17 @@ best_stop_time(const type::JourneyPatternPoint &jpp,
 /** Which is the first valid stop_time in this range ?
  *  Returns invalid_idx is none is
  */
-type::idx_t valid_pick_up(type::idx_t idx, type::idx_t end, uint32_t date, uint32_t hour, const type::Data &data, bool reconstructing_path, const type::Properties &required_properties){
+type::idx_t
+valid_pick_up(type::idx_t idx, type::idx_t end, uint32_t date,
+              uint32_t hour, const type::Data &data, bool reconstructing_path,
+              const type::Properties &required_properties){
     for(; idx < end; ++idx) {
         bool valid_date = data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_forward[idx]].test(date);
 
         if (valid_date) {
             type::idx_t st_idx = data.dataRaptor.st_idx_forward[idx];
             const type::StopTime & st = data.pt_data.stop_times[st_idx];
-            if( st.valid_end(reconstructing_path) && st.valid_hour(hour)
+            if( st.valid_end(reconstructing_path) && st.valid_hour(hour, true)
                     && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties) ){
                 return st_idx;
             }
@@ -34,14 +37,17 @@ type::idx_t valid_pick_up(type::idx_t idx, type::idx_t end, uint32_t date, uint3
     return type::invalid_idx;
 }
 
-type::idx_t valid_drop_off(type::idx_t idx, type::idx_t end, uint32_t date, uint32_t hour, const type::Data &data, bool reconstructing_path, const type::Properties &required_properties){
+type::idx_t
+valid_drop_off(type::idx_t idx, type::idx_t end, uint32_t date,
+               uint32_t hour, const type::Data &data,
+               bool reconstructing_path, const type::Properties &required_properties){
     for(; idx < end; ++idx) {
         bool valid_date = data.dataRaptor.validity_patterns[data.dataRaptor.vp_idx_backward[idx]].test(date);
 
         if (valid_date) {
             type::idx_t st_idx = data.dataRaptor.st_idx_backward[idx];
             const type::StopTime & st = data.pt_data.stop_times[st_idx];
-            if( st.valid_end(!reconstructing_path) && st.valid_hour(hour)
+            if( st.valid_end(!reconstructing_path) && st.valid_hour(hour, false)
                     && data.pt_data.vehicle_journeys[st.vehicle_journey_idx].accessible(required_properties) ){
                 return st_idx;
             }
@@ -51,10 +57,10 @@ type::idx_t valid_drop_off(type::idx_t idx, type::idx_t end, uint32_t date, uint
 }
 
 std::pair<type::idx_t, uint32_t> 
-    earliest_stop_time(const type::JourneyPatternPoint & jpp,
-                  const navitia::type::DateTime &dt, const type::Data &data, 
-                       bool reconstructing_path,
-                  const type::Properties &required_properties) {
+earliest_stop_time(const type::JourneyPatternPoint & jpp,
+                   const navitia::type::DateTime &dt, const type::Data &data,
+                   bool reconstructing_path,
+                   const type::Properties &required_properties) {
 
     // If the stop_point doesn’t match the required properties, we don’t bother looking further
     if(!data.pt_data.stop_points[jpp.stop_point_idx].accessible(required_properties))
@@ -81,7 +87,7 @@ std::pair<type::idx_t, uint32_t>
     // If no trip was found, we look for the next day
     if(first_st == type::invalid_idx){
         idx = begin - data.dataRaptor.departure_times.begin();
-        first_st = valid_pick_up(idx, end_idx, dt.date() + 1, dt.hour(), data, reconstructing_path, required_properties);
+        first_st = valid_pick_up(idx, end_idx, dt.date() + 1, 0, data, reconstructing_path, required_properties);
     }
 
     if(first_st != type::invalid_idx){
@@ -96,9 +102,9 @@ std::pair<type::idx_t, uint32_t>
 
 std::pair<type::idx_t, uint32_t> 
 tardiest_stop_time(const type::JourneyPatternPoint & jpp,
-              const navitia::type::DateTime &dt, const type::Data &data,
+                   const navitia::type::DateTime &dt, const type::Data &data,
                    bool reconstructing_path,
-              const type::Properties &required_properties) {
+                   const type::Properties &required_properties) {
     if(!data.pt_data.stop_points[jpp.stop_point_idx].accessible(required_properties))
         return std::make_pair(type::invalid_idx, 0);
     //On cherche le plus grand stop time de la journey_pattern <= dt.hour()
@@ -120,7 +126,7 @@ tardiest_stop_time(const type::JourneyPatternPoint & jpp,
     // If no trip was found, we look for the next day
     if(first_st == type::invalid_idx && dt.date() > 0){
         idx = begin - data.dataRaptor.arrival_times.begin();
-        first_st = valid_drop_off(idx, end_idx, dt.date() -1, dt.hour(), data, reconstructing_path, required_properties);
+        first_st = valid_drop_off(idx, end_idx, dt.date() -1, type::DateTime::SECONDS_PER_DAY, data, reconstructing_path, required_properties);
     }
 
     if(first_st != type::invalid_idx){
