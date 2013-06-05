@@ -7,7 +7,7 @@
 namespace nt = navitia::type;
 namespace navitia {
 
-    namespace georef {
+    namespace adminref {
         typedef boost::geometry::model::polygon<navitia::type::GeographicalCoord> polygon_type;
         struct Levels{
             std::map<std::string, std::string> LevelList;

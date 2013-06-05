@@ -545,12 +545,19 @@ struct StreetNetworkParams{
     Mode_e mode;
     idx_t offset;
     float speed;
-    int distance;
+    float distance;
+    Type_e type_filter; // filtre sur le départ/arrivée : exemple les arrêts les plus proches à une site type
+    std::string uri_filter; // l'uri de l'objet
+    float radius_filter; // ce paramètre est utilisé pour le filtre
     StreetNetworkParams():
                 mode(Mode_e::Walking),
                 offset(0),
                 speed(10),
-                distance(10){}
+                distance(10),
+                type_filter(Type_e::Unknown),
+                uri_filter(""),
+                radius_filter(150){}
+    void set_filter(const std::string & param_uri);
 };
 
 /** Type pour gérer le polymorphisme en entrée de l'API
@@ -562,7 +569,7 @@ struct StreetNetworkParams{
 struct EntryPoint {
     Type_e type;//< Le type de l'objet
     std::string uri; //< Le code externe de l'objet
-    int house_number;
+    int house_number;    
     GeographicalCoord coordinates;  // < coordonnées du point d'entrée
     StreetNetworkParams streetnetwork_params;        // < paramètres de rabatement du point d'entrée
 

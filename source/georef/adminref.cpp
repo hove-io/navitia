@@ -1,5 +1,5 @@
 #include "adminref.h"
 
-namespace navitia { namespace georef {
+namespace navitia { namespace adminref {
 
 }}

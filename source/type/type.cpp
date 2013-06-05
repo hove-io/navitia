@@ -346,4 +346,15 @@ EntryPoint::EntryPoint(const std::string &uri) : uri(uri) {
            }
        }
    }
+
+void StreetNetworkParams::set_filter(const std::string &param_uri){
+    size_t pos = param_uri.find(":");
+    if(pos == std::string::npos)
+        type_filter = Type_e::Unknown;
+    else {
+        uri_filter = param_uri;        
+        type_filter = static_data::get()->typeByCaption(param_uri.substr(0,pos));
+    }
+}
+
 }} //namespace navitia::type

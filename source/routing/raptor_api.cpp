@@ -172,6 +172,43 @@ get_stop_points( const type::EntryPoint &ep, const type::Data & data,
     return result;
 }
 
+type::idx_t get_idx_by_type(const type::Data & data, const nt::Type_e type, const std::string &uri){
+    type::idx_t result;
+    switch(type){
+        case nt::Type_e::POIType:
+            result = data.geo_ref.poitype_map.at(uri);
+        break;
+       default: result = type::invalid_idx;
+                break;
+    }
+    return result;
+}
+
+/**
+    Cette fonction permet de récupérer les points d'arrêts les plus proche à une données ayant l'identifiant idx
+*/
+std::vector<std::pair<type::idx_t, double> >
+get_stop_points_by_filter(const type::Data & data, std::vector<std::pair<type::idx_t, double> > &stop_points, const type::StreetNetworkParams &streetnetwork_params){
+    std::vector<std::pair<type::idx_t, double> > result;
+    type::idx_t idx = get_idx_by_type(data, streetnetwork_params.type_filter, streetnetwork_params.uri_filter);
+    if (idx != type::invalid_idx){
+        for(auto stop_point : stop_points){
+            switch(streetnetwork_params.type_filter){
+                case nt::Type_e::POIType:{
+                    auto pois = data.geo_ref.poi_proximity_list.find_within(data.pt_data.stop_points[stop_point.first].coord, streetnetwork_params.radius_filter);
+                    for(auto poi : pois){
+                        if (data.geo_ref.pois.at(poi.first).poitype_idx == idx){
+                            result.push_back(std::make_pair(stop_point.first,stop_point.second));
+                            break;
+                        }
+                    }}
+                break;
+                default: break;
+            }
+        }
+    }
+    return result;
+}
 
 std::vector<boost::posix_time::ptime> 
 parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str, 
@@ -218,7 +255,13 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
     }
     worker.init();
     auto departures = get_stop_points(origin, raptor.data, worker);
+    if (origin.streetnetwork_params.type_filter != type::Type_e::Unknown){
+        departures = get_stop_points_by_filter(raptor.data,departures, origin.streetnetwork_params);
+    }
     auto destinations = get_stop_points(destination, raptor.data, worker, true);
+    if (destination.streetnetwork_params.type_filter != type::Type_e::Unknown){
+        destinations = get_stop_points_by_filter(raptor.data,destinations, destination.streetnetwork_params);
+    }
     if(departures.size() == 0 && destinations.size() == 0){
         response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         return response;

@@ -379,7 +379,7 @@ void GeoRef::build_autocomplete_list(){
     for(Way way : ways){
         std::string key="";
         for(auto idx : way.admin_list){
-            Admin admin = admins.at(idx);
+            navitia::adminref::Admin admin = admins.at(idx);
             key+= " " + admin.name;
             //Ajoute le code postal si ça existe
             if (!admin.post_code.empty()){
@@ -396,7 +396,7 @@ void GeoRef::build_autocomplete_list(){
         std::string key="";
         if (poi.visible){
             for(auto idx : poi.admin_list){
-                Admin admin = admins.at(idx);
+                navitia::adminref::Admin admin = admins.at(idx);
                 key += " " + admin.name;
             }
 
@@ -406,38 +406,49 @@ void GeoRef::build_autocomplete_list(){
     fl_poi.build();
 
     // les données administratives
-    for(Admin admin : admins){
+    for(navitia::adminref::Admin admin : admins){
         fl_admin.add_string(admin.name, admin.idx ,alias, synonymes);
     }
     fl_admin.build();
 }
 
 
-/** Chargement de la liste poitype_map : mappage entre codes externes et idx des POITypes*/
-void GeoRef::build_poitypes(){
-   for(auto ptype : poitypes){
+/** Normalisation des codes externes des PoiType*/
+void GeoRef::normalize_extcode_poitypes(){
+   this->poitype_map.clear();
+   for(POIType & ptype : poitypes){
+       ptype.uri = "poi_type:" + ptype.uri;
        this->poitype_map[ptype.uri] = ptype.idx;
    }
 }
 
-/** Chargement de la liste poi_map : mappage entre codes externes et idx des POIs*/
-void GeoRef::build_pois(){
-   for(auto poi : pois){
+/** Normalisation des codes externes des poi*/
+void GeoRef::normalize_extcode_pois(){
+   this->poi_map.clear();
+   for(POI &poi : pois){
+       poi.uri = "poi:" + poi.uri;
        this->poi_map[poi.uri] = poi.idx;
    }
 }
 
 void GeoRef::build_rtree() {
     typedef boost::geometry::model::box<type::GeographicalCoord> box;
-    for(const Admin & admin : this->admins){
+    for(const navitia::adminref::Admin & admin : this->admins){
         auto envelope = boost::geometry::return_envelope<box>(admin.boundary);
         Rect r(envelope.min_corner().lon(), envelope.min_corner().lat(), envelope.max_corner().lon(), envelope.max_corner().lat());
         this->rtree.Insert(r.min, r.max, admin.idx);
     }
 }
+void GeoRef::normalize_uri(){
+    normalize_extcode_way();
+    normalize_extcode_admin();
+    normalize_extcode_poitypes();
+    normalize_extcode_pois();
+}
 
 /** Normalisation des codes externes des rues*/
 void GeoRef::normalize_extcode_way(){
+    this->way_map.clear();
     for(Way & way : ways){
         way.uri = "address:"+ way.uri;
         this->way_map[way.uri] = way.idx;
@@ -446,7 +457,8 @@ void GeoRef::normalize_extcode_way(){
 
 
 void GeoRef::normalize_extcode_admin(){
-    for(Admin& admin : admins){
+    this->admin_map.clear();
+    for(navitia::adminref::Admin& admin : admins){
         admin.uri = "admin:" + admin.id;
         this->admin_map[admin.uri] = admin.idx;
     }
