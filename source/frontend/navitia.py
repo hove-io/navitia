@@ -3,6 +3,7 @@
 import sys
 import signal
 import os
+from conf import base_url
 from werkzeug.wrappers import Request, Response
 from werkzeug.wsgi import responder
 from werkzeug.routing import Map, Rule, Submount
@@ -17,10 +18,11 @@ from apis import *
 from renderers import render
 from universals import *
 from protobuf_to_dict import protobuf_to_dict
-import interfaces.input_v1 
+import interfaces.input_v1
 import interfaces.input_v0
 
 import request_pb2, type_pb2
+
 
 def on_summary_doc(request) :
     return render(api_doc(Apis().apis_all), 'json',  request.args.get('callback'))
@@ -28,9 +30,24 @@ def on_summary_doc(request) :
 def on_doc(request, api):
     return render(api_doc(Apis().apis_all, api), 'json', request.args.get('callback'))
 
-def a(b):
-    print b
-    return lambda request, uri1, uri2 : interfaces.input_v1.journeys(request, uri1, uri2)
+def on_index(request):
+    res = {'api_versions': [
+        {
+            'id': 'v0',
+            'href': base_url + '/v0',
+            'comment': 'Deprecated API version'
+        },
+        {
+            'id': 'v1',
+            'href': base_url + '/v1',
+            'comment': 'Current stable version'
+            }],
+        'links' : {
+            'api_reference': 'http://doc.navitia.io',
+            'api_homepage': 'http://www.navitia.io'
+            }
+        }
+    return render(res, 'json', request.args.get('callback'))
 
 v0_rules = [
     Rule('/', endpoint=interfaces.input_v0.on_index),
@@ -51,13 +68,13 @@ v1_rules = [
     Rule('/<path:uri1>/schedules', endpoint=interfaces.input_v1.schedules),
     Rule('/<path:uri1>/journeys/<path:uri2>', endpoint=interfaces.input_v1.journeys),
     Rule('/journeys/<path:uri1>/to/<path:uri2>', endpoint=interfaces.input_v1.journeys),
-    Rule('/journeys/<path:uri1>/to/<path:uri2>/at/<datetime>', endpoint=interfaces.input_v1.journeys),
+    Rule('/journeys/<path:uri1>/to/<path:uri2>/at/<requested_datetime>', endpoint=interfaces.input_v1.journeys),
     Rule('/<path:uri1>/schedules/<path:uri2>', endpoint=interfaces.input_v1.schedules),
     Rule('/<path:uri1>/nearby/<path:uri2>', endpoint=interfaces.input_v1.nearby),
     ]
 
 url_map = Map([
-    Rule('/', endpoint=interfaces.input_v0.on_index),
+    Rule('/', endpoint=on_index),
     Rule('/doc.json', endpoint = on_summary_doc),
     Rule('/doc.json/<api>', endpoint = on_doc),
     Submount('/v0', v0_rules),
@@ -89,7 +106,7 @@ if __name__ == '__main__':
         for apiname, details in v.details.iteritems():
             if len(details) > 0:
                 print "Error in api : " + apiname
-                for error in details : 
+                for error in details :
                     print "\t"+error
     httpd = make_server('', 8088, application)
     print "Serving on port 8088..."

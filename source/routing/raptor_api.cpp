@@ -325,7 +325,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     boost::posix_time::ptime datetime;
     auto tmp_datetime = parse_datetimes(raptor, {datetime_str}, response, clockwise);
     if(response.has_error() || tmp_datetime.size() == 0 ||
-       response.isochrone().response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
+       response.response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
         return response;
     }
     datetime = tmp_datetime.front();
@@ -333,7 +333,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     auto departures = get_stop_points(origin, raptor.data, worker);
 
     if(departures.size() == 0){
-        response.mutable_isochrone()->set_response_type(pbnavitia::NO_ORIGIN_POINT);
+        response.set_response_type(pbnavitia::NO_ORIGIN_POINT);
         return response;
     }
     
@@ -368,20 +368,19 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
             int duration = ::abs(label - init_dt);
 
             if(duration <= max_duration) {
-                auto pb_item = response.mutable_isochrone()->add_items();
-                auto pb_stop_date_time = pb_item->mutable_stop_date_time();
-                pb_stop_date_time->set_arrival_date_time(iso_string(raptor.data, label.date(), label.hour()));
-                pb_stop_date_time->set_departure_date_time(iso_string(raptor.data, label.date(), label.hour()));
-                pb_item->set_duration(duration);
-                pb_item->set_nb_changes(round);
-                fill_pb_object(raptor.data.pt_data.journey_pattern_points[best_rp].stop_point_idx, raptor.data, pb_stop_date_time->mutable_stop_point(), 0);
+                auto pb_journey = response.add_journeys();
+                pb_journey->set_arrival_date_time(iso_string(raptor.data, label.date(), label.hour()));
+                pb_journey->set_departure_date_time(iso_string(raptor.data, label.date(), label.hour()));
+                pb_journey->set_duration(duration);
+                pb_journey->set_nb_transfers(round);
+                fill_pb_placemark(raptor.data.pt_data.stop_points[raptor.data.pt_data.journey_pattern_points[best_rp].stop_point_idx], raptor.data, pb_journey->mutable_destination(), 0);
             }
         }
     }
 
-     std::sort(response.mutable_isochrone()->mutable_items()->begin(), response.mutable_isochrone()->mutable_items()->end(),
-               [](const pbnavitia::IsochroneItem & stop_time1, const pbnavitia::IsochroneItem & stop_time2) {
-               return stop_time1.duration() < stop_time2.duration();
+     std::sort(response.mutable_journeys()->begin(), response.mutable_journeys()->end(),
+               [](const pbnavitia::Journey & journey1, const pbnavitia::Journey & journey2) {
+               return journey1.duration() < journey2.duration();
                 });
 
 

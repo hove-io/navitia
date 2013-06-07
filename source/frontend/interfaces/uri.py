@@ -1,5 +1,11 @@
-from instance_manager import NavitiaManager 
+from instance_manager import NavitiaManager
 import re
+
+collections_to_resource_type = {
+        "stop_points": "stop_point", "routes":"route",
+         "networks":"network", "commercial_modes":"commercial_mode",
+         "physical_modes":"physical_mode", "companies":"company",
+         "stop_areas":"stop_area", "lines":"line"}
 
 class InvalidUriException(Exception):
     def __init__(self, message):
@@ -7,15 +13,6 @@ class InvalidUriException(Exception):
 
 
 class Uri:
-    uri = None
-    region_or_coord_part = None
-    params = None
-    region_ = None
-    lon = None
-    lat = None
-    objects = []
-    
-
     def __init__(self, string):
         self.uri = string
         self.region_or_coord_part = None
@@ -23,6 +20,9 @@ class Uri:
         self.region_ = None
         self.lon = None
         self.lat = None
+        self.is_region = None
+        self.objects = []
+
         self.parse_region_coord()
         self.parse_params()
 
@@ -38,7 +38,7 @@ class Uri:
     def parse_region_coord(self):
         #On caste la premiere partie de l'url qui est soit une region, soit une
         #coordonnee (coord/lon;lat)
-        a = re.compile("^(/)?(?P<firstpart>((?P<region>(?!coord/)\w+)|(coord/(?P<lon>([+-]?\d{0,2}\.?\d*));(?P<lat>([+-]?\d{1,2}\.?\d*)))))")
+        a = re.compile("^(/)?(?P<firstpart>((?P<region>(?!coord/)\w+)|(coord/(?P<lon>([+-]?\d{0,3}\.?\d*));(?P<lat>([+-]?\d{0,2}\.?\d*)))))")
         m = a.search(self.uri)
         #Si on a trouve une premiere partie valide
         if(m.group("firstpart")):
@@ -46,14 +46,16 @@ class Uri:
             self.params = self.uri[m.end("firstpart"):]
             #Dans le cas ou il s'agit d'une region
             if(m.group("region")):
+                self.is_region = True
                 self.region_ = m.group("region")
             else:
                 #Si c'est une coordonnee
+                self.is_region = False
                 self.lon = float(m.group("lon"))
                 self.lat = float(m.group("lat"))
-            
+
     def parse_params(self):
-        s =  self.params.split("/") 
+        s =  self.params.split("/")
         resource_type, uid = None, None
         for par in s:
             if par != "":
@@ -62,7 +64,7 @@ class Uri:
                         resource_type = par
                     else:
                         raise InvalidUriException("Invalid resource type : "+par)
-                else: 
+                else:
                     uid = par
                     self.objects.append((resource_type, uid))
                     resource_type, uid = None, None

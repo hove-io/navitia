@@ -29,6 +29,7 @@ message Place {
     optional AdministrativeRegion administrative_region = 10;
     optional int32 distance = 11;
     optional int32 quality = 12;
+    optional NavitiaType object_type = 13;
 }
 
 enum Direction {
@@ -122,6 +123,8 @@ message Journey {
     optional string arrival_date_time = 4;
     optional string requested_date_time = 5;
     repeated Section sections = 6;
+    optional Place origin = 7;
+    optional Place destination = 8;
 }
 
 enum ResponseType {

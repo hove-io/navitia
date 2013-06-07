@@ -34,6 +34,7 @@ pbnavitia::Response query_pb(type::Type_e requested_type, std::string request, c
         return pb_response;
     } catch(const ptref_error &pt_error) {
         pb_response.set_error(pt_error.more);
+        return pb_response;
     }
 
     return extract_data(data, requested_type, final_indexes, depth);

@@ -1,4 +1,4 @@
-import multiprocessing
+# coding=utf8
 
-bind = "127.0.0.1:8088"
-workers = multiprocessing.cpu_count() * 2 + 1
+# C’est l’url de base à partir de laquelle seront construites les uri
+base_url = "http://localhost"

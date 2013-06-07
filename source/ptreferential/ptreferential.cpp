@@ -166,6 +166,11 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
     }
 
     std::vector<idx_t> final_indexes = data.get_all_index(requested_type);
+    // Cas où on a aucun objet demandé dans la base (au pif, des companies…)
+    if(final_indexes.empty()){
+        return final_indexes;
+    }
+
     std::vector<idx_t> indexes;
     for(const Filter & filter : filters){
         switch(filter.navitia_type){
@@ -182,6 +187,11 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
         std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
         std::set_intersection(final_indexes.begin(), final_indexes.end(), indexes.begin(), indexes.end(), it);
         final_indexes = tmp_indexes;
+    }
+
+    // Cas où c’est les filtres qui font qu’on ne trouve rien
+    if(final_indexes.empty()){
+        throw ptref_error("404");
     }
     return final_indexes;
 }
