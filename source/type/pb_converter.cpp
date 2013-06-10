@@ -291,6 +291,7 @@ void fill_pb_placemark(const type::StopPoint & stop_point, const type::Data &dat
     fill_pb_object(stop_point.idx, data, place->mutable_stop_point(), max_depth, now, action_period);
     place->set_name(stop_point.name);
     place->set_uri(stop_point.uri);
+    place->set_object_type(pbnavitia::STOP_POINT);
 }
 
 void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &path, const type::Data &data, pbnavitia::Section* section,

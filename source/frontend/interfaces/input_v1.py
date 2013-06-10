@@ -20,7 +20,7 @@ def uri(request, uri):
 
     if len(u.objects) == 0:
         if u.is_region:
-            return output_v1.region_metadata(request, 'json', u)
+            return output_v1.region_metadata(u.region(), 'json', request.args.get("callback"))
 
     resource_type, uid = u.objects.pop()
     req = {}
