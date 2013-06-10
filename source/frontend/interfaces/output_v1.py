@@ -7,37 +7,75 @@ import request_pb2, type_pb2, response_pb2
 from uri import collections_to_resource_type
 from error import generate_error
 
-def add_uri(collection_name, region, collection):
-    for item in collection:
-        item.uri = region+"/"+collection_name+"/"+item.uri
-    return collection
+class json_renderer:
+    nearbyable_types = ['stop_points', 'stop_areas', 'coords', 'pois']
 
-#Objets à partir desquels on peut demander un nearby ou initier un itinéraire
-nearbyable_types = ['stop_points', 'stop_areas', 'coords', 'pois']
+    def __init__(self, base_url):
+        self.base_url = base_url
+
+    def stop_point(self, obj, region, details=False):
+        return self.generic_type('stop_points', obj, region, details)
+
+    def stop_area(self, obj, region, details=False):
+        return self.generic_type('stop_areas', obj, region, details)
+
+    def route(self, obj, region, details=False):
+        return self.generic_type('routes', obj, region, details)
+
+    def line(self, obj, region, details=False):
+        return self.generic_type('lines', obj, region, details)
+
+    def network(self, obj, region, details=False):
+        return self.generic_type('networks', obj, region, details)
+
+    def commercial_mode(self, obj, region, details=False):
+        return self.generic_type('commercial_modes', obj, region, details)
+
+    def physical_mode(self, obj, region, details=False):
+        return self.generic_type('physical_modes', obj, region, details)
+
+    def company(self, obj, region, details=False):
+        return self.generic_type('companies', obj, region, details)
+
+
+    def generic_type(self, type, obj, region, details):
+        result = {
+                'name': obj.name,
+                'id': region + '/' + type + '/' + obj.uri
+                }
+        result['href'] = self.base_url + '/' + result['id'] 
+
+        if details:
+            result['links'] = {}
+            if type in self.nearbyable_types:
+                result['links']['nearby'] = result['href'] + '/nearby'
+                result['links']['journeys'] = result['href'] + '/journeys'
+            for key in collections_to_resource_type:
+                if key != type:
+                    result['links'][key] = result['href'] + '/' + key
+        return result
+
+
+
+def get_field_by_name(obj, name):
+    for field_tuple in obj.ListFields():
+        print field_tuple[0].name
+        if field_tuple[0].name == name:
+            return field_tuple[1] 
+    return None
 
 def render_ptref(response, region, resource_type, uid, format, callback):
-    resp_dict = protobuf_to_dict(response)
-    if 'error' in resp_dict and resp_dict['error'] == '404':
+    if response.error and response.error == '404':
         return generate_error("Object not found", status=404)
 
-    if not resource_type in resp_dict:
-        resp_dict[resource_type] = []
-    for item in resp_dict[resource_type]:
-        item['id'] = region +"/"+resource_type+"/"+item['uri']
-        item['href'] = base_url + '/v1/' + item['id']
-        if uid: #On a demandé un objet spécifique, donc on file plein des liens
-            item['links'] = {
-                    'schedules' : item['href'] + '/schedules',
-                    }
-            if resource_type in nearbyable_types:
-                item['links']['nearby'] = item['href'] + '/nearby'
-                item['links']['journeys'] = item['href'] + '/journeys'
-        # On ajoute les liens vers tous les objets, à part vers lui-même
-            for key in collections_to_resource_type:
-                if key != resource_type:
-                    item['links'][key] = item['href'] + '/' + key
-
-        del(item['uri'])
+    resp_dict = {resource_type: []}
+    renderer = json_renderer(base_url + '/v1/')
+    items = get_field_by_name(response, resource_type)
+    if items:
+        for item in items:
+            resp_dict[resource_type].append(renderer.generic_type(resource_type, item, region, uid != None))
+    else:
+        print "Not found :'(", resource_type
 
     return render(resp_dict, format, callback)
 
