@@ -97,7 +97,7 @@ def journeys(request, uri1, uri2=None, requested_datetime=None):
             return generate_error("Invalid Arguments : " + str(e.message))
         if arguments.valid:
             response = NavitiaManager().dispatch(arguments.arguments, u1.region(), "journeys")
-            return render_from_protobuf(response, "json", request.args.get("callback"))
+            return output_v1.journeys(request.path, u1, response, "json", request.args.get("callback"))
         else:
             return generate_error("Invalid arguments : " + arguments.details)
     else:

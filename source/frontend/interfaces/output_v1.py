@@ -36,18 +36,23 @@ class json_renderer:
     def company(self, obj, region, details=False):
         return self.generic_type('companies', obj, region, details)
 
-    def journey(self, obj, region_name, details):
+    def journey(self, obj, path, region_name, details):
         result = {
                 'duration': obj.duration,
                 'nb_transfers': obj.nb_transfers,
                 'departure_date_time': obj.departure_date_time,
                 'arrival_date_time': obj.arrival_date_time,
-                'href': 'bliii'
                 }
         if obj.HasField('origin'):
             result['origin'] = self.place(obj.origin, region_name)
         if obj.HasField('destination'):
             result['destination'] = self.place(obj.destination, region_name)
+            result['href'] = path + '/' + result['destination']['id']
+
+        if len(obj.sections) > 0:
+            result['sections'] = []
+            for section in obj.sections:
+                result['sections'].append(self.section(section, region_name))
         return result
 
     def place(self, obj, region_name):
@@ -95,6 +100,83 @@ class json_renderer:
                     result['links'][key] = result['href'] + '/' + key
         return result
 
+    def section_links(self, region_name, uris):
+        links = {}
+        if uris.HasField('company'):
+            links['company'] = self.base_url + region_name + '/companies/' + uris.company
+        if uris.HasField('vehicle_journey'):
+            links['vehicle_journey'] = self.base_url + region_name + '/vehicle_journeys/' + uris.vehicle_journey
+        if uris.HasField('line'):
+            links['line'] = self.base_url + region_name + '/lines/' + uris.line
+        if uris.HasField('route'):
+            links['route'] = self.base_url + region_name + '/routes/' + uris.route
+        if uris.HasField('commercial_mode'):
+            links['commercial_mode'] = self.base_url + region_name + '/commercial_modes/' + uris.commercial_mode
+        if uris.HasField('physical_mode'):
+            links['physical_mode'] = self.base_url + region_name + '/physical_modes/' + uris.physical_mode
+        if uris.HasField('network'):
+            links['network'] = self.base_url + region_name + '/networks/' + uris.network
+        return links
+
+    def display_informations(self, infos):
+        result = {
+                'network': infos.network,
+                'code': infos.code,
+                'headsign': infos.headsign,
+                'color': infos.color,
+                'commercial_mode': infos.commercial_mode,
+                'physical_mode': infos.physical_mode
+                }
+        return result
+
+    def street_network(self, street_network):
+        result = {
+                'length': street_network.length,
+                'mode': street_network.mode,
+                'instructions': [],
+                'coordinates': []
+                }
+        for item in street_network.path_items:
+            result['instructions'].append({'name': item.name, 'length': item.length})
+
+        for coord in street_network.coordinates:
+            result['coordinates'].append({'lon': coord.lon, 'lat': coord.lat})
+
+        return result
+
+    def section(self, obj, region_name):
+        result = {
+                'type': obj.type,
+                'origin': self.place(obj.origin, region_name),
+                'destination': self.place(obj.destination, region_name),
+                'duration': obj.duration
+                }
+        if obj.HasField('begin_date_time'):
+            result['begin_date_time'] = obj.begin_date_time
+        if obj.HasField('end_date_time'):
+            result['end_date_time'] = obj.end_date_time
+        if obj.HasField('uris'):
+            result['links'] = self.section_links(region_name, obj.uris)
+        if obj.HasField('pt_display_informations'):
+            result['pt_display_informations'] = self.display_informations(obj.pt_display_informations)
+
+        if len(obj.stop_date_times) > 0:
+            result['stop_date_times'] = []
+            for stop_dt in obj.stop_date_times:
+                result['stop_date_times'].append(
+                        {
+                            'departure_date_time': stop_dt.departure_date_time,
+                            'arrival_date_time': stop_dt.arrival_date_time,
+                            'stop_point': self.stop_point(stop_dt.stop_point, region_name)
+                        })
+
+        if obj.HasField('street_network'):
+            result['street_network'] = self.street_network(obj.street_network)
+
+        if obj.HasField('transfer_type'):
+            result['transfert_type'] = obj.transfert_type
+
+        return result
 
 
 def get_field_by_name(obj, name):
@@ -106,7 +188,7 @@ def get_field_by_name(obj, name):
 
 def render_ptref(response, region, resource_type, uid, format, callback):
     if response.error and response.error == '404':
-        return generate_error("Object not found", status=404)
+        return generate_error("No object found", status=404)
 
     resp_dict = {resource_type: []}
     renderer = json_renderer(base_url + '/v1/')
@@ -149,8 +231,14 @@ def isochrone(path, uri, response, format, callback):
     renderer = json_renderer(base_url + '/v1/')
     response_dict = {'journeys': []}
     for journey in response.journeys:
-        response_dict['journeys'].append(renderer.journey(journey, uri.region(), False))
-#        journey['href'] = base_url + path + '/' + uri.region() + '/stop_points/' +journey['destination']['stop_point']['uri']
+        response_dict['journeys'].append(renderer.journey(journey, base_url + path, uri.region(), False))
+    return render(response_dict, format, callback)
+
+def journeys(path, uri, response, format, callback):
+    renderer = json_renderer(base_url + '/v1/')
+    response_dict = {'journeys': []}
+    for journey in response.journeys:
+        response_dict['journeys'].append(renderer.journey(journey, base_url + path, uri.region(), True))
     return render(response_dict, format, callback)
 
 

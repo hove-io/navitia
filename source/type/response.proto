@@ -99,7 +99,7 @@ message Section {
 // Si c'est du TC
     optional PtDisplayInfo pt_display_informations = 4;
     optional Uris uris = 5;
-    optional VehicleJourney vehicle_journey = 9;
+    optional VehicleJourney vehicle_journey = 9; 
     repeated StopDateTime stop_date_times = 10;
 
 // Si c'est du routier
@@ -210,17 +210,6 @@ message Load {
     required bool ok = 1;
 }
 
-message IsochroneItem {
-    required StopDateTime stop_date_time = 1;
-    required int32 duration = 2;
-    required int32 nb_changes = 3;
-}
-
-message Isochrone {
-    repeated IsochroneItem items = 1;
-    optional ResponseType response_type = 2;
-}
-
 message Metadatas {
     required string start_production_date = 1;
     required string end_production_date = 2;
@@ -276,7 +265,6 @@ message Response{
     repeated Passage next_departures = 37;
     repeated Passage next_arrivals = 38;
     optional Load load = 46;
-    optional Isochrone isochrone = 47;
     optional Metadatas metadatas = 48;
     optional Pagination pagination = 49;
 }
