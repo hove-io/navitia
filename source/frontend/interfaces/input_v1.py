@@ -10,6 +10,52 @@ import output_v1
 def regions(request):
     return output_v1.regions(request)
 
+def departures(request, uri1):
+    u = None
+    try:
+        u = Uri(uri1)
+    except InvalidUriException, e:
+        return generate_error("Invalid uri")
+
+    if len(u.objects) == 0:
+        return generate_error("Departures are only available from a stop area or a stop point", 501)
+
+    resource_type, uid = u.objects.pop()
+    if resource_type not in ['stop_points', 'stop_areas']: 
+        return generate_error("Departures are only available from a stop area or a stop point", 501)
+
+    req = {            
+            'filter': [collections_to_resource_type[resource_type]+".uri="+uid], 
+            'from_datetime': [datetime.datetime.now().strftime("%Y%m%dT1337")]
+          }
+    print req
+    arguments = validate_and_fill_arguments("next_departures", req)
+    response = NavitiaManager().dispatch(arguments.arguments, u.region(), "next_departures")
+    return output_v1.departures(response,  u.region(), "json", request.args.get("callback"))
+
+def arrivals(request, uri1):
+    u = None
+    try:
+        u = Uri(uri1)
+    except InvalidUriException, e:
+        return generate_error("Invalid uri")
+
+    if len(u.objects) == 0:
+        return generate_error("Arrivals are only available from a stop area or a stop point", 501)
+
+    resource_type, uid = u.objects.pop()
+    if resource_type not in ['stop_points', 'stop_areas']: 
+        return generate_error("Arrivals are only available from a stop area or a stop point", 501)
+
+    req = {            
+            'filter': [collections_to_resource_type[resource_type]+".uri="+uid], 
+            'from_datetime': [datetime.datetime.now().strftime("%Y%m%dT1337")]
+          }
+    print req
+    arguments = validate_and_fill_arguments("next_arrivals", req)
+    response = NavitiaManager().dispatch(arguments.arguments, u.region(), "next_arrivals")
+    return output_v1.arrivals(response,  u.region(), "json", request.args.get("callback"))
+
 
 def uri(request, uri):
     u = None
@@ -48,7 +94,7 @@ def places(request, uri):
         return generate_error("Invalid uri", e.message)
 
     if len(u.objects) > 0:
-        return generate_error("You cannot search places within this object", status=501)
+        return generate_error("You cannot search places within this object, not implemented", status=501)
 
     arguments = validate_pb_request("places", request)
     if arguments.valid:
@@ -75,7 +121,7 @@ def journeys(request, uri1, uri2=None, requested_datetime=None):
 
     resource_type1, uid1 = u1.objects.pop()
     if not uid1 or not resource_type1 in acceptable_types:
-        return generate_error("Unsupported uri: " + uri1, status=501)
+        return generate_error("Unsupported uri: " + uri1 + ", not implemented", status=501)
     req = {}
     req["origin"] = [uid1]
     req["datetime"] = [datetime.datetime.now().strftime("%Y%m%dT1337")]
@@ -87,9 +133,9 @@ def journeys(request, uri1, uri2=None, requested_datetime=None):
             return generate_error("Invalid uri" + e.message)
         resource_type2, uid2 = u2.objects.pop()
         if not uid2 or not resource_type2 in acceptable_types:
-            return generate_error("Unsupported uri : " + uri2, status=501)
+            return generate_error("Unsupported uri : " + uri2 + ", not implemented", status=501)
         if u1.region() != u2.region():
-            return generate_error("The regions has to be the same", status=501)
+            return generate_error("The origin and destination are not in the same region, not implemented", status=501)
         req["destination"] = [uid2]
         try:
             arguments = validate_and_fill_arguments("journeys", req)
@@ -123,7 +169,7 @@ def nearby(request, uri1, uri2=None):
     if uid:
         req["uri"] = [uid]
     else:
-        return generate_error("You cannot search places within this object", status=501)
+        return generate_error("You cannot search places around this object, not implemented", status=501)
     try:
         arguments = validate_and_fill_arguments("places_nearby", req)
     except InvalidArguments, e:

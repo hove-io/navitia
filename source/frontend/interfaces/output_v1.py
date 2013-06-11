@@ -55,6 +55,8 @@ class json_renderer:
                 result['sections'].append(self.section(section, region_name))
         return result
 
+    def departures(self, obj):
+        result = {}
     def place(self, obj, region_name):
         if obj.object_type == type_pb2.STOP_AREA:
             return self.stop_area(obj.stop_area, region_name, False)
@@ -95,6 +97,8 @@ class json_renderer:
             if type in self.nearbyable_types:
                 result['links']['nearby'] = result['href'] + '/nearby'
                 result['links']['journeys'] = result['href'] + '/journeys'
+                result['links']['departures'] = result['href'] + '/departures'
+                result['links']['arrivals'] = result['href'] + '/arrivals'
             for key in collections_to_resource_type:
                 if key != type:
                     result['links'][key] = result['href'] + '/' + key
@@ -144,6 +148,17 @@ class json_renderer:
 
         return result
 
+    def stop_date_time(self, obj, region_name):
+        result = {}
+        if obj.HasField('departure_date_time'):
+            result['departure_date_time'] = obj.departure_date_time
+        if obj.HasField('arrival_date_time'):
+            result['arrival_date_time'] = obj.arrival_date_time
+        if obj.HasField('stop_point'):
+            result['stop_point'] = self.stop_point(obj.stop_point, region_name)
+        return result
+
+
     def section(self, obj, region_name):
         result = {
                 'type': obj.type,
@@ -163,12 +178,7 @@ class json_renderer:
         if len(obj.stop_date_times) > 0:
             result['stop_date_times'] = []
             for stop_dt in obj.stop_date_times:
-                result['stop_date_times'].append(
-                        {
-                            'departure_date_time': stop_dt.departure_date_time,
-                            'arrival_date_time': stop_dt.arrival_date_time,
-                            'stop_point': self.stop_point(stop_dt.stop_point, region_name)
-                        })
+                result['stop_date_times'].append(self.stop_date_time(stop_dt, region_name))
 
         if obj.HasField('street_network'):
             result['street_network'] = self.street_network(obj.street_network)
@@ -178,6 +188,14 @@ class json_renderer:
 
         return result
 
+    def passage(self, obj, region_name):
+        result = {
+                'stop_date_time': self.stop_date_time(obj.stop_date_time, region_name),
+                'stop_point': self.stop_point(obj.stop_point, region_name)
+                }
+        if obj.HasField('pt_display_informations'):
+            result['pt_display_informations'] = self.display_informations(obj.pt_display_informations)
+        return result
 
 def get_field_by_name(obj, name):
     for field_tuple in obj.ListFields():
@@ -241,4 +259,16 @@ def journeys(path, uri, response, format, callback):
         response_dict['journeys'].append(renderer.journey(journey, base_url + path, uri.region(), True))
     return render(response_dict, format, callback)
 
+def departures(response, region, format, callback):
+    renderer = json_renderer(base_url + '/v1/')
+    response_dict = {'next_departures': []}
+    for passage in response.next_departures:
+        response_dict['next_departures'].append(renderer.passage(passage, region))
+    return render(response_dict, format, callback)
 
+def arrivals(response, region, format, callback):
+    renderer = json_renderer(base_url + '/v1/')
+    response_dict = {'next_arrivals': []}
+    for passage in response.next_arrivals:
+        response_dict['next_arrivals'].append(renderer.passage(passage, region))
+    return render(response_dict, format, callback)
