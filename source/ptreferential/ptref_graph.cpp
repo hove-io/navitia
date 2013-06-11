@@ -49,9 +49,11 @@ Jointures::Jointures() {
     boost::add_edge(vertex_map.at(Type_e::JourneyPatternPoint), vertex_map.at(Type_e::JourneyPattern), g);
     boost::add_edge(vertex_map.at(Type_e::VehicleJourney), vertex_map.at(Type_e::JourneyPattern), g);
 
-    // À partir d'un vehicle journey, on peut avoir le journey parttern, la companie créole, le mode physique et le validity pattern
+    // À partir d'un vehicle journey, on peut avoir le journey pattern, la compagnie créole, le mode physique et le validity pattern
     boost::add_edge(vertex_map.at(Type_e::JourneyPattern), vertex_map.at(Type_e::VehicleJourney), g);
-    boost::add_edge(vertex_map.at(Type_e::Company), vertex_map.at(Type_e::VehicleJourney), g);
+    // On a mis un poids plus fort sur company, pour obliger d’obtenir les lignes au travers des JPP->Routes
+    // Sinon il tente le raccourci Company->line
+    boost::add_edge(vertex_map.at(Type_e::Company), vertex_map.at(Type_e::VehicleJourney), Edge(2.5), g);
     boost::add_edge(vertex_map.at(Type_e::PhysicalMode), vertex_map.at(Type_e::VehicleJourney), g);
     boost::add_edge(vertex_map.at(Type_e::ValidityPattern), vertex_map.at(Type_e::VehicleJourney), g);
 
