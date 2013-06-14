@@ -144,6 +144,7 @@ message Planner {
     optional ResponseType response_type = 2;
     optional string before = 3;
     optional string after = 4;
+    optional string error = 5;
 }
 
 message Status{
