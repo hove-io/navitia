@@ -28,7 +28,6 @@ def departures(request, uri1):
             'filter': [collections_to_resource_type[resource_type]+".uri="+uid], 
             'from_datetime': [datetime.datetime.now().strftime("%Y%m%dT1337")]
           }
-    print req
     arguments = validate_and_fill_arguments("next_departures", req)
     response = NavitiaManager().dispatch(arguments.arguments, u.region(), "next_departures")
     return output_v1.departures(response,  u.region(), "json", request.args.get("callback"))
@@ -51,7 +50,6 @@ def arrivals(request, uri1):
             'filter': [collections_to_resource_type[resource_type]+".uri="+uid], 
             'from_datetime': [datetime.datetime.now().strftime("%Y%m%dT1337")]
           }
-    print req
     arguments = validate_and_fill_arguments("next_arrivals", req)
     response = NavitiaManager().dispatch(arguments.arguments, u.region(), "next_arrivals")
     return output_v1.arrivals(response,  u.region(), "json", request.args.get("callback"))
@@ -70,14 +68,21 @@ def uri(request, uri):
 
     resource_type, uid = u.objects.pop()
     req = {}
+    if 'start_page' in request.args:
+        req['startPage'] = [int(request.args.get('start_page'))]
+
+    filters = []
     if uid:
-        req["filter"] = [collections_to_resource_type[resource_type]+".uri="+uid]
+        filters.append(collections_to_resource_type[resource_type]+".uri="+uid)
     else:
-        filters = []
         for resource_type2, uid2 in u.objects:
             filters.append(collections_to_resource_type[resource_type2]+".uri="+uid2)
-        if len(filters)>0:
-            req["filter"] = [" and ".join(filters)]
+
+    if 'filter' in request.args:
+        filters.append(request.args.get('filter'))
+
+    if len(filters)>0:
+        req["filter"] = [" and ".join(filters)]
     arguments = None
     try:
         arguments = validate_and_fill_arguments(resource_type, req)
@@ -153,7 +158,7 @@ def journeys(request, uri1, uri2=None, requested_datetime=None):
             return generate_error("Invalid Arguments : " + e.message)
         if arguments.valid:
             response = NavitiaManager().dispatch(arguments.arguments, u1.region(), "isochrone")
-            return output_v1.isochrone(request.path, u1, response, 'json', request.args.get("callback"))
+            return output_v1.journeys(request.path, u1, response, 'json', request.args.get("callback"))
         else:
             return generate_error("Invalid arguments : " + arguments.details)
 

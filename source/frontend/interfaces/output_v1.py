@@ -184,7 +184,7 @@ class json_renderer:
             result['street_network'] = self.street_network(obj.street_network)
 
         if obj.HasField('transfer_type'):
-            result['transfert_type'] = obj.transfert_type
+            result['transfert_type'] = obj.transfer_type
 
         return result
 
@@ -199,23 +199,41 @@ class json_renderer:
 
 def get_field_by_name(obj, name):
     for field_tuple in obj.ListFields():
-        print field_tuple[0].name
         if field_tuple[0].name == name:
             return field_tuple[1] 
     return None
+
+def pagination(base_url, obj):
+    result = {
+            'total_result': obj.totalResult,
+            'current_page': obj.startPage,
+            'items_on_page': obj.itemsOnPage,
+            'links': {
+                'first_page': base_url,
+                }
+            }
+    if obj.itemsOnPage > 0:
+        result['links']['last_page'] = base_url + '?start_page=' + str(int(obj.totalResult/obj.itemsOnPage))
+    else:
+        result['links']['last_page'] = base_url
+    if obj.HasField('nextPage'):
+        result['links']['next_page'] = base_url + '?start_page=' + str(obj.startPage + 1)
+    if obj.HasField('previousPage'):
+        result['links']['previous_page'] = base_url + '?start_page=' + str(obj.startPage - 1)
+    return result
+
 
 def render_ptref(response, region, resource_type, uid, format, callback):
     if response.error and response.error == '404':
         return generate_error("No object found", status=404)
 
-    resp_dict = {resource_type: []}
+    
+    resp_dict = {resource_type: [], 'meta': pagination(base_url + '/v1/' + region + '/' + resource_type, response.pagination)}
     renderer = json_renderer(base_url + '/v1/')
     items = get_field_by_name(response, resource_type)
     if items:
         for item in items:
             resp_dict[resource_type].append(renderer.generic_type(resource_type, item, region, uid != None))
-    else:
-        print "Not found :'(", resource_type
 
     return render(resp_dict, format, callback)
 
@@ -244,13 +262,6 @@ def region_metadata(region_name, format, callback):
         return generate_error("Unknown region: " + region, status=404)
     else:
         return render({'regions': tmp_resp}, format, callback)
-
-def isochrone(path, uri, response, format, callback):
-    renderer = json_renderer(base_url + '/v1/')
-    response_dict = {'journeys': []}
-    for journey in response.journeys:
-        response_dict['journeys'].append(renderer.journey(journey, base_url + path, uri.region(), False))
-    return render(response_dict, format, callback)
 
 def journeys(path, uri, response, format, callback):
     renderer = json_renderer(base_url + '/v1/')
