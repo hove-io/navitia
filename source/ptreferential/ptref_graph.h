@@ -10,6 +10,7 @@ namespace navitia { namespace ptref {
 struct Edge {
     float weight;
     Edge() : weight(1){}
+    Edge(float w) : weight(w){}
 };
 
 typedef boost::adjacency_list<boost::listS, boost::vecS, boost::directedS, Type_e, Edge > Graph;

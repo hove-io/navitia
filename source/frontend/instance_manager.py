@@ -101,6 +101,7 @@ class NavitiaManager:
         self.thread.start()
 
     def dispatch(self, request, region, api):
+        print request, api
         if region in self.instances:
             if api in self.instances[region].script.apis:
                 try:

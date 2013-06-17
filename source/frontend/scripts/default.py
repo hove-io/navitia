@@ -204,8 +204,8 @@ class Script:
         req.journeys.streetnetwork_params.car_distance = request_args["car_distance"]
         req.journeys.streetnetwork_params.vls_speed = request_args["br_speed"]
         req.journeys.streetnetwork_params.vls_distance = request_args["br_distance"]
-	req.journeys.streetnetwork_params.origin_filter = request_args["origin_filter"] if "origin_filter" in request_args else ""
-	req.journeys.streetnetwork_params.destination_filter = request_args["destination_filter"] if "destination_filter" in request_args else ""
+        req.journeys.streetnetwork_params.origin_filter = request_args["origin_filter"] if "origin_filter" in request_args else ""
+        req.journeys.streetnetwork_params.destination_filter = request_args["destination_filter"] if "destination_filter" in request_args else ""
         req.journeys.max_duration = request_args["max_duration"]
         req.journeys.max_transfers = request_args["max_transfers"]
         if req.journeys.streetnetwork_params.origin_mode == "bike_rental":
@@ -216,6 +216,10 @@ class Script:
         for forbidden_uri in request_args["forbidden_uris[]"]:
             req.journeys.forbidden_uris.append(forbidden_uri)
         resp = NavitiaManager().send_and_receive(req, region)
+        if resp.response_type in [response_pb2.NO_ORIGIN_NOR_DESTINATION_POINT, response_pb2.NO_ORIGIN_POINT, response_pb2.NO_DESTINATION_POINT]:
+            resp.error = "Could not find a stop point nearby. Check the coordinates (did you mix up longitude and latitude?). Maybe you are out of the covered region. Maybe the coordinate snaped to a street of OpenStreetMap with no connectivity to the street network."
+        if resp.response_type == response_pb2.NO_SOLUTION:
+            resp.error = "We found no solution. Maybe the are no vehicle running that day on all the nearest stop points?"
         if resp.journeys:
             (before, after) = extremes(resp, request_args)
             if before and after:
