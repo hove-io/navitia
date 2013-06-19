@@ -37,17 +37,18 @@ def api_doc(apis, api = None) :
             list_params.sort(key = lambda x : x[1].order)
 
             for item in list_params:
-                param = {}
-                param['name'] = item[0]
-                param['paramType'] = 'query'
-                param['description'] = item[1].description
-                param['dataType'] = convertType(item[1].validator)
-                param['required'] = item[1].required
-                param['allowMultiple'] = item[1].repeated
-                if item[1].allowableValues:
-                    param['allowableValues'] = {"valueType" : "LIST", "values" :
-                                                item[1].allowableValues}
-                params.append(param)
+                if not item[1].hidden:
+                    param = {}
+                    param['name'] = item[0]
+                    param['paramType'] = 'query'
+                    param['description'] = item[1].description
+                    param['dataType'] = convertType(item[1].validator)
+                    param['required'] = item[1].required
+                    param['allowMultiple'] = item[1].repeated
+                    if item[1].allowableValues:
+                        param['allowableValues'] = {"valueType" : "LIST", "values" :
+                                                    item[1].allowableValues}
+                    params.append(param)
             path = "/"
             version = {}
             version['name'] = 'version'

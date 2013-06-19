@@ -101,7 +101,6 @@ class NavitiaManager:
         self.thread.start()
 
     def dispatch(self, request, region, api):
-        print request, api
         if region in self.instances:
             if api in self.instances[region].script.apis:
                 try:
@@ -157,13 +156,12 @@ class NavitiaManager:
                         except:
                             pass
                 except DeadSocketException, e:
-                    print e
+                    pass
+                    #print e
                 except geos.ReadingError:
-                    print "reading error"
                     instance.geom = None
 
             self.thread_event.wait(timer)
-        print "fin thread ping"
 
 
 

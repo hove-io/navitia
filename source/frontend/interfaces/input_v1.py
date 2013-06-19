@@ -2,19 +2,19 @@ from werkzeug.wrappers import Response
 from uri import Uri, InvalidUriException, collections_to_resource_type
 from apis import validate_and_fill_arguments, InvalidArguments, validate_pb_request
 from instance_manager import NavitiaManager
-from renderers import render_from_protobuf
 from error import generate_error
 import datetime
 import output_v1
 
-def regions(request):
-    return output_v1.regions(request)
+def coverage(request):
+    return output_v1.coverage(request, format="json")
+
 
 def departures(request, uri1):
     u = None
     try:
         u = Uri(uri1)
-    except InvalidUriException, e:
+    except InvalidUriException:
         return generate_error("Invalid uri")
 
     if len(u.objects) == 0:
@@ -36,7 +36,7 @@ def arrivals(request, uri1):
     u = None
     try:
         u = Uri(uri1)
-    except InvalidUriException, e:
+    except InvalidUriException:
         return generate_error("Invalid uri")
 
     if len(u.objects) == 0:
@@ -64,7 +64,7 @@ def uri(request, uri):
 
     if len(u.objects) == 0:
         if u.is_region:
-            return output_v1.region_metadata(u.region(), 'json', request.args.get("callback"))
+            return output_v1.coverage(request, u.region(), 'json')
 
     resource_type, uid = u.objects.pop()
     req = {}
@@ -104,41 +104,54 @@ def places(request, uri):
     arguments = validate_pb_request("places", request)
     if arguments.valid:
         response = NavitiaManager().dispatch(arguments.arguments, u.region(), "places")
-        return render_from_protobuf(response, "json", request.args.get("callback"))
+        return output_v1.places(response, u, "json", request.args.get("callback"))
     else:
         return generate_error("Invalid arguments : " + arguments.details)
 
 
-def schedules(request, uri1, uri2=None):
+def route_schedules(request, uri1, uri2=None):
     return_ = '{"apiname":"schedules", uri1:"'+uri1+'"'
     if uri2:
         return_ += ', uri2:"'+uri2+'"'
     return Response(return_ +'}', mimetype='text/plain;charset=utf-8')
 
+def stop_schedules(request, uri1, uri2=None):
+    return_ = '{"apiname":"schedules", uri1:"'+uri1+'"'
+    if uri2:
+        return_ += ', uri2:"'+uri2+'"'
+    return Response(return_ +'}', mimetype='text/plain;charset=utf-8')
 
-def journeys(request, uri1, uri2=None, requested_datetime=None):
+def journeys(request, uri1=None):
     acceptable_types = ["stop_areas", "stop_points", "address", "coord", "poi"]
     u1 = None
+    from_=""
+    if uri1:
+        from_ = uri1
+    else:
+        from_ =request.args.get("from", str)
     try:
-        u1 = Uri(uri1)
+        u1 = Uri(from_)
     except InvalidUriException, e:
-        return generate_error("Invalid uri" + e.message)
+        return generate_error("Invalid id" + e.message)
+    resource_type1, uid1 = u1.objects[-1]
 
-    resource_type1, uid1 = u1.objects.pop()
     if not uid1 or not resource_type1 in acceptable_types:
-        return generate_error("Unsupported uri: " + uri1 + ", not implemented", status=501)
+        return generate_error("Unsupported id: " + uri1 + ", not implemented", status=501)
     req = {}
     req["origin"] = [uid1]
-    req["datetime"] = [datetime.datetime.now().strftime("%Y%m%dT1337")]
-    if uri2:
-        u2 = None
+    if not request.args.get("datetime"):
+        req["datetime"] = [datetime.datetime.now().strftime("%Y%m%dT1337")]
+    else:
+        req["datetime"] = [request.args.get("datetime", str)]
+    
+    if request.args.get("to"):
         try:
-            u2 = Uri(uri2)
+            u2 = Uri(request.args.get("to"))
         except InvalidUriException, e:
             return generate_error("Invalid uri" + e.message)
         resource_type2, uid2 = u2.objects.pop()
         if not uid2 or not resource_type2 in acceptable_types:
-            return generate_error("Unsupported uri : " + uri2 + ", not implemented", status=501)
+            return generate_error("Unsupported uri : " + request.args.get("to") + ", not implemented", status=501)
         if u1.region() != u2.region():
             return generate_error("The origin and destination are not in the same region, not implemented", status=501)
         req["destination"] = [uid2]
@@ -155,10 +168,10 @@ def journeys(request, uri1, uri2=None, requested_datetime=None):
         try:
             arguments = validate_and_fill_arguments("isochrone", req)
         except InvalidArguments, e:
-            return generate_error("Invalid Arguments : " + e.message)
+            return generate_error("Invalid Arguments : " + str(e.message))
         if arguments.valid:
             response = NavitiaManager().dispatch(arguments.arguments, u1.region(), "isochrone")
-            return output_v1.journeys(request.path, u1, response, 'json', request.args.get("callback"))
+            return output_v1.journeys(arguments, u1, response, 'json', request.args.get("callback"), True)
         else:
             return generate_error("Invalid arguments : " + arguments.details)
 
@@ -181,7 +194,10 @@ def nearby(request, uri1, uri2=None):
         return generate_error("Invalid Arguments : " + e.message)
     if arguments.valid:
         response = NavitiaManager().dispatch(arguments.arguments, u.region(), "places_nearby")
-        return render_from_protobuf(response, "json", request.args.get("callback"))
+        return output_v1.nearby(response, u, "json", request.args.get("callback"))
     else:
         return generate_error("Invalid arguments : " + arguments.details)
 
+
+def index(request):
+    return output_v1.index(request)

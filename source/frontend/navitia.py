@@ -31,21 +31,22 @@ def on_doc(request, api):
     return render(api_doc(Apis().apis_all, api), 'json', request.args.get('callback'))
 
 def on_index(request):
-    res = {'api_versions': [
+    res = {
+        'api_versions': [
         {
             'id': 'v0',
-            'href': base_url + '/v0',
-            'comment': 'Deprecated API version'
+            'links':[{'href':'http://doc.navitia.io', 'rel':'doc'}],
+            'title': 'Current stable API version'
         },
         {
             'id': 'v1',
-            'href': base_url + '/v1',
-            'comment': 'Current stable version'
-            }],
-        'links' : {
-            'api_reference': 'http://doc.navitia.io',
-            'api_homepage': 'http://www.navitia.io'
-            }
+            'title': 'Dev version'
+        }],
+        'links' : [
+            {"href" : base_url + '/{api_versions.id }', "rel":"navitia.api_versions"},
+            {"href" : 'http://www.navitia.io', 'rel':'about'}
+            ]
+            
         }
     return render(res, 'json', request.args.get('callback'))
 
@@ -60,19 +61,19 @@ v0_rules = [
     ]
 
 v1_rules = [
-    Rule('/', endpoint=interfaces.input_v1.regions),
-    Rule('/<path:uri>', endpoint=interfaces.input_v1.uri),
-    Rule('/<path:uri>/places', endpoint=interfaces.input_v1.places),
-    Rule('/<path:uri1>/nearby', endpoint=interfaces.input_v1.nearby),
-    Rule('/<path:uri1>/journeys', endpoint=interfaces.input_v1.journeys),
-    Rule('/<path:uri1>/schedules', endpoint=interfaces.input_v1.schedules),
-    Rule('/<path:uri1>/departures', endpoint=interfaces.input_v1.departures),
-    Rule('/<path:uri1>/arrivals', endpoint=interfaces.input_v1.arrivals),
-    Rule('/<path:uri1>/journeys/<path:uri2>', endpoint=interfaces.input_v1.journeys),
-    Rule('/journeys/<path:uri1>/to/<path:uri2>', endpoint=interfaces.input_v1.journeys),
-    Rule('/journeys/<path:uri1>/to/<path:uri2>/at/<requested_datetime>', endpoint=interfaces.input_v1.journeys),
-    Rule('/<path:uri1>/schedules/<path:uri2>', endpoint=interfaces.input_v1.schedules),
-    Rule('/<path:uri1>/nearby/<path:uri2>', endpoint=interfaces.input_v1.nearby),
+    Rule('/', endpoint=interfaces.input_v1.index),
+    Rule('/coverage', endpoint=interfaces.input_v1.coverage),
+    Rule('/coverage/', endpoint=interfaces.input_v1.coverage),
+    Rule('/coverage/<path:uri>', endpoint=interfaces.input_v1.uri),
+    Rule('/coverage/<path:uri>/places', endpoint=interfaces.input_v1.places),
+    Rule('/coverage/<path:uri1>/places_nearby', endpoint=interfaces.input_v1.nearby),
+# Rule('/coverage/<path:uri1>/places_nearby/<path:uri2>', endpoint=interfaces.input_v1.nearby),
+    Rule('/coverage/<path:uri1>/journeys', endpoint=interfaces.input_v1.journeys),
+    Rule('/coverage/<path:uri1>/route_schedules', endpoint=interfaces.input_v1.route_schedules),
+    Rule('/coverage/<path:uri1>/stop_schedules', endpoint=interfaces.input_v1.stop_schedules),
+    Rule('/coverage/<path:uri1>/departures', endpoint=interfaces.input_v1.departures),
+    Rule('/coverage/<path:uri1>/arrivals', endpoint=interfaces.input_v1.arrivals),
+    Rule('/journeys', endpoint=interfaces.input_v1.journeys),
     ]
 
 url_map = Map([
@@ -86,9 +87,9 @@ url_map = Map([
 
 
 def kill_thread(signal, frame):
-    print "Got signal !"
+#print "Got signal !"
     NavitiaManager().stop()
-    print "stoped"
+#print "stoped"
     sys.exit(0)
 
 @responder
@@ -111,7 +112,7 @@ if __name__ == '__main__':
                 for error in details :
                     print "\t"+error
     httpd = make_server('', 8088, application)
-    print "Serving on port 8088..."
+#    print "Serving on port 8088..."
     httpd.serve_forever()
 
 else:

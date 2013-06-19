@@ -7,6 +7,14 @@ class Validation_Response :
         self.valid = True
         self.details = {}
         self.arguments = {}
+        self.givenByUser_ = []
+    
+    def givenByUser(self):
+        result = {}
+        for k in self.givenByUser_:
+            if k in self.arguments.keys():
+                result[k] = self.arguments[k]
+        return result
 
 
 class Argument : 
@@ -18,7 +26,7 @@ class Argument :
     allowableValues = None
 
     def __init__(self, desc, validator, required = False, repeated = False,
-                 defaultValue = None, order = 50, allowableValues = None) :
+                 defaultValue = None, order = 50, allowableValues = None, hidden=False) :
         self.description = desc
         self.required = required
         self.repeated = repeated
@@ -26,6 +34,7 @@ class Argument :
         self.defaultValue = defaultValue
         self.order = order
         self.allowableValues = allowableValues
+        self.hidden = hidden
         if(self.validator == None) : 
             print "A validator is required"
 
@@ -106,6 +115,7 @@ def validate_arguments(request, validation_dict) :
                     if not(validation_dict[key].repeated) :
                         if not(validation_dict[key].allowableValues) or parsed_val in validation_dict[key].allowableValues :
                             response.arguments[key] = parsed_val
+                            response.givenByUser_.append(key)
                         else:
                             response.valid=False
                             response.details[key] = {"status" : "not in allowable values", "value":parsed_val}
@@ -113,12 +123,12 @@ def validate_arguments(request, validation_dict) :
                         if not(validation_dict[key].allowableValues) or parsed_val in validation_dict[key].allowableValues :
                             if not(key in response.arguments):
                                 response.arguments[key] = []
+                                response.givenByUser_.append(key)
                             response.arguments[key].append(parsed_val)
                         else:
                             response.valid=False
                             response.details[key] = {"status" : "not in allowable values", "value":parsed_val}
                 except:
-                    print "Unexpected error in validate_arguments:", sys.exc_info()[0]
                     response.valid = False
                     response.details[key] = {"status" : "notvalid", "value" : val }
     for key, value in validation_dict.iteritems():

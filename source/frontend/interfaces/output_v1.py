@@ -2,41 +2,110 @@
 from conf import base_url
 from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
 from renderers import render
-import request_pb2, type_pb2, response_pb2
-from uri import collections_to_resource_type
+import request_pb2, type_pb2#, response_pb2
+from uri import collections_to_resource_type, resource_type_to_collection
 from error import generate_error
+from sets import Set
 
 class json_renderer:
     nearbyable_types = ['stop_points', 'stop_areas', 'coords', 'pois']
+    pbtype_2_collection = {type_pb2.STOP_AREA : "stop_areas",
+                           type_pb2.STOP_POINT : "stop_points"}
 
     def __init__(self, base_url):
         self.base_url = base_url
+        self.visited_types = Set()
 
-    def stop_point(self, obj, region, details=False):
-        return self.generic_type('stop_points', obj, region, details)
+    def stop_point(self, obj, region, details=False, name_and_uri=True):
+        return self.generic_type('stop_points', obj, region, details, name_and_uri)
 
-    def stop_area(self, obj, region, details=False):
-        return self.generic_type('stop_areas', obj, region, details)
+    def stop_area(self, obj, region, details=False, name_and_uri=True):
+        return self.generic_type('stop_areas', obj, region, details, name_and_uri)
 
     def route(self, obj, region, details=False):
-        return self.generic_type('routes', obj, region, details)
+        result = self.generic_type('routes', obj, region, details)
+        try:
+            if obj.HasField("is_frequence"):
+                result["is_frequence"] = obj.is_frequence
+        except:
+            pass
+        try:
+            if obj.HasField("line"):
+                result["line"] = self.line(obj.line, region, details)
+        except:
+            pass
+        return result
 
     def line(self, obj, region, details=False):
         return self.generic_type('lines', obj, region, details)
 
     def network(self, obj, region, details=False):
-        return self.generic_type('networks', obj, region, details)
+        result = self.generic_type('networks', obj, region, details)
+        try:
+            result["lines"] = []
+            for line in obj.lines:
+                result["lines"].append(self.line(line, region, details))
+        except:
+            del result['lines']
+        return result
 
     def commercial_mode(self, obj, region, details=False):
-        return self.generic_type('commercial_modes', obj, region, details)
+        result = self.generic_type('commercial_modes', obj, region, details)
+        try:
+            result["physical_modes"] = []
+            for physical_mode in obj.physical_modes:
+                result["physical_modes"].append(self.physical_mode(physical_mode, region, details))
+        except:
+            del result['physical_modes']
+        return result
+
 
     def physical_mode(self, obj, region, details=False):
-        return self.generic_type('physical_modes', obj, region, details)
+        result = self.generic_type('physical_modes', obj, region, details)
+        try:
+            result["commercial_modes"] = []
+            for commercial_mode in obj.commercial_modes:
+                result["commercial_modes"].append(self.commercial_mode(commercial_mode, region, details))
+        except:
+            del result['commercial_modes']
+        return result
+
+    def poi_type(self, obj, region, details=False):
+        return self.generic_type("poi_types", obj, region, details)
+
+    def poi(self, obj, region, details):
+        result = self.generic_type('pois', obj, region, details)
+        if obj.HasField("poi_type"):
+            result["poi_type"] = self.poi_type('poi_types', obj.poi_type, region, details)
+        return result
+
+
 
     def company(self, obj, region, details=False):
         return self.generic_type('companies', obj, region, details)
 
-    def journey(self, obj, path, region_name, details):
+    def address(self, obj, region, details=False, name_and_uri=False):
+        result = self.generic_type('addresses', obj, region, details, name_and_uri)
+        if obj.HasField("house_number"):
+            result["house_number"] = obj.house_number
+        return result
+
+    def administrative_region(self, obj, region, details):
+        result = self.generic_type('administrative_regions', obj, region, details)
+        try:
+            if obj.HasField("zip_code"):
+                result["zip_code"] = obj.zip_code
+        except:
+            pass
+        try:
+            if obj.HasField("level"):
+                result["level"] = obj.level
+        except:
+            pass
+        return result
+        
+
+    def journey(self, obj, uri, details, is_isochrone, arguments):
         result = {
                 'duration': obj.duration,
                 'nb_transfers': obj.nb_transfers,
@@ -44,64 +113,88 @@ class json_renderer:
                 'arrival_date_time': obj.arrival_date_time,
                 }
         if obj.HasField('origin'):
-            result['origin'] = self.place(obj.origin, region_name)
+            result['origin'] = self.place(obj.origin, uri.region())
         if obj.HasField('destination'):
-            result['destination'] = self.place(obj.destination, region_name)
-            result['href'] = path + '/' + result['destination']['id']
+            result['destination'] = self.place(obj.destination, uri.region())
 
         if len(obj.sections) > 0:
             result['sections'] = []
             for section in obj.sections:
-                result['sections'].append(self.section(section, region_name))
+                result['sections'].append(self.section(section, uri.region()))
+
+        if is_isochrone:
+            params = "?"
+            if obj.HasField('origin'):
+                params = params + "from=" + obj.origin.uri + "&"
+            else:
+                params = params + "from=" + uri.uri + "&"
+            if obj.HasField('destination'):
+                resource_type = json_renderer.pbtype_2_collection[obj.destination.object_type]
+                params = params + "to=" + uri.region() + "/" +resource_type +"/" + obj.destination.uri
+
+            ignored_params = ["origin", "destination"]
+            for k, v in arguments.givenByUser().iteritems():
+                if not k in ignored_params:
+                    params = params + "&" + k + "=" + v
+
+            result["href"] = base_url + "/v1/journeys"+params
         return result
 
     def departures(self, obj):
-        result = {}
+        pass
+        #result = {}
+
     def place(self, obj, region_name):
+        obj_t = None
+        result = {"name" :"", "id":"", "object_type" : ""}
         if obj.object_type == type_pb2.STOP_AREA:
-            return self.stop_area(obj.stop_area, region_name, False)
+            obj_t = obj.stop_area
+            result["object_type"] = "stop_area"
+            result["stop_area"] = self.stop_area(obj.stop_area, region_name, False, False)
         elif obj.object_type == type_pb2.STOP_POINT:
-            return self.stop_point(obj.stop_point, region_name, False)
+            obj_t = obj.stop_point
+            result["object_type"] = "stop_point"
+            result["stop_point"] = self.stop_point(obj.stop_point, region_name, False, False)
+        elif obj.object_type  == type_pb2.ADDRESS:
+            obj_t = obj.address
+            result["object_type"] = "address"
+            result["address"] = self.address(obj.address, region_name, False, False)
+        if obj_t:
+            self.visited_types.add(result["object_type"])
+            result["name"] = obj_t.name
+            result["id"] = region_name + "/" + resource_type_to_collection[result["object_type"]]+"/"+obj.uri
+        return result
 
     def region(self, obj, region_id, details=False):
         result = {
                 'id': region_id,
-                'href': self.base_url + region_id,
                 'start_production_date': obj.start_production_date,
                 'end_production_date': obj.end_production_date,
                 'status': 'running',
                 'shape': obj.shape
                 }
-        if details:
-            links = {}
-            for key in collections_to_resource_type:
-                links[key] = result['href'] + '/' + key
-            result['links'] = links
         return result
 
 
-    def generic_type(self, type, obj, region, details):
-        result = {
-                'name': obj.name,
-                'id': region + '/' + type + '/' + obj.uri
-                }
-        result['href'] = self.base_url + result['id'] 
+    def generic_type(self, type, obj, region, details = False, name_and_uri=True):
+        self.visited_types.add(type)
+        result = {}
+        if name_and_uri : 
+            result['name'] = obj.name
+            result['id'] = region + '/' + type + '/' + obj.uri
         try: # si jamais y’a pas de champs coord dans le .proto, HasField gère une exception
             if obj.HasField('coord'):
                 result['coord'] = {'lon': obj.coord.lon, 'lat': obj.coord.lat}
         except:
             pass
-
-        if details:
-            result['links'] = {}
-            if type in self.nearbyable_types:
-                result['links']['nearby'] = result['href'] + '/nearby'
-                result['links']['journeys'] = result['href'] + '/journeys'
-                result['links']['departures'] = result['href'] + '/departures'
-                result['links']['arrivals'] = result['href'] + '/arrivals'
-            for key in collections_to_resource_type:
-                if key != type:
-                    result['links'][key] = result['href'] + '/' + key
+        try:
+            result['administrative_regions'] = []
+            for admin in obj.administrative_regions:
+                result['administrative_regions'].append(self.administrative_region(admin, region, False))
+        except:
+            pass
+        if len(result['administrative_regions'])==0:
+            del result['administrative_regions']
         return result
 
     def section_links(self, region_name, uris):
@@ -191,11 +284,29 @@ class json_renderer:
     def passage(self, obj, region_name):
         result = {
                 'stop_date_time': self.stop_date_time(obj.stop_date_time, region_name),
-                'stop_point': self.stop_point(obj.stop_point, region_name)
+                'stop_point': self.stop_point(obj.stop_point, region_name),
                 }
-        if obj.HasField('pt_display_informations'):
-            result['pt_display_informations'] = self.display_informations(obj.pt_display_informations)
+        try:
+            result['route'] = self.route(obj.vehicle_journey.route, region_name)
+        except:
+            del result['route']
+            pass
+        try:
+            if obj.HasField('pt_display_informations'):
+                result['pt_display_informations'] = self.display_informations(obj.pt_display_informations)
+        except:
+            pass
         return result
+
+    def link_curies(self, region_name):
+        t_url = base_url + "/" + region_name + "/{"
+        result = []
+        for t in self.visited_types:
+            result.append({"href":t_url+t+".id}", "rel":t+".id", "templated":"true"})
+        return result
+
+
+
 
 def get_field_by_name(obj, name):
     for field_tuple in obj.ListFields():
@@ -204,82 +315,147 @@ def get_field_by_name(obj, name):
     return None
 
 def pagination(base_url, obj):
-    result = {
-            'total_result': obj.totalResult,
-            'current_page': obj.startPage,
-            'items_on_page': obj.itemsOnPage,
-            'links': {
-                'first_page': base_url,
-                }
-            }
+    result = {}
+    result['total_result'] = obj.totalResult
+    result['current_page'] = obj.startPage
+    result['items_on_page'] = obj.itemsOnPage
+    return result
+
+def pagination_links(base_url, obj):
+    result = []
+    result.append({'href' : base_url, 'rel' : 'first'})
     if obj.itemsOnPage > 0:
-        result['links']['last_page'] = base_url + '?start_page=' + str(int(obj.totalResult/obj.itemsOnPage))
+        result.append({'href' : base_url + '?start_page=' +
+                                str(int(obj.totalResult/obj.itemsOnPage)), "rel" : "last"})
     else:
-        result['links']['last_page'] = base_url
+        result.append({'href' : base_url, "rel" : "last"})
     if obj.HasField('nextPage'):
-        result['links']['next_page'] = base_url + '?start_page=' + str(obj.startPage + 1)
+        result.append({'href' : base_url + '?start_page=' + str(obj.startPage + 1), "rel" : "next"})
     if obj.HasField('previousPage'):
-        result['links']['previous_page'] = base_url + '?start_page=' + str(obj.startPage - 1)
+        result.append({'href' : base_url + '?start_page=' + str(obj.startPage - 1), "rel" : "prev"})
     return result
 
 
 def render_ptref(response, region, resource_type, uid, format, callback):
     if response.error and response.error == '404':
         return generate_error("No object found", status=404)
-
     
-    resp_dict = {resource_type: [], 'meta': pagination(base_url + '/v1/' + region + '/' + resource_type, response.pagination)}
-    renderer = json_renderer(base_url + '/v1/')
+    resp_dict = dict([(resource_type, []), ("links", []), ("pagination", {})])
+    resp_dict[resource_type] = []
+    renderer = json_renderer(base_url + '/v1/coverage')
     items = get_field_by_name(response, resource_type)
     if items:
         for item in items:
-            resp_dict[resource_type].append(renderer.generic_type(resource_type, item, region, uid != None))
+            resp_dict[resource_type].append(renderer.generic_type(resource_type, item, region))
+    resp_dict['pagination'] = pagination(base_url + '/v1/coverage/' + region + '/' + resource_type, response.pagination)
+
+    if not uid:
+        resp_dict['links'] = pagination_links(base_url, response.pagination)
+    
+    if uid:
+        if resource_type in json_renderer.nearbyable_types:
+            resp_dict['links'].append({"href" : base_url+"/v1/coverage/"+resource_type+".id/journeys", "rel":"navitia.journeys"})
+            resp_dict['links'].append({"href" : base_url+"/v1/coverage/"+resource_type+".id/nearby", "rel":"navitia.nearby"})
+            resp_dict['links'].append({"href" : base_url+"/v1/coverage/"+resource_type+".id/route_schedules", "rel":"navitia.route_schedules"})
+            resp_dict['links'].append({"href" : base_url+"/v1/coverage/"+resource_type+".id/stop_schedules", "rel":"navitia.stop_schedules"})
+            resp_dict['links'].append({"href" : base_url+"/v1/coverage/"+resource_type+".id/departure_board", "rel":"navitia.departure_board"})
+            resp_dict['links'].append({"href" : base_url+"/v1/coverage/"+resource_type+".id/arrival_board", "rel":"navitia.arrival_board"})
+        for key in collections_to_resource_type:
+            if key != type:
+                resp_dict['links'].append({"href" : base_url+"/v1/"+resource_type+".id/"+key, "rel":"navitia."+key}) 
+    else:
+        resp_dict['links'].append({"href" : base_url + "/v1/"+resource_type+".id", "rel" : "related"})
+
 
     return render(resp_dict, format, callback)
 
-def region(region_name, details):
+def coverage(request, region_name=None, format=None):
+    region_template = "{regions.id}"
+    if region_name:
+        region_template = region_name
+    result = {'regions': [], 
+              'links' : [
+                        {"href" : base_url +"/v1/coverage/"+region_template, "rel":"related"},
+                        ]}
+
+    links =  [{"href" : base_url +"/v1/coverage/"+region_template, "rel":"related"}]
+
+    for key in collections_to_resource_type:
+        links.append({"href" : base_url+"/v1/coverage/"+region_template+"/"+key, "rel":"navitia."+key})
+    result['links'] = links
+    
+    if not region_name:
+        regions = NavitiaManager().instances.keys() 
+    else:
+        regions = {region_name}
+    
     renderer = json_renderer(base_url + '/v1/')
-    response = {}
     req = request_pb2.Request()
     req.requested_api = type_pb2.METADATAS
-    try:
-        resp = NavitiaManager().send_and_receive(req, region_name)
-        return renderer.region(resp.metadatas, region_name, details)
-    except DeadSocketException :
-        return {"id" : region, "status" : "not running", "href": base_url + "/v1/" + region_name}
-    except RegionNotFound:
-         return {"id" : region, "status" : "not found", "href": base_url + "/v1/" + region_name}
+    for r_name in regions:
+        try:
+            resp = NavitiaManager().send_and_receive(req, r_name) 
+            result['regions'].append(renderer.region(resp.metadatas, r_name))
+        except DeadSocketException :
+            if region_name:
+                return generate_error('region : ' + r_name + ' is dead', 500)
+            else :
+                result['regions'].append({"id" : r_name, "status" : "not running", "href": base_url + "/v1/" + r_name})
+        except RegionNotFound:
+            if region_name:
+                return generate_error('region : ' + r_name + " not found ", 404)
+            else: 
+                result['regions'].append({"id" : r_name, "status" : "not found", "href": base_url + "/v1/" + r_name})
+    
+    return render(result, format,  request.args.get('callback'))
 
-def regions(request, format='json'):
-    response = {'regions': []}
-    for region_name in NavitiaManager().instances.keys() :
-        response['regions'].append(region(region_name, False))
-    return render(response, format,  request.args.get('callback'))
+def index(request, format='json'):
+    response = {
+            "links" : [
+                    {"href" : base_url + "/v1/coverage", "rel" :"navitia.coverage", "title" : "Coverage of navitia"},
+                    {"href" : base_url + "/v1/coord", "rel" : "navitia.coord", "title" : "Inverted geocooding" },
+                    {"href" : base_url + "/v1/journeys", "rel" : "navitia.journeys", "title" : "Compute journeys"}
+                    ]  
+            }
+    return render(response, format, request.args.get('callback'))
 
-def region_metadata(region_name, format, callback):
-    tmp_resp = region(region_name, True)
-    if tmp_resp['status'] == 'not found':
-        return generate_error("Unknown region: " + region, status=404)
-    else:
-        return render({'regions': tmp_resp}, format, callback)
-
-def journeys(path, uri, response, format, callback):
+def journeys(arguments, uri, response, format, callback, is_isochrone=False):
     renderer = json_renderer(base_url + '/v1/')
-    response_dict = {'journeys': []}
+    response_dict = {'journeys': [], "links" : []}
     for journey in response.journeys:
-        response_dict['journeys'].append(renderer.journey(journey, base_url + path, uri.region(), True))
+        response_dict['journeys'].append(renderer.journey(journey, uri, True, is_isochrone, arguments))
+    response_dict['links'].extend(renderer.link_types(uri.region()))
     return render(response_dict, format, callback)
 
 def departures(response, region, format, callback):
     renderer = json_renderer(base_url + '/v1/')
-    response_dict = {'next_departures': []}
+    response_dict = {'departures': []}
     for passage in response.next_departures:
-        response_dict['next_departures'].append(renderer.passage(passage, region))
+        response_dict['departures'].append(renderer.passage(passage, region))
     return render(response_dict, format, callback)
 
 def arrivals(response, region, format, callback):
     renderer = json_renderer(base_url + '/v1/')
-    response_dict = {'next_arrivals': []}
+    response_dict = {'arrivals': []}
     for passage in response.next_arrivals:
-        response_dict['next_arrivals'].append(renderer.passage(passage, region))
+        response_dict['arrivals'].append(renderer.passage(passage, region))
+    return render(response_dict, format, callback)
+
+def places(response, uri, format, callback):
+    renderer = json_renderer(base_url + '/v1/')
+    response_dict = {"links" : [], "pagination" : {}, "places" : []}
+    for place in response.places:
+        response_dict['places'].append(renderer.place(place, uri.region()))
+        response_dict['places'][-1]['quality'] = place.quality
+    
+    return render(response_dict, format, callback)
+    
+
+def nearby(response, uri, format, callback):
+    renderer = json_renderer(base_url + '/v1/')
+    response_dict = {"links" : [], "pagination" : {}, "places_nearby" : []}
+    for place in response.places_nearby:
+        response_dict['places_nearby'].append(renderer.place(place, uri.region()))
+        response_dict['places_nearby'][-1]['distance'] = place.distance
+    
     return render(response_dict, format, callback)

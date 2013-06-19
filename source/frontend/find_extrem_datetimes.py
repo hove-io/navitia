@@ -8,7 +8,7 @@ def extremes(resp, request):
     try:
         asap_journey = min([journey for journey in resp.journeys if journey.arrival_date_time != ''], key=attrgetter('arrival_date_time'))
     except:
-        print "Unexpected error in prev/next datetime:", sys.exc_info()[0]
+        #print "Unexpected error in prev/next datetime:", sys.exc_info()[0]
         return (None, None)
 
     query_args = ""

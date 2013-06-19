@@ -5,7 +5,12 @@ collections_to_resource_type = {
         "stop_points": "stop_point", "routes":"route",
          "networks":"network", "commercial_modes":"commercial_mode",
          "physical_modes":"physical_mode", "companies":"company",
-         "stop_areas":"stop_area", "lines":"line"}
+         "stop_areas":"stop_area", "lines":"line",
+         "addresses":"address"}
+
+resource_type_to_collection = {resource_type:collection for collection,
+                               resource_type in
+                               collections_to_resource_type.iteritems()}
 
 class InvalidUriException(Exception):
     def __init__(self, message):
@@ -38,7 +43,7 @@ class Uri:
     def parse_region_coord(self):
         #On caste la premiere partie de l'url qui est soit une region, soit une
         #coordonnee (coord/lon;lat)
-        a = re.compile("^(/)?(?P<firstpart>((?P<region>(?!coord/)\w+)|(coord/(?P<lon>([+-]?\d{0,3}\.?\d*));(?P<lat>([+-]?\d{0,2}\.?\d*)))))")
+        a = re.compile("^(/)?(?P<firstpart>((?P<region>(?!coord)\w+)|(coord/(?P<lon>([+-]?\d{0,3}\.?\d*));(?P<lat>([+-]?\d{0,2}\.?\d*)))))")
         m = a.search(self.uri)
         #Si on a trouve une premiere partie valide
         if(m.group("firstpart")):
