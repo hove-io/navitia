@@ -3,4 +3,4 @@
 	url = https://github.com/CanalTP/libosmpbfreader.git
 [submodule "source/utils"]
 	path = source/utils
-	url = https://github.com/CanalTP/kraken.git
+	url = https://github.com/CanalTP/utils.git
