@@ -12,6 +12,8 @@ resource_type_to_collection = {resource_type:collection for collection,
                                resource_type in
                                collections_to_resource_type.iteritems()}
 
+types_not_ptrefable =  ["addresses", "administrative_regions"]
+
 class InvalidUriException(Exception):
     def __init__(self, message):
         Exception.__init__(self, message)
@@ -80,7 +82,7 @@ class Uri:
     def valid_resource_type(self, resource_type):
         resource_types = ["connections", "stop_points", "networks",
         "commercial_modes", "physical_modes", "companies", "stop_areas",
-        "routes", "lines"]
+        "routes", "lines", "addresses", "administrative_regions"]
 
         return resource_type in resource_types
 

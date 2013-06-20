@@ -350,13 +350,13 @@ def render_ptref(response, region, resource_type, uid, format, callback):
     resp_dict['pagination'] = pagination(base_url + '/v1/coverage/' + region + '/' + resource_type, response.pagination)
 
     if not uid:
-        resp_dict['links'] = pagination_links(base_url, response.pagination)
+        resp_dict['links'] = pagination_links(base_url+ '/v1/coverage/' + region + '/' + resource_type , response.pagination)
     
     if uid:
         link_first_part = base_url+"/v1/coverage/"+ region+"/"+resource_type+"/"+uid
         if resource_type in json_renderer.nearbyable_types:
             resp_dict['links'].append({"href" : link_first_part+"/journeys", "rel":"navitia.journeys", "templated":False})
-            resp_dict['links'].append({"href" : link_first_part+"/nearby", "rel":"navitia.nearby", "templated":False})
+            resp_dict['links'].append({"href" : link_first_part+"/places_nearby", "rel":"navitia.places_nearby", "templated":False})
             #resp_dict['curies'].append({"href" : base_url+"/v1/coverage/{"+resource_type+".id/route_schedules", "rel":"navitia.route_schedules"})
             #resp_dict['curies'].append({"href" : base_url+"/v1/coverage/{"+resource_type+".id/stop_schedules", "rel":"navitia.stop_schedules"})
             resp_dict['links'].append({"href" : link_first_part+"/departures", "rel":"navitia.departures", "templated":False})
@@ -423,6 +423,21 @@ def index(request, format='json'):
             }
     return render(response, format, request.args.get('callback'))
 
+def reconstruct_pagination_journeys(string, region_name):
+    args = []
+
+    for arg_and_val in string.split("&"):
+        arg, val = arg_and_val.split("=")
+        if arg == "origin" or arg == "destination":
+            resource_type, uid = val.split(":")
+            val = region_name + "/" + resource_type_to_collection[resource_type] + "/" + val
+            if arg == "origin":
+                arg = "from"
+            else:
+                arg = "to"
+        args.append(arg+"="+val)
+    return "&".join(args)
+
 def journeys(arguments, uri, response, format, callback, is_isochrone=False):
     renderer = json_renderer(base_url + '/v1/')
     response_dict = {'journeys': [], "links" : []}
@@ -430,39 +445,59 @@ def journeys(arguments, uri, response, format, callback, is_isochrone=False):
         response_dict['journeys'].append(renderer.journey(journey, uri, True, is_isochrone, arguments))
     response_dict['links'].extend(renderer.link_types(uri.region()))
     if not is_isochrone:
-        response_dict['links'].append({"href":base_url+"/v1/journeys/?"+response.prev, "rel":"prev","templated":False })
-        response_dict['links'].append({"href":base_url+"/v1/journeys/?"+response.next, "rel":"next","templated":False })
+        prev = reconstruct_pagination_journeys(response.prev, uri.region())
+        next = reconstruct_pagination_journeys(response.next, uri.region())
+        response_dict['links'].append({"href":base_url+"/v1/journeys?"+prev, "rel":"prev","templated":False })
+        response_dict['links'].append({"href":base_url+"/v1/journeys?"+next, "rel":"next","templated":False })
     return render(response_dict, format, callback)
 
 def departures(response, region, format, callback):
     renderer = json_renderer(base_url + '/v1/')
-    response_dict = {'departures': []}
+    response_dict = {'departures': [], "links" : [], "pagination" : {}}
+    response_dict['pagination']['total_result'] = len(response.places)
+    response_dict['pagination']['current_page'] = 0
+    response_dict['pagination']['items_on_page'] = len(response.places) 
+
     for passage in response.next_departures:
         response_dict['departures'].append(renderer.passage(passage, region))
+    response_dict['links'] = renderer.link_types(region)
     return render(response_dict, format, callback)
 
 def arrivals(response, region, format, callback):
     renderer = json_renderer(base_url + '/v1/')
-    response_dict = {'arrivals': []}
+    response_dict = {'arrivals': [], "pagination": {}, "links" : []}
+    response_dict['pagination']['total_result'] = len(response.next_arrivals)
+    response_dict['pagination']['current_page'] = 0
+    response_dict['pagination']['items_on_page'] = len(response.next_arrivals) 
     for passage in response.next_arrivals:
         response_dict['arrivals'].append(renderer.passage(passage, region))
+    response_dict['links'] = renderer.link_types(region)
     return render(response_dict, format, callback)
 
 def places(response, uri, format, callback):
     renderer = json_renderer(base_url + '/v1/')
     response_dict = {"links" : [], "pagination" : {}, "places" : []}
+
+    response_dict['pagination']['total_result'] = len(response.next_departures)
+    response_dict['pagination']['current_page'] = 0
+    response_dict['pagination']['items_on_page'] = len(response.next_departures) 
     for place in response.places:
         response_dict['places'].append(renderer.place(place, uri.region()))
         response_dict['places'][-1]['quality'] = place.quality
     
+    response_dict['links'] = renderer.link_types(uri.region())
     return render(response_dict, format, callback)
     
 
 def nearby(response, uri, format, callback):
     renderer = json_renderer(base_url + '/v1/')
     response_dict = {"links" : [], "pagination" : {}, "places_nearby" : []}
+    response_dict['pagination']['total_result'] = len(response.places_nearby)
+    response_dict['pagination']['current_page'] = 0
+    response_dict['pagination']['items_on_page'] = len(response.places_nearby) 
     for place in response.places_nearby:
         response_dict['places_nearby'].append(renderer.place(place, uri.region()))
         response_dict['places_nearby'][-1]['distance'] = place.distance
     
+    response_dict['links'] = renderer.link_types(uri.region())
     return render(response_dict, format, callback)

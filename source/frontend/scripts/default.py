@@ -105,7 +105,7 @@ class Script:
             req.places.admin_uris.append(admin_uri)
 
         resp = NavitiaManager().send_and_receive(req, region)
-        self.__pagination(request.arguments, "places", resp)
+        self.__pagination(request, "places", resp)
 
 	for place in resp.places:
 	    if place.HasField("address"):
@@ -137,19 +137,19 @@ class Script:
 
 
     def route_schedules(self, request, region):
-        return self.__stop_times(request, region, request["filter"], "", type_pb2.ROUTE_SCHEDULES)
+        return self.__stop_times(request, region, request.arguments["filter"], "", type_pb2.ROUTE_SCHEDULES)
 
     def next_arrivals(self, request, region):
-        return self.__stop_times(request, region, "", request["filter"], type_pb2.NEXT_ARRIVALS)
+        return self.__stop_times(request, region, "", request.arguments["filter"], type_pb2.NEXT_ARRIVALS)
 
     def next_departures(self, request, region):
-        return self.__stop_times(request, region, request["filter"], "", type_pb2.NEXT_DEPARTURES)
+        return self.__stop_times(request, region, request.arguments["filter"], "", type_pb2.NEXT_DEPARTURES)
 
     def stops_schedules(self, request, region):
-        return self.__stop_times(request, region, request["departure_filter"], request["arrival_filter"],type_pb2.STOPS_SCHEDULES)
+        return self.__stop_times(request, region, request.arguments["departure_filter"], request["arrival_filter"],type_pb2.STOPS_SCHEDULES)
 
     def departure_boards(self, request, region):
-        return self.__stop_times(request, region, request["filter"], "", type_pb2.DEPARTURE_BOARDS)
+        return self.__stop_times(request, region, request.arguments["filter"], "", type_pb2.DEPARTURE_BOARDS)
 
     
     def places_nearby(self, request, region):
@@ -161,13 +161,14 @@ class Script:
         for type in request.arguments["type[]"]:
             req.places_nearby.types.append(pb_type[type])
         resp = NavitiaManager().send_and_receive(req, region)
-        self.__pagination(request.arguments, "places_nearby", resp)
+        self.__pagination(request, "places_nearby", resp)
         return resp
 
 
     def __fill_display_and_uris(self, resp):
         for journey in resp.journeys:
             for section in journey.sections:
+
                 if section.type == response_pb2.PUBLIC_TRANSPORT:
                     section.pt_display_informations.physical_mode = section.vehicle_journey.physical_mode.name
                     section.pt_display_informations.commercial_mode = section.vehicle_journey.route.line.commercial_mode.name
@@ -221,7 +222,7 @@ class Script:
         if resp.response_type == response_pb2.NO_SOLUTION:
             resp.error = "We found no solution. Maybe the are no vehicle running that day on all the nearest stop points?"
         if resp.journeys:
-            (before, after) = extremes(resp, request.arguments)
+            (before, after) = extremes(resp, request)
             if before and after:
                 resp.prev = before
                 resp.next = after
@@ -245,7 +246,7 @@ class Script:
         req.ptref.depth = request.arguments["depth"]
         
         resp = NavitiaManager().send_and_receive(req, region)
-        self.__pagination(request.arguments, ressource_name, resp) 
+        self.__pagination(request, ressource_name, resp) 
         return resp
 
     def stop_areas(self, request, region):

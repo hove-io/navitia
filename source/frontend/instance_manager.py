@@ -109,8 +109,8 @@ class NavitiaManager:
                     return api_func(request, region)
                 except DeadSocketException, e:
                     return generate_error(e.message, status=503)
-                except AttributeError:
-                    return generate_error("Unknown api : " + api, status=404)
+#except AttributeError:
+#                    return generate_error("Unknown api : " + api, status=404)
             else:
                 return generate_error("Unknown api : " + api, status=404)
         else:

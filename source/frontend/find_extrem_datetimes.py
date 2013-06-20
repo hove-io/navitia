@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from operator import attrgetter
-import sys
+
 def extremes(resp, request): 
     before = None
     after = None
@@ -12,7 +12,7 @@ def extremes(resp, request):
         return (None, None)
 
     query_args = ""
-    for key, value in request.iteritems():
+    for key, value in request.givenByUser().iteritems():
         if key != "datetime" and key != "clockwise":
             if type(value) == type([]):
                 for v in value:

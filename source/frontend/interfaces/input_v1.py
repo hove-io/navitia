@@ -1,5 +1,5 @@
 from werkzeug.wrappers import Response
-from uri import Uri, InvalidUriException, collections_to_resource_type
+from uri import Uri, InvalidUriException, collections_to_resource_type, types_not_ptrefable
 from apis import validate_and_fill_arguments, InvalidArguments, validate_pb_request
 from instance_manager import NavitiaManager
 from error import generate_error
@@ -29,7 +29,7 @@ def departures(request, uri1):
             'from_datetime': [datetime.datetime.now().strftime("%Y%m%dT1337")]
           }
     arguments = validate_and_fill_arguments("next_departures", req)
-    response = NavitiaManager().dispatch(arguments.arguments, u.region(), "next_departures")
+    response = NavitiaManager().dispatch(arguments, u.region(), "next_departures")
     return output_v1.departures(response,  u.region(), "json", request.args.get("callback"))
 
 def arrivals(request, uri1):
@@ -51,7 +51,7 @@ def arrivals(request, uri1):
             'from_datetime': [datetime.datetime.now().strftime("%Y%m%dT1337")]
           }
     arguments = validate_and_fill_arguments("next_arrivals", req)
-    response = NavitiaManager().dispatch(arguments.arguments, u.region(), "next_arrivals")
+    response = NavitiaManager().dispatch(arguments, u.region(), "next_arrivals")
     return output_v1.arrivals(response,  u.region(), "json", request.args.get("callback"))
 
 
@@ -67,6 +67,8 @@ def uri(request, uri):
             return output_v1.coverage(request, u.region(), 'json')
 
     resource_type, uid = u.objects.pop()
+    if resource_type in types_not_ptrefable:
+        return generate_error("Type : " + resource_type + " not consultable yet", 501)
     req = {}
     if 'start_page' in request.args:
         req['startPage'] = [int(request.args.get('start_page'))]
@@ -86,7 +88,7 @@ def uri(request, uri):
     arguments = None
     try:
         arguments = validate_and_fill_arguments(resource_type, req)
-        response = NavitiaManager().dispatch(arguments.arguments, u.region(), resource_type)
+        response = NavitiaManager().dispatch(arguments, u.region(), resource_type)
     except InvalidArguments, e:
         return generate_error(e.message)
     return output_v1.render_ptref(response, u.region(), resource_type, uid, "json", request.args.get("callback"))
@@ -103,7 +105,7 @@ def places(request, uri):
 
     arguments = validate_pb_request("places", request)
     if arguments.valid:
-        response = NavitiaManager().dispatch(arguments.arguments, u.region(), "places")
+        response = NavitiaManager().dispatch(arguments, u.region(), "places")
         return output_v1.places(response, u, "json", request.args.get("callback"))
     else:
         return generate_error("Invalid arguments : " + arguments.details)
@@ -160,7 +162,7 @@ def journeys(request, uri1=None):
         except InvalidArguments, e:
             return generate_error("Invalid Arguments : " + str(e.message))
         if arguments.valid:
-            response = NavitiaManager().dispatch(arguments.arguments, u1.region(), "journeys")
+            response = NavitiaManager().dispatch(arguments, u1.region(), "journeys")
             return output_v1.journeys(request.path, u1, response, "json", request.args.get("callback"))
         else:
             return generate_error("Invalid arguments : " + arguments.details)
@@ -170,7 +172,7 @@ def journeys(request, uri1=None):
         except InvalidArguments, e:
             return generate_error("Invalid Arguments : " + str(e.message))
         if arguments.valid:
-            response = NavitiaManager().dispatch(arguments.arguments, u1.region(), "isochrone")
+            response = NavitiaManager().dispatch(arguments, u1.region(), "isochrone")
             return output_v1.journeys(arguments, u1, response, 'json', request.args.get("callback"), True)
         else:
             return generate_error("Invalid arguments : " + arguments.details)
@@ -193,7 +195,7 @@ def nearby(request, uri1, uri2=None):
     except InvalidArguments, e:
         return generate_error("Invalid Arguments : " + e.message)
     if arguments.valid:
-        response = NavitiaManager().dispatch(arguments.arguments, u.region(), "places_nearby")
+        response = NavitiaManager().dispatch(arguments, u.region(), "places_nearby")
         return output_v1.nearby(response, u, "json", request.args.get("callback"))
     else:
         return generate_error("Invalid arguments : " + arguments.details)
