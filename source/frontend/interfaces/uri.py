@@ -1,5 +1,4 @@
 from instance_manager import NavitiaManager
-import re
 
 collections_to_resource_type = {
         "stop_points": "stop_point", "routes":"route",
@@ -36,7 +35,7 @@ class Uri:
     def region(self):
         if not self.region_ and self.lon and self.lat:
             #On va chercher la region associee
-            self.region_ = NavitiaManager.key_of_coord(self.lon, self.lat)
+            self.region_ = NavitiaManager().key_of_coord(self.lon, self.lat)
             if not self.region_:
                 raise InvalidUriException("No region is covering these coordinates")
         return self.region_
@@ -45,21 +44,30 @@ class Uri:
     def parse_region_coord(self):
         #On caste la premiere partie de l'url qui est soit une region, soit une
         #coordonnee (coord/lon;lat)
-        a = re.compile("^(/)?(?P<firstpart>((?P<region>(?!coord)\w+)|(coord/(?P<lon>([+-]?\d{0,3}\.?\d*));(?P<lat>([+-]?\d{0,2}\.?\d*)))))")
-        m = a.search(self.uri)
-        #Si on a trouve une premiere partie valide
-        if(m.group("firstpart")):
-            self.region_or_coord_part = self.uri[:m.end("firstpart")]
-            self.params = self.uri[m.end("firstpart"):]
-            #Dans le cas ou il s'agit d'une region
-            if(m.group("region")):
-                self.is_region = True
-                self.region_ = m.group("region")
-            else:
-                #Si c'est une coordonnee
-                self.is_region = False
-                self.lon = float(m.group("lon"))
-                self.lat = float(m.group("lat"))
+        print self.uri
+        parts = self.uri.split("/")
+        parts.reverse()
+        self.region_or_coord_part = parts.pop()
+        if self.region_or_coord_part == "coord":
+            self.is_region = False
+            if len(parts) < 1:
+                raise InvalidUriException(", no coordinate given")
+            lonlat = parts.pop()
+            lonlatsplitted = lonlat.split(";")
+            if len(lonlatsplitted) != 2:
+                raise InvalidUriException(", unable to parse lon or lat",lonlat)
+            lon = lonlatsplitted[0]
+            lat = lonlatsplitted[1]
+            try : 
+                self.lon = float(lon)
+                self.lat = float(lat)
+            except ValueError:
+                raise InvalidUriException(", unable to parse lon or lat" + lon + ";"+lat )
+        else:
+            self.is_region = True
+            self.region_ = self.region_or_coord_part
+        parts.reverse()
+        self.params = "/".join(parts)
 
     def parse_params(self):
         s =  self.params.split("/")

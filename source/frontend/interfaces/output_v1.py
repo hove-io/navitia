@@ -413,6 +413,28 @@ def coverage(request, region_name=None, format=None):
     
     return render(result, format,  request.args.get('callback'))
 
+def coord(request, lon_, lat_):
+    try:
+        lon = float(lon_)
+        lat = float(lat_)
+    except ValueError:
+        return generate_error("Invalid coordinate : " +lon_+":"+lat_, 400)
+
+    result_dict = {"coord" : {"lon":lon, "lat": lat, "regions" : []}, "links":[]}
+    
+    region_key = NavitiaManager().key_of_coord(lon, lat)
+    if(region_key):
+        result_dict["coord"]["regions"].append({"id":region_key})
+
+    result_dict["links"].append({"href":base_url + "/v1/coverage/coord/"+lon_+";"+lat_+"/journeys", "rel" :"navitia.journeys", "templated":False})
+    result_dict["links"].append({"href":base_url + "/v1/coverage/coord/"+lon_+";"+lat_+"/places_nearby", "rel" :"navitia.nearby", "templated":False})
+    result_dict["links"].append({"href":base_url + "/v1/coverage/coord/"+lon_+";"+lat_+"/departures", "rel" :"navitia.departures", "templated":False})
+    result_dict["links"].append({"href":base_url + "/v1/coverage/coord/"+lon_+";"+lat_+"/arrivals", "rel" :"navitia.arrivals", "templated":False})
+    result_dict["links"].append({"href":"www.openstreetmap.org/?mlon="+lon_+"&mlat="+lat_+"&zoom=11&layers=M", "rel":"about", "templated":False})
+
+    return render(result_dict, "json", request.args.get('callback'))
+
+
 def index(request, format='json'):
     response = {
             "links" : [

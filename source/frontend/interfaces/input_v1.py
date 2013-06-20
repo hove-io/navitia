@@ -9,50 +9,42 @@ import output_v1
 def coverage(request):
     return output_v1.coverage(request, format="json")
 
+def coord(request, lon, lat):
+    return output_v1.coord(request, lon, lat)
+
+def departures_arrivals(type, request, uri1):
+    u = None
+    try:
+        print uri1
+        u = Uri(uri1)
+    except InvalidUriException:
+        return generate_error("Invalid uri")
+    
+    if u.is_region:
+        if len(u.objects) == 0:
+            return generate_error(type+" are only available from a stop area or a stop point", 501)
+
+        resource_type, uid = u.objects.pop()
+        if resource_type not in ['stop_points', 'stop_areas']: 
+            return generate_error(type+" are only available from a stop area or a stop point", 501)
+        filter_ = collections_to_resource_type[resource_type]+".uri="+uid
+    else:
+        filter_ = "stop_point.coord DWITHIN("+str(u.lon)+","+str(u.lat)+", 200)"
+
+    req = {            
+            'filter': [filter_], 
+            'from_datetime': [datetime.datetime.now().strftime("%Y%m%dT1337")]
+          }
+    arguments = validate_and_fill_arguments("next_"+type, req)
+    return NavitiaManager().dispatch(arguments, u.region(), "next_"+type), u.region()
 
 def departures(request, uri1):
-    u = None
-    try:
-        u = Uri(uri1)
-    except InvalidUriException:
-        return generate_error("Invalid uri")
-
-    if len(u.objects) == 0:
-        return generate_error("Departures are only available from a stop area or a stop point", 501)
-
-    resource_type, uid = u.objects.pop()
-    if resource_type not in ['stop_points', 'stop_areas']: 
-        return generate_error("Departures are only available from a stop area or a stop point", 501)
-
-    req = {            
-            'filter': [collections_to_resource_type[resource_type]+".uri="+uid], 
-            'from_datetime': [datetime.datetime.now().strftime("%Y%m%dT1337")]
-          }
-    arguments = validate_and_fill_arguments("next_departures", req)
-    response = NavitiaManager().dispatch(arguments, u.region(), "next_departures")
-    return output_v1.departures(response,  u.region(), "json", request.args.get("callback"))
+    response, region = departures_arrivals("departures", request, uri1)
+    return output_v1.departures(response,  region, "json", request.args.get("callback"))
 
 def arrivals(request, uri1):
-    u = None
-    try:
-        u = Uri(uri1)
-    except InvalidUriException:
-        return generate_error("Invalid uri")
-
-    if len(u.objects) == 0:
-        return generate_error("Arrivals are only available from a stop area or a stop point", 501)
-
-    resource_type, uid = u.objects.pop()
-    if resource_type not in ['stop_points', 'stop_areas']: 
-        return generate_error("Arrivals are only available from a stop area or a stop point", 501)
-
-    req = {            
-            'filter': [collections_to_resource_type[resource_type]+".uri="+uid], 
-            'from_datetime': [datetime.datetime.now().strftime("%Y%m%dT1337")]
-          }
-    arguments = validate_and_fill_arguments("next_arrivals", req)
-    response = NavitiaManager().dispatch(arguments, u.region(), "next_arrivals")
-    return output_v1.arrivals(response,  u.region(), "json", request.args.get("callback"))
+    response, region = departures_arrivals("arrivals", request, uri1)
+    return output_v1.arrivals(response,  region, "json", request.args.get("callback"))
 
 
 def uri(request, uri):
@@ -135,7 +127,12 @@ def journeys(request, uri1=None):
         u1 = Uri(from_)
     except InvalidUriException, e:
         return generate_error("Invalid id" + e.message)
-    resource_type1, uid1 = u1.objects[-1]
+    resource_type1, uid1 = "", ""
+    if u1.is_region:
+        u1.objects[-1]
+    else:
+        resource_type1 = "coord"
+        uid1 = "coord:"+str(u1.lon)+":"+str(u1.lat)
 
     if not uid1 or not resource_type1 in acceptable_types:
         return generate_error("Unsupported id: " + uri1 + ", not implemented", status=501)
@@ -184,7 +181,12 @@ def nearby(request, uri1, uri2=None):
         u = Uri(uri1)
     except InvalidUriException, e:
         return generate_error("Invalid uri" + e.message)
-    resource_type, uid = u.objects.pop()
+    resource_type, uid = "", "" 
+    if u.is_region:
+        resource_type, uid = u.objects.pop()
+    else:
+        resource_type = "coord"
+        uid = "coord:"+str(u.lon)+":"+str(u.lat)
     req = {}
     if uid:
         req["uri"] = [uid]
