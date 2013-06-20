@@ -25,10 +25,10 @@ class Script:
         self.apis = Apis().apis
 
 
-    def __pagination(self, request_args, ressource_name, resp):
+    def __pagination(self, request, ressource_name, resp):
         request_pagination = response_pb2.Pagination()
-        request_pagination.startPage = request_args["startPage"]
-        request_pagination.itemsPerPage = request_args["count"]
+        request_pagination.startPage = request.arguments["startPage"]
+        request_pagination.itemsPerPage = request.arguments["count"]
         objects = None
         if resp.ListFields():
             for fd in resp.ListFields():
@@ -53,7 +53,7 @@ class Script:
             
             request_pagination.itemsOnPage = len(objects)
             query_args = ""
-            for key, value in request_args.iteritems():
+            for key, value in request.arguments.iteritems():
                 if key != "startPage":
                     if type(value) == type([]):
                         for v in value:
@@ -71,13 +71,13 @@ class Script:
     
 
 
-    def status(self, request_args, region):
+    def status(self, request, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.STATUS
         resp = NavitiaManager().send_and_receive(req, region)
         return resp
 
-    def metadatas(self, request_args, region):
+    def metadatas(self, request, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
         resp = NavitiaManager().send_and_receive(req, region)
@@ -89,23 +89,23 @@ class Script:
         req = request_pb2.Request()
         req.requested_api = type_pb2.LOAD
         resp = NavitiaManager().send_and_receive(req, region)
-        return render_from_protobuf(resp, format, request.args.get('callback'))
+        return render_from_protobuf(resp, format, request.arguments.get('callback'))
 
 
-    def places(self, request_args, region):
+    def places(self, request, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.places
-        req.places.q = request_args['q']
-        req.places.depth = request_args['depth']
-        req.places.nbmax = request_args['nbmax']
-        for type in request_args["type[]"]:
+        req.places.q = request.arguments['q']
+        req.places.depth = request.arguments['depth']
+        req.places.nbmax = request.arguments['nbmax']
+        for type in request.arguments["type[]"]:
             req.places.types.append(pb_type[type])
 
-        for admin_uri in request_args["admin_uri[]"]:
+        for admin_uri in request.arguments["admin_uri[]"]:
             req.places.admin_uris.append(admin_uri)
 
         resp = NavitiaManager().send_and_receive(req, region)
-        self.__pagination(request_args, "places", resp)
+        self.__pagination(request.arguments, "places", resp)
 
 	for place in resp.places:
 	    if place.HasField("address"):
@@ -123,45 +123,45 @@ class Script:
         return resp
 
 
-    def __stop_times(self, request_args, region, departure_filter, arrival_filter, api):
+    def __stop_times(self, request, region, departure_filter, arrival_filter, api):
         req = request_pb2.Request()
         req.requested_api = api
         req.next_stop_times.departure_filter = departure_filter
         req.next_stop_times.arrival_filter = arrival_filter
-        req.next_stop_times.from_datetime = request_args["from_datetime"]
-        req.next_stop_times.duration = request_args["duration"]
-        req.next_stop_times.depth = request_args["depth"]
-        req.next_stop_times.nb_stoptimes = request_args["nb_stoptimes"] if "nb_stoptimes" in request_args else 0
+        req.next_stop_times.from_datetime = request.arguments["from_datetime"]
+        req.next_stop_times.duration = request.arguments["duration"]
+        req.next_stop_times.depth = request.arguments["depth"]
+        req.next_stop_times.nb_stoptimes = request.arguments["nb_stoptimes"] if "nb_stoptimes" in request.arguments else 0
         resp = NavitiaManager().send_and_receive(req, region)
         return resp
 
 
-    def route_schedules(self, request_args, region):
-        return self.__stop_times(request_args, region, request_args["filter"], "", type_pb2.ROUTE_SCHEDULES)
+    def route_schedules(self, request, region):
+        return self.__stop_times(request, region, request["filter"], "", type_pb2.ROUTE_SCHEDULES)
 
-    def next_arrivals(self, request_args, region):
-        return self.__stop_times(request_args, region, "", request_args["filter"], type_pb2.NEXT_ARRIVALS)
+    def next_arrivals(self, request, region):
+        return self.__stop_times(request, region, "", request["filter"], type_pb2.NEXT_ARRIVALS)
 
-    def next_departures(self, request_args, region):
-        return self.__stop_times(request_args, region, request_args["filter"], "", type_pb2.NEXT_DEPARTURES)
+    def next_departures(self, request, region):
+        return self.__stop_times(request, region, request["filter"], "", type_pb2.NEXT_DEPARTURES)
 
-    def stops_schedules(self, request_args, region):
-        return self.__stop_times(request_args, region, request_args["departure_filter"], request_args["arrival_filter"],type_pb2.STOPS_SCHEDULES)
+    def stops_schedules(self, request, region):
+        return self.__stop_times(request, region, request["departure_filter"], request["arrival_filter"],type_pb2.STOPS_SCHEDULES)
 
-    def departure_boards(self, request_args, region):
-        return self.__stop_times(request_args, region, request_args["filter"], "", type_pb2.DEPARTURE_BOARDS)
+    def departure_boards(self, request, region):
+        return self.__stop_times(request, region, request["filter"], "", type_pb2.DEPARTURE_BOARDS)
 
     
-    def places_nearby(self, request_args, region):
+    def places_nearby(self, request, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.places_nearby
-        req.places_nearby.uri = request_args["uri"]
-        req.places_nearby.distance = request_args["distance"]
-        req.places_nearby.depth = request_args["depth"]
-        for type in request_args["type[]"]:
+        req.places_nearby.uri = request.arguments["uri"]
+        req.places_nearby.distance = request.arguments["distance"]
+        req.places_nearby.depth = request.arguments["depth"]
+        for type in request.arguments["type[]"]:
             req.places_nearby.types.append(pb_type[type])
         resp = NavitiaManager().send_and_receive(req, region)
-        self.__pagination(request_args, "places_nearby", resp)
+        self.__pagination(request.arguments, "places_nearby", resp)
         return resp
 
 
@@ -187,33 +187,33 @@ class Script:
                     section.ClearField("vehicle_journey")
 
 
-    def __on_journeys(self, requested_type, request_args, region):
+    def __on_journeys(self, requested_type, request, region):
         req = request_pb2.Request()
         req.requested_api = requested_type
-        req.journeys.origin = request_args["origin"]
-        req.journeys.destination = request_args["destination"] if "destination" in request_args else ""
-        req.journeys.datetimes.append(request_args["datetime"])
-        req.journeys.clockwise = request_args["clockwise"]
-        req.journeys.streetnetwork_params.walking_speed = request_args["walking_speed"]
-        req.journeys.streetnetwork_params.walking_distance = request_args["walking_distance"]
-        req.journeys.streetnetwork_params.origin_mode = request_args["origin_mode"]
-        req.journeys.streetnetwork_params.destination_mode = request_args["destination_mode"] if "destination_mode" in request_args else ""
-        req.journeys.streetnetwork_params.bike_speed = request_args["bike_speed"]
-        req.journeys.streetnetwork_params.bike_distance = request_args["bike_distance"]
-        req.journeys.streetnetwork_params.car_speed = request_args["car_speed"]
-        req.journeys.streetnetwork_params.car_distance = request_args["car_distance"]
-        req.journeys.streetnetwork_params.vls_speed = request_args["br_speed"]
-        req.journeys.streetnetwork_params.vls_distance = request_args["br_distance"]
-        req.journeys.streetnetwork_params.origin_filter = request_args["origin_filter"] if "origin_filter" in request_args else ""
-        req.journeys.streetnetwork_params.destination_filter = request_args["destination_filter"] if "destination_filter" in request_args else ""
-        req.journeys.max_duration = request_args["max_duration"]
-        req.journeys.max_transfers = request_args["max_transfers"]
+        req.journeys.origin = request.arguments["origin"]
+        req.journeys.destination = request.arguments["destination"] if "destination" in request.arguments else ""
+        req.journeys.datetimes.append(request.arguments["datetime"])
+        req.journeys.clockwise = request.arguments["clockwise"]
+        req.journeys.streetnetwork_params.walking_speed = request.arguments["walking_speed"]
+        req.journeys.streetnetwork_params.walking_distance = request.arguments["walking_distance"]
+        req.journeys.streetnetwork_params.origin_mode = request.arguments["origin_mode"]
+        req.journeys.streetnetwork_params.destination_mode = request.arguments["destination_mode"] if "destination_mode" in request.arguments else ""
+        req.journeys.streetnetwork_params.bike_speed = request.arguments["bike_speed"]
+        req.journeys.streetnetwork_params.bike_distance = request.arguments["bike_distance"]
+        req.journeys.streetnetwork_params.car_speed = request.arguments["car_speed"]
+        req.journeys.streetnetwork_params.car_distance = request.arguments["car_distance"]
+        req.journeys.streetnetwork_params.vls_speed = request.arguments["br_speed"]
+        req.journeys.streetnetwork_params.vls_distance = request.arguments["br_distance"]
+        req.journeys.streetnetwork_params.origin_filter = request.arguments["origin_filter"] if "origin_filter" in request.arguments else ""
+        req.journeys.streetnetwork_params.destination_filter = request.arguments["destination_filter"] if "destination_filter" in request.arguments else ""
+        req.journeys.max_duration = request.arguments["max_duration"]
+        req.journeys.max_transfers = request.arguments["max_transfers"]
         if req.journeys.streetnetwork_params.origin_mode == "bike_rental":
             req.journeys.streetnetwork_params.origin_mode = "vls"
         if req.journeys.streetnetwork_params.destination_mode == "bike_rental":
             req.journeys.streetnetwork_params.destination_mode = "vls"
 
-        for forbidden_uri in request_args["forbidden_uris[]"]:
+        for forbidden_uri in request.arguments["forbidden_uris[]"]:
             req.journeys.forbidden_uris.append(forbidden_uri)
         resp = NavitiaManager().send_and_receive(req, region)
         if resp.response_type in [response_pb2.NO_ORIGIN_NOR_DESTINATION_POINT, response_pb2.NO_ORIGIN_POINT, response_pb2.NO_DESTINATION_POINT]:
@@ -221,7 +221,7 @@ class Script:
         if resp.response_type == response_pb2.NO_SOLUTION:
             resp.error = "We found no solution. Maybe the are no vehicle running that day on all the nearest stop points?"
         if resp.journeys:
-            (before, after) = extremes(resp, request_args)
+            (before, after) = extremes(resp, request.arguments)
             if before and after:
                 resp.prev = before
                 resp.next = after
@@ -229,63 +229,63 @@ class Script:
         return resp
 
 
-    def journeys(self, request_args, region):
-        return self.__on_journeys(type_pb2.PLANNER, request_args, region)
+    def journeys(self, request, region):
+        return self.__on_journeys(type_pb2.PLANNER, request, region)
 
     
-    def isochrone(self, request_args, region):
-        return self.__on_journeys(type_pb2.ISOCHRONE, request_args, region)
+    def isochrone(self, request, region):
+        return self.__on_journeys(type_pb2.ISOCHRONE, request, region)
 
-    def __on_ptref(self, ressource_name, requested_type, request_args, region):
+    def __on_ptref(self, ressource_name, requested_type, request, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.PTREFERENTIAL
 
         req.ptref.requested_type = requested_type
-        req.ptref.filter = request_args["filter"]
-        req.ptref.depth = request_args["depth"]
+        req.ptref.filter = request.arguments["filter"]
+        req.ptref.depth = request.arguments["depth"]
         
         resp = NavitiaManager().send_and_receive(req, region)
-        self.__pagination(request_args, ressource_name, resp) 
+        self.__pagination(request.arguments, ressource_name, resp) 
         return resp
 
-    def stop_areas(self, request_args, region):
-        return self.__on_ptref("stop_areas", type_pb2.STOP_AREA, request_args, region)
+    def stop_areas(self, request, region):
+        return self.__on_ptref("stop_areas", type_pb2.STOP_AREA, request, region)
 
-    def stop_points(self, request_args, region):
-        return self.__on_ptref("stop_points", type_pb2.STOP_POINT, request_args, region)
+    def stop_points(self, request, region):
+        return self.__on_ptref("stop_points", type_pb2.STOP_POINT, request, region)
 
-    def lines(self, request_args, region):
-        return self.__on_ptref("lines", type_pb2.LINE, request_args, region)
+    def lines(self, request, region):
+        return self.__on_ptref("lines", type_pb2.LINE, request, region)
 
-    def routes(self, request_args, region):
-        return self.__on_ptref("routes", type_pb2.ROUTE, request_args,  region)
+    def routes(self, request, region):
+        return self.__on_ptref("routes", type_pb2.ROUTE, request,  region)
 
-    def networks(self, request_args, region):
-        return self.__on_ptref("networks", type_pb2.NETWORK, request_args, region)
+    def networks(self, request, region):
+        return self.__on_ptref("networks", type_pb2.NETWORK, request, region)
 
-    def physical_modes(self, request_args, region):
-        return self.__on_ptref("physical_modes", type_pb2.PHYSICAL_MODE, request_args, region)
+    def physical_modes(self, request, region):
+        return self.__on_ptref("physical_modes", type_pb2.PHYSICAL_MODE, request, region)
 
-    def commercial_modes(self, request_args, region):
-        return self.__on_ptref("commercial_modes", type_pb2.COMMERCIAL_MODE, request_args, region)
+    def commercial_modes(self, request, region):
+        return self.__on_ptref("commercial_modes", type_pb2.COMMERCIAL_MODE, request, region)
 
-    def connections(self, request_args, region):
-        return self.__on_ptref("connections", type_pb2.CONNECTION, request_args, region)
+    def connections(self, request, region):
+        return self.__on_ptref("connections", type_pb2.CONNECTION, request, region)
 
-    def journey_pattern_points(self, request_args, region):
-        return self.__on_ptref("journey_pattern_points", type_pb2.JOURNEY_PATTERN_POINT, request_args,  region)
+    def journey_pattern_points(self, request, region):
+        return self.__on_ptref("journey_pattern_points", type_pb2.JOURNEY_PATTERN_POINT, request,  region)
 
-    def journey_patterns(self, request_args, region):
-        return self.__on_ptref("journey_patterns", type_pb2.JOURNEY_PATTERN, request_args, region)
+    def journey_patterns(self, request, region):
+        return self.__on_ptref("journey_patterns", type_pb2.JOURNEY_PATTERN, request, region)
 
-    def companies(self, request_args, region):
-        return self.__on_ptref("companies", type_pb2.COMPANY, request_args, region)
+    def companies(self, request, region):
+        return self.__on_ptref("companies", type_pb2.COMPANY, request, region)
 
-    def vehicle_journeys(self, request_args, region):
-        return self.__on_ptref("vehicle_journeys", type_pb2.VEHICLE_JOURNEY, request_args, region)
+    def vehicle_journeys(self, request, region):
+        return self.__on_ptref("vehicle_journeys", type_pb2.VEHICLE_JOURNEY, request, region)
     
-    def pois(self, request_args, region):
-        return self.__on_ptref("pois", type_pb2.POI, request_args, region)
+    def pois(self, request, region):
+        return self.__on_ptref("pois", type_pb2.POI, request, region)
     
-    def poi_types(self, request_args, region):
-        return self.__on_ptref("poi_types", type_pb2.POITYPE, request_args, region)
+    def poi_types(self, request, region):
+        return self.__on_ptref("poi_types", type_pb2.POITYPE, request, region)

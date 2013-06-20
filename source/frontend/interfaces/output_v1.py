@@ -160,7 +160,7 @@ class json_renderer:
             result["object_type"] = "address"
             result["address"] = self.address(obj.address, region_name, False, False)
         if obj_t:
-            self.visited_types.add(result["object_type"])
+            #self.visited_types.add(result["object_type"])
             result["name"] = obj_t.name
             result["id"] = region_name + "/" + resource_type_to_collection[result["object_type"]]+"/"+obj.uri
         return result
@@ -298,7 +298,7 @@ class json_renderer:
             pass
         return result
 
-    def link_curies(self, region_name):
+    def link_types(self, region_name):
         t_url = base_url + "/" + region_name + "/{"
         result = []
         for t in self.visited_types:
@@ -323,16 +323,16 @@ def pagination(base_url, obj):
 
 def pagination_links(base_url, obj):
     result = []
-    result.append({'href' : base_url, 'rel' : 'first'})
+    result.append({'href' : base_url, 'rel' : 'first', "templated":False})
     if obj.itemsOnPage > 0:
         result.append({'href' : base_url + '?start_page=' +
-                                str(int(obj.totalResult/obj.itemsOnPage)), "rel" : "last"})
+                       str(int(obj.totalResult/obj.itemsOnPage)), "rel" : "last", "templated":False})
     else:
         result.append({'href' : base_url, "rel" : "last"})
     if obj.HasField('nextPage'):
-        result.append({'href' : base_url + '?start_page=' + str(obj.startPage + 1), "rel" : "next"})
+        result.append({'href' : base_url + '?start_page=' + str(obj.startPage + 1), "rel" : "next", "templated":False})
     if obj.HasField('previousPage'):
-        result.append({'href' : base_url + '?start_page=' + str(obj.startPage - 1), "rel" : "prev"})
+        result.append({'href' : base_url + '?start_page=' + str(obj.startPage - 1), "rel" : "prev", "templated":False})
     return result
 
 
@@ -353,18 +353,19 @@ def render_ptref(response, region, resource_type, uid, format, callback):
         resp_dict['links'] = pagination_links(base_url, response.pagination)
     
     if uid:
+        link_first_part = base_url+"/v1/coverage/"+ region+"/"+resource_type+"/"+uid
         if resource_type in json_renderer.nearbyable_types:
-            resp_dict['links'].append({"href" : base_url+"/v1/coverage/"+resource_type+".id/journeys", "rel":"navitia.journeys"})
-            resp_dict['links'].append({"href" : base_url+"/v1/coverage/"+resource_type+".id/nearby", "rel":"navitia.nearby"})
-            resp_dict['links'].append({"href" : base_url+"/v1/coverage/"+resource_type+".id/route_schedules", "rel":"navitia.route_schedules"})
-            resp_dict['links'].append({"href" : base_url+"/v1/coverage/"+resource_type+".id/stop_schedules", "rel":"navitia.stop_schedules"})
-            resp_dict['links'].append({"href" : base_url+"/v1/coverage/"+resource_type+".id/departure_board", "rel":"navitia.departure_board"})
-            resp_dict['links'].append({"href" : base_url+"/v1/coverage/"+resource_type+".id/arrival_board", "rel":"navitia.arrival_board"})
+            resp_dict['links'].append({"href" : link_first_part+"/journeys", "rel":"navitia.journeys", "templated":False})
+            resp_dict['links'].append({"href" : link_first_part+"/nearby", "rel":"navitia.nearby", "templated":False})
+            #resp_dict['curies'].append({"href" : base_url+"/v1/coverage/{"+resource_type+".id/route_schedules", "rel":"navitia.route_schedules"})
+            #resp_dict['curies'].append({"href" : base_url+"/v1/coverage/{"+resource_type+".id/stop_schedules", "rel":"navitia.stop_schedules"})
+            resp_dict['links'].append({"href" : link_first_part+"/departures", "rel":"navitia.departures", "templated":False})
+            resp_dict['links'].append({"href" : link_first_part+"/arrivals", "rel":"navitia.arrivals", "templated":False})
         for key in collections_to_resource_type:
             if key != type:
-                resp_dict['links'].append({"href" : base_url+"/v1/"+resource_type+".id/"+key, "rel":"navitia."+key}) 
+                resp_dict['links'].append({"href" : link_first_part+"/"+key, "rel":"navitia."+key, "templated":False}) 
     else:
-        resp_dict['links'].append({"href" : base_url + "/v1/"+resource_type+".id", "rel" : "related"})
+        resp_dict['links'].append({"href" : base_url + "/v1/{"+resource_type+".id}", "rel" : "related", "templated":True})
 
 
     return render(resp_dict, format, callback)
@@ -383,6 +384,9 @@ def coverage(request, region_name=None, format=None):
     for key in collections_to_resource_type:
         links.append({"href" : base_url+"/v1/coverage/"+region_template+"/"+key, "rel":"navitia."+key})
     result['links'] = links
+
+    for link in result['links']:
+        link["templated"] = region_name==None
     
     if not region_name:
         regions = NavitiaManager().instances.keys() 
@@ -425,6 +429,9 @@ def journeys(arguments, uri, response, format, callback, is_isochrone=False):
     for journey in response.journeys:
         response_dict['journeys'].append(renderer.journey(journey, uri, True, is_isochrone, arguments))
     response_dict['links'].extend(renderer.link_types(uri.region()))
+    if not is_isochrone:
+        response_dict['links'].append({"href":base_url+"/v1/journeys/?"+response.prev, "rel":"prev","templated":False })
+        response_dict['links'].append({"href":base_url+"/v1/journeys/?"+response.next, "rel":"next","templated":False })
     return render(response_dict, format, callback)
 
 def departures(response, region, format, callback):

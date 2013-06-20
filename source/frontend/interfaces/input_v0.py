@@ -68,5 +68,5 @@ def on_api(request, region, api, format):
         return generate_error(e.message)
     except ApiNotFound, e:
         return generate_error("Unknown api : " + api, 404)
-    response = NavitiaManager().dispatch(arguments.arguments, region, api)
+    response = NavitiaManager().dispatch(arguments, region, api)
     return render_from_protobuf(response, format, request.args.get("callback"))
