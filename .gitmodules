@@ -3,4 +3,4 @@
 	url = https://github.com/CanalTP/libosmpbfreader.git
 [submodule "source/utils"]
 	path = source/utils
-	url = git@10.2.0.33:utils.git
+	url = https://github.com/CanalTP/utils.git
