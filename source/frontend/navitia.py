@@ -37,11 +37,13 @@ def on_index(request):
             'id': 'v0',
             'links':[{'href':'http://doc.navitia.io', 'rel':'doc'}],
             'title': 'Current stable API version'
-        },
-        {
-            'id': 'v1',
-            'title': 'Dev version'
-        }],
+        }
+#,
+#{
+#            'id': 'v1',
+#            'title': 'Dev version'
+#        }
+],
         'links' : [
             {"href" : base_url + '/{api_versions.id }', "rel":"navitia.api_versions"},
             {"href" : 'http://www.navitia.io', 'rel':'about'}
