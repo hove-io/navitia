@@ -66,7 +66,7 @@ struct dataRAPTOR {
         }
     }
 
-    inline type::idx_t get_stop_point_connection_idx(type::idx_t stop_point_idx_origin, type::idx_t stop_point_idx_destination, bool clockwise,const navitia::type::PT_Data &data)  const {
+    inline type::idx_t get_stop_point_connection_idx(type::idx_t stop_point_idx_origin, type::idx_t stop_point_idx_destination, bool clockwise,const navitia::type::PT_Data &/*data*/)  const {
 
         const std::vector<const type::StopPointConnection*> &foot_path = clockwise ? foot_path_forward : foot_path_backward;
         const std::vector<pair_int> &footpath_index = clockwise ? footpath_index_forward : footpath_index_backward;

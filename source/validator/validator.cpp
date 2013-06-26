@@ -157,13 +157,11 @@ int main(int argc, char** argv) {
 
     idx_t prev_journey_pattern_idx = invalid_idx;
 
-    size_t prev_order = 0;
     for(const JourneyPatternPoint* jpp: d.pt_data.journey_pattern_points) {
         if(prev_journey_pattern_idx == invalid_idx || prev_journey_pattern_idx != jpp->journey_pattern->idx) {
-            prev_order=0;
             prev_journey_pattern_idx = jpp->journey_pattern->idx;
         } else {
-            if(jpp->order != prev_journey_pattern_idx-1) {
+            if(jpp->order+1 != prev_journey_pattern_idx) {
                 std::cout << "Probleme de tri du tableau des journey pattern points " << jpp->idx << std::endl;
             }
         }

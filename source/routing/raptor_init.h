@@ -40,7 +40,7 @@ getFinalRpidAndDate(int count, type::idx_t rpid, bool clockwise, const std::vect
 
 float
 getWalkingTime(int count, type::idx_t rpid, const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations,
-               bool clockwise, const std::vector<label_vector_t> &labels, const std::vector<std::vector<const type::JourneyPatternPoint *> >&boardings,
+               bool clockwise, const std::vector<label_vector_t> &, const std::vector<std::vector<const type::JourneyPatternPoint *> >&boardings,
                const std::vector<std::vector<boarding_type> > &boarding_types, const type::Data &data);
 
 }}

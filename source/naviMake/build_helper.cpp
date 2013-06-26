@@ -269,7 +269,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
     }
  }
 
- void builder::build(navitia::type::PT_Data & pt_data) {
+ void builder::build(navitia::type::PT_Data & /*pt_data*/) {
     /*data.normalize_uri();
     data.complete();
     data.clean();

@@ -290,7 +290,7 @@ struct raptor_visitor {
     }
 
     std::pair<std::vector<type::JourneyPatternPoint*>::const_iterator, std::vector<type::JourneyPatternPoint*>::const_iterator>
-    journey_pattern_points(const std::vector<type::JourneyPatternPoint*> &journey_pattern_points, const type::JourneyPattern* journey_pattern, size_t order) const {
+    journey_pattern_points(const std::vector<type::JourneyPatternPoint*> &/*journey_pattern_points*/, const type::JourneyPattern* journey_pattern, size_t order) const {
         return std::make_pair(journey_pattern->journey_pattern_point_list.begin() + order,
                               journey_pattern->journey_pattern_point_list.end());
     }
@@ -323,7 +323,7 @@ struct raptor_reverse_visitor {
     }
 
     std::pair<std::vector<type::JourneyPatternPoint*>::const_reverse_iterator, std::vector<type::JourneyPatternPoint*>::const_reverse_iterator>
-    journey_pattern_points(const std::vector<type::JourneyPatternPoint*> &journey_pattern_points, const type::JourneyPattern* journey_pattern, size_t order) const {
+    journey_pattern_points(const std::vector<type::JourneyPatternPoint*> &/*journey_pattern_points*/, const type::JourneyPattern* journey_pattern, size_t order) const {
         size_t offset = journey_pattern->journey_pattern_point_list.size() - order - 1;
         const auto begin = journey_pattern->journey_pattern_point_list.rbegin() + offset;
         const auto end = journey_pattern->journey_pattern_point_list.rend();

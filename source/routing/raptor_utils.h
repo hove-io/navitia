@@ -43,7 +43,6 @@ struct best_dest {
         if(!clockwise)
             return add_best_reverse(rpid, t, cnt);
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
-            auto debug_t = t + rpidx_distance[rpid];
             if((best_now == navitia::type::DateTime::inf) ||
                ((t != navitia::type::DateTime::inf) && (t + rpidx_distance[rpid]) <= (best_now))) {
                 best_now = t + rpidx_distance[rpid];
@@ -92,7 +91,7 @@ struct best_dest {
 };
 
 inline
-boarding_type get_type(size_t count, type::idx_t journey_pattern_point, const std::vector<std::vector<boarding_type> > &boarding_types, const navitia::type::Data &data){
+boarding_type get_type(size_t count, type::idx_t journey_pattern_point, const std::vector<std::vector<boarding_type> > &boarding_types, const navitia::type::Data &/*data*/){
     return boarding_types[count][journey_pattern_point];
 }
 
