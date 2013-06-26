@@ -29,7 +29,7 @@ message Place {
     optional AdministrativeRegion administrative_region = 10;
     optional int32 distance = 11;
     optional int32 quality = 12;
-    optional NavitiaType object_type = 13;
+    optional NavitiaType embedded_type = 13;
 }
 
 enum Direction {

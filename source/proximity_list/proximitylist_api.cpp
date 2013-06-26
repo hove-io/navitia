@@ -19,14 +19,14 @@ void create_pb(const std::vector<std::pair<type::idx_t, type::GeographicalCoord>
             place->set_name(data.pt_data.stop_areas[result_item.first].name);
             place->set_uri(data.pt_data.stop_areas[result_item.first].uri);
             place->set_distance(coord.distance_to(result_item.second));
-            place->set_object_type(pbnavitia::STOP_AREA);
+            place->set_embedded_type(pbnavitia::STOP_AREA);
             break;
         case nt::Type_e::StopPoint:
             fill_pb_object(result_item.first, data, place->mutable_stop_point(), depth, current_date);
             place->set_name(data.pt_data.stop_points[result_item.first].name);
             place->set_uri(data.pt_data.stop_points[result_item.first].uri);
             place->set_distance(coord.distance_to(result_item.second));
-            place->set_object_type(pbnavitia::STOP_POINT);
+            place->set_embedded_type(pbnavitia::STOP_POINT);
             break;
 
         default:

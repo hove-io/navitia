@@ -44,7 +44,6 @@ class Uri:
     def parse_region_coord(self):
         #On caste la premiere partie de l'url qui est soit une region, soit une
         #coordonnee (coord/lon;lat)
-        print self.uri
         parts = self.uri.split("/")
         parts.reverse()
         self.region_or_coord_part = parts.pop()

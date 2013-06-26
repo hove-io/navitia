@@ -7,7 +7,7 @@ import datetime
 import output_v1
 
 def coverage(request):
-    return output_v1.coverage(request, format="json")
+    return output_v1.coverage(request, format=request.accept_mimetypes.best)
 
 def coord(request, lon, lat):
     return output_v1.coord(request, lon, lat)
@@ -15,7 +15,6 @@ def coord(request, lon, lat):
 def departures_arrivals(type, request, uri1):
     u = None
     try:
-        print uri1
         u = Uri(uri1)
     except InvalidUriException:
         return generate_error("Invalid uri")
@@ -40,11 +39,11 @@ def departures_arrivals(type, request, uri1):
 
 def departures(request, uri1):
     response, region = departures_arrivals("departures", request, uri1)
-    return output_v1.departures(response,  region, "json", request.args.get("callback"))
+    return output_v1.departures(response,  region, request.accept_mimetypes.best, request.args.get("callback"))
 
 def arrivals(request, uri1):
     response, region = departures_arrivals("arrivals", request, uri1)
-    return output_v1.arrivals(response,  region, "json", request.args.get("callback"))
+    return output_v1.arrivals(response,  region, request.accept_mimetypes.best, request.args.get("callback"))
 
 
 def uri(request, uri):
@@ -56,7 +55,7 @@ def uri(request, uri):
 
     if len(u.objects) == 0:
         if u.is_region:
-            return output_v1.coverage(request, u.region(), 'json')
+            return output_v1.coverage(request, u.region(), request.accept_mimetypes.best)
 
     resource_type, uid = u.objects.pop()
     if resource_type in types_not_ptrefable:
@@ -83,7 +82,7 @@ def uri(request, uri):
         response = NavitiaManager().dispatch(arguments, u.region(), resource_type)
     except InvalidArguments, e:
         return generate_error(e.message)
-    return output_v1.render_ptref(response, u.region(), resource_type, uid, "json", request.args.get("callback"))
+    return output_v1.render_ptref(response, u.region(), resource_type, uid, request.accept_mimetypes.best, request.args.get("callback"))
 
 def places(request, uri):
     u = None
@@ -98,16 +97,40 @@ def places(request, uri):
     arguments = validate_pb_request("places", request)
     if arguments.valid:
         response = NavitiaManager().dispatch(arguments, u.region(), "places")
-        return output_v1.places(response, u, "json", request.args.get("callback"))
+        return output_v1.places(response, u, request.accept_mimetypes.best, request.args.get("callback"))
     else:
         return generate_error("Invalid arguments : " + arguments.details)
 
 
-def route_schedules(request, uri1, uri2=None):
-    return_ = '{"apiname":"schedules", uri1:"'+uri1+'"'
-    if uri2:
-        return_ += ', uri2:"'+uri2+'"'
-    return Response(return_ +'}', mimetype='text/plain;charset=utf-8')
+def route_schedules(request, uri1):
+    u = None
+    try:
+        u = Uri(uri1)
+    except InvalidUriException, e:
+        return generate_error("Invalid uri", e.message)
+
+    resource_type, uid = u.objects[-1]
+
+    if not uid:
+        return generate_error("You cannot ask a route schedule with this object, not implemented", status=501)
+
+    req = {"filter" : [collections_to_resource_type[resource_type]+".uri="+uid], "from_datetime": [""]}
+    if not request.args.get("from_datetime"):
+        req["from_datetime"] = [datetime.datetime.now().strftime("%Y%m%dT1337")]
+    else:
+        req["from_datetime"] = [request.args.get("from_datetime", str)]
+
+    if request.args.get("duration"):
+        req["duration"] = [int(request.args.get("duration"))]
+    if request.args.get("depth"):
+        req["depth"] = [int(request.args.get("depth"))]
+
+    arguments = validate_and_fill_arguments("route_schedules", req)
+    if arguments.valid:
+        response = NavitiaManager().dispatch(arguments, u.region(), "route_schedules")
+        return output_v1.route_schedules(response, u, request.accept_mimetypes.best, request.args.get("callback"))
+    else:
+        return generate_error("Invalid arguments : " + arguments.details)
 
 def stop_schedules(request, uri1, uri2=None):
     return_ = '{"apiname":"schedules", uri1:"'+uri1+'"'
@@ -129,7 +152,7 @@ def journeys(request, uri1=None):
         return generate_error("Invalid id" + e.message)
     resource_type1, uid1 = "", ""
     if u1.is_region:
-        u1.objects[-1]
+        resource_type1, uid1 = u1.objects[-1]
     else:
         resource_type1 = "coord"
         uid1 = "coord:"+str(u1.lon)+":"+str(u1.lat)
@@ -160,7 +183,7 @@ def journeys(request, uri1=None):
             return generate_error("Invalid Arguments : " + str(e.message))
         if arguments.valid:
             response = NavitiaManager().dispatch(arguments, u1.region(), "journeys")
-            return output_v1.journeys(request.path, u1, response, "json", request.args.get("callback"))
+            return output_v1.journeys(request.path, u1, response, request.accept_mimetypes.best, request.args.get("callback"))
         else:
             return generate_error("Invalid arguments : " + arguments.details)
     else:
@@ -170,7 +193,7 @@ def journeys(request, uri1=None):
             return generate_error("Invalid Arguments : " + str(e.message))
         if arguments.valid:
             response = NavitiaManager().dispatch(arguments, u1.region(), "isochrone")
-            return output_v1.journeys(arguments, u1, response, 'json', request.args.get("callback"), True)
+            return output_v1.journeys(arguments, u1, response, request.accept_mimetypes.best, request.args.get("callback"), True)
         else:
             return generate_error("Invalid arguments : " + arguments.details)
 
@@ -198,10 +221,10 @@ def nearby(request, uri1, uri2=None):
         return generate_error("Invalid Arguments : " + e.message)
     if arguments.valid:
         response = NavitiaManager().dispatch(arguments, u.region(), "places_nearby")
-        return output_v1.nearby(response, u, "json", request.args.get("callback"))
+        return output_v1.nearby(response, u, request.accept_mimetypes.best, request.args.get("callback"))
     else:
         return generate_error("Invalid arguments : " + arguments.details)
 
 
 def index(request):
-    return output_v1.index(request)
+    return output_v1.index(request, format=request.accept_mimetypes.best )

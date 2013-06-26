@@ -73,7 +73,6 @@ earliest_stop_time(const type::JourneyPatternPoint & jpp,
             jpp.order * data.dataRaptor.nb_trips[jpp.journey_pattern_idx];
     std::vector<uint32_t>::const_iterator end = begin + data.dataRaptor.nb_trips[jpp.journey_pattern_idx];
 
-
     auto it = std::lower_bound(begin, end, dt.hour(),
                                [](uint32_t departure_time, uint32_t hour){
                                return departure_time < hour;});

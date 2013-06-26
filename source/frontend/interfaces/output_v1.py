@@ -103,7 +103,25 @@ class json_renderer:
         except:
             pass
         return result
+
+    def stop_time(self, obj, region = None, details = False):
+        return obj
+
+    def route_schedule(self, obj, uri) : 
+        result = {'table' : {"rows" : []}, 'route' : {} }
         
+        for row in obj.table.rows : 
+            r = {}
+            if row.stop_point:
+                r['stop_point'] = self.stop_point(row.stop_point, uri.region())
+            if row.stop_times:
+                for stop_time in row.stop_times: 
+                    if not 'stop_times' in r:
+                        r['stop_times'] = []
+                    r['stop_times'].append(self.stop_time(stop_time))
+            result['table']['rows'].append(r)
+
+        return result
 
     def journey(self, obj, uri, details, is_isochrone, arguments):
         result = {
@@ -113,8 +131,10 @@ class json_renderer:
                 'arrival_date_time': obj.arrival_date_time,
                 }
         if obj.HasField('origin'):
+            self.visited_types.add("origin")
             result['origin'] = self.place(obj.origin, uri.region())
         if obj.HasField('destination'):
+            self.visited_types.add("destination")
             result['destination'] = self.place(obj.destination, uri.region())
 
         if len(obj.sections) > 0:
@@ -129,7 +149,7 @@ class json_renderer:
             else:
                 params = params + "from=" + uri.uri + "&"
             if obj.HasField('destination'):
-                resource_type = json_renderer.pbtype_2_collection[obj.destination.object_type]
+                resource_type = json_renderer.pbtype_2_collection[obj.destination.embedded_type]
                 params = params + "to=" + uri.region() + "/" +resource_type +"/" + obj.destination.uri
 
             ignored_params = ["origin", "destination"]
@@ -146,23 +166,23 @@ class json_renderer:
 
     def place(self, obj, region_name):
         obj_t = None
-        result = {"name" :"", "id":"", "object_type" : ""}
-        if obj.object_type == type_pb2.STOP_AREA:
+        result = {"name" :"", "id":"", "embedded_type" : ""}
+        if obj.embedded_type == type_pb2.STOP_AREA:
             obj_t = obj.stop_area
-            result["object_type"] = "stop_area"
+            result["embedded_type"] = "stop_area"
             result["stop_area"] = self.stop_area(obj.stop_area, region_name, False, False)
-        elif obj.object_type == type_pb2.STOP_POINT:
+        elif obj.embedded_type == type_pb2.STOP_POINT:
             obj_t = obj.stop_point
-            result["object_type"] = "stop_point"
+            result["embedded_type"] = "stop_point"
             result["stop_point"] = self.stop_point(obj.stop_point, region_name, False, False)
-        elif obj.object_type  == type_pb2.ADDRESS:
+        elif obj.embedded_type  == type_pb2.ADDRESS:
             obj_t = obj.address
-            result["object_type"] = "address"
+            result["embedded_type"] = "address"
             result["address"] = self.address(obj.address, region_name, False, False)
         if obj_t:
-            #self.visited_types.add(result["object_type"])
+            #self.visited_types.add(result["embedded_type"])
             result["name"] = obj_t.name
-            result["id"] = region_name + "/" + resource_type_to_collection[result["object_type"]]+"/"+obj.uri
+            result["id"] = region_name + "/" + resource_type_to_collection[result["embedded_type"]]+"/"+obj.uri
         return result
 
     def region(self, obj, region_id, details=False):
@@ -177,7 +197,6 @@ class json_renderer:
 
 
     def generic_type(self, type, obj, region, details = False, name_and_uri=True):
-        self.visited_types.add(type)
         result = {}
         if name_and_uri : 
             result['name'] = obj.name
@@ -198,21 +217,35 @@ class json_renderer:
         return result
 
     def section_links(self, region_name, uris):
-        links = {}
+        links = []
         if uris.HasField('company'):
-            links['company'] = self.base_url + region_name + '/companies/' + uris.company
+            links.append({"href" : self.base_url + region_name + '/companies/' + uris.company,
+                      "templated" : False,
+                      "rel" : "navitia.company"})
         if uris.HasField('vehicle_journey'):
-            links['vehicle_journey'] = self.base_url + region_name + '/vehicle_journeys/' + uris.vehicle_journey
+            links.append({"href" : self.base_url + region_name + '/vehicle_journeys/' + uris.vehicle_journey,
+                       "templated" : False,
+                       "rel" : "navitia.vehicle_journey"})
         if uris.HasField('line'):
-            links['line'] = self.base_url + region_name + '/lines/' + uris.line
+            links.append({"href" : self.base_url + region_name + '/lines/' + uris.line,
+                       "templated" : False,
+                       "rel" : "navitia.line"})
         if uris.HasField('route'):
-            links['route'] = self.base_url + region_name + '/routes/' + uris.route
+            links.append({"href" : self.base_url + region_name + '/routes/' + uris.route,
+                       "templated" : False,
+                       "rel" : "navitia.route"})
         if uris.HasField('commercial_mode'):
-            links['commercial_mode'] = self.base_url + region_name + '/commercial_modes/' + uris.commercial_mode
+            links.append({"href" : self.base_url + region_name + '/commercial_modes/' + uris.commercial_mode,
+                       "templated" : False,
+                       "rel" : "navitia.commercial_mode"})
         if uris.HasField('physical_mode'):
-            links['physical_mode'] = self.base_url + region_name + '/physical_modes/' + uris.physical_mode
+            links.append({"href" : self.base_url + region_name + '/physical_modes/' + uris.physical_mode,
+                       "templated" : False,
+                       "rel" : "navitia.physical_mode"})
         if uris.HasField('network'):
-            links['network'] = self.base_url + region_name + '/networks/' + uris.network
+            links.append({"href" : self.base_url + region_name + '/networks/' + uris.network,
+                       "templated" : False,
+                       "rel" : "navitia.network"})
         return links
 
     def display_informations(self, infos):
@@ -248,11 +281,14 @@ class json_renderer:
         if obj.HasField('arrival_date_time'):
             result['arrival_date_time'] = obj.arrival_date_time
         if obj.HasField('stop_point'):
+            self.visited_types.add("stop_point")
             result['stop_point'] = self.stop_point(obj.stop_point, region_name)
         return result
 
 
     def section(self, obj, region_name):
+        self.visited_types.add("origin")
+        self.visited_types.add("destination")
         result = {
                 'type': obj.type,
                 'origin': self.place(obj.origin, region_name),
@@ -299,10 +335,10 @@ class json_renderer:
         return result
 
     def link_types(self, region_name):
-        t_url = base_url + "/" + region_name + "/{"
+        t_url = base_url + "/v1/coverage/{"
         result = []
         for t in self.visited_types:
-            result.append({"href":t_url+t+".id}", "rel":t+".id", "templated":"true"})
+            result.append({"href":t_url+t+".id}", "rel": t, "templated":"true"})
         return result
 
 
@@ -328,7 +364,7 @@ def pagination_links(base_url, obj):
         result.append({'href' : base_url + '?start_page=' +
                        str(int(obj.totalResult/obj.itemsOnPage)), "rel" : "last", "templated":False})
     else:
-        result.append({'href' : base_url, "rel" : "last"})
+        result.append({'href' : base_url, "rel" : "last", "templated":False})
     if obj.HasField('nextPage'):
         result.append({'href' : base_url + '?start_page=' + str(obj.startPage + 1), "rel" : "next", "templated":False})
     if obj.HasField('previousPage'):
@@ -343,6 +379,7 @@ def render_ptref(response, region, resource_type, uid, format, callback):
     resp_dict = dict([(resource_type, []), ("links", []), ("pagination", {})])
     resp_dict[resource_type] = []
     renderer = json_renderer(base_url + '/v1/coverage')
+    renderer.visited_types.add(resource_type)
     items = get_field_by_name(response, resource_type)
     if items:
         for item in items:
@@ -365,9 +402,9 @@ def render_ptref(response, region, resource_type, uid, format, callback):
             if key != type:
                 resp_dict['links'].append({"href" : link_first_part+"/"+key, "rel":"navitia."+key, "templated":False}) 
     else:
-        resp_dict['links'].append({"href" : base_url + "/v1/{"+resource_type+".id}", "rel" : "related", "templated":True})
+        resp_dict['links'].append({"href" : base_url + "/v1/coverage/{"+resource_type+".id}", "rel" : "related", "templated":True})
 
-
+    resp_dict['links'].extend(renderer.link_types(region))
     return render(resp_dict, format, callback)
 
 def coverage(request, region_name=None, format=None):
@@ -375,14 +412,13 @@ def coverage(request, region_name=None, format=None):
     if region_name:
         region_template = region_name
     result = {'regions': [], 
-              'links' : [
-                        {"href" : base_url +"/v1/coverage/"+region_template, "rel":"related"},
-                        ]}
+              'links' : []}
 
     links =  [{"href" : base_url +"/v1/coverage/"+region_template, "rel":"related"}]
 
     for key in collections_to_resource_type:
         links.append({"href" : base_url+"/v1/coverage/"+region_template+"/"+key, "rel":"navitia."+key})
+
     result['links'] = links
 
     for link in result['links']:
@@ -449,15 +485,16 @@ def reconstruct_pagination_journeys(string, region_name):
     args = []
 
     for arg_and_val in string.split("&"):
-        arg, val = arg_and_val.split("=")
-        if arg == "origin" or arg == "destination":
-            resource_type, uid = val.split(":")
-            val = region_name + "/" + resource_type_to_collection[resource_type] + "/" + val
-            if arg == "origin":
-                arg = "from"
-            else:
-                arg = "to"
-        args.append(arg+"="+val)
+        if len(arg_and_val.split("=")) == 2:
+            arg, val = arg_and_val.split("=")
+            if arg == "origin" or arg == "destination":
+                resource_type, uid = val.split(":")
+                val = region_name + "/" + resource_type_to_collection[resource_type] + "/" + val
+                if arg == "origin":
+                    arg = "from"
+                else:
+                    arg = "to"
+            args.append(arg+"="+val)
     return "&".join(args)
 
 def journeys(arguments, uri, response, format, callback, is_isochrone=False):
@@ -469,12 +506,13 @@ def journeys(arguments, uri, response, format, callback, is_isochrone=False):
     if not is_isochrone:
         prev = reconstruct_pagination_journeys(response.prev, uri.region())
         next = reconstruct_pagination_journeys(response.next, uri.region())
-        response_dict['links'].append({"href":base_url+"/v1/journeys?"+prev, "rel":"prev","templated":False })
         response_dict['links'].append({"href":base_url+"/v1/journeys?"+next, "rel":"next","templated":False })
+        response_dict['links'].append({"href":base_url+"/v1/journeys?"+prev, "rel":"prev","templated":False })
     return render(response_dict, format, callback)
 
 def departures(response, region, format, callback):
     renderer = json_renderer(base_url + '/v1/')
+    renderer.visited_types.add('departures')
     response_dict = {'departures': [], "links" : [], "pagination" : {}}
     response_dict['pagination']['total_result'] = len(response.places)
     response_dict['pagination']['current_page'] = 0
@@ -487,6 +525,7 @@ def departures(response, region, format, callback):
 
 def arrivals(response, region, format, callback):
     renderer = json_renderer(base_url + '/v1/')
+    renderer.visited_types.add('arrivals')
     response_dict = {'arrivals': [], "pagination": {}, "links" : []}
     response_dict['pagination']['total_result'] = len(response.next_arrivals)
     response_dict['pagination']['current_page'] = 0
@@ -498,6 +537,7 @@ def arrivals(response, region, format, callback):
 
 def places(response, uri, format, callback):
     renderer = json_renderer(base_url + '/v1/')
+    renderer.visited_types.add("places")
     response_dict = {"links" : [], "pagination" : {}, "places" : []}
 
     response_dict['pagination']['total_result'] = len(response.next_departures)
@@ -507,12 +547,16 @@ def places(response, uri, format, callback):
         response_dict['places'].append(renderer.place(place, uri.region()))
         response_dict['places'][-1]['quality'] = place.quality
     
-    response_dict['links'] = renderer.link_types(uri.region())
+    response_dict['links'].append({"href" : base_url+"/v1/coverage/{places.id}",
+                                   "rel" : "places.id",
+                                   "templated" : True})
+    
     return render(response_dict, format, callback)
     
 
 def nearby(response, uri, format, callback):
     renderer = json_renderer(base_url + '/v1/')
+    renderer.visited_types.add("places_nearby")
     response_dict = {"links" : [], "pagination" : {}, "places_nearby" : []}
     response_dict['pagination']['total_result'] = len(response.places_nearby)
     response_dict['pagination']['current_page'] = 0
@@ -522,4 +566,13 @@ def nearby(response, uri, format, callback):
         response_dict['places_nearby'][-1]['distance'] = place.distance
     
     response_dict['links'] = renderer.link_types(uri.region())
+    return render(response_dict, format, callback)
+
+def route_schedules(response, uri, format, callback):
+    renderer = json_renderer(base_url+'/v1/')
+    response_dict = {"links" : [], "route_schedules" : []}
+
+    for schedule in response.route_schedules:
+        response_dict['route_schedules'].append(renderer.route_schedule(schedule, uri))
+
     return render(response_dict, format, callback)
