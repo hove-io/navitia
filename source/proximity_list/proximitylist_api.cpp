@@ -15,16 +15,16 @@ void create_pb(const std::vector<std::pair<type::idx_t, type::GeographicalCoord>
         auto current_date = boost::posix_time::second_clock::local_time();
         switch(type){
         case nt::Type_e::StopArea:
-            fill_pb_object(result_item.first, data, place->mutable_stop_area(), depth, current_date);
-            place->set_name(data.pt_data.stop_areas[result_item.first].name);
-            place->set_uri(data.pt_data.stop_areas[result_item.first].uri);
+            fill_pb_object(data.pt_data.stop_areas[result_item.first], data, place->mutable_stop_area(), depth, current_date);
+            place->set_name(data.pt_data.stop_areas[result_item.first]->name);
+            place->set_uri(data.pt_data.stop_areas[result_item.first]->uri);
             place->set_distance(coord.distance_to(result_item.second));
             place->set_embedded_type(pbnavitia::STOP_AREA);
             break;
         case nt::Type_e::StopPoint:
-            fill_pb_object(result_item.first, data, place->mutable_stop_point(), depth, current_date);
-            place->set_name(data.pt_data.stop_points[result_item.first].name);
-            place->set_uri(data.pt_data.stop_points[result_item.first].uri);
+            fill_pb_object(data.pt_data.stop_points[result_item.first], data, place->mutable_stop_point(), depth, current_date);
+            place->set_name(data.pt_data.stop_points[result_item.first]->name);
+            place->set_uri(data.pt_data.stop_points[result_item.first]->uri);
             place->set_distance(coord.distance_to(result_item.second));
             place->set_embedded_type(pbnavitia::STOP_POINT);
             break;

@@ -26,6 +26,7 @@ private:
     std::unordered_map<std::string, navimake::types::VehicleJourney*> vj_map;
     std::unordered_map<std::string, navimake::types::PhysicalMode*> mode_map;
     std::unordered_map<std::string, navimake::types::Network*> agency_map;
+    std::unordered_map<std::string, navimake::types::Company*> company_map;
     typedef std::vector<navimake::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;
     log4cplus::Logger logger;

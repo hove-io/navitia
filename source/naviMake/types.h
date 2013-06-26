@@ -20,44 +20,37 @@ using nt::hasProperties;
 
 #define FORWARD_CLASS_DECLARE(type_name, collection_name) class type_name;
 ITERATE_NAVITIA_PT_TYPES(FORWARD_CLASS_DECLARE)
-class JourneyPatternPointConnection;
 class StopTime;
 
 using nt::ConnectionType;
-struct Connection: public Header, hasProperties {
+struct StopPointConnection: public Header, hasProperties {
     const static nt::Type_e type = nt::Type_e::Connection;
 
-    StopPoint* departure_stop_point;
-    StopPoint* destination_stop_point;
+    StopPoint* departure;
+    StopPoint* destination;
     int duration;
     int max_duration;
     ConnectionType connection_kind;
 
-    navitia::type::Connection get_navitia_type() const;
+    navitia::type::StopPointConnection* get_navitia_type() const;
 
-    Connection() : departure_stop_point(NULL), destination_stop_point(NULL), duration(0),
+    StopPointConnection() : departure(NULL), destination(NULL), duration(0),
         max_duration(0), connection_kind(ConnectionType::Default){}
 
-   bool operator<(const Connection& other) const;
+   bool operator<(const StopPointConnection& other) const;
 
 };
 
 struct JourneyPatternPointConnection: public Header {
-    enum JourneyPatternPointConnectionKind {
-        Extension,  //Prolongement de service
-        Guarantee,   //Correspondance garantie
-        UndefinedJourneyPatternPointConnectionKind
-    };
-
-    JourneyPatternPoint *departure_journey_pattern_point;
-    JourneyPatternPoint *destination_journey_pattern_point;
-    JourneyPatternPointConnectionKind journey_pattern_point_connection_kind;
+    JourneyPatternPoint *departure;
+    JourneyPatternPoint *destination;
+    ConnectionType connection_kind;
     int length;
 
-    navitia::type::Connection get_navitia_type() const;
+    navitia::type::JourneyPatternPointConnection* get_navitia_type() const;
 
-    JourneyPatternPointConnection() : departure_journey_pattern_point(NULL), destination_journey_pattern_point(NULL),
-                            journey_pattern_point_connection_kind(UndefinedJourneyPatternPointConnectionKind), length(0) {}
+    JourneyPatternPointConnection() : departure(NULL), destination(NULL),
+                            connection_kind(ConnectionType::undefined), length(0) {}
 
     bool operator<(const JourneyPatternPointConnection &other) const;
 };
@@ -67,7 +60,7 @@ struct StopArea : public Header, Nameable, hasProperties{
     const static nt::Type_e type = nt::Type_e::StopArea;
     nt::GeographicalCoord coord;
 
-    navitia::type::StopArea get_navitia_type() const;
+    navitia::type::StopArea* get_navitia_type() const;
 
     StopArea() {}
 
@@ -84,7 +77,7 @@ struct Network : public Header, Nameable{
     std::string website;
     std::string fax;
 
-    navitia::type::Network get_navitia_type() const;
+    navitia::type::Network* get_navitia_type() const;
 
     bool operator<(const Network& other)const{ return this->name < other.name;}
 };
@@ -99,14 +92,14 @@ struct Company : public Header, Nameable{
     std::string website;
     std::string fax;
 
-    nt::Company get_navitia_type() const;
+    nt::Company* get_navitia_type() const;
 
     bool operator<(const Company& other)const{ return this->name < other.name;}
 };
 
 struct CommercialMode : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::CommercialMode;
-    nt::CommercialMode get_navitia_type() const;
+    nt::CommercialMode* get_navitia_type() const;
 
     bool operator<(const CommercialMode& other)const ;
 };
@@ -115,7 +108,7 @@ struct PhysicalMode : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::PhysicalMode;
     PhysicalMode() {}
 
-    nt::PhysicalMode get_navitia_type() const;
+    nt::PhysicalMode* get_navitia_type() const;
 
     bool operator<(const PhysicalMode& other) const;
 };
@@ -136,7 +129,7 @@ struct Line : public Header, Nameable {
 
     Line(): color(""), sort(0), commercial_mode(NULL), network(NULL), company(NULL){}
 
-    nt::Line get_navitia_type() const;
+    nt::Line* get_navitia_type() const;
 
     bool operator<(const Line & other) const;
 };
@@ -145,7 +138,7 @@ struct Route : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Route;
     Line * line;
 
-    navitia::type::Route get_navitia_type() const;
+    navitia::type::Route* get_navitia_type() const;
 
     bool operator<(const Route& other) const;
 };
@@ -159,7 +152,7 @@ struct JourneyPattern : public Header, Nameable{
 
     JourneyPattern(): is_frequence(false), route(NULL), physical_mode(NULL){};
 
-    navitia::type::JourneyPattern get_navitia_type() const;
+    navitia::type::JourneyPattern* get_navitia_type() const;
 
     bool operator<(const JourneyPattern& other) const;
  };
@@ -187,26 +180,11 @@ struct VehicleJourney: public Header, Nameable, hasProperties{
     VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), tmp_line(NULL), wheelchair_boarding(false),
     validity_pattern(NULL), first_stop_time(NULL), is_adapted(false), adapted_validity_pattern(NULL), theoric_vehicle_journey(NULL){}
 
-    navitia::type::VehicleJourney get_navitia_type() const;
+    navitia::type::VehicleJourney* get_navitia_type() const;
 
     bool operator<(const VehicleJourney& other) const;
 };
 
-struct Equipement : public Header {
-    enum EquipementKind{ Sheltred, 
-                            MIPAccess, 
-                            Escalator, 
-                            BikeAccepted, 
-                            BikeDepot, 
-                            VisualAnnouncement, 
-                            AudibleAnnoucement,
-                            AppropriateEscort, 
-                            AppropriateSignage
-    };
-
-    std::bitset<9> equipement_kind;
-
-};
 
 struct JourneyPatternPoint : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::JourneyPatternPoint;
@@ -216,7 +194,7 @@ struct JourneyPatternPoint : public Header, Nameable{
     JourneyPattern* journey_pattern;
     StopPoint* stop_point;
 
-    nt::JourneyPatternPoint get_navitia_type() const;
+    nt::JourneyPatternPoint* get_navitia_type() const;
 
     JourneyPatternPoint() : order(0), main_stop_point(false), fare_section(0), journey_pattern(NULL), stop_point(NULL){}
 
@@ -240,7 +218,7 @@ public:
 
     bool check(int day) const;
 
-    nt::ValidityPattern get_navitia_type() const;
+    nt::ValidityPattern* get_navitia_type() const;
 
     bool operator<(const ValidityPattern& other) const;
     bool operator==(const ValidityPattern& other) const;
@@ -260,7 +238,7 @@ struct StopPoint : public Header, Nameable, hasProperties{
 
     StopPoint(): fare_zone(0), stop_area(NULL), network(NULL) {}
 
-    nt::StopPoint get_navitia_type() const;
+    nt::StopPoint* get_navitia_type() const;
 
     bool operator<(const StopPoint& other) const;
 };
@@ -288,7 +266,7 @@ struct StopTime {
         ODT(false), pick_up_allowed(false), drop_off_allowed(false), is_frequency(false), wheelchair_boarding(false),
                 local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
 
-    navitia::type::StopTime get_navitia_type() const;
+    navitia::type::StopTime* get_navitia_type() const;
 
     bool operator<(const StopTime& other) const;
 };

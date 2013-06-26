@@ -384,7 +384,7 @@ struct Autocomplete
             //boost::replace_all(strFind,it->first, it->second);
             strFind = boost::regex_replace(strFind,boost::regex("\\<" + it->first + "\\>"), it->second);
             ++it;
-        }        
+        }
 
         boost::tokenizer <> tokens(strFind);
         for (auto token_it: tokens){

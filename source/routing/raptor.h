@@ -22,7 +22,9 @@ struct RAPTOR
 
     ///Contient les heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point à chaque tour
     std::vector<label_vector_t> labels;
-    std::vector<vector_idx> boardings;
+    std::vector<std::vector<const type::JourneyPatternPoint*> > boardings;
+    std::vector<std::vector<boarding_type> > boarding_types;
+
     ///Contient les meilleures heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point
     label_vector_t best_labels;
     ///Contient tous les points d'arrivée, et la meilleure façon dont on est arrivé à destination
@@ -123,21 +125,18 @@ struct RAPTOR
     int best_round(type::idx_t journey_pattern_point_idx);
 
     inline boarding_type get_type(size_t count, type::idx_t journey_pattern_point) const {
-        return navitia::routing::get_type(count, journey_pattern_point, labels, boardings, data);
+        return navitia::routing::get_type(count, journey_pattern_point, boarding_types, data);
     }
 
-    inline type::idx_t get_boarding_jpp(size_t count, type::idx_t journey_pattern_point) const {
-        return navitia::routing::get_boarding_jpp(count, journey_pattern_point, labels, boardings, data);
+    inline const type::JourneyPatternPoint* get_boarding_jpp(size_t count, type::idx_t journey_pattern_point) const {
+        return navitia::routing::get_boarding_jpp(count, journey_pattern_point, boardings);
     }
 
-    inline std::pair<type::idx_t, uint32_t> get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const type::Properties &required_properties, bool clockwise) const {
-        return navitia::routing::get_current_stidx_gap(count, journey_pattern_point, labels, boardings, required_properties, clockwise, data);
+    inline std::pair<const navitia::type::StopTime*, unsigned int> get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const type::Properties &required_properties, bool clockwise) const {
+        return navitia::routing::get_current_stidx_gap(count, journey_pattern_point, labels, boarding_types, required_properties, clockwise, data);
     }
 
     ~RAPTOR() {}
-
 };
-
-
 
 }}

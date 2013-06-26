@@ -1,7 +1,6 @@
 #pragma once
 #include "type.h"
 #include "georef/georef.h"
-#include "georef/adminref.h"
 #include "type/message.h"
 #include "autocomplete/autocomplete.h"
 #include "proximity_list/proximity_list.h"
@@ -16,11 +15,12 @@ namespace navitia { namespace type {
 typedef std::map<std::string, idx_t> ExtCodeMap;
 
 struct PT_Data : boost::noncopyable{
-#define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name> collection_name; ExtCodeMap collection_name##_map;
+#define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name*> collection_name; ExtCodeMap collection_name##_map;
     ITERATE_NAVITIA_PT_TYPES(COLLECTION_AND_MAP)
-    std::vector<StopTime> stop_times;
-    std::vector<Connection> journey_pattern_point_connections;
-    std::vector<std::vector<Connection> > stop_point_connections;
+
+    std::vector<StopTime*> stop_times;
+    std::vector<JourneyPatternPointConnection*> journey_pattern_point_connections;
+    std::vector<StopPointConnection*> stop_point_connections;
 
     // First letter
     autocomplete::Autocomplete<idx_t> stop_area_autocomplete;
@@ -61,11 +61,13 @@ struct PT_Data : boost::noncopyable{
     void build_uri();
 
     /** Construit l'indexe Autocomplete */
-//    void build_autocomplete(const std::map<std::string, std::string> & map_alias,const std::map<std::string, std::string> & map_synonymes);
     void build_autocomplete(const navitia::georef::GeoRef&);
 
     /** Construit l'indexe ProximityList */
     void build_proximity_list();
+
+    /// tris les collections et affecte un idx a chaque élément
+    void sort();
 
     /** Retrouve un élément par un attribut arbitraire de type chaine de caractères
       *
@@ -76,26 +78,10 @@ struct PT_Data : boost::noncopyable{
         return find(attribute, std::string(str));
     }
 
-
-
-
-    /** Construit une nouvelle structure de correspondance */
-    void build_connections();
-
-    /** Retourne la correspondance entre deux journey_pattern point
-     *
-     * Cela peut varier pour les correspondances garanties ou les prolongements de service
-     * Dans le cas normal, il s'agit juste du temps de sécurité
-    */
-    Connection journey_pattern_point_connection(idx_t, idx_t){
-        Connection result;
-        result.duration = 120;
-        result.connection_type = ConnectionType::StopPoint;
-        return result;
-    }
-
     PT_Data& operator=(PT_Data&& other);
 
+    /** Définis les idx des différents objets */
+    void index();
 };
 
 }}

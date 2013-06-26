@@ -51,12 +51,12 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
     // On regroupe entre eux les stop_times appartenant au meme couple (stop_point, route)
     // On veut en effet afficher les départs regroupés par route (une route étant une vague direction commerciale
     for(type::idx_t journey_pattern_point_idx : handler.journey_pattern_points) {
-        auto stop_point_idx = data.pt_data.journey_pattern_points[journey_pattern_point_idx].stop_point_idx;
-        auto route_idx = data.pt_data.journey_patterns[data.pt_data.journey_pattern_points[journey_pattern_point_idx].journey_pattern_idx].route_idx;
+        const type::StopPoint* stop_point = data.pt_data.journey_pattern_points[journey_pattern_point_idx]->stop_point;
+        const type::Route* route = data.pt_data.journey_pattern_points[journey_pattern_point_idx]->journey_pattern->route;
 
         auto stop_times = get_stop_times({journey_pattern_point_idx}, handler.date_time, handler.max_datetime, std::numeric_limits<int>::max(), data);
 
-        auto key = std::make_pair(stop_point_idx, route_idx);
+        auto key = std::make_pair(stop_point->idx, route->idx);
         auto iter = map_route_stop_point.find(key);
         if(iter == map_route_stop_point.end()) {
             iter = map_route_stop_point.insert(std::make_pair(key, vector_dt_st())).first;
@@ -71,12 +71,12 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
     for(auto id_vec : map_route_stop_point) {
 
         auto board = handler.pb_response.add_departure_boards();
-        fill_pb_object(id_vec.first.first, data, board->mutable_stop_point(), 1, current_time, action_period);
-        fill_pb_object(id_vec.first.second, data, board->mutable_route(), 2, current_time, action_period);
+        fill_pb_object(data.pt_data.stop_points[id_vec.first.first], data, board->mutable_stop_point(), 1, current_time, action_period);
+        fill_pb_object(data.pt_data.routes[id_vec.first.second], data, board->mutable_route(), 2, current_time, action_period);
 
         auto vec_st = id_vec.second;
         std::sort(vec_st.begin(), vec_st.end(),
-                  [&](dt_st d1, dt_st d2) {
+                  [&](datetime_stop_time d1, datetime_stop_time d2) {
                     return std::abs((d1.first.hour() % type::DateTime::SECONDS_PER_DAY)-handler.date_time.hour())
                         <  std::abs((d2.first.hour() % type::DateTime::SECONDS_PER_DAY)-handler.date_time.hour());
                   });

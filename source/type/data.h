@@ -10,7 +10,6 @@
 #include <boost/format.hpp>
 #include "routing/dataraptor.h"
 #include <atomic>
-#include "georef/adminref.h"
 
 namespace navitia { namespace type {
 
@@ -35,15 +34,15 @@ public:
     /// Référentiel de transport en commun
     PT_Data pt_data;
 
-
     navitia::georef::GeoRef geo_ref;
 
     /// Données précalculées pour le raptor
     routing::dataRAPTOR dataRaptor;
 
     /** Retourne la structure de données associée au type */
-    template<typename T>  std::vector<T> & get_data();
-    template<typename T>  std::vector<T> const & get_data() const;
+    /// TODO : attention aux perfs à faire la copie
+    template<typename T> std::vector<T*> & get_data();
+    template<typename T> std::vector<T*> get_data() const;
 
     /** Retourne tous les indices d'un type donné
       *
@@ -65,7 +64,7 @@ public:
     
     /// Fixe les villes des voiries du filaire
     // les admins des objets
-    void set_admins();
+//    void set_admins();
 
     /// Mutex servant à protéger le load des données
     boost::shared_mutex load_mutex;
@@ -121,6 +120,7 @@ public:
 
     /** Construit l'indexe Autocomplete */
     void build_autocomplete();
+
 
     /** Construit l'indexe ProximityList */
     void build_proximity_list();

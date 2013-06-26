@@ -1,6 +1,6 @@
 #pragma once
 
-#include "data.h"
+#include "type/data.h"
 #include <boost/date_time/gregorian_calendar.hpp>
 
 /** Ce connecteur permet de faciliter la construction d'un réseau en code
@@ -15,7 +15,7 @@ struct builder;
 /// Structure retournée à la construction d'un VehicleJourney
 struct VJ {
     builder & b;
-    types::VehicleJourney * vj;
+    navitia::type::VehicleJourney * vj;
 
     /// Construit un nouveau vehicle journey
     VJ(builder & b, const std::string &line_name, const std::string &validity_pattern, const std::string & block_id, bool is_adapted = true, const std::string& uri="");   
@@ -36,7 +36,7 @@ struct VJ {
 
 struct SA {
     builder & b;
-    types::StopArea * sa;
+    navitia::type::StopArea * sa;
 
     /// Construit un nouveau stopArea
     SA(builder & b, const std::string & sa_name, double x, double y, bool is_adapted = true);
@@ -47,14 +47,14 @@ struct SA {
 
 
 struct builder{
-    std::map<std::string, types::Line *> lines;
-    std::map<std::string, types::ValidityPattern *> vps;
-    std::map<std::string, types::StopArea *> sas;
-    std::map<std::string, types::StopPoint *> sps;
-    std::map<std::string, types::Network *> nts;
+    std::map<std::string, navitia::type::Line *> lines;
+    std::map<std::string, navitia::type::ValidityPattern *> vps;
+    std::map<std::string, navitia::type::StopArea *> sas;
+    std::map<std::string, navitia::type::StopPoint *> sps;
+    std::map<std::string, navitia::type::Network *> nts;
     boost::gregorian::date begin;
 
-    Data data;
+    navitia::type::Data data;
     //navitia::streetnetwork::StreetNetwork street_network;
     navitia::georef::GeoRef street_network;
 
@@ -72,6 +72,7 @@ struct builder{
 
     /// Crée une connexion
     void connection(const std::string & name1, const std::string & name2, float length);
+    void journey_pattern_point_connection(const std::string & name1, const std::string & name2, float length=120);
     void build(navitia::type::PT_Data & pt_data);
     void generate_dummy_basis();
 };

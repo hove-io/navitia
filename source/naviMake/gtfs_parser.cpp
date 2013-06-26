@@ -175,13 +175,20 @@ void GtfsParser::parse_agency(Data & data, CsvReader & csv){
                 throw InvalidHeaders(csv.filename);
             }
             nm::Network * network = new nm::Network();
-            if(id_c != -1)
+            nm::Company * company = new nm::Company();
+            if(id_c != -1){
                 network->uri = row[id_c];
-            else
+                company->uri = row[id_c];
+            }else{
                 network->uri = "default_agency";
+                company->uri = "default_agency";
+            }
             network->name = row[name_c];
+            company->name = row[name_c];
             data.networks.push_back(network);
+            data.companies.push_back(company);
             agency_map[network->uri] = network;
+            company_map[network->uri] = company;
             line_read = true;
         }
     }
@@ -216,24 +223,24 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
         auto row = csv.next();
         if(row.empty())
             continue;
-        nm::StopPoint * sp = new nm::StopPoint();
-        try{
-            sp->coord.set_lon(boost::lexical_cast<double>(row[lon_c]));
-            sp->coord.set_lat(boost::lexical_cast<double>(row[lat_c]));
-        }
-        catch(boost::bad_lexical_cast ) {
-            LOG4CPLUS_WARN(logger, "Impossible de parser les coordonnées pour " 
-                    + row[id_c] + " " + row[code_c] + " " + row[name_c]);
-        }
-
-        sp->name = row[name_c];
-        sp->uri = row[id_c];
         //On teste si c'est un doublon, daqns gtfs le meme fichier contient stoparea et stoppoint
-        if(stop_map.find(sp->uri) != stop_map.end() ||
-           stop_area_map.find(sp->uri) != stop_area_map.end()) {
-            LOG4CPLUS_WARN(logger, "Le stop " + sp->uri +" a ete ignore");
+        if(stop_map.find(row[id_c]) != stop_map.end() ||
+           stop_area_map.find(row[id_c]) != stop_area_map.end()) {
+            LOG4CPLUS_WARN(logger, "Le stop " + row[id_c] +" a ete ignore");
             ignored++;
         } else {
+            nm::StopPoint * sp = new nm::StopPoint();
+            try{
+                sp->coord.set_lon(boost::lexical_cast<double>(row[lon_c]));
+                sp->coord.set_lat(boost::lexical_cast<double>(row[lat_c]));
+            }
+            catch(boost::bad_lexical_cast ) {
+                LOG4CPLUS_WARN(logger, "Impossible de parser les coordonnées pour "
+                        + row[id_c] + " " + row[code_c] + " " + row[name_c]);
+            }
+
+            sp->name = row[name_c];
+            sp->uri = row[id_c];
             // Si c'est un stopArea
             if(type_c != -1 && row[type_c] == "1") {
                 nm::StopArea * sa = new nm::StopArea();
@@ -259,7 +266,7 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
                 data.stop_points.push_back(sp);
                 if(parent_c!=-1 && row[parent_c] != "") {// On sauvegarde la référence à la zone d'arrêt
                     auto it = sa_spmap.find(row[parent_c]);
-                    if( it == sa_spmap.end()) {
+                    if(it == sa_spmap.end()) {
                         it = sa_spmap.insert(std::make_pair(row[parent_c], vector_sp())).first;
                     }
                     it->second.push_back(sp);
@@ -270,8 +277,6 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
 
     // On reboucle pour récupérer les stop areas de tous les stop points
     for(auto sa_sps : sa_spmap) {
-        if(sa_sps.first == "VTN|SevTur|parent")
-            std::cout << "DEBUG" << std::endl;
         auto it = stop_area_map.find(sa_sps.first);
         if(it != stop_area_map.end()) {
             for(auto sp : sa_sps.second) {
@@ -351,10 +356,12 @@ void GtfsParser::parse_transfers(Data & data, CsvReader & csv) {
 
         for(auto from_sp : departures) {
             for(auto to_sp : arrivals) {
-                nm::Connection * connection = new nm::Connection();
-                connection->departure_stop_point = from_sp;
-                connection->destination_stop_point  = to_sp;
+                nm::StopPointConnection * connection = new nm::StopPointConnection();
+                connection->departure = from_sp;
+                connection->destination  = to_sp;
+                connection->uri = from_sp->uri + "=>"+ to_sp->uri;
                 connection->connection_kind = types::ConnectionType::Walking;
+
                 if(time_c != -1) {
                     try{
                         connection->duration = boost::lexical_cast<int>(row[time_c]);
@@ -365,14 +372,14 @@ void GtfsParser::parse_transfers(Data & data, CsvReader & csv) {
                    connection->duration = 120;
                 }
 
-                data.connections.push_back(connection);
+                data.stop_point_connections.push_back(connection);
             }
         }
         nblines++;
     }
 
     LOG4CPLUS_TRACE(logger, boost::lexical_cast<std::string>(nblines) + 
-            " correspondances prises en compte sur " + boost::lexical_cast<std::string>(data.connections.size()));
+            " correspondances prises en compte sur " + boost::lexical_cast<std::string>(data.stop_point_connections.size()));
 }
 
 
@@ -501,7 +508,7 @@ void GtfsParser::parse_lines(Data & data, CsvReader &csv){
         long_name_c = csv.get_pos_col("route_long_name"), type_c = csv.get_pos_col("route_type"),
         color_c = csv.get_pos_col("route_color"), agency_c = csv.get_pos_col("agency_id");
     int ignored = 0;
-    
+
     while(!csv.eof()) {
         auto row = csv.next();
         if(row.empty())
@@ -522,11 +529,20 @@ void GtfsParser::parse_lines(Data & data, CsvReader &csv){
                 auto agency_it = agency_map.find(row[agency_c]);
                 if(agency_it != agency_map.end())
                     line->network = agency_it->second;
+
+                auto company_it = company_map.find(row[agency_c]);
+                if(company_it != company_map.end())
+                    line->company = company_it->second;
+
             }
             else {
                 auto agency_it = agency_map.find("default_agency");
                 if(agency_it != agency_map.end())
                     line->network = agency_it->second;
+
+                auto company_it = company_map.find("default_agency");
+                if(company_it != company_map.end())
+                    line->company = company_it->second;
             }
 
             line_map[row[id_c]] = line;
@@ -547,8 +563,8 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
     std::vector<std::string> mandatory_headers = {"route_id", "service_id",
         "trip_id"};
     if(!csv.validate(mandatory_headers)) {
-        LOG4CPLUS_FATAL(logger, "Erreur lors du parsing de " + csv.filename 
-                  + ". Il manque les colonnes : " 
+        LOG4CPLUS_FATAL(logger, "Erreur lors du parsing de " + csv.filename
+                  + ". Il manque les colonnes : "
                   + csv.missing_headers(mandatory_headers));
         throw InvalidHeaders(csv.filename);
     }
@@ -602,6 +618,8 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                     vj->adapted_validity_pattern = vp_xx;
                     vj->journey_pattern = 0;
                     vj->tmp_line = line;
+                    //A défaut d'information, on prend la premiére compagnie ratachée à la ligne
+                    vj->company = line->company;
                     vj->physical_mode = itm->second;
                     if(block_id_c != -1)
                         vj->block_id = row[block_id_c];

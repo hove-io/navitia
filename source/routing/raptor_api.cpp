@@ -16,21 +16,21 @@ std::string iso_string(const nt::Data & d, int date, int hour){
 void fill_section(pbnavitia::Section *pb_section, navitia::type::idx_t vj_idx,
         const nt::Data & d, boost::posix_time::ptime now, boost::posix_time::time_period action_period) {
 
-    const type::VehicleJourney & vj = d.pt_data.vehicle_journeys[vj_idx];
-    const type::JourneyPattern & jp = d.pt_data.journey_patterns[vj.journey_pattern_idx];
-    const type::Route & route = d.pt_data.routes[jp.route_idx];
-    const type::Line & line = d.pt_data.lines[route.line_idx];
+    const type::VehicleJourney* vj = d.pt_data.vehicle_journeys[vj_idx];
+    const type::JourneyPattern* jp = vj->journey_pattern;
+    const type::Route* route = jp->route;
+    const type::Line* line = route->line;
 
     auto mvj = pb_section->mutable_vehicle_journey();
     auto mroute = mvj->mutable_route();
     auto mline = mroute->mutable_line();
 
-    fill_pb_object(vj_idx, d, mvj, 0, now, action_period);
-    fill_pb_object(route.idx, d, mroute, 0, now, action_period);
-    fill_pb_object(line.idx, d, mline, 0, now, action_period);
-    fill_pb_object(line.network_idx, d, mline->mutable_network(), 0, now, action_period);
-    fill_pb_object(line.commercial_mode_idx, d, mline->mutable_commercial_mode(), 0, now, action_period);
-    fill_pb_object(vj.physical_mode_idx, d, mvj->mutable_physical_mode(), 0, now, action_period);
+    fill_pb_object(vj, d, mvj, 0, now, action_period);
+    fill_pb_object(route, d, mroute, 0, now, action_period);
+    fill_pb_object(line, d, mline, 0, now, action_period);
+    fill_pb_object(line->network, d, mline->mutable_network(), 0, now, action_period);
+    fill_pb_object(line->commercial_mode, d, mline->mutable_commercial_mode(), 0, now, action_period);
+    fill_pb_object(vj->physical_mode, d, mvj->mutable_physical_mode(), 0, now, action_period);
 }
 
 
@@ -79,7 +79,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                         auto dep_time = item.departures[i];
                         stop_time->set_departure_date_time(iso_string(d, dep_time.date(), dep_time.hour()));
                         boost::posix_time::time_period action_period(to_posix_time(dep_time, d), to_posix_time(arr_time, d));
-                        fill_pb_object(item.stop_points[i], d, stop_time->mutable_stop_point(), 0, now, action_period);
+                        fill_pb_object(d.pt_data.stop_points[item.stop_points[i]], d, stop_time->mutable_stop_point(), 0, now, action_period);
                         if(!pb_section->has_origin())
                             fill_pb_placemark(d.pt_data.stop_points[item.stop_points[i]], d, pb_section->mutable_origin(), 1, now, action_period);
                         fill_pb_placemark(d.pt_data.stop_points[item.stop_points[i]], d, pb_section->mutable_destination(), 1, now, action_period);
@@ -155,14 +155,14 @@ get_stop_points( const type::EntryPoint &ep, const type::Data & data,
     case navitia::type::Type_e::StopArea:
         it = data.pt_data.stop_areas_map.find(ep.uri);
         if(it!= data.pt_data.stop_areas_map.end()) {
-            for(auto spidx : data.pt_data.stop_areas[it->second].stop_point_list) {
-                result.push_back(std::make_pair(spidx, 0));
+            for(auto stop_point : data.pt_data.stop_areas[it->second]->stop_point_list) {
+                result.push_back(std::make_pair(stop_point->idx, 0));
             }
         } break;
     case type::Type_e::StopPoint:
         it = data.pt_data.stop_points_map.find(ep.uri);
         if(it != data.pt_data.stop_points_map.end()){
-            result.push_back(std::make_pair(data.pt_data.stop_points[it->second].idx, 0));
+            result.push_back(std::make_pair(data.pt_data.stop_points[it->second]->idx, 0));
         } break;
     case type::Type_e::Address:
     case type::Type_e::Coord:
@@ -172,43 +172,6 @@ get_stop_points( const type::EntryPoint &ep, const type::Data & data,
     return result;
 }
 
-type::idx_t get_idx_by_type(const type::Data & data, const nt::Type_e type, const std::string &uri){
-    type::idx_t result;
-    switch(type){
-        case nt::Type_e::POIType:
-            result = data.geo_ref.poitype_map.at(uri);
-        break;
-       default: result = type::invalid_idx;
-                break;
-    }
-    return result;
-}
-
-/**
-    Cette fonction permet de récupérer les points d'arrêts les plus proche à une données ayant l'identifiant idx
-*/
-std::vector<std::pair<type::idx_t, double> >
-get_stop_points_by_filter(const type::Data & data, std::vector<std::pair<type::idx_t, double> > &stop_points, const type::StreetNetworkParams &streetnetwork_params){
-    std::vector<std::pair<type::idx_t, double> > result;
-    type::idx_t idx = get_idx_by_type(data, streetnetwork_params.type_filter, streetnetwork_params.uri_filter);
-    if (idx != type::invalid_idx){
-        for(auto stop_point : stop_points){
-            switch(streetnetwork_params.type_filter){
-                case nt::Type_e::POIType:{
-                    auto pois = data.geo_ref.poi_proximity_list.find_within(data.pt_data.stop_points[stop_point.first].coord, streetnetwork_params.radius_filter);
-                    for(auto poi : pois){
-                        if (data.geo_ref.pois.at(poi.first).poitype_idx == idx){
-                            result.push_back(std::make_pair(stop_point.first,stop_point.second));
-                            break;
-                        }
-                    }}
-                break;
-                default: break;
-            }
-        }
-    }
-    return result;
-}
 
 std::vector<boost::posix_time::ptime> 
 parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str, 
@@ -255,13 +218,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
     }
     worker.init();
     auto departures = get_stop_points(origin, raptor.data, worker);
-    if (origin.streetnetwork_params.type_filter != type::Type_e::Unknown){
-        departures = get_stop_points_by_filter(raptor.data,departures, origin.streetnetwork_params);
-    }
     auto destinations = get_stop_points(destination, raptor.data, worker, true);
-    if (destination.streetnetwork_params.type_filter != type::Type_e::Unknown){
-        destinations = get_stop_points_by_filter(raptor.data,destinations, destination.streetnetwork_params);
-    }
     if(departures.size() == 0 && destinations.size() == 0){
         response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         return response;
@@ -348,13 +305,13 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                            walking_speed, walking_distance, wheelchair, forbidden, clockwise);
 
 
-    for(const type::StopPoint &sp : raptor.data.pt_data.stop_points) {
+    for(const type::StopPoint* sp : raptor.data.pt_data.stop_points) {
         type::DateTime best = bound;
         type::idx_t best_rp = type::invalid_idx;
-        for(type::idx_t rpidx : sp.journey_pattern_point_list) {
-            if(raptor.best_labels[rpidx] < best) {
-                best = raptor.best_labels[rpidx];
-                best_rp = rpidx;
+        for(auto jpp : sp->journey_pattern_point_list) {
+            if(raptor.best_labels[jpp->idx] < best) {
+                best = raptor.best_labels[jpp->idx];
+                best_rp = jpp->idx;
             }
         }
 
@@ -363,7 +320,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
             type::idx_t initial_rp;
             type::DateTime initial_dt;
             int round = raptor.best_round(best_rp);
-            boost::tie(initial_rp, initial_dt) = getFinalRpidAndDate(round, best_rp, clockwise, raptor.labels, raptor.boardings, raptor.data);
+            boost::tie(initial_rp, initial_dt) = getFinalRpidAndDate(round, best_rp, clockwise, raptor.labels, raptor.boardings, raptor.boarding_types, raptor.data);
 
             int duration = ::abs(label - init_dt);
 
@@ -373,7 +330,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                 pb_journey->set_departure_date_time(iso_string(raptor.data, label.date(), label.hour()));
                 pb_journey->set_duration(duration);
                 pb_journey->set_nb_transfers(round);
-                fill_pb_placemark(raptor.data.pt_data.stop_points[raptor.data.pt_data.journey_pattern_points[best_rp].stop_point_idx], raptor.data, pb_journey->mutable_destination(), 0);
+                fill_pb_placemark(raptor.data.pt_data.journey_pattern_points[best_rp]->stop_point, raptor.data, pb_journey->mutable_destination(), 0);
             }
         }
     }

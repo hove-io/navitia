@@ -20,30 +20,30 @@ next_passages(const std::string &request, const std::string &str_dt,
 
     std::remove_if(handler.journey_pattern_points.begin(), handler.journey_pattern_points.end(), vis.predicate);
 
-    auto departures_dt_idx = get_stop_times(handler.journey_pattern_points, handler.date_time, handler.max_datetime, nb_stoptimes, data, wheelchair);
+    auto departures_dt_stop_times = get_stop_times(handler.journey_pattern_points, handler.date_time, handler.max_datetime, nb_stoptimes, data, wheelchair);
 
     auto now = pt::second_clock::local_time();
     pt::time_period action_period(to_posix_time(handler.date_time, data), to_posix_time(handler.max_datetime, data));
     
-    for(auto dt_idx : departures_dt_idx) {
+    for(auto dt_stop_time : departures_dt_stop_times) {
         pbnavitia::Passage * passage;
         if(vis.api_str == "NEXT_ARRIVALS")
             passage = handler.pb_response.add_next_arrivals();
         else
             passage = handler.pb_response.add_next_departures();
-        passage->mutable_stop_date_time()->set_departure_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
-        passage->mutable_stop_date_time()->set_arrival_date_time(type::iso_string(dt_idx.first.date(),  dt_idx.first.hour(), data));
-        const auto &rp = data.pt_data.journey_pattern_points[data.pt_data.stop_times[dt_idx.second].journey_pattern_point_idx];
-        fill_pb_object(rp.stop_point_idx, data, passage->mutable_stop_point(), depth, now, action_period);
-        const type::VehicleJourney & vj = data.pt_data.vehicle_journeys[data.pt_data.stop_times[dt_idx.second].vehicle_journey_idx];
-        const type::JourneyPattern & jp = data.pt_data.journey_patterns[vj.journey_pattern_idx];
-        const type::Route & route = data.pt_data.routes[jp.route_idx];
-        const type::Line & line = data.pt_data.lines[route.line_idx];
-        const type::PhysicalMode & physical_mode = data.pt_data.physical_modes[vj.physical_mode_idx];
-        fill_pb_object(vj.idx, data, passage->mutable_vehicle_journey(), 0, now, action_period);
-        fill_pb_object(route.idx, data, passage->mutable_vehicle_journey()->mutable_route(), 0, now, action_period);
-        fill_pb_object(line.idx, data, passage->mutable_vehicle_journey()->mutable_route()->mutable_line(), 0, now, action_period);
-        fill_pb_object(physical_mode.idx, data, passage->mutable_vehicle_journey()->mutable_physical_mode(), 0, now, action_period);
+        passage->mutable_stop_date_time()->set_departure_date_time(type::iso_string(dt_stop_time.first.date(),  dt_stop_time.first.hour(), data));
+        passage->mutable_stop_date_time()->set_arrival_date_time(type::iso_string(dt_stop_time.first.date(),  dt_stop_time.first.hour(), data));
+        const type::JourneyPatternPoint* jpp = dt_stop_time.second->journey_pattern_point;
+        fill_pb_object(jpp->stop_point, data, passage->mutable_stop_point(), depth, now, action_period);
+        const type::VehicleJourney* vj = dt_stop_time.second->vehicle_journey;
+        const type::JourneyPattern* jp = vj->journey_pattern;
+        const type::Route* route = jp->route;
+        const type::Line* line = route->line;
+        const type::PhysicalMode* physical_mode = vj->physical_mode;
+        fill_pb_object(vj, data, passage->mutable_vehicle_journey(), 0, now, action_period);
+        fill_pb_object(route, data, passage->mutable_vehicle_journey()->mutable_route(), 0, now, action_period);
+        fill_pb_object(line, data, passage->mutable_vehicle_journey()->mutable_route()->mutable_line(), 0, now, action_period);
+        fill_pb_object(physical_mode, data, passage->mutable_vehicle_journey()->mutable_physical_mode(), 0, now, action_period);
     }
     return handler.pb_response;
 }
@@ -55,8 +55,8 @@ pbnavitia::Response next_departures(const std::string &request, const std::strin
         struct predicate_t {
             type::Data &data;
             predicate_t(type::Data& data) : data(data){}
-            bool operator()(const type::idx_t rpidx) const{
-                return data.pt_data.journey_pattern_points[rpidx].order == (int)(data.pt_data.journey_patterns[data.pt_data.journey_pattern_points[rpidx].journey_pattern_idx].journey_pattern_point_list.size()-1);
+            bool operator()(const type::idx_t jppidx) const{
+                return data.pt_data.journey_pattern_points[jppidx]->order == (int)(data.pt_data.journey_pattern_points[jppidx]->journey_pattern->journey_pattern_point_list.size()-1);
             }
         };
         std::string api_str;
@@ -75,8 +75,8 @@ pbnavitia::Response next_arrivals(const std::string &request, const std::string 
         struct predicate_t {
             type::Data &data;
             predicate_t(type::Data& data) : data(data){}
-            bool operator()(const type::idx_t rpidx) const{
-                return data.pt_data.journey_pattern_points[rpidx].order == 0;
+            bool operator()(const type::idx_t jppidx) const{
+                return data.pt_data.journey_pattern_points[jppidx]->order == 0;
             }
         };
         std::string api_str;

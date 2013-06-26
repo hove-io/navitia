@@ -70,7 +70,7 @@ int main(int argc, char** argv){
     for(int i = 0; i < iterations; ++i) {
         std::vector<unsigned int> hours{0, 28800, 36000, 72000, 86000};
         std::vector<unsigned int> days({7});
-        if(data.pt_data.validity_patterns.front().beginning_date.day_of_week().as_number() == 6)
+        if(data.pt_data.validity_patterns.front()->beginning_date.day_of_week().as_number() == 6)
             days.push_back(8);
         else
             days.push_back(13);
@@ -98,6 +98,7 @@ int main(int argc, char** argv){
     boost::progress_display show_progress(demands.size());
     Timer t("Calcul avec l'algorithme ");
     //ProfilerStart("bench.prof");
+    int nb_reponses = 0;
     for(auto demand : demands){
         ++show_progress;
         Timer t2;
@@ -109,6 +110,7 @@ int main(int argc, char** argv){
         Path path;
         if(res.size() > 0) {
             path = res[0];
+            ++ nb_reponses;
         }
 
         Result result(path);
@@ -131,8 +133,8 @@ int main(int argc, char** argv){
 
     for(size_t i = 0; i < demands.size(); ++i){
         PathDemand demand = demands[i];
-        out_file << data.pt_data.stop_points[demand.start].uri
-                 << ", " << data.pt_data.stop_points[demand.target].uri
+        out_file << data.pt_data.stop_points[demand.start]->uri
+                 << ", " << data.pt_data.stop_points[demand.target]->uri
                  << ", " << demand.date
                  << ", " << demand.hour;
 
@@ -146,4 +148,7 @@ int main(int argc, char** argv){
         out_file << "\n";
     }
     out_file.close();
+
+    std::cout << "Nombre de demandes :" << demands.size() << std::endl;
+    std::cout << "Nombre de resultats avec solution" << nb_reponses << std::endl;
 }

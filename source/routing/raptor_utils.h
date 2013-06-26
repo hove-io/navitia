@@ -8,7 +8,6 @@ namespace navitia { namespace routing {
 
 typedef std::pair<int, int> pair_int;
 typedef std::vector<type::DateTime> label_vector_t;
-typedef std::map<navitia::type::idx_t, navitia::type::Connection> list_connections;
 typedef std::vector<navitia::type::idx_t> vector_idx;
 typedef std::pair<navitia::type::idx_t, int> pair_idx_int;
 typedef std::vector<int> queue_t;
@@ -44,8 +43,9 @@ struct best_dest {
         if(!clockwise)
             return add_best_reverse(rpid, t, cnt);
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
+            auto debug_t = t + rpidx_distance[rpid];
             if((best_now == navitia::type::DateTime::inf) ||
-               ((t != navitia::type::DateTime::inf) && (t + rpidx_distance[rpid]) <= (best_now + max_walking))) {
+               ((t != navitia::type::DateTime::inf) && (t + rpidx_distance[rpid]) <= (best_now))) {
                 best_now = t + rpidx_distance[rpid];
                 //best_now.departure = best_now.departure + rpidx_distance[rpid];
                 best_now_rpid = rpid;
@@ -59,7 +59,7 @@ struct best_dest {
     bool add_best_reverse(unsigned int rpid, const type::DateTime &t, int cnt) {
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
             if((best_now.datetime <= max_walking) ||
-               (t != navitia::type::DateTime::min && (t - rpidx_distance[rpid]) >= (best_now - max_walking))) {
+               (t != navitia::type::DateTime::min && (t - rpidx_distance[rpid]) >= (best_now))) {
                 best_now = t - rpidx_distance[rpid];
                 //best_now.departure = t.departure - rpidx_distance[rpid];
                 best_now_rpid = rpid;
@@ -92,23 +92,11 @@ struct best_dest {
 };
 
 inline
-boarding_type get_type(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<vector_idx> &boardings, const navitia::type::Data &data){
-    const type::DateTime & date_time = labels[count][journey_pattern_point];
-    if(date_time == type::DateTime::inf || date_time == type::DateTime::min) {
-        return boarding_type::uninitialized;
-    } else {
-        type::idx_t boarding_jpp_idx = boardings[count][journey_pattern_point];
-        if(boarding_jpp_idx == type::invalid_idx) {
-            return boarding_type::departure;
-        } else if(boarding_jpp_idx < data.pt_data.stop_times.size()) {
-            return boarding_type::vj;
-        } else {
-            return boarding_type::connection;
-        }
-    }
+boarding_type get_type(size_t count, type::idx_t journey_pattern_point, const std::vector<std::vector<boarding_type> > &boarding_types, const navitia::type::Data &data){
+    return boarding_types[count][journey_pattern_point];
 }
 
-type::idx_t get_boarding_jpp(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<vector_idx> &boardings, const navitia::type::Data &data);
-std::pair<type::idx_t, uint32_t> get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<vector_idx> &boardings, const type::Properties &required_properties, bool clockwise, const navitia::type::Data &data);
+const type::JourneyPatternPoint* get_boarding_jpp(size_t count, type::idx_t journey_pattern_point, const std::vector<std::vector<const type::JourneyPatternPoint *> >&boardings);
+std::pair<const type::StopTime*, uint32_t> get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<std::vector<boarding_type> >&boarding_types, const type::Properties &required_properties, bool clockwise, const navitia::type::Data &data);
 
 }}

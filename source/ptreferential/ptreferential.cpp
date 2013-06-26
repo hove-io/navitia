@@ -79,7 +79,7 @@ template<typename T, typename C>
 std::vector<idx_t> filtered_indexes(const std::vector<T> & data, const C & clause) {
     std::vector<idx_t> result;
     for(size_t i = 0; i < data.size(); ++i){
-        if(clause(data[i]))
+        if(clause(*data[i]))
             result.push_back(i);
     }
     return result;
@@ -87,7 +87,7 @@ std::vector<idx_t> filtered_indexes(const std::vector<T> & data, const C & claus
 
 template<typename T>
 std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
-    auto & data = d.get_data<T>();
+    auto data = d.get_data<T>();
     std::vector<idx_t> indexes;
     if(filter.op == DWITHIN) {
         std::vector<std::string> splited;
@@ -178,6 +178,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
         ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
             case Type_e::POI: indexes = get_indexes<georef::POI>(filter, requested_type, data); break;
             case Type_e::POIType: indexes = get_indexes<georef::POIType>(filter, requested_type, data); break;
+            case Type_e::Connection: indexes = get_indexes<type::StopPointConnection>(filter, requested_type, data); break;
         default:
             throw parsing_error(parsing_error::partial_error,"Filter: Unable to find the requested type. Not parsed: >>" + nt::static_data::get()->captionByType(filter.navitia_type) + "<<");
         }

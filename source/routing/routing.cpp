@@ -10,8 +10,8 @@ std::string PathItem::print(const navitia::type::PT_Data & data) const {
         return ss.str();
     }
 
-    navitia::type::StopArea start = data.stop_areas[data.stop_points[stop_points.front()].stop_area_idx];
-    navitia::type::StopArea dest = data.stop_areas[data.stop_points[stop_points.back()].stop_area_idx];
+    const navitia::type::StopArea* start = data.stop_points[stop_points.front()]->stop_area;
+    const navitia::type::StopArea* dest = data.stop_points[stop_points.back()]->stop_area;
     ss << "Section de type ";
     if(type == public_transport)
         ss << "transport en commun";
@@ -25,21 +25,21 @@ std::string PathItem::print(const navitia::type::PT_Data & data) const {
 
 
     if(type == public_transport && vj_idx != navitia::type::invalid_idx){
-        const navitia::type::VehicleJourney & vj = data.vehicle_journeys[vj_idx];
-        const navitia::type::JourneyPattern & journey_pattern = data.journey_patterns[vj.journey_pattern_idx];
-        const navitia::type::Route & route = data.routes[journey_pattern.route_idx];
-        const navitia::type::Line & line = data.lines[route.line_idx];
-        ss << "Ligne : " << line.name  << " (" << line.uri << " " << line.idx << "), "
-           << "Route : " << route.name  << " (" << route.uri << " " << route.idx << "), "
-           << "JourneyPattern : " << journey_pattern.name << " (" << journey_pattern.uri << " " << journey_pattern.idx << "), "
+        const navitia::type::VehicleJourney* vj = data.vehicle_journeys[vj_idx];
+        const navitia::type::JourneyPattern* journey_pattern = vj->journey_pattern;
+        const navitia::type::Route* route = journey_pattern->route;
+        const navitia::type::Line* line = route->line;
+        ss << "Ligne : " << line->name  << " (" << line->uri << " " << line->idx << "), "
+           << "Route : " << route->name  << " (" << route->uri << " " << route->idx << "), "
+           << "JourneyPattern : " << journey_pattern->name << " (" << journey_pattern->uri << " " << journey_pattern->idx << "), "
            << "Vehicle journey " << vj_idx << "\n";
     }
-    ss << "Départ de " << start.name << "(" << start.uri << " " << start.idx << ") à " << departure << "\n";
+    ss << "Départ de " << start->name << "(" << start->uri << " " << start->idx << ") à " << departure << "\n";
     for(auto sp_idx : stop_points){
-        navitia::type::StopPoint sp = data.stop_points[sp_idx];
-        ss << "    " << sp.name << " (" << sp.uri << " " << sp.idx << ")" << "\n";
+        const navitia::type::StopPoint* sp = data.stop_points[sp_idx];
+        ss << "    " << sp->name << " (" << sp->uri << " " << sp->idx << ")" << "\n";
     }
-    ss << "Arrivée à " << dest.name << "(" << dest.uri << " " << dest.idx << ") à " << arrival << "\n";
+    ss << "Arrivée à " << dest->name << "(" << dest->uri << " " << dest->idx << ") à " << arrival << "\n";
     return ss.str();
 }
 
@@ -66,7 +66,7 @@ bool Verification::croissance(Path path) {
 bool Verification::vj_valides(Path path) {
     for(PathItem item : path.items) {
         if(item.type == public_transport) {
-            if(!data.validity_patterns[data.vehicle_journeys[item.vj_idx].validity_pattern_idx].check(item.departure.date())) {
+            if(!data.vehicle_journeys[item.vj_idx]->validity_pattern->check(item.departure.date())) {
                 std::cout << " le vj : " << item.vj_idx << " n'est pas valide le jour : " << item.departure.date() << std::endl;
                 return false;
             }
@@ -80,11 +80,11 @@ bool Verification::appartenance_rp(Path path) {
     for(PathItem item : path.items) {
 
         if(item.type == public_transport) {
-            const navitia::type::VehicleJourney & vj = data.vehicle_journeys[item.vj_idx];
+            const navitia::type::VehicleJourney* vj = data.vehicle_journeys[item.vj_idx];
 
             for(auto spidx : item.stop_points) {
-                if(std::find_if(vj.stop_time_list.begin(), vj.stop_time_list.end(),
-                                [&](int stidx){ return (data.journey_pattern_points[data.stop_times[stidx].journey_pattern_point_idx].stop_point_idx == spidx);}) == vj.stop_time_list.end()) {
+                if(std::find_if(vj->stop_time_list.begin(), vj->stop_time_list.end(),
+                                [&](const nt::StopTime* stop_time){ return (stop_time->journey_pattern_point->stop_point->idx == spidx);}) == vj->stop_time_list.end()) {
                     std::cout << "Le stop point : " << spidx << " n'appartient pas au vj : " << item.vj_idx << std::endl;
                     return false;
                 }
@@ -95,53 +95,53 @@ bool Verification::appartenance_rp(Path path) {
 }
 
 bool Verification::check_correspondances(Path path) {
-    std::vector<navitia::type::Connection> stop_point_list;
+    std::vector<navitia::type::StopPointConnection> connection_list;
 
     PathItem precitem;
     for(PathItem item : path.items) {
-        navitia::type::Connection conn;
+        navitia::type::StopPointConnection conn;
         if(item.type == walking) {
-            conn.departure_idx = item.stop_points.front();
-            conn.destination_idx =  item.stop_points.back();
+            conn.departure = data.stop_points[item.stop_points.front()];
+            conn.destination =  data.stop_points[item.stop_points.back()];
             conn.duration = item.arrival - item.departure;
-            stop_point_list.push_back(conn);
+            connection_list.push_back(conn);
         }
         if(precitem.arrival != navitia::type::DateTime::inf) {
             if(precitem.type == public_transport && item.type == public_transport) {
-                conn.departure_idx = precitem.stop_points.back();
-                conn.destination_idx =  item.stop_points.front();
+                conn.departure = data.stop_points[precitem.stop_points.back()];
+                conn.destination =  data.stop_points[item.stop_points.front()];
                 conn.duration = item.departure - precitem.arrival;
-                stop_point_list.push_back(conn);
+                connection_list.push_back(conn);
             }
         }
 
         precitem = item;
     }
 
-    for(navitia::type::Connection conn: data.connections) {
-        auto it = std::find_if(stop_point_list.begin(), stop_point_list.end(),
-                               [&](navitia::type::Connection p){return (p.departure_idx == conn.departure_idx && p.destination_idx == conn.destination_idx)
-                               ||(p.destination_idx == conn.departure_idx && p.departure_idx == conn.destination_idx);});
+    for(const navitia::type::StopPointConnection* conn: data.stop_point_connections) {
+        auto it = std::find_if(connection_list.begin(), connection_list.end(),
+                               [&](navitia::type::StopPointConnection p){return (p.departure == conn->departure && p.destination == conn->destination)
+                               ||(p.destination == conn->departure && p.departure == conn->destination);});
 
 
-    if(it != stop_point_list.end()) {
-        if(it->duration != conn.duration) {
-            std::cout << "Le temps de correspondance de la connection " << data.stop_points[it->departure_idx].name << "(" << it->departure_idx << ") -> "
-                      << data.stop_points[it->destination_idx].name << "(" << it->destination_idx << ") ne correspond pas aux données : "
-                      <<  it->duration << " != " <<  conn.duration << std::endl;
+    if(it != connection_list.end()) {
+        if(it->duration != conn->duration) {
+            std::cout << "Le temps de correspondance de la connection " << it->departure->name << "(" << it->departure->idx << ") -> "
+                      << it->destination->name << "(" << it->destination->idx << ") ne correspond pas aux données : "
+                      <<  it->duration << " != " <<  conn->duration << std::endl;
             return false;
         } else {
-            stop_point_list.erase(it);
+            connection_list.erase(it);
         }
     }
 
-    if(stop_point_list.empty())
+    if(connection_list.empty())
         return true;
 }
 bool toreturn = true;
-for(auto psp : stop_point_list) {
-    if(data.stop_points[psp.departure_idx].stop_area_idx != data.stop_points[psp.destination_idx].stop_area_idx) {
-        std::cout << "La correspondance " << psp.departure_idx << " => " << psp.destination_idx << " n'existe pas " << std::endl;
+for(auto psp : connection_list) {
+    if(psp.departure->stop_area != psp.destination->stop_area) {
+        std::cout << "La correspondance " << psp.departure->idx << " => " << psp.destination->idx << " n'existe pas " << std::endl;
         toreturn = false;
     }
 
@@ -149,6 +149,4 @@ for(auto psp : stop_point_list) {
 return toreturn;
 }
 
-
-
-                  }}
+}}

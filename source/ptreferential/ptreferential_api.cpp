@@ -14,10 +14,19 @@ pbnavitia::Response extract_data(const type::Data & data, type::Type_e requested
 
     for(type::idx_t idx : rows){
         switch(requested_type){
-#define FILL_PB_OBJECT(type_name, collection_name) case type::Type_e::type_name: fill_pb_object(idx, data, result.add_##collection_name(), depth, today); break;
-        ITERATE_NAVITIA_PT_TYPES(FILL_PB_OBJECT)
-        case Type_e::POI: fill_pb_object(idx, data, result.add_pois(), depth); break;
-        case Type_e::POIType: fill_pb_object(idx, data, result.add_poi_types()); break;
+        case Type_e::ValidityPattern: fill_pb_object(data.pt_data.validity_patterns[idx], data, result.add_validity_patterns(), depth, today); break;
+        case Type_e::Line: fill_pb_object(data.pt_data.lines[idx], data, result.add_lines(), depth, today); break;
+        case Type_e::JourneyPattern: fill_pb_object(data.pt_data.journey_patterns[idx], data, result.add_journey_patterns(), depth, today); break;
+        case Type_e::StopPoint: fill_pb_object(data.pt_data.stop_points[idx], data, result.add_stop_points(), depth, today); break;
+        case Type_e::StopArea: fill_pb_object(data.pt_data.stop_areas[idx], data, result.add_stop_areas(), depth, today); break;
+        case Type_e::Network: fill_pb_object(data.pt_data.networks[idx], data, result.add_networks(), depth, today); break;
+        case Type_e::PhysicalMode: fill_pb_object(data.pt_data.physical_modes[idx], data, result.add_physical_modes(), depth, today); break;
+        case Type_e::CommercialMode: fill_pb_object(data.pt_data.commercial_modes[idx], data, result.add_commercial_modes(), depth, today); break;
+        case Type_e::JourneyPatternPoint: fill_pb_object(data.pt_data.journey_pattern_points[idx], data, result.add_journey_pattern_points(), depth, today); break;
+        case Type_e::Company: fill_pb_object(data.pt_data.companies[idx], data, result.add_companies(), depth, today); break;
+        case Type_e::Route: fill_pb_object(data.pt_data.routes[idx], data, result.add_routes(), depth, today); break;
+        case Type_e::POI: fill_pb_object(data.geo_ref.pois[idx], data, result.add_pois(), depth, today); break;
+        case Type_e::POIType: fill_pb_object(data.geo_ref.poitypes[idx], data, result.add_poi_types(), depth, today); break;
         default: break;
         }
     }

@@ -165,6 +165,7 @@ int main(int argc, char * argv[])
     std::cout << "Construction de proximity list" << std::endl;
     nav_data.build_proximity_list();
     std::cout << "Construction de external code" << std::endl;
+    //construction des map uri => idx
     nav_data.build_uri();
 
     std::cout << "Construction de first letter" << std::endl;

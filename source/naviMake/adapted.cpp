@@ -61,7 +61,7 @@ std::vector<types::StopTime*> get_stop_from_impact(const navitia::type::Message&
     }
     if(message.object_type == navitia::type::Type_e::StopArea){
         for(auto stop : stoplist){
-            if((stop->tmp_stop_point->stop_area->uri == message.object_uri)&& (message.is_applicable(build_stop_period(*stop, current_date)))){
+            if((stop->tmp_stop_point->stop_area->uri == message.object_uri) && (message.is_applicable(build_stop_period(*stop, current_date)))){
                 result.push_back(stop);
             }
         }

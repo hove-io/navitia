@@ -152,17 +152,17 @@ type::GeographicalCoord Worker::coord_of_entry_point(const type::EntryPoint & en
     if(entry_point.type == Type_e::Address){
         auto way = this->data.geo_ref.way_map.find(entry_point.uri);
         if (way != this->data.geo_ref.way_map.end()){
-            result = this->data.geo_ref.ways[way->second].nearest_coord(entry_point.house_number, this->data.geo_ref.graph);
+            result = this->data.geo_ref.ways[way->second]->nearest_coord(entry_point.house_number, this->data.geo_ref.graph);
         }
     } else if (entry_point.type == Type_e::StopPoint) {
         auto sp_it = this->data.pt_data.stop_points_map.find(entry_point.uri);
         if(sp_it != this->data.pt_data.stop_points_map.end()) {
-            result = this->data.pt_data.stop_points[sp_it->second].coord;
+            result = this->data.pt_data.stop_points[sp_it->second]->coord;
         }
     } else if (entry_point.type == Type_e::StopArea) {
            auto sp_it = this->data.pt_data.stop_areas_map.find(entry_point.uri);
            if(sp_it != this->data.pt_data.stop_areas_map.end()) {
-               result = this->data.pt_data.stop_areas[sp_it->second].coord;
+               result = this->data.pt_data.stop_areas[sp_it->second]->coord;
            }
     } else if (entry_point.type == Type_e::Coord) {
         result = entry_point.coordinates;

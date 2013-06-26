@@ -246,7 +246,7 @@ class Apis:
             "description" : "Retrieves the status of a region", 
             "hidden" : True},
         "load" : {
-            "arguments" : {},  
+            "arguments" : {},
             "hidden" : True}
         }
 

@@ -87,12 +87,6 @@ BEGIN
         RAISE NOTICE 'relation "stop_point_uri_idx" already exists, skipping';
     END CASE;
 
-    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'connection_uri_idx')
-    THEN
-        CREATE UNIQUE INDEX connection_uri_idx ON navitia.connection(uri);
-    ELSE
-        RAISE NOTICE 'relation "connection_uri_idx" already exists, skipping';
-    END CASE;
 
     CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'journey_pattern_point_uri_idx')
     THEN
@@ -101,12 +95,6 @@ BEGIN
         RAISE NOTICE 'relation "journey_pattern_point_uri_idx" already exists, skipping';
     END CASE;
 
-    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'journey_pattern_point_connection_uri_idx')
-    THEN
-        CREATE UNIQUE INDEX journey_pattern_point_connection_uri_idx ON navitia.journey_pattern_point_connection(uri);
-    ELSE
-        RAISE NOTICE 'relation "journey_pattern_point_connection_uri_idx" already exists, skipping';
-    END CASE;
 
     CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'admin_uri_idx')
     THEN
@@ -115,6 +103,46 @@ BEGIN
         RAISE NOTICE 'relation "admin_uri_idx" already exists, skipping';
     END CASE;
 
+    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'admin_boundary_idx')
+    THEN
+        CREATE INDEX admin_boundary_idx ON navitia.admin USING gist(boundary);
+    ELSE
+        RAISE NOTICE 'relation "admin_boundary_idx" already exists, skipping';
+    END CASE;
+
+    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'way_uri_idx')
+    THEN
+        CREATE UNIQUE INDEX way_uri_idx ON georef.way(uri);
+    ELSE
+        RAISE NOTICE 'relation "way_uri_idx" already exists, skipping';
+    END CASE;
+
+    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'edge_the_geom_idx')
+    THEN
+        CREATE INDEX edge_the_geom_idx ON georef.edge USING gist(the_geog);
+    ELSE
+        RAISE NOTICE 'relation "edge_the_geom_idx" already exists, skipping';
+    END CASE;
+
+   CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'edge_way_id_idx')
+    THEN
+        CREATE INDEX edge_way_id_idx ON georef.edge(way_id);
+    ELSE
+        RAISE NOTICE 'relation "edge_way_id_idx" already exists, skipping';
+    END CASE;
+   CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'fw_way_id_idx')
+    THEN
+        CREATE INDEX fw_way_id_idx ON georef.fusion_ways(way_id);
+    ELSE
+        RAISE NOTICE 'relation "fw_way_id_idx" already exists, skipping';
+    END CASE;
+
+   CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'fw_id_idx')
+    THEN
+        CREATE INDEX fw_id_idx ON georef.fusion_ways(id);
+    ELSE
+        RAISE NOTICE 'relation "fw_id_idx" already exists, skipping';
+    END CASE;
 
 END$$;
 

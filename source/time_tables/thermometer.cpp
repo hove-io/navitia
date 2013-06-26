@@ -122,8 +122,8 @@ vector_idx Thermometer::get_thermometer() {
 
 std::vector<uint32_t> Thermometer::match_journey_pattern(const type::JourneyPattern & journey_pattern) {
     std::vector<type::idx_t> tmp;
-    for(auto rpidx : journey_pattern.journey_pattern_point_list)
-        tmp.push_back(d.pt_data.journey_pattern_points[rpidx].stop_point_idx);
+    for(auto jpp : journey_pattern.journey_pattern_point_list)
+        tmp.push_back(jpp->stop_point->idx);
     
     return match_journey_pattern(tmp);
 }

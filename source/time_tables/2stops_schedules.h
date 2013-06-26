@@ -7,7 +7,7 @@
 
 namespace navitia { namespace timetables {
 
-typedef std::pair<dt_st, dt_st> pair_dt_st;
+typedef std::pair<datetime_stop_time, datetime_stop_time> pair_dt_st;
 
 /**
  * @brief get_arrival_order : Fait un matching entre les journey_pattern points de departure_journey_patternpoint et ceux obtenus via arrival_filter.

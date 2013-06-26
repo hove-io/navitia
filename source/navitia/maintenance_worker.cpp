@@ -43,10 +43,9 @@ void MaintenanceWorker::load(){
         load_and_switch();
         data.to_load.store(false);
 
-        LOG4CPLUS_INFO(logger, boost::format("Nb data stop times : %d stopTimes : %d nb foot path : %d Nombre de stop points : %d nb vp : %d") 
+        LOG4CPLUS_INFO(logger, boost::format("Nb data stop times : %d stopTimes : %d nb foot path : %d Nombre de stop points : %d")
                 % data.pt_data.stop_times.size() % data.dataRaptor.arrival_times.size()
                 % data.dataRaptor.foot_path_forward.size() % data.pt_data.stop_points.size()
-                % data.dataRaptor.validity_patterns.size()
             );
     }
 }

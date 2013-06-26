@@ -36,15 +36,15 @@ void PoiParser::fill_poi_type(GeoRef & georef_to_fill)
 
         auto row = csv.next();
         if (!row.empty()){
-            georef::POIType ptype;
-            ptype.idx = id-1;
+            georef::POIType* ptype = new georef::POIType();
+            ptype->idx = id-1;
             if (id_c != -1 && row[id_c]!= "")
-                ptype.uri = row[id_c];
+                ptype->uri = row[id_c];
             else
-                ptype.uri = boost::lexical_cast<std::string>(id);
-            ptype.name = row[name_c];
+                ptype->uri = boost::lexical_cast<std::string>(id);
+            ptype->name = row[name_c];
             georef_to_fill.poitypes.push_back(ptype);
-            georef_to_fill.poitype_map[ptype.uri] = ptype.idx;
+            georef_to_fill.poitype_map[ptype->uri] = ptype->idx;
             ++id;
         }
     }
@@ -74,21 +74,21 @@ void PoiParser::fill_poi(GeoRef & georef_to_fill)
     while (!csv.eof()){
         auto row = csv.next();
         if (!row.empty()){
-            georef::POI poi;
-            poi.idx = id-1;
+            georef::POI* poi = new georef::POI();
+            poi->idx = id-1;
             if (id_c != -1 && row[id_c] != "")
-                poi.uri = row[id_c];
+                poi->uri = row[id_c];
             else
-                poi.uri = boost::lexical_cast<std::string>(id);
-            poi.name = row[name_c];
+                poi->uri = boost::lexical_cast<std::string>(id);
+            poi->name = row[name_c];
             if (weight_c != -1 && row[weight_c] != "")
-                poi.weight = boost::lexical_cast<int>(row[weight_c]);
+                poi->weight = boost::lexical_cast<int>(row[weight_c]);
             else
-                poi.weight = 0;
+                poi->weight = 0;
 
             try{
-                poi.coord.set_lon(boost::lexical_cast<double>(row[lon_c]));
-                poi.coord.set_lat(boost::lexical_cast<double>(row[lat_c]));
+                poi->coord.set_lon(boost::lexical_cast<double>(row[lon_c]));
+                poi->coord.set_lat(boost::lexical_cast<double>(row[lat_c]));
             }
             catch(boost::bad_lexical_cast ) {
                 std::cout << "Impossible de parser les coordonnées pour "
@@ -99,13 +99,13 @@ void PoiParser::fill_poi(GeoRef & georef_to_fill)
             auto ptype = georef_to_fill.poitype_map.find(row[type_c]);
             if (ptype == georef_to_fill.poitype_map.end()){
                 // ajouter l'Index par défaut ??
-                poi.poitype_idx = -1;
+                poi->poitype_idx = -1;
             }
             else
-                poi.poitype_idx = ptype->second;
+                poi->poitype_idx = ptype->second;
 
             if (visible_c != -1 && row[visible_c] != "")
-                poi.visible = boost::lexical_cast<bool>(row[visible_c]);
+                poi->visible = boost::lexical_cast<bool>(row[visible_c]);
             georef_to_fill.pois.push_back(poi);
             ++id;
         }

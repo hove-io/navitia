@@ -18,6 +18,7 @@ Jointures::Jointures() {
     ITERATE_NAVITIA_PT_TYPES(VERTEX_MAP)
     vertex_map[Type_e::POI] = boost::add_vertex(Type_e::POI, g);
     vertex_map[Type_e::POIType] = boost::add_vertex(Type_e::POIType, g);
+    vertex_map[Type_e::Connection] = boost::add_vertex(Type_e::Connection, g);
 
     // À partir d'un stop area, on peut avoir ses stop points
     boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::StopArea), g);

@@ -2,20 +2,21 @@
 #include <iostream>
 #include "ptreferential/where.h"
 #include "utils/timer.h"
-
+#include "utils/functions.h"
 #include <boost/geometry.hpp>
 
+namespace nt = navitia::type;
 namespace navimake{
 
 void Data::sort(){
 #define SORT_AND_INDEX(type_name, collection_name) std::sort(collection_name.begin(), collection_name.end(), Less());\
-    std::for_each(collection_name.begin(), collection_name.end(), Indexer());
+    std::for_each(collection_name.begin(), collection_name.end(), Indexer<nt::idx_t>());
     ITERATE_NAVITIA_PT_TYPES(SORT_AND_INDEX)
 
     std::sort(stops.begin(), stops.end(), Less());
 
     std::sort(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end(), Less());
-    std::for_each(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end(), Indexer());
+    std::for_each(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end(), Indexer<nt::idx_t>());
 }
 
 void Data::normalize_uri(){
@@ -41,8 +42,8 @@ void Data::complete(){
     //Ajoute les connections entre les stop points d'un meme stop area
 
     std::multimap<std::string, std::string> conns;
-    for(auto conn : connections) {
-        conns.insert(std::make_pair(conn->departure_stop_point->uri, conn->destination_stop_point->uri));
+    for(auto conn : stop_point_connections) {
+        conns.insert(std::make_pair(conn->departure->uri, conn->destination->uri));
     }
 
     std::multimap<std::string, types::StopPoint*> sa_sps;
@@ -51,64 +52,69 @@ void Data::complete(){
         if(sp->stop_area)
             sa_sps.insert(std::make_pair(sp->stop_area->uri, sp));
     }
-    int connections_size = connections.size();
+//    int connections_size = stop_point_connections.size();
 
-    std::string prec_sa = "";
-    for(auto sa_sp : sa_sps) {
-        if(prec_sa != sa_sp.first) {
-            auto ret = sa_sps.equal_range(sa_sp.first);
-            for(auto it = ret.first; it!= ret.second; ++it){
-                for(auto it2 = it; it2!=ret.second; ++it2) {
-                    if(it->second->uri != it2->second->uri) {
-                        bool found = false;
-                        auto ret2 = conns.equal_range(it->second->uri);
-                        for(auto itc = ret2.first; itc!= ret2.second; ++itc) {
-                            if(itc->second == it2->second->uri) {
-                                found = true;
-                                break;
-                            }
-                        }
+//    for(types::StopArea * sa : stop_areas) {
+//        auto ret = sa_sps.equal_range(sa->uri);
+//        for(auto sp1 = ret.first; sp1!= ret.second; ++sp1){
+//            for(auto sp2 = sp1; sp2!=ret.second; ++sp2) {
+//                if(sp1->second->uri != sp2->second->uri) {
+//                    bool found = false;
+//                    auto ret2 = conns.equal_range(sp1->second->uri);
+//                    for(auto itc = ret2.first; itc!= ret2.second; ++itc) {
+//                        if(itc->second == sp2->second->uri) {
+//                            found = true;
+//                            break;
+//                        }
+//                    }
 
-                        if(!found) {
-                            types::Connection * connection = new types::Connection();
-                            connection->departure_stop_point = it->second;
-                            connection->destination_stop_point  = it2->second;
-                            connection->connection_kind = types::ConnectionType::StopArea;
-                            connection->duration = 120;
-                            connections.push_back(connection);
-                        }
+//                    if(!found) {
+//                        types::StopPointConnection * connection = new types::StopPointConnection();
+//                        connection->departure = sp1->second;
+//                        connection->destination  = sp2->second;
+//                        connection->connection_kind = types::ConnectionType::StopArea;
+//                        connection->duration = 120;
+//                        stop_point_connections.push_back(connection);
 
-                        found = false;
-                        ret2 = conns.equal_range(it2->second->uri);
-                        for(auto itc = ret2.first; itc!= ret2.second; ++itc) {
-                            if(itc->second == it->second->uri) {
-                                found = true;
-                                break;
-                            }
-                        }
+//                        if(connection->departure->uri == "stop_point:29:2025"  || connection->departure->uri == "StopPoint:29:2025")
+//                            std::cout << "Ajout Departure : " << connection->departure->uri << " => " << connection->destination->uri << std::endl;
+//                        conns.insert(std::make_pair(connection->departure->uri, connection->destination->uri));
+//                    }
 
-                        if(!found) {
-                            types::Connection * connection = new types::Connection();
-                            connection->departure_stop_point = it2->second;
-                            connection->destination_stop_point  = it->second;
-                            connection->connection_kind = types::ConnectionType::StopArea;
-                            connection->duration = 120;
-                            connections.push_back(connection);
-                        }
-                    }
-                }
-            }
-            prec_sa = sa_sp.first;
-        }
-    }
+//                    found = false;
+//                    ret2 = conns.equal_range(sp2->second->uri);
+//                    for(auto itc = ret2.first; itc!= ret2.second; ++itc) {
+//                        if(itc->second == sp1->second->uri) {
+//                            found = true;
+//                            break;
+//                        }
+//                    }
 
-    std::cout << "On a ajouté " << (connections.size() - connections_size) << " connections lors de la completion" << std::endl;
+//                    if(!found) {
+//                        types::StopPointConnection * connection = new types::StopPointConnection();
+//                        connection->departure = sp2->second;
+//                        connection->destination  = sp1->second;
+//                        connection->connection_kind = types::ConnectionType::StopArea;
+//                        connection->duration = 120;
+//                        stop_point_connections.push_back(connection);
+
+//                        if(connection->departure->uri == "stop_point:29:2025"  || connection->departure->uri == "StopPoint:29:2025")
+//                            std::cout << "Ajout Departure : " << connection->departure->uri << " => " << connection->destination->uri << std::endl;
+//                        conns.insert(std::make_pair(connection->departure->uri, connection->destination->uri));
+//                    }
+//                }
+//            }
+//        }
+//    }
+
+//    std::cout << "On a ajouté " << stop_point_connections.size() - connections_size << " connections lors de la completion" << std::endl;
 
 
 }
 
 
 void Data::clean(){
+    auto logger = log4cplus::Logger::getInstance("log");
 
     std::set<std::string> toErase;
 
@@ -196,10 +202,25 @@ void Data::clean(){
     }
     vehicle_journeys.resize(num_elements);
 
-    std::cout << "J'ai supprimé " << erase_overlap << "vehicle journey pour cause de dépassement, " <<
-                 erase_emptiness << " car il n'y avait pas de stop time dans le clean, et "
-                 << erase_no_circulation << " car ils ne circulaient jamais." << std::endl;
 
+
+    LOG4CPLUS_INFO(logger, "J'ai supprimé " + boost::lexical_cast<std::string>(erase_overlap) + "vehicle journey pour cause de dépassement, " +
+                   boost::lexical_cast<std::string>(erase_emptiness) + " car il n'y avait pas de stop time dans le clean, et "
+                   +boost::lexical_cast<std::string>(erase_no_circulation)+ " car ils ne circulaient jamais.");
+
+    // Suppression des connections en doublons
+    // On trie les connections par departure, destination
+    auto sort_function = [](types::StopPointConnection * spc1, types::StopPointConnection *spc2) {return spc1->uri < spc2->uri
+                                                                                                    || (spc1->uri == spc2->uri && spc1 < spc2 );};
+
+    std::sort(stop_point_connections.begin(), stop_point_connections.end(), sort_function);
+    num_elements = stop_point_connections.size();
+    auto it_end = std::unique(stop_point_connections.begin(), stop_point_connections.end(), [](types::StopPointConnection * spc1, types::StopPointConnection *spc2) {return spc1->uri == spc2->uri;});
+    //@TODO : Attention ça fuit, il faudrait réussir à effacer les objets
+    //Ce qu'il y a dans la fin du vecteur apres unique n'est pas garanti, on ne peut pas itérer sur la suite pour effacer
+    stop_point_connections.resize(std::distance(stop_point_connections.begin(), it_end));
+
+    LOG4CPLUS_INFO(logger, "J'ai supprimé " + boost::lexical_cast<std::string>(num_elements-stop_point_connections.size()) + " doublons dans les connections");
 }
 
 // Functor qui sert à transformer un objet navimake en objet navitia
@@ -215,6 +236,9 @@ void Data::transform(navitia::type::PT_Data& data){
     std::transform(this->collection_name.begin(), this->collection_name.end(), data.collection_name.begin(), Transformer());
     ITERATE_NAVITIA_PT_TYPES(RESIZE_AND_TRANSFORM)
 
+    data.stop_point_connections.resize(this->stop_point_connections.size());
+    std::transform(this->stop_point_connections.begin(), this->stop_point_connections.end(), data.stop_point_connections.begin(), Transformer());
+
     data.journey_pattern_point_connections.resize(this->journey_pattern_point_connections.size());
     std::transform(this->journey_pattern_point_connections.begin(), this->journey_pattern_point_connections.end(), data.journey_pattern_point_connections.begin(), Transformer());
 
@@ -226,68 +250,66 @@ void Data::transform(navitia::type::PT_Data& data){
 }
 
 void Data::build_relations(navitia::type::PT_Data &data){
-    for(navitia::type::StopPoint & sp : data.stop_points){
-        if(sp.stop_area_idx != navitia::type::invalid_idx) {
-            navitia::type::StopArea & sa = data.stop_areas[sp.stop_area_idx];
-            sa.stop_point_list.push_back(sp.idx);
+    for(navitia::type::StopPoint* sp : data.stop_points){
+        if(sp->stop_area != nullptr) {
+            sp->stop_area->stop_point_list.push_back(sp);
         }
     }
 
-    for(navitia::type::Line & line : data.lines){
-        if(line.commercial_mode_idx != navitia::type::invalid_idx)
-            data.commercial_modes.at(line.commercial_mode_idx).line_list.push_back(line.idx);
-        if(line.network_idx != navitia::type::invalid_idx)
-            data.networks.at(line.network_idx).line_list.push_back(line.idx);
+    for(navitia::type::Line* line : data.lines){
+        if(line->commercial_mode != nullptr)
+            line->commercial_mode->line_list.push_back(line);
+        if(line->network!= nullptr)
+            line->network->line_list.push_back(line);
     }
 
     //for(navitia::type::Network & network: data.networks){}
 
     //for(navitia::type::Connection & connection: data.connections){}
 
-    for(navitia::type::JourneyPatternPoint & journey_pattern_point : data.journey_pattern_points){
-        data.journey_patterns.at(journey_pattern_point.journey_pattern_idx).journey_pattern_point_list.push_back(journey_pattern_point.idx);
-        data.stop_points.at(journey_pattern_point.stop_point_idx).journey_pattern_point_list.push_back(journey_pattern_point.idx);
+    for(navitia::type::JourneyPatternPoint* journey_pattern_point : data.journey_pattern_points){
+        journey_pattern_point->journey_pattern->journey_pattern_point_list.push_back(journey_pattern_point);
+        journey_pattern_point->stop_point->journey_pattern_point_list.push_back(journey_pattern_point);
     }
 
     //for(navitia::type::StopTime & st : data.stop_times){
     for(size_t i = 0; i < data.stop_times.size(); ++i){
-        auto & st = data.stop_times[i];
-        data.vehicle_journeys.at(st.vehicle_journey_idx).stop_time_list.push_back(i);
+        auto st = data.stop_times[i];
+        st->vehicle_journey->stop_time_list.push_back(st);
     }
 
-    for(navitia::type::JourneyPattern & journey_pattern : data.journey_patterns){
-        if(journey_pattern.route_idx != navitia::type::invalid_idx)
-            data.routes.at(journey_pattern.route_idx).journey_pattern_list.push_back(journey_pattern.idx);
-        std::sort(journey_pattern.journey_pattern_point_list.begin(), journey_pattern.journey_pattern_point_list.end(), sort_journey_pattern_points_list(data));
-        std::sort(journey_pattern.vehicle_journey_list.begin(), journey_pattern.vehicle_journey_list.end(), sort_vehicle_journey_list(data));
+    for(navitia::type::JourneyPattern* journey_pattern : data.journey_patterns){
+        if(journey_pattern->route != nullptr)
+            journey_pattern->route->journey_pattern_list.push_back(journey_pattern);
+        auto comp = [](const nt::JourneyPatternPoint* jpp1, const nt::JourneyPatternPoint* jpp2){return jpp1->order < jpp2->order;};
+        std::sort(journey_pattern->journey_pattern_point_list.begin(), journey_pattern->journey_pattern_point_list.end(), comp);
+        std::sort(journey_pattern->vehicle_journey_list.begin(), journey_pattern->vehicle_journey_list.end(), sort_vehicle_journey_list(data));
     }
 
-    for(navitia::type::Route & route : data.routes){
-        if(route.line_idx != navitia::type::invalid_idx)
-            data.lines.at(route.line_idx).route_list.push_back(route.idx);
+    for(navitia::type::Route* route : data.routes){
+        if(route->line != nullptr)
+            route->line->route_list.push_back(route);
     }
 
-    for(navitia::type::VehicleJourney & vj : data.vehicle_journeys){
-        data.journey_patterns[vj.journey_pattern_idx].vehicle_journey_list.push_back(vj.idx);
+    for(navitia::type::VehicleJourney* vj : data.vehicle_journeys){
+        vj->journey_pattern->vehicle_journey_list.push_back(vj);
 
-
-        if(vj.journey_pattern_idx != navitia::type::invalid_idx){
-            navitia::type::JourneyPattern jp = data.journey_patterns.at(vj.journey_pattern_idx);
-            if(jp.route_idx != navitia::type::invalid_idx){
-                navitia::type::Route route = data.routes.at(jp.route_idx);
-                if(route.line_idx != navitia::type::invalid_idx){
-                    navitia::type::Line & line = data.lines.at(route.line_idx);
-                    if(vj.company_idx != navitia::type::invalid_idx){
-                        navitia::type::Company & company = data.companies.at(vj.company_idx);
-                        if(std::find(line.company_list.begin(), line.company_list.end(), vj.company_idx) == line.company_list.end())
-                            line.company_list.push_back(vj.company_idx);
-                        if(std::find(company.line_list.begin(), company.line_list.end(), line.idx) == company.line_list.end())
-                            company.line_list.push_back(line.idx);
+        if(vj->journey_pattern != nullptr){
+            navitia::type::JourneyPattern* jp = vj->journey_pattern;
+            if(jp->route != nullptr){
+                navitia::type::Route* route = jp->route;
+                if(route != nullptr) {
+                    navitia::type::Line* line = route->line;
+                    if(vj->company != nullptr){
+                        if(std::find(line->company_list.begin(), line->company_list.end(), vj->company) == line->company_list.end())
+                            line->company_list.push_back(vj->company);
+                        if(std::find(vj->company->line_list.begin(), vj->company->line_list.end(), line) == vj->company->line_list.end())
+                            vj->company->line_list.push_back(line);
                     }
                 }
             }
         }
-        std::sort(vj.stop_time_list.begin(), vj.stop_time_list.end());
+        std::sort(vj->stop_time_list.begin(), vj->stop_time_list.end());
     }
 
    //for(navitia::type::Company & company : data.companies) {}
@@ -296,8 +318,8 @@ void Data::build_relations(navitia::type::PT_Data &data){
 std::string Data::compute_bounding_box(navitia::type::PT_Data &data) {
 
     std::vector<navitia::type::GeographicalCoord> bag;
-    for(navitia::type::StopPoint sp : data.stop_points) {
-        bag.push_back(sp.coord);
+    for(const navitia::type::StopPoint* sp : data.stop_points) {
+        bag.push_back(sp->coord);
     }
     boost::geometry::model::box<navitia::type::GeographicalCoord> envelope, buffer;
     boost::geometry::envelope(bag, envelope);
@@ -470,7 +492,7 @@ void  add_journey_pattern_point_connection(types::JourneyPatternPoint *rp1, type
     auto pp = journey_pattern_point_connections.equal_range(rp1->uri);
     bool find = false;
     for(auto it_pp = pp.first; it_pp != pp.second; ++it_pp) {
-        if(it_pp->second.destination_journey_pattern_point->uri == rp2->uri) {
+        if(it_pp->second.destination->uri == rp2->uri) {
             find = true;
             if(it_pp->second.length > length)
                 it_pp->second.length = length;
@@ -478,12 +500,12 @@ void  add_journey_pattern_point_connection(types::JourneyPatternPoint *rp1, type
         }
     }
     if(!find) {
-        types::JourneyPatternPointConnection rpc;
-        rpc.departure_journey_pattern_point = rp1;
-        rpc.destination_journey_pattern_point = rp2;
-        rpc.journey_pattern_point_connection_kind = types::JourneyPatternPointConnection::JourneyPatternPointConnectionKind::Extension;
-        rpc.length = length;
-        journey_pattern_point_connections.insert(std::make_pair(rp1->uri, rpc));
+        types::JourneyPatternPointConnection jppc;
+        jppc.departure = rp1;
+        jppc.destination = rp2;
+        jppc.connection_kind = nt::ConnectionType::extension;
+        jppc.length = length;
+        journey_pattern_point_connections.insert(std::make_pair(rp1->uri, jppc));
 
     }
 }

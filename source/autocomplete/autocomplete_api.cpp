@@ -13,44 +13,43 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
         pbnavitia::Place* place = pb_response.add_places();
         switch(type){
         case nt::Type_e::StopArea:
-            fill_pb_object(result_item.idx, data, place->mutable_stop_area(), depth);
-            place->set_name(data.pt_data.stop_areas[result_item.idx].name);
-            place->set_uri(data.pt_data.stop_areas[result_item.idx].uri);
+            fill_pb_object(data.pt_data.stop_areas[result_item.idx], data, place->mutable_stop_area(), depth);
+            place->set_name(data.pt_data.stop_areas[result_item.idx]->name);
+            place->set_uri(data.pt_data.stop_areas[result_item.idx]->uri);
             place->set_quality(result_item.quality);
             place->set_embedded_type(pbnavitia::STOP_AREA);
             break;
         case nt::Type_e::Admin:
-            fill_pb_object(result_item.idx, data, place->mutable_administrative_region(), depth);
+            fill_pb_object(data.geo_ref.admins[result_item.idx], data, place->mutable_administrative_region(), depth);
             place->set_quality(result_item.quality);
-            place->set_uri(data.geo_ref.admins[result_item.idx].uri);
-            place->set_name(data.geo_ref.admins[result_item.idx].name);
-            place->set_embedded_type(pbnavitia::ADMIN);
+            place->set_uri(data.geo_ref.admins[result_item.idx]->uri);
+            place->set_name(data.geo_ref.admins[result_item.idx]->name);
             break;
         case nt::Type_e::StopPoint:
-            fill_pb_object(result_item.idx, data, place->mutable_stop_point(), depth);
-            place->set_name(data.pt_data.stop_points[result_item.idx].name);
-            place->set_uri(data.pt_data.stop_points[result_item.idx].uri);
+            fill_pb_object(data.pt_data.stop_points[result_item.idx], data, place->mutable_stop_point(), depth);
+            place->set_name(data.pt_data.stop_points[result_item.idx]->name);
+            place->set_uri(data.pt_data.stop_points[result_item.idx]->uri);
             place->set_quality(result_item.quality);
             place->set_embedded_type(pbnavitia::STOP_POINT);
             break;
         case nt::Type_e::Address:
-            fill_pb_object(result_item.idx, data, place->mutable_address(), result_item.house_number,result_item.coord, depth);
-            place->set_name(data.geo_ref.ways[result_item.idx].name);
-            place->set_uri(data.geo_ref.ways[result_item.idx].uri+":"+boost::lexical_cast<std::string>(result_item.house_number));
+            fill_pb_object(data.geo_ref.ways[result_item.idx], data, place->mutable_address(), result_item.house_number,result_item.coord, depth);
+            place->set_name(data.geo_ref.ways[result_item.idx]->name);
+            place->set_uri(data.geo_ref.ways[result_item.idx]->uri+":"+boost::lexical_cast<std::string>(result_item.house_number));
             place->set_quality(result_item.quality);
             place->set_embedded_type(pbnavitia::ADDRESS);
             break;
         case nt::Type_e::POI:
-            fill_pb_object(result_item.idx, data, place->mutable_poi(), depth);
-            place->set_name(data.geo_ref.pois[result_item.idx].name);
-            place->set_uri(data.geo_ref.pois[result_item.idx].uri);
+            fill_pb_object(data.geo_ref.pois[result_item.idx], data, place->mutable_poi(), depth);
+            place->set_name(data.geo_ref.pois[result_item.idx]->name);
+            place->set_uri(data.geo_ref.pois[result_item.idx]->uri);
             place->set_quality(result_item.quality);
             place->set_embedded_type(pbnavitia::POI);
             break;
         case nt::Type_e::Line:
-            fill_pb_object(result_item.idx, data, place->mutable_line(), depth);
-            place->set_name(data.pt_data.lines[result_item.idx].name);
-            place->set_uri(data.pt_data.lines[result_item.idx].uri);
+            fill_pb_object(data.pt_data.lines[result_item.idx], data, place->mutable_line(), depth);
+            place->set_name(data.pt_data.lines[result_item.idx]->name);
+            place->set_uri(data.pt_data.lines[result_item.idx]->uri);
             place->set_quality(result_item.quality);
             place->set_embedded_type(pbnavitia::LINE);
         default:
@@ -91,7 +90,7 @@ int penalty_by_type(navitia::type::Type_e ntype, bool Is_address_type) {
 void update_quality_by_poi_type(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result, const navitia::type::Data &d){
     for(auto &item : ac_result){
         int poi_weight = 0;
-        poi_weight = item.quality + d.geo_ref.pois[item.idx].weight * 2;
+        poi_weight = item.quality + d.geo_ref.pois[item.idx]->weight * 2;
         item.quality = std::min(poi_weight, 100);
     }
 }
@@ -125,7 +124,7 @@ struct ValidAdmin {
         }
 
         for(type::idx_t admin : required_admins) {
-            if(std::find(object.admin_list.begin(), object.admin_list.end(), admin) != object.admin_list.end())
+            if(std::find(object->admin_list.begin(), object->admin_list.end(), admin) != object->admin_list.end())
                 return true;
         }
 
@@ -137,12 +136,39 @@ template<class T> ValidAdmin<T> valid_admin (const std::vector<T> & objects, std
     return ValidAdmin<T>(objects, required_admins);
 }
 
-std::vector<type::idx_t> admin_uris_to_idx(const std::vector<std::string> &admin_uris, const navitia::type::Data &d){
-    std::vector<type::idx_t> admin_idxs;
+template<class T>
+struct ValidAdminPtr {
+    const std::vector<T*>& objects;
+    const std::vector<const georef::Admin*> required_admins;
+
+    ValidAdminPtr(const std::vector<T*> & objects, const std::vector<const georef::Admin*> required_admins) : objects(objects), required_admins(required_admins) {}
+
+    bool operator()(type::idx_t idx) const {
+        const T* object = objects[idx];
+        if (required_admins.empty()){
+            return true;
+        }
+
+        for(const georef::Admin* admin : required_admins) {
+            if(std::find(object->admin_list.begin(), object->admin_list.end(), admin) != object->admin_list.end())
+                return true;
+        }
+
+        return false;
+    }
+};
+
+template<class T> ValidAdminPtr<T> valid_admin_ptr (const std::vector<T*> & objects, const std::vector<const georef::Admin*>& required_admins)  {
+    return ValidAdminPtr<T>(objects, required_admins);
+}
+
+//std::vector<type::idx_t> admin_uris_to_idx(const std::vector<std::string> &admin_uris, const navitia::type::Data &d){
+std::vector<const georef::Admin*> admin_uris_to_admin_ptr(const std::vector<std::string> &admin_uris, const navitia::type::Data &d){
+    std::vector<const georef::Admin*> admin_idxs;
     for (auto admin_uri : admin_uris){
-        for (navitia::adminref::Admin admin : d.geo_ref.admins){
-            if (admin_uri == admin.uri){
-                admin_idxs.push_back(admin.idx);
+        for (const navitia::georef::Admin *admin : d.geo_ref.admins){
+            if (admin_uri == admin->uri){
+                admin_idxs.push_back(admin);
             }
         }
     }
@@ -157,26 +183,27 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  const std::vector<std::string> &admins,
                                  const navitia::type::Data &d) {
 
-    pbnavitia::Response pb_response;    
+    pbnavitia::Response pb_response;
     bool addType = d.pt_data.stop_area_autocomplete.is_address_type(q, d.geo_ref.alias, d.geo_ref.synonymes);
-    std::vector<Autocomplete<nt::idx_t>::fl_quality> result;
-    std::vector<type::idx_t> admin_idxs = admin_uris_to_idx(admins, d);
+    std::vector<const georef::Admin*> admin_ptr = admin_uris_to_admin_ptr(admins, d);
+
     for(nt::Type_e type : filter){
+        std::vector<Autocomplete<nt::idx_t>::fl_quality> result;
         switch(type){
         case nt::Type_e::StopArea:
-            result = d.pt_data.stop_area_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin(d.pt_data.stop_areas, admin_idxs));
+            result = d.pt_data.stop_area_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin_ptr(d.pt_data.stop_areas, admin_ptr));
             break;
         case nt::Type_e::StopPoint:
-            result = d.pt_data.stop_point_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin(d.pt_data.stop_points, admin_idxs));
+            result = d.pt_data.stop_point_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin_ptr(d.pt_data.stop_points, admin_ptr));
             break;
         case nt::Type_e::Admin:
-            result = d.geo_ref.fl_admin.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax,  valid_admin(d.geo_ref.admins, admin_idxs));
+            result = d.geo_ref.fl_admin.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax,  valid_admin_ptr(d.geo_ref.admins, admin_ptr));
             break;
         case nt::Type_e::Address:
-            result = d.geo_ref.find_ways(q, nbmax, valid_admin(d.geo_ref.ways, admin_idxs));
+            result = d.geo_ref.find_ways(q, nbmax, valid_admin_ptr(d.geo_ref.ways, admin_ptr));
             break;
         case nt::Type_e::POI:
-            result = d.geo_ref.fl_poi.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax,  valid_admin(d.geo_ref.pois, admin_idxs));
+            result = d.geo_ref.fl_poi.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax,  valid_admin_ptr(d.geo_ref.pois, admin_ptr));
             break;
         case nt::Type_e::Line:
             result = d.pt_data.line_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, [](type::idx_t){return true;});

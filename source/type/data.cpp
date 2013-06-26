@@ -10,6 +10,7 @@
 #include "third_party/eos_portable_archive/portable_iarchive.hpp"
 #include "third_party/eos_portable_archive/portable_oarchive.hpp"
 #include "lz4_filter/filter.h"
+#include "utils/functions.h"
 
 namespace pt = boost::posix_time;
 
@@ -27,30 +28,30 @@ Data& Data::operator=(Data&& other){
 
     return *this;
 }
-
+/*
 void Data::set_admins(){
     // les points d'arrêts
-    for(StopPoint & stop_point : pt_data.stop_points){
-        std::vector<navitia::type::idx_t> admins=geo_ref.find_admins(stop_point.coord);
+    for(StopPoint* stop_point : pt_data.stop_points){
+        std::vector<navitia::type::idx_t> admins=geo_ref.find_admins(stop_point->coord);
         for(navitia::type::idx_t idx : admins){
-            stop_point.admin_list.push_back(idx);
+            stop_point->admin_list.push_back(idx);
         }
     }
     // les zones d'arrêts
-    for(StopArea & stop_area : pt_data.stop_areas){
-        std::vector<navitia::type::idx_t> admins=geo_ref.find_admins(stop_area.coord);
+    for(StopArea* stop_area : pt_data.stop_areas){
+        std::vector<navitia::type::idx_t> admins=geo_ref.find_admins(stop_area->coord);
         for(navitia::type::idx_t idx : admins){
-            stop_area.admin_list.push_back(idx);
+            stop_area->admin_list.push_back(idx);
         }
     }
     // POI
-    for (navitia::georef::POI& poi : geo_ref.pois){
-        std::vector<navitia::type::idx_t> admins=geo_ref.find_admins(poi.coord);
+    for (navitia::georef::POI* poi : geo_ref.pois){
+        std::vector<navitia::type::idx_t> admins=geo_ref.find_admins(poi->coord);
         for(navitia::type::idx_t idx : admins){
-            poi.admin_list.push_back(idx);
+            poi->admin_list.push_back(idx);
         }
     }
-}
+}*/
 
 bool Data::load(const std::string & filename) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -59,7 +60,7 @@ bool Data::load(const std::string & filename) {
         this->build_raptor();
         last_load_at = pt::microsec_clock::local_time();
         last_load = true;
-        loaded = true;        
+        loaded = true;
     } catch(std::exception& ex) {
         LOG4CPLUS_ERROR(logger, boost::format("le chargement des données à échoué: %s") % ex.what());
         last_load = false;
@@ -95,7 +96,8 @@ void Data::save_lz4(const std::string & filename) {
 
 void Data::build_uri(){
     this->pt_data.build_uri();    
-    geo_ref.normalize_uri();
+    geo_ref.normalize_extcode_way();
+    geo_ref.normalize_extcode_admin();
 }
 
 void Data::build_proximity_list(){
@@ -116,16 +118,19 @@ void Data::build_raptor() {
 }
 
 #define GET_DATA(type_name, collection_name)\
-    template<> std::vector<type_name> & Data::get_data<type_name>() {return this->pt_data.collection_name;}\
-    template<> std::vector<type_name> const & Data::get_data<type_name>() const {return this->pt_data.collection_name;}
+    template<> std::vector<type_name*> & Data::get_data<type_name>() {return this->pt_data.collection_name;}\
+    template<> std::vector<type_name *> Data::get_data<type_name>() const {return this->pt_data.collection_name;}
 
 ITERATE_NAVITIA_PT_TYPES(GET_DATA)
 
-    template<> std::vector<georef::POI> & Data::get_data<georef::POI>() {return this->geo_ref.pois;}\
-    template<> std::vector<georef::POI> const & Data::get_data<georef::POI>() const {return this->geo_ref.pois;}
+    template<> std::vector<georef::POI*> & Data::get_data<georef::POI>() {return this->geo_ref.pois;}
+    template<> std::vector<georef::POI*> Data::get_data<georef::POI>() const {return this->geo_ref.pois;}
 
-    template<> std::vector<georef::POIType> & Data::get_data<georef::POIType>() {return this->geo_ref.poitypes;}\
-    template<> std::vector<georef::POIType> const & Data::get_data<georef::POIType>() const {return this->geo_ref.poitypes;}
+    template<> std::vector<georef::POIType*> & Data::get_data<georef::POIType>() {return this->geo_ref.poitypes;}
+    template<> std::vector<georef::POIType*> Data::get_data<georef::POIType>() const {return this->geo_ref.poitypes;}
+
+    template<> std::vector<StopPointConnection*> & Data::get_data<StopPointConnection>() {return this->pt_data.stop_point_connections;}
+    template<> std::vector<StopPointConnection*> Data::get_data<StopPointConnection>() const {return this->pt_data.stop_point_connections;}
 
 
 std::vector<idx_t> Data::get_all_index(Type_e type) const {
@@ -135,6 +140,7 @@ std::vector<idx_t> Data::get_all_index(Type_e type) const {
     ITERATE_NAVITIA_PT_TYPES(GET_NUM_ELEMENTS)
     case Type_e::POI: num_elements = this->geo_ref.pois.size(); break;
     case Type_e::POIType: num_elements = this->geo_ref.poitypes.size(); break;
+    case Type_e::Connection: num_elements = this->pt_data.stop_point_connections.size(); break;
     default:  break;
     }
     std::vector<idx_t> indexes(num_elements);
@@ -165,10 +171,10 @@ std::vector<idx_t> Data::get_target_by_one_source(Type_e source, Type_e target, 
         return result;
     }
     switch(source) {
-#define GET_INDEXES(type_name, collection_name) case Type_e::type_name: result = pt_data.collection_name[source_idx].get(target, pt_data);break;
+#define GET_INDEXES(type_name, collection_name) case Type_e::type_name: result = pt_data.collection_name[source_idx]->get(target, pt_data);break;
     ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
-        case Type_e::POI: result = geo_ref.pois[source_idx].get(target, geo_ref);
-        case Type_e::POIType: result = geo_ref.poitypes[source_idx].get(target, geo_ref);
+        case Type_e::POI: result = geo_ref.pois[source_idx]->get(target, geo_ref);
+        case Type_e::POIType: result = geo_ref.poitypes[source_idx]->get(target, geo_ref);
         default: break;
     }
     return result;

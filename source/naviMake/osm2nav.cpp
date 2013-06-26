@@ -29,13 +29,13 @@ void Visitor::way_callback(uint64_t osmid, const CanalTP::Tags &tags, const std:
     // Est-ce que au moins une propriété fait que la rue est empruntable (voiture, vélo, piéton)
     // Alors on le garde comme way navitia
     if(w.properties.any()){
-        georef::Way gr_way;
-        gr_way.idx = geo_ref.ways.size();
-        gr_way.uri = std::to_string(osmid);
+        georef::Way* gr_way;
+        gr_way->idx = geo_ref.ways.size();
+        gr_way->uri = std::to_string(osmid);
         if(tags.find("name") != tags.end())
-            gr_way.name = tags.at("name");
+            gr_way->name = tags.at("name");
         geo_ref.ways.push_back(gr_way);
-        w.idx = gr_way.idx;
+        w.idx = gr_way->idx;
     }else{
         // Dans le cas où la maison est dessinée par un way et non pas juste par un node
         add_osm_housenumber(refs.front(), tags);
@@ -80,7 +80,7 @@ void Visitor::add_osm_housenumber(uint64_t osmid, const CanalTP::Tags & tags){
 
 void Visitor::add_osm_poi(const navitia::type::GeographicalCoord& coord, const CanalTP::Tags & tags){
     if(tags.find(poilist.poi_key) != tags.end()){
-        std::string value = tags.at(poilist.poi_key);
+        std::string value = "POITYPE:"+tags.at(poilist.poi_key);
         bool to_add = true;
         std::string name;
         auto it = geo_ref.poitype_map.find(value);
@@ -90,7 +90,7 @@ void Visitor::add_osm_poi(const navitia::type::GeographicalCoord& coord, const C
               to_add = false;
             }else{
                 if(tags.find("name") == tags.end()){ /// dans le cas où le POI n'a pas de nom, ne pas l'importer si ce n'est pas station VLS
-                    if (value != poilist.vls){
+                    if (value != "POITYPE:"+poilist.vls){
                         LOG4CPLUS_WARN(logger, "Attention, le site ayant comme type ["+value+"] n'est pas importé car il n'a pas de nom.");
                         to_add = false;
                     }
@@ -99,14 +99,14 @@ void Visitor::add_osm_poi(const navitia::type::GeographicalCoord& coord, const C
                 }
             }
             if (to_add){
-                POI poi;
-                poi.poitype_idx = it->second;
-                poi.coord = coord;
-                poi.idx = geo_ref.pois.size();
-                poi.uri = boost::lexical_cast<std::string>(poi.idx);
-                poi.name = name;
-                if (value == poilist.vls){
-                    poi.visible = false;
+                POI* poi = new POI();
+                poi->poitype_idx = it->second;
+                poi->coord = coord;
+                poi->idx = geo_ref.pois.size();
+                poi->uri = "POI:"+ boost::lexical_cast<std::string>(poi->idx);
+                poi->name = name;
+                if (value == "POITYPE:"+poilist.vls){
+                    poi->visible = false;
                 }
                 geo_ref.pois.push_back(poi);
             }
@@ -169,8 +169,6 @@ void Visitor::edges(){
                         georef::Edge e;
                         e.length = length;
                         e.way_idx = w.second.idx;
-                        Way way;
-                        way = geo_ref.ways[e.way_idx];
                         boost::add_edge(source, target, e, geo_ref.graph);
                         if(w.second.properties[CYCLE_FWD]){ // arc cyclable
                             boost::add_edge(source + geo_ref.bike_offset, target + geo_ref.bike_offset, e, geo_ref.graph);
@@ -178,7 +176,7 @@ void Visitor::edges(){
                         if(w.second.properties[CAR_FWD]){ // arc accessible en voiture
                             boost::add_edge(source + geo_ref.car_offset, target + geo_ref.car_offset, e, geo_ref.graph);
                         }
-                        geo_ref.ways[e.way_idx].edges.push_back(std::make_pair(source, target));
+                        geo_ref.ways[e.way_idx]->edges.push_back(std::make_pair(source, target));
 
                         boost::add_edge(target, source, e, geo_ref.graph);
                         if(w.second.properties[CYCLE_BWD]){ // arc cyclable
@@ -187,7 +185,7 @@ void Visitor::edges(){
                         if(w.second.properties[CAR_BWD]){ // arc accessible en voiture
                             boost::add_edge(target + geo_ref.car_offset, source + geo_ref.car_offset, e, geo_ref.graph);
                         }
-                        geo_ref.ways[e.way_idx].edges.push_back(std::make_pair(target, source));
+                        geo_ref.ways[e.way_idx]->edges.push_back(std::make_pair(target, source));
                         source = target;
                         length = 0;
                     }
@@ -201,12 +199,12 @@ void Visitor::edges(){
 }
 
 void Visitor::build_vls_edges(){
-    auto it = geo_ref.poitype_map.find(poilist.vls);
+    auto it = geo_ref.poitype_map.find("POITYPE:"+poilist.vls);
     if(it != geo_ref.poitype_map.end()){
-        for(POI poi : geo_ref.pois){
-            if (it->second == poi.poitype_idx){
-                vertex_t u = geo_ref.nearest_vertex(poi.coord, geo_ref.pl);
-                edge_t e = geo_ref.nearest_edge(poi.coord, u);
+        for(const POI* poi : geo_ref.pois){
+            if (it->second == poi->poitype_idx){
+                vertex_t u = geo_ref.nearest_vertex(poi->coord, geo_ref.pl);
+                edge_t e = geo_ref.nearest_edge(poi->coord, u);
                 georef::Edge edge;
                 edge.way_idx = geo_ref.graph[e].way_idx;
                 edge.length = 0;
@@ -235,7 +233,7 @@ void Visitor::HouseNumbers(){
                 gr_hn.coord.set_lat(n.coord.lat());
                 idx = geo_ref.graph[geo_ref.nearest_edge(gr_hn.coord)].way_idx;
                 if (idx <= geo_ref.ways.size()){
-                    geo_ref.ways[idx].add_house_number(gr_hn);
+                    geo_ref.ways[idx]->add_house_number(gr_hn);
                     total_house_number ++;
                 } // Message ?
             }
@@ -260,7 +258,7 @@ type::GeographicalCoord Visitor::admin_centre_coord(const CanalTP::References & 
                 best.set_lat(n.coord.lat());
                 break;
             }catch(...){
-                LOG4CPLUS_WARN(logger, "Attention, le noued  : [" << ref.member_id<< " est introuvable].");
+                LOG4CPLUS_WARN(logger, "Attention, le nœud  : [" << ref.member_id<< " est introuvable].");
             }
         }
     }
@@ -268,7 +266,7 @@ type::GeographicalCoord Visitor::admin_centre_coord(const CanalTP::References & 
 }
 
 
-void Visitor::manage_admin_boundary(const CanalTP::References & refs, navitia::adminref::Admin& admin){
+void Visitor::manage_admin_boundary(const CanalTP::References & refs, navitia::georef::Admin* admin){
     std::vector<uint64_t> vec_id =  nodes_of_relation(refs);
 
     // Fermer le polygon ci ce n'est pas le cas:
@@ -282,7 +280,7 @@ void Visitor::manage_admin_boundary(const CanalTP::References & refs, navitia::a
             const Node & node = this->nodes.at(osm_node_id);
             //Il ne faut pas ajouter le Node dont le coord est vide.
             if (node.coord.lat() != 0 || node.coord.lon() != 0){
-                boost::geometry::append(admin.boundary, node.coord);
+                boost::geometry::append(admin->boundary, node.coord);
             }
 
         } catch(...) {
@@ -339,47 +337,46 @@ std::vector<uint64_t> Visitor::nodes_of_relation(const CanalTP::References & ref
 
 void Visitor::AdminRef(){
     for(auto ar : OSMAdminRefs){
-        navitia::adminref::Admin admin;
-        admin.insee = ar.second.insee;
-        admin.idx = geo_ref.admins.size();
-        admin.post_code = ar.second.postcode;
-        admin.name = ar.second.name;
-        admin.level = boost::lexical_cast<int>( ar.second.level);
-        admin.coord = admin_centre_coord(ar.second.refs);
-        admin.id = boost::lexical_cast<std::string>(ar.first);
+        navitia::georef::Admin* admin;
+        admin->insee = ar.second.insee;
+        admin->idx = geo_ref.admins.size();
+        admin->post_code = ar.second.postcode;
+        admin->name = ar.second.name;
+        admin->level = boost::lexical_cast<int>( ar.second.level);
+        admin->coord = admin_centre_coord(ar.second.refs);
+        admin->id = boost::lexical_cast<std::string>(ar.first);
         manage_admin_boundary(ar.second.refs, admin);
         geo_ref.admins.push_back(admin);
     }
 }
 
 void Visitor::set_admin_of_ways(){
-    for(navitia::georef::Way& way : geo_ref.ways){
-        navitia::type::GeographicalCoord coord = way.barycentre(geo_ref.graph);
+    for(navitia::georef::Way* way : geo_ref.ways){
+        navitia::type::GeographicalCoord coord = way->barycentre(geo_ref.graph);
         std::vector<navitia::type::idx_t> vect_idx = geo_ref.find_admins(coord);
         std::sort(vect_idx.begin(), vect_idx.end(),[&](navitia::type::idx_t idx1, navitia::type::idx_t idx2)
-        {return geo_ref.admins.at(idx1).level > geo_ref.admins.at(idx2).level;});
-        for(navitia::type::idx_t id : vect_idx){
-            way.admin_list.push_back(id);
+        {return geo_ref.admins[idx1]->level > geo_ref.admins[idx2]->level;});
+        for(navitia::type::idx_t id : vect_idx){            
+            way->admin_list.push_back(geo_ref.admins[id]);
         }
     }
 }
 void Visitor::fillPoiType(){
     for(auto pt : poilist.PoiList){
-        POIType poitype;
-        poitype.name = pt.second;
-        poitype.idx = geo_ref.poitypes.size();
-        poitype.uri = pt.first;
+        POIType* poitype = new POIType();
+        poitype->name = pt.second;
+        poitype->idx = geo_ref.poitypes.size();
+        poitype->uri = "POITYPE:"+pt.first;
         geo_ref.poitypes.push_back(poitype);        
-        geo_ref.poitype_map[poitype.uri] = poitype.idx;
     }
-//    geo_ref.build_poitypes();
+    geo_ref.build_poitypes();
 }
 
 void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filename){
     Visitor v(geo_ref_to_fill);
     v.fillPoiType();
     CanalTP::read_osm_pbf(osm_pbf_filename, v);
-//    v.geo_ref.build_pois();
+    v.geo_ref.build_pois();
     std::cout << v.nodes.size() << " nodes, " << v.ways.size() << " ways/" << v.total_ways << std::endl;
     v.count_nodes_uses();
     v.edges();

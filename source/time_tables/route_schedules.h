@@ -6,7 +6,6 @@
 
 namespace navitia { namespace timetables {
 
-typedef std::vector<dt_st> vector_stopTime;
 typedef std::vector<std::string> vector_string;
 
 pbnavitia::Response route_schedule(const std::string & line_externalcode, const std::string &str_dt, uint32_t duration, const uint32_t max_depth, type::Data &d);
