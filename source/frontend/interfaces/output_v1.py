@@ -91,6 +91,7 @@ class json_renderer:
         return result
 
     def administrative_region(self, obj, region, details):
+        self.visited_types.add("administrative_regions")
         result = self.generic_type('administrative_regions', obj, region, details)
         try:
             if obj.HasField("zip_code"):
@@ -221,31 +222,31 @@ class json_renderer:
         if uris.HasField('company'):
             links.append({"href" : self.base_url + region_name + '/companies/' + uris.company,
                       "templated" : False,
-                      "rel" : "navitia.company"})
+                      "rel" : "company"})
         if uris.HasField('vehicle_journey'):
             links.append({"href" : self.base_url + region_name + '/vehicle_journeys/' + uris.vehicle_journey,
                        "templated" : False,
-                       "rel" : "navitia.vehicle_journey"})
+                       "rel" : "vehicle_journey"})
         if uris.HasField('line'):
             links.append({"href" : self.base_url + region_name + '/lines/' + uris.line,
                        "templated" : False,
-                       "rel" : "navitia.line"})
+                       "rel" : "line"})
         if uris.HasField('route'):
             links.append({"href" : self.base_url + region_name + '/routes/' + uris.route,
                        "templated" : False,
-                       "rel" : "navitia.route"})
+                       "rel" : "route"})
         if uris.HasField('commercial_mode'):
             links.append({"href" : self.base_url + region_name + '/commercial_modes/' + uris.commercial_mode,
                        "templated" : False,
-                       "rel" : "navitia.commercial_mode"})
+                       "rel" : "commercial_mode"})
         if uris.HasField('physical_mode'):
             links.append({"href" : self.base_url + region_name + '/physical_modes/' + uris.physical_mode,
                        "templated" : False,
-                       "rel" : "navitia.physical_mode"})
+                       "rel" : "physical_mode"})
         if uris.HasField('network'):
             links.append({"href" : self.base_url + region_name + '/networks/' + uris.network,
                        "templated" : False,
-                       "rel" : "navitia.network"})
+                       "rel" : "network"})
         return links
 
     def display_informations(self, infos):
@@ -392,15 +393,15 @@ def render_ptref(response, region, resource_type, uid, format, callback):
     if uid:
         link_first_part = base_url+"/v1/coverage/"+ region+"/"+resource_type+"/"+uid
         if resource_type in json_renderer.nearbyable_types:
-            resp_dict['links'].append({"href" : link_first_part+"/journeys", "rel":"navitia.journeys", "templated":False})
-            resp_dict['links'].append({"href" : link_first_part+"/places_nearby", "rel":"navitia.places_nearby", "templated":False})
-            #resp_dict['curies'].append({"href" : base_url+"/v1/coverage/{"+resource_type+".id/route_schedules", "rel":"navitia.route_schedules"})
-            #resp_dict['curies'].append({"href" : base_url+"/v1/coverage/{"+resource_type+".id/stop_schedules", "rel":"navitia.stop_schedules"})
-            resp_dict['links'].append({"href" : link_first_part+"/departures", "rel":"navitia.departures", "templated":False})
-            resp_dict['links'].append({"href" : link_first_part+"/arrivals", "rel":"navitia.arrivals", "templated":False})
+            resp_dict['links'].append({"href" : link_first_part+"/journeys", "rel":"journeys", "templated":False})
+            resp_dict['links'].append({"href" : link_first_part+"/places_nearby", "rel":"places_nearby", "templated":False})
+            #resp_dict['curies'].append({"href" : base_url+"/v1/coverage/{"+resource_type+".id/route_schedules", "rel":"route_schedules"})
+            #resp_dict['curies'].append({"href" : base_url+"/v1/coverage/{"+resource_type+".id/stop_schedules", "rel":"stop_schedules"})
+            resp_dict['links'].append({"href" : link_first_part+"/departures", "rel":"departures", "templated":False})
+            resp_dict['links'].append({"href" : link_first_part+"/arrivals", "rel":"arrivals", "templated":False})
         for key in collections_to_resource_type:
             if key != type:
-                resp_dict['links'].append({"href" : link_first_part+"/"+key, "rel":"navitia."+key, "templated":False}) 
+                resp_dict['links'].append({"href" : link_first_part+"/"+key, "rel":""+key, "templated":False}) 
     else:
         resp_dict['links'].append({"href" : base_url + "/v1/coverage/{"+resource_type+".id}", "rel" : "related", "templated":True})
 
@@ -417,7 +418,7 @@ def coverage(request, region_name=None, format=None):
     links =  [{"href" : base_url +"/v1/coverage/"+region_template, "rel":"related"}]
 
     for key in collections_to_resource_type:
-        links.append({"href" : base_url+"/v1/coverage/"+region_template+"/"+key, "rel":"navitia."+key})
+        links.append({"href" : base_url+"/v1/coverage/"+region_template+"/"+key, "rel":""+key})
 
     result['links'] = links
 
@@ -462,10 +463,10 @@ def coord(request, lon_, lat_):
     if(region_key):
         result_dict["coord"]["regions"].append({"id":region_key})
 
-    result_dict["links"].append({"href":base_url + "/v1/coverage/coord/"+lon_+";"+lat_+"/journeys", "rel" :"navitia.journeys", "templated":False})
-    result_dict["links"].append({"href":base_url + "/v1/coverage/coord/"+lon_+";"+lat_+"/places_nearby", "rel" :"navitia.nearby", "templated":False})
-    result_dict["links"].append({"href":base_url + "/v1/coverage/coord/"+lon_+";"+lat_+"/departures", "rel" :"navitia.departures", "templated":False})
-    result_dict["links"].append({"href":base_url + "/v1/coverage/coord/"+lon_+";"+lat_+"/arrivals", "rel" :"navitia.arrivals", "templated":False})
+    result_dict["links"].append({"href":base_url + "/v1/coverage/coord/"+lon_+";"+lat_+"/journeys", "rel" :"journeys", "templated":False})
+    result_dict["links"].append({"href":base_url + "/v1/coverage/coord/"+lon_+";"+lat_+"/places_nearby", "rel" :"nearby", "templated":False})
+    result_dict["links"].append({"href":base_url + "/v1/coverage/coord/"+lon_+";"+lat_+"/departures", "rel" :"departures", "templated":False})
+    result_dict["links"].append({"href":base_url + "/v1/coverage/coord/"+lon_+";"+lat_+"/arrivals", "rel" :"arrivals", "templated":False})
     result_dict["links"].append({"href":"www.openstreetmap.org/?mlon="+lon_+"&mlat="+lat_+"&zoom=11&layers=M", "rel":"about", "templated":False})
 
     return render(result_dict, "json", request.args.get('callback'))
@@ -474,9 +475,9 @@ def coord(request, lon_, lat_):
 def index(request, format='json'):
     response = {
             "links" : [
-                    {"href" : base_url + "/v1/coverage", "rel" :"navitia.coverage", "title" : "Coverage of navitia"},
-                    {"href" : base_url + "/v1/coord", "rel" : "navitia.coord", "title" : "Inverted geocooding" },
-                    {"href" : base_url + "/v1/journeys", "rel" : "navitia.journeys", "title" : "Compute journeys"}
+                    {"href" : base_url + "/v1/coverage", "rel" :"coverage", "title" : "Coverage of navitia"},
+                    {"href" : base_url + "/v1/coord", "rel" : "coord", "title" : "Inverted geocooding" },
+                    {"href" : base_url + "/v1/journeys", "rel" : "journeys", "title" : "Compute journeys"}
                     ]  
             }
     return render(response, format, request.args.get('callback'))

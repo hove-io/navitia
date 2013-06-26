@@ -35,16 +35,15 @@ def search_links(dico):
                 if link['rel'] == "related":
                     for key, val in dico.iteritems():
                         if key!="links" and key !="pagination":
-                            result[key+".id"] = link['href']
+                            result[key] = link['href']
                 else:
                     result[link['rel']] = link['href']
-    print "links : ",result
     return result
 
 def add_a(obj, links, last_type):
     if last_type in links:
         result = "<a href='"
-        result+= links[last_type].replace("{"+last_type+"}", obj)
+        result+= links[last_type].replace("{"+last_type+".id}", obj)
         result+= "'>"+obj+"</a>"
         return result
     else :
@@ -54,10 +53,10 @@ def add_links(obj):
     links = search_links(obj)
     result = add_links_recc(obj, links)
     
-    if obj.has_key("links"):
-        for link in obj["links"]:
-            if 'templated' in link and not link['templated']:
-                link['href'] = "<a href='"+link['href']+"'>"+link['href']+'</a>'
+    #if obj.has_key("links"):
+    #    for link in obj["links"]:
+    #        if 'templated' in link and not link['templated']:
+    #            link['href'] = "<a href='"+link['href']+"'>"+link['href']+'</a>'
     return result
 
 
@@ -69,6 +68,10 @@ def add_links_recc(obj, links, last_type=None):
                 obj[key] = add_a(value, links, object_type)
             if key=="href" and last_type != "links":
                 obj[key] = "<a href='"+obj[key]+"'>"+obj[key]+'</a>'
+            if key=="links":
+                for link in obj["links"]:
+                    if 'templated' in link and not link['templated']:
+                        link['href'] = "<a href='"+link['href']+"'>"+link['href']+'</a>'
             add_links_recc(obj[key], links, key)
     elif type(obj) == type([]):
         for value in obj:
