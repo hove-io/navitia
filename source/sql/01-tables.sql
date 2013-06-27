@@ -42,10 +42,55 @@ CREATE TABLE IF NOT EXISTS navitia.connection_type (
     name TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS navitia.odt_type (
+    id BIGINT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL
+);
+
 
 CREATE TABLE IF NOT EXISTS navitia.properties (
     id BIGINT PRIMARY KEY,
-    wheelchair_boarding BOOLEAN NOT NULL
+-- Accès UFR
+    wheelchair_boarding BOOLEAN NOT NULL,
+-- Abris couvert
+    sheltered BOOLEAN NOT NULL,
+-- Ascenseur
+    elevator BOOLEAN NOT NULL,
+-- Escalier mécanique
+    escalator BOOLEAN NOT NULL,
+-- Embarquement vélo
+    bike_accepted BOOLEAN NOT NULL,
+-- Parc vélo
+    bike_depot BOOLEAN NOT NULL,
+-- Annonce visuelle
+    visual_announcement BOOLEAN NOT NULL,
+-- Annonce sonore
+    audible_announcement BOOLEAN NOT NULL,
+-- Accompagnement à l'arrêt
+    appropriate_escort BOOLEAN NOT NULL,
+-- Information claire à l'arrêt
+    appropriate_signage BOOLEAN NOT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS navitia.vehicle_properties (
+    id BIGSERIAL PRIMARY KEY,
+-- Accès UFR
+    wheelchair_accessible BOOLEAN NOT NULL,
+-- Embarquement vélo
+    bike_accepted BOOLEAN NOT NULL,
+-- Air conditionné
+    air_conditioned BOOLEAN NOT NULL,
+-- Annonce visuelle
+    visual_announcement BOOLEAN NOT NULL,
+-- Annonce sonore
+    audible_announcement BOOLEAN NOT NULL,
+-- Accompagnement
+    appropriate_escort BOOLEAN NOT NULL,
+-- Information claire
+    appropriate_signage BOOLEAN NOT NULL,
+-- Ligne Scolaire
+    school_vehicle BOOLEAN NOT NULL
 );
 
 
@@ -125,7 +170,14 @@ CREATE TABLE IF NOT EXISTS navitia.company (
     id BIGINT PRIMARY KEY,
     comment TEXT,
     name TEXT NOT NULL,
-    uri TEXT NOT NULL
+    uri TEXT NOT NULL,
+    address_name TEXT,
+    address_number TEXT,
+    address_type_name TEXT,
+    phone_number TEXT,
+    mail TEXT,
+    website TEXT,
+    fax TEXT  
 );
 
 CREATE TABLE IF NOT EXISTS navitia.network (
@@ -171,7 +223,7 @@ CREATE TABLE IF NOT EXISTS navitia.journey_pattern (
 
 CREATE TABLE IF NOT EXISTS navitia.vehicle_journey (
     id BIGINT PRIMARY KEY,
-    properties_id BIGINT REFERENCES navitia.properties,
+--    properties_id BIGINT REFERENCES navitia.properties,    
     adapted_validity_pattern_id BIGINT NOT NULL REFERENCES navitia.validity_pattern,
     validity_pattern_id BIGINT REFERENCES navitia.validity_pattern,
     company_id BIGINT NOT NULL REFERENCES navitia.company,
@@ -180,6 +232,8 @@ CREATE TABLE IF NOT EXISTS navitia.vehicle_journey (
     uri TEXT NOT NULL,
     comment TEXT,
     name TEXT NOT NULL,
+    odt_type_id BIGINT NULL,
+    vehicle_properties_id BIGINT NULL REFERENCES navitia.vehicle_properties,
     theoric_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey
 );
 
@@ -260,10 +314,12 @@ CREATE TABLE IF NOT EXISTS navitia.stop_time (
     headway_sec INTEGER,
     odt BOOLEAN NOT NULL,
     pick_up_allowed BOOLEAN NOT NULL,
-    wheelchair_boarding BOOLEAN NOT NULL,
     drop_off_allowed BOOLEAN NOT NULL,
-    is_frequency BOOLEAN NOT NULL
+    is_frequency BOOLEAN NOT NULL,
+    comment TEXT,
+    properties_id BIGINT REFERENCES navitia.properties
 );
+
 
 
 -- Schéma Georef

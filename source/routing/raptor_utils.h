@@ -96,6 +96,6 @@ boarding_type get_type(size_t count, type::idx_t journey_pattern_point, const st
 }
 
 const type::JourneyPatternPoint* get_boarding_jpp(size_t count, type::idx_t journey_pattern_point, const std::vector<std::vector<const type::JourneyPatternPoint *> >&boardings);
-std::pair<const type::StopTime*, uint32_t> get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<std::vector<boarding_type> >&boarding_types, const type::Properties &required_properties, bool clockwise, const navitia::type::Data &data);
+std::pair<const type::StopTime*, uint32_t> get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<std::vector<boarding_type> >&boarding_types, const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/, bool clockwise, const navitia::type::Data &data);
 
 }}

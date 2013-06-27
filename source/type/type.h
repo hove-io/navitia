@@ -17,7 +17,6 @@
 
 #include "datetime.h"
 
-
 namespace mpl = boost::mpl;
 namespace navitia { namespace georef {
  struct Admin;
@@ -55,7 +54,7 @@ enum class Type_e {
     CommercialMode = 8,
     Connection = 9,
     JourneyPatternPoint = 10,
-    Company = 11,
+    Company = 11,   
     Route = 12,
     POI = 13,
     JourneyPatternPointConnection = 21,
@@ -101,11 +100,30 @@ struct Header{
 };
 
 
-typedef std::bitset<7> Properties;
+typedef std::bitset<10> Properties;
 struct hasProperties {
     static const uint8_t WHEELCHAIR_BOARDING = 0;
+    static const uint8_t SHELTERED = 1;
+    static const uint8_t ELEVATOR = 2;
+    static const uint8_t ESCALATOR = 3;
+    static const uint8_t BIKE_ACCEPTED = 4;
+    static const uint8_t BIKE_DEPOT = 5;
+    static const uint8_t VISUAL_ANNOUNCEMENT = 6;
+    static const uint8_t AUDIBLE_ANNOUNVEMENT = 7;
+    static const uint8_t APPOPRIATE_ESCORT = 8;
+    static const uint8_t APPOPRIATE_SIGNAGE = 9;
 
     bool wheelchair_boarding() {return _properties[WHEELCHAIR_BOARDING];}
+    bool sheltered() {return _properties[SHELTERED];}
+    bool elevator() {return _properties[ELEVATOR];}
+    bool escalator() {return _properties[ESCALATOR];}
+    bool bike_accepted() {return _properties[BIKE_ACCEPTED];}
+    bool bike_depot() {return _properties[BIKE_DEPOT];}
+    bool visual_announcement() {return _properties[VISUAL_ANNOUNCEMENT];}
+    bool audible_announcement() {return _properties[AUDIBLE_ANNOUNVEMENT];}
+    bool appropriate_escort() {return _properties[APPOPRIATE_ESCORT];}
+    bool appropriate_signage() {return _properties[APPOPRIATE_SIGNAGE];}
+
     bool accessible(const Properties &required_properties) const{
         auto mismatched = required_properties & ~_properties;
         return mismatched.none();
@@ -140,6 +158,57 @@ private:
     Properties _properties;
 };
 
+typedef std::bitset<8> VehicleProperties;
+struct hasVehicleProperties {
+    static const uint8_t WHEELCHAIR_ACCESSIBLE = 0;
+    static const uint8_t BIKE_ACCEPTED = 1;
+    static const uint8_t AIR_CONDITIONED = 2;
+    static const uint8_t VISUAL_ANNOUNCEMENT = 3;
+    static const uint8_t AUDIBLE_ANNOUNVEMENT = 4;
+    static const uint8_t APPOPRIATE_ESCORT = 5;
+    static const uint8_t APPOPRIATE_SIGNAGE = 6;
+    static const uint8_t SCOOL_VEHICLE = 7;
+
+    bool wheelchair_accessible() {return _vehicle_properties[WHEELCHAIR_ACCESSIBLE];}
+    bool bike_accepted() {return _vehicle_properties[BIKE_ACCEPTED];}
+    bool air_conditioned() {return _vehicle_properties[AIR_CONDITIONED];}
+    bool visual_announcement() {return _vehicle_properties[VISUAL_ANNOUNCEMENT];}
+    bool audible_announcement() {return _vehicle_properties[AUDIBLE_ANNOUNVEMENT];}
+    bool appropriate_escort() {return _vehicle_properties[APPOPRIATE_ESCORT];}
+    bool appropriate_signage() {return _vehicle_properties[APPOPRIATE_SIGNAGE];}
+    bool school_vehicle() {return _vehicle_properties[SCOOL_VEHICLE];}
+
+    bool accessible(const VehicleProperties &required_vehicles) const{
+        auto mismatched = required_vehicles & ~_vehicle_properties;
+        return mismatched.none();
+    }
+    bool accessible(const VehicleProperties &required_vehicles) {
+        auto mismatched = required_vehicles & ~_vehicle_properties;
+        return mismatched.none();
+    }
+
+    void set_vehicle(uint8_t vehicle) {
+        _vehicle_properties.set(vehicle, true);
+    }
+
+    void set_vehicles(const VehicleProperties &other) {
+        this->_vehicle_properties = other;
+    }
+
+    VehicleProperties vehicles() const {
+        return this->_vehicle_properties;
+    }
+
+    void unset_vehicle(uint8_t vehicle) {
+        _vehicle_properties.set(vehicle, false);
+    }
+
+    bool vehicle(uint8_t vehicle) const {
+        return _vehicle_properties[vehicle];
+    }
+private:
+    VehicleProperties _vehicle_properties;
+};
 
 /** Coordonnées géographiques en WGS84
  */
@@ -225,6 +294,15 @@ enum class ConnectionType {
     extension,
     guarantee,
     undefined
+};
+
+enum class OdtType {
+    Default = 0,    // ligne régulière
+    tad1 = 1,       // TAD virtuel avec horaires
+    tad2 = 2,       // TAD virtuel sans horaires
+    tad3 = 3,       // TAD rabattement arrêt à arrêt
+    tad4 = 4,       // TAD rabattement adresse à arrêt
+    tad5 = 5       // TAD point à point (Commune à Commune)
 };
 
 struct StopPoint;
@@ -416,25 +494,24 @@ struct JourneyPattern : public Header, Nameable{
 
 };
 
-struct VehicleJourney: public Header, Nameable, hasProperties{
+struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasProperties*/{
     const static Type_e type = Type_e::VehicleJourney;
     JourneyPattern* journey_pattern;
     Company* company;
     PhysicalMode* physical_mode;
     ValidityPattern* validity_pattern;
-    bool wheelchair_boarding;
     std::vector<StopTime*> stop_time_list;
-
+    OdtType odt_type;
 
     bool is_adapted;
     ValidityPattern* adapted_validity_pattern;
     std::vector<VehicleJourney*> adapted_vehicle_journey_list;
     VehicleJourney* theoric_vehicle_journey;
 
-    VehicleJourney(): journey_pattern(nullptr), company(nullptr), physical_mode(nullptr), validity_pattern(nullptr) , wheelchair_boarding(false), is_adapted(false), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
+    VehicleJourney(): journey_pattern(nullptr), company(nullptr), physical_mode(nullptr), validity_pattern(nullptr) /*, wheelchair_boarding(false)*/, is_adapted(false), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & uri & journey_pattern & company & physical_mode & validity_pattern & idx & wheelchair_boarding & stop_time_list
-            & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey;
+        ar & name & uri & journey_pattern & company & physical_mode & validity_pattern & idx /*& wheelchair_boarding*/ & stop_time_list
+            & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & odt_type;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -479,7 +556,6 @@ public:
     bool uncheck2(unsigned int day) const;
     //void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
     bool operator<(const ValidityPattern & other) const { return this < &other; }
-
 };
 
 struct StopPoint : public Header, Nameable, hasProperties{
@@ -533,7 +609,7 @@ struct JourneyPatternPoint : public Header{
 
 };
 
-struct StopTime {
+struct StopTime : public Nameable {
     static const uint8_t PICK_UP = 0;
     static const uint8_t DROP_OFF = 1;
     static const uint8_t ODT = 2;
@@ -548,7 +624,6 @@ struct StopTime {
     VehicleJourney* vehicle_journey;
     JourneyPatternPoint* journey_pattern_point;
     uint32_t local_traffic_zone;
-
     std::bitset<8> properties;
 
     ValidityPattern* departure_validity_pattern;
@@ -590,7 +665,7 @@ struct StopTime {
         local_traffic_zone(std::numeric_limits<uint32_t>::max()), departure_validity_pattern(nullptr), arrival_validity_pattern(nullptr){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-            ar & arrival_time & departure_time & start_time & end_time & headway_secs & vehicle_journey & journey_pattern_point & properties & local_traffic_zone & departure_validity_pattern & arrival_validity_pattern;
+            ar & arrival_time & departure_time & start_time & end_time & headway_secs & vehicle_journey & journey_pattern_point & properties & local_traffic_zone & departure_validity_pattern & arrival_validity_pattern & comment;
     }
 
     bool operator<(const StopTime& other) const {
@@ -641,6 +716,15 @@ struct StreetNetworkParams{
                 radius_filter(150){}
     void set_filter(const std::string & param_uri);
 };
+/**
+  Gestion de l'accessibilié
+  */
+struct AccessibiliteParams{
+    Properties properties;  // Accissibilié StopPoint, Correspondance, ..
+    VehicleProperties vehicle_properties; // Accissibilié VehicleJourney
+
+    AccessibiliteParams(){}
+};
 
 /** Type pour gérer le polymorphisme en entrée de l'API
   *
@@ -651,7 +735,7 @@ struct StreetNetworkParams{
 struct EntryPoint {
     Type_e type;//< Le type de l'objet
     std::string uri; //< Le code externe de l'objet
-    int house_number;    
+    int house_number;
     GeographicalCoord coordinates;  // < coordonnées du point d'entrée
     StreetNetworkParams streetnetwork_params;        // < paramètres de rabatement du point d'entrée
 

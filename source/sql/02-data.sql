@@ -12,7 +12,8 @@ BEGIN
 
         INSERT INTO navitia.connection_kind (id, name) VALUES
             (0, 'extension'), (1, 'guarantee'), (2, 'undefined');
-
+	INSERT INTO navitia.odt_type (id, name) VALUES
+	    (0, 'Default'), (1, 'tad1'), (2, 'tad2'), (3, 'tad3'), (4, 'tad4'), (5, 'tad5');
         INSERT INTO public.database_version VALUES(1);
     ELSE
         RAISE NOTICE 'database already in version 1, skipping';

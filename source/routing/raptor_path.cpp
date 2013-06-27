@@ -5,7 +5,8 @@ namespace navitia { namespace routing {
     
 std::vector<Path> 
 makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
-           type::DateTime dt, const float walking_speed, const type::Properties &required_properties, const RAPTOR &raptor_, bool clockwise) {
+           type::DateTime dt, const float walking_speed,
+           const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/, const RAPTOR &raptor_, bool clockwise) {
     std::vector<Path> result;
     navitia::type::DateTime best_dt = clockwise ? type::DateTime::inf : type::DateTime::min;
     for(unsigned int i=1;i<=raptor_.count;++i) {
@@ -28,7 +29,7 @@ makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
             }
         }
         if(best_jpp != type::invalid_idx)
-            result.push_back(makePath(best_jpp, i, clockwise, required_properties, raptor_));
+            result.push_back(makePath(best_jpp, i, clockwise, accessibilite_params/*required_properties*/, raptor_));
     }
 
     return result;
@@ -36,7 +37,7 @@ makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
 
 
 Path 
-makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,  const type::Properties &required_properties,
+makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,  const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/,
          const RAPTOR &raptor_) {
     Path result;
     unsigned int current_jpp_idx = destination_idx;
@@ -80,7 +81,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,  cons
                 l = raptor_.labels[countb][current_jpp_idx];
                 boarding_jpp = raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx;
                 uint32_t gap_frep;
-                std::tie(current_st, gap_frep) = raptor_.get_current_stidx_gap(countb, current_jpp_idx, required_properties, clockwise);
+                std::tie(current_st, gap_frep) = raptor_.get_current_stidx_gap(countb, current_jpp_idx, accessibilite_params/*required_properties*/, clockwise);
                 //Sert pour les horaires en  fréquences
 
                 item = PathItem();
@@ -105,7 +106,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,  cons
                         item.departures.push_back(workingDate);
                     }
 
-                    int order = current_st->journey_pattern_point->order;
+                    size_t order = current_st->journey_pattern_point->order;
                     // On parcourt les données dans le sens contraire du calcul
                     if(clockwise){
                         BOOST_ASSERT(order>0);
@@ -214,9 +215,9 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,  cons
 
 
 Path 
-makePathreverse(unsigned int destination_idx, unsigned int countb,  const type::Properties &required_properties,
+makePathreverse(unsigned int destination_idx, unsigned int countb,  const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/,
                 const RAPTOR &raptor_) {
-    return makePath(destination_idx, countb, false, required_properties, raptor_);
+    return makePath(destination_idx, countb, false, accessibilite_params/*required_properties*/, raptor_);
 }
 
 

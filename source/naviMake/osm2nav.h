@@ -6,7 +6,7 @@
 namespace navitia { namespace georef {
 class GeoRef;
 
-/** Remplit l'objet georef à partir du fichier openstreetmap */
+
 void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filename);
 
 struct OSMHouseNumber{
@@ -73,7 +73,7 @@ struct OSMAPoi{
     type::GeographicalCoord coord;
 };
 
-/** Structure appelée par parseur OSM PBF */
+
 struct Visitor{
     log4cplus::Logger logger;
     std::unordered_map<uint64_t,CanalTP::References> references;

@@ -529,7 +529,6 @@ BOOST_AUTO_TEST_CASE(sn_fin) {
     b.data.build_raptor();
     b.data.build_uri();
     RAPTOR raptor(b.data);
-    type::PT_Data & d = b.data.pt_data;
 
 
     auto res1 = raptor.compute_all(departs, destinations, type::DateTime(0, 9*3600 + 20 * 60));
@@ -631,8 +630,8 @@ BOOST_AUTO_TEST_CASE(max_transfers){
     type::PT_Data & d = b.data.pt_data;
 
     for(uint32_t nb_transfers=0; nb_transfers<=2;++nb_transfers) {
-        type::Properties p;
-        auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"], 86400, 0, navitia::type::DateTime::inf, true, p, nb_transfers);
+//        type::Properties p;
+        auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop2"], 86400, 0, navitia::type::DateTime::inf, true, type::AccessibiliteParams()/* p*/, nb_transfers);
         BOOST_REQUIRE(res1.size()>=1);
         for(auto r : res1) {
             BOOST_REQUIRE(r.nb_changes <= nb_transfers);

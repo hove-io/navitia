@@ -16,6 +16,7 @@ namespace navimake{ namespace types{
 using nt::Nameable;
 using nt::Header;
 using nt::hasProperties;
+using nt::hasVehicleProperties;
 
 
 #define FORWARD_CLASS_DECLARE(type_name, collection_name) class type_name;
@@ -23,6 +24,7 @@ ITERATE_NAVITIA_PT_TYPES(FORWARD_CLASS_DECLARE)
 class StopTime;
 
 using nt::ConnectionType;
+using nt::OdtType;
 struct StopPointConnection: public Header, hasProperties {
     const static nt::Type_e type = nt::Type_e::Connection;
 
@@ -157,7 +159,7 @@ struct JourneyPattern : public Header, Nameable{
     bool operator<(const JourneyPattern& other) const;
  };
 
-struct VehicleJourney: public Header, Nameable, hasProperties{
+struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     const static nt::Type_e type = nt::Type_e::VehicleJourney;
     JourneyPattern* journey_pattern;
     Company* company;
@@ -165,7 +167,7 @@ struct VehicleJourney: public Header, Nameable, hasProperties{
     Line * tmp_line; // N'est pas à remplir obligatoirement
     //Vehicle* vehicle;
     bool wheelchair_boarding;
-
+    OdtType odt_type;
     ValidityPattern* validity_pattern;
     std::vector<StopTime*> stop_time_list; // N'est pas à remplir obligatoirement
     StopTime * first_stop_time;
@@ -176,9 +178,8 @@ struct VehicleJourney: public Header, Nameable, hasProperties{
     std::vector<VehicleJourney*> adapted_vehicle_journey_list;
     VehicleJourney* theoric_vehicle_journey;
 
-
-    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), tmp_line(NULL), wheelchair_boarding(false),
-    validity_pattern(NULL), first_stop_time(NULL), is_adapted(false), adapted_validity_pattern(NULL), theoric_vehicle_journey(NULL){}
+    VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), tmp_line(NULL),/* wheelchair_boarding(false),*/
+     odt_type(OdtType::Default), validity_pattern(NULL), first_stop_time(NULL), is_adapted(false), adapted_validity_pattern(NULL), theoric_vehicle_journey(NULL){}
 
     navitia::type::VehicleJourney* get_navitia_type() const;
 
@@ -243,7 +244,7 @@ struct StopPoint : public Header, Nameable, hasProperties{
     bool operator<(const StopPoint& other) const;
 };
 
-struct StopTime {
+struct StopTime : public Nameable {
     int arrival_time; ///< En secondes depuis minuit
     int departure_time; ///< En secondes depuis minuit
     int start_time; /// Si horaire en fréquence

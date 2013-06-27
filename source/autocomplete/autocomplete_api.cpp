@@ -164,16 +164,16 @@ template<class T> ValidAdminPtr<T> valid_admin_ptr (const std::vector<T*> & obje
 
 //std::vector<type::idx_t> admin_uris_to_idx(const std::vector<std::string> &admin_uris, const navitia::type::Data &d){
 std::vector<const georef::Admin*> admin_uris_to_admin_ptr(const std::vector<std::string> &admin_uris, const navitia::type::Data &d){
-    std::vector<const georef::Admin*> admin_idxs;
+    std::vector<const georef::Admin*> admins;
     for (auto admin_uri : admin_uris){
-        for (const navitia::georef::Admin *admin : d.geo_ref.admins){
+        for (const navitia::georef::Admin* admin : d.geo_ref.admins){
             if (admin_uri == admin->uri){
-                admin_idxs.push_back(admin);
+                admins.push_back(admin);
             }
         }
     }
 
-    return admin_idxs;
+    return admins;
 }
 
 pbnavitia::Response autocomplete(const std::string &q,

@@ -9,19 +9,22 @@ namespace navitia { namespace routing {
 std::pair<const type::StopTime*, uint32_t>
 earliest_stop_time(const type::JourneyPatternPoint* jpp,
               const navitia::type::DateTime &dt,
-              const type::Data &data, bool reconstructing_path = false, const type::Properties &required_properties=0);
+              const type::Data &data, bool reconstructing_path = false,
+              const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams()/*const type::Properties &required_properties=0*/);
 ///Cherche le premier stop_time partant avant dt sur la journey_pattern au journey_pattern point order
 std::pair<const type::StopTime*, uint32_t>
 tardiest_stop_time(const type::JourneyPatternPoint* jpp,
               const navitia::type::DateTime &dt, const type::Data &data, bool reconstructing_path,
-              const type::Properties &required_properties=0);
+              /*const type::Properties &required_properties=0*/
+              const type::AccessibiliteParams & accessibilite_params);
 
 /// Returns the next stop time at given journey pattern point
 /// either a vehicle that leaves or that arrives depending on clockwise
 std::pair<const type::StopTime*, uint32_t>
 best_stop_time(const type::JourneyPatternPoint* jpp,
           const navitia::type::DateTime &dt,
-          const type::Properties &required_properties,
+          /*const type::Properties &required_properties*/
+          const type::AccessibiliteParams & accessibilite_params,
           const bool clockwise, const type::Data &data, bool reconstructing_path = false);
 
 /// Calcule le gap pour les horaires en fréquences

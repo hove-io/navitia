@@ -24,8 +24,8 @@ BOOST_AUTO_TEST_CASE(simple_journey){
     type::EntryPoint origin("stop_area:stop1");
     type::EntryPoint destination("stop_area:stop2");
 
-    streetnetwork::StreetNetwork sn_worker(data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T021000"}, true, 1.38, 1000, false, forbidden, sn_worker);
+    streetnetwork::StreetNetwork sn_worker(data.geo_ref);    
+    pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T021000"}, true, 1.38, 1000, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -63,8 +63,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
 
     // On met les horaires dans le desordre pour voir s'ils sont bien triÃ© comme attendu
     std::vector<std::string> datetimes({"20120614T080000", "20120614T090000"});
-
-    pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, false, forbidden, sn_worker);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
@@ -140,7 +139,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
 
 
 
-            Coordonées :
+            CoordonÃ©es :
                         A(12, 8)    0
                         G(10, 8)    1
                         H(10, 10)   2
@@ -422,9 +421,9 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     std::vector<std::string> datetimes({"20120614T080000", "20120614T090000"});
     std::vector<std::string> forbidden;
 
-    pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, false, forbidden, sn_worker);
+    pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
 
-// Marche à pied
+// Marche Ã  pied
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 3);
     pbnavitia::Journey journey = resp.journeys(0);
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
@@ -437,7 +436,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     pbnavitia::PathItem pathitem = section.street_network().path_items(0);
     BOOST_REQUIRE_EQUAL(pathitem.name(), "rue ab");
     BOOST_REQUIRE_EQUAL(pathitem.length(), 10);
-// vélo
+// vÃ©lo
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
     origin.streetnetwork_params.offset = b.data.geo_ref.bike_offset;
     origin.streetnetwork_params.speed = 13;
@@ -445,7 +444,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
     destination.streetnetwork_params.offset = b.data.geo_ref.bike_offset;
     destination.streetnetwork_params.distance = 5;
-    resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, false, forbidden, sn_worker);
+    resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 3);
@@ -481,7 +480,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Car;
     destination.streetnetwork_params.offset = b.data.geo_ref.car_offset;
     destination.streetnetwork_params.distance = 5;
-    resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, false, forbidden, sn_worker);
+    resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 3);

@@ -7,6 +7,7 @@
 #include <queue>
 #include "utils/csv.h"
 #include <utils/logger.h>
+#include <utils/functions.h>
 
 /** Lit les fichiers au format General Transit Feed Specifications
   *
@@ -48,6 +49,9 @@ public:
 
     /// Parse le fichier des agency, on s'en sert pour remplir les network
     void parse_agency(Data & data, CsvReader &csv);
+
+    /// Parse le fichier des agency, on s'en sert pour remplir les company
+    void parse_company(Data & data, CsvReader &csv);
 
     /// Parse le fichier calendar.txt
     /// Remplit les validity_patterns par période

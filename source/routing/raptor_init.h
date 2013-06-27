@@ -19,7 +19,7 @@ struct Departure_Type {
 std::vector<Departure_Type>
 getDepartures(const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations, bool clockwise, const float walking_speed,
               const std::vector<label_vector_t> &labels, const std::vector<std::vector<const type::JourneyPatternPoint *> > &boardings,
-              const std::vector<std::vector<boarding_type> > &boarding_types, const type::Properties &required_properties, const type::Data &data);
+              const std::vector<std::vector<boarding_type> > &boarding_types, const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/, const type::Data &data);
 
 std::vector<Departure_Type>
 getDepartures(const std::vector<std::pair<type::idx_t, double> > &departs, const navitia::type::DateTime &dep, bool clockwise, const float walking_speed, const type::Data & data);
@@ -32,7 +32,7 @@ getWalkingSolutions(bool clockwise, const std::vector<std::pair<type::idx_t, dou
 std::vector<Departure_Type>
 getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations, const float walking_speed,
                const std::vector<label_vector_t> &labels, const std::vector<std::vector<const type::JourneyPatternPoint*> >&boardings, const std::vector<std::vector<boarding_type> > &boarding_types,
-               const type::Properties &required_properties, const type::Data &data);
+               const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/, const type::Data &data);
 
 std::pair<type::idx_t, navitia::type::DateTime>
 getFinalRpidAndDate(int count, type::idx_t rpid, bool clockwise, const std::vector<label_vector_t> &labels,

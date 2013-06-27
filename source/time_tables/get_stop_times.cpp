@@ -3,7 +3,8 @@
 #include "type/pb_converter.h"
 namespace navitia { namespace timetables {
 
-std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &journey_pattern_points, const type::DateTime &dt, const type::DateTime &max_dt, const size_t max_departures, const type::Data & data, const bool wheelchair) {
+std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &journey_pattern_points, const type::DateTime &dt, const type::DateTime &max_dt, const size_t max_departures, const type::Data & data,
+                                               const type::AccessibiliteParams & accessibilite_params/*const bool wheelchair*/) {
     std::vector<datetime_stop_time> result;
     auto test_add = true;
 
@@ -18,7 +19,7 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &j
         test_add = false;
         for(auto jpp_idx : journey_pattern_points) {
             const type::JourneyPatternPoint* jpp = data.pt_data.journey_pattern_points[jpp_idx];            
-            auto st = routing::earliest_stop_time(jpp, next_requested_datetime[jpp_idx], data, wheelchair).first;
+            auto st = routing::earliest_stop_time(jpp, next_requested_datetime[jpp_idx], data, false, accessibilite_params/*wheelchair*/).first;
             if(st != nullptr) {
                 type::DateTime dt_temp = dt;
                 dt_temp.update(st->departure_time);

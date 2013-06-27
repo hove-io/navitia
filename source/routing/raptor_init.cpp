@@ -4,10 +4,11 @@ namespace navitia { namespace routing {
 std::vector<Departure_Type>
 getDepartures(const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations,
               bool clockwise, const float walking_speed, const std::vector<label_vector_t> &labels, const std::vector<std::vector< const type::JourneyPatternPoint*> > &boardings,
-              const std::vector<std::vector<boarding_type> > &boarding_types, const type::Properties &required_properties, const type::Data &data) {
+              const std::vector<std::vector<boarding_type> > &boarding_types,/* const type::Properties &required_properties*/
+              const type::AccessibiliteParams & accessibilite_params, const type::Data &data) {
       std::vector<Departure_Type> result;
 
-      auto pareto_front = getParetoFront(clockwise, departs, destinations, walking_speed, labels, boardings, boarding_types, required_properties, data);
+      auto pareto_front = getParetoFront(clockwise, departs, destinations, walking_speed, labels, boardings, boarding_types, accessibilite_params/*required_properties*/, data);
       result.insert(result.end(), pareto_front.begin(), pareto_front.end());
 
       auto walking_solutions = getWalkingSolutions(clockwise, departs, destinations, pareto_front.back(), walking_speed, labels, boardings, boarding_types, data);
@@ -60,7 +61,8 @@ bool improves(const type::DateTime & best_so_far, bool clockwise, const type::Da
 std::vector<Departure_Type>
 getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, double> > &departs, const std::vector<std::pair<type::idx_t, double> > &destinations,
                const float walking_speed, const std::vector<label_vector_t> &labels, const std::vector<std::vector<const type::JourneyPatternPoint*> > &boardings,
-               const std::vector<std::vector<boarding_type> >&boarding_types, const type::Properties &required_properties, const type::Data &data){
+               const std::vector<std::vector<boarding_type> >&boarding_types,
+               const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/, const type::Data &data){
     std::vector<Departure_Type> result;
 
     navitia::type::DateTime best_dt, best_dt_jpp;
@@ -88,7 +90,7 @@ getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, double> 
                         const type::StopTime* st;
                         uint32_t gap;
 
-                        std::tie(st, gap) = best_stop_time(journey_pattern_point, labels[round][jppidx], required_properties, !clockwise, data, true);
+                        std::tie(st, gap) = best_stop_time(journey_pattern_point, labels[round][jppidx], accessibilite_params/*required_properties*/, !clockwise, data, true);
                         if(clockwise) {
                             best_dt_jpp.update(st->arrival_time + gap, !clockwise);
                         } else {

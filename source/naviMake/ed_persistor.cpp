@@ -94,13 +94,21 @@ void EdPersistor::insert_physical_modes(const std::vector<types::PhysicalMode*>&
 }
 
 void EdPersistor::insert_companies(const std::vector<types::Company*>& companies){
-    this->lotus.prepare_bulk_insert("navitia.company", {"id", "uri", "name", "comment"});
+    this->lotus.prepare_bulk_insert("navitia.company", {"id", "uri", "name", "comment", "address_name", "address_number",
+                                    "address_type_name", "phone_number","mail", "website", "fax"});
     for(types::Company* company : companies){
         std::vector<std::string> values;
         values.push_back(std::to_string(company->idx));
         values.push_back(company->uri);
         values.push_back(company->name);
         values.push_back(company->comment);
+        values.push_back(company->address_name);
+        values.push_back(company->address_number);
+        values.push_back(company->address_type_name);
+        values.push_back(company->phone_number);
+        values.push_back(company->mail);
+        values.push_back(company->website);
+        values.push_back(company->fax);
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
@@ -266,9 +274,9 @@ void EdPersistor::insert_validity_patterns(const std::vector<types::ValidityPatt
 }
 
 void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_times){
-    this->lotus.prepare_bulk_insert("navitia.stop_time", {"arrival_time", "departure_time", "local_traffic_zone", "start_time", "end_time",
-            "headway_sec", "odt", "pick_up_allowed", "drop_off_allowed", "wheelchair_boarding", "is_frequency",
-            "journey_pattern_point_id", "vehicle_journey_id"});
+    this->lotus.prepare_bulk_insert("navitia.stop_time", {"arrival_time", "departure_time", "local_traffic_zone", "start_time",
+                                    "end_time", "headway_sec", "odt", "pick_up_allowed", "drop_off_allowed",
+                                    "is_frequency", "journey_pattern_point_id", "vehicle_journey_id", "comment"});
 
     for(types::StopTime* stop : stop_times){
         std::vector<std::string> values;
@@ -284,8 +292,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
         values.push_back(std::to_string(stop->headway_secs));
         values.push_back(std::to_string(stop->ODT));
         values.push_back(std::to_string(stop->pick_up_allowed));
-        values.push_back(std::to_string(stop->drop_off_allowed));
-        values.push_back(std::to_string(stop->wheelchair_boarding));
+        values.push_back(std::to_string(stop->drop_off_allowed));        
         values.push_back(std::to_string(stop->is_frequency));
 
         if(stop->journey_pattern_point != NULL){
@@ -298,6 +305,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
         }else{
             values.push_back(lotus.null_value);
         }
+        values.push_back(stop->comment);
         this->lotus.insert(values);
     }
 
@@ -334,7 +342,7 @@ void EdPersistor::insert_journey_pattern_point(const std::vector<types::JourneyP
 
 void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys){
     this->lotus.prepare_bulk_insert("navitia.vehicle_journey", {"id", "uri", "name", "comment", "validity_pattern_id",
-            "adapted_validity_pattern_id", "company_id", "physical_mode_id", "journey_pattern_id", "theoric_vehicle_journey_id"});
+                                    "adapted_validity_pattern_id", "company_id", "physical_mode_id", "journey_pattern_id", "theoric_vehicle_journey_id", "odt_type_id"});
 
     for(types::VehicleJourney* vj : vehicle_journeys){
         std::vector<std::string> values;
@@ -373,6 +381,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
             //@TODO WTF??
             values.push_back(lotus.null_value);
         }
+        values.push_back(std::to_string(static_cast<int>(vj->odt_type)));
         this->lotus.insert(values);
     }
 

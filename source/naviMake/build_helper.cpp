@@ -63,7 +63,10 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
 //    } else {
 //        vj->validity_pattern = vp_it->second;
 //    }
-    vj->wheelchair_boarding = wheelchair_boarding;
+//    vj->wheelchair_boarding = wheelchair_boarding;
+        if(wheelchair_boarding){
+            vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
+        }
     vj->uri = uri;
     if(!b.data.pt_data.physical_modes.empty())
         vj->physical_mode = b.data.pt_data.physical_modes.front();
@@ -164,9 +167,6 @@ SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelc
     sp->uri = sp_name;
     if(wheelchair_boarding)
         sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
-    sp->coord.set_lon(x);
-    sp->coord.set_lat(y);
-
     sp->coord.set_lon(x);
     sp->coord.set_lat(y);
 

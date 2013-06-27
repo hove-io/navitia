@@ -368,8 +368,7 @@ nt::VehicleJourney* VehicleJourney::get_navitia_type() const {
     if(this->validity_pattern != NULL)
         nt_vj->validity_pattern->idx = this->validity_pattern->idx;
 
-    nt_vj->wheelchair_boarding = this->wheelchair_boarding;
-    nt_vj->set_properties(this->properties());
+    nt_vj->set_vehicles(this->vehicles());
 
     nt_vj->is_adapted = this->is_adapted;
 
