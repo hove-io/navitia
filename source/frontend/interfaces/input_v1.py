@@ -7,7 +7,7 @@ import datetime
 import output_v1
 
 def coverage(request):
-    return output_v1.coverage(request, format=request.accept_mimetypes.best)
+    return output_v1.coverage(request, format=request.accept_mimetypes)
 
 def coord(request, lon, lat):
     return output_v1.coord(request, lon, lat)
@@ -39,11 +39,11 @@ def departures_arrivals(type, request, uri1):
 
 def departures(request, uri1):
     response, region = departures_arrivals("departures", request, uri1)
-    return output_v1.departures(response,  region, request.accept_mimetypes.best, request.args.get("callback"))
+    return output_v1.departures(response,  region, request.accept_mimetypes, request.args.get("callback"))
 
 def arrivals(request, uri1):
     response, region = departures_arrivals("arrivals", request, uri1)
-    return output_v1.arrivals(response,  region, request.accept_mimetypes.best, request.args.get("callback"))
+    return output_v1.arrivals(response,  region, request.accept_mimetypes, request.args.get("callback"))
 
 
 def uri(request, uri):
@@ -55,7 +55,7 @@ def uri(request, uri):
 
     if len(u.objects) == 0:
         if u.is_region:
-            return output_v1.coverage(request, u.region(), request.accept_mimetypes.best)
+            return output_v1.coverage(request, u.region(), request.accept_mimetypes)
 
     resource_type, uid = u.objects.pop()
     if resource_type in types_not_ptrefable:
@@ -82,7 +82,7 @@ def uri(request, uri):
         response = NavitiaManager().dispatch(arguments, u.region(), resource_type)
     except InvalidArguments, e:
         return generate_error(e.message)
-    return output_v1.render_ptref(response, u.region(), resource_type, uid, request.accept_mimetypes.best, request.args.get("callback"))
+    return output_v1.render_ptref(response, u.region(), resource_type, uid, request.accept_mimetypes, request.args.get("callback"))
 
 def places(request, uri):
     u = None
@@ -97,7 +97,7 @@ def places(request, uri):
     arguments = validate_pb_request("places", request)
     if arguments.valid:
         response = NavitiaManager().dispatch(arguments, u.region(), "places")
-        return output_v1.places(response, u, request.accept_mimetypes.best, request.args.get("callback"))
+        return output_v1.places(response, u, request.accept_mimetypes, request.args.get("callback"))
     else:
         return generate_error("Invalid arguments : " + arguments.details)
 
@@ -128,7 +128,7 @@ def route_schedules(request, uri1):
     arguments = validate_and_fill_arguments("route_schedules", req)
     if arguments.valid:
         response = NavitiaManager().dispatch(arguments, u.region(), "route_schedules")
-        return output_v1.route_schedules(response, u, request.accept_mimetypes.best, request.args.get("callback"))
+        return output_v1.route_schedules(response, u, request.accept_mimetypes, request.args.get("callback"))
     else:
         return generate_error("Invalid arguments : " + arguments.details)
 
@@ -183,7 +183,7 @@ def journeys(request, uri1=None):
             return generate_error("Invalid Arguments : " + str(e.message))
         if arguments.valid:
             response = NavitiaManager().dispatch(arguments, u1.region(), "journeys")
-            return output_v1.journeys(request.path, u1, response, request.accept_mimetypes.best, request.args.get("callback"))
+            return output_v1.journeys(request.path, u1, response, request.accept_mimetypes, request.args.get("callback"))
         else:
             return generate_error("Invalid arguments : " + arguments.details)
     else:
@@ -193,7 +193,7 @@ def journeys(request, uri1=None):
             return generate_error("Invalid Arguments : " + str(e.message))
         if arguments.valid:
             response = NavitiaManager().dispatch(arguments, u1.region(), "isochrone")
-            return output_v1.journeys(arguments, u1, response, request.accept_mimetypes.best, request.args.get("callback"), True)
+            return output_v1.journeys(arguments, u1, response, request.accept_mimetypes, request.args.get("callback"), True)
         else:
             return generate_error("Invalid arguments : " + arguments.details)
 
@@ -221,10 +221,10 @@ def nearby(request, uri1, uri2=None):
         return generate_error("Invalid Arguments : " + e.message)
     if arguments.valid:
         response = NavitiaManager().dispatch(arguments, u.region(), "places_nearby")
-        return output_v1.nearby(response, u, request.accept_mimetypes.best, request.args.get("callback"))
+        return output_v1.nearby(response, u, request.accept_mimetypes, request.args.get("callback"))
     else:
         return generate_error("Invalid arguments : " + arguments.details)
 
 
 def index(request):
-    return output_v1.index(request, format=request.accept_mimetypes.best )
+    return output_v1.index(request, format=request.accept_mimetypes)

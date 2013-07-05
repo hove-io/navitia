@@ -28,7 +28,7 @@ def on_regions(request, format):
         except RegionNotFound:
             response['regions'].append({"region_id" : region, "status" : "not found"})
 
-    return render(response, format,  request.args.get('callback'))
+    return render(response, [format],  request.args.get('callback'))
 
 def find_region(uri):
     uri_re = re.match('^coord:(.+):(.+)$', uri)
@@ -68,5 +68,5 @@ def on_api(request, region, api, format):
         return generate_error(e.message)
     except ApiNotFound, e:
         return generate_error("Unknown api : " + api, 404)
-    response = NavitiaManager().dispatch(arguments, region, api)
+    response = NavitiaManager().dispatch(arguments, region, api, request)
     return render_from_protobuf(response, format, request.args.get("callback"))

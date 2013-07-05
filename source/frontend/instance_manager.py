@@ -13,6 +13,8 @@ from singleton import singleton
 import importlib
 from renderers import render_from_protobuf
 from error import generate_error
+import logging
+import sys
 
 class Instance:
     def __init__(self):
@@ -100,14 +102,17 @@ class NavitiaManager:
         self.thread = Thread(target = self.thread_ping)
         self.thread.start()
 
-    def dispatch(self, request, region, api):
+    def dispatch(self, arguments, region, api, request=None):
         if region in self.instances:
             if api in self.instances[region].script.apis:
                 try:
                     api_func = getattr(self.instances[region].script, api)
-                    api_answer = api_func(request, region)
-                    return api_func(request, region)
+                    api_answer = api_func(arguments, region)
+                    return api_func(arguments, region)
                 except DeadSocketException, e:
+                    if request:
+                        log = logging.getLogger("werkzeug")
+                        log.error(request.url)
                     return generate_error(e.message, status=503)
 #except AttributeError:
 #                    return generate_error("Unknown api : " + api, status=404)
@@ -152,10 +157,19 @@ class NavitiaManager:
                     if resp:
                         try:
                             parsed = json.loads(resp.metadatas.shape)
-                            instance.geom = geometry.shape(parsed)
+                            check = True
+                            if 'coordinates' in parsed:
+                                if len(parsed['coordinates']) > 0:
+                                    for coords in parsed['coordinates']:
+                                        for pair_coord in coords:
+                                            for coord in pair_coord:
+                                                if int(coord) == 0:
+                                                    check = False
+                            if check:
+                                instance.geom = geometry.shape(parsed)
                         except:
                             pass
-                except DeadSocketException, e:
+                except DeadSocketException:
                     pass
                     #print e
                 except geos.ReadingError:

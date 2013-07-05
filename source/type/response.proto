@@ -230,6 +230,7 @@ message Pagination {
 message Response{
     optional string error = 2;
     optional string info = 3;
+    optional int32 status_code = 1;
 
     optional Status status = 4;
     //Places

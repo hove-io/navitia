@@ -1,5 +1,7 @@
-from werkzeug.wrappers import Response
-import json
+from response_pb2 import Response
 
 def generate_error(str, status=400):
-    return Response(json.dumps({"error" : str}),mimetype='application/json;charset=utf-8', status=status)
+    r = Response()
+    r.error = str
+    r.status_code = status
+    return r

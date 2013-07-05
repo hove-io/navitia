@@ -6,24 +6,26 @@ from werkzeug.wrappers import Response
 from error import generate_error
 
 
-def render(dico, format, callback):
-    if format == 'application/json':
+def render(dico, formats, callback, status=200):
+    if 'application/json' in formats or 'json' in formats:
         json_str = json.dumps(dico, ensure_ascii=False)
         if callback == '' or callback == None:
-            result = Response(json_str, mimetype='application/json;charset=utf-8')
+            result = Response(json_str, mimetype='application/json;charset=utf-8', status=status)
         else:
-            result = Response(callback + '(' + json_str + ')', mimetype='application/json;charset=utf-8')
-    elif format == 'text/html' or format == 'text/plain':
+            result = Response(callback + '(' + json_str + ')', mimetype='application/json;charset=utf-8', status=status)
+    elif 'text/html' in formats or 'text/plain' in formats:
         json_str = json.dumps(add_links(dico), ensure_ascii=False, indent=4)
-        result = Response('<html><pre>' + json_str + '</pre></html>', mimetype='text/html;charser=utf8')
-    elif format == 'txt':
-        result = Response(json.dumps(dico, ensure_ascii=False, indent=4), mimetype='text/plain;charset=utf-8')
-    elif format == 'xml':
-        result = Response('<?xml version="1.0" encoding="UTF-8"?>\n'+ dict2xml.dict2xml(dico, wrap="Response"), mimetype='application/xml;charset=utf-8')
-    elif format == 'pb':
-        result = generate_error('Protocol buffer not supported for this request', status=404)
+        result = Response('<html><pre>' + json_str + '</pre></html>', mimetype='text/html;charser=utf8', status=status)
+    elif 'txt' in formats:
+        result = Response(json.dumps(dico, ensure_ascii=False, indent=4), mimetype='text/plain;charset=utf-8', status=status)
+    elif 'xml' in formats:
+        result = Response('<?xml version="1.0" encoding="UTF-8"?>\n'+ dict2xml.dict2xml(dico, wrap="Response"), mimetype='application/xml;charset=utf-8', status=status)
+    elif 'pb' in formats:
+        r = generate_error('Protocol buffer not supported for this request', status=404)
+        result = render_from_protobuf(r, 'json')
     else:
-        result = generate_error("Unknown file format format('"+format+"'). Please choose .json, .txt, .xml or .pb", status=404)
+        r = generate_error("Unknown file format format('"+str(formats)+"'). Please choose .json, .txt, .xml or .pb", status=404)
+        result = render_from_protobuf(r, 'json')
     result.headers.add('Access-Control-Allow-Origin', '*')
     return result
 
@@ -78,8 +80,11 @@ def add_links_recc(obj, links, last_type=None):
             add_links_recc(value, links, last_type)
     return obj
 
-def render_from_protobuf(pb_resp, format, callback):
+def render_from_protobuf(pb_resp, format, callback, status=200):
+    if pb_resp.status_code:
+        status=pb_resp.status_code
+        pb_resp.ClearField("status_code")
     if format == 'pb':
-        return Response(pb_resp.SerializeToString(), mimetype='application/octet-stream')
+        return Response(pb_resp.SerializeToString(), mimetype='application/octet-stream', status=status)
     else:
-        return render(protobuf_to_dict(pb_resp, use_enum_labels=True), format, callback)
+        return render(protobuf_to_dict(pb_resp, use_enum_labels=True), format, callback, status)
