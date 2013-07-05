@@ -1,12 +1,12 @@
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE test_navimake
+#define BOOST_TEST_MODULE test_ed
 #include <boost/test/unit_test.hpp>
 #include "time_tables/get_stop_times.h"
-#include "naviMake/build_helper.h"
+#include "ed/build_helper.h"
 using namespace navitia::timetables;
 
 BOOST_AUTO_TEST_CASE(test1){
-    navimake::builder b("20120614");
+    ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8050)("stop2", 8100,8150);
     b.data.pt_data.index();
     b.data.build_raptor();

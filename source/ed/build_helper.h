@@ -8,7 +8,7 @@
  *  Cela est particulièrement (voire exclusivement) utile pour les tests unitaires
  */
 
-namespace navimake {
+namespace ed {
 
 struct builder;
 

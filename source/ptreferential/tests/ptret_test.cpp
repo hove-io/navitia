@@ -4,7 +4,7 @@
 #include "ptreferential/ptreferential.h"
 #include "ptreferential/reflexion.h"
 #include "ptreferential/ptref_graph.h"
-#include "naviMake/build_helper.h"
+#include "ed/build_helper.h"
 
 #include <boost/graph/strong_components.hpp>
 #include <boost/graph/connected_components.hpp>
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(reflexion){
 
 BOOST_AUTO_TEST_CASE(sans_filtre) {
 
-    navimake::builder b("201303011T1739");
+    ed::builder b("201303011T1739");
     b.generate_dummy_basis();
     b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
     b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(sans_filtre) {
 
 
 BOOST_AUTO_TEST_CASE(get_indexes_test){
-    navimake::builder b("201303011T1739");
+    ed::builder b("201303011T1739");
     b.generate_dummy_basis();
     b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
     b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(get_indexes_test){
 
 BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
 
-    navimake::builder b("201303011T1739");
+    ed::builder b("201303011T1739");
     b.generate_dummy_basis();
     b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
     b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);

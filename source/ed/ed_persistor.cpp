@@ -2,9 +2,9 @@
 
 namespace bg = boost::gregorian;
 
-namespace navimake{
+namespace ed{
 
-void EdPersistor::persist(const navimake::Data& data, const navitia::type::MetaData& meta){
+void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& meta){
 
     this->lotus.start_transaction();
 

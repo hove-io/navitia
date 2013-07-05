@@ -13,22 +13,22 @@
   *
   * http://code.google.com/intl/fr/transit/spec/transit_feed_specification.html
   */
-namespace navimake{ namespace connectors{
+namespace ed{ namespace connectors{
 class GtfsParser {
 private:
     std::string path;///< Chemin vers les fichiers
 
     // Plusieurs maps pour savoir à quel position est quel objet identifié par son ID GTFS
-    std::unordered_map<std::string, navimake::types::CommercialMode*> commercial_mode_map;
-    std::unordered_map<std::string, navimake::types::StopPoint*> stop_map;
-    std::unordered_map<std::string, navimake::types::StopArea*> stop_area_map;
-    std::unordered_map<std::string, navimake::types::Line*> line_map;
-    std::unordered_map<std::string, navimake::types::ValidityPattern*> vp_map;
-    std::unordered_map<std::string, navimake::types::VehicleJourney*> vj_map;
-    std::unordered_map<std::string, navimake::types::PhysicalMode*> mode_map;
-    std::unordered_map<std::string, navimake::types::Network*> agency_map;
-    std::unordered_map<std::string, navimake::types::Company*> company_map;
-    typedef std::vector<navimake::types::StopPoint*> vector_sp;
+    std::unordered_map<std::string, ed::types::CommercialMode*> commercial_mode_map;
+    std::unordered_map<std::string, ed::types::StopPoint*> stop_map;
+    std::unordered_map<std::string, ed::types::StopArea*> stop_area_map;
+    std::unordered_map<std::string, ed::types::Line*> line_map;
+    std::unordered_map<std::string, ed::types::ValidityPattern*> vp_map;
+    std::unordered_map<std::string, ed::types::VehicleJourney*> vj_map;
+    std::unordered_map<std::string, ed::types::PhysicalMode*> mode_map;
+    std::unordered_map<std::string, ed::types::Network*> agency_map;
+    std::unordered_map<std::string, ed::types::Company*> company_map;
+    typedef std::vector<ed::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;
     log4cplus::Logger logger;
 
@@ -42,7 +42,7 @@ public:
     GtfsParser() : production_date(boost::gregorian::date(), boost::gregorian::date()) {}
 
     /// Remplit la structure passée en paramètre
-    void fill(navimake::Data& data, const std::string beginning_date = "");
+    void fill(ed::Data& data, const std::string beginning_date = "");
 
     /// Remplit les commercial_mode et les physical_mode
     void fill_modes(Data & data);

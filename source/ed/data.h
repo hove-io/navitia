@@ -7,7 +7,7 @@
 
 namespace nt = navitia::type;
 /** Ce namespace contient toutes les structures de données \b temporaires, à remplir par le connecteur */
-namespace navimake{
+namespace ed{
 
 template<typename T>
 void normalize_uri(std::vector<T*>& vec){
@@ -31,8 +31,8 @@ void  add_journey_pattern_point_connection(types::JourneyPatternPoint *rp1, type
       */
 class Data{
 public:
-#define NAVIMAKE_COLLECTIONS(type_name, collection_name) std::vector<types::type_name*> collection_name;
-    ITERATE_NAVITIA_PT_TYPES(NAVIMAKE_COLLECTIONS)
+#define ED_COLLECTIONS(type_name, collection_name) std::vector<types::type_name*> collection_name;
+    ITERATE_NAVITIA_PT_TYPES(ED_COLLECTIONS)
     std::vector<types::StopTime*> stops;
     std::vector<types::JourneyPatternPointConnection*> journey_pattern_point_connections;
     std::vector<types::StopPointConnection*> stop_point_connections;
@@ -100,7 +100,7 @@ public:
     ~Data(){
 #define DELETE_ALL_ELEMENTS(type_name, collection_name) for(auto element : collection_name) delete element;
         ITERATE_NAVITIA_PT_TYPES(DELETE_ALL_ELEMENTS)
-        for(navimake::types::StopTime* stop : stops){
+        for(ed::types::StopTime* stop : stops){
             delete stop;
         }
     }

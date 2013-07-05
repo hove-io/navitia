@@ -1,19 +1,19 @@
-#include "naviMake/data.h"
-#include "naviMake/gtfs_parser.h"
+#include "ed/data.h"
+#include "ed/gtfs_parser.h"
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE test_navimake
+#define BOOST_TEST_MODULE test_ed
 #include <boost/test/unit_test.hpp>
 #include <string>
 #include "config.h"
-#include "naviMake/build_helper.h"
+#include "ed/build_helper.h"
 
-const std::string gtfs_path = "/navimake/gtfs";
+const std::string gtfs_path = "/ed/gtfs";
 
 
 BOOST_AUTO_TEST_CASE(connection_transformer){
-    navimake::types::Connection connection;
-    navimake::types::StopPoint* origin = new navimake::types::StopPoint();
-    navimake::types::StopPoint* destination = new navimake::types::StopPoint();
+    ed::types::Connection connection;
+    ed::types::StopPoint* origin = new ed::types::StopPoint();
+    ed::types::StopPoint* destination = new ed::types::StopPoint();
 
     origin->idx = 8;
     destination->idx = 523;
@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(connection_transformer){
     connection.destination_stop_point = destination;
     connection.duration = 10;
     connection.max_duration = 15;
-    connection.connection_kind = navimake::types::ConnectionType::Walking;
+    connection.connection_kind = ed::types::ConnectionType::Walking;
 
     navitia::type::Connection connection_n = connection.get_navitia_type();
 
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(connection_transformer){
 
 
 BOOST_AUTO_TEST_CASE(stop_area_transformer){
-    navimake::types::StopArea stop_area;
+    ed::types::StopArea stop_area;
 
     stop_area.id = "12";
     stop_area.idx = 32;
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(stop_area_transformer){
 BOOST_AUTO_TEST_CASE(validity_pattern){
     boost::gregorian::date begin;
     begin=boost::gregorian::date_from_iso_string("201303011T1739");
-    navimake::types::ValidityPattern *vp;
-    vp = new  navimake::types::ValidityPattern(begin, "01");
+    ed::types::ValidityPattern *vp;
+    vp = new  ed::types::ValidityPattern(begin, "01");
     BOOST_CHECK_EQUAL(vp->days.to_ulong(), 1);
 }

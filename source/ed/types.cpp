@@ -1,6 +1,6 @@
 #include "types.h"
 
-using namespace navimake::types;
+using namespace ed::types;
 
 bool ValidityPattern::is_valid(int duration){
     if(duration < 0){

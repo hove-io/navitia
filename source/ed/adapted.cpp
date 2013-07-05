@@ -5,7 +5,7 @@ namespace nt = navitia::type;
 namespace bg = boost::gregorian;
 namespace pt = boost::posix_time;
 
-namespace navimake{
+namespace ed{
 
 
 void delete_vj(types::VehicleJourney* vehicle_journey, const nt::Message& message, Data& data){
@@ -296,7 +296,7 @@ void AtAdaptedLoader::dispatch_message(const std::map<std::string, std::vector<n
             //on recupére la liste des VJ associé(s) a l'uri du message
             if(m.object_type == nt::Type_e::VehicleJourney || m.object_type == nt::Type_e::Route
                     || m.object_type == nt::Type_e::Line || m.object_type == nt::Type_e::Network){
-                std::vector<navimake::types::VehicleJourney*> vj_list = reconcile_impact_with_vj(m, data);
+                std::vector<ed::types::VehicleJourney*> vj_list = reconcile_impact_with_vj(m, data);
                 //on parcourt la liste des VJ associée au message
                 //et on associe le message au vehiclejourney
                 for(auto* vj  : vj_list){
@@ -305,7 +305,7 @@ void AtAdaptedLoader::dispatch_message(const std::map<std::string, std::vector<n
 
             }else if(m.object_type == nt::Type_e::JourneyPatternPoint || m.object_type == nt::Type_e::StopPoint
                     || m.object_type == nt::Type_e::StopArea){
-                std::vector<navimake::types::VehicleJourney*> vj_list = get_vj_from_impact(m);
+                std::vector<ed::types::VehicleJourney*> vj_list = get_vj_from_impact(m);
                 for(auto* vj : vj_list){
                     duplicate_vj_map[vj].insert(m);
                 }

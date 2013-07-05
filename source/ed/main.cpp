@@ -67,7 +67,7 @@ int main(int argc, char * argv[])
     pt::ptime start, end;
     int read, complete, clean, sort, transform, save, autocomplete, sn, apply_adapted_duration;
 
-    navimake::Data data; // Structure temporaire
+    ed::Data data; // Structure temporaire
     navitia::type::Data nav_data; // Structure définitive
 
 
@@ -102,7 +102,7 @@ int main(int argc, char * argv[])
     nav_data.meta.data_sources.push_back(boost::filesystem::absolute(input).native());
 
 
-    navimake::connectors::GtfsParser connector(input);
+    ed::connectors::GtfsParser connector(input);
     connector.fill(data, date);
     nav_data.meta.production_date = connector.production_date;
 
@@ -132,7 +132,7 @@ int main(int argc, char * argv[])
         std::map<std::string, std::vector<navitia::type::Message>> messages;
         messages = loader.load_disrupt(conf, pt::second_clock::local_time());
         std::cout << "nombre d'objet impactés: " << messages.size() << std::endl;
-        navimake::AtAdaptedLoader adapter;
+        ed::AtAdaptedLoader adapter;
         adapter.apply(messages, data);
     }
     apply_adapted_duration = (pt::microsec_clock::local_time() - start).total_milliseconds();

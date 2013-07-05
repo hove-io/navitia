@@ -1,9 +1,9 @@
 #pragma once
-#include "naviMake/types.h"
-#include "naviMake/data.h"
+#include "ed/types.h"
+#include "ed/data.h"
 #include "type/message.h"
 
-namespace navimake{
+namespace ed{
 
 void delete_vj(types::VehicleJourney* vehicle_journey, const nt::Message& message, Data& data);
 std::vector<types::StopTime*> get_stop_from_impact(const navitia::type::Message& message, boost::gregorian::date current_date, std::vector<types::StopTime*> stoplist);

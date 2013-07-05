@@ -3,7 +3,7 @@
 
 namespace pt = boost::posix_time;
 
-namespace navimake {
+namespace ed {
 VJ & VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs) {
 
     uint32_t first_time = vj->stop_time_list.front()->arrival_time;

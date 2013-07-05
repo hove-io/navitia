@@ -61,7 +61,7 @@ int main(int argc, char * argv[])
 
     start = pt::microsec_clock::local_time();
 
-    navimake::EdReader reader(connection_string);
+    ed::EdReader reader(connection_string);
     reader.fill(data);
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 

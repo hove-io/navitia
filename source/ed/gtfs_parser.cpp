@@ -8,10 +8,10 @@
 #include "utils/csv.h"
 #include "utils/logger.h"
 
-namespace nm = navimake::types;
+namespace nm = ed::types;
 typedef boost::tokenizer< boost::escaped_list_separator<char> > Tokenizer;
 
-namespace navimake{ namespace connectors {
+namespace ed{ namespace connectors {
 
 
 int time_to_int(const std::string & time) {
@@ -89,64 +89,64 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
 
 
 void GtfsParser::fill_modes(Data & data) {
-    navimake::types::CommercialMode* commercial_mode = new navimake::types::CommercialMode();
+    ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "0";
     commercial_mode->name = "Tram";
     commercial_mode->uri = "0x0";
     data.commercial_modes.push_back(commercial_mode);
     commercial_mode_map[commercial_mode->id] = commercial_mode;
 
-    commercial_mode = new navimake::types::CommercialMode();
+    commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "1";
     commercial_mode->name = "Metro";
     commercial_mode->uri = "0x1";
     data.commercial_modes.push_back(commercial_mode);
     commercial_mode_map[commercial_mode->id] = commercial_mode;
 
-    commercial_mode = new navimake::types::CommercialMode();
+    commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "2";
     commercial_mode->name = "Rail";
     commercial_mode->uri = "0x2";
     data.commercial_modes.push_back(commercial_mode);
     commercial_mode_map[commercial_mode->id] = commercial_mode;
 
-    commercial_mode = new navimake::types::CommercialMode();
+    commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "3";
     commercial_mode->name = "Bus";
     commercial_mode->uri = "0x3";
     data.commercial_modes.push_back(commercial_mode);
     commercial_mode_map[commercial_mode->id] = commercial_mode;
 
-    commercial_mode = new navimake::types::CommercialMode();
+    commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "4";
     commercial_mode->name = "Ferry";
     commercial_mode->uri = "0x4";
     data.commercial_modes.push_back(commercial_mode);
     commercial_mode_map[commercial_mode->id] = commercial_mode;
 
-    commercial_mode = new navimake::types::CommercialMode();
+    commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "5";
     commercial_mode->name = "Cable car";
     commercial_mode->uri = "0x5";
     data.commercial_modes.push_back(commercial_mode);
     commercial_mode_map[commercial_mode->id] = commercial_mode;
 
-    commercial_mode = new navimake::types::CommercialMode();
+    commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "6";
     commercial_mode->name = "Gondola";
     commercial_mode->uri = "0x6";
     data.commercial_modes.push_back(commercial_mode);
     commercial_mode_map[commercial_mode->id] = commercial_mode;
 
-    commercial_mode = new navimake::types::CommercialMode();
+    commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "7";
     commercial_mode->name = "Funicular";
     commercial_mode->uri = "0x7";
     data.commercial_modes.push_back(commercial_mode);
     commercial_mode_map[commercial_mode->id] = commercial_mode;
 
-    for(navimake::types::CommercialMode *mt : data.commercial_modes) {
-        navimake::types::PhysicalMode* mode = new navimake::types::PhysicalMode();
+    for(ed::types::CommercialMode *mt : data.commercial_modes) {
+        ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
         mode->id = mt->id;
         mode->name = mt->name;
         mode->uri = mt->uri;
@@ -412,9 +412,9 @@ void GtfsParser::parse_transfers(Data & data, CsvReader & csv) {
         auto row = csv.next();
         if(row.empty())
             continue;
-        typedef std::unordered_map<std::string, navimake::types::StopPoint*>::iterator sp_iterator;
+        typedef std::unordered_map<std::string, ed::types::StopPoint*>::iterator sp_iterator;
         vector_sp departures, arrivals;
-        std::unordered_map<std::string, navimake::types::StopPoint*>::iterator it;
+        std::unordered_map<std::string, ed::types::StopPoint*>::iterator it;
         it = this->stop_map.find(row[from_c]);
         if(it == this->stop_map.end()){
             std::unordered_map<std::string, vector_sp>::iterator it_sa = this->sa_spmap.find(row[from_c]);

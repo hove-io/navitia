@@ -6,7 +6,7 @@
 #include <boost/geometry.hpp>
 
 namespace nt = navitia::type;
-namespace navimake{
+namespace ed{
 
 void Data::sort(){
 #define SORT_AND_INDEX(type_name, collection_name) std::sort(collection_name.begin(), collection_name.end(), Less());\
@@ -20,15 +20,15 @@ void Data::sort(){
 }
 
 void Data::normalize_uri(){
-    ::navimake::normalize_uri(networks);
-    ::navimake::normalize_uri(companies);
-    ::navimake::normalize_uri(commercial_modes);
-    ::navimake::normalize_uri(lines);
-    ::navimake::normalize_uri(physical_modes);
-    ::navimake::normalize_uri(stop_areas);
-    ::navimake::normalize_uri(stop_points);
-    ::navimake::normalize_uri(vehicle_journeys);
-    ::navimake::normalize_uri(validity_patterns);
+    ::ed::normalize_uri(networks);
+    ::ed::normalize_uri(companies);
+    ::ed::normalize_uri(commercial_modes);
+    ::ed::normalize_uri(lines);
+    ::ed::normalize_uri(physical_modes);
+    ::ed::normalize_uri(stop_areas);
+    ::ed::normalize_uri(stop_points);
+    ::ed::normalize_uri(vehicle_journeys);
+    ::ed::normalize_uri(validity_patterns);
 }
 
 void Data::complete(){
@@ -36,8 +36,8 @@ void Data::complete(){
     build_journey_pattern_points();
     build_journey_pattern_point_connections();
     //on construit les codes externe des journey pattern
-    ::navimake::normalize_uri(journey_patterns);
-    ::navimake::normalize_uri(routes);
+    ::ed::normalize_uri(journey_patterns);
+    ::ed::normalize_uri(routes);
 
     //Ajoute les connections entre les stop points d'un meme stop area
 
@@ -118,7 +118,7 @@ void Data::clean(){
 
     std::set<std::string> toErase;
 
-    typedef std::vector<navimake::types::VehicleJourney *> vjs;
+    typedef std::vector<ed::types::VehicleJourney *> vjs;
     std::unordered_map<std::string, vjs> journey_pattern_vj;
     for(auto it = vehicle_journeys.begin(); it != vehicle_journeys.end(); ++it) {
         journey_pattern_vj[(*it)->journey_pattern->uri].push_back((*it));
@@ -142,7 +142,7 @@ void Data::clean(){
             for(auto vj2 = (vj1+1); vj2 != it1->second.end(); ++vj2) {
                 if(((*vj1)->validity_pattern->days & (*vj2)->validity_pattern->days).any()  &&
                         (*vj1)->stop_time_list.size() > 0 && (*vj2)->stop_time_list.size() > 0) {
-                    navimake::types::VehicleJourney *vjs1, *vjs2;
+                    ed::types::VehicleJourney *vjs1, *vjs2;
                     if((*vj1)->stop_time_list.front()->departure_time <= (*vj2)->stop_time_list.front()->departure_time) {
                         vjs1 = *vj1;
                         vjs2 = *vj2;
@@ -223,7 +223,7 @@ void Data::clean(){
     LOG4CPLUS_INFO(logger, "J'ai supprimé " + boost::lexical_cast<std::string>(num_elements-stop_point_connections.size()) + " doublons dans les connections");
 }
 
-// Functor qui sert à transformer un objet navimake en objet navitia
+// Functor qui sert à transformer un objet ed en objet navitia
 // Il appelle la methode get_navitia_type
 struct Transformer {
     template<class T> auto operator()(T * object) -> decltype(object->get_navitia_type()){
@@ -384,7 +384,7 @@ void Data::build_journey_patterns(){
 void Data::build_journey_pattern_points(){
     auto logger = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_TRACE(logger, "Construction des journey_pattern points");
-    std::map<std::string, navimake::types::JourneyPatternPoint*> journey_pattern_point_map;
+    std::map<std::string, ed::types::JourneyPatternPoint*> journey_pattern_point_map;
 
     int stop_seq;
     for(types::VehicleJourney * vj : this->vehicle_journeys){

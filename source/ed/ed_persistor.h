@@ -4,7 +4,7 @@
 #include "data.h"
 #include "type/meta_data.h"
 
-namespace navimake{
+namespace ed{
 
 struct EdPersistor{
 
@@ -12,7 +12,7 @@ struct EdPersistor{
 
     EdPersistor(const std::string& connection_string) : lotus(connection_string){}
 
-    void persist(const navimake::Data& data, const navitia::type::MetaData& meta);
+    void persist(const ed::Data& data, const navitia::type::MetaData& meta);
 
 private:
     void insert_metadata(const navitia::type::MetaData& meta);

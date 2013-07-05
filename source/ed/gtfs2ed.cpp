@@ -56,12 +56,12 @@ int main(int argc, char * argv[])
     pt::ptime start, end;
     int read, complete, clean, sort, save;
 
-    navimake::Data data;
+    ed::Data data;
 
 
     start = pt::microsec_clock::local_time();
 
-    navimake::connectors::GtfsParser connector(input);
+    ed::connectors::GtfsParser connector(input);
     connector.fill(data, date);
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
@@ -96,7 +96,7 @@ int main(int argc, char * argv[])
     std::cout << "journey_pattern point connections : " << data.journey_pattern_point_connections.size() << std::endl;
 
     start = pt::microsec_clock::local_time();
-    navimake::EdPersistor p(connection_string);
+    ed::EdPersistor p(connection_string);
     p.persist(data, meta);
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
 

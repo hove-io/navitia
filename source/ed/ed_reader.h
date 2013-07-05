@@ -5,7 +5,7 @@
 #include "utils/exception.h"
 #include <unordered_map>
 
-namespace navimake{
+namespace ed{
 
 struct EdReader{
 

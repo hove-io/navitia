@@ -1,9 +1,9 @@
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE test_navimake
+#define BOOST_TEST_MODULE test_ed
 #include <boost/test/unit_test.hpp>
 #include "time_tables/thermometer.h"
 
-#include "naviMake/build_helper.h"
+#include "ed/build_helper.h"
 
 #include <time.h>
 #include <cstdlib>

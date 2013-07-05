@@ -10,7 +10,7 @@
 namespace nt = navitia::type;
 using nt::idx_t;
 
-namespace navimake{ namespace types{
+namespace ed{ namespace types{
 
 // On importe quelques éléments de Navitia::type pour éviter les redondances
 using nt::Nameable;
@@ -272,4 +272,4 @@ struct StopTime : public Nameable {
     bool operator<(const StopTime& other) const;
 };
 
-}}//end namespace navimake::types
+}}//end namespace ed::types

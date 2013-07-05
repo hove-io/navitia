@@ -4,14 +4,14 @@
 
 #include <unordered_map>
 
-namespace navimake{ namespace connectors{
+namespace ed{ namespace connectors{
 
 namespace nt = navitia::type;
 namespace ns = navitia::georef;
 
 BDTopoParser::BDTopoParser(const std::string& path): path(path){}
 
-void BDTopoParser::load_city(navimake::Data& data){
+void BDTopoParser::load_city(ed::Data& data){
     
     CsvReader reader(path + "/commune.txt", true);
     
@@ -25,7 +25,7 @@ void BDTopoParser::load_city(navimake::Data& data){
     for(row = reader.next(); !reader.eof() ;row = reader.next()){
         if(row.size() < 2)
             continue;
-        navimake::types::City* city = new navimake::types::City();
+        ed::types::City* city = new ed::types::City();
         if(insee != -1)
             city->uri = row[insee];
         if(name != -1)

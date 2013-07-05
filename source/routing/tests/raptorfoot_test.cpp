@@ -1,11 +1,11 @@
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE test_navimake
+#define BOOST_TEST_MODULE test_ed
 #include <boost/test/unit_test.hpp>
 
 #include "routing/raptor.h"
 #include "street_network/types.h"
-#include "naviMake/build_helper.h"
+#include "ed/build_helper.h"
 
 
 using namespace navitia;
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(marche_depart) {
 
 
 
-    navimake::builder b("20120614");
+    ed::builder b("20120614");
     b.sa("B", B);
     b.sa("C", C);
     b.sa("Z", Z);
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(marche_milieu) {
     bsn("A", A)("B", B)("C", C)("Z", Z);
     bsn("A", "A")("C", "C")("B", "B")("Z", "Z");
 
-    navimake::builder b("20120614");
+    ed::builder b("20120614");
     b.sa("A", A);
     b.sa("B", B);
     b.sa("C", C);
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(marche_fin) {
     bsn("B", "Z")("A", "A")("B", "B")("Z", "Z");
 
 
-    navimake::builder b("20120614");
+    ed::builder b("20120614");
     b.sa("A", A);
     b.sa("B", B);
     b.sa("Z", Z);
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(marche_depart_milieu) {
     bsn("A", "B")("B","A")("A", "E")("E", "A")("C","C")("D","D")("Z","Z");
 
 
-    navimake::builder b("20120614");
+    ed::builder b("20120614");
     b.sa("B", B);
     b.sa("C", C);
     b.sa("D", D);
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(marche_depart_fin) {
     bsn("A", A)("B", B)("C", C)("Z", Z);
     bsn("A", "B")("B", "A")("C", "Z")("Z", "C")("Z", "Z");
 
-    navimake::builder b("20120614");
+    ed::builder b("20120614");
     b.sa("A", A);
     b.sa("B", B);
     b.sa("C", C);
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_CASE(marche_depart_milieu_fin) {
     bsn("A", A)("B", B)("C", C)("D", D)("E", E)("Z", Z);
     bsn("A", "B", 5*(5/60))("C", "D", 5*(5/60))("E", "Z", 5*(5/60));
 
-    navimake::builder b("20120614");
+    ed::builder b("20120614");
     b.sa("A", A);
     b.sa("B", B);
     b.sa("C", C);

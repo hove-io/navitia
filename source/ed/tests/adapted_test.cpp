@@ -1,23 +1,23 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_adapted
-#include "naviMake/data.h"
+#include "ed/data.h"
 #include <boost/test/unit_test.hpp>
 #include <string>
 #include "config.h"
-#include "naviMake/build_helper.h"
-#include "naviMake/adapted.h"
-#include "naviMake/types.h"
+#include "ed/build_helper.h"
+#include "ed/adapted.h"
+#include "ed/types.h"
 #include "boost/date_time/gregorian_calendar.hpp"
 
 namespace pt = boost::posix_time;
 
-using namespace navimake;
-using namespace navimake::types;
+using namespace ed;
+using namespace ed::types;
 
 namespace nt = navitia::type;
 namespace bg = boost::gregorian;
 namespace bt = boost::date_time;
-namespace navimake{ namespace types{
+namespace ed{ namespace types{
 
     std::ostream& operator<<(std::ostream& cout, const ValidityPattern& vp){
         cout << "[" << vp.beginning_date << " / " << vp.days << "]";
@@ -41,7 +41,7 @@ namespace navimake{ namespace types{
 
 //le message s'applique sur le vj1 le vendredi 01 mars
 BOOST_AUTO_TEST_CASE(impact_vj_0){
-    navimake::builder b("20130301T1739");
+    ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
     VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", 8000,8050)("stop2", 8200,8250).vj;
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_0){
 
 //le message s'applique sur le vj1 le vendredi 01 mars, samedi 02 mars et le dimanche 03 mars.
 BOOST_AUTO_TEST_CASE(impact_vj_1){
-    navimake::builder b("20130301T1739");
+    ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
     VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", 8000,8050)("stop2", 8200,8250).vj;
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_1){
 //le message s'applique sur le vj1 le samedi 02 mars et le dimanche 03 mars. (pas le vendredi 01 car heures non valides)
 //il ne s'applique pas sur le vj2 car heures non valides
 BOOST_AUTO_TEST_CASE(impact_vj_2){
-    navimake::builder b("20130301T1739");
+    ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
     VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj;
@@ -448,7 +448,7 @@ BOOST_AUTO_TEST_CASE(impact_vj_2){
 //vj1 et vj2 ne circule pas le 01, 02 et 03 mars
 //vj3 pas impactée
 BOOST_AUTO_TEST_CASE(impact_line_0){
-    navimake::builder b("201303011T1739");
+    ed::builder b("201303011T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
 
@@ -629,7 +629,7 @@ BOOST_AUTO_TEST_CASE(impact_line_0){
 //vj1 et vj2 concerné par le message
 //vj1 impacté le vendredi 01
 BOOST_AUTO_TEST_CASE(impact_line_1){
-    navimake::builder b("201303011T1739");
+    ed::builder b("201303011T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
 
@@ -791,7 +791,7 @@ BOOST_AUTO_TEST_CASE(impact_line_1){
 }
 
 BOOST_AUTO_TEST_CASE(impact_network_0){
-    navimake::builder b("201303011T1739");
+    ed::builder b("201303011T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
     VehicleJourney* vj = b.vj("A", "A", "1111111", "", true, "vj1")("stop1", "8:50","9:00")("stop2", "11:00", "11:02").vj;
@@ -973,7 +973,7 @@ BOOST_AUTO_TEST_CASE(impact_network_0){
 }
 
 BOOST_AUTO_TEST_CASE(impact_network_1){
-    navimake::builder b("201303011T1739");
+    ed::builder b("201303011T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
 
@@ -1156,7 +1156,7 @@ BOOST_AUTO_TEST_CASE(impact_network_1){
 }
 
 BOOST_AUTO_TEST_CASE(impact_network_2){
-    navimake::builder b("20130301T1739");
+    ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
 
@@ -1350,7 +1350,7 @@ BOOST_AUTO_TEST_CASE(impact_network_2){
 }
 
 BOOST_AUTO_TEST_CASE(impact_network_3){
-    navimake::builder b("20130301T1739");
+    ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
 
@@ -1544,7 +1544,7 @@ BOOST_AUTO_TEST_CASE(impact_network_3){
 }
 
 BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
-    navimake::builder b("20130301T1739");
+    ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
     VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", -1,8050)("stop2", 8200)("stop3", 8200,8250).vj;
@@ -1667,7 +1667,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
 
 //test : message supprimant le vj donc il n'est pas dupliqué
 BOOST_AUTO_TEST_CASE(impact_stoppoint_1){
-    navimake::builder b("20130301T1739");
+    ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
     VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", 8000,8050)("stop2", 8200,8250).vj;
@@ -1767,7 +1767,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_1){
 
 //test 2 messages <> sur un meme vehiclejourney
 BOOST_AUTO_TEST_CASE(impact_stoppoint_2){
-    navimake::builder b("20130301T1739");
+    ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
     VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", 8000,8050)("stop2", 8200, 8250).vj;
@@ -1902,7 +1902,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_2){
 }
 
 BOOST_AUTO_TEST_CASE(impact_stoppoint_passe_minuit){
-    navimake::builder b("20130301T1739");
+    ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
     VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", "23:30", "23:40")("stop2", "25:00", "25:00")("stop3", "26:00", "26:10").vj;
@@ -2017,7 +2017,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_passe_minuit){
 
 //test 2 messages <> sur un meme vehiclejourney, avec des dates d'application qui se chevauche mais qui ne sont pas égales
 BOOST_AUTO_TEST_CASE(impact_stoppoint_3){
-    navimake::builder b("20130301T1739");
+    ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130308T1739");
     b.generate_dummy_basis();
     VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", 8000,8050)("stop2", 8200,8250).vj;
@@ -2203,7 +2203,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_3){
 }
 
 BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
-    navimake::builder b("20130301T1739");
+    ed::builder b("20130301T1739");
     bg::date end_date = bg::date_from_iso_string("20130312T1739");
     b.generate_dummy_basis();
     VehicleJourney* vj = b.vj("A", "", "", true, "vj1")("stop1", 8000,8050)("stop2", 8200,8250).vj;

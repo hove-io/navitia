@@ -3,7 +3,7 @@
 #include <string>
 #include "data.h"
 
-namespace navimake{ namespace connectors{
+namespace ed{ namespace connectors{
 
 using navitia::type::idx_t;
 
@@ -13,10 +13,10 @@ class BDTopoParser {
         BDTopoParser(const std::string & path);
         
         /**
-         * Charge les Cities dans un objet Data de Navimake
+         * Charge les Cities dans un objet Data de ed
          * 
          */
-        void load_city(navimake::Data& data);
+        void load_city(ed::Data& data);
 
         
         /**
@@ -31,6 +31,6 @@ class BDTopoParser {
 };
 
 
-}}// navimake::connectors
+}}// ed::connectors
 
 

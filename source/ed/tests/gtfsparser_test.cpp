@@ -1,22 +1,22 @@
-#include "naviMake/data.h"
-#include "naviMake/gtfs_parser.h"
+#include "ed/data.h"
+#include "ed/gtfs_parser.h"
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE test_navimake
+#define BOOST_TEST_MODULE test_ed
 #include <boost/test/unit_test.hpp>
 #include <string>
 #include "config.h"
-#include "naviMake/build_helper.h"
+#include "ed/build_helper.h"
 #include "utils/csv.h"
 
-const std::string gtfs_path = "/navimake/gtfs";
+const std::string gtfs_path = "/ed/gtfs";
 
 BOOST_AUTO_TEST_CASE(required_files) {
     std::vector<std::string> files = {"agency", "routes", "stop_times", "trips"};
     for(auto file : files)
     {
-        navimake::Data data;
-        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) +  gtfs_path + "_sans_"+file);
-        BOOST_REQUIRE_THROW(parser.fill(data, "20130305"), navimake::connectors::FileNotFoundException);
+        ed::Data data;
+        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) +  gtfs_path + "_sans_"+file);
+        BOOST_REQUIRE_THROW(parser.fill(data, "20130305"), ed::connectors::FileNotFoundException);
     }
 }
 
@@ -30,17 +30,17 @@ BOOST_AUTO_TEST_CASE(parse_agencies) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
         sstream << "\n";
-        navimake::Data data;
-        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::Data data;
+        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
         CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_THROW(parser.parse_agency(data, csv), navimake::connectors::InvalidHeaders);
+        BOOST_REQUIRE_THROW(parser.parse_agency(data, csv), ed::connectors::InvalidHeaders);
     }
 
     {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join(fields, ",");
-        navimake::Data data;
-        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::Data data;
+        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
         CsvReader csv(sstream, ',' , true);
         BOOST_REQUIRE_NO_THROW(parser.parse_agency(data, csv));
     }
@@ -51,8 +51,8 @@ BOOST_AUTO_TEST_CASE(parse_agencies) {
         sstream << boost::algorithm::join(fields, ",") << "\n";
         sstream << "ratp, RATP,,,,,\n";
         sstream << ", ACME,,,,,";
-        navimake::Data data;
-        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::Data data;
+        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
         CsvReader csv(sstream, ',' , true); 
     }
 }
@@ -68,17 +68,17 @@ BOOST_AUTO_TEST_CASE(parse_stops) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
         sstream << "\n";
-        navimake::Data data;
-        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::Data data;
+        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
         CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_THROW(parser.parse_stops(data, csv), navimake::connectors::InvalidHeaders);
+        BOOST_REQUIRE_THROW(parser.parse_stops(data, csv), ed::connectors::InvalidHeaders);
     }
 
     {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join(fields, ",");
-        navimake::Data data;
-        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::Data data;
+        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
         CsvReader csv(sstream, ',' , true);
         BOOST_REQUIRE_NO_THROW(parser.parse_stops(data, csv));
     }
@@ -87,8 +87,8 @@ BOOST_AUTO_TEST_CASE(parse_stops) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join(required_fields, ",") << "\n";
         sstream << "\"a\", \"A\",\"bad_lon\",\"bad_lat\"";
-        navimake::Data data;
-        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::Data data;
+        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
         CsvReader csv(sstream, ',' , true);
         BOOST_REQUIRE_NO_THROW(parser.parse_stops(data, csv));
     }
@@ -105,17 +105,17 @@ BOOST_AUTO_TEST_CASE(parse_transfers) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
         sstream << "\n";
-        navimake::Data data;
-        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::Data data;
+        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
         CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_THROW(parser.parse_transfers(data, csv), navimake::connectors::InvalidHeaders);
+        BOOST_REQUIRE_THROW(parser.parse_transfers(data, csv), ed::connectors::InvalidHeaders);
     }
 
     {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join(fields, ",");
-        navimake::Data data;
-        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::Data data;
+        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
         CsvReader csv(sstream, ',' , true);
         BOOST_REQUIRE_NO_THROW(parser.parse_transfers(data, csv));
     }
@@ -134,17 +134,17 @@ BOOST_AUTO_TEST_CASE(parse_lines) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
         sstream << "\n";
-        navimake::Data data;
-        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::Data data;
+        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
         CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_THROW(parser.parse_lines(data, csv), navimake::connectors::InvalidHeaders);
+        BOOST_REQUIRE_THROW(parser.parse_lines(data, csv), ed::connectors::InvalidHeaders);
     }
 
     {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join(fields, ",");
-        navimake::Data data;
-        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::Data data;
+        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
         CsvReader csv(sstream, ',' , true);
         BOOST_REQUIRE_NO_THROW(parser.parse_lines(data, csv));
     }
@@ -162,25 +162,25 @@ BOOST_AUTO_TEST_CASE(parse_trips) {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join_if(fields, "," ,[&](std::string s1) {return s1 == required_field;});
         sstream << "\n";
-        navimake::Data data;
-        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::Data data;
+        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
         CsvReader csv(sstream, ',' , true);
-        BOOST_REQUIRE_THROW(parser.parse_trips(data, csv), navimake::connectors::InvalidHeaders);
+        BOOST_REQUIRE_THROW(parser.parse_trips(data, csv), ed::connectors::InvalidHeaders);
     }
 
     {
         std::stringstream sstream(std::stringstream::in | std::stringstream::out);
         sstream << boost::algorithm::join(fields, ",");
-        navimake::Data data;
-        navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+        ed::Data data;
+        ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
         CsvReader csv(sstream, ',' , true);
         BOOST_REQUIRE_NO_THROW(parser.parse_trips(data, csv));
     }
 }
 
 BOOST_AUTO_TEST_CASE(parse_gtfs){
-    navimake::Data data;
-    navimake::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
+    ed::Data data;
+    ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
     parser.fill(data);
     data.complete();
     //data.clean();

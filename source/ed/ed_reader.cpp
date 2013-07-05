@@ -1,6 +1,6 @@
 #include "ed_reader.h"
 
-namespace navimake{
+namespace ed{
 
 namespace bg = boost::gregorian;
 namespace nt = navitia::type;

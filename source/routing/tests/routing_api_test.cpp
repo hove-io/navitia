@@ -1,8 +1,8 @@
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE test_navimake
+#define BOOST_TEST_MODULE test_ed
 #include <boost/test/unit_test.hpp>
 #include "routing/raptor_api.h"
-#include "naviMake/build_helper.h"
+#include "ed/build_helper.h"
 
 
 using namespace navitia;
@@ -11,7 +11,7 @@ using namespace boost::posix_time;
 
 BOOST_AUTO_TEST_CASE(simple_journey){
     std::vector<std::string> forbidden;
-    navimake::builder b("20120614");
+    ed::builder b("20120614");
     b.vj("A")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
     type::Data data;
     b.generate_dummy_basis();
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(simple_journey){
 
 BOOST_AUTO_TEST_CASE(journey_array){
     std::vector<std::string> forbidden;
-    navimake::builder b("20120614");
+    ed::builder b("20120614");
     b.vj("A")("stop_area:stop1", 8*3600 +10*60, 8*3600 + 11 * 60)("stop_area:stop2", 8*3600 + 20 * 60 ,8*3600 + 21*60);
     b.vj("A")("stop_area:stop1", 9*3600 +10*60, 9*3600 + 11 * 60)("stop_area:stop2",  9*3600 + 20 * 60 ,9*3600 + 21*60);
     type::Data data;
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     int EE = 9;
     int RR = 10;
     int SS = 11;
-    navimake::builder b("20120614");
+    ed::builder b("20120614");
 
     type::GeographicalCoord A(12, 8, false);
     boost::add_vertex(ng::Vertex(A),b.data.geo_ref.graph);

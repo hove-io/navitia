@@ -1,6 +1,6 @@
-#include "naviMake/osm2nav.h"
+#include "ed/osm2nav.h"
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE test_navimake
+#define BOOST_TEST_MODULE test_ed
 #include <boost/test/unit_test.hpp>
 
 using namespace navitia::georef;
