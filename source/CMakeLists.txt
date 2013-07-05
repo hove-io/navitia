@@ -1,4 +1,4 @@
-project(NAViTiACpp)
+project(Kraken)
 cmake_minimum_required(VERSION 2.6)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
 
@@ -52,9 +52,9 @@ CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
 FIND_PACKAGE(Boost 1.40.0 REQUIRED)
 
 
-SET(NAVITIA_VERSION_MAJOR 0)
-SET(NAVITIA_VERSION_MINOR 60)
-SET(NAVITIA_VERSION_PATCH 0)
+SET(KRAKEN_VERSION_MAJOR 0)
+SET(KRAKEN_VERSION_MINOR 60)
+SET(KRAKEN_VERSION_PATCH 0)
 
 #ajout a l'include path le repertoirre de compilation, pour géré le config.h
 include_directories (${CMAKE_CURRENT_BINARY_DIR}
@@ -73,7 +73,7 @@ add_subdirectory(autocomplete)
 add_subdirectory(naviMake)
 add_subdirectory(visu)
 add_subdirectory(proximity_list)
-add_subdirectory(navitia)
+add_subdirectory(kraken)
 add_subdirectory(vptranslator)
 add_subdirectory(utils)
 add_subdirectory(lz4_filter)
@@ -96,16 +96,16 @@ execute_process(COMMAND lsb_release -a
 
 #on génére le fichier config.h
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
-SET(CPACK_PACKAGE_VERSION_MAJOR ${NAVITIA_VERSION_MAJOR})
-SET(CPACK_PACKAGE_VERSION_MINOR ${NAVITIA_VERSION_MINOR})
-SET(CPACK_PACKAGE_VERSION_PATCH ${NAVITIA_VERSION_PATCH})
+SET(CPACK_PACKAGE_VERSION_MAJOR ${KRAKEN_VERSION_MAJOR})
+SET(CPACK_PACKAGE_VERSION_MINOR ${KRAKEN_VERSION_MINOR})
+SET(CPACK_PACKAGE_VERSION_PATCH ${KRAKEN_VERSION_PATCH})
 SET(CPACK_GENERATOR DEB)
 
 set(CPACK_PACKAGING_INSTALL_PREFIX "/")
 SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Tristram Gräbener<tristram.grabener@canaltp.fr>")
 SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
-SET(CPACK_DEBIAN_PACKAGE_NAME "navitia")
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Navitia navimake Jörmungandr")
+SET(CPACK_DEBIAN_PACKAGE_NAME "kraken")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Kraken navimake Jörmungandr")
 
 IF(${lsb_release} STREQUAL "precise")
     SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.48.0, libboost-serialization1.48.0, libboost-regex1.48.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.48.0, libboost-program-options1.48.0, libboost-filesystem1.48.0, gunicorn, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf")
