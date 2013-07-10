@@ -556,6 +556,23 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const p
     return nearest_edge(coordinates, u);
 }
 
+GeoRef::~GeoRef() {
+    for(POIType* poi_type : poitypes) {
+        delete poi_type;
+    }
+    for(POI* poi: pois) {
+        delete poi;
+    }
+    for(Way* way: ways) {
+        delete way;
+    }
+    for(Admin* admin: admins) {
+        delete admin;
+    }
+
+}
+
+
 std::vector<type::idx_t> POI::get(type::Type_e type, const GeoRef &) const {
     switch(type) {
     case type::Type_e::POIType : return {poitype_idx}; break;

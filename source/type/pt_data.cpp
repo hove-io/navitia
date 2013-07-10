@@ -98,4 +98,16 @@ void PT_Data::index(){
 #define INDEX(type_name, collection_name) std::for_each(collection_name.begin(), collection_name.end(), Indexer());
     ITERATE_NAVITIA_PT_TYPES(INDEX)
 }
+
+PT_Data::~PT_Data() {
+    auto func_delete = 
+#define DELETE_PTDATA(type_name, collection_name) \
+        std::for_each(collection_name.begin(), collection_name.end(),\
+                [](type_name* obj){delete obj;});
+    ITERATE_NAVITIA_PT_TYPES(DELETE_PTDATA)
+
+    for(StopTime* st : stop_times) {
+        delete st;
+    }
+}
 }}

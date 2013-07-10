@@ -8,8 +8,9 @@ from datetime import datetime
 from pyed.launch_exec import launch_exec
 from pyed.config import ConfigException
 import logging
+from pyed.daemon import Daemon
 
-class Watching():
+class Watching(Daemon):
     """ when launch with run(), it looks in the source directory if there are
         any new file (osm or gtfs) to compute.
         If there was any file it will launch ed2nav after 
@@ -17,6 +18,7 @@ class Watching():
 
     def __init__(self, conf):
         """ Init watching according to conf """
+        super(Watching, self).__init__(conf.get("instance", "pid_file"))
         self.directory = conf.get("instance", "source_directory")
         self.conf = conf
         self.pyed_logger = logging.getLogger('pyed')

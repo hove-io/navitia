@@ -130,7 +130,6 @@ public:
 
     Data& operator=(Data&& other);
 
-
 private:
     /** Charge les données binaires compressées en LZ4
       *

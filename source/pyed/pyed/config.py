@@ -53,7 +53,8 @@ class Config:
         self.filename = filename
         self.dico_config = {"instance" : {
                                 "name" : None,
-                                "source_directory" : None
+                                "source_directory" : None,
+                                "pid_file" : None,
                             }, 
                             "database" : {
                                 "name" : None,
@@ -77,31 +78,35 @@ class Config:
         """ Read and parse the configuration, according to dico_config """
         conf = ConfigParser()
         conf.read(self.filename)
+        self.is_valid_ = True
         try:
             for section, options in self.dico_config.iteritems():
                 for option_name in options.keys():
                     self.dico_config[section][option_name] = conf.get(section,
                                                                 option_name)
-        except NoOptionError, exception : 
+        except NoOptionError, exception:
             self.logger.error(exception.message)
             self.is_valid_ = False
         except NoSectionError, exception:
             self.logger.error(exception.message)
             self.is_valid_ = False
-        finally:
-            self.is_valid_ = True
 
 
     def get(self, section, param_name):
         """ Retrieve the fields idenfied by it section and param_name.
             raise an error if it doesn't exists
         """
+        error = None
         if not section in self.dico_config:
-            self.logger.error("Section : " + section + " isn't in the conf")
-            raise ConfigException("Section : " + section + " isn't in the conf")
+            error = "Section : " + section + " isn't in the conf"
         elif not param_name in self.dico_config[section]:
-            self.logger.error("Param : " + section + " isn't in the conf")
-            raise ConfigException("Param : " + section + " isn't in the conf")
+            error = "Param : " + param_name + " isn't in the conf"
+        elif not self.dico_config[section][param_name]:
+            error = "Section : "+ section + " Param : "
+            error += param_name + " wasn't specified"
+        if error:
+            self.logger.error(error)
+            raise ConfigException(error)
         return self.dico_config[section][param_name]
 
     def is_valid(self):

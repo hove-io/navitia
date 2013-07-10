@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """main file
 
 read the configuration
@@ -7,50 +8,56 @@ run the watching
 
 from pyed.config import Config
 from pyed.watching import Watching
+from pyed.loggers import init_loggers
+
+import sys
 import logging
+import argparse
+
+def main(config_filename, status):
+    config = Config(config_filename)
+    if not config.is_valid():
+        logging.basicConfig(filename='/var/log/pyed.log',level=logging.ERROR)
+        logging.error("Configuration non valide")
+        SystemExit(2)
+
+    init_loggers(config)
+    pyed_logger = logging.getLogger('pyed')
+    pyed_logger.info(" Initialization of watching ...")
+    watching = Watching(config)
+    pyed_logger.info(" watching initialized")
+
+    if status == 'start':
+        pyed_logger.info(" Launching watching daemon")
+        watching.start()
+        pyed_logger.info(" watching daemon launched")
+    elif status == 'stop':
+        pyed_logger.info(" Stopping pyed daemon")
+        watching.stop()
+        pyed_logger.info(" Pyed daemon stopped")
+    elif status == 'restart':
+        pyed_logger.info(" Restarting pyed daemon")
+        pyed_logger.info(" Stopping pyed daemon")
+        watching.stop()
+        pyed_logger.info(" Pyed daemon stopped")
+        pyed_logger.info(" Start pyed daemon")
+        watching.start()
+        pyed_logger.info(" Pyed daemon started")
 
 if __name__ == '__main__':
-    CONFIG = Config("/home/vlara/workspace/pyed/pyed.ini")
-    if not CONFIG.is_valid():
-        print "Configuration non valide"
-        SystemExit(1)
+    PARSER = argparse.ArgumentParser(description="Launcher of pyed")
+    PARSER.add_argument('status',  choices=['start', 'stop', 'restart'])
+    PARSER.add_argument('--config_file', type=str)
+    CONFIG_FILENAME = ""
+    STATUS = ""
+    try:
+        ARGS = PARSER.parse_args()
+        CONFIG_FILENAME = ARGS.config_file
+        STATUS = ARGS.status
+    except argparse.ArgumentTypeError:
+        logging.basicConfig(filename='/var/log/pyed.log',level=logging.ERROR)
+        logging.error("Bad usage, learn how to use me with pyed.py -h")
+        sys.exit(1)
 
-    FORMATTER = logging.Formatter('%(asctime)s -  %(levelname)s - %(message)s')
+    main(CONFIG_FILENAME, STATUS)
 
-    ROOT_HANDLER = logging.FileHandler(CONFIG.get("logs_files", "pyed"))
-    ROOT_HANDLER.setFormatter(FORMATTER)
-    ROOT_LOGGER = logging.getLogger('root')
-    ROOT_LOGGER.setLevel(logging.INFO)
-    ROOT_LOGGER.addHandler(ROOT_HANDLER)
-
-    PYED_HANDLER = logging.FileHandler(CONFIG.get("logs_files", "pyed"))
-    PYED_HANDLER.setFormatter(FORMATTER)
-    PYED_LOGGER = logging.getLogger('pyed')
-    PYED_LOGGER.setLevel(logging.INFO)
-    PYED_LOGGER.addHandler(PYED_HANDLER)
-
-    GTFS2ED_HANDLER = logging.FileHandler(CONFIG.get("logs_files", "gtfs2ed"))
-    GTFS2ED_HANDLER.setFormatter(FORMATTER)
-    GTFS2ED_LOGGER = logging.getLogger('gtfs2ed')
-    GTFS2ED_LOGGER.setLevel(logging.INFO)
-    GTFS2ED_LOGGER.addHandler(GTFS2ED_HANDLER)
-
-    OSM2ED_HANDLER = logging.FileHandler(CONFIG.get("logs_files", "osm2ed"))
-    OSM2ED_HANDLER.setFormatter(FORMATTER)
-    OSM2ED_LOGGER = logging.getLogger('osm2ed')
-    OSM2ED_LOGGER.setLevel(logging.INFO)
-    OSM2ED_LOGGER.addHandler(OSM2ED_HANDLER)
-
-
-    ED2NAV_HANDLER = logging.FileHandler(CONFIG.get("logs_files", "ed2nav"))
-    ED2NAV_HANDLER.setFormatter(FORMATTER)
-    ED2NAV_LOGGER = logging.getLogger('ed2nav')
-    ED2NAV_LOGGER.setLevel(logging.INFO)
-    ED2NAV_LOGGER.addHandler(ED2NAV_HANDLER)
-
-    PYED_LOGGER.info(" Initialization of watching ...") 
-    WATCHING = Watching(CONFIG)
-    PYED_LOGGER.info(" watching initialized") 
-    PYED_LOGGER.info(" Launching watching") 
-    WATCHING.run()
-    PYED_LOGGER.info(" watching launched") 

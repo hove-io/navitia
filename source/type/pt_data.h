@@ -82,6 +82,9 @@ struct PT_Data : boost::noncopyable{
 
     /** Définis les idx des différents objets */
     void index();
+
+    ~PT_Data();
+
 };
 
 }}

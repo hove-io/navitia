@@ -310,6 +310,8 @@ struct GeoRef {
     /// Reconstruit un itinéraire à partir de la destination et la liste des prédécesseurs
     Path build_path(vertex_t best_destination, std::vector<vertex_t> preds) const;
     void add_way(const Way& w);
+
+    ~GeoRef();
 };
 
 // Exception levée dès que l'on trouve une destination
