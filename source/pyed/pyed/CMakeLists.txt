@@ -1,0 +1,1 @@
+INSTALL_FILES(/usr/lib/python2.7/pyed/ FILES ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py  ${CMAKE_CURRENT_SOURCE_DIR}/binarisation.py ${CMAKE_CURRENT_SOURCE_DIR}/config.py ${CMAKE_CURRENT_SOURCE_DIR}/daemon.py ${CMAKE_CURRENT_SOURCE_DIR}/launch_exec.py ${CMAKE_CURRENT_SOURCE_DIR}/loggers.py ${CMAKE_CURRENT_SOURCE_DIR}/watching.py)
