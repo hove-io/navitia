@@ -121,21 +121,29 @@ pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & reques
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest & request, pbnavitia::API api) {
     boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
     this->init_worker_data();
-    switch(api){
-    case pbnavitia::NEXT_DEPARTURES:
-        return navitia::timetables::next_departures(request.departure_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(),/* request.wheelchair()*//*false*/type::AccessibiliteParams(), this->data);
-    case pbnavitia::NEXT_ARRIVALS:
-        return navitia::timetables::next_arrivals(request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), /*request.wheelchair()*//*false*/type::AccessibiliteParams(), this->data);
-    case pbnavitia::STOPS_SCHEDULES:
-        return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
-    case pbnavitia::DEPARTURE_BOARDS:
-        return navitia::timetables::departure_board(request.departure_filter(), request.from_datetime(), request.duration(), this->data);
-    case pbnavitia::ROUTE_SCHEDULES:
-        return navitia::timetables::route_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
-    default:
-        LOG4CPLUS_WARN(logger, "On a reçu une requête time table inconnue");
+    try {
+        switch(api){
+        case pbnavitia::NEXT_DEPARTURES:
+            return navitia::timetables::next_departures(request.departure_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(),type::AccessibiliteParams(), this->data);
+        case pbnavitia::NEXT_ARRIVALS:
+            return navitia::timetables::next_arrivals(request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), type::AccessibiliteParams(), this->data);
+        case pbnavitia::STOPS_SCHEDULES:
+            return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
+        case pbnavitia::DEPARTURE_BOARDS:
+            return navitia::timetables::departure_board(request.departure_filter(), request.from_datetime(), request.duration(), this->data);
+        case pbnavitia::ROUTE_SCHEDULES:
+            return navitia::timetables::route_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
+        default:
+            LOG4CPLUS_WARN(logger, "On a reçu une requête time table inconnue");
+            pbnavitia::Response response;
+            response.set_error("Unknown time table api");
+            return response;
+        }
+
+    } catch (navitia::ptref::parsing_error error) {   
+        LOG4CPLUS_ERROR(logger, "Error in the ptref request  : "+ error.more);
         pbnavitia::Response response;
-        response.set_error("Unknown time table api");
+        response.set_error("Unknow filter : " + error.more);
         return response;
     }
 }
@@ -240,16 +248,16 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     if ((destination.type == type::Type_e::Address) || (destination.type == type::Type_e::Coord)){
         destination.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params(), false);
     }
-    /// Accessibilité, il faut initialiser ce paramètre
+/// Accessibilité, il faut initialiser ce paramètre
     type::AccessibiliteParams accessibilite_params;
 
     if(api != pbnavitia::ISOCHRONE){
         return routing::make_response(*calculateur, origin, destination, datetimes,
-                                              request.clockwise(), request.streetnetwork_params().walking_speed(), request.streetnetwork_params().walking_distance(), /*request.wheelchair()*/accessibilite_params,
+                                              request.clockwise(), request.streetnetwork_params().walking_speed(), request.streetnetwork_params().walking_distance(), accessibilite_params,
                                               forbidden, *street_network_worker, request.max_duration(), request.max_transfers());
     } else {
         return navitia::routing::make_isochrone(*calculateur, origin, request.datetimes(0),
-                                                        request.clockwise(), request.streetnetwork_params().walking_speed(), request.streetnetwork_params().walking_distance(), /*request.wheelchair()*/accessibilite_params,
+                                                        request.clockwise(), request.streetnetwork_params().walking_speed(), request.streetnetwork_params().walking_distance(), accessibilite_params,
                                                 forbidden, *street_network_worker, request.max_duration(), request.max_transfers());
     }
 }
