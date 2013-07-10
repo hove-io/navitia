@@ -81,9 +81,11 @@ add_subdirectory(routing)
 add_subdirectory(georef)
 add_subdirectory(validator)
 add_subdirectory(time_tables)
-add_subdirectory(frontend)
+add_subdirectory(jormungandr)
 add_subdirectory(connectors)
 add_subdirectory(ratimake)
+add_subdirectory(pyed)
+
 
 add_subdirectory(scripts)
 
