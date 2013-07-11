@@ -60,7 +60,7 @@ std::vector<vector_string> make_matrice(const std::vector<std::vector<datetime_s
 
 
 pbnavitia::Response route_schedule(const std::string & filter, const std::string &str_dt, uint32_t duration, const uint32_t max_depth, type::Data &d) {
-    RequestHandle handler("ROUTE_SCHEDULE", "", str_dt, duration, d);
+    RequestHandle handler("ROUTE_SCHEDULE", filter, str_dt, duration, d);
 
     if(handler.pb_response.has_error()) {
         return handler.pb_response;
