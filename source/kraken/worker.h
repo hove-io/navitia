@@ -14,13 +14,13 @@ class Worker {
     private:
         std::unique_ptr<navitia::routing::RAPTOR> calculateur;
         std::unique_ptr<navitia::streetnetwork::StreetNetwork> street_network_worker;
-        navitia::type::Data & data;
+        navitia::type::Data** data;
 
         log4cplus::Logger logger;
         boost::posix_time::ptime last_load_at;
 
     public:
-        Worker(navitia::type::Data & data) : data(data), logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))){}
+        Worker(navitia::type::Data** data) : data(data), logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))){}
 
         pbnavitia::Response dispatch(const pbnavitia::Request & request);
 

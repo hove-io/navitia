@@ -20,32 +20,36 @@ void sighandler(int signal){
 }
 
 bool MaintenanceWorker::load_and_switch(){
-    type::Data tmp_data;
+    type::Data * tmp_data = new type::Data();
     Configuration * conf = Configuration::get();
     std::string database = conf->get_as<std::string>("GENERAL", "database", "IdF.nav");
     LOG4CPLUS_INFO(logger, "Chargement des données à partir du fichier " + database);
 
-    if(!tmp_data.load(database)) {
+    bool return_= false;
+    if(!tmp_data->load(database)) {
         LOG4CPLUS_ERROR(logger, "Erreur lors du chargement des données: " + database);
-        return false;
+        return_= false;
     } else {
-        tmp_data.loaded = true;
+        tmp_data->loaded = true;
         LOG4CPLUS_TRACE(logger, "déplacement de data");
-        boost::unique_lock<boost::shared_mutex> lock(data.load_mutex);
-        data = std::move(tmp_data);
+        boost::unique_lock<boost::shared_mutex> lock((*data)->load_mutex);
+        std::swap(*data, tmp_data);
         LOG4CPLUS_TRACE(logger, "Chargement des données terminé");
-        return true;
+        return_ = true;
     }
+    delete tmp_data;
+    return return_;
+
 }
 
 void MaintenanceWorker::load(){
-    if(data.to_load.load() || !data.loaded){
+    if((*data)->to_load.load() || !(*data)->loaded){
         load_and_switch();
-        data.to_load.store(false);
+        (*data)->to_load.store(false);
 
         LOG4CPLUS_INFO(logger, boost::format("Nb data stop times : %d stopTimes : %d nb foot path : %d Nombre de stop points : %d")
-                % data.pt_data.stop_times.size() % data.dataRaptor.arrival_times.size()
-                % data.dataRaptor.foot_path_forward.size() % data.pt_data.stop_points.size()
+                % (*data)->pt_data.stop_times.size() % (*data)->dataRaptor.arrival_times.size()
+                % (*data)->dataRaptor.foot_path_forward.size() % (*data)->pt_data.stop_points.size()
             );
     }
 }
@@ -60,9 +64,9 @@ void MaintenanceWorker::load_rt(){
             nt::MessageHolder holder;
             holder.load(database_rt);
 
-            boost::unique_lock<boost::shared_mutex> lock(data.load_mutex);
-            data.pt_data.message_holder = std::move(holder);
-
+            boost::unique_lock<boost::shared_mutex> lock((*data)->load_mutex);
+            //std::swap((*data)->pt_data.message_holder, holder);
+            (*data)->pt_data.message_holder = std::move(holder);
             LOG4CPLUS_TRACE(logger, "chargement des messages AT fini!");
             LOG4CPLUS_TRACE(logger, "Effacement des données non-utilisées");
         }
@@ -84,15 +88,14 @@ void MaintenanceWorker::operator()(){
 
 void MaintenanceWorker::sighandler(int signal){
     if(signal == SIGHUP){
-        data.to_load.store(true);
+        (*data)->to_load.store(true);
     }
 
 }
 
-MaintenanceWorker::MaintenanceWorker(navitia::type::Data & data) : data(data),
+MaintenanceWorker::MaintenanceWorker(type::Data** data) : data(data),
     logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))), next_rt_load(pt::microsec_clock::universal_time()){
     dirty_pointer = this;
-
     struct sigaction action;
     action.sa_handler = navitia::sighandler;
     action.sa_flags = 0;
