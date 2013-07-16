@@ -513,6 +513,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
         ar & name & uri & journey_pattern & company & physical_mode & validity_pattern & idx /*& wheelchair_boarding*/ & stop_time_list
             & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & odt_type;
     }
+    std::string get_direction() const;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
     bool operator<(const VehicleJourney& other) const {
@@ -524,9 +525,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
         }
     }
 };
-
-
-
 
 struct ValidityPattern : public Header {
     const static Type_e type = Type_e::ValidityPattern;
@@ -615,6 +613,7 @@ struct StopTime : public Nameable {
     static const uint8_t ODT = 2;
     static const uint8_t IS_FREQUENCY = 3;
     static const uint8_t WHEELCHAIR_BOARDING = 4;
+    static const uint8_t DATE_TIME_ESTIMATED = 5;
 
     uint32_t arrival_time; ///< En secondes depuis minuit
     uint32_t departure_time; ///< En secondes depuis minuit
@@ -633,11 +632,13 @@ struct StopTime : public Nameable {
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}
     bool is_frequency() const{return properties[IS_FREQUENCY];}
+    bool date_time_estimated() const{return properties[DATE_TIME_ESTIMATED];}
 
     inline void set_pick_up_allowed(bool value) {properties[PICK_UP] = value;}
     inline void set_drop_off_allowed(bool value) {properties[DROP_OFF] = value;}
     inline void set_odt(bool value) {properties[ODT] = value;}
     inline void set_is_frequency(bool value) {properties[IS_FREQUENCY] = value;}
+    inline void set_date_time_estimated(bool value) {properties[DATE_TIME_ESTIMATED] = value;}
 
     /// Est-ce qu'on peut finir par ce stop_time : dans le sens avant on veut descendre
     bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
