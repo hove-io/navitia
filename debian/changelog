@@ -1,3 +1,24 @@
+kraken (0.61) unstable; urgency=low
+
+  [ Vincent Lara ]
+  * On va essayer de faire quelque chose de plus propre
+  * Cmake : Ajout d'une section au cpack debian
+
+  [ vlara ]
+
+ -- vlara <vlara@vlara-OptiPlex-790>  Tue, 16 Jul 2013 17:00:38 +0200
+
+kraken (0.60.0-1ubuntu1) quantal; urgency=low
+
+  [ Vincent Lara ]
+  * Ajout d'un fichier d'instruction pour le build du package
+  * On va essayer de faire quelque chose de plus propre
+  * Cmake : Ajout d'une section au cpack debian
+
+  [ vlara ]
+
+ -- vlara <vlara@vlara-OptiPlex-790>  Tue, 16 Jul 2013 16:59:38 +0200
+
 kraken (0.60.0-1) unstable; urgency=low
 
   * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
