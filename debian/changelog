@@ -1,12 +1,20 @@
+kraken (0.61ubuntu1~1.gbp04008a) UNRELEASED; urgency=low
+
+  ** SNAPSHOT build @04008af448bfdb845cea18ec9c66b8c035535de4 **
+
+  * Version 0.61
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 16 Jul 2013 17:53:46 +0200
+
 kraken (0.61) unstable; urgency=low
 
   [ Vincent Lara ]
   * On va essayer de faire quelque chose de plus propre
   * Cmake : Ajout d'une section au cpack debian
 
-  [ vlara ]
+  [ Vincent Lara ]
 
- -- vlara <vlara@vlara-OptiPlex-790>  Tue, 16 Jul 2013 17:00:38 +0200
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 16 Jul 2013 17:00:38 +0200
 
 kraken (0.60.0-1ubuntu1) quantal; urgency=low
 
