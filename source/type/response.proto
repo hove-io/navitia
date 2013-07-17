@@ -79,7 +79,8 @@ message PtDisplayInfo {
     optional string color = 5;
     optional string commercial_mode = 6;
     optional string physical_mode = 7;
-  	optional string description = 8;
+  	optional string description = 8; 
+  	optional Uris uris = 9; 	
 }
 
 message Uris {
@@ -90,6 +91,7 @@ message Uris {
     optional string commercial_mode = 5;
     optional string physical_mode = 6;
     optional string network = 7;
+    optional string note = 8;
 }
 
 message Section {
@@ -172,6 +174,10 @@ message PairStopTime {
     required StopDateTime arrival = 2;
 }
 
+message Note{
+    required string uri = 1;
+    optional string note = 2;	
+}
 message RouteScheduleStopTime {
 	enum AdditionalInformation{
 		PICK_UP_ONLY = 1;
@@ -181,13 +187,14 @@ message RouteScheduleStopTime {
 	}
     optional string stop_time = 1;
     repeated AdditionalInformation additional_informations= 2;
-    optional int32 note = 3;
+    
     
 }
 
 message RouteScheduleRow {
     required StopPoint stop_point = 1;
     repeated RouteScheduleStopTime stop_times = 2;
+    repeated Note notes = 3;
 }
 
 message Table {    

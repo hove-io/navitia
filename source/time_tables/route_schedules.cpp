@@ -101,8 +101,8 @@ pbnavitia::Response route_schedule(const std::string & filter, const std::string
         std::vector<type::VehicleJourney*> vehicle_journy_list = get_vehicle_jorney(stop_times);
         auto schedule = handler.pb_response.add_route_schedules();
         pbnavitia::Table *table = schedule->mutable_table();
-
-        fill_pb_object(d.pt_data.routes[route_idx], d, schedule->mutable_uris(), max_depth, now, action_period);
+        pbnavitia::Uris* uris = schedule->mutable_uris();
+        fill_pb_object(d.pt_data.routes[route_idx], d, uris, max_depth, now, action_period);
 
         for(type::VehicleJourney* vj : vehicle_journy_list){
             fill_pb_object(vj, d, table->add_headers(), max_depth, now, action_period);
@@ -111,11 +111,12 @@ pbnavitia::Response route_schedule(const std::string & filter, const std::string
         for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {
             type::idx_t spidx=thermometer.get_thermometer()[i];
             const type::StopPoint* sp = d.pt_data.stop_points[spidx];
-            auto * row = table->add_rows();
+            pbnavitia::RouteScheduleRow* row = table->add_rows();
             fill_pb_object(sp, d, row->mutable_stop_point(), max_depth, now, action_period);
             for(unsigned int j=0; j<stop_times.size(); ++j) {
                 datetime_stop_time dt_stop_time  = matrice[i][j];
-                fill_pb_object(dt_stop_time.second, d, row->add_stop_times(), max_depth, now, action_period, dt_stop_time.first);
+                fill_pb_object(dt_stop_time.second, d, row, max_depth, now, action_period, dt_stop_time.first);
+                fill_pb_object(dt_stop_time.second, d, uris, max_depth, now, action_period, dt_stop_time.first); // ajout de uri des commentaires
             }
         }
         fill_pb_object(d.pt_data.routes[route_idx], d, schedule->mutable_pt_display_informations(), max_depth, now, action_period);
