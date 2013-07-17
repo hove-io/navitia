@@ -1,3 +1,9 @@
+kraken (0.61.8) quantal; urgency=low
+
+  * Kraken : Suppression de la dépendance à gunicorn
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 17:28:33 +0200
+
 kraken (0.61.7) quantal; urgency=low
 
   * Pyed : Ajout de l'installation de la librairie
