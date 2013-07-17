@@ -16,9 +16,10 @@ class Watching(Daemon):
         If there was any file it will launch ed2nav after 
     """
 
-    def __init__(self, conf):
+    def __init__(self, conf, user_name, user_password):
         """ Init watching according to conf """
-        super(Watching, self).__init__(conf.get("instance", "pid_file"))
+        super(Watching, self).__init__(conf.get("instance", "pid_file"), 
+                                        user_name, user_password)
         self.directory = conf.get("instance", "source_directory")
         self.conf = conf
         self.pyed_logger = logging.getLogger('pyed')

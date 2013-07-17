@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, os, time, atexit, logging
+import sys, os, time, atexit, logging, pwd, os
 from signal import SIGTERM 
 
 class Daemon(object):
@@ -9,11 +9,14 @@ class Daemon(object):
 
     Usage: subclass the Daemon class and override the run() method
     """
-    def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+    def __init__(self, pidfile, user_name=None, user_password=None,
+                 stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
         self.pidfile = pidfile
+        self.user_name = user_name
+        self.user_password = user_password
 
     def daemonize(self):
         """
@@ -32,19 +35,35 @@ class Daemon(object):
             sys.exit(1)
 
         # decouple from parent environment
-        os.chdir("/") 
-        os.setsid() 
-        os.umask(0) 
+        os.chdir("/")
+        os.setsid()
+        os.umask(0)
 
         # do second fork
-        try: 
-            pid = os.fork() 
+        try:
+            if self.user_name:
+                pw_record = None
+                try:
+                    pw_record = pwd.getpwnam(self.user_name)
+                except:
+                    logging.basicConfig(filename='/var/log/ed/pyed.log',
+                                        level=logging.ERROR)
+                    logging.error("user name : "+self.user_name+" doesn't exist")
+                env = os.environ.copy()
+                env['HOME'] = pw_record.pw_dir
+                env['LOGNAME'] = pw_record.pw_name
+                env['PWD'] = self.user_password
+                env['USER'] = pw_record.pw_name
+                os.environ = env
+                os.setegid(pw_record.pw_gid)
+                os.seteuid(pw_record.pw_uid)
+            pid = os.fork()
             if pid > 0:
                 # exit from second parent
-                sys.exit(0) 
-        except OSError, e: 
+                sys.exit(0)
+        except OSError, e:
             sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
-            sys.exit(1) 
+            sys.exit(1)
 
         # redirect standard file descriptors
         sys.stdout.flush()
@@ -60,6 +79,7 @@ class Daemon(object):
         atexit.register(self.delpid)
         pid = str(os.getpid())
         file(self.pidfile,'w+').write("%s\n" % pid)
+        print "j'ai ecrit le fichier"
 
     def delpid(self):
         os.remove(self.pidfile)
@@ -113,7 +133,7 @@ class Daemon(object):
                 if os.path.exists(self.pidfile):
                     os.remove(self.pidfile)
             else:
-                logging.basicConfig(filename='/var/log/pyed.log',
+                logging.basicConfig(filename='/var/log/ed/pyed.log',
                                     level=logging.ERROR)
                 logging.error(str(err))
                 sys.exit(1)
