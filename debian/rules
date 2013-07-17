@@ -18,6 +18,8 @@ binary-arch:
 	cd $(BUILDDIR); cmake -P cmake_install.cmake
 	mkdir debian/tmp/DEBIAN
 	dpkg-gencontrol
+	rm debian/control
+	cp debian/kraken/DEBIAN/control debian/control
 	#cp debian/prerm debian/tmp/DEBIAN
 	dh_md5sums
 	dpkg --build debian/tmp ..
@@ -28,6 +30,5 @@ clean:
 	rm -f debian/files
 	rm -f debian/*.debhelper.log
 	rm -rf $(BUILDDIR)
-	rm -rf debian/simple-gmail-notifier
 
 .PHONY: binary binary-arch binary-indep clean
