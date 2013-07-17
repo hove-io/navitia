@@ -101,7 +101,7 @@ pbnavitia::Response route_schedule(const std::string & filter, const std::string
         std::vector<type::VehicleJourney*> vehicle_journy_list = get_vehicle_jorney(stop_times);
         auto schedule = handler.pb_response.add_route_schedules();
         pbnavitia::Table *table = schedule->mutable_table();
-//        pbnavitia::Route* route = schedule->mutable_route();
+
         fill_pb_object(d.pt_data.routes[route_idx], d, schedule->mutable_route(), max_depth, now, action_period);
 
         for(type::VehicleJourney* vj : vehicle_journy_list){
@@ -117,10 +117,8 @@ pbnavitia::Response route_schedule(const std::string & filter, const std::string
             for(unsigned int j=0; j<stop_times.size(); ++j) {
                 datetime_stop_time dt_stop_time  = matrice[i][j];
                 fill_pb_object(dt_stop_time.second, d, row, max_depth, now, action_period, dt_stop_time.first);
-//                fill_pb_object(dt_stop_time.second, d, uris, max_depth, now, action_period, dt_stop_time.first); // ajout de uri des commentaires
             }
         }
-//        fill_pb_object(d.pt_data.routes[route_idx], d, schedule->mutable_pt_display_informations(), max_depth, now, action_period);
     }
     return handler.pb_response;
 }

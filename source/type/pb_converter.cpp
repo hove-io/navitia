@@ -400,9 +400,8 @@ void fill_pb_object(const navitia::type::StopTime* stop_time, const nt::Data& da
                     const boost::posix_time::ptime&,
                     const boost::posix_time::time_period&,
                     const type::DateTime& date_time){
-
+    pbnavitia::RouteScheduleStopTime* rs_stop_time = row->add_stop_times();
     if(stop_time != nullptr) {
-        pbnavitia::RouteScheduleStopTime* rs_stop_time = row->add_stop_times();
         rs_stop_time->set_stop_time(iso_string(date_time.date(),  date_time.hour(), data));
 
         if ((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed()){
@@ -422,7 +421,8 @@ void fill_pb_object(const navitia::type::StopTime* stop_time, const nt::Data& da
             note->set_uri("note:"+std::to_string(stop_time->journey_pattern_point->idx) + std::to_string(stop_time->vehicle_journey->idx));
             note->set_note(stop_time->comment);
         }
-
+    }else {
+        rs_stop_time->set_stop_time("");
     }
 
 }

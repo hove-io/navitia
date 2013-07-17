@@ -147,8 +147,6 @@ class json_renderer:
                     #if not 'stop_times' in r:
                     #    r['date_times'] = []
                     r['date_times'].append(self.stop_time(stop_time, uri.region()))
-            if len(r['date_times'])==0:
-                del r['date_times']
             result['table']['rows'].append(r)
 
         for header in obj.table.headers:
