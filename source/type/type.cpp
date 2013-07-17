@@ -6,6 +6,17 @@
 
 namespace navitia { namespace type {
 
+std::string VehicleJourney::get_direction() const {
+    std::string to_return;
+    try {
+        if ((this->journey_pattern != nullptr) && (!this->journey_pattern->journey_pattern_point_list.empty()))
+            to_return = this->journey_pattern->journey_pattern_point_list.back()->stop_point->name;
+    }catch(...){
+
+    }
+    return to_return;
+}
+
 bool ValidityPattern::is_valid(int duration) const {
     if(duration < 0){
 
