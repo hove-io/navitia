@@ -172,6 +172,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     std::vector<StopTime*> stop_time_list; // N'est pas à remplir obligatoirement
     StopTime * first_stop_time;
     std::string block_id;
+    std::string odt_message;
 
     bool is_adapted;
     ValidityPattern* adapted_validity_pattern;
@@ -259,12 +260,13 @@ struct StopTime : public Nameable {
     bool drop_off_allowed;
     bool is_frequency;
     bool wheelchair_boarding;
+    bool date_time_estimated;
     
     uint32_t local_traffic_zone;
 
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<int>::max()), end_time(std::numeric_limits<int>::max()),
         headway_secs(std::numeric_limits<int>::max()), vehicle_journey(NULL), journey_pattern_point(NULL), tmp_stop_point(NULL), order(0),
-        ODT(false), pick_up_allowed(false), drop_off_allowed(false), is_frequency(false), wheelchair_boarding(false),
+        ODT(false), pick_up_allowed(false), drop_off_allowed(false), is_frequency(false), wheelchair_boarding(false),date_time_estimated(false),
                 local_traffic_zone(std::numeric_limits<uint32_t>::max()) {}
 
     navitia::type::StopTime* get_navitia_type() const;

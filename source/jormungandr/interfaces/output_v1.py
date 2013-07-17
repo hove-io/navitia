@@ -113,6 +113,7 @@ class json_renderer:
         descriptor = response_pb2.RouteScheduleStopTime.DESCRIPTOR.enum_types_by_name['AdditionalInformation'].values_by_number
         for indicate in obj.additional_informations:
             result['additional_information'].append(descriptor[indicate].name)
+
         if len(result['additional_information'])==0:
             del result['additional_information']
         return result
@@ -134,10 +135,10 @@ class json_renderer:
             result['table']['rows'].append(r)
 
         for header in obj.table.headers:
-            result['table']['headers'].append(self.display_headers(header))
+            result['table']['headers'].append(self.display_headers(header, uri.region()))
 
         if obj.HasField('pt_display_informations'):
-            result['display_informations'] = self.display_informations(obj.pt_display_informations)
+            result['display_informations'] = self.display_informations(obj.pt_display_informations, uri.region())
 
         if obj.HasField('uris'):
             #result['links'] = self.section_links(uri.region(), obj.uris)
@@ -154,20 +155,26 @@ class json_renderer:
     def id_links(self, region_name, uris):
         links = []
         if uris.HasField('line'):
-            links.append({"id" : region_name + '/line/' + uris.line})
+            links.append({"type": "line", "id":  region_name + '/line/' + uris.line , "templated":False})
             self.visited_types.add("line")
         if uris.HasField('route'):
-            links.append({"id" : region_name + '/route/' + uris.route})
+            links.append({"type": "route", "id":  region_name + '/route/' + uris.route , "templated":False})
             self.visited_types.add("route")
         if uris.HasField('commercial_mode'):
-            links.append({"id" : region_name + '/commercial_mode/' + uris.commercial_mode})
+            links.append({"type": "commercial_mode", "id":  region_name + '/commercial_mode/' + uris.commercial_mode , "templated":False})
             self.visited_types.add("commercial_mode")
         if uris.HasField('physical_mode'):
-            links.append({"id" : region_name + '/physical_mode/' + uris.physical_mode})
+            links.append({"type": "physical_mode", "id":  region_name + '/physical_mode/' + uris.physical_mode , "templated":False})
             self.visited_types.add("physical_mode")
         if uris.HasField('network'):
-            links.append({"id" : region_name + '/network/' + uris.network})
+            links.append({"type": "network", "id":  region_name + '/network/' + uris.network , "templated":False})
             self.visited_types.add("network")
+        if uris.HasField('note'):
+            links.append({"type": "note", "id":  region_name + '/note/' + uris.note , "templated":False})
+            self.visited_types.add("note")
+        if uris.HasField('vehicle_journey'):
+            links.append({"type": "vehicle_journey", "id":  region_name + '/vehicle_journey/' + uris.vehicle_journey , "templated":False})
+            self.visited_types.add("vehicle_journey")
 
         return links
 
@@ -298,7 +305,7 @@ class json_renderer:
                        
         return links
 
-    def display_headers(self, header):
+    def display_headers(self, header, region_name):
         result = {}
 
         if(len(header.headsign) > 0):
@@ -309,9 +316,11 @@ class json_renderer:
             result['physical_mode'] = header.physical_mode
         if(len(header.description) > 0):
             result['description'] = header.description
+        if header.HasField('uris'):
+            result['links'] = self.id_links(region_name, header.uris)
         return result
 
-    def display_informations(self, infos):
+    def display_informations(self, infos, region_name):
         result = {}
 
         if(len(infos.network) > 0):
@@ -326,7 +335,8 @@ class json_renderer:
             result['commercial_mode'] = infos.commercial_mode
         if(len(infos.physical_mode) > 0):
             result['physical_mode'] = infos.physical_mode
-
+        if infos.HasField('uris'):
+            result['links'] = self.id_links(region_name, infos.uris)
         return result
 
     def street_network(self, street_network):
@@ -372,7 +382,7 @@ class json_renderer:
         if obj.HasField('uris'):
             result['links'] = self.section_links(region_name, obj.uris)
         if obj.HasField('pt_display_informations'):
-            result['pt_display_informations'] = self.display_informations(obj.pt_display_informations)
+            result['pt_display_informations'] = self.display_informations(obj.pt_display_informations, region_name)
 
         if len(obj.stop_date_times) > 0:
             result['stop_date_times'] = []
@@ -399,7 +409,7 @@ class json_renderer:
             pass
         try:
             if obj.HasField('pt_display_informations'):
-                result['pt_display_informations'] = self.display_informations(obj.pt_display_informations)
+                result['pt_display_informations'] = self.display_informations(obj.pt_display_informations, region_name)
         except:
             pass
         return result

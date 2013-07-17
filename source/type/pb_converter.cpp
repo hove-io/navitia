@@ -395,37 +395,70 @@ void fill_pb_object(const georef::POI* geopoi, const type::Data &data, pbnavitia
         }
     }
 }
-void fill_pb_object(const navitia::type::StopTime* stop_time, const nt::Data& data, pbnavitia::RouteScheduleStopTime* rs_stop_time, int,
+
+void fill_pb_object(const navitia::type::StopTime* stop_time, const nt::Data& data, pbnavitia::RouteScheduleRow* row, int,
                     const boost::posix_time::ptime&,
                     const boost::posix_time::time_period&,
                     const type::DateTime& date_time){
 
-    rs_stop_time->set_stop_time(iso_string(date_time.date(),  date_time.hour(), data));
+    if(stop_time != nullptr) {
+        pbnavitia::RouteScheduleStopTime* rs_stop_time = row->add_stop_times();
+        rs_stop_time->set_stop_time(iso_string(date_time.date(),  date_time.hour(), data));
 
-    if ((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed()){
-        rs_stop_time->add_additional_informations(pbnavitia::RouteScheduleStopTime::PICK_UP_ONLY);
+        if ((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed()){
+            rs_stop_time->add_additional_informations(pbnavitia::RouteScheduleStopTime::PICK_UP_ONLY);
+        }
+        if (stop_time->drop_off_allowed() && (!stop_time->pick_up_allowed())){
+            rs_stop_time->add_additional_informations(pbnavitia::RouteScheduleStopTime::DROP_OFF_ONLY);
+        }
+        if (stop_time->odt()){
+            rs_stop_time->add_additional_informations(pbnavitia::RouteScheduleStopTime::ON_DEMAND_TRANSPORT);
+        }
+        if (stop_time->date_time_estimated()){
+            rs_stop_time->add_additional_informations(pbnavitia::RouteScheduleStopTime::DATE_TIME_ESTIMATED);
+        }
+//        if(!stop_time->comment.empty()){
+            pbnavitia::Note* note = row->add_notes();
+            note->set_uri("note:"+std::to_string(stop_time->journey_pattern_point->idx) + std::to_string(stop_time->vehicle_journey->idx));
+            note->set_note(std::to_string(stop_time->journey_pattern_point->idx) + std::to_string(stop_time->vehicle_journey->idx)/*stop_time->comment*/);
+//        }
+
     }
-    if (stop_time->drop_off_allowed() && (!stop_time->pick_up_allowed())){
-        rs_stop_time->add_additional_informations(pbnavitia::RouteScheduleStopTime::DROP_OFF_ONLY);
-    }
-    if (stop_time->odt()){
-        rs_stop_time->add_additional_informations(pbnavitia::RouteScheduleStopTime::ON_DEMAND_TRANSPORT);
-    }
-    if (stop_time->date_time_estimated()){
-        rs_stop_time->add_additional_informations(pbnavitia::RouteScheduleStopTime::DATE_TIME_ESTIMATED);
+
+}
+void fill_pb_object(const navitia::type::StopTime* stop_time, const nt::Data& ,  pbnavitia::Uris* uris, int,
+                    const boost::posix_time::ptime&,
+                    const boost::posix_time::time_period&,
+                    const type::DateTime&){
+
+    if(stop_time != nullptr) {
+//        if(!stop_time->comment.empty()){
+            uris->set_note("note:"+std::to_string(stop_time->journey_pattern_point->idx) + std::to_string(stop_time->vehicle_journey->idx));
+//        }
     }
 }
+
 void fill_pb_object(const type::Route* route, const nt::Data&, pbnavitia::PtDisplayInfo* pt_display_info, int ,
                     const boost::posix_time::ptime& ,
                     const boost::posix_time::time_period&){
-    if (!route->line->code.empty())
-        pt_display_info->set_code(route->line->code);
-    if (!route->line->color.empty())
-        pt_display_info->set_color(route->line->color);
-    if (!route->line->network->name.empty())
-        pt_display_info->set_network(route->line->network->name);
-    if (!route->line->commercial_mode->name.empty())
-        pt_display_info->set_commercial_mode(route->line->commercial_mode->name);
+    if(route != nullptr) {
+        pbnavitia::Uris* uris = pt_display_info->mutable_uris();
+        if (!route->line->code.empty())
+            pt_display_info->set_code(route->line->code);
+        if (!route->line->color.empty())
+            pt_display_info->set_color(route->line->color);
+        if (!route->line->network->name.empty()){
+            pt_display_info->set_network(route->line->network->name);
+            uris->set_network(route->line->network->uri);
+        }
+        if (!route->line->commercial_mode->name.empty()){
+            pt_display_info->set_commercial_mode(route->line->commercial_mode->name);
+            uris->set_commercial_mode(route->line->commercial_mode->uri);
+        }
+    }else{
+        pt_display_info->set_code("");
+    }
+
 }
 
 void fill_pb_object(const type::Route* route, const nt::Data&, pbnavitia::Uris* uris, int ,
@@ -442,16 +475,27 @@ void fill_pb_object(const type::Route* route, const nt::Data&, pbnavitia::Uris* 
         uris->set_commercial_mode(route->line->commercial_mode->uri);
 }
 
-void fill_pb_object(const type::VehicleJourney* vehicle_journey, const nt::Data&, pbnavitia::PtDisplayInfo* headers, int ,
+void fill_pb_object(const type::VehicleJourney* vehicle_journey, const nt::Data&, pbnavitia::PtDisplayInfo* header, int ,
                     const boost::posix_time::ptime& ,
                     const boost::posix_time::time_period&){
 
-    headers->set_headsign(vehicle_journey->uri);
+    if(vehicle_journey != nullptr) {
+        pbnavitia::Uris* uris = header->mutable_uris();
+        header->set_headsign(vehicle_journey->uri);
+        uris->set_vehicle_journey(vehicle_journey->uri);
 
-    if(vehicle_journey->physical_mode != nullptr)
-        headers->set_physical_mode(vehicle_journey->physical_mode->name);
+        if(vehicle_journey->physical_mode != nullptr){
+            header->set_physical_mode(vehicle_journey->physical_mode->name);
+            uris->set_physical_mode(vehicle_journey->physical_mode->uri);
+        }
 
-    headers->set_direction(vehicle_journey->get_direction());
+        header->set_direction(vehicle_journey->get_direction());
+        header->set_description(vehicle_journey->odt_message);        
+
+    }else{
+        header->set_headsign("");
+    }
+
 
 }
 }//namespace navitia

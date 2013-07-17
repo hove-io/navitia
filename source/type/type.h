@@ -502,6 +502,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
     ValidityPattern* validity_pattern;
     std::vector<StopTime*> stop_time_list;
     OdtType odt_type;
+    std::string odt_message;
 
     bool is_adapted;
     ValidityPattern* adapted_validity_pattern;
@@ -511,7 +512,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
     VehicleJourney(): journey_pattern(nullptr), company(nullptr), physical_mode(nullptr), validity_pattern(nullptr) /*, wheelchair_boarding(false)*/, is_adapted(false), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & physical_mode & validity_pattern & idx /*& wheelchair_boarding*/ & stop_time_list
-            & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & odt_type;
+            & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & odt_type & odt_message;
     }
     std::string get_direction() const;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
