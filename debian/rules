@@ -19,7 +19,7 @@ binary-arch:
 	mkdir debian/tmp/DEBIAN
 	dpkg-gencontrol
 	rm debian/control
-	cp debian/kraken/DEBIAN/control debian/control
+	debian/python_control.py debian/tmp/DEBIAN/control debian/control
 	#cp debian/prerm debian/tmp/DEBIAN
 	dh_md5sums
 	dpkg --build debian/tmp ..
