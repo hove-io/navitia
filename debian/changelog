@@ -1,3 +1,14 @@
+kraken (0.61.3) quantal; urgency=low
+
+  [ Abderrahim Azime ]
+  * Ajout de deux champs : 	* navitia.stop_time.date_time_estimated 	* navitia.vehicle_journey.odt_message
+  * Ajout des deux champs dans la base de données et import dans la base et binarisation de ces deux champs: 	* navitia.vehicle_journey.odt_message 	* navitia.stop_time.date_time_estimated
+  * amélioration de route_schedule : 	* Ajout des uris dans "display_informations" 	* Ajout des uris dans "headers" 	* Ajout des notes
+
+  [ Vincent Lara ]
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 11:20:52 +0200
+
 kraken (0.61.2) unstable; urgency=low
 
   [ Abderrahim Azime ]
