@@ -1,3 +1,10 @@
+kraken (0.61.4) unstable; urgency=low
+
+  * Version 0.61.3
+  * debian/rules : On va installer à la racine, ça devrait mieux aller.
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 11:50:52 +0200
+
 kraken (0.61.3) quantal; urgency=low
 
   [ Abderrahim Azime ]
