@@ -1,11 +1,15 @@
+kraken (0.61.7) quantal; urgency=low
+
+  * Pyed : Ajout de l'installation de la librairie
+  * Pyed : Possibilité de changer l'utilisateur qui lance le démon
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 16:53:43 +0200
+
 kraken (0.61.6) quantal; urgency=low
 
-  [ vlara ]
-  * UNRELEASED
+  * Changement du maintener dans le fichier de control
 
-  [ Vincent Lara ]
-
- -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 12:17:15 +0200
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 12:18:05 +0200
 
 kraken (0.61.5) quantal; urgency=low
 
