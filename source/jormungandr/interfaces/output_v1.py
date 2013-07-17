@@ -117,7 +117,8 @@ class json_renderer:
         r = []
         for note in obj.notes:
             r.append({"id": note.uri, "type": "notes"})
-        result["links"]= r
+        if (len(r)> 0):
+            result["links"]= r
 
         if len(result['additional_information'])==0:
             del result['additional_information']
@@ -296,6 +297,7 @@ class json_renderer:
     def display_headers(self, header, region_name):
         result = {}
         links = []
+        equipments = []
         links.append({"type": "vehicle_journey", "id": region_name + "/vehicles_journeys/" + header.vehiclejourney.uri, "templated":"false"})
         self.visited_types.add("vehicle_journey")
         if(len(header.vehiclejourney.name) > 0):
@@ -308,6 +310,20 @@ class json_renderer:
             self.visited_types.add("physical_mode")
         if(len(header.vehiclejourney.odt_message) > 0):
             result['description'] = header.vehiclejourney.odt_message
+        if header.vehiclejourney.wheelchair_accessible:
+            result['wheelchair_accessible'] = "true"
+        if header.vehiclejourney.bike_accepted:
+            result['bike_accessible'] = "true"
+        if header.vehiclejourney.visual_announcement:
+            equipments.append({"id": "has_visual_announcement"})
+        if header.vehiclejourney.audible_announcement:
+            equipments.append({"id": "has_audible_announcement"})
+        if header.vehiclejourney.appropriate_escort:
+            equipments.append({"id": "has_appropriate_escort"})
+        if header.vehiclejourney.appropriate_signage:
+            equipments.append({"id": "has_appropriate_signage"})
+        if (len(equipments)> 0):
+            result["equipments"] = equipments
         result["links"] = links
         return result
 

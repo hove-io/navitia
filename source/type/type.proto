@@ -124,7 +124,6 @@ message StopTime {
     optional bool drop_off_allowed = 7;
 }
 
-
 message VehicleJourney {
     optional string name = 3;
     optional string uri = 4;
@@ -139,6 +138,15 @@ message VehicleJourney {
     optional ValidityPattern validity_pattern = 12;
     optional ValidityPattern adapted_validity_pattern = 13;
     optional string odt_message = 14;
+
+    optional bool wheelchair_accessible = 15;
+    optional bool bike_accepted = 16;
+    optional bool air_conditioned = 17;
+    optional bool visual_announcement = 18;
+    optional bool audible_announcement = 19;
+    optional bool appropriate_escort = 20;
+    optional bool appropriate_signage = 21;
+    optional bool school_vehicle = 22;   
 }
 
 message JourneyPatternPoint{
