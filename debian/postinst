@@ -1,0 +1,3 @@
+#!/bin/sh
+python /tmp/pyed/setup.py install
+rm -R /tmp/pyed/
