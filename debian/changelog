@@ -1,4 +1,22 @@
-kraken (0.61.4) unstable; urgency=low
+kraken (0.61.6) quantal; urgency=low
+
+  [ vlara ]
+  * UNRELEASED
+
+  [ Vincent Lara ]
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 12:17:15 +0200
+
+kraken (0.61.5) quantal; urgency=low
+
+  [ vlara ]
+  * UNRELEASED
+
+  [ Vincent Lara ]
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 12:02:20 +0200
+
+kraken (0.61.4) quantal; urgency=low
 
   * Version 0.61.3
   * debian/rules : On va installer à la racine, ça devrait mieux aller.
