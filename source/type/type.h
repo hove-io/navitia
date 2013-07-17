@@ -164,7 +164,7 @@ struct hasVehicleProperties {
     static const uint8_t BIKE_ACCEPTED = 1;
     static const uint8_t AIR_CONDITIONED = 2;
     static const uint8_t VISUAL_ANNOUNCEMENT = 3;
-    static const uint8_t AUDIBLE_ANNOUNVEMENT = 4;
+    static const uint8_t AUDIBLE_ANNOUNCEMENT = 4;
     static const uint8_t APPOPRIATE_ESCORT = 5;
     static const uint8_t APPOPRIATE_SIGNAGE = 6;
     static const uint8_t SCOOL_VEHICLE = 7;
@@ -173,7 +173,7 @@ struct hasVehicleProperties {
     bool bike_accepted() {return _vehicle_properties[BIKE_ACCEPTED];}
     bool air_conditioned() {return _vehicle_properties[AIR_CONDITIONED];}
     bool visual_announcement() {return _vehicle_properties[VISUAL_ANNOUNCEMENT];}
-    bool audible_announcement() {return _vehicle_properties[AUDIBLE_ANNOUNVEMENT];}
+    bool audible_announcement() {return _vehicle_properties[AUDIBLE_ANNOUNCEMENT];}
     bool appropriate_escort() {return _vehicle_properties[APPOPRIATE_ESCORT];}
     bool appropriate_signage() {return _vehicle_properties[APPOPRIATE_SIGNAGE];}
     bool school_vehicle() {return _vehicle_properties[SCOOL_VEHICLE];}

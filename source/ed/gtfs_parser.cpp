@@ -774,7 +774,7 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                     if(visual_announcement_c != -1 && row[visual_announcement_c] == "1")
                         vj->set_vehicle(navitia::type::hasVehicleProperties::VISUAL_ANNOUNCEMENT);
                     if(audible_announcement_c != -1 && row[audible_announcement_c] == "1")
-                        vj->set_vehicle(navitia::type::hasVehicleProperties::AUDIBLE_ANNOUNVEMENT);
+                        vj->set_vehicle(navitia::type::hasVehicleProperties::AUDIBLE_ANNOUNCEMENT);
                     if(appropriate_escort_c != -1 && row[appropriate_escort_c] == "1")
                         vj->set_vehicle(navitia::type::hasVehicleProperties::APPOPRIATE_ESCORT);
                     if(appropriate_signage_c != -1 && row[appropriate_signage_c] == "1")
