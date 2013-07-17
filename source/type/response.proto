@@ -187,25 +187,27 @@ message RouteScheduleStopTime {
 	}
     optional string stop_time = 1;
     repeated AdditionalInformation additional_informations= 2;
-    
-    
+    repeated Note notes = 3;
 }
 
 message RouteScheduleRow {
     required StopPoint stop_point = 1;
     repeated RouteScheduleStopTime stop_times = 2;
-    repeated Note notes = 3;
+}
+
+message Header{
+	optional string direction = 1;
+	required VehicleJourney vehiclejourney = 2;
 }
 
 message Table {    
     repeated RouteScheduleRow rows = 1;
-    repeated PtDisplayInfo headers = 2;
+    repeated Header headers = 2;
 }
 
 message RouteSchedule {	
     required Table table = 1;
-    optional PtDisplayInfo pt_display_informations = 3;
-    optional Uris uris = 4;
+    required Route route = 2;
 }
 
 message Passage {
