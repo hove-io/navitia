@@ -1,10 +1,25 @@
-kraken (0.61ubuntu1~1.gbp04008a) UNRELEASED; urgency=low
+kraken (0.61.2) unstable; urgency=low
 
+  [ Abderrahim Azime ]
+  * amélioration de 'route_schedule'
+
+  [ Vincent Lara ]
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 10:32:39 +0200
+
+kraken (0.61ubuntu1) unstable; urgency=low
+
+  [ Vincent Lara ]
   ** SNAPSHOT build @04008af448bfdb845cea18ec9c66b8c035535de4 **
 
   * Version 0.61
 
- -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 16 Jul 2013 17:53:46 +0200
+  [ vlara ]
+  * UNRELEASED
+
+  [ Vincent Lara ]
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 16 Jul 2013 18:06:26 +0200
 
 kraken (0.61) unstable; urgency=low
 
