@@ -28,3 +28,5 @@ target_link_libraries(gtfs2ed connectors types pq pqxx data pb_lib utils routing
 
 add_executable(ed2nav ed2nav.cpp ed_reader.cpp)
 target_link_libraries(ed2nav types pq pqxx data georef routing utils ${Boost_LIBRARIES} log4cplus)
+
+INSTALL_FILES(/usr/bin/ FILES gtfs2ed osm2ed ed2nav)
