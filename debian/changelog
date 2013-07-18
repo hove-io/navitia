@@ -1,11 +1,13 @@
-kraken (0.61.8ubuntu1~1.gbpf5a98f) UNRELEASED; urgency=low
-
-  ** SNAPSHOT build @f5a98f1786c5dfb18df5dda9ed1457a23271ea38 **
+kraken (0.61.9) quantal; urgency=low
 
   * Version 0.61.8
   * Debian : On va chercher le bon control
+  * Version 0.61.8
+  * On est plus dépendant de gunicorn
+  * Ed : Installation de gtfs2ed, osm2ed, ed2nav dans /usr/bin
+  * Installation de setup.py dans /tmp/
 
- -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 17:44:49 +0200
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 18 Jul 2013 11:08:28 +0200
 
 kraken (0.61.8) quantal; urgency=low
 
