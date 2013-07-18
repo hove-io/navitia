@@ -1,3 +1,10 @@
+kraken (0.62.01) quantal; urgency=low
+
+  * Version 0.62.0
+  * Suppression totale de gunicorn
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 18 Jul 2013 16:29:07 +0200
+
 kraken (0.62.0) quantal; urgency=low
 
   * Pyed : Correction pour que le service fonctionne mieux.
