@@ -62,7 +62,7 @@ class Config:
                                 "host" : None,
                                 "password" : None
                                     }, 
-                            "logs_files" : {
+                            "log_files" : {
                                 "osm2ed" : None,
                                 "gtfs2ed" : None,
                                 "ed2nav" : None,

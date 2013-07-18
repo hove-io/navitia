@@ -9,6 +9,7 @@ from pyed.launch_exec import launch_exec
 from pyed.config import ConfigException
 import logging
 from pyed.daemon import Daemon
+import time
 
 class Watching(Daemon):
     """ when launch with run(), it looks in the source directory if there are
@@ -16,10 +17,9 @@ class Watching(Daemon):
         If there was any file it will launch ed2nav after 
     """
 
-    def __init__(self, conf, user_name, user_password):
+    def __init__(self, conf):
         """ Init watching according to conf """
-        super(Watching, self).__init__(conf.get("instance", "pid_file"), 
-                                        user_name, user_password)
+        super(Watching, self).__init__(conf.get("instance", "pid_file"))
         self.directory = conf.get("instance", "source_directory")
         self.conf = conf
         self.pyed_logger = logging.getLogger('pyed')
@@ -94,3 +94,4 @@ class Watching(Daemon):
             else:
                 self.pyed_logger.debug("We haven't made any binarisation")
             self.backup_directory = None
+            time.sleep(60)
