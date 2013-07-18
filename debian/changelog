@@ -1,3 +1,9 @@
+kraken (0.62.0) quantal; urgency=low
+
+  * Pyed : Correction pour que le service fonctionne mieux.
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 18 Jul 2013 15:07:18 +0200
+
 kraken (0.61.9) quantal; urgency=low
 
   * Version 0.61.8
