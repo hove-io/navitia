@@ -14,7 +14,7 @@ import sys
 import logging
 import argparse
 
-def main(config_filename, status, user_name, user_password):
+def main(config_filename, status):
     config = Config(config_filename)
     if not config.is_valid():
         logging.basicConfig(filename='/var/log/pyed.log',level=logging.ERROR)
