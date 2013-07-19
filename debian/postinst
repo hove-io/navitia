@@ -3,15 +3,17 @@ case "$1" in
     configure)
         chmod +x /usr/share/kraken/
         chmod +x /usr/share/kraken/scripts/
-        chmod +x /usr/share/kraken/scripts/update_db.sh
-        chmod +x /usr/share/kraken/scripts/init_db.sh
+        chmod +x /usr/share/kraken/scripts/{navimake_updater,update_data}.sh
+        chmod +x /usr/share/ed/
+        chmod +x /usr/share/ed/scripts/
+        chmod +x /usr/share/ed/scripts/{update_db,init_db}.sh
         chmod +r -R /usr/share/kraken/
+        chmod +r -R /usr/share/ed/
         chmod +rx -R /srv/jormungandr/
-        chown root:www-data /usr/share/kraken/scripts/init_db.sh
-        chown root:www-data /usr/share/kraken/scripts/update_db.sh
-        chmod +x /tmp/setup.py
-        python /tmp/setup.py install
-        rm -R /tmp/pyed
-        rm /tmp/setup.py 
+        chown root:www-data /usr/share/kraken/scripts/{navimake_updater,update_data}.sh
+        chown root:www-data /usr/share/ed/scripts/{update_db,init_db}.sh
+        /usr/bin/python /tmp/setup.py install
+        rm -R /tmp/pyed/
+        rm setup.py
         ;;
 esac
