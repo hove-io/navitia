@@ -17,7 +17,5 @@ case "$1" in
         chown root:www-data /usr/share/ed/scripts/update_db.sh
         chown root:www-data /usr/share/ed/scripts/init_db.sh
         /usr/bin/python /tmp/setup.py install
-        rm -R /tmp/pyed/
-        rm /tmp/setup.py
         ;;
 esac
