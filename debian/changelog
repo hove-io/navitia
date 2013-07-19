@@ -1,3 +1,10 @@
+kraken (0.62.03) quantal; urgency=low
+
+  * Version 0.62.02
+  * SQL : Ajout du répertoire sql dans le CMakelists principal
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 11:07:12 +0200
+
 kraken (0.62.02) quantal; urgency=low
 
   [ Vincent Lara ]
