@@ -1,3 +1,15 @@
+kraken (0.62.02) quantal; urgency=low
+
+  [ Vincent Lara ]
+  * Ed : Installation des scripts sql
+
+  [ vlara ]
+  * UNRELEASED
+
+  [ Vincent Lara ]
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 18 Jul 2013 18:15:00 +0200
+
 kraken (0.62.01) quantal; urgency=low
 
   * Version 0.62.0
