@@ -1,3 +1,15 @@
 #!/bin/sh
-python /tmp/pyed/setup.py install
-rm -R /tmp/pyed/
+case "$1" in
+    configure)
+        chmod +x /usr/share/navitia/
+        chmod +x /usr/share/navitia/scripts/
+        chmod +x /usr/share/navitia/scripts/{init, update}_db.sh
+        chmod +r -R /usr/share/navitia/
+        chmod +rx -R /srv/jormungandr/
+        chown root:www-data /usr/share/navitia/scripts/{init, update}_db.sh
+        chmod +x /tmp/setup.py
+        python /tmp/setup.py install
+        rm -R /tmp/pyed
+        rm /tmp/setup.py 
+        ;;
+esac
