@@ -57,7 +57,7 @@ if __name__ == '__main__':
         CONFIG_FILENAME = ARGS.config_file
         STATUS = ARGS.status
     except argparse.ArgumentTypeError:
-        logging.basicConfig(filename='/var/log/pyed.log',level=logging.ERROR)
+        logging.basicConfig(filename='/var/log/ed/pyed.log',level=logging.ERROR)
         logging.error("Bad usage, learn how to use me with pyed.py -h")
         sys.exit(1)
 
