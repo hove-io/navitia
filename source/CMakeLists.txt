@@ -85,7 +85,7 @@ add_subdirectory(jormungandr)
 add_subdirectory(connectors)
 add_subdirectory(ratimake)
 add_subdirectory(pyed)
-
+add_subdirectory(sql)
 
 add_subdirectory(scripts)
 
