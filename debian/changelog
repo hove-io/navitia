@@ -1,3 +1,25 @@
+kraken (0.62.04ubuntu1) quantal; urgency=low
+
+  * Changement de droit sur setup.py
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 12:09:54 +0200
+
+kraken (0.62.04) quantal; urgency=low
+
+  [ vlara ]
+  * UNRELEASED
+
+  [ Vincent Lara ]
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 12:20:39 +0200
+
+kraken (0.62.03ubuntu2) quantal; urgency=low
+
+  * Version 0.62.03
+  * Pyed : Montée en version de la librairie
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 12:09:54 +0200
+
 kraken (0.62.03ubuntu1) quantal; urgency=low
 
   * Pyed : Erreur dans l'initialisation du main
