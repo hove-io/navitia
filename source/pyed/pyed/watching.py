@@ -11,7 +11,7 @@ import logging
 from pyed.daemon import Daemon
 import time
 
-class Watching(Daemon):
+class Watching():
     """ when launch with run(), it looks in the source directory if there are
         any new file (osm or gtfs) to compute.
         If there was any file it will launch ed2nav after 
@@ -19,7 +19,6 @@ class Watching(Daemon):
 
     def __init__(self, conf):
         """ Init watching according to conf """
-        super(Watching, self).__init__(conf.get("instance", "pid_file"))
         self.directory = conf.get("instance", "source_directory")
         self.conf = conf
         self.pyed_logger = logging.getLogger('pyed')
