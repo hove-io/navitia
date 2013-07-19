@@ -1,3 +1,9 @@
+kraken (0.62.05ubuntu2) quantal; urgency=low
+
+  * Un petit test
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 15:06:36 +0200
+
 kraken (0.62.05ubuntu1) quantal; urgency=low
 
   * Postinst : On y croit
