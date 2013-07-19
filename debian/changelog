@@ -1,3 +1,9 @@
+kraken (0.62.04ubuntu2) quantal; urgency=low
+
+  * Ajout du script de post installation dans le packet
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 12:39:20 +0200
+
 kraken (0.62.04ubuntu1) quantal; urgency=low
 
   * Changement de droit sur setup.py
