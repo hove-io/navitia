@@ -1,3 +1,9 @@
+kraken (0.62.04ubuntu4) quantal; urgency=low
+
+  * Postinst : On enleve les accolades
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 14:39:58 +0200
+
 kraken (0.62.04ubuntu3) quantal; urgency=low
 
   * Postinst : navitia => kraken

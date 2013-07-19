@@ -1,5 +1,5 @@
 Source: kraken
-Version: 0.62.04ubuntu3
+Version: 0.62.04ubuntu4
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
 Installed-Size: 12383
@@ -9,7 +9,7 @@ Priority: optional
 Description: Kraken ed Jörmungandr
 
 Package: kraken
-Version: 0.62.04ubuntu3
+Version: 0.62.04ubuntu4
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
 Installed-Size: 12383
