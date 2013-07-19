@@ -443,7 +443,7 @@ class json_renderer:
         if obj.HasField('uris'):
             result['links'] = self.section_links(region_name, obj.uris)
         if obj.HasField('pt_display_informations'):
-            result['pt_display_informations'] = self.display_informations(obj.pt_display_informations, region_name)
+            result['display_informations'] = self.display_informations(obj.pt_display_informations, region_name)
 
 
 
