@@ -1,3 +1,9 @@
+kraken (0.62.05ubuntu4) quantal; urgency=low
+
+  * Postinst : On ajoute les +x qui vont bien
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 15:22:05 +0200
+
 kraken (0.62.05ubuntu3) quantal; urgency=low
 
   * Postinst : On se déplace dans /tmp/ avant de lancer l'installation
