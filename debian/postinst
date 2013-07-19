@@ -12,6 +12,11 @@ case "$1" in
         chmod +r -R /usr/share/kraken/
         chmod +r -R /usr/share/ed/
         chmod +rx -R /srv/jormungandr/
+        chmod +x /usr/bin/pyed_service.py
+        chmod +x /usr/bin/gtfs2ed
+        chmod +x /usr/bin/osm2ed
+        chmod +x /usr/bin/ed2nav
+        chmod +x /usr/bin/kraken
         chown root:www-data /usr/share/kraken/scripts/navimake_updater.sh
         chown root:www-data /usr/share/kraken/scripts/update_data.sh
         chown root:www-data /usr/share/ed/scripts/update_db.sh
