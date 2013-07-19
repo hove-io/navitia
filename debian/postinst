@@ -12,6 +12,7 @@ case "$1" in
         chmod +r -R /usr/share/kraken/
         chmod +r -R /usr/share/ed/
         chmod +rx -R /srv/jormungandr/
+        chmod +x /srv/jormungandr/jormungandr.py
         chmod +x /usr/bin/pyed_service.py
         chmod +x /usr/bin/gtfs2ed
         chmod +x /usr/bin/osm2ed
