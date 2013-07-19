@@ -1,3 +1,9 @@
+kraken (0.62.05ubuntu3) quantal; urgency=low
+
+  * Postinst : On se déplace dans /tmp/ avant de lancer l'installation
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 15:14:33 +0200
+
 kraken (0.62.05ubuntu2) quantal; urgency=low
 
   * Un petit test
