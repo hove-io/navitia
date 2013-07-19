@@ -290,6 +290,7 @@ void fill_pb_placemark(const type::StopPoint* stop_point, const type::Data &data
     fill_pb_object(stop_point, data, place->mutable_stop_point(), max_depth, now, action_period);
     place->set_name(stop_point->name);
     place->set_uri(stop_point->uri);
+    place->set_embedded_type(pbnavitia::STOP_POINT);
 }
 
 void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &path, const type::Data &data, pbnavitia::Section* section,
@@ -326,6 +327,7 @@ void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &p
             for(auto admin : place->address().administrative_regions())
                 place->set_name(place->name() + ", " + admin.name());
             place->set_uri(place->address().uri());
+            place->set_embedded_type(pbnavitia::ADDRESS);
         }
     }
 }
