@@ -1,3 +1,9 @@
+kraken (0.62.13) quantal; urgency=low
+
+  * Pyed : Suppression de status
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 22 Jul 2013 10:37:40 +0200
+
 kraken (0.62.12) quantal; urgency=low
 
   * Pyed : On enlève totalement pid_file
