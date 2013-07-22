@@ -212,6 +212,30 @@ void fill_pb_object(const nt::ValidityPattern* vp, const nt::Data&, pbnavitia::V
     validity_pattern->set_days(vp->days.to_string());
 }
 
+pbnavitia::OdtType get_pb_odt_type(const navitia::type::OdtType odt_type){
+    pbnavitia::OdtType result = pbnavitia::OdtType::regular_line;
+    switch(odt_type){
+        case type::OdtType::virtual_with_stop_time:
+            result = pbnavitia::OdtType::virtual_with_stop_time;
+            break;
+    case type::OdtType::virtual_without_stop_time:
+        result = pbnavitia::OdtType::virtual_without_stop_time;
+            break;
+    case type::OdtType::stop_point_to_stop_point:
+        result = pbnavitia::OdtType::stop_point_to_stop_point;
+            break;
+    case type::OdtType::adress_to_stop_point:
+        result = pbnavitia::OdtType::adress_to_stop_point;
+            break;
+    case type::OdtType::odt_point_to_point:
+        result = pbnavitia::OdtType::odt_point_to_point;
+            break;
+    default :
+        result = pbnavitia::OdtType::regular_line;
+    }
+    return result;
+}
+
 void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data, pbnavitia::VehicleJourney * vehicle_journey, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period){
     if(vj == nullptr)
@@ -219,7 +243,10 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data, pbnaviti
 
     vehicle_journey->set_name(vj->name);
     vehicle_journey->set_uri(vj->uri);
+    vehicle_journey->set_odt_message(vj->odt_message);
     vehicle_journey->set_is_adapted(vj->is_adapted);
+    vehicle_journey->set_odt_type(get_pb_odt_type(vj->odt_type));
+
     if(vj->journey_pattern!= nullptr && max_depth > 0)
         fill_pb_object(vj->journey_pattern, data, vehicle_journey->mutable_journey_pattern(), max_depth-1, now, action_period);
 
@@ -290,6 +317,7 @@ void fill_pb_placemark(const type::StopPoint* stop_point, const type::Data &data
     fill_pb_object(stop_point, data, place->mutable_stop_point(), max_depth, now, action_period);
     place->set_name(stop_point->name);
     place->set_uri(stop_point->uri);
+    place->set_embedded_type(pbnavitia::STOP_POINT);
 }
 
 void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &path, const type::Data &data, pbnavitia::Section* section,
@@ -326,6 +354,7 @@ void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &p
             for(auto admin : place->address().administrative_regions())
                 place->set_name(place->name() + ", " + admin.name());
             place->set_uri(place->address().uri());
+            place->set_embedded_type(pbnavitia::ADDRESS);
         }
     }
 }
@@ -400,9 +429,8 @@ void fill_pb_object(const navitia::type::StopTime* stop_time, const nt::Data& da
                     const boost::posix_time::ptime&,
                     const boost::posix_time::time_period&,
                     const type::DateTime& date_time){
-
+    pbnavitia::RouteScheduleStopTime* rs_stop_time = row->add_stop_times();
     if(stop_time != nullptr) {
-        pbnavitia::RouteScheduleStopTime* rs_stop_time = row->add_stop_times();
         rs_stop_time->set_stop_time(iso_string(date_time.date(),  date_time.hour(), data));
 
         if ((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed()){
@@ -417,85 +445,25 @@ void fill_pb_object(const navitia::type::StopTime* stop_time, const nt::Data& da
         if (stop_time->date_time_estimated()){
             rs_stop_time->add_additional_informations(pbnavitia::RouteScheduleStopTime::DATE_TIME_ESTIMATED);
         }
-//        if(!stop_time->comment.empty()){
-            pbnavitia::Note* note = row->add_notes();
+        if(!stop_time->comment.empty()){
+            pbnavitia::Note* note = rs_stop_time->add_notes();
             note->set_uri("note:"+std::to_string(stop_time->journey_pattern_point->idx) + std::to_string(stop_time->vehicle_journey->idx));
-            note->set_note(std::to_string(stop_time->journey_pattern_point->idx) + std::to_string(stop_time->vehicle_journey->idx)/*stop_time->comment*/);
-//        }
-
+            note->set_note(stop_time->comment);
+        }
+    }else {
+        rs_stop_time->set_stop_time("");
     }
 
 }
-void fill_pb_object(const navitia::type::StopTime* stop_time, const nt::Data& ,  pbnavitia::Uris* uris, int,
+
+void fill_pb_object(const navitia::type::VehicleJourney* vehiclejourney, const nt::Data& data,  pbnavitia::Header* header, int,
                     const boost::posix_time::ptime&,
                     const boost::posix_time::time_period&,
                     const type::DateTime&){
 
-    if(stop_time != nullptr) {
-//        if(!stop_time->comment.empty()){
-            uris->set_note("note:"+std::to_string(stop_time->journey_pattern_point->idx) + std::to_string(stop_time->vehicle_journey->idx));
-//        }
+    if(vehiclejourney != nullptr){
+        fill_pb_object(vehiclejourney, data, header->mutable_vehiclejourney());
+        header->set_direction(vehiclejourney->get_direction());
     }
-}
-
-void fill_pb_object(const type::Route* route, const nt::Data&, pbnavitia::PtDisplayInfo* pt_display_info, int ,
-                    const boost::posix_time::ptime& ,
-                    const boost::posix_time::time_period&){
-    if(route != nullptr) {
-        pbnavitia::Uris* uris = pt_display_info->mutable_uris();
-        if (!route->line->code.empty())
-            pt_display_info->set_code(route->line->code);
-        if (!route->line->color.empty())
-            pt_display_info->set_color(route->line->color);
-        if (!route->line->network->name.empty()){
-            pt_display_info->set_network(route->line->network->name);
-            uris->set_network(route->line->network->uri);
-        }
-        if (!route->line->commercial_mode->name.empty()){
-            pt_display_info->set_commercial_mode(route->line->commercial_mode->name);
-            uris->set_commercial_mode(route->line->commercial_mode->uri);
-        }
-    }else{
-        pt_display_info->set_code("");
-    }
-
-}
-
-void fill_pb_object(const type::Route* route, const nt::Data&, pbnavitia::Uris* uris, int ,
-                    const boost::posix_time::ptime& ,
-                    const boost::posix_time::time_period&){
-
-    if(route != nullptr)
-        uris->set_route(route->uri);
-    if(route->line != nullptr)
-        uris->set_line(route->line->uri);
-    if((route->line != nullptr) && (route->line->network != nullptr))
-        uris->set_network(route->line->network->uri);
-    if ((route->line != nullptr) && (route->line->commercial_mode != nullptr))
-        uris->set_commercial_mode(route->line->commercial_mode->uri);
-}
-
-void fill_pb_object(const type::VehicleJourney* vehicle_journey, const nt::Data&, pbnavitia::PtDisplayInfo* header, int ,
-                    const boost::posix_time::ptime& ,
-                    const boost::posix_time::time_period&){
-
-    if(vehicle_journey != nullptr) {
-        pbnavitia::Uris* uris = header->mutable_uris();
-        header->set_headsign(vehicle_journey->uri);
-        uris->set_vehicle_journey(vehicle_journey->uri);
-
-        if(vehicle_journey->physical_mode != nullptr){
-            header->set_physical_mode(vehicle_journey->physical_mode->name);
-            uris->set_physical_mode(vehicle_journey->physical_mode->uri);
-        }
-
-        header->set_direction(vehicle_journey->get_direction());
-        header->set_description(vehicle_journey->odt_message);        
-
-    }else{
-        header->set_headsign("");
-    }
-
-
 }
 }//namespace navitia

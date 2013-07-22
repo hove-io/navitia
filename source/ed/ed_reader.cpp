@@ -356,7 +356,7 @@ void EdReader::insert_journey_pattern_point_connections(const std::vector<types:
 
 void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, comment, company_id, physical_mode_id, journey_pattern_id, "
-        "validity_pattern_id, adapted_validity_pattern_id, theoric_vehicle_journey_id , odt_message "
+        "validity_pattern_id, adapted_validity_pattern_id, theoric_vehicle_journey_id ,odt_type_id, odt_message "
         "FROM navitia.vehicle_journey ";
 
     pqxx::result result = work.exec(request);
@@ -367,6 +367,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         const_it["name"].to(vj->name);
         const_it["comment"].to(vj->comment);
         const_it["odt_message"].to(vj->odt_message);
+        vj->odt_type = static_cast<nt::OdtType>(const_it["odt_type_id"].as<int>());
 
         vj->journey_pattern = journey_pattern_map[const_it["journey_pattern_id"].as<idx_t>()];
         vj->journey_pattern->vehicle_journey_list.push_back(vj);

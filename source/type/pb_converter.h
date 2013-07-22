@@ -58,21 +58,8 @@ void fill_pb_object(const navitia::type::StopTime* st, const nt::Data& data, pbn
                     const boost::posix_time::time_period& action_period = null_time_period,
                     const type::DateTime& date_time = type::DateTime());
 
-void fill_pb_object(const navitia::type::StopTime* st, const nt::Data& data, pbnavitia::Uris* uris, int max_depth = 0,
+void fill_pb_object(const navitia::type::VehicleJourney* vehiclejourney, const nt::Data& data, pbnavitia::Header* header, int max_depth = 0,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
                     const boost::posix_time::time_period& action_period = null_time_period,
                     const type::DateTime& date_time = type::DateTime());
-
-void fill_pb_object(const type::Route* route, const nt::Data& data, pbnavitia::PtDisplayInfo* pt_display_info, int max_depth = 0,
-                    const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-                    const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_object(const type::Route* route, const nt::Data& data, pbnavitia::Uris* uris, int max_depth = 0,
-                    const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-                    const boost::posix_time::time_period& action_period = null_time_period);
-
-void fill_pb_object(const type::VehicleJourney* vehicle_journey, const nt::Data& data, pbnavitia::PtDisplayInfo* header, int max_depth = 0,
-                    const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-                    const boost::posix_time::time_period& action_period = null_time_period);
-
 }//namespace navitia

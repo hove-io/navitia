@@ -164,7 +164,7 @@ struct hasVehicleProperties {
     static const uint8_t BIKE_ACCEPTED = 1;
     static const uint8_t AIR_CONDITIONED = 2;
     static const uint8_t VISUAL_ANNOUNCEMENT = 3;
-    static const uint8_t AUDIBLE_ANNOUNVEMENT = 4;
+    static const uint8_t AUDIBLE_ANNOUNCEMENT = 4;
     static const uint8_t APPOPRIATE_ESCORT = 5;
     static const uint8_t APPOPRIATE_SIGNAGE = 6;
     static const uint8_t SCOOL_VEHICLE = 7;
@@ -173,7 +173,7 @@ struct hasVehicleProperties {
     bool bike_accepted() {return _vehicle_properties[BIKE_ACCEPTED];}
     bool air_conditioned() {return _vehicle_properties[AIR_CONDITIONED];}
     bool visual_announcement() {return _vehicle_properties[VISUAL_ANNOUNCEMENT];}
-    bool audible_announcement() {return _vehicle_properties[AUDIBLE_ANNOUNVEMENT];}
+    bool audible_announcement() {return _vehicle_properties[AUDIBLE_ANNOUNCEMENT];}
     bool appropriate_escort() {return _vehicle_properties[APPOPRIATE_ESCORT];}
     bool appropriate_signage() {return _vehicle_properties[APPOPRIATE_SIGNAGE];}
     bool school_vehicle() {return _vehicle_properties[SCOOL_VEHICLE];}
@@ -297,12 +297,12 @@ enum class ConnectionType {
 };
 
 enum class OdtType {
-    Default = 0,    // ligne régulière
-    tad1 = 1,       // TAD virtuel avec horaires
-    tad2 = 2,       // TAD virtuel sans horaires
-    tad3 = 3,       // TAD rabattement arrêt à arrêt
-    tad4 = 4,       // TAD rabattement adresse à arrêt
-    tad5 = 5       // TAD point à point (Commune à Commune)
+    regular_line = 0,                 // ligne régulière
+    virtual_with_stop_time = 1,       // TAD virtuel avec horaires
+    virtual_without_stop_time = 2,    // TAD virtuel sans horaires
+    stop_point_to_stop_point = 3,     // TAD rabattement arrêt à arrêt
+    adress_to_stop_point = 4,         // TAD rabattement adresse à arrêt
+    odt_point_to_point = 5            // TAD point à point (Commune à Commune)
 };
 
 struct StopPoint;
