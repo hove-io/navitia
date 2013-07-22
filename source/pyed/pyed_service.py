@@ -14,7 +14,7 @@ import sys
 import logging
 import argparse
 
-def main(config_filename, status):
+def main(config_filename):
     config = Config(config_filename)
     if not config.is_valid():
         logging.basicConfig(filename='/var/log/pyed.log',level=logging.ERROR)
@@ -27,22 +27,9 @@ def main(config_filename, status):
     watching = Watching(config)
     pyed_logger.info(" watching initialized")
 
-    if status == 'start':
-        pyed_logger.info(" Launching watching daemon")
-        watching.start()
-        pyed_logger.info(" watching daemon launched")
-    elif status == 'stop':
-        pyed_logger.info(" Stopping pyed daemon")
-        watching.stop()
-        pyed_logger.info(" Pyed daemon stopped")
-    elif status == 'restart':
-        pyed_logger.info(" Restarting pyed daemon")
-        pyed_logger.info(" Stopping pyed daemon")
-        watching.stop()
-        pyed_logger.info(" Pyed daemon stopped")
-        pyed_logger.info(" Start pyed daemon")
-        watching.start()
-        pyed_logger.info(" Pyed daemon started")
+    pyed_logger.info(" Launching watching daemon")
+    watching.start()
+    pyed_logger.info(" watching daemon launched")
 
 if __name__ == '__main__':
     PARSER = argparse.ArgumentParser(description="Launcher of pyed")
@@ -54,11 +41,10 @@ if __name__ == '__main__':
     try:
         ARGS = PARSER.parse_args()
         CONFIG_FILENAME = ARGS.config_file
-        STATUS = ARGS.status
     except argparse.ArgumentTypeError:
         logging.basicConfig(filename='/var/log/ed/pyed.log',level=logging.ERROR)
         logging.error("Bad usage, learn how to use me with pyed.py -h")
         sys.exit(1)
 
-    main(CONFIG_FILENAME, STATUS)
+    main(CONFIG_FILENAME)
 
