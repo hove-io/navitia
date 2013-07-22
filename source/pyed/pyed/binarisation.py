@@ -30,7 +30,7 @@ def gtfs2ed(gtfs_filename, config, backup_directory):
     except ConfigException:
         pyed_logger.error("gtfs2ed : Unable to make the connection string")
         return 3
-    res = launch_exec(config.get("instance", "directory")+"/gtfs2ed",
+    res = launch_exec(config.get("instance", "exec_directory")+"/gtfs2ed",
                 ["-i", backup_directory, "--connection-string",
                  connection_string],
                 gtfs_logger, pyed_logger)
@@ -54,7 +54,7 @@ def osm2ed(osm_filename, config, backup_directory):
         return 2
     mved_file = backup_directory
     mved_file += osm_filename.split("/")[-1]
-    res = launch_exec(config.get("instance", "directory")+"/osm2ed",
+    res = launch_exec(config.get("instance", "exec_directory")+"/osm2ed",
                 ["-i", mved_file, "--connection-string", connection_string],
                 osm_logger, pyed_logger)
     if res != 0:
@@ -73,7 +73,7 @@ def ed2nav(filename, config):
     except ConfigException:
         pyed_logger.error("osm2ed : Unable to make the connection string")
         return 1
-    res = launch_exec(config.get("instance", "directory")+"/ed2nav",
+    res = launch_exec(config.get("instance", "exec_directory")+"/ed2nav",
                 ["-o", filename, "--connection-string", connection_string],
                 ed2nav_logger, pyed_logger)
     if res != 0:

@@ -53,6 +53,7 @@ class Config:
         self.filename = filename
         self.dico_config = {"instance" : {
                                 "name" : None,
+                                "exec_directory": None,
                                 "source_directory" : None,
                                 "target_directory" : None,
                                 "backup_directory" : None
