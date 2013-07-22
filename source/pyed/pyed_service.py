@@ -28,7 +28,7 @@ def main(config_filename):
     pyed_logger.info(" watching initialized")
 
     pyed_logger.info(" Launching watching daemon")
-    watching.start()
+    watching.run()
     pyed_logger.info(" watching daemon launched")
 
 if __name__ == '__main__':
