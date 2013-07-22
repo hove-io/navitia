@@ -54,7 +54,6 @@ class Config:
         self.dico_config = {"instance" : {
                                 "name" : None,
                                 "source_directory" : None,
-                                "pid_file" : None,
                             }, 
                             "database" : {
                                 "name" : None,
@@ -72,7 +71,7 @@ class Config:
         self.is_valid_ = False
         self.logger.info("Reading config")
         self.read()
-   
+
 
     def read(self):
         """ Read and parse the configuration, according to dico_config """
