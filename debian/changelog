@@ -1,3 +1,11 @@
+kraken (0.62.14) quantal; urgency=low
+
+  * Pyed : Correction start => run
+  * Pyed : Ajout de target_directory, backup_directory
+  * Pyed : Version 0.33
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 22 Jul 2013 14:19:10 +0200
+
 kraken (0.62.13) quantal; urgency=low
 
   * Pyed : Suppression de status
