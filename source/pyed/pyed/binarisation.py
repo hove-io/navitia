@@ -66,12 +66,13 @@ def ed2nav(filename, config):
     """ Launch osm2ed, compute the md5 sum of it, and save the md5 """
     pyed_logger = logging.getLogger('pyed')
     ed2nav_logger = logging.getLogger('ed2nav')
+    target_directory = config.get("instance" , "target_directory")
+    filename = target_directory +"/data.nav.lz4"
     try:
         connection_string = make_connection_string(config)
     except ConfigException:
         pyed_logger.error("osm2ed : Unable to make the connection string")
-        return 1        
-        
+        return 1
     res = launch_exec(config.get("instance", "directory")+"/ed2nav",
                 ["-o", filename, "--connection-string", connection_string],
                 ed2nav_logger, pyed_logger)

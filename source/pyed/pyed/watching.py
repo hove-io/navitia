@@ -32,8 +32,8 @@ class Watching():
         """
         if not self.backup_directory:
             now = datetime.now()
-            self.backup_directory = self.conf.get("instance", "directory")
-            self.backup_directory += "/backup/" + now.strftime("%Y%m%d-%H%M%S")
+            self.backup_directory = self.conf.get("instance", "backup_directory")
+            self.backup_directory += "/"+now.strftime("%Y%m%d-%H%M%S")
             return launch_exec("mkdir", [self.backup_directory],
                                self.pyed_logger)
 
@@ -42,8 +42,8 @@ class Watching():
             After it has computed the files it will launch ed2nav
         """
         while True:
-            osm_files = glob.glob(self.directory+"/source/*.pbf")
-            gtfs_files = glob.glob(self.directory+"/source/*.zip")
+            osm_files = glob.glob(self.directory+"/*.pbf")
+            gtfs_files = glob.glob(self.directory+"/*.zip")
             worked_on_files = []
             while len(osm_files) > 0 or len(gtfs_files) :
                 try:
@@ -81,7 +81,7 @@ class Watching():
 
             if len(worked_on_files) > 0:
                 self.pyed_logger.info("Launching ed2nav")
-                res = ed2nav(self.directory+"/data/data.nav.lz4", self.conf)
+                res = ed2nav(self.conf)
                 joined_files_str = ", ".join(worked_on_files)
                 if res == 0:
                     self.pyed_logger.info("""Ed2nav has finished for the files

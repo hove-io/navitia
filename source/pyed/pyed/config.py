@@ -54,7 +54,9 @@ class Config:
         self.dico_config = {"instance" : {
                                 "name" : None,
                                 "source_directory" : None,
-                            }, 
+                                "target_directory" : None,
+                                "backup_directory" : None
+                            },
                             "database" : {
                                 "name" : None,
                                 "user" : None,
