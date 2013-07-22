@@ -404,6 +404,8 @@ class json_renderer:
             result['physical_mode'] = infos.physical_mode
         if(len(infos.direction) > 0):
             result['direction'] = infos.direction
+        if(len(infos.description) > 0):
+            result['description'] = infos.description
         return result
 
     def street_network(self, street_network):
@@ -425,27 +427,36 @@ class json_renderer:
         result = {}
         if obj.HasField('departure_date_time'):
             result['departure_date_time'] = obj.departure_date_time
+
         if obj.HasField('arrival_date_time'):
             result['arrival_date_time'] = obj.arrival_date_time
+
         if obj.HasField('stop_point'):
             self.visited_types.add("stop_point")
             result['stop_point'] = self.stop_point(obj.stop_point, region_name)
+
         return result
 
     def section(self, obj, region_name):
         self.visited_types.add("origin")
         self.visited_types.add("destination")
-        result = {'type': get_name_enum(obj, obj.type),
+        if obj.pt_display_informations.odt_type != type_pb2.regular_line:
+            section_type = "on_demand_transport"
+        else :
+            section_type = get_name_enum(obj, obj.type)
+
+        result = {'type': section_type,
                   'duration': obj.duration,
                   'from': self.time_place(obj, region_name),
                   'to': self.time_place(obj, region_name, False)}
+        if obj.pt_display_informations.odt_type != type_pb2.regular_line:
+            result["odt_type"] = get_name_enum(obj.pt_display_informations, obj.pt_display_informations.odt_type)
+
 
         if obj.HasField('uris'):
             result['links'] = self.section_links(region_name, obj.uris)
         if obj.HasField('pt_display_informations'):
             result['display_informations'] = self.display_informations(obj.pt_display_informations, region_name)
-
-
 
         if len(obj.stop_date_times) > 0:
             result['stop_date_times'] = []

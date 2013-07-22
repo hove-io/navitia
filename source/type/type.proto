@@ -38,6 +38,16 @@ enum API {
     METADATAS = 14;
 }
 
+enum OdtType{
+    regular_line = 0;                 // ligne régulière
+    virtual_with_stop_time = 1;       // TAD virtuel avec horaires
+    virtual_without_stop_time = 2;    // TAD virtuel sans horaires
+    stop_point_to_stop_point = 3;     // TAD rabattement arrêt à arrêt
+    adress_to_stop_point = 4;         // TAD rabattement adresse à arrêt
+    odt_point_to_point = 5;           // TAD point à point (Commune à Commune)
+}
+
+
 message Message{
     optional string uri = 1;
     optional string message = 2;
@@ -138,15 +148,16 @@ message VehicleJourney {
     optional ValidityPattern validity_pattern = 12;
     optional ValidityPattern adapted_validity_pattern = 13;
     optional string odt_message = 14;
+    optional OdtType odt_type = 15;
 
-    optional bool wheelchair_accessible = 15;
-    optional bool bike_accepted = 16;
-    optional bool air_conditioned = 17;
-    optional bool visual_announcement = 18;
-    optional bool audible_announcement = 19;
-    optional bool appropriate_escort = 20;
-    optional bool appropriate_signage = 21;
-    optional bool school_vehicle = 22;   
+    optional bool wheelchair_accessible = 16;
+    optional bool bike_accepted = 17;
+    optional bool air_conditioned = 18;
+    optional bool visual_announcement = 19;
+    optional bool audible_announcement = 20;
+    optional bool appropriate_escort = 21;
+    optional bool appropriate_signage = 22;
+    optional bool school_vehicle = 23;   
 }
 
 message JourneyPatternPoint{

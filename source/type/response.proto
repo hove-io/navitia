@@ -71,6 +71,7 @@ enum TransferType {
     EXTENSION = 3;
 }
 
+	
 message PtDisplayInfo {
     optional string network = 1;
     optional string code = 2;
@@ -81,6 +82,7 @@ message PtDisplayInfo {
     optional string physical_mode = 7;
   	optional string description = 8; 
   	optional Uris uris = 9; 	
+  	optional OdtType odt_type = 10;
 }
 
 message Uris {

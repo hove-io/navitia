@@ -212,6 +212,30 @@ void fill_pb_object(const nt::ValidityPattern* vp, const nt::Data&, pbnavitia::V
     validity_pattern->set_days(vp->days.to_string());
 }
 
+pbnavitia::OdtType get_pb_odt_type(const navitia::type::OdtType odt_type){
+    pbnavitia::OdtType result = pbnavitia::OdtType::regular_line;
+    switch(odt_type){
+        case type::OdtType::virtual_with_stop_time:
+            result = pbnavitia::OdtType::virtual_with_stop_time;
+            break;
+    case type::OdtType::virtual_without_stop_time:
+        result = pbnavitia::OdtType::virtual_without_stop_time;
+            break;
+    case type::OdtType::stop_point_to_stop_point:
+        result = pbnavitia::OdtType::stop_point_to_stop_point;
+            break;
+    case type::OdtType::adress_to_stop_point:
+        result = pbnavitia::OdtType::adress_to_stop_point;
+            break;
+    case type::OdtType::odt_point_to_point:
+        result = pbnavitia::OdtType::odt_point_to_point;
+            break;
+    default :
+        result = pbnavitia::OdtType::regular_line;
+    }
+    return result;
+}
+
 void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data, pbnavitia::VehicleJourney * vehicle_journey, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period){
     if(vj == nullptr)
@@ -219,7 +243,10 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data, pbnaviti
 
     vehicle_journey->set_name(vj->name);
     vehicle_journey->set_uri(vj->uri);
+    vehicle_journey->set_odt_message(vj->odt_message);
     vehicle_journey->set_is_adapted(vj->is_adapted);
+    vehicle_journey->set_odt_type(get_pb_odt_type(vj->odt_type));
+
     if(vj->journey_pattern!= nullptr && max_depth > 0)
         fill_pb_object(vj->journey_pattern, data, vehicle_journey->mutable_journey_pattern(), max_depth-1, now, action_period);
 
