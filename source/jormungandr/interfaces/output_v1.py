@@ -297,27 +297,27 @@ class json_renderer:
         return result
 
     def section_links(self, region_name, uris):
-        links = {}
+        links = []
         if uris.HasField('company'):
-            links["company"] = region_name + '/companies/' + uris.company
+            links.append({'href' : base_url + '/' +region_name + '/' + '/companies/' + uris.company, "type" : "company", "templated":False})
 
         if uris.HasField('vehicle_journey'):
-            links["vehicle_journey"] = region_name + '/vehicle_journeys/' + uris.vehicle_journey
+            links.append({'href' : base_url + '/' +region_name + '/' + '/vehicle_journeys/' + uris.vehicle_journey, "type" : "vehicle_journey", "templated":False})
 
         if uris.HasField('line'):
-            links["line"] = region_name + '/lines/' + uris.line
+            links.append({'href' : base_url + '/' +region_name + '/lines/' + uris.line, "type" : "line", "templated":False})
 
         if uris.HasField('route'):
-            links["route"] = region_name + '/routes/' + uris.route
+            links.append({'href' : base_url + '/' +region_name + '/routes/' + uris.route, "type" : "route", "templated":False})
 
         if uris.HasField('commercial_mode'):
-            links["commercial_mode"] = region_name + '/commercial_modes/' + uris.commercial_mode
+            links.append({'href' : base_url + '/' +region_name + '/commercial_modes/' + uris.commercial_mode, "type" : "commercial_mode", "templated":False})
 
         if uris.HasField('physical_mode'):
-            links["physical_mode"] = region_name + '/physical_modes/' + uris.physical_mode
+            links.append({'href' : base_url + '/' +region_name + '/physical_modes/' + uris.physical_mode, "type" : "physical_mode", "templated":False})
 
         if uris.HasField('network'):
-            links["network"] = region_name + '/networks/' + uris.network
+            links.append({'href' : base_url + '/' +region_name + '/networks/' + uris.network, "type" : "network", "templated":False})
                        
         return links
 
