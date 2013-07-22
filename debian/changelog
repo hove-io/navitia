@@ -1,3 +1,9 @@
+kraken (0.62.11) quantal; urgency=low
+
+  * Pyed : On enleve daemon.py
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 16:56:59 +0200
+
 kraken (0.62.10) quantal; urgency=low
 
   * Postinst : Le bon !
