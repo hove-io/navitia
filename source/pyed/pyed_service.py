@@ -46,7 +46,6 @@ def main(config_filename, status):
 
 if __name__ == '__main__':
     PARSER = argparse.ArgumentParser(description="Launcher of pyed")
-    PARSER.add_argument('status',  choices=['start', 'stop', 'restart'])
     PARSER.add_argument('-c', '--config_file', type=str, required=True)
     CONFIG_FILENAME = ""
     STATUS = ""
