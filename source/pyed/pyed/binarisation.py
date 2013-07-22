@@ -45,19 +45,28 @@ def osm2ed(osm_filename, config, backup_directory):
     osm_logger = logging.getLogger('osm2ed')
     res = launch_exec("mv", [osm_filename, backup_directory], pyed_logger)
     if res != 0:
+        error = "Error while moving " + osm_filename 
+        error += + " to " + backup_directory
+        osm_logger(error)
+        pyed_logger(error)
         return 1
     connection_string = ""
     try:
         connection_string = make_connection_string(config)
     except ConfigException:
-        pyed_logger.error("osm2ed : Unable to make the connection string")
+        error = "osm2ed : Unable to make the connection string"
+        pyed_logger.error(error)
+        osm_logger.error(error)
         return 2
     mved_file = backup_directory
-    mved_file += osm_filename.split("/")[-1]
+    mved_file += "/"+osm_filename.split("/")[-1]
     res = launch_exec(config.get("instance", "exec_directory")+"/osm2ed",
                 ["-i", mved_file, "--connection-string", connection_string],
                 osm_logger, pyed_logger)
     if res != 0:
+        error = "osm2ed failed"
+        pyed_logger.error(error)
+        osm2ed_logger.error(error)
         return 3
     return 0
 
@@ -66,7 +75,12 @@ def ed2nav(filename, config):
     """ Launch osm2ed, compute the md5 sum of it, and save the md5 """
     pyed_logger = logging.getLogger('pyed')
     ed2nav_logger = logging.getLogger('ed2nav')
-    target_directory = config.get("instance" , "target_directory")
+    target_directory = None
+    try :
+        target_directory = config.get("instance" , "target_directory")
+    except ConfigException, error:
+        ed2nav_logger(error)
+        return 4
     filename = target_directory +"/data.nav.lz4"
     try:
         connection_string = make_connection_string(config)
