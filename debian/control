@@ -1,5 +1,5 @@
 Source: kraken
-Version: 0.62.11
+Version: 0.62.12
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
 Installed-Size: 12379
@@ -9,7 +9,7 @@ Priority: optional
 Description: Kraken ed Jörmungandr
 
 Package: kraken
-Version: 0.62.11
+Version: 0.62.12
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
 Installed-Size: 12379

@@ -1,3 +1,11 @@
+kraken (0.62.12) quantal; urgency=low
+
+  * Pyed : On enlève totalement pid_file
+  * Pyed : On enlève l'option start de pyed
+  * Pyed : Version 0.31
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 22 Jul 2013 10:26:49 +0200
+
 kraken (0.62.11) quantal; urgency=low
 
   * Pyed : On enleve daemon.py
