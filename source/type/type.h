@@ -297,12 +297,12 @@ enum class ConnectionType {
 };
 
 enum class OdtType {
-    Default = 0,    // ligne régulière
-    tad1 = 1,       // TAD virtuel avec horaires
-    tad2 = 2,       // TAD virtuel sans horaires
-    tad3 = 3,       // TAD rabattement arrêt à arrêt
-    tad4 = 4,       // TAD rabattement adresse à arrêt
-    tad5 = 5       // TAD point à point (Commune à Commune)
+    regular_line = 0,                 // ligne régulière
+    virtual_with_stop_time = 1,       // TAD virtuel avec horaires
+    virtual_without_stop_time = 2,    // TAD virtuel sans horaires
+    stop_point_to_stop_point = 3,     // TAD rabattement arrêt à arrêt
+    adress_to_stop_point = 4,         // TAD rabattement adresse à arrêt
+    odt_point_to_point = 5            // TAD point à point (Commune à Commune)
 };
 
 struct StopPoint;
