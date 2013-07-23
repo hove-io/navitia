@@ -327,34 +327,36 @@ void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &p
         pbnavitia::StreetNetwork * sn = section->mutable_street_network();
         create_pb(ori_dest, path, data, sn);
 
-        pbnavitia::Place* place;
+
         navitia::georef::Way* way;
         type::GeographicalCoord coord;
 
         if(path.path_items.size() > 1){
-
+            pbnavitia::Place* orig_place = section->mutable_origin();
             way = data.geo_ref.ways[path.path_items.front().way_idx];
             coord = path.coordinates.front();
-            place = section->mutable_origin();
-            fill_pb_object(way, data, place->mutable_address(), way->nearest_number(coord),coord , max_depth, now, action_period);
-            if(place->address().has_house_number())
-                place->set_name(boost::lexical_cast<std::string>(place->address().house_number()) + ", ");
-            place->set_name(place->name() + place->address().name());
-            for(auto admin : place->address().administrative_regions())
-                place->set_name(place->name() + ", " + admin.name());
-            place->set_uri(place->address().uri());
+            orig_place = section->mutable_origin();
+            fill_pb_object(way, data, orig_place->mutable_address(), way->nearest_number(coord),coord , max_depth, now, action_period);
+            if(orig_place->address().has_house_number())
+                orig_place->set_name(boost::lexical_cast<std::string>(orig_place->address().house_number()) + ", ");
+            orig_place->set_name(orig_place->name() + orig_place->address().name());
+            for(auto admin : orig_place->address().administrative_regions())
+                orig_place->set_name(orig_place->name() + ", " + admin.name());
+            orig_place->set_uri(orig_place->address().uri());
+            orig_place->set_embedded_type(pbnavitia::ADDRESS);
 
+            pbnavitia::Place* dest_place = section->mutable_destination();
             way = data.geo_ref.ways[path.path_items.back().way_idx];
             coord = path.coordinates.back();
-            place = section->mutable_destination();
-            fill_pb_object(way, data, place->mutable_address(), way->nearest_number(coord),coord , max_depth, now, action_period);
-            if(place->address().has_house_number())
-                place->set_name(boost::lexical_cast<std::string>(place->address().house_number()) + ", ");
-            place->set_name(place->name() + place->address().name());
-            for(auto admin : place->address().administrative_regions())
-                place->set_name(place->name() + ", " + admin.name());
-            place->set_uri(place->address().uri());
-            place->set_embedded_type(pbnavitia::ADDRESS);
+            dest_place = section->mutable_destination();
+            fill_pb_object(way, data, dest_place->mutable_address(), way->nearest_number(coord),coord , max_depth, now, action_period);
+            if(dest_place->address().has_house_number())
+                dest_place->set_name(boost::lexical_cast<std::string>(dest_place->address().house_number()) + ", ");
+            dest_place->set_name(dest_place->name() + dest_place->address().name());
+            for(auto admin : dest_place->address().administrative_regions())
+                dest_place->set_name(dest_place->name() + ", " + admin.name());
+            dest_place->set_uri(dest_place->address().uri());
+            dest_place->set_embedded_type(pbnavitia::ADDRESS);
         }
     }
 }

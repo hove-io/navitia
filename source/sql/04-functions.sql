@@ -122,7 +122,16 @@ on (w.id = a.way_id)
 where a.admin_id is NULL
 $$
 LANGUAGE SQL;
-
+-- Ajout des voies qui ne sont pas dans la table de fusion : cas voie appartient à un seul admin avec un level 9
+CREATE OR REPLACE FUNCTION georef.complate_fusion_ways() RETURNS VOID AS $$
+insert into georef.fusion_ways(id, way_id)  
+ select georef.way.id, georef.way.id from georef.way
+where georef.way.id in ( select w.id from georef.way w
+left outer join georef.fusion_ways fw
+on(w.id=fw.way_id)
+where fw.id IS NULL)
+$$
+LANGUAGE SQL;
 
 
 CREATE OR REPLACE FUNCTION georef.add_way_name() RETURNS VOID AS $$

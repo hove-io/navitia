@@ -643,8 +643,14 @@ def reconstruct_pagination_journeys(string, region_name):
         if len(arg_and_val.split("=")) == 2:
             arg, val = arg_and_val.split("=")
             if arg == "origin" or arg == "destination":
-                resource_type, uid = val.split(":")
+                coord = ""
+                if val[:5] == "coord":
+                    val = val[5:-1]
+                    resource_type = "coord"
+                else:
+                    resource_type, uid = val.split(":")
                 val = region_name + "/" + resource_type_to_collection[resource_type] + "/" + val
+
                 if arg == "origin":
                     arg = "from"
                 else:

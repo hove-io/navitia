@@ -299,6 +299,8 @@ void Visitor::build_ways(){
     PQclear(this->lotus.exec("SELECT georef.insert_tmp_rel_way_admin();", "", PGRES_TUPLES_OK));
     /// MAJ des way_id dans la table edge
     PQclear(this->lotus.exec("SELECT georef.update_edge();", "", PGRES_TUPLES_OK));
+    ///  Ajout des voies qui ne sont pas dans la table de fusion : cas voie appartient à un seul admin avec un level 9
+    PQclear(this->lotus.exec("SELECT georef.complate_fusion_ways();", "", PGRES_TUPLES_OK));
     /// Ajout des voies n'ayant pas de communes dans la table de fusion
     PQclear(this->lotus.exec("SELECT georef.add_fusion_ways();", "", PGRES_TUPLES_OK));
     /// Ecrasement des données de la table 'rel_way_admin' par 'tmp_rel_way_admin'

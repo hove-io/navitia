@@ -139,7 +139,7 @@ def stop_schedules(request, uri1, uri2=None):
     return Response(return_ +'}', mimetype='text/plain;charset=utf-8')
 
 def journeys(request, uri1=None):
-    acceptable_types = ["stop_areas", "stop_points", "address", "coord", "poi"]
+    acceptable_types = ["stop_areas", "stop_points", "addresses", "coords", "poi"]
     u1 = None
     from_=""
     if uri1:
