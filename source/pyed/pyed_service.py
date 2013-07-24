@@ -28,7 +28,10 @@ def main(config_filename):
     pyed_logger.info(" watching initialized")
 
     pyed_logger.info(" Launching watching daemon")
-    watching.run()
+    try:
+        watching.run()
+    except Exception:
+        pyed_logger.exception("Fatal error, ")
     pyed_logger.info(" watching daemon launched")
 
 if __name__ == '__main__':

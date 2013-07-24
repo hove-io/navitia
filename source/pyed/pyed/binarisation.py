@@ -69,12 +69,12 @@ def osm2ed(osm_filename, config, backup_directory):
     if res != 0:
         error = "osm2ed failed"
         pyed_logger.error(error)
-        osm2ed_logger.error(error)
+        osm_logger.error(error)
         return 3
     return 0
 
 
-def ed2nav(filename, config):
+def ed2nav(config):
     """ Launch osm2ed, compute the md5 sum of it, and save the md5 """
     pyed_logger = logging.getLogger('pyed')
     ed2nav_logger = logging.getLogger('ed2nav')

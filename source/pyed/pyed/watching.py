@@ -45,7 +45,7 @@ class Watching():
             osm_files = glob.glob(self.directory+"/*.pbf")
             gtfs_files = glob.glob(self.directory+"/*.zip")
             worked_on_files = []
-            while len(osm_files) > 0 or len(gtfs_files) :
+            while len(osm_files) > 0 or len(gtfs_files)>0 :
                 try:
                     if self.make_backupdirectory() !=0:
                         self.pyed_logger.error("""Unable to make backup
