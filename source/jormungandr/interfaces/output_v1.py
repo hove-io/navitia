@@ -2,7 +2,7 @@
 from conf import base_url
 from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
 from renderers import render
-import request_pb2, type_pb2
+import request_pb2, type_pb2,response_pb2
 from uri import collections_to_resource_type, resource_type_to_collection
 from error import generate_error
 from sets import Set
@@ -148,8 +148,6 @@ class json_renderer:
             if row.stop_times:
                 r['date_times'] = []
                 for stop_time in row.stop_times:
-                    #if not 'stop_times' in r:
-                    #    r['date_times'] = []
                     r['date_times'].append(self.stop_time(stop_time, uri.region()))
             result['table']['rows'].append(r)
 
@@ -459,6 +457,15 @@ class json_renderer:
                 result['notes'].append({"id": note_.uri})
 
         return result
+    def estimated_duration(self, stop_date_times):
+        result = False
+        for stop_dt in stop_date_times:
+            if stop_dt.HasField('has_properties'):
+                for additional_information in stop_dt.has_properties.additional_informations:
+                    if additional_information == type_pb2.hasPropertie.DATE_TIME_ESTIMATED:
+                        result = True
+                        break
+        return result
 
     def section(self, obj, region_name):
         self.visited_types.add("origin")
@@ -472,10 +479,11 @@ class json_renderer:
                   'duration': obj.duration,
                   'from': self.time_place(obj, region_name),
                   'to': self.time_place(obj, region_name, False)}
-        if obj.pt_display_informations.odt_type != type_pb2.regular_line:
-            result["odt_type"] = get_name_enum(obj.pt_display_informations, obj.pt_display_informations.odt_type)
-
-
+        #if obj.pt_display_informations.odt_type != type_pb2.regular_line:
+            #result["odt_type"] = get_name_enum(obj.pt_display_informations, obj.pt_display_informations.odt_type)
+        result['additional_information'] = []
+        if self.estimated_duration(obj.stop_date_times):
+            result['additional_information'].append("duration_estimated")
         if obj.HasField('uris'):
             result['links'] = self.section_links(region_name, obj.uris)
         if obj.HasField('pt_display_informations'):
