@@ -5,6 +5,7 @@ from pyed.launch_exec import launch_exec
 from pyed.config import ConfigException
 import logging
 import subprocess
+import os.path
 
 def make_connection_string(config):
     """ Make the a connection string connection from the config """
@@ -18,11 +19,13 @@ def gtfs2ed(gtfs_filename, config, backup_directory):
     """ Unzip gtfs file, remove the file, launch gtfs2ed """
     pyed_logger = logging.getLogger('pyed')
     gtfs_logger = logging.getLogger('gtfs2ed')
-    res = launch_exec("unzip", [gtfs_filename, "-d", backup_directory],
-                       pyed_logger)
-    if res != 0:
+    res = launch_exec("mv", [gtfs_filename, backup_directory], pyed_logger)
+    if res!=0:
         return 1
-    res = launch_exec("rm", [gtfs_filename], pyed_logger)
+    gtfs_bnanme = os.path.basename(gtfs_filename)
+    new_gtfs = backup_directory + "/" +gtfs_bnanme
+    res = launch_exec("unzip", [new_gtfs, "-d", backup_directory],
+                       pyed_logger)
     if res != 0:
         return 2
     try :
