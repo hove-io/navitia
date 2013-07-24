@@ -167,6 +167,14 @@ class json_renderer:
             del result['display_informations']
         return result
 
+    def notes_stop_date_times(self, obj, uri):
+        r = []
+        for section in obj.sections:
+            if section.stop_date_times:
+                for stop_date_time in section.stop_date_times:
+                    for note_ in stop_date_time.notes:
+                        r.append({"id": note_.uri, "value": note_.note})
+        return r
 
     def journey(self, obj, uri, details, is_isochrone, arguments):
         result = {
@@ -410,13 +418,11 @@ class json_renderer:
 
     def street_network(self, street_network):
         result = {
-                'length': street_network.length,
-                'mode': street_network.mode,
-                'instructions': [],
+                'path_items': [],
                 'coordinates': []
                 }
         for item in street_network.path_items:
-            result['instructions'].append({'name': item.name, 'length': item.length})
+            result['path_items'].append({'name': item.name, 'length': item.length})
 
         for coord in street_network.coordinates:
             result['coordinates'].append({'lon': coord.lon, 'lat': coord.lat})
@@ -434,6 +440,15 @@ class json_renderer:
         if obj.HasField('stop_point'):
             self.visited_types.add("stop_point")
             result['stop_point'] = self.stop_point(obj.stop_point, region_name)
+
+        result['additional_information'] = []
+        descriptor = type_pb2.StopDateTime.DESCRIPTOR.enum_types_by_name['AdditionalInformation'].values_by_number
+        for additional_information in obj.additional_informations:
+            result['additional_information'].append(descriptor[additional_information].name)
+
+        result['notes'] = []
+        for note_ in obj.notes:
+            result['notes'].append({"id": note_.uri})
 
         return result
 
@@ -465,6 +480,7 @@ class json_renderer:
 
         if obj.HasField('street_network'):
             result['street_network'] = self.street_network(obj.street_network)
+            result['length'] = obj.street_network.length
 
         if obj.HasField('transfer_type'):
             result['transfert_type'] = obj.transfer_type
@@ -673,15 +689,26 @@ def get_name_enum(obj, enum):
             return field.enum_type.values_by_number[int(value)].name
     return ""
 
+def street_network_display_informations(journey) :
+    for section in journey.sections:
+        if section.type == response_pb2.STREET_NETWORK:
+            if section.HasField('street_network'):
+                section.pt_display_informations.physical_mode = get_name_enum(section.street_network, section.street_network.mode)
+                section.pt_display_informations.direction = section.street_network.path_items[-1].name
+
+
+
 def journeys(arguments, uri, response, format, callback, is_isochrone=False):
 
     renderer = json_renderer(base_url + '/v1/')
     if is_isochrone:
         response_dict = {'journeys': [], "links" : []}
     if not is_isochrone:
-        response_dict = {'pagination': {'links' : []}, 'response_type' : '', 'journeys': []}
+        response_dict = {'pagination': {'links' : []}, 'response_type' : '', 'journeys': [], 'notes' : []}
     for journey in response.journeys:
+        street_network_display_informations(journey)
         response_dict['journeys'].append(renderer.journey(journey, uri, True, is_isochrone, arguments))
+        response_dict['notes'].extend(renderer.notes_stop_date_times( journey, uri))
     if is_isochrone:
         response_dict['links'].extend(renderer.link_types(uri.region()))
     if not is_isochrone:

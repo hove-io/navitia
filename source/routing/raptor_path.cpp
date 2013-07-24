@@ -107,6 +107,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,  cons
                     }
 
                     size_t order = current_st->journey_pattern_point->order;
+                    item.orders.push_back(order);
                     // On parcourt les données dans le sens contraire du calcul
                     if(clockwise){
                         BOOST_ASSERT(order>0);
@@ -122,6 +123,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,  cons
                 }
                 // Je stocke le dernier stop point, et ses temps d'arrivée et de départ
                 item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_jpp_idx]->stop_point->idx);
+                item.orders.push_back(current_st->journey_pattern_point->order);
                 if(clockwise) {
                     workingDate.update(current_st->departure_time+gap_frep, !clockwise);
                     item.departures.push_back(workingDate);

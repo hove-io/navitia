@@ -59,14 +59,23 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             if(path.items.size() > 0 && path.items.front().stop_points.size() > 0 && path.items.front().stop_points.size() > 0){
                 const auto temp = worker.get_path(path.items.front().stop_points.front());
                 if(temp.path_items.size() > 0) {
-                    fill_street_section(origin, temp , d, pb_journey->add_sections(), 1);
+                    pbnavitia::Section * pb_section = pb_journey->add_sections();
+                    fill_street_section(origin, temp , d, pb_section, 1);
                     departure_time = path.items.front().departure - temp.length/origin.streetnetwork_params.speed;
+                    auto arr_time = path.items.front().departure;
+                    pb_section->set_end_date_time(iso_string(d, arr_time.date(), arr_time.hour()));
+                    pb_section->set_begin_date_time(iso_string(d, departure_time.date(), departure_time.hour()));
                 }
             }
             
-
+            const type::VehicleJourney* vj;
             // La partie TC et correspondances
             for(PathItem & item : path.items){
+
+
+                if (item.vj_idx != type::invalid_idx)
+                    vj = d.pt_data.vehicle_journeys[item.vj_idx];
+
                 pbnavitia::Section * pb_section = pb_journey->add_sections();
                 if(item.type == public_transport){
                     pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
@@ -75,7 +84,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                     for(size_t i=0;i<item.stop_points.size();++i){
                         pbnavitia::StopDateTime * stop_time = pb_section->add_stop_date_times();
                         auto arr_time = item.arrivals[i];
-                        stop_time->set_arrival_date_time(iso_string(d, arr_time.date(), arr_time.hour()));
+                        stop_time->set_arrival_date_time(iso_string(d, arr_time.date(), arr_time.hour()));                        
                         auto dep_time = item.departures[i];
                         stop_time->set_departure_date_time(iso_string(d, dep_time.date(), dep_time.hour()));
                         boost::posix_time::time_period action_period(to_posix_time(dep_time, d), to_posix_time(arr_time, d));
@@ -83,7 +92,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                         if(!pb_section->has_origin())
                             fill_pb_placemark(d.pt_data.stop_points[item.stop_points[i]], d, pb_section->mutable_origin(), 1, now, action_period);
                         fill_pb_placemark(d.pt_data.stop_points[item.stop_points[i]], d, pb_section->mutable_destination(), 1, now, action_period);
-
+                        if (item.vj_idx != type::invalid_idx)
+                            fill_pb_object(vj->stop_time_list[item.orders[i]], d, stop_time, 1, now, action_period);
 
                         // L'heure de départ du véhicule au premier stop point
                         if(departure_ptime.is_not_a_date_time())
@@ -123,14 +133,15 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             }
             pb_journey->set_duration(arrival_time - departure_time);
 
-
-
             // La marche à pied finale si on avait donné une coordonnée
             if(path.items.size() > 0 && path.items.back().stop_points.size() > 0 && path.items.back().stop_points.size()>0){
                 auto temp = worker.get_path(path.items.back().stop_points.back(), true);
                 if(temp.path_items.size() > 0) {
-                    fill_street_section(destination, temp, d, pb_journey->add_sections(), 1);
+                    pbnavitia::Section * pb_section = pb_journey->add_sections();
+                    fill_street_section(destination, temp, d, pb_section, 1);
+                    pb_section->set_begin_date_time(iso_string(d, arrival_time.date(), arrival_time.hour()));
                     arrival_time =  arrival_time + temp.length/destination.streetnetwork_params.speed;
+                    pb_section->set_end_date_time(iso_string(d, arrival_time.date(), arrival_time.hour()));
                 }
             }
             pb_journey->set_departure_date_time(iso_string(d, departure_time.date(), departure_time.hour()));

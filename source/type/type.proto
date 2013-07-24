@@ -47,7 +47,6 @@ enum OdtType{
     odt_point_to_point = 5;           // TAD point à point (Commune à Commune)
 }
 
-
 message Message{
     optional string uri = 1;
     optional string message = 2;
@@ -119,11 +118,25 @@ message JourneyPattern {
     repeated Message messages = 9;
 }
 
-message StopDateTime {
-    optional string arrival_date_time = 1;
-    optional string departure_date_time = 2;
-    optional StopPoint stop_point = 3;
+message Note{
+    required string uri = 1;
+    optional string note = 2;	
 }
+
+message StopDateTime {
+	enum AdditionalInformation{
+		PICK_UP_ONLY = 1;
+		DROP_OFF_ONLY = 2;
+		ON_DEMAND_TRANSPORT = 3;
+		DATE_TIME_ESTIMATED = 4;
+	}
+    optional string arrival_date_time = 1;
+    optional string departure_date_time = 2;    
+    optional StopPoint stop_point = 3;
+    repeated AdditionalInformation additional_informations = 4;
+    repeated Note notes = 5;
+}
+
 
 message StopTime {
     optional string arrival_time = 1;

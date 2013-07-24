@@ -291,6 +291,29 @@ void fill_pb_object(const nt::StopTime* st, const type::Data &data, pbnavitia::S
         fill_pb_object(st->vehicle_journey, data, stop_time->mutable_vehicle_journey(), max_depth-1, now, action_period);
 }
 
+void fill_pb_object(const nt::StopTime* st, const type::Data &, pbnavitia::StopDateTime * stop_date_time, int ,
+                    const pt::ptime& , const pt::time_period& ) {
+    if(st == nullptr)
+        return ;
+
+    if ((!st->drop_off_allowed()) && st->pick_up_allowed()){
+        stop_date_time->add_additional_informations(pbnavitia::StopDateTime::PICK_UP_ONLY);
+    }
+    if (st->drop_off_allowed() && (!st->pick_up_allowed())){
+        stop_date_time->add_additional_informations(pbnavitia::StopDateTime::DROP_OFF_ONLY);
+    }
+    if (st->odt()){
+        stop_date_time->add_additional_informations(pbnavitia::StopDateTime::ON_DEMAND_TRANSPORT);
+    }
+    if (st->date_time_estimated()){
+        stop_date_time->add_additional_informations(pbnavitia::StopDateTime::DATE_TIME_ESTIMATED);
+    }
+    if(!st->comment.empty()){
+        pbnavitia::Note* note = stop_date_time->add_notes();
+        note->set_uri("note:"+std::to_string(st->journey_pattern_point->idx) + std::to_string(st->vehicle_journey->idx));
+        note->set_note(std::to_string(st->journey_pattern_point->idx) + std::to_string(st->vehicle_journey->idx)/*st->comment*/);
+    }
+}
 
 void fill_pb_object(const nt::JourneyPatternPoint* jpp, const nt::Data& data, pbnavitia::JourneyPatternPoint * journey_pattern_point, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period){
@@ -325,13 +348,12 @@ void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &p
     if(path.path_items.size() > 0) {
         section->set_type(pbnavitia::STREET_NETWORK);
         pbnavitia::StreetNetwork * sn = section->mutable_street_network();
-        create_pb(ori_dest, path, data, sn);
-
-
-        navitia::georef::Way* way;
+        create_pb(ori_dest, path, data, sn);        
+        section->set_duration(sn->length()/ori_dest.streetnetwork_params.speed);
+        navitia::georef::Way* way;        
         type::GeographicalCoord coord;
 
-        if(path.path_items.size() > 1){
+        if(path.path_items.size() > 0){
             pbnavitia::Place* orig_place = section->mutable_origin();
             way = data.geo_ref.ways[path.path_items.front().way_idx];
             coord = path.coordinates.front();
@@ -356,7 +378,7 @@ void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &p
             for(auto admin : dest_place->address().administrative_regions())
                 dest_place->set_name(dest_place->name() + ", " + admin.name());
             dest_place->set_uri(dest_place->address().uri());
-            dest_place->set_embedded_type(pbnavitia::ADDRESS);
+            dest_place->set_embedded_type(pbnavitia::ADDRESS);            
         }
     }
 }
@@ -391,6 +413,7 @@ void create_pb(const type::EntryPoint &ori_dest, const navitia::georef::Path& pa
             pbnavitia::PathItem * path_item = sn->add_path_items();
             path_item->set_name(data.geo_ref.ways[item.way_idx]->name);
             path_item->set_length(item.length);
+            sn->set_length(sn->length() + item.length);
         }else{
             std::cout << "Way étrange : " << item.way_idx << std::endl;
         }
