@@ -296,22 +296,23 @@ void fill_pb_object(const nt::StopTime* st, const type::Data &, pbnavitia::StopD
     if(st == nullptr)
         return ;
 
+    pbnavitia::hasPropertie * hp = stop_date_time->mutable_has_properties();
     if ((!st->drop_off_allowed()) && st->pick_up_allowed()){
-        stop_date_time->add_additional_informations(pbnavitia::StopDateTime::PICK_UP_ONLY);
+        hp->add_additional_informations(pbnavitia::hasPropertie::PICK_UP_ONLY);
     }
-    if (st->drop_off_allowed() && (!st->pick_up_allowed())){
-        stop_date_time->add_additional_informations(pbnavitia::StopDateTime::DROP_OFF_ONLY);
+   if (st->drop_off_allowed() && (!st->pick_up_allowed())){
+        hp->add_additional_informations(pbnavitia::hasPropertie::DROP_OFF_ONLY);
     }
     if (st->odt()){
-        stop_date_time->add_additional_informations(pbnavitia::StopDateTime::ON_DEMAND_TRANSPORT);
+        hp->add_additional_informations(pbnavitia::hasPropertie::ON_DEMAND_TRANSPORT);
     }
     if (st->date_time_estimated()){
-        stop_date_time->add_additional_informations(pbnavitia::StopDateTime::DATE_TIME_ESTIMATED);
+        hp->add_additional_informations(pbnavitia::hasPropertie::DATE_TIME_ESTIMATED);
     }
     if(!st->comment.empty()){
-        pbnavitia::Note* note = stop_date_time->add_notes();
+        pbnavitia::Note* note = hp->add_notes();
         note->set_uri("note:"+std::to_string(st->journey_pattern_point->idx) + std::to_string(st->vehicle_journey->idx));
-        note->set_note(std::to_string(st->journey_pattern_point->idx) + std::to_string(st->vehicle_journey->idx)/*st->comment*/);
+        note->set_note(st->comment);
     }
 }
 
@@ -457,21 +458,21 @@ void fill_pb_object(const navitia::type::StopTime* stop_time, const nt::Data& da
     pbnavitia::RouteScheduleStopTime* rs_stop_time = row->add_stop_times();
     if(stop_time != nullptr) {
         rs_stop_time->set_stop_time(iso_string(date_time.date(),  date_time.hour(), data));
-
+        pbnavitia::hasPropertie * hn = rs_stop_time->mutable_has_properties();
         if ((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed()){
-            rs_stop_time->add_additional_informations(pbnavitia::RouteScheduleStopTime::PICK_UP_ONLY);
+            hn->add_additional_informations(pbnavitia::hasPropertie::PICK_UP_ONLY);
         }
         if (stop_time->drop_off_allowed() && (!stop_time->pick_up_allowed())){
-            rs_stop_time->add_additional_informations(pbnavitia::RouteScheduleStopTime::DROP_OFF_ONLY);
+            hn->add_additional_informations(pbnavitia::hasPropertie::DROP_OFF_ONLY);
         }
         if (stop_time->odt()){
-            rs_stop_time->add_additional_informations(pbnavitia::RouteScheduleStopTime::ON_DEMAND_TRANSPORT);
+            hn->add_additional_informations(pbnavitia::hasPropertie::ON_DEMAND_TRANSPORT);
         }
         if (stop_time->date_time_estimated()){
-            rs_stop_time->add_additional_informations(pbnavitia::RouteScheduleStopTime::DATE_TIME_ESTIMATED);
+            hn->add_additional_informations(pbnavitia::hasPropertie::DATE_TIME_ESTIMATED);
         }
         if(!stop_time->comment.empty()){
-            pbnavitia::Note* note = rs_stop_time->add_notes();
+            pbnavitia::Note* note = hn->add_notes();
             note->set_uri("note:"+std::to_string(stop_time->journey_pattern_point->idx) + std::to_string(stop_time->vehicle_journey->idx));
             note->set_note(stop_time->comment);
         }

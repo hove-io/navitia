@@ -2,7 +2,7 @@
 from conf import base_url
 from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
 from renderers import render
-import request_pb2, type_pb2, response_pb2
+import request_pb2, type_pb2
 from uri import collections_to_resource_type, resource_type_to_collection
 from error import generate_error
 from sets import Set
@@ -111,13 +111,14 @@ class json_renderer:
         result = {}
         result['date_time'] = obj.stop_time
         result['additional_information'] = []
-        descriptor = response_pb2.RouteScheduleStopTime.DESCRIPTOR.enum_types_by_name['AdditionalInformation'].values_by_number
-        for indicate in obj.additional_informations:
-            result['additional_information'].append(descriptor[indicate].name)
+        if obj.HasField("has_properties"):
+            for additional_information in obj.has_properties.additional_informations:
+                result['additional_information'].append(self.name_has_propertie(additional_information))
 
         r = []
-        for note in obj.notes:
-            r.append({"id": note.uri, "type": "notes"})
+        if obj.HasField("has_properties"):
+            for note in obj.has_properties.notes:
+                r.append({"id": note.uri, "type": "notes"})
         if (len(r)> 0):
             result["links"]= r
 
@@ -130,8 +131,9 @@ class json_renderer:
         for row in obj.table.rows :
             if row.stop_times:
                 for stop_time in row.stop_times:
-                    for note_ in stop_time.notes:
-                        r.append({"id": note_.uri, "value": note_.note})
+                    if stop_time.HasField("has_properties"):
+                        for note_ in stop_time.has_properties.notes:
+                            r.append({"id": note_.uri, "value": note_.note})
         return r
 
 
@@ -172,8 +174,9 @@ class json_renderer:
         for section in obj.sections:
             if section.stop_date_times:
                 for stop_date_time in section.stop_date_times:
-                    for note_ in stop_date_time.notes:
-                        r.append({"id": note_.uri, "value": note_.note})
+                    if stop_date_time.HasField('has_properties'):
+                        for note_ in stop_date_time.has_properties.notes:
+                            r.append({"id": note_.uri, "value": note_.note})
         return r
 
     def journey(self, obj, uri, details, is_isochrone, arguments):
@@ -429,6 +432,10 @@ class json_renderer:
 
         return result
 
+    def name_has_propertie(self, enum):
+        descriptor = type_pb2.hasPropertie.DESCRIPTOR.enum_types_by_name['AdditionalInformation'].values_by_number
+        return descriptor[enum].name
+
     def stop_date_time(self, obj, region_name):
         result = {}
         if obj.HasField('departure_date_time'):
@@ -441,14 +448,15 @@ class json_renderer:
             self.visited_types.add("stop_point")
             result['stop_point'] = self.stop_point(obj.stop_point, region_name)
 
-        result['additional_information'] = []
-        descriptor = type_pb2.StopDateTime.DESCRIPTOR.enum_types_by_name['AdditionalInformation'].values_by_number
-        for additional_information in obj.additional_informations:
-            result['additional_information'].append(descriptor[additional_information].name)
+        if obj.HasField('has_properties'):
+            result['additional_information'] = []
+            for additional_information in obj.has_properties.additional_informations:
+                result['additional_information'].append(self.name_has_propertie(additional_information))
 
-        result['notes'] = []
-        for note_ in obj.notes:
-            result['notes'].append({"id": note_.uri})
+        if obj.HasField('has_properties'):
+            result['notes'] = []
+            for note_ in obj.has_properties.notes:
+                result['notes'].append({"id": note_.uri})
 
         return result
 

@@ -177,17 +177,9 @@ message PairStopTime {
     required StopDateTime arrival = 2;
 }
 
-
 message RouteScheduleStopTime {
-	enum AdditionalInformation{
-		PICK_UP_ONLY = 1;
-		DROP_OFF_ONLY = 2;
-		ON_DEMAND_TRANSPORT = 3;
-		DATE_TIME_ESTIMATED = 4;
-	}
     optional string stop_time = 1;
-    repeated AdditionalInformation additional_informations= 2;
-    repeated Note notes = 3;
+    optional hasPropertie has_properties = 2;
 }
 
 message RouteScheduleRow {
