@@ -247,6 +247,14 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data, pbnaviti
     vehicle_journey->set_is_adapted(vj->is_adapted);
     vehicle_journey->set_odt_type(get_pb_odt_type(vj->odt_type));
 
+    vehicle_journey->set_wheelchair_accessible(vj->wheelchair_accessible());
+    vehicle_journey->set_bike_accepted(vj->bike_accepted());
+    vehicle_journey->set_air_conditioned(vj->air_conditioned());
+    vehicle_journey->set_visual_announcement(vj->visual_announcement());
+    vehicle_journey->set_appropriate_escort(vj->appropriate_escort());
+    vehicle_journey->set_appropriate_signage(vj->appropriate_signage());
+    vehicle_journey->set_school_vehicle(vj->school_vehicle());
+
     if(vj->journey_pattern!= nullptr && max_depth > 0)
         fill_pb_object(vj->journey_pattern, data, vehicle_journey->mutable_journey_pattern(), max_depth-1, now, action_period);
 
@@ -480,16 +488,5 @@ void fill_pb_object(const navitia::type::StopTime* stop_time, const nt::Data& da
         rs_stop_time->set_stop_time("");
     }
 
-}
-
-void fill_pb_object(const navitia::type::VehicleJourney* vehiclejourney, const nt::Data& data,  pbnavitia::Header* header, int,
-                    const boost::posix_time::ptime&,
-                    const boost::posix_time::time_period&,
-                    const type::DateTime&){
-
-    if(vehiclejourney != nullptr){
-        fill_pb_object(vehiclejourney, data, header->mutable_vehiclejourney());
-        header->set_direction(vehiclejourney->get_direction());
-    }
 }
 }//namespace navitia
