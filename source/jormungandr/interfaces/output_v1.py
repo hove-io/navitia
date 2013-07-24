@@ -308,25 +308,25 @@ class json_renderer:
     def section_links(self, region_name, uris):
         links = []
         if uris.HasField('company'):
-            links.append({'href' : base_url + '/' +region_name + '/' + '/companies/' + uris.company, "type" : "company", "templated":False})
+            links.append({'type' : 'company' , 'id' : region_name + '/companies/' + uris.company})
 
         if uris.HasField('vehicle_journey'):
-            links.append({'href' : base_url + '/' +region_name + '/' + '/vehicle_journeys/' + uris.vehicle_journey, "type" : "vehicle_journey", "templated":False})
+            links.append({'type' : 'vehicle_journey' , 'id' : region_name + '/vehicle_journeys/' + uris.vehicle_journey})
 
         if uris.HasField('line'):
-            links.append({'href' : base_url + '/' +region_name + '/lines/' + uris.line, "type" : "line", "templated":False})
+            links.append({'type' : 'line' , 'id' : region_name + '/lines/' + uris.line})
 
         if uris.HasField('route'):
-            links.append({'href' : base_url + '/' +region_name + '/routes/' + uris.route, "type" : "route", "templated":False})
+            links.append({'type' : 'route' , 'id' : region_name + '/routes/' + uris.route})
 
         if uris.HasField('commercial_mode'):
-            links.append({'href' : base_url + '/' +region_name + '/commercial_modes/' + uris.commercial_mode, "type" : "commercial_mode", "templated":False})
+            links.append({'type' : 'commercial_mode' , 'id' : region_name + '/commercial_modes/' + uris.commercial_mode})
 
         if uris.HasField('physical_mode'):
-            links.append({'href' : base_url + '/' +region_name + '/physical_modes/' + uris.physical_mode, "type" : "physical_mode", "templated":False})
+            links.append({'type' : 'physical_mode' , 'id' : region_name + '/physical_modes/' + uris.physical_mode})
 
         if uris.HasField('network'):
-            links.append({'href' : base_url + '/' +region_name + '/networks/' + uris.network, "type" : "network", "templated":False})
+            links.append({'type' : 'network' , 'id' : region_name + '/networks/' + uris.network})
                        
         return links
 
@@ -715,7 +715,6 @@ def street_network_display_informations(journey) :
 
 
 def journeys(arguments, uri, response, format, callback, is_isochrone=False):
-
     renderer = json_renderer(base_url + '/v1/')
     if is_isochrone:
         response_dict = {'journeys': [], "links" : []}
