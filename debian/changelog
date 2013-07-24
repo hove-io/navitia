@@ -1,3 +1,28 @@
+kraken (0.62.16) quantal; urgency=low
+
+  [ Abderrahim Azime ]
+  * refactoring de "route_schedule"
+  * Suppression des commentaires inutils, ajout des stoptimes dans le cas où est nuls
+  * faute d'orthographe
+  * Ajout de l'accessibilté dans le flux au niveau de la circulation (VehicleJourney)
+  * Amélioration de l'interface V1 de "journeys"
+  * Remplacement de "pt_display_informations" par "display_informations" pour journeys
+  * Binarisation de l'information "odt_type_id" de la circulation
+  * Nommage des types de TAD
+  * Intitialisation de l'odt_type de la circulation par "regular_line"
+  * Amélioration de l'interface V1 de l'api "journeys"
+  * Ajout des links dans l'api "journeys"
+
+  [ Vincent Lara ]
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 22 Jul 2013 16:53:10 +0200
+
+kraken (0.62.15) quantal; urgency=low
+
+  * Pyed : Ajout de exec_directory
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 22 Jul 2013 14:37:29 +0200
+
 kraken (0.62.14) quantal; urgency=low
 
   * Pyed : Correction start => run
