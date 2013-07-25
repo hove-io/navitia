@@ -5,7 +5,7 @@ BUILDDIR = build
 # secondly called by launchpad
 build:
 	mkdir $(BUILDDIR);
-	cd $(BUILDDIR); cmake -DCMAKE_INSTALL_PREFIX=../debian/tmp/usr -DCMAKE_BUILD_TYPE=Release ../source
+	cd $(BUILDDIR); cmake -DCMAKE_INSTALL_PREFIX=../debian/tmp -DCMAKE_BUILD_TYPE=Release ../source
 	make -j5 -C $(BUILDDIR)
 
 # thirdly called by launchpad
@@ -18,7 +18,9 @@ binary-arch:
 	cd $(BUILDDIR); cmake -P cmake_install.cmake
 	mkdir debian/tmp/DEBIAN
 	dpkg-gencontrol
-	#cp debian/prerm debian/tmp/DEBIAN
+	rm debian/control
+	debian/python_control.py debian/tmp/DEBIAN/control debian/control
+	cp debian/postinst debian/tmp/DEBIAN
 	dh_md5sums
 	dpkg --build debian/tmp ..
 
@@ -28,6 +30,5 @@ clean:
 	rm -f debian/files
 	rm -f debian/*.debhelper.log
 	rm -rf $(BUILDDIR)
-	rm -rf debian/simple-gmail-notifier
 
 .PHONY: binary binary-arch binary-indep clean

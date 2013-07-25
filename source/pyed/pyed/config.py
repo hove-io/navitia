@@ -53,17 +53,18 @@ class Config:
         self.filename = filename
         self.dico_config = {"instance" : {
                                 "name" : None,
+                                "exec_directory": None,
                                 "source_directory" : None,
-                                "target_file" : None,
-                                "pid_file" : None,
-                            }, 
+                                "target_directory" : None,
+                                "backup_directory" : None
+                            },
                             "database" : {
                                 "name" : None,
                                 "user" : None,
                                 "host" : None,
                                 "password" : None
                                     }, 
-                            "logs_files" : {
+                            "log_files" : {
                                 "osm2ed" : None,
                                 "gtfs2ed" : None,
                                 "ed2nav" : None,
@@ -73,7 +74,7 @@ class Config:
         self.is_valid_ = False
         self.logger.info("Reading config")
         self.read()
-   
+
 
     def read(self):
         """ Read and parse the configuration, according to dico_config """

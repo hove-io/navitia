@@ -9,8 +9,9 @@ from pyed.launch_exec import launch_exec
 from pyed.config import ConfigException
 import logging
 from pyed.daemon import Daemon
+import time
 
-class Watching(Daemon):
+class Watching():
     """ when launch with run(), it looks in the source directory if there are
         any new file (osm or gtfs) to compute.
         If there was any file it will launch ed2nav after 
@@ -18,7 +19,6 @@ class Watching(Daemon):
 
     def __init__(self, conf):
         """ Init watching according to conf """
-        super(Watching, self).__init__(conf.get("instance", "pid_file"))
         self.directory = conf.get("instance", "source_directory")
         self.conf = conf
         self.pyed_logger = logging.getLogger('pyed')
@@ -32,8 +32,8 @@ class Watching(Daemon):
         """
         if not self.backup_directory:
             now = datetime.now()
-            self.backup_directory = self.conf.get("instance", "directory")
-            self.backup_directory += "/backup/" + now.strftime("%Y%m%d-%H%M%S")
+            self.backup_directory = self.conf.get("instance", "backup_directory")
+            self.backup_directory += "/"+now.strftime("%Y%m%d-%H%M%S")
             return launch_exec("mkdir", [self.backup_directory],
                                self.pyed_logger)
 
@@ -42,10 +42,10 @@ class Watching(Daemon):
             After it has computed the files it will launch ed2nav
         """
         while True:
-            osm_files = glob.glob(self.directory+"/source/*.pbf")
-            gtfs_files = glob.glob(self.directory+"/source/*.zip")
+            osm_files = glob.glob(self.directory+"/*.pbf")
+            gtfs_files = glob.glob(self.directory+"/*.zip")
             worked_on_files = []
-            while len(osm_files) > 0 or len(gtfs_files) :
+            while len(osm_files) > 0 or len(gtfs_files)>0 :
                 try:
                     if self.make_backupdirectory() !=0:
                         self.pyed_logger.error("""Unable to make backup
@@ -81,8 +81,7 @@ class Watching(Daemon):
 
             if len(worked_on_files) > 0:
                 self.pyed_logger.info("Launching ed2nav")
-                target_file = self.conf.get("instance", "target_file")
-                res = ed2nav(target_file, self.conf)
+                res = ed2nav(self.conf)
                 joined_files_str = ", ".join(worked_on_files)
                 if res == 0:
                     self.pyed_logger.info("""Ed2nav has finished for the files
@@ -94,3 +93,4 @@ class Watching(Daemon):
             else:
                 self.pyed_logger.debug("We haven't made any binarisation")
             self.backup_directory = None
+            time.sleep(60)

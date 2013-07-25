@@ -85,7 +85,7 @@ add_subdirectory(jormungandr)
 add_subdirectory(connectors)
 add_subdirectory(ratimake)
 add_subdirectory(pyed)
-
+add_subdirectory(sql)
 
 add_subdirectory(scripts)
 
@@ -104,16 +104,17 @@ SET(CPACK_PACKAGE_VERSION_PATCH ${KRAKEN_VERSION_PATCH})
 SET(CPACK_GENERATOR DEB)
 
 set(CPACK_PACKAGING_INSTALL_PREFIX "/")
-SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Tristram Gräbener<tristram.grabener@canaltp.fr>")
+SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Vincent Lara <vincent.lara@canaltp.fr>")
 SET(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
 SET(CPACK_DEBIAN_PACKAGE_NAME "kraken")
+SET(CPACK_DEBIAN_PACKAGE_SECTION "unstable")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Kraken ed Jörmungandr")
 SET(CPACK_DEBIAN_PACKAGE_SECTION "devel")
 
 IF(${lsb_release} STREQUAL "precise")
-    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.48.0, libboost-serialization1.48.0, libboost-regex1.48.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.48.0, libboost-program-options1.48.0, libboost-filesystem1.48.0, gunicorn, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf")
+    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.48.0, libboost-serialization1.48.0, libboost-regex1.48.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.48.0, libboost-program-options1.48.0, libboost-filesystem1.48.0, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf")
 ELSE()
-    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, gunicorn, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf")
+    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf")
 ENDIF()
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/debian/postinst;${CMAKE_SOURCE_DIR}/debian/changelog;")
 

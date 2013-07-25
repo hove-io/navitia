@@ -18,11 +18,13 @@ def gtfs2ed(gtfs_filename, config, backup_directory):
     """ Unzip gtfs file, remove the file, launch gtfs2ed """
     pyed_logger = logging.getLogger('pyed')
     gtfs_logger = logging.getLogger('gtfs2ed')
-    res = launch_exec("unzip", [gtfs_filename, "-d", backup_directory],
-                       pyed_logger)
-    if res != 0:
+    res = launch_exec("mv", [gtfs_filename, backup_directory], pyed_logger)
+    if res!=0:
         return 1
-    res = launch_exec("rm", [gtfs_filename], pyed_logger)
+    gtfs_bnanme = os.path.basename(gtfs_filename)
+    new_gtfs = backup_directory + "/" +gtfs_bnanme
+    res = launch_exec("unzip", [new_gtfs, "-d", backup_directory],
+                       pyed_logger)
     if res != 0:
         return 2
     try :
@@ -30,7 +32,7 @@ def gtfs2ed(gtfs_filename, config, backup_directory):
     except ConfigException:
         pyed_logger.error("gtfs2ed : Unable to make the connection string")
         return 3
-    res = launch_exec(config.get("instance", "directory")+"/gtfs2ed",
+    res = launch_exec(config.get("instance", "exec_directory")+"/gtfs2ed",
                 ["-i", backup_directory, "--connection-string",
                  connection_string],
                 gtfs_logger, pyed_logger)
@@ -45,33 +47,49 @@ def osm2ed(osm_filename, config, backup_directory):
     osm_logger = logging.getLogger('osm2ed')
     res = launch_exec("mv", [osm_filename, backup_directory], pyed_logger)
     if res != 0:
+        error = "Error while moving " + osm_filename 
+        error += + " to " + backup_directory
+        osm_logger(error)
+        pyed_logger(error)
         return 1
     connection_string = ""
     try:
         connection_string = make_connection_string(config)
     except ConfigException:
-        pyed_logger.error("osm2ed : Unable to make the connection string")
+        error = "osm2ed : Unable to make the connection string"
+        pyed_logger.error(error)
+        osm_logger.error(error)
         return 2
     mved_file = backup_directory
-    mved_file += osm_filename.split("/")[-1]
-    res = launch_exec(config.get("instance", "directory")+"/osm2ed",
+    mved_file += "/"+osm_filename.split("/")[-1]
+    res = launch_exec(config.get("instance", "exec_directory")+"/osm2ed",
                 ["-i", mved_file, "--connection-string", connection_string],
                 osm_logger, pyed_logger)
     if res != 0:
+        error = "osm2ed failed"
+        pyed_logger.error(error)
+        osm_logger.error(error)
         return 3
     return 0
 
 
-def ed2nav(filename, config):
+def ed2nav(config):
     """ Launch osm2ed, compute the md5 sum of it, and save the md5 """
     pyed_logger = logging.getLogger('pyed')
     ed2nav_logger = logging.getLogger('ed2nav')
+    target_directory = None
+    try :
+        target_directory = config.get("instance" , "target_directory")
+    except ConfigException, error:
+        ed2nav_logger(error)
+        return 4
+    filename = target_directory +"/data.nav.lz4"
     try:
         connection_string = make_connection_string(config)
     except ConfigException:
         pyed_logger.error("osm2ed : Unable to make the connection string")
         return 1
-    res = launch_exec(config.get("instance", "directory")+"/ed2nav",
+    res = launch_exec(config.get("instance", "exec_directory")+"/ed2nav",
                 ["-o", filename, "--connection-string", connection_string],
                 ed2nav_logger, pyed_logger)
     if res != 0:

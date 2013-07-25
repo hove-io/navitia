@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, os, time, atexit, logging
+import sys, os, time, atexit, logging, pwd, os
 from signal import SIGTERM 
 
 class Daemon(object):
@@ -9,7 +9,8 @@ class Daemon(object):
 
     Usage: subclass the Daemon class and override the run() method
     """
-    def __init__(self, pidfile, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+    def __init__(self, pidfile,
+                 stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
@@ -32,19 +33,19 @@ class Daemon(object):
             sys.exit(1)
 
         # decouple from parent environment
-        os.chdir("/") 
-        os.setsid() 
-        os.umask(0) 
+        os.chdir("/")
+        os.setsid()
+        os.umask(0)
 
         # do second fork
-        try: 
-            pid = os.fork() 
+        try:
+            pid = os.fork()
             if pid > 0:
                 # exit from second parent
-                sys.exit(0) 
-        except OSError, e: 
+                sys.exit(0)
+        except OSError, e:
             sys.stderr.write("fork #2 failed: %d (%s)\n" % (e.errno, e.strerror))
-            sys.exit(1) 
+            sys.exit(1)
 
         # redirect standard file descriptors
         sys.stdout.flush()
@@ -60,6 +61,7 @@ class Daemon(object):
         atexit.register(self.delpid)
         pid = str(os.getpid())
         file(self.pidfile,'w+').write("%s\n" % pid)
+        print "j'ai ecrit le fichier"
 
     def delpid(self):
         os.remove(self.pidfile)
@@ -113,7 +115,7 @@ class Daemon(object):
                 if os.path.exists(self.pidfile):
                     os.remove(self.pidfile)
             else:
-                logging.basicConfig(filename='/var/log/pyed.log',
+                logging.basicConfig(filename='/var/log/ed/pyed.log',
                                     level=logging.ERROR)
                 logging.error(str(err))
                 sys.exit(1)
