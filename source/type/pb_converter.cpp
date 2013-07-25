@@ -361,7 +361,6 @@ void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &p
         section->set_duration(sn->length()/ori_dest.streetnetwork_params.speed);
         navitia::georef::Way* way;        
         type::GeographicalCoord coord;
-
         if(path.path_items.size() > 0){
             pbnavitia::Place* orig_place = section->mutable_origin();
             way = data.geo_ref.ways[path.path_items.front().way_idx];
@@ -401,8 +400,6 @@ void fill_message(const type::Message & message, const type::Data&, pbnavitia::M
 
 void create_pb(const type::EntryPoint &ori_dest, const navitia::georef::Path& path, const navitia::type::Data& data, pbnavitia::StreetNetwork* sn,
         const pt::ptime&, const pt::time_period&){
-    sn->set_length(path.length);
-
     switch(ori_dest.streetnetwork_params.mode){
         case type::Mode_e::Bike:
             sn->set_mode(pbnavitia::Bike);
@@ -417,16 +414,18 @@ void create_pb(const type::EntryPoint &ori_dest, const navitia::georef::Path& pa
             sn->set_mode(pbnavitia::Walking);
     }    
 
+    uint32_t length = 0;
     for(auto item : path.path_items){
         if(item.way_idx < data.geo_ref.ways.size()){
             pbnavitia::PathItem * path_item = sn->add_path_items();
             path_item->set_name(data.geo_ref.ways[item.way_idx]->name);
             path_item->set_length(item.length);
-            sn->set_length(sn->length() + item.length);
+            length += item.length;
         }else{
             std::cout << "Way étrange : " << item.way_idx << std::endl;
         }
     }
+    sn->set_length(length);
     for(auto coord : path.coordinates){
         if(coord.is_initialized()) {
             pbnavitia::GeographicalCoord * pb_coord = sn->add_coordinates();
