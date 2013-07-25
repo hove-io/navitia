@@ -43,6 +43,7 @@ struct PathItem{
     navitia::type::DateTime departure;
     std::vector<navitia::type::DateTime> arrivals;
     std::vector<navitia::type::DateTime> departures;
+    std::vector<size_t> orders;
     type::idx_t vj_idx;
     std::vector<type::idx_t> stop_points;
     ItemType type;

@@ -170,13 +170,21 @@ struct hasVehicleProperties {
     static const uint8_t SCOOL_VEHICLE = 7;
 
     bool wheelchair_accessible() {return _vehicle_properties[WHEELCHAIR_ACCESSIBLE];}
+    bool wheelchair_accessible() const {return _vehicle_properties[WHEELCHAIR_ACCESSIBLE];}
     bool bike_accepted() {return _vehicle_properties[BIKE_ACCEPTED];}
+    bool bike_accepted() const {return _vehicle_properties[BIKE_ACCEPTED];}
     bool air_conditioned() {return _vehicle_properties[AIR_CONDITIONED];}
+    bool air_conditioned() const {return _vehicle_properties[AIR_CONDITIONED];}
     bool visual_announcement() {return _vehicle_properties[VISUAL_ANNOUNCEMENT];}
+    bool visual_announcement() const {return _vehicle_properties[VISUAL_ANNOUNCEMENT];}
     bool audible_announcement() {return _vehicle_properties[AUDIBLE_ANNOUNCEMENT];}
+    bool audible_announcement() const {return _vehicle_properties[AUDIBLE_ANNOUNCEMENT];}
     bool appropriate_escort() {return _vehicle_properties[APPOPRIATE_ESCORT];}
+    bool appropriate_escort() const {return _vehicle_properties[APPOPRIATE_ESCORT];}
     bool appropriate_signage() {return _vehicle_properties[APPOPRIATE_SIGNAGE];}
+    bool appropriate_signage() const {return _vehicle_properties[APPOPRIATE_SIGNAGE];}
     bool school_vehicle() {return _vehicle_properties[SCOOL_VEHICLE];}
+    bool school_vehicle() const {return _vehicle_properties[SCOOL_VEHICLE];}
 
     bool accessible(const VehicleProperties &required_vehicles) const{
         auto mismatched = required_vehicles & ~_vehicle_properties;

@@ -52,9 +52,10 @@ enum StreetNetworkMode {
 
 message StreetNetwork {
     optional double length = 1;
-    optional StreetNetworkMode mode = 2;
-    repeated PathItem path_items = 3;
-    repeated GeographicalCoord coordinates = 4;
+    optional double duration = 2;    
+    optional StreetNetworkMode mode = 3;    
+    repeated PathItem path_items = 4;
+    repeated GeographicalCoord coordinates = 5;
 }
 
 enum SectionType {
@@ -176,20 +177,9 @@ message PairStopTime {
     required StopDateTime arrival = 2;
 }
 
-message Note{
-    required string uri = 1;
-    optional string note = 2;	
-}
 message RouteScheduleStopTime {
-	enum AdditionalInformation{
-		PICK_UP_ONLY = 1;
-		DROP_OFF_ONLY = 2;
-		ON_DEMAND_TRANSPORT = 3;
-		DATE_TIME_ESTIMATED = 4;
-	}
     optional string stop_time = 1;
-    repeated AdditionalInformation additional_informations= 2;
-    repeated Note notes = 3;
+    optional hasPropertie has_properties = 2;
 }
 
 message RouteScheduleRow {

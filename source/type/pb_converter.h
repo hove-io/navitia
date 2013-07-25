@@ -25,6 +25,10 @@ void fill_pb_object(const navitia::type::StopTime* st, const type::Data &data, p
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
+void fill_pb_object(const navitia::type::StopTime* st, const type::Data &data, pbnavitia::StopDateTime * stop_date_time, int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period);
+
 void fill_pb_placemark(const type::StopPoint* stop_point, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
@@ -58,8 +62,4 @@ void fill_pb_object(const navitia::type::StopTime* st, const nt::Data& data, pbn
                     const boost::posix_time::time_period& action_period = null_time_period,
                     const type::DateTime& date_time = type::DateTime());
 
-void fill_pb_object(const navitia::type::VehicleJourney* vehiclejourney, const nt::Data& data, pbnavitia::Header* header, int max_depth = 0,
-                    const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
-                    const boost::posix_time::time_period& action_period = null_time_period,
-                    const type::DateTime& date_time = type::DateTime());
 }//namespace navitia

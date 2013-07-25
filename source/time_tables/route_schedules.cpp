@@ -101,12 +101,25 @@ pbnavitia::Response route_schedule(const std::string & filter, const std::string
         std::vector<type::VehicleJourney*> vehicle_journy_list = get_vehicle_jorney(stop_times);
         auto schedule = handler.pb_response.add_route_schedules();
         pbnavitia::Table *table = schedule->mutable_table();
-
-        fill_pb_object(d.pt_data.routes[route_idx], d, schedule->mutable_route(), max_depth, now, action_period);
+        navitia::type::Route* route = d.pt_data.routes[route_idx];
+        fill_pb_object(route, d, schedule->mutable_route(), 0, now, action_period);
+        if (route->line != nullptr){
+            fill_pb_object(route->line, d, schedule->mutable_route()->mutable_line(), 0, now, action_period);
+            if(route->line->commercial_mode){
+                fill_pb_object(route->line->commercial_mode, d, schedule->mutable_route()->mutable_line()->mutable_commercial_mode(), 0);
+            }
+            if(route->line->network){
+                fill_pb_object(route->line->network, d, schedule->mutable_route()->mutable_line()->mutable_network(), 0);
+            }
+        }
 
         for(type::VehicleJourney* vj : vehicle_journy_list){
             pbnavitia::Header* header = table->add_headers();
-            fill_pb_object(vj, d, header, max_depth, now, action_period);
+            fill_pb_object(vj, d, header->mutable_vehiclejourney(), 0, now, action_period);
+            if (vj->physical_mode != nullptr){
+                fill_pb_object(vj->physical_mode, d,  header->mutable_vehiclejourney()->mutable_physical_mode(),0, now, action_period);
+            }
+            header->set_direction(vj->get_direction());
         }
 
         for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {
