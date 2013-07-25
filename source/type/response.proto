@@ -52,9 +52,10 @@ enum StreetNetworkMode {
 
 message StreetNetwork {
     optional double length = 1;
-    optional StreetNetworkMode mode = 2;
-    repeated PathItem path_items = 3;
-    repeated GeographicalCoord coordinates = 4;
+    optional double duration = 2;    
+    optional StreetNetworkMode mode = 3;    
+    repeated PathItem path_items = 4;
+    repeated GeographicalCoord coordinates = 5;
 }
 
 enum SectionType {
@@ -71,6 +72,7 @@ enum TransferType {
     EXTENSION = 3;
 }
 
+	
 message PtDisplayInfo {
     optional string network = 1;
     optional string code = 2;
@@ -79,6 +81,9 @@ message PtDisplayInfo {
     optional string color = 5;
     optional string commercial_mode = 6;
     optional string physical_mode = 7;
+  	optional string description = 8; 
+  	optional Uris uris = 9; 	
+  	optional OdtType odt_type = 10;
 }
 
 message Uris {
@@ -89,6 +94,7 @@ message Uris {
     optional string commercial_mode = 5;
     optional string physical_mode = 6;
     optional string network = 7;
+    optional string note = 8;
 }
 
 message Section {
@@ -171,16 +177,27 @@ message PairStopTime {
     required StopDateTime arrival = 2;
 }
 
+message RouteScheduleStopTime {
+    optional string stop_time = 1;
+    optional hasPropertie has_properties = 2;
+}
+
 message RouteScheduleRow {
     required StopPoint stop_point = 1;
-    repeated string stop_times = 2;
+    repeated RouteScheduleStopTime stop_times = 2;
 }
 
-message Table {
+message Header{
+	optional string direction = 1;
+	required VehicleJourney vehiclejourney = 2;
+}
+
+message Table {    
     repeated RouteScheduleRow rows = 1;
+    repeated Header headers = 2;
 }
 
-message RouteSchedule {
+message RouteSchedule {	
     required Table table = 1;
     required Route route = 2;
 }

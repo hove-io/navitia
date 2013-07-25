@@ -8,7 +8,7 @@
 #include <string>
 #include <iostream>
 
-void doWork(zmq::context_t & context, navitia::type::Data & data) {
+void doWork(zmq::context_t & context, navitia::type::Data** data) {
     zmq::socket_t socket (context, ZMQ_REP);
     socket.connect ("inproc://workers");
     bool run = true;
@@ -43,7 +43,7 @@ int main(int, char** argv){
     if(getcwd(buf, 256)) conf->set_string("path",std::string(buf) + "/"); else conf->set_string("path", "unknown");
 
 
-    navitia::type::Data data;
+    navitia::type::Data* data = new navitia::type::Data();
 
 
     boost::thread_group threads;
@@ -56,11 +56,10 @@ int main(int, char** argv){
     workers.bind("inproc://workers");
 
     // Launch pool of worker threads
-    for(int thread_nbr = 0; thread_nbr < data.nb_threads; ++thread_nbr) {
-        threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data)));
+    for(int thread_nbr = 0; thread_nbr < data->nb_threads; ++thread_nbr) {
+        threads.create_thread(std::bind(&doWork, std::ref(context), &data));
     }
-
-    threads.create_thread(navitia::MaintenanceWorker(std::ref(data)));
+    threads.create_thread(navitia::MaintenanceWorker(&data));
 
     // Connect work threads to client threads via a queue
     do{

@@ -231,6 +231,7 @@ CREATE TABLE IF NOT EXISTS navitia.vehicle_journey (
     journey_pattern_id BIGINT NOT NULL REFERENCES navitia.journey_pattern,
     uri TEXT NOT NULL,
     comment TEXT,
+    odt_message TEXT, -- Utiliser pour stocker le message TAD
     name TEXT NOT NULL,
     odt_type_id BIGINT NULL,
     vehicle_properties_id BIGINT NULL REFERENCES navitia.vehicle_properties,
@@ -317,6 +318,7 @@ CREATE TABLE IF NOT EXISTS navitia.stop_time (
     drop_off_allowed BOOLEAN NOT NULL,
     is_frequency BOOLEAN NOT NULL,
     comment TEXT,
+    date_time_estimated BOOLEAN NOT NULL DEFAULT false,
     properties_id BIGINT REFERENCES navitia.properties
 );
 

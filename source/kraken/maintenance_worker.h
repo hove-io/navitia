@@ -9,13 +9,13 @@ namespace navitia {
 
 class MaintenanceWorker{
     private:
-        navitia::type::Data & data;
+        navitia::type::Data** data;
         log4cplus::Logger logger;
 
         boost::posix_time::ptime next_rt_load;
 
     public:
-        MaintenanceWorker(navitia::type::Data & data);
+        MaintenanceWorker(type::Data** data);
 
         bool load_and_switch();
 

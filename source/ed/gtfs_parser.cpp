@@ -55,8 +55,8 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
     typedef boost::function<void(GtfsParser*, Data&, CsvReader&)> parse_function;
     typedef std::pair<std::string, parse_function> string_function;
     std::vector<string_function> filename_function_list;
-    filename_function_list.push_back(std::make_pair("agency.txt", &GtfsParser::parse_agency));
     filename_function_list.push_back(std::make_pair("company.txt", &GtfsParser::parse_company));
+    filename_function_list.push_back(std::make_pair("agency.txt", &GtfsParser::parse_agency));
     filename_function_list.push_back(std::make_pair("stops.txt", &GtfsParser::parse_stops));
     filename_function_list.push_back(std::make_pair("routes.txt", &GtfsParser::parse_lines));
     filename_function_list.push_back(std::make_pair("transfers.txt", &GtfsParser::parse_transfers));
@@ -245,6 +245,13 @@ void GtfsParser::parse_agency(Data & data, CsvReader & csv){
             agency_map[network->uri] = network;
             line_read = true;
         }
+    }
+    if (data.companies.empty()){
+        nm::Company * company = new nm::Company();
+        company->uri = "default_company";
+        company->name = "compagnie par défaut";
+        data.companies.push_back(company);
+        company_map[company->uri] = company;
     }
 }
 
@@ -694,6 +701,7 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
             school_vehicle_c = csv.get_pos_col("school_vehicle");
     int odt_type_c = csv.get_pos_col("odt_type");
     int company_id_c = csv.get_pos_col("company_id");
+    int condition_c = csv.get_pos_col("trip_condition");
 
     int ignored = 0;
     int ignored_vj = 0;
@@ -738,6 +746,9 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                     if (trip_desc_c != -1)
                         vj->comment = row[trip_desc_c];
 
+                    if (condition_c != -1)
+                        vj->odt_message = row[condition_c];
+
                     vj->validity_pattern = vp_xx;
                     vj->adapted_validity_pattern = vp_xx;
                     vj->journey_pattern = 0;
@@ -763,7 +774,7 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                     if(visual_announcement_c != -1 && row[visual_announcement_c] == "1")
                         vj->set_vehicle(navitia::type::hasVehicleProperties::VISUAL_ANNOUNCEMENT);
                     if(audible_announcement_c != -1 && row[audible_announcement_c] == "1")
-                        vj->set_vehicle(navitia::type::hasVehicleProperties::AUDIBLE_ANNOUNVEMENT);
+                        vj->set_vehicle(navitia::type::hasVehicleProperties::AUDIBLE_ANNOUNCEMENT);
                     if(appropriate_escort_c != -1 && row[appropriate_escort_c] == "1")
                         vj->set_vehicle(navitia::type::hasVehicleProperties::APPOPRIATE_ESCORT);
                     if(appropriate_signage_c != -1 && row[appropriate_signage_c] == "1")
@@ -856,7 +867,7 @@ void GtfsParser::parse_stop_times(Data & data, CsvReader &csv) {
         departure_c = csv.get_pos_col("departure_time"), stop_c = csv.get_pos_col("stop_id"),
         stop_seq_c = csv.get_pos_col("stop_sequence"), pickup_c = csv.get_pos_col("pickup_type"),
         drop_off_c = csv.get_pos_col("drop_off_type"), itl_c = csv.get_pos_col("stop_times_itl"),
-        desc_c = csv.get_pos_col("stop_desc");
+        desc_c = csv.get_pos_col("stop_desc"), date_time_estimated_c = csv.get_pos_col("date_time_estimated");
 
 
     size_t count = 0;
@@ -883,6 +894,10 @@ void GtfsParser::parse_stop_times(Data & data, CsvReader &csv) {
             stop_time->vehicle_journey = vj_it->second;
             if (desc_c != -1)
                 stop_time->comment = row[desc_c];
+
+            if (date_time_estimated_c != -1)
+                stop_time->date_time_estimated = (row[date_time_estimated_c] == "1");
+            else stop_time->date_time_estimated = false;
 
             if(pickup_c != -1 && drop_off_c != -1)
                 stop_time->ODT = (row[pickup_c] == "2" && row[drop_off_c] == "2");

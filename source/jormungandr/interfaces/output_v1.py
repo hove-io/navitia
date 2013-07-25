@@ -2,13 +2,15 @@
 from conf import base_url
 from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
 from renderers import render
-import request_pb2, type_pb2#, response_pb2
+import request_pb2, type_pb2,response_pb2
 from uri import collections_to_resource_type, resource_type_to_collection
 from error import generate_error
 from sets import Set
+from google.protobuf.descriptor import FieldDescriptor
 
 class json_renderer:
     nearbyable_types = ['stop_points', 'stop_areas', 'coords', 'pois']
+    scheduable_types = ['stop_points', 'stop_areas', 'coords', 'pois', 'lines', 'routes']
     pbtype_2_collection = {type_pb2.STOP_AREA : "stop_areas",
                            type_pb2.STOP_POINT : "stop_points"}
 
@@ -16,8 +18,8 @@ class json_renderer:
         self.base_url = base_url
         self.visited_types = Set()
 
-    def stop_point(self, obj, region, details=False, name_and_uri=True):
-        return self.generic_type('stop_points', obj, region, details, name_and_uri)
+    def stop_point(self, obj, region, details=False, name_and_uri=True, administrative_regions=True):
+        return self.generic_type('stop_points', obj, region, details, name_and_uri,administrative_regions)
 
     def stop_area(self, obj, region, details=False, name_and_uri=True):
         return self.generic_type('stop_areas', obj, region, details, name_and_uri)
@@ -105,24 +107,75 @@ class json_renderer:
             pass
         return result
 
-    def stop_time(self, obj, region = None, details = False):
-        return obj
+    def stop_time(self, obj, region_name = None, details = False):
+        result = {}
+        result['date_time'] = obj.stop_time
+        result['additional_information'] = []
+        if obj.HasField("has_properties"):
+            for additional_information in obj.has_properties.additional_informations:
+                result['additional_information'].append(self.name_has_propertie(additional_information))
 
-    def route_schedule(self, obj, uri) : 
-        result = {'table' : {"rows" : []}, 'route' : {} }
-        
-        for row in obj.table.rows : 
+        r = []
+        if obj.HasField("has_properties"):
+            for note in obj.has_properties.notes:
+                r.append({"id": note.uri, "type": "notes"})
+        if (len(r)> 0):
+            result["links"]= r
+
+        if len(result['additional_information'])==0:
+            del result['additional_information']
+        return result
+
+    def notes_stoptimes(self, obj, uri):
+        r = []
+        for row in obj.table.rows :
+            if row.stop_times:
+                for stop_time in row.stop_times:
+                    if stop_time.HasField("has_properties"):
+                        for note_ in stop_time.has_properties.notes:
+                            r.append({"id": note_.uri, "value": note_.note})
+        return r
+
+
+    def route_schedule(self, obj, uri) :
+        result = {'table' : {"headers" : [], "rows" : []}, "display_informations": [], "links":[]}
+
+        for row in obj.table.rows :
             r = {}
             if row.stop_point:
-                r['stop_point'] = self.stop_point(row.stop_point, uri.region())
+                r['stop_point'] = self.stop_point(row.stop_point, uri.region(), False, True, False)
+                self.visited_types.add("stop_point")
             if row.stop_times:
-                for stop_time in row.stop_times: 
-                    if not 'stop_times' in r:
-                        r['stop_times'] = []
-                    r['stop_times'].append(self.stop_time(stop_time))
+                r['date_times'] = []
+                for stop_time in row.stop_times:
+                    r['date_times'].append(self.stop_time(stop_time, uri.region()))
             result['table']['rows'].append(r)
 
+        for header in obj.table.headers:
+            result['table']['headers'].append(self.display_headers(header, uri.region()))
+
+        if obj.HasField('route'):
+            result['display_informations'] = self.route_informations(obj.route, uri.region())
+
+        if obj.HasField('route'):
+            result['links'] = self.route_links(obj.route, uri.region())
+
+        if len(result['table']['headers'])==0:
+            del result['table']['headers']
+
+        if len(result['display_informations'])==0:
+            del result['display_informations']
         return result
+
+    def notes_stop_date_times(self, obj, uri):
+        r = []
+        for section in obj.sections:
+            if section.stop_date_times:
+                for stop_date_time in section.stop_date_times:
+                    if stop_date_time.HasField('has_properties'):
+                        for note_ in stop_date_time.has_properties.notes:
+                            r.append({"id": note_.uri, "value": note_.note})
+        return r
 
     def journey(self, obj, uri, details, is_isochrone, arguments):
         result = {
@@ -130,6 +183,7 @@ class json_renderer:
                 'nb_transfers': obj.nb_transfers,
                 'departure_date_time': obj.departure_date_time,
                 'arrival_date_time': obj.arrival_date_time,
+                'requested_date_time': obj.requested_date_time
                 }
         if obj.HasField('origin'):
             self.visited_types.add("origin")
@@ -184,6 +238,39 @@ class json_renderer:
             #self.visited_types.add(result["embedded_type"])
             result["name"] = obj_t.name
             result["id"] = region_name + "/" + resource_type_to_collection[result["embedded_type"]]+"/"+obj.uri
+
+        return result
+
+    def time_place(self, obj, region_name, is_from=True):
+        obj_t = None
+        result = {}
+        if is_from:
+            obj_oridest = obj.destination
+            if obj.HasField('begin_date_time'):
+                result['date_time'] = obj.begin_date_time
+        else:
+            obj_oridest = obj.origin
+            if obj.HasField('end_date_time'):
+                result['date_time'] = obj.end_date_time
+
+        if obj_oridest.embedded_type == type_pb2.STOP_AREA:
+            obj_t = obj_oridest.stop_area
+            result["embedded_type"] = "stop_area"
+            result["stop_area"] = self.stop_area(obj_oridest.stop_area, region_name, True)
+        elif obj_oridest.embedded_type == type_pb2.STOP_POINT:
+            obj_t = obj_oridest.stop_point
+            result["embedded_type"] = "stop_point"
+            result["stop_point"] = self.stop_point(obj_oridest.stop_point, region_name, True)
+            result["stop_point"]["stop_area"] = self.stop_area(obj_oridest.stop_point.stop_area, region_name, True)
+        elif obj_oridest.embedded_type  == type_pb2.ADDRESS:
+            obj_t = obj_oridest.address
+            result["embedded_type"] = "address"
+            result["address"] = self.address(obj_oridest.address, region_name, True)
+        if obj_t:
+            #self.visited_types.add(result["embedded_type"])
+            result["name"] = obj_t.name
+            result["id"] = region_name + "/" + resource_type_to_collection[result["embedded_type"]]+"/"+obj_oridest.uri
+
         return result
 
     def region(self, obj, region_id, details=False):
@@ -197,7 +284,7 @@ class json_renderer:
         return result
 
 
-    def generic_type(self, type, obj, region, details = False, name_and_uri=True):
+    def generic_type(self, type, obj, region, details = False, name_and_uri=True, administrative_regions=True):
         result = {}
         if name_and_uri : 
             result['name'] = obj.name
@@ -209,8 +296,9 @@ class json_renderer:
             pass
         try:
             result['administrative_regions'] = []
-            for admin in obj.administrative_regions:
-                result['administrative_regions'].append(self.administrative_region(admin, region, False))
+            if administrative_regions :
+                for admin in obj.administrative_regions:
+                    result['administrative_regions'].append(self.administrative_region(admin, region, False))
         except:
             pass
         if len(result['administrative_regions'])==0:
@@ -220,90 +308,186 @@ class json_renderer:
     def section_links(self, region_name, uris):
         links = []
         if uris.HasField('company'):
-            links.append({"href" : self.base_url + region_name + '/companies/' + uris.company,
-                      "templated" : False,
-                      "rel" : "company"})
+            links.append({'type' : 'company' , 'id' : region_name + '/companies/' + uris.company})
+
         if uris.HasField('vehicle_journey'):
-            links.append({"href" : self.base_url + region_name + '/vehicle_journeys/' + uris.vehicle_journey,
-                       "templated" : False,
-                       "rel" : "vehicle_journey"})
+            links.append({'type' : 'vehicle_journey' , 'id' : region_name + '/vehicle_journeys/' + uris.vehicle_journey})
+
         if uris.HasField('line'):
-            links.append({"href" : self.base_url + region_name + '/lines/' + uris.line,
-                       "templated" : False,
-                       "rel" : "line"})
+            links.append({'type' : 'line' , 'id' : region_name + '/lines/' + uris.line})
+
         if uris.HasField('route'):
-            links.append({"href" : self.base_url + region_name + '/routes/' + uris.route,
-                       "templated" : False,
-                       "rel" : "route"})
+            links.append({'type' : 'route' , 'id' : region_name + '/routes/' + uris.route})
+
         if uris.HasField('commercial_mode'):
-            links.append({"href" : self.base_url + region_name + '/commercial_modes/' + uris.commercial_mode,
-                       "templated" : False,
-                       "rel" : "commercial_mode"})
+            links.append({'type' : 'commercial_mode' , 'id' : region_name + '/commercial_modes/' + uris.commercial_mode})
+
         if uris.HasField('physical_mode'):
-            links.append({"href" : self.base_url + region_name + '/physical_modes/' + uris.physical_mode,
-                       "templated" : False,
-                       "rel" : "physical_mode"})
+            links.append({'type' : 'physical_mode' , 'id' : region_name + '/physical_modes/' + uris.physical_mode})
+
         if uris.HasField('network'):
-            links.append({"href" : self.base_url + region_name + '/networks/' + uris.network,
-                       "templated" : False,
-                       "rel" : "network"})
+            links.append({'type' : 'network' , 'id' : region_name + '/networks/' + uris.network})
+                       
         return links
 
-    def display_informations(self, infos):
-        result = {
-                'network': infos.network,
-                'code': infos.code,
-                'headsign': infos.headsign,
-                'color': infos.color,
-                'commercial_mode': infos.commercial_mode,
-                'physical_mode': infos.physical_mode
-                }
+    def display_headers(self, header, region_name):
+        result = {}
+        links = []
+        equipments = []
+        links.append({"type": "vehicle_journey", "id": region_name + "/vehicles_journeys/" + header.vehiclejourney.uri, "templated":"false"})
+        self.visited_types.add("vehicle_journey")
+        if(len(header.vehiclejourney.name) > 0):
+            result['headsign'] = header.vehiclejourney.name
+        if(len(header.direction) > 0):
+            result['direction'] = header.direction
+        if(len(header.vehiclejourney.physical_mode.name) > 0):
+            result['physical_mode'] = header.vehiclejourney.physical_mode.name
+            links.append({"type": "physical_mode", "id": region_name + "/physical_modes/" + header.vehiclejourney.physical_mode.uri, "templated":"false"})
+            self.visited_types.add("physical_mode")
+        if(len(header.vehiclejourney.odt_message) > 0):
+            result['description'] = header.vehiclejourney.odt_message
+        if header.vehiclejourney.wheelchair_accessible:
+            result['wheelchair_accessible'] = "true"
+        if header.vehiclejourney.bike_accepted:
+            result['bike_accessible'] = "true"
+        if header.vehiclejourney.visual_announcement:
+            equipments.append({"id": "has_visual_announcement"})
+        if header.vehiclejourney.audible_announcement:
+            equipments.append({"id": "has_audible_announcement"})
+        if header.vehiclejourney.appropriate_escort:
+            equipments.append({"id": "has_appropriate_escort"})
+        if header.vehiclejourney.appropriate_signage:
+            equipments.append({"id": "has_appropriate_signage"})
+        if (len(equipments)> 0):
+            result["equipments"] = equipments
+        result["links"] = links
+        return result
+
+    def route_links(self, rte, region_name):
+        links = []
+        links.append({"type": "line", "id": region_name + "/lines/" + rte.line.uri})
+        self.visited_types.add("line")
+        links.append({"type": "route", "id": region_name + "/routes/" +  rte.uri})
+        self.visited_types.add("route")
+        if(len(rte.line.network.name) > 0):
+            links.append({"type": "network", "id": region_name + "/networks/" + rte.line.network.uri})
+            self.visited_types.add("network")
+        if(len(rte.line.commercial_mode.name) > 0):
+            links.append({"type": "commercial_mode", "id": region_name + "/commercial_modes/" + rte.line.commercial_mode.uri})
+            self.visited_types.add("commercial_mode")
+        #if(len(rte.line.physical_mode.name) > 0):
+        #    links.append({"type": "physical_mode", "id": region_name + "/physical_modes/" + rte.line.commercial_mode.uri})
+        #    self.visited_types.add("physical_mode")
+        return links
+
+    def route_informations(self, rte, region_name):
+        result = {}
+        if(len(rte.line.network.name) > 0):
+            result['network'] = rte.line.network.name
+        if(len(rte.line.code) > 0):
+            result['code'] = rte.line.code
+        if(len(rte.name) > 0):
+            result['headsign'] = rte.name
+        if(len(rte.line.color) > 0):
+            result['color'] = rte.line.color
+        if(len(rte.line.commercial_mode.name) > 0):
+            result['commercial_mode'] = rte.line.commercial_mode.name
+        #if(len(rte.line.physical_mode.name) > 0):
+        #    result['physical_mode'] = rte.line.commercial_mode.name
+        return result
+
+    def display_informations(self, infos, region_name):
+        result = {}
+
+        if(len(infos.network) > 0):
+            result['network'] = infos.network
+        if(len(infos.code) > 0):
+            result['code'] = infos.code
+        if(len(infos.headsign) > 0):
+            result['headsign'] = infos.headsign
+        if(len(infos.color) > 0):
+            result['color'] = infos.color
+        if(len(infos.commercial_mode) > 0):
+            result['commercial_mode'] = infos.commercial_mode
+        if(len(infos.physical_mode) > 0):
+            result['physical_mode'] = infos.physical_mode
+        if(len(infos.direction) > 0):
+            result['direction'] = infos.direction
+        if(len(infos.description) > 0):
+            result['description'] = infos.description
         return result
 
     def street_network(self, street_network):
         result = {
-                'length': street_network.length,
-                'mode': street_network.mode,
-                'instructions': [],
+                'path_items': [],
                 'coordinates': []
                 }
         for item in street_network.path_items:
-            result['instructions'].append({'name': item.name, 'length': item.length})
+            result['path_items'].append({'name': item.name, 'length': item.length})
 
         for coord in street_network.coordinates:
             result['coordinates'].append({'lon': coord.lon, 'lat': coord.lat})
 
         return result
 
+    def name_has_propertie(self, enum):
+        descriptor = type_pb2.hasPropertie.DESCRIPTOR.enum_types_by_name['AdditionalInformation'].values_by_number
+        return descriptor[enum].name
+
     def stop_date_time(self, obj, region_name):
         result = {}
         if obj.HasField('departure_date_time'):
             result['departure_date_time'] = obj.departure_date_time
+
         if obj.HasField('arrival_date_time'):
             result['arrival_date_time'] = obj.arrival_date_time
+
         if obj.HasField('stop_point'):
             self.visited_types.add("stop_point")
             result['stop_point'] = self.stop_point(obj.stop_point, region_name)
-        return result
 
+        if obj.HasField('has_properties'):
+            result['additional_information'] = []
+            for additional_information in obj.has_properties.additional_informations:
+                result['additional_information'].append(self.name_has_propertie(additional_information))
+
+        if obj.HasField('has_properties'):
+            result['notes'] = []
+            for note_ in obj.has_properties.notes:
+                result['notes'].append({"id": note_.uri})
+
+        return result
+    def estimated_duration(self, stop_date_times):
+        result = False
+        for stop_dt in stop_date_times:
+            if stop_dt.HasField('has_properties'):
+                for additional_information in stop_dt.has_properties.additional_informations:
+                    if additional_information == type_pb2.hasPropertie.DATE_TIME_ESTIMATED:
+                        result = True
+                        break
+        return result
 
     def section(self, obj, region_name):
         self.visited_types.add("origin")
         self.visited_types.add("destination")
-        result = {
-                'type': obj.type,
-                'origin': self.place(obj.origin, region_name),
-                'destination': self.place(obj.destination, region_name),
-                'duration': obj.duration
-                }
-        if obj.HasField('begin_date_time'):
-            result['begin_date_time'] = obj.begin_date_time
-        if obj.HasField('end_date_time'):
-            result['end_date_time'] = obj.end_date_time
+        if obj.pt_display_informations.odt_type != type_pb2.regular_line:
+            section_type = "on_demand_transport"
+        else :
+            section_type = get_name_enum(obj, obj.type)
+
+        result = {'type': section_type,
+                  'duration': obj.duration,
+                  'from': self.time_place(obj, region_name),
+                  'to': self.time_place(obj, region_name, False)}
+        #if obj.pt_display_informations.odt_type != type_pb2.regular_line:
+            #result["odt_type"] = get_name_enum(obj.pt_display_informations, obj.pt_display_informations.odt_type)
+        result['additional_information'] = []
+        if self.estimated_duration(obj.stop_date_times):
+            result['additional_information'].append("duration_estimated")
         if obj.HasField('uris'):
             result['links'] = self.section_links(region_name, obj.uris)
         if obj.HasField('pt_display_informations'):
-            result['pt_display_informations'] = self.display_informations(obj.pt_display_informations)
+            result['display_informations'] = self.display_informations(obj.pt_display_informations, region_name)
 
         if len(obj.stop_date_times) > 0:
             result['stop_date_times'] = []
@@ -312,6 +496,7 @@ class json_renderer:
 
         if obj.HasField('street_network'):
             result['street_network'] = self.street_network(obj.street_network)
+            result['length'] = obj.street_network.length
 
         if obj.HasField('transfer_type'):
             result['transfert_type'] = obj.transfer_type
@@ -330,7 +515,7 @@ class json_renderer:
             pass
         try:
             if obj.HasField('pt_display_informations'):
-                result['pt_display_informations'] = self.display_informations(obj.pt_display_informations)
+                result['pt_display_informations'] = self.display_informations(obj.pt_display_informations, region_name)
         except:
             pass
         return result
@@ -395,7 +580,8 @@ def render_ptref(response, region, resource_type, uid, format, callback):
         if resource_type in json_renderer.nearbyable_types:
             resp_dict['links'].append({"href" : link_first_part+"/journeys", "rel":"journeys", "templated":False})
             resp_dict['links'].append({"href" : link_first_part+"/places_nearby", "rel":"places_nearby", "templated":False})
-            #resp_dict['curies'].append({"href" : base_url+"/v1/coverage/{"+resource_type+".id/route_schedules", "rel":"route_schedules"})
+        if resource_type in json_renderer.scheduable_types:
+            resp_dict['links'].append({"href" : link_first_part+"/route_schedules", "rel":"route_schedules", "templated":False})
             #resp_dict['curies'].append({"href" : base_url+"/v1/coverage/{"+resource_type+".id/stop_schedules", "rel":"stop_schedules"})
             resp_dict['links'].append({"href" : link_first_part+"/departures", "rel":"departures", "templated":False})
             resp_dict['links'].append({"href" : link_first_part+"/arrivals", "rel":"arrivals", "templated":False})
@@ -489,26 +675,64 @@ def reconstruct_pagination_journeys(string, region_name):
         if len(arg_and_val.split("=")) == 2:
             arg, val = arg_and_val.split("=")
             if arg == "origin" or arg == "destination":
-                resource_type, uid = val.split(":")
+                coord = ""
+                if val[:5] == "coord":
+                    val = val[5:-1]
+                    resource_type = "coord"
+                else:
+                    resource_type, uid = val.split(":")
                 val = region_name + "/" + resource_type_to_collection[resource_type] + "/" + val
+
                 if arg == "origin":
                     arg = "from"
                 else:
                     arg = "to"
+
+            if arg == "clockwise":
+                if val == "true":
+                    arg = "datetime_represents"
+                    val = "departure"
+                else :
+                    arg = "datetime_represents"
+                    val = "arrival"
+
             args.append(arg+"="+val)
     return "&".join(args)
 
+def get_name_enum(obj, enum):
+    for field, value in obj.ListFields():
+        if field.type == FieldDescriptor.TYPE_ENUM and enum == value:
+            return field.enum_type.values_by_number[int(value)].name
+    return ""
+
+def street_network_display_informations(journey) :
+    for section in journey.sections:
+        if section.type == response_pb2.STREET_NETWORK:
+            if section.HasField('street_network'):
+                section.pt_display_informations.physical_mode = get_name_enum(section.street_network, section.street_network.mode)
+                section.pt_display_informations.direction = section.street_network.path_items[-1].name
+
+
+
 def journeys(arguments, uri, response, format, callback, is_isochrone=False):
     renderer = json_renderer(base_url + '/v1/')
-    response_dict = {'journeys': [], "links" : []}
+    if is_isochrone:
+        response_dict = {'journeys': [], "links" : []}
+    if not is_isochrone:
+        response_dict = {'pagination': {'links' : []}, 'response_type' : '', 'journeys': [], 'notes' : []}
     for journey in response.journeys:
+        street_network_display_informations(journey)
         response_dict['journeys'].append(renderer.journey(journey, uri, True, is_isochrone, arguments))
-    response_dict['links'].extend(renderer.link_types(uri.region()))
+        response_dict['notes'].extend(renderer.notes_stop_date_times( journey, uri))
+    if is_isochrone:
+        response_dict['links'].extend(renderer.link_types(uri.region()))
     if not is_isochrone:
         prev = reconstruct_pagination_journeys(response.prev, uri.region())
         next = reconstruct_pagination_journeys(response.next, uri.region())
-        response_dict['links'].append({"href":base_url+"/v1/journeys?"+next, "rel":"next","templated":False })
-        response_dict['links'].append({"href":base_url+"/v1/journeys?"+prev, "rel":"prev","templated":False })
+        response_dict['response_type'] = get_name_enum(response, response.response_type)
+        response_dict['pagination']['links'].append({"href":base_url+"/v1/journeys?"+next, "type":"next","templated":False })
+        response_dict['pagination']['links'].append({"href":base_url+"/v1/journeys?"+prev, "type":"prev","templated":False })
+
     return render(response_dict, format, callback)
 
 def departures(response, region, format, callback):
@@ -570,10 +794,12 @@ def nearby(response, uri, format, callback):
     return render(response_dict, format, callback)
 
 def route_schedules(response, uri, format, callback):
-    renderer = json_renderer(base_url+'/v1/')
-    response_dict = {"links" : [], "route_schedules" : []}
+    renderer = json_renderer(base_url+'/v1/coverage/')
+    response_dict = {"links" : [], "route_schedules" : [], "notes":[]}
 
     for schedule in response.route_schedules:
         response_dict['route_schedules'].append(renderer.route_schedule(schedule, uri))
+        response_dict['notes'].extend(renderer.notes_stoptimes(schedule, uri))
 
+    response_dict['links'].extend(renderer.link_types(uri.region()))
     return render(response_dict, format, callback)

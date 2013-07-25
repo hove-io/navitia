@@ -164,19 +164,27 @@ struct hasVehicleProperties {
     static const uint8_t BIKE_ACCEPTED = 1;
     static const uint8_t AIR_CONDITIONED = 2;
     static const uint8_t VISUAL_ANNOUNCEMENT = 3;
-    static const uint8_t AUDIBLE_ANNOUNVEMENT = 4;
+    static const uint8_t AUDIBLE_ANNOUNCEMENT = 4;
     static const uint8_t APPOPRIATE_ESCORT = 5;
     static const uint8_t APPOPRIATE_SIGNAGE = 6;
     static const uint8_t SCOOL_VEHICLE = 7;
 
     bool wheelchair_accessible() {return _vehicle_properties[WHEELCHAIR_ACCESSIBLE];}
+    bool wheelchair_accessible() const {return _vehicle_properties[WHEELCHAIR_ACCESSIBLE];}
     bool bike_accepted() {return _vehicle_properties[BIKE_ACCEPTED];}
+    bool bike_accepted() const {return _vehicle_properties[BIKE_ACCEPTED];}
     bool air_conditioned() {return _vehicle_properties[AIR_CONDITIONED];}
+    bool air_conditioned() const {return _vehicle_properties[AIR_CONDITIONED];}
     bool visual_announcement() {return _vehicle_properties[VISUAL_ANNOUNCEMENT];}
-    bool audible_announcement() {return _vehicle_properties[AUDIBLE_ANNOUNVEMENT];}
+    bool visual_announcement() const {return _vehicle_properties[VISUAL_ANNOUNCEMENT];}
+    bool audible_announcement() {return _vehicle_properties[AUDIBLE_ANNOUNCEMENT];}
+    bool audible_announcement() const {return _vehicle_properties[AUDIBLE_ANNOUNCEMENT];}
     bool appropriate_escort() {return _vehicle_properties[APPOPRIATE_ESCORT];}
+    bool appropriate_escort() const {return _vehicle_properties[APPOPRIATE_ESCORT];}
     bool appropriate_signage() {return _vehicle_properties[APPOPRIATE_SIGNAGE];}
+    bool appropriate_signage() const {return _vehicle_properties[APPOPRIATE_SIGNAGE];}
     bool school_vehicle() {return _vehicle_properties[SCOOL_VEHICLE];}
+    bool school_vehicle() const {return _vehicle_properties[SCOOL_VEHICLE];}
 
     bool accessible(const VehicleProperties &required_vehicles) const{
         auto mismatched = required_vehicles & ~_vehicle_properties;
@@ -297,12 +305,12 @@ enum class ConnectionType {
 };
 
 enum class OdtType {
-    Default = 0,    // ligne régulière
-    tad1 = 1,       // TAD virtuel avec horaires
-    tad2 = 2,       // TAD virtuel sans horaires
-    tad3 = 3,       // TAD rabattement arrêt à arrêt
-    tad4 = 4,       // TAD rabattement adresse à arrêt
-    tad5 = 5       // TAD point à point (Commune à Commune)
+    regular_line = 0,                 // ligne régulière
+    virtual_with_stop_time = 1,       // TAD virtuel avec horaires
+    virtual_without_stop_time = 2,    // TAD virtuel sans horaires
+    stop_point_to_stop_point = 3,     // TAD rabattement arrêt à arrêt
+    adress_to_stop_point = 4,         // TAD rabattement adresse à arrêt
+    odt_point_to_point = 5            // TAD point à point (Commune à Commune)
 };
 
 struct StopPoint;
@@ -502,6 +510,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
     ValidityPattern* validity_pattern;
     std::vector<StopTime*> stop_time_list;
     OdtType odt_type;
+    std::string odt_message;
 
     bool is_adapted;
     ValidityPattern* adapted_validity_pattern;
@@ -511,8 +520,9 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
     VehicleJourney(): journey_pattern(nullptr), company(nullptr), physical_mode(nullptr), validity_pattern(nullptr) /*, wheelchair_boarding(false)*/, is_adapted(false), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & physical_mode & validity_pattern & idx /*& wheelchair_boarding*/ & stop_time_list
-            & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & odt_type;
+            & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & odt_type & odt_message;
     }
+    std::string get_direction() const;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
     bool operator<(const VehicleJourney& other) const {
@@ -524,9 +534,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
         }
     }
 };
-
-
-
 
 struct ValidityPattern : public Header {
     const static Type_e type = Type_e::ValidityPattern;
@@ -615,6 +622,7 @@ struct StopTime : public Nameable {
     static const uint8_t ODT = 2;
     static const uint8_t IS_FREQUENCY = 3;
     static const uint8_t WHEELCHAIR_BOARDING = 4;
+    static const uint8_t DATE_TIME_ESTIMATED = 5;
 
     uint32_t arrival_time; ///< En secondes depuis minuit
     uint32_t departure_time; ///< En secondes depuis minuit
@@ -633,11 +641,13 @@ struct StopTime : public Nameable {
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}
     bool is_frequency() const{return properties[IS_FREQUENCY];}
+    bool date_time_estimated() const{return properties[DATE_TIME_ESTIMATED];}
 
     inline void set_pick_up_allowed(bool value) {properties[PICK_UP] = value;}
     inline void set_drop_off_allowed(bool value) {properties[DROP_OFF] = value;}
     inline void set_odt(bool value) {properties[ODT] = value;}
     inline void set_is_frequency(bool value) {properties[IS_FREQUENCY] = value;}
+    inline void set_date_time_estimated(bool value) {properties[DATE_TIME_ESTIMATED] = value;}
 
     /// Est-ce qu'on peut finir par ce stop_time : dans le sens avant on veut descendre
     bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}

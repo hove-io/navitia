@@ -356,8 +356,8 @@ void EdReader::insert_journey_pattern_point_connections(const std::vector<types:
 
 void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, comment, company_id, physical_mode_id, journey_pattern_id, "
-        "validity_pattern_id, adapted_validity_pattern_id, theoric_vehicle_journey_id "
-        "FROM navitia.vehicle_journey";
+        "validity_pattern_id, adapted_validity_pattern_id, theoric_vehicle_journey_id ,odt_type_id, odt_message "
+        "FROM navitia.vehicle_journey ";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -366,6 +366,8 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         const_it["uri"].to(vj->uri);
         const_it["name"].to(vj->name);
         const_it["comment"].to(vj->comment);
+        const_it["odt_message"].to(vj->odt_message);
+        vj->odt_type = static_cast<nt::OdtType>(const_it["odt_type_id"].as<int>());
 
         vj->journey_pattern = journey_pattern_map[const_it["journey_pattern_id"].as<idx_t>()];
         vj->journey_pattern->vehicle_journey_list.push_back(vj);
@@ -390,8 +392,8 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
 
 void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT vehicle_journey_id, journey_pattern_point_id, arrival_time, departure_time, " // 0, 1, 2, 3
-        "local_traffic_zone, start_time, end_time, headway_sec, odt, pick_up_allowed, wheelchair_boarding, " // 4, 5, 6, 7, 8, 9, 10
-        "drop_off_allowed, is_frequency " // 11, 12
+        "local_traffic_zone, start_time, end_time, headway_sec, odt, pick_up_allowed, " // 4, 5, 6, 7, 8, 9, 10
+        "drop_off_allowed, is_frequency, date_time_estimated " // 11, 12
         "FROM navitia.stop_time;";
 
     pqxx::result result = work.exec(request);
@@ -404,6 +406,7 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
         const_it["end_time"].to(stop->end_time);
         const_it["headway_sec"].to(stop->headway_secs);
 
+        stop->set_date_time_estimated(const_it["date_time_estimated"].as<bool>());
 
         stop->set_odt(const_it["odt"].as<bool>());
 

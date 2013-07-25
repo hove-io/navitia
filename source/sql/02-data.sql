@@ -13,7 +13,7 @@ BEGIN
         INSERT INTO navitia.connection_kind (id, name) VALUES
             (0, 'extension'), (1, 'guarantee'), (2, 'undefined');
 	INSERT INTO navitia.odt_type (id, name) VALUES
-	    (0, 'Default'), (1, 'tad1'), (2, 'tad2'), (3, 'tad3'), (4, 'tad4'), (5, 'tad5');
+	    (0, 'regular_line'), (1, 'virtual_with_stop_time'), (2, 'virtual_without_stop_time'), (3, 'stop_point_to_stop_point'), (4, 'adress_to_stop_point'), (5, 'odt_point_to_point');
         INSERT INTO public.database_version VALUES(1);
     ELSE
         RAISE NOTICE 'database already in version 1, skipping';

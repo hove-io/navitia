@@ -61,22 +61,22 @@ pbnavitia::Response Worker::status() {
 
     auto status = result.mutable_status();
 
-    boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
-    status->set_publication_date(pt::to_iso_string(data.meta.publication_date));
-    status->set_start_production_date(bg::to_iso_string(data.meta.production_date.begin()));
-    status->set_end_production_date(bg::to_iso_string(data.meta.production_date.end()));
+    boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
+    status->set_publication_date(pt::to_iso_string((*data)->meta.publication_date));
+    status->set_start_production_date(bg::to_iso_string((*data)->meta.production_date.begin()));
+    status->set_end_production_date(bg::to_iso_string((*data)->meta.production_date.end()));
 
-    for(auto data_sources: data.meta.data_sources){
+    for(auto data_sources: (*data)->meta.data_sources){
         status->add_data_sources(data_sources);
     }
-    status->set_data_version(data.version);
-    status->set_navimake_version(data.meta.navimake_version);
+    status->set_data_version((*data)->version);
+    status->set_navimake_version((*data)->meta.navimake_version);
     status->set_navitia_version(NAVITIA_VERSION);
 
-    status->set_loaded(data.loaded);
-    status->set_last_load_status(data.last_load);
-    status->set_last_load_at(pt::to_iso_string(data.last_load_at));
-    status->set_nb_threads(data.nb_threads);
+    status->set_loaded((*data)->loaded);
+    status->set_last_load_status((*data)->last_load);
+    status->set_last_load_at(pt::to_iso_string((*data)->last_load_at));
+    status->set_nb_threads((*data)->nb_threads);
 
     return result;
 }
@@ -85,19 +85,19 @@ pbnavitia::Response Worker::metadatas() {
     pbnavitia::Response result;
     auto metadatas = result.mutable_metadatas();
     
-    metadatas->set_start_production_date(bg::to_iso_string(data.meta.production_date.begin()));
-    metadatas->set_end_production_date(bg::to_iso_string(data.meta.production_date.end()));
-    metadatas->set_shape(data.meta.shape);
+    metadatas->set_start_production_date(bg::to_iso_string((*data)->meta.production_date.begin()));
+    metadatas->set_end_production_date(bg::to_iso_string((*data)->meta.production_date.end()));
+    metadatas->set_shape((*data)->meta.shape);
     metadatas->set_status("running");
     
     return result;
 }
 
 void Worker::init_worker_data(){
-    if(this->data.last_load_at != this->last_load_at || !calculateur){
-        calculateur = std::unique_ptr<navitia::routing::RAPTOR>(new navitia::routing::RAPTOR(this->data));
-        street_network_worker = std::unique_ptr<navitia::streetnetwork::StreetNetwork>(new navitia::streetnetwork::StreetNetwork(this->data.geo_ref));
-        this->last_load_at = this->data.last_load_at;
+    if((*this->data)->last_load_at != this->last_load_at || !calculateur){
+        calculateur = std::unique_ptr<navitia::routing::RAPTOR>(new navitia::routing::RAPTOR(*(*this->data)));
+        street_network_worker = std::unique_ptr<navitia::streetnetwork::StreetNetwork>(new navitia::streetnetwork::StreetNetwork((*this->data)->geo_ref));
+        this->last_load_at = (*this->data)->last_load_at;
 
         LOG4CPLUS_INFO(logger, "instanciation du calculateur");
     }
@@ -105,7 +105,7 @@ void Worker::init_worker_data(){
 
 pbnavitia::Response Worker::load() {
     pbnavitia::Response result;
-    data.to_load = true;
+    (*data)->to_load = true;
     result.mutable_load()->set_ok(true);
 
     return result;
@@ -114,25 +114,25 @@ pbnavitia::Response Worker::load() {
 
 
 pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & request) {
-    boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
-    return navitia::autocomplete::autocomplete(request.q(), vector_of_pb_types(request), request.depth(), request.nbmax(), vector_of_admins(request), this->data);
+    boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
+    return navitia::autocomplete::autocomplete(request.q(), vector_of_pb_types(request), request.depth(), request.nbmax(), vector_of_admins(request), *(*this->data));
 }
 
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest & request, pbnavitia::API api) {
-    boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
+    boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     this->init_worker_data();
     try {
         switch(api){
         case pbnavitia::NEXT_DEPARTURES:
-            return navitia::timetables::next_departures(request.departure_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(),type::AccessibiliteParams(), this->data);
+            return navitia::timetables::next_departures(request.departure_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(),type::AccessibiliteParams(), *(*this->data));
         case pbnavitia::NEXT_ARRIVALS:
-            return navitia::timetables::next_arrivals(request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), type::AccessibiliteParams(), this->data);
+            return navitia::timetables::next_arrivals(request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), type::AccessibiliteParams(), *(*this->data));
         case pbnavitia::STOPS_SCHEDULES:
-            return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
+            return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.from_datetime(), request.duration(), request.depth(), *(*this->data));
         case pbnavitia::DEPARTURE_BOARDS:
-            return navitia::timetables::departure_board(request.departure_filter(), request.from_datetime(), request.duration(), this->data);
+            return navitia::timetables::departure_board(request.departure_filter(), request.from_datetime(), request.duration(), *(*this->data));
         case pbnavitia::ROUTE_SCHEDULES:
-            return navitia::timetables::route_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(), this->data);
+            return navitia::timetables::route_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(), *(*this->data));
         default:
             LOG4CPLUS_WARN(logger, "On a reçu une requête time table inconnue");
             pbnavitia::Response response;
@@ -149,28 +149,28 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
 }
 
 pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest &request) {
-    boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
+    boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     type::EntryPoint ep(request.uri());
     auto coord = this->coord_of_entry_point(ep);
-    return navitia::proximitylist::find(coord, request.distance(), vector_of_pb_types(request), request.depth(), this->data);
+    return navitia::proximitylist::find(coord, request.distance(), vector_of_pb_types(request), request.depth(), *(*this->data));
 }
 
 type::GeographicalCoord Worker::coord_of_entry_point(const type::EntryPoint & entry_point) {
     type::GeographicalCoord result;
     if(entry_point.type == Type_e::Address){
-        auto way = this->data.geo_ref.way_map.find(entry_point.uri);
-        if (way != this->data.geo_ref.way_map.end()){
-            result = this->data.geo_ref.ways[way->second]->nearest_coord(entry_point.house_number, this->data.geo_ref.graph);
+        auto way = (*this->data)->geo_ref.way_map.find(entry_point.uri);
+        if (way != (*this->data)->geo_ref.way_map.end()){
+            result = (*this->data)->geo_ref.ways[way->second]->nearest_coord(entry_point.house_number, (*this->data)->geo_ref.graph);
         }
     } else if (entry_point.type == Type_e::StopPoint) {
-        auto sp_it = this->data.pt_data.stop_points_map.find(entry_point.uri);
-        if(sp_it != this->data.pt_data.stop_points_map.end()) {
-            result = this->data.pt_data.stop_points[sp_it->second]->coord;
+        auto sp_it = (*this->data)->pt_data.stop_points_map.find(entry_point.uri);
+        if(sp_it != (*this->data)->pt_data.stop_points_map.end()) {
+            result = (*this->data)->pt_data.stop_points[sp_it->second]->coord;
         }
     } else if (entry_point.type == Type_e::StopArea) {
-           auto sp_it = this->data.pt_data.stop_areas_map.find(entry_point.uri);
-           if(sp_it != this->data.pt_data.stop_areas_map.end()) {
-               result = this->data.pt_data.stop_areas[sp_it->second]->coord;
+           auto sp_it = (*this->data)->pt_data.stop_areas_map.find(entry_point.uri);
+           if(sp_it != (*this->data)->pt_data.stop_areas_map.end()) {
+               result = (*this->data)->pt_data.stop_areas[sp_it->second]->coord;
            }
     } else if (entry_point.type == Type_e::Coord) {
         result = entry_point.coordinates;
@@ -191,17 +191,17 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
     }
     switch(result.mode){
         case type::Mode_e::Bike:
-            result.offset = data.geo_ref.bike_offset;
+            result.offset = (*data)->geo_ref.bike_offset;
             result.distance = request.bike_distance();
             result.speed = request.bike_speed();
             break;
         case type::Mode_e::Car:
-            result.offset = data.geo_ref.car_offset;
+            result.offset = (*data)->geo_ref.car_offset;
             result.distance = request.car_distance();
             result.speed = request.car_speed();
             break;
         case type::Mode_e::Vls:
-            result.offset = data.geo_ref.vls_offset;
+            result.offset = (*data)->geo_ref.vls_offset;
             result.distance = request.vls_distance();
             result.speed = request.vls_speed();
             break;
@@ -215,7 +215,7 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
 }
 
 pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api) {
-    boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
+    boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     this->init_worker_data();
 
     type::EntryPoint origin = type::EntryPoint(request.origin());
@@ -263,8 +263,8 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 }
 
 pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
-    boost::shared_lock<boost::shared_mutex> lock(data.load_mutex);
-    return navitia::ptref::query_pb(get_type(request.requested_type()), request.filter(), request.depth(), this->data);
+    boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
+    return navitia::ptref::query_pb(get_type(request.requested_type()), request.filter(), request.depth(), *(*this->data));
 }
 
 

@@ -1,3 +1,13 @@
+Source: kraken
+Version: 0.60.0
+Section: devel
+Priority: optional
+Architecture: amd64
+Build-Depends: cmake, debhelper
+Installed-Size: 6471
+Maintainer: Tristram Gräbener<tristram.grabener@canaltp.fr>
+Description: Kraken ed Jörmungandr
+
 Package: kraken
 Version: 0.60.0
 Section: devel

@@ -5,7 +5,7 @@ collections_to_resource_type = {
          "networks":"network", "commercial_modes":"commercial_mode",
          "physical_modes":"physical_mode", "companies":"company",
          "stop_areas":"stop_area", "lines":"line",
-         "addresses":"address"}
+         "addresses":"address", "coords":"coord"}
 
 resource_type_to_collection = {resource_type:collection for collection,
                                resource_type in
@@ -52,7 +52,7 @@ class Uri:
             if len(parts) < 1:
                 raise InvalidUriException(", no coordinate given")
             lonlat = parts.pop()
-            lonlatsplitted = lonlat.split(";")
+            lonlatsplitted = lonlat.split(":")
             if len(lonlatsplitted) != 2:
                 raise InvalidUriException(", unable to parse lon or lat",lonlat)
             lon = lonlatsplitted[0]
@@ -61,7 +61,7 @@ class Uri:
                 self.lon = float(lon)
                 self.lat = float(lat)
             except ValueError:
-                raise InvalidUriException(", unable to parse lon or lat" + lon + ";"+lat )
+                raise InvalidUriException(", unable to parse lon or lat" + lon + ":"+lat )
         else:
             self.is_region = True
             self.region_ = self.region_or_coord_part
@@ -89,7 +89,7 @@ class Uri:
     def valid_resource_type(self, resource_type):
         resource_types = ["connections", "stop_points", "networks",
         "commercial_modes", "physical_modes", "companies", "stop_areas",
-        "routes", "lines", "addresses", "administrative_regions"]
+        "routes", "lines", "addresses", "administrative_regions", "coords"]
 
         return resource_type in resource_types
 

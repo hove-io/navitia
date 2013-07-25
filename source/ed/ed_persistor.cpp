@@ -276,7 +276,7 @@ void EdPersistor::insert_validity_patterns(const std::vector<types::ValidityPatt
 void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_times){
     this->lotus.prepare_bulk_insert("navitia.stop_time", {"arrival_time", "departure_time", "local_traffic_zone", "start_time",
                                     "end_time", "headway_sec", "odt", "pick_up_allowed", "drop_off_allowed",
-                                    "is_frequency", "journey_pattern_point_id", "vehicle_journey_id", "comment"});
+                                    "is_frequency", "journey_pattern_point_id", "vehicle_journey_id", "comment", "date_time_estimated"});
 
     for(types::StopTime* stop : stop_times){
         std::vector<std::string> values;
@@ -305,7 +305,8 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
         }else{
             values.push_back(lotus.null_value);
         }
-        values.push_back(stop->comment);
+        values.push_back(stop->comment);        
+        values.push_back(std::to_string(stop->date_time_estimated));
         this->lotus.insert(values);
     }
 
@@ -342,7 +343,7 @@ void EdPersistor::insert_journey_pattern_point(const std::vector<types::JourneyP
 
 void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys){
     this->lotus.prepare_bulk_insert("navitia.vehicle_journey", {"id", "uri", "name", "comment", "validity_pattern_id",
-                                    "adapted_validity_pattern_id", "company_id", "physical_mode_id", "journey_pattern_id", "theoric_vehicle_journey_id", "odt_type_id"});
+                                    "adapted_validity_pattern_id", "company_id", "physical_mode_id", "journey_pattern_id", "theoric_vehicle_journey_id", "odt_type_id", "odt_message"});
 
     for(types::VehicleJourney* vj : vehicle_journeys){
         std::vector<std::string> values;
@@ -381,7 +382,8 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
             //@TODO WTF??
             values.push_back(lotus.null_value);
         }
-        values.push_back(std::to_string(static_cast<int>(vj->odt_type)));
+        values.push_back(std::to_string(static_cast<int>(vj->odt_type)));        
+        values.push_back(vj->odt_message);
         this->lotus.insert(values);
     }
 
