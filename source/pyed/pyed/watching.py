@@ -81,7 +81,8 @@ class Watching(Daemon):
 
             if len(worked_on_files) > 0:
                 self.pyed_logger.info("Launching ed2nav")
-                res = ed2nav(self.directory+"/data/data.nav.lz4", self.conf)
+                target_file = self.conf.get("instance", "target_file")
+                res = ed2nav(target_file, self.conf)
                 joined_files_str = ", ".join(worked_on_files)
                 if res == 0:
                     self.pyed_logger.info("""Ed2nav has finished for the files
