@@ -186,6 +186,11 @@ message JourneyPatternPoint{
     repeated Message messages = 7;
 }
 
+message Contributor {
+    optional string uri = 1;
+    optional string name = 2;
+}
+
 message PoiType {
     optional string uri = 1;
     optional string name = 2;

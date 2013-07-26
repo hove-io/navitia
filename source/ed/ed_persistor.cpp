@@ -16,6 +16,7 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     this->insert_commercial_modes(data.commercial_modes);
     this->insert_physical_modes(data.physical_modes);
     this->insert_companies(data.companies);
+    this->insert_contributors(data.contributors);
 
     this->insert_stop_areas(data.stop_areas);
     this->insert_stop_points(data.stop_points);
@@ -109,6 +110,18 @@ void EdPersistor::insert_companies(const std::vector<types::Company*>& companies
         values.push_back(company->mail);
         values.push_back(company->website);
         values.push_back(company->fax);
+        this->lotus.insert(values);
+    }
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_contributors(const std::vector<types::Contributor*>& contributors){
+    this->lotus.prepare_bulk_insert("navitia.contributor", {"id", "uri", "name"});
+    for(types::Contributor* contributor : contributors){
+        std::vector<std::string> values;
+        values.push_back(std::to_string(contributor->idx));
+        values.push_back(contributor->uri);
+        values.push_back(contributor->name);
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();

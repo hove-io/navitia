@@ -40,34 +40,36 @@ const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
     FUN(CommercialMode, commercial_modes)\
     FUN(JourneyPatternPoint, journey_pattern_points)\
     FUN(Company, companies)\
-    FUN(Route, routes)
+    FUN(Route, routes)\
+    FUN(Contributor, contributors)
 
 enum class Type_e {
-    ValidityPattern = 0,
-    Line = 1,
-    JourneyPattern = 2,
-    VehicleJourney = 3,
-    StopPoint = 4,
-    StopArea = 5,
-    Network = 6,
-    PhysicalMode = 7,
-    CommercialMode = 8,
-    Connection = 9,
-    JourneyPatternPoint = 10,
-    Company = 11,   
-    Route = 12,
-    POI = 13,
-    JourneyPatternPointConnection = 21,
-    StopPointConnection = 22,
+    ValidityPattern                 = 0,
+    Line                            = 1,
+    JourneyPattern                  = 2,
+    VehicleJourney                  = 3,
+    StopPoint                       = 4,
+    StopArea                        = 5,
+    Network                         = 6,
+    PhysicalMode                    = 7,
+    CommercialMode                  = 8,
+    Connection                      = 9,
+    JourneyPatternPoint             = 10,
+    Company                         = 11,
+    Route                           = 12,
+    POI                             = 13,
+    JourneyPatternPointConnection   = 14,
+    StopPointConnection             = 15,
+    Contributor                     = 16,
 
     // Objets spéciaux qui ne font pas partie du référentiel TC
-    eStopTime = 14,
-    Address = 15,
-    Coord = 16,
-    Unknown = 17,
-    Way = 18,
-    Admin=19,
-    POIType=20
+    eStopTime                       = 17,
+    Address                         = 18,
+    Coord                           = 19,
+    Unknown                         = 20,
+    Way                             = 21,
+    Admin                           = 22,
+    POIType                         = 23
 };
 
 enum class Mode_e{
@@ -388,6 +390,15 @@ struct Network : public Header, Nameable{
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const Network & other) const { return this < &other; }
 
+};
+
+struct Contributor : public Header, Nameable{
+    const static Type_e type = Type_e::Contributor;
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        ar & idx & id & name & uri;
+    }
+    bool operator<(const Contributor & other) const { return this < &other; }
 };
 
 struct Company : public Header, Nameable{

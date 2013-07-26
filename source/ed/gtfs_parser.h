@@ -28,6 +28,7 @@ private:
     std::unordered_map<std::string, ed::types::PhysicalMode*> mode_map;
     std::unordered_map<std::string, ed::types::Network*> agency_map;
     std::unordered_map<std::string, ed::types::Company*> company_map;
+    std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
     typedef std::vector<ed::types::StopPoint*> vector_sp;
     std::unordered_map<std::string, vector_sp> sa_spmap;
     log4cplus::Logger logger;
@@ -49,8 +50,9 @@ public:
 
     /// Parse le fichier des agency, on s'en sert pour remplir les network
     void parse_agency(Data & data, CsvReader &csv);
-
-    /// Parse le fichier des agency, on s'en sert pour remplir les company
+    /// Parse le fichier des contributor, on s'en sert pour remplir les contributor
+    void parse_contributor(Data & data, CsvReader &csv);
+    /// Parse le fichier des company, on s'en sert pour remplir les company
     void parse_company(Data & data, CsvReader &csv);
 
     /// Parse le fichier calendar.txt
