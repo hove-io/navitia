@@ -239,13 +239,12 @@ void GtfsParser::parse_company(Data & data, CsvReader &csv){
             line_read = true;
         }
     }
-    if (! line_read){ // création d'une compagnie par defaut
-        nm::Company * company = new nm::Company();
-        company->uri = "default_company";
-        company->name = "compagnie par défaut";
-        data.companies.push_back(company);
-        company_map[company->uri] = company;
-    }
+    // création d'une compagnie par defaut
+    nm::Company * company = new nm::Company();
+    company->uri = "default_company";
+    company->name = "compagnie par défaut";
+    data.companies.push_back(company);
+    company_map[company->uri] = company;
 }
 
 void GtfsParser::parse_agency(Data & data, CsvReader & csv){
@@ -807,13 +806,19 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                         vj->set_vehicle(navitia::type::hasVehicleProperties::SCOOL_VEHICLE);
 
                     vj_map[vj->uri] = vj;
-                    std::string company_s("default_company");
+                    std::string company_s;
                     if ((company_id_c != -1) && (!row[company_id_c].empty())){
                         company_s = row[company_id_c];
                     }
                     auto company_it = company_map.find(company_s);
-                    if(company_it != company_map.end())
+                    if(company_it != company_map.end()){
                         vj->company = company_it->second;
+                    }else{
+                        auto company_it = company_map.find("default_company");
+                        if(company_it != company_map.end()){
+                            vj->company = company_it->second;
+                        }
+                    }
 
                     data.vehicle_journeys.push_back(vj);
 
