@@ -78,6 +78,10 @@ pbnavitia::Response Worker::status() {
     status->set_last_load_at(pt::to_iso_string((*data)->last_load_at));
     status->set_nb_threads((*data)->nb_threads);
 
+    for(type::Contributor* contributor : (*data)->pt_data.contributors){
+        status->add_contributors(contributor->uri);
+    }
+
     return result;
 }
 

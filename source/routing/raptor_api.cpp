@@ -68,7 +68,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                 }
             }
             
-            const type::VehicleJourney* vj;
+            const type::VehicleJourney* vj = nullptr;
             // La partie TC et correspondances
             for(PathItem & item : path.items){
 
