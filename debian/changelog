@@ -1,3 +1,18 @@
+kraken (0.62.16ubuntu1) quantal; urgency=low
+
+  [ Abderrahim Azime ]
+  * - Prise en compte des coordonnées dans "journeys" - Création de l'origin et la destination dans la section "street_network"
+  * Import des données OSM : Ajout des voies qui ne sont pas dans la table de fusion
+
+  [ Vincent Lara ]
+  * Version 0.62.16
+  * Pyed : On mv avant de unzip
+  * Pyed : Erreurs d'inattention
+  * Pyed : version 0.37
+  * Jormungandr wsgi : On set les variables d'environnement
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 24 Jul 2013 10:30:06 +0200
+
 kraken (0.62.16) quantal; urgency=low
 
   [ Abderrahim Azime ]

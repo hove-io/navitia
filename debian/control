@@ -1,18 +1,18 @@
 Source: kraken
-Version: 0.62.16
+Version: 0.62.16ubuntu1
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
-Installed-Size: 12409
+Installed-Size: 12578
 Depends: libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf
 Section: devel
 Priority: optional
 Description: Kraken ed Jörmungandr
 
 Package: kraken
-Version: 0.62.16
+Version: 0.62.16ubuntu1
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
-Installed-Size: 12409
+Installed-Size: 12578
 Depends: libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf
 Section: devel
 Priority: optional
