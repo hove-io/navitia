@@ -53,7 +53,7 @@ void EdPersistor::build_relation(){
 }
 
 void EdPersistor::clean_db(){
-    PQclear(this->lotus.exec("TRUNCATE navitia.stop_area, navitia.line, navitia.company, navitia.physical_mode, "
+    PQclear(this->lotus.exec("TRUNCATE navitia.stop_area, navitia.line, navitia.company, navitia.physical_mode, navitia.contributor, "
                 "navitia.commercial_mode, navitia.properties, navitia.validity_pattern, navitia.network, navitia.parameters, navitia.connection CASCADE"));
 }
 
