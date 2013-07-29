@@ -1,3 +1,31 @@
+kraken (0.62.20) squeeze; urgency=low
+
+  [ Abderrahim Azime ]
+  * Amélioration du flux "journeys" : 	1) Ajout des commentaires sur les horaires 	2) affichage de la direction dans StreetNetwork 	3) Ajout de l'heure de départ et d'arrivé dans StreetNetwork 	4) Ajout des informations PICK_UP_ONLY, DROP_OFF_ONLY, ON_DEMAND_TRANSPORT, DATE_TIME_ESTIMATED au niveau de l'horaire
+  * Mutualisation de la proporiété "AdditionalInformations" entre "journeys" et "route_schedules"
+  * ajout de "additional_information" dans une section de type odt
+  * Ajoute des équipements de la circulation dans le flux de "route_schedules"
+  * Modification des links dans "journeys"
+
+  [ Vincent Lara ]
+  * Pyed : Ajout de target file
+  * Cmake : ajout de postinst
+  * Debian : Ajout de changelog et de control
+  * Debian : Ajout de postinst
+  * Streetnetwork : Correction de la longueur d'un chemin
+
+  [ Abderrahim Azime ]
+  * Ajout de la table des contributeurs
+  * Ajout du type contributor, chargement dans la base et sa binarisation
+  * Suppression du contenu de la table contributor avant les insertions
+  * Création d'une compagnie par défaut : le TAD n'a pas de compagnie
+  * Ajout des contributor dans le flux de status
+
+  [ Vincent Lara ]
+  * Version 0.62.16ubuntu1
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 29 Jul 2013 17:21:15 +0200
+
 kraken (0.62.16ubuntu1) quantal; urgency=low
 
   [ Abderrahim Azime ]
