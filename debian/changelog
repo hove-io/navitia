@@ -1,3 +1,12 @@
+kraken (0.62.20ubuntu1) quantal; urgency=low
+
+  * Debian : rules plus conventionnel
+  * Debian : version 0.62.16
+  * Pyed : Suppression daemon
+  * Cmake : déplacement à la racine
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 30 Jul 2013 10:56:41 +0200
+
 kraken (0.62.20) squeeze; urgency=low
 
   [ Abderrahim Azime ]
