@@ -1,0 +1,70 @@
+project(Kraken)
+cmake_minimum_required(VERSION 2.6)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
+
+IF(NOT CMAKE_BUILD_TYPE)
+   SET(CMAKE_BUILD_TYPE Debug)
+ENDIF(NOT CMAKE_BUILD_TYPE)
+
+IF(WIN32)
+  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0501)
+  IF(MSVC)
+	IF(CMAKE_CL_64)
+		SET(LIB_PREFIX "C:/lib64/")
+	ELSE(CMAKE_CL_64)
+		SET(LIB_PREFIX "C:/lib32/")
+	ENDIF(CMAKE_CL_64)
+	SET(BOOST_ROOT "${LIB_PREFIX}boost/")
+	
+	# Sur un système ayant les 2 versions 32 et 64 bits on considère que Qt est installé à un endroit précis
+	FIND_PROGRAM(QMAKE "${LIB_PREFIX}qt-4.7/bin/qmake.exe")
+	IF(QMAKE)
+		SET(QT_QMAKE_EXECUTABLE "${LIB_PREFIX}qt-4.7/bin/qmake.exe")
+	ENDIF(QMAKE)
+  ELSEIF(MINGW)
+    SET (BOOST_INCLUDEDIR "c:/mingw/include")
+  ENDIF(MSVC)  
+ENDIF(WIN32)
+
+
+
+IF(CMAKE_COMPILER_IS_GNUCXX)
+    SET(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra -std=c++0x -Woverloaded-virtual -Wundef -rdynamic ")
+    SET(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAG} --coverage -g")
+    SET(CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+
+if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    SET(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libstdc++  -ferror-limit=10 -pthread")
+    SET(CMAKE_C_FLAGS "-ferror-limit=10 -I/usr/local/include/c++/v1 -pthread")
+endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -fno-omit-frame-pointer")
+
+
+
+#gestion des fixtures pour les test unitaire
+SET(FIXTURES_DIR ${CMAKE_SOURCE_DIR}/../fixtures/)
+
+
+INCLUDE (CheckIncludeFiles)
+CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
+FIND_PACKAGE(Boost 1.40.0 REQUIRED)
+
+
+SET(KRAKEN_VERSION_MAJOR 0)
+SET(KRAKEN_VERSION_MINOR 60)
+SET(KRAKEN_VERSION_PATCH 0)
+
+#ajout a l'include path le repertoirre de compilation, pour géré le config.h
+include_directories (${CMAKE_CURRENT_BINARY_DIR}
+                     ${CMAKE_SOURCE_DIR}
+                     ${CMAKE_SOURCE_DIR}/../
+                     ${Boost_INCLUDE_DIRS}
+)
+link_directories ( ${Boost_LIBRARY_DIRS} )
+
+
+ENABLE_TESTING()
+
+add_subdirectory("source")
