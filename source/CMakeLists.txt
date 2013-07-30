@@ -67,6 +67,7 @@ link_directories ( ${Boost_LIBRARY_DIRS} )
 
 ENABLE_TESTING()
 
+add_subdirectory("source")
 add_subdirectory(type)
 add_subdirectory(ptreferential)
 add_subdirectory(autocomplete)
