@@ -1,5 +1,5 @@
 Source: kraken
-Version: 0.62.20
+Version: 0.62.30
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
 Installed-Size: 12815
@@ -9,7 +9,7 @@ Priority: optional
 Description: Kraken ed Jörmungandr
 
 Package: navitia-kraken
-Version: 0.62.20
+Version: 0.62.30
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
 Installed-Size: 12815
@@ -20,7 +20,7 @@ Description: Navitia Kraken
 
 
 Package: navitia-ed
-Version: 0.62.20
+Version: 0.62.30
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
 Installed-Size: 12815
@@ -31,7 +31,7 @@ Description: Navitia-Ed
 
 
 Package: navitia-jormungandr
-Version: 0.62.20
+Version: 0.62.30
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
 Installed-Size: 12815
