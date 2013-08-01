@@ -22,6 +22,7 @@ private:
     void insert_commercial_modes(const std::vector<types::CommercialMode*>& commercial_mode);
     void insert_physical_modes(const std::vector<types::PhysicalMode*>& physical_modes);
     void insert_companies(const std::vector<types::Company*>& companies);
+    void insert_contributors(const std::vector<types::Contributor*>& contributors);
 
     void insert_stop_points(const std::vector<types::StopPoint*>& stop_points);
     void insert_lines(const std::vector<types::Line*>& lines);

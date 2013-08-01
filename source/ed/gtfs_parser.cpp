@@ -55,6 +55,7 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
     typedef boost::function<void(GtfsParser*, Data&, CsvReader&)> parse_function;
     typedef std::pair<std::string, parse_function> string_function;
     std::vector<string_function> filename_function_list;
+    filename_function_list.push_back(std::make_pair("contributor.txt", &GtfsParser::parse_contributor));
     filename_function_list.push_back(std::make_pair("company.txt", &GtfsParser::parse_company));
     filename_function_list.push_back(std::make_pair("agency.txt", &GtfsParser::parse_agency));
     filename_function_list.push_back(std::make_pair("stops.txt", &GtfsParser::parse_stops));
@@ -154,6 +155,37 @@ void GtfsParser::fill_modes(Data & data) {
         mode_map[mode->id] = mode;
     }
 }
+void GtfsParser::parse_contributor(Data & data, CsvReader &csv){
+    std::vector<std::string> headers = {"contributor_name", "contributor_id"};
+    if(!csv.validate(headers)) {
+        LOG4CPLUS_FATAL(logger, "Erreur lors de la lecture " + csv.filename +
+                " il manque les colonnes  : " + csv.missing_headers(headers));
+        throw InvalidHeaders(csv.filename);
+    }
+
+    int id_c = csv.get_pos_col("contributor_id"), name_c = csv.get_pos_col("contributor_name");
+
+    bool line_read = false;
+    while(!csv.eof()) {
+        auto row = csv.next();
+        if(!row.empty()) {
+            if(line_read && id_c == -1) {
+                LOG4CPLUS_FATAL(logger, "Erreur lors de la lecture " + csv.filename +
+                        "le fichier comporte plus d'un contributeur et n'a pas de colonne contributor_id");
+                throw InvalidHeaders(csv.filename);
+            }
+            nm::Contributor * contributor = new nm::Contributor();
+            if(id_c != -1){
+                contributor->uri = row[id_c];
+            }
+            contributor->name = row[name_c];
+            contributor->idx = data.contributors.size() + 1;
+            data.contributors.push_back(contributor);
+            contributor_map[contributor->uri] = contributor;
+            line_read = true;
+        }
+    }
+}
 
 void GtfsParser::parse_company(Data & data, CsvReader &csv){
     std::vector<std::string> headers = {"company_name", "company_id"};
@@ -207,12 +239,12 @@ void GtfsParser::parse_company(Data & data, CsvReader &csv){
             line_read = true;
         }
     }
-    if (! line_read){ // création d'une compagnie par defaut
-        nm::Company * company = new nm::Company();
-        company->uri = "default_company";
-        data.companies.push_back(company);
-        company_map[company->uri] = company;
-    }
+    // création d'une compagnie par defaut
+    nm::Company * company = new nm::Company();
+    company->uri = "default_company";
+    company->name = "compagnie par défaut";
+    data.companies.push_back(company);
+    company_map[company->uri] = company;
 }
 
 void GtfsParser::parse_agency(Data & data, CsvReader & csv){
@@ -648,20 +680,11 @@ void GtfsParser::parse_lines(Data & data, CsvReader &csv){
                 auto agency_it = agency_map.find(row[agency_c]);
                 if(agency_it != agency_map.end())
                     line->network = agency_it->second;
-
-//                auto company_it = company_map.find(row[agency_c]);
-//                if(company_it != company_map.end())
-//                    line->company = company_it->second;
-
             }
             else {
                 auto agency_it = agency_map.find("default_agency");
                 if(agency_it != agency_map.end())
                     line->network = agency_it->second;
-
-//                auto company_it = company_map.find("default_company");
-//                if(company_it != company_map.end())
-//                    line->company = company_it->second;
             }
 
             line_map[row[id_c]] = line;
@@ -783,13 +806,19 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                         vj->set_vehicle(navitia::type::hasVehicleProperties::SCOOL_VEHICLE);
 
                     vj_map[vj->uri] = vj;
-                    std::string company_s("default_company");
+                    std::string company_s;
                     if ((company_id_c != -1) && (!row[company_id_c].empty())){
                         company_s = row[company_id_c];
                     }
                     auto company_it = company_map.find(company_s);
-                    if(company_it != company_map.end())
+                    if(company_it != company_map.end()){
                         vj->company = company_it->second;
+                    }else{
+                        auto company_it = company_map.find("default_company");
+                        if(company_it != company_map.end()){
+                            vj->company = company_it->second;
+                        }
+                    }
 
                     data.vehicle_journeys.push_back(vj);
 

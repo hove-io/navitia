@@ -15,6 +15,7 @@ void EdReader::fill(navitia::type::Data& data){
     this->fill_commercial_modes(data, work);
     this->fill_physical_modes(data, work);
     this->fill_companies(data, work);
+    this->fill_contributors(data, work);
 
     this->fill_stop_areas(data, work);
     this->fill_stop_points(data, work);
@@ -147,6 +148,22 @@ void EdReader::fill_physical_modes(nt::Data& data, pqxx::work& work){
 
         data.pt_data.physical_modes.push_back(mode);
         this->physical_mode_map[const_it["id"].as<idx_t>()] = mode;
+    }
+}
+
+void EdReader::fill_contributors(nt::Data& data, pqxx::work& work){
+    std::string request = "SELECT id, name, uri FROM navitia.contributor";
+
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        nt::Contributor* contributor = new nt::Contributor();
+        const_it["uri"].to(contributor->uri);
+        const_it["name"].to(contributor->name);
+
+        contributor->idx = data.pt_data.contributors.size();
+
+        data.pt_data.contributors.push_back(contributor);
+        this->contributor_map[const_it["id"].as<idx_t>()] = contributor;
     }
 }
 

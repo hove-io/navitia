@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#You have to be logged as postgres to execute this script
 if [ $# -ne 1 ]
 then
     echo 'fichier de conf requis en paramétre'
@@ -24,6 +24,6 @@ source $1
 
 #installation de postgis sur la base
 
-sudo -u postgres psql --set ON_ERROR_STOP=1 --dbname=$dbname -f "$postgis_dir/postgis.sql"
+psql --set ON_ERROR_STOP=1 --dbname=$dbname -f "$postgis_dir/postgis.sql"
 
-sudo -u postgres psql --set ON_ERROR_STOP=1 --dbname=$dbname -f "$postgis_dir/spatial_ref_sys.sql"
+psql --set ON_ERROR_STOP=1 --dbname=$dbname -f "$postgis_dir/spatial_ref_sys.sql"

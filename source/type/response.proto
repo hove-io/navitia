@@ -170,6 +170,8 @@ message Status{
     optional bool loaded = 10;
 
     optional int32 nb_threads = 11;
+    
+    repeated string contributors = 12;
 }
 
 message PairStopTime {

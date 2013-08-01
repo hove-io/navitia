@@ -94,6 +94,7 @@
     </column>
     <column id="COL27" populated="true" UUID="4daf0872-49bc-4da7-a817-968e1c455db0" autoInc
 
+
 ement="false" autoIncrementSequenceName="journey_pattern_point_id_seq_1" defaultValue="" name="journey_pattern_id" nullable="0" physicalName="journey_pattern_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
@@ -187,7 +188,7 @@ ement="false" autoIncrementSequenceName="journey_pattern_point_id_seq_1" default
   <table id="TAB55" populated="true" UUID="0294999f-b2cf-4642-ad6f-e48a862d7646" name="line" objectType="TABLE" physicalName="line" >
    <remarks></remarks>
    <folder id="FOLTAB551" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL56" populated="true" UUID="713a0
+    <column id="COL56" populated="true" UUID="713a
 
 7-3fbe-4f47-a37f-4bf7e2780276" autoIncrement="true" autoIncrementSequenceName="line_id_seq" defaultValue="" name="lid" nullable="0" physicalName="lid" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
@@ -277,6 +278,7 @@ ement="false" autoIncrementSequenceName="journey_pattern_point_id_seq_1" default
     </folder>
     <folder id="FOLTAB743" populated="true" name="Exported Keys" physicalName="Exported Keys" t
 
+
 pe="3">
     </folder>
     <folder id="FOLTAB742" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
@@ -358,7 +360,7 @@ pe="3">
     <column id="COL104" populated="true" UUID="38745c90-65d2-4f74-9598-d74ec99e921e" autoIncrement="false" autoIncrementSequenceName="stop_time_start_time_seq" defaultValue="" name="start_time" nullable="1" physicalName="start_time" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
-    <column id="COL105" populated="true" UUID="51032a39-97a1-47d6-b23d-3e1b463ea552" autoIncrement="false" autoIncrementSequenceName="stop_time_end_time_seq" defaultValue="" name="end_time" 
+    <column id="COL105" populated="true" UUID="51032a39-97a1-47d6-b23d-3e1b463ea552" autoIncrement="false" autoIncrementSequenceName="stop_time_end_time_seq" defaultValue="" name="end_time"
 llable="1" physicalName="end_time" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
@@ -451,6 +453,7 @@ llable="1" physicalName="end_time" precision="0" referenceCount="1" scale="0" so
     </column>
     <column id="COL132" populated="true" UUID="285b643d-87bf-41fa-9948-ac8b1ff6cb11" autoIncrement="false" autoIncrementSequenceName="journey_pattern_point_id_seq_10" defaultValue="" name="company_id" nullable="0" physicalName="company_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="
 
+
 serDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
@@ -540,7 +543,7 @@ serDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb
     <column id="COL158" populated="true" UUID="0c3e89b0-9678-4141-85fe-f326bae07355" autoIncrement="false" autoIncrementSequenceName="journey_pattern_point_connection_length_seq" defaultValue="" name="length" nullable="0" physicalName="length" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
-    <column id="COL159" populated="true" UUID="1
+    <column id="COL159" populated="true" UUID="
 d6358-0ef1-4893-ad74-86a72539c21a" autoIncrement="false" autoIncrementSequenceName="journey_pattern_point_connection_uri_seq" defaultValue="" name="uri" nullable="0" physicalName="uri" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks></remarks>
     </column>
@@ -631,6 +634,7 @@ d6358-0ef1-4893-ad74-86a72539c21a" autoIncrement="false" autoIncrementSequenceNa
      <remarks></remarks>
     </column>
     <column id="COL187" populated="true" UUID="2df803c7-1db5-4b70-b771-5e6754b98999" autoIncrement="false" autoIncrementSequenceName="stop_point
+
 
 id_seq_3" defaultValue="" name="stop_point_id" nullable="0" physicalName="stop_point_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
@@ -731,7 +735,7 @@ id_seq_3" defaultValue="" name="stop_point_id" nullable="0" physicalName="stop_p
   </table>
   <table id="TAB216" populated="true" UUID="71e2452f-8f02-40f4-90b0-9afcead0cfef" name="alias" objectType="TABLE" physicalName="alias" >
    <remarks></remarks>
-   <folder i
+   <folder 
 "FOLTAB2161" populated="true" name="Columns" physicalName="Columns" type="1">
     <column id="COL217" populated="true" UUID="21c2bfe0-22a6-427c-a127-99f660d066ff" autoIncrement="true" autoIncrementSequenceName="alias_aid_seq" defaultValue="" name="aid" nullable="0" physicalName="aid" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
@@ -837,6 +841,7 @@ id_seq_3" defaultValue="" name="stop_point_id" nullable="0" physicalName="stop_p
    </folder>
   </tab
 
+
 e>
   <table id="TAB243" populated="true" UUID="bc11a8d0-2994-415d-9aaa-2b1f53a78ed6" name="Parameters" objectType="TABLE" physicalName="Parameters" >
    <remarks></remarks>
@@ -940,7 +945,7 @@ e>
     </folder>
     <folder id="FOLTAB2614" populated="true" name="Indices" physicalName="Indices" type="4">
     <index id="IDX266" populated="true" UUID="7fb783d6-f73d-4446-b73d-7a8aab95317a" clustered="false" name="edge_pk" physicalName="edge_pk" primaryKeyIndex="true" unique="false" >
-     <index-column id="IDC267" populated="true" UUID="aa999ced-b6ad-415d-98aa-90f4c1689c2b" ascendingOrD
+     <index-column id="IDC267" populated="true" UUID="aa999ced-b6ad-415d-98aa-90f4c1689c2b" ascendingOr
 cending="UNSPECIFIED" column-ref="COL262" name="source_node_id" physicalName="source_node_id" />
      <index-column id="IDC268" populated="true" UUID="72cfae81-a81e-4855-a3c7-55c6ef0e483a" ascendingOrDescending="UNSPECIFIED" column-ref="COL263" name="target_node_id" physicalName="target_node_id" />
     </index>
@@ -1023,6 +1028,7 @@ cending="UNSPECIFIED" column-ref="COL262" name="source_node_id" physicalName="so
    </relationship>
    <relationship id="REL300" populated="true" UUID="da05d0b6-06b8-4a37-8958-0fe21efd3612" deferrability="7" deleteRule="3" fk-table-ref="TAB154" fkCardinality="7" identifying="true" name="journey_pattern_point_journey_pattern_point_connection_fk1" physicalName="journe
 
+
 _pattern_point_journey_pattern_point_connection_fk1" pk-table-ref="TAB25" pkCardinality="2" updateRule="3" >
     <column-mapping id="CMP301" populated="true" UUID="1feca093-e18f-4072-9661-ecae85f415e9" fk-column-ref="COL156" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL26" />
    </relationship>
@@ -1080,7 +1086,7 @@ _pattern_point_journey_pattern_point_connection_fk1" pk-table-ref="TAB25" pkCard
    <relationship id="REL336" populated="true" UUID="97b82ecb-22e2-48f1-8255-988d69f83f53" deferrability="7" deleteRule="3" fk-table-ref="TAB278" fkCardinality="7" identifying="true" name="admin_rel_way_admin_fk" physicalName="admin_rel_way_admin_fk" pk-table-ref="TAB165" pkCardinality="2" updateRule="3" >
     <column-mapping id="CMP337" populated="true" UUID="713c3f87-d57a-4575-a538-4b97c6d6ec9f" fk-column-ref="COL279" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL166" />
    </relationship>
-   <relationship id="REL338" populated="true" UUID="f5c23996-f859-4076-a0b2-a79b1547b58f" deferrability="7" deleteRule="3" fk-table-ref="TAB199" fkCardinality="7" identifying="true" n
+   <relationship id="REL338" populated="true" UUID="f5c23996-f859-4076-a0b2-a79b1547b58f" deferrability="7" deleteRule="3" fk-table-ref="TAB199" fkCardinality="7" identifying="true" 
 e="poi_type_poi_fk" physicalName="poi_type_poi_fk" pk-table-ref="TAB191" pkCardinality="2" updateRule="3" >
     <column-mapping id="CMP339" populated="true" UUID="fa096696-7d35-4892-a46f-28ffe5e1f7b7" fk-column-ref="COL205" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL192" />
    </relationship>
@@ -1150,6 +1156,7 @@ e="poi_type_poi_fk" physicalName="poi_type_poi_fk" pk-table-ref="TAB191" pkCardi
   <table-pane table-ref="TAB210" x="40" y="212" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB216" x="781" y="100" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB222" x="
+
 
 25" y="100" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB228" x="676" y="806" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
@@ -1223,7 +1230,7 @@ e="poi_type_poi_fk" physicalName="poi_type_poi_fk" pk-table-ref="TAB191" pkCardi
   <critic-grouping platformType="HSQLDB" enabled="true">
    <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.HSQLDBUnsupportedFeaturesCritic" severity="ERROR"/>
   </critic-grouping>
-  <critic-grouping platformType=
+  <critic-grouping platformType
 ySQL" enabled="true">
    <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.MySQLCommentCritic" severity="ERROR"/>
    <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.MySQLReservedWordsCritic" severity="ERROR"/>

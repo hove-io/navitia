@@ -166,6 +166,12 @@ CREATE TABLE IF NOT EXISTS navitia.commercial_mode (
     name TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS navitia.contributor (
+    id BIGINT PRIMARY KEY,
+    uri TEXT NOT NULL,
+    name TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS navitia.company (
     id BIGINT PRIMARY KEY,
     comment TEXT,

@@ -8,7 +8,6 @@ from datetime import datetime
 from pyed.launch_exec import launch_exec
 from pyed.config import ConfigException
 import logging
-from pyed.daemon import Daemon
 import time
 
 class Watching():

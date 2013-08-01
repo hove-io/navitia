@@ -1,19 +1,41 @@
 Source: kraken
-Version: 0.62.16
+Version: 0.62.30
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
-Installed-Size: 12409
-Depends: libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf
+Installed-Size: 12815
+Depends: libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf, python-pyed
 Section: devel
 Priority: optional
 Description: Kraken ed Jörmungandr
 
-Package: kraken
-Version: 0.62.16
+Package: navitia-kraken
+Version: 0.62.30
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
-Installed-Size: 12409
-Depends: libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf
+Installed-Size: 12815
+Depends: libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf, libpqxx-3.1
 Section: devel
 Priority: optional
-Description: Kraken ed Jörmungandr
+Description: Navitia Kraken
+
+
+Package: navitia-ed
+Version: 0.62.30
+Architecture: amd64
+Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
+Installed-Size: 12815
+Depends: libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf, python-pyed
+Section: devel
+Priority: optional
+Description: Navitia-Ed
+
+
+Package: navitia-jormungandr
+Version: 0.62.30
+Architecture: amd64
+Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
+Installed-Size: 12815
+Depends: python-zmq, python-werkzeug, python-shapely, python-protobuf
+Section: devel
+Priority: optional
+Description: Navitia-Jormungandr

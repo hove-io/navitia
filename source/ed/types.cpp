@@ -164,6 +164,14 @@ navitia::type::StopArea* StopArea::get_navitia_type() const {
     return sa;
 }
 
+nt::Contributor* Contributor::get_navitia_type() const {
+    nt::Contributor* nt_contributor = new nt::Contributor();
+    nt_contributor->id = this->id;
+    nt_contributor->idx = this->idx;
+    nt_contributor->uri = this->uri;
+    nt_contributor->name = this->name;
+    return nt_contributor;
+}
 
 nt::PhysicalMode* PhysicalMode::get_navitia_type() const {
     nt::PhysicalMode* nt_mode = new nt::PhysicalMode();

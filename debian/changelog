@@ -1,3 +1,71 @@
+kraken (0.62.21) squeeze; urgency=low
+
+  * Pyed: Suppression de dameon
+  * Debian : Suppression de l'installation de pyed dans le postinst
+  * Debian : Ajout du répertoire source et options de compilation
+  * Debian : Ajout de fichiers install
+  * Dépendences : Ajout de libpq
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 31 Jul 2013 10:31:20 +0200
+
+kraken (0.62.20debian) squeeze; urgency=low
+
+  * Debian : fichier rules plus conventionnel
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 30 Jul 2013 10:56:41 +0200
+
+kraken (0.62.20ubuntu1) quantal; urgency=low
+
+  * Debian : rules plus conventionnel
+  * Debian : version 0.62.16
+  * Pyed : Suppression daemon
+  * Cmake : déplacement à la racine
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 30 Jul 2013 10:56:41 +0200
+
+kraken (0.62.20) squeeze; urgency=low
+
+  [ Abderrahim Azime ]
+  * Amélioration du flux "journeys" : 	1) Ajout des commentaires sur les horaires 	2) affichage de la direction dans StreetNetwork 	3) Ajout de l'heure de départ et d'arrivé dans StreetNetwork 	4) Ajout des informations PICK_UP_ONLY, DROP_OFF_ONLY, ON_DEMAND_TRANSPORT, DATE_TIME_ESTIMATED au niveau de l'horaire
+  * Mutualisation de la proporiété "AdditionalInformations" entre "journeys" et "route_schedules"
+  * ajout de "additional_information" dans une section de type odt
+  * Ajoute des équipements de la circulation dans le flux de "route_schedules"
+  * Modification des links dans "journeys"
+
+  [ Vincent Lara ]
+  * Pyed : Ajout de target file
+  * Cmake : ajout de postinst
+  * Debian : Ajout de changelog et de control
+  * Debian : Ajout de postinst
+  * Streetnetwork : Correction de la longueur d'un chemin
+
+  [ Abderrahim Azime ]
+  * Ajout de la table des contributeurs
+  * Ajout du type contributor, chargement dans la base et sa binarisation
+  * Suppression du contenu de la table contributor avant les insertions
+  * Création d'une compagnie par défaut : le TAD n'a pas de compagnie
+  * Ajout des contributor dans le flux de status
+
+  [ Vincent Lara ]
+  * Version 0.62.16ubuntu1
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 30 Jul 2013 10:38:13 +0200
+
+kraken (0.62.16ubuntu1) quantal; urgency=low
+
+  [ Abderrahim Azime ]
+  * - Prise en compte des coordonnées dans "journeys" - Création de l'origin et la destination dans la section "street_network"
+  * Import des données OSM : Ajout des voies qui ne sont pas dans la table de fusion
+
+  [ Vincent Lara ]
+  * Version 0.62.16
+  * Pyed : On mv avant de unzip
+  * Pyed : Erreurs d'inattention
+  * Pyed : version 0.37
+  * Jormungandr wsgi : On set les variables d'environnement
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 24 Jul 2013 10:30:06 +0200
+
 kraken (0.62.16) quantal; urgency=low
 
   [ Abderrahim Azime ]

@@ -1,6 +1,7 @@
 project(Kraken)
 cmake_minimum_required(VERSION 2.6)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
+set(CMAKE_INSTALL_PREFIX "/")
 
 IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE Debug)
@@ -112,11 +113,9 @@ SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Kraken ed Jörmungandr")
 SET(CPACK_DEBIAN_PACKAGE_SECTION "devel")
 
 IF(${lsb_release} STREQUAL "precise")
-    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.48.0, libboost-serialization1.48.0, libboost-regex1.48.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.48.0, libboost-program-options1.48.0, libboost-filesystem1.48.0, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf")
+    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.48.0, libboost-serialization1.48.0, libboost-regex1.48.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.48.0, libboost-program-options1.48.0, libboost-filesystem1.48.0, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf, libpqxx-3.1")
 ELSE()
-    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf")
+    SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf, libpqxx-3.1")
 ENDIF()
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/debian/postinst;${CMAKE_SOURCE_DIR}/debian/changelog;")
-
 
 INCLUDE(CPack)

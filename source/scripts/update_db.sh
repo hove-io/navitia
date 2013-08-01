@@ -9,7 +9,8 @@ cd $sql_dir
 
 tempfile=$(mktemp)
 
-#on construit un gros fichier en assemblant tous les scripts sql, et on encapsule dans une transaction
+#on construit un gros fichier en assemblant tous les scripts sql
+# et on encapsule dans une transaction
 echo "begin transaction;" > $tempfile
 
 cat *.sql >> $tempfile

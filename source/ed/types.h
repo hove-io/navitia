@@ -69,6 +69,16 @@ struct StopArea : public Header, Nameable, hasProperties{
     bool operator<(const StopArea& other) const;
 };
 
+
+struct Contributor : public Header, Nameable{
+    const static nt::Type_e type = nt::Type_e::Contributor;
+    Contributor() {}
+
+    nt::Contributor* get_navitia_type() const;
+
+    bool operator<(const Contributor& other)const{ return this->name < other.name;}
+};
+
 struct Network : public Header, Nameable{
     const static nt::Type_e type = nt::Type_e::Network;
     std::string address_name;
