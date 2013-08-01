@@ -5,6 +5,10 @@
 #include "utils/exception.h"
 #include <unordered_map>
 
+#include <boost/graph/strong_components.hpp>
+#include <boost/graph/connected_components.hpp>
+#include <algorithm>
+
 namespace ed{
 
 struct EdReader{
@@ -23,7 +27,7 @@ struct EdReader{
 
     void fill(navitia::type::Data& nav_data);
 
-private:
+private:    
     //map d'id en base vers le poiteur de l'objet instancié
     std::unordered_map<idx_t, navitia::type::Network*> network_map;
     std::unordered_map<idx_t, navitia::type::CommercialMode*> commercial_mode_map;
@@ -41,12 +45,17 @@ private:
 
     //map d'id en base(osmid) vers l'idx de l'objet
     std::unordered_map<idx_t, navitia::georef::Admin*> admin_map;
-    std::unordered_map<idx_t, navitia::georef::Way*> way_map;
+    std::unordered_map<idx_t, navitia::georef::Way*> way_map;    
     std::unordered_map<idx_t, navitia::georef::POI*> poi_map;
     std::unordered_map<idx_t, navitia::georef::POIType*> poi_type_map;
 
 //    std::unordered_map<uint64_t, idx_t> admin_map;
     std::unordered_map<uint64_t, idx_t> node_map;
+
+    // ces deux vectors servent pour ne pas charger les graphes secondaires
+    std::vector<uint64_t> way_no_ignore;
+    std::vector<std::string> edge_to_ignore;
+    std::vector<uint64_t> node_to_ignore;
 
     void fill_meta(navitia::type::Data& data, pqxx::work& work);
     void fill_networks(navitia::type::Data& data, pqxx::work& work);
@@ -77,6 +86,7 @@ private:
     void fill_house_numbers(navitia::type::Data& data, pqxx::work& work);
     void fill_vertex(navitia::type::Data& data, pqxx::work& work);
     void fill_graph(navitia::type::Data& data, pqxx::work& work);
+    void fill_vector_to_ignore(navitia::type::Data& data, pqxx::work& work);
     void fill_graph_vls(navitia::type::Data& data, pqxx::work& work);
 
     /// les relations admin et les autres objets
