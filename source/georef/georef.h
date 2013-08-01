@@ -69,6 +69,9 @@ typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
 /// Représentation d'un arc dans le graphe
 typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
 
+/// Pour parcourir les segements du graphe
+typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
+
 
 /** le numéro de la maison :
     il représente un point dans la rue, voie */
