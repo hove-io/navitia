@@ -1,3 +1,13 @@
+kraken (0.62.30) squeeze; urgency=low
+
+  * Pyed : Version 0.38.3
+  * Kraken : Version 0.62.21
+  * Scripts : On doit être postgres pour les runner
+  * Jormungandr : le signal de kill n'est catché qu'en standalone
+  * Version 0.62.30
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 01 Aug 2013 10:04:42 +0200
+
 kraken (0.62.21) squeeze; urgency=low
 
   * Pyed: Suppression de dameon
