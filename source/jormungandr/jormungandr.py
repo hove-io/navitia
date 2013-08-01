@@ -100,14 +100,10 @@ def application(environ, start_response):
     return urls.dispatch(lambda fun, v: fun(request, **v),
             catch_http_exceptions=True)
 
-signal.signal(signal.SIGINT, kill_thread)
-signal.signal(signal.SIGTERM, kill_thread)
-
-hdlr = logging.FileHandler('/var/log/ed/pyed_nantes')
-hdlr.setLevel(logging.INFO)
-logging.getLogger("werkzeug").addHandler(hdlr)
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGINT, kill_thread)
+    signal.signal(signal.SIGTERM, kill_thread)
     NavitiaManager().initialisation('Jörmungandr.ini')
     v = validate_apis(Apis().apis_all)
     if not(v.valid):
