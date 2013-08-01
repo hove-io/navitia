@@ -33,14 +33,14 @@ namespace qi = boost::spirit::qi;
     qi::rule<Iterator, std::string()> escaped_string, bracket_string;
     qi::rule<Iterator, Operator_e(), qi::space_type> bin_op; // Match une operator binaire telle que <, =...
     qi::rule<Iterator, std::vector<Filter>(), qi::space_type> filter; // La string complète a parser
-    qi::rule<Iterator, Filter(), qi::space_type> single_clause, having_clause; // La string complète à parser
+    qi::rule<Iterator, Filter(), qi::space_type> single_clause, having_clause, after_clause; // La string complète à parser
 
     select_r() : select_r::base_type(filter) {
         // Attention, le - dans un qi::char_ *peut* avoir une signification particulière telle que a-z
         word = qi::lexeme[+(qi::alnum|qi::char_("_:\x7c-"))];
-        text = qi::lexeme[+(qi::alnum|qi::char_("_:-=.<> \x7c"))];
-        escaped_string = '"' >> qi::lexeme[+(qi::alnum|qi::char_("_: &.\x7c-"))] >> '"';
-        bracket_string = '(' >> qi::lexeme[+(qi::alnum|qi::char_("_: &,.-"))] >> ')';
+        text = qi::lexeme[+(qi::alnum|qi::char_("_:=.<>\x7c ")|qi::char_("-"))];
+        escaped_string = '"' >> qi::lexeme[+(qi::alnum|qi::char_("_: &.\x7c")|qi::char_("-"))] >> '"';
+        bracket_string = '(' >> qi::lexeme[+(qi::alnum|qi::char_("_:=.<> \x7c")|qi::char_("-"))] /*qi::lexeme[+(qi::alnum|qi::char_("_: &,.-"))] */>> ')';
         bin_op =  qi::string("<=")[qi::_val = LEQ]
                 | qi::string(">=")[qi::_val = GEQ]
                 | qi::string("<>")[qi::_val = NEQ]
@@ -50,8 +50,9 @@ namespace qi = boost::spirit::qi;
                 | qi::string("DWITHIN") [qi::_val = DWITHIN];
 
         single_clause = (word >> "." >> word >> bin_op >> (word|escaped_string|bracket_string))[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2, qi::_3, qi::_4)];
-        having_clause = (word >> "HAVING" >> '(' >> text >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
-        filter %= (single_clause | having_clause) % (qi::lexeme["and"] | qi::lexeme["AND"]);
+        having_clause = (word >> "HAVING" >> bracket_string /*'(' >> (word|escaped_string|bracket_string) >> ')'*/)[qi::_val = boost::phoenix::construct<Filter>(qi::_1, qi::_2)];
+        after_clause = ("AFTER(" >> text >> ')')[qi::_val = boost::phoenix::construct<Filter>(qi::_1)];
+        filter %= (single_clause | having_clause | after_clause) % (qi::lexeme["and"] | qi::lexeme["AND"]);
     }
 
 };
@@ -119,10 +120,23 @@ std::vector<idx_t> get_indexes(Filter filter,  Type_e requested_type, const Data
 
     else if( filter.op == HAVING ) {
         indexes = make_query(nt::static_data::get()->typeByCaption(filter.object), filter.value, d);
-    } else {
+    } else if(filter.op == AFTER) {
+        //On récupère les indexes à partir des quels on veut faire la requete
+        std::vector<idx_t> tmp_indexes = make_query(nt::static_data::get()->typeByCaption(filter.object), filter.value, d);
+
+        //On ajoute à indexes tous les journey_patterns qui sont apres
+        for(auto first_jpp : tmp_indexes) {
+            auto jpp = d.pt_data.journey_pattern_points[first_jpp];
+            for(auto other_jpp : jpp->journey_pattern->journey_pattern_point_list) {
+                if(other_jpp->order > jpp->order) {
+                    indexes.push_back(other_jpp->idx);
+                }
+            }
+        }
+    }
+    else {
         indexes = filtered_indexes(data, build_clause<T>({filter}));
     }
-
     Type_e current = filter.navitia_type;
     std::map<Type_e, Type_e> path = find_path(requested_type);
     while(path[current] != current){
@@ -184,6 +198,7 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
         }
         // Attention ! les structures doivent être triées !
         std::sort(indexes.begin(), indexes.end());
+        std::unique(indexes.begin(), indexes.end());
         std::vector<idx_t> tmp_indexes;
         std::back_insert_iterator< std::vector<idx_t> > it(tmp_indexes);
         std::set_intersection(final_indexes.begin(), final_indexes.end(), indexes.begin(), indexes.end(), it);

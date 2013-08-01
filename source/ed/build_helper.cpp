@@ -28,18 +28,21 @@ VJ::VJ(builder & b, const std::string &line_name, const std::string &validity_pa
     if(it == b.lines.end()){
 
         navitia::type::Line* line = new navitia::type::Line();
+        line->idx = b.data.pt_data.lines.size();
         line->uri = line_name;
         b.lines[line_name] = line;
         line->name = line_name;
         b.data.pt_data.lines.push_back(line);
         navitia::type::Route* route = new navitia::type::Route();
+        route->idx = b.data.pt_data.routes.size();
         route->uri = line_name + ":" + std::to_string(b.data.pt_data.routes.size());
         b.data.pt_data.routes.push_back(route);
         line->route_list.push_back(route);
         route->line = line;
         navitia::type::JourneyPattern* jp = new navitia::type::JourneyPattern();
-        b.data.pt_data.journey_patterns.push_back(jp);
+        jp->idx = b.data.pt_data.journey_patterns.size();
         jp->uri = route->uri + ":0";
+        b.data.pt_data.journey_patterns.push_back(jp);
         route->journey_pattern_list.push_back(jp);
         jp->route = route;
         vj->journey_pattern = jp;
@@ -89,6 +92,7 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32
     navitia::type::JourneyPatternPoint* jpp = nullptr;
     if(it == b.sps.end()){
         sp = new navitia::type::StopPoint();
+        sp->idx = b.data.pt_data.stop_points.size();
         sp->name = sp_name;
         sp->uri = sp_name;
         if(!b.data.pt_data.networks.empty())
@@ -99,6 +103,7 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32
         auto sa_it = b.sas.find(sp_name);
         if(sa_it == b.sas.end()) {
             navitia::type::StopArea* sa = new navitia::type::StopArea();
+            sa->idx = b.data.pt_data.stop_areas.size();
             sa->name = sp_name;
             sa->uri = sp_name;
             sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
@@ -122,6 +127,7 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32
     }
     if(jpp == nullptr) {
         jpp = new navitia::type::JourneyPatternPoint();
+        jpp->idx = b.data.pt_data.journey_pattern_points.size();
         vj->journey_pattern->journey_pattern_point_list.push_back(jpp);
         jpp->stop_point = sp;
         sp->journey_pattern_point_list.push_back(jpp);
@@ -150,6 +156,7 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint32
 
 SA::SA(builder & b, const std::string & sa_name, double x, double y, bool wheelchair_boarding) : b(b) {
     sa = new navitia::type::StopArea();
+    sa->idx = b.data.pt_data.stop_areas.size();
     b.data.pt_data.stop_areas.push_back(sa);
     sa->name = sa_name;
     sa->uri = sa_name;
@@ -162,6 +169,7 @@ SA::SA(builder & b, const std::string & sa_name, double x, double y, bool wheelc
 
 SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelchair_boarding){
     navitia::type::StopPoint * sp = new navitia::type::StopPoint();
+    sp->idx = b.data.pt_data.stop_points.size();
     b.data.pt_data.stop_points.push_back(sp);
     sp->name = sp_name;
     sp->uri = sp_name;
@@ -186,6 +194,7 @@ VJ builder::vj(const std::string &network_name, const std::string &line_name, co
     auto it = this->nts.find(network_name);
     if(it == this->nts.end()){
         navitia::type::Network* network = new navitia::type::Network();
+        network->idx = this->data.pt_data.networks.size();
         network->uri = network_name;
         network->name = network_name;
         this->nts[network_name] = network;
@@ -226,6 +235,7 @@ void builder::journey_pattern_point_connection(const std::string & name1, const 
 
 void builder::connection(const std::string & name1, const std::string & name2, float length) {
     navitia::type::StopPointConnection* connexion = new navitia::type::StopPointConnection();
+    connexion->idx = data.pt_data.stop_point_connections.size();
     if(sps.count(name1) == 0 || sps.count(name2) == 0)
         return ;
     connexion->departure = (*(sps.find(name1))).second;
@@ -239,22 +249,26 @@ void builder::connection(const std::string & name1, const std::string & name2, f
 
  void builder::generate_dummy_basis() {
     navitia::type::Company *company = new navitia::type::Company();
-    this->data.pt_data.companies.push_back(company);
+    company->idx = this->data.pt_data.companies.size();
     company->name = "base_company";
     company->uri = "base_company";
+    this->data.pt_data.companies.push_back(company);
 
     navitia::type::Network *network = new navitia::type::Network();
-    this->data.pt_data.networks.push_back(network);
+    network->idx = this->data.pt_data.networks.size();
     network->name = "base_network";
     network->uri = "base_network";
+    this->data.pt_data.networks.push_back(network);
 
     navitia::type::CommercialMode *commercial_mode = new navitia::type::CommercialMode();
+    commercial_mode->idx = this->data.pt_data.commercial_modes.size();
     commercial_mode->id = "0";
     commercial_mode->name = "Tram";
     commercial_mode->uri = "0x0";
     this->data.pt_data.commercial_modes.push_back(commercial_mode);
 
     commercial_mode = new navitia::type::CommercialMode();
+    commercial_mode->idx = this->data.pt_data.commercial_modes.size();
     commercial_mode->id = "1";
     commercial_mode->name = "Metro";
     commercial_mode->uri = "0x1";
@@ -262,6 +276,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
 
     for(navitia::type::CommercialMode *mt : this->data.pt_data.commercial_modes) {
         navitia::type::PhysicalMode* mode = new navitia::type::PhysicalMode();
+        mode->idx = mt->idx;
         mode->id = mt->id;
         mode->name = mt->name;
         mode->uri = mt->uri;
