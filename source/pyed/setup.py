@@ -2,8 +2,8 @@
 
 from distutils.core import setup
 
-setup(name='python-pyed',
-      version='0.38.2',
+setup(name='pyed',
+      version='0.38.3',
       description="Mange et vomis des donnees dans ed, puis les remange et les revomi dans un .nav",
       author='CanalTP',
       author_email='vincent.lara@canaltp.fr',

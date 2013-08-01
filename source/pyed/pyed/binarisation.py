@@ -5,6 +5,7 @@ from pyed.launch_exec import launch_exec
 from pyed.config import ConfigException
 import logging
 import subprocess
+import os
 
 def make_connection_string(config):
     """ Make the a connection string connection from the config """
