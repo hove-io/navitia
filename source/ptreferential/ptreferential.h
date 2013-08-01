@@ -35,6 +35,8 @@ struct Filter {
 
     Filter(std::string object, std::string attribute, Operator_e op, std::string value) : object(object), attribute(attribute), op(op), value(value) {}
     Filter(std::string object, std::string value) : object(object), op(HAVING), value(value) {}
+    Filter(std::string value) : object("journey_pattern_point"), op(AFTER), value(value) {}
+
     Filter() {}
 };
 
