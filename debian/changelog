@@ -1,3 +1,13 @@
+kraken (0.62.21) squeeze; urgency=low
+
+  * Pyed: Suppression de dameon
+  * Debian : Suppression de l'installation de pyed dans le postinst
+  * Debian : Ajout du répertoire source et options de compilation
+  * Debian : Ajout de fichiers install
+  * Dépendences : Ajout de libpq
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 31 Jul 2013 10:31:20 +0200
+
 kraken (0.62.20debian) squeeze; urgency=low
 
   * Debian : fichier rules plus conventionnel
