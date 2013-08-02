@@ -1,3 +1,17 @@
+kraken (0.62.34) quantal; urgency=low
+
+  * Cmake : Ajout de droit d'execution sur les programmes
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 02 Aug 2013 10:46:15 +0200
+
+kraken (0.62.33) quantal; urgency=low
+
+  * Version 0.62.31
+  * Debian : On enleve le postinst
+  * Version 0.62.33
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 01 Aug 2013 18:31:25 +0200
+
 kraken (0.62.31) quantal; urgency=low
 
   [ Vincent Lara ]
