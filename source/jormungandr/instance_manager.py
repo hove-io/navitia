@@ -121,12 +121,12 @@ class NavitiaManager:
         else:
              return generate_error(region + " not found", status=404)
 
-    def send_and_receive(self, request, region = None):
+    def send_and_receive(self, request, region = None, timeout=10000):
         if region in self.instances:
             instance = self.instances[region]
             instance.lock.acquire()
             instance.socket.send(request.SerializeToString())#, zmq.NOBLOCK, copy=False)
-            socks = dict(instance.poller.poll(10000))
+            socks = dict(instance.poller.poll(timeout))
             if socks.get(instance.socket) == zmq.POLLIN:
                 pb = instance.socket.recv()
                 instance.lock.release()
@@ -153,7 +153,7 @@ class NavitiaManager:
         while not self.thread_event.is_set():
             for key, instance in self.instances.iteritems():
                 try:
-                    resp = self.send_and_receive(req, key)
+                    resp = self.send_and_receive(req, key, timeout=1000)
                     if resp:
                         try:
                             parsed = json.loads(resp.metadatas.shape)
