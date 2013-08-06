@@ -27,8 +27,8 @@ class Script:
 
     def __pagination(self, request, ressource_name, resp):
         request_pagination = response_pb2.Pagination()
-        request_pagination.startPage = request.arguments["startPage"]
-        request_pagination.itemsPerPage = request.arguments["count"]
+        request_pagination.startPage = request["startPage"]
+        request_pagination.itemsPerPage = request["count"]
         objects = None
         if resp.ListFields():
             for fd in resp.ListFields():
@@ -38,22 +38,22 @@ class Script:
         else:
             request_pagination.totalResult = 0
 
-        if objects: 
+        if objects:
             begin = int(request_pagination.startPage) * int(request_pagination.itemsPerPage)
-            end = begin + int(request_pagination.itemsPerPage) 
+            end = begin + int(request_pagination.itemsPerPage)
             if end > request_pagination.totalResult:
                 end = request_pagination.totalResult
 
-            toDelete = [] 
+            toDelete = []
             if begin < request_pagination.totalResult :
                 del objects[end:]# todo -1 valable ?
                 del objects[0:begin]
             else:
                 del objects[0:]
-            
+
             request_pagination.itemsOnPage = len(objects)
             query_args = ""
-            for key, value in request.arguments.iteritems():
+            for key, value in request.iteritems():
                 if key != "startPage":
                     if type(value) == type([]):
                         for v in value:
@@ -68,7 +68,7 @@ class Script:
         resp.pagination.CopyFrom(request_pagination)
 
 
-    
+
 
 
     def status(self, request, region):
@@ -107,18 +107,17 @@ class Script:
         resp = NavitiaManager().send_and_receive(req, region)
         self.__pagination(request, "places", resp)
 
-	for place in resp.places:
-	    if place.HasField("address"):
-	        post_code = place.address.name
-		if place.address.house_number > 0:
-		   post_code = str(place.address.house_number) + " " + place.address.name 
-		
-		for ad in place.address.administrative_regions:
-		    if ad.zip_code != "":
-		        post_code = post_code + ", " + ad.zip_code + " " + ad.name
-		    else:
-			post_code = post_code + ", " + ad.name
-		place.name = post_code
+        for place in resp.places:
+            if place.HasField("address"):
+                post_code = place.address.name
+            if place.address.house_number > 0:
+               post_code = str(place.address.house_number) + " " + place.address.name
+            for ad in place.address.administrative_regions:
+                if ad.zip_code != "":
+                    post_code = post_code + ", " + ad.zip_code + " " + ad.name
+                else:
+                    post_code = post_code + ", " + ad.name
+            place.name = post_code
 
         return resp
 
@@ -151,7 +150,7 @@ class Script:
     def departure_boards(self, request, region):
         return self.__stop_times(request, region, request.arguments["filter"], "", type_pb2.DEPARTURE_BOARDS)
 
-    
+
     def places_nearby(self, request, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.places_nearby
@@ -236,7 +235,7 @@ class Script:
     def journeys(self, request, region):
         return self.__on_journeys(type_pb2.PLANNER, request, region)
 
-    
+
     def isochrone(self, request, region):
         return self.__on_journeys(type_pb2.ISOCHRONE, request, region)
 
@@ -245,11 +244,11 @@ class Script:
         req.requested_api = type_pb2.PTREFERENTIAL
 
         req.ptref.requested_type = requested_type
-        req.ptref.filter = request.arguments["filter"]
-        req.ptref.depth = request.arguments["depth"]
-        
+        req.ptref.filter = request["filter"]
+        req.ptref.depth = request["depth"]
+
         resp = NavitiaManager().send_and_receive(req, region)
-        self.__pagination(request, ressource_name, resp) 
+        self.__pagination(request, ressource_name, resp)
         return resp
 
     def stop_areas(self, request, region):
@@ -287,9 +286,9 @@ class Script:
 
     def vehicle_journeys(self, request, region):
         return self.__on_ptref("vehicle_journeys", type_pb2.VEHICLE_JOURNEY, request, region)
-    
+
     def pois(self, request, region):
         return self.__on_ptref("pois", type_pb2.POI, request, region)
-    
+
     def poi_types(self, request, region):
         return self.__on_ptref("poi_types", type_pb2.POITYPE, request, region)

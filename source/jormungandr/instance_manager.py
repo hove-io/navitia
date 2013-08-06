@@ -15,6 +15,7 @@ from renderers import render_from_protobuf
 from error import generate_error
 import logging
 import sys
+from renderers import protobuf_to_dict
 
 class Instance:
     def __init__(self):
@@ -198,3 +199,21 @@ class NavitiaManager:
                 return key
         return None
 
+    def regions(self):
+        response = {'regions': []}
+        for region in self.instances.keys() :
+            req = request_pb2.Request()
+            req.requested_api = type_pb2.METADATAS
+            try:
+                resp = self.send_and_receive(req, region)
+                resp_dict = protobuf_to_dict(resp)
+                if 'metadatas' in resp_dict.keys():
+                    resp_dict['metadatas']['region_id'] = region
+                    response['regions'].append(resp_dict['metadatas'])
+            except DeadSocketException :
+                response['regions'].append({"region_id" : region,
+                                            "status" : "not running"})
+            except RegionNotFound:
+                response['regions'].append({"region_id" : region,
+                                            "status" : "not found"})
+        return response
