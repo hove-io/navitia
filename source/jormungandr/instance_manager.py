@@ -59,7 +59,7 @@ class NavitiaManager:
         """
 
         self.instances = {}
-
+        self.contributors = {}
         self.context = zmq.Context()
         self.default_socket = None
 
@@ -144,7 +144,6 @@ class NavitiaManager:
                 raise DeadSocketException(region+" is a dead socket (" + instance.socket_path + ")")
         else:
             raise RegionNotFound(region +" not found ")
-        
 
 
     def thread_ping(self, timer=1):
@@ -158,6 +157,9 @@ class NavitiaManager:
                         try:
                             parsed = json.loads(resp.metadatas.shape)
                             check = True
+                            if 'contributors' in parsed:
+                                for contributor in parser.contributors:
+                                    self.contributors[contributor] = key
                             if 'coordinates' in parsed:
                                 if len(parsed['coordinates']) > 0:
                                     for coords in parsed['coordinates']:
