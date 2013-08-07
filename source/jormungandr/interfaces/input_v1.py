@@ -139,61 +139,52 @@ def stop_schedules(request, uri1, uri2=None):
     return Response(return_ +'}', mimetype='text/plain;charset=utf-8')
 
 def journeys(request, uri1=None):
-    acceptable_types = ["stop_areas", "stop_points", "addresses", "coords", "poi"]
-    u1 = None
-    from_=""
+    req = {}
+    #We catch the from argument
+    from_ = ""
     if uri1:
         from_ = uri1
     else:
-        from_ =request.args.get("from", str)
-    try:
-        u1 = Uri(from_)
-    except InvalidUriException, e:
-        return generate_error("Invalid id" + e.message)
-    resource_type1, uid1 = "", ""
-    if u1.is_region:
-        resource_type1, uid1 = u1.objects[-1]
-    else:
-        resource_type1 = "coord"
-        uid1 = "coord:"+str(u1.lon)+":"+str(u1.lat)
-
-    if not uid1 or not resource_type1 in acceptable_types:
-        return generate_error("Unsupported id: " + uri1 + ", not implemented", status=501)
-    req = {}
-    req["origin"] = [uid1]
+        from_ = request.args.get("from", str)
+    req["origin"] = [from_]
+    #We fill the datetime argument
     if not request.args.get("datetime"):
         req["datetime"] = [datetime.datetime.now().strftime("%Y%m%dT1337")]
     else:
         req["datetime"] = [request.args.get("datetime", str)]
-    
+    #If it's a journey from one point to another
     if request.args.get("to"):
-        try:
-            u2 = Uri(request.args.get("to"))
-        except InvalidUriException, e:
-            return generate_error("Invalid uri" + e.message)
-        resource_type2, uid2 = u2.objects.pop()
-        if not uid2 or not resource_type2 in acceptable_types:
-            return generate_error("Unsupported uri : " + request.args.get("to") + ", not implemented", status=501)
-        if u1.region() != u2.region():
-            return generate_error("The origin and destination are not in the same region, not implemented", status=501)
-        req["destination"] = [uid2]
+        to_ = request.args.get("to")
+        region = NavitiaManager().key_of_id(from_)
+        if region != NavitiaManager().key_of_id(to_):
+            error = "The origin and destination are not in the same region"
+            error += ", not implemented"
+            return generate_error(error, status=501)
+        req["destination"] = [to_]
         try:
             arguments = validate_and_fill_arguments("journeys", req)
-        except InvalidArguments, e:
-            return generate_error("Invalid Arguments : " + str(e.message))
+        except InvalidArguments, exception:
+            error = "Invalid Arguments : "
+            return generate_error(error + str(exception.message))
         if arguments.valid:
-            response = NavitiaManager().dispatch(arguments, u1.region(), "journeys")
-            return output_v1.journeys(request.path, u1, response, request.accept_mimetypes, request.args.get("callback"))
+            response = NavitiaManager().dispatch(arguments, region, "journeys")
+            return output_v1.journeys(request.path, from_, response,
+                                      request.accept_mimetypes,
+                                      request.args.get("callback"))
         else:
             return generate_error("Invalid arguments : " + arguments.details)
     else:
+        #All the journeys from that point
         try:
             arguments = validate_and_fill_arguments("isochrone", req)
-        except InvalidArguments, e:
-            return generate_error("Invalid Arguments : " + str(e.message))
+        except InvalidArguments, exception:
+            error = "Invalid Arguments : "
+            return generate_error(error + str(exception.message))
         if arguments.valid:
-            response = NavitiaManager().dispatch(arguments, u1.region(), "isochrone")
-            return output_v1.journeys(arguments, u1, response, request.accept_mimetypes, request.args.get("callback"), True)
+            response = NavitiaManager().dispatch(arguments, region, "isochrone")
+            return output_v1.journeys(arguments, from_, response,
+                                      request.accept_mimetypes,
+                                      request.args.get("callback"), True)
         else:
             return generate_error("Invalid arguments : " + arguments.details)
 
