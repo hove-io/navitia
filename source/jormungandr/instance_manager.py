@@ -180,14 +180,28 @@ class NavitiaManager:
             self.thread_event.wait(timer)
 
 
-
-
-    def stop(self) : 
+    def stop(self) :
         self.thread_event.set()
 
-
-
-    
+    def key_of_id(self, object_id):
+        """ Retrieves the key of the region of a given id
+            if it's a coord calls key_of_coord
+            Return the region key, or None if it doesn't exists
+        """
+        if len(object_id)>=6 and object_id[:6] == "coord:":
+            if object_id.count(":") == 2:
+                lon, lat = object_id.split(":")[1:]
+                return self.key_of_coord(lon, lat)
+            else:
+                return None
+        else:
+            try:
+                contributor = object_id[:object_id.find(":")]
+            except ValueError:
+                return None
+            if contributor in self.contributors:
+                return self.contributors[contributor]
+        return None
 
     def key_of_coord(self, lon, lat):
         """ Étant donné une coordonnée, retourne à quelle clef NAViTiA cela correspond
