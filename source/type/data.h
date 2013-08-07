@@ -130,6 +130,8 @@ public:
 
     Data& operator=(Data&& other);
 
+    /** Retourne le type de l'id donné */
+    Type_e get_type_of_id(const std::string & id);
 private:
     /** Charge les données binaires compressées en LZ4
       *
