@@ -205,8 +205,8 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
     switch(source) {
     #define GET_INDEXES(type_name, collection_name)\
         case Type_e::type_name:\
-            collection =  pt_data.collection_name[source_idx]\
-            result = collection->get(target, pt_data);break;
+            result = pt_data.collection_name[source_idx]->get(target, pt_data);\
+            break;
     ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
         case Type_e::POI:
             result = geo_ref.pois[source_idx]->get(target, geo_ref);
@@ -218,16 +218,19 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
 }
 
 Type_e Data::get_type_of_id(const std::string & id) {
+    if(id.size()>6 && id.substr(0,6) == "coord:")
+        return Type_e::Coord;
     #define GET_TYPE(type_name, collection_name) \
-    if(pt_data.collection_name.find(id) != pt_data.collection_name.end())\
+    auto collection_name##_map = pt_data.collection_name##_map;\
+    if(collection_name##_map.find(id) != collection_name##_map.end())\
         return Type_e::type_name;
-    ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
+    ITERATE_NAVITIA_PT_TYPES(GET_TYPE)
     if(geo_ref.poitype_map.find(id) != geo_ref.poitype_map.end())
         return Type_e::POIType;
     if(geo_ref.poi_map.find(id) != geo_ref.poi_map.end())
         return Type_e::POI;
     if(geo_ref.way_map.find(id) != geo_ref.way_map.end())
-        return Type_e::Way:
+        return Type_e::Way;
     if(geo_ref.admin_map.find(id) != geo_ref.admin_map.end())
         return Type_e::Admin;
     return Type_e::Unknown;

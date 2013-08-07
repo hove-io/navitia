@@ -21,10 +21,12 @@ BOOST_AUTO_TEST_CASE(simple_journey){
     b.data.meta.production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
     RAPTOR raptor(b.data);
 
-    type::EntryPoint origin("stop_area:stop1");
-    type::EntryPoint destination("stop_area:stop2");
+    type::Type_e origin_type = b.data.get_type_of_id("stop_area:stop1");
+    type::Type_e destination_type = b.data.get_type_of_id("stop_area:stop2");
+    type::EntryPoint origin(origin_type, "stop_area:stop1");
+    type::EntryPoint destination(destination_type, "stop_area:stop2");
 
-    streetnetwork::StreetNetwork sn_worker(data.geo_ref);    
+    streetnetwork::StreetNetwork sn_worker(data.geo_ref);
     pbnavitia::Response resp = make_response(raptor, origin, destination, {"20120614T021000"}, true, 1.38, 1000, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -56,8 +58,10 @@ BOOST_AUTO_TEST_CASE(journey_array){
     b.data.meta.production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
     RAPTOR raptor(b.data);
 
-    type::EntryPoint origin("stop_area:stop1");
-    type::EntryPoint destination("stop_area:stop2");
+    type::Type_e origin_type = b.data.get_type_of_id("stop_area:stop1");
+    type::Type_e destination_type = b.data.get_type_of_id("stop_area:stop2");
+    type::EntryPoint origin(origin_type, "stop_area:stop1");
+    type::EntryPoint destination(destination_type, "stop_area:stop2");
 
     streetnetwork::StreetNetwork sn_worker(data.geo_ref);
 
@@ -408,12 +412,19 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
 
     RAPTOR raptor(b.data);
 
-
-    type::EntryPoint origin("coord:"+boost::lexical_cast<std::string>(S.lon())+":"+boost::lexical_cast<std::string>(S.lat()));
+    std::string origin_lon = boost::lexical_cast<std::string>(S.lon()),
+                origin_lat = boost::lexical_cast<std::string>(S.lat()),
+                origin_uri = "coord:"+origin_lon+":"+origin_lat;
+    type::Type_e origin_type = b.data.get_type_of_id(origin_uri);
+    type::EntryPoint origin(origin_type, origin_uri);
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
     origin.streetnetwork_params.offset = 0;
     origin.streetnetwork_params.distance = 15;
-    type::EntryPoint destination("coord:"+boost::lexical_cast<std::string>(R.lon())+":"+boost::lexical_cast<std::string>(R.lat()));
+    std::string destination_lon = boost::lexical_cast<std::string>(R.lon()),
+                destination_lat = boost::lexical_cast<std::string>(R.lat()),
+                destination_uri = "coord:"+destination_lon+":"+destination_lat;
+    type::Type_e destination_type = b.data.get_type_of_id(destination_uri);
+    type::EntryPoint destination(destination_type, destination_uri);
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
     destination.streetnetwork_params.offset = 0;
     destination.streetnetwork_params.distance = 5;

@@ -337,34 +337,28 @@ bool Connection<JourneyPatternPoint>::operator<(const Connection<JourneyPatternP
 template<>
 bool Connection<StopPoint>::operator<(const Connection<StopPoint> & other) const { return this < &other; }
 
-EntryPoint::EntryPoint(const std::string &uri) : uri(uri) {
-       size_t pos = uri.find(":");
-       if(pos == std::string::npos)
-           type = Type_e::Unknown;
-       else {
-           type = static_data::get()->typeByCaption(uri.substr(0,pos));
+EntryPoint::EntryPoint(const Type_e type, const std::string &uri) : type(type), uri(uri) {
+   // Gestion des adresses
+   if (type == Type_e::Address){
+       std::vector<std::string> vect;
+       vect = split_string(uri, ":");
+       if(vect.size() == 3){
+           this->uri = vect[0] + ":" + vect[1];
+           this->house_number = str_to_int(vect[2]);
        }
-       // Gestion des adresses
-       if (type == Type_e::Address){
-           std::vector<std::string> vect;
-           vect = split_string(uri, ":");
-           if(vect.size() == 3){
-               this->uri = vect[0] + ":" + vect[1];
-               this->house_number = str_to_int(vect[2]);
+   }
+   if(type == Type_e::Coord){
+       size_t pos2 = uri.find(":", 6);
+       try{
+           if(pos2 != std::string::npos) {
+               this->coordinates.set_lon(boost::lexical_cast<double>(uri.substr(6, pos2 - 6)));
+               this->coordinates.set_lat(boost::lexical_cast<double>(uri.substr(pos2+1)));
            }
+       }catch(boost::bad_lexical_cast){
+           this->coordinates.set_lon(0);
+           this->coordinates.set_lat(0);
        }
-       if(type == Type_e::Coord){
-           size_t pos2 = uri.find(":", pos+1);
-           try{
-               if(pos2 != std::string::npos) {
-                   this->coordinates.set_lon(boost::lexical_cast<double>(uri.substr(pos+1, pos2 - pos - 1)));
-                   this->coordinates.set_lat(boost::lexical_cast<double>(uri.substr(pos2+1)));
-               }
-           }catch(boost::bad_lexical_cast){
-               this->coordinates.set_lon(0);
-               this->coordinates.set_lat(0);
-           }
-       }
+   }
 }
 
 void StreetNetworkParams::set_filter(const std::string &param_uri){

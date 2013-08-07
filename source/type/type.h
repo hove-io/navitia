@@ -761,7 +761,7 @@ struct EntryPoint {
     StreetNetworkParams streetnetwork_params;        // < paramètres de rabatement du point d'entrée
 
     /// Construit le type à partir d'une chaîne
-    EntryPoint(const std::string & uri);
+    EntryPoint(const Type_e type, const std::string & uri);
 
     EntryPoint() : type(Type_e::Unknown), house_number(-1) {}
 };

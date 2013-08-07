@@ -154,7 +154,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
 
 pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest &request) {
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
-    type::EntryPoint ep(request.uri());
+    type::EntryPoint ep((*data)->get_type_of_id(request.uri()), request.uri());
     auto coord = this->coord_of_entry_point(ep);
     return navitia::proximitylist::find(coord, request.distance(), vector_of_pb_types(request), request.depth(), *(*this->data));
 }
@@ -222,7 +222,8 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     this->init_worker_data();
 
-    type::EntryPoint origin = type::EntryPoint(request.origin());
+    Type_e origin_type = (*data)->get_type_of_id(request.origin());
+    type::EntryPoint origin = type::EntryPoint(origin_type, request.origin());
 
     if (origin.type == type::Type_e::Address) {
         origin.coordinates = this->coord_of_entry_point(origin);
@@ -230,7 +231,8 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
     type::EntryPoint destination;
     if(api != pbnavitia::ISOCHRONE) {
-        destination = type::EntryPoint(request.destination());
+        Type_e destination_type = (*data)->get_type_of_id(request.origin());
+        destination = type::EntryPoint(destination_type, request.destination());
         if (destination.type == type::Type_e::Address) {
             destination.coordinates = this->coord_of_entry_point(destination);
         }
