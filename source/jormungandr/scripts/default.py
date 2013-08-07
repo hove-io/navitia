@@ -38,19 +38,19 @@ class Script:
         else:
             request_pagination.totalResult = 0
 
-        if objects: 
+        if objects:
             begin = int(request_pagination.startPage) * int(request_pagination.itemsPerPage)
             end = begin + int(request_pagination.itemsPerPage) 
             if end > request_pagination.totalResult:
                 end = request_pagination.totalResult
 
-            toDelete = [] 
+            toDelete = []
             if begin < request_pagination.totalResult :
                 del objects[end:]# todo -1 valable ?
                 del objects[0:begin]
             else:
                 del objects[0:]
-            
+
             request_pagination.itemsOnPage = len(objects)
             query_args = ""
             for key, value in request.arguments.iteritems():
@@ -66,9 +66,6 @@ class Script:
             if end<request_pagination.totalResult:
                 request_pagination.nextPage = query_args+"startPage=%i"%(request_pagination.startPage+1)
         resp.pagination.CopyFrom(request_pagination)
-
-
-    
 
 
     def status(self, request, region):
