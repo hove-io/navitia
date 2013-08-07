@@ -344,7 +344,6 @@ EntryPoint::EntryPoint(const std::string &uri) : uri(uri) {
        else {
            type = static_data::get()->typeByCaption(uri.substr(0,pos));
        }
-
        // Gestion des adresses
        if (type == Type_e::Address){
            std::vector<std::string> vect;
@@ -354,7 +353,6 @@ EntryPoint::EntryPoint(const std::string &uri) : uri(uri) {
                this->house_number = str_to_int(vect[2]);
            }
        }
-
        if(type == Type_e::Coord){
            size_t pos2 = uri.find(":", pos+1);
            try{
@@ -367,14 +365,14 @@ EntryPoint::EntryPoint(const std::string &uri) : uri(uri) {
                this->coordinates.set_lat(0);
            }
        }
-   }
+}
 
 void StreetNetworkParams::set_filter(const std::string &param_uri){
     size_t pos = param_uri.find(":");
     if(pos == std::string::npos)
         type_filter = Type_e::Unknown;
     else {
-        uri_filter = param_uri;        
+        uri_filter = param_uri;
         type_filter = static_data::get()->typeByCaption(param_uri.substr(0,pos));
     }
 }

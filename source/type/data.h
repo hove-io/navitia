@@ -143,6 +143,7 @@ private:
     /** Sauvegarde les données en binaire compressé avec LZ4*/
     void save_lz4(const std::string & filename);
 
+
 };
 
 
