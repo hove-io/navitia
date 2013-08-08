@@ -279,6 +279,11 @@ struct GeographicalCoord{
         return ((this->lat() == 0) || (this->lon() == 0));
     }
 
+    bool is_valid() const{
+        return this->lon() >= -180 && this->lon() <= 180 &&
+               this->lat() >= -90 && this->lat() <= 90;
+    }
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & _lon & _lat;
     }
