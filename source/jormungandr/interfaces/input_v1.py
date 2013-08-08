@@ -18,20 +18,20 @@ def departures_arrivals(type, request, uri1):
         u = Uri(uri1)
     except InvalidUriException:
         return generate_error("Invalid uri")
-    
+
     if u.is_region:
         if len(u.objects) == 0:
             return generate_error(type+" are only available from a stop area or a stop point", 501)
 
         resource_type, uid = u.objects.pop()
-        if resource_type not in ['stop_points', 'stop_areas']: 
+        if resource_type not in ['stop_points', 'stop_areas']:
             return generate_error(type+" are only available from a stop area or a stop point", 501)
         filter_ = collections_to_resource_type[resource_type]+".uri="+uid
     else:
         filter_ = "stop_point.coord DWITHIN("+str(u.lon)+","+str(u.lat)+", 200)"
 
-    req = {            
-            'filter': [filter_], 
+    req = {
+            'filter': [filter_],
             'from_datetime': [datetime.datetime.now().strftime("%Y%m%dT1337")]
           }
     arguments = validate_and_fill_arguments("next_"+type, req)
@@ -146,6 +146,11 @@ def journeys(request, uri1=None):
         from_ = uri1
     else:
         from_ = request.args.get("from", str)
+    region = NavitiaManager().key_of_id(from_)
+    if from_[:len("address")] == "address":
+        region_complete = ":" + region
+        index1 = from_.find(region_complete)
+        from_ = from_[:index1] + from_[index1+len(region_complete):]
     req["origin"] = [from_]
     #We fill the datetime argument
     if not request.args.get("datetime"):
@@ -155,11 +160,14 @@ def journeys(request, uri1=None):
     #If it's a journey from one point to another
     if request.args.get("to"):
         to_ = request.args.get("to")
-        region = NavitiaManager().key_of_id(from_)
         if region != NavitiaManager().key_of_id(to_):
             error = "The origin and destination are not in the same region"
             error += ", not implemented"
             return generate_error(error, status=501)
+        if to_[:len("address")] == "address":
+            region_complete = ":" + region
+            index1 = to_.find(region_complete)
+            to_ = to_[:index1] + to_[index1+len(region_complete):]
         req["destination"] = [to_]
         try:
             arguments = validate_and_fill_arguments("journeys", req)
@@ -195,7 +203,7 @@ def nearby(request, uri1, uri2=None):
         u = Uri(uri1)
     except InvalidUriException, e:
         return generate_error("Invalid uri" + e.message)
-    resource_type, uid = "", "" 
+    resource_type, uid = "", ""
     if u.is_region:
         resource_type, uid = u.objects.pop()
     else:

@@ -30,14 +30,15 @@ class DeadSocketException(Exception):
         Exception.__init__(self, message)
 
 
-        
 class RegionNotFound(Exception):
     def __init__(self, message):
         Exception.__init__(self, message)
 
+
 class ApiNotFound(Exception):
     def __init__(self, message):
         Exception.__init__(self, message)
+
 
 class InvalidArguments(Exception):
     def __init__(self, message):
@@ -154,6 +155,7 @@ class NavitiaManager:
                 try:
                     resp = self.send_and_receive(req, key, timeout=1000)
                     if resp:
+                        print resp
                         try:
                             parsed = json.loads(resp.metadatas.shape)
                             check = True
@@ -171,6 +173,8 @@ class NavitiaManager:
                                 instance.geom = geometry.shape(parsed)
                         except:
                             pass
+                    else:
+                        print "Mais je n'ai pas de reponse"
                 except DeadSocketException:
                     pass
                     #print e
@@ -188,7 +192,9 @@ class NavitiaManager:
             if it's a coord calls key_of_coord
             Return the region key, or None if it doesn't exists
         """
+        print object_id
         if len(object_id)>=6 and object_id[:6] == "coord:":
+            print "coord"
             if object_id.count(":") == 2:
                 lon, lat = object_id.split(":")[1:]
                 return self.key_of_coord(lon, lat)
@@ -196,11 +202,17 @@ class NavitiaManager:
                 return None
         else:
             try:
-                contributor = object_id[:object_id.find(":")]
+                print "retrieving contributor"
+                contributor = object_id.split(":")[1]
+                print "contributor : " + contributor
             except ValueError:
+                print "value error"
                 return None
+            print self.contributors
             if contributor in self.contributors:
                 return self.contributors[contributor]
+            elif contributor in self.instances.keys():
+                return contributor
         return None
 
     def key_of_coord(self, lon, lat):
