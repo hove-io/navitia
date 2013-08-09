@@ -130,11 +130,11 @@ class json_renderer:
                 r.append({"id": note.uri, "type": "notes"})
         if (len(r)> 0):
             result["links"]= r
-        if len(result['additional_information'])==0:
-            del result['additional_information']
+        if len(result['additional_informations'])==0:
+            del result['additional_informations']
         return result
 
-    def notes_stoptimes(self, obj, uri):
+    def notes_stoptimes(self, obj):
         r = []
         for row in obj.table.rows :
             if row.stop_times:
@@ -145,32 +145,32 @@ class json_renderer:
         return r
 
 
-    def route_schedule(self, obj, uri) :
+    def route_schedule(self, obj, region) :
         result = {"table" : {"headers" : [], "rows" : []},
                   "display_informations": [], "links":[]}
 
         for row in obj.table.rows :
             r = {}
             if row.stop_point:
-                r['stop_point'] = self.stop_point(row.stop_point, uri.region(),
+                r['stop_point'] = self.stop_point(row.stop_point, region,
                                                   False, True, False)
                 self.visited_types.add("stop_point")
             if row.stop_times:
                 r['date_times'] = []
                 for stop_time in row.stop_times:
-                    tmp_stoptime = self.stop_time(stop_time, uri.region())
-                    r['date_times'].append(tmp_stop_time)
+                    tmp_stoptime = self.stop_time(stop_time, region)
+                    r['date_times'].append(tmp_stoptime)
             result['table']['rows'].append(r)
 
         for header in obj.table.headers:
-            tmp_header = self.display_headers(header, uri.region())
+            tmp_header = self.display_headers(header, region)
             result['table']['headers'].append(tmp_header)
 
         if obj.HasField('route'):
-            result['display_informations'] = self.route_informations(obj.route, uri.region())
+            result['display_informations'] = self.route_informations(obj.route, region)
 
         if obj.HasField('route'):
-            result['links'] = self.route_links(obj.route, uri.region())
+            result['links'] = self.route_links(obj.route, region)
 
         if len(result['table']['headers'])==0:
             del result['table']['headers']
@@ -189,7 +189,7 @@ class json_renderer:
                             r.append({"id": note_.uri, "value": note_.note})
         return r
 
-    def journey(self, obj, uri, details, is_isochrone, arguments):
+    def journey(self, obj, region, uri, details, is_isochrone, arguments):
         result = {
                 'duration': obj.duration,
                 'nb_transfers': obj.nb_transfers,
@@ -199,22 +199,22 @@ class json_renderer:
                 }
         if obj.HasField('origin'):
             self.visited_types.add("origin")
-            result['origin'] = self.place(obj.origin, uri.region())
+            result['origin'] = self.place(obj.origin, region)
         if obj.HasField('destination'):
             self.visited_types.add("destination")
-            result['destination'] = self.place(obj.destination, uri.region())
+            result['destination'] = self.place(obj.destination, region)
 
         if len(obj.sections) > 0:
             result['sections'] = []
             for section in obj.sections:
-                result['sections'].append(self.section(section, uri.region()))
+                result['sections'].append(self.section(section, region))
 
         if is_isochrone:
             params = "?"
             if obj.HasField('origin'):
                 params = params + "from=" + obj.origin.uri + "&"
             else:
-                params = params + "from=" + uri.uri + "&"
+                params = params + "from=" + uri + "&"
             if obj.HasField('destination'):
                 resource_type = json_renderer.pbtype_2_collection[obj.destination.embedded_type]
                 params = params + "to=" + obj.destination.uri
@@ -233,7 +233,7 @@ class json_renderer:
 
     def place(self, obj, region_name):
         obj_t = None
-        result = {"name" :"", "id":"", "embedded_type" : ""}
+        result = {"name" :"", "id":"", "embedded_type" : "", "links" : []}
         if obj.embedded_type == type_pb2.STOP_AREA:
             obj_t = obj.stop_area
             result["embedded_type"] = "stop_area"
@@ -247,18 +247,22 @@ class json_renderer:
             result["embedded_type"] = "address"
             result["address"] = self.address(obj.address, region_name, False, False)
         if obj_t:
-            #self.visited_types.add(result["embedded_type"])
             result["name"] = obj_t.name
             if obj.embedded_type != type_pb2.ADDRESS:
                 result["id"] = obj.uri
             else:
                 real_id = "address:"+region_name+":"
                 result["id"] = obj.uri.replace("address:", real_id, 1)
+            collection_name = resource_type_to_collection[result["embedded_type"]]
+            link = base_url + '/v1/coverage/' + region_name + '/'
+            link += collection_name + '/'+ result["id"]
+            result["links"].append({"type": "self", "href": link})
         return result
 
     def time_place(self, obj, region_name, is_from=True):
         obj_t = None
         result = {}
+        obj_oridest = None
         if is_from:
             obj_oridest = obj.destination
             if obj.HasField('begin_date_time'):
@@ -289,8 +293,8 @@ class json_renderer:
         if obj_t:
             #self.visited_types.add(result["embedded_type"])
             result["name"] = obj_t.name
-            if obj.embedded_type != type_pb2.ADDRESS:
-                result["id"] = obj.uri
+            if obj_oridest.embedded_type != type_pb2.ADDRESS:
+                result["id"] = obj_t.uri
             else:
                 real_id = "address:"+region_name+":"
                 result["id"] = obj.uri.replace("address:", real_id, 1)
@@ -471,10 +475,10 @@ class json_renderer:
 
         return result
 
-    def name_has_propertie(self, enum):
+    def name_has_propertie(self, enum_id):
         properties_descriptor = type_pb2.hasPropertie.DESCRIPTOR
         enum = properties_descriptor.enum_types_by_name['AdditionalInformation']
-        return enum.values_by_number[enum].name
+        return enum.values_by_number[enum_id].name
 
     def stop_date_time(self, obj, region_name):
         result = {}
@@ -493,7 +497,7 @@ class json_renderer:
             properties = obj.has_properties
             for additional_information in properties.additional_informations:
                 information = self.name_has_propertie(additional_information)
-                result['additional_information'].append(information)
+                result['additional_informations'].append(information)
 
         if obj.HasField('has_properties'):
             result['notes'] = []
@@ -714,7 +718,7 @@ def coord(request, lon_, lat_):
     region_key = NavitiaManager().key_of_coord(lon, lat)
     if(region_key):
         result_dict["coord"]["regions"].append({"id":region_key})
-    url_coord = base_url + "/v1/coverage/coord/" + lon_ + ";" + lat_
+    url_coord = base_url + "/v1/coverage/" + lon_ + ";" + lat_
     url_osm = "www.openstreetmap.org/"
     url_osm += "?mlon="+lon_+"&mlat="+lat_+"&zoom=11&layers=M"
     result_dict["links"].append({"href": url_coord + "/journeys",
@@ -751,6 +755,14 @@ def reconstruct_pagination_journeys(string):
         if len(arg_and_val.split("=")) == 2:
             arg, val = arg_and_val.split("=")
             if arg == "origin" or arg == "destination":
+                coord = ""
+                if val[:5] == "coord":
+                    val = val[5:-1]
+                    resource_type = "coord"
+                #else:
+                #    resource_type, uid = val.split(":")
+                #val = region_name + "/" + resource_type_to_collection[resource_type] + "/" + val
+
                 if arg == "origin":
                     arg = "from"
                 else:
@@ -785,10 +797,11 @@ def street_network_display_informations(journey) :
 
 
 
-def journeys(arguments, uri, response, format, callback, is_isochrone=False):
+def journeys(arguments, region, uri, response, format,
+             callback, is_isochrone=False):
     renderer = json_renderer(base_url + '/v1/')
     if is_isochrone:
-        response_dict = {'journeys': [], "links" : []}
+        response_dict = {'journeys': [], "links" : [], "notes" : []}
     if not is_isochrone:
         response_dict = {'pagination': {'links' : []},
                          'response_type' : '',
@@ -796,12 +809,12 @@ def journeys(arguments, uri, response, format, callback, is_isochrone=False):
                          'notes' : []}
     for journey in response.journeys:
         street_network_display_informations(journey)
-        response_dict['journeys'].append(renderer.journey(journey, uri, True,
-                                         is_isochrone, arguments))
+        response_dict['journeys'].append(renderer.journey(journey, region, uri,
+                                         True, is_isochrone, arguments))
         notes = renderer.notes_stop_date_times( journey, uri)
         response_dict['notes'].extend(notes)
     if is_isochrone:
-        response_dict['links'].extend(renderer.link_types(uri.region()))
+        response_dict['links'].extend(renderer.link_types(region))
     if not is_isochrone:
         prev_args = reconstruct_pagination_journeys(response.prev)
         next_args = reconstruct_pagination_journeys(response.next)
@@ -841,7 +854,7 @@ def arrivals(response, region, format, callback):
     response_dict['links'] = renderer.link_types(region)
     return render(response_dict, format, callback)
 
-def places(response, uri, format, callback):
+def places(response, region, format, callback):
     renderer = json_renderer(base_url + '/v1/')
     renderer.visited_types.add("places")
     response_dict = {"links" : [], "pagination" : {}, "places" : []}
@@ -850,7 +863,7 @@ def places(response, uri, format, callback):
     response_dict['pagination']['current_page'] = 0
     response_dict['pagination']['items_on_page'] = len(response.next_departures)
     for place in response.places:
-        response_dict['places'].append(renderer.place(place, uri.region()))
+        response_dict['places'].append(renderer.place(place, region))
         response_dict['places'][-1]['quality'] = place.quality
     response_dict['links'].append({"href" : base_url+"/v1/coverage/{places.id}",
                                    "rel" : "places.id",
@@ -871,15 +884,13 @@ def nearby(response, uri, format, callback):
     response_dict['links'] = renderer.link_types(uri.region())
     return render(response_dict, format, callback)
 
-def route_schedules(response, uri, format, callback):
+def route_schedules(response, region, format, callback):
     renderer = json_renderer(base_url+'/v1/coverage/')
     response_dict = {"links" : [], "route_schedules" : [], "notes":[]}
 
     for schedule in response.route_schedules:
-        schedule_obj = renderer.route_schedule(schedule, uri)
-        note_obj = renderer.notes_stoptimes(schedule, uri)
-        response_dict['route_schedules'].append(schedule_obj)
-        response_dict['notes'].extend(note_obj)
+        response_dict['route_schedules'].append(renderer.route_schedule(schedule, region))
+        response_dict['notes'].extend(renderer.notes_stoptimes(schedule))
 
-    response_dict['links'].extend(renderer.link_types(uri.region()))
+    response_dict['links'].extend(renderer.link_types(region))
     return render(response_dict, format, callback)

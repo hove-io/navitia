@@ -1,7 +1,7 @@
 # coding=utf-8
 
 import json
-from shapely import geometry, geos
+from shapely import geometry, geos, wkt
 import ConfigParser
 import zmq
 from threading import Lock, Thread, Event
@@ -142,6 +142,7 @@ class NavitiaManager:
                 instance.socket.connect(instance.socket_path)
                 instance.poller.register(instance.socket)
                 instance.lock.release()
+                logging.error("La requête : ")
                 raise DeadSocketException(region+" is a dead socket (" + instance.socket_path + ")")
         else:
             raise RegionNotFound(region +" not found ")
@@ -155,16 +156,14 @@ class NavitiaManager:
                 try:
                     resp = self.send_and_receive(req, key, timeout=1000)
                     if resp:
-                        try:
-                            check = True
-                            if resp.HasField("metadatas"):
-                                metadatas = resp.metadatas
-                                for contributor in metadatas.contributors:
-                                    self.contributors[str(contributor)] = key
-                            if check:
-                                instance.geom = geometry.shape(metadatas.shape)
-                        except:
-                            pass
+                        #try:
+                        if resp.HasField("metadatas"):
+                            metadatas = resp.metadatas
+                            for contributor in metadatas.contributors:
+                                self.contributors[str(contributor)] = key
+                        instance.geom = wkt.loads(metadatas.shape)
+                        #except:
+                        #    pass
                     else:
                         print "Mais je n'ai pas de reponse"
                 except DeadSocketException:
@@ -184,18 +183,20 @@ class NavitiaManager:
             if it's a coord calls key_of_coord
             Return the region key, or None if it doesn't exists
         """
-        if len(object_id)>=6 and object_id[:6] == "coord:":
-            if object_id.count(":") == 1 and object_id.count(";") == 1:
-                lon, lat = object_id[6:].split(";")
-                return self.key_of_coord(lon, lat)
-            else:
+#Il s'agit d'une coordonnée
+        if object_id.count(";") == 1:
+            lon, lat = object_id.split(";")
+            try:
+                flon = float(lon)
+                flat = float(lat)
+            except:
                 return None
+            return self.key_of_coord(flon, flat)
         else:
             try:
                 contributor = object_id.split(":")[1]
             except ValueError:
                 return None
-            print self.contributors
             if contributor in self.contributors:
                 return self.contributors[contributor]
             elif contributor in self.instances.keys():
@@ -210,7 +211,6 @@ class NavitiaManager:
         p = geometry.Point(lon,lat)
         for key, instance in self.instances.iteritems():
             if instance.geom and instance.geom.contains(p):
-                print "j'ai trouve une key !"
                 return key
         return None
 
