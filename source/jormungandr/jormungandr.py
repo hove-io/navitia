@@ -74,6 +74,7 @@ v1_rules = [
     Rule('/coverage/<path:uri1>/departures', endpoint=interfaces.input_v1.departures),
     Rule('/coverage/<path:uri1>/arrivals', endpoint=interfaces.input_v1.arrivals),
     Rule('/journeys', endpoint=interfaces.input_v1.journeys),
+    Rule('/route_schedules', endpoint=interfaces.input_v1.route_schedules),
     Rule('/coord/<lon>;<lat>', endpoint=interfaces.input_v1.coord)
     ]
 

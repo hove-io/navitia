@@ -5,7 +5,7 @@ from instance_manager import NavitiaManager
 from error import generate_error
 import datetime
 import output_v1
-
+import logging
 def coverage(request):
     return output_v1.coverage(request, format=request.accept_mimetypes)
 
@@ -102,19 +102,33 @@ def places(request, uri):
         return generate_error("Invalid arguments : " + arguments.details)
 
 
-def route_schedules(request, uri1):
+def route_schedules(request, uri1=None):
     u = None
-    try:
-        u = Uri(uri1)
-    except InvalidUriException, e:
-        return generate_error("Invalid uri", e.message)
+    req = {"filter" : [], "from_datetime": []}
+    region = ""
+    if(uri1):
+	    try:
+		u = Uri(uri1)
+	    except InvalidUriException, e:
+		return generate_error("Invalid uri", e.message)
 
-    resource_type, uid = u.objects[-1]
-
-    if not uid:
-        return generate_error("You cannot ask a route schedule with this object, not implemented", status=501)
-
-    req = {"filter" : [collections_to_resource_type[resource_type]+".uri="+uid], "from_datetime": [""]}
+	    resource_type, uid = u.objects[-1]
+	    region = u.region()	
+	    if not uid:
+		return generate_error("You cannot ask a route schedule with this object, not implemented", status=501)
+	    req["filter"] =[collections_to_resource_type[resource_type]+".uri="+uid]
+    elif(request.args.get("filter")):
+	filter_ = request.args.get("filter", str)
+	if filter_.count("=") == 0 :
+		return generate_error("Invalid filter")
+	region = filter_.split("=")[1].split("/")[0]
+	filters = []
+	for f in filter_.split("="):
+	    filters.append(f.replace(f, f.split("/")[-1]))
+	tmp = "=".join(filters)
+	req["filter"] = [tmp]
+    else:
+    	return generate_error("Invalid request")
     if not request.args.get("from_datetime"):
         req["from_datetime"] = [datetime.datetime.now().strftime("%Y%m%dT1337")]
     else:
@@ -127,8 +141,8 @@ def route_schedules(request, uri1):
 
     arguments = validate_and_fill_arguments("route_schedules", req)
     if arguments.valid:
-        response = NavitiaManager().dispatch(arguments, u.region(), "route_schedules")
-        return output_v1.route_schedules(response, u, request.accept_mimetypes, request.args.get("callback"))
+        response = NavitiaManager().dispatch(arguments, region, "route_schedules")
+        return output_v1.route_schedules(response, u, region, request.accept_mimetypes, request.args.get("callback"))
     else:
         return generate_error("Invalid arguments : " + arguments.details)
 

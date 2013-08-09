@@ -137,28 +137,28 @@ class json_renderer:
         return r
 
 
-    def route_schedule(self, obj, uri) :
+    def route_schedule(self, obj, uri, region) :
         result = {'table' : {"headers" : [], "rows" : []}, "display_informations": [], "links":[]}
 
         for row in obj.table.rows :
             r = {}
             if row.stop_point:
-                r['stop_point'] = self.stop_point(row.stop_point, uri.region(), False, True, False)
+                r['stop_point'] = self.stop_point(row.stop_point, region, False, True, False)
                 self.visited_types.add("stop_point")
             if row.stop_times:
                 r['date_times'] = []
                 for stop_time in row.stop_times:
-                    r['date_times'].append(self.stop_time(stop_time, uri.region()))
+                    r['date_times'].append(self.stop_time(stop_time, region))
             result['table']['rows'].append(r)
 
         for header in obj.table.headers:
-            result['table']['headers'].append(self.display_headers(header, uri.region()))
+            result['table']['headers'].append(self.display_headers(header, region))
 
         if obj.HasField('route'):
-            result['display_informations'] = self.route_informations(obj.route, uri.region())
+            result['display_informations'] = self.route_informations(obj.route, region)
 
         if obj.HasField('route'):
-            result['links'] = self.route_links(obj.route, uri.region())
+            result['links'] = self.route_links(obj.route, region)
 
         if len(result['table']['headers'])==0:
             del result['table']['headers']
@@ -680,7 +680,7 @@ def reconstruct_pagination_journeys(string, region_name):
                     val = val[5:-1]
                     resource_type = "coord"
                 else:
-                    resource_type, uid = val.split(":")
+                    resource_type = val.split(":")[0]
                 val = region_name + "/" + resource_type_to_collection[resource_type] + "/" + val
 
                 if arg == "origin":
@@ -717,7 +717,7 @@ def street_network_display_informations(journey) :
 def journeys(arguments, uri, response, format, callback, is_isochrone=False):
     renderer = json_renderer(base_url + '/v1/')
     if is_isochrone:
-        response_dict = {'journeys': [], "links" : []}
+	    response_dict = {'journeys': [], "links" : [], 'notes' : []}
     if not is_isochrone:
         response_dict = {'pagination': {'links' : []}, 'response_type' : '', 'journeys': [], 'notes' : []}
     for journey in response.journeys:
@@ -793,13 +793,13 @@ def nearby(response, uri, format, callback):
     response_dict['links'] = renderer.link_types(uri.region())
     return render(response_dict, format, callback)
 
-def route_schedules(response, uri, format, callback):
+def route_schedules(response, uri, region, format, callback):
     renderer = json_renderer(base_url+'/v1/coverage/')
     response_dict = {"links" : [], "route_schedules" : [], "notes":[]}
 
     for schedule in response.route_schedules:
-        response_dict['route_schedules'].append(renderer.route_schedule(schedule, uri))
+        response_dict['route_schedules'].append(renderer.route_schedule(schedule, uri, region))
         response_dict['notes'].extend(renderer.notes_stoptimes(schedule, uri))
 
-    response_dict['links'].extend(renderer.link_types(uri.region()))
+    response_dict['links'].extend(renderer.link_types(region))
     return render(response_dict, format, callback)
