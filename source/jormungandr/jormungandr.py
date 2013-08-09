@@ -45,7 +45,6 @@ def on_index(request):
             {"href" : base_url + '/{api_versions.id }', "rel":"navitia.api_versions"},
             {"href" : 'http://www.navitia.io', 'rel':'about'}
             ]
-            
         }
     return render(res, 'json', request.args.get('callback'))
 
