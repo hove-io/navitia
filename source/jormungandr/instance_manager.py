@@ -155,22 +155,14 @@ class NavitiaManager:
                 try:
                     resp = self.send_and_receive(req, key, timeout=1000)
                     if resp:
-                        print resp
                         try:
-                            parsed = json.loads(resp.metadatas.shape)
                             check = True
-                            if 'contributors' in parsed:
-                                for contributor in parser.contributors:
-                                    self.contributors[contributor] = key
-                            if 'coordinates' in parsed:
-                                if len(parsed['coordinates']) > 0:
-                                    for coords in parsed['coordinates']:
-                                        for pair_coord in coords:
-                                            for coord in pair_coord:
-                                                if int(coord) == 0:
-                                                    check = False
+                            if resp.HasField("metadatas"):
+                                metadatas = resp.metadatas
+                                for contributor in metadatas.contributors:
+                                    self.contributors[str(contributor)] = key
                             if check:
-                                instance.geom = geometry.shape(parsed)
+                                instance.geom = geometry.shape(metadatas.shape)
                         except:
                             pass
                     else:
@@ -192,21 +184,16 @@ class NavitiaManager:
             if it's a coord calls key_of_coord
             Return the region key, or None if it doesn't exists
         """
-        print object_id
         if len(object_id)>=6 and object_id[:6] == "coord:":
-            print "coord"
-            if object_id.count(":") == 2:
-                lon, lat = object_id.split(":")[1:]
+            if object_id.count(":") == 1 and object_id.count(";") == 1:
+                lon, lat = object_id[6:].split(";")
                 return self.key_of_coord(lon, lat)
             else:
                 return None
         else:
             try:
-                print "retrieving contributor"
                 contributor = object_id.split(":")[1]
-                print "contributor : " + contributor
             except ValueError:
-                print "value error"
                 return None
             print self.contributors
             if contributor in self.contributors:
@@ -223,6 +210,7 @@ class NavitiaManager:
         p = geometry.Point(lon,lat)
         for key, instance in self.instances.iteritems():
             if instance.geom and instance.geom.contains(p):
+                print "j'ai trouve une key !"
                 return key
         return None
 
