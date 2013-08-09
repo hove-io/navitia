@@ -65,35 +65,29 @@ pbnavitia::Response Worker::status() {
     status->set_publication_date(pt::to_iso_string((*data)->meta.publication_date));
     status->set_start_production_date(bg::to_iso_string((*data)->meta.production_date.begin()));
     status->set_end_production_date(bg::to_iso_string((*data)->meta.production_date.end()));
-
-    for(auto data_sources: (*data)->meta.data_sources){
-        status->add_data_sources(data_sources);
-    }
     status->set_data_version((*data)->version);
     status->set_navimake_version((*data)->meta.navimake_version);
     status->set_navitia_version(NAVITIA_VERSION);
-
     status->set_loaded((*data)->loaded);
     status->set_last_load_status((*data)->last_load);
     status->set_last_load_at(pt::to_iso_string((*data)->last_load_at));
     status->set_nb_threads((*data)->nb_threads);
-
-    for(type::Contributor* contributor : (*data)->pt_data.contributors){
-        status->add_contributors(contributor->uri);
+    for(auto data_sources: (*data)->meta.data_sources){
+        status->add_data_sources(data_sources);
     }
-
     return result;
 }
 
 pbnavitia::Response Worker::metadatas() {
     pbnavitia::Response result;
     auto metadatas = result.mutable_metadatas();
-    
     metadatas->set_start_production_date(bg::to_iso_string((*data)->meta.production_date.begin()));
     metadatas->set_end_production_date(bg::to_iso_string((*data)->meta.production_date.end()));
     metadatas->set_shape((*data)->meta.shape);
     metadatas->set_status("running");
-    
+    for(type::Contributor* contributor : (*data)->pt_data.contributors){
+        metadatas->add_contributors(contributor->uri);
+    }
     return result;
 }
 
