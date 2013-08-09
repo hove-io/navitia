@@ -617,7 +617,7 @@ def render_ptref(response, region, resource_type, uid, format, callback):
     resp_dict = dict([(resource_type, []), ("links", []), ("pagination", {})])
     resp_dict[resource_type] = []
     url_coverage = base_url + '/v1/coverage'
-    url_region = url_coverage + '/region'
+    url_region = url_coverage + '/' + region
     url_type = url_region + '/' + resource_type
     renderer = json_renderer(url_coverage)
     renderer.visited_types.add(resource_type)
@@ -744,7 +744,7 @@ def index(request, format='json'):
             }
     return render(response, format, request.args.get('callback'))
 
-def reconstruct_pagination_journeys(string, region_name):
+def reconstruct_pagination_journeys(string):
     args = []
 
     for arg_and_val in string.split("&"):
@@ -803,8 +803,8 @@ def journeys(arguments, uri, response, format, callback, is_isochrone=False):
     if is_isochrone:
         response_dict['links'].extend(renderer.link_types(uri.region()))
     if not is_isochrone:
-        prev_args = reconstruct_pagination_journeys(response.prev, uri.region())
-        next_args = reconstruct_pagination_journeys(response.next, uri.region())
+        prev_args = reconstruct_pagination_journeys(response.prev)
+        next_args = reconstruct_pagination_journeys(response.next)
         prev_url = base_url+"/v1/journeys?" + prev_args
         next_url = base_url+"/v1/journeys?" + next_args
         prev_obj = {"href":prev_url, "type":"prev", "templated":False }
