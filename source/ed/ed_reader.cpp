@@ -91,17 +91,15 @@ void EdReader::fill_meta(navitia::type::Data& nav_data, pqxx::work& work){
     bg::date end = bg::from_string(const_it["end_date"].as<std::string>()) + bg::days(1);
 
     nav_data.meta.production_date = bg::date_period(begin, end);
-
     request = "SELECT ST_AsText(ST_MakeEnvelope("
-        "(select min(ST_X(coord::geometry)) from navitia.stop_point), "
-        "(select min(ST_Y(coord::geometry)) from navitia.stop_point), "
-        "(select max(ST_X(coord::geometry)) from navitia.stop_point), "
-        "(select max(ST_Y(coord::geometry)) from navitia.stop_point), "
-        "4326)) as shape;";
+              "(select min(ST_X(coord::geometry)) from georef.node),"
+              "(select min(ST_Y(coord::geometry)) from georef.node),"
+              "(select max(ST_X(coord::geometry)) from georef.node),"
+              "(select max(ST_Y(coord::geometry)) from georef.node),"
+              "4326)) as shape;";
     result = work.exec(request);
     const_it = result.begin();
     const_it["shape"].to(nav_data.meta.shape);
-    std::cout << nav_data.meta.shape << std::endl;
 }
 
 void EdReader::fill_networks(nt::Data& data, pqxx::work& work){
