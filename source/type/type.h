@@ -562,6 +562,9 @@ public:
     ValidityPattern()  {}
     ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date){}
     ValidityPattern(boost::gregorian::date beginning_date, const std::string & vp = "") : days(vp), beginning_date(beginning_date){}
+    ValidityPattern(const ValidityPattern & vp) : days(vp.days), beginning_date(vp.beginning_date){}
+    ValidityPattern(const ValidityPattern* vp) : days(vp->days), beginning_date(vp->beginning_date){}
+
     int slide(boost::gregorian::date day) const;
     void add(boost::gregorian::date day);
     void add(int day);
@@ -766,7 +769,7 @@ struct EntryPoint {
     StreetNetworkParams streetnetwork_params;        // < paramètres de rabatement du point d'entrée
 
     /// Construit le type à partir d'une chaîne
-    EntryPoint(const std::string & uri);
+    EntryPoint(const Type_e type, const std::string & uri);
 
     EntryPoint() : type(Type_e::Unknown), house_number(-1) {}
 };

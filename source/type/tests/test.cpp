@@ -22,29 +22,20 @@ BOOST_AUTO_TEST_CASE(boost_geometry){
     //spherical_point s(2,48);
 }
 
-BOOST_AUTO_TEST_CASE(uri_sa) {
-    std::string uri("stop_area:moo:uri");
-    EntryPoint ep(uri);
-
-    BOOST_CHECK(ep.type == Type_e::StopArea);
-
-    // On garde le prefixe de type
-    BOOST_CHECK_EQUAL(ep.uri, "stop_area:moo:uri");
-}
 
 BOOST_AUTO_TEST_CASE(uri_coord) {
     std::string uri("coord:2.2:4.42");
-    EntryPoint ep(uri);
+    EntryPoint ep(Type_e::Coord, uri);
 
     BOOST_CHECK(ep.type == Type_e::Coord);
     BOOST_CHECK_CLOSE(ep.coordinates.lon(), 2.2, 1e-6);
     BOOST_CHECK_CLOSE(ep.coordinates.lat(), 4.42, 1e-6);
 
-    EntryPoint ep2("coord:2.1");
+    EntryPoint ep2(Type_e::Coord, "coord:2.1");
     BOOST_CHECK_CLOSE(ep2.coordinates.lon(), 0, 1e-6);
     BOOST_CHECK_CLOSE(ep2.coordinates.lat(), 0, 1e-6);
 
-    EntryPoint ep3("coord:2.1:bli");
+    EntryPoint ep3(Type_e::Coord, "coord:2.1:bli");
     BOOST_CHECK_CLOSE(ep3.coordinates.lon(), 0, 1e-6);
     BOOST_CHECK_CLOSE(ep3.coordinates.lat(), 0, 1e-6);
 }

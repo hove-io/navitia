@@ -41,7 +41,7 @@ class Argument :
 class ValidationTypeException(Exception):
     def __init__(self, message):
         Exception.__init__(self, message)
-        
+
 
 
 def boolean(value):
@@ -52,7 +52,7 @@ def boolean(value):
     else:
         raise ValidationTypeException("boolean")
 
-def time(value): 
+def time(value):
     m = re.match(r"T(?P<hour>(\d){1,2})(?P<minutes>(\d){2})", value)
     if(m) :
         if(int(m.groupdict()['hour']) < 0 or int(m.groupdict()['hour']) > 24 or
@@ -65,7 +65,7 @@ def time(value):
 
     return value
 
-def datetime_validator(value): 
+def datetime_validator(value):
     m = re.match(r"^(\d){4}(?P<month>(\d){2})(?P<day>(\d){2})(?P<hour>T(\d){3,4})", value)
     if(m) :
         if(int(m.groupdict()['month']) < 1 or int(m.groupdict()['month']) > 12 or
@@ -79,7 +79,7 @@ def datetime_validator(value):
 
     return value
 
-    
+
 def entrypoint(valid_types = None):
     if valid_types == None:
         types = ("validity_pattern", "line", "route", "vehicle_journey",
@@ -101,9 +101,10 @@ def filter(value):
 
 
 def validate_arguments(request, validation_dict) :
-    response = Validation_Response() 
+    response = Validation_Response()
     for key, value in request.iteritems() :
-        if not (key in validation_dict) : 
+        print key, value
+        if not (key in validation_dict) :
             response.details[key] = {"status" : "ignored", "value":str(value)}
         else:
             if not validation_dict[key].repeated and len(value) > 1:
@@ -117,7 +118,7 @@ def validate_arguments(request, validation_dict) :
                             response.arguments[key] = parsed_val
                             response.givenByUser_.append(key)
                         else:
-                            response.valid=False
+                            response.valid = False
                             response.details[key] = {"status" : "not in allowable values", "value":parsed_val}
                     else:
                         if not(validation_dict[key].allowableValues) or parsed_val in validation_dict[key].allowableValues :

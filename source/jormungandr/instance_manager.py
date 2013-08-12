@@ -1,7 +1,7 @@
 # coding=utf-8
 
 import json
-from shapely import geometry, geos
+from shapely import geometry, geos, wkt
 import ConfigParser
 import zmq
 from threading import Lock, Thread, Event
@@ -30,14 +30,15 @@ class DeadSocketException(Exception):
         Exception.__init__(self, message)
 
 
-        
 class RegionNotFound(Exception):
     def __init__(self, message):
         Exception.__init__(self, message)
 
+
 class ApiNotFound(Exception):
     def __init__(self, message):
         Exception.__init__(self, message)
+
 
 class InvalidArguments(Exception):
     def __init__(self, message):
@@ -59,7 +60,7 @@ class NavitiaManager:
         """
 
         self.instances = {}
-
+        self.contributors = {}
         self.context = zmq.Context()
         self.default_socket = None
 
@@ -141,10 +142,10 @@ class NavitiaManager:
                 instance.socket.connect(instance.socket_path)
                 instance.poller.register(instance.socket)
                 instance.lock.release()
+                logging.error("La requête : ")
                 raise DeadSocketException(region+" is a dead socket (" + instance.socket_path + ")")
         else:
             raise RegionNotFound(region +" not found ")
-        
 
 
     def thread_ping(self, timer=1):
@@ -155,20 +156,16 @@ class NavitiaManager:
                 try:
                     resp = self.send_and_receive(req, key, timeout=1000)
                     if resp:
-                        try:
-                            parsed = json.loads(resp.metadatas.shape)
-                            check = True
-                            if 'coordinates' in parsed:
-                                if len(parsed['coordinates']) > 0:
-                                    for coords in parsed['coordinates']:
-                                        for pair_coord in coords:
-                                            for coord in pair_coord:
-                                                if int(coord) == 0:
-                                                    check = False
-                            if check:
-                                instance.geom = geometry.shape(parsed)
-                        except:
-                            pass
+                        #try:
+                        if resp.HasField("metadatas"):
+                            metadatas = resp.metadatas
+                            for contributor in metadatas.contributors:
+                                self.contributors[str(contributor)] = key
+                        instance.geom = wkt.loads(metadatas.shape)
+                        #except:
+                        #    pass
+                    else:
+                        print "Mais je n'ai pas de reponse"
                 except DeadSocketException:
                     pass
                     #print e
@@ -178,14 +175,33 @@ class NavitiaManager:
             self.thread_event.wait(timer)
 
 
-
-
-    def stop(self) : 
+    def stop(self) :
         self.thread_event.set()
 
-
-
-    
+    def key_of_id(self, object_id):
+        """ Retrieves the key of the region of a given id
+            if it's a coord calls key_of_coord
+            Return the region key, or None if it doesn't exists
+        """
+#Il s'agit d'une coordonnée
+        if object_id.count(";") == 1:
+            lon, lat = object_id.split(";")
+            try:
+                flon = float(lon)
+                flat = float(lat)
+            except:
+                return None
+            return self.key_of_coord(flon, flat)
+        else:
+            try:
+                contributor = object_id.split(":")[1]
+            except ValueError:
+                return None
+            if contributor in self.contributors:
+                return self.contributors[contributor]
+            elif contributor in self.instances.keys():
+                return contributor
+        return None
 
     def key_of_coord(self, lon, lat):
         """ Étant donné une coordonnée, retourne à quelle clef NAViTiA cela correspond
