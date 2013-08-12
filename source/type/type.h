@@ -562,6 +562,9 @@ public:
     ValidityPattern()  {}
     ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date){}
     ValidityPattern(boost::gregorian::date beginning_date, const std::string & vp = "") : days(vp), beginning_date(beginning_date){}
+    ValidityPattern(const ValidityPattern & vp) : days(vp.days), beginning_date(vp.beginning_date){}
+    ValidityPattern(const ValidityPattern* vp) : days(vp->days), beginning_date(vp->beginning_date){}
+
     int slide(boost::gregorian::date day) const;
     void add(boost::gregorian::date day);
     void add(int day);
