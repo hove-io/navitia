@@ -439,9 +439,40 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
         auto vj = vehicle_journey_map[const_it["vehicle_journey_id"].as<idx_t>()];
         vj->stop_time_list.push_back(stop);
         stop->vehicle_journey = vj;
-
-        stop->departure_validity_pattern = vj->validity_pattern;
-        stop->arrival_validity_pattern = vj->validity_pattern;
+        if(stop->departure_time > 24*3600) {
+            auto tmp_vp = new nt::ValidityPattern(vj->validity_pattern);
+            tmp_vp->days <<= 1;
+            auto find_vp_predicate = [&](nt::ValidityPattern* vp1) { return tmp_vp->days == vp1->days;};
+            auto it = std::find_if(data.pt_data.validity_patterns.begin(),
+                                data.pt_data.validity_patterns.end(), find_vp_predicate);
+            if(it != data.pt_data.validity_patterns.end()) {
+                stop->departure_validity_pattern = *(it);
+            } else {
+                tmp_vp->idx = data.pt_data.validity_patterns.size();
+                data.pt_data.validity_patterns.push_back(tmp_vp);
+                this->validity_pattern_map[tmp_vp->idx] = tmp_vp;
+                stop->departure_validity_pattern = tmp_vp;
+            }
+        } else {
+            stop->departure_validity_pattern = vj->validity_pattern;
+        }
+        if(stop->arrival_time > 24*3600) {
+            auto tmp_vp = new nt::ValidityPattern(vj->validity_pattern);
+            tmp_vp->days <<= 1;
+            auto find_vp_predicate = [&](nt::ValidityPattern* vp1) { return tmp_vp->days == vp1->days;};
+            auto it = std::find_if(data.pt_data.validity_patterns.begin(),
+                                data.pt_data.validity_patterns.end(), find_vp_predicate);
+            if(it != data.pt_data.validity_patterns.end()) {
+                stop->arrival_validity_pattern = *(it);
+            } else {
+                tmp_vp->idx = data.pt_data.validity_patterns.size();
+                data.pt_data.validity_patterns.push_back(tmp_vp);
+                this->validity_pattern_map[tmp_vp->idx] = tmp_vp;
+                stop->arrival_validity_pattern = tmp_vp;
+            }
+        } else {
+            stop->arrival_validity_pattern = vj->validity_pattern;
+        }
 
         data.pt_data.stop_times.push_back(stop);
     }
