@@ -602,7 +602,7 @@ def pagination_links(base_url, obj):
     result.append({'href' : base_url, 'rel' : 'first', "templated":False})
     if obj.itemsOnPage > 0:
         result.append({'href' : base_url + '?start_page=' +
-                       str(int(obj.totalResult/obj.itemsOnPage)),
+                       str(int(obj.totalResult/obj.itemsPerPage)),
                            "rel" : "last", "templated":False})
     else:
         result.append({'href' : base_url, "rel" : "last", "templated":False})
@@ -894,3 +894,264 @@ def route_schedules(response, region, format, callback):
 
     response_dict['links'].extend(renderer.link_types(region))
     return render(response_dict, format, callback)
+
+def stop_schedules(format, callback):
+    result = {
+    "links": [
+        {"type": "stop_point", "templated":True,
+         "href" : "http://navitia2-ws.ctp.dev.canaltp.fr/v1/coverage/stop_points/{stop_point.id}"},
+        {"type": "stop_point", "templated":True,
+         "href" : "http://navitia2-ws.ctp.dev.canaltp.fr/v1/coverage/routes/{route.id}"},
+        {"type": "stop_point", "templated":True,
+         "href" : "http://navitia2-ws.ctp.dev.canaltp.fr/v1/coverage/lines/{line.id}"},
+    ],
+    "stop_schedules": [
+        {
+            "stop_point": {
+                "name": "Champ de Courses",
+                "coord": {
+                        "lat": 47.24493824,
+                        "lon": -1.56183498
+                    },
+                "id": "RATP:stop_point:CCOU2"
+            },
+            "route": {
+                    "name": "Le Bourget",
+                    "id": "RATP:route:RTP868562-3",
+                    "line": {
+                        "color": "FFFFFF",
+                        "code": "133",
+                        "name": "GARE DE SARCELLES-ST BRICE <-> LE_BOURGET RER",
+                        "id": "RATP:line:868562"
+                    },
+            },
+            "datetimes": [
+                {
+                    "datetime": "20130806T111000",
+                    "links": [
+                        { "id": "2", "type": "notes"}
+                    ],
+                    "additionnal_informations": [
+                        "pickup_only"
+                    ]
+                },
+                {
+                    "datetime": "20130806T111500",
+                    "links": [
+                        { "id": "3", "type": "notes"}
+                    ],
+                    "additionnal_informations": [
+                        "dropoff_only"
+                    ]
+                },
+                {
+                    "datetime": "20130806T121500",
+                    "additionnal_informations": [
+                        "dropoff_only"
+                    ]
+                },
+                {
+                    "datetime": "20130806T131500",
+                }
+            ]
+        },
+        {
+            "stop_point": {
+                "name": "Bertrand Bonnesoeur",
+                "coord": {
+                        "lat": 47.74493824,
+                        "lon": -0.56183498
+                    },
+                "id": "RATP:stop_point:BBS1"
+
+            },
+            "route": {
+                "name": "Le havre -> Champ-sur-Marne",
+                "id": "RATP:route:RTP868562-3",
+                "line": {
+                    "color": "FFFFFF",
+                    "code": "133",
+                    "name": "Gare du Havre <-> Champ-sur-Marne",
+                    "id": "RATP:line:868562"
+                },
+
+            },
+            "datetimes": [
+                {
+                    "datetime": "20130806T081000",
+                },
+                {
+                    "datetime": "20130806T091000",
+                },
+                {
+                    "datetime": "20130806T101000",
+                },
+                {
+                    "datetime": "20130806T111000",
+                },
+                {
+                    "datetime": "20130806T231000",
+                    "links": [
+                        { "id": "3", "type": "notes"}
+                    ],
+                    "additionnal_informations": [
+                        "pickup_only"
+                    ]
+                },
+                {
+                    "datetime": "20130807T001000",
+                    "links": [
+                        { "id": "3", "type": "notes"}
+                    ],
+                    "additionnal_informations": [
+                        "dropoff_only"
+                    ]
+                },
+                {
+                    "datetime": "20130807T011500",
+                    "additionnal_informations": [
+                        "dropoff_only"
+                    ]
+                },
+                {
+                    "datetime": "20130807T012500",
+                }
+            ]
+        }
+    ],
+    "notes": [
+        {"id" : "2", "value": "Beware the vehicle is a spaceship"},
+        {"id" : "3", "value": "Beware the vehicle is a drazienne"},
+    ]
+}
+    result = {
+
+    "links": [
+        {"type": "stop_point", "templated":True,
+         "href" : "http://navitia2-ws.ctp.dev.canaltp.fr/v1/coverage/stop_points/{stop_point.id}"},
+        {"type": "stop_point", "templated":True,
+         "href" : "http://navitia2-ws.ctp.dev.canaltp.fr/v1/coverage/routes/{route.id}"},
+        {"type": "stop_point", "templated":True,
+         "href" : "http://navitia2-ws.ctp.dev.canaltp.fr/v1/coverage/lines/{line.id}"},
+    ],
+    "stop_schedules": [
+        {
+            "stop_point": {
+                "name": "Champ de Courses",
+                "coord": {
+                        "lat": 47.24493824,
+                        "lon": -1.56183498
+                    },
+                "id": "RATP:stop_point:CCOU2"
+            },
+            "route": {
+                    "name": "Le Bourget",
+                    "id": "RATP:route:RTP868562-3",
+                    "line": {
+                        "color": "FFFFFF",
+                        "code": "133",
+                        "name": "GARE DE SARCELLES-ST BRICE <-> LE_BOURGET RER",
+                        "id": "RATP:line:868562"
+                    },
+            },
+            "datetimes": [
+                {
+                    "datetime": "20130806T111000",
+                    "links": [
+                        { "id": "2", "type": "notes"}
+                    ],
+                    "additionnal_informations": [
+                        "pickup_only"
+                    ]
+                },
+                {
+                    "datetime": "20130806T111500",
+                    "links": [
+                        { "id": "3", "type": "notes"}
+                    ],
+                    "additionnal_informations": [
+                        "dropoff_only"
+                    ]
+                },
+                {
+                    "datetime": "20130806T121500",
+                    "additionnal_informations": [
+                        "dropoff_only"
+                    ]
+                },
+                {
+                    "datetime": "20130806T131500",
+                }
+            ]
+        },
+        {
+            "stop_point": {
+                "name": "Bertrand Bonnesoeur",
+                "coord": {
+                        "lat": 47.74493824,
+                        "lon": -0.56183498
+                    },
+                "id": "RATP:stop_point:BBS1"
+
+            },
+            "route": {
+                "name": "Le havre -> Champ-sur-Marne",
+                "id": "RATP:route:RTP868562-3",
+                "line": {
+                    "color": "FFFFFF",
+                    "code": "133",
+                    "name": "Gare du Havre <-> Champ-sur-Marne",
+                    "id": "RATP:line:868562"
+                },
+
+            },
+            "datetimes": [
+                {
+                    "datetime": "20130806T081000",
+                },
+                {
+                    "datetime": "20130806T091000",
+                },
+                {
+                    "datetime": "20130806T101000",
+                },
+                {
+                    "datetime": "20130806T111000",
+                },
+                {
+                    "datetime": "20130806T231000",
+                    "links": [
+                        { "id": "3", "type": "notes"}
+                    ],
+                    "additionnal_informations": [
+                        "pickup_only"
+                    ]
+                },
+                {
+                    "datetime": "20130807T001000",
+                    "links": [
+                        { "id": "3", "type": "notes"}
+                    ],
+                    "additionnal_informations": [
+                        "dropoff_only"
+                    ]
+                },
+                {
+                    "datetime": "20130807T011500",
+                    "additionnal_informations": [
+                        "dropoff_only"
+                    ]
+                },
+                {
+                    "datetime": "20130807T012500",
+                }
+            ]
+        }
+    ],
+    "notes": [
+        {"id" : "2", "value": "Beware the vehicle is a spaceship"},
+        {"id" : "3", "value": "Beware the vehicle is a drazienne"},
+    ]
+}
+    return render(result, format, callback)
+
