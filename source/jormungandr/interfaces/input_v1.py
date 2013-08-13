@@ -63,7 +63,7 @@ def uri(request, uri=None):
         return generate_error("Type : " + resource_type + " not consultable yet", 501)
     req = {}
     if 'start_page' in request.args:
-        req['startPage'] = [int(request.args.get('start_page'))]
+        req['start_page'] = [int(request.args.get('start_page'))]
 
     filters = []
     if uid:
