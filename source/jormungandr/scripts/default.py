@@ -3,7 +3,6 @@ import type_pb2
 import request_pb2
 import response_pb2
 from protobuf_to_dict import protobuf_to_dict
-from apis import Apis, validation_decorator
 
 from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
 from renderers import render, render_from_protobuf
@@ -22,9 +21,13 @@ pb_type = {
 
 class Script:
     def __init__(self):
-        self.apis = Apis().apis
-
-
+        self.apis = ["places", "next_departures", "next_arrivals",
+                     "route_schedules", "stops_schedules", "departure_boards",
+                     "stop_areas", "stop_points", "lines", "routes",
+                     "physical_modes", "commercial_modes", "connections",
+                     "journey_pattern_points", "journey_patterns", "companies",
+                     "vehicle_journeys", "pois", "poi_types", "journeys",
+                     "isochrone", "metadatas", "status", "load"]
     def __pagination(self, request, ressource_name, resp):
         request_pagination = response_pb2.Pagination()
         request_pagination.startPage = request["startPage"]
@@ -239,16 +242,16 @@ class Script:
     def isochrone(self, request, region):
         return self.__on_journeys(type_pb2.ISOCHRONE, request, region)
 
-    def __on_ptref(self, ressource_name, requested_type, request, region):
+    def __on_ptref(self, resource_name, requested_type, request, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.PTREFERENTIAL
 
         req.ptref.requested_type = requested_type
         req.ptref.filter = request["filter"]
         req.ptref.depth = request["depth"]
-
+        print req
         resp = NavitiaManager().send_and_receive(req, region)
-        self.__pagination(request, ressource_name, resp)
+        self.__pagination(request, resource_name, resp)
         return resp
 
     def stop_areas(self, request, region):
