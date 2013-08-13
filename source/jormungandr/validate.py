@@ -103,7 +103,6 @@ def filter(value):
 def validate_arguments(request, validation_dict) :
     response = Validation_Response()
     for key, value in request.iteritems() :
-        print key, value
         if not (key in validation_dict) :
             response.details[key] = {"status" : "ignored", "value":str(value)}
         else:
