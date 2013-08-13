@@ -264,7 +264,10 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
 pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
-    return navitia::ptref::query_pb(get_type(request.requested_type()), request.filter(), request.depth(), *(*this->data));
+    return navitia::ptref::query_pb(get_type(request.requested_type()),
+                                    request.filter(), request.depth(),
+                                    request.start_page(), request.count(),
+                                    *(*this->data));
 }
 
 
