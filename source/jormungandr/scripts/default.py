@@ -28,33 +28,12 @@ class Script:
                      "journey_pattern_points", "journey_patterns", "companies",
                      "vehicle_journeys", "pois", "poi_types", "journeys",
                      "isochrone", "metadatas", "status", "load"]
+
+
+
+
     def __pagination(self, request, ressource_name, resp):
-        request_pagination = response_pb2.Pagination()
-        request_pagination.startPage = request["startPage"]
-        request_pagination.itemsPerPage = request["count"]
-        objects = None
-        if resp.ListFields():
-            for fd in resp.ListFields():
-                if fd[0].name == ressource_name:
-                    objects = fd[1]
-                    request_pagination.totalResult = len(fd[1])
-        else:
-            request_pagination.totalResult = 0
-
-        if objects:
-            begin = int(request_pagination.startPage) * int(request_pagination.itemsPerPage)
-            end = begin + int(request_pagination.itemsPerPage)
-            if end > request_pagination.totalResult:
-                end = request_pagination.totalResult
-
-            toDelete = []
-            if begin < request_pagination.totalResult :
-                del objects[end:]# todo -1 valable ?
-                del objects[0:begin]
-            else:
-                del objects[0:]
-
-            request_pagination.itemsOnPage = len(objects)
+        if resp.pagination.totalResult > 0:
             query_args = ""
             for key, value in request.iteritems():
                 if key != "startPage":
@@ -63,15 +42,13 @@ class Script:
                             query_args += key + "=" +unicode(v) + "&"
                     else:
                         query_args += key + "=" +unicode(value) + "&"
-            if request_pagination.startPage > 0:
-                request_pagination.previousPage = query_args+"startPage=%i"%(request_pagination.startPage-1)
-
-            if end<request_pagination.totalResult:
-                request_pagination.nextPage = query_args+"startPage=%i"%(request_pagination.startPage+1)
-        resp.pagination.CopyFrom(request_pagination)
-
-
-
+            if resp.pagination.startPage > 0:
+                page = resp.pagination.startPage-1
+                resp.pagination.previousPage = query_args+"start_page=%i"% page
+            last_id_page = (resp.pagination.startPage + 1) * resp.pagination.itemsPerPage
+            if last_id_page  < resp.pagination.totalResult:
+                page = resp.pagination.startPage+1
+                resp.pagination.nextPage = query_args+"start_page=%i"% page
 
 
     def status(self, request, region):
@@ -114,13 +91,14 @@ class Script:
             if place.HasField("address"):
                 post_code = place.address.name
             if place.address.house_number > 0:
-               post_code = str(place.address.house_number) + " " + place.address.name
+                post_code = str(place.address.house_number) + " " + place.address.name
+
             for ad in place.address.administrative_regions:
                 if ad.zip_code != "":
                     post_code = post_code + ", " + ad.zip_code + " " + ad.name
                 else:
                     post_code = post_code + ", " + ad.name
-            place.name = post_code
+                place.name = post_code
 
         return resp
 
@@ -247,9 +225,11 @@ class Script:
         req.requested_api = type_pb2.PTREFERENTIAL
 
         req.ptref.requested_type = requested_type
-        req.ptref.filter = request["filter"]
-        req.ptref.depth = request["depth"]
-        print req
+        req.ptref.filter     = request["filter"]
+        req.ptref.depth      = request["depth"]
+        req.ptref.start_page = request["start_page"]
+        req.ptref.count      = request["count"]
+
         resp = NavitiaManager().send_and_receive(req, region)
         self.__pagination(request, resource_name, resp)
         return resp

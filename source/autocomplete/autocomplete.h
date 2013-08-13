@@ -19,7 +19,7 @@
 namespace navitia { namespace autocomplete {
 
 
-/** Map de type first letter
+/** Map de type Autocomplete
   *
   * On associe une chaine de caractères, par exemple "rue jean jaures" à une valeur T (typiquement un pointeur
   * ou un indexe)
@@ -28,7 +28,7 @@ namespace navitia { namespace autocomplete {
   */
 template<class T>
 struct Autocomplete
-{    
+{
     /// structure qui contient la position des mots dans autocomplete et le nombre de match.
     struct fl_quality{
         T idx;

@@ -171,7 +171,6 @@ message Status{
 
     optional int32 nb_threads = 11;
     
-    repeated string contributors = 12;
 }
 
 message PairStopTime {
@@ -235,6 +234,7 @@ message Metadatas {
     required string end_production_date = 2;
     required string shape = 3;
     required string status = 4;
+    repeated string contributors = 12;
 }
 
 message Pagination {

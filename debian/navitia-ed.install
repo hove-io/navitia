@@ -1,4 +1,5 @@
 debian/tmp/usr/bin/gtfs2ed usr/bin
 debian/tmp/usr/bin/osm2ed usr/bin
 debian/tmp/usr/bin/ed2nav usr/bin
-debian/tmp/usr/share/ed/* usr/share
+debian/tmp/usr/bin/pyed_service.py usr/bin
+debian/tmp/usr/share/ed/* usr/share/ed
