@@ -8,7 +8,9 @@ namespace pt = boost::posix_time;
 
 namespace navitia{
 
-void fill_pb_object(navitia::georef::Admin* adm, const nt::Data& , pbnavitia::AdministrativeRegion* admin, int, const pt::ptime&, const pt::time_period& ){
+void fill_pb_object(navitia::georef::Admin* adm, const nt::Data&,
+                    pbnavitia::AdministrativeRegion* admin, int,
+                    const pt::ptime&, const pt::time_period& ){
 //    navitia::georef::Admin* adm = data.geo_ref.admins.at(idx);
     if(adm == nullptr)
         return ;
@@ -23,8 +25,11 @@ void fill_pb_object(navitia::georef::Admin* adm, const nt::Data& , pbnavitia::Ad
     }
 }
 
-void fill_pb_object(const nt::StopArea * sa, const nt::Data& data, pbnavitia::StopArea* stop_area, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period){
+
+void fill_pb_object(const nt::StopArea * sa,
+                    const nt::Data& data, pbnavitia::StopArea* stop_area,
+                    int max_depth, const pt::ptime& now,
+                    const pt::time_period& action_period){
     if(sa == nullptr)
         return ;
     stop_area->set_uri(sa->uri);
@@ -35,16 +40,23 @@ void fill_pb_object(const nt::StopArea * sa, const nt::Data& data, pbnavitia::St
     }
     if(max_depth > 0){
         for(navitia::georef::Admin* adm : sa->admin_list){
-            fill_pb_object(adm, data,  stop_area->add_administrative_regions(), max_depth-1, now, action_period);
+            fill_pb_object(adm, data,  stop_area->add_administrative_regions(),
+                           max_depth-1, now, action_period);
         }
     }
-
-    for(const auto& message : data.pt_data.message_holder.find_messages(sa->uri, now, action_period)){
-        fill_message(message, data, stop_area->add_messages(), max_depth-1, now, action_period);
+    if(max_depth > 0) {
+        auto messages = data.pt_data.message_holder
+                            .find_messages(sa->uri, now, action_period);
+        for(const auto& message : messages){
+            fill_message(message, data, stop_area->add_messages(), max_depth-1,
+                         now, action_period);
+        }
     }
 }
 
-void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data, pbnavitia::StopPoint* stop_point, int max_depth,
+
+void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
+                    pbnavitia::StopPoint* stop_point, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period){
     if(sp == nullptr)
         return ;
@@ -58,7 +70,8 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data, pbnavitia::St
 
     if(max_depth > 0){
         for(navitia::georef::Admin* adm : sp->admin_list){
-            fill_pb_object(adm, data,  stop_point->add_administrative_regions(), max_depth-1, now, action_period);
+            fill_pb_object(adm, data,  stop_point->add_administrative_regions(),
+                           max_depth-1, now, action_period);
         }
     }
 
@@ -66,13 +79,18 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data, pbnavitia::St
         fill_pb_object(sp->stop_area, data, stop_point->mutable_stop_area(), max_depth-1, now, action_period);
 
 
-    for(const auto& message : data.pt_data.message_holder.find_messages(sp->uri, now, action_period)){
-        fill_message(message, data, stop_point->add_messages(), max_depth-1, now, action_period);
+    if(max_depth > 0){
+        for(const auto& message : data.pt_data.message_holder.find_messages(sp->uri, now, action_period)){
+            fill_message(message, data, stop_point->add_messages(), max_depth-1, now, action_period);
+        }
     }
 }
 
-void fill_pb_object(navitia::georef::Way* way, const nt::Data& data, pbnavitia::Address * address, int house_number,
-        type::GeographicalCoord& coord, int max_depth, const pt::ptime& now, const pt::time_period& action_period){
+
+void fill_pb_object(navitia::georef::Way* way, const nt::Data& data,
+                    pbnavitia::Address * address, int house_number,
+                    type::GeographicalCoord& coord, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period){
     if(way == nullptr)
         return ;
     address->set_name(way->name);
@@ -87,13 +105,16 @@ void fill_pb_object(navitia::georef::Way* way, const nt::Data& data, pbnavitia::
 
     if(max_depth > 0){
         for(georef::Admin* admin : way->admin_list){
-            fill_pb_object(admin, data,  address->add_administrative_regions(), max_depth-1, now, action_period);
+            fill_pb_object(admin, data,  address->add_administrative_regions(),
+                           max_depth-1, now, action_period);
         }
     }
 }
 
-void fill_pb_object(nt::Line const* l, const nt::Data& data, pbnavitia::Line * line, int depth,
-                    const pt::ptime& now, const pt::time_period& action_period){
+
+void fill_pb_object(nt::Line const* l, const nt::Data& data,
+                    pbnavitia::Line * line, int depth, const pt::ptime& now,
+                    const pt::time_period& action_period){
     if(l == nullptr)
         return ;
 
@@ -110,19 +131,24 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data, pbnavitia::Line * l
             fill_pb_object(route, data, line->add_routes(), depth-1);
         }
         for(auto physical_mode : l->physical_mode_list){
-            fill_pb_object(physical_mode, data, line->add_physical_mode(), depth-1);
+            fill_pb_object(physical_mode, data, line->add_physical_mode(),
+                           depth-1);
         }
-        
-        fill_pb_object(l->commercial_mode, data, line->mutable_commercial_mode(), depth-1);
+        fill_pb_object(l->commercial_mode, data,
+                       line->mutable_commercial_mode(), depth-1);
         fill_pb_object(l->network, data, line->mutable_network(), depth-1);
     }
-
-    for(const auto& message : data.pt_data.message_holder.find_messages(l->uri, now, action_period)){
-        fill_message(message, data, line->add_messages(), depth-1, now, action_period);
+    if(depth > 0) {
+        for(const auto& message : data.pt_data.message_holder.find_messages(l->uri, now, action_period)){
+            fill_message(message, data, line->add_messages(),
+                         depth-1, now, action_period);
+        }
     }
 }
 
-void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data, pbnavitia::JourneyPattern * journey_pattern, int max_depth,
+
+void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data,
+                    pbnavitia::JourneyPattern * journey_pattern, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period){
     if(jp == nullptr)
         return ;
@@ -130,14 +156,19 @@ void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data, pbnaviti
     journey_pattern->set_name(jp->name);
     journey_pattern->set_uri(jp->uri);
     if(max_depth > 0 && jp->route != nullptr)
-        fill_pb_object(jp->route, data, journey_pattern->mutable_route(), max_depth - 1, now, action_period);
+        fill_pb_object(jp->route, data, journey_pattern->mutable_route(),
+                       max_depth-1, now, action_period);
 
-    for(const auto& message : data.pt_data.message_holder.find_messages(jp->uri, now, action_period)){
-        fill_message(message, data, journey_pattern->add_messages(), max_depth-1, now, action_period);
+    if(max_depth > 0) {
+        for(const auto& message : data.pt_data.message_holder.find_messages(jp->uri, now, action_period)){
+            fill_message(message, data, journey_pattern->add_messages(), max_depth-1, now, action_period);
+        }
     }
 }
 
-void fill_pb_object(const nt::Route* r, const nt::Data& data, pbnavitia::Route * route, int max_depth,
+
+void fill_pb_object(const nt::Route* r, const nt::Data& data,
+                    pbnavitia::Route* route, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period){
     if(r == nullptr)
         return ;
@@ -147,12 +178,16 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data, pbnavitia::Route *
     if(max_depth > 0 && r->line != nullptr)
         fill_pb_object(r->line, data, route->mutable_line(), max_depth - 1, now, action_period);
 
-    for(const auto& message : data.pt_data.message_holder.find_messages(r->uri, now, action_period)){
-        fill_message(message, data, route->add_messages(), max_depth-1, now, action_period);
+    if(max_depth > 0) {
+        for(const auto& message : data.pt_data.message_holder.find_messages(r->uri, now, action_period)){
+            fill_message(message, data, route->add_messages(), max_depth-1, now, action_period);
+        }
     }
 }
 
-void fill_pb_object(const nt::Network* n, const nt::Data&, pbnavitia::Network * network, int,
+
+void fill_pb_object(const nt::Network* n, const nt::Data&,
+                    pbnavitia::Network* network, int,
                     const pt::ptime&, const pt::time_period&){
     if(n == nullptr)
         return ;
@@ -161,7 +196,9 @@ void fill_pb_object(const nt::Network* n, const nt::Data&, pbnavitia::Network * 
     network->set_uri(n->uri);
 }
 
-void fill_pb_object(const nt::CommercialMode* m, const nt::Data&, pbnavitia::CommercialMode * commercial_mode,
+
+void fill_pb_object(const nt::CommercialMode* m, const nt::Data&,
+                    pbnavitia::CommercialMode* commercial_mode,
                     int, const pt::ptime&, const pt::time_period&){
     if(m == nullptr)
         return ;
@@ -170,7 +207,9 @@ void fill_pb_object(const nt::CommercialMode* m, const nt::Data&, pbnavitia::Com
     commercial_mode->set_uri(m->uri);
 }
 
-void fill_pb_object(const nt::PhysicalMode* m, const nt::Data&, pbnavitia::PhysicalMode * physical_mode, int,
+
+void fill_pb_object(const nt::PhysicalMode* m, const nt::Data&,
+                    pbnavitia::PhysicalMode* physical_mode, int,
                     const pt::ptime&, const pt::time_period&){
     if(m == nullptr)
         return ;
@@ -179,7 +218,10 @@ void fill_pb_object(const nt::PhysicalMode* m, const nt::Data&, pbnavitia::Physi
     physical_mode->set_uri(m->uri);
 }
 
-void fill_pb_object(const nt::Company* c, const nt::Data&, pbnavitia::Company * company, int, const pt::ptime&, const pt::time_period&){
+
+void fill_pb_object(const nt::Company* c, const nt::Data&,
+                    pbnavitia::Company* company, int, const pt::ptime&,
+                    const pt::time_period&){
     if(c == nullptr)
         return ;
 
@@ -187,30 +229,39 @@ void fill_pb_object(const nt::Company* c, const nt::Data&, pbnavitia::Company * 
     company->set_uri(c->uri);
 }
 
-void fill_pb_object(const nt::StopPointConnection* c, const nt::Data& data, pbnavitia::Connection * connection, int max_depth,
+
+void fill_pb_object(const nt::StopPointConnection* c, const nt::Data& data,
+                    pbnavitia::Connection* connection, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period){
     if(c == nullptr)
         return ;
 
     connection->set_seconds(c->duration);
     if(c->departure != nullptr && c->destination != nullptr && max_depth > 0){
-        fill_pb_object(c->departure, data, connection->mutable_origin(), max_depth - 1, now, action_period);
-        fill_pb_object(c->destination, data, connection->mutable_destination(), max_depth - 1, now, action_period);
+        fill_pb_object(c->departure, data, connection->mutable_origin(),
+                       max_depth-1, now, action_period);
+        fill_pb_object(c->destination, data, connection->mutable_destination(),
+                       max_depth-1, now, action_period);
     }
 }
 
-void fill_pb_object(const nt::JourneyPatternPointConnection* , const nt::Data& , pbnavitia::Connection* , int,
+
+void fill_pb_object(const nt::JourneyPatternPointConnection*, const nt::Data&,
+                    pbnavitia::Connection* , int,
                     const pt::ptime&, const pt::time_period&){
 }
 
 
-void fill_pb_object(const nt::ValidityPattern* vp, const nt::Data&, pbnavitia::ValidityPattern* validity_pattern, int, const pt::ptime&, const pt::time_period&){
+void fill_pb_object(const nt::ValidityPattern* vp, const nt::Data&,
+                    pbnavitia::ValidityPattern* validity_pattern, int,
+                    const pt::ptime&, const pt::time_period&){
     if(vp == nullptr)
         return;
-
-    validity_pattern->set_beginning_date(boost::gregorian::to_iso_string(vp->beginning_date));
+    auto vp_string = boost::gregorian::to_iso_string(vp->beginning_date);
+    validity_pattern->set_beginning_date(vp_string);
     validity_pattern->set_days(vp->days.to_string());
 }
+
 
 pbnavitia::OdtType get_pb_odt_type(const navitia::type::OdtType odt_type){
     pbnavitia::OdtType result = pbnavitia::OdtType::regular_line;
@@ -236,7 +287,9 @@ pbnavitia::OdtType get_pb_odt_type(const navitia::type::OdtType odt_type){
     return result;
 }
 
-void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data, pbnavitia::VehicleJourney * vehicle_journey, int max_depth,
+
+void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
+                    pbnavitia::VehicleJourney * vehicle_journey, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period){
     if(vj == nullptr)
         return ;
@@ -255,33 +308,43 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data, pbnaviti
     vehicle_journey->set_appropriate_signage(vj->appropriate_signage());
     vehicle_journey->set_school_vehicle(vj->school_vehicle());
 
-    if(vj->journey_pattern!= nullptr && max_depth > 0)
-        fill_pb_object(vj->journey_pattern, data, vehicle_journey->mutable_journey_pattern(), max_depth-1, now, action_period);
-
+    if(vj->journey_pattern!= nullptr && max_depth > 0) {
+        fill_pb_object(vj->journey_pattern, data,
+                       vehicle_journey->mutable_journey_pattern(), max_depth-1,
+                       now, action_period);
+    }
     if(max_depth > 0) {
         for(auto* stop_time : vj->stop_time_list) {
-            fill_pb_object(stop_time, data, vehicle_journey->add_stop_times(), max_depth -1, now, action_period);
+            fill_pb_object(stop_time, data, vehicle_journey->add_stop_times(),
+                           max_depth-1, now, action_period);
         }
-        fill_pb_object(vj->physical_mode, data, vehicle_journey->mutable_physical_mode(), max_depth-1, now, action_period);
-
-        fill_pb_object(vj->validity_pattern, data, vehicle_journey->mutable_validity_pattern(), max_depth-1);
-        fill_pb_object(vj->adapted_validity_pattern, data, vehicle_journey->mutable_adapted_validity_pattern(), max_depth-1);
-
+        fill_pb_object(vj->physical_mode, data,
+                       vehicle_journey->mutable_physical_mode(), max_depth-1,
+                       now, action_period);
+        fill_pb_object(vj->validity_pattern, data,
+                       vehicle_journey->mutable_validity_pattern(),
+                       max_depth-1);
+        fill_pb_object(vj->adapted_validity_pattern, data,
+                       vehicle_journey->mutable_adapted_validity_pattern(),
+                       max_depth-1);
     }
-
-    for(auto message : data.pt_data.message_holder.find_messages(vj->uri, now, action_period)){
-        fill_message(message, data, vehicle_journey->add_messages(), max_depth-1, now, action_period);
+    if(max_depth > 0) {
+        for(auto message : data.pt_data.message_holder.find_messages(vj->uri, now, action_period)){
+            fill_message(message, data, vehicle_journey->add_messages(), max_depth-1, now, action_period);
+        }
     }
     //si on a un vj théorique rataché à notre vj, on récupére les messages qui le concerne
-    if(vj->theoric_vehicle_journey != nullptr){
+    if(vj->theoric_vehicle_journey != nullptr && max_depth > 0){
         for(auto message : data.pt_data.message_holder.find_messages(vj->theoric_vehicle_journey->uri, now, action_period)){
             fill_message(message, data, vehicle_journey->add_messages(), max_depth-1, now, action_period);
         }
     }
 }
 
-void fill_pb_object(const nt::StopTime* st, const type::Data &data, pbnavitia::StopTime *stop_time, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period) {
+
+void fill_pb_object(const nt::StopTime* st, const type::Data &data,
+                    pbnavitia::StopTime *stop_time, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period){
     if(st == nullptr)
         return ;
     boost::posix_time::time_duration p = boost::posix_time::seconds(st->arrival_time);
@@ -338,8 +401,10 @@ void fill_pb_object(const nt::JourneyPatternPoint* jpp, const nt::Data& data, pb
         if(jpp->journey_pattern != nullptr)
             fill_pb_object(jpp->journey_pattern, data, journey_pattern_point->mutable_journey_pattern(), max_depth - 1, now, action_period);
     }
-    for(auto message : data.pt_data.message_holder.find_messages(jpp->uri, now, action_period)){
-        fill_message(message, data, journey_pattern_point->add_messages(), max_depth-1, now, action_period);
+    if(max_depth > 0) {
+        for(auto message : data.pt_data.message_holder.find_messages(jpp->uri, now, action_period)){
+            fill_message(message, data, journey_pattern_point->add_messages(), max_depth-1, now, action_period);
+        }
     }
 }
 
@@ -357,9 +422,9 @@ void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &p
     if(path.path_items.size() > 0) {
         section->set_type(pbnavitia::STREET_NETWORK);
         pbnavitia::StreetNetwork * sn = section->mutable_street_network();
-        create_pb(ori_dest, path, data, sn);        
+        create_pb(ori_dest, path, data, sn);
         section->set_duration(sn->length()/ori_dest.streetnetwork_params.speed);
-        navitia::georef::Way* way;        
+        navitia::georef::Way* way;
         type::GeographicalCoord coord;
         if(path.path_items.size() > 0){
             pbnavitia::Place* orig_place = section->mutable_origin();
@@ -386,7 +451,7 @@ void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path &p
             for(auto admin : dest_place->address().administrative_regions())
                 dest_place->set_name(dest_place->name() + ", " + admin.name());
             dest_place->set_uri(dest_place->address().uri());
-            dest_place->set_embedded_type(pbnavitia::ADDRESS);            
+            dest_place->set_embedded_type(pbnavitia::ADDRESS);
         }
     }
 }
@@ -412,7 +477,7 @@ void create_pb(const type::EntryPoint &ori_dest, const navitia::georef::Path& pa
         break;
         default :
             sn->set_mode(pbnavitia::Walking);
-    }    
+    }
 
     uint32_t length = 0;
     for(auto item : path.path_items){
@@ -436,7 +501,7 @@ void create_pb(const type::EntryPoint &ori_dest, const navitia::georef::Path& pa
 }
 
 void fill_pb_object(const georef::POIType* geo_poi_type, const type::Data &, pbnavitia::PoiType* poi_type, int,
-        const pt::ptime&, const pt::time_period&) {    
+        const pt::ptime&, const pt::time_period&) {
     poi_type->set_name(geo_poi_type->name);
     poi_type->set_uri(geo_poi_type->uri);
 }
