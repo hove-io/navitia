@@ -57,7 +57,6 @@ pbnavitia::Response query_pb(type::Type_e requested_type, std::string request,
                              const int count, const type::Data &data){
     std::vector<type::idx_t> final_indexes;
     pbnavitia::Response pb_response;
-    std::cout << request << std::endl;
     try {
         final_indexes = make_query(requested_type, request, data);
     } catch(const parsing_error &parse_error) {
