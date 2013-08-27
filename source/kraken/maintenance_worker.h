@@ -19,8 +19,6 @@ class MaintenanceWorker{
 
         bool load_and_switch();
 
-        void load_rt();
-
         void load();
 
         void operator()();

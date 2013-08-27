@@ -10,6 +10,7 @@
 #include "utils/exception.h"
 #include "ed_reader.h"
 #include "type/data.h"
+#include "ed/connectors/adjustit_connector.h"
 
 
 namespace po = boost::program_options;
@@ -17,14 +18,18 @@ namespace pt = boost::posix_time;
 
 int main(int argc, char * argv[])
 {
-    std::string output, connection_string;
+    std::string output, connection_string, at_connection_string, media_lang,
+        media_media;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
         ("version,v", "Affiche la version")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
         ("output,o", po::value<std::string>(&output)->default_value("data.nav.lz4"), "Fichier de sortie")
-        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
+        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia")
+        ("at-connection-string", po::value<std::string>(&at_connection_string), "parametres de connection à la base de données : DRIVER=FreeTDS;SERVER=;UID=;PWD=;DATABASE=;TDS_Version=8.0;Port=1433;ClientCharset=UTF-8")
+        ("media-lang", po::value<std::string>(&media_lang)->default_value("FR"), "langue du media à charger")
+        ("media-media", po::value<std::string>(&media_media)->default_value("INTERNET"), "media à charger");
 
 
     po::variables_map vm;
@@ -53,13 +58,13 @@ int main(int argc, char * argv[])
 
     po::notify(vm);
 
-    pt::ptime start, end;
+    pt::ptime start, end, now;
     int read, sort, autocomplete, save;
 
     navitia::type::Data data;
 
-
-    start = pt::microsec_clock::local_time();
+    //on init now pour le moment à now, à rendre paramétrable pour le debug
+    now = start = pt::microsec_clock::local_time();
 
     ed::EdReader reader(connection_string);
     reader.fill(data);
@@ -98,11 +103,21 @@ int main(int argc, char * argv[])
     {Timer t("Construction des correspondances");  data.pt_data.build_connections();}
     */
     autocomplete = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+    if(!at_connection_string.empty()){
+        ed::connectors::AtLoader::Config config;
+        config.connect_string = at_connection_string;
+        config.media_lang = media_lang;
+        config.media_media = media_media;
+
+        ed::connectors::AtLoader loader;
+        data.pt_data.message_holder.messages = loader.load(config, now);
+
+    }
+
     std::cout << "Debut sauvegarde ..." << std::endl;
 
     start = pt::microsec_clock::local_time();
-
-
     data.save(output);
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
 

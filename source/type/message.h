@@ -77,46 +77,20 @@ struct Message{
 };
 
 struct MessageHolder{
-
-    static const unsigned int version = 1; //< Numéro de la version. À incrémenter à chaque que l'on modifie les données sérialisées
-    //UTC
-    boost::posix_time::ptime generation_date;
-
-    //UTC
-    boost::posix_time::ptime last_load_at;
-
     // object_external_code => vector<message>
     std::map<std::string, std::vector<Message>> messages;
 
 
-    std::atomic<bool> last_load;
-
-    std::atomic<bool> loaded;
-
-    MessageHolder(): last_load(false), loaded(false){}
+    MessageHolder(){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int){
-        ar & messages & generation_date;
+        ar & messages;
     }
-
-    /** Charge les données et effectue les initialisations nécessaires */
-    bool load(const std::string & filename);
-
-    /** Sauvegarde les données */
-    void save(const std::string & filename);
 
     MessageHolder& operator=(const navitia::type::MessageHolder&&);
 
     std::vector<Message> find_messages(const std::string& uri, const boost::posix_time::ptime& now,
         const boost::posix_time::time_period& action_time) const;
-
-    private:
-    void load_lz4(const std::string & filename);
-
-    void save_lz4(const std::string & filename);
-
-
 };
 
 }}//namespace
-BOOST_CLASS_VERSION(navitia::type::MessageHolder, navitia::type::MessageHolder::version)

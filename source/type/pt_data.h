@@ -48,7 +48,9 @@ struct PT_Data : boost::noncopyable{
                 // Les proximity list
                 & stop_area_proximity_list & stop_point_proximity_list & line_autocomplete
                 // Les types un peu spéciaux
-                & stop_point_connections & journey_pattern_point_connections;
+                & stop_point_connections & journey_pattern_point_connections
+                //les messages
+                & message_holder;
     }
 
     /** Initialise tous les indexes

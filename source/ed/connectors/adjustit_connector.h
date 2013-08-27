@@ -5,7 +5,7 @@
 #include "type/message.h"
 #include <boost/program_options.hpp>
 
-namespace navitia{
+namespace ed{ namespace connectors{
 
 
 navitia::type::Type_e parse_object_type(std::string object_type);
@@ -41,4 +41,4 @@ struct AtLoader {
 };
 
 
-}//namespace
+}}//namespace

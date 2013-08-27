@@ -16,7 +16,7 @@ SET(SOURCE
 #ADD_TEST(navimake_test ${EXECUTABLE_OUTPUT_PATH}/navimake_test --report_level=no)
 
 add_executable(gtfs_parser_test gtfsparser_test.cpp)
-target_link_libraries(gtfs_parser_test connectors types utils ${Boost_LIBRARIES} log4cplus)
+target_link_libraries(gtfs_parser_test ed connectors types utils ${Boost_LIBRARIES} log4cplus)
 ADD_TEST(gtfs_parser_test ${EXECUTABLE_OUTPUT_PATH}/gtfs_parser_test --report_level=no)
 
 #@TODO: à porter avec els type navitia!
@@ -26,5 +26,5 @@ ADD_TEST(gtfs_parser_test ${EXECUTABLE_OUTPUT_PATH}/gtfs_parser_test --report_le
 #ADD_TEST(adapted_test ${EXECUTABLE_OUTPUT_PATH}/adapted_test --report_level=no)
 
 add_executable(osm_test osm_test.cpp)
-target_link_libraries(osm_test connectors osmpbf types data georef pb_lib utils routing ${Boost_LIBRARIES} log4cplus)
+target_link_libraries(osm_test ed connectors osmpbf types data georef pb_lib utils routing ${Boost_LIBRARIES} log4cplus)
 

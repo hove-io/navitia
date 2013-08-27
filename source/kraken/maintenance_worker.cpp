@@ -54,34 +54,12 @@ void MaintenanceWorker::load(){
     }
 }
 
-void MaintenanceWorker::load_rt(){
-    if(pt::microsec_clock::universal_time() > next_rt_load){
-
-        Configuration * conf = Configuration::get();
-        std::string database_rt = conf->get_as<std::string>("GENERAL", "database-rt", "");
-        if(!database_rt.empty()){
-            LOG4CPLUS_INFO(logger, "chargement des messages AT");
-            nt::MessageHolder holder;
-            holder.load(database_rt);
-
-            boost::unique_lock<boost::shared_mutex> lock((*data)->load_mutex);
-            //std::swap((*data)->pt_data.message_holder, holder);
-            (*data)->pt_data.message_holder = std::move(holder);
-            LOG4CPLUS_TRACE(logger, "chargement des messages AT fini!");
-            LOG4CPLUS_TRACE(logger, "Effacement des données non-utilisées");
-        }
-        next_rt_load = pt::microsec_clock::universal_time() + pt::minutes(1);
-    }
-}
 
 void MaintenanceWorker::operator()(){
     LOG4CPLUS_INFO(logger, "démarrage du thread de maintenance");
     while(true){
         load();
-
-        load_rt();
-
-        boost::this_thread::sleep(pt::seconds(1));
+        boost::this_thread::sleep(pt::seconds(10));
     }
 
 }
