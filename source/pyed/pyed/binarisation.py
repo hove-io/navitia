@@ -6,6 +6,8 @@ from pyed.config import ConfigException
 import logging
 import subprocess
 import os
+import pyed.task_pb2
+import pika
 
 def make_connection_string(config):
     """ Make the a connection string connection from the config """
@@ -20,7 +22,7 @@ def gtfs2ed(gtfs_filename, config, backup_directory):
     pyed_logger = logging.getLogger('pyed')
     gtfs_logger = logging.getLogger('gtfs2ed')
     res = launch_exec("mv", [gtfs_filename, backup_directory], pyed_logger)
-    if res!=0:
+    if res != 0:
         return 1
     gtfs_bnanme = os.path.basename(gtfs_filename)
     new_gtfs = backup_directory + "/" +gtfs_bnanme
@@ -48,7 +50,7 @@ def osm2ed(osm_filename, config, backup_directory):
     osm_logger = logging.getLogger('osm2ed')
     res = launch_exec("mv", [osm_filename, backup_directory], pyed_logger)
     if res != 0:
-        error = "Error while moving " + osm_filename 
+        error = "Error while moving " + osm_filename
         error += + " to " + backup_directory
         osm_logger(error)
         pyed_logger(error)
@@ -74,6 +76,24 @@ def osm2ed(osm_filename, config, backup_directory):
     return 0
 
 
+def reload_data(config):
+    """ reload data on all kraken"""
+    task = pyed.task_pb2.Task()
+    task.action = pyed.task_pb2.RELOAD
+
+    connection = pika.BlockingConnection(pika.ConnectionParameters(
+            host='localhost'))
+    channel = connection.channel()
+    exchange_name = config.get('instance', 'name') + '_task'
+    channel.exchange_declare(exchange=exchange_name, type='fanout',
+            durable=True)
+
+
+    channel.basic_publish(exchange=exchange_name, routing_key='',
+            body=task.SerializeToString())
+    connection.close()
+
+
 def ed2nav(config):
     """ Launch osm2ed, compute the md5 sum of it, and save the md5 """
     pyed_logger = logging.getLogger('pyed')
@@ -95,28 +115,5 @@ def ed2nav(config):
                 ed2nav_logger, pyed_logger)
     if res != 0:
         return 2
-    md5 = subprocess.Popen(('/usr/bin/md5sum', filename),
-                            stdout=subprocess.PIPE)
-    cut = subprocess.Popen(['cut', '-d', ' ', '-f1'], stdin=md5.stdout,
-                                  stdout=subprocess.PIPE)
-    pyed_logger.info("Lauching md5 of "+ filename)
-    if md5.wait() == 0:
-        pyed_logger.info("md5 of "+filename+ " computed")
-        pyed_logger.info("cutting md5 of "+filename)
-        cut_log = cut.communicate()
-        if cut.wait()==0:
-            pyed_logger.info("md5 of "+filename+" cutted")
-            pyed_logger.info("writing md5 to "+filename+".md5")
-            md5file = open(filename+".md5", 'w')
-            md5file.write(cut_log[0])
-            md5file.close()
-            pyed_logger.info("md5 of "+filename+" written in "+filename+".md5")
-        else:
-            pyed_logger.error("cutting the md5 of "+ filename+ "failed ")
-            if len(cut_log[0]):
-                pyed_logger.info(cut_log[0])
-            if len(cut_log[1]):
-                pyed_logger.error(cut_log[1])
-    else:
-        pyed_logger.error("md5 of "+ filename+ "failed ")
+    reload_data(config)
     return 0

@@ -63,13 +63,20 @@ class Config:
                                 "user" : None,
                                 "host" : None,
                                 "password" : None
-                                    }, 
+                                    },
                             "log_files" : {
                                 "osm2ed" : None,
                                 "gtfs2ed" : None,
                                 "ed2nav" : None,
                                 "pyed" : None
-                                    }
+                                    },
+                            'broker' : {
+                                'host' : None,
+                                'port' : None,
+                                'username' : None,
+                                'password' : None,
+                                'vhost' : None
+                                }
                             }
         self.is_valid_ = False
         self.logger.info("Reading config")

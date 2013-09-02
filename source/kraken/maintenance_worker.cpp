@@ -4,7 +4,7 @@
 
 #include <sys/stat.h>
 #include <signal.h>
-
+#include "type/task.pb.h"
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -13,11 +13,6 @@ namespace bg = boost::gregorian;
 
 namespace navitia {
 
-std::atomic<MaintenanceWorker*> dirty_pointer;
-
-void sighandler(int signal){
-    dirty_pointer.load()->sighandler(signal);
-}
 
 bool MaintenanceWorker::load_and_switch(){
     type::Data * tmp_data = new type::Data();
@@ -57,29 +52,50 @@ void MaintenanceWorker::load(){
 
 void MaintenanceWorker::operator()(){
     LOG4CPLUS_INFO(logger, "démarrage du thread de maintenance");
-    while(true){
-        load();
-        boost::this_thread::sleep(pt::seconds(10));
+    //
+    load();
+    auto consumer_tag = this->channel->BasicConsume(this->queue_name);
+
+    bool running = true;
+    LOG4CPLUS_TRACE(logger, "début de la boucle d'evenement");
+    while(running){
+        auto envelope = this->channel->BasicConsumeMessage(consumer_tag);
+        LOG4CPLUS_TRACE(logger, "Message reçu");
+        pbnavitia::Task task;
+        bool result = task.ParseFromString(envelope->Message()->Body());
+        if(!result){
+            LOG4CPLUS_WARN(logger, "impossible de parser le protobuf reçu");
+        }
+        if(task.action() == pbnavitia::RELOAD){
+            load();
+        }
     }
 
 }
 
-void MaintenanceWorker::sighandler(int signal){
-    if(signal == SIGHUP){
-        (*data)->to_load.store(true);
-    }
+void MaintenanceWorker::init_rabbitmq(){
+    Configuration * conf = Configuration::get();
+    std::string instance_name = conf->get_as<std::string>("GENERAL", "instance_name", "");
+    std::string host = conf->get_as<std::string>("BROKER", "host", "");
+    int port = conf->get_as<int>("BROKER", "port", 0);
+    std::string username = conf->get_as<std::string>("BROKER", "username", "");
+    std::string password = conf->get_as<std::string>("BROKER", "password", "");
+    std::string vhost = conf->get_as<std::string>("BROKER", "vhost", "");
+    //connection
+    LOG4CPLUS_DEBUG(logger, "connection à rabbitmq");
+    this->channel = AmqpClient::Channel::Create(host, port, username,
+            password, vhost);
 
+    //création d'une queue temporaire
+    this->queue_name = channel->DeclareQueue("", false, false, true, true);
+    channel->BindQueue(queue_name, instance_name + "_task");
+    LOG4CPLUS_TRACE(logger, "connecté à rabbitmq");
 }
 
 MaintenanceWorker::MaintenanceWorker(type::Data** data) : data(data),
-    logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))), next_rt_load(pt::microsec_clock::universal_time()){
-    dirty_pointer = this;
-    struct sigaction action;
-    action.sa_handler = navitia::sighandler;
-    action.sa_flags = 0;
-    sigemptyset(&action.sa_mask);
-    sigaction(SIGHUP, &action, NULL);
-
+        logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))),
+        next_rt_load(pt::microsec_clock::universal_time()){
+    init_rabbitmq();
 }
 
 }
