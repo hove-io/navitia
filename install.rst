@@ -12,6 +12,8 @@ Dependencies
 * boost
 * zeromq
 * libgoogle-perftools-dev
+* rabbitmq
+* SimpleAmqpClient (https://github.com/alanxz/SimpleAmqpClient + https://github.com/alanxz/SimpleAmqpClient/issues/55)
 
 Build instruction
 =================
