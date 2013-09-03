@@ -119,7 +119,7 @@ int main(int argc, char** argv){
         Timer t2;
         //            CALLGRIND_START_INSTRUMENTATION;
 
-        auto res = router.compute(demand.start, demand.target, demand.hour, demand.date, navitia::type::DateTime::inf);
+        auto res = router.compute(data.pt_data.stop_areas[demand.start], data.pt_data.stop_areas[demand.target], demand.hour, demand.date, navitia::type::DateTime::inf);
         //            CALLGRIND_STOP_INSTRUMENTATION;
 
         Path path;

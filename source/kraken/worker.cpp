@@ -163,12 +163,12 @@ type::GeographicalCoord Worker::coord_of_entry_point(const type::EntryPoint & en
     } else if (entry_point.type == Type_e::StopPoint) {
         auto sp_it = (*this->data)->pt_data.stop_points_map.find(entry_point.uri);
         if(sp_it != (*this->data)->pt_data.stop_points_map.end()) {
-            result = (*this->data)->pt_data.stop_points[sp_it->second]->coord;
+            result = sp_it->second->coord;
         }
     } else if (entry_point.type == Type_e::StopArea) {
-           auto sp_it = (*this->data)->pt_data.stop_areas_map.find(entry_point.uri);
-           if(sp_it != (*this->data)->pt_data.stop_areas_map.end()) {
-               result = (*this->data)->pt_data.stop_areas[sp_it->second]->coord;
+           auto sa_it = (*this->data)->pt_data.stop_areas_map.find(entry_point.uri);
+           if(sa_it != (*this->data)->pt_data.stop_areas_map.end()) {
+               result = sa_it->second->coord;
            }
     } else if (entry_point.type == Type_e::Coord) {
         result = entry_point.coordinates;

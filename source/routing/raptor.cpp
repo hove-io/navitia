@@ -460,18 +460,18 @@ void RAPTOR::boucleRAPTOR(/*const type::Properties &required_properties*/const t
 }
 
 
-std::vector<Path> RAPTOR::compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
+std::vector<Path> RAPTOR::compute(const type::StopArea* departure, const type::StopArea* destination, int departure_hour,
                                   int departure_day, type::DateTime borne, bool clockwise,
                                   /*const type::Properties &required_properties*/
                                   const type::AccessibiliteParams & accessibilite_params, uint32_t max_transfers) {
     
     std::vector<std::pair<type::idx_t, double> > departures, destinations;
 
-    for(const type::StopPoint* sp : data.pt_data.stop_areas[departure_idx]->stop_point_list) {
+    for(const type::StopPoint* sp : departure->stop_point_list) {
         departures.push_back(std::make_pair(sp->idx, 0));
     }
 
-    for(const type::StopPoint* sp : data.pt_data.stop_areas[destination_idx]->stop_point_list) {
+    for(const type::StopPoint* sp : destination->stop_point_list) {
         destinations.push_back(std::make_pair(sp->idx, 0));
     }
 
