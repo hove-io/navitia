@@ -35,11 +35,11 @@ def on_index(request):
             'links':[{'href':'http://doc.navitia.io', 'rel':'doc'}],
             'title': 'Current stable API version'
         }
-#,
-#{
-#            'id': 'v1',
-#            'title': 'Dev version'
-#        }
+,
+{
+            'id': 'v1',
+            'title': 'Dev version'
+        }
 ],
         'links' : [
             {"href" : base_url + '/{api_versions.id }', "rel":"navitia.api_versions"},
@@ -61,20 +61,36 @@ v0_rules = [
 
 
 v1_rules = [
-    Rule('/', endpoint=interfaces.input_v1.index),
-    Rule('/coverage', endpoint=interfaces.input_v1.coverage),
-    Rule('/coverage/', endpoint=interfaces.input_v1.coverage),
-    Rule('/coverage/<path:uri>', endpoint=interfaces.input_v1.uri),
-    Rule('/coverage/<path:uri>/places', endpoint=interfaces.input_v1.places),
-    Rule('/coverage/<path:uri1>/places_nearby', endpoint=interfaces.input_v1.nearby),
-    Rule('/coverage/<path:uri1>/places_nearby/<path:uri2>', endpoint=interfaces.input_v1.nearby),
-    Rule('/coverage/<path:uri1>/journeys', endpoint=interfaces.input_v1.journeys),
-    Rule('/coverage/<path:uri1>/route_schedules', endpoint=interfaces.input_v1.route_schedules),
-#    Rule('/coverage/<path:uri1>/stop_schedules', endpoint=interfaces.input_v1.stop_schedules),
-    Rule('/coverage/<path:uri1>/departures', endpoint=interfaces.input_v1.departures),
-    Rule('/coverage/<path:uri1>/arrivals', endpoint=interfaces.input_v1.arrivals),
-    Rule('/journeys', endpoint=interfaces.input_v1.journeys),
-    Rule('/coord/<lon>;<lat>', endpoint=interfaces.input_v1.coord)
+    Rule('/',
+         endpoint=interfaces.input_v1.index),
+    Rule('/coverage',
+         endpoint=interfaces.input_v1.coverage),
+    Rule('/coverage/',
+         endpoint=interfaces.input_v1.coverage),
+    Rule('/coverage/<path:uri>',
+         endpoint=interfaces.input_v1.uri),
+    Rule('/coverage/<string:region>/places',
+         endpoint=interfaces.input_v1.places),
+    Rule('/coverage/<path:uri1>/places_nearby',
+         endpoint=interfaces.input_v1.nearby),
+    Rule('/coverage/<path:uri1>/places_nearby/<path:uri2>',
+         endpoint=interfaces.input_v1.nearby),
+    Rule('/coverage/<path:uri1>/journeys',
+         endpoint=interfaces.input_v1.journeys),
+    Rule('/coverage/<path:uri1>/route_schedules',
+         endpoint=interfaces.input_v1.route_schedules),
+    Rule('/coverage/<path:uri1>/stop_schedules',
+         endpoint=interfaces.input_v1.stop_schedules),
+    Rule('/coverage/<path:uri1>/departures',
+         endpoint=interfaces.input_v1.departures),
+    Rule('/coverage/<path:uri1>/arrivals',
+         endpoint=interfaces.input_v1.arrivals),
+    Rule('/journeys',
+         endpoint=interfaces.input_v1.journeys),
+    Rule('/route_schedules',
+         endpoint=interfaces.input_v1.route_schedules),
+    Rule('/coord/<lon>;<lat>',
+         endpoint=interfaces.input_v1.coord)
     ]
 
 url_map = Map([

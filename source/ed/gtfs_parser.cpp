@@ -332,6 +332,12 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
             catch(boost::bad_lexical_cast ) {
                 LOG4CPLUS_WARN(logger, "Impossible de parser les coordonnées pour "
                         + row[id_c] + " " + row[code_c] + " " + row[name_c]);
+                continue;
+            }
+            if(!sp->coord.is_valid()) {
+                LOG4CPLUS_WARN(logger, "Le stop point " + row[id_c] + " " + row[code_c] + " " + row[name_c] +
+                               "a ete ignore car ses coordonees ne sont pas valides ("+row[lon_c]+", "+row[lat_c]+")");
+                continue;
             }
 
             sp->name = row[name_c];
@@ -408,7 +414,6 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
             LOG4CPLUS_WARN(logger, error_message);
         }
     }
-
     //On va chercher l'accessibilité pour les stop points qui hérite de l'accessibilité de leur stop area
     for(auto sp : wheelchair_heritance) {
         if(sp->stop_area != 0 && sp->stop_area->property(navitia::type::hasProperties::WHEELCHAIR_BOARDING)) {
@@ -417,6 +422,24 @@ void GtfsParser::parse_stops(Data & data, CsvReader & csv) {
             LOG4CPLUS_WARN(logger, "Impossible de récuperer l'accessibilité du stop area pour le stop point " + sp->uri);
         }
     }
+    //Suppression des stop_points sans stop_areas
+    std::vector<size_t> erasest;
+    for(int i=data.stop_points.size()-1; i >=0;--i) {
+        if(data.stop_points[i]->stop_area == nullptr) {
+            erasest.push_back(i);
+        }
+    }
+    int num_elements = data.stop_points.size();
+    for(size_t to_erase : erasest) {
+        stop_map.erase(data.stop_points[to_erase]->uri);
+        delete data.stop_points[to_erase];
+        data.stop_points[to_erase] = data.stop_points[num_elements - 1];
+        num_elements--;
+    }
+    data.stop_points.resize(num_elements);
+    LOG4CPLUS_INFO(logger, "Suppression de " + boost::lexical_cast<std::string>(erasest.size()) + " stop_point orphelin");
+
+
     LOG4CPLUS_TRACE(logger, "J'ai parsé " + boost::lexical_cast<std::string>(data.stop_points.size()) + " stop points");;
     LOG4CPLUS_TRACE(logger, "J'ai parsé " + boost::lexical_cast<std::string>(data.stop_areas.size())+ " stop areas");
     LOG4CPLUS_TRACE(logger, "J'ai ignoré " + boost::lexical_cast<std::string>(ignored)+ " points à cause de doublons" );

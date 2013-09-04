@@ -48,7 +48,7 @@ class Arguments:
                            order = 50),
         "count" : Argument("Number of elements per page", int, False, False,
                            50),
-        "startPage" : Argument("The page number of the ptref result", int,
+        "start_page" : Argument("The page number of the ptref result", int,
                                False, False, 0)
         }
     journeyArguments = {

@@ -11,6 +11,7 @@ Dependencies
 * osmpbf
 * boost
 * zeromq
+* libgoogle-perftools-dev
 
 Build instruction
 =================

@@ -31,7 +31,6 @@ message StreetNetworkParams{
     optional int32 vls_distance =10;
     optional string origin_filter = 11;
     optional string destination_filter = 12;
-    
 }
 
 
@@ -57,6 +56,8 @@ message PTRefRequest {
     required NavitiaType requested_type = 1;
     required string filter = 2;
     required int32 depth = 3;
+    required int32 start_page = 4;
+    required int32 count = 5;
 }
 
 message Request {

@@ -21,14 +21,12 @@ class InvalidUriException(Exception):
 class Uri:
     def __init__(self, string):
         self.uri = string
-        self.region_or_coord_part = None
         self.params = None
-        self.region_ = None
         self.lon = None
         self.lat = None
         self.is_region = None
         self.objects = []
-
+        self.region_ = None
         self.parse_region_coord()
         self.parse_params()
 
@@ -37,7 +35,8 @@ class Uri:
             #On va chercher la region associee
             self.region_ = NavitiaManager().key_of_coord(self.lon, self.lat)
             if not self.region_:
-                raise InvalidUriException("No region is covering these coordinates")
+                error = "No region is covering these coordinates"
+                raise InvalidUriException(error)
         return self.region_
 
 
@@ -47,21 +46,19 @@ class Uri:
         parts = self.uri.split("/")
         parts.reverse()
         self.region_or_coord_part = parts.pop()
-        if self.region_or_coord_part == "coord":
+        if self.region_or_coord_part.count(";") == 1:
             self.is_region = False
-            if len(parts) < 1:
-                raise InvalidUriException(", no coordinate given")
-            lonlat = parts.pop()
-            lonlatsplitted = lonlat.split(":")
+            lonlatsplitted = self.region_or_coord_part.split(";")
             if len(lonlatsplitted) != 2:
                 raise InvalidUriException(", unable to parse lon or lat",lonlat)
             lon = lonlatsplitted[0]
             lat = lonlatsplitted[1]
-            try : 
+            try :
                 self.lon = float(lon)
                 self.lat = float(lat)
             except ValueError:
-                raise InvalidUriException(", unable to parse lon or lat" + lon + ":"+lat )
+                error = ", unable to parse lon or lat" + lon + ":"+lat
+                raise InvalidUriException(error)
         else:
             self.is_region = True
             self.region_ = self.region_or_coord_part
@@ -69,15 +66,16 @@ class Uri:
         self.params = "/".join(parts)
 
     def parse_params(self):
-        s =  self.params.split("/")
+        parts = self.params.split("/")
         resource_type, uid = None, None
-        for par in s:
+        for par in parts:
             if par != "":
                 if not resource_type:
                     if self.valid_resource_type(par):
                         resource_type = par
                     else:
-                        raise InvalidUriException("Invalid resource type : "+par)
+                        error = "Invalid resource type : "+par
+                        raise InvalidUriException(error)
                 else:
                     uid = par
                     self.objects.append((resource_type, uid))
@@ -138,7 +136,7 @@ class Tests(unittest.TestCase):
         uri = Uri(string)
         self.assertEqual(uri.lon, .111111)
         self.assertEqual(uri.lat, 22.3)
-   
+
     def testResourceListWithslash(self):
         string = "/paris/stop_areas"
         uri = Uri(string)
@@ -147,7 +145,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(uri.objects), 1)
         self.assertEqual(uri.objects[0][0], "stop_areas")
         self.assertEqual(uri.objects[0][1], None)
-   
+
     def testResourceWithslash(self):
         string = "/paris/stop_areas/1"
         uri = Uri(string)
@@ -156,7 +154,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(uri.objects), 1)
         self.assertEqual(uri.objects[0][0], "stop_areas")
         self.assertEqual(uri.objects[0][1], 1)
-    
+
     def testResourceListWithoutSlash(self):
         string = "paris/stop_areas"
         uri = Uri(string)
@@ -165,7 +163,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(uri.objects), 1)
         self.assertEqual(uri.objects[0][0], "stop_areas")
         self.assertEqual(uri.objects[0][1], None)
-   
+
     def testResourcetWithoutslash(self):
         string = "paris/stop_areas/1"
         uri = Uri(string)
