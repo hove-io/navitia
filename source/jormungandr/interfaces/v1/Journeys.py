@@ -5,7 +5,7 @@ from protobuf_to_dict import protobuf_to_dict
 from find_extrem_datetimes import extremes
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, place,\
-                   PbField, stop_date_time, enum_type
+                   PbField, stop_date_time, enum_type, NonNullList
 from interfaces.parsers import option_value
 from ResourceUri import ResourceUri
 import datetime
@@ -110,11 +110,11 @@ section = {
     "display_informations" : PbField(display_informations,
                                      attribute="pt_display_informations"),
     "geojson" : GeoJson(),
-    "path" : fields.List(fields.Nested({"length":fields.Integer(),
+    "path" : NonNullList(fields.Nested({"length":fields.Integer(),
                                         "name":fields.String()}),
                          attribute="street_network.path_items"),
     "transfer_type" : enum_type(),
-    "stop_date_times" : fields.List(fields.Nested(stop_date_time))
+    "stop_date_times" : NonNullList(fields.Nested(stop_date_time))
 }
 
 
@@ -126,13 +126,13 @@ journey = {
     'departure_date_time' : fields.String(),
     'arrival_date_time' : fields.String(),
     'requested_date_time' : fields.String(),
-    'sections' : fields.List(fields.Nested(section)),
+    'sections' : NonNullList(fields.Nested(section)),
     'from' : PbField(place, attribute='origin'),
     'to' : PbField(place, attribute='destination')
 }
 
 journeys = {
-    "journeys" : fields.List(fields.Nested(journey)),
+    "journeys" : NonNullList(fields.Nested(journey)),
     "error": fields.String()
         }
 

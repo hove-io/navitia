@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 class PbField(fields.Nested):
     def __init__(self, nested, allow_null=True, **kwargs):
-        super(PbField, self).__init__(nested, allow_null=True, **kwargs)
+        super(PbField, self).__init__(nested, **kwargs)
 
     def output(self, key, obj):
         if self.attribute:
@@ -35,6 +35,12 @@ class enum_type(fields.Raw):
         enum = obj.DESCRIPTOR.fields_by_name[key].enum_type.values_by_number
         return str.lower(enum[getattr(obj, key)].name)
 
+class NonNullList(fields.List):
+    def __init__(self, *args, **kwargs):
+        super(NonNullList, self).__init__(*args, **kwargs)
+        self.display_empty = False
+
+
 coord = {
     "lon" : fields.Float(),
     "lat" : fields.Float()
@@ -51,7 +57,7 @@ admin["level"] = fields.Integer
 admin["zip_code"] = fields.String
 
 generic_type_admin = deepcopy(generic_type)
-generic_type_admin["administrative_regions"] = fields.List(fields.Nested(admin))
+generic_type_admin["administrative_regions"] = NonNullList(fields.Nested(admin))
 
 stop_point = deepcopy(generic_type_admin)
 stop_area = deepcopy(generic_type_admin)
@@ -67,8 +73,8 @@ network["lines"] = fields.List(fields.Nested(line))
 
 commercial_mode = deepcopy(generic_type)
 physical_mode = deepcopy(generic_type)
-commercial_mode["physical_modes"] = fields.List(fields.Nested(commercial_mode))
-physical_mode["commercial_modes"] = fields.List(fields.Nested(physical_mode))
+commercial_mode["physical_modes"] = NonNullList(fields.Nested(commercial_mode))
+physical_mode["commercial_modes"] = NonNullList(fields.Nested(physical_mode))
 
 poi_type = deepcopy(generic_type)
 poi = deepcopy(generic_type)

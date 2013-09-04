@@ -4,21 +4,21 @@ from instance_manager import NavitiaManager
 from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination,\
-                   journey_pattern_point
+                   journey_pattern_point, NonNullList
 from collections import OrderedDict
 from ResourceUri import ResourceUri
 
 collections = OrderedDict([
     ("pagination", fields.Nested(pagination)),
-    ("stop_points", fields.List(fields.Nested(stop_point))),
-    ("stop_areas", fields.List(fields.Nested(stop_area))),
-    ("routes", fields.List(fields.Nested(route))),
-    ("lines", fields.List(fields.Nested(line))),
-    ("physical_modes", fields.List(fields.Nested(physical_mode))),
-    ("commercial_modes", fields.List(fields.Nested(commercial_mode))),
-    ("companies", fields.List(fields.Nested(company))),
-    ("networks", fields.List(fields.Nested(network))),
-    ("journey_pattern_points", fields.List(fields.Nested(journey_pattern_point))),
+    ("stop_points", NonNullList(fields.Nested(stop_point))),
+    ("stop_areas", NonNullList(fields.Nested(stop_area))),
+    ("routes", NonNullList(fields.Nested(route))),
+    ("lines", NonNullList(fields.Nested(line))),
+    ("physical_modes", NonNullList(fields.Nested(physical_mode))),
+    ("commercial_modes", NonNullList(fields.Nested(commercial_mode))),
+    ("companies", NonNullList(fields.Nested(company))),
+    ("networks", NonNullList(fields.Nested(network))),
+    ("journey_pattern_points", NonNullList(fields.Nested(journey_pattern_point))),
 ])
 
 class Uri(ResourceUri):
@@ -30,7 +30,7 @@ class Uri(ResourceUri):
         self.parser.add_argument("count", type=int, default=25)
         self.parser.add_argument("depth", type=int, default=1)
 
-    @marshal_with(collections)
+    @marshal_with(collections, allow_null=False)
     def get(self, collection=None, region=None, lon=None, lat=None,
             uri=None, id=None):
         self.region = NavitiaManager().get_region(region, lon, lat)
