@@ -224,7 +224,7 @@ class Script:
         req.ptref.count = request.arguments["count"]
 
         resp = NavitiaManager().send_and_receive(req, region)
-        self.__pagination(request, ressource_name, resp) 
+        self.__pagination(request, ressource_name, resp)
         return resp
 
     def stop_areas(self, request, region):

@@ -9,7 +9,7 @@
 #include <boost/serialization/bitset.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/map.hpp>
-
+#include <boost/serialization/shared_ptr.hpp>
 
 #include <atomic>
 #include <map>
@@ -32,6 +32,15 @@ enum Jours {
     Fer = 0x80
 };
 
+struct LocalizedMessage{
+    std::string title;
+    std::string body;
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int){
+        ar & title & body;
+    }
+};
+
 struct Message{
     std::string uri;
 
@@ -45,10 +54,9 @@ struct Message{
     boost::posix_time::time_duration application_daily_start_hour;
     boost::posix_time::time_duration application_daily_end_hour;
 
-    std::bitset<7> active_days;
+    std::bitset<8> active_days;
 
-    std::string message;
-    std::string title;
+    std::map<std::string, LocalizedMessage> localized_messages;
 
     Message(): object_type(Type_e::ValidityPattern),
         publication_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)),
@@ -57,7 +65,7 @@ struct Message{
     template<class Archive> void serialize(Archive & ar, const unsigned int){
         ar & uri & object_type & object_uri & publication_period
             & application_period & application_daily_start_hour
-            & application_daily_end_hour & active_days & message & title;
+            & application_daily_end_hour & active_days & localized_messages;
     }
 
     bool is_valid(const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_time)const;
@@ -77,8 +85,8 @@ struct Message{
 };
 
 struct MessageHolder{
-    // object_external_code => vector<message>
-    std::map<std::string, std::vector<Message>> messages;
+    // external_code => message
+    std::map<std::string, boost::shared_ptr<Message>> messages;
 
 
     MessageHolder(){}
@@ -89,8 +97,6 @@ struct MessageHolder{
 
     MessageHolder& operator=(const navitia::type::MessageHolder&&);
 
-    std::vector<Message> find_messages(const std::string& uri, const boost::posix_time::ptime& now,
-        const boost::posix_time::time_period& action_time) const;
 };
 
 }}//namespace

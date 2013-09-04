@@ -60,8 +60,8 @@ public:
       * retourne une liste d'indexes pointant vers target
       */
     std::vector<idx_t> get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const ;
-    
-    
+
+
     /// Fixe les villes des voiries du filaire
     // les admins des objets
 //    void set_admins();

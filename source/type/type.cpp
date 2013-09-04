@@ -17,6 +17,20 @@ std::string VehicleJourney::get_direction() const {
     return to_return;
 }
 
+std::vector<boost::shared_ptr<Message>> HasMessages::get_applicable_messages(
+        const boost::posix_time::ptime& current_time,
+        const boost::posix_time::time_period& action_period) const {
+    std::vector<boost::shared_ptr<Message>> result;
+    for(auto message : this->messages){
+        if(message->is_valid(current_time, action_period)){
+            result.push_back(message);
+        }
+    }
+    return result;
+
+}
+
+
 bool ValidityPattern::is_valid(int duration) const {
     if(duration < 0){
 

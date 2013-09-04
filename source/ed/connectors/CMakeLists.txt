@@ -1,9 +1,9 @@
 SET(SOURCE_LIB
-    adjustit_connector.cpp
     gtfs_parser.cpp
     osm2nav.cpp
     osm_tags_reader.cpp
     poi_parser.cpp
+    messages_connector.cpp
 )
 
 FIND_PACKAGE(Qt4 REQUIRED QtCore QtSql)

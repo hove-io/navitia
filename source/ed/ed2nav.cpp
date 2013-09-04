@@ -10,7 +10,6 @@
 #include "utils/exception.h"
 #include "ed_reader.h"
 #include "type/data.h"
-#include "ed/connectors/adjustit_connector.h"
 
 
 namespace po = boost::program_options;
@@ -26,10 +25,7 @@ int main(int argc, char * argv[])
         ("version,v", "Affiche la version")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
         ("output,o", po::value<std::string>(&output)->default_value("data.nav.lz4"), "Fichier de sortie")
-        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia")
-        ("at-connection-string", po::value<std::string>(&at_connection_string), "parametres de connection à la base de données : DRIVER=FreeTDS;SERVER=;UID=;PWD=;DATABASE=;TDS_Version=8.0;Port=1433;ClientCharset=UTF-8")
-        ("media-lang", po::value<std::string>(&media_lang)->default_value("FR"), "langue du media à charger")
-        ("media-media", po::value<std::string>(&media_media)->default_value("INTERNET"), "media à charger");
+        ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
 
 
     po::variables_map vm;
@@ -104,16 +100,6 @@ int main(int argc, char * argv[])
     */
     autocomplete = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
-    if(!at_connection_string.empty()){
-        ed::connectors::AtLoader::Config config;
-        config.connect_string = at_connection_string;
-        config.media_lang = media_lang;
-        config.media_media = media_media;
-
-        ed::connectors::AtLoader loader;
-        data.pt_data.message_holder.messages = loader.load(config, now);
-
-    }
 
     std::cout << "Debut sauvegarde ..." << std::endl;
 

@@ -16,6 +16,13 @@ BEGIN
     ELSE
         RAISE NOTICE 'schema "georef" already exists, skipping';
     END CASE;
+
+    CASE WHEN (select count(*) = 0 from pg_namespace where nspname = 'realtime')
+    THEN
+        CREATE SCHEMA realtime;
+    ELSE
+        RAISE NOTICE 'schema "realtime" already exists, skipping';
+    END CASE;
 END$$;
 
 
@@ -229,7 +236,7 @@ CREATE TABLE IF NOT EXISTS navitia.journey_pattern (
 
 CREATE TABLE IF NOT EXISTS navitia.vehicle_journey (
     id BIGINT PRIMARY KEY,
---    properties_id BIGINT REFERENCES navitia.properties,    
+--    properties_id BIGINT REFERENCES navitia.properties,
     adapted_validity_pattern_id BIGINT NOT NULL REFERENCES navitia.validity_pattern,
     validity_pattern_id BIGINT REFERENCES navitia.validity_pattern,
     company_id BIGINT NOT NULL REFERENCES navitia.company,
@@ -380,3 +387,31 @@ CREATE UNLOGGED TABLE IF NOT EXISTS georef.fusion_ways
 );
 
 
+create table if NOT EXISTS navitia.object_type(
+    id int primary key,
+    name text NOT NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS realtime.message(
+    id BIGSERIAL primary key,
+    uri text NOT NULL,
+    start_publication_date timestamptz NOT NULL,
+    end_publication_date timestamptz NOT NULL,
+    start_application_date timestamptz NOT NULL,
+    end_application_date timestamptz NOT NULL,
+    start_application_daily_hour timetz NOT NULL,
+    end_application_daily_hour timetz NOT NULL,
+    active_days bit(8) NOT NULL,
+    object_uri text NOT NULL,
+    object_type_id int NOT NULL REFERENCES navitia.object_type
+);
+
+
+CREATE TABLE IF NOT EXISTS realtime.localized_message(
+    message_id BIGINT NOT NULL REFERENCES realtime.message,
+    language text NOT NULL,
+    body text NOT NULL,
+    title text,
+    CONSTRAINT localized_message_pk PRIMARY KEY (message_id, language)
+);

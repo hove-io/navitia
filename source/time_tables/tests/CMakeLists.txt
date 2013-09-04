@@ -6,6 +6,6 @@ ADD_TEST(get_stop_times ${EXECUTABLE_OUTPUT_PATH}/get_stop_times --report_level=
 
 
 add_executable(thermometer thermometer.cpp)
-target_link_libraries(thermometer time_tables ptreferential ed data routing types utils pb_lib georef ${Boost_LIBRARIES} log4cplus)
+target_link_libraries(thermometer time_tables ptreferential ed data routing utils pb_lib georef ${Boost_LIBRARIES} log4cplus)
 ADD_TEST(thermometer ${EXECUTABLE_OUTPUT_PATH}/thermometer --report_level=no)
 

@@ -3,12 +3,6 @@
 #include <log4cplus/logger.h>
 
 #include <boost/format.hpp>
-#include <fstream>
-#include <boost/iostreams/filtering_streambuf.hpp>
-
-#include "third_party/eos_portable_archive/portable_iarchive.hpp"
-#include "third_party/eos_portable_archive/portable_oarchive.hpp"
-#include "lz4_filter/filter.h"
 
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
@@ -21,22 +15,7 @@ MessageHolder& MessageHolder::operator=(const navitia::type::MessageHolder&& oth
     return *this;
 }
 
-std::vector<Message> MessageHolder::find_messages(const std::string& uri, const boost::posix_time::ptime& now,
-        const boost::posix_time::time_period& action_period) const{
-    std::vector<Message> result;
-    auto it = messages.find(uri);
-    if(it != messages.end()){
-        for(auto m : it->second){
-            if(m.is_valid(now, action_period)){
-                result.push_back(m);
-            }
-        }
-    }
-    return result;
 
-}
-
-//TODO action_time devrait etre une time_duration
 bool Message::is_valid(const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period) const{
     if(now.is_not_a_date_time() && action_period.is_null()){
         return false;

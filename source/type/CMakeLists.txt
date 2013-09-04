@@ -15,9 +15,7 @@ add_custom_command (TARGET pb_lib
     COMMAND protoc ARGS --python_out=${CMAKE_SOURCE_DIR}/pyed/pyed task.proto
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/type)
 
-add_library(types type.cpp
-    message.cpp datetime.cpp
-)
+add_library(types type.cpp message.cpp datetime.cpp)
 
 SET(DATA_SRC
     data.cpp
