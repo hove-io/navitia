@@ -218,8 +218,8 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departur
     if(b_dest.best_now_rpid == type::invalid_idx) {
         return result;
     }
-    //auto tmp = makePathes(calc_dest, bound, walking_speed, accessibilite_params, *this, clockwise);
-    //result.insert(result.end(), tmp.begin(), tmp.end());
+    auto tmp = makePathes(calc_dest, bound, walking_speed, accessibilite_params, *this, clockwise);
+    result.insert(result.end(), tmp.begin(), tmp.end());
     //Second passe : permet d’optimiser les temps de correspondance
     departures = getDepartures(calc_dep, calc_dest, !clockwise, walking_speed, labels, boardings, boarding_types, accessibilite_params/*required_properties*/, data);
 
