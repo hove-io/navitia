@@ -58,7 +58,7 @@ def on_universal_places_nearby(request, format):
         return on_api(request, region, "places_nearby", format)
     else:
         return generate_error("Unable to deduce the region from the uri. Is it a valid coordinate?", status=404)
-   
+
 def on_api(request, region, api, format):
     arguments = None
     response = None

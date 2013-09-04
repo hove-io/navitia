@@ -88,21 +88,37 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,  cons
                 item.type = public_transport;
 
                 workingDate = l;
-                workingDate.update((clockwise?current_st->departure_time:current_st->arrival_time), clockwise);
+                if(current_st->is_frequency())
+                    workingDate.update(clockwise?current_st->f_departure_time(gap_frep):current_st->f_arrival_time(gap_frep), clockwise);
+                else
+                    workingDate.update((clockwise?current_st->departure_time:current_st->arrival_time), clockwise);
+
                 item.vj_idx = current_st->vehicle_journey->idx;
                 while(boarding_jpp != current_jpp_idx) {
 
                     //On stocke le sp, et les temps
                     item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_jpp_idx]->stop_point->idx);
                     if(clockwise) {
-                        workingDate.update(current_st->departure_time+gap_frep, !clockwise);
+                        if(current_st->is_frequency())
+                            workingDate.update(current_st->f_departure_time(gap_frep), !clockwise);
+                        else
+                            workingDate.update(current_st->departure_time, !clockwise);
                         item.departures.push_back(workingDate);
-                        workingDate.update(current_st->arrival_time+gap_frep, !clockwise);
+                        if(current_st->is_frequency())
+                            workingDate.update(current_st->f_arrival_time(gap_frep), !clockwise);
+                        else
+                            workingDate.update(current_st->arrival_time, !clockwise);
                         item.arrivals.push_back(workingDate);
                     } else {
-                        workingDate.update(current_st->arrival_time+gap_frep, !clockwise);
+                        if(current_st->is_frequency())
+                            workingDate.update(current_st->f_arrival_time(gap_frep), !clockwise);
+                        else
+                            workingDate.update(current_st->arrival_time, !clockwise);
                         item.arrivals.push_back(workingDate);
-                        workingDate.update(current_st->departure_time+gap_frep, !clockwise);
+                        if(current_st->is_frequency())
+                            workingDate.update(current_st->f_departure_time(gap_frep), !clockwise);
+                        else
+                            workingDate.update(current_st->departure_time, !clockwise);
                         item.departures.push_back(workingDate);
                     }
 
@@ -125,16 +141,28 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,  cons
                 item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_jpp_idx]->stop_point->idx);
                 item.orders.push_back(current_st->journey_pattern_point->order);
                 if(clockwise) {
-                    workingDate.update(current_st->departure_time+gap_frep, !clockwise);
+                    if(current_st->is_frequency())
+                        workingDate.update(current_st->f_departure_time(gap_frep), !clockwise);
+                    else
+                        workingDate.update(current_st->departure_time, !clockwise);
                     item.departures.push_back(workingDate);
-                    workingDate.update(current_st->arrival_time+gap_frep,  !clockwise);
+                    if(current_st->is_frequency())
+                        workingDate.update(current_st->f_arrival_time(gap_frep), !clockwise);
+                    else
+                        workingDate.update(current_st->arrival_time, !clockwise);
                     item.arrivals.push_back(workingDate);
                     item.arrival = item.arrivals.front();
                     item.departure = item.departures.back();
                 } else {
-                    workingDate.update(current_st->arrival_time+gap_frep, !clockwise);
+                    if(current_st->is_frequency())
+                        workingDate.update(current_st->f_arrival_time(gap_frep), !clockwise);
+                    else
+                        workingDate.update(current_st->arrival_time, !clockwise);
                     item.arrivals.push_back(workingDate);
-                    workingDate.update(current_st->departure_time+gap_frep, !clockwise);
+                    if(current_st->is_frequency())
+                        workingDate.update(current_st->f_departure_time(gap_frep), !clockwise);
+                    else
+                        workingDate.update(current_st->departure_time, !clockwise);
                     item.departures.push_back(workingDate);
                     item.arrival = item.arrivals.back();
                     item.departure = item.departures.front();

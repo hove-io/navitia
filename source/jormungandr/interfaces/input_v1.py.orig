@@ -47,7 +47,6 @@ def arrivals(request, uri1):
 
 
 def uri(request, uri=None):
-    print "uri"
     u = None
     try:
         u = Uri(uri)
@@ -64,7 +63,7 @@ def uri(request, uri=None):
         return generate_error("Type : " + resource_type + " not consultable yet", 501)
     req = {}
     if 'start_page' in request.args:
-        req['start_page'] = [int(request.args.get('start_page'))]
+        req['startPage'] = [int(request.args.get('start_page'))]
 
     filters = []
     if uid:
@@ -104,6 +103,30 @@ def route_schedules(request, uri1=None):
     req = {"filter" : [], "from_datetime": []}
     region = ""
     if(uri1):
+<<<<<<< HEAD
+	    try:
+		u = Uri(uri1)
+	    except InvalidUriException, e:
+		return generate_error("Invalid uri", e.message)
+
+	    resource_type, uid = u.objects[-1]
+	    region = u.region()
+	    if not uid:
+		return generate_error("You cannot ask a route schedule with this object, not implemented", status=501)
+	    req["filter"] =[collections_to_resource_type[resource_type]+".uri="+uid]
+    elif(request.args.get("filter")):
+	filter_ = request.args.get("filter", str)
+	if filter_.count("=") == 0 :
+		return generate_error("Invalid filter")
+	region = filter_.split("=")[1].split("/")[0]
+	filters = []
+	for f in filter_.split("="):
+	    filters.append(f.replace(f, f.split("/")[-1]))
+	tmp = "=".join(filters)
+	req["filter"] = [tmp]
+    else:
+    	return generate_error("Invalid request")
+=======
         try:
             u = Uri(uri1)
         except InvalidUriException, e:
@@ -126,6 +149,7 @@ def route_schedules(request, uri1=None):
         req["filter"] = [tmp]
     else:
         return generate_error("Invalid request")
+>>>>>>> suppressiontypeByCaption
     if not request.args.get("from_datetime"):
         req["from_datetime"] = [datetime.datetime.now().strftime("%Y%m%dT1337")]
     else:
@@ -139,12 +163,21 @@ def route_schedules(request, uri1=None):
     arguments = validate_and_fill_arguments("route_schedules", req)
     if arguments.valid:
         response = NavitiaManager().dispatch(arguments, region, "route_schedules")
+<<<<<<< HEAD
+        return output_v1.route_schedules(response, u, region, request.accept_mimetypes, request.args.get("callback"))
+=======
         return output_v1.route_schedules(response, region,
                                          request.accept_mimetypes,
                                          request.args.get("callback"))
+>>>>>>> suppressiontypeByCaption
     else:
         return generate_error("Invalid arguments : " + arguments.details)
 
+def stop_schedules(request, uri1, uri2=None):
+    return_ = '{"apiname":"schedules", uri1:"'+uri1+'"'
+    if uri2:
+        return_ += ', uri2:"'+uri2+'"'
+    return Response(return_ +'}', mimetype='text/plain;charset=utf-8')
 
 def do_entry_point(uri):
     if uri.is_region:
@@ -247,6 +280,3 @@ def nearby(request, uri1=None, uri2=None):
 
 def index(request):
     return output_v1.index(request, format=request.accept_mimetypes)
-
-def stop_schedules(request, uri1) :
-    return output_v1.stop_schedules(format=request.accept_mimetypes, callback=request.args.get("callback"))
