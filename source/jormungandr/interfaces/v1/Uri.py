@@ -10,15 +10,15 @@ from ResourceUri import ResourceUri
 
 collections = OrderedDict([
     ("pagination", fields.Nested(pagination)),
-    ("stop_points", NonNullList(fields.Nested(stop_point))),
-    ("stop_areas", NonNullList(fields.Nested(stop_area))),
-    ("routes", NonNullList(fields.Nested(route))),
-    ("lines", NonNullList(fields.Nested(line))),
-    ("physical_modes", NonNullList(fields.Nested(physical_mode))),
-    ("commercial_modes", NonNullList(fields.Nested(commercial_mode))),
-    ("companies", NonNullList(fields.Nested(company))),
-    ("networks", NonNullList(fields.Nested(network))),
-    ("journey_pattern_points", NonNullList(fields.Nested(journey_pattern_point))),
+    ("stop_points", NonNullList(fields.Nested(stop_point, display_null=False))),
+    ("stop_areas", NonNullList(fields.Nested(stop_area, display_null=False))),
+    ("routes", NonNullList(fields.Nested(route, display_null=False))),
+    ("lines", NonNullList(fields.Nested(line, display_null=False))),
+    ("physical_modes", NonNullList(fields.Nested(physical_mode, display_null=False))),
+    ("commercial_modes", NonNullList(fields.Nested(commercial_mode, display_null=False))),
+    ("companies", NonNullList(fields.Nested(company, display_null=False))),
+    ("networks", NonNullList(fields.Nested(network, display_null=False))),
+    ("journey_pattern_points", NonNullList(fields.Nested(journey_pattern_point, display_null=False))),
 ])
 
 class Uri(ResourceUri):
@@ -30,7 +30,7 @@ class Uri(ResourceUri):
         self.parser.add_argument("count", type=int, default=25)
         self.parser.add_argument("depth", type=int, default=1)
 
-    @marshal_with(collections, allow_null=False)
+    @marshal_with(collections, display_null=False)
     def get(self, collection=None, region=None, lon=None, lat=None,
             uri=None, id=None):
         self.region = NavitiaManager().get_region(region, lon, lat)

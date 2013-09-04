@@ -4,7 +4,8 @@ from instance_manager import NavitiaManager
 from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, PbField,\
-                   stop_date_time, enum_type
+                   stop_date_time, enum_type, NonNullList, NonNullNested,\
+                   additional_informations
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
 from ResourceUri import ResourceUri
@@ -40,25 +41,18 @@ class Schedules(ResourceUri):
         response = NavitiaManager().dispatch(args, self.region, self.endpoint)
         return response, 200
 
-class additional_informations(fields.Raw):
-    def output(self, key, obj):
-        properties = getattr(obj, "has_properties")
-        enum = properties.DESCRIPTOR.enum_types_by_name["AdditionalInformation"]
-        return [str.lower(enum.values_by_number[v].name) for v
-                in properties.additional_informations]
-
-note_link = fields.Nested({
+note_link = NonNullNested({
     "id" : fields.String(attribute="uri"),
     "type" : "notes"
 })
 date_time = {
     "date_time" : fields.String(attribute="stop_time"),
     "additional_informations" : additional_informations(),
-    "links": fields.List(note_link)
+    "links": NonNullList(note_link)
 }
 row = {
     "stop_point" : PbField(stop_point),
-    "datetimes" : fields.List(fields.Nested(date_time), attribute="stop_times")
+    "datetimes" : NonNullList(fields.Nested(date_time), attribute="stop_times")
 }
 header = {
     "headsign" : fields.String(attribute="vehiclejourney.name"),
@@ -69,8 +63,8 @@ header = {
     "bike_accessible" : fields.Boolean(default=True),
 }
 route_schedule_fields = {
-    "rows" : fields.List(fields.Nested(row),attribute="table.rows"),
-    "headers" : fields.List(fields.Nested(header), attribute="table.headers"),
+    "rows" : NonNullList(NonNullNested(row),attribute="table.rows"),
+    "headers" : NonNullList(NonNullNested(header), attribute="table.headers"),
     "route" : PbField(route),
     "display_informations" : PbField({
        "network" : fields.String(attribute="line.network.name"),
@@ -82,8 +76,8 @@ route_schedule_fields = {
 }
 
 route_schedules = {
-    "route_schedules" : fields.List(fields.Nested(route_schedule_fields)),
-    "pagination" : fields.Nested(pagination),
+    "route_schedules" : NonNullList(NonNullNested(route_schedule_fields)),
+    "pagination" : NonNullNested(pagination),
     }
 
 class RouteSchedules(Schedules):
@@ -98,11 +92,11 @@ class RouteSchedules(Schedules):
 stop_schedule = {
     "stop_point" : PbField(stop_point),
     "route" : PbField(route),
-    "stop_date_times" : fields.List(fields.Nested(date_time))
+    "stop_date_times" : NonNullList(NonNullNested(date_time))
 }
 stop_schedules = {
-    "stop_schedules" : fields.List(fields.Nested(stop_schedule)),
-    "pagination" : fields.Nested(pagination),
+    "stop_schedules" : NonNullList(NonNullNested(stop_schedule)),
+    "pagination" : NonNullNested(pagination),
 }
 
 class StopSchedules(Schedules):
@@ -121,11 +115,11 @@ passage = {
 }
 
 departures = {
-    "departures" : fields.List(fields.Nested(passage), attribute="next_departures")
+    "departures" : NonNullList(NonNullNested(passage), attribute="next_departures")
 }
 
 arrivals = {
-    "arrivals" : fields.List(fields.Nested(passage), attribute="next_arrivals")
+    "arrivals" : NonNullList(NonNullNested(passage), attribute="next_arrivals")
 }
 
 class NextDepartures(Schedules):
