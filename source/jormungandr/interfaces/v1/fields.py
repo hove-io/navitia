@@ -5,6 +5,7 @@ from collections import OrderedDict
 class PbField(fields.Nested):
     def __init__(self, nested, allow_null=True, **kwargs):
         super(PbField, self).__init__(nested, **kwargs)
+        self.display_null = False
 
     def output(self, key, obj):
         if self.attribute:
@@ -14,6 +15,13 @@ class PbField(fields.Nested):
                 return super(PbField, self).output(key, obj)
         except ValueError:
             return None
+
+
+class NonNullNested(fields.Nested):
+    def __init__(self, *args, **kwargs):
+        super(NonNullNested, self).__init__(*args, **kwargs)
+        self.display_null = False
+
 
 class enum_type(fields.Raw):
     def output(self, key, obj):
@@ -40,6 +48,12 @@ class NonNullList(fields.List):
         super(NonNullList, self).__init__(*args, **kwargs)
         self.display_empty = False
 
+class additional_informations(fields.Raw):
+    def output(self, key, obj):
+        properties = getattr(obj, "has_properties")
+        enum = properties.DESCRIPTOR.enum_types_by_name["AdditionalInformation"]
+        return [str.lower(enum.values_by_number[v].name) for v
+                in properties.additional_informations]
 
 coord = {
     "lon" : fields.Float(),
@@ -49,7 +63,7 @@ coord = {
 generic_type = {
     "name" : fields.String(),
     "id" : fields.String(attribute="uri"),
-    "coord" : fields.Nested(coord, True)
+    "coord" : NonNullNested(coord, True)
 }
 
 admin = deepcopy(generic_type)
@@ -57,7 +71,7 @@ admin["level"] = fields.Integer
 admin["zip_code"] = fields.String
 
 generic_type_admin = deepcopy(generic_type)
-generic_type_admin["administrative_regions"] = NonNullList(fields.Nested(admin))
+generic_type_admin["administrative_regions"] = NonNullList(NonNullNested(admin))
 
 stop_point = deepcopy(generic_type_admin)
 stop_area = deepcopy(generic_type_admin)
@@ -73,8 +87,8 @@ network["lines"] = fields.List(fields.Nested(line))
 
 commercial_mode = deepcopy(generic_type)
 physical_mode = deepcopy(generic_type)
-commercial_mode["physical_modes"] = NonNullList(fields.Nested(commercial_mode))
-physical_mode["commercial_modes"] = NonNullList(fields.Nested(physical_mode))
+commercial_mode["physical_modes"] = NonNullList(NonNullNested(commercial_mode))
+physical_mode["commercial_modes"] = NonNullList(NonNullNested(physical_mode))
 
 poi_type = deepcopy(generic_type)
 poi = deepcopy(generic_type)
@@ -93,8 +107,7 @@ stop_date_time = {
     "departure_date_time" : fields.String(),
     "arrival_date_time" : fields.String(),
     "stop_point" : PbField(stop_point),
-    "additional_informations" : fields.List(fields.Integer(),
-                                            attribute="has_properties.additional_informations")
+    "additional_informations" : additional_informations
 }
 
 
