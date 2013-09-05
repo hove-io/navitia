@@ -230,7 +230,7 @@ Type_e Data::get_type_of_id(const std::string & id) {
     if(geo_ref.poi_map.find(id) != geo_ref.poi_map.end())
         return Type_e::POI;
     if(geo_ref.way_map.find(id) != geo_ref.way_map.end())
-        return Type_e::Way;
+        return Type_e::Address;
     if(geo_ref.admin_map.find(id) != geo_ref.admin_map.end())
         return Type_e::Admin;
     return Type_e::Unknown;

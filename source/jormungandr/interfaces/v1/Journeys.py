@@ -243,8 +243,11 @@ class Journeys(ResourceUri):
         return response, 200
 
     def transform_id(self, id):
-        splitted = id.split(";")
-        if len(splitted) == 2:
+        splitted_coord = id.split(";")
+        splitted_address = id.split(":")
+        if len(splitted_coord) == 2:
             return "coord:"+id.replace(";", ":")
-        else :
-            return id
+        if len(splitted_address) >=3 and splitted_address[0] == 'address':
+            del splitted_address[1]
+            return ':'.join(splitted_address)
+        return id

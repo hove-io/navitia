@@ -87,16 +87,18 @@ class add_address_region(object):
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
             def add_region(objects):
-                if isinstance(objects, list):
+                if isinstance(objects, list) or isinstance(objects, tuple):
                     for item in objects:
                         add_region(item)
                 elif isinstance(objects, dict) or\
                      isinstance(objects, OrderedDict):
-                         for k, v in objects.iteritems():
-                             if k == 'address':
-                                 tmp = "address:"+self.resource.region+':'
-                                 objects[k]['id'] = v['id'].replace("address:", tmp)
-                             else:
+                         if 'embedded_type' in objects.keys() and\
+                            objects['embedded_type'] == 'address':
+                            tmp = 'address:'+self.resource.region+':'
+                            objects['id'] = objects['id'].replace('address:', tmp)
+                            objects['address']['id'] = objects['id']
+                         else :
+                             for v in objects.items():
                                  add_region(v)
             if self.resource.region:
                 add_region(objects)
