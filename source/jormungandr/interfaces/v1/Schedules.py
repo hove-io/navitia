@@ -60,19 +60,21 @@ header = {
     "physical_mode" : fields.String(attribute="vehiclejourney.physical_mode.name"),
     "description" : fields.String(attribute="header.vehiclejourney.odt_message"),
     "wheelchair_accessible" : fields.Boolean(default=True),
-    "bike_accessible" : fields.Boolean(default=True),
+    "bike_accessible" : fields.Boolean(default=True)
+}
+table_field = {
+    "rows" : NonNullList(NonNullNested(row)),
+    "headers" : NonNullList(NonNullNested(header))
 }
 route_schedule_fields = {
-    "rows" : NonNullList(NonNullNested(row),attribute="table.rows"),
-    "headers" : NonNullList(NonNullNested(header), attribute="table.headers"),
-    "route" : PbField(route),
+    "table" : PbField(table_field),
     "display_informations" : PbField({
        "network" : fields.String(attribute="line.network.name"),
        "code" : fields.String(attribute="line.code"),
        "headsign" : fields.String(attribute="line.headsign"),
        "color" : fields.String(attribute="line.color"),
        "commercial_mode" : fields.String(attribute="line.commercial_mode.name")
-        }, attribute="route"),
+        }),
 }
 
 route_schedules = {
