@@ -65,8 +65,12 @@ struct parsing_error : public ptref_error{
 };
 
 /// Exécute une requête sur les données Data : retourne les idx des objets demandés
-std::vector<type::idx_t> make_query(type::Type_e requested_type, std::string request, const type::Data &data);
+std::vector<type::idx_t> make_query(type::Type_e requested_type,
+                                    std::string request, const type::Data &data);
 
+/// Extrait les données à paginer
+std::vector<type::idx_t> paginate(std::vector<type::idx_t> &indexes,
+                                  int count, int start_page);
 
 /// Trouve le chemin d'un type de données à un autre
 /// Par exemple StopArea → StopPoint → JourneyPatternPoint
