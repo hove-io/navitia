@@ -5,7 +5,7 @@ from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, PbField,\
                    stop_date_time, enum_type, NonNullList, NonNullNested,\
-                   additional_informations
+                   additional_informations, equipments
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
 from ResourceUri import ResourceUri
@@ -45,6 +45,7 @@ note_link = NonNullNested({
     "id" : fields.String(attribute="uri"),
     "type" : "notes"
 })
+
 date_time = {
     "date_time" : fields.String(attribute="stop_time"),
     "additional_informations" : additional_informations(),
@@ -54,13 +55,16 @@ row = {
     "stop_point" : PbField(stop_point),
     "datetimes" : NonNullList(fields.Nested(date_time), attribute="stop_times")
 }
+
 header = {
+    "id" : fields.String(attribute="vehiclejourney.uri"),
     "headsign" : fields.String(attribute="vehiclejourney.name"),
     "direction" : fields.String(),
     "physical_mode" : fields.String(attribute="vehiclejourney.physical_mode.name"),
     "description" : fields.String(attribute="vehiclejourney.odt_message"),
     "wheelchair_accessible" : fields.Boolean(default=True),
-    "bike_accessible" : fields.Boolean(default=True)
+    "bike_accessible" : fields.Boolean(default=True),
+    "equipments" : equipments()
 }
 table_field = {
     "rows" : NonNullList(NonNullNested(row)),
