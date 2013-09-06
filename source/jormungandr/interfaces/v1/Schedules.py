@@ -58,7 +58,7 @@ header = {
     "headsign" : fields.String(attribute="vehiclejourney.name"),
     "direction" : fields.String(),
     "physical_mode" : fields.String(attribute="vehiclejourney.physical_mode.name"),
-    "description" : fields.String(attribute="header.vehiclejourney.odt_message"),
+    "description" : fields.String(attribute="vehiclejourney.odt_message"),
     "wheelchair_accessible" : fields.Boolean(default=True),
     "bike_accessible" : fields.Boolean(default=True)
 }
@@ -71,10 +71,10 @@ route_schedule_fields = {
     "display_informations" : PbField({
        "network" : fields.String(attribute="line.network.name"),
        "code" : fields.String(attribute="line.code"),
-       "headsign" : fields.String(attribute="line.headsign"),
+       "headsign" : fields.String(attribute="name"),
        "color" : fields.String(attribute="line.color"),
        "commercial_mode" : fields.String(attribute="line.commercial_mode.name")
-        }),
+        }, attribute="route"),
 }
 
 route_schedules = {
