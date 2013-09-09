@@ -67,7 +67,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                     pb_section->set_begin_date_time(iso_string(d, departure_time.date(), departure_time.hour()));
                 }
             }
-            
+
             const type::VehicleJourney* vj = nullptr;
             // La partie TC et correspondances
             for(PathItem & item : path.items){
@@ -79,12 +79,11 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                 pbnavitia::Section * pb_section = pb_journey->add_sections();
                 if(item.type == public_transport){
                     pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
-                    
                     boost::posix_time::ptime departure_ptime , arrival_ptime;
                     for(size_t i=0;i<item.stop_points.size();++i){
                         pbnavitia::StopDateTime * stop_time = pb_section->add_stop_date_times();
                         auto arr_time = item.arrivals[i];
-                        stop_time->set_arrival_date_time(iso_string(d, arr_time.date(), arr_time.hour()));                        
+                        stop_time->set_arrival_date_time(iso_string(d, arr_time.date(), arr_time.hour()));
                         auto dep_time = item.departures[i];
                         stop_time->set_departure_date_time(iso_string(d, dep_time.date(), dep_time.hour()));
                         boost::posix_time::time_period action_period(to_posix_time(dep_time, d), to_posix_time(arr_time, d));
@@ -106,7 +105,6 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                         fill_section(pb_section, item.vj_idx, d, now, action_period);
                     }
                 }
-
                 else {
                     pb_section->set_type(pbnavitia::TRANSFER);
                     pb_section->set_duration(item.departure - item.arrival);
