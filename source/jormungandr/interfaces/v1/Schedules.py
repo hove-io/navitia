@@ -5,7 +5,7 @@ from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, PbField,\
                    stop_date_time, enum_type, NonNullList, NonNullNested,\
-                   additional_informations, equipments
+                   additional_informations, equipments, notes,notes_links
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
 from ResourceUri import ResourceUri
@@ -42,15 +42,10 @@ class Schedules(ResourceUri):
         response = NavitiaManager().dispatch(args, self.region, self.endpoint)
         return response, 200
 
-note_link = NonNullNested({
-    "id" : fields.String(attribute="uri"),
-    "type" : "notes"
-})
-
 date_time = {
     "date_time" : fields.String(attribute="stop_time"),
     "additional_informations" : additional_informations(),
-    "links": NonNullList(note_link)
+    "links": notes_links
 }
 row = {
     "stop_point" : PbField(stop_point),
@@ -84,7 +79,7 @@ route_schedule_fields = {
 
 route_schedules = {
     "route_schedules" : NonNullList(NonNullNested(route_schedule_fields)),
-    "pagination" : NonNullNested(pagination),
+    "pagination" : NonNullNested(pagination)
     }
 
 class RouteSchedules(Schedules):

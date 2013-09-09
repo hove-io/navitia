@@ -55,6 +55,22 @@ class additional_informations(fields.Raw):
         return [str.lower(enum.values_by_number[v].name) for v
                 in properties.additional_informations]
 
+class notes(fields.Raw):
+    def output(self, key, obj):
+        properties = getattr(obj, "has_properties")
+        r = []
+        for note_ in properties.notes:
+            r.append({"id": note_.uri, "value": note_.note})
+        return r
+
+class notes_links(fields.Raw):
+    def output(self, key, obj):
+        properties = getattr(obj, "has_properties")
+        r = []
+        for note_ in properties.notes:
+            r.append({"id": note_.uri, "type": "notes"})
+        return r
+
 class equipments():
     def output(self, key, obj):
         vehiclejourney = getattr(obj, "vehiclejourney")
