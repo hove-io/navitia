@@ -35,9 +35,10 @@ class Schedules(ResourceUri):
                 self.region = NavitiaManager().key_of_id(filter_parts[1].strip())
         else:
             args["filter"] = self.get_filter(uri.split("/"))
+            self.region = NavitiaManager().get_region(region, lon, lat)
         if not args["from_datetime"]:
             args["from_datetime"] = datetime.now().strftime("%Y%m%dT1337")
-            self.region = NavitiaManager().get_region(region, lon, lat)
+
         response = NavitiaManager().dispatch(args, self.region, self.endpoint)
         return response, 200
 
