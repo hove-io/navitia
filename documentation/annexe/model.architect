@@ -92,10 +92,7 @@
     <column id="COL26" populated="true" UUID="9a10998c-ba4c-4420-96ed-40f23c9f436f" autoIncrement="true" autoIncrementSequenceName="journey_pattern_point_id_seq" defaultValue="" name="jppid" nullable="0" physicalName="jppid" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL27" populated="true" UUID="4daf0872-49bc-4da7-a817-968e1c455db0" autoInc
-
-
-ement="false" autoIncrementSequenceName="journey_pattern_point_id_seq_1" defaultValue="" name="journey_pattern_id" nullable="0" physicalName="journey_pattern_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL27" populated="true" UUID="4daf0872-49bc-4da7-a817-968e1c455db0" autoIncrement="false" autoIncrementSequenceName="journey_pattern_point_id_seq_1" defaultValue="" name="journey_pattern_id" nullable="0" physicalName="journey_pattern_id" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL28" populated="true" UUID="643907d1-11c5-4ab3-838a-3c7868845d4f" autoIncrement="false" autoIncrementSequenceName="stop_area_name_seq_2" defaultValue="" name="name" nullable="0" physicalName="name" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
@@ -188,9 +185,7 @@ ement="false" autoIncrementSequenceName="journey_pattern_point_id_seq_1" default
   <table id="TAB55" populated="true" UUID="0294999f-b2cf-4642-ad6f-e48a862d7646" name="line" objectType="TABLE" physicalName="line" >
    <remarks></remarks>
    <folder id="FOLTAB551" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL56" populated="true" UUID="713a
-
-7-3fbe-4f47-a37f-4bf7e2780276" autoIncrement="true" autoIncrementSequenceName="line_id_seq" defaultValue="" name="lid" nullable="0" physicalName="lid" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL56" populated="true" UUID="713a  7-3fbe-4f47-a37f-4bf7e2780276" autoIncrement="true" autoIncrementSequenceName="line_id_seq" defaultValue="" name="lid" nullable="0" physicalName="lid" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     <column id="COL57" populated="true" UUID="368bd6fa-a7c5-4690-ac23-c092dafe3baf" autoIncrement="false" autoIncrementSequenceName="stop_area_uri_seq_5" defaultValue="" name="uri" nullable="0" physicalName="uri" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
@@ -276,10 +271,7 @@ ement="false" autoIncrementSequenceName="journey_pattern_point_id_seq_1" default
      <remarks></remarks>
     </column>
     </folder>
-    <folder id="FOLTAB743" populated="true" name="Exported Keys" physicalName="Exported Keys" t
-
-
-pe="3">
+    <folder id="FOLTAB743" populated="true" name="Exported Keys" physicalName="Exported Keys" type="3">
     </folder>
     <folder id="FOLTAB742" populated="true" name="Imported Keys" physicalName="Imported Keys" type="2">
     </folder>
@@ -360,8 +352,7 @@ pe="3">
     <column id="COL104" populated="true" UUID="38745c90-65d2-4f74-9598-d74ec99e921e" autoIncrement="false" autoIncrementSequenceName="stop_time_start_time_seq" defaultValue="" name="start_time" nullable="1" physicalName="start_time" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
-    <column id="COL105" populated="true" UUID="51032a39-97a1-47d6-b23d-3e1b463ea552" autoIncrement="false" autoIncrementSequenceName="stop_time_end_time_seq" defaultValue="" name="end_time"
-llable="1" physicalName="end_time" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
+    <column id="COL105" populated="true" UUID="51032a39-97a1-47d6-b23d-3e1b463ea552" autoIncrement="false" autoIncrementSequenceName="stop_time_end_time_seq" defaultValue="" name="end_time" nullable="0" physicalName="end_time" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
     <column id="COL106" populated="true" UUID="aeaafd01-9341-4b51-9cdf-cb85bf7c1ef1" autoIncrement="false" autoIncrementSequenceName="stop_time_headway_sec_seq" defaultValue="" name="headway_sec" nullable="1" physicalName="headway_sec" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
@@ -451,10 +442,7 @@ llable="1" physicalName="end_time" precision="0" referenceCount="1" scale="0" so
     <column id="COL131" populated="true" UUID="d3804f88-f96c-4270-8dfc-2c7ead22e711" autoIncrement="false" autoIncrementSequenceName="journey_pattern_point_id_seq_9" defaultValue="" name="line_id" nullable="0" physicalName="line_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL132" populated="true" UUID="285b643d-87bf-41fa-9948-ac8b1ff6cb11" autoIncrement="false" autoIncrementSequenceName="journey_pattern_point_id_seq_10" defaultValue="" name="company_id" nullable="0" physicalName="company_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="
-
-
-serDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL132" populated="true" UUID="285b643d-87bf-41fa-9948-ac8b1ff6cb11" autoIncrement="false" autoIncrementSequenceName="journey_pattern_point_id_seq_10" defaultValue="" name="company_id" nullable="0" physicalName="company_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="   serDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -543,8 +531,7 @@ serDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb
     <column id="COL158" populated="true" UUID="0c3e89b0-9678-4141-85fe-f326bae07355" autoIncrement="false" autoIncrementSequenceName="journey_pattern_point_connection_length_seq" defaultValue="" name="length" nullable="0" physicalName="length" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
-    <column id="COL159" populated="true" UUID="
-d6358-0ef1-4893-ad74-86a72539c21a" autoIncrement="false" autoIncrementSequenceName="journey_pattern_point_connection_uri_seq" defaultValue="" name="uri" nullable="0" physicalName="uri" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
+    <column id="COL159" populated="true" UUID=" d6358-0ef1-4893-ad74-86a72539c21a" autoIncrement="false" autoIncrementSequenceName="journey_pattern_point_connection_uri_seq" defaultValue="" name="uri" nullable="0" physicalName="uri" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks></remarks>
     </column>
     </folder>
@@ -633,10 +620,7 @@ d6358-0ef1-4893-ad74-86a72539c21a" autoIncrement="false" autoIncrementSequenceNa
     <column id="COL186" populated="true" UUID="561d0fb5-57c3-4ddc-90f2-ebce3d2e7023" autoIncrement="false" autoIncrementSequenceName="admin_aid_seq_2" defaultValue="" name="admin_id" nullable="0" physicalName="admin_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL187" populated="true" UUID="2df803c7-1db5-4b70-b771-5e6754b98999" autoIncrement="false" autoIncrementSequenceName="stop_point
-
-
-id_seq_3" defaultValue="" name="stop_point_id" nullable="0" physicalName="stop_point_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
+    <column id="COL187" populated="true" UUID="2df803c7-1db5-4b70-b771-5e6754b98999" autoIncrement="false" autoIncrementSequenceName="stop_point   id_seq_3" defaultValue="" name="stop_point_id" nullable="0" physicalName="stop_point_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
     </folder>
@@ -735,8 +719,7 @@ id_seq_3" defaultValue="" name="stop_point_id" nullable="0" physicalName="stop_p
   </table>
   <table id="TAB216" populated="true" UUID="71e2452f-8f02-40f4-90b0-9afcead0cfef" name="alias" objectType="TABLE" physicalName="alias" >
    <remarks></remarks>
-   <folder 
-"FOLTAB2161" populated="true" name="Columns" physicalName="Columns" type="1">
+   <folder id="FOLTAB2161" populated="true" name="Columns" physicalName="Columns" type="1">
     <column id="COL217" populated="true" UUID="21c2bfe0-22a6-427c-a127-99f660d066ff" autoIncrement="true" autoIncrementSequenceName="alias_aid_seq" defaultValue="" name="aid" nullable="0" physicalName="aid" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
@@ -839,10 +822,7 @@ id_seq_3" defaultValue="" name="stop_point_id" nullable="0" physicalName="stop_p
      <index-column id="IDC242" populated="true" UUID="951e7fd7-7bbb-431f-aebf-6c23ffa44d2b" ascendingOrDescending="UNSPECIFIED" column-ref="COL239" name="id" physicalName="id" />
     </index>
    </folder>
-  </tab
-
-
-e>
+  </table>
   <table id="TAB243" populated="true" UUID="bc11a8d0-2994-415d-9aaa-2b1f53a78ed6" name="Parameters" objectType="TABLE" physicalName="Parameters" >
    <remarks></remarks>
    <folder id="FOLTAB2431" populated="true" name="Columns" physicalName="Columns" type="1">
@@ -945,8 +925,7 @@ e>
     </folder>
     <folder id="FOLTAB2614" populated="true" name="Indices" physicalName="Indices" type="4">
     <index id="IDX266" populated="true" UUID="7fb783d6-f73d-4446-b73d-7a8aab95317a" clustered="false" name="edge_pk" physicalName="edge_pk" primaryKeyIndex="true" unique="false" >
-     <index-column id="IDC267" populated="true" UUID="aa999ced-b6ad-415d-98aa-90f4c1689c2b" ascendingOr
-cending="UNSPECIFIED" column-ref="COL262" name="source_node_id" physicalName="source_node_id" />
+     <index-column id="IDC267" populated="true" UUID="aa999ced-b6ad-415d-98aa-90f4c1689c2b" ascendingOrDescending="UNSPECIFIED" column-ref="COL262" name="source_node_id" physicalName="source_node_id" />
      <index-column id="IDC268" populated="true" UUID="72cfae81-a81e-4855-a3c7-55c6ef0e483a" ascendingOrDescending="UNSPECIFIED" column-ref="COL263" name="target_node_id" physicalName="target_node_id" />
     </index>
    </folder>
@@ -1026,10 +1005,7 @@ cending="UNSPECIFIED" column-ref="COL262" name="source_node_id" physicalName="so
    <relationship id="REL298" populated="true" UUID="a5919689-7c39-40e2-843a-6b77a5a4a080" deferrability="7" deleteRule="3" fk-table-ref="TAB154" fkCardinality="7" identifying="true" name="journey_pattern_point_journey_pattern_point_connection_fk" physicalName="journey_pattern_point_journey_pattern_point_connection_fk" pk-table-ref="TAB25" pkCardinality="2" updateRule="3" >
     <column-mapping id="CMP299" populated="true" UUID="7d26db48-37a8-4e32-9276-c14afe485f60" fk-column-ref="COL155" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL26" />
    </relationship>
-   <relationship id="REL300" populated="true" UUID="da05d0b6-06b8-4a37-8958-0fe21efd3612" deferrability="7" deleteRule="3" fk-table-ref="TAB154" fkCardinality="7" identifying="true" name="journey_pattern_point_journey_pattern_point_connection_fk1" physicalName="journe
-
-
-_pattern_point_journey_pattern_point_connection_fk1" pk-table-ref="TAB25" pkCardinality="2" updateRule="3" >
+   <relationship id="REL300" populated="true" UUID="da05d0b6-06b8-4a37-8958-0fe21efd3612" deferrability="7" deleteRule="3" fk-table-ref="TAB154" fkCardinality="7" identifying="true" name="journey_pattern_point_journey_pattern_point_connection_fk1" physicalName="journe   _pattern_point_journey_pattern_point_connection_fk1" pk-table-ref="TAB25" pkCardinality="2" updateRule="3" >
     <column-mapping id="CMP301" populated="true" UUID="1feca093-e18f-4072-9661-ecae85f415e9" fk-column-ref="COL156" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL26" />
    </relationship>
    <relationship id="REL302" populated="true" UUID="1c3d631c-bf95-42ee-af82-35a98e6e002d" deferrability="7" deleteRule="3" fk-table-ref="TAB55" fkCardinality="7" identifying="false" name="network_line_fk" physicalName="network_line_fk" pk-table-ref="TAB37" pkCardinality="2" updateRule="3" >
@@ -1086,8 +1062,7 @@ _pattern_point_journey_pattern_point_connection_fk1" pk-table-ref="TAB25" pkCard
    <relationship id="REL336" populated="true" UUID="97b82ecb-22e2-48f1-8255-988d69f83f53" deferrability="7" deleteRule="3" fk-table-ref="TAB278" fkCardinality="7" identifying="true" name="admin_rel_way_admin_fk" physicalName="admin_rel_way_admin_fk" pk-table-ref="TAB165" pkCardinality="2" updateRule="3" >
     <column-mapping id="CMP337" populated="true" UUID="713c3f87-d57a-4575-a538-4b97c6d6ec9f" fk-column-ref="COL279" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL166" />
    </relationship>
-   <relationship id="REL338" populated="true" UUID="f5c23996-f859-4076-a0b2-a79b1547b58f" deferrability="7" deleteRule="3" fk-table-ref="TAB199" fkCardinality="7" identifying="true" 
-e="poi_type_poi_fk" physicalName="poi_type_poi_fk" pk-table-ref="TAB191" pkCardinality="2" updateRule="3" >
+   <relationship id="REL338" populated="true" UUID="f5c23996-f859-4076-a0b2-a79b1547b58f" deferrability="7" deleteRule="3" fk-table-ref="TAB199" fkCardinality="7" identifying="true" name="New SQL Relationship" physicalName="poi_type_poi_fk" pk-table-ref="TAB191" pkCardinality="2" updateRule="3" >
     <column-mapping id="CMP339" populated="true" UUID="fa096696-7d35-4892-a46f-28ffe5e1f7b7" fk-column-ref="COL205" name="Column Mapping" physicalName="Column Mapping" pk-column-ref="COL192" />
    </relationship>
    <relationship id="REL340" populated="true" UUID="3dcc5c3c-0e4a-4006-9a05-6b32e140b112" deferrability="7" deleteRule="3" fk-table-ref="TAB210" fkCardinality="7" identifying="true" name="poi_rel_poi_admin_fk" physicalName="poi_rel_poi_admin_fk" pk-table-ref="TAB199" pkCardinality="2" updateRule="3" >
@@ -1155,10 +1130,7 @@ e="poi_type_poi_fk" physicalName="poi_type_poi_fk" pk-table-ref="TAB191" pkCardi
   <table-pane table-ref="TAB199" x="104" y="23" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB210" x="40" y="212" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB216" x="781" y="100" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
-  <table-pane table-ref="TAB222" x="
-
-
-25" y="100" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
+  <table-pane table-ref="TAB222" x="25" y="100" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB228" x="676" y="806" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB233" x="47" y="764" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
   <table-pane table-ref="TAB238" x="48" y="1429" bgColor="0xeeeeee" fgColor="0x000000" rounded="true" dashed="false"/>
@@ -1230,8 +1202,9 @@ e="poi_type_poi_fk" physicalName="poi_type_poi_fk" pk-table-ref="TAB191" pkCardi
   <critic-grouping platformType="HSQLDB" enabled="true">
    <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.HSQLDBUnsupportedFeaturesCritic" severity="ERROR"/>
   </critic-grouping>
-  <critic-grouping platformType
-ySQL" enabled="true">
+  <critic-grouping platformType="SQL" enabled="true">
+  </critic-grouping>
+  <critic-grouping platformType="MySQL" enabled="true">
    <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.MySQLCommentCritic" severity="ERROR"/>
    <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.MySQLReservedWordsCritic" severity="ERROR"/>
    <critic-settings class="ca.sqlpower.architect.ddl.critic.impl.MySQLUnsupportedFeaturesCritic" severity="ERROR"/>
@@ -1262,933 +1235,3 @@ ySQL" enabled="true">
   <olap-gui>
   </olap-gui>
 </architect-project>
-
-[Database Types_1]
-JDBC Driver Class=oracle.jdbc.OracleDriver
-JDBC URL=jdbc:oracle:thin:@<hostname>:<Port:1521>:<SID>
-Name=Oracle 8i
-DDL Generator=ca.sqlpower.architect.ddl.Oracle8DDLGenerator
-Supports Updatable Result Sets=True
-ca.sqlpower.architect.etl.kettle.connectionType=Oracle
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_0=BIT, BIT, -7, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_1=CHAR, CHAR, 1, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_2=BINARY, BINARY, -2, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_3=VARBINARY, VARBINARY, -3, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_4=RAW, VARBINARY, -3, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_5=VARCHAR, VARCHAR, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_6=VARCHAR2,VARCHAR, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_7=NVARCHAR2,NVARCHAR, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_8=BLOB, BLOB, 2004, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_9=CLOB, CLOB, 2005, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_10=BIGINT, BIGINT, -5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_11=DECIMAL, DECIMAL, 3, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_12=DOUBLE, DOUBLE, 8, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_13=FLOAT, FLOAT, 6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_14=INTEGER, INTEGER, 4, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_15=NUMERIC, NUMERIC, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_16=NUMBER,  NUMERIC, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_17=REAL, REAL, 7, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_18=SMALLINT, SMALLINT, 5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_19=TINYINT, TINYINT, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_20=INTERVALDS, TINYINT, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_21=INTERVALYM, TINYINT, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_22=TIME, TIME, 92, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_23=TIMESTAMP, TIMESTAMP, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_24=TIMESTAMP WITH LOCAL TIME ZONE, TIMESTAMP, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_25=TIMESTAMP WITH TIME ZONE, TIMESTAMP, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_26=DATE, DATE, 91, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_27=LONG, LONGVARCHAR, -1, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_28=LONG RAW, LONGVARBINARY, -4, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_29=STRUCT, LONGVARBINARY, -4, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_30=ARRAY, LONGVARBINARY, -4, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_31=REF, LONGVARBINARY, -4, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ColumnProfileResult$StringLengthSQLFunction=LENGTH(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$AverageSQLFunction=AVG(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$CaseWhenNullSQLFunction=DECODE(:,NULL,:)
-ca.sqlpower.sqlobject.SQLIndex.IndexType_0=CTXCAT
-ca.sqlpower.sqlobject.SQLIndex.IndexType_1=BTREE
-ca.sqlpower.sqlobject.SQLIndex.IndexType_2=BITMAP
-ca.sqlpower.sqlobject.SQLIndex.IndexType_3=FUNCTION-BASED
-ca.sqlpower.sqlobject.SQLIndex.IndexType_4=IOT - TOP
-ca.sqlpower.sqlobject.SQLIndex.IndexType_5=DOMAIN
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_0=433cc8af-284d-4abb-8ef7-08ebcb34dbf1,NUMBER,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_1=fc731466-848e-411a-82af-e7f5e1d504bb,RAW,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_2=936cd049-d1df-44fc-ab05-b47cabe09060,NUMBER,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_3=5c50e616-a448-40e1-abcd-5bfc04dcc607,BLOB,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_4=a26374aa-3026-4bb8-b564-eb2e186dfa5d,NUMBER,VARIABLE,VARIABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_5=67ddc63f-5541-4dd1-9236-632d9d155e80,CHAR,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_6=cc1304ea-628a-4fc5-a84a-06ba14759152,NUMBER,VARIABLE,VARIABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_7=4fc90970-b2e5-41dd-911c-cc605d87e7a8,NUMBER,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_8=63b011c7-c81f-4c75-8271-632b3c87f727,NUMBER,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_9=83c27f1a-f56c-4e2c-ae53-18e02ff499af,LONG RAW,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_10=9a814859-ab26-4acd-9415-ea82291bcac1,LONG,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_11=115245ce-612c-4d6a-b559-6dd903dd959a,NUMBER,VARIABLE,VARIABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_12=8fe516a5-9833-4170-9572-50e78bbf221f,NUMBER,VARIABLE,VARIABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_13=69fb547f-e14c-4748-9746-4c0e9e94eb52,NUMBER,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_14=10d6960f-169d-47c2-860a-37341342b1d5,DATE,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_15=6497d8de-0e00-40d6-a42e-e2adca83be64,DATE,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_16=608a1d2c-c960-44ac-b1f3-503aba0a5b7b,NUMBER,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_17=f332925d-2b1a-4a8a-b22d-90b05d4f7ebb,LONG RAW,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_18=831ac2d4-0e65-47ec-a0b7-62b7f6b8760a,VARCHAR2,VARIABLE,NOT_APPLICABLE
-[Database Types_2]
-JDBC Driver Class=oracle.jdbc.OracleDriver
-JDBC URL=jdbc:oracle:thin:@<hostname>:<Port:1521>:<SID>
-Name=Oracle 9i
-Supports Updatable Result Sets=True
-DDL Generator=ca.sqlpower.architect.ddl.Oracle9PlusDDLGenerator
-ca.sqlpower.architect.etl.kettle.connectionType=Oracle
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_0=BIT, BIT, -7, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_1=CHAR, CHAR, 1, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_2=BINARY, BINARY, -2, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_3=VARBINARY, VARBINARY, -3, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_4=RAW, VARBINARY, -3, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_5=VARCHAR, VARCHAR, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_6=VARCHAR2,VARCHAR, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_7=NVARCHAR2,NVARCHAR, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_8=BLOB, BLOB, 2004, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_9=CLOB, CLOB, 2005, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_10=BIGINT, BIGINT, -5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_11=DECIMAL, DECIMAL, 3, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_12=DOUBLE, DOUBLE, 8, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_13=FLOAT, FLOAT, 6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_14=INTEGER, INTEGER, 4, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_15=NUMERIC, NUMERIC, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_16=NUMBER,  NUMERIC, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_17=REAL, REAL, 7, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_18=SMALLINT, SMALLINT, 5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_19=TINYINT, TINYINT, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_20=INTERVALDS, TINYINT, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_21=INTERVALYM, TINYINT, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_22=TIME, TIME, 92, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_23=TIMESTAMP, TIMESTAMP, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_24=TIMESTAMP WITH LOCAL TIME ZONE, TIMESTAMP, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_25=TIMESTAMP WITH TIME ZONE, TIMESTAMP, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_26=DATE, DATE, 91, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_27=LONG, LONGVARCHAR, -1, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_28=LONG RAW, LONGVARBINARY, -4, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_29=STRUCT, LONGVARBINARY, -4, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_30=ARRAY, LONGVARBINARY, -4, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_31=REF, LONGVARBINARY, -4, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ColumnProfileResult$StringLengthSQLFunction=LENGTH(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$AverageSQLFunction=AVG(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$CaseWhenNullSQLFunction=DECODE(:,NULL,:)
-ca.sqlpower.sqlobject.SQLIndex.IndexType_0=CTXCAT
-ca.sqlpower.sqlobject.SQLIndex.IndexType_1=BTREE
-ca.sqlpower.sqlobject.SQLIndex.IndexType_2=BITMAP
-ca.sqlpower.sqlobject.SQLIndex.IndexType_3=FUNCTION-BASED
-ca.sqlpower.sqlobject.SQLIndex.IndexType_4=IOT - TOP
-ca.sqlpower.sqlobject.SQLIndex.IndexType_5=DOMAIN
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_0=433cc8af-284d-4abb-8ef7-08ebcb34dbf1,NUMBER,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_1=fc731466-848e-411a-82af-e7f5e1d504bb,RAW,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_2=936cd049-d1df-44fc-ab05-b47cabe09060,NUMBER,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_3=5c50e616-a448-40e1-abcd-5bfc04dcc607,BLOB,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_4=a26374aa-3026-4bb8-b564-eb2e186dfa5d,NUMBER,VARIABLE,VARIABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_5=cc1304ea-628a-4fc5-a84a-06ba14759152,NUMBER,VARIABLE,VARIABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_6=4fc90970-b2e5-41dd-911c-cc605d87e7a8,NUMBER,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_7=63b011c7-c81f-4c75-8271-632b3c87f727,NUMBER,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_8=83c27f1a-f56c-4e2c-ae53-18e02ff499af,LONG RAW,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_9=9a814859-ab26-4acd-9415-ea82291bcac1,LONG,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_10=0b8db85e-251b-4be0-8205-4d74362105cb,NCLOB,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_11=115245ce-612c-4d6a-b559-6dd903dd959a,NUMBER,VARIABLE,VARIABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_12=8fe516a5-9833-4170-9572-50e78bbf221f,NUMBER,VARIABLE,VARIABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_13=69fb547f-e14c-4748-9746-4c0e9e94eb52,NUMBER,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_14=10d6960f-169d-47c2-860a-37341342b1d5,DATE,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_15=608a1d2c-c960-44ac-b1f3-503aba0a5b7b,NUMBER,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_16=f332925d-2b1a-4a8a-b22d-90b05d4f7ebb,LONG RAW,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_17=831ac2d4-0e65-47ec-a0b7-62b7f6b8760a,VARCHAR2,VARIABLE,NOT_APPLICABLE
-[Database Types_3]
-JDBC Driver Class=oracle.jdbc.OracleDriver
-JDBC URL=jdbc:oracle:thin:@<hostname>:<Port:1521>:<SID>
-Name=Oracle 10g
-Supports Updatable Result Sets=True
-DDL Generator=ca.sqlpower.architect.ddl.Oracle9PlusDDLGenerator
-ca.sqlpower.architect.etl.kettle.connectionType=Oracle
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_0=BIT, BIT, -7, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_1=CHAR, CHAR, 1, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_2=BINARY, BINARY, -2, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_3=VARBINARY, VARBINARY, -3, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_4=RAW, VARBINARY, -3, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_5=VARCHAR, VARCHAR, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_6=VARCHAR2,VARCHAR, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_7=NVARCHAR2,NVARCHAR, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_8=BLOB, BLOB, 2004, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_9=CLOB, CLOB, 2005, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_10=BIGINT, BIGINT, -5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_11=DECIMAL, DECIMAL, 3, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_12=DOUBLE, DOUBLE, 8, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_13=FLOAT, FLOAT, 6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_14=INTEGER, INTEGER, 4, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_15=NUMERIC, NUMERIC, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_16=NUMBER,  NUMERIC, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_17=REAL, REAL, 7, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_18=SMALLINT, SMALLINT, 5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_19=TINYINT, TINYINT, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_20=INTERVALDS, TINYINT, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_21=INTERVALYM, TINYINT, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_22=TIME, TIME, 92, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_23=TIMESTAMP, TIMESTAMP, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_24=TIMESTAMP WITH LOCAL TIME ZONE, TIMESTAMP, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_25=TIMESTAMP WITH TIME ZONE, TIMESTAMP, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_26=DATE, DATE, 91, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_27=LONG, LONGVARCHAR, -1, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_28=LONG RAW, LONGVARBINARY, -4, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_29=STRUCT, LONGVARBINARY, -4, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_30=ARRAY, LONGVARBINARY, -4, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_31=REF, LONGVARBINARY, -4, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ColumnProfileResult$StringLengthSQLFunction=LENGTH(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$AverageSQLFunction=AVG(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$CaseWhenNullSQLFunction=DECODE(:,NULL,:)
-ca.sqlpower.sqlobject.SQLIndex.IndexType_0=CTXCAT
-ca.sqlpower.sqlobject.SQLIndex.IndexType_1=BTREE
-ca.sqlpower.sqlobject.SQLIndex.IndexType_2=BITMAP
-ca.sqlpower.sqlobject.SQLIndex.IndexType_3=FUNCTION-BASED
-ca.sqlpower.sqlobject.SQLIndex.IndexType_4=IOT - TOP
-ca.sqlpower.sqlobject.SQLIndex.IndexType_5=DOMAIN
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_0=433cc8af-284d-4abb-8ef7-08ebcb34dbf1,NUMBER,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_1=fc731466-848e-411a-82af-e7f5e1d504bb,RAW,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_2=936cd049-d1df-44fc-ab05-b47cabe09060,NUMBER,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_3=5c50e616-a448-40e1-abcd-5bfc04dcc607,BLOB,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_4=a26374aa-3026-4bb8-b564-eb2e186dfa5d,NUMBER,VARIABLE,VARIABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_5=cc1304ea-628a-4fc5-a84a-06ba14759152,NUMBER,VARIABLE,VARIABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_6=4fc90970-b2e5-41dd-911c-cc605d87e7a8,NUMBER,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_7=63b011c7-c81f-4c75-8271-632b3c87f727,NUMBER,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_8=83c27f1a-f56c-4e2c-ae53-18e02ff499af,LONG RAW,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_9=9a814859-ab26-4acd-9415-ea82291bcac1,LONG,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_10=0b8db85e-251b-4be0-8205-4d74362105cb,NCLOB,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_11=115245ce-612c-4d6a-b559-6dd903dd959a,NUMBER,VARIABLE,VARIABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_12=8fe516a5-9833-4170-9572-50e78bbf221f,NUMBER,VARIABLE,VARIABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_13=69fb547f-e14c-4748-9746-4c0e9e94eb52,NUMBER,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_14=10d6960f-169d-47c2-860a-37341342b1d5,DATE,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_15=608a1d2c-c960-44ac-b1f3-503aba0a5b7b,NUMBER,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_16=f332925d-2b1a-4a8a-b22d-90b05d4f7ebb,LONG RAW,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_17=831ac2d4-0e65-47ec-a0b7-62b7f6b8760a,VARCHAR2,VARIABLE,NOT_APPLICABLE
-[Database Types_4]
-JDBC Driver Class=org.postgresql.Driver
-JDBC JAR_0=builtin:postgresql-8.2-506.jdbc3.jar
-JDBC JAR Count=1
-JDBC URL=jdbc:postgresql://<Hostname>:<Port:5432>/<Database>
-DDL Generator=ca.sqlpower.architect.ddl.PostgresDDLGenerator
-Name=PostgreSQL
-Supports Updatable Result Sets=True
-ca.sqlpower.architect.etl.kettle.connectionType=PostgreSQL
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_0=varchar,varchar,12,true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_1=char,char,1,true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_2=name,name,1,true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_3=bpchar,bpchar,1,true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_4=date,date,91,true,true,true,false,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_5=time,time,92,true,true,true,false,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_6=timestamp,timestamp,93,true,true,true,false,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_7=timestamptz,timestamptz,93,true,true,true,false,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_8=timetz,timetz,92,true,true,true,false,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_9=float4,float,6,true,true,true,true,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_10=float8,float,6,true,true,true,true,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_11=int2,int,4,true,true,true,true,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_12=int4,int,4,true,true,true,true,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_13=int8,int,4,true,true,true,true,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_14=float4,float,6,true,true,true,true,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_15=float4,float,6,true,true,true,true,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_16=numeric,numeric,6,true,true,true,true,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_17=interval,interval,6,true,true,true,true,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_18=bool,bool,16,true,false,false,false,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_19=bit,bit,-7,true,false,false,false,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_20=bytea,bytea,2004,false,false,false,false,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_21=text,text,2004,false,false,false,false,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_22=oid,oid,2004,false,false,false,false,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_23=xid,xid,2004,false,false,false,false,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_24=cid,cid,2004,false,false,false,false,false,false,false,true
-ca.sqlpower.architect.profile.ColumnProfileResult$StringLengthSQLFunction=LENGTH(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$AverageSQLFunction=AVG(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$CaseWhenNullSQLFunction=CASE WHEN : IS NULL THEN : END
-ca.sqlpower.sqlobject.SQLIndex.IndexType_0=HASH
-ca.sqlpower.sqlobject.SQLIndex.IndexType_1=BTREE
-ca.sqlpower.sqlobject.SQLIndex.IndexType_2=RTREE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_0=fc731466-848e-411a-82af-e7f5e1d504bb,BYTEA,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_1=936cd049-d1df-44fc-ab05-b47cabe09060,BIT,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_2=5c50e616-a448-40e1-abcd-5bfc04dcc607,BYTEA,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_3=67ddc63f-5541-4dd1-9236-632d9d155e80,CHAR,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_4=9c22ed40-2868-4d9e-96ca-789234a53c8f,TEXT,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_5=cc1304ea-628a-4fc5-a84a-06ba14759152,NUMERIC,VARIABLE,VARIABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_6=4fc90970-b2e5-41dd-911c-cc605d87e7a8,DOUBLE PRECISION,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_7=7e55bcd0-7606-4153-b749-9c397f12c4d8,REAL,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_8=83c27f1a-f56c-4e2c-ae53-18e02ff499af,BYTEA,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_9=9a814859-ab26-4acd-9415-ea82291bcac1,TEXT,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_10=608a1d2c-c960-44ac-b1f3-503aba0a5b7b,SMALLINT,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_11=f332925d-2b1a-4a8a-b22d-90b05d4f7ebb,BYTEA,NOT_APPLICABLE,NOT_APPLICABLE
-[Database Types_5]
-JDBC Driver Class=com.microsoft.sqlserver.jdbc.SQLServerDriver
-JDBC JAR_0=builtin:sqljdbc4-2.0.jar
-JDBC JAR Count=1
-JDBC URL=jdbc:sqlserver://<Hostname>:<Port:1433>
-Name=SQL Server 2000
-Supports Updatable Result Sets=True
-DDL Generator=ca.sqlpower.architect.ddl.SQLServer2000DDLGenerator
-ca.sqlpower.architect.etl.kettle.connectionType=MS SQL Server:MSSQL
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_0=bit, bit, -7, true,false,false,false,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_1=tinyint, INTEGER, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_2=tinyint identity, INTEGER, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_3=bigint, INTEGER, -5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_4=bigint identity, INTEGER, -5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_5=numeric, numeric, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_6=numeric(), numeric, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_7=decimal, decimal, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_8=decimal(), decimal, 2,true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_9=int, INTEGER, 4,true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_10=int identity, INTEGER, 4, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_11=smallint, INTEGER, 4,true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_12=smallint identity, INTEGER, 4,true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_13=float, float, 6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_14=real, real, 7,true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_15=money, money, 2, true,true,true,true,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_16=smallmoney, smallmoney, 7, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_17=text, text, 2005, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_18=ntext, ntext, 2005, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_19=image, image, 2004, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_20=datetime, datetime, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_21=smalldatetime, smalldatetime, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_22=varbinary, varbinary, -3, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_23=binary, binary, -2, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_24=char, char, 1, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_25=nchar, nchar, 1, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_26=varchar, varchar, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_27=nvarchar, nvarchar, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_28=sysname, sysname, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_29=timestamp, timestamp, 2006, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_30=uniqueidentifier, uniqueidentifier, 2006, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_31=sql_variant, sql_variant, 2006, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ColumnProfileResult$StringLengthSQLFunction=LEN(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$AverageSQLFunction=AVG(CONVERT(DECIMAL,:))
-ca.sqlpower.architect.profile.ColumnProfileResult$CaseWhenNullSQLFunction=CASE WHEN : IS NULL THEN : END
-ca.sqlpower.sqlobject.SQLIndex.IndexType_0=HASH
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_0=5c50e616-a448-40e1-abcd-5bfc04dcc607,IMAGE,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_1=9c22ed40-2868-4d9e-96ca-789234a53c8f,TEXT,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_2=ee349be3-6af2-46e1-b305-975f5354b009,DATETIME,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_3=4fc90970-b2e5-41dd-911c-cc605d87e7a8,REAL,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_4=63b011c7-c81f-4c75-8271-632b3c87f727,INT,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_5=83c27f1a-f56c-4e2c-ae53-18e02ff499af,IMAGE,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_6=9a814859-ab26-4acd-9415-ea82291bcac1,TEXT,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_7=0b8db85e-251b-4be0-8205-4d74362105cb,NCLOB,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_8=10d6960f-169d-47c2-860a-37341342b1d5,DATETIME,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_9=6497d8de-0e00-40d6-a42e-e2adca83be64,DATETIME,NOT_APPLICABLE,NOT_APPLICABLE
-[Database Types_6]
-JDBC Driver Class=com.microsoft.sqlserver.jdbc.SQLServerDriver
-JDBC JAR_0=builtin:sqljdbc4-2.0.jar
-JDBC JAR Count=1
-JDBC URL=jdbc:sqlserver://<Hostname>:<Port:1433>
-Name=SQL Server 2005
-Supports Updatable Result Sets=True
-DDL Generator=ca.sqlpower.architect.ddl.SQLServer2005DDLGenerator
-ca.sqlpower.architect.etl.kettle.connectionType=MS SQL Server:MSSQL
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_0=bit, bit, -7, true,false,false,false,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_1=tinyint, INTEGER, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_2=tinyint identity, INTEGER, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_3=bigint, INTEGER, -5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_4=bigint identity, INTEGER, -5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_5=numeric, numeric, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_6=numeric(), numeric, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_7=decimal, decimal, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_8=decimal(), decimal, 2,true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_9=int, INTEGER, 4,true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_10=int identity, INTEGER, 4, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_11=smallint, INTEGER, 4,true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_12=smallint identity, INTEGER, 4,true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_13=float, float, 6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_14=real, real, 7,true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_15=money, money, 2, true,true,true,true,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_16=smallmoney, smallmoney, 7, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_17=text, text, 2005, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_18=ntext, ntext, 2005, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_19=image, image, 2004, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_20=datetime, datetime, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_21=smalldatetime, smalldatetime, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_22=varbinary, varbinary, -3, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_23=binary, binary, -2, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_24=char, char, 1, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_25=nchar, nchar, 1, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_26=varchar, varchar, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_27=nvarchar, nvarchar, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_28=sysname, sysname, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_29=timestamp, timestamp, 2006, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_30=uniqueidentifier, uniqueidentifier, 2006, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_31=sql_variant, sql_variant, 2006, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ColumnProfileResult$StringLengthSQLFunction=LEN(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$AverageSQLFunction=AVG(CONVERT(DECIMAL,:))
-ca.sqlpower.architect.profile.ColumnProfileResult$CaseWhenNullSQLFunction=CASE WHEN : IS NULL THEN : END
-ca.sqlpower.sqlobject.SQLIndex.IndexType_0=HASH
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_0=5c50e616-a448-40e1-abcd-5bfc04dcc607,IMAGE,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_1=9c22ed40-2868-4d9e-96ca-789234a53c8f,TEXT,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_2=ee349be3-6af2-46e1-b305-975f5354b009,DATETIME,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_3=4fc90970-b2e5-41dd-911c-cc605d87e7a8,REAL,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_4=63b011c7-c81f-4c75-8271-632b3c87f727,INT,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_5=83c27f1a-f56c-4e2c-ae53-18e02ff499af,IMAGE,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_6=9a814859-ab26-4acd-9415-ea82291bcac1,TEXT,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_7=0b8db85e-251b-4be0-8205-4d74362105cb,NCLOB,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_8=10d6960f-169d-47c2-860a-37341342b1d5,DATETIME,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_9=6497d8de-0e00-40d6-a42e-e2adca83be64,DATETIME,NOT_APPLICABLE,NOT_APPLICABLE
-[Database Types_7]
-JDBC Driver Class=com.microsoft.sqlserver.jdbc.SQLServerDriver
-JDBC JAR_0=builtin:sqljdbc4-2.0.jar
-JDBC JAR Count=1
-JDBC URL=jdbc:sqlserver://<Hostname>:<Port:1433>
-Name=SQL Server 2008
-Supports Updatable Result Sets=True
-DDL Generator=ca.sqlpower.architect.ddl.SQLServer2005DDLGenerator
-ca.sqlpower.architect.etl.kettle.connectionType=MS SQL Server:MSSQL
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_0=bit, bit, -7, true,false,false,false,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_1=tinyint, INTEGER, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_2=tinyint identity, INTEGER, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_3=bigint, INTEGER, -5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_4=bigint identity, INTEGER, -5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_5=numeric, numeric, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_6=numeric(), numeric, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_7=decimal, decimal, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_8=decimal(), decimal, 2,true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_9=int, INTEGER, 4,true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_10=int identity, INTEGER, 4, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_11=smallint, INTEGER, 4,true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_12=smallint identity, INTEGER, 4,true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_13=float, float, 6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_14=real, real, 7,true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_15=money, money, 2, true,true,true,true,false,false,false,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_16=smallmoney, smallmoney, 7, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_17=text, text, 2005, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_18=ntext, ntext, 2005, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_19=image, image, 2004, false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_20=datetime, datetime, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_21=smalldatetime, smalldatetime, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_22=varbinary, varbinary, -3, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_23=binary, binary, -2, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_24=char, char, 1, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_25=nchar, nchar, 1, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_26=varchar, varchar, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_27=nvarchar, nvarchar, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_28=sysname, sysname, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_29=timestamp, timestamp, 2006, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_30=uniqueidentifier, uniqueidentifier, 2006, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_31=sql_variant, sql_variant, 2006, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ColumnProfileResult$StringLengthSQLFunction=LEN(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$AverageSQLFunction=AVG(CONVERT(DECIMAL,:))
-ca.sqlpower.architect.profile.ColumnProfileResult$CaseWhenNullSQLFunction=CASE WHEN : IS NULL THEN : END
-ca.sqlpower.sqlobject.SQLIndex.IndexType_0=HASH
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_0=5c50e616-a448-40e1-abcd-5bfc04dcc607,IMAGE,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_1=9c22ed40-2868-4d9e-96ca-789234a53c8f,TEXT,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_2=ee349be3-6af2-46e1-b305-975f5354b009,DATETIME,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_3=4fc90970-b2e5-41dd-911c-cc605d87e7a8,REAL,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_4=63b011c7-c81f-4c75-8271-632b3c87f727,INT,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_5=83c27f1a-f56c-4e2c-ae53-18e02ff499af,IMAGE,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_6=9a814859-ab26-4acd-9415-ea82291bcac1,TEXT,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_7=0b8db85e-251b-4be0-8205-4d74362105cb,NCLOB,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_8=10d6960f-169d-47c2-860a-37341342b1d5,DATETIME,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_9=6497d8de-0e00-40d6-a42e-e2adca83be64,DATETIME,NOT_APPLICABLE,NOT_APPLICABLE
-[Database Types_8]
-JDBC Driver Class=com.mysql.jdbc.Driver
-JDBC JAR_0=builtin:mysql-connector-java-bin.jar
-JDBC JAR Count=1
-JDBC URL=jdbc:mysql://<Hostname>:<Port:3306>/<Database>
-Name=MySQL
-Supports Updatable Result Sets=True
-DDL Generator=ca.sqlpower.architect.ddl.MySqlDDLGenerator
-ca.sqlpower.architect.etl.kettle.connectionType=MySQL
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_0=BIGINT, BIGINT, -5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_1=BINARY, BINARY, -2, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_2=BIT, TINYINT, -7, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_3=BLOB, LONGBLOB, 2004, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_4=CHAR, CHAR, 1, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_5=CLOB, LONGTEXT, 2005, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_6=DATE, DATE, 91, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_7=DECIMAL, DECIMAL, 3, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_8=DOUBLE, DOUBLE PRECISION, 8, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_9=FLOAT, DOUBLE PRECISION, 6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_10=INTEGER, INT, 4, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_11=LONGVARBINARY, VARBINARY, -4, false,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_12=LONGVARCHAR, VARCHAR, -1, false,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_13=NUMERIC, NUMERIC, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_14=REAL, DOUBLE PRECISION, 7, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_15=SMALLINT, SMALLINT, 5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_16=TIME, TIME, 92, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_17=TIMESTAMP, TIMESTAMP, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_18=TINYINT, TINYINT, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_19=VARBINARY, VARBINARY, -3, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_20=VARCHAR, VARCHAR  , 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ColumnProfileResult$StringLengthSQLFunction=LENGTH(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$AverageSQLFunction=AVG(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$CaseWhenNullSQLFunction=CASE WHEN : IS NULL THEN : END
-ca.sqlpower.sqlobject.SQLIndex.IndexType_0=HASH
-ca.sqlpower.sqlobject.SQLIndex.IndexType_1=BTREE
-ca.sqlpower.sqlobject.SQLIndex.IndexType_2=RTREE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_0=433cc8af-284d-4abb-8ef7-08ebcb34dbf1,BIGINT,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_1=936cd049-d1df-44fc-ab05-b47cabe09060,TINYINT,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_2=5c50e616-a448-40e1-abcd-5bfc04dcc607,LONGBLOB,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_3=9c22ed40-2868-4d9e-96ca-789234a53c8f,LONGTEXT,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_4=4fc90970-b2e5-41dd-911c-cc605d87e7a8,DOUBLE PRECISION,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_5=7e55bcd0-7606-4153-b749-9c397f12c4d8,DOUBLE PRECISIONS,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_6=63b011c7-c81f-4c75-8271-632b3c87f727,INT,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_7=83c27f1a-f56c-4e2c-ae53-18e02ff499af,VARBINARY,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_8=9a814859-ab26-4acd-9415-ea82291bcac1,TEXT,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_9=8fe516a5-9833-4170-9572-50e78bbf221f,DOUBLE PRECISION,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_10=69fb547f-e14c-4748-9746-4c0e9e94eb52,SMALLINT,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_11=6497d8de-0e00-40d6-a42e-e2adca83be64,DATETIME,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_12=608a1d2c-c960-44ac-b1f3-503aba0a5b7b,TINYINT,VARIABLE,NOT_APPLICABLE
-[Database Types_9]
-JDBC URL=jdbc:db2://<Hostname>:<Port>/<Database>
-Name=DB2
-Supports Updatable Result Sets=True
-DDL Generator=ca.sqlpower.architect.ddl.DB2DDLGenerator
-ca.sqlpower.architect.etl.kettle.connectionType=IBM DB2
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_0=BIGINT, BIGINT, -5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_1=BINARY, BINARY, -2, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_2=BIT, BIT, -7, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_3=BLOB, BLOB, 2004, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_4=CHAR, CHAR, 1, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_5=CLOB, CLOB, 2005, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_6=DATE, DATE, 91, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_7=DECIMAL, DECIMAL, 3, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_8=DOUBLE, DOUBLE, 8, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_9=FLOAT, FLOAT, 6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_10=INTEGER, INTEGER, 4, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_11=LONGVARBINARY, LONGVARBINARY, -4, false,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_12=LONGVARCHAR, LONGVARCHAR, -1, false,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_13=NUMERIC, NUMERIC, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_14=REAL, REAL, 7, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_15=SMALLINT, SMALLINT, 5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_16=TIME, TIME, 92, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_17=TIMESTAMP, TIMESTAMP, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_18=TINYINT, TINYINT, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_19=VARBINARY, VARBINARY, -3, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_20=VARCHAR, VARCHAR, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ColumnProfileResult$StringLengthSQLFunction=LENGTH(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$AverageSQLFunction=AVG(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$CaseWhenNullSQLFunction=CASE WHEN : IS NULL THEN : END
-ca.sqlpower.sqlobject.SQLIndex.IndexType_0=HASH
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_0=fc731466-848e-411a-82af-e7f5e1d504bb,BLOB,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_1=936cd049-d1df-44fc-ab05-b47cabe09060,DECIMAL,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_2=5c50e616-a448-40e1-abcd-5bfc04dcc607,BLOB,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_3=9c22ed40-2868-4d9e-96ca-789234a53c8f,CLOB,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_4=4fc90970-b2e5-41dd-911c-cc605d87e7a8,DOUBLE,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_5=7e55bcd0-7606-4153-b749-9c397f12c4d8,FLOAT,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_6=83c27f1a-f56c-4e2c-ae53-18e02ff499af,BLOB,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_7=9a814859-ab26-4acd-9415-ea82291bcac1,CLOB,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_8=115245ce-612c-4d6a-b559-6dd903dd959a,DECIMAL,VARIABLE,VARIABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_9=8fe516a5-9833-4170-9572-50e78bbf221f,FLOAT,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_10=608a1d2c-c960-44ac-b1f3-503aba0a5b7b,SMALLINT,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_11=f332925d-2b1a-4a8a-b22d-90b05d4f7ebb,BLOB,VARIABLE,NOT_APPLICABLE
-[Database Types_10]
-JDBC URL=jdbc:derby:<Database>;create=true
-Name=Derby Embedded
-Supports Updatable Result Sets=True
-ca.sqlpower.architect.etl.kettle.connectionType=Apache Derby
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_0=BIGINT, BIGINT, -5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_1=BINARY, BINARY, -2, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_2=BIT, BIT, -7, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_3=BLOB, BLOB, 2004, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_4=CHAR, CHAR, 1, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_5=CLOB, CLOB, 2005, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_6=DATE, DATE, 91, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_7=DECIMAL, DECIMAL, 3, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_8=DOUBLE, DOUBLE, 8, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_9=FLOAT, FLOAT, 6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_10=INTEGER, INTEGER, 4, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_11=LONGVARBINARY, LONGVARBINARY, -4, false,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_12=LONGVARCHAR, LONGVARCHAR, -1, false,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_13=NUMERIC, NUMERIC, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_14=REAL, REAL, 7, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_15=SMALLINT, SMALLINT, 5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_16=TIME, TIME, 92, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_17=TIMESTAMP, TIMESTAMP, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_18=TINYINT, TINYINT, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_19=VARBINARY, VARBINARY, -3, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_20=VARCHAR, VARCHAR, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ColumnProfileResult$StringLengthSQLFunction=LENGTH(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$AverageSQLFunction=AVG(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$CaseWhenNullSQLFunction=CASE WHEN : IS NULL THEN : END
-ca.sqlpower.sqlobject.SQLIndex.IndexType_0=HASH
-[Database Types_11]
-Name=HSQLDB
-JDBC JAR_0=builtin:hsqldb-1.8.0.9.jar
-JDBC JAR Count=1
-Supports Updatable Result Sets=False
-JDBC Driver Class=org.hsqldb.jdbcDriver
-JDBC URL=jdbc:hsqldb:<Type>:<Filename>;shutdown=true
-DDL Generator=ca.sqlpower.architect.ddl.HSQLDBDDLGenerator
-ca.sqlpower.architect.etl.kettle.connectionType=Hypersonic
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_0=BIGINT, BIGINT, -5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_1=BINARY, BINARY, -2, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_2=BIT, BIT, -7, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_3=BLOB, BLOB, 2004, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_4=CHAR, CHAR, 1, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_5=CLOB, CLOB, 2005, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_6=DATE, DATE, 91, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_7=DECIMAL, DECIMAL, 3, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_8=DOUBLE, DOUBLE, 8, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_9=FLOAT, FLOAT, 6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_10=INTEGER, INTEGER, 4, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_11=LONGVARBINARY, LONGVARBINARY, -4, false,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_12=LONGVARCHAR, LONGVARCHAR, -1, false,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_13=NUMERIC, NUMERIC, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_14=REAL, REAL, 7, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_15=SMALLINT, SMALLINT, 5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_16=TIME, TIME, 92, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_17=TIMESTAMP, TIMESTAMP, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_18=TINYINT, TINYINT, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_19=VARBINARY, VARBINARY, -3, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_20=VARCHAR, VARCHAR, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_21=BOOLEAN,BOOLEAN,16,false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ColumnProfileResult$StringLengthSQLFunction=LENGTH(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$AverageSQLFunction=AVG(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$CaseWhenNullSQLFunction=CASE WHEN : IS NULL THEN : END
-ca.sqlpower.sqlobject.SQLIndex.IndexType_0=HASH
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_0=433cc8af-284d-4abb-8ef7-08ebcb34dbf1,BIGINT,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_1=fc731466-848e-411a-82af-e7f5e1d504bb,BINARY,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_2=936cd049-d1df-44fc-ab05-b47cabe09060,BIT,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_3=5c50e616-a448-40e1-abcd-5bfc04dcc607,LONGVARBINARY,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_4=9c22ed40-2868-4d9e-96ca-789234a53c8f,LONGVARCHAR,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_5=cc1304ea-628a-4fc5-a84a-06ba14759152,DECIMAL,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_6=83c27f1a-f56c-4e2c-ae53-18e02ff499af,LONGVARBINARY,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_7=9a814859-ab26-4acd-9415-ea82291bcac1,LONGVARCHAR,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_8=f332925d-2b1a-4a8a-b22d-90b05d4f7ebb,VARBINARY,NOT_APPLICABLE,NOT_APPLICABLE
-[Database Types_12]
-JDBC Driver Class=com.sqlstream.jdbc.Driver
-JDBC JAR_0=builtin:SqlStreamJdbc_Complete-2.0.3.jar
-JDBC JAR Count=1
-JDBC URL=jdbc:sqlstream://<Host>
-Name=SQLstream
-Supports Updatable Result Sets=True
-DDL Generator=ca.sqlpower.architect.ddl.GenericDDLGenerator
-Supports Stream Queries=True
-[Database Types_13]
-JDBC Driver Class=org.h2.Driver
-JDBC URL=jdbc:h2:/path/to/database
-Name=H2 Database
-Supports Updatable Result Sets=false
-DDL Generator=ca.sqlpower.architect.ddl.H2DDLGenerator
-ca.sqlpower.architect.etl.kettle.connectionType=Hypersonic
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_0=BIGINT, BIGINT, -5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_1=BINARY, BINARY, -2, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_2=BIT, BIT, -7, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_3=BLOB, BLOB, 2004, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_4=CHAR, CHAR, 1, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_5=CLOB, CLOB, 2005, true,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_6=DATE, DATE, 91, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_7=DECIMAL, DECIMAL, 3, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_8=DOUBLE, DOUBLE, 8, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_9=FLOAT, FLOAT, 6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_10=INTEGER, INTEGER, 4, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_11=LONGVARBINARY, LONGVARBINARY, -4, false,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_12=LONGVARCHAR, LONGVARCHAR, -1, false,false,false,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_13=NUMERIC, NUMERIC, 2, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_14=REAL, REAL, 7, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_15=SMALLINT, SMALLINT, 5, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_16=TIME, TIME, 92, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_17=TIMESTAMP, TIMESTAMP, 93, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_18=TINYINT, TINYINT, -6, true,true,true,true,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_19=VARBINARY, VARBINARY, -3, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_20=VARCHAR, VARCHAR, 12, true,true,true,false,true,true,true,true
-ca.sqlpower.architect.profile.ProfileFunctionDescriptor_21=BOOLEAN,BOOLEAN,16,false,false,false,false,false,false,false,false
-ca.sqlpower.architect.profile.ColumnProfileResult$StringLengthSQLFunction=LENGTH(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$AverageSQLFunction=AVG(:)
-ca.sqlpower.architect.profile.ColumnProfileResult$CaseWhenNullSQLFunction=CASE WHEN : IS NULL THEN : END
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_0=433cc8af-284d-4abb-8ef7-08ebcb34dbf1,BIGINT,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_1=fc731466-848e-411a-82af-e7f5e1d504bb,BINARY,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_2=936cd049-d1df-44fc-ab05-b47cabe09060,BIT,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_3=5c50e616-a448-40e1-abcd-5bfc04dcc607,LONGVARBINARY,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_4=9c22ed40-2868-4d9e-96ca-789234a53c8f,LONGVARCHAR,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_5=83c27f1a-f56c-4e2c-ae53-18e02ff499af,LONGVARBINARY,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_6=9a814859-ab26-4acd-9415-ea82291bcac1,LONGVARCHAR,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_7=0b8db85e-251b-4be0-8205-4d74362105cb,NCLOB,VARIABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_8=8fe516a5-9833-4170-9572-50e78bbf221f,REAL,NOT_APPLICABLE,NOT_APPLICABLE
-ca.sqlpower.sqlobject.SQLTypePhysicalProperties_9=f332925d-2b1a-4a8a-b22d-90b05d4f7ebb,VARBINARY,NOT_APPLICABLE,NOT_APPLICABLE
-[Data Types_1]
-Name=ARRAY
-UUID=5a4374b2-131e-46dd-b7f1-5eb2aaf25f8b
-Basic Type=OTHER
-Description=
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=2003
-[Data Types_2]
-Name=BIGINT
-UUID=433cc8af-284d-4abb-8ef7-08ebcb34dbf1
-Basic Type=NUMBER
-Description=8-byte integer
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=-5
-[Data Types_3]
-Name=BINARY
-UUID=fc731466-848e-411a-82af-e7f5e1d504bb
-Basic Type=OTHER
-Description=Fixed-length binary data
-Precision Type=VARIABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=-2
-[Data Types_4]
-Name=BIT
-UUID=936cd049-d1df-44fc-ab05-b47cabe09060
-Basic Type=NUMBER
-Description=
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=-7
-[Data Types_5]
-Name=BLOB
-UUID=5c50e616-a448-40e1-abcd-5bfc04dcc607
-Basic Type=OTHER
-Description=A Binary Large OBject
-Precision Type=VARIABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=2004
-[Data Types_6]
-Name=BOOLEAN
-UUID=a26374aa-3026-4bb8-b564-eb2e186dfa5d
-Basic Type=BOOLEAN
-Description=A boolean value (true or false)
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=16
-[Data Types_7]
-Name=CHAR
-UUID=67ddc63f-5541-4dd1-9236-632d9d155e80
-Basic Type=TEXT
-Description=Fixed-length character data
-Precision Type=VARIABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=1
-[Data Types_8]
-Name=CLOB
-UUID=9c22ed40-2868-4d9e-96ca-789234a53c8f
-Basic Type=OTHER
-Description=A Character Large OBject
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=2005
-[Data Types_9]
-Name=DATALINK
-UUID=dd5ea6b7-8ef8-4865-94cf-cde8435e479a
-Basic Type=OTHER
-Description=
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=70
-[Data Types_10]
-Name=DATE
-UUID=ee349be3-6af2-46e1-b305-975f5354b009
-Basic Type=DATETIME
-Description=A date, without time-of-day
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=91
-[Data Types_11]
-Name=DECIMAL
-UUID=cc1304ea-628a-4fc5-a84a-06ba14759152
-Basic Type=NUMBER
-Description=Numeric value with a fixed precision and scale
-Precision Type=VARIABLE
-Scale Type=VARIABLE
-JDBC Type=3
-[Data Types_12]
-Name=DISTINCT
-UUID=691163ca-b094-43dc-b36a-cc0dca835be8
-Basic Type=OTHER
-Description=
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=2001
-[Data Types_13]
-Name=DOUBLE
-UUID=4fc90970-b2e5-41dd-911c-cc605d87e7a8
-Basic Type=NUMBER
-Description=Double-precision floating point number
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=8
-[Data Types_14]
-Name=FLOAT
-UUID=7e55bcd0-7606-4153-b749-9c397f12c4d8
-Basic Type=NUMBER
-Description=Single-precision floating point number
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=6
-[Data Types_15]
-Name=INTEGER
-UUID=63b011c7-c81f-4c75-8271-632b3c87f727
-Basic Type=NUMBER
-Description=4-byte integer (-2147483648 to 2147483647 signed)
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=4
-[Data Types_16]
-Name=JAVA_OBJECT
-UUID=9cf970cb-9fda-4564-a567-3d34deeb5869
-Basic Type=OTHER
-Description=
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=2000
-[Data Types_17]
-Name=LONGNVARCHAR
-UUID=895cdc41-03a5-44f8-b41c-43668f815af2
-Basic Type=TEXT
-Description=Large variable-length national character data
-Precision Type=VARIABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=-16
-[Data Types_18]
-Name=LONGVARBINARY
-UUID=83c27f1a-f56c-4e2c-ae53-18e02ff499af
-Basic Type=NUMBER
-Description=Long variable-length binary data
-Precision Type=VARIABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=-4
-[Data Types_19]
-Name=LONGVARCHAR
-UUID=9a814859-ab26-4acd-9415-ea82291bcac1
-Basic Type=TEXT
-Description=Large variable-length character data
-Precision Type=VARIABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=-1
-[Data Types_20]
-Name=NCHAR
-UUID=18b8c53c-4811-4ed7-802e-2c8586fca549
-Basic Type=TEXT
-Description=Fixed-length national character data
-Precision Type=VARIABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=-15
-[Data Types_21]
-Name=NCLOB
-UUID=0b8db85e-251b-4be0-8205-4d74362105cb
-Basic Type=OTHER
-Description=A National Character Large OBject
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=2011
-[Data Types_22]
-Name=NULL
-UUID=7e164a6e-b44f-40e0-8022-495a87989568
-Basic Type=OTHER
-Description=
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=0
-[Data Types_23]
-Name=NUMERIC
-UUID=115245ce-612c-4d6a-b559-6dd903dd959a
-Basic Type=NUMBER
-Description=Numeric value with a fixed precision and scale
-Precision Type=VARIABLE
-Scale Type=VARIABLE
-JDBC Type=2
-[Data Types_24]
-Name=NVARCHAR
-UUID=087a20b8-b387-474a-b9c8-55eb87aff017
-Basic Type=TEXT
-Description=Variable-length national character data
-Precision Type=VARIABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=-9
-[Data Types_25]
-Name=OTHER
-UUID=d9e42a14-4d15-4b55-b176-ecbba383bbdd
-Basic Type=OTHER
-Description=
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=1111
-[Data Types_26]
-Name=REAL
-UUID=8fe516a5-9833-4170-9572-50e78bbf221f
-Basic Type=NUMBER
-Description=Single-precision floating point number
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=7
-[Data Types_27]
-Name=REF
-UUID=15422a2f-0cd9-49b9-97e8-afa2253a0951
-Basic Type=OTHER
-Description=
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=2006
-[Data Types_28]
-Name=ROWID
-UUID=cc2c22e6-30f2-48ee-b700-12f37571061e
-Basic Type=OTHER
-Description=
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=-8
-[Data Types_29]
-Name=SMALLINT
-UUID=69fb547f-e14c-4748-9746-4c0e9e94eb52
-Basic Type=NUMBER
-Description=2-byte integer (0 to 65525 unsigned, -32768 to 32767 signed)
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=5
-[Data Types_30]
-Name=SQLXML
-UUID=82d5ff2b-1b7e-482d-8047-ad6c6e0e726b
-Basic Type=OTHER
-Description=XML data
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=2009
-[Data Types_31]
-Name=STRUCT
-UUID=efddce6b-f53f-442d-8010-306bc3c6c755
-Basic Type=OTHER
-Description=
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=2002
-[Data Types_32]
-Name=TIME
-UUID=10d6960f-169d-47c2-860a-37341342b1d5
-Basic Type=DATETIME
-Description=Time of day
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=92
-[Data Types_33]
-Name=TIMESTAMP
-UUID=6497d8de-0e00-40d6-a42e-e2adca83be64
-Basic Type=DATETIME
-Description=A time and date
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=93
-[Data Types_34]
-Name=TINYINT
-UUID=608a1d2c-c960-44ac-b1f3-503aba0a5b7b
-Basic Type=NUMBER
-Description=1-byte integer (0 to 255 unsigned, -127 to 128 signed)
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=-6
-[Data Types_35]
-Name=VARBINARY
-UUID=f332925d-2b1a-4a8a-b22d-90b05d4f7ebb
-Basic Type=OTHER
-Description=Variable-length binary data
-Precision Type=VARIABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=-3
-[Data Types_36]
-Name=VARCHAR
-UUID=831ac2d4-0e65-47ec-a0b7-62b7f6b8760a
-Basic Type=TEXT
-Description=Variable-length character data
-Precision Type=VARIABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=12
-[Data Types_37]
-Name=UNKNOWN
-UUID=Unknown_UserDefinedSQLType
-Basic Type=OTHER
-Description=Unknown Type
-Precision Type=NOT_APPLICABLE
-Scale Type=NOT_APPLICABLE
-JDBC Type=1111

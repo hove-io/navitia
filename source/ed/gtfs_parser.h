@@ -45,6 +45,9 @@ public:
     /// Remplit la structure passée en paramètre
     void fill(ed::Data& data, const std::string beginning_date = "");
 
+    /// Ajout des objets par défaut
+    void fill_default_objects(Data & data);
+
     /// Remplit les commercial_mode et les physical_mode
     void fill_modes(Data & data);
 

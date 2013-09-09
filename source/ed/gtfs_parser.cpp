@@ -52,6 +52,7 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
     }
 
     fill_modes(data);
+    fill_default_objects(data);
     typedef boost::function<void(GtfsParser*, Data&, CsvReader&)> parse_function;
     typedef std::pair<std::string, parse_function> string_function;
     std::vector<string_function> filename_function_list;
@@ -88,6 +89,14 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
     normalize_extcodes(data);
 }
 
+void GtfsParser::fill_default_objects(Data & data){
+    // création d'une compagnie par defaut
+    nm::Company * company = new nm::Company();
+    company->uri = "default_company";
+    company->name = "compagnie par défaut";
+    data.companies.push_back(company);
+    company_map[company->uri] = company;
+}
 
 void GtfsParser::fill_modes(Data & data) {
     ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
@@ -239,12 +248,6 @@ void GtfsParser::parse_company(Data & data, CsvReader &csv){
             line_read = true;
         }
     }
-    // création d'une compagnie par defaut
-    nm::Company * company = new nm::Company();
-    company->uri = "default_company";
-    company->name = "compagnie par défaut";
-    data.companies.push_back(company);
-    company_map[company->uri] = company;
 }
 
 void GtfsParser::parse_agency(Data & data, CsvReader & csv){
@@ -277,13 +280,6 @@ void GtfsParser::parse_agency(Data & data, CsvReader & csv){
             agency_map[network->uri] = network;
             line_read = true;
         }
-    }
-    if (data.companies.empty()){
-        nm::Company * company = new nm::Company();
-        company->uri = "default_company";
-        company->name = "compagnie par défaut";
-        data.companies.push_back(company);
-        company_map[company->uri] = company;
     }
 }
 

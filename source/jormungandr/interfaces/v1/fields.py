@@ -55,6 +55,37 @@ class additional_informations(fields.Raw):
         return [str.lower(enum.values_by_number[v].name) for v
                 in properties.additional_informations]
 
+class notes(fields.Raw):
+    def output(self, key, obj):
+        properties = getattr(obj, "has_properties")
+        r = []
+        for note_ in properties.notes:
+            r.append({"id": note_.uri, "value": note_.note})
+        return r
+
+class notes_links(fields.Raw):
+    def output(self, key, obj):
+        properties = getattr(obj, "has_properties")
+        r = []
+        for note_ in properties.notes:
+            r.append({"id": note_.uri, "type": "notes"})
+        return r
+
+class equipments():
+    def output(self, key, obj):
+        vehiclejourney = getattr(obj, "vehiclejourney")
+        eq = []
+        if vehiclejourney.visual_announcement:
+            eq.append({"id": "has_visual_announcement"})
+        if vehiclejourney.audible_announcement:
+            eq.append({"id": "has_audible_announcement"})
+        if vehiclejourney.appropriate_escort:
+            eq.append({"id": "has_appropriate_escort"})
+        if vehiclejourney.appropriate_signage:
+            eq.append({"id": "has_appropriate_signage"})
+        return eq
+
+
 coord = {
     "lon" : fields.Float(),
     "lat" : fields.Float()

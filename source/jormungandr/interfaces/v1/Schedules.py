@@ -5,7 +5,7 @@ from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, PbField,\
                    stop_date_time, enum_type, NonNullList, NonNullNested,\
-                   additional_informations
+                   additional_informations, equipments, notes,notes_links
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
 from ResourceUri import ResourceUri
@@ -35,41 +35,43 @@ class Schedules(ResourceUri):
                 self.region = NavitiaManager().key_of_id(filter_parts[1].strip())
         else:
             args["filter"] = self.get_filter(uri.split("/"))
+            self.region = NavitiaManager().get_region(region, lon, lat)
         if not args["from_datetime"]:
             args["from_datetime"] = datetime.now().strftime("%Y%m%dT1337")
-            self.region = NavitiaManager().get_region(region, lon, lat)
+
         response = NavitiaManager().dispatch(args, self.region, self.endpoint)
         return response, 200
 
-note_link = NonNullNested({
-    "id" : fields.String(attribute="uri"),
-    "type" : "notes"
-})
 date_time = {
     "date_time" : fields.String(attribute="stop_time"),
     "additional_informations" : additional_informations(),
-    "links": NonNullList(note_link)
+    "links": notes_links
 }
 row = {
     "stop_point" : PbField(stop_point),
     "datetimes" : NonNullList(fields.Nested(date_time), attribute="stop_times")
 }
+
 header = {
+    "id" : fields.String(attribute="vehiclejourney.uri"),
     "headsign" : fields.String(attribute="vehiclejourney.name"),
     "direction" : fields.String(),
     "physical_mode" : fields.String(attribute="vehiclejourney.physical_mode.name"),
-    "description" : fields.String(attribute="header.vehiclejourney.odt_message"),
+    "description" : fields.String(attribute="vehiclejourney.odt_message"),
     "wheelchair_accessible" : fields.Boolean(default=True),
     "bike_accessible" : fields.Boolean(default=True),
+    "equipments" : equipments()
+}
+table_field = {
+    "rows" : NonNullList(NonNullNested(row)),
+    "headers" : NonNullList(NonNullNested(header))
 }
 route_schedule_fields = {
-    "rows" : NonNullList(NonNullNested(row),attribute="table.rows"),
-    "headers" : NonNullList(NonNullNested(header), attribute="table.headers"),
-    "route" : PbField(route),
+    "table" : PbField(table_field),
     "display_informations" : PbField({
        "network" : fields.String(attribute="line.network.name"),
        "code" : fields.String(attribute="line.code"),
-       "headsign" : fields.String(attribute="line.headsign"),
+       "headsign" : fields.String(attribute="name"),
        "color" : fields.String(attribute="line.color"),
        "commercial_mode" : fields.String(attribute="line.commercial_mode.name")
         }, attribute="route"),
@@ -77,7 +79,7 @@ route_schedule_fields = {
 
 route_schedules = {
     "route_schedules" : NonNullList(NonNullNested(route_schedule_fields)),
-    "pagination" : NonNullNested(pagination),
+    "pagination" : NonNullNested(pagination)
     }
 
 class RouteSchedules(Schedules):
