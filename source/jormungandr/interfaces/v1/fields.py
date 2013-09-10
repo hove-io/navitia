@@ -85,6 +85,13 @@ class equipments():
             eq.append({"id": "has_appropriate_signage"})
         return eq
 
+class get_label():
+    def output(self, key, obj):
+        line = getattr(obj, "line")
+        if line.code != '':
+            return line.code
+        else :
+            return line.name
 
 coord = {
     "lon" : fields.Float(),

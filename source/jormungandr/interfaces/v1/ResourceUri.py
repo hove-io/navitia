@@ -132,9 +132,9 @@ class add_notes(object):
                              for v in objects.items():
                                  result.extend(add_note(v))
                 return result
-            if self.resource.region:
-                if not "notes" in objects.keys() or  not isinstance(objects["notes"], list):
-                    objects["notes"] = []
-                    objects["notes"].extend(add_note(objects))
+            #if self.resource.region:
+            #    if not "notes" in objects.keys() or  not isinstance(objects["notes"], list):
+            #        objects["notes"] = []
+            #        objects["notes"].extend(add_note(objects))
             return objects
         return wrapper
