@@ -70,6 +70,7 @@ table_field = {
 
 display_information = {
        "network" : fields.String(attribute="line.network.name"),
+       "direction": fields.String(attribute="name"),
        "label" : get_label(),
        "color" : fields.String(attribute="line.color"),
        "commercial_mode" : fields.String(attribute="line.commercial_mode.name")
