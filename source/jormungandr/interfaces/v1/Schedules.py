@@ -66,15 +66,19 @@ table_field = {
     "rows" : NonNullList(NonNullNested(row)),
     "headers" : NonNullList(NonNullNested(header))
 }
-route_schedule_fields = {
-    "table" : PbField(table_field),
-    "display_informations" : PbField({
+
+display_information = {
        "network" : fields.String(attribute="line.network.name"),
        "code" : fields.String(attribute="line.code"),
+       "name" : fields.String(attribute="line.name"),
        "headsign" : fields.String(attribute="name"),
        "color" : fields.String(attribute="line.color"),
        "commercial_mode" : fields.String(attribute="line.commercial_mode.name")
-        }, attribute="route"),
+        }
+
+route_schedule_fields = {
+    "table" : PbField(table_field),
+    "display_informations" : PbField(display_information, attribute="route"),
 }
 
 route_schedules = {
@@ -93,7 +97,7 @@ class RouteSchedules(Schedules):
 
 stop_schedule = {
     "stop_point" : PbField(stop_point),
-    "route" : PbField(route),
+    "display_informations" : PbField(display_information, attribute="route"),
     "stop_date_times" : NonNullList(NonNullNested(date_time))
 }
 stop_schedules = {
