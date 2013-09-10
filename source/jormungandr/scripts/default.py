@@ -28,7 +28,7 @@ class Script:
                      "connections", "journey_pattern_points",
                      "journey_patterns", "companies", "vehicle_journeys",
                      "pois", "poi_types", "journeys", "isochrone", "metadatas",
-                     "status", "load"]
+                     "status", "load", "networks"]
 
 
 
