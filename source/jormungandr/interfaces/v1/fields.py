@@ -68,7 +68,7 @@ class notes_links(fields.Raw):
         properties = getattr(obj, "has_properties")
         r = []
         for note_ in properties.notes:
-            r.append({"id": note_.uri, "type": "notes"})
+            r.append({"id": note_.uri, "type": "notes", "value": note_.note})
         return r
 
 class equipments():

@@ -40,7 +40,7 @@ class Schedules(ResourceUri):
             args["from_datetime"] = datetime.now().strftime("%Y%m%dT1337")
 
         response = NavitiaManager().dispatch(args, self.region, self.endpoint)
-        return response, 200
+        return response
 
 date_time = {
     "date_time" : fields.String(attribute="stop_time"),

@@ -17,6 +17,8 @@ class ResourceUri(Resource):
         self.method_decorators.append(add_computed_resources(self))
         self.method_decorators.append(add_pagination_links())
         self.method_decorators.append(clean_links())
+        self.method_decorators.append(add_notes(self))
+
 
     def get_filter(self, items):
         filters = []
@@ -102,5 +104,37 @@ class add_address_region(object):
                                  add_region(v)
             if self.resource.region:
                 add_region(objects)
+            return objects
+        return wrapper
+
+
+
+class add_notes(object):
+    def __init__(self, resource):
+        self.resource = resource
+
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            def add_note(objects):
+                result = []
+                if isinstance(objects, list) or isinstance(objects, tuple):
+                    for item in objects:
+                        result.extend(add_note(item))
+
+                elif isinstance(objects, dict) or\
+                     isinstance(objects, OrderedDict):
+                         if 'type' in objects.keys() and objects['type'] == 'notes':
+                            result.append({"id" : objects['id'], "value" :  objects['value']})
+                            del objects["value"]
+                         else :
+                             for v in objects.items():
+                                 result.extend(add_note(v))
+                return result
+            if self.resource.region:
+                if not "notes" in objects.keys() or  not isinstance(objects["notes"], list):
+                    objects["notes"] = []
+                    objects["notes"].extend(add_note(objects))
             return objects
         return wrapper
