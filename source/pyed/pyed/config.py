@@ -31,6 +31,7 @@ class Config:
     [instance]
     name = instance_name
     source_directory = /srv/ed/instance_name
+    working_directory = /srv/ed/working_directory
 
     [database]
     host = localhost
@@ -56,7 +57,7 @@ class Config:
                                 "exec_directory": None,
                                 "source_directory" : None,
                                 "target_directory" : None,
-                                "backup_directory" : None
+                                "working_directory" : None
                             },
                             "database" : {
                                 "name" : None,

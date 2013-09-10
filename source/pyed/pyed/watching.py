@@ -21,7 +21,7 @@ class Watching():
         self.directory = conf.get("instance", "source_directory")
         self.conf = conf
         self.pyed_logger = logging.getLogger('pyed')
-        self.backup_directory = None
+        self.working_directory = None
 
     def make_backupdirectory(self):
         """ If there is no backup directory it creates one in 
@@ -29,11 +29,11 @@ class Watching():
             The name of the backup directory is the time when it's created
             formatted as %Y%m%d-%H%M%S 
         """
-        if not self.backup_directory:
+        if not self.working_directory:
             now = datetime.now()
-            self.backup_directory = self.conf.get("instance", "backup_directory")
-            self.backup_directory += "/"+now.strftime("%Y%m%d-%H%M%S")
-            return launch_exec("mkdir", [self.backup_directory],
+            self.working_directory = self.conf.get("instance", "working_directory")
+            self.working_directory += "/"+now.strftime("%Y%m%d-%H%M%S")
+            return launch_exec("mkdir", [self.working_directory],
                                self.pyed_logger)
 
     def run(self):
@@ -55,7 +55,7 @@ class Watching():
                 if len(osm_files) > 0:
                     osmfile = osm_files.pop()
                     self.pyed_logger.info("Osm file found " + osmfile )
-                    res = osm2ed(osmfile, self.conf, self.backup_directory)
+                    res = osm2ed(osmfile, self.conf, self.working_directory)
                     if res == 0:
                         self.pyed_logger.info("Osm file add to ed " + osmfile )
                         worked_on_files.append(osmfile)
@@ -65,7 +65,7 @@ class Watching():
                 elif len(gtfs_files) > 0:
                     gtfsfile = gtfs_files.pop()
                     self.pyed_logger.info("Gtfs file found " + gtfsfile )
-                    res = gtfs2ed(gtfsfile, self.conf, self.backup_directory)
+                    res = gtfs2ed(gtfsfile, self.conf, self.working_directory)
                     if res == 0:
                         self.pyed_logger.info("""Gtfs file added 
                                                  to ed %s""" % gtfsfile )
@@ -91,5 +91,5 @@ class Watching():
                 worked_on_files = []
             else:
                 self.pyed_logger.debug("We haven't made any binarisation")
-            self.backup_directory = None
+            self.working_directory = None
             time.sleep(60)

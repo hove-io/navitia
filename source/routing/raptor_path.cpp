@@ -36,8 +36,9 @@ makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
 }
 
 
-Path 
-makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,  const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/,
+Path
+makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
+         const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/,
          const RAPTOR &raptor_) {
     Path result;
     unsigned int current_jpp_idx = destination_idx;
@@ -74,7 +75,6 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,  cons
             result.items.push_back(item);
             boarding_jpp = type::invalid_idx;
             current_jpp_idx = raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx;
-       
         } else { // Sinon c'est un trajet TC
             // Est-ce que qu'on a à faire à un nouveau trajet ?
             if(boarding_jpp == type::invalid_idx) {
@@ -243,9 +243,9 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,  cons
 }
 
 
-
-Path 
-makePathreverse(unsigned int destination_idx, unsigned int countb,  const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/,
+Path
+makePathreverse(unsigned int destination_idx, unsigned int countb,
+                const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/,
                 const RAPTOR &raptor_) {
     return makePath(destination_idx, countb, false, accessibilite_params/*required_properties*/, raptor_);
 }
