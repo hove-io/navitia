@@ -117,24 +117,34 @@ class add_notes(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            def add_note(objects):
+            if isinstance(objects, tuple):
+                data, code, header = unpack(objects)
+            else:
+                data = objects
+
+            def add_note(data):
                 result = []
-                if isinstance(objects, list) or isinstance(objects, tuple):
-                    for item in objects:
+                if isinstance(data, list) or isinstance(data, tuple):
+                    for item in data:
                         result.extend(add_note(item))
 
-                elif isinstance(objects, dict) or\
-                     isinstance(objects, OrderedDict):
-                         if 'type' in objects.keys() and objects['type'] == 'notes':
-                            result.append({"id" : objects['id'], "value" :  objects['value']})
-                            del objects["value"]
+                elif isinstance(data, dict) or\
+                     isinstance(data, OrderedDict):
+                         if 'type' in data.keys() and data['type'] == 'notes':
+                            result.append({"id" : data['id'], "value" :  data['value']})
+                            del data["value"]
                          else :
-                             for v in objects.items():
+                             for v in data.items():
                                  result.extend(add_note(v))
                 return result
-            #if self.resource.region:
-            #    if not "notes" in objects.keys() or  not isinstance(objects["notes"], list):
-            #        objects["notes"] = []
-            #        objects["notes"].extend(add_note(objects))
-            return objects
+            if self.resource.region:
+                if not "notes" in data.keys() or  not isinstance(data["notes"], list):
+                    data["notes"] = []
+                    data["notes"].extend(add_note(data))
+
+            if isinstance(objects, tuple):
+                return data, code, header
+            else:
+                return data
+
         return wrapper
