@@ -6,7 +6,7 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, PbField,\
                    stop_date_time, enum_type, NonNullList, NonNullNested,\
                    additional_informations, equipments, notes,notes_links,\
-                   get_label
+                   get_label,StopScheduleLinks
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
 from ResourceUri import ResourceUri
@@ -76,6 +76,7 @@ display_information = {
        "commercial_mode" : fields.String(attribute="line.commercial_mode.name")
         }
 
+
 route_schedule_fields = {
     "table" : PbField(table_field),
     "display_informations" : PbField(display_information, attribute="route"),
@@ -98,7 +99,8 @@ class RouteSchedules(Schedules):
 stop_schedule = {
     "stop_point" : PbField(stop_point),
     "display_informations" : PbField(display_information, attribute="route"),
-    "stop_date_times" : NonNullList(NonNullNested(date_time))
+    "stop_date_times" : NonNullList(NonNullNested(date_time)),
+    "links" : StopScheduleLinks()
 }
 stop_schedules = {
     "stop_schedules" : NonNullList(NonNullNested(stop_schedule)),
