@@ -6,6 +6,7 @@ from find_extrem_datetimes import extremes
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, place,\
                    PbField, stop_date_time, enum_type, NonNullList, NonNullNested
+
 from interfaces.parsers import option_value
 from ResourceUri import ResourceUri
 import datetime
@@ -91,6 +92,18 @@ class section_type(enum_type):
             pass
         return super(section_type, self).output(key, obj)
 
+class get_temp_date_time():
+    def output(self, key, obj):
+        result = {}
+        enum = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_name
+        if obj.type == enum['STREET_NETWORK'].number:
+            result = {"departure_date_time": obj.begin_date_time, "arrival_date_time": obj.end_date_time}
+        else:
+            stop_date_times = getattr(obj, "stop_date_times")
+            result = {"departure_date_time": stop_date_times[0].departure_date_time, "arrival_date_time": stop_date_times[-1].arrival_date_time}
+
+
+        return result
 
 class section_place(PbField):
     def output(self, key, obj):
@@ -114,10 +127,10 @@ section = {
                                         "name":fields.String()}),
                          attribute="street_network.path_items"),
     "transfer_type" : enum_type(),
-    "stop_date_times" : NonNullList(NonNullNested(stop_date_time))
+    "stop_date_times" : NonNullList(NonNullNested(stop_date_time)),
+    #temp_date_time : une variable temporaire
+    "temp_date_time" : get_temp_date_time()
 }
-
-
 
 
 journey = {
@@ -176,6 +189,23 @@ class add_journey_href(object):
             return objects
         return wrapper
 
+class add_date_time_from_to(object):
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if not "journeys" in objects[0].keys():
+                return objects
+            for journey in objects[0]['journeys']:
+                if "sections" in journey.keys():
+                    for section in journey["sections"]:
+                        if "temp_date_time" in section.keys():
+                            section["from"]["departure_date_time"] = section["temp_date_time"]["departure_date_time"]
+                            section["to"]["arrival_date_time"] = section["temp_date_time"]["arrival_date_time"]
+                            del section["temp_date_time"]
+            return objects
+        return wrapper
+
 class Journeys(ResourceUri):
     def __init__(self):
         modes = ["walking", "car", "bike", "br"]
@@ -210,6 +240,7 @@ class Journeys(ResourceUri):
     @clean_links()
     @add_id_links()
     @add_journey_href()
+    @add_date_time_from_to()
     @marshal_with(journeys)
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parser.parse_args()
