@@ -91,7 +91,12 @@ class get_label():
         if line.code != '':
             return line.code
         else :
-            return line.name
+            if line.name != '':
+                return line.name
+            else:
+                route = getattr(obj, "route")
+                return route.name
+
 
 coord = {
     "lon" : fields.Float(),
@@ -165,7 +170,6 @@ pagination = {
     "items_per_page" : fields.Integer(attribute="itemsPerPage"),
     "items_on_page" : fields.Integer(attribute="itemsOnPage"),
 }
-
 
 class StopScheduleLinks():
     def output(self, key, obj):
