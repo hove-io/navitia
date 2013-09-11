@@ -50,7 +50,7 @@ date_time = {
 }
 row = {
     "stop_point" : PbField(stop_point),
-    "datetimes" : NonNullList(fields.Nested(date_time), attribute="stop_times")
+    "date_times" : NonNullList(fields.Nested(date_time), attribute="stop_times")
 }
 
 header = {
