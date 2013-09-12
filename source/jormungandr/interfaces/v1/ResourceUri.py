@@ -36,6 +36,8 @@ class ResourceUri(Resource):
                         filters.append("stop_point.coord DWITHIN("+lon+","+lat+",200)")
                     else:
                         filters.append(type_+".uri="+item)
+                else :
+                    filters.append(type_+".uri="+item)
                 type_ = None
         return " and ".join(filters)
 
