@@ -100,8 +100,11 @@ class get_temp_date_time():
             result = {"departure_date_time": obj.begin_date_time, "arrival_date_time": obj.end_date_time}
         else:
             stop_date_times = getattr(obj, "stop_date_times")
-            result = {"departure_date_time": stop_date_times[0].departure_date_time, "arrival_date_time": stop_date_times[-1].arrival_date_time}
-
+            if len(stop_date_times)>0:
+                departure = getattr(stop_date_times[0], "departure_date_time")
+                arrival = getattr(stop_date_times[-1], "arrival_date_time")
+                result = {"departure_date_time": departure,
+                          "arrival_date_time": arrival}
 
         return result
 
@@ -200,14 +203,18 @@ class add_date_time_from_to(object):
                 if "sections" in journey.keys():
                     for section in journey["sections"]:
                         if "temp_date_time" in section.keys():
-                            section["from"]["departure_date_time"] = section["temp_date_time"]["departure_date_time"]
-                            section["to"]["arrival_date_time"] = section["temp_date_time"]["arrival_date_time"]
+                            tmp = section["temp_date_time"]
+                            if tmp.has_key("departure_date_time"):
+                                section["from"]["departure_date_time"] = tmp["departure_date_time"]
+                            if tmp.has_key("arrival_date_time"):
+                                section["to"]["arrival_date_time"] = tmp["arrival_date_time"]
                             del section["temp_date_time"]
             return objects
         return wrapper
 
 class Journeys(ResourceUri):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(Journeys, self).__init__(*args, **kwargs)
         modes = ["walking", "car", "bike", "br"]
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("from", type=str, dest="origin")
@@ -247,7 +254,7 @@ class Journeys(ResourceUri):
         if not region is None or (not lon is None and not lat is None):
             self.region = NavitiaManager().get_region(region, lon, lat)
             if uri:
-                objects = uri.split("/")
+                objects = uri.split("/").arrival_date_time
                 if len(objects) % 2 == 0:
                     args["origin"] = objects[-1]
                 else:
