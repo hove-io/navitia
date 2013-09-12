@@ -47,6 +47,11 @@ next_passages(const std::string &request, const std::string &str_dt,
         fill_pb_object(line, data, passage->mutable_vehicle_journey()->mutable_route()->mutable_line(), 0, now, action_period);
         fill_pb_object(physical_mode, data, passage->mutable_vehicle_journey()->mutable_physical_mode(), 0, now, action_period);
     }
+    auto pagination = handler.pb_response.mutable_pagination();
+    pagination->set_totalresult(handler.total_result);
+    pagination->set_startpage(start_page);
+    pagination->set_itemsperpage(count);
+    pagination->set_itemsonpage(handler.pb_response.route_schedules_size());
     return handler.pb_response;
 }
 
