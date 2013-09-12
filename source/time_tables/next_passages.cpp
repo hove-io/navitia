@@ -12,8 +12,9 @@ pbnavitia::Response
 next_passages(const std::string &request, const std::string &str_dt,
               uint32_t duration, uint32_t nb_stoptimes, const int depth,
               /*const bool wheelchair*/
-              const type::AccessibiliteParams & accessibilite_params, type::Data & data, Visitor vis) {
-    RequestHandle handler(vis.api_str, request, str_dt, duration,data);
+              const type::AccessibiliteParams & accessibilite_params, type::Data & data, Visitor vis,
+              uint32_t count, uint32_t start_page) {
+    RequestHandle handler(vis.api_str, request, str_dt, duration,data, count, start_page);
 
     if(handler.pb_response.has_error()) {
         return handler.pb_response;
@@ -51,7 +52,8 @@ next_passages(const std::string &request, const std::string &str_dt,
 
 
 pbnavitia::Response next_departures(const std::string &request, const std::string &str_dt, uint32_t duration, uint32_t nb_stoptimes, const int depth,
-                                    /*const bool wheelchair*/const type::AccessibiliteParams & accessibilite_params, type::Data & data) {
+                                    /*const bool wheelchair*/const type::AccessibiliteParams & accessibilite_params, type::Data & data,
+                                    uint32_t count, uint32_t start_page) {
 
     struct vis_next_departures {
         struct predicate_t {
@@ -67,12 +69,13 @@ pbnavitia::Response next_departures(const std::string &request, const std::strin
         vis_next_departures(type::Data& data) : api_str("NEXT_DEPARTURES"), api_pb(pbnavitia::NEXT_DEPARTURES), predicate(data) {}
     };
     vis_next_departures vis(data);
-    return next_passages(request, str_dt, duration, nb_stoptimes, depth, accessibilite_params/*wheelchair*/, data, vis);
+    return next_passages(request, str_dt, duration, nb_stoptimes, depth, accessibilite_params/*wheelchair*/, data, vis, count, start_page);
 }
 
 
 pbnavitia::Response next_arrivals(const std::string &request, const std::string &str_dt, uint32_t duration, uint32_t nb_stoptimes, const int depth,
-                                  /*const bool wheelchair*/const type::AccessibiliteParams & accessibilite_params, type::Data & data) {
+                                  /*const bool wheelchair*/const type::AccessibiliteParams & accessibilite_params, type::Data & data,
+                                  uint32_t count, uint32_t start_page) {
 
     struct vis_next_arrivals {
         struct predicate_t {
@@ -88,7 +91,7 @@ pbnavitia::Response next_arrivals(const std::string &request, const std::string 
         vis_next_arrivals(type::Data& data) : api_str("NEXT_ARRIVALS"), api_pb(pbnavitia::NEXT_ARRIVALS), predicate(data) {}
     };
     vis_next_arrivals vis(data);
-    return next_passages(request, str_dt, duration, nb_stoptimes, depth, accessibilite_params/*wheelchair*/, data, vis);
+    return next_passages(request, str_dt, duration, nb_stoptimes, depth, accessibilite_params/*wheelchair*/, data, vis,count , start_page);
 }
 
 

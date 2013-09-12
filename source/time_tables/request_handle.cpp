@@ -34,5 +34,4 @@ RequestHandle::RequestHandle(const std::string &API, const std::string &request,
 
 }
 
-
 }}
