@@ -48,14 +48,14 @@ bool Verification::verif(Path path) {
 }
 
 bool Verification::croissance(Path path) {
-    navitia::type::DateTime precdt = navitia::type::DateTime::min;
+    DateTime precdt = DateTimeUtils::min;
     for(PathItem item : path.items) {
         if(precdt > item.departure) {
             std::cout << "Erreur dans la vérification de la croissance des horaires : " << precdt  << " >  " << item.departure << std::endl;
             return false;
         }
         if(item.departure > item.arrival) {
-            std::cout << "Erreur dans la vérification de la croissance des horaires : " << item.departure<< " >  "   << item.arrival  << std::endl;
+            std::cout << "Erreur dans la vérification de la croissance des horaires : " << item.departure << " >  " << item.arrival << std::endl;
             return false;
         }
         precdt = item.arrival;
@@ -66,8 +66,8 @@ bool Verification::croissance(Path path) {
 bool Verification::vj_valides(Path path) {
     for(PathItem item : path.items) {
         if(item.type == public_transport) {
-            if(!data.vehicle_journeys[item.vj_idx]->validity_pattern->check(item.departure.date())) {
-                std::cout << " le vj : " << item.vj_idx << " n'est pas valide le jour : " << item.departure.date() << std::endl;
+            if(!data.vehicle_journeys[item.vj_idx]->validity_pattern->check(DateTimeUtils::date(item.departure))) {
+                std::cout << " le vj : " << item.vj_idx << " n'est pas valide le jour : " << DateTimeUtils::date(item.departure) << std::endl;
                 return false;
             }
         }
@@ -106,7 +106,7 @@ bool Verification::check_correspondances(Path path) {
             conn.duration = item.arrival - item.departure;
             connection_list.push_back(conn);
         }
-        if(precitem.arrival != navitia::type::DateTime::inf) {
+        if(precitem.arrival != DateTimeUtils::inf) {
             if(precitem.type == public_transport && item.type == public_transport) {
                 conn.departure = data.stop_points[precitem.stop_points.back()];
                 conn.destination =  data.stop_points[item.stop_points.front()];
