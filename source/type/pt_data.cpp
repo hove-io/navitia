@@ -48,7 +48,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
         this->stop_area_autocomplete.add_string(sa->name + " " + key, sa->idx, georef.alias, georef.synonymes);
     }
     this->stop_area_autocomplete.build();
-    this->stop_area_autocomplete.compute_score(&this, georef, type::Type_e::StopArea);
+    this->stop_area_autocomplete.compute_score((*this), georef, type::Type_e::StopArea);
 
     for(const StopPoint* sp : this->stop_points){
         std::string key="";

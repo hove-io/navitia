@@ -109,9 +109,9 @@ struct Autocomplete
         }
     }
 
-
     void compute_score(const type::PT_Data &pt_data, const georef::GeoRef &georef,
-                       const type::Type_e type);
+                       const type::Type_e type);/* {
+    }*/
     // Méthodes premettant de retrouver nos éléments
     /** Définit un fonctor permettant de parcourir notre structure un peu particulière */
     struct comp{
