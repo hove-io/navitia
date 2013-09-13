@@ -19,7 +19,7 @@
 namespace navitia { namespace autocomplete {
 
 
-/** Map de type first letter
+/** Map de type Autocomplete
   *
   * On associe une chaine de caractères, par exemple "rue jean jaures" à une valeur T (typiquement un pointeur
   * ou un indexe)
@@ -28,7 +28,7 @@ namespace navitia { namespace autocomplete {
   */
 template<class T>
 struct Autocomplete
-{    
+{
     /// structure qui contient la position des mots dans autocomplete et le nombre de match.
     struct fl_quality{
         T idx;
@@ -49,10 +49,11 @@ struct Autocomplete
     struct word_quality{
         int word_count;
         int word_distance;
+        int score;
 
         word_quality():word_count(0), word_distance(0){}
         template<class Archive> void serialize(Archive & ar, const unsigned int) {
-            ar & word_count & word_distance;
+            ar & word_count & word_distance & score;
         }
     };
 
@@ -77,7 +78,7 @@ struct Autocomplete
     /** Étant donné une chaîne de caractères et la position de l'élément qui nous intéresse :
       * – on découpe en mots la chaîne (tokens)
       * — on rajoute la position à la liste de chaque mot
-      */    
+      */
     void add_string(std::string str, T position, const std::map<std::string, std::string> & map_alias,
                     const std::map<std::string, std::string> & map_synonymes){
         word_quality wc;
@@ -106,9 +107,11 @@ struct Autocomplete
         for(auto key_val: map){
             vec_map.push_back(std::make_pair(key_val.first, std::vector<T>(key_val.second.begin(), key_val.second.end())));
         }
-    }    
+    }
 
-
+    void compute_score(const type::PT_Data &pt_data, const georef::GeoRef &georef,
+                       const type::Type_e type);/* {
+    }*/
     // Méthodes premettant de retrouver nos éléments
     /** Définit un fonctor permettant de parcourir notre structure un peu particulière */
     struct comp{

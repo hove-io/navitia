@@ -21,6 +21,7 @@ message PTReferential {
 message Place {
     required string name = 1;
     required string uri = 2;
+    optional NavitiaType embedded_type = 3;
     optional StopArea stop_area = 4;
     optional Poi poi = 5;
     optional StopPoint stop_point = 6;
@@ -29,7 +30,6 @@ message Place {
     optional AdministrativeRegion administrative_region = 10;
     optional int32 distance = 11;
     optional int32 quality = 12;
-    optional NavitiaType embedded_type = 13;
 }
 
 enum Direction {
@@ -171,7 +171,6 @@ message Status{
 
     optional int32 nb_threads = 11;
     
-    repeated string contributors = 12;
 }
 
 message PairStopTime {
@@ -179,14 +178,14 @@ message PairStopTime {
     required StopDateTime arrival = 2;
 }
 
-message RouteScheduleStopTime {
+message ScheduleStopTime {
     optional string stop_time = 1;
     optional hasPropertie has_properties = 2;
 }
 
 message RouteScheduleRow {
     required StopPoint stop_point = 1;
-    repeated RouteScheduleStopTime stop_times = 2;
+    repeated ScheduleStopTime stop_times = 2;
 }
 
 message Header{
@@ -235,6 +234,7 @@ message Metadatas {
     required string end_production_date = 2;
     required string shape = 3;
     required string status = 4;
+    repeated string contributors = 12;
 }
 
 message Pagination {
@@ -244,6 +244,12 @@ message Pagination {
     required int32 itemsOnPage = 4;
     optional string nextPage = 5;
     optional string previousPage = 6;
+}
+
+message StopSchedule {
+    required Route route = 1;
+    required StopPoint stop_point = 2;
+    repeated ScheduleStopTime stop_date_times = 3;
 }
 
 message Response{
@@ -257,7 +263,7 @@ message Response{
     repeated string bad_words = 12;
     repeated Place places = 13;
     repeated Place places_nearby = 14;
-    
+
     //Ptref
     repeated ValidityPattern validity_patterns = 15;
     repeated Line lines = 16;
@@ -274,17 +280,21 @@ message Response{
     repeated Route routes = 27;
     repeated Poi pois = 28;
     repeated PoiType poi_types = 29;
-    
+
+    //Journeys
     repeated Journey journeys = 30;
     optional ResponseType response_type = 31;
     optional string prev = 32;
     optional string next = 33;
-    
+
+    //TimeTables
     optional StopsSchedule stops_schedule = 34;
     repeated RouteSchedule route_schedules = 35;
     repeated DepartureBoard departure_boards = 36;
     repeated Passage next_departures = 37;
     repeated Passage next_arrivals = 38;
+    repeated StopSchedule stop_schedules = 39;
+
     optional Load load = 46;
     optional Metadatas metadatas = 48;
     optional Pagination pagination = 49;

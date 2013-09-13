@@ -219,7 +219,6 @@ void Data::clean(){
     //@TODO : Attention ça fuit, il faudrait réussir à effacer les objets
     //Ce qu'il y a dans la fin du vecteur apres unique n'est pas garanti, on ne peut pas itérer sur la suite pour effacer
     stop_point_connections.resize(std::distance(stop_point_connections.begin(), it_end));
-
     LOG4CPLUS_INFO(logger, "J'ai supprimé " + boost::lexical_cast<std::string>(num_elements-stop_point_connections.size()) + " doublons dans les connections");
 }
 

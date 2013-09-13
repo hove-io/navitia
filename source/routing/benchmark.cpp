@@ -40,11 +40,16 @@ struct Result {
 int main(int argc, char** argv){
     po::options_description desc("Options de l'outil de benchmark");
     std::string file, output;
-    int iterations;
+    int iterations, start, target, date, hour;
+
     desc.add_options()
             ("help", "Affiche l'aide")
             ("interations,i", po::value<int>(&iterations)->default_value(100), "Nombre d'itérations (10 calculs par itération)")
             ("file,f", po::value<std::string>(&file)->default_value("data.nav.lz4"), "Données en entrée")
+            ("start,s", po::value<int>(&start)->default_value(-1), "Start pour du debug")
+            ("target,t", po::value<int>(&target)->default_value(-1), "Target pour du debug")
+            ("date,d", po::value<int>(&date)->default_value(-1), "Date pour du debug")
+            ("hour,h", po::value<int>(&hour)->default_value(-1), "Hour pour du debug")
             ("output,o", po::value<std::string>(&output)->default_value("benchmark.csv"), "Fichier de sortie");
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -60,35 +65,45 @@ int main(int argc, char** argv){
         Timer t("Chargement des données : " + file);
         data.load(file);
     }
-
-    // Génération des instances
-    std::random_device rd;
-    std::mt19937 rng(31442);
-    std::uniform_int_distribution<> gen(0,data.pt_data.stop_areas.size()-1);
-
     std::vector<PathDemand> demands;
-    for(int i = 0; i < iterations; ++i) {
-        std::vector<unsigned int> hours{0, 28800, 36000, 72000, 86000};
-        std::vector<unsigned int> days({7});
-        if(data.pt_data.validity_patterns.front()->beginning_date.day_of_week().as_number() == 6)
-            days.push_back(8);
-        else
-            days.push_back(13);
 
+    if(start != -1 && target != -1 && date != -1 && hour != -1) {
         PathDemand demand;
-        demand.start = gen(rng);
-        demand.target = gen(rng);
-        while(demand.start == demand.target) {
+        demand.start = start;
+        demand.target = target;
+        demand.hour = hour;
+        demand.date = date;
+        demands.push_back(demand);
+    } else {
+        // Génération des instances
+        std::random_device rd;
+        std::mt19937 rng(31442);
+        std::uniform_int_distribution<> gen(0,data.pt_data.stop_areas.size()-1);
+
+        for(int i = 0; i < iterations; ++i) {
+            std::vector<unsigned int> hours{0, 28800, 36000, 72000, 86000};
+            std::vector<unsigned int> days({7});
+            if(data.pt_data.validity_patterns.front()->beginning_date.day_of_week().as_number() == 6)
+                days.push_back(8);
+            else
+                days.push_back(13);
+
+            PathDemand demand;
+            demand.start = gen(rng);
             demand.target = gen(rng);
-        }
-        for(auto day : days) {
-            for(auto hour : hours) {
-                demand.date = day;
-                demand.hour = hour;
-                demands.push_back(demand);
+            while(demand.start == demand.target) {
+                demand.target = gen(rng);
+            }
+            for(auto day : days) {
+                for(auto hour : hours) {
+                    demand.date = day;
+                    demand.hour = hour;
+                    demands.push_back(demand);
+                }
             }
         }
     }
+
     // Calculs des itinéraires
     std::vector<Result> results;
     data.build_raptor();

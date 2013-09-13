@@ -67,7 +67,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                     pb_section->set_begin_date_time(iso_string(d, DateTimeUtils::date(departure_time), DateTimeUtils::hour(departure_time)));
                 }
             }
-            
+
             const type::VehicleJourney* vj = nullptr;
             // La partie TC et correspondances
             for(PathItem & item : path.items){
@@ -75,7 +75,6 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                 pbnavitia::Section * pb_section = pb_journey->add_sections();
                 if(item.type == public_transport){
                     pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
-                    
                     boost::posix_time::ptime departure_ptime , arrival_ptime;
                     for(size_t i=0;i<item.stop_points.size();++i){
                         pbnavitia::StopDateTime * stop_time = pb_section->add_stop_date_times();
@@ -105,7 +104,6 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                         fill_section(pb_section, item.vj_idx, d, now, action_period);
                     }
                 }
-
                 else {
                     pb_section->set_type(pbnavitia::TRANSFER);
                     switch(item.type) {
@@ -210,7 +208,7 @@ parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str,
 }
 
 
-pbnavitia::Response 
+pbnavitia::Response
 make_response(RAPTOR &raptor, const type::EntryPoint &origin,
               const type::EntryPoint &destination,
               const std::vector<std::string> &datetimes_str, bool clockwise,
@@ -287,7 +285,6 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                                    const type::AccessibiliteParams & accessibilite_params,
                                    std::vector<std::string> forbidden,
                                    streetnetwork::StreetNetwork & worker, int max_duration, uint32_t max_transfers) {
-    
     pbnavitia::Response response;
 
     boost::posix_time::ptime datetime;
@@ -304,8 +301,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
         response.set_response_type(pbnavitia::NO_ORIGIN_POINT);
         return response;
     }
-    
-    
+
     std::vector<idx_label> tmp;
     int day = (datetime.date() - raptor.data.meta.production_date.begin()).days();
     int time = datetime.time_of_day().total_seconds();
@@ -339,6 +335,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
                 auto pb_journey = response.add_journeys();
                 pb_journey->set_arrival_date_time(iso_string(raptor.data, DateTimeUtils::date(label), DateTimeUtils::hour(label)));
                 pb_journey->set_departure_date_time(iso_string(raptor.data, DateTimeUtils::date(label), DateTimeUtils::hour(label)));
+                pb_journey->set_requested_date_time(iso_string(raptor.data,DateTimeUtils::date(init_dt),  DateTimeUtils::hour(init_dt)));
                 pb_journey->set_duration(duration);
                 pb_journey->set_nb_transfers(round);
                 fill_pb_placemark(raptor.data.pt_data.journey_pattern_points[best_rp]->stop_point, raptor.data, pb_journey->mutable_destination(), 0);

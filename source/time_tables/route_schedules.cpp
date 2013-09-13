@@ -10,17 +10,25 @@ namespace pt = boost::posix_time;
 
 namespace navitia { namespace timetables {
 
-std::vector<std::vector<datetime_stop_time> > get_all_stop_times(const vector_idx &journey_patterns, const DateTime &dateTime, const DateTime &max_datetime, type::Data &d) {
+std::vector<std::vector<datetime_stop_time> >
+get_all_stop_times(const vector_idx &journey_patterns,
+                   const DateTime &dateTime,
+                   const DateTime &max_datetime, type::Data &d) {
     std::vector<std::vector<datetime_stop_time> > result;
 
-    //On cherche les premiers journey_pattern_points de toutes les journey_patterns
+    //On cherche les premiers journey_pattern_points
+    //de tous les journey_patterns
     std::vector<type::idx_t> first_journey_pattern_points;
-    for(type::idx_t journey_pattern_idx : journey_patterns) {
-        first_journey_pattern_points.push_back(d.pt_data.journey_patterns[journey_pattern_idx]->journey_pattern_point_list.front()->idx);
+    for(type::idx_t jp_idx : journey_patterns) {
+        auto jpp = d.pt_data.journey_patterns[jp_idx];
+        auto first_jpp_idx = jpp->journey_pattern_point_list.front()->idx;
+        first_journey_pattern_points.push_back(first_jpp_idx);
     }
 
-    //On fait un next_departures sur ces journey_pattern points
-    auto first_dt_st = get_stop_times(first_journey_pattern_points, dateTime, max_datetime, std::numeric_limits<int>::max(), d);
+    //On fait un best_stop_time sur ces journey_pattern points
+    auto first_dt_st = get_stop_times(first_journey_pattern_points,
+                                      dateTime, max_datetime,
+                                      std::numeric_limits<int>::max(), d);
 
     //On va chercher tous les prochains horaires
     for(auto ho : first_dt_st) {
@@ -34,9 +42,11 @@ std::vector<std::vector<datetime_stop_time> > get_all_stop_times(const vector_id
     return result;
 }
 
- std::vector<std::vector<datetime_stop_time> > make_matrice(const std::vector<std::vector<datetime_stop_time> > & stop_times, Thermometer &thermometer, type::Data &) {
-    std::vector<std::vector<datetime_stop_time> > result;
 
+std::vector<std::vector<datetime_stop_time> >
+make_matrice(const std::vector<std::vector<datetime_stop_time> >& stop_times,
+             Thermometer &thermometer, type::Data &) {
+    std::vector<std::vector<datetime_stop_time> > result;
     //On initilise le tableau vide
     for(unsigned int i=0; i<thermometer.get_thermometer().size(); ++i) {
         result.push_back(std::vector<datetime_stop_time>());
@@ -46,7 +56,8 @@ std::vector<std::vector<datetime_stop_time> > get_all_stop_times(const vector_id
     //On remplit le tableau
     int y=0;
     for(std::vector<datetime_stop_time> vec : stop_times) {
-        std::vector<uint32_t> orders = thermometer.match_journey_pattern(*vec.front().second->vehicle_journey->journey_pattern);
+        auto jpp = *vec.front().second->vehicle_journey->journey_pattern;
+        std::vector<uint32_t> orders = thermometer.match_journey_pattern(jpp);
         int order = 0;
         for(datetime_stop_time dt_stop_time : vec) {
             result[orders[order]][y] = dt_stop_time;
@@ -58,7 +69,9 @@ std::vector<std::vector<datetime_stop_time> > get_all_stop_times(const vector_id
     return result;
 }
 
-std::vector<type::VehicleJourney*> get_vehicle_jorney(const std::vector<std::vector<datetime_stop_time> > & stop_times){
+
+std::vector<type::VehicleJourney*>
+get_vehicle_jorney(const std::vector<std::vector<datetime_stop_time> >& stop_times){
     std::vector<type::VehicleJourney*> result;
     for(const std::vector<datetime_stop_time> vec : stop_times){
         type::VehicleJourney* vj = vec.front().second->vehicle_journey;
@@ -73,51 +86,75 @@ std::vector<type::VehicleJourney*> get_vehicle_jorney(const std::vector<std::vec
     return result;
 }
 
-pbnavitia::Response route_schedule(const std::string & filter, const std::string &str_dt, uint32_t duration, const uint32_t max_depth, type::Data &d) {
-    RequestHandle handler("ROUTE_SCHEDULE", filter, str_dt, duration, d);
+
+pbnavitia::Response
+route_schedule(const std::string& filter, const std::string &str_dt,
+               uint32_t duration, const uint32_t max_depth,
+               int count, int start_page, type::Data &d) {
+    RequestHandle handler("ROUTE_SCHEDULE", filter, str_dt, duration, d,
+                          count, start_page);
 
     if(handler.pb_response.has_error()) {
         return handler.pb_response;
     }
     auto now = pt::second_clock::local_time();
-    pt::time_period action_period(to_posix_time(handler.date_time, d), to_posix_time(handler.max_datetime, d));
+    auto pt_datetime = to_posix_time(handler.date_time, d);
+    auto pt_max_datetime = to_posix_time(handler.max_datetime, d);
+    pt::time_period action_period(pt_datetime, pt_max_datetime);
     Thermometer thermometer(d);
-
-    for(type::idx_t route_idx : navitia::ptref::make_query(type::Type_e::Route, filter, d)) {
-        auto journey_patterns = d.pt_data.routes[route_idx]->get(type::Type_e::JourneyPattern, d.pt_data);
+    auto routes_idx = navitia::ptref::make_query(type::Type_e::Route, filter, d);
+    for(type::idx_t route_idx : routes_idx) {
+        auto route = d.pt_data.routes[route_idx];
+        auto jps = route->get(type::Type_e::JourneyPattern, d.pt_data);
         //On récupère les stop_times
-        auto stop_times = get_all_stop_times(journey_patterns, handler.date_time, handler.max_datetime, d);
+        auto stop_times = get_all_stop_times(jps, handler.date_time,
+                                             handler.max_datetime, d);
         std::vector<vector_idx> stop_points;
-        for(auto journey_pattern : journey_patterns) {
+        for(auto jp_idx : jps) {
+            auto jp = d.pt_data.journey_patterns[jp_idx];
             stop_points.push_back(vector_idx());
-            for(auto jpp : d.pt_data.journey_patterns[journey_pattern]->journey_pattern_point_list) {
+            for(auto jpp : jp->journey_pattern_point_list) {
                 stop_points.back().push_back(jpp->stop_point->idx);
             }
         }
         thermometer.generate_thermometer(stop_points);
-        //On génère la matrice        
-         std::vector<std::vector<datetime_stop_time> >  matrice = make_matrice(stop_times, thermometer, d);
+        //On génère la matrice
+        auto  matrice = make_matrice(stop_times, thermometer, d);
          //On récupère les vehicleJourny de manière unique
-        std::vector<type::VehicleJourney*> vehicle_journy_list = get_vehicle_jorney(stop_times);
+        auto vehicle_journy_list = get_vehicle_jorney(stop_times);
         auto schedule = handler.pb_response.add_route_schedules();
         pbnavitia::Table *table = schedule->mutable_table();
-        navitia::type::Route* route = d.pt_data.routes[route_idx];
-        fill_pb_object(route, d, schedule->mutable_route(), 0, now, action_period);
+        auto m_route = schedule->mutable_route();
+        fill_pb_object(route, d, m_route, 0,
+                       now, action_period);
         if (route->line != nullptr){
-            fill_pb_object(route->line, d, schedule->mutable_route()->mutable_line(), 0, now, action_period);
+            auto m_line = m_route->mutable_line();
+
+    auto pagination = handler.pb_response.mutable_pagination();
+    pagination->set_totalresult(handler.total_result);
+    pagination->set_startpage(start_page);
+    pagination->set_itemsperpage(count);
+    pagination->set_itemsonpage(std::max(handler.pb_response.departure_boards_size(),
+                                         handler.pb_response.stop_schedules_size()));
+            fill_pb_object(route->line, d, m_line, 0, now, action_period);
             if(route->line->commercial_mode){
-                fill_pb_object(route->line->commercial_mode, d, schedule->mutable_route()->mutable_line()->mutable_commercial_mode(), 0);
+                auto m_commercial_mode = m_line->mutable_commercial_mode();
+                fill_pb_object(route->line->commercial_mode,
+                               d, m_commercial_mode, 0);
             }
             if(route->line->network){
-                fill_pb_object(route->line->network, d, schedule->mutable_route()->mutable_line()->mutable_network(), 0);
+                auto m_network = m_line->mutable_network();
+                fill_pb_object(route->line->network, d, m_network, 0);
             }
         }
 
         for(type::VehicleJourney* vj : vehicle_journy_list){
             pbnavitia::Header* header = table->add_headers();
-            fill_pb_object(vj, d, header->mutable_vehiclejourney(), 0, now, action_period);
+            auto m_vj = header->mutable_vehiclejourney();
+            fill_pb_object(vj, d, m_vj, 0, now, action_period);
             if (vj->physical_mode != nullptr){
-                fill_pb_object(vj->physical_mode, d,  header->mutable_vehiclejourney()->mutable_physical_mode(),0, now, action_period);
+                fill_pb_object(vj->physical_mode, d,
+                               m_vj->mutable_physical_mode(),0, now, action_period);
             }
             header->set_direction(vj->get_direction());
         }
@@ -126,13 +163,21 @@ pbnavitia::Response route_schedule(const std::string & filter, const std::string
             type::idx_t spidx=thermometer.get_thermometer()[i];
             const type::StopPoint* sp = d.pt_data.stop_points[spidx];
             pbnavitia::RouteScheduleRow* row = table->add_rows();
-            fill_pb_object(sp, d, row->mutable_stop_point(), max_depth, now, action_period);
+            fill_pb_object(sp, d, row->mutable_stop_point(), max_depth,
+                           now, action_period);
             for(unsigned int j=0; j<stop_times.size(); ++j) {
                 datetime_stop_time dt_stop_time  = matrice[i][j];
-                fill_pb_object(dt_stop_time.second, d, row, max_depth, now, action_period, dt_stop_time.first);
+                auto rs_st = row->add_stop_times();
+                fill_pb_object(dt_stop_time.second, d, rs_st, max_depth,
+                               now, action_period, dt_stop_time.first);
             }
         }
     }
+    auto pagination = handler.pb_response.mutable_pagination();
+    pagination->set_totalresult(handler.total_result);
+    pagination->set_startpage(start_page);
+    pagination->set_itemsperpage(count);
+    pagination->set_itemsonpage(handler.pb_response.route_schedules_size());
     return handler.pb_response;
 }
 }}

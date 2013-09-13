@@ -86,7 +86,7 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
     }
 
     if(first_st != nullptr){
-        return std::make_pair(first_st, !first_st->is_frequency() ? 0 : compute_gap(DateTimeUtils::hour(dt), first_st->start_time, first_st->headway_secs));
+        return std::make_pair(first_st, !first_st->is_frequency() ? 0 : compute_gap(DateTimeUtils::hour(dt), first_st->start_time, first_st->headway_secs, true));
     }
 
     //Cette journey_pattern ne comporte aucun trip compatible
@@ -107,7 +107,7 @@ tardiest_stop_time(const type::JourneyPatternPoint* jpp,
                        data.dataRaptor.first_stop_time[jpp->journey_pattern->idx] +
                        jpp->order * data.dataRaptor.nb_trips[jpp->journey_pattern->idx];
     const auto end = begin + data.dataRaptor.nb_trips[jpp->journey_pattern->idx];
-
+    auto tmp_vec = std::vector<uint32_t>(begin, end);
     auto it = std::lower_bound(begin, end, DateTimeUtils::hour(dt),
                                [](uint32_t arrival_time, uint32_t hour){
                                   return arrival_time > hour;}
@@ -125,7 +125,7 @@ tardiest_stop_time(const type::JourneyPatternPoint* jpp,
     }
 
     if(first_st != nullptr){
-        return std::make_pair(first_st, !first_st->is_frequency() ? 0 : compute_gap(DateTimeUtils::hour(dt), first_st->start_time, first_st->headway_secs));
+        return std::make_pair(first_st, !first_st->is_frequency() ? 0 : compute_gap(DateTimeUtils::hour(dt), first_st->start_time, first_st->headway_secs, false));
     }
 
     //Cette journey_pattern ne comporte aucun trip compatible

@@ -163,7 +163,8 @@ std::vector<Filter> parse(std::string request){
 }
 
 
-std::vector<idx_t> make_query(Type_e requested_type, std::string request, const Data & data) {
+std::vector<idx_t> make_query(Type_e requested_type, std::string request,
+                              const Data & data) {
     std::vector<Filter> filters;
 
     if(!request.empty()){
@@ -212,6 +213,29 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request, const 
     return final_indexes;
 }
 
+
+std::vector<type::idx_t> paginate(std::vector<type::idx_t> &indexes,
+                                  int count, int start_page) {
+    std::vector<type::idx_t> response;
+    if(count>=0 && start_page>=0) {
+        uint32_t begin_i = start_page * count;
+        uint32_t end_i = begin_i + count;
+        if(begin_i < indexes.size()) {
+            auto begin = indexes.begin() + begin_i;
+            std::vector<idx_t>::iterator end;
+            if(end_i < indexes.size())
+                end = indexes.begin() + end_i;
+            else
+                end = indexes.end();
+            response = std::vector<idx_t>(begin, end);
+        }
+    }else{
+        return indexes;
+    }
+
+
+    return response;
+}
 
 
 

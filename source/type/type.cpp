@@ -309,7 +309,8 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data & data) const {
     switch(type) {
     case Type_e::StopArea: result.push_back(stop_area->idx); break;
     case Type_e::JourneyPatternPoint: return indexes(journey_pattern_point_list); break;
-    case Type_e::Connection: for(const StopPointConnection* conn : data.stop_point_connections) {
+    case Type_e::Connection:
+        for(const StopPointConnection* conn : data.stop_point_connections) {
             if(conn->departure->idx == this->idx) {
                 result.push_back(conn->idx);
             }
@@ -337,44 +338,36 @@ bool Connection<JourneyPatternPoint>::operator<(const Connection<JourneyPatternP
 template<>
 bool Connection<StopPoint>::operator<(const Connection<StopPoint> & other) const { return this < &other; }
 
-EntryPoint::EntryPoint(const std::string &uri) : uri(uri) {
-       size_t pos = uri.find(":");
-       if(pos == std::string::npos)
-           type = Type_e::Unknown;
-       else {
-           type = static_data::get()->typeByCaption(uri.substr(0,pos));
-       }
-
-       // Gestion des adresses
-       if (type == Type_e::Address){
-           std::vector<std::string> vect;
-           vect = split_string(uri, ":");
-           if(vect.size() == 3){
-               this->uri = vect[0] + ":" + vect[1];
-               this->house_number = str_to_int(vect[2]);
-           }
-       }
-
-       if(type == Type_e::Coord){
-           size_t pos2 = uri.find(":", pos+1);
-           try{
-               if(pos2 != std::string::npos) {
-                   this->coordinates.set_lon(boost::lexical_cast<double>(uri.substr(pos+1, pos2 - pos - 1)));
-                   this->coordinates.set_lat(boost::lexical_cast<double>(uri.substr(pos2+1)));
-               }
-           }catch(boost::bad_lexical_cast){
-               this->coordinates.set_lon(0);
-               this->coordinates.set_lat(0);
-           }
+EntryPoint::EntryPoint(const Type_e type, const std::string &uri) : type(type), uri(uri) {
+   // Gestion des adresses
+   if (type == Type_e::Address){
+       std::vector<std::string> vect;
+       vect = split_string(uri, ":");
+       if(vect.size() == 3){
+           this->uri = vect[0] + ":" + vect[1];
+           this->house_number = str_to_int(vect[2]);
        }
    }
+   if(type == Type_e::Coord){
+       size_t pos2 = uri.find(":", 6);
+       try{
+           if(pos2 != std::string::npos) {
+               this->coordinates.set_lon(boost::lexical_cast<double>(uri.substr(6, pos2 - 6)));
+               this->coordinates.set_lat(boost::lexical_cast<double>(uri.substr(pos2+1)));
+           }
+       }catch(boost::bad_lexical_cast){
+           this->coordinates.set_lon(0);
+           this->coordinates.set_lat(0);
+       }
+   }
+}
 
 void StreetNetworkParams::set_filter(const std::string &param_uri){
     size_t pos = param_uri.find(":");
     if(pos == std::string::npos)
         type_filter = Type_e::Unknown;
     else {
-        uri_filter = param_uri;        
+        uri_filter = param_uri;
         type_filter = static_data::get()->typeByCaption(param_uri.substr(0,pos));
     }
 }

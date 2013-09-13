@@ -28,9 +28,13 @@ best_stop_time(const type::JourneyPatternPoint* jpp,
           const bool clockwise, const type::Data &data, bool reconstructing_path = false);
 
 /// Calcule le gap pour les horaires en fréquences
-inline uint32_t compute_gap(uint32_t hour, uint32_t start_time, uint32_t headway_secs) {
+inline uint32_t compute_gap(uint32_t hour, uint32_t start_time, uint32_t headway_secs, bool clockwise) {
     float tmp = hour-start_time + (hour>start_time ? 0 : DateTimeUtils::SECONDS_PER_DAY);
-
-    return std::ceil(tmp/headway_secs)*headway_secs;
+    int x = clockwise ? std::ceil(tmp/headway_secs) : std::floor(tmp/headway_secs);
+    BOOST_ASSERT((clockwise && (x*headway_secs+start_time >= hour)) ||
+                 (!clockwise && (x*headway_secs+start_time <= hour)));
+    BOOST_ASSERT((clockwise && (x*headway_secs+start_time - hour) <= headway_secs) ||
+                 (!clockwise && (hour - (x*headway_secs+start_time)) <= headway_secs));
+    return x*headway_secs;
 }
 }}

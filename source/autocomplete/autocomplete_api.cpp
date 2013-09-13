@@ -229,6 +229,11 @@ pbnavitia::Response autocomplete(const std::string &q,
     while (pb_response.mutable_places()->size() > nbmax){
         pb_response.mutable_places()->RemoveLast();
     }
+    auto pagination = pb_response.mutable_pagination();
+    pagination->set_totalresult(result_size);
+    pagination->set_startpage(0);
+    pagination->set_itemsperpage(nbmax);
+    pagination->set_itemsonpage(result_size);
     return pb_response;
 }
 

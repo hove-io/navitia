@@ -243,7 +243,8 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departur
     if(b_dest.best_now_rpid == type::invalid_idx) {
         return result;
     }
-
+    auto tmp = makePathes(calc_dest, bound, walking_speed, accessibilite_params, *this, clockwise);
+    result.insert(result.end(), tmp.begin(), tmp.end());
     //Second passe : permet d’optimiser les temps de correspondance
     departures = getDepartures(calc_dep, calc_dest, !clockwise, walking_speed, labels, boardings, boarding_types, accessibilite_params/*required_properties*/, data);
 
@@ -446,7 +447,7 @@ void RAPTOR::raptor_loop(Visitor visitor, /*const type::Properties &required_pro
                             else
                                 bound = b_dest.best_now;
 
-                            DateTimeUtils::update(workingDt, !st->is_frequency()? st->section_end_time(visitor.clockwise()) : st->start_time+gap, visitor.clockwise());
+                            DateTimeUtils::update(workingDt, st->section_end_time(visitor.clockwise(), gap), visitor.clockwise());
 
                             if(visitor.comp(workingDt, bound) && st->valid_end(visitor.clockwise())) {
                                 working_labels[jpp_idx] = workingDt;
@@ -484,7 +485,9 @@ void RAPTOR::raptor_loop(Visitor visitor, /*const type::Properties &required_pro
                             it_st = visitor.first_stoptime(temp_stop_time);
                             const type::StopTime* st = *it_st;
                             workingDt = labels_temp;
-                            DateTimeUtils::update(workingDt, !st->is_frequency()? st->section_end_time(visitor.clockwise()) : st->start_time+gap, visitor.clockwise());
+                            DateTimeUtils::update(workingDt, st->section_end_time(visitor.clockwise(), gap), visitor.clockwise());
+                            BOOST_ASSERT(visitor.comp(labels_temp, workingDt) || labels_temp == workingDt);
+                            BOOST_ASSERT(gap >= 0);
                             l_zone = st->local_traffic_zone;
                         }
                     }

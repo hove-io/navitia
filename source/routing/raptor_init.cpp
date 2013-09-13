@@ -55,9 +55,9 @@ getDepartures(const std::vector<std::pair<type::idx_t, double> > &departs, const
 // Does the current date improves compared to best_so_far – we must not forget to take the walking duration
 bool improves(const DateTime & best_so_far, bool clockwise, const DateTime & current, int walking_duration) {
     if(clockwise) {
-        return current - walking_duration > best_so_far;
+        return (current - walking_duration) > best_so_far;
     } else {
-        return current + walking_duration < best_so_far;
+        return (current + walking_duration) < best_so_far;
     }
 }
 
@@ -84,29 +84,32 @@ getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, double> 
             for(auto journey_pattern_point : data.pt_data.stop_points[spid_dist.first]->journey_pattern_point_list) {
                 type::idx_t jppidx = journey_pattern_point->idx;
                 auto type = get_type(round, jppidx, boarding_types, data);
+                auto& l = labels[round][jppidx];
                 if((type != boarding_type::uninitialized) &&
-                   labels[round][jppidx] != DateTimeUtils::inf &&
-                   labels[round][jppidx] != DateTimeUtils::min &&
-                   improves(best_dt, clockwise, labels[round][jppidx], spid_dist.second/walking_speed) ) {
+                   l != DateTimeUtils::inf &&
+                   l != DateTimeUtils::min &&
+                   improves(best_dt, clockwise, l, spid_dist.second/walking_speed) ) {
                     best_jpp = jppidx;
-                    best_dt_jpp = labels[round][jppidx];
+                    best_dt_jpp = l;
                     if(type == boarding_type::vj) {
                         // Dans le sens horaire : lors du calcul on gardé que l’heure de départ, mais on veut l’arrivée
                         // Il faut donc retrouver le stop_time qui nous intéresse avec best_stop_time
                         const type::StopTime* st;
-                        uint32_t gap;
+                        uint32_t gap = 0;
 
-                        std::tie(st, gap) = best_stop_time(journey_pattern_point, labels[round][jppidx], accessibilite_params/*required_properties*/, !clockwise, data, true);
+                        std::tie(st, gap) = best_stop_time(journey_pattern_point, l, accessibilite_params/*required_properties*/, !clockwise, data, true);
                         if(clockwise) {
-                            DateTimeUtils::update(best_dt_jpp, st->arrival_time + gap, !clockwise);
+                            auto arrival_time = !st->is_frequency() ? st->arrival_time : st->f_arrival_time(gap);
+                            DateTimeUtils::update(best_dt_jpp, arrival_time, !clockwise);
                         } else {
-                            DateTimeUtils::update(best_dt_jpp, st->departure_time + gap, !clockwise);
+                            auto departure_time = !st->is_frequency() ? st->departure_time : st->f_departure_time(gap);
+                            DateTimeUtils::update(best_dt_jpp, departure_time, !clockwise);
                         }
                     }
                     if(clockwise)
-                        best_dt = best_dt_jpp - (spid_dist.second/walking_speed);
+                        best_dt = l - (spid_dist.second/walking_speed);
                     else
-                        best_dt = best_dt_jpp + (spid_dist.second/walking_speed);
+                        best_dt = l + (spid_dist.second/walking_speed);
                 }
             }
         }

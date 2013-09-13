@@ -279,6 +279,11 @@ struct GeographicalCoord{
         return ((this->lat() == 0) || (this->lon() == 0));
     }
 
+    bool is_valid() const{
+        return this->lon() >= -180 && this->lon() <= 180 &&
+               this->lat() >= -90 && this->lat() <= 90;
+    }
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & _lon & _lat;
     }
@@ -554,9 +559,12 @@ public:
     std::bitset<366> days;
     boost::gregorian::date beginning_date;
 
-    ValidityPattern()  { }
-    ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date){ }
-    ValidityPattern(boost::gregorian::date beginning_date, const std::string & vp = "") : days(vp), beginning_date(beginning_date){ }
+    ValidityPattern()  {}
+    ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date){}
+    ValidityPattern(boost::gregorian::date beginning_date, const std::string & vp = "") : days(vp), beginning_date(beginning_date){}
+    ValidityPattern(const ValidityPattern & vp) : days(vp.days), beginning_date(vp.beginning_date){}
+    ValidityPattern(const ValidityPattern* vp) : days(vp->days), beginning_date(vp->beginning_date){}
+
     int slide(boost::gregorian::date day) const;
     void add(boost::gregorian::date day);
     void add(int day);
@@ -660,11 +668,28 @@ struct StopTime : public Nameable {
     inline void set_is_frequency(bool value) {properties[IS_FREQUENCY] = value;}
     inline void set_date_time_estimated(bool value) {properties[DATE_TIME_ESTIMATED] = value;}
 
+
+
     /// Est-ce qu'on peut finir par ce stop_time : dans le sens avant on veut descendre
     bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
 
     /// Heure de fin de stop_time : dans le sens avant, c'est la fin, sinon le départ
-    uint32_t section_end_time(bool clockwise) const {return clockwise ? arrival_time : departure_time;}
+    uint32_t section_end_time(bool clockwise, int gap=0) const {
+        if(this->is_frequency())
+            return clockwise ? this->f_arrival_time(gap) : this->f_departure_time(gap);
+        else
+            return clockwise ? arrival_time : departure_time;
+    }
+
+    inline uint32_t f_arrival_time(int gap) const {
+        auto first_st = this->vehicle_journey->stop_time_list.front();
+        return gap + first_st->start_time + this->arrival_time - first_st->arrival_time;
+    }
+
+    inline uint32_t f_departure_time(int gap) const {
+        auto first_st = this->vehicle_journey->stop_time_list.front();
+        return gap + first_st->start_time + this->departure_time - first_st->departure_time;
+    }
 
     DateTime section_end_date(int date, bool clockwise) const {return DateTimeUtils::set(date, this->section_end_time(clockwise));}
 
@@ -761,7 +786,7 @@ struct EntryPoint {
     StreetNetworkParams streetnetwork_params;        // < paramètres de rabatement du point d'entrée
 
     /// Construit le type à partir d'une chaîne
-    EntryPoint(const std::string & uri);
+    EntryPoint(const Type_e type, const std::string & uri);
 
     EntryPoint() : type(Type_e::Unknown), house_number(-1) {}
 };
