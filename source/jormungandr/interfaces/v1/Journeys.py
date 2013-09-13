@@ -200,8 +200,8 @@ class add_date_time_from_to(object):
                 if "sections" in journey.keys():
                     for section in journey["sections"]:
                         if "temp_date_time" in section.keys():
-                            section["from"]["departure_date_time"] = section["temp_date_time"]["departure_date_time"]
-                            section["to"]["arrival_date_time"] = section["temp_date_time"]["arrival_date_time"]
+                            section["from"]["date_time"] = section["temp_date_time"]["departure_date_time"]
+                            section["to"]["date_time"] = section["temp_date_time"]["arrival_date_time"]
                             del section["temp_date_time"]
             return objects
         return wrapper
