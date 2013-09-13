@@ -83,6 +83,7 @@ route_schedule_fields = {
 }
 
 route_schedules = {
+    "error" : fields.String(attribute="error"),
     "route_schedules" : NonNullList(NonNullNested(route_schedule_fields)),
     "pagination" : NonNullNested(pagination)
     }
@@ -123,11 +124,13 @@ passage = {
 }
 
 departures = {
-    "departures" : NonNullList(NonNullNested(passage), attribute="next_departures")
+    "departures" : NonNullList(NonNullNested(passage), attribute="next_departures"),
+    "pagination" : NonNullNested(pagination)
 }
 
 arrivals = {
-    "arrivals" : NonNullList(NonNullNested(passage), attribute="next_arrivals")
+    "arrivals" : NonNullList(NonNullNested(passage), attribute="next_arrivals"),
+    "pagination" : NonNullNested(pagination)
 }
 
 class NextDepartures(Schedules):

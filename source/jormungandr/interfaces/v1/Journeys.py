@@ -92,21 +92,6 @@ class section_type(enum_type):
             pass
         return super(section_type, self).output(key, obj)
 
-class get_temp_date_time():
-    def output(self, key, obj):
-        result = {}
-        enum = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_name
-        if obj.type == enum['STREET_NETWORK'].number:
-            result = {"departure_date_time": obj.begin_date_time, "arrival_date_time": obj.end_date_time}
-        else:
-            stop_date_times = getattr(obj, "stop_date_times")
-            if len(stop_date_times)>0:
-                departure = getattr(stop_date_times[0], "departure_date_time")
-                arrival = getattr(stop_date_times[-1], "arrival_date_time")
-                result = {"departure_date_time": departure,
-                          "arrival_date_time": arrival}
-
-        return result
 
 class section_place(PbField):
     def output(self, key, obj):
@@ -131,8 +116,8 @@ section = {
                          attribute="street_network.path_items"),
     "transfer_type" : enum_type(),
     "stop_date_times" : NonNullList(NonNullNested(stop_date_time)),
-    #temp_date_time : une variable temporaire
-    "temp_date_time" : get_temp_date_time()
+    "departure_date_time" : fields.String(attribute="begin_date_time"),
+    "arrival_date_time" : fields.String(attribute="end_date_time")
 }
 
 
@@ -192,29 +177,8 @@ class add_journey_href(object):
             return objects
         return wrapper
 
-class add_date_time_from_to(object):
-    def __call__(self, f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            objects = f(*args, **kwargs)
-            if not "journeys" in objects[0].keys():
-                return objects
-            for journey in objects[0]['journeys']:
-                if "sections" in journey.keys():
-                    for section in journey["sections"]:
-                        if "temp_date_time" in section.keys():
-                            tmp = section["temp_date_time"]
-                            if tmp.has_key("departure_date_time"):
-                                section["from"]["departure_date_time"] = tmp["departure_date_time"]
-                            if tmp.has_key("arrival_date_time"):
-                                section["to"]["arrival_date_time"] = tmp["arrival_date_time"]
-                            del section["temp_date_time"]
-            return objects
-        return wrapper
-
 class Journeys(ResourceUri):
-    def __init__(self, *args, **kwargs):
-        super(Journeys, self).__init__(*args, **kwargs)
+    def __init__(self):
         modes = ["walking", "car", "bike", "br"]
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("from", type=str, dest="origin")
@@ -247,14 +211,13 @@ class Journeys(ResourceUri):
     @clean_links()
     @add_id_links()
     @add_journey_href()
-    @add_date_time_from_to()
     @marshal_with(journeys)
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parser.parse_args()
         if not region is None or (not lon is None and not lat is None):
             self.region = NavitiaManager().get_region(region, lon, lat)
             if uri:
-                objects = uri.split("/").arrival_date_time
+                objects = uri.split("/")
                 if len(objects) % 2 == 0:
                     args["origin"] = objects[-1]
                 else:
