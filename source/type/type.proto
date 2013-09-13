@@ -38,7 +38,7 @@ enum API {
     METADATAS = 14;
 }
 
-enum VehicleJourneyType{
+enum OdtType{
     regular_line = 0;                 // ligne régulière
     virtual_with_stop_time = 1;       // TAD virtuel avec horaires
     virtual_without_stop_time = 2;    // TAD virtuel sans horaires
