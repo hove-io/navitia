@@ -190,7 +190,7 @@ class Journeys(ResourceUri):
                                  dest="max_transfers")
         self.parser.add_argument("first_section_mode",
                                  type=option_value(modes),
-                                 action="append", default="walking",
+                                 default="walking",
                                  dest="origin_mode")
         self.parser.add_argument("last_section_mode",
                                  type=option_value(modes),
