@@ -214,6 +214,10 @@ class Journeys(ResourceUri):
     @marshal_with(journeys)
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parser.parse_args()
+        #TODO : Changer le protobuff pour que ce soit propre
+        args["destination_mode"] = "vls" if args["destination_mode"] == "br" else args["destination_mode"]
+        args["origin_mode"] = "vls" if args["origin_mode"] == "br" else args["origin_mode"]
+
         if not region is None or (not lon is None and not lat is None):
             self.region = NavitiaManager().get_region(region, lon, lat)
             if uri:
