@@ -6,6 +6,7 @@ from find_extrem_datetimes import extremes
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, place,\
                    PbField, stop_date_time, enum_type, NonNullList, NonNullNested
+
 from interfaces.parsers import option_value
 from ResourceUri import ResourceUri
 import datetime
@@ -114,10 +115,10 @@ section = {
                                         "name":fields.String()}),
                          attribute="street_network.path_items"),
     "transfer_type" : enum_type(),
-    "stop_date_times" : NonNullList(NonNullNested(stop_date_time))
+    "stop_date_times" : NonNullList(NonNullNested(stop_date_time)),
+    "departure_date_time" : fields.String(attribute="begin_date_time"),
+    "arrival_date_time" : fields.String(attribute="end_date_time")
 }
-
-
 
 
 journey = {
@@ -179,6 +180,7 @@ class add_journey_href(object):
 class Journeys(ResourceUri):
     def __init__(self):
         modes = ["walking", "car", "bike", "br"]
+        types = ["all", "asap"]
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("from", type=str, dest="origin")
         self.parser.add_argument("to", type=str, dest="destination")
@@ -204,6 +206,8 @@ class Journeys(ResourceUri):
         self.parser.add_argument("car_speed", type=float, default=16.8)
         self.parser.add_argument("car_distance", type=int, default=15000)
         self.parser.add_argument("forbidden_uris[]", type=str, action="append")
+        self.parser.add_argument("count", type=int)
+        self.parser.add_argument("type", type=option_value(types), default="all")
 #a supprimer
         self.parser.add_argument("max_duration", type=int, default=36000)
 

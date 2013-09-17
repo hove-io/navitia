@@ -3,13 +3,14 @@
 #include "type/datetime.h"
 
 #include <boost/foreach.hpp>
+#include <boost/dynamic_bitset.hpp>
 namespace navitia { namespace routing {
 
 /** Données statiques qui ne sont pas modifiées pendant le calcul */
 struct dataRAPTOR {
 
     typedef std::pair<int, int> pair_int;
-    typedef std::vector<type::DateTime> label_vector_t;
+    typedef std::vector<DateTime> label_vector_t;
     typedef std::vector<navitia::type::idx_t> vector_idx;
 
 
@@ -30,6 +31,8 @@ struct dataRAPTOR {
     label_vector_t labels_const;
     label_vector_t labels_const_reverse;
     vector_idx boardings_const;
+    std::vector<boost::dynamic_bitset<> > jp_validity_patterns;
+
 
     dataRAPTOR()  {}
     void load(const navitia::type::PT_Data &data);

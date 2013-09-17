@@ -51,6 +51,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
         }
     }
     this->stop_area_autocomplete.build();
+    this->stop_area_autocomplete.compute_score((*this), georef, type::Type_e::StopArea);
 
     for(const StopPoint* sp : this->stop_points){
         // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin

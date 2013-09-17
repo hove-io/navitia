@@ -28,7 +28,7 @@ class Script:
                      "connections", "journey_pattern_points",
                      "journey_patterns", "companies", "vehicle_journeys",
                      "pois", "poi_types", "journeys", "isochrone", "metadatas",
-                     "status", "load"]
+                     "status", "load", "networks"]
 
 
 
@@ -160,7 +160,6 @@ class Script:
     def __fill_display_and_uris(self, resp):
         for journey in resp.journeys:
             for section in journey.sections:
-
                 if section.type == response_pb2.PUBLIC_TRANSPORT:
                     section.pt_display_informations.physical_mode = section.vehicle_journey.physical_mode.name
                     section.pt_display_informations.commercial_mode = section.vehicle_journey.route.line.commercial_mode.name
@@ -181,6 +180,41 @@ class Script:
                     section.uris.physical_mode = section.vehicle_journey.physical_mode.uri
                     section.uris.network = section.vehicle_journey.route.line.network.uri
                     section.ClearField("vehicle_journey")
+
+    def get_journey(self, req, region, type_):
+        resp = NavitiaManager().send_and_receive(req, region)
+        if resp.response_type in [response_pb2.NO_ORIGIN_NOR_DESTINATION_POINT,
+                                  response_pb2.NO_ORIGIN_POINT,
+                                  response_pb2.NO_DESTINATION_POINT]:
+            resp.error = """
+                        Could not find a stop point nearby.
+                        Check the coordinates (did you mix up longitude and
+                        latitude?). Maybe you are out of the covered region.
+                        Maybe the coordinate snaped to a street of
+                        OpenStreetMap with no connectivity to the street
+                        network."""
+        if resp.response_type == response_pb2.NO_SOLUTION:
+            resp.error = "We found no solution. Maybe the are no vehicle \
+                          running that day on all the nearest stop points?"
+        if not resp.error and type_ == "asap":
+            #We are looking for the asap result
+            earliest_dt = None
+            earliest_i = None
+            for i in range(0, len(resp.journeys)):
+                if not earliest_dt or\
+                       earliest_dt > resp.journeys[i].arrival_date_time:
+                    earliest_dt = resp.journeys[i].arrival_date_time
+                    earliest_i = i
+            if earliest_dt:
+                #We list the journeys to delete
+                to_delete = range(0, len(resp.journeys))
+                del to_delete[earliest_i]
+                to_delete.sort(reverse=True)
+                #And then we delete it
+                for i in to_delete:
+                    del resp.journeys[i]
+        self.__fill_display_and_uris(resp)
+        return resp
 
 
     def __on_journeys(self, requested_type, request, region):
@@ -212,12 +246,29 @@ class Script:
         if "forbidden_uris" in request:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.journeys.forbidden_uris.append(forbidden_uri)
-        resp = NavitiaManager().send_and_receive(req, region)
-        if resp.response_type in [response_pb2.NO_ORIGIN_NOR_DESTINATION_POINT, response_pb2.NO_ORIGIN_POINT, response_pb2.NO_DESTINATION_POINT]:
-            resp.error = "Could not find a stop point nearby. Check the coordinates (did you mix up longitude and latitude?). Maybe you are out of the covered region. Maybe the coordinate snaped to a street of OpenStreetMap with no connectivity to the street network."
-        if resp.response_type == response_pb2.NO_SOLUTION:
-            resp.error = "We found no solution. Maybe the are no vehicle running that day on all the nearest stop points?"
-        self.__fill_display_and_uris(resp)
+        resp = self.get_journey(req, region, request["type"])
+        if len(resp.error) == 0:
+            while request["count"] and request["count"] > len(resp.journeys):
+                datetime = None
+                if request["clockwise"]:
+                    datetime = resp.journeys[-1].departure_date_time
+                    last = str(int(datetime[-1])+1)
+                else:
+                    datetime = resp.journeys[-1].arrival_date_time
+                    last = str(int(datetime[-1])-1)
+                datetime = datetime[:-1] + last
+                req.journeys.datetimes[0] = datetime
+                tmp_resp = self.get_journey(req, region, request["type"])
+                if len(tmp_resp.error) > 0 and len(tmp_resp.journeys) == 0:
+                    break
+                else:
+                    resp.journeys.extend(tmp_resp.journeys)
+
+            if request["count"] and len(resp.journeys) > request["count"]:
+                to_delete = range(request["count"], len(resp.journeys))
+                to_delete.sort(reverse=True)
+                for i in to_delete:
+                    del resp.journeys[i]
         return resp
 
 

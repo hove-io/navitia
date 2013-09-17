@@ -55,6 +55,22 @@ class additional_informations(fields.Raw):
         return [str.lower(enum.values_by_number[v].name) for v
                 in properties.additional_informations]
 
+class notes(fields.Raw):
+    def output(self, key, obj):
+        properties = getattr(obj, "has_properties")
+        r = []
+        for note_ in properties.notes:
+            r.append({"id": note_.uri, "value": note_.note})
+        return r
+
+class notes_links(fields.Raw):
+    def output(self, key, obj):
+        properties = getattr(obj, "has_properties")
+        r = []
+        for note_ in properties.notes:
+            r.append({"id": note_.uri, "type": "notes", "value": note_.note})
+        return r
+
 class equipments():
     def output(self, key, obj):
         vehiclejourney = getattr(obj, "vehiclejourney")
@@ -68,6 +84,18 @@ class equipments():
         if vehiclejourney.appropriate_signage:
             eq.append({"id": "has_appropriate_signage"})
         return eq
+
+class get_label():
+    def output(self, key, obj):
+        line = getattr(obj, "line")
+        if line.code != '':
+            return line.code
+        else :
+            if line.name != '':
+                return line.name
+            else:
+                route = getattr(obj, "route")
+                return route.name
 
 
 coord = {
@@ -92,18 +120,23 @@ stop_point = deepcopy(generic_type_admin)
 stop_area = deepcopy(generic_type_admin)
 journey_pattern_point = deepcopy(generic_type_admin)
 line = deepcopy(generic_type)
+line["code"] = fields.String()
+line["color"] = fields.String()
 
 route = deepcopy(generic_type)
 route["is_frequence"] = fields.String
 route["line"] = PbField(line)
+line["routes"] = NonNullList(NonNullNested(route))
 
 network = deepcopy(generic_type)
-network["lines"] = fields.List(fields.Nested(line))
+network["lines"] = NonNullList(NonNullNested(line))
+line["network"] = PbField(network)
 
 commercial_mode = deepcopy(generic_type)
 physical_mode = deepcopy(generic_type)
 commercial_mode["physical_modes"] = NonNullList(NonNullNested(commercial_mode))
 physical_mode["commercial_modes"] = NonNullList(NonNullNested(physical_mode))
+line["commercial_mode"] = PbField(commercial_mode)
 
 poi_type = deepcopy(generic_type)
 poi = deepcopy(generic_type)
@@ -142,3 +175,13 @@ pagination = {
     "items_per_page" : fields.Integer(attribute="itemsPerPage"),
     "items_on_page" : fields.Integer(attribute="itemsOnPage"),
 }
+
+class StopScheduleLinks():
+    def output(self, key, obj):
+        route = getattr(obj, "route")
+        response = []
+        response.append({"type": "route", "id": route.uri})
+        response.append({"type": "line", "id": route.line.uri})
+        response.append({"type": "commercial_mode", "id": route.line.commercial_mode.uri})
+        response.append({"type": "network", "id": route.line.network.uri})
+        return response

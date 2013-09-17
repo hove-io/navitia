@@ -17,6 +17,8 @@ class ResourceUri(Resource):
         self.method_decorators.append(add_computed_resources(self))
         self.method_decorators.append(add_pagination_links())
         self.method_decorators.append(clean_links())
+        self.method_decorators.append(add_notes(self))
+
 
     def get_filter(self, items):
         filters = []
@@ -27,7 +29,15 @@ class ResourceUri(Resource):
             if not type_:
                 type_ = collections_to_resource_type[item]
             else:
-                filters.append(type_+".uri="+item)
+                if type_ == "coords":
+                    splitted_coord = item.split(";")
+                    if len(splitted_coord) == 2:
+                        lon, lat = splitted_coord
+                        filters.append("stop_point.coord DWITHIN("+lon+","+lat+",200)")
+                    else:
+                        filters.append(type_+".uri="+item)
+                else :
+                    filters.append(type_+".uri="+item)
                 type_ = None
         return " and ".join(filters)
 
@@ -103,4 +113,46 @@ class add_address_region(object):
             if self.resource.region:
                 add_region(objects)
             return objects
+        return wrapper
+
+
+
+class add_notes(object):
+    def __init__(self, resource):
+        self.resource = resource
+
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if isinstance(objects, tuple):
+                data, code, header = unpack(objects)
+            else:
+                data = objects
+
+            def add_note(data):
+                result = []
+                if isinstance(data, list) or isinstance(data, tuple):
+                    for item in data:
+                        result.extend(add_note(item))
+
+                elif isinstance(data, dict) or\
+                     isinstance(data, OrderedDict):
+                         if 'type' in data.keys() and data['type'] == 'notes':
+                            result.append({"id" : data['id'], "value" :  data['value']})
+                            del data["value"]
+                         else :
+                             for v in data.items():
+                                 result.extend(add_note(v))
+                return result
+            if self.resource.region:
+                if not "notes" in data.keys() or  not isinstance(data["notes"], list):
+                    data["notes"] = []
+                    data["notes"].extend(add_note(data))
+
+            if isinstance(objects, tuple):
+                return data, code, header
+            else:
+                return data
+
         return wrapper

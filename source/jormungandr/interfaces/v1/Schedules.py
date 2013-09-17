@@ -5,7 +5,8 @@ from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, PbField,\
                    stop_date_time, enum_type, NonNullList, NonNullNested,\
-                   additional_informations, equipments
+                   additional_informations, equipments, notes,notes_links,\
+                   get_label,StopScheduleLinks
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
 from ResourceUri import ResourceUri
@@ -42,19 +43,14 @@ class Schedules(ResourceUri):
         response = NavitiaManager().dispatch(args, self.region, self.endpoint)
         return response, 200
 
-note_link = NonNullNested({
-    "id" : fields.String(attribute="uri"),
-    "type" : "notes"
-})
-
 date_time = {
     "date_time" : fields.String(attribute="stop_time"),
     "additional_informations" : additional_informations(),
-    "links": NonNullList(note_link)
+    "links": notes_links
 }
 row = {
     "stop_point" : PbField(stop_point),
-    "datetimes" : NonNullList(fields.Nested(date_time), attribute="stop_times")
+    "date_times" : NonNullList(fields.Nested(date_time), attribute="stop_times")
 }
 
 header = {
@@ -71,20 +67,25 @@ table_field = {
     "rows" : NonNullList(NonNullNested(row)),
     "headers" : NonNullList(NonNullNested(header))
 }
-route_schedule_fields = {
-    "table" : PbField(table_field),
-    "display_informations" : PbField({
+
+display_information = {
        "network" : fields.String(attribute="line.network.name"),
-       "code" : fields.String(attribute="line.code"),
-       "headsign" : fields.String(attribute="name"),
+       "direction": fields.String(attribute="name"),
+       "label" : get_label(),
        "color" : fields.String(attribute="line.color"),
        "commercial_mode" : fields.String(attribute="line.commercial_mode.name")
-        }, attribute="route"),
+        }
+
+
+route_schedule_fields = {
+    "table" : PbField(table_field),
+    "display_informations" : PbField(display_information, attribute="route"),
 }
 
 route_schedules = {
+    "error" : fields.String(attribute="error"),
     "route_schedules" : NonNullList(NonNullNested(route_schedule_fields)),
-    "pagination" : NonNullNested(pagination),
+    "pagination" : NonNullNested(pagination)
     }
 
 class RouteSchedules(Schedules):
@@ -98,8 +99,9 @@ class RouteSchedules(Schedules):
 
 stop_schedule = {
     "stop_point" : PbField(stop_point),
-    "route" : PbField(route),
-    "stop_date_times" : NonNullList(NonNullNested(date_time))
+    "display_informations" : PbField(display_information, attribute="route"),
+    "stop_date_times" : NonNullList(NonNullNested(date_time)),
+    "links" : StopScheduleLinks()
 }
 stop_schedules = {
     "stop_schedules" : NonNullList(NonNullNested(stop_schedule)),
@@ -122,11 +124,13 @@ passage = {
 }
 
 departures = {
-    "departures" : NonNullList(NonNullNested(passage), attribute="next_departures")
+    "departures" : NonNullList(NonNullNested(passage), attribute="next_departures"),
+    "pagination" : NonNullNested(pagination)
 }
 
 arrivals = {
-    "arrivals" : NonNullList(NonNullNested(passage), attribute="next_arrivals")
+    "arrivals" : NonNullList(NonNullNested(passage), attribute="next_arrivals"),
+    "pagination" : NonNullNested(pagination)
 }
 
 class NextDepartures(Schedules):

@@ -2,6 +2,7 @@
 # coding=utf-8
 import sys
 import signal
+import os
 from conf import base_url
 from instance_manager import NavitiaManager, RegionNotFound
 from flask import Flask, url_for
@@ -23,14 +24,15 @@ def region_not_found(error):
 def kill_thread(signal, frame):
     NavitiaManager().stop()
     sys.exit(0)
-
+config_file = 'Jörmungandr.ini' if not os.environ.has_key('JORMUNGANDR_CONFIG_FILE')\
+                                else os.environ['JORMUNGANDR_CONFIG_FILE']
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, kill_thread)
     signal.signal(signal.SIGTERM, kill_thread)
-    NavitiaManager().set_config_file('Jörmungandr.ini')
+    NavitiaManager().set_config_file(config_file)
     NavitiaManager().initialisation()
     app.run(debug=True)
 else:
-    NavitiaManager().set_config_file('Jörmungandr.ini')
+    NavitiaManager().set_config_file(config_file)
     NavitiaManager().initialisation()
     app.run(debug=True)
