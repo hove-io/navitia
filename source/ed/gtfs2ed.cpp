@@ -18,13 +18,15 @@ namespace pt = boost::posix_time;
 
 int main(int argc, char * argv[])
 {
-    std::string type, input, output, date, connection_string, external_input;
+    std::string type, input, output, date, connection_string, aliases_file,
+                synonyms_file;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
         ("date,d", po::value<std::string>(&date), "Date de début")
         ("input,i", po::value<std::string>(&input), "Repertoire d'entrée")
-        ("external-input,e", po::value<std::string>(&external_input), "Repertoire d'entrée de ExternalSettings")
+        ("aliases,a", po::value<std::string>(&aliases_file), "Fichier aliases")
+        ("synonyms,s", po::value<std::string>(&synonyms_file), "Fichier synonymes")
         ("version,v", "Affiche la version")
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
         ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
@@ -52,7 +54,7 @@ int main(int argc, char * argv[])
     if(vm.count("help") || !vm.count("input")) {
         std::cout << desc <<  "\n";
         return 1;
-    }    
+    }
     po::notify(vm);
 
     pt::ptime start, end;
@@ -85,9 +87,13 @@ int main(int argc, char * argv[])
 
     data.normalize_uri();
 
-    if (vm.count("external-input")){
-        ed::connectors::ExternalParser extConnecteur(external_input);
-        extConnecteur.fill_alias_synonyme(data);
+    ed::connectors::ExternalParser extConnecteur;
+    if(vm.count("synonyms")){
+        extConnecteur.fill_synonyms(synonyms_file, data);
+    }
+
+    if(vm.count("aliases")){
+        extConnecteur.fill_aliases(aliases_file, data);
     }
 
     std::cout << "line: " << data.lines.size() << std::endl;

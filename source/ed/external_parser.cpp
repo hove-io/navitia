@@ -8,15 +8,15 @@
 
 //namespace navitia{ namespace georef{
 namespace ed{ namespace connectors{
-ExternalParser::ExternalParser(const std::string & path): path(path){
+ExternalParser::ExternalParser() {
         init_logger();
         logger = log4cplus::Logger::getInstance("log");
 }
 
-void ExternalParser::fill_aliases(Data & data){
+void ExternalParser::fill_aliases(const std::string &file, Data & data){
     // Verification des entêtes:
     std::string key, value;
-    CsvReader csv(path + "/" + "alias.txt", '=', true);
+    CsvReader csv(file, '=', true);
     if(!csv.is_open()) {
         LOG4CPLUS_FATAL(logger, "Impossible d'ouvrir le fichier " + csv.filename +" dans fill_aliases");
         return;
@@ -39,12 +39,13 @@ void ExternalParser::fill_aliases(Data & data){
             }
         }
     }
+    LOG4CPLUS_TRACE(logger, "On a  " + boost::lexical_cast<std::string>(data.alias.size())+ " aliases");
 }
 
-void ExternalParser::fill_synonyms(Data & data)
+void ExternalParser::fill_synonyms(const std::string &file, Data & data)
 {
     std::string key, value;
-    CsvReader csv(path + "/" + "synonyme.txt", '=', true);
+    CsvReader csv(file, '=', true);
     if(!csv.is_open()) {
         LOG4CPLUS_FATAL(logger, "Impossible d'ouvrir le fichier " + csv.filename +" dans fill_synonyms");
         return;
@@ -67,18 +68,7 @@ void ExternalParser::fill_synonyms(Data & data)
             }
         }
     }
-}
-
-void ExternalParser::fill_alias_synonyme(Data & data)
-{
-    // Lire les fichiers poi-type.txt
-    fill_aliases(data);
-    LOG4CPLUS_TRACE(logger, "On a  " + boost::lexical_cast<std::string>(data.alias.size())+ " alias");
-
-    // Lire les fichiers poi-type.txt
-    fill_synonyms(data);
     LOG4CPLUS_TRACE(logger, "On a  " + boost::lexical_cast<std::string>(data.synonymes.size())+ " synonymes");
 }
-
 
 }}

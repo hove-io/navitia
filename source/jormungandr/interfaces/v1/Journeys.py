@@ -59,7 +59,7 @@ class GeoJson(fields.Raw):
                 "type" : "LineString",
                 "coordinates" : [],
                 "properties" : [{
-                    "lenth" : length
+                    "length" : length
                     }]
         }
         for coord in coords:
