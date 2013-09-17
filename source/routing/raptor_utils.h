@@ -7,15 +7,21 @@
 namespace navitia { namespace routing {
 
 typedef std::pair<int, int> pair_int;
-typedef std::vector<type::DateTime> label_vector_t;
+typedef std::vector<DateTime> label_vector_t;
 typedef std::vector<navitia::type::idx_t> vector_idx;
 typedef std::pair<navitia::type::idx_t, int> pair_idx_int;
 typedef std::vector<int> queue_t;
 typedef std::vector<pair_int> vector_pairint;
-typedef std::pair<navitia::type::idx_t, type::DateTime> idx_label;
+typedef std::pair<navitia::type::idx_t, DateTime> idx_label;
 typedef std::vector<idx_label> vector_idxlabel;
 typedef std::pair<navitia::type::idx_t, double> idx_distance;
 typedef std::vector<idx_distance> vec_idx_distance;
+
+template<typename T>
+inline void memset32(T*buf, uint n, T c)
+{
+    for(register uint i = 0; i < n; i++) *buf++ = c;
+}
 
 enum class boarding_type {
     vj,
@@ -28,7 +34,7 @@ enum class boarding_type {
 
 struct best_dest {
     std::vector<float> rpidx_distance;
-    type::DateTime best_now;
+    DateTime best_now;
     unsigned int best_now_rpid;
     unsigned int count;
     float max_walking;
@@ -39,12 +45,18 @@ struct best_dest {
 
     bool is_dest(unsigned int rpid) const {return rpidx_distance[rpid] != std::numeric_limits<float>::max();}
 
-    bool add_best(unsigned int rpid, const type::DateTime &t, int cnt, bool clockwise = true) {
-        if(!clockwise)
-            return add_best_reverse(rpid, t, cnt);
+    template<typename Visitor>
+    inline bool add_best(const Visitor & v, unsigned int rpid, const DateTime &t, int cnt) {
+        if(v.clockwise())
+            return add_best_clockwise(rpid, t, cnt);
+        else
+            return add_best_unclockwise(rpid, t, cnt);
+    }
+
+    inline bool add_best_clockwise(unsigned int rpid, const DateTime &t, int cnt) {
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
-            if((best_now == navitia::type::DateTime::inf) ||
-               ((t != navitia::type::DateTime::inf) && (t + rpidx_distance[rpid]) <= (best_now))) {
+            if((best_now == DateTimeUtils::inf) ||
+               ((t != DateTimeUtils::inf) && (t + rpidx_distance[rpid]) <= (best_now))) {
                 best_now = t + rpidx_distance[rpid];
                 //best_now.departure = best_now.departure + rpidx_distance[rpid];
                 best_now_rpid = rpid;
@@ -55,10 +67,10 @@ struct best_dest {
         return false;
     }
 
-    bool add_best_reverse(unsigned int rpid, const type::DateTime &t, int cnt) {
+    inline bool add_best_unclockwise(unsigned int rpid, const DateTime &t, int cnt) {
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
-            if((best_now.datetime <= max_walking) ||
-               (t != navitia::type::DateTime::min && (t - rpidx_distance[rpid]) >= (best_now))) {
+            if((best_now <= max_walking) ||
+               ((t != DateTimeUtils::min) && (t - rpidx_distance[rpid]) >= (best_now))) {
                 best_now = t - rpidx_distance[rpid];
                 //best_now.departure = t.departure - rpidx_distance[rpid];
                 best_now_rpid = rpid;
@@ -70,21 +82,21 @@ struct best_dest {
     }
 
     void reinit(const size_t nb_rpid, const float max_walking_ = 0) {
-        rpidx_distance.clear();
-        rpidx_distance.insert(rpidx_distance.end(), nb_rpid, std::numeric_limits<float>::max());
-        best_now = type::DateTime();
+        rpidx_distance.resize(nb_rpid);
+        memset32<float>(&rpidx_distance[0], nb_rpid, std::numeric_limits<float>::max());
+        best_now = DateTimeUtils::inf;
         best_now_rpid = type::invalid_idx;
         count = 0;
         max_walking = max_walking_;
     }
 
-    void reinit(size_t nb_rpid, const type::DateTime &borne, const float max_walking = 0) {
+    void reinit(size_t nb_rpid, const DateTime &borne, const float max_walking = 0) {
         reinit(nb_rpid, max_walking);
         best_now = borne;
     }
 
     void reverse() {
-        best_now = type::DateTime::min;
+        best_now = DateTimeUtils::min;
     }
 
 

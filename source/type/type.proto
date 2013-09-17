@@ -45,6 +45,11 @@ enum OdtType{
     stop_point_to_stop_point = 3;     // TAD rabattement arrêt à arrêt
     adress_to_stop_point = 4;         // TAD rabattement adresse à arrêt
     odt_point_to_point = 5;           // TAD point à point (Commune à Commune)
+    
+    
+    //regular = 0;
+    //odt_with_stop_time = 1;
+    //odt_with_zone = 2;
 }
 
 message Message{
@@ -134,6 +139,19 @@ message hasPropertie{
 	repeated Note notes = 5;
 }
 
+message hasVehiclePropertie{
+	enum VehiclePropertie{
+        has_wheelchair_accessiblity = 1;
+        has_bike_accepted = 2;
+        has_air_conditioned = 3;
+        has_visual_announcement = 4;
+        has_audible_announcement = 5;
+        has_appropriate_escort = 6;
+        has_appropriate_signage = 7;
+        has_school_vehicle = 8;
+	}
+	repeated VehiclePropertie vehicle_properties = 1;
+}
 message StopDateTime {
     optional string arrival_date_time = 1;
     optional string departure_date_time = 2;    

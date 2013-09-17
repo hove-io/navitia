@@ -55,6 +55,40 @@ class additional_informations(fields.Raw):
         return [str.lower(enum.values_by_number[v].name) for v
                 in properties.additional_informations]
 
+class has_vehicle_propertie(fields.Raw):
+    def output(self, key, obj):
+        properties = getattr(obj, "has_vehicle_properties")
+        enum = properties.DESCRIPTOR.enum_types_by_name["VehiclePropertie"]
+        return [str.lower(enum.values_by_number[v].name) for v
+                in properties.vehicle_properties]
+
+class display_informations(fields.Raw):
+    def output(self, key, obj):
+        display_information = getattr(obj, "pt_display_informations")
+        result = {}
+        if display_information.network != '' :
+            result["network"] = display_information.network
+        if display_information.headsign != '':
+            result["headsign"] = display_information.headsign
+        if display_information.direction != '':
+            result["direction"] = display_information.direction
+        if display_information.physical_mode != '':
+            result["physical_mode"] = display_information.physical_mode
+        if display_information.description != '':
+            result["description"] = display_information.description
+        if display_information.name != '':
+            result["label"] = display_information.name
+        if display_information.code != '':
+            result["label"] = display_information.code
+        if display_information.color != '':
+            result["color"] = display_information.color
+        if display_information.commercial_mode != '':
+            result["commercial_mode"] = display_information.commercial_mode
+        #result["equipments"] = has_vehicle_propertie()
+        #result["equipments"] = fields.List(PbField(enum_type())).output("has_vehicle_properties", display_information)
+
+        return result
+
 class notes(fields.Raw):
     def output(self, key, obj):
         properties = getattr(obj, "has_properties")
@@ -120,18 +154,23 @@ stop_point = deepcopy(generic_type_admin)
 stop_area = deepcopy(generic_type_admin)
 journey_pattern_point = deepcopy(generic_type_admin)
 line = deepcopy(generic_type)
+line["code"] = fields.String()
+line["color"] = fields.String()
 
 route = deepcopy(generic_type)
 route["is_frequence"] = fields.String
 route["line"] = PbField(line)
+line["routes"] = NonNullList(NonNullNested(route))
 
 network = deepcopy(generic_type)
-network["lines"] = fields.List(fields.Nested(line))
+network["lines"] = NonNullList(NonNullNested(line))
+line["network"] = PbField(network)
 
 commercial_mode = deepcopy(generic_type)
 physical_mode = deepcopy(generic_type)
 commercial_mode["physical_modes"] = NonNullList(NonNullNested(commercial_mode))
 physical_mode["commercial_modes"] = NonNullList(NonNullNested(physical_mode))
+line["commercial_mode"] = PbField(commercial_mode)
 
 poi_type = deepcopy(generic_type)
 poi = deepcopy(generic_type)

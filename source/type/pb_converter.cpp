@@ -621,10 +621,10 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
                     pbnavitia::ScheduleStopTime* rs_stop_time, int,
                     const boost::posix_time::ptime&,
                     const boost::posix_time::time_period&,
-                    const type::DateTime& date_time){
+                    const DateTime& date_time){
     if(stop_time != nullptr) {
-        rs_stop_time->set_stop_time(iso_string(date_time.date(),
-                                    date_time.hour(), data));
+        rs_stop_time->set_stop_time(iso_string(DateTimeUtils::date(date_time),
+                                    DateTimeUtils::hour(date_time), data));
         pbnavitia::hasPropertie * hn = rs_stop_time->mutable_has_properties();
         if ((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed()){
             hn->add_additional_informations(pbnavitia::hasPropertie::PICK_UP_ONLY);
@@ -649,4 +649,78 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
         rs_stop_time->set_stop_time("");
     }
 }
+
+void fill_pb_object(const nt::Route* r, const nt::Data& ,
+                    pbnavitia::PtDisplayInfo* pt_display_info, int ,
+                    const pt::ptime& , const pt::time_period& ){
+    if(r == nullptr)
+        return ;
+    pbnavitia::Uris* uris = pt_display_info->mutable_uris();
+    uris->set_route(r->uri);
+    pt_display_info->set_direction(r->name);
+    if (r->line != nullptr){
+        pt_display_info->set_color(r->line->color);
+        pt_display_info->set_code(r->line->code);
+        pt_display_info->set_name(r->line->name);
+        uris->set_line(r->line->uri);
+        if (r->line->network != nullptr){
+            pt_display_info->set_network(r->line->network->name);
+            uris->set_line(r->line->uri);
+        }
+        if (r->line->commercial_mode != nullptr){
+            pt_display_info->set_commercial_mode(r->line->commercial_mode->name);
+            uris->set_commercial_mode(r->line->commercial_mode->uri);
+        }
+
+    }
+
+}
+void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
+                    pbnavitia::PtDisplayInfo * vj_display_information, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period)
+{
+    if(vj == nullptr)
+        return ;
+    pbnavitia::Uris* uris = vj_display_information->mutable_uris();
+    uris->set_vehicle_journey(vj->uri);
+    if ((vj->journey_pattern != nullptr) && (vj->journey_pattern->route)){
+        fill_pb_object(vj->journey_pattern->route, data, vj_display_information,max_depth,now,action_period);
+        uris->set_route(vj->journey_pattern->route->uri);
+    }
+    vj_display_information->set_headsign(vj->name);
+    vj_display_information->set_direction(vj->get_direction());
+    if (vj->physical_mode != nullptr){
+        vj_display_information->set_physical_mode(vj->physical_mode->name);
+        uris->set_physical_mode(vj->physical_mode->uri);
+    }
+    vj_display_information->set_description(vj->odt_message);
+    vj_display_information->set_odt_type(get_pb_odt_type(vj->odt_type));
+
+    pbnavitia::hasVehiclePropertie* has_vehicle_propertie = vj_display_information->mutable_has_vehicle_properties();
+    if (vj->wheelchair_accessible()){
+        has_vehicle_propertie->add_vehicle_properties(pbnavitia::hasVehiclePropertie::has_wheelchair_accessiblity);
+    }
+    if (vj->bike_accepted()){
+        has_vehicle_propertie->add_vehicle_properties(pbnavitia::hasVehiclePropertie::has_bike_accepted);
+    }
+    if (vj->air_conditioned()){
+        has_vehicle_propertie->add_vehicle_properties(pbnavitia::hasVehiclePropertie::has_air_conditioned);
+    }
+    if (vj->visual_announcement()){
+        has_vehicle_propertie->add_vehicle_properties(pbnavitia::hasVehiclePropertie::has_visual_announcement);
+    }
+    if (vj->audible_announcement()){
+        has_vehicle_propertie->add_vehicle_properties(pbnavitia::hasVehiclePropertie::has_audible_announcement);
+    }
+    if (vj->appropriate_escort()){
+        has_vehicle_propertie->add_vehicle_properties(pbnavitia::hasVehiclePropertie::has_appropriate_escort);
+    }
+    if (vj->appropriate_signage()){
+        has_vehicle_propertie->add_vehicle_properties(pbnavitia::hasVehiclePropertie::has_appropriate_signage);
+    }
+    if (vj->school_vehicle()){
+        has_vehicle_propertie->add_vehicle_properties(pbnavitia::hasVehiclePropertie::has_school_vehicle);
+    }
+}
+
 }//namespace navitia

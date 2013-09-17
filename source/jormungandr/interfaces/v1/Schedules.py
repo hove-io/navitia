@@ -5,8 +5,8 @@ from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, PbField,\
                    stop_date_time, enum_type, NonNullList, NonNullNested,\
-                   additional_informations, equipments, notes,notes_links,\
-                   get_label,StopScheduleLinks
+                   additional_informations,  notes,notes_links,\
+                   get_label,StopScheduleLinks,display_informations
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
 from ResourceUri import ResourceUri
@@ -53,33 +53,24 @@ row = {
     "date_times" : NonNullList(fields.Nested(date_time), attribute="stop_times")
 }
 
+
+
 header = {
-    "id" : fields.String(attribute="vehiclejourney.uri"),
-    "headsign" : fields.String(attribute="vehiclejourney.name"),
-    "direction" : fields.String(),
-    "physical_mode" : fields.String(attribute="vehiclejourney.physical_mode.name"),
-    "description" : fields.String(attribute="vehiclejourney.odt_message"),
-    "wheelchair_accessible" : fields.Boolean(default=True),
-    "bike_accessible" : fields.Boolean(default=True),
-    "equipments" : equipments()
+    #"id" : fields.String(attribute="vehiclejourney.uri"),
+    "display_informations" :  display_informations(),
+    "additional_informations" : additional_informations()
+    #"wheelchair_accessible" : fields.Boolean(default=True),
+    #"bike_accessible" : fields.Boolean(default=True),
 }
 table_field = {
     "rows" : NonNullList(NonNullNested(row)),
     "headers" : NonNullList(NonNullNested(header))
 }
 
-display_information = {
-       "network" : fields.String(attribute="line.network.name"),
-       "direction": fields.String(attribute="name"),
-       "label" : get_label(),
-       "color" : fields.String(attribute="line.color"),
-       "commercial_mode" : fields.String(attribute="line.commercial_mode.name")
-        }
-
-
 route_schedule_fields = {
     "table" : PbField(table_field),
-    "display_informations" : PbField(display_information, attribute="route"),
+    #"display_informations" : PbField(display_information, attribute="route"),
+    "display_informations" : display_informations(),
 }
 
 route_schedules = {
@@ -99,7 +90,8 @@ class RouteSchedules(Schedules):
 
 stop_schedule = {
     "stop_point" : PbField(stop_point),
-    "display_informations" : PbField(display_information, attribute="route"),
+    #"display_informations" : PbField(display_information, attribute="route"),
+    "display_informations" : display_informations(),
     "stop_date_times" : NonNullList(NonNullNested(date_time)),
     "links" : StopScheduleLinks()
 }

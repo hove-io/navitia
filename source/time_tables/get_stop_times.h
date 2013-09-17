@@ -4,7 +4,7 @@
 
 
 namespace navitia { namespace timetables {
-typedef std::pair<type::DateTime, const type::StopTime*> datetime_stop_time;
+typedef std::pair<DateTime, const type::StopTime*> datetime_stop_time;
 
 std::string iso_string(const nt::Data & d, int date, int hour);
 
@@ -18,8 +18,8 @@ std::string iso_string(const nt::Data & d, int date, int hour);
  * @param raptor : Sert pour les données
  * @return : Renvoie de paire de datetime, st.idx de départs. La liste est triée selon les datetimes.
  */
-std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &journey_pattern_points, const type::DateTime &dt,
-                                   const type::DateTime &max_dt, const size_t max_departures, const type::Data & data,
+std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &journey_pattern_points, const DateTime &dt,
+                                   const DateTime &max_dt, const size_t max_departures, const type::Data & data,
                                    const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams()/*const bool wheelchair = false*/);
 
 

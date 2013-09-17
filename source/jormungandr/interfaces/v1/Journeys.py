@@ -180,6 +180,7 @@ class add_journey_href(object):
 class Journeys(ResourceUri):
     def __init__(self):
         modes = ["walking", "car", "bike", "br"]
+        types = ["all", "asap"]
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("from", type=str, dest="origin")
         self.parser.add_argument("to", type=str, dest="destination")
@@ -205,6 +206,8 @@ class Journeys(ResourceUri):
         self.parser.add_argument("car_speed", type=float, default=16.8)
         self.parser.add_argument("car_distance", type=int, default=15000)
         self.parser.add_argument("forbidden_uris[]", type=str, action="append")
+        self.parser.add_argument("count", type=int)
+        self.parser.add_argument("type", type=option_value(types), default="all")
 #a supprimer
         self.parser.add_argument("max_duration", type=int, default=36000)
 
