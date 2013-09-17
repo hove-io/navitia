@@ -15,7 +15,7 @@ def true_false(value, name):
                          .format(name, value))
 
 def option_value(values):
-    def to_return(name, value):
+    def to_return(value, name):
         if not value in values:
             error = "The {} argument must be in list"+str(values)
             error +=", you gave {}".format(name, value)
