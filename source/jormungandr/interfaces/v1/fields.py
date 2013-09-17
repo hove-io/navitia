@@ -120,18 +120,23 @@ stop_point = deepcopy(generic_type_admin)
 stop_area = deepcopy(generic_type_admin)
 journey_pattern_point = deepcopy(generic_type_admin)
 line = deepcopy(generic_type)
+line["code"] = fields.String()
+line["color"] = fields.String()
 
 route = deepcopy(generic_type)
 route["is_frequence"] = fields.String
 route["line"] = PbField(line)
+line["routes"] = NonNullList(NonNullNested(route))
 
 network = deepcopy(generic_type)
-network["lines"] = fields.List(fields.Nested(line))
+network["lines"] = NonNullList(NonNullNested(line))
+line["network"] = PbField(network)
 
 commercial_mode = deepcopy(generic_type)
 physical_mode = deepcopy(generic_type)
 commercial_mode["physical_modes"] = NonNullList(NonNullNested(commercial_mode))
 physical_mode["commercial_modes"] = NonNullList(NonNullNested(physical_mode))
+line["commercial_mode"] = PbField(commercial_mode)
 
 poi_type = deepcopy(generic_type)
 poi = deepcopy(generic_type)
