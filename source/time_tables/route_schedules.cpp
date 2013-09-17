@@ -135,8 +135,11 @@ route_schedule(const std::string& filter, const std::string &str_dt,
                                          handler.pb_response.stop_schedules_size()));
         for(type::VehicleJourney* vj : vehicle_journy_list){
             pbnavitia::Header* header = table->add_headers();
-            pbnavitia::PtDisplayInfo* vj_display_information = header->mutable_pt_display_informations();
-            fill_pb_object(vj, d, vj_display_information, 0, now, action_period);
+            fill_pb_object(vj, d, header, 0, now, action_period);
+//            pbnavitia::PtDisplayInfo* vj_display_information = header->mutable_pt_display_informations();
+//            fill_pb_object(vj, d, vj_display_information, 0, now, action_period);
+//            pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey = header->mutable_addinfovehiclejourney();
+//            add_info_vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->odt_type));
         }
 
         for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {

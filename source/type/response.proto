@@ -190,10 +190,15 @@ message RouteScheduleRow {
     repeated ScheduleStopTime stop_times = 2;
 }
 
+message addInfoVehicleJourney{
+	required OdtType vehicle_journey_type = 1;	
+}
+
 message Header{
 //	optional string direction = 1;
 	required PtDisplayInfo pt_display_informations = 1;
-    optional hasPropertie has_properties = 2;
+	required addInfoVehicleJourney add_info_vehicle_journey = 2;
+//    optional hasPropertie has_properties = 2;
 //	required VehicleJourney vehiclejourney = 2;
 }
 
