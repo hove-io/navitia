@@ -80,16 +80,26 @@ def reload_data(config):
     """ reload data on all kraken"""
     task = pyed.task_pb2.Task()
     task.action = pyed.task_pb2.RELOAD
+    pyed_logger = logging.getLogger('pyed')
 
+    #TODO configurer la connection!!!
     connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host='localhost'))
+        host=config.get('broker', 'host'),
+        port=int(config.get('broker', 'port')),
+        virtual_host=config.get('broker', 'vhost'),
+        credentials=pika.credentials.PlainCredentials(
+            config.get('broker', 'username'),
+            config.get('broker', 'password'))
+        ))
     channel = connection.channel()
-    exchange_name = config.get('instance', 'name') + '_task'
-    channel.exchange_declare(exchange=exchange_name, type='fanout',
+    instance_name = config.get('instance', 'name')
+    exchange_name = config.get('broker', 'exchange')
+    channel.exchange_declare(exchange=exchange_name, type='topic',
             durable=True)
 
-
-    channel.basic_publish(exchange=exchange_name, routing_key='',
+    pyed_logger.info("reload kraken")
+    channel.basic_publish(exchange=exchange_name,
+            routing_key=instance_name+'.task.reload',
             body=task.SerializeToString())
     connection.close()
 

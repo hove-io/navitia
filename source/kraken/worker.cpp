@@ -103,7 +103,6 @@ void Worker::init_worker_data(){
 
 pbnavitia::Response Worker::load() {
     pbnavitia::Response result;
-    (*data)->to_load = true;
     result.mutable_load()->set_ok(true);
 
     return result;

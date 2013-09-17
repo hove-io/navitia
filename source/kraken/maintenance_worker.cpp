@@ -38,15 +38,12 @@ bool MaintenanceWorker::load_and_switch(){
 }
 
 void MaintenanceWorker::load(){
-    if((*data)->to_load.load() || !(*data)->loaded){
-        load_and_switch();
-        (*data)->to_load.store(false);
+    load_and_switch();
 
-        LOG4CPLUS_INFO(logger, boost::format("Nb data stop times : %d stopTimes : %d nb foot path : %d Nombre de stop points : %d")
-                % (*data)->pt_data.stop_times.size() % (*data)->dataRaptor.arrival_times.size()
-                % (*data)->dataRaptor.foot_path_forward.size() % (*data)->pt_data.stop_points.size()
+    LOG4CPLUS_INFO(logger, boost::format("Nb data stop times : %d stopTimes : %d nb foot path : %d Nombre de stop points : %d")
+            % (*data)->pt_data.stop_times.size() % (*data)->dataRaptor.arrival_times.size()
+            % (*data)->dataRaptor.foot_path_forward.size() % (*data)->pt_data.stop_points.size()
             );
-    }
 }
 
 
@@ -54,6 +51,7 @@ void MaintenanceWorker::operator()(){
     LOG4CPLUS_INFO(logger, "démarrage du thread de maintenance");
     //
     load();
+    //@TODO dans la prochaine version de simpleAMQPclient on devrait ne pas avoir a spécifier la queue
     auto consumer_tag = this->channel->BasicConsume(this->queue_name);
 
     bool running = true;
@@ -76,19 +74,24 @@ void MaintenanceWorker::operator()(){
 void MaintenanceWorker::init_rabbitmq(){
     Configuration * conf = Configuration::get();
     std::string instance_name = conf->get_as<std::string>("GENERAL", "instance_name", "");
-    std::string host = conf->get_as<std::string>("BROKER", "host", "");
-    int port = conf->get_as<int>("BROKER", "port", 0);
-    std::string username = conf->get_as<std::string>("BROKER", "username", "");
-    std::string password = conf->get_as<std::string>("BROKER", "password", "");
-    std::string vhost = conf->get_as<std::string>("BROKER", "vhost", "");
+    std::string exchange_name = conf->get_as<std::string>("BROKER", "exchange_name", "navitia");
+    std::string host = conf->get_as<std::string>("BROKER", "host", "localhost");
+    int port = conf->get_as<int>("BROKER", "port", 5672);
+    std::string username = conf->get_as<std::string>("BROKER", "username", "guest");
+    std::string password = conf->get_as<std::string>("BROKER", "password", "guest");
+    std::string vhost = conf->get_as<std::string>("BROKER", "vhost", "/");
     //connection
     LOG4CPLUS_DEBUG(logger, "connection à rabbitmq");
     this->channel = AmqpClient::Channel::Create(host, port, username,
             password, vhost);
 
+    //création de l'exchange (il devrait deja exister, mais dans l'doute)
+    this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
+
     //création d'une queue temporaire
     this->queue_name = channel->DeclareQueue("", false, false, true, true);
-    channel->BindQueue(queue_name, instance_name + "_task");
+    //on se bind sur l'echange precedement créer, et on prend tous les messages possible pôur cette instance
+    channel->BindQueue(queue_name, exchange_name, instance_name+".task.*");
     LOG4CPLUS_TRACE(logger, "connecté à rabbitmq");
 }
 

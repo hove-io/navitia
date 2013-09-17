@@ -1,0 +1,30 @@
+import "type.proto";
+package pbnavitia.realtime;
+
+message TCObject{
+    optional string object_uri = 0;
+    optional pbnavitia.NavitiaType object_type = 1;
+}
+
+message LocalizedMessage{
+    required string language = 0;
+    optional string body = 1;
+    optional string title = 2;
+}
+
+message Message{
+    required string uri = 0;
+    required TCObject object = 1;
+
+    //POSIX time (i.e., number of seconds since January 1st 1970 00:00:00 UTC)
+    optional uint64 start_publication_date = 2;
+    optional uint64 end_publication_date = 3;
+    optional uint64 start_application_date = 4;
+    optional uint64 end_application_date = 5;
+    //number of seconds since midnigth
+    optional uint32 start_application_daily_hour = 6;
+    optional uint32 end_application_daily_hour = 7;
+    optional string active_days = 8;
+
+    repeated LocalizedMessage messages = 9;
+}
