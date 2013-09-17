@@ -60,15 +60,12 @@ class additional_informations_header(fields.Raw):
         addinfo = getattr(obj, "add_info_vehicle_journey")
         enum_t = addinfo.DESCRIPTOR.fields_by_name['vehicle_journey_type'].enum_type.values_by_name
         if addinfo.vehicle_journey_type == enum_t['virtual_with_stop_time'].number :
-            return ["virtual_with_stop_time"]
-        if addinfo.vehicle_journey_type == enum_t['virtual_without_stop_time'].number:
-            return ["virtual_without_stop_time"]
-        if addinfo.vehicle_journey_type == enum_t['stop_point_to_stop_point'].number:
-            return ["stop_point_to_stop_point"]
-        if addinfo.vehicle_journey_type == enum_t['adress_to_stop_point'].number:
-            return ["adress_to_stop_point"]
-        if addinfo.vehicle_journey_type == enum_t['odt_point_to_point'].number:
-            return ["odt_point_to_point"]
+            return ["odt_with_stop_time"]
+        if addinfo.vehicle_journey_type == enum_t['virtual_without_stop_time'].number or \
+            addinfo.vehicle_journey_type == enum_t['stop_point_to_stop_point'].number or \
+            addinfo.vehicle_journey_type == enum_t['adress_to_stop_point'].number or \
+            addinfo.vehicle_journey_type == enum_t['odt_point_to_point'].number:
+            return ["odt_with_zone"]
         return ["regular"]
 
 
