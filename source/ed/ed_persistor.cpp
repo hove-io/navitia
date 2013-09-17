@@ -8,10 +8,11 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
 
     this->lotus.start_transaction();
 
+    std::cout << "début : vider toutes les tables (TRUNCATE)!" << std::endl;
     this->clean_db();
 
+    std::cout << "début : block insert!" << std::endl;
     this->insert_metadata(meta);
-
     this->insert_networks(data.networks);
     this->insert_commercial_modes(data.commercial_modes);
     this->insert_physical_modes(data.physical_modes);
@@ -23,7 +24,6 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
 
     this->insert_lines(data.lines);
     this->insert_routes(data.routes);
-
     this->insert_journey_patterns(data.journey_patterns);
 
     this->insert_validity_patterns(data.validity_patterns);
@@ -36,8 +36,13 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     //@TODO: les connections ont des doublons, en attendant que ce soit corrigé, on ne les enregistre pas
     this->insert_stop_point_connections(data.stop_point_connections);
     //this->insert_journey_pattern_point_connections(data.journey_pattern_point_connections);
+    this->insert_alias(data.alias);
+    this->insert_synonyms(data.synonymes);
+    std::cout << "fin : block insert!" << std::endl;
     this->build_relation();
     this->lotus.commit();
+    std::cout << "fin : commit!" << std::endl;
+
 
 }
 
@@ -53,7 +58,7 @@ void EdPersistor::build_relation(){
 }
 
 void EdPersistor::clean_db(){
-    PQclear(this->lotus.exec("TRUNCATE navitia.stop_area, navitia.line, navitia.company, navitia.physical_mode, navitia.contributor, "
+    PQclear(this->lotus.exec("TRUNCATE navitia.stop_area, navitia.line, navitia.company, navitia.physical_mode, navitia.contributor, navitia.alias,navitia.synonym,"
                 "navitia.commercial_mode, navitia.properties, navitia.validity_pattern, navitia.network, navitia.parameters, navitia.connection CASCADE"));
 }
 
@@ -400,6 +405,39 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         this->lotus.insert(values);
     }
 
+    this->lotus.finish_bulk_insert();
+}
+
+void EdPersistor::insert_alias(const std::map<std::string, std::string>& alias){
+    this->lotus.prepare_bulk_insert("navitia.alias", {"id", "key", "value"});
+    int count=1;
+    std::map <std::string, std::string> ::const_iterator it = alias.begin();
+    while(it != alias.end()){
+        std::vector<std::string> values;
+        values.push_back(std::to_string(count));
+        values.push_back(it->first);
+        values.push_back(it->second);
+        this->lotus.insert(values);
+        count++;
+        ++it;
+    }
+    this->lotus.finish_bulk_insert();
+
+}
+
+void EdPersistor::insert_synonyms(const std::map<std::string, std::string>& synonyms){
+    this->lotus.prepare_bulk_insert("navitia.synonym", {"id", "key", "value"});
+    int count = 1;
+        std::map <std::string, std::string>::const_iterator it = synonyms.begin();
+    while(it != synonyms.end()){
+        std::vector<std::string> values;
+        values.push_back(std::to_string(count));
+        values.push_back(it->first);
+        values.push_back(it->second);
+        this->lotus.insert(values);
+        count++;
+        ++it;
+    }
     this->lotus.finish_bulk_insert();
 }
 

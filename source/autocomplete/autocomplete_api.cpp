@@ -71,14 +71,13 @@ int penalty_by_type(navitia::type::Type_e ntype, bool Is_address_type) {
         result = 2;
         break;
     case navitia::type::Type_e::POI:
-        result = 4;
+        result = Is_address_type ? 4 : 6;
         break;
     case navitia::type::Type_e::Address:
-        result = Is_address_type ? 0 : 6;
+        result = Is_address_type ? 0 : 8;
         break;
     case navitia::type::Type_e::StopPoint:
-        result = 8;
-        result = Is_address_type ? 6 : 8;
+        result = Is_address_type ? 6 : 4;
         break;
     default:
         break;
@@ -95,6 +94,30 @@ void update_quality_by_poi_type(std::vector<Autocomplete<nt::idx_t>::fl_quality>
     }
 }
 
+///Ajouter une pénalité aux objects sans admin par au moin d.geo_ref.word_weight
+void update_quality_for_missing_admin(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result, const navitia::type::Data &d, navitia::type::Type_e ntype){
+    for (auto &item : ac_result){
+        int penalty = 0;
+        switch(ntype){
+        case navitia::type::Type_e::StopArea:
+            penalty = (d.pt_data.stop_areas[item.idx]->admin_list.size() > 0) ? 0 : d.geo_ref.word_weight * 2;
+            break;
+        case navitia::type::Type_e::POI:
+            penalty = (d.geo_ref.pois[item.idx]->admin_list.size() > 0) ? 0 : d.geo_ref.word_weight * 2;
+            break;
+        case navitia::type::Type_e::Address:
+            penalty = (d.geo_ref.ways[item.idx]->admin_list.size() > 0)? 0 : d.geo_ref.word_weight * 2;
+            break;
+        case navitia::type::Type_e::StopPoint:
+            penalty = (d.pt_data.stop_points[item.idx]->admin_list.size() > 0) ? 0 : d.geo_ref.word_weight * 2;
+            break;
+        default:
+            break;
+        }
+        item.quality -= penalty;
+    }
+}
+
 void update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result, navitia::type::Type_e ntype,
                     bool Is_address_type,
                     const navitia::type::Data &d){
@@ -105,9 +128,13 @@ void update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result,
     }
 
     //Mettre à jour la qualité sur le poids de POI
-    if (ntype ==navitia::type::Type_e::POI){
-        update_quality_by_poi_type(ac_result, d);
-    }
+    //Cette méthode n'est pas utilisé en absence du poids sur poi-type.
+//    if (ntype ==navitia::type::Type_e::POI){
+//        update_quality_by_poi_type(ac_result, d);
+//    }
+
+    //Ajouter une pénalité aux objects sans admin par au moin d.geo_ref.word_weight
+    update_quality_for_missing_admin(ac_result, d, ntype);
 }
 
 template<class T>
@@ -184,6 +211,8 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  const navitia::type::Data &d) {
 
     pbnavitia::Response pb_response;
+    int nbmax_to_find = nbmax;
+    nbmax = std::max(100, nbmax);
     bool addType = d.pt_data.stop_area_autocomplete.is_address_type(q, d.geo_ref.alias, d.geo_ref.synonymes);
     std::vector<const georef::Admin*> admin_ptr = admin_uris_to_admin_ptr(admins, d);
 
@@ -222,6 +251,7 @@ pbnavitia::Response autocomplete(const std::string &q,
     };
 
     //Trier la partiallement jusqu'au nbmax elément.
+    nbmax = nbmax_to_find;
     int result_size = std::min(nbmax, pb_response.mutable_places()->size());
     std::partial_sort(pb_response.mutable_places()->begin(),pb_response.mutable_places()->begin() + result_size,
                       pb_response.mutable_places()->end(),compare);
