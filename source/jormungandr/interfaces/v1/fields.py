@@ -224,17 +224,6 @@ pagination = {
     "items_on_page" : fields.Integer(attribute="itemsOnPage"),
 }
 
-class StopScheduleLinks():
-    def output(self, key, obj):
-        route = getattr(obj, "route")
-        response = []
-        response.append({"type": "route", "id": route.uri})
-        response.append({"type": "line", "id": route.line.uri})
-        response.append({"type": "commercial_mode", "id": route.line.commercial_mode.uri})
-        response.append({"type": "network", "id": route.line.network.uri})
-        return response
-
-
 class UrisToLinks():
     def output(self, key, obj):
         display_info = getattr(obj, "pt_display_informations")
