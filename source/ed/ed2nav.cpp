@@ -78,6 +78,8 @@ int main(int argc, char * argv[])
     std::cout << "modes: " << data.pt_data.physical_modes.size() << std::endl;
     std::cout << "validity pattern : " << data.pt_data.validity_patterns.size() << std::endl;
     std::cout << "journey_pattern point connections : " << data.pt_data.journey_pattern_point_connections.size() << std::endl;
+    std::cout << "alias : " << data.geo_ref.alias.size() << std::endl;
+    std::cout << "synonyms : " << data.geo_ref.synonymes.size() << std::endl;
 
     start = pt::microsec_clock::local_time();
     data.pt_data.sort();

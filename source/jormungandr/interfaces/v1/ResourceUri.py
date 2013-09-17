@@ -29,7 +29,15 @@ class ResourceUri(Resource):
             if not type_:
                 type_ = collections_to_resource_type[item]
             else:
-                filters.append(type_+".uri="+item)
+                if type_ == "coord":
+                    splitted_coord = item.split(";")
+                    if len(splitted_coord) == 2:
+                        lon, lat = splitted_coord
+                        filters.append("stop_point.coord DWITHIN("+lon+","+lat+",200)")
+                    else:
+                        filters.append(type_+".uri="+item)
+                else :
+                    filters.append(type_+".uri="+item)
                 type_ = None
         return " and ".join(filters)
 

@@ -659,8 +659,8 @@ struct StopTime : public Nameable {
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}
-    bool is_frequency() const{return properties[IS_FREQUENCY];}
-    bool date_time_estimated() const{return properties[DATE_TIME_ESTIMATED];}
+    bool is_frequency() const {return properties[IS_FREQUENCY];}
+    bool date_time_estimated() const {return properties[DATE_TIME_ESTIMATED];}
 
     inline void set_pick_up_allowed(bool value) {properties[PICK_UP] = value;}
     inline void set_drop_off_allowed(bool value) {properties[DROP_OFF] = value;}
@@ -691,7 +691,7 @@ struct StopTime : public Nameable {
         return gap + first_st->start_time + this->departure_time - first_st->departure_time;
     }
 
-    DateTime section_end_date(int date, bool clockwise) const {return type::DateTime(date, this->section_end_time(clockwise));}
+    DateTime section_end_date(int date, bool clockwise) const {return DateTimeUtils::set(date, this->section_end_time(clockwise));}
 
 
     /** Is this hour valid : only concerns frequency data

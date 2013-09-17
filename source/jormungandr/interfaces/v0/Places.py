@@ -8,10 +8,10 @@ from interfaces.parsers import depth_argument
 class Places(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument("q", type=str, required=True)
+        self.parser.add_argument("q", type=unicode, required=True)
         self.parser.add_argument("type[]", type=str, action="append",
-                                 default=["stop_area", "stop_point",
-                                          "address", "poi"])
+                                 default=["stop_area","address", 
+					  "poi", "administrative_region"])
         self.parser.add_argument("count", type=int,  default=10)
         self.parser.add_argument("admin_uri[]", type=str, action="append")
         self.parser.add_argument("depth", type=depth_argument, default=1)

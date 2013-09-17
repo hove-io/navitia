@@ -59,7 +59,7 @@ class GeoJson(fields.Raw):
                 "type" : "LineString",
                 "coordinates" : [],
                 "properties" : [{
-                    "lenth" : length
+                    "length" : length
                     }]
         }
         for coord in coords:
@@ -92,18 +92,6 @@ class section_type(enum_type):
             pass
         return super(section_type, self).output(key, obj)
 
-class get_temp_date_time():
-    def output(self, key, obj):
-        result = {}
-        enum = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_name
-        if obj.type == enum['STREET_NETWORK'].number:
-            result = {"departure_date_time": obj.begin_date_time, "arrival_date_time": obj.end_date_time}
-        else:
-            stop_date_times = getattr(obj, "stop_date_times")
-            result = {"departure_date_time": stop_date_times[0].departure_date_time, "arrival_date_time": stop_date_times[-1].arrival_date_time}
-
-
-        return result
 
 class section_place(PbField):
     def output(self, key, obj):
@@ -128,8 +116,8 @@ section = {
                          attribute="street_network.path_items"),
     "transfer_type" : enum_type(),
     "stop_date_times" : NonNullList(NonNullNested(stop_date_time)),
-    #temp_date_time : une variable temporaire
-    "temp_date_time" : get_temp_date_time()
+    "departure_date_time" : fields.String(attribute="begin_date_time"),
+    "arrival_date_time" : fields.String(attribute="end_date_time")
 }
 
 
@@ -189,26 +177,10 @@ class add_journey_href(object):
             return objects
         return wrapper
 
-class add_date_time_from_to(object):
-    def __call__(self, f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            objects = f(*args, **kwargs)
-            if not "journeys" in objects[0].keys():
-                return objects
-            for journey in objects[0]['journeys']:
-                if "sections" in journey.keys():
-                    for section in journey["sections"]:
-                        if "temp_date_time" in section.keys():
-                            section["from"]["departure_date_time"] = section["temp_date_time"]["departure_date_time"]
-                            section["to"]["arrival_date_time"] = section["temp_date_time"]["arrival_date_time"]
-                            del section["temp_date_time"]
-            return objects
-        return wrapper
-
 class Journeys(ResourceUri):
     def __init__(self):
         modes = ["walking", "car", "bike", "br"]
+        types = ["all", "asap"]
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("from", type=str, dest="origin")
         self.parser.add_argument("to", type=str, dest="destination")
@@ -219,7 +191,7 @@ class Journeys(ResourceUri):
                                  dest="max_transfers")
         self.parser.add_argument("first_section_mode",
                                  type=option_value(modes),
-                                 action="append", default="walking",
+                                 default="walking",
                                  dest="origin_mode")
         self.parser.add_argument("last_section_mode",
                                  type=option_value(modes),
@@ -234,16 +206,21 @@ class Journeys(ResourceUri):
         self.parser.add_argument("car_speed", type=float, default=16.8)
         self.parser.add_argument("car_distance", type=int, default=15000)
         self.parser.add_argument("forbidden_uris[]", type=str, action="append")
+        self.parser.add_argument("count", type=int)
+        self.parser.add_argument("type", type=option_value(types), default="all")
 #a supprimer
         self.parser.add_argument("max_duration", type=int, default=36000)
 
     @clean_links()
     @add_id_links()
     @add_journey_href()
-    @add_date_time_from_to()
     @marshal_with(journeys)
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parser.parse_args()
+        #TODO : Changer le protobuff pour que ce soit propre
+        args["destination_mode"] = "vls" if args["destination_mode"] == "br" else args["destination_mode"]
+        args["origin_mode"] = "vls" if args["origin_mode"] == "br" else args["origin_mode"]
+
         if not region is None or (not lon is None and not lat is None):
             self.region = NavitiaManager().get_region(region, lon, lat)
             if uri:

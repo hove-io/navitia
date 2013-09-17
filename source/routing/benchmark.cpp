@@ -33,7 +33,7 @@ struct Result {
 
     Result(Path path) : duration(path.duration), visited(path.percent_visited), time(-1), arrival(-1), nb_changes(path.nb_changes) {
         if(!path.items.empty())
-            arrival = path.items.back().arrival.hour();
+            arrival = DateTimeUtils::hour(path.items.back().arrival);
     }
 };
 
@@ -119,7 +119,7 @@ int main(int argc, char** argv){
         Timer t2;
         //            CALLGRIND_START_INSTRUMENTATION;
 
-        auto res = router.compute(demand.start, demand.target, demand.hour, demand.date, navitia::type::DateTime::inf);
+        auto res = router.compute(demand.start, demand.target, demand.hour, demand.date, navitia::DateTimeUtils::inf);
         //            CALLGRIND_STOP_INSTRUMENTATION;
 
         Path path;

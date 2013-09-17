@@ -5,23 +5,23 @@ namespace navitia { namespace routing {
     
 std::vector<Path> 
 makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
-           type::DateTime dt, const float walking_speed,
+           DateTime dt, const float walking_speed,
            const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/, const RAPTOR &raptor_, bool clockwise) {
     std::vector<Path> result;
-    navitia::type::DateTime best_dt = clockwise ? type::DateTime::inf : type::DateTime::min;
+    DateTime best_dt = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
     for(unsigned int i=1;i<=raptor_.count;++i) {
         type::idx_t best_jpp = type::invalid_idx;
         for(auto spid_dist : destinations) {
             for(auto dest : raptor_.data.pt_data.stop_points[spid_dist.first]->journey_pattern_point_list) {
                 type::idx_t dest_idx = dest->idx;
                 if(raptor_.get_type(i, dest_idx) != boarding_type::uninitialized) {
-                    navitia::type::DateTime current_dt = raptor_.labels[i][dest_idx];
+                    DateTime current_dt = raptor_.labels[i][dest_idx];
                     if(clockwise)
                         current_dt = current_dt + spid_dist.second/walking_speed;
                     else
                         current_dt = current_dt - spid_dist.second/walking_speed;
-                    if(        (clockwise && ((best_dt == type::DateTime::inf && current_dt <= dt) || (best_dt != type::DateTime::inf && current_dt < best_dt)))
-                            ||(!clockwise && ((best_dt == type::DateTime::min && current_dt >= dt) || (best_dt != type::DateTime::min && current_dt > best_dt))) ){
+                    if(        (clockwise && ((best_dt == DateTimeUtils::inf && current_dt <= dt) || (best_dt != DateTimeUtils::inf && current_dt < best_dt)))
+                            ||(!clockwise && ((best_dt == DateTimeUtils::min && current_dt >= dt) || (best_dt != DateTimeUtils::min && current_dt > best_dt))) ){
                         best_dt = current_dt ;
                         best_jpp = dest_idx;
                     }
@@ -42,7 +42,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
          const RAPTOR &raptor_) {
     Path result;
     unsigned int current_jpp_idx = destination_idx;
-    type::DateTime l = raptor_.labels[countb][current_jpp_idx],
+    DateTime l = raptor_.labels[countb][current_jpp_idx],
                    workingDate = l;
 
     const type::StopTime* current_st;
@@ -89,9 +89,9 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
 
                 workingDate = l;
                 if(current_st->is_frequency())
-                    workingDate.update(clockwise?current_st->f_departure_time(gap_frep):current_st->f_arrival_time(gap_frep), clockwise);
+                    DateTimeUtils::update(workingDate, clockwise?current_st->f_departure_time(gap_frep):current_st->f_arrival_time(gap_frep), clockwise);
                 else
-                    workingDate.update((clockwise?current_st->departure_time:current_st->arrival_time), clockwise);
+                    DateTimeUtils::update(workingDate, (clockwise?current_st->departure_time:current_st->arrival_time), clockwise);
 
                 item.vj_idx = current_st->vehicle_journey->idx;
                 while(boarding_jpp != current_jpp_idx) {
@@ -99,26 +99,28 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                     //On stocke le sp, et les temps
                     item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_jpp_idx]->stop_point->idx);
                     if(clockwise) {
+
                         if(current_st->is_frequency())
-                            workingDate.update(current_st->f_departure_time(gap_frep), !clockwise);
+                            DateTimeUtils::update(workingDate, current_st->f_departure_time(gap_frep), !clockwise);
                         else
-                            workingDate.update(current_st->departure_time, !clockwise);
+                            DateTimeUtils::update(workingDate, current_st->departure_time, !clockwise);
                         item.departures.push_back(workingDate);
                         if(current_st->is_frequency())
-                            workingDate.update(current_st->f_arrival_time(gap_frep), !clockwise);
+                            DateTimeUtils::update(workingDate, current_st->f_arrival_time(gap_frep), !clockwise);
                         else
-                            workingDate.update(current_st->arrival_time, !clockwise);
+                            DateTimeUtils::update(workingDate, current_st->arrival_time, !clockwise);
                         item.arrivals.push_back(workingDate);
                     } else {
                         if(current_st->is_frequency())
-                            workingDate.update(current_st->f_arrival_time(gap_frep), !clockwise);
+                            DateTimeUtils::update(workingDate, current_st->f_arrival_time(gap_frep), !clockwise);
                         else
-                            workingDate.update(current_st->arrival_time, !clockwise);
+                            DateTimeUtils::update(workingDate, current_st->arrival_time, !clockwise);
                         item.arrivals.push_back(workingDate);
                         if(current_st->is_frequency())
-                            workingDate.update(current_st->f_departure_time(gap_frep), !clockwise);
+                            DateTimeUtils::update(workingDate, current_st->f_departure_time(gap_frep), !clockwise);
                         else
-                            workingDate.update(current_st->departure_time, !clockwise);
+                            DateTimeUtils::update(workingDate, current_st->departure_time, !clockwise);
+
                         item.departures.push_back(workingDate);
                     }
 
@@ -142,27 +144,29 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                 item.orders.push_back(current_st->journey_pattern_point->order);
                 if(clockwise) {
                     if(current_st->is_frequency())
-                        workingDate.update(current_st->f_departure_time(gap_frep), !clockwise);
+                        DateTimeUtils::update(workingDate, current_st->f_departure_time(gap_frep), !clockwise);
                     else
-                        workingDate.update(current_st->departure_time, !clockwise);
+                        DateTimeUtils::update(workingDate, current_st->departure_time, !clockwise);
                     item.departures.push_back(workingDate);
                     if(current_st->is_frequency())
-                        workingDate.update(current_st->f_arrival_time(gap_frep), !clockwise);
+                        DateTimeUtils::update(workingDate, current_st->f_arrival_time(gap_frep), !clockwise);
                     else
-                        workingDate.update(current_st->arrival_time, !clockwise);
+                        DateTimeUtils::update(workingDate, current_st->arrival_time, !clockwise);
+
                     item.arrivals.push_back(workingDate);
                     item.arrival = item.arrivals.front();
                     item.departure = item.departures.back();
                 } else {
                     if(current_st->is_frequency())
-                        workingDate.update(current_st->f_arrival_time(gap_frep), !clockwise);
+                        DateTimeUtils::update(workingDate, current_st->f_arrival_time(gap_frep), !clockwise);
                     else
-                        workingDate.update(current_st->arrival_time, !clockwise);
+                        DateTimeUtils::update(workingDate, current_st->arrival_time, !clockwise);
                     item.arrivals.push_back(workingDate);
                     if(current_st->is_frequency())
-                        workingDate.update(current_st->f_departure_time(gap_frep), !clockwise);
+                        DateTimeUtils::update(workingDate, current_st->f_departure_time(gap_frep), !clockwise);
                     else
-                        workingDate.update(current_st->departure_time, !clockwise);
+                        DateTimeUtils::update(workingDate, current_st->departure_time, !clockwise);
+
                     item.departures.push_back(workingDate);
                     item.arrival = item.arrivals.back();
                     item.departure = item.departures.front();
@@ -218,7 +222,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
     PathItem previous_item;
     std::vector<std::pair<int, PathItem>> to_insert;
     for(auto item = path.items.begin(); item!= path.items.end(); ++item) {
-        if(previous_item.departure != type::DateTime::inf) {
+        if(previous_item.departure != DateTimeUtils::inf) {
             if(item->type == walking || item->type == extension || item->type == guarantee) {
                 auto duration = item->arrival - item->departure;
                 item->departure = previous_item.arrival;

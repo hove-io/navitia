@@ -20,7 +20,7 @@ def gtfs2ed(gtfs_filename, config, backup_directory):
     pyed_logger = logging.getLogger('pyed')
     gtfs_logger = logging.getLogger('gtfs2ed')
     res = launch_exec("mv", [gtfs_filename, backup_directory], pyed_logger)
-    if res!=0:
+    if res != 0:
         return 1
     gtfs_bnanme = os.path.basename(gtfs_filename)
     new_gtfs = backup_directory + "/" +gtfs_bnanme
@@ -33,10 +33,21 @@ def gtfs2ed(gtfs_filename, config, backup_directory):
     except ConfigException:
         pyed_logger.error("gtfs2ed : Unable to make the connection string")
         return 3
+    params = ["-i", backup_directory, "--connection-string", connection_string]
+    try:
+        aliases = config.get("instance", "aliases")
+        params.append("-a")
+        params.append(aliases)
+    except ConfigException:
+        pass
+    try:
+        synonyms = config.get("instance", "synonyms")
+        params.append("-s")
+        params.append(synonyms)
+    except ConfigException:
+        pass
     res = launch_exec(config.get("instance", "exec_directory")+"/gtfs2ed",
-                ["-i", backup_directory, "--connection-string",
-                 connection_string],
-                gtfs_logger, pyed_logger)
+                      params, gtfs_logger, pyed_logger)
     if res != 0:
         return 4
     return 0
@@ -78,13 +89,12 @@ def ed2nav(config):
     """ Launch osm2ed, compute the md5 sum of it, and save the md5 """
     pyed_logger = logging.getLogger('pyed')
     ed2nav_logger = logging.getLogger('ed2nav')
-    target_directory = None
+    filename = None
     try :
-        target_directory = config.get("instance" , "target_directory")
+        filename = config.get("instance" , "target_file")
     except ConfigException, error:
-        ed2nav_logger(error)
+        ed2nav_logger.error(error)
         return 4
-    filename = target_directory +"/data.nav.lz4"
     try:
         connection_string = make_connection_string(config)
     except ConfigException:

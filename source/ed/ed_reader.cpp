@@ -47,6 +47,10 @@ void EdReader::fill(navitia::type::Data& data){
 //    this->clean_graph(data, work);
     this->fill_graph_vls(data, work);
 
+    //Charger les alias et les synonymes
+    this->fill_alias(data, work);
+    this->fill_synonyms(data, work);
+
     /// les relations admin et les autres objets
     this->build_rel_stop_point_admin(data, work);
     this->build_rel_stop_area_admin(data, work);
@@ -713,6 +717,28 @@ void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
         }catch(...){
             std::cout<<"Impossible de trouver le noued le plus proche à la station vls poi_id = "<<const_it["id"].as<std::string>()<<std::endl;
         }
+    }
+}
+
+void EdReader::fill_alias(navitia::type::Data& data, pqxx::work& work){
+    std::string key, value;
+    std::string request = "SELECT key, value FROM navitia.alias;";
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        const_it["key"].to(key);
+        const_it["value"].to(value);
+        data.geo_ref.alias[key]=value;
+    }
+}
+
+void EdReader::fill_synonyms(navitia::type::Data& data, pqxx::work& work){
+    std::string key, value;
+    std::string request = "SELECT key, value FROM navitia.synonym;";
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        const_it["key"].to(key);
+        const_it["value"].to(value);
+        data.geo_ref.synonymes[key]=value;
     }
 }
 
