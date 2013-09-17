@@ -682,11 +682,28 @@ struct StopTime : public Nameable {
     inline void set_is_frequency(bool value) {properties[IS_FREQUENCY] = value;}
     inline void set_date_time_estimated(bool value) {properties[DATE_TIME_ESTIMATED] = value;}
 
+
+
     /// Est-ce qu'on peut finir par ce stop_time : dans le sens avant on veut descendre
     bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
 
     /// Heure de fin de stop_time : dans le sens avant, c'est la fin, sinon le départ
-    uint32_t section_end_time(bool clockwise) const {return clockwise ? arrival_time : departure_time;}
+    uint32_t section_end_time(bool clockwise, int gap=0) const {
+        if(this->is_frequency())
+            return clockwise ? this->f_arrival_time(gap) : this->f_departure_time(gap);
+        else
+            return clockwise ? arrival_time : departure_time;
+    }
+
+    inline uint32_t f_arrival_time(int gap) const {
+        auto first_st = this->vehicle_journey->stop_time_list.front();
+        return gap + first_st->start_time + this->arrival_time - first_st->arrival_time;
+    }
+
+    inline uint32_t f_departure_time(int gap) const {
+        auto first_st = this->vehicle_journey->stop_time_list.front();
+        return gap + first_st->start_time + this->departure_time - first_st->departure_time;
+    }
 
     DateTime section_end_date(int date, bool clockwise) const {return type::DateTime(date, this->section_end_time(clockwise));}
 

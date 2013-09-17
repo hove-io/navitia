@@ -323,7 +323,8 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data & data) const {
     switch(type) {
     case Type_e::StopArea: result.push_back(stop_area->idx); break;
     case Type_e::JourneyPatternPoint: return indexes(journey_pattern_point_list); break;
-    case Type_e::Connection: for(const StopPointConnection* conn : data.stop_point_connections) {
+    case Type_e::Connection:
+        for(const StopPointConnection* conn : data.stop_point_connections) {
             if(conn->departure->idx == this->idx) {
                 result.push_back(conn->idx);
             }

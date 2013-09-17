@@ -35,7 +35,7 @@ Version: 0.62.33
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
 Installed-Size: 12815
-Depends: python-zmq, python-werkzeug, python-shapely, python-protobuf
+Depends: python-zmq, python-werkzeug, python-shapely, python-protobuf, python-flask
 Section: devel
 Priority: optional
 Description: Navitia-Jormungandr

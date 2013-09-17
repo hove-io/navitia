@@ -112,7 +112,7 @@ pbnavitia::Response Worker::load() {
 
 pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & request) {
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
-    return navitia::autocomplete::autocomplete(request.q(), vector_of_pb_types(request), request.depth(), request.nbmax(), vector_of_admins(request), *(*this->data));
+    return navitia::autocomplete::autocomplete(request.q(), vector_of_pb_types(request), request.depth(), request.count(), vector_of_admins(request), *(*this->data));
 }
 
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest & request, pbnavitia::API api) {
@@ -127,9 +127,9 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
         case pbnavitia::STOPS_SCHEDULES:
             return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.from_datetime(), request.duration(), request.depth(), *(*this->data));
         case pbnavitia::DEPARTURE_BOARDS:
-            return navitia::timetables::departure_board(request.departure_filter(), request.from_datetime(), request.duration(), *(*this->data));
+            return navitia::timetables::departure_board(request.departure_filter(), request.from_datetime(), request.duration(), request.interface_version(), request.count(), request.start_page(), *(*this->data));
         case pbnavitia::ROUTE_SCHEDULES:
-            return navitia::timetables::route_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(), *(*this->data));
+            return navitia::timetables::route_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(),request.count(), request.start_page(), *(*this->data));
         default:
             LOG4CPLUS_WARN(logger, "On a reçu une requête time table inconnue");
             pbnavitia::Response response;
@@ -149,7 +149,8 @@ pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest 
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     type::EntryPoint ep((*data)->get_type_of_id(request.uri()), request.uri());
     auto coord = this->coord_of_entry_point(ep);
-    return navitia::proximitylist::find(coord, request.distance(), vector_of_pb_types(request), request.depth(), *(*this->data));
+    return navitia::proximitylist::find(coord, request.distance(), vector_of_pb_types(request), request.depth(),
+                                        request.count(), *(*this->data));
 }
 
 type::GeographicalCoord Worker::coord_of_entry_point(const type::EntryPoint & entry_point) {
@@ -224,7 +225,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
     type::EntryPoint destination;
     if(api != pbnavitia::ISOCHRONE) {
-        Type_e destination_type = (*data)->get_type_of_id(request.origin());
+        Type_e destination_type = (*data)->get_type_of_id(request.destination());
         destination = type::EntryPoint(destination_type, request.destination());
         if (destination.type == type::Type_e::Address) {
             destination.coordinates = this->coord_of_entry_point(destination);

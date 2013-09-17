@@ -47,6 +47,7 @@ def arrivals(request, uri1):
 
 
 def uri(request, uri=None):
+    print "uri"
     u = None
     try:
         u = Uri(uri)

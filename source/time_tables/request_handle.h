@@ -13,9 +13,11 @@ struct RequestHandle {
     type::DateTime date_time;
     type::DateTime max_datetime;
     std::vector<type::idx_t> journey_pattern_points;
+    int total_result;
 
-    RequestHandle(const std::string &API, const std::string &request, const std::string &change_time,
-                   uint32_t duration, const type::Data & data);
+    RequestHandle(const std::string &API, const std::string &request,
+                  const std::string &change_time, uint32_t duration,
+                  const type::Data & data, int count=-1, int start_page=-1);
 };
 }
 

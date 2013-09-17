@@ -3,7 +3,6 @@ import type_pb2
 import request_pb2
 import response_pb2
 from protobuf_to_dict import protobuf_to_dict
-from apis import Apis, validation_decorator
 
 from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
 from renderers import render, render_from_protobuf
@@ -22,14 +21,23 @@ pb_type = {
 
 class Script:
     def __init__(self):
-        self.apis = Apis().apis
+        self.apis = ["places", "places_nearby", "next_departures",
+                     "next_arrivals", "route_schedules", "stops_schedules",
+                     "departure_boards", "stop_areas", "stop_points", "lines",
+                     "routes", "physical_modes", "commercial_modes",
+                     "connections", "journey_pattern_points",
+                     "journey_patterns", "companies", "vehicle_journeys",
+                     "pois", "poi_types", "journeys", "isochrone", "metadatas",
+                     "status", "load"]
+
+
 
 
     def __pagination(self, request, ressource_name, resp):
         if resp.pagination.totalResult > 0:
             query_args = ""
-            for key, value in request.arguments.iteritems():
-                if key != "start_page":
+            for key, value in request.iteritems():
+                if key != "startPage":
                     if type(value) == type([]):
                         for v in value:
                             query_args += key + "=" +unicode(v) + "&"
@@ -68,14 +76,16 @@ class Script:
     def places(self, request, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.places
-        req.places.q = request.arguments['q']
-        req.places.depth = request.arguments['depth']
-        req.places.nbmax = request.arguments['nbmax']
-        for type in request.arguments["type[]"]:
-            req.places.types.append(pb_type[type])
+        req.places.q     = request['q']
+        req.places.depth = request['depth']
+        req.places.count = request['count']
+        if request["type[]"]:
+            for type in request["type[]"]:
+                req.places.types.append(pb_type[type])
 
-        for admin_uri in request.arguments["admin_uri[]"]:
-            req.places.admin_uris.append(admin_uri)
+        if request["admin_uri[]"]:
+            for admin_uri in request["admin_uri[]"]:
+                req.places.admin_uris.append(admin_uri)
 
         resp = NavitiaManager().send_and_receive(req, region)
         self.__pagination(request, "places", resp)
@@ -99,40 +109,49 @@ class Script:
     def __stop_times(self, request, region, departure_filter, arrival_filter, api):
         req = request_pb2.Request()
         req.requested_api = api
-        req.next_stop_times.departure_filter = departure_filter
-        req.next_stop_times.arrival_filter = arrival_filter
-        req.next_stop_times.from_datetime = request.arguments["from_datetime"]
-        req.next_stop_times.duration = request.arguments["duration"]
-        req.next_stop_times.depth = request.arguments["depth"]
-        req.next_stop_times.nb_stoptimes = request.arguments["nb_stoptimes"] if "nb_stoptimes" in request.arguments else 0
+        st = req.next_stop_times
+        st.departure_filter = departure_filter
+        st.arrival_filter = arrival_filter
+        st.from_datetime = request["from_datetime"]
+        st.duration      = request["duration"]
+        st.depth         = request["depth"]
+        st.nb_stoptimes  = 0 if not "nb_stoptimes" in request.keys()\
+                             else request["nb_stoptimes"]
+        st.interface_version = 0 if not "interface_version" in request.keys()\
+                                  else request["interface_version"]
+        st.count = 10 if not "count" in request.keys() else request["count"]
+        st.start_page = 0 if not "start_page" in request.keys()\
+                           else request["start_page"]
         resp = NavitiaManager().send_and_receive(req, region)
         return resp
 
 
     def route_schedules(self, request, region):
-        return self.__stop_times(request, region, request.arguments["filter"], "", type_pb2.ROUTE_SCHEDULES)
+        return self.__stop_times(request, region, request["filter"], "", type_pb2.ROUTE_SCHEDULES)
 
     def next_arrivals(self, request, region):
-        return self.__stop_times(request, region, "", request.arguments["filter"], type_pb2.NEXT_ARRIVALS)
+        return self.__stop_times(request, region, "", request["filter"], type_pb2.NEXT_ARRIVALS)
 
     def next_departures(self, request, region):
-        return self.__stop_times(request, region, request.arguments["filter"], "", type_pb2.NEXT_DEPARTURES)
+        return self.__stop_times(request, region, request["filter"], "", type_pb2.NEXT_DEPARTURES)
 
     def stops_schedules(self, request, region):
-        return self.__stop_times(request, region, request.arguments["departure_filter"], request["arrival_filter"],type_pb2.STOPS_SCHEDULES)
+        return self.__stop_times(request, region, request["departure_filter"], request["arrival_filter"],type_pb2.STOPS_SCHEDULES)
 
     def departure_boards(self, request, region):
-        return self.__stop_times(request, region, request.arguments["filter"], "", type_pb2.DEPARTURE_BOARDS)
+        return self.__stop_times(request, region, request["filter"], "", type_pb2.DEPARTURE_BOARDS)
 
-    
+
     def places_nearby(self, request, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.places_nearby
-        req.places_nearby.uri = request.arguments["uri"]
-        req.places_nearby.distance = request.arguments["distance"]
-        req.places_nearby.depth = request.arguments["depth"]
-        for type in request.arguments["type[]"]:
-            req.places_nearby.types.append(pb_type[type])
+        req.places_nearby.uri      = request["uri"]
+        req.places_nearby.distance = request["distance"]
+        req.places_nearby.depth    = request["depth"]
+        req.places_nearby.count    = request["count"]
+        if request["type[]"]:
+            for type in request["type[]"]:
+                req.places_nearby.types.append(pb_type[type])
         resp = NavitiaManager().send_and_receive(req, region)
         self.__pagination(request, "places_nearby", resp)
         return resp
@@ -167,41 +186,37 @@ class Script:
     def __on_journeys(self, requested_type, request, region):
         req = request_pb2.Request()
         req.requested_api = requested_type
-        req.journeys.origin = request.arguments["origin"]
-        req.journeys.destination = request.arguments["destination"] if "destination" in request.arguments else ""
-        req.journeys.datetimes.append(request.arguments["datetime"])
-        req.journeys.clockwise = request.arguments["clockwise"]
-        req.journeys.streetnetwork_params.walking_speed = request.arguments["walking_speed"]
-        req.journeys.streetnetwork_params.walking_distance = request.arguments["walking_distance"]
-        req.journeys.streetnetwork_params.origin_mode = request.arguments["origin_mode"]
-        req.journeys.streetnetwork_params.destination_mode = request.arguments["destination_mode"] if "destination_mode" in request.arguments else ""
-        req.journeys.streetnetwork_params.bike_speed = request.arguments["bike_speed"]
-        req.journeys.streetnetwork_params.bike_distance = request.arguments["bike_distance"]
-        req.journeys.streetnetwork_params.car_speed = request.arguments["car_speed"]
-        req.journeys.streetnetwork_params.car_distance = request.arguments["car_distance"]
-        req.journeys.streetnetwork_params.vls_speed = request.arguments["br_speed"]
-        req.journeys.streetnetwork_params.vls_distance = request.arguments["br_distance"]
-        req.journeys.streetnetwork_params.origin_filter = request.arguments["origin_filter"] if "origin_filter" in request.arguments else ""
-        req.journeys.streetnetwork_params.destination_filter = request.arguments["destination_filter"] if "destination_filter" in request.arguments else ""
-        req.journeys.max_duration = request.arguments["max_duration"]
-        req.journeys.max_transfers = request.arguments["max_transfers"]
+        req.journeys.origin = request["origin"]
+        if request["destination"]:
+            req.journeys.destination = request["destination"] #if "destination" in request.keys() else ""
+        req.journeys.datetimes.append(request["datetime"])
+        req.journeys.clockwise = request["clockwise"]
+        req.journeys.streetnetwork_params.walking_speed = request["walking_speed"]
+        req.journeys.streetnetwork_params.walking_distance = request["walking_distance"]
+        req.journeys.streetnetwork_params.origin_mode = request["origin_mode"]
+        req.journeys.streetnetwork_params.destination_mode = request["destination_mode"] if "destination_mode" in request else ""
+        req.journeys.streetnetwork_params.bike_speed = request["bike_speed"]
+        req.journeys.streetnetwork_params.bike_distance = request["bike_distance"]
+        req.journeys.streetnetwork_params.car_speed = request["car_speed"]
+        req.journeys.streetnetwork_params.car_distance = request["car_distance"]
+        req.journeys.streetnetwork_params.vls_speed = request["br_speed"]
+        req.journeys.streetnetwork_params.vls_distance = request["br_distance"]
+        req.journeys.streetnetwork_params.origin_filter = request["origin_filter"] if "origin_filter" in request else ""
+        req.journeys.streetnetwork_params.destination_filter = request["destination_filter"] if "destination_filter" in request else ""
+        req.journeys.max_duration = request["max_duration"]
+        req.journeys.max_transfers = request["max_transfers"]
         if req.journeys.streetnetwork_params.origin_mode == "bike_rental":
             req.journeys.streetnetwork_params.origin_mode = "vls"
         if req.journeys.streetnetwork_params.destination_mode == "bike_rental":
             req.journeys.streetnetwork_params.destination_mode = "vls"
-
-        for forbidden_uri in request.arguments["forbidden_uris[]"]:
-            req.journeys.forbidden_uris.append(forbidden_uri)
+        if "forbidden_uris" in request:
+            for forbidden_uri in request["forbidden_uris[]"]:
+                req.journeys.forbidden_uris.append(forbidden_uri)
         resp = NavitiaManager().send_and_receive(req, region)
         if resp.response_type in [response_pb2.NO_ORIGIN_NOR_DESTINATION_POINT, response_pb2.NO_ORIGIN_POINT, response_pb2.NO_DESTINATION_POINT]:
             resp.error = "Could not find a stop point nearby. Check the coordinates (did you mix up longitude and latitude?). Maybe you are out of the covered region. Maybe the coordinate snaped to a street of OpenStreetMap with no connectivity to the street network."
         if resp.response_type == response_pb2.NO_SOLUTION:
             resp.error = "We found no solution. Maybe the are no vehicle running that day on all the nearest stop points?"
-        if resp.journeys:
-            (before, after) = extremes(resp, request)
-            if before and after:
-                resp.prev = before
-                resp.next = after
         self.__fill_display_and_uris(resp)
         return resp
 
@@ -209,22 +224,22 @@ class Script:
     def journeys(self, request, region):
         return self.__on_journeys(type_pb2.PLANNER, request, region)
 
-    
+
     def isochrone(self, request, region):
         return self.__on_journeys(type_pb2.ISOCHRONE, request, region)
 
-    def __on_ptref(self, ressource_name, requested_type, request, region):
+    def __on_ptref(self, resource_name, requested_type, request, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.PTREFERENTIAL
 
         req.ptref.requested_type = requested_type
-        req.ptref.filter = request.arguments["filter"]
-        req.ptref.depth = request.arguments["depth"]
-        req.ptref.start_page = request.arguments["start_page"]
-        req.ptref.count = request.arguments["count"]
+        req.ptref.filter     = request["filter"]
+        req.ptref.depth      = request["depth"]
+        req.ptref.start_page = request["start_page"]
+        req.ptref.count      = request["count"]
 
         resp = NavitiaManager().send_and_receive(req, region)
-        self.__pagination(request, ressource_name, resp)
+        self.__pagination(request, resource_name, resp)
         return resp
 
     def stop_areas(self, request, region):
@@ -262,9 +277,9 @@ class Script:
 
     def vehicle_journeys(self, request, region):
         return self.__on_ptref("vehicle_journeys", type_pb2.VEHICLE_JOURNEY, request, region)
-    
+
     def pois(self, request, region):
         return self.__on_ptref("pois", type_pb2.POI, request, region)
-    
+
     def poi_types(self, request, region):
         return self.__on_ptref("poi_types", type_pb2.POITYPE, request, region)
