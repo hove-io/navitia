@@ -6,7 +6,8 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, PbField,\
                    stop_date_time, enum_type, NonNullList, NonNullNested,\
                    additional_informations,  notes,notes_links,\
-                   get_label,StopScheduleLinks,display_informations
+                   get_label,StopScheduleLinks,display_informations,\
+                   additional_informations_header, UrisToLinks
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
 from ResourceUri import ResourceUri
@@ -53,14 +54,10 @@ row = {
     "date_times" : NonNullList(fields.Nested(date_time), attribute="stop_times")
 }
 
-
-
 header = {
-    #"id" : fields.String(attribute="vehiclejourney.uri"),
     "display_informations" :  display_informations(),
-    "additional_informations" : additional_informations()
-    #"wheelchair_accessible" : fields.Boolean(default=True),
-    #"bike_accessible" : fields.Boolean(default=True),
+    "additional_informations" : additional_informations_header(),
+    "links" : UrisToLinks()
 }
 table_field = {
     "rows" : NonNullList(NonNullNested(row)),
@@ -69,8 +66,7 @@ table_field = {
 
 route_schedule_fields = {
     "table" : PbField(table_field),
-    #"display_informations" : PbField(display_information, attribute="route"),
-    "display_informations" : display_informations(),
+    "display_informations" : display_informations()
 }
 
 route_schedules = {

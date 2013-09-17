@@ -55,12 +55,23 @@ class additional_informations(fields.Raw):
         return [str.lower(enum.values_by_number[v].name) for v
                 in properties.additional_informations]
 
-class has_vehicle_propertie(fields.Raw):
+class additional_informations_header(fields.Raw):
     def output(self, key, obj):
-        properties = getattr(obj, "has_vehicle_properties")
-        enum = properties.DESCRIPTOR.enum_types_by_name["VehiclePropertie"]
-        return [str.lower(enum.values_by_number[v].name) for v
-                in properties.vehicle_properties]
+        addinfo = getattr(obj, "add_info_vehicle_journey")
+        enum_t = addinfo.DESCRIPTOR.fields_by_name['vehicle_journey_type'].enum_type.values_by_name
+        if addinfo.vehicle_journey_type == enum_t['virtual_with_stop_time'].number :
+            return ["virtual_with_stop_time"]
+        if addinfo.vehicle_journey_type == enum_t['virtual_without_stop_time'].number:
+            return ["virtual_without_stop_time"]
+        if addinfo.vehicle_journey_type == enum_t['stop_point_to_stop_point'].number:
+            return ["stop_point_to_stop_point"]
+        if addinfo.vehicle_journey_type == enum_t['adress_to_stop_point'].number:
+            return ["adress_to_stop_point"]
+        if addinfo.vehicle_journey_type == enum_t['odt_point_to_point'].number:
+            return ["odt_point_to_point"]
+        return ["regular"]
+
+
 
 class display_informations(fields.Raw):
     def output(self, key, obj):
@@ -84,9 +95,12 @@ class display_informations(fields.Raw):
             result["color"] = display_information.color
         if display_information.commercial_mode != '':
             result["commercial_mode"] = display_information.commercial_mode
-        #result["equipments"] = has_vehicle_propertie()
-        #result["equipments"] = fields.List(PbField(enum_type())).output("has_vehicle_properties", display_information)
-
+        properties = getattr(display_information, "has_vehicle_properties")
+        enum = properties.DESCRIPTOR.enum_types_by_name["VehiclePropertie"]
+        result["equipments"] = [str.lower(enum.values_by_number[v].name) for v
+                in properties.vehicle_properties]
+        if len(result["equipments"]) == 0:
+            del result["equipments"]
         return result
 
 class notes(fields.Raw):
@@ -218,4 +232,28 @@ class StopScheduleLinks():
         response.append({"type": "line", "id": route.line.uri})
         response.append({"type": "commercial_mode", "id": route.line.commercial_mode.uri})
         response.append({"type": "network", "id": route.line.network.uri})
+        return response
+
+
+class UrisToLinks():
+    def output(self, key, obj):
+        display_info = getattr(obj, "pt_display_informations")
+        uris = getattr(display_info, "uris")
+        response = []
+        if uris.line != '' :
+            response.append({"type": "line", "id": uris.line})
+        if uris.company != '' :
+            response.append({"type": "company", "id": uris.company})
+        if uris.vehicle_journey != '' :
+            response.append({"type": "vehicle_journey", "id": uris.vehicle_journey})
+        if uris.route != '' :
+            response.append({"type": "route", "id": uris.route})
+        if uris.commercial_mode != '' :
+            response.append({"type": "commercial_mode", "id": uris.commercial_mode})
+        if uris.physical_mode != '' :
+            response.append({"type": "physical_mode", "id": uris.physical_mode})
+        if uris.network != '' :
+            response.append({"type": "network", "id": uris.network})
+        if uris.note != '' :
+            response.append({"type": "note", "id": uris.note})
         return response

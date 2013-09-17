@@ -665,22 +665,21 @@ void fill_pb_object(const nt::Route* r, const nt::Data& ,
         uris->set_line(r->line->uri);
         if (r->line->network != nullptr){
             pt_display_info->set_network(r->line->network->name);
-            uris->set_line(r->line->uri);
+            uris->set_network(r->line->network->uri);
         }
         if (r->line->commercial_mode != nullptr){
             pt_display_info->set_commercial_mode(r->line->commercial_mode->name);
             uris->set_commercial_mode(r->line->commercial_mode->uri);
         }
-
     }
-
 }
 void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
-                    pbnavitia::PtDisplayInfo * vj_display_information, int max_depth,
+                    pbnavitia::Header * vj_header, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period)
 {
     if(vj == nullptr)
         return ;
+    pbnavitia::PtDisplayInfo* vj_display_information = vj_header->mutable_pt_display_informations();
     pbnavitia::Uris* uris = vj_display_information->mutable_uris();
     uris->set_vehicle_journey(vj->uri);
     if ((vj->journey_pattern != nullptr) && (vj->journey_pattern->route)){
@@ -721,6 +720,8 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
     if (vj->school_vehicle()){
         has_vehicle_propertie->add_vehicle_properties(pbnavitia::hasVehiclePropertie::has_school_vehicle);
     }
+    pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey = vj_header->mutable_add_info_vehicle_journey();
+    add_info_vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->odt_type));
 }
 
 }//namespace navitia
