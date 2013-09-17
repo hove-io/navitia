@@ -66,7 +66,7 @@ table_field = {
 
 route_schedule_fields = {
     "table" : PbField(table_field),
-    "display_informations" : display_informations(),
+    "display_informations" : display_informations()
 }
 
 route_schedules = {

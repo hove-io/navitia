@@ -71,12 +71,7 @@ class additional_informations_header(fields.Raw):
             return ["odt_point_to_point"]
         return ["regular"]
 
-class has_vehicle_propertie(fields.Raw):
-    def output(self, key, obj):
-        properties = getattr(obj, "has_vehicle_properties")
-        enum = properties.DESCRIPTOR.enum_types_by_name["VehiclePropertie"]
-        return [str.lower(enum.values_by_number[v].name) for v
-                in properties.vehicle_properties]
+
 
 class display_informations(fields.Raw):
     def output(self, key, obj):
@@ -100,8 +95,12 @@ class display_informations(fields.Raw):
             result["color"] = display_information.color
         if display_information.commercial_mode != '':
             result["commercial_mode"] = display_information.commercial_mode
-        #result["equipments"] = has_vehicle_propertie()
-
+        properties = getattr(display_information, "has_vehicle_properties")
+        enum = properties.DESCRIPTOR.enum_types_by_name["VehiclePropertie"]
+        result["equipments"] = [str.lower(enum.values_by_number[v].name) for v
+                in properties.vehicle_properties]
+        if len(result["equipments"]) == 0:
+            del result["equipments"]
         return result
 
 class notes(fields.Raw):
