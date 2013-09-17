@@ -60,7 +60,7 @@ void fill_pb_object(navitia::georef::Admin* adm, const nt::Data& data, pbnavitia
 void fill_pb_object(const navitia::type::StopTime* st, const nt::Data& data, pbnavitia::ScheduleStopTime* row, int max_depth = 0,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
                     const boost::posix_time::time_period& action_period = null_time_period,
-                    const type::DateTime& date_time = type::DateTime());
+                    const DateTime& date_time = DateTime());
 
 void fill_pb_object(const type::StopPointConnection* c, const type::Data& data,
                     pbnavitia::Connection* connection, int max_depth,

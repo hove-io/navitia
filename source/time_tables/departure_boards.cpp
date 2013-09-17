@@ -12,11 +12,10 @@ namespace navitia { namespace timetables {
 
 std::vector<vector_datetime> make_columuns(const vector_dt_st &stop_times) {
     std::vector<vector_datetime> result;
-    type::DateTime prev_date = type::DateTime::inf;
+    DateTime prev_date = DateTimeUtils::inf;
 
     for(auto & item : stop_times) {
-        if(prev_date == type::DateTime:: inf ||
-           (prev_date.hour()/3600) != (item.first.hour()/3600)) {
+        if(prev_date == DateTimeUtils::inf || (DateTimeUtils::hour(prev_date)/3600) != (DateTimeUtils::hour(item.first)/3600)) {
             //On supprime les doublons
             if(result.size() > 0) {
                 auto last = result.back();
@@ -41,7 +40,7 @@ std::vector<vector_datetime> make_columuns(const vector_dt_st &stop_times) {
 
 pbnavitia::Response
 render_v0(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
-          type::DateTime datetime, type::DateTime max_datetime,
+          DateTime datetime, DateTime max_datetime,
           const type::Data &data) {
     pbnavitia::Response response;
     auto current_time = pt::second_clock::local_time();
@@ -50,10 +49,10 @@ render_v0(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
 
     auto sort_predicate =
         [&](datetime_stop_time d1, datetime_stop_time d2) {
-            auto hour1 = d1.first.hour() % type::DateTime::SECONDS_PER_DAY;
-            auto hour2 = d2.first.hour() % type::DateTime::SECONDS_PER_DAY;
-            return std::abs(hour1 - datetime.hour()) <
-                   std::abs(hour2 - datetime.hour());
+            auto hour1 = DateTimeUtils::hour(d1.first) % DateTimeUtils::SECONDS_PER_DAY;
+            auto hour2 = DateTimeUtils::hour(d2.first) % DateTimeUtils::SECONDS_PER_DAY;
+            return std::abs(hour1 - DateTimeUtils::hour(datetime)) <
+                   std::abs(hour2 - DateTimeUtils::hour(datetime));
         };
 
     for(auto id_vec : map_route_stop_point) {
@@ -71,12 +70,12 @@ render_v0(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
         for(auto vec : make_columuns(vec_st)) {
             pbnavitia::BoardItem *item = board->add_board_items();
 
-            for(type::DateTime dt : vec) {
+            for(DateTime dt : vec) {
                 if(!item->has_hour()) {
-                    auto hours = dt.hour()/3600;
+                    auto hours = DateTimeUtils::hour(dt)/3600;
                     item->set_hour(boost::lexical_cast<std::string>(hours));
                 }
-                auto minutes = (dt.hour()%3600)/60;
+                auto minutes = (DateTimeUtils::hour(dt)%3600)/60;
                 item->add_minutes(boost::lexical_cast<std::string>(minutes));
             }
         }
@@ -87,7 +86,7 @@ render_v0(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
 
 pbnavitia::Response
 render_v1(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
-          type::DateTime datetime, type::DateTime max_datetime,
+          DateTime datetime, DateTime max_datetime,
           const type::Data &data) {
     pbnavitia::Response response;
     auto current_time = pt::second_clock::local_time();

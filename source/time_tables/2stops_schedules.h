@@ -31,7 +31,7 @@ std::unordered_map<type::idx_t, uint32_t> get_arrival_order(const std::vector<ty
  * @return : Un vecteur de paires de DateTime/StopTime
  */
 std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
-                                        const type::DateTime &datetime, const type::DateTime &max_datetime,
+                                        const DateTime &datetime, const DateTime &max_datetime,
                                         type::Data & data);
 
 /**

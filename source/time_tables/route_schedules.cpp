@@ -12,8 +12,8 @@ namespace navitia { namespace timetables {
 
 std::vector<std::vector<datetime_stop_time> >
 get_all_stop_times(const vector_idx &journey_patterns,
-                   const type::DateTime &dateTime,
-                   const type::DateTime &max_datetime, type::Data &d) {
+                   const DateTime &dateTime,
+                   const DateTime &max_datetime, type::Data &d) {
     std::vector<std::vector<datetime_stop_time> > result;
 
     //On cherche les premiers journey_pattern_points
@@ -33,9 +33,9 @@ get_all_stop_times(const vector_idx &journey_patterns,
     //On va chercher tous les prochains horaires
     for(auto ho : first_dt_st) {
         result.push_back(std::vector<datetime_stop_time>());
-        type::DateTime dt = ho.first;
-        for(auto stop_time : ho.second->vehicle_journey->stop_time_list) {
-            dt.update(stop_time->departure_time);
+        DateTime dt = ho.first;
+        for(const type::StopTime* stop_time : ho.second->vehicle_journey->stop_time_list) {
+            DateTimeUtils::update(dt, stop_time->departure_time);
             result.back().push_back(std::make_pair(dt, stop_time));
         }
     }
