@@ -4,6 +4,7 @@
 #include "data.h"
 #include "type/meta_data.h"
 
+
 namespace ed{
 
 struct EdPersistor{
@@ -37,7 +38,8 @@ private:
 
     void insert_stop_point_connections(const std::vector<types::StopPointConnection*>& connections);
     void insert_journey_pattern_point_connections(const std::vector<types::JourneyPatternPointConnection*>& connections);
-
+    void insert_alias(const std::map<std::string, std::string>& alias);
+    void insert_synonyms(const std::map<std::string, std::string>& synonyms);
     /// suppression de l'ensemble des objets chargés par gtfs déja present en base
     void clean_db();
     void build_relation();

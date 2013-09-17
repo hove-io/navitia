@@ -8,6 +8,7 @@ SET(SOURCE_LIB
         osm_tags_reader.cpp
         adapted.cpp
         poi_parser.cpp
+        external_parser.cpp
 )
 add_library(connectors ${SOURCE_LIB})
 
