@@ -24,7 +24,7 @@ def main():
         sys.exit(1)
 
     daemon = Persistor()
-    daemon.load_config(config_file)
+    daemon.init(config_file)
     daemon.run()
 
 

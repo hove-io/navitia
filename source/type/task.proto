@@ -1,11 +1,15 @@
 package pbnavitia;
 
+import "realtime.proto";
+
 enum Action{
     RELOAD = 0;
+    MESSAGE = 1;
 }
 
 message Task{
     required Action action = 1;
+    optional pbnavitia.realtime.Message message = 3;
 }
 
 

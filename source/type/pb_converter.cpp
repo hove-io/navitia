@@ -110,8 +110,8 @@ void fill_pb_object(navitia::georef::Way* way, const nt::Data& data,
 
 
 void fill_pb_object(nt::Line const* l, const nt::Data& data,
-                    pbnavitia::Line * line, int max_depth, const pt::ptime& now,
-                    const pt::time_period& action_period){
+        pbnavitia::Line * line, int max_depth, const pt::ptime& now,
+        const pt::time_period& action_period){
     if(l == nullptr)
         return ;
 
@@ -130,7 +130,7 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
         }
         for(auto physical_mode : l->physical_mode_list){
             fill_pb_object(physical_mode, data, line->add_physical_mode(),
-                           depth-1);
+                    depth-1);
         }
 
         fill_pb_object(l->commercial_mode, data,
@@ -139,6 +139,7 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
         for(const auto message : l->get_applicable_messages(now, action_period)){
             fill_message(message, data, line->add_messages(), depth-1, now, action_period);
         }
+    }
 }
 
 

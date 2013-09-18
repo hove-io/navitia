@@ -63,6 +63,7 @@ void MaintenanceWorker::operator()(){
         bool result = task.ParseFromString(envelope->Message()->Body());
         if(!result){
             LOG4CPLUS_WARN(logger, "impossible de parser le protobuf reçu");
+            continue;
         }
         if(task.action() == pbnavitia::RELOAD){
             load();

@@ -1,5 +1,5 @@
 find_package(Protobuf REQUIRED)
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS type.proto response.proto request.proto task.proto)
+PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS type.proto response.proto request.proto task.proto realtime.proto)
 
 
 add_library(pb_lib ${PROTO_SRCS} pb_converter.cpp)
@@ -14,6 +14,12 @@ add_custom_command (TARGET pb_lib
     PRE_BUILD
     COMMAND protoc ARGS --python_out=${CMAKE_SOURCE_DIR}/pyed/pyed task.proto
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/type)
+
+add_custom_command (TARGET pb_lib
+    PRE_BUILD
+    COMMAND protoc ARGS --python_out=${CMAKE_SOURCE_DIR}/persistor/persistor type.proto
+    task.proto realtime.proto
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/type )
 
 add_library(types type.cpp message.cpp datetime.cpp)
 
