@@ -257,7 +257,8 @@ message Pagination {
 }
 
 message StopSchedule {
-    required Route route = 1;
+    //required Route route = 1;
+    required PtDisplayInfo pt_display_informations = 1;
     required StopPoint stop_point = 2;
     repeated ScheduleStopTime stop_date_times = 3;
 }

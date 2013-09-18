@@ -6,7 +6,7 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, PbField,\
                    stop_date_time, enum_type, NonNullList, NonNullNested,\
                    additional_informations,  notes,notes_links,\
-                   get_label,StopScheduleLinks,display_informations,\
+                   get_label,display_informations,\
                    additional_informations_header, UrisToLinks
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
@@ -89,7 +89,7 @@ stop_schedule = {
     #"display_informations" : PbField(display_information, attribute="route"),
     "display_informations" : display_informations(),
     "stop_date_times" : NonNullList(NonNullNested(date_time)),
-    "links" : StopScheduleLinks()
+    "links" : UrisToLinks()
 }
 stop_schedules = {
     "stop_schedules" : NonNullList(NonNullNested(stop_schedule)),
