@@ -6,7 +6,7 @@ from find_extrem_datetimes import extremes
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, place,\
                    PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
-                   display_informations
+                   display_informations_vj
 
 from interfaces.parsers import option_value
 from ResourceUri import ResourceUri
@@ -98,7 +98,7 @@ section = {
     "from" : section_place(place, attribute="origin"),
     "to": section_place(place, attribute="destination"),
     "links" : SectionLinks(attribute="uris"),
-    "display_informations" : display_informations(),
+    "display_informations" : display_informations_vj(),
     "geojson" : GeoJson(),
     "path" : NonNullList(NonNullNested({"length":fields.Integer(),
                                         "name":fields.String()}),

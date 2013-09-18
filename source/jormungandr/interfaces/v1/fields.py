@@ -68,36 +68,27 @@ class additional_informations_header(fields.Raw):
             return ["odt_with_zone"]
         return ["regular"]
 
-
-
-class display_informations(fields.Raw):
+class display_informations_route(fields.Raw):
     def output(self, key, obj):
         display_information = getattr(obj, "pt_display_informations")
         result = {}
-        if display_information.network != '' :
-            result["network"] = display_information.network
-        if display_information.headsign != '':
-            result["headsign"] = display_information.headsign
-        if display_information.direction != '':
-            result["direction"] = display_information.direction
-        if display_information.physical_mode != '':
-            result["physical_mode"] = display_information.physical_mode
-        if display_information.description != '':
-            result["description"] = display_information.description
-        if display_information.name != '':
-            result["label"] = display_information.name
-        if display_information.code != '':
-            result["label"] = display_information.code
-        if display_information.color != '':
-            result["color"] = display_information.color
-        if display_information.commercial_mode != '':
-            result["commercial_mode"] = display_information.commercial_mode
+        result["network"] = display_information.network
+        result["direction"] = display_information.direction
+        result["commercial_mode"] = display_information.commercial_mode
+        result["label"] = display_information.name if display_information.code == "" else display_information.code
+        result["color"] = display_information.color
+        return result
+
+class display_informations_vj(display_informations_route):
+    def output(self, key, obj):
+        display_information = getattr(obj, "pt_display_informations")
+        result = super(display_informations_vj, self).output(key, obj)
+        result["description"] = display_information.description
+        result["physical_mode"] = display_information.physical_mode
         properties = getattr(display_information, "has_vehicle_properties")
         enum = properties.DESCRIPTOR.enum_types_by_name["VehiclePropertie"]
-        result["equipments"] = [str.lower(enum.values_by_number[v].name) for v
+        result["equipments"] = [str.lower(enum.values_by_number[v].name) for v\
                 in properties.vehicle_properties]
-        if len(result["equipments"]) == 0:
-            del result["equipments"]
         return result
 
 class notes(fields.Raw):
