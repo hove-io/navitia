@@ -4,7 +4,7 @@ from validate import Validator
 
 class Config(object):
     """
-    class de configuration de persistor
+    class de configuration de sindri
 
     """
     def __init__(self):
@@ -55,7 +55,7 @@ class Config(object):
         confspec.append('[ed]')
         confspec.append('connection-string = string()')
 
-        confspec.append('[persistor]')
+        confspec.append('[sindri]')
         confspec.append('exchange-name = string(default="navitia")')
         confspec.append('instance-name = string()')
         confspec.append('rt-topics = string_list()')
@@ -76,7 +76,7 @@ class Config(object):
         self.rabbitmq_vhost = config['rabbitmq']['vhost']
         self.rabbitmq_vhost = config['rabbitmq']['vhost']
         self.ed_connection_string = config['ed']['connection-string']
-        self.instance_name = config['persistor']['instance-name']
-        self.rt_topics = config['persistor']['rt-topics']
-        self.exchange_name = config['persistor']['exchange-name']
+        self.instance_name = config['sindri']['instance-name']
+        self.rt_topics = config['sindri']['rt-topics']
+        self.exchange_name = config['sindri']['exchange-name']
 

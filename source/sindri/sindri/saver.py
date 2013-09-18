@@ -4,9 +4,16 @@ import psycopg2
 import datetime
 
 class InvalidMessage(ValueError):
+    """
+    Exception lancé lorsque que le message à traiter n'est pas valide
+    """
     pass
 
 class TechnicalError(ValueError):
+    """
+    Exception lancé lors d'un probléme technique
+    typiquement la base de données est inaccessible
+    """
     pass
 
 def from_timestamp(timestamp):
@@ -18,6 +25,10 @@ def from_time(time):
     return datetime.datetime.utcfromtimestamp(time).time()
 
 def build_message_dict(message):
+    """
+    construit à partir d'un object protobuf pbnavitia.realtime.Message le
+    dictionnaire utilisé pour l'insertion en base
+    """
     result = {}
     result['uri'] = message.uri
     result['object_uri'] = message.object.object_uri
@@ -57,7 +68,7 @@ VALUES (%(message_id)s, %(language)s, %(body)s, %(title)s);
     cursor.execute(query, {'message_id': message_id,
         'language': localized_message.language, 'body': localized_message.body,
         'title': localized_message.title})
-    logging.getLogger('persistor').debug(cursor.query)
+    logging.getLogger('sindri').debug(cursor.query)
 
 
 def update_message(cursor, row_id, message):
@@ -77,11 +88,11 @@ def update_message(cursor, row_id, message):
     m_dict = build_message_dict(message)
     m_dict['id'] = row_id
     cursor.execute(query, m_dict)
-    logging.getLogger('persistor').debug(cursor.query)
+    logging.getLogger('sindri').debug(cursor.query)
 
     cursor.execute('DELETE from realtime.localized_message '
             'where message_id = %(id)s', {'id': row_id})
-    logging.getLogger('persistor').debug(cursor.query)
+    logging.getLogger('sindri').debug(cursor.query)
 
     for localized_message in message.localized_messages:
         insert_localized_message(cursor, localized_message, row_id)
@@ -101,7 +112,7 @@ RETURNING id;
     """
     m_dict = build_message_dict(message)
     cursor.execute(query, m_dict)
-    logging.getLogger('persistor').debug(cursor.query)
+    logging.getLogger('sindri').debug(cursor.query)
     row_id = cursor.fetchone()
 
     for localized_message in message.localized_messages:
@@ -121,11 +132,19 @@ def find_message_id(cursor, message_uri):
 
 
 class EdRealtimeSaver(object):
+    """
+    Classe responsable de l'enregistrement en base de donnée des événements
+    temps réel.
+    """
     def __init__(self, config):
         self.connection_string = config.ed_connection_string
         self.connection = None
+        self.__connect()
 
     def persist_message(self, message):
+        """
+        enregistre ou met a jour un message dans ED
+        """
         try:
             self.__connect()
             cursor = self.connection.cursor()
@@ -136,18 +155,21 @@ class EdRealtimeSaver(object):
                 insert_message(cursor, message)
             self.connection.commit()
         except (psycopg2.IntegrityError, psycopg2.DataError), e:
-            logging.getLogger('persistor').exception(
+            logging.getLogger('sindri').exception(
                     'error durring transaction')
             self.connection.rollback()
         except psycopg2.Error, e:
-            logging.getLogger('persistor').exception(
+            logging.getLogger('sindri').exception(
                     'error durring transaction')
             self.connection.rollback()
             raise TechnicalError('problem with databases: ' + str(e))
 
     def __connect(self):
+        """
+        ouvre la connection à la base de données si besoin
+        """
         if not self.connection:
-            logging.getLogger('persistor').info('connection à ED')
+            logging.getLogger('sindri').info('connection à ED')
             self.connection = psycopg2.connect(self.connection_string)
 
 

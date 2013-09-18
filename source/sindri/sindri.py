@@ -5,7 +5,7 @@
 """
 import sys
 
-from persistor.daemon import Persistor
+from sindri.daemon import Sindri
 import argparse
 
 
@@ -13,7 +13,9 @@ def main():
     """
         main: ce charge d'interpreter les parametres de la ligne de commande
     """
-    parser = argparse.ArgumentParser(description="Launcher of persistor")
+    parser = argparse.ArgumentParser(description="Sindri se charge "
+            "d'enregister dans au sein d'ED les flux temps réels associés à "
+            "une instance")
     parser.add_argument('config_file', type=str)
     config_file = ""
     try:
@@ -23,7 +25,7 @@ def main():
         print("Bad usage, learn how to use me with %s -h" % sys.argv[0])
         sys.exit(1)
 
-    daemon = Persistor()
+    daemon = Sindri()
     daemon.init(config_file)
     daemon.run()
 

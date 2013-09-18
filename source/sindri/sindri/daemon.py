@@ -1,13 +1,13 @@
 #encoding: utf-8
-from persistor.config import Config
+from sindri.config import Config
 import pika
 import logging
-import persistor.task_pb2
+import sindri.task_pb2
 import psycopg2
 import google
-from persistor.saver import EdRealtimeSaver, TechnicalError, InvalidMessage
+from sindri.saver import EdRealtimeSaver, TechnicalError, InvalidMessage
 
-class Persistor(object):
+class Sindri(object):
     def __init__(self):
         self.connection = None
         self.channel = None
@@ -16,6 +16,9 @@ class Persistor(object):
         self.config = Config()
 
     def init(self, filename):
+        """
+        initialise le service via le fichier de conf passer en paramétre
+        """
         self.config.load(filename)
 #la DB doit etre prete avant d'initialiser rabbitmq, on peut recevoir des
 #tache avant d'avoir lancer la boucle d'evenement
@@ -25,10 +28,17 @@ class Persistor(object):
 
 
     def run(self):
-        logging.getLogger('persistor').info("start consuming")
+        """
+        lance la boucle de traitement
+        """
+        logging.getLogger('sindri').info("start consuming")
         self.channel.start_consuming()
 
     def __init_logger(self, filename='', level='debug'):
+        """
+        initialise le logger, par défaut level=Debug
+        et affichage sur la sortie standard
+        """
         level = getattr(logging, level.upper(), logging.DEBUG)
         logging.basicConfig(filename=filename, level=level)
 
@@ -48,11 +58,11 @@ class Persistor(object):
         exchange_name = self.config.exchange_name
         self.channel.exchange_declare(exchange=exchange_name, type='topic',
                 durable=True)
-        #la queue pour persistor doit etre persistante
+        #la queue pour sindri doit etre persistante
         #on veux pouvoir gérer la reprise sur incident
-        queue_name = instance_name + '_persistor'
+        queue_name = instance_name + '_sindri'
         self.channel.queue_declare(queue=queue_name, durable=True)
-        logging.getLogger('persistor').debug("listen following topics: %s",
+        logging.getLogger('sindri').debug("listen following topics: %s",
                 self.config.rt_topics)
         #on bind notre queue pour les différent topics spécifiés
         for binding_key in self.config.rt_topics:
@@ -63,29 +73,29 @@ class Persistor(object):
         self.channel.basic_consume(self.callback, queue=queue_name)
 
     def handle_message(self, task):
-        logging.getLogger('persistor').debug('%s', str(task))
+        logging.getLogger('sindri').debug('%s', str(task))
         if(task.message.IsInitialized()):
             try:
                 self.ed_realtime_saver.persist_message(task.message)
             except InvalidMessage, e:
-                logging.getLogger('persistor').warn("%s", str(e))
+                logging.getLogger('sindri').warn("%s", str(e))
         else:
-            logging.getLogger('persistor').warn("message task whitout"
+            logging.getLogger('sindri').warn("message task whitout"
                     "message in payload")
 
 
     def callback(self, ch, method, properties, body):
-        logging.getLogger('persistor').debug("Message received")
-        task = persistor.task_pb2.Task()
+        logging.getLogger('sindri').debug("Message received")
+        task = sindri.task_pb2.Task()
         try:
             task.ParseFromString(body)
         except google.protobuf.message.DecodeError, e:
-            logging.getLogger('persistor').warn("message is not a valid "
+            logging.getLogger('sindri').warn("message is not a valid "
                     "protobuf task: %s", str(e))
             ch.basic_ack(delivery_tag = method.delivery_tag)
             return
 
-        if(task.action == persistor.task_pb2.MESSAGE):
+        if(task.action == sindri.task_pb2.MESSAGE):
             try:
                 self.handle_message(task)
                 ch.basic_ack(delivery_tag = method.delivery_tag)
