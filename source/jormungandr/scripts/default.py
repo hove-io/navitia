@@ -214,7 +214,7 @@ class Script:
                 #And then we delete it
                 for i in to_delete:
                     del resp.journeys[i]
-        self.__fill_display_and_uris(resp)
+        #self.__fill_display_and_uris(resp)
         return resp
 
 

@@ -191,15 +191,16 @@ message RouteScheduleRow {
 }
 
 message addInfoVehicleJourney{
-	required OdtType vehicle_journey_type = 1;	
+	enum AdditionalInformation{
+		has_date_time_estimated = 1;
+	}
+	repeated AdditionalInformation additional_informations= 1;
+	required OdtType vehicle_journey_type = 2;
 }
 
 message Header{
-//	optional string direction = 1;
 	required PtDisplayInfo pt_display_informations = 1;
 	required addInfoVehicleJourney add_info_vehicle_journey = 2;
-//    optional hasPropertie has_properties = 2;
-//	required VehicleJourney vehiclejourney = 2;
 }
 
 message Table {    

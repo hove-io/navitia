@@ -674,28 +674,27 @@ void fill_pb_object(const nt::Route* r, const nt::Data& ,
     }
 }
 void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
-                    pbnavitia::Header * vj_header, int max_depth,
+                    pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
                     const pt::ptime& now, const pt::time_period& action_period)
 {
     if(vj == nullptr)
         return ;
-    pbnavitia::PtDisplayInfo* vj_display_information = vj_header->mutable_pt_display_informations();
-    pbnavitia::Uris* uris = vj_display_information->mutable_uris();
+    pbnavitia::Uris* uris = pt_display_info->mutable_uris();
     uris->set_vehicle_journey(vj->uri);
     if ((vj->journey_pattern != nullptr) && (vj->journey_pattern->route)){
-        fill_pb_object(vj->journey_pattern->route, data, vj_display_information,max_depth,now,action_period);
+        fill_pb_object(vj->journey_pattern->route, data, pt_display_info,max_depth,now,action_period);
         uris->set_route(vj->journey_pattern->route->uri);
     }
-    vj_display_information->set_headsign(vj->name);
-    vj_display_information->set_direction(vj->get_direction());
+    pt_display_info->set_headsign(vj->name);
+    pt_display_info->set_direction(vj->get_direction());
     if (vj->physical_mode != nullptr){
-        vj_display_information->set_physical_mode(vj->physical_mode->name);
+        pt_display_info->set_physical_mode(vj->physical_mode->name);
         uris->set_physical_mode(vj->physical_mode->uri);
     }
-    vj_display_information->set_description(vj->odt_message);
-    vj_display_information->set_odt_type(get_pb_odt_type(vj->odt_type));
+    pt_display_info->set_description(vj->odt_message);
+    pt_display_info->set_odt_type(get_pb_odt_type(vj->odt_type));
 
-    pbnavitia::hasVehiclePropertie* has_vehicle_propertie = vj_display_information->mutable_has_vehicle_properties();
+    pbnavitia::hasVehiclePropertie* has_vehicle_propertie = pt_display_info->mutable_has_vehicle_properties();
     if (vj->wheelchair_accessible()){
         has_vehicle_propertie->add_vehicle_properties(pbnavitia::hasVehiclePropertie::has_wheelchair_accessiblity);
     }
@@ -720,6 +719,19 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
     if (vj->school_vehicle()){
         has_vehicle_propertie->add_vehicle_properties(pbnavitia::hasVehiclePropertie::has_school_vehicle);
     }
+//    pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey = vj_header->mutable_add_info_vehicle_journey();
+//    add_info_vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->odt_type));
+}
+
+
+void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
+                    pbnavitia::Header * vj_header, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period)
+{
+    if(vj == nullptr)
+        return ;
+    pbnavitia::PtDisplayInfo* vj_display_information = vj_header->mutable_pt_display_informations();
+    fill_pb_object(vj,data,vj_display_information,max_depth,now,action_period);
     pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey = vj_header->mutable_add_info_vehicle_journey();
     add_info_vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->odt_type));
 }
