@@ -35,4 +35,3 @@ if __name__ == '__main__':
 else:
     NavitiaManager().set_config_file(config_file)
     NavitiaManager().initialisation()
-    app.run(debug=True)
