@@ -539,6 +539,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
             & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & odt_type & odt_message;
     }
     std::string get_direction() const;
+    bool has_date_time_estimated() const;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
     bool operator<(const VehicleJourney& other) const {

@@ -17,6 +17,17 @@ std::string VehicleJourney::get_direction() const {
     return to_return;
 }
 
+bool VehicleJourney::has_date_time_estimated() const{
+    bool to_return = false;
+    for(StopTime* st : this->stop_time_list){
+        if (st->date_time_estimated()){
+            to_return = true;
+            break;
+        }
+    }
+    return to_return;
+}
+
 bool ValidityPattern::is_valid(int duration) const {
     if(duration < 0){
 

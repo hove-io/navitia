@@ -18,7 +18,9 @@ void fill_section(pbnavitia::Section *pb_section, navitia::type::idx_t vj_idx,
 
     const type::VehicleJourney* vj = d.pt_data.vehicle_journeys[vj_idx];
     pbnavitia::PtDisplayInfo* vj_pt_display_information = pb_section->mutable_pt_display_informations();
+    pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey = pb_section->mutable_add_info_vehicle_journey();
     fill_pb_object(vj, d, vj_pt_display_information, 0, now, action_period);
+    fill_pb_object(vj, d, add_info_vehicle_journey, 0, now, action_period);
 }
 
 

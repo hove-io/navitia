@@ -55,18 +55,24 @@ class additional_informations(fields.Raw):
         return [str.lower(enum.values_by_number[v].name) for v
                 in properties.additional_informations]
 
-class additional_informations_header(fields.Raw):
+class additional_informations_vj(fields.Raw):
     def output(self, key, obj):
         addinfo = getattr(obj, "add_info_vehicle_journey")
+        result = []
+        if (addinfo.has_date_time_estimated):
+            result.append("has_date_time_estimated")
+
         enum_t = addinfo.DESCRIPTOR.fields_by_name['vehicle_journey_type'].enum_type.values_by_name
         if addinfo.vehicle_journey_type == enum_t['virtual_with_stop_time'].number :
-            return ["odt_with_stop_time"]
+            result.append("odt_with_stop_time")
         if addinfo.vehicle_journey_type == enum_t['virtual_without_stop_time'].number or \
             addinfo.vehicle_journey_type == enum_t['stop_point_to_stop_point'].number or \
             addinfo.vehicle_journey_type == enum_t['adress_to_stop_point'].number or \
             addinfo.vehicle_journey_type == enum_t['odt_point_to_point'].number:
-            return ["odt_with_zone"]
-        return ["regular"]
+            result.append("odt_with_zone")
+        else :
+            result.append("regular")
+        return result
 
 class display_informations_route(fields.Raw):
     def output(self, key, obj):

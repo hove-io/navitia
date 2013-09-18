@@ -122,6 +122,7 @@ message Section {
 
     optional string begin_date_time = 15;
     optional string end_date_time = 16;
+    optional addInfoVehicleJourney add_info_vehicle_journey = 17;
 }
 
 message Journey {
@@ -191,11 +192,8 @@ message RouteScheduleRow {
 }
 
 message addInfoVehicleJourney{
-	enum AdditionalInformation{
-		has_date_time_estimated = 1;
-	}
-	repeated AdditionalInformation additional_informations= 1;
-	required OdtType vehicle_journey_type = 2;
+	required OdtType vehicle_journey_type = 1;
+	optional bool has_date_time_estimated = 2;
 }
 
 message Header{
