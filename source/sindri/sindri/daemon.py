@@ -3,11 +3,20 @@ from sindri.config import Config
 import pika
 import logging
 import sindri.task_pb2
-import psycopg2
 import google
 from sindri.saver import EdRealtimeSaver, TechnicalError, InvalidMessage
 
 class Sindri(object):
+    """
+    Classe gérant le service de persitances des événements temps réel envoyés
+    sur rabbitmq.
+    Sindri et son frére Brokk sont les nains forgerons de la mythologie nordique
+
+    l'utilisation est la suivante:
+    sindri = Sindri()
+    sindri.init(conf_filename)
+    sindri.run()
+    """
     def __init__(self):
         self.connection = None
         self.channel = None
