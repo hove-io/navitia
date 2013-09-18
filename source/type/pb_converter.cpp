@@ -719,20 +719,14 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
     if (vj->school_vehicle()){
         has_vehicle_propertie->add_vehicle_properties(pbnavitia::hasVehiclePropertie::has_school_vehicle);
     }
-//    pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey = vj_header->mutable_add_info_vehicle_journey();
-//    add_info_vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->odt_type));
 }
 
-
-void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
-                    pbnavitia::Header * vj_header, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period)
+void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& ,
+                    pbnavitia::addInfoVehicleJourney * add_info_vehicle_journey, int ,
+                    const pt::ptime& , const pt::time_period& )
 {
     if(vj == nullptr)
         return ;
-    pbnavitia::PtDisplayInfo* vj_display_information = vj_header->mutable_pt_display_informations();
-    fill_pb_object(vj,data,vj_display_information,max_depth,now,action_period);
-    pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey = vj_header->mutable_add_info_vehicle_journey();
     add_info_vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->odt_type));
 }
 
