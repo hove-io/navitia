@@ -68,7 +68,37 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
         stop_point->mutable_coord()->set_lon(sp->coord.lon());
         stop_point->mutable_coord()->set_lat(sp->coord.lat());
     }
-
+    pbnavitia::hasStopPointPropertie* has_stop_point_propertie =  stop_point->mutable_has_stop_point_properties();
+    if (sp->wheelchair_boarding()){
+        has_stop_point_propertie->add_stop_point_properties(pbnavitia::hasStopPointPropertie::has_wheelchair_boarding);
+    }
+    if (sp->sheltered()){
+        has_stop_point_propertie->add_stop_point_properties(pbnavitia::hasStopPointPropertie::has_sheltered);
+    }
+    if (sp->elevator()){
+        has_stop_point_propertie->add_stop_point_properties(pbnavitia::hasStopPointPropertie::has_elevator);
+    }
+    if (sp->escalator()){
+        has_stop_point_propertie->add_stop_point_properties(pbnavitia::hasStopPointPropertie::has_escalator);
+    }
+    if (sp->bike_accepted()){
+        has_stop_point_propertie->add_stop_point_properties(pbnavitia::hasStopPointPropertie::has_bike_accepted);
+    }
+    if (sp->bike_depot()){
+        has_stop_point_propertie->add_stop_point_properties(pbnavitia::hasStopPointPropertie::has_bike_depot);
+    }
+    if (sp->visual_announcement()){
+        has_stop_point_propertie->add_stop_point_properties(pbnavitia::hasStopPointPropertie::has_visual_announcement);
+    }
+    if (sp->audible_announcement()){
+        has_stop_point_propertie->add_stop_point_properties(pbnavitia::hasStopPointPropertie::has_audible_announcement);
+    }
+    if (sp->appropriate_escort()){
+        has_stop_point_propertie->add_stop_point_properties(pbnavitia::hasStopPointPropertie::has_appropriate_escort);
+    }
+    if (sp->appropriate_signage()){
+        has_stop_point_propertie->add_stop_point_properties(pbnavitia::hasStopPointPropertie::has_appropriate_signage);
+    }
     if(depth > 0){
         for(navitia::georef::Admin* adm : sp->admin_list){
             fill_pb_object(adm, data,  stop_point->add_administrative_regions(),

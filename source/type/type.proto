@@ -87,6 +87,7 @@ message StopPoint {
     optional string uri = 5;
     optional GeographicalCoord coord = 6;
     optional StopArea stop_area = 7;
+    optional hasStopPointPropertie has_stop_point_properties = 8;
 
     repeated Message messages = 9;
 }
@@ -137,6 +138,22 @@ message hasPropertie{
 	}
 	repeated AdditionalInformation additional_informations= 1;
 	repeated Note notes = 5;
+}
+
+message hasStopPointPropertie{
+	enum StopPointPropertie{
+		has_wheelchair_boarding = 1;
+		has_sheltered = 2;
+		has_elevator = 3;
+		has_escalator = 4;
+		has_bike_accepted = 5;
+		has_bike_depot = 6;
+		has_visual_announcement = 7;
+		has_audible_announcement = 8;
+		has_appropriate_escort = 9;
+		has_appropriate_signage = 10;
+	}
+	repeated StopPointPropertie stop_point_properties = 1;
 }
 
 message hasVehiclePropertie{

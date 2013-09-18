@@ -139,6 +139,14 @@ class get_label():
                 route = getattr(obj, "route")
                 return route.name
 
+class equipments_stop_point():
+    def output(self, key, obj):
+        if obj.HasField("has_stop_point_properties"):
+            properties = getattr(obj, "has_stop_point_properties")
+            enum = properties.DESCRIPTOR.enum_types_by_name["StopPointPropertie"]
+            return [str.lower(enum.values_by_number[v].name) for v in properties.stop_point_properties]
+        else:
+            return []
 
 coord = {
     "lon" : fields.Float(),
@@ -185,7 +193,7 @@ poi = deepcopy(generic_type)
 poi["poi_type"] = PbField(poi_type)
 
 company = deepcopy(generic_type)
-
+stop_point["equipments"] = equipments_stop_point()
 stop_point["stop_area"] = PbField(deepcopy(stop_area))
 stop_area["stop_point"] = PbField(deepcopy(stop_point))
 journey_pattern_point["stop_point"] = PbField(deepcopy(stop_point))
