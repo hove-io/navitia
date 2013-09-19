@@ -148,7 +148,10 @@ class add_notes(object):
             if self.resource.region:
                 if not "notes" in data.keys() or  not isinstance(data["notes"], list):
                     data["notes"] = []
-                    data["notes"].extend(add_note(data))
+                    result = []
+                    result_note = add_note(data)
+                    [result.append(item) for item in result_note if not item in result]
+                    data["notes"].extend(result)
 
             if isinstance(objects, tuple):
                 return data, code, header

@@ -84,7 +84,7 @@ message PtDisplayInfo {
   	optional string description = 8; 
   	optional Uris uris = 9; 	
   	optional OdtType odt_type = 10;
-  	optional hasVehiclePropertie has_vehicle_properties = 11;
+  	optional hasEquipments has_equipments = 11;
   	optional string name = 12;
 }
 
@@ -122,6 +122,7 @@ message Section {
 
     optional string begin_date_time = 15;
     optional string end_date_time = 16;
+    optional addInfoVehicleJourney add_info_vehicle_journey = 17;
 }
 
 message Journey {
@@ -191,15 +192,13 @@ message RouteScheduleRow {
 }
 
 message addInfoVehicleJourney{
-	required OdtType vehicle_journey_type = 1;	
+	required OdtType vehicle_journey_type = 1;
+	optional bool has_date_time_estimated = 2;
 }
 
 message Header{
-//	optional string direction = 1;
 	required PtDisplayInfo pt_display_informations = 1;
 	required addInfoVehicleJourney add_info_vehicle_journey = 2;
-//    optional hasPropertie has_properties = 2;
-//	required VehicleJourney vehiclejourney = 2;
 }
 
 message Table {    
@@ -257,10 +256,10 @@ message Pagination {
 }
 
 message StopSchedule {
-    //required Route route = 1;
-    required PtDisplayInfo pt_display_informations = 1;
-    required StopPoint stop_point = 2;
-    repeated ScheduleStopTime stop_date_times = 3;
+    required Route route = 1;
+    required PtDisplayInfo pt_display_informations = 2;
+    required StopPoint stop_point = 3;
+    repeated ScheduleStopTime stop_date_times = 4;
 }
 
 message Response{

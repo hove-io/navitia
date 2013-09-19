@@ -28,12 +28,7 @@ def gtfs2ed(gtfs_filename, config, backup_directory):
                        pyed_logger)
     if res != 0:
         return 2
-    try :
-        connection_string = make_connection_string(config)
-    except ConfigException:
-        pyed_logger.error("gtfs2ed : Unable to make the connection string")
-        return 3
-    params = ["-i", backup_directory, "--connection-string", connection_string]
+    params = ["-i", backup_directory]
     try:
         aliases = config.get("instance", "aliases")
         params.append("-a")
@@ -46,6 +41,13 @@ def gtfs2ed(gtfs_filename, config, backup_directory):
         params.append(synonyms)
     except ConfigException:
         pass
+    try :
+        connection_string = make_connection_string(config)
+    except ConfigException:
+        pyed_logger.error("gtfs2ed : Unable to make the connection string")
+        return 3
+    params.append("--connection-string")
+    params.append(connection_string)
     res = launch_exec(config.get("instance", "exec_directory")+"/gtfs2ed",
                       params, gtfs_logger, pyed_logger)
     if res != 0:

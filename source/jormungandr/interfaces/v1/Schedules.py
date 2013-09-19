@@ -6,8 +6,8 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, PbField,\
                    stop_date_time, enum_type, NonNullList, NonNullNested,\
                    additional_informations,  notes,notes_links,\
-                   get_label,display_informations,\
-                   additional_informations_header, UrisToLinks
+                   get_label,display_informations_vj,display_informations_route,\
+                   additional_informations_vj, UrisToLinks
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
 from ResourceUri import ResourceUri
@@ -55,8 +55,8 @@ row = {
 }
 
 header = {
-    "display_informations" :  display_informations(),
-    "additional_informations" : additional_informations_header(),
+    "display_informations" :  display_informations_vj(),
+    "additional_informations" : additional_informations_vj(),
     "links" : UrisToLinks()
 }
 table_field = {
@@ -66,7 +66,7 @@ table_field = {
 
 route_schedule_fields = {
     "table" : PbField(table_field),
-    "display_informations" : display_informations()
+    "display_informations" : display_informations_route()
 }
 
 route_schedules = {
@@ -86,8 +86,8 @@ class RouteSchedules(Schedules):
 
 stop_schedule = {
     "stop_point" : PbField(stop_point),
-    #"display_informations" : PbField(display_information, attribute="route"),
-    "display_informations" : display_informations(),
+    "route" : PbField(route, attribute="route"),
+    "display_informations" : display_informations_route(),
     "stop_date_times" : NonNullList(NonNullNested(date_time)),
     "links" : UrisToLinks()
 }

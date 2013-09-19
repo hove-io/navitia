@@ -116,15 +116,25 @@ struct hasProperties {
     static const uint8_t APPOPRIATE_SIGNAGE = 9;
 
     bool wheelchair_boarding() {return _properties[WHEELCHAIR_BOARDING];}
+    bool wheelchair_boarding() const {return _properties[WHEELCHAIR_BOARDING];}
     bool sheltered() {return _properties[SHELTERED];}
+    bool sheltered() const {return _properties[SHELTERED];}
     bool elevator() {return _properties[ELEVATOR];}
+    bool elevator() const {return _properties[ELEVATOR];}
     bool escalator() {return _properties[ESCALATOR];}
+    bool escalator() const {return _properties[ESCALATOR];}
     bool bike_accepted() {return _properties[BIKE_ACCEPTED];}
+    bool bike_accepted() const {return _properties[BIKE_ACCEPTED];}
     bool bike_depot() {return _properties[BIKE_DEPOT];}
+    bool bike_depot() const {return _properties[BIKE_DEPOT];}
     bool visual_announcement() {return _properties[VISUAL_ANNOUNCEMENT];}
+    bool visual_announcement() const {return _properties[VISUAL_ANNOUNCEMENT];}
     bool audible_announcement() {return _properties[AUDIBLE_ANNOUNVEMENT];}
+    bool audible_announcement() const {return _properties[AUDIBLE_ANNOUNVEMENT];}
     bool appropriate_escort() {return _properties[APPOPRIATE_ESCORT];}
+    bool appropriate_escort() const {return _properties[APPOPRIATE_ESCORT];}
     bool appropriate_signage() {return _properties[APPOPRIATE_SIGNAGE];}
+    bool appropriate_signage() const {return _properties[APPOPRIATE_SIGNAGE];}
 
     bool accessible(const Properties &required_properties) const{
         auto mismatched = required_properties & ~_properties;
@@ -539,6 +549,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
             & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & odt_type & odt_message;
     }
     std::string get_direction() const;
+    bool has_date_time_estimated() const;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
     bool operator<(const VehicleJourney& other) const {

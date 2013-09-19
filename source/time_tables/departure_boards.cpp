@@ -100,26 +100,18 @@ render_v1(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
         fill_pb_object(data.pt_data.stop_points[id_vec.first.first], data,
                        schedule->mutable_stop_point(), 0,
                        current_time, action_period);
-//        auto m_route = schedule->mutable_route();
-//        fill_pb_object(data.pt_data.routes[id_vec.first.second], data,
-//                       m_route, 0, current_time, action_period);
+
+        auto m_route = schedule->mutable_route();
+        fill_pb_object(data.pt_data.routes[id_vec.first.second], data,
+                               m_route, 0, current_time, action_period);
+        if (data.pt_data.routes[id_vec.first.second]->line != nullptr){
+            auto m_line = m_route->mutable_line();
+            fill_pb_object(data.pt_data.routes[id_vec.first.second]->line, data,
+                                   m_line, 0, current_time, action_period);
+        }
         auto pt_display_information = schedule->mutable_pt_display_informations();
         fill_pb_object(data.pt_data.routes[id_vec.first.second], data,
                                pt_display_information, 0, current_time, action_period);
-
-//        if(data.pt_data.routes[id_vec.first.second]->line != nullptr){
-//            auto m_line = m_route->mutable_line();
-//            fill_pb_object(data.pt_data.routes[id_vec.first.second]->line, data, m_line, 0, now, action_period);
-//            if(data.pt_data.routes[id_vec.first.second]->line->commercial_mode){
-//                auto m_commercial_mode = m_line->mutable_commercial_mode();
-//                fill_pb_object(data.pt_data.routes[id_vec.first.second]->line->commercial_mode,
-//                               data, m_commercial_mode, 0);
-//            }
-//            if(data.pt_data.routes[id_vec.first.second]->line->network){
-//                auto m_network = m_line->mutable_network();
-//                fill_pb_object(data.pt_data.routes[id_vec.first.second]->line->network, data, m_network, 0);
-//            }
-//        }
         //Now we fill the stop_date_times
         for(auto dt_st : id_vec.second) {
             auto stop_date_time = schedule->add_stop_date_times();
