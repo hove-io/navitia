@@ -27,6 +27,7 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     this->insert_journey_patterns(data.journey_patterns);
 
     this->insert_validity_patterns(data.validity_patterns);
+    this->insert_vehicle_properties(data.vehicle_journeys);
     this->insert_vehicle_journeys(data.vehicle_journeys);
 
     this->insert_journey_pattern_point(data.journey_pattern_points);
@@ -59,7 +60,7 @@ void EdPersistor::build_relation(){
 
 void EdPersistor::clean_db(){
     PQclear(this->lotus.exec("TRUNCATE navitia.stop_area, navitia.line, navitia.company, navitia.physical_mode, navitia.contributor, navitia.alias,navitia.synonym,"
-                "navitia.commercial_mode, navitia.properties, navitia.validity_pattern, navitia.network, navitia.parameters, navitia.connection CASCADE"));
+                "navitia.commercial_mode, navitia.vehicle_properties, navitia.properties, navitia.validity_pattern, navitia.network, navitia.parameters, navitia.connection CASCADE"));
 }
 
 void EdPersistor::insert_networks(const std::vector<types::Network*>& networks){
@@ -359,9 +360,39 @@ void EdPersistor::insert_journey_pattern_point(const std::vector<types::JourneyP
     this->lotus.finish_bulk_insert();
 }
 
+void EdPersistor::insert_vehicle_properties(const std::vector<types::VehicleJourney*>& vehicle_journeys){
+    this->lotus.prepare_bulk_insert("navitia.vehicle_properties", {"id", "wheelchair_accessible",
+                                    "bike_accepted", "air_conditioned", "visual_announcement",
+                                    "audible_announcement", "appropriate_escort", "appropriate_signage",
+                                    "school_vehicle"});
+
+    std::vector<navitia::type::idx_t> to_insert;
+    for(types::VehicleJourney* vj : vehicle_journeys){
+
+        navitia::type::idx_t idx = vj->to_ulog();
+        if(!binary_search(to_insert.begin(), to_insert.end(), idx)){
+            std::vector<std::string> values;
+            values.push_back(std::to_string(idx));
+            values.push_back(std::to_string(vj->wheelchair_accessible()));
+            values.push_back(std::to_string(vj->bike_accepted()));
+            values.push_back(std::to_string(vj->air_conditioned()));
+            values.push_back(std::to_string(vj->visual_announcement()));
+            values.push_back(std::to_string(vj->audible_announcement()));
+            values.push_back(std::to_string(vj->appropriate_escort()));
+            values.push_back(std::to_string(vj->appropriate_signage()));
+            values.push_back(std::to_string(vj->school_vehicle()));
+            this->lotus.insert(values);
+            to_insert.push_back(idx);
+            std::sort(to_insert.begin(), to_insert.end());
+        }
+    }
+    this->lotus.finish_bulk_insert();
+}
+
 void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys){
     this->lotus.prepare_bulk_insert("navitia.vehicle_journey", {"id", "uri", "name", "comment", "validity_pattern_id",
-                                    "adapted_validity_pattern_id", "company_id", "physical_mode_id", "journey_pattern_id", "theoric_vehicle_journey_id", "odt_type_id", "odt_message"});
+                                    "adapted_validity_pattern_id", "company_id", "physical_mode_id", "journey_pattern_id", "theoric_vehicle_journey_id",
+                                    "vehicle_properties_id","odt_type_id", "odt_message"});
 
     for(types::VehicleJourney* vj : vehicle_journeys){
         std::vector<std::string> values;
@@ -398,8 +429,9 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
             values.push_back(std::to_string(vj->theoric_vehicle_journey->idx));
         }else{
             //@TODO WTF??
-            values.push_back(lotus.null_value);
+            values.push_back(lotus.null_value);        
         }
+        values.push_back(std::to_string(vj->to_ulog()));
         values.push_back(std::to_string(static_cast<int>(vj->odt_type)));        
         values.push_back(vj->odt_message);
         this->lotus.insert(values);

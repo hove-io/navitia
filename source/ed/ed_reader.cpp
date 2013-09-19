@@ -376,10 +376,24 @@ void EdReader::insert_journey_pattern_point_connections(const std::vector<types:
 */
 
 void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, company_id, physical_mode_id, journey_pattern_id, "
-        "validity_pattern_id, adapted_validity_pattern_id, theoric_vehicle_journey_id ,odt_type_id, odt_message "
-        "FROM navitia.vehicle_journey ";
-
+//    std::string request = "SELECT id, name, uri, comment, company_id, physical_mode_id, journey_pattern_id, "
+//        "validity_pattern_id, adapted_validity_pattern_id, theoric_vehicle_journey_id ,odt_type_id, odt_message "
+//        "FROM navitia.vehicle_journey ";
+    std::string request = "SELECT vj.id as id, vj.name as name, vj.uri as uri, vj.comment as comment,"
+            "vj.company_id as company_id, vj.physical_mode_id as physical_mode_id,"
+            "vj.journey_pattern_id as journey_pattern_id, vj.validity_pattern_id as validity_pattern_id,"
+            "vj.adapted_validity_pattern_id as adapted_validity_pattern_id, vj.theoric_vehicle_journey_id as theoric_vehicle_journey_id ,"
+            "vj.odt_type_id as odt_type_id, vj.odt_message as odt_message,"
+            "vp.wheelchair_accessible as wheelchair_accessible,"
+            "vp.bike_accepted as bike_accepted,"
+            "vp.air_conditioned as air_conditioned,"
+            "vp.visual_announcement as visual_announcement,"
+            "vp.audible_announcement as audible_announcement,"
+            "vp.appropriate_escort as appropriate_escort,"
+            "vp.appropriate_signage as appropriate_signage,"
+            "vp.school_vehicle as school_vehicle "
+            "FROM navitia.vehicle_journey as vj, navitia.vehicle_properties as vp "
+            "where vj.vehicle_properties_id = vp.id ";
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         nt::VehicleJourney* vj = new nt::VehicleJourney();

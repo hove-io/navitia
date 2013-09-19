@@ -30,6 +30,7 @@ private:
     void insert_routes(const std::vector<types::Route*>& routes);
     void insert_journey_patterns(const std::vector<types::JourneyPattern*>& journey_pattern);
     void insert_validity_patterns(const std::vector<types::ValidityPattern*>& validity_patterns);
+    void insert_vehicle_properties(const std::vector<types::VehicleJourney*>& vehicle_journeys);
     void insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys);
 
     void insert_journey_pattern_point(const std::vector<types::JourneyPatternPoint*>& journey_pattern_points);

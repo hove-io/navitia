@@ -226,6 +226,11 @@ struct hasVehicleProperties {
     bool vehicle(uint8_t vehicle) const {
         return _vehicle_properties[vehicle];
     }
+
+    idx_t to_ulog(){
+        return _vehicle_properties.to_ulong();
+    }
+
 private:
     VehicleProperties _vehicle_properties;
 };
@@ -546,7 +551,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
     VehicleJourney(): journey_pattern(nullptr), company(nullptr), physical_mode(nullptr), validity_pattern(nullptr) /*, wheelchair_boarding(false)*/, is_adapted(false), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & physical_mode & validity_pattern & idx /*& wheelchair_boarding*/ & stop_time_list
-            & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & odt_type & odt_message;
+            & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & odt_type & odt_message
+            ;
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;
