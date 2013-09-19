@@ -1,11 +1,12 @@
 #encoding: utf-8
 import logging
-import psycopg2
 import datetime
+from sqlalchemy import Table, MetaData, select, create_engine, insert, update
+import sqlalchemy
 
-class InvalidMessage(ValueError):
+class FunctionalError(ValueError):
     """
-    Exception lancé lorsque que le message à traiter n'est pas valide
+    Exception lancé lorsque que la donnée à traiter n'est pas valide
     """
     pass
 
@@ -23,6 +24,22 @@ def from_timestamp(timestamp):
 
 def from_time(time):
     return datetime.datetime.utcfromtimestamp(time).time()
+
+
+def parse_active_days(active_days):
+    """
+    permet de parser les champs active_days
+    retourne la valeur par défaut si non initialisé: "11111111"
+    sinon vérifie que c'est bien une chaine de 8 0 ou 1 et la retourne
+    raise une FunctionalError si le format n'est pas valide
+    """
+    if not active_days:
+        return '11111111'
+    else:
+        if (active_days.count('0') + active_days.count('1')) != 8:
+            raise FunctionalError('active_days not valid: ' + active_days)
+        return  active_days
+
 
 def build_message_dict(message):
     """
@@ -60,76 +77,6 @@ def build_message_dict(message):
 
     return result
 
-def insert_localized_message(cursor, localized_message, message_id):
-    query = ("""INSERT INTO realtime.localized_message """
-    """(message_id, language, body, title)
-VALUES (%(message_id)s, %(language)s, %(body)s, %(title)s);
-    """)
-    cursor.execute(query, {'message_id': message_id,
-        'language': localized_message.language, 'body': localized_message.body,
-        'title': localized_message.title})
-    logging.getLogger('sindri').debug(cursor.query)
-
-
-def update_message(cursor, row_id, message):
-    query = """UPDATE realtime.message
-    SET start_publication_date = %(start_publication_date)s,
-        end_publication_date = %(end_publication_date)s,
-        start_application_date = %(end_application_date)s,
-        end_application_date = %(end_application_date)s,
-        start_application_daily_hour = %(end_application_daily_hour)s,
-        end_application_daily_hour = %(end_application_daily_hour)s,
-        active_days = %(active_days)s,
-        object_uri = %(object_uri)s,
-        object_type_id = %(object_type_id)s,
-        uri = %(uri)s
-    where id = %(id)s;
-    """
-    m_dict = build_message_dict(message)
-    m_dict['id'] = row_id
-    cursor.execute(query, m_dict)
-    logging.getLogger('sindri').debug(cursor.query)
-
-    cursor.execute('DELETE from realtime.localized_message '
-            'where message_id = %(id)s', {'id': row_id})
-    logging.getLogger('sindri').debug(cursor.query)
-
-    for localized_message in message.localized_messages:
-        insert_localized_message(cursor, localized_message, row_id)
-
-
-def insert_message(cursor, message):
-    query = """INSERT INTO realtime.message
-    (start_publication_date, end_publication_date, start_application_date,
-    end_application_date, start_application_daily_hour,
-    end_application_daily_hour, active_days, object_uri, object_type_id, uri)
-VALUES
-    (%(start_application_date)s, %(end_publication_date)s,
-    %(start_application_date)s, %(end_application_date)s,
-    %(start_application_daily_hour)s, %(end_application_daily_hour)s,
-    %(active_days)s, %(object_uri)s, %(object_type_id)s, %(uri)s)
-RETURNING id;
-    """
-    m_dict = build_message_dict(message)
-    cursor.execute(query, m_dict)
-    logging.getLogger('sindri').debug(cursor.query)
-    row_id = cursor.fetchone()
-
-    for localized_message in message.localized_messages:
-        insert_localized_message(cursor, localized_message, row_id)
-
-
-
-def find_message_id(cursor, message_uri):
-    """
-    retourne l'id en base du message correspondant à cette URI
-    si celui ci est présent dans ED sinon retourne None
-    """
-    cursor.execute('SELECT id from realtime.message where uri = %(uri)s',
-            {'uri': message_uri})
-    row = cursor.fetchone()
-    return row[0] if row else None
-
 
 class EdRealtimeSaver(object):
     """
@@ -137,45 +84,86 @@ class EdRealtimeSaver(object):
     temps réel.
     """
     def __init__(self, config):
-        self.connection_string = config.ed_connection_string
-        self.connection = None
-        self.__connect()
+        self.connection_string = 'postgresql://navitia:navitia@localhost/navitia'#config.ed_connection_string
+        self.engine = create_engine(self.connection_string)
+        meta = MetaData(self.engine)
+        self.message_table = Table('message', meta, autoload=True,
+                schema='realtime')
+        self.localized_message_table = Table('localized_message', meta,
+                autoload=True, schema='realtime')
+
 
     def persist_message(self, message):
         """
         enregistre ou met a jour un message dans ED
         """
+        conn = None
+        logging.getLogger('sindri').info('enter')
         try:
-            self.__connect()
-            cursor = self.connection.cursor()
-            row_id = find_message_id(cursor, message.uri)
-            if row_id:
-                update_message(cursor, row_id, message)
-            else:
-                insert_message(cursor, message)
-            self.connection.commit()
-        except (psycopg2.IntegrityError, psycopg2.DataError), e:
+            conn = self.engine.connect()
+            transaction = conn.begin()
+        except sqlalchemy.exc.SQLAlchemyError, e:
             logging.getLogger('sindri').exception(
                     'error durring transaction')
-            self.connection.rollback()
-        except psycopg2.Error, e:
-            logging.getLogger('sindri').exception(
-                    'error durring transaction')
-            self.connection.rollback()
             raise TechnicalError('problem with databases: ' + str(e))
 
-    def __connect(self):
+
+        try:
+            row_id = self.find_message_id(conn, message.uri)
+            self.save_message(conn, row_id, message)
+            transaction.commit()
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.DataError), e:
+            logging.getLogger('sindri').exception(
+                    'error durring transaction')
+            transaction.rollback()
+            raise FunctionalError(str(e))
+        except sqlalchemy.exc.SQLAlchemyError, e:
+            logging.getLogger('sindri').exception(
+                    'error durring transaction')
+            transaction.rollback()
+            raise TechnicalError('problem with databases: ' + str(e))
+        except:
+            transaction.rollback()
+            raise
+        finally:
+            if conn:
+                conn.close()
+
+    def find_message_id(self, conn, message_uri):
         """
-        ouvre la connection à la base de données si besoin
+        retourne l'id en base du message correspondant à cette URI
+        si celui ci est présent dans ED sinon retourne None
         """
-        if not self.connection:
-            logging.getLogger('sindri').info('connection à ED')
-            self.connection = psycopg2.connect(self.connection_string)
+        query = select([self.message_table.c.id],
+                self.message_table.c.uri == message_uri)
+        result = conn.execute(query)
+        row = result.fetchone()
+        return row[0] if row else None
+
+    def save_message(self, conn, message_id, message):
+        """
+        retourne l'id en base du message correspondant à cette URI
+        si celui ci est présent dans ED sinon retourne None
+        """
+        if not message_id:
+            query = self.message_table.insert()
+        else:
+            query = self.message_table.update().where(
+                    self.message_table.c.id == message_id)
+
+        result = conn.execute(query.values(build_message_dict(message)))
+        if result.is_insert:
+            message_id = result.inserted_primary_key[0]
+        else:
+            conn.execute(self.localized_message_table.delete().where(
+                self.localized_message_table.c.message_id == message_id))
+        #on insére les messages text
+        query = self.localized_message_table.insert()
+        for localized_message in message.localized_messages:
+            conn.execute(query.values(message_id=message_id,
+                language=localized_message.language,
+                body=localized_message.body, title=localized_message.title))
 
 
-    def __del__(self):
-        self.close()
 
-    def close(self):
-        if self.connection:
-            self.connection.close()
+

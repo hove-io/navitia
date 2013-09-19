@@ -4,7 +4,8 @@ import pika
 import logging
 import sindri.task_pb2
 import google
-from sindri.saver import EdRealtimeSaver, TechnicalError, InvalidMessage
+from sindri.saver import EdRealtimeSaver, TechnicalError, FunctionalError
+import sys
 
 class Sindri(object):
     """
@@ -71,7 +72,7 @@ class Sindri(object):
         #on veux pouvoir gérer la reprise sur incident
         queue_name = instance_name + '_sindri'
         self.channel.queue_declare(queue=queue_name, durable=True)
-        logging.getLogger('sindri').debug("listen following topics: %s",
+        logging.getLogger('sindri').info("listen following topics: %s",
                 self.config.rt_topics)
         #on bind notre queue pour les différent topics spécifiés
         for binding_key in self.config.rt_topics:
@@ -82,11 +83,10 @@ class Sindri(object):
         self.channel.basic_consume(self.callback, queue=queue_name)
 
     def handle_message(self, task):
-        logging.getLogger('sindri').debug('%s', str(task))
         if(task.message.IsInitialized()):
             try:
                 self.ed_realtime_saver.persist_message(task.message)
-            except InvalidMessage, e:
+            except FunctionalError, e:
                 logging.getLogger('sindri').warn("%s", str(e))
         else:
             logging.getLogger('sindri').warn("message task whitout"
@@ -98,21 +98,27 @@ class Sindri(object):
         task = sindri.task_pb2.Task()
         try:
             task.ParseFromString(body)
+            logging.getLogger('sindri').debug('%s', str(task))
         except google.protobuf.message.DecodeError, e:
             logging.getLogger('sindri').warn("message is not a valid "
                     "protobuf task: %s", str(e))
             ch.basic_ack(delivery_tag = method.delivery_tag)
             return
 
-        if(task.action == sindri.task_pb2.MESSAGE):
-            try:
+        try:
+            if(task.action == sindri.task_pb2.MESSAGE):
                 self.handle_message(task)
-                ch.basic_ack(delivery_tag = method.delivery_tag)
-            except TechnicalError:
-                #en cas d'erreur technique (DB KO) on acknoledge pas la tache
-                #et on attend 10sec
-                ch.basic_nack(delivery_tag = method.delivery_tag)
-                self.connection.sleep(10)
+
+            ch.basic_ack(delivery_tag = method.delivery_tag)
+        except TechnicalError:
+            #en cas d'erreur technique (DB KO) on acknoledge pas la tache
+            #et on attend 10sec
+            ch.basic_nack(delivery_tag = method.delivery_tag)
+            self.connection.sleep(10)
+        except:
+            logging.exception('fatal')
+            sys.exit(1)
+
 
 
     def __del__(self):
