@@ -675,6 +675,14 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
             note->set_uri("note:"+note_id);
             note->set_note(stop_time->comment);
         }
+        if(stop_time->vehicle_journey != nullptr){
+            if(!stop_time->vehicle_journey->odt_message.empty()){
+                pbnavitia::Note* note = hn->add_notes();
+                auto note_id = std::to_string(stop_time->vehicle_journey->idx);
+                note->set_uri("note:"+note_id);
+                note->set_note(stop_time->vehicle_journey->odt_message);
+            }
+        }
     }else {
         rs_stop_time->set_stop_time("");
     }
