@@ -13,14 +13,17 @@ Navitia se décompose en un ensemble de composant spécialisé dans un seul rôl
 - Kraken
 - Jormungandr
 
-Un zolie schéma
+.. image:: ../_static/Archi_navitia2.png
 
 ED
 --
 ED est la base de données principale, c'est ici que l'ensemble des données sont stockées
 que ce soit les horaires théorique ou temps réel, ainsi que les données de voirie.
 
-Autour de cette base de données gravite tout les connecteurs servant à l'alimenter ou à alimenter Kraken.
+Autour de cette base de données gravite tous les connecteurs servant à l'alimenter ou à alimenter Kraken.
+
+La base de de données utilisée est postgresql avec l'extension postgis pour gérer les données géographiques.
+Le modéle de la base est disponible dans "documentation/annexe/model.architect" 
 
 gtfs2ed
 ~~~~~~~
@@ -37,7 +40,7 @@ Ce fichier est communément appelé un '.nav'
 
 nav2rt
 ~~~~~~
-nav2rt charge un .nav et y ajoute les données temps réel présente dans ED
+nav2rt charge un .nav et y ajoute les données temps réel présente dans ED.
 
 pyed
 ~~~~
@@ -84,13 +87,15 @@ Ceci permettra à Sindri de gérer la reprise sur incident
 
 
 Brokk
-====
+-----
 Aussi connu sous le nom de broker, nous utilisons RabbitMQ pour assurer ce rôle.
-La majorité des échanges entre les composants doivent passer par lui, seul la communication entre Jormungandr et Kraken utilise zmq
+La majorité des échanges entre les composants doivent passer par lui, seul la communication entre Jormungandr et Kraken utilise zmq,
+principalement pour des raisons de performance.
 
 Il ne devrait y avoir qu'un seul exchange partagé par toutes les instances, c'est le topic qui détermine les instances ciblés.
 Par défaut le topic utilisé s'appelle "navitia".
 Chaque application doit créer l'exchange avant de l'utiliser, sa configuration est la suivante:
+
 - type : topic
 - durable: True
 
