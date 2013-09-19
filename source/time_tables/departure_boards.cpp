@@ -100,6 +100,15 @@ render_v1(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
         fill_pb_object(data.pt_data.stop_points[id_vec.first.first], data,
                        schedule->mutable_stop_point(), 0,
                        current_time, action_period);
+
+        auto m_route = schedule->mutable_route();
+        fill_pb_object(data.pt_data.routes[id_vec.first.second], data,
+                               m_route, 0, current_time, action_period);
+        if (data.pt_data.routes[id_vec.first.second]->line != nullptr){
+            auto m_line = m_route->mutable_line();
+            fill_pb_object(data.pt_data.routes[id_vec.first.second]->line, data,
+                                   m_line, 0, current_time, action_period);
+        }
         auto pt_display_information = schedule->mutable_pt_display_informations();
         fill_pb_object(data.pt_data.routes[id_vec.first.second], data,
                                pt_display_information, 0, current_time, action_period);

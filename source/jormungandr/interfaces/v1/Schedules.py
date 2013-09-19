@@ -86,7 +86,7 @@ class RouteSchedules(Schedules):
 
 stop_schedule = {
     "stop_point" : PbField(stop_point),
-    #"display_informations" : PbField(display_information, attribute="route"),
+    "route" : PbField(route, attribute="route"),
     "display_informations" : display_informations_route(),
     "stop_date_times" : NonNullList(NonNullNested(date_time)),
     "links" : UrisToLinks()
