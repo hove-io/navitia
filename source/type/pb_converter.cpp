@@ -2,6 +2,7 @@
 #include "georef/georef.h"
 #include "georef/street_network.h"
 #include "boost/lexical_cast.hpp"
+#include <functional>
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -670,16 +671,15 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
         }
         if(!stop_time->comment.empty()){
             pbnavitia::Note* note = hn->add_notes();
-            auto note_id = std::to_string(stop_time->journey_pattern_point->idx)
-                           + std::to_string(stop_time->vehicle_journey->idx);
-            note->set_uri("note:"+note_id);
+            std::hash<std::string> hash_fn;
+            note->set_uri("note:"+std::to_string(hash_fn(stop_time->comment)));
             note->set_note(stop_time->comment);
         }
         if(stop_time->vehicle_journey != nullptr){
             if(!stop_time->vehicle_journey->odt_message.empty()){
                 pbnavitia::Note* note = hn->add_notes();
-                auto note_id = std::to_string(stop_time->vehicle_journey->idx);
-                note->set_uri("note:"+note_id);
+                std::hash<std::string> hash_fn;
+                note->set_uri("note:"+std::to_string(hash_fn(stop_time->vehicle_journey->odt_message)));
                 note->set_note(stop_time->vehicle_journey->odt_message);
             }
         }
