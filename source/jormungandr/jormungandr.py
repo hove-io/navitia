@@ -24,7 +24,7 @@ def region_not_found(error):
 def kill_thread(signal, frame):
     NavitiaManager().stop()
     sys.exit(0)
-config_file = 'Jörmungandr.ini' if not os.environ.has_key('JORMUNGANDR_CONFIG_FILE')\
+config_file = 'Jormungandr.ini' if not os.environ.has_key('JORMUNGANDR_CONFIG_FILE')\
                                 else os.environ['JORMUNGANDR_CONFIG_FILE']
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, kill_thread)

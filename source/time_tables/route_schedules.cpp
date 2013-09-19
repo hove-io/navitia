@@ -152,9 +152,9 @@ route_schedule(const std::string& filter, const std::string &str_dt,
             pbnavitia::Header* header = table->add_headers();
             auto m_vj = header->mutable_vehiclejourney();
             fill_pb_object(vj, d, m_vj, 0, now, action_period);
-            if (vj->physical_mode != nullptr){
-                fill_pb_object(vj->physical_mode, d,
-                               m_vj->mutable_physical_mode(),0, now, action_period);
+            if ((vj->journey_pattern != nullptr) && (vj->journey_pattern->physical_mode != nullptr)){
+                fill_pb_object(vj->journey_pattern->physical_mode, d,
+                               m_vj->mutable_journey_pattern()->mutable_physical_mode(),0, now, action_period);
             }
             header->set_direction(vj->get_direction());
         }

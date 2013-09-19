@@ -338,8 +338,8 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
             fill_pb_object(stop_time, data, vehicle_journey->add_stop_times(),
                            depth-1, now, action_period);
         }
-        fill_pb_object(vj->physical_mode, data,
-                       vehicle_journey->mutable_physical_mode(), depth-1,
+        fill_pb_object(vj->journey_pattern->physical_mode, data,
+                       vehicle_journey->mutable_journey_pattern()->mutable_physical_mode(), depth-1,
                        now, action_period);
         fill_pb_object(vj->validity_pattern, data,
                        vehicle_journey->mutable_validity_pattern(),

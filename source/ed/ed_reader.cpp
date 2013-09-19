@@ -271,7 +271,7 @@ void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, route_id, is_frequence "
+    std::string request = "SELECT id, name, uri, comment, route_id, is_frequence, physical_mode_id "
         "FROM navitia.journey_pattern";
 
     pqxx::result result = work.exec(request);
@@ -284,6 +284,10 @@ void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
 
         journey_pattern->route = route_map[const_it["route_id"].as<idx_t>()];
         journey_pattern->route->journey_pattern_list.push_back(journey_pattern);
+
+        // attach the physical mode to the corresponding journeyPattern
+        journey_pattern->physical_mode = physical_mode_map[const_it["physical_mode_id"].as<idx_t>()];
+        journey_pattern->physical_mode->journey_pattern_list.push_back(journey_pattern);
 
         data.pt_data.journey_patterns.push_back(journey_pattern);
         this->journey_pattern_map[const_it["id"].as<idx_t>()] = journey_pattern;
@@ -372,7 +376,7 @@ void EdReader::insert_journey_pattern_point_connections(const std::vector<types:
 */
 
 void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, company_id, physical_mode_id, journey_pattern_id, "
+    std::string request = "SELECT id, name, uri, comment, company_id, journey_pattern_id, "
         "validity_pattern_id, adapted_validity_pattern_id, theoric_vehicle_journey_id ,odt_type_id, odt_message "
         "FROM navitia.vehicle_journey ";
 
@@ -390,7 +394,6 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         vj->journey_pattern->vehicle_journey_list.push_back(vj);
 
         vj->company = company_map[const_it["company_id"].as<idx_t>()];
-        vj->physical_mode = physical_mode_map[const_it["physical_mode_id"].as<idx_t>()];
 
         vj->adapted_validity_pattern = validity_pattern_map[const_it["adapted_validity_pattern_id"].as<idx_t>()];
 

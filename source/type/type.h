@@ -439,9 +439,10 @@ struct CommercialMode : public Header, Nameable{
 
 struct PhysicalMode : public Header, Nameable{
     const static Type_e type = Type_e::PhysicalMode;
+    std::vector<JourneyPattern*> journey_pattern_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & idx;
+        ar & id & idx & name & uri & journey_pattern_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -502,15 +503,16 @@ struct JourneyPattern : public Header, Nameable{
     bool is_frequence;
     Route* route;
     CommercialMode* commercial_mode;
+    PhysicalMode* physical_mode;
 
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
     std::vector<VehicleJourney*> vehicle_journey_list;
 
-    JourneyPattern(): is_frequence(false), route(nullptr), commercial_mode(nullptr) {};
+    JourneyPattern(): is_frequence(false), route(nullptr), commercial_mode(nullptr), physical_mode(nullptr) {};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & uri & is_frequence & route & commercial_mode
-                & journey_pattern_point_list & vehicle_journey_list;
+                & physical_mode & journey_pattern_point_list & vehicle_journey_list;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -522,7 +524,6 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
     const static Type_e type = Type_e::VehicleJourney;
     JourneyPattern* journey_pattern;
     Company* company;
-    PhysicalMode* physical_mode;
     ValidityPattern* validity_pattern;
     std::vector<StopTime*> stop_time_list;
     OdtType odt_type;
@@ -533,9 +534,9 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
     std::vector<VehicleJourney*> adapted_vehicle_journey_list;
     VehicleJourney* theoric_vehicle_journey;
 
-    VehicleJourney(): journey_pattern(nullptr), company(nullptr), physical_mode(nullptr), validity_pattern(nullptr) /*, wheelchair_boarding(false)*/, is_adapted(false), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
+    VehicleJourney(): journey_pattern(nullptr), company(nullptr), validity_pattern(nullptr) /*, wheelchair_boarding(false)*/, is_adapted(false), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & uri & journey_pattern & company & physical_mode & validity_pattern & idx /*& wheelchair_boarding*/ & stop_time_list
+        ar & name & uri & journey_pattern & company & validity_pattern & idx /*& wheelchair_boarding*/ & stop_time_list
             & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & odt_type & odt_message;
     }
     std::string get_direction() const;

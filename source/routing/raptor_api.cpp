@@ -22,7 +22,8 @@ void fill_section(pbnavitia::Section *pb_section, navitia::type::idx_t vj_idx,
     const type::Line* line = route->line;
 
     auto mvj = pb_section->mutable_vehicle_journey();
-    auto mroute = mvj->mutable_route();
+    auto mjp = mvj->mutable_journey_pattern();
+    auto mroute = mjp->mutable_route();
     auto mline = mroute->mutable_line();
 
     fill_pb_object(vj, d, mvj, 0, now, action_period);
@@ -30,7 +31,7 @@ void fill_section(pbnavitia::Section *pb_section, navitia::type::idx_t vj_idx,
     fill_pb_object(line, d, mline, 0, now, action_period);
     fill_pb_object(line->network, d, mline->mutable_network(), 0, now, action_period);
     fill_pb_object(line->commercial_mode, d, mline->mutable_commercial_mode(), 0, now, action_period);
-    fill_pb_object(vj->physical_mode, d, mvj->mutable_physical_mode(), 0, now, action_period);
+    fill_pb_object(jp->physical_mode, d, mjp->mutable_physical_mode(), 0, now, action_period);
 }
 
 

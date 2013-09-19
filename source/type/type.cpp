@@ -238,7 +238,7 @@ std::vector<idx_t> PhysicalMode::get(Type_e type, const PT_Data & data) const {
     switch(type) {
         case Type_e::VehicleJourney:
             for(auto vj : data.vehicle_journeys) {
-                if(vj-> physical_mode == this)
+                if(vj->journey_pattern->physical_mode == this)
                     result.push_back(vj->idx);
             }
             break;
@@ -287,7 +287,7 @@ std::vector<idx_t> VehicleJourney::get(Type_e type, const PT_Data &) const {
     switch(type) {
     case Type_e::JourneyPattern: result.push_back(journey_pattern->idx); break;
     case Type_e::Company: result.push_back(company->idx); break;
-    case Type_e::PhysicalMode: result.push_back(physical_mode->idx); break;
+    case Type_e::PhysicalMode: result.push_back(journey_pattern->physical_mode->idx); break;
     case Type_e::ValidityPattern: result.push_back(validity_pattern->idx); break;
     default: break;
     }
