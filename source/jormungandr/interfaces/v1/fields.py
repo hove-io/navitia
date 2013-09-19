@@ -65,13 +65,14 @@ class additional_informations_vj(fields.Raw):
         enum_t = addinfo.DESCRIPTOR.fields_by_name['vehicle_journey_type'].enum_type.values_by_name
         if addinfo.vehicle_journey_type == enum_t['virtual_with_stop_time'].number :
             result.append("odt_with_stop_time")
-        if addinfo.vehicle_journey_type == enum_t['virtual_without_stop_time'].number or \
-            addinfo.vehicle_journey_type == enum_t['stop_point_to_stop_point'].number or \
-            addinfo.vehicle_journey_type == enum_t['adress_to_stop_point'].number or \
-            addinfo.vehicle_journey_type == enum_t['odt_point_to_point'].number:
-            result.append("odt_with_zone")
         else :
-            result.append("regular")
+            if addinfo.vehicle_journey_type == enum_t['virtual_without_stop_time'].number or \
+                addinfo.vehicle_journey_type == enum_t['stop_point_to_stop_point'].number or \
+                addinfo.vehicle_journey_type == enum_t['adress_to_stop_point'].number or \
+                addinfo.vehicle_journey_type == enum_t['odt_point_to_point'].number:
+                result.append("odt_with_zone")
+            else :
+                result.append("regular")
         return result
 
 class display_informations_route(fields.Raw):
