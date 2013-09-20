@@ -24,6 +24,7 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
             place->set_quality(result_item.quality);
             place->set_uri(data.geo_ref.admins[result_item.idx]->uri);
             place->set_name(data.geo_ref.admins[result_item.idx]->name);
+            place->set_embedded_type(pbnavitia::ADMIN);
             break;
         case nt::Type_e::StopPoint:
             fill_pb_object(data.pt_data.stop_points[result_item.idx], data, place->mutable_stop_point(), depth);
@@ -137,6 +138,26 @@ void update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result,
     update_quality_for_missing_admin(ac_result, d, ntype);
 }
 
+int get_embedded_type_order(int n){
+    switch(n){
+    case pbnavitia::ADMIN:
+        return 1;
+        break;
+     case pbnavitia::STOP_AREA:
+        return 2;
+        break;
+    case pbnavitia::POI:
+       return 3;
+       break;
+    case pbnavitia::ADDRESS:
+       return 4;
+       break;
+    default:
+       return 5;
+       break;
+    }
+}
+
 template<class T>
 struct ValidAdmin {
     const std::vector<T> & objects;
@@ -211,11 +232,12 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  const navitia::type::Data &d) {
 
     pbnavitia::Response pb_response;
-    int nbmax_to_find = nbmax;
+    int nbmax_temp = nbmax;
     nbmax = std::max(100, nbmax);
     bool addType = d.pt_data.stop_area_autocomplete.is_address_type(q, d.geo_ref.alias, d.geo_ref.synonymes);
     std::vector<const georef::Admin*> admin_ptr = admin_uris_to_admin_ptr(admins, d);
 
+    ///Récupérer max(100, count) éléments pour chaque type d'ObjectTC
     for(nt::Type_e type : filter){
         std::vector<Autocomplete<nt::idx_t>::fl_quality> result;
         switch(type){
@@ -244,14 +266,14 @@ pbnavitia::Response autocomplete(const std::string &q,
         update_quality(result, type, addType, d);
 
         create_pb(result, type, depth, d, pb_response);
-    }
+    }    
 
     auto compare = [](pbnavitia::Place a, pbnavitia::Place b){
-            return a.quality() > b.quality();
+        return a.quality() > b.quality();
     };
 
-    //Trier la partiallement jusqu'au nbmax elément.
-    nbmax = nbmax_to_find;
+    //Trier le résultat partiallement jusqu'au nbmax(10 par défaut) eléments et supprimer le reste.
+    nbmax = nbmax_temp;
     int result_size = std::min(nbmax, pb_response.mutable_places()->size());
     std::partial_sort(pb_response.mutable_places()->begin(),pb_response.mutable_places()->begin() + result_size,
                       pb_response.mutable_places()->end(),compare);
@@ -259,6 +281,23 @@ pbnavitia::Response autocomplete(const std::string &q,
     while (pb_response.mutable_places()->size() > nbmax){
         pb_response.mutable_places()->RemoveLast();
     }
+
+    auto compare_attributs = [](pbnavitia::Place a, pbnavitia::Place b){
+        if (a.embedded_type() != b.embedded_type()){
+            return get_embedded_type_order(a.embedded_type()) < get_embedded_type_order(b.embedded_type());
+        } else if  (a.quality() == b.quality()){
+            return a.name() < b.name();
+        }
+        else{
+            return a.quality() > b.quality();
+        }
+    };
+
+    //Retrier le résultat final
+    result_size = std::min(nbmax, pb_response.mutable_places()->size());
+    std::partial_sort(pb_response.mutable_places()->begin(),pb_response.mutable_places()->begin() + result_size,
+                      pb_response.mutable_places()->end(),compare_attributs);
+
     auto pagination = pb_response.mutable_pagination();
     pagination->set_totalresult(result_size);
     pagination->set_startpage(0);
