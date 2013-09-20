@@ -10,7 +10,6 @@
 #include <boost/regex.hpp>
 
 
-
 #include <map>
 #include <unordered_map>
 #include <set>
@@ -95,6 +94,7 @@ struct Autocomplete
         }
         wc.word_count = count;
         wc.word_distance = distance;
+        wc.score = 0;
         ac_list[position] = wc;
     }
 
@@ -109,7 +109,7 @@ struct Autocomplete
         }
     }
 
-    void compute_score(const type::PT_Data &pt_data, const georef::GeoRef &georef,
+    void compute_score(type::PT_Data &pt_data, georef::GeoRef &georef,
                        const type::Type_e type);/* {
     }*/
     // Méthodes premettant de retrouver nos éléments
@@ -231,7 +231,7 @@ struct Autocomplete
                 quality.idx = pair.first;
                 quality.nb_found = pair.second.nb_found;
                 quality.word_len = wordLength;
-                quality.quality = calc_quality(quality, wordweight);
+                quality.quality = calc_quality(quality, wordweight, 0);
                 vec_quality.push_back(quality);
             }
 
@@ -268,6 +268,14 @@ struct Autocomplete
         wordCount = vec.size();
         wordLength = wordcount(vec);
 
+        //Récupérer le Max score parmi les élément trouvé
+        int max_score = 0;
+        for (auto ir : index_result){
+            if (keep_element(ir)){
+                max_score = ac_list.at(ir).score > max_score ? ac_list.at(ir).score : max_score;
+            }
+        }
+
         // Créer un vector de réponse:
         std::vector<fl_quality> vec_quality;
 
@@ -276,7 +284,7 @@ struct Autocomplete
                 quality.idx = i;
                 quality.nb_found = wordCount;
                 quality.word_len = wordLength;
-                quality.quality = calc_quality(quality, wordweight);
+                quality.quality = calc_quality(quality, wordweight, max_score);
                 vec_quality.push_back(quality);
             }
         }
@@ -293,7 +301,7 @@ struct Autocomplete
         }
     }
 
-    int calc_quality(const fl_quality & ql,  int wordweight) const {
+    int calc_quality(const fl_quality & ql,  int wordweight, int max_score) const {
         int result = 100;
 
         //Qualité sur le nombres des mot trouvé
@@ -302,6 +310,8 @@ struct Autocomplete
         //Qualité sur la distance globale des mots.
         result -= (ac_list.at(ql.idx).word_distance - ql.word_len);//Coeff de la distance = 1        
 
+        //Qualité sur le score
+        result -= (max_score - ac_list.at(ql.idx).score)/10;
         return result;
     }
 
