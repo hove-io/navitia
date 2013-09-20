@@ -169,7 +169,7 @@ struct hasProperties {
         return _properties.to_ulong();
     }
 
-private:
+//private: on ne peut pas binaraisé si privé
     Properties _properties;
 };
 
@@ -234,7 +234,7 @@ struct hasVehicleProperties {
         return _vehicle_properties.to_ulong();
     }
 
-private:
+//private: on ne peut pas binaraisé si privé
     VehicleProperties _vehicle_properties;
 };
 
@@ -382,7 +382,7 @@ struct StopArea : public Header, Nameable, hasProperties{
     bool wheelchair_boarding;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & uri & name & coord & stop_point_list & admin_list &
+        ar & id & idx & uri & name & coord & stop_point_list & admin_list & _properties &
             wheelchair_boarding;
     }
 
@@ -555,7 +555,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & physical_mode & validity_pattern & idx /*& wheelchair_boarding*/ & stop_time_list
             & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & odt_type & odt_message
-            ;
+           & _vehicle_properties;
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;
@@ -615,7 +615,7 @@ struct StopPoint : public Header, Nameable, hasProperties{
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & uri & name & stop_area & coord & fare_zone & idx & journey_pattern_point_list & admin_list;
+        ar & uri & name & stop_area & coord & fare_zone & idx & journey_pattern_point_list & admin_list & _properties;
     }
 
     StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}
