@@ -164,6 +164,7 @@ place = {
     "stop_area" : PbField(stop_area),
     "address" : PbField(address),
     "poi" : PbField(poi),
+    "administrative_region" : PbField(admin),
     "embedded_type" : enum_type(),
     "name" : fields.String(),
     "id" : fields.String(attribute='uri')
