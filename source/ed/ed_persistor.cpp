@@ -179,6 +179,26 @@ void EdPersistor::insert_sa_sp_properties(const ed::Data& data){
             std::sort(to_insert.begin(), to_insert.end());
         }
     }
+    for(types::StopPointConnection* connection : data.stop_point_connections){
+        navitia::type::idx_t idx = connection->to_ulog();
+        if(!binary_search(to_insert.begin(), to_insert.end(), idx)){
+            std::vector<std::string> values;
+            values.push_back(std::to_string(idx));
+            values.push_back(std::to_string(connection->wheelchair_boarding()));
+            values.push_back(std::to_string(connection->sheltered()));
+            values.push_back(std::to_string(connection->elevator()));
+            values.push_back(std::to_string(connection->escalator()));
+            values.push_back(std::to_string(connection->bike_accepted()));
+            values.push_back(std::to_string(connection->bike_depot()));
+            values.push_back(std::to_string(connection->visual_announcement()));
+            values.push_back(std::to_string(connection->audible_announcement()));
+            values.push_back(std::to_string(connection->appropriate_escort()));
+            values.push_back(std::to_string(connection->appropriate_signage()));
+            this->lotus.insert(values);
+            to_insert.push_back(idx);
+            std::sort(to_insert.begin(), to_insert.end());
+        }
+    }
     this->lotus.finish_bulk_insert();
 }
 
@@ -253,7 +273,7 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
 
 void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPointConnection*>& connections){
     this->lotus.prepare_bulk_insert("navitia.connection", {"departure_stop_point_id", "destination_stop_point_id", "connection_type_id",
-            "duration", "max_duration"});
+                                    "duration", "max_duration", "properties_id"});
 
     //@TODO properties!!
     for(types::StopPointConnection* co : connections){
@@ -263,9 +283,9 @@ void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPoi
         values.push_back(std::to_string(static_cast<int>(co->connection_kind)));
         values.push_back(std::to_string(co->duration));
         values.push_back(std::to_string(co->max_duration));
+        values.push_back(std::to_string(co->to_ulog()));
         this->lotus.insert(values);
     }
-
     this->lotus.finish_bulk_insert();
 }
 
