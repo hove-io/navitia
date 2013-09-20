@@ -291,7 +291,10 @@ nt::JourneyPattern* JourneyPattern::get_navitia_type() const {
         nt_journey_pattern->route->idx = this->route->idx;
 
     if(this->physical_mode != NULL)
+    {
         nt_journey_pattern->commercial_mode->idx = this->physical_mode->idx;
+        nt_journey_pattern->physical_mode->idx = this->physical_mode->idx;
+    }
 
     return nt_journey_pattern;
 }
@@ -367,9 +370,6 @@ nt::VehicleJourney* VehicleJourney::get_navitia_type() const {
 
     if(this->company != NULL)
         nt_vj->company->idx = this->company->idx;
-
-    if(this->physical_mode != NULL)
-        nt_vj->physical_mode->idx = this->physical_mode->idx;
 
     nt_vj->journey_pattern->idx = this->journey_pattern->idx;
 

@@ -74,16 +74,18 @@ enum TransferType {
 
 	
 message PtDisplayInfo {
-    optional string network = 1;
-    optional string code = 2;
-    optional string headsign = 3;
-    optional string direction = 4;
-    optional string color = 5;
-    optional string commercial_mode = 6;
-    optional string physical_mode = 7;
+    optional string network = 1;//
+    optional string code = 2;//
+    optional string headsign = 3;//
+    optional string direction = 4;//
+    optional string color = 5;//
+    optional string commercial_mode = 6;//
+    optional string physical_mode = 7;//
   	optional string description = 8; 
   	optional Uris uris = 9; 	
   	optional OdtType odt_type = 10;
+  	optional hasEquipments has_equipments = 11;
+  	optional string name = 12;
 }
 
 message Uris {
@@ -120,6 +122,7 @@ message Section {
 
     optional string begin_date_time = 15;
     optional string end_date_time = 16;
+    optional addInfoVehicleJourney add_info_vehicle_journey = 17;
 }
 
 message Journey {
@@ -188,9 +191,14 @@ message RouteScheduleRow {
     repeated ScheduleStopTime stop_times = 2;
 }
 
+message addInfoVehicleJourney{
+	required OdtType vehicle_journey_type = 1;
+	optional bool has_date_time_estimated = 2;
+}
+
 message Header{
-	optional string direction = 1;
-	required VehicleJourney vehiclejourney = 2;
+	required PtDisplayInfo pt_display_informations = 1;
+	required addInfoVehicleJourney add_info_vehicle_journey = 2;
 }
 
 message Table {    
@@ -200,7 +208,8 @@ message Table {
 
 message RouteSchedule {	
     required Table table = 1;
-    required Route route = 2;
+    required PtDisplayInfo pt_display_informations = 2;
+//    required Route route = 2;
 }
 
 message Passage {
@@ -248,8 +257,9 @@ message Pagination {
 
 message StopSchedule {
     required Route route = 1;
-    required StopPoint stop_point = 2;
-    repeated ScheduleStopTime stop_date_times = 3;
+    required PtDisplayInfo pt_display_informations = 2;
+    required StopPoint stop_point = 3;
+    repeated ScheduleStopTime stop_date_times = 4;
 }
 
 message Response{

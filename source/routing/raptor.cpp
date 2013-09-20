@@ -293,6 +293,7 @@ void RAPTOR::set_journey_patterns_valides(uint32_t date, const std::vector<std::
                     || (forbid_uri == journey_pattern->route->uri)
                     || (forbid_uri == journey_pattern->uri)
                     || (forbid_uri == journey_pattern->commercial_mode->uri)
+                    || (forbid_uri == journey_pattern->physical_mode->uri)
                     || (forbid_uri == line->network->uri) )
             {
                 forbidden_journey_patterns.set(journey_pattern->idx);

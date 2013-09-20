@@ -729,7 +729,7 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                   + csv.missing_headers(mandatory_headers));
         throw InvalidHeaders(csv.filename);
     }
-    data.journey_patterns.reserve(350000);
+
     data.vehicle_journeys.reserve(350000);
 
     int id_c = csv.get_pos_col("route_id"), service_c = csv.get_pos_col("service_id"),

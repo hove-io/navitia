@@ -89,12 +89,17 @@ private:
     void fill_vector_to_ignore(navitia::type::Data& data, pqxx::work& work);
     void fill_graph_vls(navitia::type::Data& data, pqxx::work& work);
 
+    //les alias et synonymes:
+    void fill_alias(navitia::type::Data& data, pqxx::work& work);
+    void fill_synonyms(navitia::type::Data& data, pqxx::work& work);
+
     /// les relations admin et les autres objets
     void build_rel_stop_point_admin(navitia::type::Data& data, pqxx::work& work);
     void build_rel_stop_area_admin(navitia::type::Data& data, pqxx::work& work);
     void build_rel_way_admin(navitia::type::Data& data, pqxx::work& work);
     void build_rel_poi_admin(navitia::type::Data& data, pqxx::work& work);
     void build_rel_admin_admin(navitia::type::Data& data, pqxx::work& work);
+
 };
 
 }

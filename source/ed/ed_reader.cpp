@@ -47,6 +47,10 @@ void EdReader::fill(navitia::type::Data& data){
 //    this->clean_graph(data, work);
     this->fill_graph_vls(data, work);
 
+    //Charger les alias et les synonymes
+    this->fill_alias(data, work);
+    this->fill_synonyms(data, work);
+
     /// les relations admin et les autres objets
     this->build_rel_stop_point_admin(data, work);
     this->build_rel_stop_area_admin(data, work);
@@ -264,7 +268,6 @@ void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
         route->line = line_map[const_it["line_id"].as<idx_t>()];
         route->line->route_list.push_back(route);
 
-
         data.pt_data.routes.push_back(route);
         this->route_map[const_it["id"].as<idx_t>()] = route;
     }
@@ -285,9 +288,12 @@ void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
         journey_pattern->route = route_map[const_it["route_id"].as<idx_t>()];
         journey_pattern->route->journey_pattern_list.push_back(journey_pattern);
 
-        // attach the physical mode to the corresponding journeyPattern
+        // attach the physical mode with database values
         journey_pattern->physical_mode = physical_mode_map[const_it["physical_mode_id"].as<idx_t>()];
         journey_pattern->physical_mode->journey_pattern_list.push_back(journey_pattern);
+
+        // get commercial mode from the line of the route of the journey_pattern
+        journey_pattern->commercial_mode = journey_pattern->route->line->commercial_mode;
 
         data.pt_data.journey_patterns.push_back(journey_pattern);
         this->journey_pattern_map[const_it["id"].as<idx_t>()] = journey_pattern;
@@ -413,7 +419,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
 void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT vehicle_journey_id, journey_pattern_point_id, arrival_time, departure_time, " // 0, 1, 2, 3
         "local_traffic_zone, start_time, end_time, headway_sec, odt, pick_up_allowed, " // 4, 5, 6, 7, 8, 9, 10
-        "drop_off_allowed, is_frequency, date_time_estimated " // 11, 12
+        "drop_off_allowed, is_frequency, date_time_estimated, comment " // 11, 12
         "FROM navitia.stop_time;";
 
     pqxx::result result = work.exec(request);
@@ -425,6 +431,7 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
         const_it["start_time"].to(stop->start_time);
         const_it["end_time"].to(stop->end_time);
         const_it["headway_sec"].to(stop->headway_secs);
+        const_it["comment"].to(stop->comment);
 
         stop->set_date_time_estimated(const_it["date_time_estimated"].as<bool>());
 
@@ -716,6 +723,28 @@ void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
         }catch(...){
             std::cout<<"Impossible de trouver le noued le plus proche à la station vls poi_id = "<<const_it["id"].as<std::string>()<<std::endl;
         }
+    }
+}
+
+void EdReader::fill_alias(navitia::type::Data& data, pqxx::work& work){
+    std::string key, value;
+    std::string request = "SELECT key, value FROM navitia.alias;";
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        const_it["key"].to(key);
+        const_it["value"].to(value);
+        data.geo_ref.alias[key]=value;
+    }
+}
+
+void EdReader::fill_synonyms(navitia::type::Data& data, pqxx::work& work){
+    std::string key, value;
+    std::string request = "SELECT key, value FROM navitia.synonym;";
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        const_it["key"].to(key);
+        const_it["value"].to(value);
+        data.geo_ref.synonymes[key]=value;
     }
 }
 

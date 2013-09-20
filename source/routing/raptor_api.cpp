@@ -17,21 +17,10 @@ void fill_section(pbnavitia::Section *pb_section, navitia::type::idx_t vj_idx,
         const nt::Data & d, boost::posix_time::ptime now, boost::posix_time::time_period action_period) {
 
     const type::VehicleJourney* vj = d.pt_data.vehicle_journeys[vj_idx];
-    const type::JourneyPattern* jp = vj->journey_pattern;
-    const type::Route* route = jp->route;
-    const type::Line* line = route->line;
-
-    auto mvj = pb_section->mutable_vehicle_journey();
-    auto mjp = mvj->mutable_journey_pattern();
-    auto mroute = mjp->mutable_route();
-    auto mline = mroute->mutable_line();
-
-    fill_pb_object(vj, d, mvj, 0, now, action_period);
-    fill_pb_object(route, d, mroute, 0, now, action_period);
-    fill_pb_object(line, d, mline, 0, now, action_period);
-    fill_pb_object(line->network, d, mline->mutable_network(), 0, now, action_period);
-    fill_pb_object(line->commercial_mode, d, mline->mutable_commercial_mode(), 0, now, action_period);
-    fill_pb_object(jp->physical_mode, d, mjp->mutable_physical_mode(), 0, now, action_period);
+    pbnavitia::PtDisplayInfo* vj_pt_display_information = pb_section->mutable_pt_display_informations();
+    pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey = pb_section->mutable_add_info_vehicle_journey();
+    fill_pb_object(vj, d, vj_pt_display_information, 0, now, action_period);
+    fill_pb_object(vj, d, add_info_vehicle_journey, 0, now, action_period);
 }
 
 

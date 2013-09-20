@@ -173,7 +173,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     const static nt::Type_e type = nt::Type_e::VehicleJourney;
     JourneyPattern* journey_pattern;
     Company* company;
-    PhysicalMode* physical_mode;
+    PhysicalMode* physical_mode; // Normalement on va lire cette info dans JourneyPattern
     Line * tmp_line; // N'est pas à remplir obligatoirement
     //Vehicle* vehicle;
     bool wheelchair_boarding;

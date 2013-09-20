@@ -39,7 +39,6 @@ class Journeys(Resource):
             if before and after:
                 response.prev = before
                 response.next = after
-            print response.journeys[0].sections[0].origin
         return protobuf_to_dict(response), 200
 
 class Isochrone(Resource):
