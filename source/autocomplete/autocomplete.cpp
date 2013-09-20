@@ -1,32 +1,80 @@
 #include "autocomplete.h"
-
+#include "type/pt_data.h"
 namespace navitia { namespace autocomplete {
 
-void compute_score_poi(const type::PT_Data &pt_data, const georef::GeoRef &georef) {
+void compute_score_poi(type::PT_Data &pt_data, georef::GeoRef &georef) {
+    for (auto it = georef.fl_poi.ac_list.begin(); it != georef.fl_poi.ac_list.end(); ++it){
+        for (navitia::georef::Admin* admin : georef.pois[it->first]->admin_list){
+            if(admin->level == 8){
+                (it->second).score = georef.fl_admin.ac_list.at(admin->idx).score;
+            }
+        }
+    }
 }
 
 
-void compute_score_way(const type::PT_Data &pt_data, const georef::GeoRef &georef) {
+void compute_score_way(type::PT_Data &pt_data, georef::GeoRef &georef) {
+    for (auto it = georef.fl_way.ac_list.begin(); it != georef.fl_way.ac_list.end(); ++it){
+        for (navitia::georef::Admin* admin : georef.ways[it->first]->admin_list){
+            if (admin->level == 8){
+                //georef.fl_way.ac_list.at(it->first).score = georef.fl_admin.ac_list.at(admin->idx).score;
+                (it->second).score = georef.fl_admin.ac_list.at(admin->idx).score;
+            }
+        }
+    }
 }
 
 
-void compute_score_stop_area(const type::PT_Data &pt_data, const georef::GeoRef &georef) {
+void compute_score_stop_area(type::PT_Data &pt_data, georef::GeoRef &georef) {
+    for(auto it = pt_data.stop_area_autocomplete.ac_list.begin(); it != pt_data.stop_area_autocomplete.ac_list.end(); ++it){
+        for (navitia::georef::Admin* admin : pt_data.stop_areas[it->first]->admin_list){
+            if (admin->level == 8){
+                (it->second).score = georef.fl_admin.ac_list.at(admin->idx).score;
+            }
+        }
+    }
 }
 
 
-void compute_score_stop_point(const type::PT_Data &pt_data, const georef::GeoRef &georef) {
+void compute_score_stop_point(type::PT_Data &pt_data, georef::GeoRef &georef) {
+    //Récupérer le score de son admin du niveau 8 dans le autocomplete: georef.fl_admin
+    for (auto it = pt_data.stop_point_autocomplete.ac_list.begin(); it != pt_data.stop_point_autocomplete.ac_list.end(); ++it){
+        for(navitia::georef::Admin* admin : pt_data.stop_points[it->first]->admin_list){
+            if (admin->level == 8){
+                (it->second).score = georef.fl_admin.ac_list.at(admin->idx).score;
+            }
+        }
+    }
 }
 
 
-void compute_score_admin(const type::PT_Data &pt_data, const georef::GeoRef &georef) {
+void compute_score_admin(type::PT_Data &pt_data, georef::GeoRef &georef) {
+    int max_score = 0;
+    //Pour chaque stop_point incrémenter le score de son admin de niveau 8 par 1.
+    for (navitia::type::StopPoint* sp : pt_data.stop_points){
+        for (navitia::georef::Admin * admin : sp->admin_list){
+            if (admin->level == 8){
+                georef.fl_admin.ac_list.at(admin->idx).score++;
+            }
+        }
+    }
+    //Calculer le max_score des admins
+    for (auto it = georef.fl_admin.ac_list.begin(); it != georef.fl_admin.ac_list.end(); ++it){
+        max_score = ((it->second).score > max_score)?(it->second).score:max_score;
+    }
+
+    //Ajuster le score de chaque admin an utilisant le max_score.
+    for (auto it = georef.fl_admin.ac_list.begin(); it != georef.fl_admin.ac_list.end(); ++it){
+        (it->second).score = ((it->second).score * 100)/max_score;
+    }
 }
 
 
-void compute_score_line(const type::PT_Data &pt_data, const georef::GeoRef &georef) {
+void compute_score_line(type::PT_Data &pt_data, georef::GeoRef &georef) {
 }
 
 template<>
-void Autocomplete<type::idx_t>::compute_score(const type::PT_Data &pt_data, const georef::GeoRef &georef,
+void Autocomplete<type::idx_t>::compute_score(type::PT_Data &pt_data, georef::GeoRef &georef,
                    const type::Type_e type) {
     switch(type){
         case type::Type_e::StopArea:

@@ -63,6 +63,9 @@ struct PT_Data : boost::noncopyable{
     /** Construit l'indexe Autocomplete */
     void build_autocomplete(const navitia::georef::GeoRef&);
 
+    /** Calcul le score des objectTC */
+    void compute_score_autocomplete(navitia::georef::GeoRef&);
+
     /** Construit l'indexe ProximityList */
     void build_proximity_list();
 
