@@ -189,7 +189,21 @@ void EdReader::fill_companies(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat FROM navitia.stop_area";
+    std::string request = "SELECT sa.id as id, sa.name as name, sa.uri as uri, sa.comment as comment,";
+    request += "ST_X(sa.coord::geometry) as lon,";
+    request += "ST_Y(sa.coord::geometry) as lat,";
+    request += "pr.wheelchair_boarding as wheelchair_boarding,";
+    request += "pr.sheltered as sheltered,";
+    request += "pr.elevator as elevator,";
+    request += "pr.escalator as escalator,";
+    request += "pr.bike_accepted as bike_accepted,";
+    request += "pr.bike_depot as bike_depot,";
+    request += "pr.visual_announcement as visual_announcement,";
+    request += "pr.audible_announcement as audible_announcement,";
+    request += "pr.appropriate_escort as appropriate_escort,";
+    request += "pr.appropriate_signage as appropriate_signage ";
+    request += "FROM navitia.stop_area as sa, navitia.properties  as pr ";
+    request += "where sa.properties_id=pr.id ";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -199,6 +213,36 @@ void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
         const_it["comment"].to(sa->comment);
         sa->coord.set_lon(const_it["lon"].as<double>());
         sa->coord.set_lat(const_it["lat"].as<double>());
+        if (const_it["wheelchair_boarding"].as<bool>()){
+            sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+        }
+        if (const_it["sheltered"].as<bool>()){
+            sa->set_property(navitia::type::hasProperties::SHELTERED);
+        }
+        if (const_it["elevator"].as<bool>()){
+            sa->set_property(navitia::type::hasProperties::ELEVATOR);
+        }
+        if (const_it["escalator"].as<bool>()){
+            sa->set_property(navitia::type::hasProperties::ESCALATOR);
+        }
+        if (const_it["bike_accepted"].as<bool>()){
+            sa->set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
+        }
+        if (const_it["bike_depot"].as<bool>()){
+            sa->set_property(navitia::type::hasProperties::BIKE_DEPOT);
+        }
+        if (const_it["visual_announcement"].as<bool>()){
+            sa->set_property(navitia::type::hasProperties::VISUAL_ANNOUNCEMENT);
+        }
+        if (const_it["audible_announcement"].as<bool>()){
+            sa->set_property(navitia::type::hasProperties::AUDIBLE_ANNOUNVEMENT);
+        }
+        if (const_it["appropriate_escort"].as<bool>()){
+            sa->set_property(navitia::type::hasProperties::APPOPRIATE_ESCORT);
+        }
+        if (const_it["appropriate_signage"].as<bool>()){
+            sa->set_property(navitia::type::hasProperties::APPOPRIATE_SIGNAGE);
+        }
 
         sa->idx = data.pt_data.stop_areas.size();
 
@@ -208,9 +252,21 @@ void EdReader::fill_stop_areas(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat, "
-        "fare_zone, stop_area_id "
-        "FROM navitia.stop_point";
+    std::string request = "SELECT sp.id as id, sp.name as name, sp.uri as uri,";
+    request += "sp.comment as comment, ST_X(sp.coord::geometry) as lon, ST_Y(sp.coord::geometry) as lat,";
+    request += "sp.fare_zone as fare_zone, sp.stop_area_id as stop_area_id,";
+    request += "pr.wheelchair_boarding as wheelchair_boarding,";
+    request += "pr.sheltered as sheltered,";
+    request += "pr.elevator as elevator,";
+    request += "pr.escalator as escalator,";
+    request += "pr.bike_accepted as bike_accepted,";
+    request += "pr.bike_depot as bike_depot,";
+    request += "pr.visual_announcement as visual_announcement,";
+    request += "pr.audible_announcement as audible_announcement,";
+    request += "pr.appropriate_escort as appropriate_escort,";
+    request += "pr.appropriate_signage as appropriate_signage ";
+    request += "FROM navitia.stop_point as sp, navitia.properties  as pr ";
+    request += "where sp.properties_id=pr.id";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -221,7 +277,36 @@ void EdReader::fill_stop_points(nt::Data& data, pqxx::work& work){
         const_it["fare_zone"].to(sp->fare_zone);
         sp->coord.set_lon(const_it["lon"].as<double>());
         sp->coord.set_lat(const_it["lat"].as<double>());
-
+        if (const_it["wheelchair_boarding"].as<bool>()){
+            sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+        }
+        if (const_it["sheltered"].as<bool>()){
+            sp->set_property(navitia::type::hasProperties::SHELTERED);
+        }
+        if (const_it["elevator"].as<bool>()){
+            sp->set_property(navitia::type::hasProperties::ELEVATOR);
+        }
+        if (const_it["escalator"].as<bool>()){
+            sp->set_property(navitia::type::hasProperties::ESCALATOR);
+        }
+        if (const_it["bike_accepted"].as<bool>()){
+            sp->set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
+        }
+        if (const_it["bike_depot"].as<bool>()){
+            sp->set_property(navitia::type::hasProperties::BIKE_DEPOT);
+        }
+        if (const_it["visual_announcement"].as<bool>()){
+            sp->set_property(navitia::type::hasProperties::VISUAL_ANNOUNCEMENT);
+        }
+        if (const_it["audible_announcement"].as<bool>()){
+            sp->set_property(navitia::type::hasProperties::AUDIBLE_ANNOUNVEMENT);
+        }
+        if (const_it["appropriate_escort"].as<bool>()){
+            sp->set_property(navitia::type::hasProperties::APPOPRIATE_ESCORT);
+        }
+        if (const_it["appropriate_signage"].as<bool>()){
+            sp->set_property(navitia::type::hasProperties::APPOPRIATE_SIGNAGE);
+        }
         sp->stop_area = stop_area_map[const_it["stop_area_id"].as<idx_t>()];
         sp->stop_area->stop_point_list.push_back(sp);
 
@@ -338,8 +423,24 @@ void EdReader::fill_validity_patterns(nt::Data& data, pqxx::work& work){
 
 
 void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT departure_stop_point_id, destination_stop_point_id, connection_type_id, " 
-                          "duration, max_duration FROM navitia.connection";
+//    std::string request = "SELECT departure_stop_point_id, destination_stop_point_id, connection_type_id, "
+//                          "duration, max_duration FROM navitia.connection";
+    std::string request = "SELECT conn.departure_stop_point_id as departure_stop_point_id,";
+                request += "conn.destination_stop_point_id as destination_stop_point_id,";
+                request += "conn.connection_type_id as connection_type_id,";
+                request += "conn.duration as duration, conn.max_duration as max_duration,";
+                request += "pr.wheelchair_boarding as wheelchair_boarding,";
+                request += "pr.sheltered as sheltered,";
+                request += "pr.elevator as elevator,";
+                request += "pr.escalator as escalator,";
+                request += "pr.bike_accepted as bike_accepted,";
+                request += "pr.bike_depot as bike_depot,";
+                request += "pr.visual_announcement as visual_announcement,";
+                request += "pr.audible_announcement as audible_announcement,";
+                request += "pr.appropriate_escort as appropriate_escort,";
+                request += "pr.appropriate_signage as appropriate_signage ";
+                request += "FROM navitia.connection as conn, navitia.properties  as pr ";
+                request += "where conn.properties_id=pr.id ";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -352,6 +453,38 @@ void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
             stop_point_connection->connection_type = static_cast<nt::ConnectionType>(const_it["connection_type_id"].as<int>());
             stop_point_connection->duration = const_it["duration"].as<int>();
             stop_point_connection->max_duration = const_it["max_duration"].as<int>();
+
+            if (const_it["wheelchair_boarding"].as<bool>()){
+                stop_point_connection->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+            }
+            if (const_it["sheltered"].as<bool>()){
+                stop_point_connection->set_property(navitia::type::hasProperties::SHELTERED);
+            }
+            if (const_it["elevator"].as<bool>()){
+                stop_point_connection->set_property(navitia::type::hasProperties::ELEVATOR);
+            }
+            if (const_it["escalator"].as<bool>()){
+                stop_point_connection->set_property(navitia::type::hasProperties::ESCALATOR);
+            }
+            if (const_it["bike_accepted"].as<bool>()){
+                stop_point_connection->set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
+            }
+            if (const_it["bike_depot"].as<bool>()){
+                stop_point_connection->set_property(navitia::type::hasProperties::BIKE_DEPOT);
+            }
+            if (const_it["visual_announcement"].as<bool>()){
+                stop_point_connection->set_property(navitia::type::hasProperties::VISUAL_ANNOUNCEMENT);
+            }
+            if (const_it["audible_announcement"].as<bool>()){
+                stop_point_connection->set_property(navitia::type::hasProperties::AUDIBLE_ANNOUNVEMENT);
+            }
+            if (const_it["appropriate_escort"].as<bool>()){
+                stop_point_connection->set_property(navitia::type::hasProperties::APPOPRIATE_ESCORT);
+            }
+            if (const_it["appropriate_signage"].as<bool>()){
+                stop_point_connection->set_property(navitia::type::hasProperties::APPOPRIATE_SIGNAGE);
+            }
+
             data.pt_data.stop_point_connections.push_back(stop_point_connection);
         }
     }
@@ -376,9 +509,22 @@ void EdReader::insert_journey_pattern_point_connections(const std::vector<types:
 */
 
 void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, company_id, physical_mode_id, journey_pattern_id, "
-        "validity_pattern_id, adapted_validity_pattern_id, theoric_vehicle_journey_id ,odt_type_id, odt_message "
-        "FROM navitia.vehicle_journey ";
+    std::string request = "SELECT vj.id as id, vj.name as name, vj.uri as uri, vj.comment as comment,";
+                request += "vj.company_id as company_id, vj.physical_mode_id as physical_mode_id,";
+                request += "vj.journey_pattern_id as journey_pattern_id, vj.validity_pattern_id as validity_pattern_id,";
+                request += "vj.adapted_validity_pattern_id as adapted_validity_pattern_id,";
+                request += "vj.theoric_vehicle_journey_id as theoric_vehicle_journey_id ,";
+                request += "vj.odt_type_id as odt_type_id, vj.odt_message as odt_message,";
+                request += "vp.wheelchair_accessible as wheelchair_accessible,";
+                request += "vp.bike_accepted as bike_accepted,";
+                request += "vp.air_conditioned as air_conditioned,";
+                request += "vp.visual_announcement as visual_announcement,";
+                request += "vp.audible_announcement as audible_announcement,";
+                request += "vp.appropriate_escort as appropriate_escort,";
+                request += "vp.appropriate_signage as appropriate_signage,";
+                request += "vp.school_vehicle as school_vehicle ";
+                request += "FROM navitia.vehicle_journey as vj, navitia.vehicle_properties as vp ";
+                request += "where vj.vehicle_properties_id = vp.id ";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -406,6 +552,30 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
             vj->theoric_vehicle_journey = vehicle_journey_map[const_it["theoric_vehicle_journey_id"].as<idx_t>()];
         }
 
+        if (const_it["wheelchair_accessible"].as<bool>()){
+            vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
+        }
+        if (const_it["bike_accepted"].as<bool>()){
+            vj->set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
+        }
+        if (const_it["air_conditioned"].as<bool>()){
+            vj->set_vehicle(navitia::type::hasVehicleProperties::AIR_CONDITIONED);
+        }
+        if (const_it["visual_announcement"].as<bool>()){
+            vj->set_vehicle(navitia::type::hasVehicleProperties::VISUAL_ANNOUNCEMENT);
+        }
+        if (const_it["audible_announcement"].as<bool>()){
+            vj->set_vehicle(navitia::type::hasVehicleProperties::AUDIBLE_ANNOUNCEMENT);
+        }
+        if (const_it["appropriate_escort"].as<bool>()){
+            vj->set_vehicle(navitia::type::hasVehicleProperties::APPOPRIATE_ESCORT);
+        }
+        if (const_it["appropriate_signage"].as<bool>()){
+            vj->set_vehicle(navitia::type::hasVehicleProperties::APPOPRIATE_SIGNAGE);
+        }
+        if (const_it["school_vehicle"].as<bool>()){
+            vj->set_vehicle(navitia::type::hasVehicleProperties::SCOOL_VEHICLE);
+        }
         data.pt_data.vehicle_journeys.push_back(vj);
         this->vehicle_journey_map[const_it["id"].as<idx_t>()] = vj;
     }
