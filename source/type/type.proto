@@ -45,6 +45,11 @@ enum OdtType{
     stop_point_to_stop_point = 3;     // TAD rabattement arrêt à arrêt
     adress_to_stop_point = 4;         // TAD rabattement adresse à arrêt
     odt_point_to_point = 5;           // TAD point à point (Commune à Commune)
+    
+    
+    //regular = 0;
+    //odt_with_stop_time = 1;
+    //odt_with_zone = 2;
 }
 
 message Message{
@@ -82,6 +87,7 @@ message StopPoint {
     optional string uri = 5;
     optional GeographicalCoord coord = 6;
     optional StopArea stop_area = 7;
+    optional hasEquipments has_equipments = 8;
 
     repeated Message messages = 9;
 }
@@ -132,6 +138,25 @@ message hasPropertie{
 	}
 	repeated AdditionalInformation additional_informations= 1;
 	repeated Note notes = 5;
+}
+
+message hasEquipments{
+	enum Equipment{
+        has_wheelchair_accessiblity = 1;
+        has_bike_accepted = 2;
+        has_air_conditioned = 3;
+        has_visual_announcement = 4;
+        has_audible_announcement = 5;
+        has_appropriate_escort = 6;
+        has_appropriate_signage = 7;
+        has_school_vehicle = 8;        
+        has_wheelchair_boarding = 8;
+		has_sheltered = 9;
+		has_elevator = 10;
+		has_escalator = 11;
+		has_bike_depot = 12;
+	}
+	repeated Equipment has_equipments = 1;
 }
 
 message StopDateTime {

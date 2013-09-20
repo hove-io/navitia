@@ -124,39 +124,21 @@ route_schedule(const std::string& filter, const std::string &str_dt,
         auto vehicle_journy_list = get_vehicle_jorney(stop_times);
         auto schedule = handler.pb_response.add_route_schedules();
         pbnavitia::Table *table = schedule->mutable_table();
-        auto m_route = schedule->mutable_route();
-        fill_pb_object(route, d, m_route, 0,
-                       now, action_period);
-        if (route->line != nullptr){
-            auto m_line = m_route->mutable_line();
+        auto m_pt_display_informations = schedule->mutable_pt_display_informations();
+        fill_pb_object(route, d, m_pt_display_informations, 0, now, action_period);
 
-    auto pagination = handler.pb_response.mutable_pagination();
-    pagination->set_totalresult(handler.total_result);
-    pagination->set_startpage(start_page);
-    pagination->set_itemsperpage(count);
-    pagination->set_itemsonpage(std::max(handler.pb_response.departure_boards_size(),
+        auto pagination = handler.pb_response.mutable_pagination();
+        pagination->set_totalresult(handler.total_result);
+        pagination->set_startpage(start_page);
+        pagination->set_itemsperpage(count);
+        pagination->set_itemsonpage(std::max(handler.pb_response.departure_boards_size(),
                                          handler.pb_response.stop_schedules_size()));
-            fill_pb_object(route->line, d, m_line, 0, now, action_period);
-            if(route->line->commercial_mode){
-                auto m_commercial_mode = m_line->mutable_commercial_mode();
-                fill_pb_object(route->line->commercial_mode,
-                               d, m_commercial_mode, 0);
-            }
-            if(route->line->network){
-                auto m_network = m_line->mutable_network();
-                fill_pb_object(route->line->network, d, m_network, 0);
-            }
-        }
-
         for(type::VehicleJourney* vj : vehicle_journy_list){
             pbnavitia::Header* header = table->add_headers();
-            auto m_vj = header->mutable_vehiclejourney();
-            fill_pb_object(vj, d, m_vj, 0, now, action_period);
-            if (vj->physical_mode != nullptr){
-                fill_pb_object(vj->physical_mode, d,
-                               m_vj->mutable_physical_mode(),0, now, action_period);
-            }
-            header->set_direction(vj->get_direction());
+            pbnavitia::PtDisplayInfo* vj_display_information = header->mutable_pt_display_informations();
+            pbnavitia::addInfoVehicleJourney* add_info_vehicle_journey = header->mutable_add_info_vehicle_journey();
+            fill_pb_object(vj, d, vj_display_information, 0, now, action_period);
+            fill_pb_object(vj, d, add_info_vehicle_journey, 0, now, action_period);
         }
 
         for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {

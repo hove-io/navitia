@@ -5,7 +5,8 @@ from protobuf_to_dict import protobuf_to_dict
 from find_extrem_datetimes import extremes
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, place,\
-                   PbField, stop_date_time, enum_type, NonNullList, NonNullNested
+                   PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
+                   display_informations_vj,additional_informations_vj
 
 from interfaces.parsers import option_value
 from ResourceUri import ResourceUri
@@ -59,24 +60,13 @@ class GeoJson(fields.Raw):
                 "type" : "LineString",
                 "coordinates" : [],
                 "properties" : [{
-                    "lenth" : length
+                    "length" : length
                     }]
         }
         for coord in coords:
             response["coordinates"].append([coord.lon, coord.lat])
         return response
 
-display_informations = {
-            "network" : fields.String(),
-            "code" : fields.String(),
-            "headsign" : fields.String(),
-            "color" : fields.String(),
-            "commercial_mode" : fields.String(),
-            "physical_mode" : fields.String(),
-            "direction" : fields.String(),
-            "description" : fields.String(),
-            "odt_type" : enum_type()
-}
 
 class section_type(enum_type):
     def output(self, key, obj):
@@ -108,8 +98,8 @@ section = {
     "from" : section_place(place, attribute="origin"),
     "to": section_place(place, attribute="destination"),
     "links" : SectionLinks(attribute="uris"),
-    "display_informations" : PbField(display_informations,
-                                     attribute="pt_display_informations"),
+    "display_informations" : display_informations_vj(),
+    "additional_informations" : additional_informations_vj(),
     "geojson" : GeoJson(),
     "path" : NonNullList(NonNullNested({"length":fields.Integer(),
                                         "name":fields.String()}),
@@ -191,7 +181,7 @@ class Journeys(ResourceUri):
                                  dest="max_transfers")
         self.parser.add_argument("first_section_mode",
                                  type=option_value(modes),
-                                 action="append", default="walking",
+                                 default="walking",
                                  dest="origin_mode")
         self.parser.add_argument("last_section_mode",
                                  type=option_value(modes),
@@ -217,6 +207,10 @@ class Journeys(ResourceUri):
     @marshal_with(journeys)
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parser.parse_args()
+        #TODO : Changer le protobuff pour que ce soit propre
+        args["destination_mode"] = "vls" if args["destination_mode"] == "br" else args["destination_mode"]
+        args["origin_mode"] = "vls" if args["origin_mode"] == "br" else args["origin_mode"]
+
         if not region is None or (not lon is None and not lat is None):
             self.region = NavitiaManager().get_region(region, lon, lat)
             if uri:

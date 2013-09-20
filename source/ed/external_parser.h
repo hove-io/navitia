@@ -8,15 +8,12 @@ namespace ed{ namespace connectors{
 class ExternalParser
 {
 private:
-    std::string path;///< Chemin vers les fichiers
     log4cplus::Logger logger;
 
 public:
-    ExternalParser(const std::string & path);
-    ExternalParser(): path(){}
+    ExternalParser();
 
-    void fill_aliases(Data & data);
-    void fill_synonyms(Data & data);
-    void fill_alias_synonyme(Data & data);
+    void fill_aliases(const std::string &file, Data & data);
+    void fill_synonyms(const std::string &file, Data & data);
 };
 }}

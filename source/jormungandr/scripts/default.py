@@ -160,6 +160,7 @@ class Script:
     def __fill_display_and_uris(self, resp):
         for journey in resp.journeys:
             for section in journey.sections:
+
                 if section.type == response_pb2.PUBLIC_TRANSPORT:
                     section.pt_display_informations.physical_mode = section.vehicle_journey.physical_mode.name
                     section.pt_display_informations.commercial_mode = section.vehicle_journey.route.line.commercial_mode.name
@@ -213,7 +214,7 @@ class Script:
                 #And then we delete it
                 for i in to_delete:
                     del resp.journeys[i]
-        self.__fill_display_and_uris(resp)
+        #self.__fill_display_and_uris(resp)
         return resp
 
 

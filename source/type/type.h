@@ -116,15 +116,25 @@ struct hasProperties {
     static const uint8_t APPOPRIATE_SIGNAGE = 9;
 
     bool wheelchair_boarding() {return _properties[WHEELCHAIR_BOARDING];}
+    bool wheelchair_boarding() const {return _properties[WHEELCHAIR_BOARDING];}
     bool sheltered() {return _properties[SHELTERED];}
+    bool sheltered() const {return _properties[SHELTERED];}
     bool elevator() {return _properties[ELEVATOR];}
+    bool elevator() const {return _properties[ELEVATOR];}
     bool escalator() {return _properties[ESCALATOR];}
+    bool escalator() const {return _properties[ESCALATOR];}
     bool bike_accepted() {return _properties[BIKE_ACCEPTED];}
+    bool bike_accepted() const {return _properties[BIKE_ACCEPTED];}
     bool bike_depot() {return _properties[BIKE_DEPOT];}
+    bool bike_depot() const {return _properties[BIKE_DEPOT];}
     bool visual_announcement() {return _properties[VISUAL_ANNOUNCEMENT];}
+    bool visual_announcement() const {return _properties[VISUAL_ANNOUNCEMENT];}
     bool audible_announcement() {return _properties[AUDIBLE_ANNOUNVEMENT];}
+    bool audible_announcement() const {return _properties[AUDIBLE_ANNOUNVEMENT];}
     bool appropriate_escort() {return _properties[APPOPRIATE_ESCORT];}
+    bool appropriate_escort() const {return _properties[APPOPRIATE_ESCORT];}
     bool appropriate_signage() {return _properties[APPOPRIATE_SIGNAGE];}
+    bool appropriate_signage() const {return _properties[APPOPRIATE_SIGNAGE];}
 
     bool accessible(const Properties &required_properties) const{
         auto mismatched = required_properties & ~_properties;
@@ -155,8 +165,11 @@ struct hasProperties {
         return _properties[property];
     }
 
+    idx_t to_ulog(){
+        return _properties.to_ulong();
+    }
 
-private:
+//private: on ne peut pas binaraisé si privé
     Properties _properties;
 };
 
@@ -216,7 +229,12 @@ struct hasVehicleProperties {
     bool vehicle(uint8_t vehicle) const {
         return _vehicle_properties[vehicle];
     }
-private:
+
+    idx_t to_ulog(){
+        return _vehicle_properties.to_ulong();
+    }
+
+//private: on ne peut pas binaraisé si privé
     VehicleProperties _vehicle_properties;
 };
 
@@ -364,7 +382,7 @@ struct StopArea : public Header, Nameable, hasProperties{
     bool wheelchair_boarding;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & uri & name & coord & stop_point_list & admin_list &
+        ar & id & idx & uri & name & coord & stop_point_list & admin_list & _properties &
             wheelchair_boarding;
     }
 
@@ -536,9 +554,11 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
     VehicleJourney(): journey_pattern(nullptr), company(nullptr), physical_mode(nullptr), validity_pattern(nullptr) /*, wheelchair_boarding(false)*/, is_adapted(false), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & physical_mode & validity_pattern & idx /*& wheelchair_boarding*/ & stop_time_list
-            & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & odt_type & odt_message;
+            & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & odt_type & odt_message
+           & _vehicle_properties;
     }
     std::string get_direction() const;
+    bool has_date_time_estimated() const;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
     bool operator<(const VehicleJourney& other) const {
@@ -595,7 +615,7 @@ struct StopPoint : public Header, Nameable, hasProperties{
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & uri & name & stop_area & coord & fare_zone & idx & journey_pattern_point_list & admin_list;
+        ar & uri & name & stop_area & coord & fare_zone & idx & journey_pattern_point_list & admin_list & _properties;
     }
 
     StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}

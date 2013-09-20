@@ -66,4 +66,16 @@ void fill_pb_object(const type::StopPointConnection* c, const type::Data& data,
                     pbnavitia::Connection* connection, int max_depth,
                     const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
                     const boost::posix_time::time_period& action_period = null_time_period);
+
+void fill_pb_object(const nt::Route* r, const nt::Data& data,
+                    pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
+                    const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period = null_time_period);
+
+void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
+                    pbnavitia::addInfoVehicleJourney * add_info_vehicle_journey, int max_depth,
+                    const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period = null_time_period);
+
+void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
+                    pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
+                    const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period);
 }//namespace navitia
