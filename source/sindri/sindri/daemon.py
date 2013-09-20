@@ -52,6 +52,14 @@ class Sindri(object):
         level = getattr(logging, level.upper(), logging.DEBUG)
         logging.basicConfig(filename=filename, level=level)
 
+        if level == logging.DEBUG:
+            #on active les logs de sqlalchemy si on est en debug:
+            #log des requetes et des resultats
+            logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
+            logging.getLogger('sqlalchemy.pool').setLevel(logging.DEBUG)
+            logging.getLogger('sqlalchemy.dialects.postgresql')\
+                    .setLevel(logging.INFO)
+
     def __init_rabbitmq(self):
         """
         initialise les queue rabbitmq
