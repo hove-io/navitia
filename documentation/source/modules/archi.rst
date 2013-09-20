@@ -82,7 +82,7 @@ Chaque **Contributeur** temps réel se voit associé un topic, sous la forme : r
 Le connecteur publie les événements sur l'exchange AMQP global (par défaut navitia) avec ce topic,
 ce qui permet à toutes les instances intéressé de pouvoir recevoir ces flux.
 
-Les éléments insérés dans l'exchange **doivent etre persistant** ce qui se réalise en passant fixant la propriété *delivry_mode* à **2**.
+Les éléments insérés dans l'exchange **doivent etre persistant** ce qui se réalise en fixant la propriété *delivry_mode* à **2**.
 Ceci permettra à Sindri de gérer la reprise sur incident
 
 

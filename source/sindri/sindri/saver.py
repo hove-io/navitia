@@ -56,7 +56,7 @@ def build_message_dict(message):
     else:
         if (message.active_days.count('0')
                 + message.active_days.count('1')) != 8:
-            raise InvalidMessage('not valid: ' + message.active_days)
+            raise FunctionalError('not valid: ' + message.active_days)
         result['active_days'] = message.active_days
 
     result['start_publication_date'] = from_timestamp(
@@ -84,7 +84,7 @@ class EdRealtimeSaver(object):
     temps réel.
     """
     def __init__(self, config):
-        self.connection_string = 'postgresql://navitia:navitia@localhost/navitia'#config.ed_connection_string
+        self.connection_string = config.ed_connection_string
         self.engine = create_engine(self.connection_string)
         meta = MetaData(self.engine)
         self.message_table = Table('message', meta, autoload=True,
@@ -163,7 +163,4 @@ class EdRealtimeSaver(object):
             conn.execute(query.values(message_id=message_id,
                 language=localized_message.language,
                 body=localized_message.body, title=localized_message.title))
-
-
-
 
