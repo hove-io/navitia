@@ -360,7 +360,7 @@ struct Connection: public Header, hasProperties{
         max_duration(0){};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & uri & departure & destination & duration & max_duration;
+        ar & id & idx & uri & departure & destination & duration & max_duration & _properties;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
