@@ -19,6 +19,7 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
     this->insert_companies(data.companies);
     this->insert_contributors(data.contributors);
 
+    this->insert_sa_sp_properties(data);
     this->insert_stop_areas(data.stop_areas);
     this->insert_stop_points(data.stop_points);
 
@@ -133,10 +134,57 @@ void EdPersistor::insert_contributors(const std::vector<types::Contributor*>& co
     this->lotus.finish_bulk_insert();
 }
 
-void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_areas){
-    this->lotus.prepare_bulk_insert("navitia.stop_area", {"id", "uri", "name", "coord", "comment"});
+void EdPersistor::insert_sa_sp_properties(const ed::Data& data){
+    this->lotus.prepare_bulk_insert("navitia.properties", {"id", "wheelchair_boarding", "sheltered", "elevator", "escalator",
+                                    "bike_accepted","bike_depot", "visual_announcement", "audible_announcement",
+                                    "appropriate_escort", "appropriate_signage"});
+    std::vector<navitia::type::idx_t> to_insert;
+    for(types::StopArea* sa : data.stop_areas){
+        navitia::type::idx_t idx = sa->to_ulog();
+        if(!binary_search(to_insert.begin(), to_insert.end(), idx)){
+            std::vector<std::string> values;
+            values.push_back(std::to_string(idx));
+            values.push_back(std::to_string(sa->wheelchair_boarding()));
+            values.push_back(std::to_string(sa->sheltered()));
+            values.push_back(std::to_string(sa->elevator()));
+            values.push_back(std::to_string(sa->escalator()));
+            values.push_back(std::to_string(sa->bike_accepted()));
+            values.push_back(std::to_string(sa->bike_depot()));
+            values.push_back(std::to_string(sa->visual_announcement()));
+            values.push_back(std::to_string(sa->audible_announcement()));
+            values.push_back(std::to_string(sa->appropriate_escort()));
+            values.push_back(std::to_string(sa->appropriate_signage()));
+            this->lotus.insert(values);
+            to_insert.push_back(idx);
+            std::sort(to_insert.begin(), to_insert.end());
+        }
+    }
+    for(types::StopPoint* sp : data.stop_points){
+        navitia::type::idx_t idx = sp->to_ulog();
+        if(!binary_search(to_insert.begin(), to_insert.end(), idx)){
+            std::vector<std::string> values;
+            values.push_back(std::to_string(idx));
+            values.push_back(std::to_string(sp->wheelchair_boarding()));
+            values.push_back(std::to_string(sp->sheltered()));
+            values.push_back(std::to_string(sp->elevator()));
+            values.push_back(std::to_string(sp->escalator()));
+            values.push_back(std::to_string(sp->bike_accepted()));
+            values.push_back(std::to_string(sp->bike_depot()));
+            values.push_back(std::to_string(sp->visual_announcement()));
+            values.push_back(std::to_string(sp->audible_announcement()));
+            values.push_back(std::to_string(sp->appropriate_escort()));
+            values.push_back(std::to_string(sp->appropriate_signage()));
+            this->lotus.insert(values);
+            to_insert.push_back(idx);
+            std::sort(to_insert.begin(), to_insert.end());
+        }
+    }
+    this->lotus.finish_bulk_insert();
+}
 
-    //@TODO properties!!!
+void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_areas){
+    this->lotus.prepare_bulk_insert("navitia.stop_area", {"id", "uri", "name", "coord", "comment", "properties_id"});
+
     for(types::StopArea* sa : stop_areas){
         std::vector<std::string> values;
         values.push_back(std::to_string(sa->idx));
@@ -144,6 +192,7 @@ void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_ar
         values.push_back(sa->name);
         values.push_back("POINT(" + std::to_string(sa->coord.lon()) + " " + std::to_string(sa->coord.lat()) + ")");
         values.push_back(sa->comment);
+        values.push_back(std::to_string(sa->to_ulog()));
         this->lotus.insert(values);
     }
 
@@ -151,9 +200,8 @@ void EdPersistor::insert_stop_areas(const std::vector<types::StopArea*>& stop_ar
 }
 
 void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_points){
-    this->lotus.prepare_bulk_insert("navitia.stop_point", {"id", "uri", "name", "coord", "comment", "fare_zone", "stop_area_id"});
+    this->lotus.prepare_bulk_insert("navitia.stop_point", {"id", "uri", "name", "coord", "comment", "fare_zone", "stop_area_id","properties_id"});
 
-    //@TODO properties!!!
     for(types::StopPoint* sp : stop_points){
         std::vector<std::string> values;
         values.push_back(std::to_string(sp->idx));
@@ -167,6 +215,7 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
         }else{
             values.push_back(lotus.null_value);
         }
+        values.push_back(std::to_string(sp->to_ulog()));
         this->lotus.insert(values);
     }
 

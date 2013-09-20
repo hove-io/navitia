@@ -17,6 +17,7 @@ struct EdPersistor{
 
 private:
     void insert_metadata(const navitia::type::MetaData& meta);
+    void insert_sa_sp_properties(const ed::Data& data);
     void insert_stop_areas(const std::vector<types::StopArea*>& stop_areas);
 
     void insert_networks(const std::vector<types::Network*>& networks);

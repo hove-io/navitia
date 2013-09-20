@@ -165,6 +165,9 @@ struct hasProperties {
         return _properties[property];
     }
 
+    idx_t to_ulog(){
+        return _properties.to_ulong();
+    }
 
 private:
     Properties _properties;
