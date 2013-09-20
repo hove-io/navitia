@@ -51,13 +51,7 @@ def build_message_dict(message):
     result['object_uri'] = message.object.object_uri
     result['object_type_id'] = message.object.object_type
 
-    if not message.active_days:
-        result['active_days'] = '11111111'
-    else:
-        if (message.active_days.count('0')
-                + message.active_days.count('1')) != 8:
-            raise FunctionalError('not valid: ' + message.active_days)
-        result['active_days'] = message.active_days
+    result['active_days'] = parse_active_days(message.active_days)
 
     result['start_publication_date'] = from_timestamp(
             message.start_publication_date)
