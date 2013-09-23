@@ -415,3 +415,15 @@ CREATE TABLE IF NOT EXISTS realtime.localized_message(
     title text,
     CONSTRAINT localized_message_pk PRIMARY KEY (message_id, language)
 );
+
+CREATE TABLE IF NOT EXISTS realtime.at_perturbation(
+    id BIGSERIAL primary key,
+    uri text NOT NULL,
+    start_application_date timestamptz NOT NULL,
+    end_application_date timestamptz NOT NULL,
+    start_application_daily_hour timetz NOT NULL,
+    end_application_daily_hour timetz NOT NULL,
+    active_days bit(8) NOT NULL,
+    object_uri text NOT NULL,
+    object_type_id int NOT NULL REFERENCES navitia.object_type
+);

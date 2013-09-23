@@ -100,6 +100,17 @@ class Sindri(object):
             logging.getLogger('sindri').warn("message task whitout"
                     "message in payload")
 
+    def handle_at_perturbation(self, task):
+        if(task.at_perturbation.IsInitialized()):
+            try:
+                self.ed_realtime_saver.persist_at_perturbation(
+                        task.at_perturbation)
+            except FunctionalError, e:
+                logging.getLogger('sindri').warn("%s", str(e))
+        else:
+            logging.getLogger('sindri').warn("at perturbation task whitout "
+                    "payload")
+
 
     def callback(self, ch, method, properties, body):
         logging.getLogger('sindri').debug("Message received")
@@ -116,6 +127,8 @@ class Sindri(object):
         try:
             if(task.action == sindri.task_pb2.MESSAGE):
                 self.handle_message(task)
+            elif(task.action == sindri.task_pb2.AT_PERTURBATION):
+                self.handle_at_perturbation(task)
 
             ch.basic_ack(delivery_tag = method.delivery_tag)
         except TechnicalError:

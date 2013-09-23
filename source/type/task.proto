@@ -5,11 +5,13 @@ import "realtime.proto";
 enum Action{
     RELOAD = 0;
     MESSAGE = 1;
+    AT_PERTURBATION = 2;
 }
 
 message Task{
     required Action action = 1;
     optional pbnavitia.realtime.Message message = 3;
+    optional pbnavitia.realtime.AtPerturbation at_perturbation = 4;
 }
 
 

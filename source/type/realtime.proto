@@ -28,3 +28,16 @@ message Message{
 
     repeated LocalizedMessage localized_messages = 10;
 }
+
+message AtPerturbation{
+    required string uri = 1;
+    required TCObject object = 2;
+
+    //POSIX time (i.e., number of seconds since January 1st 1970 00:00:00 UTC)
+    optional uint64 start_application_date = 3;
+    optional uint64 end_application_date = 4;
+    //number of seconds since midnigth
+    optional uint32 start_application_daily_hour = 5;
+    optional uint32 end_application_daily_hour = 6;
+    optional string active_days = 7;
+}
