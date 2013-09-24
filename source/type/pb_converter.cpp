@@ -734,7 +734,7 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
 
     pbnavitia::hasEquipments* has_equipments = pt_display_info->mutable_has_equipments();
     if (vj->wheelchair_accessible()){
-        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_wheelchair_accessiblity);
+        has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_wheelchair_accessibility);
     }
     if (vj->bike_accepted()){
         has_equipments->add_has_equipments(pbnavitia::hasEquipments::has_bike_accepted);

@@ -182,7 +182,7 @@ struct hasVehicleProperties {
     static const uint8_t AUDIBLE_ANNOUNCEMENT = 4;
     static const uint8_t APPOPRIATE_ESCORT = 5;
     static const uint8_t APPOPRIATE_SIGNAGE = 6;
-    static const uint8_t SCOOL_VEHICLE = 7;
+    static const uint8_t SCHOOL_VEHICLE = 7;
 
     bool wheelchair_accessible() {return _vehicle_properties[WHEELCHAIR_ACCESSIBLE];}
     bool wheelchair_accessible() const {return _vehicle_properties[WHEELCHAIR_ACCESSIBLE];}
@@ -198,8 +198,8 @@ struct hasVehicleProperties {
     bool appropriate_escort() const {return _vehicle_properties[APPOPRIATE_ESCORT];}
     bool appropriate_signage() {return _vehicle_properties[APPOPRIATE_SIGNAGE];}
     bool appropriate_signage() const {return _vehicle_properties[APPOPRIATE_SIGNAGE];}
-    bool school_vehicle() {return _vehicle_properties[SCOOL_VEHICLE];}
-    bool school_vehicle() const {return _vehicle_properties[SCOOL_VEHICLE];}
+    bool school_vehicle() {return _vehicle_properties[SCHOOL_VEHICLE];}
+    bool school_vehicle() const {return _vehicle_properties[SCHOOL_VEHICLE];}
 
     bool accessible(const VehicleProperties &required_vehicles) const{
         auto mismatched = required_vehicles & ~_vehicle_properties;

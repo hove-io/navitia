@@ -579,7 +579,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
             vj->set_vehicle(navitia::type::hasVehicleProperties::APPOPRIATE_SIGNAGE);
         }
         if (const_it["school_vehicle"].as<bool>()){
-            vj->set_vehicle(navitia::type::hasVehicleProperties::SCOOL_VEHICLE);
+            vj->set_vehicle(navitia::type::hasVehicleProperties::SCHOOL_VEHICLE);
         }
         data.pt_data.vehicle_journeys.push_back(vj);
         this->vehicle_journey_map[const_it["id"].as<idx_t>()] = vj;

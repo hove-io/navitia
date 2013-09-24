@@ -144,7 +144,7 @@ message hasPropertie{
 
 message hasEquipments{
 	enum Equipment{
-        has_wheelchair_accessiblity = 1;
+        has_wheelchair_accessibility = 1;
         has_bike_accepted = 2;
         has_air_conditioned = 3;
         has_visual_announcement = 4;

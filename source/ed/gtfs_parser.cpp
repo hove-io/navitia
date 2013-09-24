@@ -822,7 +822,7 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                     if(appropriate_signage_c != -1 && row[appropriate_signage_c] == "1")
                         vj->set_vehicle(navitia::type::hasVehicleProperties::APPOPRIATE_SIGNAGE);
                     if(school_vehicle_c != -1 && row[school_vehicle_c] == "1")
-                        vj->set_vehicle(navitia::type::hasVehicleProperties::SCOOL_VEHICLE);
+                        vj->set_vehicle(navitia::type::hasVehicleProperties::SCHOOL_VEHICLE);
 
                     vj_map[vj->uri] = vj;
                     std::string company_s;
