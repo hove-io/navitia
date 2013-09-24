@@ -2,13 +2,14 @@
 # coding=utf-8
 import sys
 import signal
+import os
 from conf import base_url
 from instance_manager import NavitiaManager, RegionNotFound
 from flask import Flask, url_for
 from flask.ext.restful import Api
 from interfaces.v0_routing import v0_routing
 from interfaces.v1_routing import v1_routing
-
+from interfaces.documentation import v0_documentation, v1_documentation
 app = Flask(__name__)
 api = Api(app)
 

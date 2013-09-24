@@ -9,6 +9,7 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
 from collections import OrderedDict
 from ResourceUri import ResourceUri
 from interfaces.argument import ArgumentDoc
+from interfaces.parsers import depth_argument
 
 collections = OrderedDict([
     ("pagination", fields.Nested(pagination)),

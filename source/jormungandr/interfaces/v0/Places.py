@@ -15,8 +15,8 @@ class Places(Resource):
         self.parsers["get"].add_argument("q", type=str, required=True,
                 description="The data to search")
         self.parsers["get"].add_argument("type[]", type=str, action="append",
-                                 default=["stop_area","address", 
-					  "poi", "administrative_region"],
+                                 default=["stop_area","address",
+                                          "poi", "administrative_region"],
                 description="The type of data to search")
         self.parsers["get"].add_argument("count", type=int,  default=10,
                 description="The maximum number of places returned")

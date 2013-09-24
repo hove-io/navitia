@@ -6,6 +6,7 @@ from protobuf_to_dict import protobuf_to_dict
 from flask.ext.restful import reqparse
 from interfaces.parsers import depth_argument
 from interfaces.argument import ArgumentDoc
+from interfaces.parsers import depth_argument
 
 class Ptref(Resource):
     parsers = {}

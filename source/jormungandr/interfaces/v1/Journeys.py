@@ -15,6 +15,7 @@ import datetime
 from functools import wraps
 from make_links import add_id_links, clean_links
 from interfaces.argument import ArgumentDoc
+from interfaces.parsers import depth_argument
 
 class SectionLinks(fields.Raw):
     def __init__(self, **kwargs):

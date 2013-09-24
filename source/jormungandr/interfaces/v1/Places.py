@@ -7,6 +7,7 @@ from fields import place, NonNullList, NonNullNested
 from ResourceUri import ResourceUri, add_address_region
 from make_links import add_id_links
 from interfaces.argument import ArgumentDoc
+from interfaces.parsers import depth_argument
 
 places = { "places" : NonNullList(NonNullNested(place))}
 
@@ -18,8 +19,8 @@ class Places(ResourceUri):
         self.parsers["get"].add_argument("q", type=unicode, required=True,
                 description="The data to search")
         self.parsers["get"].add_argument("type[]", type=str, action="append",
-                                 default=["stop_area","address", 
-					  "poi", "administrative_region"],
+                                 default=["stop_area","address",
+                                          "poi", "administrative_region"],
                 description="The type of data to search")
         self.parsers["get"].add_argument("count", type=int,  default=10,
                 description="The maximum number of places returned")
@@ -41,7 +42,7 @@ places_nearby = { "places_nearby" : NonNullList(NonNullNested(place))}
 class PlacesNearby(ResourceUri):
     parsers = {}
     def __init__(self):
-        self.parsers["get"] = reqparse.RequestParser()
+        self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         self.parsers["get"].add_argument("uri", type=str, required=True,
                 description="""uri arround which you want to look for objects.

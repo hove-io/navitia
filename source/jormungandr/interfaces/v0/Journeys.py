@@ -7,6 +7,7 @@ from protobuf_to_dict import protobuf_to_dict
 from find_extrem_datetimes import extremes
 from flask.ext.restful import reqparse
 from interfaces.argument import ArgumentDoc
+from interfaces.parsers import depth_argument
 
 class Journeys(Resource):
     """ Compute journeys"""

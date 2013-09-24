@@ -14,6 +14,7 @@ from collections import OrderedDict
 from ResourceUri import ResourceUri
 from datetime import datetime
 from interfaces.argument import ArgumentDoc
+from interfaces.parsers import depth_argument
 
 class Schedules(ResourceUri):
     parsers = {}
