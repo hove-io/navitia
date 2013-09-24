@@ -1,3 +1,4 @@
+#coding=utf-8
 from flask import Flask
 from flask.ext.restful import Resource, fields, marshal_with
 from instance_manager import NavitiaManager

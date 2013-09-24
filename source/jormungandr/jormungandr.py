@@ -8,7 +8,7 @@ from flask import Flask, url_for
 from flask.ext.restful import Api
 from interfaces.v0_routing import v0_routing
 from interfaces.v1_routing import v1_routing
-from interfaces.v0_documentation import v0_documentation
+from interfaces.documentation import v0_documentation, v1_documentation
 
 app = Flask(__name__)
 api = Api(app)
@@ -16,6 +16,7 @@ api = Api(app)
 v1_routing(api)
 v0_routing(api)
 v0_documentation(api)
+v1_documentation(api)
 @app.errorhandler(RegionNotFound)
 def region_not_found(error):
     return {"error" : error.value}, 404
@@ -28,10 +29,9 @@ def kill_thread(signal, frame):
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, kill_thread)
     signal.signal(signal.SIGTERM, kill_thread)
-    NavitiaManager().set_config_file('Jörmungandr.ini')
+    NavitiaManager().set_config_file('/home/vlara/navitiagit/source/jormungandr/Jörmungandr.ini')
     NavitiaManager().initialisation()
     app.run(debug=True)
 else:
     NavitiaManager().set_config_file('Jörmungandr.ini')
     NavitiaManager().initialisation()
-    app.run(debug=True)
