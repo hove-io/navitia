@@ -326,7 +326,7 @@ pbnavitia::VehicleJourneyType get_pb_odt_type(const navitia::type::VehicleJourne
         result = pbnavitia::VehicleJourneyType::stop_point_to_stop_point;
             break;
     case type::VehicleJourneyType::adress_to_stop_point:
-        result = pbnavitia::VehicleJourneyType::adress_to_stop_point;
+        result = pbnavitia::VehicleJourneyType::address_to_stop_point;
             break;
     case type::VehicleJourneyType::odt_point_to_point:
         result = pbnavitia::VehicleJourneyType::odt_point_to_point;
