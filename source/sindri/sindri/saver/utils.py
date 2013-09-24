@@ -1,6 +1,18 @@
 #encoding: utf-8
 import datetime
-from sindri.saver import FunctionalError
+
+class FunctionalError(ValueError):
+    """
+    Exception lancé lorsque que la donnée à traiter n'est pas valide
+    """
+    pass
+
+class TechnicalError(ValueError):
+    """
+    Exception lancé lors d'un probléme technique
+    typiquement la base de données est inaccessible
+    """
+    pass
 
 def from_timestamp(timestamp):
     #@TODO: pour le moment on remet à l'heure local

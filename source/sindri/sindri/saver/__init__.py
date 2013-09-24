@@ -1,1 +1,2 @@
-from sindri.saver.edsaver import EdRealtimeSaver, FunctionalError, TechnicalError
+from sindri.saver.edsaver import EdRealtimeSaver
+from sindri.saver.utils import FunctionalError, TechnicalError
