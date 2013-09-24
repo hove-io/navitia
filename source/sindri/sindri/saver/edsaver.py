@@ -4,6 +4,7 @@ import datetime
 from sqlalchemy import Table, MetaData, select, create_engine
 import sqlalchemy
 from sindri.saver.message import persist_message
+from sindri.saver.at_perturbation import persist_at_perturbation
 from sindri.saver.utils import FunctionalError, TechnicalError
 
 
@@ -20,14 +21,15 @@ class EdRealtimeSaver(object):
                 schema='realtime')
         self.localized_message_table = Table('localized_message', self.meta,
                 autoload=True, schema='realtime')
+        self.at_perturbation_table = Table('at_perturbation', self.meta,
+                autoload=True, schema='realtime')
 
     def persist_message(self, message):
         self.__persist(message, persist_message)
 
 
     def persist_at_perturbation(self, perturbation):
-        print 'ok'
-        #self.__persist(, persist_message)
+        self.__persist(perturbation, persist_at_perturbation)
 
     def __persist(self, item, callback):
         """
