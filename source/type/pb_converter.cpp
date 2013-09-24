@@ -313,26 +313,26 @@ void fill_pb_object(const nt::ValidityPattern* vp, const nt::Data&,
 }
 
 
-pbnavitia::OdtType get_pb_odt_type(const navitia::type::OdtType odt_type){
-    pbnavitia::OdtType result = pbnavitia::OdtType::regular_line;
-    switch(odt_type){
-        case type::OdtType::virtual_with_stop_time:
-            result = pbnavitia::OdtType::virtual_with_stop_time;
+pbnavitia::VehicleJourneyType get_pb_odt_type(const navitia::type::VehicleJourneyType vehicle_journey_type){
+    pbnavitia::VehicleJourneyType result = pbnavitia::VehicleJourneyType::regular;
+    switch(vehicle_journey_type){
+        case type::VehicleJourneyType::virtual_with_stop_time:
+            result = pbnavitia::VehicleJourneyType::virtual_with_stop_time;
             break;
-    case type::OdtType::virtual_without_stop_time:
-        result = pbnavitia::OdtType::virtual_without_stop_time;
+    case type::VehicleJourneyType::virtual_without_stop_time:
+        result = pbnavitia::VehicleJourneyType::virtual_without_stop_time;
             break;
-    case type::OdtType::stop_point_to_stop_point:
-        result = pbnavitia::OdtType::stop_point_to_stop_point;
+    case type::VehicleJourneyType::stop_point_to_stop_point:
+        result = pbnavitia::VehicleJourneyType::stop_point_to_stop_point;
             break;
-    case type::OdtType::adress_to_stop_point:
-        result = pbnavitia::OdtType::adress_to_stop_point;
+    case type::VehicleJourneyType::adress_to_stop_point:
+        result = pbnavitia::VehicleJourneyType::adress_to_stop_point;
             break;
-    case type::OdtType::odt_point_to_point:
-        result = pbnavitia::OdtType::odt_point_to_point;
+    case type::VehicleJourneyType::odt_point_to_point:
+        result = pbnavitia::VehicleJourneyType::odt_point_to_point;
             break;
     default :
-        result = pbnavitia::OdtType::regular_line;
+        result = pbnavitia::VehicleJourneyType::regular;
     }
     return result;
 }
@@ -349,7 +349,7 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
     vehicle_journey->set_uri(vj->uri);
     vehicle_journey->set_odt_message(vj->odt_message);
     vehicle_journey->set_is_adapted(vj->is_adapted);
-    vehicle_journey->set_odt_type(get_pb_odt_type(vj->odt_type));
+    vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
 
     vehicle_journey->set_wheelchair_accessible(vj->wheelchair_accessible());
     vehicle_journey->set_bike_accepted(vj->bike_accepted());
@@ -730,7 +730,7 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
         uris->set_physical_mode(vj->journey_pattern->physical_mode->uri);
     }
     pt_display_info->set_description(vj->odt_message);
-    pt_display_info->set_odt_type(get_pb_odt_type(vj->odt_type));
+    pt_display_info->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
 
     pbnavitia::hasEquipments* has_equipments = pt_display_info->mutable_has_equipments();
     if (vj->wheelchair_accessible()){
@@ -765,7 +765,7 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& ,
 {
     if(vj == nullptr)
         return ;
-    add_info_vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->odt_type));
+    add_info_vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
     add_info_vehicle_journey->set_has_date_time_estimated(vj->has_date_time_estimated());
 }
 

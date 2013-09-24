@@ -169,7 +169,7 @@ class Script:
                     section.pt_display_informations.headsign = section.vehicle_journey.route.name
                     if(len(section.vehicle_journey.odt_message) > 0):
                         section.pt_display_informations.description = section.vehicle_journey.odt_message
-                    section.pt_display_informations.odt_type = section.vehicle_journey.odt_type
+                    section.pt_display_informations.vehicle_journey_type = section.vehicle_journey.vehicle_journey_type
                     if section.destination.HasField("stop_point"):
                         section.pt_display_informations.direction = section.destination.stop_point.name
                     if section.vehicle_journey.route.line.color != "":

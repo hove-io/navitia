@@ -24,7 +24,7 @@ ITERATE_NAVITIA_PT_TYPES(FORWARD_CLASS_DECLARE)
 class StopTime;
 
 using nt::ConnectionType;
-using nt::OdtType;
+using nt::VehicleJourneyType;
 struct StopPointConnection: public Header, hasProperties {
     const static nt::Type_e type = nt::Type_e::Connection;
 
@@ -177,7 +177,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     Line * tmp_line; // N'est pas à remplir obligatoirement
     //Vehicle* vehicle;
     bool wheelchair_boarding;
-    OdtType odt_type;
+    navitia::type::VehicleJourneyType vehicle_journey_type;
     ValidityPattern* validity_pattern;
     std::vector<StopTime*> stop_time_list; // N'est pas à remplir obligatoirement
     StopTime * first_stop_time;
@@ -190,7 +190,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
     VehicleJourney* theoric_vehicle_journey;
 
     VehicleJourney(): journey_pattern(NULL), company(NULL), physical_mode(NULL), tmp_line(NULL),/* wheelchair_boarding(false),*/
-     odt_type(OdtType::regular_line), validity_pattern(NULL), first_stop_time(NULL), is_adapted(false), adapted_validity_pattern(NULL), theoric_vehicle_journey(NULL){}
+     vehicle_journey_type(navitia::type::VehicleJourneyType::regular), validity_pattern(NULL), first_stop_time(NULL), is_adapted(false), adapted_validity_pattern(NULL), theoric_vehicle_journey(NULL){}
 
     navitia::type::VehicleJourney* get_navitia_type() const;
 

@@ -83,7 +83,7 @@ message PtDisplayInfo {
     optional string physical_mode = 7;//
   	optional string description = 8; 
   	optional Uris uris = 9; 	
-  	optional OdtType odt_type = 10;
+  	optional VehicleJourneyType vehicle_journey_type = 10;
   	optional hasEquipments has_equipments = 11;
   	optional string name = 12;
 }
@@ -192,7 +192,7 @@ message RouteScheduleRow {
 }
 
 message addInfoVehicleJourney{
-	required OdtType vehicle_journey_type = 1;
+	required VehicleJourneyType vehicle_journey_type = 1;
 	optional bool has_date_time_estimated = 2;
 }
 

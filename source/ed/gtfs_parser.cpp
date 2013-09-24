@@ -805,7 +805,7 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
 //                    if(wheelchair_c != -1)
 //                        vj->wheelchair_boarding = row[wheelchair_c] == "1";
                     if(odt_type_c != -1){
-                        vj->odt_type = static_cast<nt::OdtType>(boost::lexical_cast<int>(row[odt_type_c]));
+                        vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(boost::lexical_cast<int>(row[odt_type_c]));
                     }
                     if(wheelchair_c != -1 && row[wheelchair_c] == "1")
                         vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);

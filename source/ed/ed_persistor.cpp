@@ -501,7 +501,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
             values.push_back(lotus.null_value);        
         }
         values.push_back(std::to_string(vj->to_ulog()));
-        values.push_back(std::to_string(static_cast<int>(vj->odt_type)));        
+        values.push_back(std::to_string(static_cast<int>(vj->vehicle_journey_type)));
         values.push_back(vj->odt_message);
         this->lotus.insert(values);
     }

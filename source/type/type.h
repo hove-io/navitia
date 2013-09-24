@@ -329,8 +329,8 @@ enum class ConnectionType {
     undefined
 };
 
-enum class OdtType {
-    regular_line = 0,                 // ligne régulière
+enum class VehicleJourneyType {
+    regular = 0,                    // ligne régulière
     virtual_with_stop_time = 1,       // TAD virtuel avec horaires
     virtual_without_stop_time = 2,    // TAD virtuel sans horaires
     stop_point_to_stop_point = 3,     // TAD rabattement arrêt à arrêt
@@ -544,7 +544,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
     Company* company;
     ValidityPattern* validity_pattern;
     std::vector<StopTime*> stop_time_list;
-    OdtType odt_type;
+    VehicleJourneyType vehicle_journey_type;
     std::string odt_message;
 
     bool is_adapted;
@@ -555,7 +555,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
     VehicleJourney(): journey_pattern(nullptr), company(nullptr), validity_pattern(nullptr) /*, wheelchair_boarding(false)*/, is_adapted(false), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & name & uri & journey_pattern & company & validity_pattern & idx /*& wheelchair_boarding*/ & stop_time_list
-            & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & odt_type & odt_message
+            & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & vehicle_journey_type & odt_message
            & _vehicle_properties;
     }
     std::string get_direction() const;

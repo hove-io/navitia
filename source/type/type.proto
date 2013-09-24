@@ -38,8 +38,8 @@ enum API {
     METADATAS = 14;
 }
 
-enum OdtType{
-    regular_line = 0;                 // ligne régulière
+enum VehicleJourneyType{
+    regular = 0;                 // ligne régulière
     virtual_with_stop_time = 1;       // TAD virtuel avec horaires
     virtual_without_stop_time = 2;    // TAD virtuel sans horaires
     stop_point_to_stop_point = 3;     // TAD rabattement arrêt à arrêt
@@ -191,7 +191,7 @@ message VehicleJourney {
     optional ValidityPattern validity_pattern = 12;
     optional ValidityPattern adapted_validity_pattern = 13;
     optional string odt_message = 14;
-    optional OdtType odt_type = 15;
+    optional VehicleJourneyType vehicle_journey_type = 15;
 
     optional bool wheelchair_accessible = 16;
     optional bool bike_accepted = 17;

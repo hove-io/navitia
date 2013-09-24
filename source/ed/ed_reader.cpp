@@ -540,7 +540,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         const_it["name"].to(vj->name);
         const_it["comment"].to(vj->comment);
         const_it["odt_message"].to(vj->odt_message);
-        vj->odt_type = static_cast<nt::OdtType>(const_it["odt_type_id"].as<int>());
+        vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(const_it["odt_type_id"].as<int>());
 
         vj->journey_pattern = journey_pattern_map[const_it["journey_pattern_id"].as<idx_t>()];
         vj->journey_pattern->vehicle_journey_list.push_back(vj);

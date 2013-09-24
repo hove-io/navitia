@@ -73,10 +73,10 @@ class section_type(enum_type):
         try:
             if obj.HasField("pt_display_informations"):
                 infos = obj.pt_display_informations
-                if infos.HasField("odt_type"):
+                if infos.HasField("vehicle_journey_type"):
                     infos_desc = infos.DESCRIPTOR
-                    odt_enum = infos_desc.fields_by_name['odt_type'].enum_type
-                    if infos.odt_type != odt_enum.values_by_name['regular_line'].number:
+                    odt_enum = infos_desc.fields_by_name['vehicle_journey_type'].enum_type
+                    if infos.vehicle_journey_type != odt_enum.values_by_name['regular_line'].number:
                         return "on_demand_transport"
         except ValueError:
             pass
