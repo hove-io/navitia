@@ -9,7 +9,7 @@ class PbField(fields.Nested):
 
     def output(self, key, obj):
         if self.attribute:
-            key = self.attribute
+            key = self.attribute.split(".")[0]
         try :
             if obj.HasField(key):
                 return super(PbField, self).output(key, obj)
