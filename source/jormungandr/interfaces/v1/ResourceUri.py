@@ -9,7 +9,7 @@ from flask.ext.restful.utils import unpack
 
 class ResourceUri(Resource):
     def __init__(self, *args, **kwargs):
-        super(ResourceUri, self).__init__()
+        Resource.__init__(self, *args, **kwargs)
         self.region = None
         self.method_decorators = []
         self.method_decorators.append(add_id_links())
@@ -52,22 +52,21 @@ class add_computed_resources(object):
                 data, code, header = unpack(response)
             else:
                 data = response
-            if not "collection" in kwargs.keys():
-                return response
             collection = None
             kwargs["_external"] = True
-            kwargs["uri"] = kwargs["collection"] + '/'
             templated = True
+            for key in data.keys():
+                if key != 'links' and key != 'pagination':
+                    collection = key
+            if collection is None:
+                return response
+            kwargs["uri"] = collection + '/'
             if "id" in kwargs.keys():
                 kwargs["uri"] += kwargs["id"]
                 del kwargs["id"]
                 templated = False
             else:
-                kwargs["uri"] += '{' + kwargs["collection"] + ".id}"
-            del kwargs["collection"]
-            for key in data.keys():
-                if key != 'links' and key != 'pagination':
-                    collection = key
+                kwargs["uri"] += '{' + collection + ".id}"
             if collection in ['stop_areas', 'stop_points', 'lines', 'routes']:
                 for api in ['route_schedules', 'stop_schedules',
                             'arrivals', 'departures']:

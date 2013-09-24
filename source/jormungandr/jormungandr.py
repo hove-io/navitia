@@ -2,7 +2,6 @@
 # coding=utf-8
 import sys
 import signal
-import os
 from conf import base_url
 from instance_manager import NavitiaManager, RegionNotFound
 from flask import Flask, url_for
@@ -15,7 +14,8 @@ api = Api(app)
 
 v1_routing(api)
 v0_routing(api)
-
+v0_documentation(api)
+v1_documentation(api)
 @app.errorhandler(RegionNotFound)
 def region_not_found(error):
     return {"error" : error.value}, 404

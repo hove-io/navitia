@@ -45,8 +45,8 @@ class add_pagination_links(object):
                 elif key == "pagination":
                     pagination = value
                 elif key in collections_to_resource_type.keys():
-                    endpoint = "v1.uri" if "id" in kwargs.keys() \
-                                   else "v1.collection"
+                    endpoint = "v1."+key+"."
+                    endpoint += "id" if "id" in kwargs.keys() else "collection"
                 elif key in ["journeys", "stop_schedules", "route_schedules",
                              "departures", "arrivals"]:
                     endpoint = "v1."+key
@@ -116,7 +116,6 @@ class add_coverage_link(generate_links):
                 data = self.prepare_objetcs(data)
                 kwargs  = self.prepare_kwargs(kwargs, data)
                 url = url_for("v1.coverage", _external=True, **kwargs)
-                url = url.replace("%7B", "{").replace("%7D", "}")
                 data["links"].append({"href":url, "rel" : "related",
                                              "templated":True})
             if isinstance(objects, tuple):
@@ -142,8 +141,8 @@ class add_collection_links(generate_links):
                 data = self.prepare_objetcs(objects, True)
                 kwargs  = self.prepare_kwargs(kwargs, data)
                 for collection in self.collections:
-                    kwargs["collection"] = collection
-                    url = url_for("v1.collection", _external=True, **kwargs)
+                    url = url_for("v1."+collection+".collection",
+                                    _external=True, **kwargs)
                     data["links"].append({"href":url, "rel" : collection,
                                              "templated":True})
             if isinstance(objects, tuple):
@@ -181,8 +180,10 @@ class add_id_links(generate_links):
                 if kwargs["collection"] in collections_to_resource_type.keys():
                     if not uri_id:
                         kwargs["id"] = "{"+obj+".id}"
-                    endpoint = "v1.uri" if "region" in kwargs.keys()\
-                                        else "v1.uriredirect"
+                    endpoint = "v1."+kwargs["collection"]+"."
+                    endpoint += "id" if "region" in kwargs.keys()\
+                                        else "redirect"
+                    del kwargs["collection"]
                     url = url_for(endpoint, _external=True, **kwargs)
                     data["links"].append({"href":url, "rel" : obj,
                                              "templated":True})

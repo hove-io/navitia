@@ -1,3 +1,4 @@
+#coding=utf-8
 from flask import Flask, request
 from flask.ext.restful import Resource, fields, marshal_with, reqparse
 from instance_manager import NavitiaManager
@@ -5,46 +6,63 @@ from make_links import add_id_links
 from fields import place, NonNullList, NonNullNested
 from ResourceUri import ResourceUri, add_address_region
 from make_links import add_id_links
+from interfaces.argument import ArgumentDoc
 
 places = { "places" : NonNullList(NonNullNested(place))}
 
 class Places(ResourceUri):
+    parsers = {}
     def __init__(self):
-        super(Places, self).__init__(self)
-        self.parser = reqparse.RequestParser()
-        self.parser.add_argument("q", type=unicode, required=True)
-        self.parser.add_argument("type[]", type=str, action="append",
+        super(Places, self).__init__()
+        self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
+        self.parsers["get"].add_argument("q", type=unicode, required=True,
+                description="The data to search")
+        self.parsers["get"].add_argument("type[]", type=str, action="append",
                                  default=["stop_area","address", 
-					  "poi", "administrative_region"])
-        self.parser.add_argument("count", type=int,  default=10)
-        self.parser.add_argument("admin_uri[]", type=str, action="append")
-        self.parser.add_argument("depth", type=int, default=1)
+					  "poi", "administrative_region"],
+                description="The type of data to search")
+        self.parsers["get"].add_argument("count", type=int,  default=10,
+                description="The maximum number of places returned")
+        self.parsers["get"].add_argument("admin_uri[]", type=str, action="append",
+                description="""If filled, will restrained the search within the
+                               given admin uris""")
+        self.parsers["get"].add_argument("depth", type=depth_argument, default=1,
+                description="The depth of the objects")
 
     @marshal_with(places)
     def get(self, region=None, lon=None, lat=None):
         self.region = NavitiaManager().get_region(region, lon, lat)
-        args = self.parser.parse_args()
+        args = self.parsers["get"].parse_args()
         response = NavitiaManager().dispatch(args, self.region, "places")
         return response, 200
 
 places_nearby = { "places_nearby" : NonNullList(NonNullNested(place))}
 
 class PlacesNearby(ResourceUri):
+    parsers = {}
     def __init__(self):
-        self.parser = reqparse.RequestParser()
-        self.parser.add_argument("uri", type=str)
-        self.parser.add_argument("type[]", type=str,
+        self.parsers["get"] = reqparse.RequestParser()
+        parser_get = self.parsers["get"]
+        self.parsers["get"].add_argument("uri", type=str, required=True,
+                description="""uri arround which you want to look for objects.
+                                Not all objects make sense (e.g. a mode). """)
+        self.parsers["get"].add_argument("type[]", type=str,
                                  action="append", default=["stop_area", "stop_point",
-                                                           "address", "poi"])
-        self.parser.add_argument("distance", type=int, default=500)
-        self.parser.add_argument("count", type=int, default=10)
-        self.parser.add_argument("depth", type=int, default=1)
-        self.parser.add_argument("start_page", type=int, default=0)
+                                                           "address", "poi"],
+                description="Type of the objects to return")
+        self.parsers["get"].add_argument("distance", type=int, default=500,
+                description="Distance range of the query")
+        self.parsers["get"].add_argument("count", type=int, default=10,
+                description="Number of elements per page")
+        self.parsers["get"].add_argument("depth", type=depth_argument, default=1,
+                description="Maximum depth on objects")
+        self.parsers["get"].add_argument("start_page", type=int, default=0,
+                description="The page number of the ptref result")
 
     @marshal_with(places_nearby)
     def get(self, region=None, lon=None, lat=None, uri=None):
         self.region = NavitiaManager().get_region(region, lon, lat)
-        args = self.parser.parse_args()
+        args = self.parsers["get"].parse_args()
         if uri:
             if uri[-1] == '/':
                 uri = uri[:-1]
