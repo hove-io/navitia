@@ -1,7 +1,5 @@
 #encoding: utf-8
-import logging
-import datetime
-from sqlalchemy import Table, MetaData, select, create_engine
+from sqlalchemy import select
 from sindri.saver.utils import parse_active_days, from_timestamp, from_time, \
         FunctionalError
 
@@ -61,4 +59,5 @@ def save_at_perturbation(meta, conn, perturbation_id, perturbation):
         query = perturbation_table.update().where(
                 perturbation_table.c.id == perturbation_id)
 
-    conn.execute(query.values(build_at_perturbation_dict(perturbation)))
+    conn.execute(query.values(build_at_perturbation_dict(
+        perturbation)))

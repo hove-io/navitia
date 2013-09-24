@@ -1,7 +1,5 @@
 #encoding: utf-8
-import logging
-import datetime
-from sqlalchemy import Table, MetaData, select, create_engine
+from sqlalchemy import select
 from sindri.saver.utils import parse_active_days, from_timestamp, from_time, \
         FunctionalError
 
@@ -69,8 +67,8 @@ def find_message_id(meta, conn, message_uri):
 
 def save_message(meta, conn, message_id, message):
     """
-    retourne l'id en base du message correspondant à cette URI
-    si celui ci est présent dans ED sinon retourne None
+    insert ou update le message en base de données
+    et insert les localized_messages associés
     """
     msg_table = meta.tables['realtime.message']
     local_msg_table = meta.tables['realtime.localized_message']
