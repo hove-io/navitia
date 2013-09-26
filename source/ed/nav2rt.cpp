@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "utils/timer.h"
+#include "utils/logger.h"
 
 #include <fstream>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -10,6 +11,7 @@
 #include "utils/exception.h"
 #include "type/data.h"
 #include "ed/connectors/messages_connector.h"
+#include "ed/adapted.h"
 
 
 namespace po = boost::program_options;
@@ -17,6 +19,7 @@ namespace pt = boost::posix_time;
 
 int main(int argc, char * argv[])
 {
+    init_logger();
     std::string output, input, connection_string, media_lang,
         media_media;
     po::options_description desc("Allowed options");
@@ -56,7 +59,7 @@ int main(int argc, char * argv[])
     po::notify(vm);
 
     pt::ptime start, end, now;
-    int read, load, save;
+    int read, load, load_pert, save;
 
     std::cout << "chargement du nav" << std::endl;
 
@@ -67,7 +70,7 @@ int main(int argc, char * argv[])
 
     std::cout << "chargement des messages" << std::endl;
 
-    ed::connectors::MessageLoaderConfig config;
+    ed::connectors::RealtimeLoaderConfig config;
     config.connection_string = connection_string;
     try{
         start = pt::microsec_clock::local_time();
@@ -82,6 +85,23 @@ int main(int argc, char * argv[])
 
     std::cout << "application des messages sur data" << std::endl;
     ed::connectors::apply_messages(data);
+
+    std::cout << "chargement des perturbation AT" << std::endl;
+    std::vector<navitia::type::AtPerturbation> perturbations;
+    try{
+        start = pt::microsec_clock::local_time();
+        perturbations = ed::connectors::load_at_perturbations(config, now);
+        load_pert = (pt::microsec_clock::local_time() - start).total_milliseconds();
+    }catch(const navitia::exception& ex){
+        std::cout << ex.what() << std::endl;
+        return 1;
+    }
+    std::cout << perturbations.size() << " perturbations chargées" << std::endl;
+
+    ed::AtAdaptedLoader adapter;
+    adapter.apply(perturbations, data.pt_data);
+
+
 
     std::cout << "Debut sauvegarde ..." << std::endl;
 

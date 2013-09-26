@@ -41,13 +41,11 @@ struct LocalizedMessage{
     }
 };
 
-struct Message{
+struct AtPerturbation{
     std::string uri;
 
     Type_e object_type;
     std::string object_uri;
-
-    boost::posix_time::time_period publication_period;
 
     boost::posix_time::time_period application_period;
 
@@ -56,11 +54,29 @@ struct Message{
 
     std::bitset<8> active_days;
 
+    AtPerturbation(): object_type(Type_e::ValidityPattern),
+        application_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)){}
+
+    bool valid_day_of_week(const boost::gregorian::date& date) const;
+
+    bool valid_hour_perturbation(const boost::posix_time::time_period& period) const;
+
+    bool is_applicable(const boost::posix_time::time_period& time) const;
+
+    bool operator<(const AtPerturbation& other) const {
+        return (this->uri < other.uri);
+    }
+};
+
+/**
+ * les messages étant pour le moment des perturbations AT avec plus d'info
+ * on en hérite pour ne pas mutliplier le code
+ */
+struct Message: public AtPerturbation{
+    boost::posix_time::time_period publication_period;
     std::map<std::string, LocalizedMessage> localized_messages;
 
-    Message(): object_type(Type_e::ValidityPattern),
-        publication_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)),
-        application_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)){}
+    Message(): publication_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int){
         ar & uri & object_type & object_uri & publication_period
@@ -70,18 +86,7 @@ struct Message{
 
     bool is_valid(const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_time)const;
 
-    bool valid_day_of_week(const boost::gregorian::date& date) const;
-
-    bool valid_hour_perturbation(const boost::posix_time::time_period& period) const;
-
     bool is_publishable(const boost::posix_time::ptime& time) const;
-    bool is_applicable(const boost::posix_time::time_period& time) const;
-
-
-    bool operator<(const Message& other) const {
-        return (this->uri < other.uri);
-    }
-
 };
 
 struct MessageHolder{
@@ -91,7 +96,7 @@ struct MessageHolder{
 
     MessageHolder(){}
 
-    template<class Archive> void serialize(Archive & ar, const unsigned int){
+    template<class Archive> void serialize(Archive& ar, const unsigned int){
         ar & messages;
     }
 

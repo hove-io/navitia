@@ -10,7 +10,7 @@ namespace ed{ namespace connectors{
 namespace pt = boost::posix_time;
 
 std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
-        const MessageLoaderConfig& conf,
+        const RealtimeLoaderConfig& conf,
         const boost::posix_time::ptime& current_time){
     //pour le moment on vire les timezone et on considére que c'est de l'heure local
     std::string request = "SELECT id, uri, start_publication_date::timestamp, "
@@ -78,14 +78,10 @@ std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
         std::string language = cursor["language"].as<std::string>();
         cursor["body"].to(message->localized_messages[language].body);
         cursor["title"].to(message->localized_messages[language].title);
-        std::cout << message->uri << std::endl;
-        std::cout << message->localized_messages[language].body << std::endl;
-        std::cout << message->localized_messages[language].title << std::endl;
     }
     if(message){//on ajoute le dernier message traité
         messages[message->uri] = message;
     }
-
 
     return messages;
 }
@@ -127,6 +123,59 @@ void apply_messages(navitia::type::Data& data){
             }
         }
     }
+}
+
+std::vector<navitia::type::AtPerturbation> load_at_perturbations(
+        const RealtimeLoaderConfig& conf,
+        const boost::posix_time::ptime& current_time){
+    //pour le moment on vire les timezone et on considére que c'est de l'heure local
+    std::string request = "SELECT id, uri, start_application_date::timestamp, "
+        "end_application_date::timestamp, start_application_daily_hour::time, "
+        "end_application_daily_hour::time, active_days, object_uri, "
+        "object_type_id "
+        "FROM realtime.at_perturbation";
+    std::unique_ptr<pqxx::connection> conn;
+    try{
+        conn = std::unique_ptr<pqxx::connection>(
+                new pqxx::connection(conf.connection_string));
+    }catch(const pqxx::pqxx_exception &e){
+        throw navitia::exception(e.base().what());
+
+    }
+    pqxx::work work(*conn, "chargement des perturbations at");
+
+    std::vector<navitia::type::AtPerturbation> perturbations;
+
+    pqxx::result result = work.exec(request);
+    for(auto cursor = result.begin(); cursor != result.end(); ++cursor){
+        nt::AtPerturbation perturbation;
+        cursor["uri"].to(perturbation.uri);
+        //on construit le message
+        cursor["object_uri"].to(perturbation.object_uri);
+
+        perturbation.object_type = static_cast<navitia::type::Type_e>(
+                cursor["object_type_id"].as<int>());
+
+        perturbation.application_daily_start_hour = pt::duration_from_string(
+                cursor["start_application_daily_hour"].as<std::string>());
+
+        perturbation.application_daily_end_hour = pt::duration_from_string(
+                cursor["end_application_daily_hour"].as<std::string>());
+
+        pt::ptime start = pt::time_from_string(
+                cursor["start_application_date"].as<std::string>());
+
+        pt::ptime end = pt::time_from_string(
+                cursor["end_application_date"].as<std::string>());
+        perturbation.application_period = pt::time_period(start, end);
+
+        perturbation.active_days = std::bitset<8>(
+                cursor["active_days"].as<std::string>());
+
+        perturbations.push_back(perturbation);
+    }
+
+    return perturbations;
 }
 
 }}//namespace

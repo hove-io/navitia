@@ -33,7 +33,7 @@ bool Message::is_publishable(const boost::posix_time::ptime& time) const{
     return publication_period.contains(time);
 }
 
-bool Message::is_applicable(const boost::posix_time::time_period& period) const{
+bool AtPerturbation::is_applicable(const boost::posix_time::time_period& period) const{
     bool days_intersects = false;
 
     //intersection de la period ou se déroule l'action et de la periode de validité de la perturbation
@@ -64,7 +64,7 @@ bool Message::is_applicable(const boost::posix_time::time_period& period) const{
 
 }
 
-bool Message::valid_hour_perturbation(const pt::time_period& period) const{
+bool AtPerturbation::valid_hour_perturbation(const pt::time_period& period) const{
     pt::time_period daily_period(pt::ptime(period.begin().date(), application_daily_start_hour),
             pt::ptime(period.begin().date(), application_daily_end_hour));
 
@@ -72,7 +72,7 @@ bool Message::valid_hour_perturbation(const pt::time_period& period) const{
 
 }
 
-bool Message::valid_day_of_week(const bg::date& date) const{
+bool AtPerturbation::valid_day_of_week(const bg::date& date) const{
 
     switch(date.day_of_week()){
         case bg::Monday: return this->active_days[0];

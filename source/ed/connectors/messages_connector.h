@@ -9,14 +9,18 @@ namespace navitia{namespace type{
 
 namespace ed{ namespace connectors{
 
-struct MessageLoaderConfig{
+struct RealtimeLoaderConfig{
     std::string connection_string;
 };
 
 std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
-        const MessageLoaderConfig& conf,
+        const RealtimeLoaderConfig& conf,
         const boost::posix_time::ptime& current_time);
 
 void apply_messages(navitia::type::Data& data);
+
+std::vector<navitia::type::AtPerturbation> load_at_perturbations(
+        const RealtimeLoaderConfig& conf,
+        const boost::posix_time::ptime& current_time);
 
 }}//connectors

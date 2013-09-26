@@ -32,4 +32,4 @@ INSTALL_TARGETS(/usr/bin/ gtfs2ed osm2ed ed2nav)
 add_subdirectory(connectors)
 
 add_executable(nav2rt nav2rt.cpp)
-target_link_libraries(nav2rt types connectors pq pqxx data georef routing utils ${Boost_LIBRARIES} log4cplus)
+target_link_libraries(nav2rt ed types connectors pq pqxx data georef routing utils ${Boost_LIBRARIES} log4cplus)
