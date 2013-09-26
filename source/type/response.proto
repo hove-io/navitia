@@ -134,6 +134,7 @@ message Journey {
     repeated Section sections = 6;
     optional Place origin = 7;
     optional Place destination = 8;
+    optional string type =9;
 }
 
 enum ResponseType {

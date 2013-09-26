@@ -119,7 +119,8 @@ journey = {
     'requested_date_time' : fields.String(),
     'sections' : NonNullList(NonNullNested(section)),
     'from' : PbField(place, attribute='origin'),
-    'to' : PbField(place, attribute='destination')
+    'to' : PbField(place, attribute='destination'),
+    'type' : fields.String()
 }
 
 journeys = {
@@ -189,6 +190,7 @@ class Journeys(ResourceUri):
                                  dest="destination_mode")
         self.parser.add_argument("walking_speed", type=float, default=1.68)
         self.parser.add_argument("walking_distance", type=int, default=1000)
+
         self.parser.add_argument("bike_speed", type=float, default=8.8)
         self.parser.add_argument("bike_distance", type=int, default=5000)
         self.parser.add_argument("br_speed", type=float, default=8.8,)
