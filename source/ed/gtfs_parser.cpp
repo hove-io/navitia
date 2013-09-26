@@ -729,7 +729,7 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                   + csv.missing_headers(mandatory_headers));
         throw InvalidHeaders(csv.filename);
     }
-    data.journey_patterns.reserve(350000);
+
     data.vehicle_journeys.reserve(350000);
 
     int id_c = csv.get_pos_col("route_id"), service_c = csv.get_pos_col("service_id"),
@@ -805,7 +805,7 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
 //                    if(wheelchair_c != -1)
 //                        vj->wheelchair_boarding = row[wheelchair_c] == "1";
                     if(odt_type_c != -1){
-                        vj->odt_type = static_cast<nt::OdtType>(boost::lexical_cast<int>(row[odt_type_c]));
+                        vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(boost::lexical_cast<int>(row[odt_type_c]));
                     }
                     if(wheelchair_c != -1 && row[wheelchair_c] == "1")
                         vj->set_vehicle(navitia::type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE);
@@ -822,7 +822,7 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
                     if(appropriate_signage_c != -1 && row[appropriate_signage_c] == "1")
                         vj->set_vehicle(navitia::type::hasVehicleProperties::APPOPRIATE_SIGNAGE);
                     if(school_vehicle_c != -1 && row[school_vehicle_c] == "1")
-                        vj->set_vehicle(navitia::type::hasVehicleProperties::SCOOL_VEHICLE);
+                        vj->set_vehicle(navitia::type::hasVehicleProperties::SCHOOL_VEHICLE);
 
                     vj_map[vj->uri] = vj;
                     std::string company_s;

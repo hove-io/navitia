@@ -328,7 +328,7 @@ void EdPersistor::insert_routes(const std::vector<types::Route*>& routes){
 }
 
 void EdPersistor::insert_journey_patterns(const std::vector<types::JourneyPattern*>& journey_patterns){
-    this->lotus.prepare_bulk_insert("navitia.journey_pattern", {"id", "uri", "name", "comment", "is_frequence", "route_id"});
+    this->lotus.prepare_bulk_insert("navitia.journey_pattern", {"id", "uri", "name", "comment", "physical_mode_id", "is_frequence", "route_id"});
 
     for(types::JourneyPattern* jp : journey_patterns){
         std::vector<std::string> values;
@@ -336,6 +336,11 @@ void EdPersistor::insert_journey_patterns(const std::vector<types::JourneyPatter
         values.push_back(jp->uri);
         values.push_back(jp->name);
         values.push_back(jp->comment);
+        if (jp->physical_mode != NULL){
+            values.push_back(std::to_string(jp->physical_mode->idx));
+        }else{
+            values.push_back(lotus.null_value);
+        }
         values.push_back(std::to_string(jp->is_frequence));
         if(jp->route != NULL){
             values.push_back(std::to_string(jp->route->idx));
@@ -460,7 +465,7 @@ void EdPersistor::insert_vehicle_properties(const std::vector<types::VehicleJour
 
 void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys){
     this->lotus.prepare_bulk_insert("navitia.vehicle_journey", {"id", "uri", "name", "comment", "validity_pattern_id",
-                                    "adapted_validity_pattern_id", "company_id", "physical_mode_id", "journey_pattern_id", "theoric_vehicle_journey_id",
+                                    "adapted_validity_pattern_id", "company_id", "journey_pattern_id", "theoric_vehicle_journey_id",
                                     "vehicle_properties_id","odt_type_id", "odt_message"});
 
     for(types::VehicleJourney* vj : vehicle_journeys){
@@ -484,11 +489,6 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
         }else{
             values.push_back(lotus.null_value);
         }
-        if(vj->physical_mode != NULL){
-            values.push_back(std::to_string(vj->physical_mode->idx));
-        }else{
-            values.push_back(lotus.null_value);
-        }
         if(vj->journey_pattern != NULL){
             values.push_back(std::to_string(vj->journey_pattern->idx));
         }else{
@@ -501,7 +501,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
             values.push_back(lotus.null_value);        
         }
         values.push_back(std::to_string(vj->to_ulog()));
-        values.push_back(std::to_string(static_cast<int>(vj->odt_type)));        
+        values.push_back(std::to_string(static_cast<int>(vj->vehicle_journey_type)));
         values.push_back(vj->odt_message);
         this->lotus.insert(values);
     }

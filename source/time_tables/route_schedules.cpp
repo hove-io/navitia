@@ -133,6 +133,7 @@ route_schedule(const std::string& filter, const std::string &str_dt,
         pagination->set_itemsperpage(count);
         pagination->set_itemsonpage(std::max(handler.pb_response.departure_boards_size(),
                                          handler.pb_response.stop_schedules_size()));
+
         for(type::VehicleJourney* vj : vehicle_journy_list){
             pbnavitia::Header* header = table->add_headers();
             pbnavitia::PtDisplayInfo* vj_display_information = header->mutable_pt_display_informations();

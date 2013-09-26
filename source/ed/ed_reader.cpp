@@ -353,14 +353,13 @@ void EdReader::fill_routes(nt::Data& data, pqxx::work& work){
         route->line = line_map[const_it["line_id"].as<idx_t>()];
         route->line->route_list.push_back(route);
 
-
         data.pt_data.routes.push_back(route);
         this->route_map[const_it["id"].as<idx_t>()] = route;
     }
 }
 
 void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, name, uri, comment, route_id, is_frequence "
+    std::string request = "SELECT id, name, uri, comment, route_id, is_frequence, physical_mode_id "
         "FROM navitia.journey_pattern";
 
     pqxx::result result = work.exec(request);
@@ -373,6 +372,13 @@ void EdReader::fill_journey_patterns(nt::Data& data, pqxx::work& work){
 
         journey_pattern->route = route_map[const_it["route_id"].as<idx_t>()];
         journey_pattern->route->journey_pattern_list.push_back(journey_pattern);
+
+        // attach the physical mode with database values
+        journey_pattern->physical_mode = physical_mode_map[const_it["physical_mode_id"].as<idx_t>()];
+        journey_pattern->physical_mode->journey_pattern_list.push_back(journey_pattern);
+
+        // get commercial mode from the line of the route of the journey_pattern
+        journey_pattern->commercial_mode = journey_pattern->route->line->commercial_mode;
 
         data.pt_data.journey_patterns.push_back(journey_pattern);
         this->journey_pattern_map[const_it["id"].as<idx_t>()] = journey_pattern;
@@ -510,7 +516,7 @@ void EdReader::insert_journey_pattern_point_connections(const std::vector<types:
 
 void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT vj.id as id, vj.name as name, vj.uri as uri, vj.comment as comment,";
-                request += "vj.company_id as company_id, vj.physical_mode_id as physical_mode_id,";
+                request += "vj.company_id as company_id, ";
                 request += "vj.journey_pattern_id as journey_pattern_id, vj.validity_pattern_id as validity_pattern_id,";
                 request += "vj.adapted_validity_pattern_id as adapted_validity_pattern_id,";
                 request += "vj.theoric_vehicle_journey_id as theoric_vehicle_journey_id ,";
@@ -534,13 +540,12 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
         const_it["name"].to(vj->name);
         const_it["comment"].to(vj->comment);
         const_it["odt_message"].to(vj->odt_message);
-        vj->odt_type = static_cast<nt::OdtType>(const_it["odt_type_id"].as<int>());
+        vj->vehicle_journey_type = static_cast<nt::VehicleJourneyType>(const_it["odt_type_id"].as<int>());
 
         vj->journey_pattern = journey_pattern_map[const_it["journey_pattern_id"].as<idx_t>()];
         vj->journey_pattern->vehicle_journey_list.push_back(vj);
 
         vj->company = company_map[const_it["company_id"].as<idx_t>()];
-        vj->physical_mode = physical_mode_map[const_it["physical_mode_id"].as<idx_t>()];
 
         vj->adapted_validity_pattern = validity_pattern_map[const_it["adapted_validity_pattern_id"].as<idx_t>()];
 
@@ -574,7 +579,7 @@ void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
             vj->set_vehicle(navitia::type::hasVehicleProperties::APPOPRIATE_SIGNAGE);
         }
         if (const_it["school_vehicle"].as<bool>()){
-            vj->set_vehicle(navitia::type::hasVehicleProperties::SCOOL_VEHICLE);
+            vj->set_vehicle(navitia::type::hasVehicleProperties::SCHOOL_VEHICLE);
         }
         data.pt_data.vehicle_journeys.push_back(vj);
         this->vehicle_journey_map[const_it["id"].as<idx_t>()] = vj;

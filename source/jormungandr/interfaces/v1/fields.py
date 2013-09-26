@@ -68,7 +68,7 @@ class additional_informations_vj(fields.Raw):
         else :
             if addinfo.vehicle_journey_type == enum_t['virtual_without_stop_time'].number or \
                 addinfo.vehicle_journey_type == enum_t['stop_point_to_stop_point'].number or \
-                addinfo.vehicle_journey_type == enum_t['adress_to_stop_point'].number or \
+                addinfo.vehicle_journey_type == enum_t['address_to_stop_point'].number or \
                 addinfo.vehicle_journey_type == enum_t['odt_point_to_point'].number:
                 result.append("odt_with_zone")
             else :
