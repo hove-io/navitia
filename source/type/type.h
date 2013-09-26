@@ -619,6 +619,7 @@ public:
     bool uncheck2(unsigned int day) const;
     //void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
     bool operator<(const ValidityPattern & other) const { return this < &other; }
+    bool operator==(const ValidityPattern & other) const { return (this->beginning_date == other.beginning_date) && (this->days == other.days);}
 };
 
 struct StopPoint : public Header, Nameable, hasProperties, HasMessages{
