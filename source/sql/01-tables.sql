@@ -239,8 +239,8 @@ DO $$
 BEGIN
     CASE WHEN (SELECT COUNT(1) = 0 FROM navitia.INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='journey_pattern' AND COLUMN_NAME='physical_mode_id')
     THEN
-	-- Ajout de la nouvelle colonne
-    	CREATE TABLE IF NOT EXISTS navitia.journey_pattern_tmp (
+    -- Ajout de la nouvelle colonne
+        CREATE TABLE IF NOT EXISTS navitia.journey_pattern_tmp (
             id BIGINT PRIMARY KEY,
             route_id BIGINT NOT NULL REFERENCES navitia.route,
             physical_mode_id BIGINT NOT NULL REFERENCES navitia.physical_mode,
@@ -251,23 +251,23 @@ BEGIN
         );
         INSERT INTO navitia.journey_pattern_tmp 
         SELECT 
-	    navitia.journey_pattern.id, 
-	    navitia.journey_pattern.route_id, 
-	    MAX(navitia.vehicle_journey.physical_mode_id), 
-	    navitia.journey_pattern.comment, 
-	    navitia.journey_pattern.uri, 
-	    navitia.journey_pattern.name, 
-	    navitia.journey_pattern.is_frequence 
+        navitia.journey_pattern.id, 
+        navitia.journey_pattern.route_id, 
+        MAX(navitia.vehicle_journey.physical_mode_id), 
+        navitia.journey_pattern.comment, 
+        navitia.journey_pattern.uri, 
+        navitia.journey_pattern.name, 
+        navitia.journey_pattern.is_frequence 
         FROM 
-	    navitia.journey_pattern,
-	    navitia.vehicle_journey
+        navitia.journey_pattern,
+        navitia.vehicle_journey
         WHERE
-	    navitia.vehicle_journey.journey_pattern_id = navitia.journey_pattern.id
+        navitia.vehicle_journey.journey_pattern_id = navitia.journey_pattern.id
         GROUP BY
-	    navitia.journey_pattern.id, 
-            navitia.journey_pattern.route_id, 
-            navitia.journey_pattern.comment, 
-            navitia.journey_pattern.uri, 
+        navitia.journey_pattern.id,
+            navitia.journey_pattern.route_id,
+            navitia.journey_pattern.comment,
+            navitia.journey_pattern.uri,
             navitia.journey_pattern.name,
             navitia.journey_pattern.is_frequence;
 
