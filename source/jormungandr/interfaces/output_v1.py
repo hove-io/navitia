@@ -517,7 +517,7 @@ class json_renderer:
     def section(self, obj, region_name):
         self.visited_types.add("origin")
         self.visited_types.add("destination")
-        if obj.pt_display_informations.odt_type != type_pb2.regular_line:
+        if obj.pt_display_informations.vehicle_journey_type != type_pb2.regular:
             section_type = "on_demand_transport"
         else :
             section_type = get_name_enum(obj, obj.type)

@@ -5,7 +5,9 @@ from protobuf_to_dict import protobuf_to_dict
 from find_extrem_datetimes import extremes
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, place,\
-                   PbField, stop_date_time, enum_type, NonNullList, NonNullNested
+                   PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
+                   display_informations_vj,additional_informations_vj
+
 from interfaces.parsers import option_value
 from ResourceUri import ResourceUri
 import datetime
@@ -58,34 +60,23 @@ class GeoJson(fields.Raw):
                 "type" : "LineString",
                 "coordinates" : [],
                 "properties" : [{
-                    "lenth" : length
+                    "length" : length
                     }]
         }
         for coord in coords:
             response["coordinates"].append([coord.lon, coord.lat])
         return response
 
-display_informations = {
-            "network" : fields.String(),
-            "code" : fields.String(),
-            "headsign" : fields.String(),
-            "color" : fields.String(),
-            "commercial_mode" : fields.String(),
-            "physical_mode" : fields.String(),
-            "direction" : fields.String(),
-            "description" : fields.String(),
-            "odt_type" : enum_type()
-}
 
 class section_type(enum_type):
     def output(self, key, obj):
         try:
             if obj.HasField("pt_display_informations"):
                 infos = obj.pt_display_informations
-                if infos.HasField("odt_type"):
+                if infos.HasField("vehicle_journey_type"):
                     infos_desc = infos.DESCRIPTOR
-                    odt_enum = infos_desc.fields_by_name['odt_type'].enum_type
-                    if infos.odt_type != odt_enum.values_by_name['regular_line'].number:
+                    odt_enum = infos_desc.fields_by_name['vehicle_journey_type'].enum_type
+                    if infos.vehicle_journey_type != odt_enum.values_by_name['regular'].number:
                         return "on_demand_transport"
         except ValueError:
             pass
@@ -107,17 +98,17 @@ section = {
     "from" : section_place(place, attribute="origin"),
     "to": section_place(place, attribute="destination"),
     "links" : SectionLinks(attribute="uris"),
-    "display_informations" : PbField(display_informations,
-                                     attribute="pt_display_informations"),
+    "display_informations" : display_informations_vj(),
+    "additional_informations" : additional_informations_vj(),
     "geojson" : GeoJson(),
     "path" : NonNullList(NonNullNested({"length":fields.Integer(),
                                         "name":fields.String()}),
                          attribute="street_network.path_items"),
     "transfer_type" : enum_type(),
-    "stop_date_times" : NonNullList(NonNullNested(stop_date_time))
+    "stop_date_times" : NonNullList(NonNullNested(stop_date_time)),
+    "departure_date_time" : fields.String(attribute="begin_date_time"),
+    "arrival_date_time" : fields.String(attribute="end_date_time")
 }
-
-
 
 
 journey = {
@@ -179,6 +170,7 @@ class add_journey_href(object):
 class Journeys(ResourceUri):
     def __init__(self):
         modes = ["walking", "car", "bike", "br"]
+        types = ["all", "asap"]
         self.parser = reqparse.RequestParser()
         self.parser.add_argument("from", type=str, dest="origin")
         self.parser.add_argument("to", type=str, dest="destination")
@@ -189,7 +181,7 @@ class Journeys(ResourceUri):
                                  dest="max_transfers")
         self.parser.add_argument("first_section_mode",
                                  type=option_value(modes),
-                                 action="append", default="walking",
+                                 default="walking",
                                  dest="origin_mode")
         self.parser.add_argument("last_section_mode",
                                  type=option_value(modes),
@@ -204,6 +196,8 @@ class Journeys(ResourceUri):
         self.parser.add_argument("car_speed", type=float, default=16.8)
         self.parser.add_argument("car_distance", type=int, default=15000)
         self.parser.add_argument("forbidden_uris[]", type=str, action="append")
+        self.parser.add_argument("count", type=int)
+        self.parser.add_argument("type", type=option_value(types), default="all")
 #a supprimer
         self.parser.add_argument("max_duration", type=int, default=36000)
 
@@ -213,11 +207,14 @@ class Journeys(ResourceUri):
     @marshal_with(journeys)
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parser.parse_args()
+        #TODO : Changer le protobuff pour que ce soit propre
+        args["destination_mode"] = "vls" if args["destination_mode"] == "br" else args["destination_mode"]
+        args["origin_mode"] = "vls" if args["origin_mode"] == "br" else args["origin_mode"]
         if not region is None or (not lon is None and not lat is None):
-            self.region = NavitiaManager().get_region(region, lon, lat)
+	    self.region = NavitiaManager().get_region(region, lon, lat)
             if uri:
                 objects = uri.split("/")
-                if len(objects) % 2 == 0:
+                if objects and len(objects) % 2 == 0:
                     args["origin"] = objects[-1]
                 else:
                     return {"error" : "Unable to compute journeys from this \
@@ -225,7 +222,7 @@ class Journeys(ResourceUri):
         else:
             if "origin" in args.keys():
                 self.region = NavitiaManager().key_of_id(args["origin"])
-                args["origin"] = self.transform_id(args["origin"])
+		args["origin"] = self.transform_id(args["origin"])
             elif "destination" in args.keys():
                 self.region = NavitiaManager().key_of_id(args["destination"])
             if "destination" in args.keys():
@@ -240,7 +237,7 @@ class Journeys(ResourceUri):
         else:
             api = "isochrone"
         response = NavitiaManager().dispatch(args, self.region, api)
-        return response, 200
+	return response, 200
 
     def transform_id(self, id):
         splitted_coord = id.split(";")

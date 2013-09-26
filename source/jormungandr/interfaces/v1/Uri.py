@@ -4,7 +4,7 @@ from instance_manager import NavitiaManager
 from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination,\
-                   journey_pattern_point, NonNullList
+                   journey_pattern_point, NonNullList, poi, poi_type
 from collections import OrderedDict
 from ResourceUri import ResourceUri
 
@@ -19,6 +19,8 @@ collections = OrderedDict([
     ("companies", NonNullList(fields.Nested(company, display_null=False))),
     ("networks", NonNullList(fields.Nested(network, display_null=False))),
     ("journey_pattern_points", NonNullList(fields.Nested(journey_pattern_point, display_null=False))),
+    ("pois", NonNullList(fields.Nested(poi, display_null=False))),
+    ("poi_types", NonNullList(fields.Nested(poi_type, display_null=False))),
 ])
 
 class Uri(ResourceUri):

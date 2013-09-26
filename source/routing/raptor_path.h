@@ -16,7 +16,7 @@ namespace navitia { namespace routing {
     ///Construit tous chemins trouvés
     std::vector<Path> 
     makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
-               navitia::type::DateTime dt, const float walking_speed,
+               DateTime dt, const float walking_speed,
 //               const type::Properties &required_properties,
                const type::AccessibiliteParams & accessibilite_params,
                const RAPTOR &raptor_, bool clockwise);

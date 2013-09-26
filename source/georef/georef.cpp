@@ -386,39 +386,56 @@ void GeoRef::build_proximity_list(){
 void GeoRef::build_autocomplete_list(){
     int pos = 0;
     for(Way* way : ways){
-        std::string key="";
-        for(Admin* admin : way->admin_list){
-            key+= " " + admin->name;
-            //Ajoute le code postal si ça existe
-            if (!admin->post_code.empty()){
-                key += " "+ admin->post_code;
+        // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin
+        if ((!way->name.empty()) && (way->admin_list.size() > 0)){
+            std::string key="";
+            for(Admin* admin : way->admin_list){
+                //Ajout du nom de l'admin de niveau 8
+                if (admin->level == 8) {
+                    key+= " " + admin->name;
+                }
+                //Ajoute le code postal si ça existe
+                if ((!admin->post_code.empty()) && (admin->level == 8))
+                {
+                    key += " "+ admin->post_code;
+                }
             }
+            fl_way.add_string(way->way_type +" "+ way->name + " " + key, pos,alias, synonymes);
         }
-        fl_way.add_string(way->way_type +" "+ way->name + " " + key, pos,alias, synonymes);
         pos++;
     }
     fl_way.build();
 
     //Remplir les poi dans la liste autocompletion
     for(const POI* poi : pois){
-        std::string key="";
-        if (poi->visible){
-            for(Admin* admin : poi->admin_list){
-                key += " " + admin->name;
-            }
+        // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin
+        if ((!poi->name.empty()) && (poi->admin_list.size() > 0)){
+            std::string key="";
+            if (poi->visible){
 
-            fl_poi.add_string(poi->name + " " + key, poi->idx ,alias, synonymes);
+                for(Admin* admin : poi->admin_list){
+                    if (admin->level == 8)
+                    {
+                        key += " " + admin->name;
+                    }
+                }
+
+                fl_poi.add_string(poi->name + " " + key, poi->idx ,alias, synonymes);
+            }
         }
     }
     fl_poi.build();
 
     // les données administratives
     for(Admin* admin : admins){
+        /*
         std::string key="";
         for(Admin* adm : admin->admin_list){
             key += " " + adm->name;
         }
         fl_admin.add_string(admin->name + " " + key, admin->idx ,alias, synonymes);
+        */
+        fl_admin.add_string(admin->name, admin->idx ,alias, synonymes);
     }
     fl_admin.build();
 }
@@ -458,7 +475,7 @@ void GeoRef::normalize_extcode_way(){
 
 void GeoRef::normalize_extcode_admin(){
     for(Admin* admin : admins){
-        admin->uri = "admin:" + admin->id;
+        admin->uri = "admin:" + admin->uri;
         this->admin_map[admin->uri] = admin->idx;
     }
 }

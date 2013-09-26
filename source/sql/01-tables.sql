@@ -228,11 +228,54 @@ CREATE TABLE IF NOT EXISTS navitia.route (
 CREATE TABLE IF NOT EXISTS navitia.journey_pattern (
     id BIGINT PRIMARY KEY,
     route_id BIGINT NOT NULL REFERENCES navitia.route,
+    physical_mode_id BIGINT NOT NULL REFERENCES navitia.physical_mode,
     comment TEXT,
     uri TEXT NOT NULL,
     name TEXT NOT NULL,
     is_frequence BOOLEAN NOT NULL
 );
+
+DO $$
+BEGIN
+    CASE WHEN (SELECT COUNT(1) = 0 FROM navitia.INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='journey_pattern' AND COLUMN_NAME='physical_mode_id')
+    THEN
+	-- Ajout de la nouvelle colonne
+    	CREATE TABLE IF NOT EXISTS navitia.journey_pattern_tmp (
+            id BIGINT PRIMARY KEY,
+            route_id BIGINT NOT NULL REFERENCES navitia.route,
+            physical_mode_id BIGINT NOT NULL REFERENCES navitia.physical_mode,
+            comment TEXT,
+            uri TEXT NOT NULL,
+            name TEXT NOT NULL,
+            is_frequence BOOLEAN NOT NULL
+        );
+        INSERT INTO navitia.journey_pattern_tmp 
+        SELECT 
+	    navitia.journey_pattern.id, 
+	    navitia.journey_pattern.route_id, 
+	    MAX(navitia.vehicle_journey.physical_mode_id), 
+	    navitia.journey_pattern.comment, 
+	    navitia.journey_pattern.uri, 
+	    navitia.journey_pattern.name, 
+	    navitia.journey_pattern.is_frequence 
+        FROM 
+	    navitia.journey_pattern,
+	    navitia.vehicle_journey
+        WHERE
+	    navitia.vehicle_journey.journey_pattern_id = navitia.journey_pattern.id
+        GROUP BY
+	    navitia.journey_pattern.id, 
+            navitia.journey_pattern.route_id, 
+            navitia.journey_pattern.comment, 
+            navitia.journey_pattern.uri, 
+            navitia.journey_pattern.name,
+            navitia.journey_pattern.is_frequence;
+
+        DROP TABLE navitia.journey_pattern CASCADE;
+        ALTER TABLE navitia.journey_pattern_tmp RENAME TO journey_pattern;
+    ELSE
+    END CASE;
+END$$;
 
 CREATE TABLE IF NOT EXISTS navitia.vehicle_journey (
     id BIGINT PRIMARY KEY,
@@ -240,7 +283,6 @@ CREATE TABLE IF NOT EXISTS navitia.vehicle_journey (
     adapted_validity_pattern_id BIGINT NOT NULL REFERENCES navitia.validity_pattern,
     validity_pattern_id BIGINT REFERENCES navitia.validity_pattern,
     company_id BIGINT NOT NULL REFERENCES navitia.company,
-    physical_mode_id BIGINT NOT NULL REFERENCES navitia.physical_mode,
     journey_pattern_id BIGINT NOT NULL REFERENCES navitia.journey_pattern,
     uri TEXT NOT NULL,
     comment TEXT,
@@ -250,6 +292,8 @@ CREATE TABLE IF NOT EXISTS navitia.vehicle_journey (
     vehicle_properties_id BIGINT NULL REFERENCES navitia.vehicle_properties,
     theoric_vehicle_journey_id BIGINT REFERENCES navitia.vehicle_journey
 );
+
+ALTER TABLE navitia.vehicle_journey DROP COLUMN IF EXISTS physical_mode_id;
 
 CREATE TABLE IF NOT EXISTS navitia.stop_area (
     id BIGINT PRIMARY KEY,

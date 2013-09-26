@@ -5,7 +5,7 @@ namespace navitia { namespace timetables {
 
 
 std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, const std::string &arrival_filter,
-                                        const type::DateTime &datetime, const type::DateTime &max_datetime,
+                                        const DateTime &datetime, const DateTime &max_datetime,
                                         type::Data & data) {
 
     std::vector<pair_dt_st> result;
@@ -35,8 +35,8 @@ std::vector<pair_dt_st> stops_schedule(const std::string &departure_filter, cons
         const type::VehicleJourney* vj = departure_st->vehicle_journey;
         const uint32_t arrival_order = departure_idx_arrival_order[departure_st->journey_pattern_point->idx];
         const type::StopTime* arrival_st = vj->stop_time_list[arrival_order];
-        type::DateTime arrival_dt = dep_dt_st.first;
-        arrival_dt.update(arrival_st->arrival_time);
+        DateTime arrival_dt = dep_dt_st.first;
+        DateTimeUtils::update(arrival_dt, arrival_st->arrival_time);
         result.push_back(std::make_pair(dep_dt_st, std::make_pair(arrival_dt, arrival_st)));
     }
 
@@ -57,9 +57,9 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
         return pb_response;
     }
 
-    type::DateTime dt((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
+    DateTime dt = DateTimeUtils::set((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
 
-    type::DateTime max_dt;
+    DateTime max_dt;
     max_dt = dt + duration;
     std::vector<pair_dt_st> board;
     try {
@@ -76,15 +76,15 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
         pbnavitia::PairStopTime * pair_stoptime = pb_response.mutable_stops_schedule()->add_board_items();
         auto stoptime = pair_stoptime->mutable_departure();
         const auto &dt_stop_time = pair_dt_idx.first;
-        stoptime->set_departure_date_time(type::iso_string(dt_stop_time.first.date(),  dt_stop_time.first.hour(), data));
-        stoptime->set_arrival_date_time(type::iso_string(dt_stop_time.first.date(),  dt_stop_time.first.hour(), data));
+        stoptime->set_departure_date_time(navitia::iso_string(DateTimeUtils::date(dt_stop_time.first), DateTimeUtils::hour(dt_stop_time.first), data));
+        stoptime->set_arrival_date_time(navitia::iso_string(DateTimeUtils::date(dt_stop_time.first), DateTimeUtils::hour(dt_stop_time.first), data));
         const type::JourneyPatternPoint* jpp = dt_stop_time.second->journey_pattern_point;
         fill_pb_object(jpp->stop_point, data, stoptime->mutable_stop_point(), depth, current_time, action_period);
 
         stoptime = pair_stoptime->mutable_arrival();
         const auto &dt_stop_time2 = pair_dt_idx.second;
-        stoptime->set_departure_date_time(type::iso_string(dt_stop_time2.first.date(),  dt_stop_time2.first.hour(), data));
-        stoptime->set_arrival_date_time(type::iso_string(dt_stop_time2.first.date(),  dt_stop_time2.first.hour(), data));
+        stoptime->set_departure_date_time(navitia::iso_string(DateTimeUtils::date(dt_stop_time2.first), DateTimeUtils::hour(dt_stop_time2.first), data));
+        stoptime->set_arrival_date_time(navitia::iso_string(DateTimeUtils::date(dt_stop_time2.first), DateTimeUtils::hour(dt_stop_time2.first), data));
         const type::JourneyPatternPoint* jpp2 = dt_stop_time2.second->journey_pattern_point;
         fill_pb_object(jpp2->stop_point, data, stoptime->mutable_stop_point(), depth, current_time, action_period);
     }

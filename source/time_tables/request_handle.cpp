@@ -5,8 +5,10 @@ namespace navitia { namespace timetables {
 
 RequestHandle::RequestHandle(const std::string &API, const std::string &request,
                              const std::string &str_dt, uint32_t duration,
-                             const type::Data &data, int count, int start_page) {
+                             const type::Data &data, uint32_t count, uint32_t start_page) :
+    date_time(DateTimeUtils::inf), max_datetime(DateTimeUtils::inf){
     std::string error = API + " ";
+
     try {
         auto ptime = boost::posix_time::from_iso_string(str_dt);
         if( !data.meta.production_date.contains(ptime.date()) ) {
@@ -18,7 +20,7 @@ RequestHandle::RequestHandle(const std::string &API, const std::string &request,
             pb_response.set_error(error);
         }
 
-        date_time = type::DateTime((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
+        date_time = DateTimeUtils::set((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
         max_datetime = date_time + duration;
         const auto jpp_t = type::Type_e::JourneyPatternPoint;
         journey_pattern_points = ptref::make_query(jpp_t, request, data);
@@ -31,8 +33,6 @@ RequestHandle::RequestHandle(const std::string &API, const std::string &request,
         error += "Unable to parse Datetime: " + str_dt;
         pb_response.set_error(error);
     }
-
 }
-
 
 }}
