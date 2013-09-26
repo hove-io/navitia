@@ -57,7 +57,8 @@ row = {
 header = {
     "display_informations" :  display_informations_vj(),
     "additional_informations" : additional_informations_vj(),
-    "links" : UrisToLinks()
+    "links" : UrisToLinks(),
+	"equipments" : equipments()
 }
 table_field = {
     "rows" : NonNullList(NonNullNested(row)),

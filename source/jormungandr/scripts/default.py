@@ -224,7 +224,7 @@ class Script:
 
 
     def __on_journeys(self, requested_type, request, region):
-	req = request_pb2.Request()
+        req = request_pb2.Request()
         req.requested_api = requested_type
         req.journeys.origin = request["origin"]
         if request["destination"]:

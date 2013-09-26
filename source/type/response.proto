@@ -74,13 +74,13 @@ enum TransferType {
 
 	
 message PtDisplayInfo {
-    optional string network = 1;//
-    optional string code = 2;//
-    optional string headsign = 3;//
-    optional string direction = 4;//
-    optional string color = 5;//
-    optional string commercial_mode = 6;//
-    optional string physical_mode = 7;//
+    optional string network = 1;
+    optional string code = 2;
+    optional string headsign = 3;
+    optional string direction = 4;
+    optional string color = 5;
+    optional string commercial_mode = 6;
+    optional string physical_mode = 7;
   	optional string description = 8; 
   	optional Uris uris = 9; 	
   	optional VehicleJourneyType vehicle_journey_type = 10;
