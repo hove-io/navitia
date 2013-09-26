@@ -73,10 +73,10 @@ class section_type(enum_type):
         try:
             if obj.HasField("pt_display_informations"):
                 infos = obj.pt_display_informations
-                if infos.HasField("odt_type"):
+                if infos.HasField("vehicle_journey_type"):
                     infos_desc = infos.DESCRIPTOR
-                    odt_enum = infos_desc.fields_by_name['odt_type'].enum_type
-                    if infos.odt_type != odt_enum.values_by_name['regular_line'].number:
+                    odt_enum = infos_desc.fields_by_name['vehicle_journey_type'].enum_type
+                    if infos.vehicle_journey_type != odt_enum.values_by_name['regular'].number:
                         return "on_demand_transport"
         except ValueError:
             pass
@@ -119,7 +119,8 @@ journey = {
     'requested_date_time' : fields.String(),
     'sections' : NonNullList(NonNullNested(section)),
     'from' : PbField(place, attribute='origin'),
-    'to' : PbField(place, attribute='destination')
+    'to' : PbField(place, attribute='destination'),
+    'type' : fields.String()
 }
 
 journeys = {
@@ -189,6 +190,7 @@ class Journeys(ResourceUri):
                                  dest="destination_mode")
         self.parser.add_argument("walking_speed", type=float, default=1.68)
         self.parser.add_argument("walking_distance", type=int, default=1000)
+
         self.parser.add_argument("bike_speed", type=float, default=8.8)
         self.parser.add_argument("bike_distance", type=int, default=5000)
         self.parser.add_argument("br_speed", type=float, default=8.8,)
@@ -210,12 +212,11 @@ class Journeys(ResourceUri):
         #TODO : Changer le protobuff pour que ce soit propre
         args["destination_mode"] = "vls" if args["destination_mode"] == "br" else args["destination_mode"]
         args["origin_mode"] = "vls" if args["origin_mode"] == "br" else args["origin_mode"]
-
         if not region is None or (not lon is None and not lat is None):
-            self.region = NavitiaManager().get_region(region, lon, lat)
+	    self.region = NavitiaManager().get_region(region, lon, lat)
             if uri:
                 objects = uri.split("/")
-                if len(objects) % 2 == 0:
+                if objects and len(objects) % 2 == 0:
                     args["origin"] = objects[-1]
                 else:
                     return {"error" : "Unable to compute journeys from this \
@@ -223,7 +224,7 @@ class Journeys(ResourceUri):
         else:
             if "origin" in args.keys():
                 self.region = NavitiaManager().key_of_id(args["origin"])
-                args["origin"] = self.transform_id(args["origin"])
+		args["origin"] = self.transform_id(args["origin"])
             elif "destination" in args.keys():
                 self.region = NavitiaManager().key_of_id(args["destination"])
             if "destination" in args.keys():
@@ -238,7 +239,7 @@ class Journeys(ResourceUri):
         else:
             api = "isochrone"
         response = NavitiaManager().dispatch(args, self.region, api)
-        return response, 200
+	return response, 200
 
     def transform_id(self, id):
         splitted_coord = id.split(";")

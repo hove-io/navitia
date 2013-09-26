@@ -8,6 +8,7 @@ from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
 from renderers import render, render_from_protobuf
 from werkzeug.wrappers import Response
 from find_extrem_datetimes import *
+from qualifier import qualifier
 
 pb_type = {
         'stop_area': type_pb2.STOP_AREA,
@@ -169,7 +170,7 @@ class Script:
                     section.pt_display_informations.headsign = section.vehicle_journey.route.name
                     if(len(section.vehicle_journey.odt_message) > 0):
                         section.pt_display_informations.description = section.vehicle_journey.odt_message
-                    section.pt_display_informations.odt_type = section.vehicle_journey.odt_type
+                    section.pt_display_informations.vehicle_journey_type = section.vehicle_journey.vehicle_journey_type
                     if section.destination.HasField("stop_point"):
                         section.pt_display_informations.direction = section.destination.stop_point.name
                     if section.vehicle_journey.route.line.color != "":
@@ -183,7 +184,11 @@ class Script:
                     section.ClearField("vehicle_journey")
 
     def get_journey(self, req, region, type_):
-        resp = NavitiaManager().send_and_receive(req, region)
+        if req.requested_api == type_pb2.PLANNER :
+            resp = qualifier().qualifier_one(req, region)
+        else:
+            resp = NavitiaManager().send_and_receive(req, region)
+
         if resp.response_type in [response_pb2.NO_ORIGIN_NOR_DESTINATION_POINT,
                                   response_pb2.NO_ORIGIN_POINT,
                                   response_pb2.NO_DESTINATION_POINT]:
@@ -244,7 +249,7 @@ class Script:
             req.journeys.streetnetwork_params.origin_mode = "vls"
         if req.journeys.streetnetwork_params.destination_mode == "bike_rental":
             req.journeys.streetnetwork_params.destination_mode = "vls"
-        if "forbidden_uris" in request:
+        if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.journeys.forbidden_uris.append(forbidden_uri)
         resp = self.get_journey(req, region, request["type"])

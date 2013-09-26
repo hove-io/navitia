@@ -41,11 +41,11 @@ next_passages(const std::string &request, const std::string &str_dt,
         const type::JourneyPattern* jp = vj->journey_pattern;
         const type::Route* route = jp->route;
         const type::Line* line = route->line;
-        const type::PhysicalMode* physical_mode = vj->physical_mode;
+        const type::PhysicalMode* physical_mode = jp->physical_mode;
         fill_pb_object(vj, data, passage->mutable_vehicle_journey(), 0, now, action_period);
         fill_pb_object(route, data, passage->mutable_vehicle_journey()->mutable_route(), 0, now, action_period);
         fill_pb_object(line, data, passage->mutable_vehicle_journey()->mutable_route()->mutable_line(), 0, now, action_period);
-        fill_pb_object(physical_mode, data, passage->mutable_vehicle_journey()->mutable_physical_mode(), 0, now, action_period);
+        fill_pb_object(physical_mode, data, passage->mutable_vehicle_journey()->mutable_journey_pattern()->mutable_physical_mode(), 0, now, action_period);
     }
     auto pagination = handler.pb_response.mutable_pagination();
     pagination->set_totalresult(handler.total_result);
