@@ -1,8 +1,13 @@
 #encoding: utf-8
+#!/usr/bin/env python
 import logging
 import datetime
+import time
 from sqlalchemy import Column, Table, MetaData, select, create_engine, \
-    ForeignKey, bindparam,  and_, or_
+    ForeignKey, bindparam,  and_, or_, exc
+import at.task_pb2
+import at.realtime_pb2
+import  at.type_pb2
 #
 # SELECT "
 #             "event.event_id AS event_id, " //0
@@ -34,18 +39,19 @@ from sqlalchemy import Column, Table, MetaData, select, create_engine, \
 
 class AtRealtimeReader(object):
     """
-    Classe responsable de la lecture en base de donnée des événements
-    temps réel.
+    Classe responsable de la lecture en base de donnee des evenements
+    temps reel.
     """
 
     def __init__(self):
+        self.message_list = []
         self.username = 'sa'
         self.password = '159can87*'
         self.server = '10.2.0.16'
         self.port = '1433'
         self.database = 'at_lyon2sim'
         #dialect+driver://user:password@host/dbname[?key=value..]
-        connection_string = 'mssql+pymssql://%s:%s@%s/%s' % (
+        connection_string = 'mssql+pymssql://%s:%s@%s/%s?charset=utf8' % (
                 self.username,
                 self.password,
                 self.server,
@@ -71,35 +77,114 @@ class AtRealtimeReader(object):
         autoload=True)
 
         self.msgmedia_table = Table('msgmedia', self.meta, autoload=True)
+        
+        self.label_impact_id = 'impact_id'
+        self.label_publication_start_date = 'publication_start_date'
+        self.label_publication_end_date = 'publication_end_date'
+        self.label_application_start_date = 'application_start_date'
+        self.label_application_end_date = 'application_end_date'
+        self.label_application_daily_start_hour = 'application_daily_start_hour'
+        self.label_application_daily_end_hour = 'application_daily_end_hour'
+        self.label_active_days = 'active_days'
+        self.label_object_external_code = 'object_external_code'
+        self.label_object_type = 'object_type'
+        self.label_title = 'title'
+        self.label_message = 'message'
+        self.label_message_lang = 'lang'
 
-    def run(self):
-        logger = logging.getLogger('connector')
-        conn = None
-        try:
-            conn = self.__engine.connect()
-        except sqlalchemy.exc.SQLAlchemyError, e:
-            logger.exception('error durring connection')
-        if conn is not None:
-            result = None
-            try:
-                s = select([self.event_table.c.Event_ID,
-                            self.impact_table.c.Impact_ID,
-                            self.event_table.c.Event_PublicationStartDate,
-                            self.event_table.c.Event_PublicationEndDate,
-                            self.impact_table.c.Impact_EventStartDate,
-                            self.impact_table.c.Impact_EventEndDate,
-                            self.impact_table.c.Impact_DailyStartDate,
-                            self.impact_table.c.Impact_DailyEndDate,
-                            self.impact_table.c.Impact_ActiveDays,
-                            self.tcobjectref_table.c.TCObjectCodeExt,
-                            self.tcobjectref_table.c.TCObjectType,
-                            self.impactbroadcast_table.c.Impact_Title,
-                            self.impactbroadcast_table.c.Impact_Msg
-                            ],
+    def get_pos_time(self, sql_time):
+        return int(time.mktime(sql_time.timetuple()))
+
+    def get_datetime_to_second(self, sql_time):
+        tt = sql_time.timetuple()
+        return (tt.tm_hour * 60 * 60) + (tt.tm_min * 60 ) + tt.tm_sec
+
+    def get_navitia_type(self, object_type):
+        if object_type == 'StopPoint':
+            return at.type_pb2.STOP_POINT
+        elif object_type == 'VehicleJourney':
+            return at.type_pb2.VEHICLE_JOURNEY
+        elif object_type == 'Line':
+            return at.type_pb2.LINE
+        elif object_type == 'Network':
+            return at.type_pb2.NETWORK
+        elif object_type == 'Route':
+            return at.type_pb2.JOURNEY_PATTERN
+        elif object_type == 'StopArea':
+            return at.type_pb2.STOP_AREA
+        elif object_type == 'RoutePoint':
+            return at.type_pb2.JOURNEY_PATTERN_POINT
+        else:
+            return -1
+
+    def set_message(self, result_proxy):
+        last_impact_id = -1
+        for row in result_proxy:
+            if last_impact_id <> row[self.label_impact_id]:
+                last_impact_id = row[self.label_impact_id]
+                message = at.realtime_pb2.Message()
+                self.message_list.append(message)
+
+                message.uri = str(row[self.label_impact_id]) + '-' + \
+                    row[self.label_message_lang]
+
+                message.start_publication_date = \
+                    self.get_pos_time(row[self.label_publication_start_date])
+
+                message.end_publication_date = \
+                    self.get_pos_time(row[self.label_publication_end_date])
+                message.start_application_date = \
+                    self.get_pos_time(row[self.label_application_start_date])
+                message.end_application_date = \
+                    self.get_pos_time(row[self.label_application_end_date])
+                # number of seconds since midnigth
+                message.start_application_daily_hour = \
+                    self.get_datetime_to_second(row[self
+                    .label_application_daily_start_hour])
+                message.end_application_daily_hour = \
+                    self.get_datetime_to_second(row[self
+                    .label_application_daily_end_hour])
+                message.active_days = \
+                    str(row[self.label_active_days])
+                message.object.object_uri = row[self.label_object_external_code]
+                message.object.object_type =  \
+                    self.get_navitia_type(row[self.label_object_type])
+
+            localized_message = message.localized_messages.add()
+            localized_message.language = row[self.label_message_lang]
+            localized_message.body = row[self.label_message]
+            localized_message.title = row[self.label_title]
+
+    def set_request(self):
+        return  select([self.event_table.c.Event_ID,
+                        self.impact_table.c.Impact_ID
+                        .label(self.label_impact_id),
+                        self.event_table.c.Event_PublicationStartDate
+                        .label(self.label_publication_start_date),
+                        self.event_table.c.Event_PublicationEndDate
+                        .label(self.label_publication_end_date),
+                        self.impact_table.c.Impact_EventStartDate
+                        .label(self.label_application_start_date),
+                        self.impact_table.c.Impact_EventEndDate
+                        .label(self.label_application_end_date),
+                        self.impact_table.c.Impact_DailyStartDate
+                        .label(self.label_application_daily_start_hour),
+                        self.impact_table.c.Impact_DailyEndDate
+                        .label(self.label_application_daily_end_hour),
+                        self.impact_table.c.Impact_ActiveDays
+                        .label(self.label_active_days),
+                        self.tcobjectref_table.c.TCObjectCodeExt
+                        .label(self.label_object_external_code),
+                        self.tcobjectref_table.c.TCObjectType
+                        .label(self.label_object_type),
+                        self.impactbroadcast_table.c.Impact_Title
+                        .label(self.label_title),
+                        self.impactbroadcast_table.c.Impact_Msg
+                        .label(self.label_message),
+                        self.msgmedia_table.c.MsgMedia_Lang
+                        .label(self.label_message_lang)],
                     #clause where
-                    and_(self.msgmedia_table.c.MsgMedia_Lang == bindparam(
-                        'media_lang'),
-                        self.msgmedia_table.c.MsgMedia_Media == bindparam(
+                    and_(self.msgmedia_table.c.MsgMedia_Media == bindparam(
                         'media_media'),
                         self.event_table.c.Event_PublicationEndDate
                         >=bindparam('event_publicationenddate'),
@@ -112,17 +197,27 @@ class AtRealtimeReader(object):
                         self.tcobjectref_table).join(
                         self.impactbroadcast_table).join(self
                     .msgmedia_table)]
-                    )
-                result = conn.execute(s, media_lang= 'fr',
-                                      media_media='Internet',
+                    ).order_by(self.event_table.c.Event_ID)
+
+    def run(self):
+        logger = logging.getLogger('connector')
+        conn = None
+        try:
+            conn = self.__engine.connect()
+        except exc.SQLAlchemyError, e:
+            logger.exception('error durring connection')
+        if conn is not None:
+            result = None
+            try:
+                s = self.set_request()
+                result = conn.execute(s, media_media='Internet',
                                       event_publicationenddate=
                                       datetime.datetime(2013,9,01),
                                       event_closedate= datetime.datetime.now())
-            except sqlalchemy.exc.SQLAlchemyError, e:
+            except exc.SQLAlchemyError, e:
                 logger.exception('error durring request')
             if result is not None:
-                for row in result:
-                    print row
+                self.set_message(result)
                 result.close();
 
 
