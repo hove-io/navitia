@@ -44,6 +44,8 @@ private:
     void dispatch_perturbations(const std::vector<nt::AtPerturbation>& perturbations, const nt::PT_Data& data);
 
     void clean(nt::PT_Data& data);
+    void clean_stop_time(nt::PT_Data& data);
+    void clean_journey_pattern_point(nt::PT_Data& data);
 
 public:
     void apply(const std::vector<nt::AtPerturbation>& perturbations, nt::PT_Data& data);

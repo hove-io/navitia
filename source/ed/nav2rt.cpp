@@ -59,7 +59,7 @@ int main(int argc, char * argv[])
     po::notify(vm);
 
     pt::ptime start, end, now;
-    int read, load, load_pert, save;
+    int read, load, load_pert, apply_adapted, save;
 
     std::cout << "chargement du nav" << std::endl;
 
@@ -98,8 +98,10 @@ int main(int argc, char * argv[])
     }
     std::cout << perturbations.size() << " perturbations chargées" << std::endl;
 
+    start = pt::microsec_clock::local_time();
     ed::AtAdaptedLoader adapter;
     adapter.apply(perturbations, data.pt_data);
+    apply_adapted = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 
 
@@ -112,6 +114,8 @@ int main(int argc, char * argv[])
     std::cout << "temps de traitement" << std::endl;
     std::cout << "\t lecture du nav " << read << "ms" << std::endl;
     std::cout << "\t chargement des messages " << load << "ms" << std::endl;
+    std::cout << "\t chargement des perturbations " << load_pert << "ms" << std::endl;
+    std::cout << "\t application des perturbations " << apply_adapted << "ms" << std::endl;
     std::cout << "\t enregistrement des données " << save << "ms" << std::endl;
 
     return 0;

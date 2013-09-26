@@ -503,9 +503,10 @@ struct Line : public Header, Nameable, HasMessages{
     Line(): sort(0), commercial_mode(nullptr), network(nullptr){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & code & forward_name & backward_name & additional_data & color
-                & sort & commercial_mode  & company_list & network
-                & route_list & physical_mode_list & messages;
+        ar & id & idx & name & uri & code & forward_name & backward_name
+                & additional_data & color & sort & commercial_mode
+                & company_list & network & route_list & physical_mode_list
+                & messages;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
