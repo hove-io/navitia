@@ -1,9 +1,8 @@
 #encoding: utf-8
 import logging
-import pymssql
-from sqlalchemy import Column, Table, MetaData, select, create_engine, ForeignKey
-import sqlalchemy
-
+import datetime
+from sqlalchemy import Column, Table, MetaData, select, create_engine, \
+    ForeignKey, bindparam,  and_, or_
 #
 # SELECT "
 #             "event.event_id AS event_id, " //0
@@ -97,18 +96,34 @@ class AtRealtimeReader(object):
                             self.impactbroadcast_table.c.Impact_Title,
                             self.impactbroadcast_table.c.Impact_Msg
                             ],
+                    #clause where
+                    and_(self.msgmedia_table.c.MsgMedia_Lang == bindparam(
+                        'media_lang'),
+                        self.msgmedia_table.c.MsgMedia_Media == bindparam(
+                        'media_media'),
+                        self.event_table.c.Event_PublicationEndDate
+                        >=bindparam('event_publicationenddate'),
+                        or_(self.event_table.c.Event_CloseDate == None,
+                            self.event_table.c.Event_CloseDate > bindparam(
+                                'event_closedate'))
+                        ),
+                    #jointure
                     from_obj=[self.event_table.join(self.impact_table).join(
                         self.tcobjectref_table).join(
                         self.impactbroadcast_table).join(self
-                    .msgmedia_table)],
-                    self.msgmedia_table.c.MsgMedia_Lang = :media_lang)
-                result = conn.execute(s)
+                    .msgmedia_table)]
+                    )
+                result = conn.execute(s, media_lang= 'fr',
+                                      media_media='Internet',
+                                      event_publicationenddate=
+                                      datetime.datetime(2013,9,01),
+                                      event_closedate= datetime.datetime.now())
             except sqlalchemy.exc.SQLAlchemyError, e:
                 logger.exception('error durring request')
             if result is not None:
                 for row in result:
                     print row
-            result.close();
+                result.close();
 
 
 
