@@ -84,6 +84,7 @@ class display_informations_route(fields.Raw):
         result["commercial_mode"] = display_information.commercial_mode
         result["label"] = display_information.name if display_information.code == "" else display_information.code
         result["color"] = display_information.color
+        result["code"] = display_information.code
         return result
 
 class has_equipments():
