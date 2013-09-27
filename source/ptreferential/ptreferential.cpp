@@ -229,7 +229,11 @@ std::vector<type::idx_t> paginate(std::vector<type::idx_t> &indexes,
                 end = indexes.end();
             response = std::vector<idx_t>(begin, end);
         }
+    }else{
+        return indexes;
     }
+
+
     return response;
 }
 

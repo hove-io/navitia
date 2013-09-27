@@ -135,7 +135,6 @@ class add_collection_links(generate_links):
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
             if isinstance(objects, tuple):
-                print objects
                 data, code, header = unpack(objects)
             else:
                 data = objects

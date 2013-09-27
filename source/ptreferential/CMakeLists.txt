@@ -1,5 +1,4 @@
 SET(PTREF_SRC ptreferential.cpp ptreferential_api.cpp where.h reflexion.h ptref_graph.cpp)
 add_library(ptreferential ${PTREF_SRC})
-target_link_libraries(ptreferential georef)
 
 add_subdirectory(tests)

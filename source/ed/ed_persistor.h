@@ -4,6 +4,7 @@
 #include "data.h"
 #include "type/meta_data.h"
 
+
 namespace ed{
 
 struct EdPersistor{
@@ -16,6 +17,7 @@ struct EdPersistor{
 
 private:
     void insert_metadata(const navitia::type::MetaData& meta);
+    void insert_sa_sp_properties(const ed::Data& data);
     void insert_stop_areas(const std::vector<types::StopArea*>& stop_areas);
 
     void insert_networks(const std::vector<types::Network*>& networks);
@@ -29,6 +31,7 @@ private:
     void insert_routes(const std::vector<types::Route*>& routes);
     void insert_journey_patterns(const std::vector<types::JourneyPattern*>& journey_pattern);
     void insert_validity_patterns(const std::vector<types::ValidityPattern*>& validity_patterns);
+    void insert_vehicle_properties(const std::vector<types::VehicleJourney*>& vehicle_journeys);
     void insert_vehicle_journeys(const std::vector<types::VehicleJourney*>& vehicle_journeys);
 
     void insert_journey_pattern_point(const std::vector<types::JourneyPatternPoint*>& journey_pattern_points);
@@ -37,7 +40,8 @@ private:
 
     void insert_stop_point_connections(const std::vector<types::StopPointConnection*>& connections);
     void insert_journey_pattern_point_connections(const std::vector<types::JourneyPatternPointConnection*>& connections);
-
+    void insert_alias(const std::map<std::string, std::string>& alias);
+    void insert_synonyms(const std::map<std::string, std::string>& synonyms);
     /// suppression de l'ensemble des objets chargés par gtfs déja present en base
     void clean_db();
     void build_relation();

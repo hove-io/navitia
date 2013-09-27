@@ -118,15 +118,25 @@ struct hasProperties {
     static const uint8_t APPOPRIATE_SIGNAGE = 9;
 
     bool wheelchair_boarding() {return _properties[WHEELCHAIR_BOARDING];}
+    bool wheelchair_boarding() const {return _properties[WHEELCHAIR_BOARDING];}
     bool sheltered() {return _properties[SHELTERED];}
+    bool sheltered() const {return _properties[SHELTERED];}
     bool elevator() {return _properties[ELEVATOR];}
+    bool elevator() const {return _properties[ELEVATOR];}
     bool escalator() {return _properties[ESCALATOR];}
+    bool escalator() const {return _properties[ESCALATOR];}
     bool bike_accepted() {return _properties[BIKE_ACCEPTED];}
+    bool bike_accepted() const {return _properties[BIKE_ACCEPTED];}
     bool bike_depot() {return _properties[BIKE_DEPOT];}
+    bool bike_depot() const {return _properties[BIKE_DEPOT];}
     bool visual_announcement() {return _properties[VISUAL_ANNOUNCEMENT];}
+    bool visual_announcement() const {return _properties[VISUAL_ANNOUNCEMENT];}
     bool audible_announcement() {return _properties[AUDIBLE_ANNOUNVEMENT];}
+    bool audible_announcement() const {return _properties[AUDIBLE_ANNOUNVEMENT];}
     bool appropriate_escort() {return _properties[APPOPRIATE_ESCORT];}
+    bool appropriate_escort() const {return _properties[APPOPRIATE_ESCORT];}
     bool appropriate_signage() {return _properties[APPOPRIATE_SIGNAGE];}
+    bool appropriate_signage() const {return _properties[APPOPRIATE_SIGNAGE];}
 
     bool accessible(const Properties &required_properties) const{
         auto mismatched = required_properties & ~_properties;
@@ -157,8 +167,11 @@ struct hasProperties {
         return _properties[property];
     }
 
+    idx_t to_ulog(){
+        return _properties.to_ulong();
+    }
 
-private:
+//private: on ne peut pas binaraisé si privé
     Properties _properties;
 };
 
@@ -171,7 +184,7 @@ struct hasVehicleProperties {
     static const uint8_t AUDIBLE_ANNOUNCEMENT = 4;
     static const uint8_t APPOPRIATE_ESCORT = 5;
     static const uint8_t APPOPRIATE_SIGNAGE = 6;
-    static const uint8_t SCOOL_VEHICLE = 7;
+    static const uint8_t SCHOOL_VEHICLE = 7;
 
     bool wheelchair_accessible() {return _vehicle_properties[WHEELCHAIR_ACCESSIBLE];}
     bool wheelchair_accessible() const {return _vehicle_properties[WHEELCHAIR_ACCESSIBLE];}
@@ -187,8 +200,8 @@ struct hasVehicleProperties {
     bool appropriate_escort() const {return _vehicle_properties[APPOPRIATE_ESCORT];}
     bool appropriate_signage() {return _vehicle_properties[APPOPRIATE_SIGNAGE];}
     bool appropriate_signage() const {return _vehicle_properties[APPOPRIATE_SIGNAGE];}
-    bool school_vehicle() {return _vehicle_properties[SCOOL_VEHICLE];}
-    bool school_vehicle() const {return _vehicle_properties[SCOOL_VEHICLE];}
+    bool school_vehicle() {return _vehicle_properties[SCHOOL_VEHICLE];}
+    bool school_vehicle() const {return _vehicle_properties[SCHOOL_VEHICLE];}
 
     bool accessible(const VehicleProperties &required_vehicles) const{
         auto mismatched = required_vehicles & ~_vehicle_properties;
@@ -218,7 +231,12 @@ struct hasVehicleProperties {
     bool vehicle(uint8_t vehicle) const {
         return _vehicle_properties[vehicle];
     }
-private:
+
+    idx_t to_ulog(){
+        return _vehicle_properties.to_ulong();
+    }
+
+//private: on ne peut pas binaraisé si privé
     VehicleProperties _vehicle_properties;
 };
 
@@ -324,8 +342,8 @@ enum class ConnectionType {
     undefined
 };
 
-enum class OdtType {
-    regular_line = 0,                 // ligne régulière
+enum class VehicleJourneyType {
+    regular = 0,                    // ligne régulière
     virtual_with_stop_time = 1,       // TAD virtuel avec horaires
     virtual_without_stop_time = 2,    // TAD virtuel sans horaires
     stop_point_to_stop_point = 3,     // TAD rabattement arrêt à arrêt
@@ -355,7 +373,7 @@ struct Connection: public Header, hasProperties{
         max_duration(0){};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & uri & departure & destination & duration & max_duration;
+        ar & id & idx & uri & departure & destination & duration & max_duration & _properties;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -377,8 +395,8 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages{
     bool wheelchair_boarding;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & uri & name & coord & stop_point_list & admin_list
-            & wheelchair_boarding & messages;
+        ar & id & idx & uri & name & coord & stop_point_list & admin_list 
+        & _properties & wheelchair_boarding & messages;
     }
 
     StopArea(): wheelchair_boarding(false) {}
@@ -452,9 +470,10 @@ struct CommercialMode : public Header, Nameable{
 
 struct PhysicalMode : public Header, Nameable{
     const static Type_e type = Type_e::PhysicalMode;
+    std::vector<JourneyPattern*> journey_pattern_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & idx;
+        ar & id & idx & name & uri & journey_pattern_list;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -515,15 +534,16 @@ struct JourneyPattern : public Header, Nameable{
     bool is_frequence;
     Route* route;
     CommercialMode* commercial_mode;
+    PhysicalMode* physical_mode;
 
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
     std::vector<VehicleJourney*> vehicle_journey_list;
 
-    JourneyPattern(): is_frequence(false), route(nullptr), commercial_mode(nullptr) {};
+    JourneyPattern(): is_frequence(false), route(nullptr), commercial_mode(nullptr), physical_mode(nullptr) {};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & id & idx & name & uri & is_frequence & route & commercial_mode
-                & journey_pattern_point_list & vehicle_journey_list;
+                & physical_mode & journey_pattern_point_list & vehicle_journey_list;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -535,10 +555,9 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     const static Type_e type = Type_e::VehicleJourney;
     JourneyPattern* journey_pattern;
     Company* company;
-    PhysicalMode* physical_mode;
     ValidityPattern* validity_pattern;
     std::vector<StopTime*> stop_time_list;
-    OdtType odt_type;
+    VehicleJourneyType vehicle_journey_type;
     std::string odt_message;
 
     bool is_adapted;
@@ -546,13 +565,16 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     std::vector<VehicleJourney*> adapted_vehicle_journey_list;
     VehicleJourney* theoric_vehicle_journey;
 
-    VehicleJourney(): journey_pattern(nullptr), company(nullptr), physical_mode(nullptr), validity_pattern(nullptr) /*, wheelchair_boarding(false)*/, is_adapted(false), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
+    VehicleJourney(): journey_pattern(nullptr), company(nullptr), validity_pattern(nullptr) /*, wheelchair_boarding(false)*/, is_adapted(false), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & uri & journey_pattern & company & physical_mode & validity_pattern & idx /*& wheelchair_boarding*/ & stop_time_list
-            & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & odt_type & odt_message
-            & messages;
+        ar & name & uri & journey_pattern & company & validity_pattern
+            & idx /*& wheelchair_boarding*/ & stop_time_list & is_adapted
+            & adapted_validity_pattern & adapted_vehicle_journey_list
+            & theoric_vehicle_journey & comment & vehicle_journey_type
+            & odt_message & _vehicle_properties & messages;
     }
     std::string get_direction() const;
+    bool has_date_time_estimated() const;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
     bool operator<(const VehicleJourney& other) const {
@@ -609,7 +631,8 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages{
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & uri & name & stop_area & coord & fare_zone & idx & journey_pattern_point_list & admin_list & messages;
+        ar & uri & name & stop_area & coord & fare_zone & idx
+            & journey_pattern_point_list & admin_list & _properties & messages;
     }
 
     StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}
@@ -673,8 +696,8 @@ struct StopTime : public Nameable {
     bool pick_up_allowed() const {return properties[PICK_UP];}
     bool drop_off_allowed() const {return properties[DROP_OFF];}
     bool odt() const {return properties[ODT];}
-    bool is_frequency() const{return properties[IS_FREQUENCY];}
-    bool date_time_estimated() const{return properties[DATE_TIME_ESTIMATED];}
+    bool is_frequency() const {return properties[IS_FREQUENCY];}
+    bool date_time_estimated() const {return properties[DATE_TIME_ESTIMATED];}
 
     inline void set_pick_up_allowed(bool value) {properties[PICK_UP] = value;}
     inline void set_drop_off_allowed(bool value) {properties[DROP_OFF] = value;}
@@ -705,7 +728,7 @@ struct StopTime : public Nameable {
         return gap + first_st->start_time + this->departure_time - first_st->departure_time;
     }
 
-    DateTime section_end_date(int date, bool clockwise) const {return type::DateTime(date, this->section_end_time(clockwise));}
+    DateTime section_end_date(int date, bool clockwise) const {return DateTimeUtils::set(date, this->section_end_time(clockwise));}
 
 
     /** Is this hour valid : only concerns frequency data

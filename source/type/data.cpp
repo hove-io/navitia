@@ -113,6 +113,7 @@ void Data::build_proximity_list(){
 void Data::build_autocomplete(){
     pt_data.build_autocomplete(geo_ref);
     geo_ref.build_autocomplete_list();
+    pt_data.compute_score_autocomplete(geo_ref);
 }
 
 void Data::build_raptor() {

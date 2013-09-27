@@ -121,9 +121,9 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     try {
         switch(api){
         case pbnavitia::NEXT_DEPARTURES:
-            return navitia::timetables::next_departures(request.departure_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(),type::AccessibiliteParams(), *(*this->data));
+            return navitia::timetables::next_departures(request.departure_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(),type::AccessibiliteParams(), *(*this->data), request.count(), request.start_page());
         case pbnavitia::NEXT_ARRIVALS:
-            return navitia::timetables::next_arrivals(request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), type::AccessibiliteParams(), *(*this->data));
+            return navitia::timetables::next_arrivals(request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), type::AccessibiliteParams(), *(*this->data), request.count(), request.start_page());
         case pbnavitia::STOPS_SCHEDULES:
             return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.from_datetime(), request.duration(), request.depth(), *(*this->data));
         case pbnavitia::DEPARTURE_BOARDS:

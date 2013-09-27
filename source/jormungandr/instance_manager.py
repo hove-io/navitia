@@ -126,7 +126,6 @@ class NavitiaManager(object):
             if api in self.instances[region].script.apis:
                 try:
                     api_func = getattr(self.instances[region].script, api)
-                    api_answer = api_func(arguments, region)
                     return api_func(arguments, region)
                 except DeadSocketException, e:
                     if request:

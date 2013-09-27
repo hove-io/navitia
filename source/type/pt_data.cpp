@@ -41,27 +41,47 @@ void PT_Data::sort(){
 //void PT_Data::build_autocomplete(const std::map<std::string, std::string> & map_alias, const std::map<std::string, std::string> & map_synonymes){
 void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     for(const StopArea* sa : this->stop_areas){
-        std::string key="";
-        for( navitia::georef::Admin* admin : sa->admin_list){
-            key +=" " + admin->name;
+        // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin
+        if ((!sa->name.empty()) && (sa->admin_list.size() > 0)){
+            std::string key="";
+            for( navitia::georef::Admin* admin : sa->admin_list){
+                if (admin->level ==8){key +=" " + admin->name;}
+            }
+            this->stop_area_autocomplete.add_string(sa->name + " " + key, sa->idx, georef.alias, georef.synonymes);
         }
-        this->stop_area_autocomplete.add_string(sa->name + " " + key, sa->idx, georef.alias, georef.synonymes);
     }
     this->stop_area_autocomplete.build();
+    //this->stop_area_autocomplete.compute_score((*this), georef, type::Type_e::StopArea);
 
     for(const StopPoint* sp : this->stop_points){
-        std::string key="";
-        for(navitia::georef::Admin* admin : sp->admin_list){
-            key += key + " " + admin->name;
+        // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin
+        if ((!sp->name.empty()) && (sp->admin_list.size() > 0)){
+            std::string key="";
+            for(navitia::georef::Admin* admin : sp->admin_list){
+                if (admin->level == 8){key += key + " " + admin->name;}
+            }
+            this->stop_point_autocomplete.add_string(sp->name + " " + key, sp->idx, georef.alias, georef.synonymes);
         }
-        this->stop_point_autocomplete.add_string(sp->name + " " + key, sp->idx, georef.alias, georef.synonymes);
     }
     this->stop_point_autocomplete.build();
 
     for(const Line* line : this->lines){
-        this->line_autocomplete.add_string(line->name, line->idx, georef.alias, georef.synonymes);
+        if (!line->name.empty()){
+            this->line_autocomplete.add_string(line->name, line->idx, georef.alias, georef.synonymes);
+        }
     }
     this->line_autocomplete.build();
+}
+
+void PT_Data::compute_score_autocomplete(navitia::georef::GeoRef& georef){
+
+    //Commencer par calculer le score des admin
+    georef.fl_admin.compute_score((*this), georef, type::Type_e::Admin);
+    //Affecter le score de chaque admin à ses ObjectTC
+    georef.fl_way.compute_score((*this), georef, type::Type_e::Way);
+    georef.fl_poi.compute_score((*this), georef, type::Type_e::POI);
+    this->stop_area_autocomplete.compute_score((*this), georef, type::Type_e::StopArea);
+    this->stop_point_autocomplete.compute_score((*this), georef, type::Type_e::StopPoint);
 }
 
 
