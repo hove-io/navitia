@@ -215,12 +215,21 @@ std::vector<nt::StopTime*> duplicate_vj(nt::VehicleJourney* vehicle_journey,
 
         for(auto* stoptmp : impacted_stop){
             auto it = std::find_if(vj_adapted->stop_time_list.begin(), vj_adapted->stop_time_list.end(),
-                    [&stoptmp](nt::StopTime* s1){
+                    [&stoptmp](const nt::StopTime* s1){
                         return (s1->arrival_time == stoptmp->arrival_time && s1->departure_time == stoptmp->departure_time
                         && s1->journey_pattern_point->stop_point == stoptmp->journey_pattern_point->stop_point);
                     });
             if(it != vj_adapted->stop_time_list.end()){
+                //on ajoute le pointeur du stop à supprimer
                 stop_to_delete.push_back(*it);
+                //on recherche puis supprime le jpp associé au stop
+                auto& jpp_list = vj_adapted->journey_pattern->journey_pattern_point_list;
+                auto jpp_it = std::find(jpp_list.begin(), jpp_list.end(), (*it)->journey_pattern_point);
+                if(jpp_it != jpp_list.end()){
+                    jpp_list.erase(jpp_it);
+                }
+                //on supprime le stop de la liste;
+                //à partir d'ici l'itérateur it n'est plus valide!!!
                 vj_adapted->stop_time_list.erase(it);
             }
         }
@@ -403,6 +412,7 @@ void AtAdaptedLoader::clean_stop_time(nt::PT_Data& data){
     }
     data.stop_times.resize(count);
     assert(data.stop_times.size() == (original_size - stop_to_delete.size()));
+    std::cout << "stop_to_delete: " << stop_to_delete.size() << std::endl;
 }
 
 void AtAdaptedLoader::clean_journey_pattern_point(nt::PT_Data& data){

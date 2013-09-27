@@ -1617,7 +1617,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_0){
 
 
     vj = b.data.pt_data.vehicle_journeys[1];
-    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:1");
+    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:0");
     BOOST_CHECK_EQUAL(vj->is_adapted,  true);
 
     BOOST_CHECK(vj->validity_pattern->days.none());
@@ -1840,16 +1840,17 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_2){
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 2);
 
 
-    //le premier vj adapté ne doit pas circulé, il correspond à un état intermédiaire
+    //le premier vj adapté ne doit pas circuler, il correspond à un état intermédiaire
     vj = b.data.pt_data.vehicle_journeys[1];
-    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:1");
+    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:0");
     BOOST_CHECK_EQUAL(vj->is_adapted,  true);
     BOOST_CHECK(vj->validity_pattern->days.none());
     BOOST_CHECK(vj->adapted_validity_pattern->days.none());
+    BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 1);
 
 
     vj = b.data.pt_data.vehicle_journeys[2];
-    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:2");
+    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:1");
     BOOST_CHECK_EQUAL(vj->is_adapted,  true);
 
     BOOST_CHECK(vj->validity_pattern->days.none());
@@ -1962,7 +1963,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_passe_minuit){
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 3);
 
     vj = b.data.pt_data.vehicle_journeys[1];
-    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:1");
+    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:0");
     BOOST_CHECK_EQUAL(vj->is_adapted,  true);
     BOOST_CHECK(vj->validity_pattern->days.none());
 
@@ -2086,7 +2087,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_3){
 
 
     vj = b.data.pt_data.vehicle_journeys[1];
-    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:1");
+    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:0");
     BOOST_CHECK_EQUAL(vj->is_adapted,  true);
     BOOST_CHECK(vj->validity_pattern->days.none());
     testdate = bg::date_from_iso_string("20130301T1739");
@@ -2117,7 +2118,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_3){
 
 
     vj = b.data.pt_data.vehicle_journeys[2];
-    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:2");
+    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:1");
     BOOST_CHECK_EQUAL(vj->is_adapted,  true);
 
     BOOST_CHECK(vj->validity_pattern->days.none());
@@ -2146,7 +2147,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_3){
     BOOST_CHECK_EQUAL(vj->stop_time_list.size(), 0);
 
     vj = b.data.pt_data.vehicle_journeys[3];
-    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:3");
+    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:2");
     BOOST_CHECK_EQUAL(vj->is_adapted,  true);
 
     BOOST_CHECK(vj->validity_pattern->days.none());
@@ -2290,7 +2291,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
 
 
     vj = b.data.pt_data.vehicle_journeys[1];
-    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:1");
+    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:0");
     BOOST_CHECK_EQUAL(vj->is_adapted,  true);
 
     BOOST_CHECK(vj->validity_pattern->days.none());
@@ -2334,7 +2335,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
     }
 
     vj = b.data.pt_data.vehicle_journeys[2];
-    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:2");
+    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:1");
     BOOST_CHECK_EQUAL(vj->is_adapted,  true);
 
     BOOST_CHECK(vj->validity_pattern->days.none());
@@ -2378,7 +2379,7 @@ BOOST_AUTO_TEST_CASE(impact_stoppoint_4){
     }
 
     vj = b.data.pt_data.vehicle_journeys[3];
-    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:3");
+    BOOST_CHECK_EQUAL(vj->uri,  "vehicle_journey:vj1:adapted:2");
     BOOST_CHECK_EQUAL(vj->is_adapted,  true);
 
     BOOST_CHECK(vj->validity_pattern->days.none());
