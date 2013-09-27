@@ -11,7 +11,7 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    additional_informations_vj, UrisToLinks
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
-from ResourceUri import ResourceUri
+from ResourceUri import ResourceUri, add_notes
 from datetime import datetime
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
@@ -34,6 +34,8 @@ class Schedules(ResourceUri):
                 description="Number of schedules per page")
         parser_get.add_argument("start_page", type=int, default=0,
                 description="The current page")
+        self.method_decorators.append(add_notes(self))
+
 
     def get(self, uri=None, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()

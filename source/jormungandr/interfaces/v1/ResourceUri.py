@@ -17,7 +17,6 @@ class ResourceUri(Resource):
         self.method_decorators.append(add_computed_resources(self))
         self.method_decorators.append(add_pagination_links())
         self.method_decorators.append(clean_links())
-        self.method_decorators.append(add_notes(self))
 
 
     def get_filter(self, items):

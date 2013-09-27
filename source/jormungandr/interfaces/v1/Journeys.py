@@ -10,7 +10,7 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    display_informations_vj,additional_informations_vj
 
 from interfaces.parsers import option_value
-from ResourceUri import ResourceUri
+from ResourceUri import ResourceUri, add_notes
 import datetime
 from functools import wraps
 from make_links import add_id_links, clean_links
@@ -174,10 +174,10 @@ class add_journey_href(object):
 
 class Journeys(ResourceUri):
     parsers = {}
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         modes = ["walking", "car", "bike", "br"]
         types = ["all", "asap"]
-        self.parsers["get"] =  reqparse.RequestParser()
+        self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("from", type=str, dest="origin")
         parser_get.add_argument("to", type=str, dest="destination")
@@ -207,13 +207,15 @@ class Journeys(ResourceUri):
         parser_get.add_argument("type", type=option_value(types), default="all")
 #a supprimer
         parser_get.add_argument("max_duration", type=int, default=36000)
+        self.method_decorators.append(add_notes(self))
+
 
     @clean_links()
     @add_id_links()
     @add_journey_href()
     @marshal_with(journeys)
     def get(self, region=None, lon=None, lat=None, uri=None):
-        args = self.parser.parse_args()
+        args = self.parsers["get"].parse_args()
         #TODO : Changer le protobuff pour que ce soit propre
         args["destination_mode"] = "vls" if args["destination_mode"] == "br" else args["destination_mode"]
         args["origin_mode"] = "vls" if args["origin_mode"] == "br" else args["origin_mode"]
