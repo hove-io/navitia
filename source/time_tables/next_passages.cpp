@@ -3,31 +3,35 @@
 #include "request_handle.h"
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "type/datetime.h"
+#include "ptreferential/ptreferential.h"
 namespace pt = boost::posix_time;
 
 namespace navitia { namespace timetables {
 
 template<typename Visitor>
-pbnavitia::Response 
+pbnavitia::Response
 next_passages(const std::string &request, const std::string &str_dt,
               uint32_t duration, uint32_t nb_stoptimes, const int depth,
               /*const bool wheelchair*/
               const type::AccessibiliteParams & accessibilite_params, type::Data & data, Visitor vis,
               uint32_t count, uint32_t start_page) {
-    RequestHandle handler(vis.api_str, request, str_dt, duration,data, count, start_page);
+    RequestHandle handler(vis.api_str, request, str_dt, duration,data);//, count, start_page);
 
     if(handler.pb_response.has_error()) {
         return handler.pb_response;
     }
 
-    std::remove_if(handler.journey_pattern_points.begin(), handler.journey_pattern_points.end(), vis.predicate);
+    std::remove_if(handler.journey_pattern_points.begin(),
+                   handler.journey_pattern_points.end(), vis.predicate);
 
-    auto departures_dt_stop_times = get_stop_times(handler.journey_pattern_points, handler.date_time, handler.max_datetime, nb_stoptimes, data, accessibilite_params/*wheelchair*/);
-
+    auto passages_dt_st = get_stop_times(handler.journey_pattern_points,
+                            handler.date_time, handler.max_datetime,
+                            nb_stoptimes, data, accessibilite_params);
+    size_t total_result = passages_dt_st.size();
+    passages_dt_st = ptref::paginate(passages_dt_st, count, start_page);
     auto now = pt::second_clock::local_time();
     pt::time_period action_period(navitia::to_posix_time(handler.date_time, data), navitia::to_posix_time(handler.max_datetime, data));
-    
-    for(auto dt_stop_time : departures_dt_stop_times) {
+    for(auto dt_stop_time : passages_dt_st) {
         pbnavitia::Passage * passage;
         if(vis.api_str == "NEXT_ARRIVALS")
             passage = handler.pb_response.add_next_arrivals();
@@ -48,10 +52,10 @@ next_passages(const std::string &request, const std::string &str_dt,
         fill_pb_object(physical_mode, data, passage->mutable_vehicle_journey()->mutable_journey_pattern()->mutable_physical_mode(), 0, now, action_period);
     }
     auto pagination = handler.pb_response.mutable_pagination();
-    pagination->set_totalresult(handler.total_result);
+    pagination->set_totalresult(total_result);
     pagination->set_startpage(start_page);
     pagination->set_itemsperpage(count);
-    pagination->set_itemsonpage(handler.pb_response.route_schedules_size());
+    pagination->set_itemsonpage(passages_dt_st.size());
     return handler.pb_response;
 }
 
