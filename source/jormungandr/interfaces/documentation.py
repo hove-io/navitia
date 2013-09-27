@@ -10,6 +10,7 @@ class Documentation(Resource):
         self.endpoints = []
         self.api_version = 0
         self.base_path = None
+        self.method_decorators = []
 
 
     def get(self, api=None):
@@ -43,14 +44,55 @@ class Documentation(Resource):
         response["apis"] = self.get_endpoint(rule_list)
         return response
 
+    def get_path(self, rule):
+        path = rule.rule
+        for argument in rule.arguments:
+            path = re.sub(r'<(\w+):'+argument+'>', '{'+argument+'}', path)
+        return path
+
+    def get_parameters(self, rule, parser):
+        parameters = []
+        for argument in rule.arguments:
+            name = argument
+            converter = rule._converters[name]
+            description = converter.__doc__
+            type_ = 'string'
+            if 'type_' in dir(converter):
+                type_ = converter.type_
+            parameters.append({
+                "paramType" : "path",
+                "name" : name,
+                "description" : description,
+                "type" : type_,
+                "required" : True,
+                "dataType": "string"
+                            })
+        for argument in parser.args:
+            if "description" in dir(argument) and\
+                    argument.description and\
+                    not argument.hidden:
+                param = { "paramType": "query",
+                          "name" : argument.name,
+                          "dataType" : "string",
+                          "required" : argument.required,
+                          "allowMultiple" : argument.action=="append",
+                          "description" : argument.description,
+                        }
+                if len(argument.choices) > 0:
+                    values = [list(i) for i in argument.choices]
+                    param["allowableValues"] = {
+                        "valueType": "LIST",
+                        "values" : values
+                    }
+                parameters.append(param)
+        return parameters
+
+
+
     def get_endpoint(self, rules):
         apis = []
         for (rule, endpoint) in rules:
-            path_arguments = []
-            path = rule.rule
-            for argument in rule.arguments:
-                path = re.sub(r'<(\w+):'+argument+'>', '{'+argument+'}', path)
-                path_arguments.append((argument, '{'+argument+'}'))
+            path = self.get_path(rule)
             api = {"path" : path,
                     "operations" : []
             }
@@ -59,48 +101,11 @@ class Documentation(Resource):
                     view_func = current_app.view_functions[endpoint]
                     func = view_func.func_dict['view_class']
                     parameters = []
-                    if len(path_arguments) > 0:
-                        for path_argument in path_arguments:
-                            name = path_argument[0]
-                            converter = rule._converters[name]
-                            description = converter.__doc__
-                            type_ = 'string'
-                            if 'type_' in dir(converter):
-                                type_ = converter.type_
-                            elif 'num_convert' in dir(converter):
-                                type_ = 'float' if isinstance(converter.num_convert, float) else 'int'
-                            parameters.append({
-                                "paramType" : "path",
-                                "name" : name,
-                                "description" : description,
-                                "type" : type_,
-                                "required" : True,
-                                "dataType": "string"
-                                })
                     func_instance = func()
                     if "parsers" in dir(func_instance) and\
                             method.lower() in func_instance.parsers.keys():
                         parser = func_instance.parsers[method.lower()]
-                        for argument in parser.args:
-                            if "description" in dir(argument) and\
-                                    argument.description and\
-                                    not argument.hidden:
-                                param = {
-                                       "paramType": "query",
-                                       "name" : argument.name,
-                                       "dataType" : "string",
-                                       "required" : argument.required,
-                                       "allowMultiple" : argument.action=="append",
-                                       "description" : argument.description,
-                                   }
-                                if len(argument.choices) > 0:
-                                    values = [list(i) for i in argument.choices]
-                                    param["allowableValues"] = {
-                                        "valueType": "LIST",
-                                        "values" : values
-                                    }
-                                parameters.append(param)
-
+                        parameters = self.get_parameters(rule, parser)
                     summary = None
                     notes = None
                     if func.__doc__:
