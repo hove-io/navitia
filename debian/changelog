@@ -1,3 +1,88 @@
+navitia2 (0.62.41) unstable; urgency=low
+
+  [ Vincent Lara ]
+  * Debian : Ajout de la dépendance à python-six
+  * Jormungandr : Correction des fichiers à installer
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 10 Sep 2013 11:40:18 +0200
+
+kraken (0.62.40) quantal; urgency=low
+
+  * Debut de qqc
+  * Jörmungandr : Suppression de apis et validation
+  * Instance manager : On ne va plus lire des valeurs par défaut dans la conf
+  * Jörmungandr : Definition des apis appelables dans le script
+  * ptref : On enlève un std::cout
+  * PbConverter : Début de lintage
+  * Jörmungandr : Mega refacto qui utilise une version custome de flask-restfull
+  * Add module flask-restful
+  * Jormungandr : Gestion des listes vides
+  * Submodule update
+  * Pulled down update to libutils
+  * Transverse : Compilation de utils en premier
+  * Raptor : Un bout de debug qui trainait
+  * Jormungandr : Prise en compte de nonnull
+  * Updated flask-restful
+  * Ptdata : get type ne renvoyait pas le bon type pour les adresses
+  * Jormungandr : Maj des CmakeLists
+  * Raptor : Hacke pour avoir des résultats
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 04 Sep 2013 19:09:59 +0200
+
+kraken (0.62.38) squeeze; urgency=low
+
+  * Autocomplete : Ajout des informations de pagination
+  * Kraken : Ajout de la pagination dans ptref
+  * Jörmungandr : Bouchon stop_schedules
+  * Jörmungandr : startPage devient start_page
+  * Jörmungandr : La pagination se fait maintenant dans kraken
+  * Jörmungandr : Lintage
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 13 Aug 2013 16:36:11 +0200
+
+kraken (0.62.37) quantal; urgency=low
+
+  [ Vincent Lara ]
+  * Debian : Correction du packaging de ed
+  * Jormungandr : Ajout de bouchons
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 13 Aug 2013 09:55:32 +0200
+
+kraken (0.62.36) quantal; urgency=low
+
+  [ l-vincent-l ]
+  * Update install.rst
+
+  [ Vincent Lara ]
+  * Ed : Gestion de mauvaises coordonnées
+  * Debian : Correction des dépendences de navitia-ed
+  * Jörmungandr : Hotfix pour les route_schedules
+  * Jormungandr : lintage output_v1
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 12 Aug 2013 18:46:07 +0200
+
+kraken (0.62.35) quantal; urgency=low
+
+  [ l-vincent-l ]
+  * Update install.rst
+
+  [ Vincent Lara ]
+  * Ed : Gestion de mauvaises coordonnées
+  * Debian : Correction des dépendences de navitia-ed
+  * Jörmungandr : Hotfix pour les route_schedules
+  * Jormungandr : lintage output_v1
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 12 Aug 2013 18:46:00 +0200
+
+kraken (0.62.35) quantal; urgency=low
+
+  * Debian : Correction des fichiers d'install
+  * Scripts : on les rend executable
+  * Version 0.62.34
+  * Jörmungandr : Suppression du deadlock sur jormungandr
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 02 Aug 2013 16:53:11 +0200
+
 kraken (0.62.34) quantal; urgency=low
 
   * Cmake : Ajout de droit d'execution sur les programmes

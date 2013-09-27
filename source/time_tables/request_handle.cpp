@@ -15,14 +15,19 @@ RequestHandle::RequestHandle(const std::string &, const std::string &request,
              // On regarde si la date + duration ne déborde pas de la période de production
             fill_pb_error(pbnavitia::Error::date_out_of_bounds, "date is not in data production period",pb_response.mutable_error());
         }
+
         if(! pb_response.has_error()){
-            date_time = DateTimeUtils::set((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
-            max_datetime = date_time + duration;
-            const auto jpp_t = type::Type_e::JourneyPatternPoint;
-            journey_pattern_points = ptref::make_query(jpp_t, request, data);
-            total_result = journey_pattern_points.size();
-            journey_pattern_points = ptref::paginate(journey_pattern_points, count, start_page);
-        }
+		    date_time = DateTimeUtils::set((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
+		    max_datetime = date_time + duration;
+		    const auto jpp_t = type::Type_e::JourneyPatternPoint;
+		    journey_pattern_points = ptref::make_query(jpp_t, request, data);
+		    total_result = journey_pattern_points.size();
+		    if(count != std::numeric_limits<uint32_t>::max() &&
+		       start_page != std::numeric_limits<uint32_t>::max())
+		        journey_pattern_points = ptref::paginate(journey_pattern_points,
+		                                                 count, start_page);
+		}
+
     } catch(const ptref::parsing_error &parse_error) {
         fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse Datetime" + parse_error.more,pb_response.mutable_error());
     } catch(...) {

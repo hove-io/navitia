@@ -8,5 +8,6 @@ setup(name='pyed',
       author='CanalTP',
       author_email='vincent.lara@canaltp.fr',
       url='www.navitia.io',
-      packages=['pyed']
+      packages=['pyed'],
+      requires=['python-configobj']
 )
