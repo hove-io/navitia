@@ -503,9 +503,10 @@ struct Line : public Header, Nameable, HasMessages{
     Line(): sort(0), commercial_mode(nullptr), network(nullptr){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & code & forward_name & backward_name & additional_data & color
-                & sort & commercial_mode  & company_list & network
-                & route_list & physical_mode_list & messages;
+        ar & id & idx & name & uri & code & forward_name & backward_name
+                & additional_data & color & sort & commercial_mode
+                & company_list & network & route_list & physical_mode_list
+                & messages;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -618,6 +619,7 @@ public:
     bool uncheck2(unsigned int day) const;
     //void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
     bool operator<(const ValidityPattern & other) const { return this < &other; }
+    bool operator==(const ValidityPattern & other) const { return (this->beginning_date == other.beginning_date) && (this->days == other.days);}
 };
 
 struct StopPoint : public Header, Nameable, hasProperties, HasMessages{
