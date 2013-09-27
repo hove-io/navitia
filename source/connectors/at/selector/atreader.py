@@ -7,7 +7,8 @@ from sqlalchemy import Column, Table, MetaData, select, create_engine, \
     ForeignKey, bindparam,  and_, or_, exc
 import at.task_pb2
 import at.realtime_pb2
-import  at.type_pb2
+import at.type_pb2
+import google
 #
 # SELECT "
 #             "event.event_id AS event_id, " //0
@@ -36,6 +37,30 @@ import  at.type_pb2
 #             "AND msgmedia.msgmedia_media = :media_media"
 #     );
 
+def get_pos_time(sql_time):
+    return int(time.mktime(sql_time.timetuple()))
+
+def get_datetime_to_second(sql_time):
+    tt = sql_time.timetuple()
+    return (tt.tm_hour * 60 * 60) + (tt.tm_min * 60 ) + tt.tm_sec
+
+def get_navitia_type(object_type):
+    if object_type == 'StopPoint':
+        return at.type_pb2.STOP_POINT
+    elif object_type == 'VehicleJourney':
+        return at.type_pb2.VEHICLE_JOURNEY
+    elif object_type == 'Line':
+        return at.type_pb2.LINE
+    elif object_type == 'Network':
+        return at.type_pb2.NETWORK
+    elif object_type == 'Route':
+        return at.type_pb2.JOURNEY_PATTERN
+    elif object_type == 'StopArea':
+        return at.type_pb2.STOP_AREA
+    elif object_type == 'RoutePoint':
+        return at.type_pb2.JOURNEY_PATTERN_POINT
+    else:
+        return -1
 
 class AtRealtimeReader(object):
     """
@@ -43,23 +68,11 @@ class AtRealtimeReader(object):
     temps reel.
     """
 
-    def __init__(self):
-        self.message_list = []
-        self.username = 'sa'
-        self.password = '159can87*'
-        self.server = '10.2.0.16'
-        self.port = '1433'
-        self.database = 'at_lyon2sim'
-        #dialect+driver://user:password@host/dbname[?key=value..]
-        connection_string = 'mssql+pymssql://%s:%s@%s/%s?charset=utf8' % (
-                self.username,
-                self.password,
-                self.server,
-                self.database
-        )
+    def __init__(self, config):
 
-        self.__engine = create_engine(
-            connection_string, echo=False)
+        self.message_list = []
+        self.__engine = create_engine(config.at_connection_string + '?charset=utf8',
+                                      echo=False)
 
         self.meta = MetaData(self.__engine)
         self.event_table = Table('event', self.meta, autoload=True)
@@ -92,68 +105,50 @@ class AtRealtimeReader(object):
         self.label_message = 'message'
         self.label_message_lang = 'lang'
 
-    def get_pos_time(self, sql_time):
-        return int(time.mktime(sql_time.timetuple()))
-
-    def get_datetime_to_second(self, sql_time):
-        tt = sql_time.timetuple()
-        return (tt.tm_hour * 60 * 60) + (tt.tm_min * 60 ) + tt.tm_sec
-
-    def get_navitia_type(self, object_type):
-        if object_type == 'StopPoint':
-            return at.type_pb2.STOP_POINT
-        elif object_type == 'VehicleJourney':
-            return at.type_pb2.VEHICLE_JOURNEY
-        elif object_type == 'Line':
-            return at.type_pb2.LINE
-        elif object_type == 'Network':
-            return at.type_pb2.NETWORK
-        elif object_type == 'Route':
-            return at.type_pb2.JOURNEY_PATTERN
-        elif object_type == 'StopArea':
-            return at.type_pb2.STOP_AREA
-        elif object_type == 'RoutePoint':
-            return at.type_pb2.JOURNEY_PATTERN_POINT
-        else:
-            return -1
 
     def set_message(self, result_proxy):
         last_impact_id = -1
         for row in result_proxy:
-            if last_impact_id <> row[self.label_impact_id]:
-                last_impact_id = row[self.label_impact_id]
-                message = at.realtime_pb2.Message()
-                self.message_list.append(message)
+            try:
+                if last_impact_id <> row[self.label_impact_id]:
+                    last_impact_id = row[self.label_impact_id]
+                    message = at.realtime_pb2.Message()
+                    self.message_list.append(message)
 
-                message.uri = str(row[self.label_impact_id]) + '-' + \
-                    row[self.label_message_lang]
+                    message.uri = str(row[self.label_impact_id]) + '-' + \
+                        row[self.label_message_lang]
 
-                message.start_publication_date = \
-                    self.get_pos_time(row[self.label_publication_start_date])
+                    message.start_publication_date = \
+                        get_pos_time(row[self.label_publication_start_date])
 
-                message.end_publication_date = \
-                    self.get_pos_time(row[self.label_publication_end_date])
-                message.start_application_date = \
-                    self.get_pos_time(row[self.label_application_start_date])
-                message.end_application_date = \
-                    self.get_pos_time(row[self.label_application_end_date])
-                # number of seconds since midnigth
-                message.start_application_daily_hour = \
-                    self.get_datetime_to_second(row[self
-                    .label_application_daily_start_hour])
-                message.end_application_daily_hour = \
-                    self.get_datetime_to_second(row[self
-                    .label_application_daily_end_hour])
-                message.active_days = \
-                    str(row[self.label_active_days])
-                message.object.object_uri = row[self.label_object_external_code]
-                message.object.object_type =  \
-                    self.get_navitia_type(row[self.label_object_type])
+                    message.end_publication_date = \
+                        get_pos_time(row[self.label_publication_end_date])
+                    message.start_application_date = \
+                        get_pos_time(row[self.label_application_start_date])
+                    message.end_application_date = \
+                        get_pos_time(row[self.label_application_end_date])
+                    # number of seconds since midnigth
+                    message.start_application_daily_hour = \
+                        get_datetime_to_second(
+                            row[self.label_application_daily_start_hour])
+                    message.end_application_daily_hour = \
+                        get_datetime_to_second(
+                            row[self.label_application_daily_end_hour])
+                    message.active_days = \
+                        str(row[self.label_active_days])
+                    message.object.object_uri = row[self.label_object_external_code]
+                    message.object.object_type =  \
+                        get_navitia_type(row[self.label_object_type])
 
-            localized_message = message.localized_messages.add()
-            localized_message.language = row[self.label_message_lang]
-            localized_message.body = row[self.label_message]
-            localized_message.title = row[self.label_title]
+                localized_message = message.localized_messages.add()
+                localized_message.language = row[self.label_message_lang]
+                localized_message.body = row[self.label_message]
+                localized_message.title = row[self.label_title]
+
+                print message.uri
+            except google.protobuf.message.DecodeError, e:
+                logging.getLogger('connector').warn("message is not a valid "
+                    "protobuf task: %s", str(e))
 
     def set_request(self):
         return  select([self.event_table.c.Event_ID,
@@ -197,7 +192,7 @@ class AtRealtimeReader(object):
                         self.tcobjectref_table).join(
                         self.impactbroadcast_table).join(self
                     .msgmedia_table)]
-                    ).order_by(self.event_table.c.Event_ID)
+                    ).order_by(self.impact_table.c.Impact_ID)
 
     def run(self):
         logger = logging.getLogger('connector')
@@ -219,9 +214,3 @@ class AtRealtimeReader(object):
             if result is not None:
                 self.set_message(result)
                 result.close();
-
-
-
-if __name__ == '__main__':
-    atrealtimereader = AtRealtimeReader()
-    atrealtimereader.run()
