@@ -25,7 +25,10 @@ RequestHandle::RequestHandle(const std::string &API, const std::string &request,
         const auto jpp_t = type::Type_e::JourneyPatternPoint;
         journey_pattern_points = ptref::make_query(jpp_t, request, data);
         total_result = journey_pattern_points.size();
-        journey_pattern_points = ptref::paginate(journey_pattern_points, count, start_page);
+        if(count != std::numeric_limits<uint32_t>::max() &&
+           start_page != std::numeric_limits<uint32_t>::max())
+            journey_pattern_points = ptref::paginate(journey_pattern_points,
+                                                     count, start_page);
 
     } catch(const ptref::parsing_error &parse_error) {
         pb_response.set_error(parse_error.more);
