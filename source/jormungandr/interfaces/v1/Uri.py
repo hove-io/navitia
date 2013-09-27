@@ -11,21 +11,6 @@ from ResourceUri import ResourceUri
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
 
-collections = OrderedDict([
-    ("pagination", fields.Nested(pagination)),
-    ("stop_points", NonNullList(fields.Nested(stop_point, display_null=False))),
-    ("stop_areas", NonNullList(fields.Nested(stop_area, display_null=False))),
-    ("routes", NonNullList(fields.Nested(route, display_null=False))),
-    ("lines", NonNullList(fields.Nested(line, display_null=False))),
-    ("physical_modes", NonNullList(fields.Nested(physical_mode, display_null=False))),
-    ("commercial_modes", NonNullList(fields.Nested(commercial_mode, display_null=False))),
-    ("companies", NonNullList(fields.Nested(company, display_null=False))),
-    ("networks", NonNullList(fields.Nested(network, display_null=False))),
-    ("journey_pattern_points", NonNullList(fields.Nested(journey_pattern_point, display_null=False))),
-    ("pois", NonNullList(fields.Nested(poi, display_null=False))),
-    ("poi_types", NonNullList(fields.Nested(poi_type, display_null=False))),
-])
-
 class Uri(ResourceUri):
     parsers = {}
     def __init__(self, is_collection, collection, *args, **kwargs):
@@ -43,7 +28,8 @@ class Uri(ResourceUri):
         self.collection = collection
 
 
-    @marshal_with(collections, display_null=False)
+
+    #@marshal_with(collections, display_null=False)
     def get(self, region=None, lon=None, lat=None, uri=None, id=None):
         collection = self.collection
         self.region = NavitiaManager().get_region(region, lon, lat)
@@ -67,6 +53,13 @@ def journey_pattern_points(is_collection):
         """ Retrieves journey pattern points"""
         def __init__(self):
             Uri.__init__(self, is_collection, "journey_pattern_points")
+            self.collections = [
+                ("journey_pattern_points",
+                  NonNullList(fields.Nested(journey_pattern_point,
+                                display_null=False)))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
     return JourneyPatternPoints
 
 def commercial_modes(is_collection):
@@ -74,6 +67,14 @@ def commercial_modes(is_collection):
         """ Retrieves commercial modes"""
         def __init__(self):
             Uri.__init__(self, is_collection, "commercial_modes")
+            self.collections = [
+                ("commercial_modes",
+                  NonNullList(fields.Nested(commercial_mode,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
     return CommercialModes
 
 
@@ -82,6 +83,14 @@ def journey_patterns(is_collection):
         """ Retrieves journey patterns"""
         def __init__(self):
             Uri.__init__(self, is_collection, "journey_patterns")
+            self.collections = [
+                ("journey_patterns",
+                  NonNullList(fields.Nested(journey_pattern,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
     return JourneyPatterns
 
 
@@ -90,6 +99,14 @@ def vehicle_journeys(is_collection):
         """ Retrieves vehicle journeys"""
         def __init__(self):
             Uri.__init__(self, is_collection, "vehicle_journeys")
+            self.collections = [
+                ("vehicle_journeys",
+                  NonNullList(fields.Nested(vehicle_journey,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
     return VehicleJourneys
 
 
@@ -98,6 +115,14 @@ def physical_modes(is_collection):
         """ Retrieves physical modes"""
         def __init__(self):
             Uri.__init__(self, is_collection, "physical_modes")
+            self.collections = [
+                ("physical_modes",
+                  NonNullList(fields.Nested(physical_mode,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
     return PhysicalModes
 
 
@@ -106,6 +131,13 @@ def stop_points(is_collection):
         """ Retrieves stop points """
         def __init__(self, *args, **kwargs):
             Uri.__init__(self, is_collection, "stop_points", *args, **kwargs)
+            self.collections = [
+                ("stop_points",
+                    NonNullList(fields.Nested(stop_point, display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
     return StopPoints
 
 
@@ -114,6 +146,14 @@ def stop_areas(is_collection):
         """ Retrieves stop areas """
         def __init__(self):
             Uri.__init__(self, is_collection, "stop_areas")
+            self.collections = [
+                ("stop_areas",
+                  NonNullList(fields.Nested(stop_area,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
     return StopAreas
 
 
@@ -122,6 +162,14 @@ def connections(is_collection):
         """ Retrieves connections"""
         def __init__(self):
             Uri.__init__(self, is_collection, "connections")
+            self.collections = [
+                ("connections",
+                  NonNullList(fields.Nested(connection,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
     return Connections
 
 def companies(is_collection):
@@ -129,6 +177,14 @@ def companies(is_collection):
         """ Retrieves companies"""
         def __init__(self):
             Uri.__init__(self, is_collection, "companies")
+            self.collections = [
+                ("companies",
+                  NonNullList(fields.Nested(company,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
     return Companies
 
 
@@ -137,6 +193,14 @@ def poi_types(is_collection):
         """ Retrieves poi types"""
         def __init__(self):
             Uri.__init__(self, is_collection, "poi_types")
+            self.collections = [
+                ("poi_types",
+                  NonNullList(fields.Nested(poi_type,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
     return PoiTypes
 
 
@@ -146,6 +210,14 @@ def routes(is_collection):
         """ Retrieves routes"""
         def __init__(self):
             Uri.__init__(self, is_collection, "routes")
+            self.collections = [
+                ("routes",
+                  NonNullList(fields.Nested(route,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                  ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
     return Routes
 
 
@@ -154,6 +226,14 @@ def lines(is_collection):
         """ Retrieves lines"""
         def __init__(self):
             Uri.__init__(self, is_collection, "lines")
+            self.collections = [
+                ("lines",
+                  NonNullList(fields.Nested(line,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                  ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
     return Lines
 
 
@@ -162,14 +242,15 @@ def pois(is_collection):
         """ Retrieves pois"""
         def __init__(self):
             Uri.__init__(self, is_collection, "pois")
+            self.collections = [
+                ("pois",
+                  NonNullList(fields.Nested(poi,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                  ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
     return Pois
-
-def addresses(is_collection):
-    class Addresses(Uri):
-        """ Retrieves addresses"""
-        def __init__(self):
-            Uri.__init__(self, is_collection, "addresses")
-    return Addresses
 
 
 def networks(is_collection):
@@ -177,15 +258,15 @@ def networks(is_collection):
         """ Retrieves networks"""
         def __init__(self):
             Uri.__init__(self, is_collection, "networks")
+            self.collections = [
+                ("networks",
+                  NonNullList(fields.Nested(network,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                  ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
     return Networks
-
-
-def coords(is_collection):
-    class Coords(Uri):
-        """ Retrieves coords"""
-        def __init__(self):
-            Uri.__init__(self, is_collection, "coords")
-    return Coords
 
 
 def Redirect(*args, **kwargs):
