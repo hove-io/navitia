@@ -1,3 +1,4 @@
+#coding=utf-8
 from flask import Flask, request, url_for
 from flask.ext.restful import fields, reqparse, marshal_with
 from instance_manager import NavitiaManager, RegionNotFound
@@ -9,10 +10,12 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    display_informations_vj,additional_informations_vj
 
 from interfaces.parsers import option_value
-from ResourceUri import ResourceUri
+from ResourceUri import ResourceUri, add_notes
 import datetime
 from functools import wraps
 from make_links import add_id_links, clean_links
+from interfaces.argument import ArgumentDoc
+from interfaces.parsers import depth_argument
 
 class SectionLinks(fields.Raw):
     def __init__(self, **kwargs):
@@ -119,7 +122,8 @@ journey = {
     'requested_date_time' : fields.String(),
     'sections' : NonNullList(NonNullNested(section)),
     'from' : PbField(place, attribute='origin'),
-    'to' : PbField(place, attribute='destination')
+    'to' : PbField(place, attribute='destination'),
+    'type' : fields.String()
 }
 
 journeys = {
@@ -171,47 +175,51 @@ class Journeys(ResourceUri):
     def __init__(self):
         modes = ["walking", "car", "bike", "br"]
         types = ["all", "asap"]
-        self.parser = reqparse.RequestParser()
-        self.parser.add_argument("from", type=str, dest="origin")
-        self.parser.add_argument("to", type=str, dest="destination")
-        self.parser.add_argument("datetime", type=str)
-        self.parser.add_argument("datetime_represents", dest="clockwise",
-                                 type=dt_represents, default=True)
-        self.parser.add_argument("max_nb_transfers", type=int, default=10,
-                                 dest="max_transfers")
-        self.parser.add_argument("first_section_mode",
-                                 type=option_value(modes),
-                                 default="walking",
-                                 dest="origin_mode")
-        self.parser.add_argument("last_section_mode",
-                                 type=option_value(modes),
-                                 default="walking",
-                                 dest="destination_mode")
-        self.parser.add_argument("walking_speed", type=float, default=1.68)
-        self.parser.add_argument("walking_distance", type=int, default=1000)
-        self.parser.add_argument("bike_speed", type=float, default=8.8)
-        self.parser.add_argument("bike_distance", type=int, default=5000)
-        self.parser.add_argument("br_speed", type=float, default=8.8,)
-        self.parser.add_argument("br_distance", type=int, default=5000)
-        self.parser.add_argument("car_speed", type=float, default=16.8)
-        self.parser.add_argument("car_distance", type=int, default=15000)
-        self.parser.add_argument("forbidden_uris[]", type=str, action="append")
-        self.parser.add_argument("count", type=int)
-        self.parser.add_argument("type", type=option_value(types), default="all")
+        self.parsers = {}
+        self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
+        parser_get = self.parsers["get"]
+        parser_get.add_argument("from", type=str, dest="origin")
+        parser_get.add_argument("to", type=str, dest="destination")
+        parser_get.add_argument("datetime", type=str)
+        parser_get.add_argument("datetime_represents", dest="clockwise",
+                           type=dt_represents, default=True)
+        parser_get.add_argument("max_nb_transfers", type=int, default=10,
+                           dest="max_transfers")
+        parser_get.add_argument("first_section_mode",
+                           type=option_value(modes),
+                           default="walking",
+                           dest="origin_mode")
+        parser_get.add_argument("last_section_mode",
+                           type=option_value(modes),
+                           default="walking",
+                           dest="destination_mode")
+        parser_get.add_argument("walking_speed", type=float, default=1.68)
+        parser_get.add_argument("walking_distance", type=int, default=1000)
+        parser_get.add_argument("bike_speed", type=float, default=8.8)
+        parser_get.add_argument("bike_distance", type=int, default=5000)
+        parser_get.add_argument("br_speed", type=float, default=8.8,)
+        parser_get.add_argument("br_distance", type=int, default=5000)
+        parser_get.add_argument("car_speed", type=float, default=16.8)
+        parser_get.add_argument("car_distance", type=int, default=15000)
+        parser_get.add_argument("forbidden_uris[]", type=str, action="append")
+        parser_get.add_argument("count", type=int)
+        parser_get.add_argument("type", type=option_value(types), default="all")
 #a supprimer
-        self.parser.add_argument("max_duration", type=int, default=36000)
+        parser_get.add_argument("max_duration", type=int, default=36000)
+        self.method_decorators.append(add_notes(self))
+
 
     @clean_links()
     @add_id_links()
     @add_journey_href()
     @marshal_with(journeys)
     def get(self, region=None, lon=None, lat=None, uri=None):
-        args = self.parser.parse_args()
+        args = self.parsers["get"].parse_args()
         #TODO : Changer le protobuff pour que ce soit propre
         args["destination_mode"] = "vls" if args["destination_mode"] == "br" else args["destination_mode"]
         args["origin_mode"] = "vls" if args["origin_mode"] == "br" else args["origin_mode"]
         if not region is None or (not lon is None and not lat is None):
-	    self.region = NavitiaManager().get_region(region, lon, lat)
+            self.region = NavitiaManager().get_region(region, lon, lat)
             if uri:
                 objects = uri.split("/")
                 if objects and len(objects) % 2 == 0:

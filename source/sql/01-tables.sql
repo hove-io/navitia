@@ -237,7 +237,7 @@ CREATE TABLE IF NOT EXISTS navitia.journey_pattern (
 
 DO $$
 BEGIN
-    CASE WHEN (SELECT COUNT(1) = 0 FROM navitia.INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='journey_pattern' AND COLUMN_NAME='physical_mode_id')
+    CASE WHEN (SELECT COUNT(1) = 0 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='navitia.journey_pattern' AND COLUMN_NAME='physical_mode_id')
     THEN
     -- Ajout de la nouvelle colonne
         CREATE TABLE IF NOT EXISTS navitia.journey_pattern_tmp (

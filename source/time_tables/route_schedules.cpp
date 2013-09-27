@@ -91,8 +91,7 @@ pbnavitia::Response
 route_schedule(const std::string& filter, const std::string &str_dt,
                uint32_t duration, const uint32_t max_depth,
                int count, int start_page, type::Data &d) {
-    RequestHandle handler("ROUTE_SCHEDULE", filter, str_dt, duration, d,
-                          count, start_page);
+    RequestHandle handler("ROUTE_SCHEDULE", filter, str_dt, duration, d);
 
     if(handler.pb_response.has_error()) {
         return handler.pb_response;
@@ -102,7 +101,9 @@ route_schedule(const std::string& filter, const std::string &str_dt,
     auto pt_max_datetime = to_posix_time(handler.max_datetime, d);
     pt::time_period action_period(pt_datetime, pt_max_datetime);
     Thermometer thermometer(d);
-    auto routes_idx = navitia::ptref::make_query(type::Type_e::Route, filter, d);
+    auto routes_idx = ptref::make_query(type::Type_e::Route, filter, d);
+    size_t total_result = routes_idx.size();
+    routes_idx = ptref::paginate(routes_idx, count, start_page);
     for(type::idx_t route_idx : routes_idx) {
         auto route = d.pt_data.routes[route_idx];
         auto jps = route->get(type::Type_e::JourneyPattern, d.pt_data);
@@ -127,12 +128,6 @@ route_schedule(const std::string& filter, const std::string &str_dt,
         auto m_pt_display_informations = schedule->mutable_pt_display_informations();
         fill_pb_object(route, d, m_pt_display_informations, 0, now, action_period);
 
-        auto pagination = handler.pb_response.mutable_pagination();
-        pagination->set_totalresult(handler.total_result);
-        pagination->set_startpage(start_page);
-        pagination->set_itemsperpage(count);
-        pagination->set_itemsonpage(std::max(handler.pb_response.departure_boards_size(),
-                                         handler.pb_response.stop_schedules_size()));
         for(type::VehicleJourney* vj : vehicle_journy_list){
             pbnavitia::Header* header = table->add_headers();
             pbnavitia::PtDisplayInfo* vj_display_information = header->mutable_pt_display_informations();
@@ -156,7 +151,7 @@ route_schedule(const std::string& filter, const std::string &str_dt,
         }
     }
     auto pagination = handler.pb_response.mutable_pagination();
-    pagination->set_totalresult(handler.total_result);
+    pagination->set_totalresult(total_result);
     pagination->set_startpage(start_page);
     pagination->set_itemsperpage(count);
     pagination->set_itemsonpage(handler.pb_response.route_schedules_size());

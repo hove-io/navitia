@@ -8,6 +8,7 @@ from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
 from renderers import render, render_from_protobuf
 from werkzeug.wrappers import Response
 from find_extrem_datetimes import *
+from qualifier import qualifier
 
 pb_type = {
         'stop_area': type_pb2.STOP_AREA,
@@ -183,7 +184,11 @@ class Script:
                     section.ClearField("vehicle_journey")
 
     def get_journey(self, req, region, type_):
-        resp = NavitiaManager().send_and_receive(req, region)
+        if req.requested_api == type_pb2.PLANNER :
+            resp = qualifier().qualifier_one(req, region)
+        else:
+            resp = NavitiaManager().send_and_receive(req, region)
+
         if resp.response_type in [response_pb2.NO_ORIGIN_NOR_DESTINATION_POINT,
                                   response_pb2.NO_ORIGIN_POINT,
                                   response_pb2.NO_DESTINATION_POINT]:
@@ -219,7 +224,7 @@ class Script:
 
 
     def __on_journeys(self, requested_type, request, region):
-	req = request_pb2.Request()
+        req = request_pb2.Request()
         req.requested_api = requested_type
         req.journeys.origin = request["origin"]
         if request["destination"]:
