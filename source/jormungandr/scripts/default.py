@@ -10,6 +10,7 @@ from werkzeug.wrappers import Response
 from find_extrem_datetimes import *
 from qualifier import qualifier
 
+
 pb_type = {
         'stop_area': type_pb2.STOP_AREA,
         'stop_point': type_pb2.STOP_POINT,
@@ -189,19 +190,20 @@ class Script:
         else:
             resp = NavitiaManager().send_and_receive(req, region)
 
-        if resp.response_type in [response_pb2.NO_ORIGIN_NOR_DESTINATION_POINT,
-                                  response_pb2.NO_ORIGIN_POINT,
-                                  response_pb2.NO_DESTINATION_POINT]:
-            resp.error = """
+        #if resp.response_type in [response_pb2.NO_ORIGIN_NOR_DESTINATION_POINT,
+        #                          response_pb2.NO_ORIGIN_POINT,
+        #                          response_pb2.NO_DESTINATION_POINT]:
+            '''resp.error = """
                         Could not find a stop point nearby.
                         Check the coordinates (did you mix up longitude and
                         latitude?). Maybe you are out of the covered region.
                         Maybe the coordinate snaped to a street of
                         OpenStreetMap with no connectivity to the street
                         network."""
-        if resp.response_type == response_pb2.NO_SOLUTION:
-            resp.error = "We found no solution. Maybe the are no vehicle \
-                          running that day on all the nearest stop points?"
+            '''
+        #if resp.response_type == response_pb2.NO_SOLUTION:
+            '''resp.error = "We found no solution. Maybe the are no vehicle \
+                          running that day on all the nearest stop points?"'''
         if not resp.error and type_ == "asap":
             #We are looking for the asap result
             earliest_dt = None
@@ -253,7 +255,7 @@ class Script:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.journeys.forbidden_uris.append(forbidden_uri)
         resp = self.get_journey(req, region, request["type"])
-        if len(resp.error) == 0:
+        if not resp.error:
             while request["count"] and request["count"] > len(resp.journeys):
                 datetime = None
                 if request["clockwise"]:
@@ -265,7 +267,7 @@ class Script:
                 datetime = datetime[:-1] + last
                 req.journeys.datetimes[0] = datetime
                 tmp_resp = self.get_journey(req, region, request["type"])
-                if len(tmp_resp.error) > 0 and len(tmp_resp.journeys) == 0:
+                if not tmp_resp.error and len(tmp_resp.journeys) == 0:
                     break
                 else:
                     resp.journeys.extend(tmp_resp.journeys)

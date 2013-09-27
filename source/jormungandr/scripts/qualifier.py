@@ -59,7 +59,9 @@ class qualifier:
 
         if resp.response_type == response_pb2.ITINERARY_FOUND:
             journeys = getattr(resp, "journeys")
-            trajet["presse"] = 0
+
+            if len(journeys)>0:
+                trajet["presse"] = 0
             index = -1
             for journey in journeys:
                 index = index + 1

@@ -134,6 +134,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             pb_journey->set_arrival_date_time(iso_string(d, DateTimeUtils::date(arrival_time), DateTimeUtils::hour(arrival_time)));
         }
     } else {
+        fill_pb_error(pbnavitia::Error::no_solution, "no solution for journey",pb_response.mutable_error());
         pb_response.set_response_type(pbnavitia::NO_SOLUTION);
     }
 
@@ -180,11 +181,13 @@ parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str,
             boost::posix_time::ptime ptime;
             ptime = boost::posix_time::from_iso_string(datetime);
             if(!raptor.data.meta.production_date.contains(ptime.date())) {
+                fill_pb_error(pbnavitia::Error::date_out_of_bounds, "date is not in data production period",response.mutable_error());
                 response.set_response_type(pbnavitia::DATE_OUT_OF_BOUNDS);
             }
             datetimes.push_back(ptime);
         } catch(...){
-            response.set_error("Impossible to parse date " + datetime);
+//            response.set_error("Impossible to parse date " + datetime);            
+            fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse Datetime",response.mutable_error());
             response.set_info("Example of invalid date: " + datetime);
         }
     }
@@ -211,23 +214,26 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
 
     std::vector<boost::posix_time::ptime> datetimes;
     datetimes = parse_datetimes(raptor, datetimes_str, response, clockwise);
-    if(response.error() != "" || response.response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
+    if(response.has_error() || response.response_type() == pbnavitia::DATE_OUT_OF_BOUNDS) {
         return response;
     }
     worker.init();
     auto departures = get_stop_points(origin, raptor.data, worker);
     auto destinations = get_stop_points(destination, raptor.data, worker, true);
     if(departures.size() == 0 && destinations.size() == 0){
+        fill_pb_error(pbnavitia::Error::no_origin_nor_destionation, "no origin point, no destination point",response.mutable_error());
         response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         return response;
     }
 
     if(departures.size() == 0){
+        fill_pb_error(pbnavitia::Error::no_origin, "no origin point",response.mutable_error());
         response.set_response_type(pbnavitia::NO_ORIGIN_POINT);
         return response;
     }
 
     if(destinations.size() == 0){
+        fill_pb_error(pbnavitia::Error::no_destination, "no destination point",response.mutable_error());
         response.set_response_type(pbnavitia::NO_DESTINATION_POINT);
         return response;
     }

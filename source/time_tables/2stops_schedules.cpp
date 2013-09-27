@@ -53,7 +53,8 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
     try{
         ptime = boost::posix_time::from_iso_string(str_dt);
     } catch(boost::bad_lexical_cast) {
-        pb_response.set_error("DateTime " + str_dt + " is in a bad format should be YYYYMMddThhmmss ");
+//        pb_response.set_error("DateTime " + str_dt + " is in a bad format should be YYYYMMddThhmmss ");
+          fill_pb_error(pbnavitia::Error::bad_format, "DateTime is in a bad format should be YYYYMMddThhmmss",pb_response.mutable_error());
         return pb_response;
     }
 
@@ -65,7 +66,8 @@ pbnavitia::Response stops_schedule(const std::string &departure_filter, const st
     try {
         board = stops_schedule(departure_filter, arrival_filter, dt, max_dt, data);
     } catch(const ptref::parsing_error &parse_error) {
-        pb_response.set_error(parse_error.more);
+//        pb_response.set_error(parse_error.more);
+        fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse :" + parse_error.more,pb_response.mutable_error());
         return pb_response;
     }
 

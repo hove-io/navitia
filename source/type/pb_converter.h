@@ -78,4 +78,11 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
 void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
                     pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
                     const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_period);
+
+
+void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& comment,
+                    pbnavitia::Error* error, int max_depth = 0 ,
+                    const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+                    const boost::posix_time::time_period& action_period  = null_time_period);
+
 }//namespace navitia

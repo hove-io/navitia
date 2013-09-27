@@ -13,6 +13,8 @@ from ResourceUri import ResourceUri
 import datetime
 from functools import wraps
 from make_links import add_id_links, clean_links
+from errors import ManageError
+
 
 class SectionLinks(fields.Raw):
     def __init__(self, **kwargs):
@@ -123,9 +125,14 @@ journey = {
     'type' : fields.String()
 }
 
+error = {
+    "id": enum_type(),
+    "message":fields.String(attribute="comment")
+}
+
 journeys = {
     "journeys" : NonNullList(NonNullNested(journey)),
-    "error": fields.String()
+    "error": PbField(error)
         }
 
 def dt_represents(value):
@@ -239,7 +246,9 @@ class Journeys(ResourceUri):
         else:
             api = "isochrone"
         response = NavitiaManager().dispatch(args, self.region, api)
-	return response, 200
+        if response.HasField("error"):
+            return ManageError(response)
+	return response ,200
 
     def transform_id(self, id):
         splitted_coord = id.split(";")
