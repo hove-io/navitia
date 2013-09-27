@@ -36,6 +36,8 @@ import google
 #             "AND msgmedia.msgmedia_lang = :media_lang "
 #             "AND msgmedia.msgmedia_media = :media_media"
 #     );
+def int_to_bitset(s):
+    return str(s) if s<=1 else int_to_bitset(s>>1) + str(s&1)
 
 def get_pos_time(sql_time):
     return int(time.mktime(sql_time.timetuple()))
@@ -135,7 +137,7 @@ class AtRealtimeReader(object):
                         get_datetime_to_second(
                             row[self.label_application_daily_end_hour])
                     message.active_days = \
-                        str(row[self.label_active_days])
+                        int_to_bitset(row[self.label_active_days])
                     message.object.object_uri = row[self.label_object_external_code]
                     message.object.object_type =  \
                         get_navitia_type(row[self.label_object_type])
@@ -145,7 +147,7 @@ class AtRealtimeReader(object):
                 localized_message.body = row[self.label_message]
                 localized_message.title = row[self.label_title]
 
-                print message.uri
+                print str(row[self.label_active_days]) + ' - ' + message.active_days
             except google.protobuf.message.DecodeError, e:
                 logging.getLogger('connector').warn("message is not a valid "
                     "protobuf task: %s", str(e))
@@ -194,7 +196,7 @@ class AtRealtimeReader(object):
                     .msgmedia_table)]
                     ).order_by(self.impact_table.c.Impact_ID)
 
-    def run(self):
+    def execute(self):
         logger = logging.getLogger('connector')
         conn = None
         try:
