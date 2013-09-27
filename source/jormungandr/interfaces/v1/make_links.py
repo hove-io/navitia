@@ -79,8 +79,8 @@ class add_pagination_links(object):
                                 "type": "next",
                                 "templated" : False
                             })
-                        kwargs["start_page"] = 0 if items_per_page == 0 \
-                                              else total_result / items_per_page
+                        kwargs["start_page"] = 0 if items_per_page == 0 or total_result == 0 \
+                                              else (total_result-1) / items_per_page
                         data["links"].append({
                             "href": url_for(endpoint, **kwargs),
                             "type": "last",
