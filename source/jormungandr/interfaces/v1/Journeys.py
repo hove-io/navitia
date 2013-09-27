@@ -63,7 +63,7 @@ class GeoJson(fields.Raw):
                 "type" : "LineString",
                 "coordinates" : [],
                 "properties" : [{
-                    "lenth" : length
+                    "length" : length
                     }]
         }
         for coord in coords:
@@ -114,8 +114,6 @@ section = {
 }
 
 
-
-
 journey = {
     'duration' : fields.Integer(),
     'nb_transfers' : fields.Integer(),
@@ -124,7 +122,8 @@ journey = {
     'requested_date_time' : fields.String(),
     'sections' : NonNullList(NonNullNested(section)),
     'from' : PbField(place, attribute='origin'),
-    'to' : PbField(place, attribute='destination')
+    'to' : PbField(place, attribute='destination'),
+    'type' : fields.String()
 }
 
 journeys = {
@@ -173,8 +172,7 @@ class add_journey_href(object):
         return wrapper
 
 class Journeys(ResourceUri):
-    parsers = {}
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         modes = ["walking", "car", "bike", "br"]
         types = ["all", "asap"]
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
