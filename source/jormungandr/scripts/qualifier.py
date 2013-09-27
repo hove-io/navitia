@@ -48,8 +48,8 @@ class qualifier:
                         "walking_distance":req.journeys.streetnetwork_params.walking_distance,
                         "bike_speed":req.journeys.streetnetwork_params.bike_speed,
                         "bike_distance":req.journeys.streetnetwork_params.bike_distance})
-        trajet = {"presse" : -1, "presse_plus" : -1,
-                      "confort" : -1, "sante" : -1}
+        trajet = {"rapid" : -1, "rapid_plus" : -1,
+                      "comfort" : -1, "healthy" : -1}
 
         self.set_streetnetwork_params(params, req)
         resp = NavitiaManager().send_and_receive(req, region)
@@ -59,43 +59,43 @@ class qualifier:
 
         if resp.response_type == response_pb2.ITINERARY_FOUND:
             journeys = getattr(resp, "journeys")
-            trajet["presse"] = 0
+            trajet["rapid"] = 0
             index = -1
             for journey in journeys:
                 index = index + 1
-                if journeys[trajet["presse"]].arrival_date_time > journey.arrival_date_time :
-                    trajet["presse"] = index
+                if journeys[trajet["rapid"]].arrival_date_time > journey.arrival_date_time :
+                    trajet["rapid"] = index
 
-            if trajet["presse"] > -1 :
+            if trajet["rapid"] > -1 :
                 index = -1
                 for journey in journeys :
                     index = index + 1
-                    if journey.duration > 1.2*journeys[trajet["presse"]].duration and \
-                        journey.nb_transfers < journeys[trajet["presse"]].nb_transfers :
-                        trajet["presse_plus"] = index
+                    if journey.duration > 1.2*journeys[trajet["rapid"]].duration and \
+                        journey.nb_transfers < journeys[trajet["rapid"]].nb_transfers :
+                        trajet["rapid_plus"] = index
 
-                if trajet["presse_plus"] > -1 :
-                    trajet["presse"] = trajet["presse_plus"]
+                if trajet["rapid_plus"] > -1 :
+                    trajet["rapid"] = trajet["rapid_plus"]
                 index = -1
-                presse_duration = self.get_rabattement_duration(journeys[trajet["presse"]])
+                rapid_duration = self.get_rabattement_duration(journeys[trajet["rapid"]])
                 for journey in journeys :
                     index = index + 1
-                    if journey.duration > 1.5*journeys[trajet["presse"]].duration :
+                    if journey.duration > 1.5*journeys[trajet["rapid"]].duration :
                         current_duration = self.get_rabattement_duration(journey)
                         sections = getattr(journey, "sections")
                         if (not self.is_car(sections[0])) and \
                             (not self.is_car(sections[-1])) and\
                             current_duration > 0.1*journey.duration:
-                            trajet["sante"] = index
-                        if journey.nb_transfers < journeys[trajet["presse"]].nb_transfers or \
-                            current_duration < presse_duration:
-                            trajet["confort"] = index
+                            trajet["healthy"] = index
+                        if journey.nb_transfers < journeys[trajet["rapid"]].nb_transfers or \
+                            current_duration < rapid_duration:
+                            trajet["comfort"] = index
 
-            if trajet["presse"] > -1 :
-                journeys[trajet["presse"]].type =  "presse"
-            if trajet["confort"] > -1 :
-                journeys[trajet["confort"]].type = "confort"
-            if trajet["sante"] > -1 :
-                journeys[trajet["sante"]].type = "sante"
+            if trajet["rapid"] > -1 :
+                journeys[trajet["rapid"]].type =  "rapid"
+            if trajet["comfort"] > -1 :
+                journeys[trajet["comfort"]].type = "comfort"
+            if trajet["healthy"] > -1 :
+                journeys[trajet["healthy"]].type = "healthy"
 
         return resp
