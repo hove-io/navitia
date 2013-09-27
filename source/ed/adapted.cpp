@@ -125,9 +125,7 @@ nt::VehicleJourney* create_adapted_vj(
         jp->journey_pattern_point_list.push_back(new_jpp);
         new_jpp->journey_pattern = jp;
         //@TODO changer l'uri
-
     }
-
 
     //On duplique les StopTime
     vj_adapted->stop_time_list = std::vector<nt::StopTime*>();
