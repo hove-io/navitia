@@ -54,7 +54,6 @@ class Schedules(ResourceUri):
             args["from_datetime"] = datetime.now().strftime("%Y%m%dT1337")
 
         response = NavitiaManager().dispatch(args, self.region, self.endpoint)
-        print response
         return response, 200
 
 date_time = {
