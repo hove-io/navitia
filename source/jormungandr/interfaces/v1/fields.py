@@ -84,6 +84,7 @@ class display_informations_route(fields.Raw):
         result["commercial_mode"] = display_information.commercial_mode
         result["label"] = display_information.name if display_information.code == "" else display_information.code
         result["color"] = display_information.color
+        result["code"] = display_information.code
         return result
 
 class has_equipments():
@@ -155,7 +156,11 @@ generic_type_admin["administrative_regions"] = NonNullList(NonNullNested(admin))
 
 stop_point = deepcopy(generic_type_admin)
 stop_area = deepcopy(generic_type_admin)
-journey_pattern_point = deepcopy(generic_type_admin)
+journey_pattern_point = deepcopy(generic_type)
+journey_pattern = deepcopy(generic_type)
+journey_pattern["journey_pattern_points"] = NonNullList(NonNullNested(journey_pattern_point))
+vehicle_journey = deepcopy(generic_type)
+vehicle_journey["journey_pattern"] = PbField(journey_pattern)
 line = deepcopy(generic_type)
 line["code"] = fields.String()
 line["color"] = fields.String()
@@ -164,6 +169,7 @@ route = deepcopy(generic_type)
 route["is_frequence"] = fields.String
 route["line"] = PbField(line)
 line["routes"] = NonNullList(NonNullNested(route))
+journey_pattern["route"] = PbField(route)
 
 network = deepcopy(generic_type)
 network["lines"] = NonNullList(NonNullNested(line))
@@ -187,6 +193,11 @@ journey_pattern_point["stop_point"] = PbField(deepcopy(stop_point))
 address = deepcopy(generic_type_admin)
 address["house_number"] = fields.Integer()
 
+connection = {
+    "origin" : PbField(stop_point),
+    "destination" : PbField(stop_point),
+    "duration" : fields.Integer(attribute="seconds")
+}
 
 stop_date_time = {
     "departure_date_time" : fields.String(),

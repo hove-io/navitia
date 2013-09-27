@@ -1,3 +1,4 @@
+#coding=utf-8
 from flask import Flask
 from flask.ext.restful import Resource, fields, marshal_with, reqparse
 from instance_manager import NavitiaManager
@@ -10,23 +11,34 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    additional_informations_vj, UrisToLinks, has_equipments
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
-from ResourceUri import ResourceUri
+from ResourceUri import ResourceUri, add_notes
 from datetime import datetime
+from interfaces.argument import ArgumentDoc
+from interfaces.parsers import depth_argument
 
 class Schedules(ResourceUri):
+    parsers = {}
     def __init__(self, endpoint):
-        super(Schedules, self).__init__(self)
+        super(Schedules, self).__init__()
         self.endpoint = endpoint
-        self.parser = reqparse.RequestParser()
-        self.parser.add_argument("filter", type=str)
-        self.parser.add_argument("from_datetime", type=str)
-        self.parser.add_argument("duration", type=int, default=3600*24)
-        self.parser.add_argument("depth", type=int, default=2)
-        self.parser.add_argument("count", type=int, default=10)
-        self.parser.add_argument("start_page", type=int, default=0)
+        self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
+        parser_get = self.parsers["get"]
+        parser_get.add_argument("filter", type=str)
+        parser_get.add_argument("from_datetime", type=str,
+                description="The datetime from which you want the schedules")
+        parser_get.add_argument("duration", type=int, default=3600*24,
+                description="Maximum duration between datetime and the\
+                             retrieved stop time")
+        parser_get.add_argument("depth", type=int, default=2)
+        parser_get.add_argument("count", type=int, default=10,
+                description="Number of schedules per page")
+        parser_get.add_argument("start_page", type=int, default=0,
+                description="The current page")
+        self.method_decorators.append(add_notes(self))
+
 
     def get(self, uri=None, region=None, lon=None, lat=None):
-        args = self.parser.parse_args()
+        args = self.parsers["get"].parse_args()
         if uri == None:
             first_filter = args["filter"].lower().split("and")[0].strip()
             filter_parts = first_filter.lower().split("=")
@@ -42,6 +54,7 @@ class Schedules(ResourceUri):
             args["from_datetime"] = datetime.now().strftime("%Y%m%dT1337")
 
         response = NavitiaManager().dispatch(args, self.region, self.endpoint)
+        print response
         return response, 200
 
 date_time = {
@@ -100,7 +113,7 @@ stop_schedules = {
 class StopSchedules(Schedules):
     def __init__(self):
         super(StopSchedules, self).__init__("departure_boards")
-        self.parser.add_argument("interface_version", type=int, default=1)
+        self.parsers["get"].add_argument("interface_version", type=int, default=1)
     @marshal_with(stop_schedules)
     def get(self, uri=None, region=None, lon= None, lat=None):
         return super(StopSchedules, self).get(uri=uri, region=region, lon=lon, lat=lat)
@@ -125,8 +138,9 @@ arrivals = {
 class NextDepartures(Schedules):
     def __init__(self):
         super(NextDepartures, self).__init__("next_departures")
-        self.parser.add_argument("max_departures", type=int,
-                                 dest="nb_stoptimes", default=20)
+        self.parsers["get"].add_argument("max_departures", type=int,
+                                 dest="nb_stoptimes", default=20,
+                                 description="Maximum number of departures")
     @marshal_with(departures)
     def get(self, uri=None, region=None, lon= None, lat=None, dest="nb_stoptimes"):
         return super(NextDepartures, self).get(uri=uri, region=region, lon=lon, lat=lat)
@@ -134,8 +148,9 @@ class NextDepartures(Schedules):
 class NextArrivals(Schedules):
     def __init__(self):
         super(NextArrivals, self).__init__("next_arrivals")
-        self.parser.add_argument("max_arrivals", type=int,
-                                 dest="nb_stoptimes", default=20)
+        self.parsers["get"].add_argument("max_arrivals", type=int,
+                                 dest="nb_stoptimes", default=20,
+                                 description="Maximum number of departures")
     @marshal_with(arrivals)
     def get(self, uri=None, region=None, lon= None, lat=None):
         return super(NextArrivals, self).get(uri=uri, region=region, lon=lon, lat=lat)

@@ -1,4 +1,5 @@
-from flask import Flask, url_for
+#coding=utf-8
+from flask import Flask, url_for, current_app
 from flask.ext.restful import Resource
 
 class Index(Resource):
