@@ -175,6 +175,7 @@ class Journeys(ResourceUri):
     def __init__(self):
         modes = ["walking", "car", "bike", "br"]
         types = ["all", "asap"]
+        self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("from", type=str, dest="origin")
