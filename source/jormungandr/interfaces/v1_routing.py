@@ -67,8 +67,6 @@ def v1_routing(api):
 
     collections = converters_collection_type.collections_to_resource_type.keys()
     for collection in collections:
-        if collection in ["addresses", "coords"]:
-            continue
         api.add_resource(getattr(Uri, collection)(True),
             region + collection,
             coord + collection,
