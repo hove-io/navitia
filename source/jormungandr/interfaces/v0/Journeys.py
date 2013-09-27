@@ -12,7 +12,7 @@ from interfaces.parsers import depth_argument
 class Journeys(Resource):
     """ Compute journeys"""
     parsers = {}
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("origin", type=str, required=True,
