@@ -1,11 +1,12 @@
 #coding=utf-8
-from flask import Flask, url_for, redirect
-from flask.ext.restful import Resource, fields, marshal_with, reqparse
+from flask import url_for, redirect
+from flask.ext.restful import fields, marshal_with, reqparse, abort
 from instance_manager import NavitiaManager
 from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination,\
-                   journey_pattern_point, NonNullList, poi, poi_type
+                   journey_pattern_point, NonNullList, poi, poi_type,\
+                   journey_pattern, vehicle_journey, connection
 from collections import OrderedDict
 from ResourceUri import ResourceUri
 from interfaces.argument import ArgumentDoc
@@ -28,8 +29,6 @@ class Uri(ResourceUri):
         self.collection = collection
 
 
-
-    #@marshal_with(collections, display_null=False)
     def get(self, region=None, lon=None, lat=None, uri=None, id=None):
         collection = self.collection
         self.region = NavitiaManager().get_region(region, lon, lat)
@@ -267,6 +266,30 @@ def networks(is_collection):
             self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
                                                     display_null=False))
     return Networks
+
+
+
+def addresses(is_collection):
+    class Addresses(Uri):
+        """ Not implemented yet"""
+        def __init__(self):
+            Uri.__init__(self, is_collection, "addresses")
+        def get(*args, **kwargs):
+            abort(500, message="Not implemented yet")
+
+    return Addresses
+
+
+
+def coords(is_collection):
+    class Coords(Uri):
+        """ Not implemented yet"""
+        def __init__(self):
+            Uri.__init__(self, is_collection, "coords")
+        def get(*args, **kwargs):
+            abort(500, message="Not implemented yet")
+
+    return Coords
 
 
 def Redirect(*args, **kwargs):
