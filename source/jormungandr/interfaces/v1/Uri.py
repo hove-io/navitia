@@ -6,11 +6,12 @@ from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination,\
                    journey_pattern_point, NonNullList, poi, poi_type,\
-                   journey_pattern, vehicle_journey, connection
+                   journey_pattern, vehicle_journey, connection, error
 from collections import OrderedDict
 from ResourceUri import ResourceUri
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
+from errors import ManageError
 
 class Uri(ResourceUri):
     parsers = {}
@@ -45,6 +46,8 @@ class Uri(ResourceUri):
                 collection = uris[-1] if len(uris)%2!=0 else uris[-2]
             args["filter"] = self.get_filter(uris)
         response = NavitiaManager().dispatch(args, self.region, collection)
+        if response.HasField("error"):
+            return ManageError(response)
         return response, 200
 
 def journey_pattern_points(is_collection):
@@ -55,7 +58,8 @@ def journey_pattern_points(is_collection):
             self.collections = [
                 ("journey_pattern_points",
                   NonNullList(fields.Nested(journey_pattern_point,
-                                display_null=False)))
+                                display_null=False))),
+                ("error", fields.Nested(error))
                 ]
             self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
                                                     display_null=False))
@@ -70,7 +74,8 @@ def commercial_modes(is_collection):
                 ("commercial_modes",
                   NonNullList(fields.Nested(commercial_mode,
                                 display_null=False))),
-                ("pagination", fields.Nested(pagination))
+                ("pagination", fields.Nested(pagination)),
+                ("error", fields.Nested(error))
                 ]
             self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
                                                     display_null=False))
@@ -86,7 +91,8 @@ def journey_patterns(is_collection):
                 ("journey_patterns",
                   NonNullList(fields.Nested(journey_pattern,
                                 display_null=False))),
-                ("pagination", fields.Nested(pagination))
+                ("pagination", fields.Nested(pagination)),
+                ("error", fields.Nested(error))
                 ]
             self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
                                                     display_null=False))
@@ -102,7 +108,8 @@ def vehicle_journeys(is_collection):
                 ("vehicle_journeys",
                   NonNullList(fields.Nested(vehicle_journey,
                                 display_null=False))),
-                ("pagination", fields.Nested(pagination))
+                ("pagination", fields.Nested(pagination)),
+                ("error", fields.Nested(error))
                 ]
             self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
                                                     display_null=False))
@@ -118,7 +125,8 @@ def physical_modes(is_collection):
                 ("physical_modes",
                   NonNullList(fields.Nested(physical_mode,
                                 display_null=False))),
-                ("pagination", fields.Nested(pagination))
+                ("pagination", fields.Nested(pagination)),
+                ("error", fields.Nested(error))
                 ]
             self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
                                                     display_null=False))
@@ -133,7 +141,8 @@ def stop_points(is_collection):
             self.collections = [
                 ("stop_points",
                     NonNullList(fields.Nested(stop_point, display_null=False))),
-                ("pagination", fields.Nested(pagination))
+                ("pagination", fields.Nested(pagination)),
+                ("error", fields.Nested(error))
                 ]
             self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
                                                     display_null=False))
@@ -149,7 +158,8 @@ def stop_areas(is_collection):
                 ("stop_areas",
                   NonNullList(fields.Nested(stop_area,
                                 display_null=False))),
-                ("pagination", fields.Nested(pagination))
+                ("pagination", fields.Nested(pagination)),
+                ("error", fields.Nested(error))
                 ]
             self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
                                                     display_null=False))
@@ -165,7 +175,8 @@ def connections(is_collection):
                 ("connections",
                   NonNullList(fields.Nested(connection,
                                 display_null=False))),
-                ("pagination", fields.Nested(pagination))
+                ("pagination", fields.Nested(pagination)),
+                ("error", fields.Nested(error))
                 ]
             self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
                                                     display_null=False))
@@ -180,7 +191,8 @@ def companies(is_collection):
                 ("companies",
                   NonNullList(fields.Nested(company,
                                 display_null=False))),
-                ("pagination", fields.Nested(pagination))
+                ("pagination", fields.Nested(pagination)),
+                ("error", fields.Nested(error))
                 ]
             self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
                                                     display_null=False))
@@ -196,7 +208,8 @@ def poi_types(is_collection):
                 ("poi_types",
                   NonNullList(fields.Nested(poi_type,
                                 display_null=False))),
-                ("pagination", fields.Nested(pagination))
+                ("pagination", fields.Nested(pagination)),
+                ("error", fields.Nested(error))
                 ]
             self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
                                                     display_null=False))
@@ -213,7 +226,8 @@ def routes(is_collection):
                 ("routes",
                   NonNullList(fields.Nested(route,
                                 display_null=False))),
-                ("pagination", fields.Nested(pagination))
+                ("pagination", fields.Nested(pagination)),
+                ("error", fields.Nested(error))
                   ]
             self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
                                                     display_null=False))
@@ -229,7 +243,8 @@ def lines(is_collection):
                 ("lines",
                   NonNullList(fields.Nested(line,
                                 display_null=False))),
-                ("pagination", fields.Nested(pagination))
+                ("pagination", fields.Nested(pagination)),
+                ("error", fields.Nested(error))
                   ]
             self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
                                                     display_null=False))
@@ -245,7 +260,8 @@ def pois(is_collection):
                 ("pois",
                   NonNullList(fields.Nested(poi,
                                 display_null=False))),
-                ("pagination", fields.Nested(pagination))
+                ("pagination", fields.Nested(pagination)),
+                ("error", fields.Nested(error))
                   ]
             self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
                                                     display_null=False))
@@ -261,7 +277,8 @@ def networks(is_collection):
                 ("networks",
                   NonNullList(fields.Nested(network,
                                 display_null=False))),
-                ("pagination", fields.Nested(pagination))
+                ("pagination", fields.Nested(pagination)),
+                ("error", fields.Nested(error))
                   ]
             self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
                                                     display_null=False))

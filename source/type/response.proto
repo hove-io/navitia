@@ -52,8 +52,8 @@ enum StreetNetworkMode {
 
 message StreetNetwork {
     optional double length = 1;
-    optional double duration = 2;    
-    optional StreetNetworkMode mode = 3;    
+    optional double duration = 2;
+    optional StreetNetworkMode mode = 3;
     repeated PathItem path_items = 4;
     repeated GeographicalCoord coordinates = 5;
 }
@@ -72,7 +72,7 @@ enum TransferType {
     EXTENSION = 3;
 }
 
-	
+
 message PtDisplayInfo {
     optional string network = 1;
     optional string code = 2;
@@ -81,8 +81,8 @@ message PtDisplayInfo {
     optional string color = 5;
     optional string commercial_mode = 6;
     optional string physical_mode = 7;
-  	optional string description = 8; 
-  	optional Uris uris = 9; 	
+  	optional string description = 8;
+  	optional Uris uris = 9;
   	optional VehicleJourneyType vehicle_journey_type = 10;
   	optional hasEquipments has_equipments = 11;
   	optional string name = 12;
@@ -107,7 +107,7 @@ message Section {
 // Si c'est du TC
     optional PtDisplayInfo pt_display_informations = 4;
     optional Uris uris = 5;
-    optional VehicleJourney vehicle_journey = 9; 
+    optional VehicleJourney vehicle_journey = 9;
     repeated StopDateTime stop_date_times = 10;
 
 // Si c'est du routier
@@ -154,7 +154,8 @@ message Planner {
     optional ResponseType response_type = 2;
     optional string before = 3;
     optional string after = 4;
-    optional string error = 5;
+    //optional string error = 5;
+    optional Error error = 5;
 }
 
 message Status{
@@ -174,7 +175,7 @@ message Status{
     optional bool loaded = 10;
 
     optional int32 nb_threads = 11;
-    
+
 }
 
 message PairStopTime {
@@ -202,12 +203,12 @@ message Header{
 	required addInfoVehicleJourney add_info_vehicle_journey = 2;
 }
 
-message Table {    
+message Table {
     repeated RouteScheduleRow rows = 1;
     repeated Header headers = 2;
 }
 
-message RouteSchedule {	
+message RouteSchedule {
     required Table table = 1;
     required PtDisplayInfo pt_display_informations = 2;
 //    required Route route = 2;
@@ -263,8 +264,26 @@ message StopSchedule {
     repeated ScheduleStopTime stop_date_times = 4;
 }
 
+
+message Error{
+	enum error_id{
+		bad_filter = 1;
+		unknown_api = 2;
+		date_out_of_bounds = 3;
+		unable_to_parse = 4;
+		bad_format = 5;
+		no_origin = 6;
+		no_destination = 7;
+		no_origin_nor_destionation = 8;
+		no_solution = 9;
+		unknown_object = 10;
+	}
+	optional error_id id = 1;
+	optional string comment = 2;
+}
+
 message Response{
-    optional string error = 2;
+    optional Error error = 2;
     optional string info = 3;
     optional int32 status_code = 1;
 

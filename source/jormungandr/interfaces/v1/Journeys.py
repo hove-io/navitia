@@ -13,6 +13,7 @@ from ResourceUri import ResourceUri, add_notes
 import datetime
 from functools import wraps
 from make_links import add_id_links, clean_links
+from errors import ManageError
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
 from operator import itemgetter
@@ -131,7 +132,7 @@ journey = {
 
 journeys = {
     "journeys" : NonNullList(NonNullNested(journey)),
-    "error": fields.String()
+    "error": PbField(error,attribute='error')
         }
 
 def dt_represents(value):
@@ -259,11 +260,11 @@ class Journeys(ResourceUri):
 
     @clean_links()
     @add_id_links()
-    @add_journey_pagination()
     @add_journey_href()
     @marshal_with(journeys)
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers["get"].parse_args()
+        #TODO : Changer le protobuff pour que ce soit propre
         args["destination_mode"] = "vls" if args["destination_mode"] == "br" else args["destination_mode"]
         args["origin_mode"] = "vls" if args["origin_mode"] == "br" else args["origin_mode"]
         if not region is None or (not lon is None and not lat is None):
@@ -278,7 +279,7 @@ class Journeys(ResourceUri):
         else:
             if "origin" in args.keys():
                 self.region = NavitiaManager().key_of_id(args["origin"])
-                args["origin"] = self.transform_id(args["origin"])
+		args["origin"] = self.transform_id(args["origin"])
             elif "destination" in args.keys():
                 self.region = NavitiaManager().key_of_id(args["destination"])
             if "destination" in args.keys():
@@ -293,7 +294,9 @@ class Journeys(ResourceUri):
         else:
             api = "isochrone"
         response = NavitiaManager().dispatch(args, self.region, api)
-        return response, 200
+        if response.HasField("error"):
+            return ManageError(response)
+	return response ,200
 
     def transform_id(self, id):
         splitted_coord = id.split(";")
