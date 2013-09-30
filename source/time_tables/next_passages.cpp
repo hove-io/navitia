@@ -39,14 +39,10 @@ next_passages(const std::string &request, const std::string &str_dt,
             passage = handler.pb_response.add_next_arrivals();
         else
             passage = handler.pb_response.add_next_departures();
-        auto departure_date = iso_string(DateTimeUtils::date(dt_stop_time.first);
-        auto departure_hour = DateTimeUtils::hour(dt_stop_time.first);
-        auto arrival_date = navitia::iso_string(DateTimeUtils::date(dt_stop_time.first);
-        auto arrival_hour = DateTimeUtils::hour(dt_stop_time.first);
-        passage->mutable_stop_date_time()->set_departure_date_time(departure_date,
-            departure_hour, data));
-        passage->mutable_stop_date_time()->set_arrival_date_time(arrival_date,
-            arrival_hour, data));
+        auto departure_date = navitia::iso_string(dt_stop_time.first, data);
+        auto arrival_date = navitia::iso_string(dt_stop_time.first, data);
+        passage->mutable_stop_date_time()->set_departure_date_time(departure_date);
+        passage->mutable_stop_date_time()->set_arrival_date_time(arrival_date);
         const type::JourneyPatternPoint* jpp = dt_stop_time.second->journey_pattern_point;
         fill_pb_object(jpp->stop_point, data, passage->mutable_stop_point(),
                 depth, now, action_period);
@@ -83,7 +79,7 @@ pbnavitia::Response next_departures(const std::string &request,
             predicate_t(type::Data& data) : data(data){}
             bool operator()(const type::idx_t jppidx) const {
                 auto jpp = data.pt_data.journey_pattern_points[jppidx];
-                auto last_jpp = jpp->journey_pattern->journey_pattern_point_list.last();
+                auto last_jpp = jpp->journey_pattern->journey_pattern_point_list.back();
                 return jpp == last_jpp;
             }
         };
