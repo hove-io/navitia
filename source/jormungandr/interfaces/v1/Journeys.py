@@ -10,7 +10,7 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    display_informations_vj,additional_informations_vj
 
 from interfaces.parsers import option_value
-from ResourceUri import ResourceUri
+from ResourceUri import ResourceUri, add_notes
 import datetime
 from functools import wraps
 from make_links import add_id_links, clean_links
