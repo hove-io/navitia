@@ -8,7 +8,7 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    stop_date_time, enum_type, NonNullList, NonNullNested,\
                    additional_informations,  notes,notes_links,\
                    get_label,display_informations_vj,display_informations_route,\
-                   additional_informations_vj, UrisToLinks, has_equipments
+                   additional_informations_vj, UrisToLinks, has_equipments, error
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
 from ResourceUri import ResourceUri, add_notes
@@ -83,11 +83,6 @@ table_field = {
 route_schedule_fields = {
     "table" : PbField(table_field),
     "display_informations" : display_informations_route()
-}
-
-error = {
-    'id' : enum_type(),
-    'message': fields.String(attribute='comment')
 }
 
 route_schedules = {

@@ -7,7 +7,7 @@ from find_extrem_datetimes import extremes
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, place,\
                    PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
-                   display_informations_vj,additional_informations_vj
+                   display_informations_vj,additional_informations_vj, error
 
 from interfaces.parsers import option_value
 from ResourceUri import ResourceUri, add_notes
@@ -127,10 +127,6 @@ journey = {
     'type' : fields.String()
 }
 
-error = {
-    'id' : enum_type(),
-    'message': fields.String(attribute='comment')
-}
 journeys = {
     "journeys" : NonNullList(NonNullNested(journey)),
     "error": PbField(error,attribute='error')
