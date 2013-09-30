@@ -127,7 +127,7 @@ class AtRealtimeReader(object):
             last_exec_file = open(self.last_exec_file_name, 'r')
             las_execution_time = last_exec_file.readline().rstrip('\n\r')
             return datetime.datetime.strptime(las_execution_time,
-                                       self.datetime_format)
+                                              self.datetime_format)
         else:
             return datetime.datetime.now()
 
@@ -259,15 +259,15 @@ class AtRealtimeReader(object):
                 last_execution_time = self.get_last_execution_time()
                 result = conn.execute(s, media_media='Internet',
                                       event_publicationenddate=
-                                        last_execution_time,
+                                      last_execution_time,
                                       # datetime.datetime(2013, 9, 01),
                                       event_closedate=datetime.datetime.now(),
                                       impact_modification_date=
-                                        last_execution_time)
+                                      last_execution_time)
                 #save execution time
                 self.set_last_execution_time(execution_time)
             except exc.SQLAlchemyError, e:
                 logger.exception('error durring request')
             if result is not None:
                 self.set_message(result)
-                result.close();
+                result.close()
