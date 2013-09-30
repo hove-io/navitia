@@ -62,6 +62,7 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}
                      ${CMAKE_SOURCE_DIR}
                      ${CMAKE_SOURCE_DIR}/../
                      ${Boost_INCLUDE_DIRS}
+                     ${CMAKE_SOURCE_DIR}/third_party/SimpleAmqpClient/src/
 )
 link_directories(${Boost_LIBRARY_DIRS})
 
@@ -91,8 +92,12 @@ add_subdirectory(sql)
 
 add_subdirectory(scripts)
 
+
 #on prend simpleamqpclient en lib static
+SET(BUILD_STATIC_LIBS ON CACHE BOOL "Build Rabbitmqc as static library")
 SET(BUILD_SHARED_LIBS OFF CACHE BOOL "Build SimpleAmqpClient as static library")
+SET(Rabbitmqc_INCLUDE_DIR third_party/librabbitmq-c/rabbitmq-c/librabbitmq/)
+add_subdirectory(third_party/librabbitmq-c)
 add_subdirectory(third_party/SimpleAmqpClient)
 
 #on récupére le systéme sur lequel on se trouve pour définir les dépendances

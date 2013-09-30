@@ -10,3 +10,6 @@
 [submodule "source/third_party/SimpleAmqpClient"]
 	path = source/third_party/SimpleAmqpClient
 	url = git@github.com:kinnou02/SimpleAmqpClient.git
+[submodule "source/third_party/librabbitmq-c"]
+	path = source/third_party/librabbitmq-c
+	url = git@github.com:alanxz/rabbitmq-c.git
