@@ -31,7 +31,7 @@ add_library(types type.cpp message.cpp datetime.cpp)
 
 SET(DATA_SRC
     data.cpp
-    ${CMAKE_SOURCE_DIR}/../third_party/lz4/lz4.c
+    ${CMAKE_SOURCE_DIR}/third_party/lz4/lz4.c
     pt_data.cpp
 )
 

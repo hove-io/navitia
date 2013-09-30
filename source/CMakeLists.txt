@@ -58,12 +58,12 @@ SET(KRAKEN_VERSION_MINOR 60)
 SET(KRAKEN_VERSION_PATCH 0)
 
 #ajout a l'include path le repertoirre de compilation, pour géré le config.h
-include_directories (${CMAKE_CURRENT_BINARY_DIR}
+include_directories(${CMAKE_CURRENT_BINARY_DIR}
                      ${CMAKE_SOURCE_DIR}
                      ${CMAKE_SOURCE_DIR}/../
                      ${Boost_INCLUDE_DIRS}
 )
-link_directories ( ${Boost_LIBRARY_DIRS} )
+link_directories(${Boost_LIBRARY_DIRS})
 
 
 ENABLE_TESTING()
@@ -88,7 +88,12 @@ add_subdirectory(jormungandr)
 add_subdirectory(pyed)
 add_subdirectory(sql)
 
+
 add_subdirectory(scripts)
+
+#on prend simpleamqpclient en lib static
+SET(BUILD_SHARED_LIBS OFF CACHE BOOL "Build SimpleAmqpClient as static library")
+add_subdirectory(third_party/SimpleAmqpClient)
 
 #on récupére le systéme sur lequel on se trouve pour définir les dépendances
 execute_process(COMMAND lsb_release -a
