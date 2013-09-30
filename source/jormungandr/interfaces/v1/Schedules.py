@@ -39,6 +39,7 @@ class Schedules(ResourceUri):
 
     def get(self, uri=None, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
+        args["nb_stoptimes"] = args["count"]
         if uri == None:
             first_filter = args["filter"].lower().split("and")[0].strip()
             filter_parts = first_filter.lower().split("=")
@@ -137,9 +138,7 @@ arrivals = {
 class NextDepartures(Schedules):
     def __init__(self):
         super(NextDepartures, self).__init__("next_departures")
-        self.parsers["get"].add_argument("max_departures", type=int,
-                                 dest="nb_stoptimes", default=20,
-                                 description="Maximum number of departures")
+
     @marshal_with(departures)
     def get(self, uri=None, region=None, lon= None, lat=None, dest="nb_stoptimes"):
         return super(NextDepartures, self).get(uri=uri, region=region, lon=lon, lat=lat)
@@ -147,9 +146,7 @@ class NextDepartures(Schedules):
 class NextArrivals(Schedules):
     def __init__(self):
         super(NextArrivals, self).__init__("next_arrivals")
-        self.parsers["get"].add_argument("max_arrivals", type=int,
-                                 dest="nb_stoptimes", default=20,
-                                 description="Maximum number of departures")
+
     @marshal_with(arrivals)
     def get(self, uri=None, region=None, lon= None, lat=None):
         return super(NextArrivals, self).get(uri=uri, region=region, lon=lon, lat=lat)
