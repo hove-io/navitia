@@ -159,7 +159,6 @@ class NavitiaManager(object):
                 instance.socket.connect(instance.socket_path)
                 instance.poller.register(instance.socket)
                 instance.lock.release()
-                print self
                 logging.error("La requête : " + request.SerializeToString() + " a echoue")
                 raise DeadSocketException(region+" is a dead socket (" + instance.socket_path + ")")
         else:

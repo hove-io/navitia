@@ -1,44 +1,40 @@
-from flask import Flask, url_for, redirect
-from flask.ext.restful import Resource, fields, marshal_with, reqparse
+#coding=utf-8
+from flask import url_for, redirect
+from flask.ext.restful import fields, marshal_with, reqparse, abort
 from instance_manager import NavitiaManager
 from converters_collection_type import collections_to_resource_type
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination,\
-                   journey_pattern_point, NonNullList, poi, poi_type
+                   journey_pattern_point, NonNullList, poi, poi_type,\
+                   journey_pattern, vehicle_journey, connection
 from collections import OrderedDict
 from ResourceUri import ResourceUri
-
-collections = OrderedDict([
-    ("pagination", fields.Nested(pagination)),
-    ("stop_points", NonNullList(fields.Nested(stop_point, display_null=False))),
-    ("stop_areas", NonNullList(fields.Nested(stop_area, display_null=False))),
-    ("routes", NonNullList(fields.Nested(route, display_null=False))),
-    ("lines", NonNullList(fields.Nested(line, display_null=False))),
-    ("physical_modes", NonNullList(fields.Nested(physical_mode, display_null=False))),
-    ("commercial_modes", NonNullList(fields.Nested(commercial_mode, display_null=False))),
-    ("companies", NonNullList(fields.Nested(company, display_null=False))),
-    ("networks", NonNullList(fields.Nested(network, display_null=False))),
-    ("journey_pattern_points", NonNullList(fields.Nested(journey_pattern_point, display_null=False))),
-    ("pois", NonNullList(fields.Nested(poi, display_null=False))),
-    ("poi_types", NonNullList(fields.Nested(poi_type, display_null=False))),
-])
+from interfaces.argument import ArgumentDoc
+from interfaces.parsers import depth_argument
 
 class Uri(ResourceUri):
+    parsers = {}
+    def __init__(self, is_collection, collection, *args, **kwargs):
+        ResourceUri.__init__(self, *args, **kwargs)
+        self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
+        self.parsers["get"].add_argument("start_page", type=int, default=0,
+                description="The page where you want to start")
+        self.parsers["get"].add_argument("count", type=int, default=25,
+                description="The number of objects you want on the page")
+        self.parsers["get"].add_argument("depth", type=depth_argument, default=1,
+                description="The depth of your object")
+        if is_collection:
+            self.parsers["get"].add_argument("filter", type=str, default = "",
+                    description="The filter parameter")
+        self.collection = collection
 
-    def __init__(self):
-        super(Uri, self).__init__(self)
-        self.parser = reqparse.RequestParser()
-        self.parser.add_argument("start_page", type=int, default=0)
-        self.parser.add_argument("count", type=int, default=25)
-        self.parser.add_argument("depth", type=int, default=1)
 
-    @marshal_with(collections, display_null=False)
-    def get(self, collection=None, region=None, lon=None, lat=None,
-            uri=None, id=None):
+    def get(self, region=None, lon=None, lat=None, uri=None, id=None):
+        collection = self.collection
         self.region = NavitiaManager().get_region(region, lon, lat)
         if not self.region:
             return {"error" : "No region"}, 404
-        args = self.parser.parse_args()
+        args = self.parsers["get"].parse_args()
         if(collection != None and id != None):
             args["filter"] = collections_to_resource_type[collection]+".uri="+id
         elif(uri):
@@ -51,15 +47,250 @@ class Uri(ResourceUri):
         response = NavitiaManager().dispatch(args, self.region, collection)
         return response, 200
 
+def journey_pattern_points(is_collection):
+    class JourneyPatternPoints(Uri):
+        """ Retrieves journey pattern points"""
+        def __init__(self):
+            Uri.__init__(self, is_collection, "journey_pattern_points")
+            self.collections = [
+                ("journey_pattern_points",
+                  NonNullList(fields.Nested(journey_pattern_point,
+                                display_null=False)))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
+    return JourneyPatternPoints
 
-class Collection(Uri):
-    def __init__(self):
-        super(Collection, self).__init__()
-        self.parser.add_argument("filter", type=str, default = "")
+def commercial_modes(is_collection):
+    class CommercialModes(Uri):
+        """ Retrieves commercial modes"""
+        def __init__(self):
+            Uri.__init__(self, is_collection, "commercial_modes")
+            self.collections = [
+                ("commercial_modes",
+                  NonNullList(fields.Nested(commercial_mode,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
+    return CommercialModes
 
-    def get(self, region=None, lon=None, lat=None, collection=None, uri=None):
-        return super(Collection, self).get(region=region, lon=lon, lat=lat,
-                                    collection=collection, uri=uri)
+
+def journey_patterns(is_collection):
+    class JourneyPatterns(Uri):
+        """ Retrieves journey patterns"""
+        def __init__(self):
+            Uri.__init__(self, is_collection, "journey_patterns")
+            self.collections = [
+                ("journey_patterns",
+                  NonNullList(fields.Nested(journey_pattern,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
+    return JourneyPatterns
+
+
+def vehicle_journeys(is_collection):
+    class VehicleJourneys(Uri):
+        """ Retrieves vehicle journeys"""
+        def __init__(self):
+            Uri.__init__(self, is_collection, "vehicle_journeys")
+            self.collections = [
+                ("vehicle_journeys",
+                  NonNullList(fields.Nested(vehicle_journey,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
+    return VehicleJourneys
+
+
+def physical_modes(is_collection):
+    class PhysicalModes(Uri):
+        """ Retrieves physical modes"""
+        def __init__(self):
+            Uri.__init__(self, is_collection, "physical_modes")
+            self.collections = [
+                ("physical_modes",
+                  NonNullList(fields.Nested(physical_mode,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
+    return PhysicalModes
+
+
+def stop_points(is_collection):
+    class StopPoints(Uri):
+        """ Retrieves stop points """
+        def __init__(self, *args, **kwargs):
+            Uri.__init__(self, is_collection, "stop_points", *args, **kwargs)
+            self.collections = [
+                ("stop_points",
+                    NonNullList(fields.Nested(stop_point, display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
+    return StopPoints
+
+
+def stop_areas(is_collection):
+    class StopAreas(Uri):
+        """ Retrieves stop areas """
+        def __init__(self):
+            Uri.__init__(self, is_collection, "stop_areas")
+            self.collections = [
+                ("stop_areas",
+                  NonNullList(fields.Nested(stop_area,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
+    return StopAreas
+
+
+def connections(is_collection):
+    class Connections(Uri):
+        """ Retrieves connections"""
+        def __init__(self):
+            Uri.__init__(self, is_collection, "connections")
+            self.collections = [
+                ("connections",
+                  NonNullList(fields.Nested(connection,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
+    return Connections
+
+def companies(is_collection):
+    class Companies(Uri):
+        """ Retrieves companies"""
+        def __init__(self):
+            Uri.__init__(self, is_collection, "companies")
+            self.collections = [
+                ("companies",
+                  NonNullList(fields.Nested(company,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
+    return Companies
+
+
+def poi_types(is_collection):
+    class PoiTypes(Uri):
+        """ Retrieves poi types"""
+        def __init__(self):
+            Uri.__init__(self, is_collection, "poi_types")
+            self.collections = [
+                ("poi_types",
+                  NonNullList(fields.Nested(poi_type,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
+    return PoiTypes
+
+
+
+def routes(is_collection):
+    class Routes(Uri):
+        """ Retrieves routes"""
+        def __init__(self):
+            Uri.__init__(self, is_collection, "routes")
+            self.collections = [
+                ("routes",
+                  NonNullList(fields.Nested(route,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                  ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
+    return Routes
+
+
+def lines(is_collection):
+    class Lines(Uri):
+        """ Retrieves lines"""
+        def __init__(self):
+            Uri.__init__(self, is_collection, "lines")
+            self.collections = [
+                ("lines",
+                  NonNullList(fields.Nested(line,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                  ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
+    return Lines
+
+
+def pois(is_collection):
+    class Pois(Uri):
+        """ Retrieves pois"""
+        def __init__(self):
+            Uri.__init__(self, is_collection, "pois")
+            self.collections = [
+                ("pois",
+                  NonNullList(fields.Nested(poi,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                  ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
+    return Pois
+
+
+def networks(is_collection):
+    class Networks(Uri):
+        """ Retrieves networks"""
+        def __init__(self):
+            Uri.__init__(self, is_collection, "networks")
+            self.collections = [
+                ("networks",
+                  NonNullList(fields.Nested(network,
+                                display_null=False))),
+                ("pagination", fields.Nested(pagination))
+                  ]
+            self.method_decorators.insert(0, marshal_with(OrderedDict(self.collections),
+                                                    display_null=False))
+    return Networks
+
+
+
+def addresses(is_collection):
+    class Addresses(Uri):
+        """ Not implemented yet"""
+        def __init__(self):
+            Uri.__init__(self, is_collection, "addresses")
+        def get(*args, **kwargs):
+            abort(500, message="Not implemented yet")
+
+    return Addresses
+
+
+
+def coords(is_collection):
+    class Coords(Uri):
+        """ Not implemented yet"""
+        def __init__(self):
+            Uri.__init__(self, is_collection, "coords")
+        def get(*args, **kwargs):
+            abort(500, message="Not implemented yet")
+
+    return Coords
+
 
 def Redirect(*args, **kwargs):
     id = kwargs["id"]
@@ -69,7 +300,3 @@ def Redirect(*args, **kwargs):
         region = "{region.id}"
     url = url_for("v1.uri", region=region, collection=collection, id=id)
     return redirect(url, 303)
-
-
-
-

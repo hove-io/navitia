@@ -387,6 +387,7 @@ struct Autocomplete
         std::string strToken;
         std::string strFind = str;
         boost::to_lower(strFind);
+        strFind = boost::regex_replace(strFind, boost::regex("( ){2,}"), " ");
 
         //traiter les caractères accentués
         strFind = strip_accents(strFind);

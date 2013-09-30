@@ -1,3 +1,4 @@
+# coding=utf-8
 from flask import Flask
 from flask.ext.restful import Resource, fields, marshal_with
 from instance_manager import NavitiaManager
@@ -16,6 +17,7 @@ regions_fields = {
 
 
 class Regions(Resource):
+    """Retrieves the list of the regions"""
     @marshal_with(regions_fields)
     def get(self):
         regions = NavitiaManager().regions()

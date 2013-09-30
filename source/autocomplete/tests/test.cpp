@@ -199,6 +199,100 @@ BOOST_AUTO_TEST_CASE(regex_address_type_tests){
     BOOST_CHECK_EQUAL(addtype, true);
 }
 
+BOOST_AUTO_TEST_CASE(regex_synonyme_gare_sncf_tests){
+    std::map<std::string, std::string> alias;
+    alias["de"]="";
+    alias["la"]="";
+    alias["les"]="";
+    alias["des"]="";
+    alias["d"]="";
+    alias["l"]="";
+    alias["st"]="saint";
+    alias["av"]="avenue";
+    alias["r"]="rue";
+    alias["bvd"]="boulevard";
+    alias["bld"]="boulevard";
+    alias["bd"]="boulevard";
+
+
+    std::map<std::string, std::string> synonymes;
+//    synonymes["cc"]="centre commercial";
+//    synonymes["c c"]="centre commercial";
+//    synonymes["hotel de ville"]="mairie";
+    synonymes["gare sncf"]="gare";
+    synonymes["gare snc"]="gare";
+    synonymes["gare sn"]="gare";
+    synonymes["gare s"]="gare";
+//    synonymes["c.h.u"]="hopital";
+//    synonymes["c.h.r"]="hopital";
+//    synonymes["chateau neuf"]="chateauneuf";
+//    synonymes["saint philbert de grandlieu"]="saint philbert de grand lieu";
+//    synonymes["ld"]="Lieu-Dit";
+
+    Autocomplete<unsigned int> ac;
+    std::vector<std::string> vec;
+
+    //synonyme : "gare sncf" = "gare"
+    //"gare sncf" -> "gare"
+    vec = ac.tokenize("gare sncf", alias, synonymes);
+    BOOST_CHECK_EQUAL(vec[0], "gare");
+    BOOST_CHECK_EQUAL(vec.size(),1);
+    vec.clear();
+
+    //synonyme : "gare snc" = "gare"
+    //"gare snc" -> "gare"
+    vec = ac.tokenize("gare snc", alias, synonymes);
+    BOOST_CHECK_EQUAL(vec[0], "gare");
+    BOOST_CHECK_EQUAL(vec.size(),1);
+    vec.clear();
+
+    //synonyme : "gare sn" = "gare"
+    //"gare sn" -> "gare"
+    vec = ac.tokenize("gare sn", alias, synonymes);
+    BOOST_CHECK_EQUAL(vec[0], "gare");
+    BOOST_CHECK_EQUAL(vec.size(),1);
+    vec.clear();
+
+    //synonyme : "gare s" = "gare"
+    //"gare s" -> "gare"
+    vec = ac.tokenize("gare s", alias, synonymes);
+    BOOST_CHECK_EQUAL(vec[0], "gare");
+    BOOST_CHECK_EQUAL(vec.size(),1);
+    vec.clear();
+
+    //synonyme : "gare sn nantes" = "gare nantes"
+    //"gare sn nantes" -> "gare nantes"
+    vec = ac.tokenize("gare sn nantes", alias, synonymes);
+    BOOST_CHECK_EQUAL(vec[0], "gare");
+    BOOST_CHECK_EQUAL(vec[1], "nantes");
+    BOOST_CHECK_EQUAL(vec.size(),2);
+    vec.clear();
+
+    //synonyme : "gare sn nantes" = "gare nantes"
+    //"gare sn  nantes" -> "gare nantes"
+    vec = ac.tokenize("gare sn  nantes", alias, synonymes);
+    BOOST_CHECK_EQUAL(vec[0], "gare");
+    BOOST_CHECK_EQUAL(vec[1], "nantes");
+    BOOST_CHECK_EQUAL(vec.size(),2);
+    vec.clear();
+
+    //synonyme : "gare sn nantes" = "gare nantes"
+    //"gare s  nantes" -> "gare nantes"
+    vec = ac.tokenize("gare  s  nantes", alias, synonymes);
+    BOOST_CHECK_EQUAL(vec[0], "gare");
+    BOOST_CHECK_EQUAL(vec[1], "nantes");
+    BOOST_CHECK_EQUAL(vec.size(),2);
+    vec.clear();
+
+    //synonyme : "gare sn nantes" = "gare nantes"
+    //"gare s    nantes" -> "gare nantes"
+    vec = ac.tokenize("gare  s    nantes", alias, synonymes);
+    BOOST_CHECK_EQUAL(vec[0], "gare");
+    BOOST_CHECK_EQUAL(vec[1], "nantes");
+    BOOST_CHECK_EQUAL(vec.size(),2);
+    vec.clear();
+}
+
 BOOST_AUTO_TEST_CASE(parse_find_with_name_in_vector_test){
     /// Liste des alias (Pas serialisé)
     std::map<std::string, std::string> alias;

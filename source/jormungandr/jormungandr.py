@@ -9,13 +9,14 @@ from flask import Flask, url_for
 from flask.ext.restful import Api
 from interfaces.v0_routing import v0_routing
 from interfaces.v1_routing import v1_routing
-
+from interfaces.documentation import v0_documentation, v1_documentation
 app = Flask(__name__)
 api = Api(app)
 
 v1_routing(api)
 v0_routing(api)
-
+v0_documentation(api)
+v1_documentation(api)
 @app.errorhandler(RegionNotFound)
 def region_not_found(error):
     return {"error" : error.value}, 404
