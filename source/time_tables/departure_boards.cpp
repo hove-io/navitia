@@ -162,6 +162,15 @@ departure_board(const std::string &request, const std::string &date,
                             stop_times.begin(), stop_times.end());
     }
 
+    //Trie des vecteurs de date_times stop_times
+    for(auto sp_route_dt_st : map_route_stop_point) {
+        auto dt_st = sp_route_dt_st.second;
+        std::sort(dt_st.begin(), dt_st.end(),
+                [](datetime_stop_time dt1, datetime_stop_time dt2) {
+                    return dt1.first < dt2.first;
+                }
+    }
+
     if(interface_version == 0) {
         handler.pb_response = render_v0(map_route_stop_point,
                                         handler.date_time,
