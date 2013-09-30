@@ -115,6 +115,7 @@ stop_schedule = {
 stop_schedules = {
     "stop_schedules" : NonNullList(NonNullNested(stop_schedule)),
     "pagination" : NonNullNested(pagination),
+    "error": PbField(error,attribute='error')
 }
 
 class StopSchedules(Schedules):
@@ -134,12 +135,14 @@ passage = {
 
 departures = {
     "departures" : NonNullList(NonNullNested(passage), attribute="next_departures"),
-    "pagination" : NonNullNested(pagination)
+    "pagination" : NonNullNested(pagination),
+    "error": PbField(error,attribute='error')
 }
 
 arrivals = {
     "arrivals" : NonNullList(NonNullNested(passage), attribute="next_arrivals"),
-    "pagination" : NonNullNested(pagination)
+    "pagination" : NonNullNested(pagination),
+    "error": PbField(error,attribute='error')
 }
 
 class NextDepartures(Schedules):
