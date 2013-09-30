@@ -4,11 +4,12 @@ import logging
 import datetime
 import time
 from sqlalchemy import Column, Table, MetaData, select, create_engine, \
-    ForeignKey, bindparam,  and_, or_, exc
+    ForeignKey, bindparam, and_, or_, exc
 import at.task_pb2
 import at.realtime_pb2
 import at.type_pb2
 import google
+import os
 #
 # SELECT "
 #             "event.event_id AS event_id, " //0
@@ -36,13 +37,18 @@ import google
 #             "AND msgmedia.msgmedia_lang = :media_lang "
 #             "AND msgmedia.msgmedia_media = :media_media"
 #     );
+def int_to_bitset(s):
+    return str(s) if s <= 1 else int_to_bitset(s >> 1) + str(s & 1)
+
 
 def get_pos_time(sql_time):
     return int(time.mktime(sql_time.timetuple()))
 
+
 def get_datetime_to_second(sql_time):
     tt = sql_time.timetuple()
     return (tt.tm_hour * 60 * 60) + (tt.tm_min * 60 ) + tt.tm_sec
+
 
 def get_navitia_type(object_type):
     if object_type == 'StopPoint':
@@ -62,6 +68,7 @@ def get_navitia_type(object_type):
     else:
         return -1
 
+
 class AtRealtimeReader(object):
     """
     Classe responsable de la lecture en base de donnee des evenements
@@ -71,26 +78,32 @@ class AtRealtimeReader(object):
     def __init__(self, config):
 
         self.message_list = []
-        self.__engine = create_engine(config.at_connection_string + '?charset=utf8',
-                                      echo=False)
+        self.__engine = create_engine(
+            config.at_connection_string + '?charset=utf8',
+            echo=False)
 
         self.meta = MetaData(self.__engine)
         self.event_table = Table('event', self.meta, autoload=True)
 
         self.impact_table = Table('impact', self.meta,
-        Column('Event_ID', None, ForeignKey('event.Event_ID')),
-        Column('TCObjectRef_ID', None, ForeignKey('tcobjectref.TCObjectRef_ID')),
-        autoload=True)
+                                  Column('Event_ID', None,
+                                         ForeignKey('event.Event_ID')),
+                                  Column('TCObjectRef_ID', None, ForeignKey(
+                                      'tcobjectref.TCObjectRef_ID')),
+                                  autoload=True)
 
         self.tcobjectref_table = Table('tcobjectref', self.meta, autoload=True)
 
         self.impactbroadcast_table = Table('impactbroadcast', self.meta,
-        Column('Impact_ID', None, ForeignKey('impact.Impact_ID')),
-        Column('MsgMedia_ID', None, ForeignKey('msgmedia.MsgMedia_ID')),
-        autoload=True)
+                                           Column('Impact_ID', None, ForeignKey(
+                                               'impact.Impact_ID')),
+                                           Column('MsgMedia_ID', None,
+                                                  ForeignKey(
+                                                      'msgmedia.MsgMedia_ID')),
+                                           autoload=True)
 
         self.msgmedia_table = Table('msgmedia', self.meta, autoload=True)
-        
+
         self.label_impact_id = 'impact_id'
         self.label_publication_start_date = 'publication_start_date'
         self.label_publication_end_date = 'publication_end_date'
@@ -105,8 +118,29 @@ class AtRealtimeReader(object):
         self.label_message = 'message'
         self.label_message_lang = 'lang'
 
+        self.last_exec_file_name = './last_exec_time.txt'
+        self.datetime_format = '%Y-%m-%d %H:%M:%S'
+
+
+    def get_last_execution_time(self):
+        if os.path.exists(self.last_exec_file_name):
+            last_exec_file = open(self.last_exec_file_name, 'r')
+            las_execution_time = last_exec_file.readline().rstrip('\n\r')
+            return datetime.datetime.strptime(las_execution_time,
+                                              self.datetime_format)
+        else:
+            return datetime.datetime.now()
+
+    def set_last_execution_time(self, last_execution_time):
+        last_exec_file = open(self.last_exec_file_name, 'w')
+        last_exec_file.write(last_execution_time.strftime(self.datetime_format))
+
 
     def set_message(self, result_proxy):
+        """
+
+        :param result_proxy:
+        """
         last_impact_id = -1
         for row in result_proxy:
             try:
@@ -116,7 +150,7 @@ class AtRealtimeReader(object):
                     self.message_list.append(message)
 
                     message.uri = str(row[self.label_impact_id]) + '-' + \
-                        row[self.label_message_lang]
+                                  row[self.label_message_lang]
 
                     message.start_publication_date = \
                         get_pos_time(row[self.label_publication_start_date])
@@ -135,9 +169,10 @@ class AtRealtimeReader(object):
                         get_datetime_to_second(
                             row[self.label_application_daily_end_hour])
                     message.active_days = \
-                        str(row[self.label_active_days])
-                    message.object.object_uri = row[self.label_object_external_code]
-                    message.object.object_type =  \
+                        int_to_bitset(row[self.label_active_days])
+                    message.object.object_uri = row[
+                        self.label_object_external_code]
+                    message.object.object_type = \
                         get_navitia_type(row[self.label_object_type])
 
                 localized_message = message.localized_messages.add()
@@ -145,56 +180,70 @@ class AtRealtimeReader(object):
                 localized_message.body = row[self.label_message]
                 localized_message.title = row[self.label_title]
 
-                print message.uri
+                print str(
+                    row[self.label_active_days]) + ' - ' + message.active_days
             except google.protobuf.message.DecodeError, e:
                 logging.getLogger('connector').warn("message is not a valid "
-                    "protobuf task: %s", str(e))
+                                                    "protobuf task: %s", str(e))
 
     def set_request(self):
-        return  select([self.event_table.c.Event_ID,
-                        self.impact_table.c.Impact_ID
-                        .label(self.label_impact_id),
-                        self.event_table.c.Event_PublicationStartDate
-                        .label(self.label_publication_start_date),
-                        self.event_table.c.Event_PublicationEndDate
-                        .label(self.label_publication_end_date),
-                        self.impact_table.c.Impact_EventStartDate
-                        .label(self.label_application_start_date),
-                        self.impact_table.c.Impact_EventEndDate
-                        .label(self.label_application_end_date),
-                        self.impact_table.c.Impact_DailyStartDate
-                        .label(self.label_application_daily_start_hour),
-                        self.impact_table.c.Impact_DailyEndDate
-                        .label(self.label_application_daily_end_hour),
-                        self.impact_table.c.Impact_ActiveDays
-                        .label(self.label_active_days),
-                        self.tcobjectref_table.c.TCObjectCodeExt
-                        .label(self.label_object_external_code),
-                        self.tcobjectref_table.c.TCObjectType
-                        .label(self.label_object_type),
-                        self.impactbroadcast_table.c.Impact_Title
-                        .label(self.label_title),
-                        self.impactbroadcast_table.c.Impact_Msg
-                        .label(self.label_message),
-                        self.msgmedia_table.c.MsgMedia_Lang
-                        .label(self.label_message_lang)],
-                    #clause where
-                    and_(self.msgmedia_table.c.MsgMedia_Media == bindparam(
-                        'media_media'),
-                        self.event_table.c.Event_PublicationEndDate
-                        >=bindparam('event_publicationenddate'),
-                        or_(self.event_table.c.Event_CloseDate == None,
-                            self.event_table.c.Event_CloseDate > bindparam(
-                                'event_closedate'))
-                        ),
-                    #jointure
-                    from_obj=[self.event_table.join(self.impact_table).join(
-                        self.tcobjectref_table).join(
-                        self.impactbroadcast_table).join(self
-                    .msgmedia_table)]
-                    ).order_by(self.impact_table.c.Impact_ID)
+        return select([self.event_table.c.Event_ID,
+                       self.impact_table.c.Impact_ID
+                       .label(self.label_impact_id),
+                       self.event_table.c.Event_PublicationStartDate
+                       .label(self.label_publication_start_date),
+                       self.event_table.c.Event_PublicationEndDate
+                       .label(self.label_publication_end_date),
+                       self.impact_table.c.Impact_EventStartDate
+                       .label(self.label_application_start_date),
+                       self.impact_table.c.Impact_EventEndDate
+                       .label(self.label_application_end_date),
+                       self.impact_table.c.Impact_DailyStartDate
+                       .label(self.label_application_daily_start_hour),
+                       self.impact_table.c.Impact_DailyEndDate
+                       .label(self.label_application_daily_end_hour),
+                       self.impact_table.c.Impact_ActiveDays
+                       .label(self.label_active_days),
+                       self.tcobjectref_table.c.TCObjectCodeExt
+                       .label(self.label_object_external_code),
+                       self.tcobjectref_table.c.TCObjectType
+                       .label(self.label_object_type),
+                       self.impactbroadcast_table.c.Impact_Title
+                       .label(self.label_title),
+                       self.impactbroadcast_table.c.Impact_Msg
+                       .label(self.label_message),
+                       self.msgmedia_table.c.MsgMedia_Lang
+                       .label(self.label_message_lang)],
+                      #clause where
+                      and_(self.msgmedia_table.c.MsgMedia_Media == bindparam(
+                          'media_media'),
+                           self.event_table.c.Event_PublicationEndDate
+                           >= bindparam('event_publicationenddate'),
+                           or_(self.event_table.c.Event_CloseDate == None,
+                               self.event_table.c.Event_CloseDate > bindparam(
+                                   'event_closedate'),
+                               self.impact_table.c
+                               .Impact_SelfModificationDate == None,
+                               self.impact_table.c
+                               .Impact_SelfModificationDate > bindparam(
+                                   'impact_modification_date'),
+                               self.impact_table.c
+                               .Impact_ChildrenModificationDate == None,
+                               self.impact_table.c
+                               .Impact_ChildrenModificationDate > bindparam(
+                                   'impact_modification_date'),
+                           )
+                      ),
+                      #jointure
+                      from_obj=[self.event_table.join(self.impact_table).join(
+                          self.tcobjectref_table).join(
+                          self.impactbroadcast_table).join(self
+                      .msgmedia_table)]
+        ).order_by(self.impact_table.c.Impact_ID)
 
-    def run(self):
+    # impact_SelfModificationDate, impact_ChildrenModificationDate
+
+    def execute(self):
         logger = logging.getLogger('connector')
         conn = None
         try:
@@ -205,12 +254,20 @@ class AtRealtimeReader(object):
             result = None
             try:
                 s = self.set_request()
+                execution_time = datetime.datetime.now()
+                #read last execution time
+                last_execution_time = self.get_last_execution_time()
                 result = conn.execute(s, media_media='Internet',
                                       event_publicationenddate=
-                                      datetime.datetime(2013,9,01),
-                                      event_closedate= datetime.datetime.now())
+                                      last_execution_time,
+                                      # datetime.datetime(2013, 9, 01),
+                                      event_closedate=datetime.datetime.now(),
+                                      impact_modification_date=
+                                      last_execution_time)
+                #save execution time
+                self.set_last_execution_time(execution_time)
             except exc.SQLAlchemyError, e:
                 logger.exception('error durring request')
             if result is not None:
                 self.set_message(result)
-                result.close();
+                result.close()

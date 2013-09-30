@@ -17,7 +17,6 @@ class Config(object):
         self.at_connection_string = None
 
         self.exchange_name = None
-        self.instance_name = None
         self.rt_topics = []
 
     def build_error(self, config, validate_result):
@@ -71,4 +70,6 @@ class Config(object):
         self.rabbitmq_vhost = config['rabbitmq']['vhost']
         self.rabbitmq_vhost = config['rabbitmq']['vhost']
         self.at_connection_string = config['at']['connection-string']
+        self.exchange_name = config['connector_at']['exchange-name']
+        self.rt_topics = config['connector_at']['rt-topics']
 
