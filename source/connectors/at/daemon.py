@@ -60,7 +60,7 @@ class ConnectorAT(object):
                                             "%s", self.config.rt_topics)
         for message in self.at_realtime_reader.message_list:
             task = at.task_pb2.Task()
-            task.action = 1
+            task.action = task_pb2.ACTION
             task.message.MergeFrom(message)
             for routing_key in self.config.rt_topics:
                 exchange_name = self.config.exchange_name
