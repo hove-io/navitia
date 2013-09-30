@@ -96,7 +96,7 @@ add_subdirectory(scripts)
 #on prend simpleamqpclient en lib static
 SET(BUILD_STATIC_LIBS ON CACHE BOOL "Build Rabbitmqc as static library")
 SET(BUILD_SHARED_LIBS OFF CACHE BOOL "Build SimpleAmqpClient as static library")
-SET(Rabbitmqc_INCLUDE_DIRS third_party/librabbitmq-c/librabbitmq/)
+SET(Rabbitmqc_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/third_party/librabbitmq-c/librabbitmq/")
 add_subdirectory(third_party/librabbitmq-c)
 add_subdirectory(third_party/SimpleAmqpClient)
 
