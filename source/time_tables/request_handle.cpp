@@ -20,7 +20,7 @@ RequestHandle::RequestHandle(const std::string &, const std::string &request,
 		    date_time = DateTimeUtils::set((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
 		    max_datetime = date_time + duration;
 		    const auto jpp_t = type::Type_e::JourneyPatternPoint;
-		    journey_pattern_points = ptref::make_query(jpp_t, request, data);
+		    journey_pattern_points = ptref::make_query(jpp_t, request, data);            
 		    total_result = journey_pattern_points.size();
 		    if(count != std::numeric_limits<uint32_t>::max() &&
 		       start_page != std::numeric_limits<uint32_t>::max())
@@ -30,9 +30,11 @@ RequestHandle::RequestHandle(const std::string &, const std::string &request,
 
     } catch(const ptref::parsing_error &parse_error) {
         fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse Datetime" + parse_error.more,pb_response.mutable_error());
+    } catch(const ptref::ptref_error &ptref_error){
+        fill_pb_error(pbnavitia::Error::bad_filter, "ptref : "  + ptref_error.more,pb_response.mutable_error());
     } catch(...) {
-          fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse Datetime",pb_response.mutable_error());
-    }
+        fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse Datetime",pb_response.mutable_error());
+  }
 }
 
 }}

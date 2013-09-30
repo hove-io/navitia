@@ -15,6 +15,7 @@ from ResourceUri import ResourceUri, add_notes
 from datetime import datetime
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
+from errors import ManageError
 
 class Schedules(ResourceUri):
     parsers = {}
@@ -54,6 +55,8 @@ class Schedules(ResourceUri):
             args["from_datetime"] = datetime.now().strftime("%Y%m%dT1337")
 
         response = NavitiaManager().dispatch(args, self.region, self.endpoint)
+        if response.HasField("error"):
+            return ManageError(response)
         return response, 200
 
 date_time = {
@@ -82,8 +85,13 @@ route_schedule_fields = {
     "display_informations" : display_informations_route()
 }
 
+error = {
+    'id' : enum_type(),
+    'message': fields.String(attribute='comment')
+}
+
 route_schedules = {
-    "error" : fields.String(attribute="error"),
+    "error": PbField(error,attribute='error'),
     "route_schedules" : NonNullList(NonNullNested(route_schedule_fields)),
     "pagination" : NonNullNested(pagination)
     }
