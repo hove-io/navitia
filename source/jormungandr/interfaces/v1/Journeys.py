@@ -127,9 +127,13 @@ journey = {
     'type' : fields.String()
 }
 
+error = {
+    'id' : enum_type(),
+    'message': fields.String(attribute='comment')
+}
 journeys = {
     "journeys" : NonNullList(NonNullNested(journey)),
-    "error": fields.String()
+    "error": PbField(error,attribute='error')
         }
 
 def dt_represents(value):
@@ -209,11 +213,11 @@ class Journeys(ResourceUri):
         parser_get.add_argument("max_duration", type=int, default=36000)
         self.method_decorators.append(add_notes(self))
 
-
     @clean_links()
     @add_id_links()
     @add_journey_href()
     @marshal_with(journeys)
+
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers["get"].parse_args()
         #TODO : Changer le protobuff pour que ce soit propre
