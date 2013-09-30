@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "osm_tags_reader.h"
+#include "ed/connectors/osm_tags_reader.h"
 #include "utils/functions.h"
 
 #include "config.h"
@@ -12,7 +12,7 @@
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
-namespace navitia { namespace georef {
+namespace ed { namespace connectors {
 
 void Visitor::node_callback(uint64_t osmid, double lon, double lat, const CanalTP::Tags & tags){
     Node node;
@@ -64,7 +64,7 @@ void Visitor::relation_callback(uint64_t osmid, const CanalTP::Tags & tags, cons
                 inf.postcode = tags.at("addr:postcode");
             }
             inf.refs = refs;
-            OSMAdminRefs[osmid]=inf;            
+            OSMAdminRefs[osmid]=inf;
         }
     }
 }
@@ -163,8 +163,8 @@ void Visitor::insert_house_numbers(){
     lotus.finish_bulk_insert();
 }
 
-type::GeographicalCoord Visitor::admin_centre_coord(const CanalTP::References & refs){
-    type::GeographicalCoord best;
+navitia::type::GeographicalCoord Visitor::admin_centre_coord(const CanalTP::References & refs){
+    navitia::type::GeographicalCoord best;
     for(CanalTP::Reference ref : refs){
         if (ref.member_type == OSMPBF::Relation_MemberType_NODE){
             try{
@@ -381,7 +381,7 @@ int main(int argc, char** argv) {
 
     start = pt::microsec_clock::local_time();
     po::notify(vm);
-    navitia::georef::Visitor v(connection_string);
+    ed::connectors::Visitor v(connection_string);
     v.lotus.start_transaction();
 
     v.clean_georef();

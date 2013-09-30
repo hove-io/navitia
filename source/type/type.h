@@ -27,6 +27,8 @@ typedef uint32_t idx_t;
 
 const idx_t invalid_idx = std::numeric_limits<idx_t>::max();
 
+struct Message;
+
 // Types qui sont exclus : JourneyPatternPointConnection
 #define ITERATE_NAVITIA_PT_TYPES(FUN)\
     FUN(ValidityPattern, validity_patterns)\
@@ -238,6 +240,17 @@ struct hasVehicleProperties {
     VehicleProperties _vehicle_properties;
 };
 
+struct HasMessages{
+    //on utilise des smart pointer boost car ils sont sérializable
+    //si les weak_ptr était géré, c'est eux qu'ils faudrait utiliser
+    std::vector<boost::shared_ptr<Message>> messages;
+
+    std::vector<boost::shared_ptr<Message>> get_applicable_messages(
+            const boost::posix_time::ptime& current_time,
+            const boost::posix_time::time_period& action_period)const;
+
+};
+
 /** Coordonnées géographiques en WGS84
  */
 struct GeographicalCoord{
@@ -368,13 +381,13 @@ struct Connection: public Header, hasProperties{
     bool operator<(const Connection<T> &other) const;
 
 };
- 
+
 typedef Connection<JourneyPatternPoint>  JourneyPatternPointConnection;
 typedef Connection<StopPoint>  StopPointConnection;
 
 
 
-struct StopArea : public Header, Nameable, hasProperties{
+struct StopArea : public Header, Nameable, hasProperties, HasMessages{
     const static Type_e type = Type_e::StopArea;
     GeographicalCoord coord;
     std::string additional_data;
@@ -382,8 +395,8 @@ struct StopArea : public Header, Nameable, hasProperties{
     bool wheelchair_boarding;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & uri & name & coord & stop_point_list & admin_list & _properties &
-            wheelchair_boarding;
+        ar & id & idx & uri & name & coord & stop_point_list & admin_list 
+        & _properties & wheelchair_boarding & messages;
     }
 
     StopArea(): wheelchair_boarding(false) {}
@@ -469,7 +482,7 @@ struct PhysicalMode : public Header, Nameable{
 
 };
 
-struct Line : public Header, Nameable {
+struct Line : public Header, Nameable, HasMessages{
     const static Type_e type = Type_e::Line;
     std::string code;
     std::string forward_name;
@@ -490,9 +503,10 @@ struct Line : public Header, Nameable {
     Line(): sort(0), commercial_mode(nullptr), network(nullptr){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & code & forward_name & backward_name & additional_data & color
-                & sort & commercial_mode  & company_list & network
-                & route_list & physical_mode_list;
+        ar & id & idx & name & uri & code & forward_name & backward_name
+                & additional_data & color & sort & commercial_mode
+                & company_list & network & route_list & physical_mode_list
+                & messages;
     }
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
@@ -500,7 +514,7 @@ struct Line : public Header, Nameable {
 
 };
 
-struct Route : public Header, Nameable {
+struct Route : public Header, Nameable, HasMessages{
     const static Type_e type = Type_e::Route;
     Line* line;
     std::vector<JourneyPattern*> journey_pattern_list;
@@ -508,7 +522,7 @@ struct Route : public Header, Nameable {
     Route() : line(nullptr) {}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & name & uri & line & journey_pattern_list;
+        ar & id & idx & name & uri & line & journey_pattern_list & messages;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -538,7 +552,7 @@ struct JourneyPattern : public Header, Nameable{
 
 };
 
-struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasProperties*/{
+struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessages{
     const static Type_e type = Type_e::VehicleJourney;
     JourneyPattern* journey_pattern;
     Company* company;
@@ -554,9 +568,11 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties/*, hasPrope
 
     VehicleJourney(): journey_pattern(nullptr), company(nullptr), validity_pattern(nullptr) /*, wheelchair_boarding(false)*/, is_adapted(false), adapted_validity_pattern(nullptr), theoric_vehicle_journey(nullptr){}
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & name & uri & journey_pattern & company & validity_pattern & idx /*& wheelchair_boarding*/ & stop_time_list
-            & is_adapted & adapted_validity_pattern & adapted_vehicle_journey_list & theoric_vehicle_journey & comment & vehicle_journey_type & odt_message
-           & _vehicle_properties;
+        ar & name & uri & journey_pattern & company & validity_pattern
+            & idx /*& wheelchair_boarding*/ & stop_time_list & is_adapted
+            & adapted_validity_pattern & adapted_vehicle_journey_list
+            & theoric_vehicle_journey & comment & vehicle_journey_type
+            & odt_message & _vehicle_properties & messages;
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;
@@ -581,8 +597,8 @@ public:
     boost::gregorian::date beginning_date;
 
     ValidityPattern()  {}
-    ValidityPattern(boost::gregorian::date beginning_date) : beginning_date(beginning_date){}
-    ValidityPattern(boost::gregorian::date beginning_date, const std::string & vp = "") : days(vp), beginning_date(beginning_date){}
+    ValidityPattern(const boost::gregorian::date& beginning_date) : beginning_date(beginning_date){}
+    ValidityPattern(const boost::gregorian::date& beginning_date, const std::string & vp) : days(vp), beginning_date(beginning_date){}
     ValidityPattern(const ValidityPattern & vp) : days(vp.days), beginning_date(vp.beginning_date){}
     ValidityPattern(const ValidityPattern* vp) : days(vp->days), beginning_date(vp->beginning_date){}
 
@@ -603,9 +619,10 @@ public:
     bool uncheck2(unsigned int day) const;
     //void add(boost::gregorian::date start, boost::gregorian::date end, std::bitset<7> active_days);
     bool operator<(const ValidityPattern & other) const { return this < &other; }
+    bool operator==(const ValidityPattern & other) const { return (this->beginning_date == other.beginning_date) && (this->days == other.days);}
 };
 
-struct StopPoint : public Header, Nameable, hasProperties{
+struct StopPoint : public Header, Nameable, hasProperties, HasMessages{
     const static Type_e type = Type_e::StopPoint;
     GeographicalCoord coord;
     int fare_zone;
@@ -616,7 +633,8 @@ struct StopPoint : public Header, Nameable, hasProperties{
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & uri & name & stop_area & coord & fare_zone & idx & journey_pattern_point_list & admin_list & _properties;
+        ar & uri & name & stop_area & coord & fare_zone & idx
+            & journey_pattern_point_list & admin_list & _properties & messages;
     }
 
     StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}

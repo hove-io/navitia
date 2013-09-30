@@ -46,13 +46,9 @@ void fill_pb_object(const nt::StopArea * sa,
                            depth-1, now, action_period);
         }
     }
-    if(depth > 0) {
-        auto messages = data.pt_data.message_holder
-                            .find_messages(sa->uri, now, action_period);
-        for(const auto& message : messages){
-            fill_message(message, data, stop_area->add_messages(), depth-1,
-                         now, action_period);
-        }
+
+    for(const auto message : sa->get_applicable_messages(now, action_period)){
+        fill_message(message, data, stop_area->add_messages(), max_depth-1, now, action_period);
     }
 }
 
@@ -112,13 +108,8 @@ void fill_pb_object(const nt::StopPoint* sp, const nt::Data& data,
                        depth-1, now, action_period);
 
 
-    if(depth > 0){
-        auto messages = data.pt_data.message_holder
-                            .find_messages(sp->uri, now, action_period);
-        for(const auto& message : messages){
-            fill_message(message, data, stop_point->add_messages(),
-                         depth-1, now, action_period);
-        }
+    for(const auto message : sp->get_applicable_messages(now, action_period)){
+        fill_message(message, data, stop_point->add_messages(), max_depth-1, now, action_period);
     }
 }
 
@@ -150,8 +141,8 @@ void fill_pb_object(navitia::georef::Way* way, const nt::Data& data,
 
 
 void fill_pb_object(nt::Line const* l, const nt::Data& data,
-                    pbnavitia::Line * line, int max_depth, const pt::ptime& now,
-                    const pt::time_period& action_period){
+        pbnavitia::Line * line, int max_depth, const pt::ptime& now,
+        const pt::time_period& action_period){
     if(l == nullptr)
         return ;
 
@@ -170,26 +161,22 @@ void fill_pb_object(nt::Line const* l, const nt::Data& data,
         }
         for(auto physical_mode : l->physical_mode_list){
             fill_pb_object(physical_mode, data, line->add_physical_mode(),
-                           depth-1);
+                    depth-1);
         }
+
         fill_pb_object(l->commercial_mode, data,
-                       line->mutable_commercial_mode(), depth-1);
+                line->mutable_commercial_mode(), depth-1);
         fill_pb_object(l->network, data, line->mutable_network(), depth-1);
-    }
-    if(depth > 0) {
-        auto messages = data.pt_data.message_holder
-                            .find_messages(l->uri, now, action_period);
-        for(const auto& message : messages){
-            fill_message(message, data, line->add_messages(),
-                         depth-1, now, action_period);
+        for(const auto message : l->get_applicable_messages(now, action_period)){
+            fill_message(message, data, line->add_messages(), depth-1, now, action_period);
         }
     }
 }
 
 
 void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data,
-                    pbnavitia::JourneyPattern * journey_pattern, int max_depth,
-                    const pt::ptime& now, const pt::time_period& action_period){
+        pbnavitia::JourneyPattern * journey_pattern, int max_depth,
+        const pt::ptime& now, const pt::time_period& action_period){
     if(jp == nullptr)
         return ;
     int depth = (max_depth <= 3) ? max_depth : 3;
@@ -198,15 +185,15 @@ void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data,
     journey_pattern->set_uri(jp->uri);
     if(depth > 0 && jp->route != nullptr)
         fill_pb_object(jp->route, data, journey_pattern->mutable_route(),
-                       depth-1, now, action_period);
+                depth-1, now, action_period);
 
     if(depth > 0) {
-        auto messages = data.pt_data.message_holder
-                            .find_messages(jp->uri, now, action_period);
+        /*auto messages = data.pt_data.message_holder
+            .find_messages(jp->uri, now, action_period);
         for(const auto& message : messages){
             fill_message(message, data, journey_pattern->add_messages(),
-                         depth-1, now, action_period);
-        }
+                    depth-1, now, action_period);
+        }*/
     }
 }
 
@@ -224,13 +211,8 @@ void fill_pb_object(const nt::Route* r, const nt::Data& data,
         fill_pb_object(r->line, data, route->mutable_line(), depth-1,
                        now, action_period);
     }
-    if(depth > 0) {
-        auto messages = data.pt_data.message_holder
-                            .find_messages(r->uri, now, action_period);
-        for(const auto& message : messages){
-            fill_message(message, data, route->add_messages(),
-                         depth-1, now, action_period);
-        }
+    for(const auto& message : r->get_applicable_messages(now, action_period)){
+        fill_message(message, data, route->add_messages(), max_depth-1, now, action_period);
     }
 }
 
@@ -380,21 +362,20 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
                        depth-1);
     }
     if(depth > 0) {
-        auto messages = data.pt_data.message_holder
-                            .find_messages(vj->uri, now, action_period);
-        for(auto message : messages){
-            fill_message(message, data, vehicle_journey->add_messages(),
-                         depth-1, now, action_period);
-        }
+        //fill_pb_object(vj->physical_mode, data, vehicle_journey->mutable_physical_mode(), max_depth-1, now, action_period);
+
+        fill_pb_object(vj->validity_pattern, data, vehicle_journey->mutable_validity_pattern(), max_depth-1);
+        fill_pb_object(vj->adapted_validity_pattern, data, vehicle_journey->mutable_adapted_validity_pattern(), max_depth-1);
+
+    }
+
+    for(auto message : vj->get_applicable_messages(now, action_period)){
+        fill_message(message, data, vehicle_journey->add_messages(), max_depth-1, now, action_period);
     }
     //si on a un vj théorique rataché à notre vj, on récupére les messages qui le concerne
-    if(vj->theoric_vehicle_journey != nullptr && depth > 0){
-        auto theoric_vj = vj->theoric_vehicle_journey->uri;
-        auto messages = data.pt_data.message_holder
-                            .find_messages(theoric_vj, now, action_period);
-        for(auto message : messages){
-            fill_message(message, data, vehicle_journey->add_messages(),
-                         depth-1, now, action_period);
+    if(vj->theoric_vehicle_journey != nullptr){
+        for(auto message : vj->theoric_vehicle_journey->get_applicable_messages(now, action_period)){
+            fill_message(message, data, vehicle_journey->add_messages(), max_depth-1, now, action_period);
         }
     }
 }
@@ -480,14 +461,9 @@ void fill_pb_object(const nt::JourneyPatternPoint* jpp, const nt::Data& data,
                            depth - 1, now, action_period);
         }
     }
-    if(depth > 0) {
-        auto messages = data.pt_data.message_holder
-                            .find_messages(jpp->uri, now, action_period);
-        for(auto message : messages){
-            fill_message(message, data, journey_pattern_point->add_messages(),
-                         depth-1, now, action_period);
-        }
-    }
+    /*for(auto message : data.pt_data.message_holder.find_messages(jpp->uri, now, action_period)){
+        fill_message(message, data, journey_pattern_point->add_messages(), max_depth-1, now, action_period);
+    }*/
 }
 
 
@@ -562,14 +538,15 @@ void fill_street_section(const type::EntryPoint &ori_dest,
     }
 }
 
-
-void fill_message(const type::Message & message,
-                  const type::Data&, pbnavitia::Message* pb_message, int,
-                  const boost::posix_time::ptime&,
-                  const boost::posix_time::time_period&){
-    pb_message->set_uri(message.uri);
-    pb_message->set_message(message.message);
-    pb_message->set_title(message.title);
+void fill_message(const boost::shared_ptr<type::Message> message,
+        const type::Data&, pbnavitia::Message* pb_message, int,
+        const boost::posix_time::ptime&, const boost::posix_time::time_period&){
+    pb_message->set_uri(message->uri);
+    auto it = message->localized_messages.find("fr");
+    if(it !=  message->localized_messages.end()){
+        pb_message->set_message(it->second.body);
+        pb_message->set_title(it->second.title);
+    }
 }
 
 
@@ -611,7 +588,6 @@ void create_pb(const type::EntryPoint &ori_dest,
         }
     }
 }
-
 
 void fill_pb_object(const georef::POIType* geo_poi_type, const type::Data &,
                     pbnavitia::PoiType* poi_type, int,

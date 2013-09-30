@@ -1,9 +1,10 @@
-#include "ed/osm2nav.h"
+#include "ed/connectors/osm2nav.h"
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_ed
 #include <boost/test/unit_test.hpp>
 
 using namespace navitia::georef;
+using namespace ed::connectors;
 using namespace CanalTP;
 
 BOOST_AUTO_TEST_CASE(cas_simple){

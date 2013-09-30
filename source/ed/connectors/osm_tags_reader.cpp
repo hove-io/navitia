@@ -1,7 +1,7 @@
 #include "osm_tags_reader.h"
 #include <iostream>
 
-namespace navitia { namespace georef{
+namespace ed { namespace connectors{
 
 std::bitset<8> parse_way_tags(const std::map<std::string, std::string> & tags){
     const int unknown = -1;

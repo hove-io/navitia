@@ -1,7 +1,7 @@
 #include "config.h"
 #include <iostream>
 
-#include "gtfs_parser.h"
+#include "ed/connectors/gtfs_parser.h"
 #include "external_parser.h"
 
 #include "utils/timer.h"

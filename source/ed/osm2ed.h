@@ -5,10 +5,10 @@
 #include "utils/logger.h"
 #include <unordered_map>
 
-namespace navitia { namespace georef {
+namespace ed { namespace connectors {
 
 struct OSMHouseNumber{
-    type::GeographicalCoord coord;
+    navitia::type::GeographicalCoord coord;
     int number;
 
     OSMHouseNumber(): number(-1){}
@@ -97,7 +97,7 @@ struct OSMAdminRef{
     std::string insee;
     std::string name;
     std::string postcode;
-    type::GeographicalCoord coord;
+    navitia::type::GeographicalCoord coord;
     CanalTP::References refs;
 };
 
@@ -140,7 +140,7 @@ struct Visitor{
     void insert_house_numbers();
 
     /// récupération des coordonnées du noued "admin_centre"
-    type::GeographicalCoord admin_centre_coord(const CanalTP::References & refs);
+    navitia::type::GeographicalCoord admin_centre_coord(const CanalTP::References & refs);
 
     /// à partir des références d'une relation, reconstruit la liste des identifiants OSM ordonnés
     std::vector<uint64_t> nodes_of_relation(const CanalTP::References & refs) const;

@@ -48,6 +48,14 @@ class Config:
     gtfs2ed = /var/log/ed/gtfs2ed_instance_name
     ed2nav = /var/log/ed/ed2nav_instance_name
     pyed = /var/log/ed/pyed_instance_name
+
+    [broker]
+    host = localhost
+    port = 5672
+    username = guest
+    password = guest
+    vhost = /
+    exchange = navitia
     """
     def __init__(self, filename):
         """ Init the configuration,
@@ -76,7 +84,15 @@ class Config:
                                 "gtfs2ed" : None,
                                 "ed2nav" : None,
                                 "pyed" : None
-                                    }
+                                    },
+                            'broker' : {
+                                'host' : None,
+                                'port' : None,
+                                'username' : None,
+                                'password' : None,
+                                'vhost' : None,
+                                'exchange': None
+                                }
                             }
         self.is_valid_ = False
         self.logger.info("Reading config")

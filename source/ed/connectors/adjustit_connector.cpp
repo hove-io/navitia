@@ -1,4 +1,4 @@
-#include "connectors/adjustit_connector.h"
+#include "adjustit_connector.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -17,7 +17,7 @@ namespace ba = boost::algorithm;
 namespace nt = navitia::type;
 namespace po = boost::program_options;
 
-namespace navitia{
+namespace ed{ namespace connectors{
 
 QSqlDatabase AtLoader::connect(const Config& params){
 
@@ -259,4 +259,4 @@ navitia::type::Message AtLoader::parse_message(const QSqlQuery& requester, const
     return message;
 }
 
-}//namespace
+}}//namespace

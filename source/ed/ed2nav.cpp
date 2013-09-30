@@ -17,7 +17,8 @@ namespace pt = boost::posix_time;
 
 int main(int argc, char * argv[])
 {
-    std::string output, connection_string;
+    std::string output, connection_string, at_connection_string, media_lang,
+        media_media;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
@@ -53,13 +54,13 @@ int main(int argc, char * argv[])
 
     po::notify(vm);
 
-    pt::ptime start, end;
+    pt::ptime start, end, now;
     int read, sort, autocomplete, save;
 
     navitia::type::Data data;
 
-
-    start = pt::microsec_clock::local_time();
+    //on init now pour le moment à now, à rendre paramétrable pour le debug
+    now = start = pt::microsec_clock::local_time();
 
     ed::EdReader reader(connection_string);
     reader.fill(data);
@@ -100,11 +101,11 @@ int main(int argc, char * argv[])
     {Timer t("Construction des correspondances");  data.pt_data.build_connections();}
     */
     autocomplete = (pt::microsec_clock::local_time() - start).total_milliseconds();
+
+
     std::cout << "Debut sauvegarde ..." << std::endl;
 
     start = pt::microsec_clock::local_time();
-
-
     data.save(output);
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
 

@@ -8,7 +8,7 @@
 #include "georef/adminref.h"
 #include "utils/functions.h"
 
-namespace navitia { namespace georef {
+namespace ed { namespace connectors {
 
 void Visitor::node_callback(uint64_t osmid, double lon, double lat, const CanalTP::Tags & tags){
     Node node;
@@ -29,7 +29,7 @@ void Visitor::way_callback(uint64_t osmid, const CanalTP::Tags &tags, const std:
     // Est-ce que au moins une propriété fait que la rue est empruntable (voiture, vélo, piéton)
     // Alors on le garde comme way navitia
     if(w.properties.any()){
-        georef::Way* gr_way;
+        navitia::georef::Way* gr_way;
         gr_way->idx = geo_ref.ways.size();
         gr_way->uri = std::to_string(osmid);
         if(tags.find("name") != tags.end())
@@ -99,7 +99,7 @@ void Visitor::add_osm_poi(const navitia::type::GeographicalCoord& coord, const C
                 }
             }
             if (to_add){
-                POI* poi = new POI();
+                navitia::georef::POI* poi = new navitia::georef::POI();
                 poi->poitype_idx = it->second;
                 poi->coord = coord;
                 poi->idx = geo_ref.pois.size();
@@ -120,7 +120,7 @@ void Visitor::count_nodes_uses() {
         if(w.second.properties.any()) {
             for(uint64_t ref : w.second.refs){
                 if(nodes[ref].increment_use(node_idx)){
-                    Vertex v;
+                    navitia::georef::Vertex v;
                     node_idx++;
                     v.coord = nodes[ref].coord;
                     boost::add_vertex(v, geo_ref.graph);
@@ -131,7 +131,7 @@ void Visitor::count_nodes_uses() {
             // make sure that the last node is considered as an extremity
             if(nodes[ref].increment_use(node_idx)){
                 node_idx++;
-                Vertex v;
+                navitia::georef::Vertex v;
                 v.coord =  nodes[ref].coord;
                 boost::add_vertex(v, geo_ref.graph);
             }
@@ -139,34 +139,34 @@ void Visitor::count_nodes_uses() {
             ref = w.second.refs.back();
             if(nodes[ref].increment_use(node_idx)){
                 node_idx++;
-                Vertex v;
+                navitia::georef::Vertex v;
                 v.coord =  nodes[ref].coord;
                 boost::add_vertex(v, geo_ref.graph);
             }
         }
-    }    
-    vertex_t Conunt_v = boost::num_vertices(geo_ref.graph);
+    }
+    navitia::georef::vertex_t Conunt_v = boost::num_vertices(geo_ref.graph);
     geo_ref.init_offset(Conunt_v);
     std::cout << "On a : " << boost::num_vertices(geo_ref.graph) << " nœuds" << std::endl;
 }
 
-void Visitor::edges(){    
+void Visitor::edges(){
     for(const auto & w : ways){
         if(w.second.properties.any() && w.second.refs.size() > 0){
             Node n = nodes[w.second.refs[0]];
-            type::idx_t source = n.idx;
-            type::GeographicalCoord prev = n.coord;
+            navitia::type::idx_t source = n.idx;
+            navitia::type::GeographicalCoord prev = n.coord;
             float length = 0;
             for(size_t i = 1; i < w.second.refs.size(); ++i){
                 Node current_node = nodes[w.second.refs[i]];
-                type::GeographicalCoord current = current_node.coord;
+                navitia::type::GeographicalCoord current = current_node.coord;
                 length += current.distance_to(prev);
                 prev = current;
                 // If a node is used more than once, it is an intersection, hence it's a node of the street network graph
                 try{
                     if(current_node.uses > 1){
-                        type::idx_t target = current_node.idx;
-                        georef::Edge e;
+                        navitia::type::idx_t target = current_node.idx;
+                        navitia::georef::Edge e;
                         e.length = length;
                         e.way_idx = w.second.idx;
                         boost::add_edge(source, target, e, geo_ref.graph);
@@ -194,18 +194,18 @@ void Visitor::edges(){
                 }
             }
         }
-    }    
+    }
     std::cout << "On a " << boost::num_edges(geo_ref.graph) << " arcs" << std::endl;
 }
 
 void Visitor::build_vls_edges(){
     auto it = geo_ref.poitype_map.find("POITYPE:"+poilist.vls);
     if(it != geo_ref.poitype_map.end()){
-        for(const POI* poi : geo_ref.pois){
+        for(const navitia::georef::POI* poi : geo_ref.pois){
             if (it->second == poi->poitype_idx){
-                vertex_t u = geo_ref.nearest_vertex(poi->coord, geo_ref.pl);
-                edge_t e = geo_ref.nearest_edge(poi->coord, u);
-                georef::Edge edge;
+                navitia::georef::vertex_t u = geo_ref.nearest_vertex(poi->coord, geo_ref.pl);
+                navitia::georef::edge_t e = geo_ref.nearest_edge(poi->coord, u);
+                navitia::georef::Edge edge;
                 edge.way_idx = geo_ref.graph[e].way_idx;
                 edge.length = 0;
                 edge.time = 120; // le temps nécessaire pour prendre le vélo
@@ -219,9 +219,9 @@ void Visitor::build_vls_edges(){
 }
 
 void Visitor::HouseNumbers(){
-    type::idx_t idx;
-    type::idx_t Count = 0; // Nombre d'adresses non importées
-    georef::HouseNumber gr_hn;    
+    navitia::type::idx_t idx;
+    navitia::type::idx_t Count = 0; // Nombre d'adresses non importées
+    navitia::georef::HouseNumber gr_hn;
     for(auto hn : housenumbers){
         try{
             Node n = nodes[hn.first];
@@ -248,8 +248,8 @@ void Visitor::HouseNumbers(){
     std::cout<<"Nombre d'adresses non importées : "<<Count<<"/"<<housenumbers.size()<<std::endl;
 }
 
-type::GeographicalCoord Visitor::admin_centre_coord(const CanalTP::References & refs){
-    type::GeographicalCoord best;
+navitia::type::GeographicalCoord Visitor::admin_centre_coord(const CanalTP::References & refs){
+    navitia::type::GeographicalCoord best;
     for(CanalTP::Reference ref : refs){
         if (ref.member_type == OSMPBF::Relation_MemberType_NODE){
             try{
@@ -356,23 +356,23 @@ void Visitor::set_admin_of_ways(){
         std::vector<navitia::type::idx_t> vect_idx = geo_ref.find_admins(coord);
         std::sort(vect_idx.begin(), vect_idx.end(),[&](navitia::type::idx_t idx1, navitia::type::idx_t idx2)
         {return geo_ref.admins[idx1]->level > geo_ref.admins[idx2]->level;});
-        for(navitia::type::idx_t id : vect_idx){            
+        for(navitia::type::idx_t id : vect_idx){
             way->admin_list.push_back(geo_ref.admins[id]);
         }
     }
 }
 void Visitor::fillPoiType(){
     for(auto pt : poilist.PoiList){
-        POIType* poitype = new POIType();
+        navitia::georef::POIType* poitype = new navitia::georef::POIType();
         poitype->name = pt.second;
         poitype->idx = geo_ref.poitypes.size();
         poitype->uri = "POITYPE:"+pt.first;
-        geo_ref.poitypes.push_back(poitype);        
+        geo_ref.poitypes.push_back(poitype);
     }
     geo_ref.build_poitypes();
 }
 
-void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filename){
+void fill_from_osm(navitia::georef::GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filename){
     Visitor v(geo_ref_to_fill);
     v.fillPoiType();
     CanalTP::read_osm_pbf(osm_pbf_filename, v);
@@ -400,6 +400,4 @@ void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filenam
 }
 
 }}
-
-
 

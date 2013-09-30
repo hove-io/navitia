@@ -60,8 +60,8 @@ public:
       * retourne une liste d'indexes pointant vers target
       */
     std::vector<idx_t> get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const ;
-    
-    
+
+
     /// Fixe les villes des voiries du filaire
     // les admins des objets
 //    void set_admins();
@@ -74,11 +74,9 @@ public:
     bool last_load;
     boost::posix_time::ptime last_load_at;
 
-    std::atomic<bool> to_load;
-
 
     /// Constructeur de data, définit le nombre de threads, charge les données
-    Data() : nb_threads(8), version(0), loaded(false), last_load(true), to_load(true){
+    Data() : nb_threads(8), version(0), loaded(false), last_load(true){
         if(Configuration::is_instanciated()){
             init_logger();
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
