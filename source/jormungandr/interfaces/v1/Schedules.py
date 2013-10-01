@@ -50,6 +50,7 @@ class Schedules(ResourceUri):
             else:
                 self.region = NavitiaManager().key_of_id(filter_parts[1].strip())
         else:
+            self.collection='schedules'
             args["filter"] = self.get_filter(uri.split("/"))
             self.region = NavitiaManager().get_region(region, lon, lat)
         if not args["from_datetime"]:
