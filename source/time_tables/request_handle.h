@@ -16,9 +16,7 @@ struct RequestHandle {
 
     RequestHandle(const std::string &API, const std::string &request,
                   const std::string &change_time, uint32_t duration,
-                  const type::Data & data,
-                  uint32_t count=std::numeric_limits<uint32_t>::max(),
-                  uint32_t start_page=std::numeric_limits<uint32_t>::max());
+                  const type::Data & data);
 };
 }
 

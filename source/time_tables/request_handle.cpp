@@ -5,7 +5,7 @@ namespace navitia { namespace timetables {
 
 RequestHandle::RequestHandle(const std::string &API, const std::string &request,
                              const std::string &str_dt, uint32_t duration,
-                             const type::Data &data, uint32_t count, uint32_t start_page) :
+                             const type::Data &data) :
     date_time(DateTimeUtils::inf), max_datetime(DateTimeUtils::inf){
     std::string error = API + " ";
 
@@ -25,11 +25,6 @@ RequestHandle::RequestHandle(const std::string &API, const std::string &request,
         const auto jpp_t = type::Type_e::JourneyPatternPoint;
         journey_pattern_points = ptref::make_query(jpp_t, request, data);
         total_result = journey_pattern_points.size();
-        if(count != std::numeric_limits<uint32_t>::max() &&
-           start_page != std::numeric_limits<uint32_t>::max())
-            journey_pattern_points = ptref::paginate(journey_pattern_points,
-                                                     count, start_page);
-
     } catch(const ptref::parsing_error &parse_error) {
         pb_response.set_error(parse_error.more);
     } catch(...) {

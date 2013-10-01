@@ -230,7 +230,7 @@ class Journeys(ResourceUri):
         else:
             if "origin" in args.keys():
                 self.region = NavitiaManager().key_of_id(args["origin"])
-		args["origin"] = self.transform_id(args["origin"])
+                args["origin"] = self.transform_id(args["origin"])
             elif "destination" in args.keys():
                 self.region = NavitiaManager().key_of_id(args["destination"])
             if "destination" in args.keys():
@@ -245,7 +245,7 @@ class Journeys(ResourceUri):
         else:
             api = "isochrone"
         response = NavitiaManager().dispatch(args, self.region, api)
-	return response, 200
+        return response, 200
 
     def transform_id(self, id):
         splitted_coord = id.split(";")
