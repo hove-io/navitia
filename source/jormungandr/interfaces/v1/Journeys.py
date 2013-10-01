@@ -20,6 +20,7 @@ from operator import itemgetter
 from datetime import datetime, timedelta
 import sys
 from copy import copy
+from datetime import datetime
 
 class SectionLinks(fields.Raw):
     def __init__(self, **kwargs):
@@ -137,9 +138,9 @@ journeys = {
 
 def dt_represents(value):
     if value == "arrival":
-        return True
-    elif value == "departure":
         return False
+    elif value == "departure":
+        return True
     else:
         raise ValueError("Unable to parse datetime_represents")
 
@@ -177,7 +178,6 @@ class add_journey_href(object):
             return objects
         return wrapper
 
-
 class add_journey_pagination(object):
     def __call__(self, f):
         @wraps(f)
@@ -189,18 +189,19 @@ class add_journey_pagination(object):
             if not datetime_before is None and not datetime_after is None:
                 if not "links" in objects[0]:
                     objects[0]["links"] = []
-                args = copy(request.args)
-                args["datetime"] = datetime_before
+
+                args = request.args.copy()
+                args["datetime"] = datetime_before.strftime("%Y%m%dT%H%M%S")
                 args["datetime_represents"] = "arrival"
                 objects[0]["links"].append({
-                    "href" : url_for("v1.journeys", args),
+                    "href" : url_for("v1.journeys", **args),
                     "templated" : False,
                     "type" : "prev"
                     })
-                args["datetime"] = datetime_after
+                args["datetime"] = datetime_after.strftime("%Y%m%dT%H%M%S")
                 args["datetime_represents"] = "departure"
                 objects[0]["links"].append({
-                    "href" : url_for("v1.journeys", args),
+                    "href" : url_for("v1.journeys", **args),
                     "templated" : False,
                     "type" : "next"
                     })
@@ -264,6 +265,7 @@ class Journeys(ResourceUri):
 
     @clean_links()
     @add_id_links()
+    @add_journey_pagination()
     @add_journey_href()
     @marshal_with(journeys)
     @ManageError()
