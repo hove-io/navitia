@@ -9,14 +9,14 @@
 
 
 
-namespace navitia{ namespace georef{
+namespace ed{ namespace connectors{
 PoiParser::PoiParser(const std::string & path): path(path){
         init_logger();
         logger = log4cplus::Logger::getInstance("log");
 }
 
 
-void PoiParser::fill_poi_type(GeoRef & georef_to_fill)
+void PoiParser::fill_poi_type(navitia::georef::GeoRef & georef_to_fill)
 {
     // Verification des entêtes:
     CsvReader csv(path + "/" + "poi_type.txt", ',', true);
@@ -36,7 +36,7 @@ void PoiParser::fill_poi_type(GeoRef & georef_to_fill)
 
         auto row = csv.next();
         if (!row.empty()){
-            georef::POIType* ptype = new georef::POIType();
+            navitia::georef::POIType* ptype = new navitia::georef::POIType();
             ptype->idx = id-1;
             if (id_c != -1 && row[id_c]!= "")
                 ptype->uri = row[id_c];
@@ -53,7 +53,7 @@ void PoiParser::fill_poi_type(GeoRef & georef_to_fill)
 //    georef_to_fill.normalize_extcode_poitypes();
 }
 
-void PoiParser::fill_poi(GeoRef & georef_to_fill)
+void PoiParser::fill_poi(navitia::georef::GeoRef & georef_to_fill)
 {
     // Verification des entêtes:
     CsvReader csv(path + "/" + "poi.txt", ',', true);
@@ -74,7 +74,7 @@ void PoiParser::fill_poi(GeoRef & georef_to_fill)
     while (!csv.eof()){
         auto row = csv.next();
         if (!row.empty()){
-            georef::POI* poi = new georef::POI();
+            navitia::georef::POI* poi = new navitia::georef::POI();
             poi->idx = id-1;
             if (id_c != -1 && row[id_c] != "")
                 poi->uri = row[id_c];
@@ -115,7 +115,7 @@ void PoiParser::fill_poi(GeoRef & georef_to_fill)
 
 }
 
-void PoiParser::fill(GeoRef & georef_to_fill)
+void PoiParser::fill(navitia::georef::GeoRef & georef_to_fill)
 {
     // Lire les fichiers poi-type.txt
     fill_poi_type(georef_to_fill);
@@ -126,7 +126,7 @@ void PoiParser::fill(GeoRef & georef_to_fill)
     LOG4CPLUS_TRACE(logger, "On a  " + boost::lexical_cast<std::string>(georef_to_fill.pois.size())+ " POIs");
 }
 
-void PoiParser::fill_aliases(GeoRef & georef_to_fill){
+void PoiParser::fill_aliases(navitia::georef::GeoRef & georef_to_fill){
     // Verification des entêtes:
     std::string key, value;
     CsvReader csv(path + "/" + "alias.txt", '=', true);
@@ -154,7 +154,7 @@ void PoiParser::fill_aliases(GeoRef & georef_to_fill){
     }
 }
 
-void PoiParser::fill_synonyms(GeoRef &georef_to_fill)
+void PoiParser::fill_synonyms(navitia::georef::GeoRef &georef_to_fill)
 {
     std::string key, value;
     CsvReader csv(path + "/" + "synonyme.txt", '=', true);
@@ -182,7 +182,7 @@ void PoiParser::fill_synonyms(GeoRef &georef_to_fill)
     }
 }
 
-void PoiParser::fill_alias_synonyme(GeoRef &georef_to_fill)
+void PoiParser::fill_alias_synonyme(navitia::georef::GeoRef &georef_to_fill)
 {
     // Lire les fichiers poi-type.txt
     fill_aliases(georef_to_fill);

@@ -8,23 +8,23 @@ IF(NOT CMAKE_BUILD_TYPE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
 IF(WIN32)
-  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0501)
-  IF(MSVC)
-	IF(CMAKE_CL_64)
-		SET(LIB_PREFIX "C:/lib64/")
-	ELSE(CMAKE_CL_64)
-		SET(LIB_PREFIX "C:/lib32/")
-	ENDIF(CMAKE_CL_64)
-	SET(BOOST_ROOT "${LIB_PREFIX}boost/")
-	
-	# Sur un système ayant les 2 versions 32 et 64 bits on considère que Qt est installé à un endroit précis
-	FIND_PROGRAM(QMAKE "${LIB_PREFIX}qt-4.7/bin/qmake.exe")
-	IF(QMAKE)
-		SET(QT_QMAKE_EXECUTABLE "${LIB_PREFIX}qt-4.7/bin/qmake.exe")
-	ENDIF(QMAKE)
-  ELSEIF(MINGW)
-    SET (BOOST_INCLUDEDIR "c:/mingw/include")
-  ENDIF(MSVC)  
+    ADD_DEFINITIONS(-D_WIN32_WINNT=0x0501)
+    IF(MSVC)
+        IF(CMAKE_CL_64)
+            SET(LIB_PREFIX "C:/lib64/")
+        ELSE(CMAKE_CL_64)
+            SET(LIB_PREFIX "C:/lib32/")
+        ENDIF(CMAKE_CL_64)
+        SET(BOOST_ROOT "${LIB_PREFIX}boost/")
+
+        # Sur un système ayant les 2 versions 32 et 64 bits on considère que Qt est installé à un endroit précis
+        FIND_PROGRAM(QMAKE "${LIB_PREFIX}qt-4.7/bin/qmake.exe")
+        IF(QMAKE)
+            SET(QT_QMAKE_EXECUTABLE "${LIB_PREFIX}qt-4.7/bin/qmake.exe")
+        ENDIF(QMAKE)
+    ELSEIF(MINGW)
+        SET (BOOST_INCLUDEDIR "c:/mingw/include")
+    ENDIF(MSVC)
 ENDIF(WIN32)
 
 
@@ -58,12 +58,13 @@ SET(KRAKEN_VERSION_MINOR 60)
 SET(KRAKEN_VERSION_PATCH 0)
 
 #ajout a l'include path le repertoirre de compilation, pour géré le config.h
-include_directories (${CMAKE_CURRENT_BINARY_DIR}
+include_directories(${CMAKE_CURRENT_BINARY_DIR}
                      ${CMAKE_SOURCE_DIR}
                      ${CMAKE_SOURCE_DIR}/../
                      ${Boost_INCLUDE_DIRS}
+                     ${CMAKE_SOURCE_DIR}/third_party/SimpleAmqpClient/src/
 )
-link_directories ( ${Boost_LIBRARY_DIRS} )
+link_directories(${Boost_LIBRARY_DIRS})
 
 
 ENABLE_TESTING()
@@ -83,12 +84,22 @@ add_subdirectory(georef)
 add_subdirectory(validator)
 add_subdirectory(time_tables)
 add_subdirectory(jormungandr)
-add_subdirectory(connectors)
-add_subdirectory(ratimake)
+#add_subdirectory(connectors)
+#add_subdirectory(ratimake)
 add_subdirectory(pyed)
 add_subdirectory(sql)
 
+
 add_subdirectory(scripts)
+
+
+#on prend simpleamqpclient en lib static
+SET(BUILD_STATIC_LIBS ON CACHE BOOL "Build Rabbitmqc as static library")
+SET(BUILD_SHARED_LIBS OFF CACHE BOOL "Build SimpleAmqpClient as static library")
+SET(BUILD_API_DOCS OFF CACHE BOOL "don't build dpc of librabbimq-c")
+SET(Rabbitmqc_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/third_party/librabbitmq-c/librabbitmq/")
+add_subdirectory(third_party/librabbitmq-c)
+add_subdirectory(third_party/SimpleAmqpClient)
 
 #on récupére le systéme sur lequel on se trouve pour définir les dépendances
 execute_process(COMMAND lsb_release -a

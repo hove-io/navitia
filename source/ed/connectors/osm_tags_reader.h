@@ -1,7 +1,7 @@
 #include <bitset>
 #include <map>
 
-namespace navitia { namespace georef {
+namespace ed { namespace connectors {
 
 constexpr uint8_t CYCLE_FWD = 0;
 constexpr uint8_t CYCLE_BWD = 1;

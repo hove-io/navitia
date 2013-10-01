@@ -15,7 +15,7 @@ simplement avoir une vision globale des fonctionnalités. Elle se découpe en tr
     * Guide d’administration
     * Guide du développeur de navitia
 
-Afin de comprendre succintement les possibilités offertes par navitia et les intégrer rapidement, il est conseillé de commencer
+Afin de comprendre succinctement les possibilités offertes par navitia et les intégrer rapidement, il est conseillé de commencer
 par visiter http://navitia.io.
 
 De plus la référence de tous les paramètres d’appel à navitia est détaillé sur http://doc.navitia.io
@@ -30,11 +30,9 @@ Table des matières :
    fonctions
    administration
    dev
-
-   
-.. pre_requis
+   modules/archi
+..  pre_requis
    interface
    hub_navitia
    dev
-   
 

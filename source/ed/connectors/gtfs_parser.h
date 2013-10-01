@@ -1,5 +1,5 @@
 #pragma once
-#include "data.h"
+#include "ed/data.h"
 #include <boost/unordered_map.hpp>
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>

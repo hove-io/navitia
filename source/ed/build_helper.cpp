@@ -1,5 +1,5 @@
 #include "build_helper.h"
-#include "gtfs_parser.h"
+#include "ed/connectors/gtfs_parser.h"
 
 namespace pt = boost::posix_time;
 

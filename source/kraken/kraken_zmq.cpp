@@ -1,18 +1,24 @@
+//on inclue simpleAmqpClient dés le début, sinon probléme avec la compatibilité C++ 11
+#define BOOST_NO_CXX11_RVALUE_REFERENCES
+#include <SimpleAmqpClient/SimpleAmqpClient.h>
 #include "worker.h"
 #include "maintenance_worker.h"
 #include "type/type.pb.h"
+#include <google/protobuf/descriptor.h>
 
 #include <zmq.hpp>
 #include <boost/thread.hpp>
 #include <functional>
 #include <string>
 #include <iostream>
+#include "utils/logger.h"
 
 void doWork(zmq::context_t & context, navitia::type::Data** data) {
     zmq::socket_t socket (context, ZMQ_REP);
     socket.connect ("inproc://workers");
     bool run = true;
     navitia::Worker w(data);
+    auto logger = log4cplus::Logger::getInstance("worker");
     while(run) {
         zmq::message_t request;
         try{
@@ -24,7 +30,9 @@ void doWork(zmq::context_t & context, navitia::type::Data** data) {
         }
 
         pbnavitia::Request pb_req;
+        //@TODO check que la désérialization à réussi
         pb_req.ParseFromArray(request.data(), request.size());
+        LOG4CPLUS_TRACE(logger, "receive request: " << API_Name(pb_req.requested_api()));
 
         auto result = w.dispatch(pb_req);
 

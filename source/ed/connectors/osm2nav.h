@@ -3,14 +3,17 @@
 #include "third_party/osmpbfreader/osmpbfreader.h"
 #include "georef/pois.h"
 
-namespace navitia { namespace georef {
-class GeoRef;
+namespace navitia{namespace georef{
+    class GeoRef;
+}}
+
+namespace ed { namespace connectors {
 
 
-void fill_from_osm(GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filename);
+void fill_from_osm(navitia::georef::GeoRef & geo_ref_to_fill, const std::string & osm_pbf_filename);
 
 struct OSMHouseNumber{
-    type::GeographicalCoord coord;
+    navitia::type::GeographicalCoord coord;
     int number;
 
     OSMHouseNumber(): number(-1){}
@@ -63,14 +66,14 @@ struct OSMAdminRef{
     std::string insee;
     std::string name;
     std::string postcode;
-    type::GeographicalCoord coord;
+    navitia::type::GeographicalCoord coord;
     CanalTP::References refs;
 };
 
 struct OSMAPoi{
     std::string key;
     std::string name;
-    type::GeographicalCoord coord;
+    navitia::type::GeographicalCoord coord;
 };
 
 
@@ -86,14 +89,14 @@ struct Visitor{
     int total_house_number;
 
     std::unordered_map<uint64_t, OSMWay> ways;
-    georef::GeoRef & geo_ref;
+    navitia::georef::GeoRef & geo_ref;
     //Pour charger les données administratives
     navitia::georef::Levels levellist;
     // Pour charger les pois
     navitia::georef::Pois poilist;
     std::map<std::string,std::string>::iterator iter;
 
-    Visitor(GeoRef & to_fill) : total_ways(0), total_vls_stations(0), total_house_number(0), geo_ref(to_fill){
+    Visitor(navitia::georef::GeoRef & to_fill) : total_ways(0), total_vls_stations(0), total_house_number(0), geo_ref(to_fill){
         init_logger();
         logger = log4cplus::Logger::getInstance("log");
     }
@@ -118,7 +121,7 @@ struct Visitor{
     void HouseNumbers();
 
     /// récupération des coordonnées du noued "admin_centre"
-    type::GeographicalCoord admin_centre_coord(const CanalTP::References & refs);
+    navitia::type::GeographicalCoord admin_centre_coord(const CanalTP::References & refs);
 
     /// à partir des références d'une relation, reconstruit la liste des identifiants OSM ordonnés
     std::vector<uint64_t> nodes_of_relation(const CanalTP::References & refs);

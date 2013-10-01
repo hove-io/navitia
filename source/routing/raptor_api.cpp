@@ -144,28 +144,28 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
 
 std::vector<std::pair<type::idx_t, double> >
 get_stop_points( const type::EntryPoint &ep, const type::Data & data,
-                streetnetwork::StreetNetwork & worker, bool use_second = false/*,
-                const int walking_distance = 1000*/){
+        streetnetwork::StreetNetwork & worker, bool use_second = false/*,
+                                                                        const int walking_distance = 1000*/){
     std::vector<std::pair<type::idx_t, double> > result;
 
-    std::map<std::string, type::idx_t>::const_iterator it;
-    switch(ep.type) {
-    case navitia::type::Type_e::StopArea:
-        it = data.pt_data.stop_areas_map.find(ep.uri);
+    if(ep.type == type::Type_e::StopArea){
+        auto it = data.pt_data.stop_areas_map.find(ep.uri);
         if(it!= data.pt_data.stop_areas_map.end()) {
-            for(auto stop_point : data.pt_data.stop_areas[it->second]->stop_point_list) {
+            for(auto stop_point : it->second->stop_point_list) {
                 result.push_back(std::make_pair(stop_point->idx, 0));
             }
-        } break;
-    case type::Type_e::StopPoint:
-        it = data.pt_data.stop_points_map.find(ep.uri);
+        }
+    }else if(ep.type == type::Type_e::StopPoint){
+        auto it = data.pt_data.stop_points_map.find(ep.uri);
         if(it != data.pt_data.stop_points_map.end()){
-            result.push_back(std::make_pair(data.pt_data.stop_points[it->second]->idx, 0));
-        } break;
-    case type::Type_e::Address:
-    case type::Type_e::Coord:
-        result = worker.find_nearest_stop_points(ep.coordinates, data.pt_data.stop_point_proximity_list, ep.streetnetwork_params.distance, use_second, ep.streetnetwork_params.offset); break;
-    default: break;
+            result.push_back(std::make_pair(it->second->idx, 0));
+        }
+    }else if(ep.type == type::Type_e::Address
+            || ep.type == type::Type_e::Coord){
+        result = worker.find_nearest_stop_points(ep.coordinates,
+                data.pt_data.stop_point_proximity_list,
+                ep.streetnetwork_params.distance, use_second,
+                ep.streetnetwork_params.offset);
     }
     return result;
 }
