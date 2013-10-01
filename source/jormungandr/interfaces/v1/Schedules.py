@@ -8,7 +8,7 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    stop_date_time, enum_type, NonNullList, NonNullNested,\
                    additional_informations,  notes,notes_links,\
                    get_label,display_informations_vj,display_informations_route,\
-                   additional_informations_vj, UrisToLinks, has_equipments, error
+                   additional_informations_vj, UrisToLinks,  error
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
 from ResourceUri import ResourceUri, add_notes
@@ -56,8 +56,10 @@ class Schedules(ResourceUri):
             args["from_datetime"] = datetime.now().strftime("%Y%m%dT1337")
 
         response = NavitiaManager().dispatch(args, self.region, self.endpoint)
+
         if response.HasField("error"):
             return ManageError(response)
+
         return response, 200
 
 date_time = {
@@ -73,9 +75,9 @@ row = {
 header = {
     "display_informations" :  display_informations_vj(),
     "additional_informations" : additional_informations_vj(),
-    "links" : UrisToLinks(),
-	"equipments" : has_equipments()
+    "links" : UrisToLinks()
 }
+
 table_field = {
     "rows" : NonNullList(NonNullNested(row)),
     "headers" : NonNullList(NonNullNested(header))
