@@ -6,7 +6,7 @@ from protobuf_to_dict import protobuf_to_dict
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, place,\
                    PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
-                   display_informations_vj,additional_informations_vj
+                   display_informations_vj,additional_informations_vj, error
 
 from interfaces.parsers import option_value
 from ResourceUri import ResourceUri, add_notes
@@ -133,7 +133,7 @@ journey = {
 journeys = {
     "journeys" : NonNullList(NonNullNested(journey)),
     "error": PbField(error,attribute='error')
-        }
+}
 
 def dt_represents(value):
     if value == "arrival":
@@ -148,6 +148,8 @@ class add_journey_href(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
+            if objects[1] != 200:
+                return objects
             if not "journeys" in objects[0].keys():
                 return objects
             if "region" in kwargs.keys():
@@ -181,6 +183,8 @@ class add_journey_pagination(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
+            if objects[1] != 200:
+                return objects
             datetime_after, datetime_before = self.extremes(objects[0])
             if not datetime_before is None and not datetime_after is None:
                 if not "links" in objects[0]:
@@ -262,6 +266,7 @@ class Journeys(ResourceUri):
     @add_id_links()
     @add_journey_href()
     @marshal_with(journeys)
+    @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers["get"].parse_args()
         #TODO : Changer le protobuff pour que ce soit propre
@@ -279,7 +284,7 @@ class Journeys(ResourceUri):
         else:
             if "origin" in args.keys():
                 self.region = NavitiaManager().key_of_id(args["origin"])
-		args["origin"] = self.transform_id(args["origin"])
+                args["origin"] = self.transform_id(args["origin"])
             elif "destination" in args.keys():
                 self.region = NavitiaManager().key_of_id(args["destination"])
             if "destination" in args.keys():
@@ -287,16 +292,14 @@ class Journeys(ResourceUri):
             else:
                 raise RegionNotFound("")
         if not args["datetime"]:
-            args["datetime"] = datetime.datetime.now().strftime("%Y%m%dT1337")
+            args["datetime"] = datetime.now().strftime("%Y%m%dT1337")
         api = None
         if "destination" in args.keys() and args["destination"]:
             api = "journeys"
         else:
             api = "isochrone"
         response = NavitiaManager().dispatch(args, self.region, api)
-        if response.HasField("error"):
-            return ManageError(response)
-	return response ,200
+        return response
 
     def transform_id(self, id):
         splitted_coord = id.split(";")

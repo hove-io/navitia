@@ -55,10 +55,8 @@ class Schedules(ResourceUri):
         if not args["from_datetime"]:
             args["from_datetime"] = datetime.now().strftime("%Y%m%dT1337")
 
-        response = NavitiaManager().dispatch(args, self.region, self.endpoint)
-        if response.HasField("error"):
-            return ManageError(response)
-        return response, 200
+        return NavitiaManager().dispatch(args, self.region, self.endpoint)
+
 
 date_time = {
     "date_time" : fields.String(attribute="stop_time"),
@@ -69,34 +67,31 @@ row = {
     "stop_point" : PbField(stop_point),
     "date_times" : NonNullList(fields.Nested(date_time), attribute="stop_times")
 }
-
 header = {
     "display_informations" :  display_informations_vj(),
     "additional_informations" : additional_informations_vj(),
     "links" : UrisToLinks(),
-	"equipments" : has_equipments()
+    "equipments" : has_equipments()
 }
 table_field = {
     "rows" : NonNullList(NonNullNested(row)),
     "headers" : NonNullList(NonNullNested(header))
 }
-
 route_schedule_fields = {
     "table" : PbField(table_field),
     "display_informations" : display_informations_route()
 }
-
 route_schedules = {
     "error": PbField(error,attribute='error'),
     "route_schedules" : NonNullList(NonNullNested(route_schedule_fields)),
     "pagination" : NonNullNested(pagination)
-    }
-
+}
 class RouteSchedules(Schedules):
 
     def __init__(self):
         super(RouteSchedules, self).__init__("route_schedules")
     @marshal_with(route_schedules)
+    @ManageError()
     def get(self, uri=None, region=None, lon= None, lat=None):
         return super(RouteSchedules, self).get(uri=uri, region=region, lon=lon, lat=lat)
 
@@ -113,12 +108,12 @@ stop_schedules = {
     "pagination" : NonNullNested(pagination),
     "error": PbField(error,attribute='error')
 }
-
 class StopSchedules(Schedules):
     def __init__(self):
         super(StopSchedules, self).__init__("departure_boards")
         self.parsers["get"].add_argument("interface_version", type=int, default=1)
     @marshal_with(stop_schedules)
+    @ManageError()
     def get(self, uri=None, region=None, lon= None, lat=None):
         return super(StopSchedules, self).get(uri=uri, region=region, lon=lon, lat=lat)
 
@@ -128,31 +123,31 @@ passage = {
     "stop_point" : PbField(stop_point),
     "stop_date_time" : PbField(stop_date_time)
 }
-
 departures = {
     "departures" : NonNullList(NonNullNested(passage), attribute="next_departures"),
     "pagination" : NonNullNested(pagination),
     "error": PbField(error,attribute='error')
 }
-
 arrivals = {
     "arrivals" : NonNullList(NonNullNested(passage), attribute="next_arrivals"),
     "pagination" : NonNullNested(pagination),
     "error": PbField(error,attribute='error')
 }
-
 class NextDepartures(Schedules):
     def __init__(self):
         super(NextDepartures, self).__init__("next_departures")
 
     @marshal_with(departures)
+    @ManageError()
     def get(self, uri=None, region=None, lon= None, lat=None, dest="nb_stoptimes"):
         return super(NextDepartures, self).get(uri=uri, region=region, lon=lon, lat=lat)
+
 
 class NextArrivals(Schedules):
     def __init__(self):
         super(NextArrivals, self).__init__("next_arrivals")
 
     @marshal_with(arrivals)
+    @ManageError()
     def get(self, uri=None, region=None, lon= None, lat=None):
         return super(NextArrivals, self).get(uri=uri, region=region, lon=lon, lat=lat)

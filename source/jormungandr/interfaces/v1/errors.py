@@ -1,5 +1,6 @@
 # coding=utf-8
 import response_pb2
+from functools import wraps
 
 
 '''
@@ -27,19 +28,28 @@ import response_pb2
 
 
 
-def ManageError(response):
-    if response.error:
-        if response.error.id in  [response_pb2.Error.date_out_of_bounds,
-                                  response_pb2.Error.no_origin,
-                                  response_pb2.Error.no_destination,
-                                  response_pb2.Error.no_origin_nor_destionation,
-                                  response_pb2.Error.unknown_object]:
-            return response, 404
-        if response.error.id in [response_pb2.Error.unable_to_parse,
-                                 response_pb2.Error.bad_filter,
-                                 response_pb2.Error.unknown_api,
-                                 response_pb2.Error.bad_format]:
-            return response, 400
-        if response.error.id == response_pb2.Error.no_solution:
-            return response, 204
-    return response, 200
+class ManageError(object):
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            response = f(*args, **kwargs)
+            code = 200
+            errors = {
+                    response_pb2.Error.date_out_of_bounds : 404,
+                    response_pb2.Error.no_origin : 404,
+                    response_pb2.Error.no_destination : 404,
+                    response_pb2.Error.no_origin_nor_destionation : 404,
+                    response_pb2.Error.unknown_object : 404,
+                    response_pb2.Error.unable_to_parse : 400,
+                    response_pb2.Error.bad_filter : 400,
+                    response_pb2.Error.unknown_api : 400,
+                    response_pb2.Error.bad_format : 400,
+                    response_pb2.Error.no_solution : 204
+            }
+            if response.HasField("error") and response.error.id in errors.keys():
+                code = errors[response.error.id]
+            else:
+                response.ClearField("error")
+            return response, code
+        return wrapper
+

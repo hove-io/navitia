@@ -33,6 +33,8 @@ class add_pagination_links(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
+            if objects[1] != 200:
+                return objects
             endpoint = None
             pagination = None
             if isinstance(objects, tuple):
@@ -108,6 +110,8 @@ class add_coverage_link(generate_links):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
+            if objects[1] != 200:
+                return objects
             if isinstance(objects, tuple):
                 data, code, header = unpack(objects)
             else:
@@ -133,6 +137,8 @@ class add_collection_links(generate_links):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
+            if objects[1] != 200:
+                return objects
             if isinstance(objects, tuple):
                 data, code, header = unpack(objects)
             else:
@@ -160,6 +166,8 @@ class add_id_links(generate_links):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
+            if objects[1] != 200:
+                return objects
             if isinstance(objects, tuple):
                 data, code, header = unpack(objects)
             else:
@@ -213,6 +221,8 @@ class clean_links(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             response = f(*args, **kwargs)
+            if response[1] != 200:
+                return response
             if isinstance(response, tuple):
                 data, code, header = unpack(response)
             else:

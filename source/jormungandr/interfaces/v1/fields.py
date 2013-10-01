@@ -227,7 +227,7 @@ pagination = {
 
 error = {
     'id' : enum_type(),
-    'message': fields.String(attribute='comment')
+    'message': fields.String()
 }
 
 class UrisToLinks():
