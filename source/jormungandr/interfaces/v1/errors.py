@@ -1,7 +1,7 @@
 # coding=utf-8
 import response_pb2
 from functools import wraps
-
+from flask import request
 
 '''
 
@@ -48,6 +48,10 @@ class ManageError(object):
             }
             if response.HasField("error") and response.error.id in errors.keys():
                 code = errors[response.error.id]
+                if code == 400 and "filter" not in request.args.keys():
+                    response.error.id = response_pb2.Error.unknown_object
+                    code = 404
+
             else:
                 response.ClearField("error")
             return response, code
