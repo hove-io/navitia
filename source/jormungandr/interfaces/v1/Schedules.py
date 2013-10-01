@@ -65,7 +65,7 @@ date_time = {
 }
 row = {
     "stop_point" : PbField(stop_point),
-    "date_times" : NonNullList(fields.Nested(date_time), attribute="stop_times")
+    "date_times" : fields.List(fields.Nested(date_time), attribute="stop_times")
 }
 
 header = {
@@ -74,8 +74,8 @@ header = {
     "links" : UrisToLinks()
 }
 table_field = {
-    "rows" : NonNullList(NonNullNested(row)),
-    "headers" : NonNullList(NonNullNested(header))
+    "rows" : fields.List(fields.Nested(row)),
+    "headers" : fields.List(fields.Nested(header))
 }
 
 route_schedule_fields = {
@@ -85,8 +85,8 @@ route_schedule_fields = {
 
 route_schedules = {
     "error": PbField(error,attribute='error'),
-    "route_schedules" : NonNullList(NonNullNested(route_schedule_fields)),
-    "pagination" : NonNullNested(pagination)
+    "route_schedules" : fields.List(fields.Nested(route_schedule_fields)),
+    "pagination" : fields.Nested(pagination)
 }
 class RouteSchedules(Schedules):
 
@@ -102,12 +102,12 @@ stop_schedule = {
     "stop_point" : PbField(stop_point),
     "route" : PbField(route, attribute="route"),
     "display_informations" : display_informations_route(),
-    "stop_date_times" : NonNullList(NonNullNested(date_time)),
+    "stop_date_times" : fields.List(fields.Nested(date_time)),
     "links" : UrisToLinks()
 }
 stop_schedules = {
-    "stop_schedules" : NonNullList(NonNullNested(stop_schedule)),
-    "pagination" : NonNullNested(pagination),
+    "stop_schedules" : fields.List(fields.Nested(stop_schedule)),
+    "pagination" : fields.Nested(pagination),
     "error": PbField(error,attribute='error')
 }
 
@@ -128,14 +128,14 @@ passage = {
 }
 
 departures = {
-    "departures" : NonNullList(NonNullNested(passage), attribute="next_departures"),
-    "pagination" : NonNullNested(pagination),
+    "departures" : fields.List(fields.Nested(passage), attribute="next_departures"),
+    "pagination" : fields.Nested(pagination),
     "error": PbField(error,attribute='error')
 }
 
 arrivals = {
-    "arrivals" : NonNullList(NonNullNested(passage), attribute="next_arrivals"),
-    "pagination" : NonNullNested(pagination),
+    "arrivals" : fields.List(fields.Nested(passage), attribute="next_arrivals"),
+    "pagination" : fields.Nested(pagination),
     "error": PbField(error,attribute='error')
 }
 
