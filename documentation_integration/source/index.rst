@@ -152,7 +152,7 @@ This errors appears when there is an error in the request
 
 The are two possible http codes :
 
-* Code 404 :
+* Code 404:
 
     ========================== ==========================================================================
     Error id                   Description
@@ -179,7 +179,7 @@ Code 50x
 Code 204
 ********
 
-    When you're request is good but we are not able to find a journey
+    When your request is good but we are not able to find a journey
 
 Redirections
 ============
@@ -195,7 +195,7 @@ The only arguments are the ones of :ref:`paging`.
 Public transportation objects
 ******************************
 
-Once you've selected a region, you can explore the public transportation objects easily with these apis. You just need to add at the end of your url a collection name to see all the objects of a particular collection.
+Once you have selected a region, you can explore the public transportation objects easily with these apis. You just need to add at the end of your url a collection name to see all the objects of a particular collection.
 To see an object add the id of this object at the end of the collection's url.
 The only arguments are the ones of :ref:`paging`.
 
@@ -370,7 +370,7 @@ type                *enum* string           Use to qualified a journey can be ``
 =================== ======================= ======================================================================
 
 .. note::
-    When used with just a from or a to parameter, it will not contain the sections parameter nor the from (if the from parametre was given).
+    When used with just a "from" or a "to" parameter, it will not contain the sections parameter nor the from (if the from parametre was given).
 
 
 * Section object
