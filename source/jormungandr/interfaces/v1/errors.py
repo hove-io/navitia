@@ -44,7 +44,7 @@ class ManageError(object):
                     response_pb2.Error.bad_filter : 400,
                     response_pb2.Error.unknown_api : 400,
                     response_pb2.Error.bad_format : 400,
-                    response_pb2.Error.no_solution : 204
+                    response_pb2.Error.no_solution : 200
             }
             if response.HasField("error") and response.error.id in errors.keys():
                 code = errors[response.error.id]
