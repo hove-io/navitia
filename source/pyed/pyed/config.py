@@ -69,6 +69,7 @@ class Config:
                                 "exec_directory": None,
                                 "source_directory" : None,
                                 "target_file" : None,
+                                "tmp_file" : None,
                                 "working_directory" : None,
                                 "aliases" : None,
                                 "synonyms" : None
@@ -83,7 +84,8 @@ class Config:
                                 "osm2ed" : None,
                                 "gtfs2ed" : None,
                                 "ed2nav" : None,
-                                "pyed" : None
+                                "pyed" : None,
+                                "nav2rt" : None
                                     },
                             'broker' : {
                                 'host' : None,
@@ -137,6 +139,13 @@ class Config:
         confspec.append("gtfs2ed=string")
         confspec.append("ed2nav=string")
         confspec.append("pyed=string")
+        confspec.append('[broker]')
+        confspec.append('host = string(default="localhost")')
+        confspec.append('port = integer(0, 65535, default=5672)')
+        confspec.append('username = string(default="guest")')
+        confspec.append('password = string(default="guest")')
+        confspec.append('vhost = string(default="/")')
+        confspec.append('rt-topics = string_list()')
 
         self.config = ConfigObj(self.filename, configspec=confspec, \
                                 stringify=True)

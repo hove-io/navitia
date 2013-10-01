@@ -118,12 +118,12 @@ def reload_data(config):
 
 
 def ed2nav(config):
-    """ Launch osm2ed, compute the md5 sum of it, and save the md5 """
+    """ Launch ed2nav"""
     pyed_logger = logging.getLogger('pyed')
     ed2nav_logger = logging.getLogger('ed2nav')
     filename = None
     try :
-        filename = config.get("instance" , "target_file")
+        filename = config.get("instance" , "tmp_file")
     except ConfigException, error:
         ed2nav_logger.error(error)
         return 4
@@ -135,6 +135,30 @@ def ed2nav(config):
     res = launch_exec(config.get("instance", "exec_directory")+"/ed2nav",
                 ["-o", filename, "--connection-string", connection_string],
                 ed2nav_logger, pyed_logger)
+    if res != 0:
+        return 2
+    return 0
+
+def nav2rt(config):
+    """ Launch nav2rt"""
+    pyed_logger = logging.getLogger('pyed')
+    nav2rt_logger = logging.getLogger('nav2rt')
+    source_filename = None
+    target_filename = None
+    try :
+        source_filename = config.get("instance", "tmp_file")
+        target_filename = config.get("instance", "target_file")
+    except ConfigException, error:
+        nav2rt_logger.error(error)
+        return 4
+    try:
+        connection_string = make_connection_string(config)
+    except ConfigException:
+        pyed_logger.error("nav2rt: Unable to make the connection string")
+        return 1
+    res = launch_exec(config.get("instance", "exec_directory")+"/nav2rt",
+                ["-i", source_filename, "-o", target_filename, "--connection-string", connection_string],
+                nav2rt_logger, pyed_logger)
     if res != 0:
         return 2
     reload_data(config)
