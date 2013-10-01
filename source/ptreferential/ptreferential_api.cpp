@@ -93,10 +93,12 @@ pbnavitia::Response query_pb(type::Type_e requested_type, std::string request,
         total_result = final_indexes.size();
         final_indexes = paginate(final_indexes, count, startPage);
     } catch(const parsing_error &parse_error) {
-        pb_response.set_error(parse_error.more);
+//        pb_response.set_error(parse_error.more);
+        fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse :" + parse_error.more, pb_response.mutable_error());
         return pb_response;
     } catch(const ptref_error &pt_error) {
-        pb_response.set_error(pt_error.more);
+//        pb_response.set_error(pt_error.more);
+        fill_pb_error(pbnavitia::Error::bad_filter, "ptref : " + pt_error.more, pb_response.mutable_error());
         return pb_response;
     }
 

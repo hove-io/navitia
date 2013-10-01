@@ -8,13 +8,14 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    stop_date_time, enum_type, NonNullList, NonNullNested,\
                    additional_informations,  notes,notes_links,\
                    get_label,display_informations_vj,display_informations_route,\
-                   additional_informations_vj, UrisToLinks, has_equipments
+                   additional_informations_vj, UrisToLinks,  error
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
 from ResourceUri import ResourceUri, add_notes
 from datetime import datetime
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
+from errors import ManageError
 
 class Schedules(ResourceUri):
     parsers = {}
@@ -39,6 +40,7 @@ class Schedules(ResourceUri):
 
     def get(self, uri=None, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
+        args["nb_stoptimes"] = args["count"]
         if uri == None:
             first_filter = args["filter"].lower().split("and")[0].strip()
             filter_parts = first_filter.lower().split("=")
@@ -53,8 +55,8 @@ class Schedules(ResourceUri):
         if not args["from_datetime"]:
             args["from_datetime"] = datetime.now().strftime("%Y%m%dT1337")
 
-        response = NavitiaManager().dispatch(args, self.region, self.endpoint)
-        return response, 200
+        return NavitiaManager().dispatch(args, self.region, self.endpoint)
+
 
 date_time = {
     "date_time" : fields.String(attribute="stop_time"),
@@ -63,18 +65,17 @@ date_time = {
 }
 row = {
     "stop_point" : PbField(stop_point),
-    "date_times" : NonNullList(fields.Nested(date_time), attribute="stop_times")
+    "date_times" : fields.List(fields.Nested(date_time), attribute="stop_times")
 }
 
 header = {
     "display_informations" :  display_informations_vj(),
     "additional_informations" : additional_informations_vj(),
-    "links" : UrisToLinks(),
-	"equipments" : has_equipments()
+    "links" : UrisToLinks()
 }
 table_field = {
-    "rows" : NonNullList(NonNullNested(row)),
-    "headers" : NonNullList(NonNullNested(header))
+    "rows" : fields.List(fields.Nested(row)),
+    "headers" : fields.List(fields.Nested(header))
 }
 
 route_schedule_fields = {
@@ -83,16 +84,16 @@ route_schedule_fields = {
 }
 
 route_schedules = {
-    "error" : fields.String(attribute="error"),
-    "route_schedules" : NonNullList(NonNullNested(route_schedule_fields)),
-    "pagination" : NonNullNested(pagination)
-    }
-
+    "error": PbField(error,attribute='error'),
+    "route_schedules" : fields.List(fields.Nested(route_schedule_fields)),
+    "pagination" : fields.Nested(pagination)
+}
 class RouteSchedules(Schedules):
 
     def __init__(self):
         super(RouteSchedules, self).__init__("route_schedules")
     @marshal_with(route_schedules)
+    @ManageError()
     def get(self, uri=None, region=None, lon= None, lat=None):
         return super(RouteSchedules, self).get(uri=uri, region=region, lon=lon, lat=lat)
 
@@ -101,12 +102,13 @@ stop_schedule = {
     "stop_point" : PbField(stop_point),
     "route" : PbField(route, attribute="route"),
     "display_informations" : display_informations_route(),
-    "stop_date_times" : NonNullList(NonNullNested(date_time)),
+    "stop_date_times" : fields.List(fields.Nested(date_time)),
     "links" : UrisToLinks()
 }
 stop_schedules = {
-    "stop_schedules" : NonNullList(NonNullNested(stop_schedule)),
-    "pagination" : NonNullNested(pagination),
+    "stop_schedules" : fields.List(fields.Nested(stop_schedule)),
+    "pagination" : fields.Nested(pagination),
+    "error": PbField(error,attribute='error')
 }
 
 class StopSchedules(Schedules):
@@ -114,6 +116,7 @@ class StopSchedules(Schedules):
         super(StopSchedules, self).__init__("departure_boards")
         self.parsers["get"].add_argument("interface_version", type=int, default=1)
     @marshal_with(stop_schedules)
+    @ManageError()
     def get(self, uri=None, region=None, lon= None, lat=None):
         return super(StopSchedules, self).get(uri=uri, region=region, lon=lon, lat=lat)
 
@@ -125,31 +128,32 @@ passage = {
 }
 
 departures = {
-    "departures" : NonNullList(NonNullNested(passage), attribute="next_departures"),
-    "pagination" : NonNullNested(pagination)
+    "departures" : fields.List(fields.Nested(passage), attribute="next_departures"),
+    "pagination" : fields.Nested(pagination),
+    "error": PbField(error,attribute='error')
 }
 
 arrivals = {
-    "arrivals" : NonNullList(NonNullNested(passage), attribute="next_arrivals"),
-    "pagination" : NonNullNested(pagination)
+    "arrivals" : fields.List(fields.Nested(passage), attribute="next_arrivals"),
+    "pagination" : fields.Nested(pagination),
+    "error": PbField(error,attribute='error')
 }
 
 class NextDepartures(Schedules):
     def __init__(self):
         super(NextDepartures, self).__init__("next_departures")
-        self.parsers["get"].add_argument("max_departures", type=int,
-                                 dest="nb_stoptimes", default=20,
-                                 description="Maximum number of departures")
+
     @marshal_with(departures)
+    @ManageError()
     def get(self, uri=None, region=None, lon= None, lat=None, dest="nb_stoptimes"):
         return super(NextDepartures, self).get(uri=uri, region=region, lon=lon, lat=lat)
+
 
 class NextArrivals(Schedules):
     def __init__(self):
         super(NextArrivals, self).__init__("next_arrivals")
-        self.parsers["get"].add_argument("max_arrivals", type=int,
-                                 dest="nb_stoptimes", default=20,
-                                 description="Maximum number of departures")
+
     @marshal_with(arrivals)
+    @ManageError()
     def get(self, uri=None, region=None, lon= None, lat=None):
         return super(NextArrivals, self).get(uri=uri, region=region, lon=lon, lat=lat)

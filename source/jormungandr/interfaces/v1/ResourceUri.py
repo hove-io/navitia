@@ -55,7 +55,7 @@ class add_computed_resources(object):
             kwargs["_external"] = True
             templated = True
             for key in data.keys():
-                if key != 'links' and key != 'pagination':
+                if key != 'links' and key != 'pagination' and key != 'error':
                     collection = key
             if collection is None:
                 return response

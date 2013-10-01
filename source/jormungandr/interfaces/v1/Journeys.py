@@ -3,19 +3,23 @@ from flask import Flask, request, url_for
 from flask.ext.restful import fields, reqparse, marshal_with
 from instance_manager import NavitiaManager, RegionNotFound
 from protobuf_to_dict import protobuf_to_dict
-from find_extrem_datetimes import extremes
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, place,\
                    PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
-                   display_informations_vj,additional_informations_vj
+                   display_informations_vj,additional_informations_vj,error
 
 from interfaces.parsers import option_value
 from ResourceUri import ResourceUri, add_notes
 import datetime
 from functools import wraps
 from make_links import add_id_links, clean_links
+from errors import ManageError
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
+from operator import itemgetter
+from datetime import datetime, timedelta
+import sys
+from copy import copy
 
 class SectionLinks(fields.Raw):
     def __init__(self, **kwargs):
@@ -128,8 +132,8 @@ journey = {
 
 journeys = {
     "journeys" : NonNullList(NonNullNested(journey)),
-    "error": fields.String()
-        }
+    "error": PbField(error,attribute='error')
+}
 
 def dt_represents(value):
     if value == "arrival":
@@ -144,6 +148,8 @@ class add_journey_href(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
+            if objects[1] != 200:
+                return objects
             if not "journeys" in objects[0].keys():
                 return objects
             if "region" in kwargs.keys():
@@ -170,6 +176,53 @@ class add_journey_href(object):
                     ]
             return objects
         return wrapper
+
+
+class add_journey_pagination(object):
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if objects[1] != 200:
+                return objects
+            datetime_after, datetime_before = self.extremes(objects[0])
+            if not datetime_before is None and not datetime_after is None:
+                if not "links" in objects[0]:
+                    objects[0]["links"] = []
+                args = copy(request.args)
+                args["datetime"] = datetime_before
+                args["datetime_represents"] = "arrival"
+                objects[0]["links"].append({
+                    "href" : url_for("v1.journeys", args),
+                    "templated" : False,
+                    "type" : "prev"
+                    })
+                args["datetime"] = datetime_after
+                args["datetime_represents"] = "departure"
+                objects[0]["links"].append({
+                    "href" : url_for("v1.journeys", args),
+                    "templated" : False,
+                    "type" : "next"
+                    })
+            return objects
+        return wrapper
+
+    def extremes(self, resp):
+        datetime_before = None
+        datetime_after = None
+        try:
+            list_journeys = [journey for journey in resp['journeys']\
+                                if 'arrival_date_time' in journey.keys() and\
+                                    journey['arrival_date_time'] != '']
+            asap_journey = min(list_journeys, key=itemgetter('arrival_date_time'))
+        except:
+            return (None, None)
+        if asap_journey['arrival_date_time'] and ['asap_journey.departure_date_time']:
+            minute = timedelta(minutes = 1)
+            datetime_after = datetime.strptime(asap_journey['departure_date_time'], "%Y%m%dT%H%M%S") + minute
+            datetime_before = datetime.strptime(asap_journey['arrival_date_time'], "%Y%m%dT%H%M%S") - minute
+
+        return (datetime_before, datetime_after)
 
 class Journeys(ResourceUri):
     def __init__(self):
@@ -213,6 +266,7 @@ class Journeys(ResourceUri):
     @add_id_links()
     @add_journey_href()
     @marshal_with(journeys)
+    @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers["get"].parse_args()
         #TODO : Changer le protobuff pour que ce soit propre
@@ -238,14 +292,14 @@ class Journeys(ResourceUri):
             else:
                 raise RegionNotFound("")
         if not args["datetime"]:
-            args["datetime"] = datetime.datetime.now().strftime("%Y%m%dT1337")
+            args["datetime"] = datetime.now().strftime("%Y%m%dT1337")
         api = None
         if "destination" in args.keys() and args["destination"]:
             api = "journeys"
         else:
             api = "isochrone"
         response = NavitiaManager().dispatch(args, self.region, api)
-        return response, 200
+        return response
 
     def transform_id(self, id):
         splitted_coord = id.split(";")

@@ -133,14 +133,16 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
         default:
             LOG4CPLUS_WARN(logger, "On a reçu une requête time table inconnue");
             pbnavitia::Response response;
-            response.set_error("Unknown time table api");
+            fill_pb_error(pbnavitia::Error::unknown_api, "Unknown time table api",response.mutable_error());
+//            response.set_error("Unknown time table api");
             return response;
         }
 
     } catch (navitia::ptref::parsing_error error) {   
         LOG4CPLUS_ERROR(logger, "Error in the ptref request  : "+ error.more);
         pbnavitia::Response response;
-        response.set_error("Unknow filter : " + error.more);
+        fill_pb_error(pbnavitia::Error::bad_filter, "Unknow filter : " + error.more,response.mutable_error());
+//        response.set_error("Unknow filter : " + error.more);
         return response;
     }
 }

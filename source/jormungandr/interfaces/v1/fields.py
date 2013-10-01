@@ -225,6 +225,11 @@ pagination = {
     "items_on_page" : fields.Integer(attribute="itemsOnPage"),
 }
 
+error = {
+    'id' : enum_type(),
+    'message': fields.String()
+}
+
 class UrisToLinks():
     def output(self, key, obj):
         display_info = getattr(obj, "pt_display_informations")

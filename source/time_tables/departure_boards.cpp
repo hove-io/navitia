@@ -5,6 +5,7 @@
 
 #include "boost/lexical_cast.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
+#include "ptreferential/ptreferential.h"
 
 namespace pt = boost::posix_time;
 
@@ -15,7 +16,8 @@ std::vector<vector_datetime> make_columuns(const vector_dt_st &stop_times) {
     DateTime prev_date = DateTimeUtils::inf;
 
     for(auto & item : stop_times) {
-        if(prev_date == DateTimeUtils::inf || (DateTimeUtils::hour(prev_date)/3600) != (DateTimeUtils::hour(item.first)/3600)) {
+        if(prev_date == DateTimeUtils::inf ||
+                (DateTimeUtils::hour(prev_date)/3600) != (DateTimeUtils::hour(item.first)/3600)) {
             //On supprime les doublons
             if(result.size() > 0) {
                 auto last = result.back();
@@ -128,8 +130,7 @@ departure_board(const std::string &request, const std::string &date,
                 uint32_t duration, int interface_version,
                 int count, int start_page, const type::Data &data) {
 
-    RequestHandle handler("DEPARTURE_BOARD", request, date,  duration, data,
-                         count, start_page);
+    RequestHandle handler("DEPARTURE_BOARD", request, date,  duration, data);
 
     if(handler.pb_response.has_error())
         return handler.pb_response;
@@ -138,37 +139,46 @@ departure_board(const std::string &request, const std::string &date,
         return handler.pb_response;
 
     std::map<stop_point_line, vector_dt_st> map_route_stop_point;
+    //Mapping route/stop_point
+    std::vector<stop_point_line> sps_routes;
+    for(auto jpp_idx : handler.journey_pattern_points) {
+        auto jpp = data.pt_data.journey_pattern_points[jpp_idx];
+        auto route_idx  = jpp->journey_pattern->route->idx;
+        auto sp_idx = jpp->stop_point->idx;
+        stop_point_line key = stop_point_line(sp_idx, route_idx);
+        auto find_predicate = [&](stop_point_line spl) {
+            return spl.first == key.first && spl.second == key.second;
+        };
+        auto it = std::find_if(sps_routes.begin(), sps_routes.end(), find_predicate);
+        if(it == sps_routes.end())
+            sps_routes.push_back(key);
+    }
+    size_t total_result = sps_routes.size();
+    sps_routes = ptref::paginate(sps_routes, count, start_page);
+    //Trie des vecteurs de date_times stop_times
+    auto sort_predicate = [](datetime_stop_time dt1, datetime_stop_time dt2) {
+                    return dt1.first < dt2.first;
+                };
     // On regroupe entre eux les stop_times appartenant
     // au meme couple (stop_point, route)
     // On veut en effet afficher les départs regroupés par route
     // (une route étant une vague direction commerciale
-    for(type::idx_t jpp_idx : handler.journey_pattern_points) {
-        auto jpp = data.pt_data.journey_pattern_points[jpp_idx];
-        const type::StopPoint* stop_point = jpp->stop_point;
-        const type::Route* route = jpp->journey_pattern->route;
-
-        auto stop_times = get_stop_times({jpp_idx}, handler.date_time,
-                                         handler.max_datetime,
-                                         std::numeric_limits<int>::max(), data);
-
-        auto key = std::make_pair(stop_point->idx, route->idx);
-        auto iter = map_route_stop_point.find(key);
-        if(iter == map_route_stop_point.end()) {
-            auto to_insert = std::make_pair(key, vector_dt_st());
-            iter = map_route_stop_point.insert(to_insert).first;
+    for(auto sp_route : sps_routes) {
+        std::vector<datetime_stop_time> stop_times;
+        const type::StopPoint* stop_point = data.pt_data.stop_points[sp_route.first];
+        const type::Route* route = data.pt_data.routes[sp_route.second];
+        auto jpps = stop_point->journey_pattern_point_list;
+        for(auto jpp : jpps) {
+            if(jpp->journey_pattern->route == route) {
+                auto tmp = get_stop_times({jpp->idx}, handler.date_time,
+                                                 handler.max_datetime,
+                                                 std::numeric_limits<int>::max(), data);
+                stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
+            }
         }
-
-        iter->second.insert(iter->second.end(),
-                            stop_times.begin(), stop_times.end());
-    }
-
-    //Trie des vecteurs de date_times stop_times
-    for(auto sp_route_dt_st : map_route_stop_point) {
-        auto dt_st = sp_route_dt_st.second;
-        std::sort(dt_st.begin(), dt_st.end(),
-                [](datetime_stop_time dt1, datetime_stop_time dt2) {
-                    return dt1.first < dt2.first;
-                }
+        std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
+        auto to_insert = std::pair<stop_point_line, vector_dt_st>(sp_route, stop_times);
+        map_route_stop_point.insert(to_insert);
     }
 
     if(interface_version == 0) {
@@ -183,7 +193,7 @@ departure_board(const std::string &request, const std::string &date,
 
 
     auto pagination = handler.pb_response.mutable_pagination();
-    pagination->set_totalresult(handler.total_result);
+    pagination->set_totalresult(total_result);
     pagination->set_startpage(start_page);
     pagination->set_itemsperpage(count);
     pagination->set_itemsonpage(std::max(handler.pb_response.departure_boards_size(),

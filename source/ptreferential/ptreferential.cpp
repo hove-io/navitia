@@ -40,7 +40,7 @@ namespace qi = boost::spirit::qi;
         word = qi::lexeme[+(qi::alnum|qi::char_("_:\x7c-"))];
         text = qi::lexeme[+(qi::alnum|qi::char_("_:=.<>\x7c ")|qi::char_("-"))];
         escaped_string = '"' >> qi::lexeme[+(qi::alnum|qi::char_("_: &.\x7c")|qi::char_("-"))] >> '"';
-        bracket_string = '(' >> qi::lexeme[+(qi::alnum|qi::char_("_:=.<> \x7c")|qi::char_("-"))] /*qi::lexeme[+(qi::alnum|qi::char_("_: &,.-"))] */>> ')';
+        bracket_string = '(' >> qi::lexeme[+(qi::alnum|qi::char_("_:=.<> \x7c")|qi::char_("-")|qi::char_(","))] /*qi::lexeme[+(qi::alnum|qi::char_("_: &,.-"))] */>> ')';
         bin_op =  qi::string("<=")[qi::_val = LEQ]
                 | qi::string(">=")[qi::_val = GEQ]
                 | qi::string("<>")[qi::_val = NEQ]
@@ -179,10 +179,10 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
             throw parsing_error(parsing_error::error_type::unknown_object, "Filter Unknown object type: " + filter.object);
         }
     }
-
     std::vector<idx_t> final_indexes = data.get_all_index(requested_type);
     // Cas où on a aucun objet demandé dans la base (au pif, des companies…)
     if(final_indexes.empty()){
+        throw ptref_error("Filters: No requested object in the database");
         return final_indexes;
     }
 
@@ -208,7 +208,8 @@ std::vector<idx_t> make_query(Type_e requested_type, std::string request,
 
     // Cas où c’est les filtres qui font qu’on ne trouve rien
     if(final_indexes.empty()){
-        throw ptref_error("404");
+        //throw ptref_error("404");
+        throw ptref_error("Filters: Unable to find object");
     }
     return final_indexes;
 }
