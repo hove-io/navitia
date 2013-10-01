@@ -279,7 +279,7 @@ message Error{
 		unknown_object = 10;
 	}
 	optional error_id id = 1;
-	optional string comment = 2;
+	optional string message = 2;
 }
 
 message Response{
