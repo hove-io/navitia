@@ -8,7 +8,7 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    stop_date_time, enum_type, NonNullList, NonNullNested,\
                    additional_informations,  notes,notes_links,\
                    get_label,display_informations_vj,display_informations_route,\
-                   additional_informations_vj, UrisToLinks, has_equipments, error
+                   additional_informations_vj, UrisToLinks,  error
 from make_links import add_collection_links, add_id_links
 from collections import OrderedDict
 from ResourceUri import ResourceUri, add_notes
@@ -67,20 +67,22 @@ row = {
     "stop_point" : PbField(stop_point),
     "date_times" : NonNullList(fields.Nested(date_time), attribute="stop_times")
 }
+
 header = {
     "display_informations" :  display_informations_vj(),
     "additional_informations" : additional_informations_vj(),
-    "links" : UrisToLinks(),
-    "equipments" : has_equipments()
+    "links" : UrisToLinks()
 }
 table_field = {
     "rows" : NonNullList(NonNullNested(row)),
     "headers" : NonNullList(NonNullNested(header))
 }
+
 route_schedule_fields = {
     "table" : PbField(table_field),
     "display_informations" : display_informations_route()
 }
+
 route_schedules = {
     "error": PbField(error,attribute='error'),
     "route_schedules" : NonNullList(NonNullNested(route_schedule_fields)),
@@ -108,6 +110,7 @@ stop_schedules = {
     "pagination" : NonNullNested(pagination),
     "error": PbField(error,attribute='error')
 }
+
 class StopSchedules(Schedules):
     def __init__(self):
         super(StopSchedules, self).__init__("departure_boards")
@@ -123,16 +126,19 @@ passage = {
     "stop_point" : PbField(stop_point),
     "stop_date_time" : PbField(stop_date_time)
 }
+
 departures = {
     "departures" : NonNullList(NonNullNested(passage), attribute="next_departures"),
     "pagination" : NonNullNested(pagination),
     "error": PbField(error,attribute='error')
 }
+
 arrivals = {
     "arrivals" : NonNullList(NonNullNested(passage), attribute="next_arrivals"),
     "pagination" : NonNullNested(pagination),
     "error": PbField(error,attribute='error')
 }
+
 class NextDepartures(Schedules):
     def __init__(self):
         super(NextDepartures, self).__init__("next_departures")
