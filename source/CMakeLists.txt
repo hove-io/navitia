@@ -91,15 +91,21 @@ add_subdirectory(sql)
 add_subdirectory(scripts)
 
 
-#on prend simpleamqpclient en lib static
-SET(BUILD_STATIC_LIBS ON CACHE BOOL "Build Rabbitmqc as static library")
-SET(BUILD_SHARED_LIBS OFF CACHE BOOL "Build SimpleAmqpClient as static library")
-SET(BUILD_API_DOCS OFF CACHE BOOL "don't build dpc of librabbimq-c")
-SET(Rabbitmqc_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/third_party/librabbitmq-c/librabbitmq/")
-add_subdirectory(third_party/librabbitmq-c)
-add_subdirectory(third_party/SimpleAmqpClient)
 
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 SET(CPACK_PACKAGE_VERSION_MAJOR ${KRAKEN_VERSION_MAJOR})
 SET(CPACK_PACKAGE_VERSION_MINOR ${KRAKEN_VERSION_MINOR})
 SET(CPACK_PACKAGE_VERSION_PATCH ${KRAKEN_VERSION_PATCH})
+
+#THIRD PARTY
+#on prend simpleamqpclient en lib static
+SET(BUILD_STATIC_LIBS ON CACHE BOOL "Build Rabbitmqc as static library")
+SET(BUILD_SHARED_LIBS OFF CACHE BOOL "Build SimpleAmqpClient as static library")
+SET(BUILD_API_DOCS OFF CACHE BOOL "don't build doc of librabbimq-c")
+SET(BUILD_EXAMPLES OFF CACHE BOOL "don't build example of librabbimq-c")
+SET(BUILD_TOOLS OFF CACHE BOOL "don't build tool of librabbimq-c")
+SET(BUILD_TESTS OFF CACHE BOOL "don't build tests of librabbimq-c")
+SET(CMAKE_INSTALL_PREFIX "")
+SET(Rabbitmqc_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/third_party/librabbitmq-c/librabbitmq/")
+add_subdirectory(third_party/librabbitmq-c)
+add_subdirectory(third_party/SimpleAmqpClient)

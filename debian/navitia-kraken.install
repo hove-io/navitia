@@ -1,2 +1,2 @@
-debian/tmp/usr/bin/kraken /usr/bin/
-debian/tmp/usr/share/kraken/scripts/update_data.sh usr/share/kraken/scripts
+usr/bin/kraken /usr/bin/
+usr/share/kraken/scripts/update_data.sh usr/share/kraken/scripts
