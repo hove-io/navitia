@@ -9,5 +9,5 @@ setup(name='pyed',
       author_email='vincent.lara@canaltp.fr',
       url='www.navitia.io',
       packages=['pyed'],
-      requires=['python-configobj']
+      requires=['configobj']
 )
