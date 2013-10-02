@@ -4,8 +4,7 @@ namespace navitia { namespace routing {
 
 std::pair<const type::StopTime*, uint32_t>
 best_stop_time(const type::JourneyPatternPoint* jpp,
-               const DateTime &dt,
-               /*const type::Properties &required_properties*/
+               const DateTime dt,
                const type::AccessibiliteParams & accessibilite_params,
                const bool clockwise, const type::Data &data, bool reconstructing_path) {
     if(clockwise)
@@ -51,7 +50,7 @@ const type::StopTime* valid_drop_off(type::idx_t idx, type::idx_t end, uint32_t 
 
 std::pair<const type::StopTime*, uint32_t>
 earliest_stop_time(const type::JourneyPatternPoint* jpp,
-                   const DateTime &dt, const type::Data &data,
+                   const DateTime dt, const type::Data &data,
                    bool reconstructing_path,
                    const type::AccessibiliteParams & accessibilite_params) {
 
@@ -101,7 +100,7 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
 
 std::pair<const type::StopTime*, uint32_t>
 tardiest_stop_time(const type::JourneyPatternPoint* jpp,
-                   const DateTime &dt, const type::Data &data,
+                   const DateTime dt, const type::Data &data,
                    bool reconstructing_path,
                    const type::AccessibiliteParams & accessibilite_params) {
     if(!jpp->stop_point->accessible(accessibilite_params.properties))
