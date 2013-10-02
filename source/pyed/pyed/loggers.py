@@ -41,3 +41,9 @@ def init_loggers(config):
     ed2nav_logger = logging.getLogger('ed2nav')
     ed2nav_logger.setLevel(logging.INFO)
     ed2nav_logger.addHandler(ed2nav_handler)
+
+    nav2rt_handler = logging.FileHandler(config.get("log_files", "nav2rt"))
+    nav2rt_handler.setFormatter(formatter)
+    nav2rt_logger = logging.getLogger('nav2rt')
+    nav2rt_logger.setLevel(logging.INFO)
+    nav2rt_logger.addHandler(ed2nav_handler)

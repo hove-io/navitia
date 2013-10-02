@@ -63,9 +63,10 @@ struct RAPTOR
 
 
     ///Lance un calcul d'itinéraire entre deux stop areas avec aussi une borne
-    std::vector<Path> 
-    compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
-            int departure_day, DateTime bound, bool clockwise = true,
+    std::vector<Path>
+    compute(const type::StopArea* departure, const type::StopArea* destination,
+            int departure_hour, int departure_day, DateTime bound,
+            bool clockwise = true,
             /*const type::Properties &required_properties = 0*/
             const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(), uint32_t
             max_transfers=std::numeric_limits<uint32_t>::max());

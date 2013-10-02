@@ -71,6 +71,10 @@ pbnavitia::Response extract_data(const type::Data & data,
             fill_pb_object(data.pt_data.stop_point_connections[idx], data,
                            result.add_connections(), depth, today);
             break;
+        case Type_e::VehicleJourney:
+            fill_pb_object(data.pt_data.vehicle_journeys[idx], data,
+                           result.add_vehicle_journeys(), depth, today);
+            break;
         default: break;
         }
     }

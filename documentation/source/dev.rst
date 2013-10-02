@@ -7,14 +7,14 @@ de NAViTiA.
 Architecture générale
 *********************
 
-navitia se compose du cœur appelé *krakken* et du frontend appelé *Jörmungandr*.
+navitia se compose du cœur appelé *kraken* et du frontend appelé *Jörmungandr*.
 
 Le cœur est développé en C++ et le frontend en python.
 
 Les deux composants communiquent entre eux au travers de message *protocol buffers* transmis avec
 `ZMQ <http://www.zeromq.org/>`_.
 
-Afin de gérer des requêtes multiples, krakken instancie *n* threads. Les threads ne peuvent pas communiquer entre-eux.
+Afin de gérer des requêtes multiples, kraken instancie *n* threads, chacun d'entre eux est indépendant
 
 
 Tests unitaires
@@ -60,12 +60,12 @@ Règles globales
 
 .. _`guidelines google`: http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml
 
-Dans l'ensemble les `guidelines google`_ sont très bien. Nous ne les appliquons cependant pas à la lettre 
+Dans l'ensemble les `guidelines google`_ sont très bien. Nous ne les appliquons cependant pas à la lettre
 Les grandes différences portent sur :
 
 * Boost : on utilise tout ;)
 * Les exception : on utilise
-* C++11 : on utilise ce qui est supporté par GCC 4.5
+* C++11 : on utilise ce qui est supporté par GCC 4.6
 
 Quant à la mise en forme du code, les règles Qt seront à suivre http://wiki.qt-project.org/Coding_Conventions (par contre il faut penser à ignorer les remarques très spécifiques à Qt)
 

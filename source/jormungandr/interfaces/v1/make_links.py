@@ -13,7 +13,7 @@ class generate_links(object):
             objects = objects[0]
         if not "links" in objects.keys():
             objects["links"] = []
-        else:
+        elif hasattr(self, "collections") :
             for link in objects["links"]:
                 if "type" in link.keys():
                     self.collections.remove(link["type"])
