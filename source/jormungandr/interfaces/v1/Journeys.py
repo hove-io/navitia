@@ -194,14 +194,14 @@ class add_journey_pagination(object):
                 args["datetime"] = datetime_before.strftime("%Y%m%dT%H%M%S")
                 args["datetime_represents"] = "arrival"
                 objects[0]["links"].append({
-                    "href" : url_for("v1.journeys", **args),
+                    "href" : url_for("v1.journeys", _external=True, **args),
                     "templated" : False,
                     "type" : "prev"
                     })
                 args["datetime"] = datetime_after.strftime("%Y%m%dT%H%M%S")
                 args["datetime_represents"] = "departure"
                 objects[0]["links"].append({
-                    "href" : url_for("v1.journeys", **args),
+                    "href" : url_for("v1.journeys", _external=True, **args),
                     "templated" : False,
                     "type" : "next"
                     })
