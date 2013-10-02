@@ -227,7 +227,7 @@ class add_journey_pagination(object):
 class Journeys(ResourceUri):
     def __init__(self):
         modes = ["walking", "car", "bike", "br"]
-        types = ["all", "asap"]
+        types = ["all", "rapid"]
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
