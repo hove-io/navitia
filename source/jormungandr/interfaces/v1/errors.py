@@ -35,6 +35,7 @@ class ManageError(object):
             response = f(*args, **kwargs)
             code = 200
             errors = {
+                    response_pb2.Error.service_unavailable : 503,
                     response_pb2.Error.date_out_of_bounds : 404,
                     response_pb2.Error.no_origin : 404,
                     response_pb2.Error.no_destination : 404,
