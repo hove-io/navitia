@@ -11,14 +11,14 @@ using navitia::type::idx_t;
 class BDTopoParser {
     public:
         BDTopoParser(const std::string & path);
-        
+
         /**
          * Charge les Cities dans un objet Data de ed
-         * 
+         *
          */
         void load_city(ed::Data& data);
 
-        
+
         /**
          * Charge les données du filaire de voirie dans un objet Data de NAViTiA /!\
          *

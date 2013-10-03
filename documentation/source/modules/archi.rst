@@ -23,7 +23,7 @@ que ce soit les horaires théorique ou temps réel, ainsi que les données de vo
 Autour de cette base de données gravite tous les connecteurs servant à l'alimenter ou à alimenter Kraken.
 
 La base de de données utilisée est postgresql avec l'extension postgis pour gérer les données géographiques.
-Le modéle de la base est disponible dans "documentation/annexe/model.architect" 
+Le modéle de la base est disponible dans "documentation/annexe/model.architect"
 
 gtfs2ed
 ~~~~~~~

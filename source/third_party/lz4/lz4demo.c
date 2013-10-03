@@ -277,9 +277,9 @@ int decode_file(char* input_filename, char* output_filename)
 		uselessRet = fread(&chunkSize, 1, 4, finput);
 		if( uselessRet==0 ) break;   // Nothing to read : file read is completed
 		LITTLE_ENDIAN32(chunkSize);
-		if (chunkSize == ARCHIVE_MAGICNUMBER) 
+		if (chunkSize == ARCHIVE_MAGICNUMBER)
 			continue;   // appended compressed stream
-		
+
 		// Read Block
 	    uselessRet = fread(in_buff, 1, chunkSize, finput);
 
@@ -353,7 +353,7 @@ int main(int argc, char** argv)
 		if ( argument[0] =='d' ) { decode=1; continue; }
 
 		// Bench
-		if ( argument[0] =='b' ) { bench=1; if (argument[1] >= '0') cLevel=argument[1] - '0'; continue; } 
+		if ( argument[0] =='b' ) { bench=1; if (argument[1] >= '0') cLevel=argument[1] - '0'; continue; }
 
 		// Modify Block Size (benchmark only)
 		if ( argument[0] =='B' ) { int B = argument[1] - '0'; int S = 1 << (10 + 2*B); BMK_SetBlocksize(S); continue; }

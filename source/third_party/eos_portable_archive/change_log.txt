@@ -1,7 +1,7 @@
-IMPORTANT: 
+IMPORTANT:
 
 This is the last release from me as EOS employee. I plan to contribute all of this
-work to the official boost libraries distribution and will continue to support users. 
+work to the official boost libraries distribution and will continue to support users.
 Francois Mauger joined me recently and already added a valuable tutorial for you!
 
 Changelog:

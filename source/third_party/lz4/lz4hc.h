@@ -44,7 +44,7 @@ int LZ4_compressHC (const char* source, char* dest, int isize);
 /*
 LZ4_compressHC :
 	return : the number of bytes in compressed buffer dest
-	note : destination buffer must be already allocated. 
+	note : destination buffer must be already allocated.
 		To avoid any problem, size it to handle worst cases situations (input data not compressible)
 		Worst case size evaluation is provided by function LZ4_compressBound() (see "lz4.h")
 */

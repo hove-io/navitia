@@ -12,16 +12,16 @@ namespace ns = navitia::georef;
 BDTopoParser::BDTopoParser(const std::string& path): path(path){}
 
 void BDTopoParser::load_city(ed::Data& data){
-    
+
     CsvReader reader(path + "/commune.txt", true);
-    
+
     std::vector<std::string> row = reader.next();
-    
+
     int name = reader.get_pos_col("nom");
     int insee = reader.get_pos_col("code_insee");
     int x = reader.get_pos_col("x");
     int y = reader.get_pos_col("y");
-    
+
     for(row = reader.next(); !reader.eof() ;row = reader.next()){
         if(row.size() < 2)
             continue;
@@ -76,14 +76,14 @@ void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
     int x2 = reader.get_pos_col("x_fin");
     int y2 = reader.get_pos_col("y_fin");
     int l = reader.get_pos_col("longueur");
-    int insee = reader.get_pos_col("inseecom_g");    
+    int insee = reader.get_pos_col("inseecom_g");
     int n_deb_d = reader.get_pos_col("bornedeb_d");
     int n_deb_g = reader.get_pos_col("bornedeb_g");
     int n_fin_d = reader.get_pos_col("bornefin_d");
     int n_fin_g = reader.get_pos_col("bornefin_g");
 
     std::unordered_map<std::string, vertex_t> vertex_map;
-    std::unordered_map<std::string, Way> way_map;    
+    std::unordered_map<std::string, Way> way_map;
     std::unordered_map<std::string, HouseNumber> house_number_left_map;
     std::unordered_map<std::string, HouseNumber> house_number_right_map;
 
@@ -175,10 +175,10 @@ void BDTopoParser::load_georef(ns::GeoRef & geo_ref){
 
      for(auto way : way_map){
         geo_ref.ways.push_back(way.second);
-        geo_ref.ways.back().idx = idx;        
+        geo_ref.ways.back().idx = idx;
         for(auto node_pair : geo_ref.ways.back().edges){
             edge_t e = boost::edge(node_pair.first, node_pair.second, geo_ref.graph).first;
-            geo_ref.graph[e].way_idx = idx;            
+            geo_ref.graph[e].way_idx = idx;
         }
         idx++;
     }

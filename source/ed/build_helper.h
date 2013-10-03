@@ -74,6 +74,7 @@ struct builder{
     void connection(const std::string & name1, const std::string & name2, float length);
     void journey_pattern_point_connection(const std::string & name1, const std::string & name2, float length=120);
     void build(navitia::type::PT_Data & pt_data);
+    void finish();
     void generate_dummy_basis();
 };
 

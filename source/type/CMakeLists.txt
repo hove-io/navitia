@@ -12,7 +12,7 @@ add_custom_command (TARGET pb_lib
 
 add_custom_command (TARGET pb_lib
     PRE_BUILD
-    COMMAND protoc ARGS --python_out=${CMAKE_SOURCE_DIR}/pyed/pyed task.proto 
+    COMMAND protoc ARGS --python_out=${CMAKE_SOURCE_DIR}/pyed/pyed task.proto
     realtime.proto type.proto
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/type)
 

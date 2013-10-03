@@ -8,7 +8,7 @@ else
   OUTPUT64  = LZ4Demo64.exe
 endif
 
-all: lz4demo64 lz4demo32 
+all: lz4demo64 lz4demo32
 
 lz4demo64: lz4.c lz4.h lz4hc.c lz4hc.h bench.c lz4demo.c
 	gcc      -O3 -I. -std=c99 -Wall -W -Wundef -Wno-implicit-function-declaration lz4hc.c lz4.c bench.c lz4demo.c -o $(OUTPUT64)
