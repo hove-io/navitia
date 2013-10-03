@@ -197,7 +197,13 @@ class Script:
                     del resp.journeys[i]
         self.__fill_uris(resp)
         return resp
-
+    def journey_compare(self, j1, j2):
+        if datetime.strptime(j1.arrival_date_time, "%Y%m%dT%H%M%S") > datetime.strptime(j2.arrival_date_time, "%Y%m%dT%H%M%S") :
+            return 1
+        elif datetime.strptime(j1.arrival_date_time, "%Y%m%dT%H%M%S") == datetime.strptime(j2.arrival_date_time, "%Y%m%dT%H%M%S") :
+            return 0
+        else:
+            return -1
 
     def __on_journeys(self, requested_type, request, region):
         req = request_pb2.Request()
@@ -249,6 +255,8 @@ class Script:
                 to_delete.sort(reverse=True)
                 for i in to_delete:
                     del resp.journeys[i]
+            if not request["clockwise"]:
+                resp.journeys.sort(self.journey_compare)
         return resp
 
 
