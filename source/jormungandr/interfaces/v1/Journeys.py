@@ -185,7 +185,7 @@ class add_journey_pagination(object):
             objects = f(*args, **kwargs)
             if objects[1] != 200:
                 return objects
-            datetime_after, datetime_before = self.extremes(objects[0])
+            datetime_before, datetime_after = self.extremes(objects[0])
             if not datetime_before is None and not datetime_after is None:
                 if not "links" in objects[0]:
                     objects[0]["links"] = []
