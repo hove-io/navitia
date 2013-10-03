@@ -22,7 +22,7 @@ tardiest_stop_time(const type::JourneyPatternPoint* jpp,
 /// either a vehicle that leaves or that arrives depending on clockwise
 std::pair<const type::StopTime*, uint32_t>
 best_stop_time(const type::JourneyPatternPoint* jpp,
-          const DateTime &dt,
+          const DateTime dt,
           /*const type::Properties &required_properties*/
           const type::AccessibiliteParams & accessibilite_params,
           const bool clockwise, const type::Data &data, bool reconstructing_path = false);

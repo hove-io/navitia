@@ -159,30 +159,18 @@ class Script:
         return resp
 
 
-    def __fill_display_and_uris(self, resp):
+    def __fill_uris(self, resp):
         for journey in resp.journeys:
             for section in journey.sections:
 
                 if section.type == response_pb2.PUBLIC_TRANSPORT:
-                    section.pt_display_informations.physical_mode = section.vehicle_journey.physical_mode.name
-                    section.pt_display_informations.commercial_mode = section.vehicle_journey.route.line.commercial_mode.name
-                    section.pt_display_informations.network = section.vehicle_journey.route.line.network.name
-                    section.pt_display_informations.code = section.vehicle_journey.route.line.code
-                    section.pt_display_informations.headsign = section.vehicle_journey.route.name
-                    if(len(section.vehicle_journey.odt_message) > 0):
-                        section.pt_display_informations.description = section.vehicle_journey.odt_message
-                    section.pt_display_informations.vehicle_journey_type = section.vehicle_journey.vehicle_journey_type
-                    if section.destination.HasField("stop_point"):
-                        section.pt_display_informations.direction = section.destination.stop_point.name
-                    if section.vehicle_journey.route.line.color != "":
-                        section.pt_display_informations.color = section.vehicle_journey.route.line.color
-                    section.uris.vehicle_journey = section.vehicle_journey.uri
-                    section.uris.line = section.vehicle_journey.route.line.uri
-                    section.uris.route = section.vehicle_journey.route.uri
-                    section.uris.commercial_mode = section.vehicle_journey.route.line.commercial_mode.uri
-                    section.uris.physical_mode = section.vehicle_journey.physical_mode.uri
-                    section.uris.network = section.vehicle_journey.route.line.network.uri
-                    section.ClearField("vehicle_journey")
+                    if section.HasField("pt_display_informations"):
+                        section.uris.vehicle_journey = section.pt_display_informations.uris.vehicle_journey
+                        section.uris.line = section.pt_display_informations.uris.line
+                        section.uris.route = section.pt_display_informations.uris.route
+                        section.uris.commercial_mode = section.pt_display_informations.uris.commercial_mode
+                        section.uris.physical_mode = section.pt_display_informations.uris.physical_mode
+                        section.uris.network = section.pt_display_informations.uris.network
 
     def get_journey(self, req, region, type_):
         if req.requested_api == type_pb2.PLANNER :
@@ -206,7 +194,7 @@ class Script:
                 #And then we delete it
                 for i in to_delete:
                     del resp.journeys[i]
-        #self.__fill_display_and_uris(resp)
+        self.__fill_uris(resp)
         return resp
 
 

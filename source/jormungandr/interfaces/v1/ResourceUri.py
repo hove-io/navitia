@@ -13,7 +13,7 @@ class ResourceUri(Resource):
         self.region = None
         self.method_decorators = []
         self.method_decorators.append(add_id_links())
-        self.method_decorators.append(add_address_region(self))
+        self.method_decorators.append(add_address_id(self))
         self.method_decorators.append(add_computed_resources(self))
         self.method_decorators.append(add_pagination_links())
         self.method_decorators.append(clean_links())
@@ -90,7 +90,7 @@ class add_computed_resources(object):
                 return data
         return wrapper
 
-class add_address_region(object):
+class add_address_id(object):
     def __init__(self, resource):
         self.resource = resource
 
@@ -98,22 +98,21 @@ class add_address_region(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            def add_region(objects):
+            def add_id(objects):
                 if isinstance(objects, list) or isinstance(objects, tuple):
                     for item in objects:
-                        add_region(item)
+                        add_id(item)
                 elif isinstance(objects, dict) or\
                      isinstance(objects, OrderedDict):
                          if 'embedded_type' in objects.keys() and\
-                            objects['embedded_type'] == 'address':
-                            tmp = 'address:'+self.resource.region+':'
-                            objects['id'] = objects['id'].replace('address:', tmp)
+                            objects['embedded_type'] == 'address' :
+                            objects['id'] = objects['address']['coord']['lon']+';'+objects['address']['coord']['lat']
                             objects['address']['id'] = objects['id']
                          else :
                              for v in objects.items():
-                                 add_region(v)
+                                 add_id(v)
             if self.resource.region:
-                add_region(objects)
+                add_id(objects)
             return objects
         return wrapper
 
