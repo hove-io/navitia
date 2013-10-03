@@ -9,6 +9,7 @@ from renderers import render, render_from_protobuf
 from werkzeug.wrappers import Response
 from find_extrem_datetimes import *
 from qualifier import qualifier
+from datetime import datetime, timedelta
 
 
 pb_type = {
@@ -230,15 +231,13 @@ class Script:
         resp = self.get_journey(req, region, request["type"])
         if not resp.HasField("error"):
             while request["count"] and request["count"] > len(resp.journeys):
-                datetime = None
+                temp_datetime = None
                 if request["clockwise"]:
-                    datetime = resp.journeys[-1].departure_date_time
-                    last = str(int(datetime[-1])+1)
+                    temp_datetime = datetime.strptime(resp.journeys[-1].departure_date_time, "%Y%m%dT%H%M%S") + timedelta(seconds = 1)
                 else:
-                    datetime = resp.journeys[-1].arrival_date_time
-                    last = str(int(datetime[-1])-1)
-                datetime = datetime[:-1] + last
-                req.journeys.datetimes[0] = datetime
+                    temp_datetime = datetime.strptime(resp.journeys[-1].arrival_date_time, "%Y%m%dT%H%M%S") + timedelta(seconds = -1)
+
+                req.journeys.datetimes[0] = temp_datetime.strftime("%Y%m%dT%H%M%S")
                 tmp_resp = self.get_journey(req, region, request["type"])
                 if not tmp_resp.error and len(tmp_resp.journeys) == 0:
                     break
