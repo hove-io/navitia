@@ -227,6 +227,7 @@ class add_journey_pagination(object):
 
 class Journeys(ResourceUri):
     def __init__(self):
+        ResourceUri.__init__(self)
         modes = ["walking", "car", "bike", "br"]
         types = ["all", "rapid"]
         self.parsers = {}
