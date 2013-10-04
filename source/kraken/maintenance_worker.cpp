@@ -75,7 +75,7 @@ void MaintenanceWorker::operator()(){
 void MaintenanceWorker::init_rabbitmq(){
     Configuration * conf = Configuration::get();
     std::string instance_name = conf->get_as<std::string>("GENERAL", "instance_name", "");
-    std::string exchange_name = conf->get_as<std::string>("BROKER", "exchange_name", "navitia");
+    std::string exchange_name = conf->get_as<std::string>("BROKER", "exchange", "navitia");
     std::string host = conf->get_as<std::string>("BROKER", "host", "localhost");
     int port = conf->get_as<int>("BROKER", "port", 5672);
     std::string username = conf->get_as<std::string>("BROKER", "username", "guest");

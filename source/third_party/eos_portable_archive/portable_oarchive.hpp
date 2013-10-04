@@ -15,7 +15,7 @@
  * Based on the portable archive example by Robert Ramey this implementation
  * uses Beman Dawes endian library and fp_utilities from Johan Rade, both being
  * in boost since 1.36. Prior to that you need to add them both (header only)
- * to your boost directory before you're able to use the archives provided. 
+ * to your boost directory before you're able to use the archives provided.
  * Our archives have been tested successfully for boost versions 1.33 to 1.49!
  *
  * \note Correct behaviour has so far been confirmed using PowerPC-32, x86-32
@@ -28,7 +28,7 @@
  *       Arash Abghari for this suggestion). With that all unit tests from the
  *       serialization library pass again with the notable exception of user
  *       defined primitive types. Those are not supported and as a result any
- *       user defined type to be used with the portable archives are required 
+ *       user defined type to be used with the portable archives are required
  *       to be at least object_serializable.
  *
  * \note Oliver Putz pointed out that -0.0 was not serialized correctly, so
@@ -171,7 +171,7 @@ namespace eos {
 	#if BOOST_VERSION < 103400
 		, std::ostream
 	#else
-		, std::ostream::char_type 
+		, std::ostream::char_type
 		, std::ostream::traits_type
 	#endif
 	> portable_oprimitive;
@@ -204,9 +204,9 @@ namespace eos {
 		template<int> struct dummy { dummy(int) {}};
 
 		// stores a signed char directly to stream
-		inline void save_signed_char(const signed char& c) 
-		{ 
-			portable_oprimitive::save(c); 
+		inline void save_signed_char(const signed char& c)
+		{
+			portable_oprimitive::save(c);
 		}
 
 		// archive initialization
@@ -321,7 +321,7 @@ namespace eos {
 				// examine the number of bytes
 				// needed to represent the number
 				signed char size = 0;
-				do { temp >>= CHAR_BIT; ++size; } 
+				do { temp >>= CHAR_BIT; ++size; }
 				while (temp != 0 && temp != (T) -1);
 
 				// encode the sign bit into the size
@@ -339,30 +339,30 @@ namespace eos {
 
 		/**
 		 * \brief Save floating point types.
-		 * 
+		 *
 		 * We simply rely on fp_traits to extract the bit pattern into an (unsigned)
 		 * integral type and store that into the stream. Francois Mauger provided
 		 * standardized behaviour for special values like inf and NaN, that need to
 		 * be serialized in his application.
 		 *
 		 * \note by Johan Rade (author of the floating point utilities library):
-		 * Be warned that the math::detail::fp_traits<T>::type::get_bits() function 
+		 * Be warned that the math::detail::fp_traits<T>::type::get_bits() function
 		 * is *not* guaranteed to give you all bits of the floating point number. It
 		 * will give you all bits if and only if there is an integer type that has
 		 * the same size as the floating point you are copying from. It will not
 		 * give you all bits for double if there is no uint64_t. It will not give
 		 * you all bits for long double if sizeof(long double) > 8 or there is no
-		 * uint64_t. 
-		 * 
+		 * uint64_t.
+		 *
 		 * The member fp_traits<T>::type::coverage will tell you whether all bits
 		 * are copied. This is a typedef for either math::detail::all_bits or
-		 * math::detail::not_all_bits. 
-		 * 
+		 * math::detail::not_all_bits.
+		 *
 		 * If the function does not copy all bits, then it will copy the most
 		 * significant bits. So if you serialize and deserialize the way you
 		 * describe, and fp_traits<T>::type::coverage is math::detail::not_all_bits,
 		 * then your floating point numbers will be truncated. This will introduce
-		 * small rounding off errors. 
+		 * small rounding off errors.
 		 */
 		template <typename T>
 		typename boost::enable_if<boost::is_floating_point<T> >::type
@@ -378,7 +378,7 @@ namespace eos {
 			// 1. you're serializing a long double which is not portable
 			// 2. you're serializing a double but have no 64 bit integer
 			// 3. your machine is using an unknown floating point format
-			// after reading the note above you still might decide to 
+			// after reading the note above you still might decide to
 			// deactivate this static assert and try if it works out.
 			typename traits::bits bits;
 			BOOST_STATIC_ASSERT(sizeof(bits) == sizeof(T));
@@ -387,7 +387,7 @@ namespace eos {
 			// examine value closely
 			switch (fp::fpclassify(t))
 			{
-			//case FP_ZERO: bits = 0; break; 
+			//case FP_ZERO: bits = 0; break;
 			case FP_NAN: bits = traits::exponent | traits::mantissa; break;
 			case FP_INFINITE: bits = traits::exponent | (t<0) * traits::sign; break;
 			case FP_SUBNORMAL: assert(std::numeric_limits<T>::has_denorm); // pass

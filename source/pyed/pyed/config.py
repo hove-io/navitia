@@ -145,7 +145,7 @@ class Config:
         confspec.append('username = string(default="guest")')
         confspec.append('password = string(default="guest")')
         confspec.append('vhost = string(default="/")')
-        confspec.append('rt-topics = string_list()')
+        confspec.append('rt-topics = string_list(default=list())')
 
         self.config = ConfigObj(self.filename, configspec=confspec, \
                                 stringify=True)
@@ -167,7 +167,7 @@ class Config:
             error = "Section : " + section + " isn't in the conf"
         elif not param_name in self.config[section]:
             error = "Param : " + param_name + " isn't in the conf"
-        elif not self.config[section][param_name]:
+        elif self.config[section][param_name] == None:
             error = "Section : "+ section + " Param : "
             error += param_name + " wasn't specified"
         if error:

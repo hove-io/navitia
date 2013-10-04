@@ -9,6 +9,7 @@ from renderers import render, render_from_protobuf
 from werkzeug.wrappers import Response
 from find_extrem_datetimes import *
 from qualifier import qualifier
+from datetime import datetime, timedelta
 
 
 pb_type = {
@@ -159,52 +160,25 @@ class Script:
         return resp
 
 
-    def __fill_display_and_uris(self, resp):
+    def __fill_uris(self, resp):
         for journey in resp.journeys:
             for section in journey.sections:
 
                 if section.type == response_pb2.PUBLIC_TRANSPORT:
-                    section.pt_display_informations.physical_mode = section.vehicle_journey.physical_mode.name
-                    section.pt_display_informations.commercial_mode = section.vehicle_journey.route.line.commercial_mode.name
-                    section.pt_display_informations.network = section.vehicle_journey.route.line.network.name
-                    section.pt_display_informations.code = section.vehicle_journey.route.line.code
-                    section.pt_display_informations.headsign = section.vehicle_journey.route.name
-                    if(len(section.vehicle_journey.odt_message) > 0):
-                        section.pt_display_informations.description = section.vehicle_journey.odt_message
-                    section.pt_display_informations.vehicle_journey_type = section.vehicle_journey.vehicle_journey_type
-                    if section.destination.HasField("stop_point"):
-                        section.pt_display_informations.direction = section.destination.stop_point.name
-                    if section.vehicle_journey.route.line.color != "":
-                        section.pt_display_informations.color = section.vehicle_journey.route.line.color
-                    section.uris.vehicle_journey = section.vehicle_journey.uri
-                    section.uris.line = section.vehicle_journey.route.line.uri
-                    section.uris.route = section.vehicle_journey.route.uri
-                    section.uris.commercial_mode = section.vehicle_journey.route.line.commercial_mode.uri
-                    section.uris.physical_mode = section.vehicle_journey.physical_mode.uri
-                    section.uris.network = section.vehicle_journey.route.line.network.uri
-                    section.ClearField("vehicle_journey")
+                    if section.HasField("pt_display_informations"):
+                        section.uris.vehicle_journey = section.pt_display_informations.uris.vehicle_journey
+                        section.uris.line = section.pt_display_informations.uris.line
+                        section.uris.route = section.pt_display_informations.uris.route
+                        section.uris.commercial_mode = section.pt_display_informations.uris.commercial_mode
+                        section.uris.physical_mode = section.pt_display_informations.uris.physical_mode
+                        section.uris.network = section.pt_display_informations.uris.network
 
     def get_journey(self, req, region, type_):
         if req.requested_api == type_pb2.PLANNER :
             resp = qualifier().qualifier_one(req, region)
         else:
             resp = NavitiaManager().send_and_receive(req, region)
-
-        #if resp.response_type in [response_pb2.NO_ORIGIN_NOR_DESTINATION_POINT,
-        #                          response_pb2.NO_ORIGIN_POINT,
-        #                          response_pb2.NO_DESTINATION_POINT]:
-            '''resp.error = """
-                        Could not find a stop point nearby.
-                        Check the coordinates (did you mix up longitude and
-                        latitude?). Maybe you are out of the covered region.
-                        Maybe the coordinate snaped to a street of
-                        OpenStreetMap with no connectivity to the street
-                        network."""
-            '''
-        #if resp.response_type == response_pb2.NO_SOLUTION:
-            '''resp.error = "We found no solution. Maybe the are no vehicle \
-                          running that day on all the nearest stop points?"'''
-        if not resp.error and type_ == "asap":
+        if resp.error and type_ == "rapid":
             #We are looking for the asap result
             earliest_dt = None
             earliest_i = None
@@ -221,9 +195,15 @@ class Script:
                 #And then we delete it
                 for i in to_delete:
                     del resp.journeys[i]
-        #self.__fill_display_and_uris(resp)
+        self.__fill_uris(resp)
         return resp
-
+    def journey_compare(self, j1, j2):
+        if datetime.strptime(j1.arrival_date_time, "%Y%m%dT%H%M%S") > datetime.strptime(j2.arrival_date_time, "%Y%m%dT%H%M%S") :
+            return 1
+        elif datetime.strptime(j1.arrival_date_time, "%Y%m%dT%H%M%S") == datetime.strptime(j2.arrival_date_time, "%Y%m%dT%H%M%S") :
+            return 0
+        else:
+            return -1
 
     def __on_journeys(self, requested_type, request, region):
         req = request_pb2.Request()
@@ -255,17 +235,15 @@ class Script:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.journeys.forbidden_uris.append(forbidden_uri)
         resp = self.get_journey(req, region, request["type"])
-        if not resp.error:
+        if not resp.HasField("error"):
             while request["count"] and request["count"] > len(resp.journeys):
-                datetime = None
+                temp_datetime = None
                 if request["clockwise"]:
-                    datetime = resp.journeys[-1].departure_date_time
-                    last = str(int(datetime[-1])+1)
+                    temp_datetime = datetime.strptime(resp.journeys[-1].departure_date_time, "%Y%m%dT%H%M%S") + timedelta(seconds = 1)
                 else:
-                    datetime = resp.journeys[-1].arrival_date_time
-                    last = str(int(datetime[-1])-1)
-                datetime = datetime[:-1] + last
-                req.journeys.datetimes[0] = datetime
+                    temp_datetime = datetime.strptime(resp.journeys[-1].arrival_date_time, "%Y%m%dT%H%M%S") + timedelta(seconds = -1)
+
+                req.journeys.datetimes[0] = temp_datetime.strftime("%Y%m%dT%H%M%S")
                 tmp_resp = self.get_journey(req, region, request["type"])
                 if not tmp_resp.error and len(tmp_resp.journeys) == 0:
                     break
@@ -277,6 +255,8 @@ class Script:
                 to_delete.sort(reverse=True)
                 for i in to_delete:
                     del resp.journeys[i]
+            if not request["clockwise"]:
+                resp.journeys.sort(self.journey_compare)
         return resp
 
 

@@ -190,7 +190,7 @@ CREATE TABLE IF NOT EXISTS navitia.company (
     phone_number TEXT,
     mail TEXT,
     website TEXT,
-    fax TEXT  
+    fax TEXT
 );
 
 CREATE TABLE IF NOT EXISTS navitia.network (
@@ -237,7 +237,9 @@ CREATE TABLE IF NOT EXISTS navitia.journey_pattern (
 
 DO $$
 BEGIN
-    CASE WHEN (SELECT COUNT(1) = 0 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='navitia.journey_pattern' AND COLUMN_NAME='physical_mode_id')
+#pour migrer les données il faut que la table VJ existe
+    CASE WHEN ((SELECT COUNT(1) = 0 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='navitia.journey_pattern' AND COLUMN_NAME='physical_mode_id') 
+        AND (SELECT COUNT(1) = 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='navitia.vehicle_journey'))
     THEN
     -- Ajout de la nouvelle colonne
         CREATE TABLE IF NOT EXISTS navitia.journey_pattern_tmp (
@@ -249,16 +251,16 @@ BEGIN
             name TEXT NOT NULL,
             is_frequence BOOLEAN NOT NULL
         );
-        INSERT INTO navitia.journey_pattern_tmp 
-        SELECT 
-        navitia.journey_pattern.id, 
-        navitia.journey_pattern.route_id, 
-        MAX(navitia.vehicle_journey.physical_mode_id), 
-        navitia.journey_pattern.comment, 
-        navitia.journey_pattern.uri, 
-        navitia.journey_pattern.name, 
-        navitia.journey_pattern.is_frequence 
-        FROM 
+        INSERT INTO navitia.journey_pattern_tmp
+        SELECT
+        navitia.journey_pattern.id,
+        navitia.journey_pattern.route_id,
+        MAX(navitia.vehicle_journey.physical_mode_id),
+        navitia.journey_pattern.comment,
+        navitia.journey_pattern.uri,
+        navitia.journey_pattern.name,
+        navitia.journey_pattern.is_frequence
+        FROM
         navitia.journey_pattern,
         navitia.vehicle_journey
         WHERE

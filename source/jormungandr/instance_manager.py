@@ -176,7 +176,7 @@ class NavitiaManager(object):
                         metadatas = resp.metadatas
                         for contributor in metadatas.contributors:
                             self.contributors[str(contributor)] = key
-                    instance.geom = wkt.loads(metadatas.shape)
+                        instance.geom = wkt.loads(metadatas.shape)
                     #except:
                     #    pass
                 except DeadSocketException:

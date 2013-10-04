@@ -185,7 +185,7 @@ class add_journey_pagination(object):
             objects = f(*args, **kwargs)
             if objects[1] != 200:
                 return objects
-            datetime_after, datetime_before = self.extremes(objects[0])
+            datetime_before, datetime_after = self.extremes(objects[0])
             if not datetime_before is None and not datetime_after is None:
                 if not "links" in objects[0]:
                     objects[0]["links"] = []
@@ -194,14 +194,14 @@ class add_journey_pagination(object):
                 args["datetime"] = datetime_before.strftime("%Y%m%dT%H%M%S")
                 args["datetime_represents"] = "arrival"
                 objects[0]["links"].append({
-                    "href" : url_for("v1.journeys", **args),
+                    "href" : url_for("v1.journeys", _external=True, **args),
                     "templated" : False,
                     "type" : "prev"
                     })
                 args["datetime"] = datetime_after.strftime("%Y%m%dT%H%M%S")
                 args["datetime_represents"] = "departure"
                 objects[0]["links"].append({
-                    "href" : url_for("v1.journeys", **args),
+                    "href" : url_for("v1.journeys", _external=True, **args),
                     "templated" : False,
                     "type" : "next"
                     })
@@ -227,8 +227,9 @@ class add_journey_pagination(object):
 
 class Journeys(ResourceUri):
     def __init__(self):
+        ResourceUri.__init__(self)
         modes = ["walking", "car", "bike", "br"]
-        types = ["all", "asap"]
+        types = ["all", "rapid"]
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
