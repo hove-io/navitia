@@ -237,9 +237,9 @@ CREATE TABLE IF NOT EXISTS navitia.journey_pattern (
 
 DO $$
 BEGIN
-#pour migrer les données il faut que la table VJ existe
+--pour migrer les données il faut que la table VJ existe
     CASE WHEN ((SELECT COUNT(1) = 0 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='navitia.journey_pattern' AND COLUMN_NAME='physical_mode_id') 
-        AND (SELECT COUNT(1) = 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='navitia.vehicle_journey'))
+        AND (SELECT COUNT(1) = 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='navitia.vehicle_journey' AND COLUMN_NAME='physical_mode_id'))
     THEN
     -- Ajout de la nouvelle colonne
         CREATE TABLE IF NOT EXISTS navitia.journey_pattern_tmp (
