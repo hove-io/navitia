@@ -67,3 +67,12 @@ class ConnectorAT(object):
                 self.channel.basic_publish(exchange=exchange_name,
                                            routing_key=routing_key,
                                            body=task.SerializeToString())
+        for perturbation in self.at_realtime_reader.perturbation_list:
+            task = at.task_pb2.Task()
+            task.action = at.task_pb2.AT_PERTURBATION
+            task.at_perturbation.MergeFrom(perturbation)
+            for routing_key in self.config.rt_topics:
+                exchange_name = self.config.exchange_name
+                self.channel.basic_publish(exchange=exchange_name,
+                                           routing_key=routing_key,
+                                           body=task.SerializeToString())
