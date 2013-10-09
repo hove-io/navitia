@@ -24,6 +24,7 @@ class ResourceUri(Resource):
         if len(items) % 2 != 0:
             items = items[:-1]
         type_ = None
+
         for item in items:
             if not type_:
                 type_ = collections_to_resource_type[item]
@@ -32,7 +33,10 @@ class ResourceUri(Resource):
                     splitted_coord = item.split(";")
                     if len(splitted_coord) == 2:
                         lon, lat = splitted_coord
-                        filters.append("stop_point.coord DWITHIN("+lon+","+lat+",200)")
+                        object_type = "stop_point"
+                        if(self.collection == "pois"):
+                            object_type = "poi"
+                        filters.append(object_type+".coord DWITHIN("+lon+","+lat+",200)")
                     else:
                         filters.append(type_+".uri="+item)
                 else :

@@ -144,6 +144,13 @@ BEGIN
         RAISE NOTICE 'relation "fw_id_idx" already exists, skipping';
     END CASE;
 
+    CASE WHEN (select count(*) = 0 from pg_indexes where indexname = 'message_uri_idx')
+    THEN
+        CREATE UNIQUE INDEX message_uri_idx ON realtime.message(uri);
+    ELSE
+        RAISE NOTICE 'relation "message_uri_idx" already exists, skipping';
+    END CASE;
+
 END$$;
 
 

@@ -1,5 +1,5 @@
 #include "ed/data.h"
-#include "ed/gtfs_parser.h"
+#include "ed/connectors/gtfs_parser.h"
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_ed
 #include <boost/test/unit_test.hpp>

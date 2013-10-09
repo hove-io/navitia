@@ -681,7 +681,7 @@ void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
         navitia::georef::POI* poi = new navitia::georef::POI();
         const_it["uri"].to(poi->uri);
         const_it["name"].to(poi->name);
-        const_it["id"].to(poi->idx);
+        const_it["id"].to(poi->id);
         poi->coord.set_lon(const_it["lon"].as<double>());
         poi->coord.set_lat(const_it["lat"].as<double>());
         const_it["weight"].to(poi->weight);

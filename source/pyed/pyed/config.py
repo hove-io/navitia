@@ -48,6 +48,14 @@ class Config:
     gtfs2ed = /var/log/ed/gtfs2ed_instance_name
     ed2nav = /var/log/ed/ed2nav_instance_name
     pyed = /var/log/ed/pyed_instance_name
+
+    [broker]
+    host = localhost
+    port = 5672
+    username = guest
+    password = guest
+    vhost = /
+    exchange = navitia
     """
     def __init__(self, filename):
         """ Init the configuration,
@@ -61,6 +69,7 @@ class Config:
                                 "exec_directory": None,
                                 "source_directory" : None,
                                 "target_file" : None,
+                                "tmp_file" : None,
                                 "working_directory" : None,
                                 "aliases" : None,
                                 "synonyms" : None
@@ -75,8 +84,17 @@ class Config:
                                 "osm2ed" : None,
                                 "gtfs2ed" : None,
                                 "ed2nav" : None,
-                                "pyed" : None
-                                    }
+                                "pyed" : None,
+                                "nav2rt" : None
+                                    },
+                            'broker' : {
+                                'host' : None,
+                                'port' : None,
+                                'username' : None,
+                                'password' : None,
+                                'vhost' : None,
+                                'exchange': None
+                                }
                             }
         self.is_valid_ = False
         self.logger.info("Reading config")
@@ -121,6 +139,13 @@ class Config:
         confspec.append("gtfs2ed=string")
         confspec.append("ed2nav=string")
         confspec.append("pyed=string")
+        confspec.append('[broker]')
+        confspec.append('host = string(default="localhost")')
+        confspec.append('port = integer(0, 65535, default=5672)')
+        confspec.append('username = string(default="guest")')
+        confspec.append('password = string(default="guest")')
+        confspec.append('vhost = string(default="/")')
+        confspec.append('rt-topics = string_list(default=list())')
 
         self.config = ConfigObj(self.filename, configspec=confspec, \
                                 stringify=True)
@@ -142,7 +167,7 @@ class Config:
             error = "Section : " + section + " isn't in the conf"
         elif not param_name in self.config[section]:
             error = "Param : " + param_name + " isn't in the conf"
-        elif not self.config[section][param_name]:
+        elif self.config[section][param_name] == None:
             error = "Section : "+ section + " Param : "
             error += param_name + " wasn't specified"
         if error:

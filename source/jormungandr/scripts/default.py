@@ -189,7 +189,7 @@ class Script:
             resp = qualifier().qualifier_one(req, region)
         else:
             resp = NavitiaManager().send_and_receive(req, region)
-        if not resp.HasField("error") and type_ == "asap":
+        if not resp.HasField("error") and type_ == "rapid":
             #We are looking for the asap result
             earliest_dt = None
             earliest_i = None
