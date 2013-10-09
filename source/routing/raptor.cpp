@@ -238,28 +238,29 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departur
     clear_and_init(departures, calc_dest, bound, clockwise, walking_speed, walking_distance);
 
     boucleRAPTOR(/*required_properties*/accessibilite_params, clockwise, false, max_transfers);
-
+    //auto tmp = makePathes(calc_dest, bound, walking_speed, accessibilite_params, *this, clockwise);
+    //result.insert(result.end(), tmp.begin(), tmp.end());
     // Aucune solution n’a pas été trouvée :'(
     if(b_dest.best_now_rpid == type::invalid_idx) {
         return result;
-    }
-    auto tmp = makePathes(calc_dest, bound, walking_speed, accessibilite_params, *this, clockwise);
-    result.insert(result.end(), tmp.begin(), tmp.end());
-    //Second passe : permet d’optimiser les temps de correspondance
-    departures = getDepartures(calc_dep, calc_dest, !clockwise, walking_speed, labels, boardings, boarding_types, accessibilite_params/*required_properties*/, data);
+    } else {
 
-    for(auto departure : departures) {
-        clear_and_init({departure}, calc_dep, departure_datetime, !clockwise, walking_speed, walking_distance);
+        //Second passe : permet d’optimiser les temps de correspondance
+        departures = getDepartures(calc_dep, calc_dest, !clockwise, walking_speed, labels, boardings, boarding_types, accessibilite_params/*required_properties*/, data);
 
-        boucleRAPTOR(accessibilite_params/*required_properties*/, !clockwise, true, max_transfers);
+        for(auto departure : departures) {
+            clear_and_init({departure}, calc_dep, departure_datetime, !clockwise, walking_speed, walking_distance);
 
-        if(b_dest.best_now_rpid != type::invalid_idx) {
-            std::vector<Path> temp = makePathes(calc_dep, departure_datetime, walking_speed, accessibilite_params/*required_properties*/, *this, !clockwise);
-            result.insert(result.end(), temp.begin(), temp.end());
+            boucleRAPTOR(accessibilite_params/*required_properties*/, !clockwise, true, max_transfers);
+
+            if(b_dest.best_now_rpid != type::invalid_idx) {
+                std::vector<Path> temp = makePathes(calc_dep, departure_datetime, walking_speed, accessibilite_params/*required_properties*/, *this, !clockwise);
+                result.insert(result.end(), temp.begin(), temp.end());
+            }
         }
-    }
 
-    return result;
+        return result;
+    }
 }
 
 
@@ -434,7 +435,7 @@ void RAPTOR::raptor_loop(Visitor visitor, /*const type::Properties &required_pro
                 boarding = nullptr;
                 workingDt = visitor.worst_datetime();
                 typename Visitor::stop_time_iterator it_st;
-                int gap = 0;
+                DateTime tmp_dt = 0;
                 BOOST_FOREACH(const type::JourneyPatternPoint* jpp, visitor.journey_pattern_points(this->data.pt_data.journey_pattern_points, journey_pattern, Q[journey_pattern->idx])) {
                     type::idx_t jpp_idx = jpp->idx;
                     if(boarding != nullptr) {
@@ -448,7 +449,7 @@ void RAPTOR::raptor_loop(Visitor visitor, /*const type::Properties &required_pro
                             else
                                 bound = b_dest.best_now;
 
-                            DateTimeUtils::update(workingDt, st->section_end_time(visitor.clockwise(), gap), visitor.clockwise());
+                            DateTimeUtils::update(workingDt, st->section_end_time(visitor.clockwise(), tmp_dt), visitor.clockwise());
 
                             if(visitor.comp(workingDt, bound) && st->valid_end(visitor.clockwise())) {
                                 working_labels[jpp_idx] = workingDt;
@@ -479,16 +480,15 @@ void RAPTOR::raptor_loop(Visitor visitor, /*const type::Properties &required_pro
                        (boarding == nullptr || visitor.better_or_equal(labels_temp, workingDt, *it_st))) {
 
                         const type::StopTime* temp_stop_time;
-                        std::tie(temp_stop_time, gap) = best_stop_time(jpp, labels_temp, accessibilite_params/*required_properties*/, visitor.clockwise(), data);
+                        std::tie(temp_stop_time, tmp_dt) = best_stop_time(jpp, labels_temp, accessibilite_params, visitor.clockwise(), data);
 
                         if(temp_stop_time != nullptr) {
-                            boarding = /*temp_stop_time->journey_pattern_point*/jpp;
+                            boarding = jpp;
                             it_st = visitor.first_stoptime(temp_stop_time);
                             const type::StopTime* st = *it_st;
-                            workingDt = labels_temp;
-                            DateTimeUtils::update(workingDt, st->section_end_time(visitor.clockwise(), gap), visitor.clockwise());
+                            workingDt = tmp_dt;
                             BOOST_ASSERT(visitor.comp(labels_temp, workingDt) || labels_temp == workingDt);
-                            BOOST_ASSERT(gap >= 0);
+                            BOOST_ASSERT(tmp_dt >= 0);
                             l_zone = st->local_traffic_zone;
                         }
                     }
