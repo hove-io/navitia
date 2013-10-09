@@ -189,22 +189,7 @@ class Script:
             resp = qualifier().qualifier_one(req, region)
         else:
             resp = NavitiaManager().send_and_receive(req, region)
-
-        #if resp.response_type in [response_pb2.NO_ORIGIN_NOR_DESTINATION_POINT,
-        #                          response_pb2.NO_ORIGIN_POINT,
-        #                          response_pb2.NO_DESTINATION_POINT]:
-            '''resp.error = """
-                        Could not find a stop point nearby.
-                        Check the coordinates (did you mix up longitude and
-                        latitude?). Maybe you are out of the covered region.
-                        Maybe the coordinate snaped to a street of
-                        OpenStreetMap with no connectivity to the street
-                        network."""
-            '''
-        #if resp.response_type == response_pb2.NO_SOLUTION:
-            '''resp.error = "We found no solution. Maybe the are no vehicle \
-                          running that day on all the nearest stop points?"'''
-        if not resp.error and type_ == "asap":
+        if not resp.HasField("error") and type_ == "asap":
             #We are looking for the asap result
             earliest_dt = None
             earliest_i = None
@@ -255,7 +240,7 @@ class Script:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.journeys.forbidden_uris.append(forbidden_uri)
         resp = self.get_journey(req, region, request["type"])
-        if not resp.error:
+        if not resp.HasField("error"):
             while request["count"] and request["count"] > len(resp.journeys):
                 datetime = None
                 if request["clockwise"]:
