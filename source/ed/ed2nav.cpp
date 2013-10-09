@@ -53,7 +53,7 @@ int main(int argc, char * argv[])
 
     po::notify(vm);
 
-    pt::ptime start, end;
+    pt::ptime start;
     int read, sort, autocomplete, save;
 
     navitia::type::Data data;
