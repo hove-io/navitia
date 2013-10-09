@@ -35,6 +35,7 @@ void Data::complete(){
     build_journey_patterns();
     build_journey_pattern_points();
     build_journey_pattern_point_connections();
+    finalize_frequency();
     //on construit les codes externe des journey pattern
     ::ed::normalize_uri(journey_patterns);
     ::ed::normalize_uri(routes);
@@ -509,4 +510,18 @@ void  add_journey_pattern_point_connection(types::JourneyPatternPoint *rp1, type
     }
 }
 
+
+void Data::finalize_frequency() {
+    for(auto * vj : this->vehicle_journeys) {
+        if(!vj->stop_time_list.empty() && vj->stop_time_list.front()->is_frequency) {
+            auto * first_st = vj->stop_time_list.front();
+            size_t nb_trips = std::ceil((first_st->end_time - first_st->start_time)/first_st->headway_secs);
+            for(auto * st : vj->stop_time_list) {
+                st->start_time = first_st->start_time+(st->arrival_time - first_st->arrival_time);
+                st->end_time = first_st->start_time + nb_trips * st->headway_secs;
+                st->end_time += (st->departure_time - first_st->departure_time);
+            }
+        }
+    }
+}
 }//namespace
