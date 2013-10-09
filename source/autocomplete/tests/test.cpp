@@ -216,18 +216,10 @@ BOOST_AUTO_TEST_CASE(regex_synonyme_gare_sncf_tests){
 
 
     std::map<std::string, std::string> synonymes;
-//    synonymes["cc"]="centre commercial";
-//    synonymes["c c"]="centre commercial";
-//    synonymes["hotel de ville"]="mairie";
     synonymes["gare sncf"]="gare";
     synonymes["gare snc"]="gare";
     synonymes["gare sn"]="gare";
     synonymes["gare s"]="gare";
-//    synonymes["c.h.u"]="hopital";
-//    synonymes["c.h.r"]="hopital";
-//    synonymes["chateau neuf"]="chateauneuf";
-//    synonymes["saint philbert de grandlieu"]="saint philbert de grand lieu";
-//    synonymes["ld"]="Lieu-Dit";
 
     Autocomplete<unsigned int> ac;
     std::vector<std::string> vec;
@@ -493,6 +485,29 @@ BOOST_AUTO_TEST_CASE(autocomplete_find_quality_test){
         BOOST_REQUIRE_EQUAL(res.at(1).idx, 6);
         BOOST_REQUIRE_EQUAL(res.at(2).idx, 0);
         BOOST_REQUIRE_EQUAL(res.at(3).idx, 2);
+    }
+
+///Test pour verifier que - entres les deux mots est ignoré.
+BOOST_AUTO_TEST_CASE(autocomplete_add_string_with_Line){
+    /// Liste des alias (Pas serialisé)
+    std::map<std::string, std::string> alias;
+    std::map<std::string, std::string> synonymes;
+    std::vector<std::string> admins;
+    std::string admin_uri = "";
+    int word_weight = 5;
+    int nbmax = 10;
+
+    Autocomplete<unsigned int> ac;
+    ac.add_string("rue jeanne d'arc", 0, alias, synonymes);
+    ac.add_string("place jean jaures", 1, alias, synonymes);
+    ac.add_string("avenue jean jaures", 3, alias, synonymes);
+    ac.add_string("rue jean-jaures", 6, alias, synonymes);
+    ac.add_string("rue jean zay ", 7, alias, synonymes);
+
+    ac.build();
+
+    auto res = ac.find_complete("jean-jau", alias, synonymes, word_weight, nbmax, [](int){return true;});
+    std::vector<int> expected = {0,1,3,6};
     }
 
 

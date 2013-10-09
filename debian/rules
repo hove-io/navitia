@@ -1,6 +1,12 @@
 #!/usr/bin/make -f
 
 export DH_VERBOSE = 1
+
+PYTHON2=$(shell pyversions -vr)
+
+# Prevent setuptools/distribute from accessing the internet.
+export http_proxy = http://127.0.0.1:9
+
 %:
 	dh $@ --sourcedirectory=source --builddirectory=build_package --parallel --max-parallel=4
 
@@ -9,3 +15,12 @@ override_dh_auto_configure:
 
 override_dh_auto_build:
 	dh_auto_build -- -j4
+	cd source/pyed && python$* setup.py build
+
+override_dh_auto_install:
+	dh_auto_install
+	cd source/pyed && python$* setup.py install --root=$(CURDIR)/debian/tmp --install-layout=deb
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf source/pyed/build

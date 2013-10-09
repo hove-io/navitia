@@ -274,7 +274,11 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
 
 
 pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
-    pbnavitia::Response result;
+    pbnavitia::Response result ;
+    if (! (*data)->loaded){
+        fill_pb_error(pbnavitia::Error::service_unavailable, "The service is loading data",result.mutable_error());
+        return result;
+    }
     switch(request.requested_api()){
     case pbnavitia::STATUS: return status(); break;
     case pbnavitia::LOAD: return load(); break;

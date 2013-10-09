@@ -4,7 +4,7 @@ from flask.ext.restful import Resource, fields, marshal_with, reqparse
 from instance_manager import NavitiaManager
 from make_links import add_id_links
 from fields import place, NonNullList, NonNullNested
-from ResourceUri import ResourceUri, add_address_region
+from ResourceUri import ResourceUri
 from make_links import add_id_links
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
