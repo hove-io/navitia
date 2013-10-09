@@ -79,20 +79,20 @@ int main(int argc, char** argv){
         std::random_device rd;
         std::mt19937 rng(31442);
         std::uniform_int_distribution<> gen(0,data.pt_data.stop_areas.size()-1);
+        std::vector<unsigned int> hours{0, 28800, 36000, 72000, 86000};
+        std::vector<unsigned int> days({7});
+        if(data.pt_data.validity_patterns.front()->beginning_date.day_of_week().as_number() == 6)
+            days.push_back(8);
+        else
+            days.push_back(13);
 
         for(int i = 0; i < iterations; ++i) {
-            std::vector<unsigned int> hours{0, 28800, 36000, 72000, 86000};
-            std::vector<unsigned int> days({7});
-            if(data.pt_data.validity_patterns.front()->beginning_date.day_of_week().as_number() == 6)
-                days.push_back(8);
-            else
-                days.push_back(13);
-
             PathDemand demand;
             demand.start = gen(rng);
             demand.target = gen(rng);
             while(demand.start == demand.target) {
                 demand.target = gen(rng);
+                demand.start = gen(rng);
             }
             for(auto day : days) {
                 for(auto hour : hours) {
@@ -137,7 +137,7 @@ int main(int argc, char** argv){
 
     Timer ecriture("Écriture du fichier de résultats");
     std::fstream out_file(output, std::ios::out);
-    out_file << "Start, Target, Day, Hour";
+    out_file << "Start, Start id, Target, Target id, Day, Hour";
         out_file << ", "
                  << "arrival, "
                  << "duration, "
@@ -148,8 +148,10 @@ int main(int argc, char** argv){
 
     for(size_t i = 0; i < demands.size(); ++i){
         PathDemand demand = demands[i];
-        out_file << data.pt_data.stop_points[demand.start]->uri
-                 << ", " << data.pt_data.stop_points[demand.target]->uri
+        out_file << data.pt_data.stop_areas[demand.start]->uri
+                 << ", " << demand.start
+                 << ", " << data.pt_data.stop_areas[demand.target]->uri
+                 << ", " << demand.target
                  << ", " << demand.date
                  << ", " << demand.hour;
 
