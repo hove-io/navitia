@@ -79,7 +79,7 @@ private:
 
     void fill_admins(navitia::type::Data& data, pqxx::work& work);
     void fill_stop_point_connections(navitia::type::Data& data, pqxx::work& work);
-    //void insert_journey_pattern_point_connections(const std::vector<types::JourneyPatternPointConnection*>& connections);
+    void fill_journey_pattern_point_connections(navitia::type::Data& data, pqxx::work& work);
     void fill_poi_types(navitia::type::Data& data, pqxx::work& work);
     void fill_pois(navitia::type::Data& data, pqxx::work& work);
     void fill_ways(navitia::type::Data& data, pqxx::work& work);

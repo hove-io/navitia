@@ -37,7 +37,7 @@ void EdPersistor::persist(const ed::Data& data, const navitia::type::MetaData& m
 
     //@TODO: les connections ont des doublons, en attendant que ce soit corrigé, on ne les enregistre pas
     this->insert_stop_point_connections(data.stop_point_connections);
-    //this->insert_journey_pattern_point_connections(data.journey_pattern_point_connections);
+    this->insert_journey_pattern_point_connections(data.journey_pattern_point_connections);
     this->insert_alias(data.alias);
     this->insert_synonyms(data.synonymes);
     std::cout << "fin : block insert!" << std::endl;
