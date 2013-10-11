@@ -39,10 +39,10 @@ BOOST_AUTO_TEST_CASE(dropoff_pickup) {
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa1]]
+    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa2]]
+    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     type::AccessibiliteParams access;
@@ -132,13 +132,13 @@ BOOST_AUTO_TEST_CASE(base) {
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa1]]
+    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa2]]
+    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp3 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa3]]
+    auto jpp3 = b.data.pt_data.stop_areas_map[spa3]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     type::AccessibiliteParams access;
@@ -298,10 +298,10 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa1]]
+    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa2]]
+    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     type::AccessibiliteParams access;
@@ -421,13 +421,13 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa1]]
+    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa2]]
+    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp3 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa3]]
+    auto jpp3 = b.data.pt_data.stop_areas_map[spa3]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     type::AccessibiliteParams access;
@@ -604,10 +604,10 @@ BOOST_AUTO_TEST_CASE(base_vp) {
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa1]]
+    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa2]]
+    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     type::AccessibiliteParams access;
@@ -701,10 +701,10 @@ BOOST_AUTO_TEST_CASE(vj2) {
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa1]]
+    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa2]]
+    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     type::AccessibiliteParams access;
@@ -840,10 +840,10 @@ BOOST_AUTO_TEST_CASE(vp2) {
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa1]]
+    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa2]]
+    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     type::AccessibiliteParams access;
@@ -923,13 +923,13 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa1]]
+    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa2]]
+    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp3 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa3]]
+    auto jpp3 = b.data.pt_data.stop_areas_map[spa3]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     type::AccessibiliteParams access;
@@ -1086,13 +1086,13 @@ BOOST_AUTO_TEST_CASE(freq_base) {
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa1]]
+    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa2]]
+    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp3 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa3]]
+    auto jpp3 = b.data.pt_data.stop_areas_map[spa3]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     type::AccessibiliteParams access;
@@ -1285,10 +1285,10 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa1]]
+    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa2]]
+    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     type::AccessibiliteParams access;
@@ -1424,10 +1424,10 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
     b.data.build_uri();
     b.data.build_raptor();
 
-    auto jpp1 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa1]]
+    auto jpp1 = b.data.pt_data.stop_areas_map[spa1]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
-    auto jpp2 = b.data.pt_data.stop_areas[b.data.pt_data.stop_areas_map[spa2]]
+    auto jpp2 = b.data.pt_data.stop_areas_map[spa2]
                 ->stop_point_list.front()
                 ->journey_pattern_point_list.front();
     type::AccessibiliteParams access;
