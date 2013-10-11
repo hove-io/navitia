@@ -720,18 +720,32 @@ struct StopTime : public Nameable {
             return clockwise ? arrival_time : departure_time;
     }
 
-    inline uint32_t f_arrival_time( const DateTime dt) const {
-        if (this == this->vehicle_journey->stop_time_list.front())
-            return dt;
-        auto prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
-        return dt + this->arrival_time - prec_st->arrival_time;
+    inline uint32_t f_arrival_time(const DateTime dt, bool clockwise = true) const {
+        if(clockwise) {
+            if (this == this->vehicle_journey->stop_time_list.front())
+                return dt;
+            auto prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
+            return dt + this->arrival_time - prec_st->arrival_time;
+        } else {
+            if (this == this->vehicle_journey->stop_time_list.back())
+                return dt;
+            auto next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
+            return dt - (next_st->arrival_time - this->arrival_time);
+        }
     }
 
-    inline uint32_t f_departure_time( const DateTime dt) const {
-        if (this == this->vehicle_journey->stop_time_list.back())
-            return dt;
-        auto next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
-        return dt - (next_st->departure_time - this->departure_time);
+    inline uint32_t f_departure_time(const DateTime dt, bool clockwise = false) const {
+        if(clockwise) {
+            if (this == this->vehicle_journey->stop_time_list.front())
+                return dt;
+            auto prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
+            return dt + this->departure_time - prec_st->departure_time;
+        } else {
+            if (this == this->vehicle_journey->stop_time_list.back())
+                return dt;
+            auto next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
+            return dt - (next_st->departure_time - this->departure_time);
+        }
     }
 
     DateTime section_end_date(int date, bool clockwise) const {return DateTimeUtils::set(date, this->section_end_time(clockwise));}
