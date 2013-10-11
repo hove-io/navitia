@@ -299,13 +299,4 @@ void builder::connection(const std::string & name1, const std::string & name2, f
          vj->stop_time_list.back()->set_pick_up_allowed(false);
      }
  }
-
-
-void builder::finish() {
-    for(auto vj : this->data.pt_data.vehicle_journeys) {
-        vj->stop_time_list.front()->set_drop_off_allowed(false);
-        vj->stop_time_list.back()->set_pick_up_allowed(false);
-    }
-}
-
 }
