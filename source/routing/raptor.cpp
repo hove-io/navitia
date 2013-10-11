@@ -47,6 +47,9 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
     int last = 0;
     std::vector<const type::StopPointConnection*>::const_iterator it = (v.clockwise()) ? data.dataRaptor.foot_path_forward.begin() :
                                                                                 data.dataRaptor.foot_path_backward.begin();
+    auto &current_labels = labels[count];
+    auto &current_boardings = boardings[count];
+    auto &current_boarding_types = boarding_types[count];
     for(auto stop_point_idx = marked_sp.find_first(); stop_point_idx != marked_sp.npos;
         stop_point_idx = marked_sp.find_next(stop_point_idx)) {
 
@@ -64,8 +67,8 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                 //On regarde si on est arrivé avec un vj ou un departure,
                 //Puis on compare avec la meilleure arrivée trouvée pour ce stoppoint
                 if((b_type == boarding_type::vj || b_type == boarding_type::departure) &&
-                    v.comp(labels[count][jppidx], best_arrival)) {
-                    best_arrival = labels[count][jppidx];
+                    v.comp(current_labels[jppidx], best_arrival)) {
+                    best_arrival = current_labels[jppidx];
                     best_jpp = jppidx;
                 }
             }
@@ -80,9 +83,9 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                     type::idx_t jpp_idx = jpp->idx;
                     if(jpp_idx != best_jpp && v.comp(best_departure, best_labels[jpp_idx]) ) {
                        best_labels[jpp_idx] = best_departure;
-                       labels[count][jpp_idx] = best_departure;
-                       boardings[count][jpp_idx] = data.pt_data.journey_pattern_points[best_jpp];
-                       boarding_types[count][jpp_idx] = boarding_type::connection;
+                       current_labels[jpp_idx] = best_departure;
+                       current_boardings[jpp_idx] = data.pt_data.journey_pattern_points[best_jpp];
+                       current_boarding_types[jpp_idx] = boarding_type::connection;
 
                        if(!b_dest.add_best(v, jpp_idx, best_departure, count) && v.comp(jpp->order, Q[jpp->journey_pattern->idx]) ) {
                            Q[jpp->journey_pattern->idx] = jpp->order;
@@ -103,6 +106,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                                previous = labels[count][best_jpp];
 
 
+                         previous = current_labels[best_jpp];
                 it += index.first - last;
                 const auto end = it + index.second;
 
@@ -120,9 +124,9 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                                 }*/
                                 if(v.comp(next, best_labels[destination_jpp_idx]) || next == best_labels[destination_jpp_idx]) {
                                     best_labels[destination_jpp_idx] = next;
-                                    labels[count][destination_jpp_idx] = next;
-                                    boardings[count][destination_jpp_idx] = data.pt_data.journey_pattern_points[best_jpp];
-                                    boarding_types[count][destination_jpp_idx] = boarding_type::connection;
+                                    current_labels[destination_jpp_idx] = next;
+                                    current_boardings[destination_jpp_idx] = data.pt_data.journey_pattern_points[best_jpp];
+                                    current_boarding_types[destination_jpp_idx] = boarding_type::connection;
 
                                     if(!b_dest.add_best(v, destination_jpp_idx, next, count)
                                            && v.comp(destination_jpp->order, Q[destination_jpp->journey_pattern->idx])) {
