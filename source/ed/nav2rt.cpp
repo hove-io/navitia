@@ -101,6 +101,8 @@ int main(int argc, char * argv[])
     start = pt::microsec_clock::local_time();
     ed::AtAdaptedLoader adapter;
     adapter.apply(perturbations, data.pt_data);
+    //aprés avoir modifié les graphs; on retris
+    data.pt_data.sort();
     apply_adapted = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 
