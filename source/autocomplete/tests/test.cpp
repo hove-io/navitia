@@ -559,9 +559,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_alias_and_weight_test){
         ac.add_string("hopital paul gaultier", 8, alias, synonymes);
 
         ac.build();
-        int alias_size = sizeof(alias);
+        int alias_size = alias.size();
 
-        BOOST_REQUIRE_EQUAL(alias_size, 24);
+        BOOST_REQUIRE_EQUAL(alias_size, 23);
 
         auto res = ac.find_complete("rue jean", alias, synonymes, word_weight, nbmax, [](int){return true;});
         BOOST_REQUIRE_EQUAL(res.size(), 4);
