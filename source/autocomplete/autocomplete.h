@@ -57,19 +57,23 @@ struct Autocomplete
     };
 
     /// Structure temporaire pour construire l'indexe
-    std::map<std::string, std::set<T> > map;
+    std::map<std::string, std::set<T> > temp_word_map;
 
     /// À chaque mot (par exemple "rue" ou "jaures") on associe un tableau de T qui contient la liste des éléments contenant ce mot
     typedef std::pair<std::string, std::vector<T> > vec_elt;
 
     /// Structure principale de notre indexe
-    std::vector<vec_elt> vec_map;
+    std::vector<vec_elt> word_dictionnary;
+
+    /// Structure temporaire pour garder les patterns et leurs indexs
+    std::map<std::string, std::set<T> > temp_pattern_map;
+    std::vector<vec_elt> pattern_dictionnary;
 
     /// Structure pour garder les informations comme nombre des mots, la distance des mots...dans chaque Autocomplete (Position)
-    std::map<T, word_quality> ac_list;
+    std::map<T, word_quality> word_quality_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & vec_map & ac_list;
+        ar & word_dictionnary & word_quality_list &pattern_dictionnary;
     }
 
     // Méthodes permettant de construire l'indexe
@@ -85,17 +89,49 @@ struct Autocomplete
 
         //Appeler la méthode pour traiter les alias avant de les ajouter dans le dictionaire:
         std::vector<std::string> vec_word = tokenize(str, map_alias, map_synonymes);
+
+        //créer des patterns pour chaque mot et les ajouter dans temp_pattern_map:
+        add_vec_pattern(vec_word, position);
+
         int count = vec_word.size();
         auto vec = vec_word.begin();
         while(vec != vec_word.end()){
-            map[*vec].insert(position);
+            temp_word_map[*vec].insert(position);
             distance += (*vec).size();
             ++vec;
         }
         wc.word_count = count;
         wc.word_distance = distance;
         wc.score = 0;
-        ac_list[position] = wc;
+        word_quality_list[position] = wc;
+    }
+
+    void add_vec_pattern(const std::vector<std::string> &vec_words, T position){
+        //Créer les patterns:
+        std::vector<std::string> vec_patt = make_vec_pattern(vec_words, 2);
+        auto v_patt = vec_patt.begin();
+        while(v_patt != vec_patt.end()){
+            temp_pattern_map[*v_patt].insert(position);
+            ++v_patt;
+        }
+    }
+
+    std::vector<std::string> make_vec_pattern(const std::vector<std::string> &vec_words, size_t n_gram) const{
+        std::vector<std::string> pattern;
+        auto vec = vec_words.begin();
+        while(vec != vec_words.end()){
+            std::string word = *vec;
+            if (word.length() > n_gram){
+                for (size_t i = 0;i <=  word.length() - n_gram; ++i){
+                    pattern.push_back(word.substr(i,n_gram));
+                }
+            }
+            else{
+                pattern.push_back(word);
+            }
+            ++vec;
+        }
+        return pattern;
     }
 
     /** Construit la structure finale
@@ -103,12 +139,19 @@ struct Autocomplete
       * Les map et les set sont bien pratiques, mais leurs performances sont mauvaises avec des petites données (comme des ints)
       */
     void build(){
-        vec_map.reserve(map.size());
-        for(auto key_val: map){
-            vec_map.push_back(std::make_pair(key_val.first, std::vector<T>(key_val.second.begin(), key_val.second.end())));
+        word_dictionnary.reserve(temp_word_map.size());
+        for(auto key_val: temp_word_map){
+            word_dictionnary.push_back(std::make_pair(key_val.first, std::vector<T>(key_val.second.begin(), key_val.second.end())));
+        }
+
+        //Dictionnaire des patterns:
+        pattern_dictionnary.reserve((temp_pattern_map.size()));
+        for(auto key_val:temp_pattern_map){
+            pattern_dictionnary.push_back(std::make_pair(key_val.first, std::vector<T>(key_val.second.begin(), key_val.second.end())));
         }
     }
 
+    //Méthode pour calculer le score de chaque élément par son admin.
     void compute_score(type::PT_Data &pt_data, georef::GeoRef &georef,
                        const type::Type_e type);/* {
     }*/
@@ -130,10 +173,10 @@ struct Autocomplete
     };
 
     /** Retrouve toutes les positions des élements contenant le mot des mots qui commencent par token */
-    std::vector<T> match(const std::string &token) const {
+    std::vector<T> match(const std::string &token, const std::vector<vec_elt> &vec_source) const {
         // Les éléments dans vec_map sont triés par ordre alphabétiques, il suffit donc de trouver la borne inf et sup
-        auto lower = std::lower_bound(vec_map.begin(), vec_map.end(), token, comp());
-        auto upper = std::upper_bound(vec_map.begin(), vec_map.end(), token, comp());
+        auto lower = std::lower_bound(vec_source.begin(), vec_source.end(), token, comp());
+        auto upper = std::upper_bound(vec_source.begin(), vec_source.end(), token, comp());
 
         std::vector<T> result;
 
@@ -152,12 +195,12 @@ struct Autocomplete
         auto vec = vecStr.begin();
         if(vec != vecStr.end()){
             // Premier résultat. Il y aura au plus ces indexes
-            result = match(*vec);
+            result = match(*vec, word_dictionnary);
 
             for(++vec; vec != vecStr.end(); ++vec){
                 std::vector<T> new_result;
                 std::sort(result.begin(), result.end());
-                for(auto i : match(*vec)){
+                for(auto i : match(*vec, word_dictionnary)){
                     // Binary search fait une recherche dichotomique pour savoir si l'élément i existe
                     // S'il existe dans les deux cas, on le garde
                     if(binary_search(result.begin(), result.end(), i)){
@@ -171,7 +214,7 @@ struct Autocomplete
             }
         }
         return result;
-    }
+    }    
 
     /** Définit un fonctor permettant de parcourir notqualityre structure un peu particulière : trier par la valeur "nb_found"*/
     /** associé au valeur du vector<T> */
@@ -193,53 +236,7 @@ struct Autocomplete
         bool operator()(T a, T b) const{
             return fl_result.at(a).quality > fl_result.at(b).quality;
         }
-    };
-
-    /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant au moins un des mots*/
-    std::vector<fl_quality> find_partial(std::string str, const std::map<std::string, std::string> & map_alias, int wordweight) const {
-        int wordLength = 0;
-        std::unordered_map<T, fl_quality> fl_result;
-        boost::to_lower(str);
-        str = get_alias(str, map_alias);
-        std::vector<T> index_result;
-
-        // Créer un vector de réponse:
-        std::vector<fl_quality> vec_quality;
-        fl_quality quality;
-        wordLength = lettercount(str);
-
-
-        boost::tokenizer<> tokens(str);
-        auto token_it = tokens.begin();
-        if(token_it != tokens.end()){
-            // Premier résultat. Il y aura au plus ces indexes
-            index_result = match(*token_it);
-
-            //incrémenter la propriété "nb_found" pour chaque index des mots autocomplete dans vec_map
-            add_word_quality(fl_result,index_result);
-
-            //Recherche des mots qui restent
-            for(++token_it; token_it != tokens.end(); ++token_it){
-                index_result = match(*token_it);
-
-                //incrémenter la propriété "nb_found" pour chaque index des mots autocomplete dans vec_map
-                add_word_quality(fl_result,index_result);
-            }
-
-            //remplir le tableau temp_result avec le résultat de qualité.
-            for(auto pair : fl_result){
-                quality.idx = pair.first;
-                quality.nb_found = pair.second.nb_found;
-                quality.word_len = wordLength;
-                quality.quality = calc_quality(quality, wordweight, 0);
-                vec_quality.push_back(quality);
-            }
-
-            std::sort(vec_quality.begin(), vec_quality.end());
-        }
-
-        return vec_quality;
-    }
+    };    
 
     std::vector<fl_quality> sort_and_truncate(std::vector<fl_quality> input, size_t nbmax) const {
         typename std::vector<fl_quality>::iterator middle_iterator;
@@ -264,15 +261,16 @@ struct Autocomplete
         int wordLength = 0;
         fl_quality quality;
         std::vector<T> index_result;
+        //Vector des ObjetTC index trouvés
         index_result = find(vec);
         wordCount = vec.size();
-        wordLength = wordcount(vec);
+        wordLength = words_length(vec);
 
         //Récupérer le Max score parmi les élément trouvé
         int max_score = 0;
         for (auto ir : index_result){
             if (keep_element(ir)){
-                max_score = ac_list.at(ir).score > max_score ? ac_list.at(ir).score : max_score;
+                max_score = word_quality_list.at(ir).score > max_score ? word_quality_list.at(ir).score : max_score;
             }
         }
 
@@ -284,11 +282,73 @@ struct Autocomplete
                 quality.idx = i;
                 quality.nb_found = wordCount;
                 quality.word_len = wordLength;
-                quality.quality = calc_quality(quality, wordweight, max_score);
+                quality.quality = calc_quality_fl(quality, wordweight, max_score);
                 vec_quality.push_back(quality);
             }
         }
+        return sort_and_truncate(vec_quality, nbmax);
+    }
 
+
+    /** Recherche des patterns les plus proche : faute de frappe */
+    std::vector<fl_quality> find_partial_with_pattern(const std::string &str, const std::map<std::string, std::string> &map_alias,
+                                                      const std::map<std::string, std::string> &map_synonymes, const int word_weight,
+                                                      size_t nbmax,
+                                                      std::function<bool(T)> keep_element)
+                                                      const{
+        //Map temporaire pour garder les patterns trouvé:
+        std::unordered_map<T, fl_quality> fl_result;
+
+        //Vector temporaire des indexs
+        std::vector<T> index_result;
+
+        //Créer un vector de réponse
+        std::vector<fl_quality> vec_quality;
+        fl_quality quality;
+
+        std::vector<std::string> vec_word = tokenize(str, map_alias, map_synonymes);
+        std::vector<std::string> vec_pattern = make_vec_pattern(vec_word, 2); //2-grams
+        int wordLength = words_length(vec_word);
+        int pattern_count = vec_pattern.size();
+
+        //recherche pour le premier pattern:
+        auto vec = vec_pattern.begin();
+        if (vec != vec_pattern.end()){
+            //Premier résultat:
+            index_result = match(*vec, pattern_dictionnary);
+
+            //Incrémenter la propriété "nb_found" pour chaque index des mots autocomplete dans vec_map
+            add_word_quality(fl_result,index_result);
+
+            //Recherche des mots qui restent
+            for (++vec; vec != vec_pattern.end(); ++vec){
+                index_result = match(*vec, pattern_dictionnary);
+
+                //incrémenter la propriété "nb_found" pour chaque index des mots autocomplete dans vec_map
+                add_word_quality(fl_result,index_result);
+            }
+
+            //Récupérer le Max score parmi les élément trouvé
+            int max_score = 0;
+            for (auto ir : index_result){
+                if (keep_element(ir)){
+                    max_score = word_quality_list.at(ir).score > max_score ? word_quality_list.at(ir).score : max_score;
+                }
+            }
+
+            //remplir le tableau temp_result avec le résultat de qualité.
+            //A ne pas remonter l'objectTC si le  faute de frappe est > 2
+            for(auto pair : fl_result){
+                //if (keep_element(pair.first) && (pair.second.nb_found > pattern_count - 3)){
+                if (keep_element(pair.first) && (((pattern_count - pair.second.nb_found) * 100) / pattern_count <= 25)){
+                    quality.idx = pair.first;
+                    quality.nb_found = pair.second.nb_found;
+                    quality.word_len = wordLength;
+                    quality.quality = calc_quality_pattern(quality, word_weight, max_score, pattern_count);
+                    vec_quality.push_back(quality);
+                }
+            }
+        }
         return sort_and_truncate(vec_quality, nbmax);
     }
 
@@ -301,32 +361,35 @@ struct Autocomplete
         }
     }
 
-    int calc_quality(const fl_quality & ql,  int wordweight, int max_score) const {
+    int calc_quality_fl(const fl_quality & ql,  int wordweight, int max_score) const {
         int result = 100;
 
         //Qualité sur le nombres des mot trouvé
-        result -= (ac_list.at(ql.idx).word_count - ql.nb_found) * wordweight;//coeff  WordFound
+        result -= (word_quality_list.at(ql.idx).word_count - ql.nb_found) * wordweight;//coeff  WordFound
 
         //Qualité sur la distance globale des mots.
-        result -= (ac_list.at(ql.idx).word_distance - ql.word_len);//Coeff de la distance = 1        
+        result -= (word_quality_list.at(ql.idx).word_distance - ql.word_len);//Coeff de la distance = 1
 
         //Qualité sur le score
-        result -= (max_score - ac_list.at(ql.idx).score)/10;
+        result -= (max_score - word_quality_list.at(ql.idx).score)/10;
         return result;
     }
 
+    int calc_quality_pattern(const fl_quality & ql,  int wordweight, int max_score, int patt_count) const {
+        int result = 100;
 
-    int lettercount(const std::string &str) const {
-        int result = 0;
-        boost::tokenizer <> tokens(str);
+        //Qualité sur le nombres des mot trouvé
+        result -= (patt_count - ql.nb_found) * wordweight;//coeff  WordFound
 
-        for (auto token_it: tokens){
-            result += token_it.size();
-        }
+        //Qualité sur la distance globale des mots.
+        result -= abs(word_quality_list.at(ql.idx).word_distance - ql.word_len);//Coeff de la distance = 1
+
+        //Qualité sur le score
+        result -= (max_score - word_quality_list.at(ql.idx).score)/10;
         return result;
     }
 
-    int wordcount(std::vector<std::string> & words) const{
+    int words_length(std::vector<std::string> & words) const{
         int distance = 0;
         auto vec = words.begin();
         while(vec != words.end()){
@@ -410,7 +473,6 @@ struct Autocomplete
         }
         return vec;
     }
-
 
     bool is_address_type(const std::string & str,  const std::map<std::string, std::string> & map_alias,
                           const std::map<std::string, std::string> & map_synonymes) const{
