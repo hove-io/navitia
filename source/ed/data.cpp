@@ -53,64 +53,57 @@ void Data::complete(){
         if(sp->stop_area)
             sa_sps.insert(std::make_pair(sp->stop_area->uri, sp));
     }
-//    int connections_size = stop_point_connections.size();
+    int connections_size = stop_point_connections.size();
 
-//    for(types::StopArea * sa : stop_areas) {
-//        auto ret = sa_sps.equal_range(sa->uri);
-//        for(auto sp1 = ret.first; sp1!= ret.second; ++sp1){
-//            for(auto sp2 = sp1; sp2!=ret.second; ++sp2) {
-//                if(sp1->second->uri != sp2->second->uri) {
-//                    bool found = false;
-//                    auto ret2 = conns.equal_range(sp1->second->uri);
-//                    for(auto itc = ret2.first; itc!= ret2.second; ++itc) {
-//                        if(itc->second == sp2->second->uri) {
-//                            found = true;
-//                            break;
-//                        }
-//                    }
+    for(types::StopArea * sa : stop_areas) {
+        auto ret = sa_sps.equal_range(sa->uri);
+        for(auto sp1 = ret.first; sp1!= ret.second; ++sp1){
+            for(auto sp2 = sp1; sp2!=ret.second; ++sp2) {
+                if(sp1->second->uri != sp2->second->uri) {
+                    bool found = false;
+                    auto ret2 = conns.equal_range(sp1->second->uri);
+                    for(auto itc = ret2.first; itc!= ret2.second; ++itc) {
+                        if(itc->second == sp2->second->uri) {
+                            found = true;
+                            break;
+                        }
+                    }
 
-//                    if(!found) {
-//                        types::StopPointConnection * connection = new types::StopPointConnection();
-//                        connection->departure = sp1->second;
-//                        connection->destination  = sp2->second;
-//                        connection->connection_kind = types::ConnectionType::StopArea;
-//                        connection->duration = 120;
-//                        stop_point_connections.push_back(connection);
+                    if(!found) {
+                        types::StopPointConnection * connection = new types::StopPointConnection();
+                        connection->departure = sp1->second;
+                        connection->destination  = sp2->second;
+                        connection->connection_kind = types::ConnectionType::StopArea;
+                        connection->duration = 120;
+                        connection->uri = sp1->second->uri +"=>"+sp2->second->uri;
+                        stop_point_connections.push_back(connection);
+                        conns.insert(std::make_pair(connection->departure->uri, connection->destination->uri));
+                    }
 
-//                        if(connection->departure->uri == "stop_point:29:2025"  || connection->departure->uri == "StopPoint:29:2025")
-//                            std::cout << "Ajout Departure : " << connection->departure->uri << " => " << connection->destination->uri << std::endl;
-//                        conns.insert(std::make_pair(connection->departure->uri, connection->destination->uri));
-//                    }
+                    found = false;
+                    ret2 = conns.equal_range(sp2->second->uri);
+                    for(auto itc = ret2.first; itc!= ret2.second; ++itc) {
+                        if(itc->second == sp1->second->uri) {
+                            found = true;
+                            break;
+                        }
+                    }
 
-//                    found = false;
-//                    ret2 = conns.equal_range(sp2->second->uri);
-//                    for(auto itc = ret2.first; itc!= ret2.second; ++itc) {
-//                        if(itc->second == sp1->second->uri) {
-//                            found = true;
-//                            break;
-//                        }
-//                    }
-
-//                    if(!found) {
-//                        types::StopPointConnection * connection = new types::StopPointConnection();
-//                        connection->departure = sp2->second;
-//                        connection->destination  = sp1->second;
-//                        connection->connection_kind = types::ConnectionType::StopArea;
-//                        connection->duration = 120;
-//                        stop_point_connections.push_back(connection);
-
-//                        if(connection->departure->uri == "stop_point:29:2025"  || connection->departure->uri == "StopPoint:29:2025")
-//                            std::cout << "Ajout Departure : " << connection->departure->uri << " => " << connection->destination->uri << std::endl;
-//                        conns.insert(std::make_pair(connection->departure->uri, connection->destination->uri));
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-//    std::cout << "On a ajouté " << stop_point_connections.size() - connections_size << " connections lors de la completion" << std::endl;
-
-
+                    if(!found) {
+                        types::StopPointConnection * connection = new types::StopPointConnection();
+                        connection->departure = sp2->second;
+                        connection->destination  = sp1->second;
+                        connection->connection_kind = types::ConnectionType::StopArea;
+                        connection->duration = 120;
+                        connection->uri = sp2->second->uri +"=>"+sp1->second->uri;
+                        stop_point_connections.push_back(connection);
+                        conns.insert(std::make_pair(connection->departure->uri, connection->destination->uri));
+                    }
+                }
+            }
+        }
+    }
+    std::cout << "On a ajouté " << stop_point_connections.size() - connections_size << " connections lors de la completion" << std::endl;
 }
 
 
@@ -214,9 +207,11 @@ void Data::clean(){
     auto sort_function = [](types::StopPointConnection * spc1, types::StopPointConnection *spc2) {return spc1->uri < spc2->uri
                                                                                                     || (spc1->uri == spc2->uri && spc1 < spc2 );};
 
+    auto unique_function = [](types::StopPointConnection * spc1, types::StopPointConnection *spc2) {return spc1->uri == spc2->uri;};
+
     std::sort(stop_point_connections.begin(), stop_point_connections.end(), sort_function);
     num_elements = stop_point_connections.size();
-    auto it_end = std::unique(stop_point_connections.begin(), stop_point_connections.end(), [](types::StopPointConnection * spc1, types::StopPointConnection *spc2) {return spc1->uri == spc2->uri;});
+    auto it_end = std::unique(stop_point_connections.begin(), stop_point_connections.end(), unique_function);
     //@TODO : Attention ça fuit, il faudrait réussir à effacer les objets
     //Ce qu'il y a dans la fin du vecteur apres unique n'est pas garanti, on ne peut pas itérer sur la suite pour effacer
     stop_point_connections.resize(std::distance(stop_point_connections.begin(), it_end));
