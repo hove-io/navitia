@@ -171,7 +171,7 @@ void RAPTOR::clear(const type::Data & data, bool clockwise, DateTime borne, int 
     }
 
     b_dest.reinit(data.pt_data.journey_pattern_points.size(), borne, walking_duration);
-
+    this->make_queue();
     best_labels = labels[0];
 }
 
