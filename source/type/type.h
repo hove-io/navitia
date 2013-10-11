@@ -684,8 +684,8 @@ struct StopTime : public Nameable {
 
     uint32_t arrival_time; ///< En secondes depuis minuit
     uint32_t departure_time; ///< En secondes depuis minuit
-    uint32_t start_time; ///< Si horaire en fréquence
-    uint32_t end_time; ///< Si horaire en fréquence
+    uint32_t start_time; ///< Si horaire en fréquence, premiere arrivee
+    uint32_t end_time; ///< Si horaire en fréquence, dernier depart
     uint32_t headway_secs; ///< Si horaire en fréquence
     VehicleJourney* vehicle_journey;
     JourneyPatternPoint* journey_pattern_point;
@@ -713,21 +713,39 @@ struct StopTime : public Nameable {
     bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
 
     /// Heure de fin de stop_time : dans le sens avant, c'est la fin, sinon le départ
-    uint32_t section_end_time(bool clockwise, int gap=0) const {
+    uint32_t section_end_time(bool clockwise, const DateTime dt = 0) const {
         if(this->is_frequency())
-            return clockwise ? this->f_arrival_time(gap) : this->f_departure_time(gap);
+            return clockwise ? this->f_arrival_time(dt) : this->f_departure_time(dt);
         else
             return clockwise ? arrival_time : departure_time;
     }
 
-    inline uint32_t f_arrival_time(int gap) const {
-        auto first_st = this->vehicle_journey->stop_time_list.front();
-        return gap + first_st->start_time + this->arrival_time - first_st->arrival_time;
+    inline uint32_t f_arrival_time(const DateTime dt, bool clockwise = true) const {
+        if(clockwise) {
+            if (this == this->vehicle_journey->stop_time_list.front())
+                return dt;
+            auto prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
+            return dt + this->arrival_time - prec_st->arrival_time;
+        } else {
+            if (this == this->vehicle_journey->stop_time_list.back())
+                return dt;
+            auto next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
+            return dt - (next_st->arrival_time - this->arrival_time);
+        }
     }
 
-    inline uint32_t f_departure_time(int gap) const {
-        auto first_st = this->vehicle_journey->stop_time_list.front();
-        return gap + first_st->start_time + this->departure_time - first_st->departure_time;
+    inline uint32_t f_departure_time(const DateTime dt, bool clockwise = false) const {
+        if(clockwise) {
+            if (this == this->vehicle_journey->stop_time_list.front())
+                return dt;
+            auto prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
+            return dt + this->departure_time - prec_st->departure_time;
+        } else {
+            if (this == this->vehicle_journey->stop_time_list.back())
+                return dt;
+            auto next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
+            return dt - (next_st->departure_time - this->departure_time);
+        }
     }
 
     DateTime section_end_date(int date, bool clockwise) const {return DateTimeUtils::set(date, this->section_end_time(clockwise));}
