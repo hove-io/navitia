@@ -337,23 +337,18 @@ void Data::build_journey_patterns(){
     LOG4CPLUS_TRACE(logger, "On calcule les journey_patterns");
 
     // Associe à chaque line uri le nombre de journey_pattern trouvées jusqu'à present
-    std::map<std::string, int> line_journey_patterns_count;
     for(auto it1 = this->vehicle_journeys.begin(); it1 != this->vehicle_journeys.end(); ++it1){
         types::VehicleJourney * vj1 = *it1;
         // Si le vj n'appartient encore à aucune journey_pattern
         if(vj1->journey_pattern == 0) {
-            auto it = line_journey_patterns_count.find(vj1->tmp_line->uri);
-            int count = 1;
-            if(it == line_journey_patterns_count.end()){
-                line_journey_patterns_count[vj1->tmp_line->uri] = count;
-            } else {
-                count = it->second + 1;
-                it->second = count;
+            std::string journey_pattern_uri = vj1->tmp_line->uri + "-" + boost::lexical_cast<std::string>(this->journey_patterns.size());
+            if(!vj1->block_id.empty()){
+                journey_pattern_uri += "-" + vj1->block_id;
             }
 
             types::Route * route = new types::Route();
             types::JourneyPattern * journey_pattern = new types::JourneyPattern();
-            journey_pattern->uri = vj1->tmp_line->uri + "-" + boost::lexical_cast<std::string>(count);
+            journey_pattern->uri = journey_pattern_uri;
             journey_pattern->route = route;
             journey_pattern->physical_mode = vj1->physical_mode;
             vj1->journey_pattern = journey_pattern;
@@ -472,8 +467,13 @@ void Data::build_journey_pattern_point_connections(){
 
 // Compare si deux vehicle journey appartiennent à la même journey_pattern
 bool same_journey_pattern(types::VehicleJourney * vj1, types::VehicleJourney * vj2){
+
     if(vj1->stop_time_list.size() != vj2->stop_time_list.size())
         return false;
+
+    if (vj1->block_id != vj2->block_id)
+        return false;
+
     for(size_t i = 0; i < vj1->stop_time_list.size(); ++i)
         if(vj1->stop_time_list[i]->tmp_stop_point != vj2->stop_time_list[i]->tmp_stop_point){
             return false;
