@@ -52,12 +52,9 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
     auto &current_boarding_types = boarding_types[count];
     for(auto stop_point_idx = marked_sp.find_first(); stop_point_idx != marked_sp.npos;
         stop_point_idx = marked_sp.find_next(stop_point_idx)) {
-
-
         //On cherche le meilleur jpp du stop point
         const type::StopPoint* stop_point = data.pt_data.stop_points[stop_point_idx];
         if(stop_point->accessible(required_properties)) {
-
             DateTime best_arrival = v.worst_datetime();
             type::idx_t best_jpp = type::invalid_idx;
 
@@ -90,20 +87,12 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                        }
                     }
                 }
-
-
-
                 //On va maintenant chercher toutes les connexions et on marque tous les journey_pattern_points concernés
-
                 //On récupère l'index dans les footpath
                 const pair_int & index = (v.clockwise()) ? data.dataRaptor.footpath_index_forward[stop_point_idx] :
                                                          data.dataRaptor.footpath_index_backward[stop_point_idx];
-
-                int prec_duration = -1;
+                //int prec_duration = -1;
                 DateTime next = v.worst_datetime(),
-                               previous = labels[count][best_jpp];
-
-
                          previous = current_labels[best_jpp];
                 it += index.first - last;
                 const auto end = it + index.second;
@@ -112,14 +101,10 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                     const type::StopPointConnection* spc = *it;
                     const auto destination = spc->destination;
                     next = v.combine(previous, spc->duration); // ludo
-                    if(!destination->accessible(required_properties)) continue; //{
+                    if(destination->accessible(required_properties)) {
                         for(auto destination_jpp : destination->journey_pattern_point_list) {
                             type::idx_t destination_jpp_idx = destination_jpp->idx;
                             if(best_jpp != destination_jpp_idx) {
-                                /*if(spc->duration != prec_duration) {
-                                    next = v.combine(previous, spc->duration);
-                                    prec_duration = spc->duration;
-                                }*/
                                 if(v.comp(next, best_labels[destination_jpp_idx]) || next == best_labels[destination_jpp_idx]) {
                                     best_labels[destination_jpp_idx] = next;
                                     current_labels[destination_jpp_idx] = next;
@@ -133,11 +118,10 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                                 }
                             }
                         }
-                    //}
+                    }
                 }
                 last = index.first + index.second;
             }
-
         }
     }
 }
@@ -490,7 +474,6 @@ void RAPTOR::raptor_loop(Visitor visitor, /*const type::Properties &required_pro
                             const type::StopTime* st = *it_st;
                             workingDt = tmp_dt;
                             BOOST_ASSERT(visitor.comp(labels_temp, workingDt) || labels_temp == workingDt);
-                            BOOST_ASSERT(tmp_dt >= 0);
                             l_zone = st->local_traffic_zone;
                         }
                     }
