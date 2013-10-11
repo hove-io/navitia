@@ -72,10 +72,8 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                     best_jpp = jppidx;
                 }
             }
-
-
             // Si on a trouvé un journey pattern pour ce stop point
-            // NB : l'inverse ne devrait jamais arriver
+            // NB : l'inverse arrive lorsqu'on a déjà marqué le stop point avec une autre correspondance
             if(best_jpp != type::invalid_idx) {
                 const DateTime best_departure = v.combine(best_arrival, 120);
                 //On marque tous les journey_pattern points du stop point
