@@ -82,6 +82,7 @@ class Script:
         req.places.q     = request['q']
         req.places.depth = request['depth']
         req.places.count = request['count']
+	req.places.search_type = request['search_type']
         if request["type[]"]:
             for type in request["type[]"]:
                 req.places.types.append(pb_type[type])
