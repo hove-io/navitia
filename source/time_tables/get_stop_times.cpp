@@ -19,8 +19,8 @@ std::vector<datetime_stop_time> get_stop_times(const std::vector<type::idx_t> &j
     while(test_add && result.size() < max_departures) {
         test_add = false;
         for(auto jpp_idx : journey_pattern_points) {
-            const type::JourneyPatternPoint* jpp = data.pt_data.journey_pattern_points[jpp_idx];            
-            auto st = routing::earliest_stop_time(jpp, next_requested_datetime[jpp_idx], data, false, accessibilite_params/*wheelchair*/).first;
+            const type::JourneyPatternPoint* jpp = data.pt_data.journey_pattern_points[jpp_idx];
+            auto st = routing::earliest_stop_time(jpp, next_requested_datetime[jpp_idx], data, false, accessibilite_params).first;
             if(st != nullptr) {
                 DateTime dt_temp = next_requested_datetime[jpp_idx];
                 DateTimeUtils::update(dt_temp, st->departure_time);

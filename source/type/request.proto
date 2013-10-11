@@ -7,6 +7,7 @@ message PlacesRequest {
     required int32 depth        = 3;
     required int32 count        = 4;
     repeated string admin_uris  = 5;
+    optional int32 search_type = 6;
 }
 
 message NextStopTimeRequest {

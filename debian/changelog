@@ -1,3 +1,11 @@
+navitia2 (0.63.00) unstable; urgency=low
+
+  [ Alexandre Jacquin ]
+  * Debian : Ajout de pyed
+  * 
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Thu, 10 Oct 2013 11:58:55 +0200
+
 navitia2 (0.62.41) unstable; urgency=low
 
   [ Vincent Lara ]

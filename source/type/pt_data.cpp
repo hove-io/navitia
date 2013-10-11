@@ -32,6 +32,9 @@ void PT_Data::sort(){
     std::sort(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end());
     std::for_each(journey_pattern_point_connections.begin(), journey_pattern_point_connections.end(), Indexer<idx_t>());
 
+    std::sort(stop_point_connections.begin(), stop_point_connections.end());
+    std::for_each(stop_point_connections.begin(), stop_point_connections.end(), Indexer<idx_t>());
+
     for(auto* vj: this->vehicle_journeys){
         std::sort(vj->stop_time_list.begin(), vj->stop_time_list.end(), Less());
     }

@@ -58,8 +58,8 @@ void dataRAPTOR::load(const type::PT_Data &data)
     
     arrival_times.clear();
     departure_times.clear();
-    st_idx_forward.clear();
-    st_idx_backward.clear();
+    st_idx_forward.clear(); // Nom a changer ce ne sont plus des idx mais des pointeurs
+    st_idx_backward.clear(); //
     first_stop_time.clear();
 
     for(int i=0; i<=365; ++i) {
@@ -82,14 +82,12 @@ void dataRAPTOR::load(const type::PT_Data &data)
                         if(!st1->is_frequency())
                             time1 = DateTimeUtils::hour(st1->departure_time);
                         else
-                            time1 = st1->end_time;
+                            time1 = DateTimeUtils::hour(st1->end_time);
                         if(!st2->is_frequency())
                             time2 = DateTimeUtils::hour(st2->departure_time);
                         else
-                            time2 = st2->end_time;
-
+                            time2 = DateTimeUtils::hour(st2->end_time);
                         return (time1 == time2 && st1 < st2) || (time1 < time2);});
-
 
             st_idx_forward.insert(st_idx_forward.end(), vec_st.begin(), vec_st.end());
 
@@ -98,7 +96,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
                 if(!st->is_frequency())
                     time = DateTimeUtils::hour(st->departure_time);
                 else
-                    time = st->end_time;
+                    time = DateTimeUtils::hour(st->end_time);
                 departure_times.push_back(time);
             }
 
@@ -108,14 +106,12 @@ void dataRAPTOR::load(const type::PT_Data &data)
                       if(!st1->is_frequency())
                           time1 = DateTimeUtils::hour(st1->arrival_time);
                       else
-                          time1 = st1->start_time;
+                          time1 = DateTimeUtils::hour(st1->start_time);
                       if(!st2->is_frequency())
                           time2 = DateTimeUtils::hour(st2->arrival_time);
                       else
-                          time2 = st2->start_time;
-
+                          time2 = DateTimeUtils::hour(st2->start_time);
                       return (time1 == time2 && st1 > st2) || (time1 > time2);});
-
 
             st_idx_backward.insert(st_idx_backward.end(), vec_st.begin(), vec_st.end());
             for(auto st : vec_st) {
@@ -123,7 +119,7 @@ void dataRAPTOR::load(const type::PT_Data &data)
                 if(!st->is_frequency())
                     time = DateTimeUtils::hour(st->arrival_time);
                 else
-                    time = st->start_time;
+                    time = DateTimeUtils::hour(st->start_time);
                 arrival_times.push_back(time);
             }
         }
