@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_alias_and_weight_test){
         ac.build();
         int alias_size = sizeof(alias);
 
-        BOOST_REQUIRE_EQUAL(alias_size, 10);
+        BOOST_REQUIRE_EQUAL(alias_size, 24);
 
         auto res = ac.find_complete("rue jean", alias, synonymes, word_weight, nbmax, [](int){return true;});
         BOOST_REQUIRE_EQUAL(res.size(), 4);
