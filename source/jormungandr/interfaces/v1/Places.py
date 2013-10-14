@@ -72,7 +72,19 @@ class PlacesNearby(ResourceUri):
             if uri[-1] == '/':
                 uri = uri[:-1]
             uris = uri.split("/")
-            args["uri"] = uris[-1]
+            if len(uris) > 1:
+                args["uri"] = uris[-1]
+            else:
+                coord = uri.split(";")
+                if len(coord) == 2:
+                    try:
+                        lon = str(float(coord[0]))
+                        lat = str(float(coord[1]))
+                        args["uri"] = "coord:"+lon+":"+lat
+                    except ValueError:
+                        pass
+                else:
+                    abort(500, "Not implemented yet")
         response = NavitiaManager().dispatch(args, self.region, "places_nearby")
         return response, 200
 
