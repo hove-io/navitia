@@ -27,8 +27,17 @@ getDepartures(const std::vector<std::pair<type::idx_t, double> > &departs, const
               }
           }
       }
+      auto unique_func = [](const Departure_Type &departure1, const Departure_Type departure2){
+        return departure1.rpidx == departure2.rpidx &&
+               departure1.count == departure2.count &&
+               departure1.arrival == departure2.arrival &&
+               departure1.upper_bound == departure2.upper_bound &&
+               departure1.walking_time == departure2.walking_time &&
+               departure1.ratio == departure2.ratio;
+      };
 
-
+      auto it = std::unique(result.begin(), result.end(), unique_func);
+      result.resize(std::distance(result.begin(), it));
       return result;
 }
 
