@@ -3,7 +3,7 @@
 #include "request_handle.h"
 #include "type/pb_converter.h"
 #include "ptreferential/ptreferential.h"
-
+#include "utils/paginate.h"
 
 
 namespace pt = boost::posix_time;
@@ -103,7 +103,7 @@ route_schedule(const std::string& filter, const std::string &str_dt,
     Thermometer thermometer(d);
     auto routes_idx = ptref::make_query(type::Type_e::Route, filter, d);
     size_t total_result = routes_idx.size();
-    routes_idx = ptref::paginate(routes_idx, count, start_page);
+    routes_idx = paginate(routes_idx, count, start_page);
     for(type::idx_t route_idx : routes_idx) {
         auto route = d.pt_data.routes[route_idx];
         auto jps = route->get(type::Type_e::JourneyPattern, d.pt_data);
