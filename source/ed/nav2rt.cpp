@@ -67,7 +67,6 @@ int main(int argc, char * argv[])
     data.load(input);
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
-/*
     std::cout << "chargement des messages" << std::endl;
 
     ed::connectors::RealtimeLoaderConfig config;
@@ -104,8 +103,6 @@ int main(int argc, char * argv[])
     data.pt_data.sort();
     apply_adapted = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
-
-*/
     std::cout << "Debut sauvegarde ..." << std::endl;
 
     start = pt::microsec_clock::local_time();
