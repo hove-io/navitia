@@ -26,6 +26,8 @@ class Places(ResourceUri):
                 description="The type of data to search")
         self.parsers["get"].add_argument("count", type=int,  default=10,
                 description="The maximum number of places returned")
+        self.parsers["get"].add_argument("search_type", type=int, default=0,
+                description="Type of search: firstletter or type error")
         self.parsers["get"].add_argument("admin_uri[]", type=str, action="append",
                 description="""If filled, will restrained the search within the
                                given admin uris""")
@@ -37,6 +39,10 @@ class Places(ResourceUri):
         self.region = NavitiaManager().get_region(region, lon, lat)
         args = self.parsers["get"].parse_args()
         response = NavitiaManager().dispatch(args, self.region, "places")
+        places = getattr(response, "places")
+        if len(places) == 0:
+            args["search_type"] = 1
+            response = NavitiaManager().dispatch(args, self.region, "places")
         return response, 200
 
 place_nearby = deepcopy(place)

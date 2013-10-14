@@ -254,7 +254,7 @@ struct GeoRef {
     void build_rtree();
 
     /// Recherche d'une adresse avec un numéro en utilisant Autocomplete
-    std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax, std::function<bool(nt::idx_t)> keep_element) const;
+    std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax, const int search_type,std::function<bool(nt::idx_t)> keep_element) const;
 
 
     /** Projete chaque stop_point sur le filaire de voirie

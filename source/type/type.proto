@@ -152,11 +152,11 @@ message hasEquipments{
         has_appropriate_escort = 6;
         has_appropriate_signage = 7;
         has_school_vehicle = 8;        
-        has_wheelchair_boarding = 8;
-		has_sheltered = 9;
-		has_elevator = 10;
-		has_escalator = 11;
-		has_bike_depot = 12;
+        has_wheelchair_boarding = 9;
+		has_sheltered = 10;
+		has_elevator = 11;
+		has_escalator = 12;
+		has_bike_depot = 13;
 	}
 	repeated Equipment has_equipments = 1;
 }

@@ -112,7 +112,7 @@ pbnavitia::Response Worker::load() {
 
 pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & request) {
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
-    return navitia::autocomplete::autocomplete(request.q(), vector_of_pb_types(request), request.depth(), request.count(), vector_of_admins(request), *(*this->data));
+    return navitia::autocomplete::autocomplete(request.q(), vector_of_pb_types(request), request.depth(), request.count(), vector_of_admins(request), request.search_type(), *(*this->data));
 }
 
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest & request, pbnavitia::API api) {

@@ -37,7 +37,7 @@ void EdReader::fill(navitia::type::Data& data){
 
     //@TODO: les connections ont des doublons, en attendant que ce soit corrigé, on ne les enregistre pas
     this->fill_stop_point_connections(data, work);
-    //this->insert_journey_pattern_point_connections(data.journey_pattern_point_connections);
+    this->fill_journey_pattern_point_connections(data, work);
     this->fill_poi_types(data, work);
     this->fill_pois(data, work);    
     this->fill_ways(data, work);
@@ -495,24 +495,29 @@ void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
         }
     }
 }
-/*
-void EdReader::insert_journey_pattern_point_connections(const std::vector<types::JourneyPatternPointConnection*>& connections){
-    this->lotus.prepare_bulk_insert("navitia.journey_pattern_point_connection", {"departure_journey_pattern_point_id",
-            "destination_journey_pattern_point_id", "connection_kind_id", "length"});
 
-    //@TODO properties!!
-    for(types::JourneyPatternPointConnection* co : connections){
-        std::vector<std::string> values;
-        values.push_back(std::to_string(co->departure_journey_pattern_point->idx));
-        values.push_back(std::to_string(co->destination_journey_pattern_point->idx));
-        values.push_back(std::to_string(static_cast<int>(co->journey_pattern_point_connection_kind)));
-        values.push_back(std::to_string(co->length));
-        this->lotus.insert(values);
+void EdReader::fill_journey_pattern_point_connections(nt::Data& data, pqxx::work& work){
+    std::string request = "select departure_journey_pattern_point_id,";
+                request += "destination_journey_pattern_point_id,";
+                request += "connection_kind_id,";
+                request += "length ";
+                request += "from navitia.journey_pattern_point_connection";
+
+    pqxx::result result = work.exec(request);
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        auto it_departure = journey_pattern_point_map.find(const_it["departure_journey_pattern_point_id"].as<idx_t>());
+        auto it_destination = journey_pattern_point_map.find(const_it["destination_journey_pattern_point_id"].as<idx_t>());
+        if(it_departure!=journey_pattern_point_map.end() && it_destination!=journey_pattern_point_map.end()) {
+            auto* jppc= new nt::JourneyPatternPointConnection();
+            jppc->departure = it_departure->second;
+            jppc->destination = it_destination->second;
+            jppc->connection_type = static_cast<nt::ConnectionType>(const_it["connection_kind_id"].as<int>());
+            jppc->duration = const_it["length"].as<int>();
+            data.pt_data.journey_pattern_point_connections.push_back(jppc);
+        }
     }
-
-    this->lotus.finish_bulk_insert();
 }
-*/
+
 
 void EdReader::fill_vehicle_journeys(nt::Data& data, pqxx::work& work){
     std::string request = "SELECT vj.id as id, vj.name as name, vj.uri as uri, vj.comment as comment,";

@@ -603,7 +603,7 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
 
         geo_ref.build_autocomplete_list();
 
-        result = geo_ref.find_ways("10 rue jean jaures", nbmax, [](int){return true;});
+        result = geo_ref.find_ways("10 rue jean jaures", nbmax, false, [](int){return true;});
         if (result.empty())
             result.clear();
 

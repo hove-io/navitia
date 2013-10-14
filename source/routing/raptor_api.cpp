@@ -74,9 +74,6 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                         stop_time->set_departure_date_time(iso_string(d, DateTimeUtils::date(dep_time), DateTimeUtils::hour(dep_time)));
                         boost::posix_time::time_period action_period(navitia::to_posix_time(dep_time, d), navitia::to_posix_time(arr_time, d));
                         fill_pb_object(d.pt_data.stop_points[item.stop_points[i]], d, stop_time->mutable_stop_point(), 0, now, action_period);
-                        if(!pb_section->has_origin())
-                            fill_pb_placemark(d.pt_data.stop_points[item.stop_points[i]], d, pb_section->mutable_origin(), 1, now, action_period);
-                        fill_pb_placemark(d.pt_data.stop_points[item.stop_points[i]], d, pb_section->mutable_destination(), 1, now, action_period);
                         if (item.vj_idx != type::invalid_idx)
                         {
                             vj = d.pt_data.vehicle_journeys[item.vj_idx];
@@ -88,6 +85,13 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                             departure_ptime = navitia::to_posix_time(dep_time, d);
                         // L'heure d'arrivée au dernier stop point
                         arrival_ptime = navitia::to_posix_time(arr_time, d);
+                    }
+                    if (item.stop_points.size() > 1){
+                        auto arr_time = item.arrivals[0];
+                        auto dep_time = item.departures[0];
+                        boost::posix_time::time_period action_period(navitia::to_posix_time(dep_time, d), navitia::to_posix_time(arr_time, d));
+                        fill_pb_placemark(d.pt_data.stop_points[item.stop_points[0]], d, pb_section->mutable_origin(), 1, now, action_period);
+                        fill_pb_placemark(d.pt_data.stop_points[item.stop_points[item.stop_points.size()-1]], d, pb_section->mutable_destination(), 1, now, action_period);
                     }
                     if( item.vj_idx != type::invalid_idx){ // TODO : réfléchir si ça peut vraiment arriver
                         boost::posix_time::time_period action_period(departure_ptime, arrival_ptime);
