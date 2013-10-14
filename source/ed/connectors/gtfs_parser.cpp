@@ -197,7 +197,7 @@ void GtfsParser::parse_physical_modes(Data & data, CsvReader &csv) {
 }
 void GtfsParser::parse_commercial_modes(Data & data, CsvReader &csv) {
 
-    std::vector<std::string> headers = {"commercial_mode_id", "commercial_mode_name", "physical_mode_id"};
+    std::vector<std::string> headers = {"commercial_mode_id", "commercial_mode_name"};
     if(!csv.validate(headers)) {
         LOG4CPLUS_FATAL(logger, "Erreur lors de la lecture " + csv.filename +
                 " il manque les colonnes  : " + csv.missing_headers(headers));
