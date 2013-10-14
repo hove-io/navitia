@@ -54,6 +54,7 @@ message PlacesNearbyRequest {
     repeated NavitiaType types  = 3;
     required int32 depth        = 4;
     required int32 count        = 5;
+    required int32 start_page   = 6;
 }
 
 message PTRefRequest {

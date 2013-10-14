@@ -4,10 +4,12 @@ from flask.ext.restful import Resource, fields, marshal_with, reqparse
 from instance_manager import NavitiaManager
 from make_links import add_id_links
 from fields import place, NonNullList, NonNullNested
+from fields import place, NonNullList, NonNullNested, PbField, pagination
 from ResourceUri import ResourceUri
 from make_links import add_id_links
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
+from copy import deepcopy
 
 places = { "places" : NonNullList(NonNullNested(place))}
 
@@ -38,6 +40,8 @@ class Places(ResourceUri):
         return response, 200
 
 places_nearby = { "places_nearby" : NonNullList(NonNullNested(place))}
+places_nearby = { "places_nearby" : NonNullList(NonNullNested(place_nearby)),
+                  "pagination" : PbField(pagination)}
 
 class PlacesNearby(ResourceUri):
     parsers = {}

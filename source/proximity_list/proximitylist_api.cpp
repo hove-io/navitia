@@ -61,20 +61,25 @@ pbnavitia::Response find(type::GeographicalCoord coord, double distance,
         default: break;
         }
         if(!list.empty()) {
-            auto nb_sort = (list.size()<count)? list.size() : count;
+            auto end_pagination = (start_page+1)*count;
+            auto nb_sort = (list.size() < end_pagination) ? list.size():end_pagination;
             std::partial_sort(list.begin(), list.begin() + nb_sort, list.end(),
                 [&](idx_coord a, idx_coord b)
                 {return coord.distance_to(a.second)< coord.distance_to(b.second);});
-            list.resize(nb_sort);
+            total_result = list.size();
+            list = paginate(list, count, start_page);
             for(auto idx_coord : list) {
                 result.push_back(t_result(idx_coord.first, idx_coord.second, type));
             }
-            if(result.size() > count)
-                result.resize(count);
         }
 
     }
     create_pb(result, depth, data, response, coord);
+    auto pagination = response.mutable_pagination();
+    pagination->set_totalresult(total_result);
+    pagination->set_startpage(start_page);
+    pagination->set_itemsperpage(count);
+    pagination->set_itemsonpage(result.size());
     return response;
 }
 }} // namespace navitia::proximitylist

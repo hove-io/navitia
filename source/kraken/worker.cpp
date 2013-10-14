@@ -138,7 +138,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
             return response;
         }
 
-    } catch (navitia::ptref::parsing_error error) {   
+    } catch (navitia::ptref::parsing_error error) {
         LOG4CPLUS_ERROR(logger, "Error in the ptref request  : "+ error.more);
         pbnavitia::Response response;
         fill_pb_error(pbnavitia::Error::bad_filter, "Unknow filter : " + error.more,response.mutable_error());
@@ -151,8 +151,9 @@ pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest 
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     type::EntryPoint ep((*data)->get_type_of_id(request.uri()), request.uri());
     auto coord = this->coord_of_entry_point(ep);
-    return navitia::proximitylist::find(coord, request.distance(), vector_of_pb_types(request), request.depth(),
-                                        request.count(), *(*this->data));
+    return proximitylist::find(coord, request.distance(), vector_of_pb_types(request),
+                               request.depth(), request.count(), request.start_page(),
+                               *(*this->data));
 }
 
 type::GeographicalCoord Worker::coord_of_entry_point(const type::EntryPoint & entry_point) {
