@@ -25,7 +25,7 @@ private:
     std::unordered_map<std::string, ed::types::Line*> line_map;
     std::unordered_map<std::string, ed::types::ValidityPattern*> vp_map;
     std::unordered_map<std::string, ed::types::VehicleJourney*> vj_map;
-    std::unordered_map<std::string, ed::types::PhysicalMode*> mode_map;
+    std::unordered_map<std::string, ed::types::PhysicalMode*> physical_mode_map;
     std::unordered_map<std::string, ed::types::Network*> agency_map;
     std::unordered_map<std::string, ed::types::Company*> company_map;
     std::unordered_map<std::string, ed::types::Contributor*> contributor_map;
@@ -49,7 +49,8 @@ public:
     void fill_default_objects(Data & data);
 
     /// Remplit les commercial_mode et les physical_mode
-    void fill_modes(Data & data);
+    void parse_physical_modes(Data & data, CsvReader &csv);
+    void parse_commercial_modes(Data & data, CsvReader &csv);
 
     /// Parse le fichier des agency, on s'en sert pour remplir les network
     void parse_agency(Data & data, CsvReader &csv);

@@ -35,7 +35,7 @@ namespace DateTimeUtils{
         if(hh>=SECONDS_PER_DAY)
             hh -= SECONDS_PER_DAY;
         if(clockwise){
-            datetime += ( hh>=this_hour ?0:SECONDS_PER_DAY) + hh - this_hour;
+            datetime += (hh>=this_hour ?0:SECONDS_PER_DAY) + hh - this_hour;
         }
         else {
             if(hh<=this_hour)

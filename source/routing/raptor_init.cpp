@@ -27,8 +27,17 @@ getDepartures(const std::vector<std::pair<type::idx_t, double> > &departs, const
               }
           }
       }
+      auto unique_func = [](const Departure_Type &departure1, const Departure_Type departure2){
+        return departure1.rpidx == departure2.rpidx &&
+               departure1.count == departure2.count &&
+               departure1.arrival == departure2.arrival &&
+               departure1.upper_bound == departure2.upper_bound &&
+               departure1.walking_time == departure2.walking_time &&
+               departure1.ratio == departure2.ratio;
+      };
 
-
+      auto it = std::unique(result.begin(), result.end(), unique_func);
+      result.resize(std::distance(result.begin(), it));
       return result;
 }
 
@@ -95,14 +104,14 @@ getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, double> 
                         // Dans le sens horaire : lors du calcul on gardé que l’heure de départ, mais on veut l’arrivée
                         // Il faut donc retrouver le stop_time qui nous intéresse avec best_stop_time
                         const type::StopTime* st;
-                        uint32_t gap = 0;
+                        DateTime dt = 0;
 
-                        std::tie(st, gap) = best_stop_time(journey_pattern_point, l, accessibilite_params/*required_properties*/, !clockwise, data, true);
+                        std::tie(st, dt) = best_stop_time(journey_pattern_point, l, accessibilite_params/*required_properties*/, !clockwise, data, true);
                         if(clockwise) {
-                            auto arrival_time = !st->is_frequency() ? st->arrival_time : st->f_arrival_time(gap);
+                            auto arrival_time = !st->is_frequency() ? st->arrival_time : st->f_arrival_time(dt);
                             DateTimeUtils::update(best_dt_jpp, arrival_time, !clockwise);
                         } else {
-                            auto departure_time = !st->is_frequency() ? st->departure_time : st->f_departure_time(gap);
+                            auto departure_time = !st->is_frequency() ? st->departure_time : st->f_departure_time(dt);
                             DateTimeUtils::update(best_dt_jpp, departure_time, !clockwise);
                         }
                     }

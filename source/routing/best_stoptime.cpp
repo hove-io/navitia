@@ -78,19 +78,24 @@ earliest_stop_time(const type::JourneyPatternPoint* jpp,
     const type::StopTime* first_st = valid_pick_up(idx, end_idx,
             DateTimeUtils::date(dt), DateTimeUtils::hour(dt), data,
             reconstructing_path, accessibilite_params.vehicle_properties);
-
+    auto working_dt = dt;
     // If no trip was found, we look for one the day after
-    if(first_st == nullptr){
+    if(first_st == nullptr) {
         idx = begin - data.dataRaptor.departure_times.begin();
-        first_st = valid_pick_up(idx, end_idx, DateTimeUtils::date(dt) + 1, 0,
+        working_dt = DateTimeUtils::set(DateTimeUtils::date(dt)+1, 0);
+        first_st = valid_pick_up(idx, end_idx, DateTimeUtils::date(working_dt), 0,
             data, reconstructing_path, accessibilite_params.vehicle_properties);
     }
 
-    if(first_st != nullptr){
-        return std::make_pair(first_st,
-                !first_st->is_frequency() ? 0 :
-                    compute_gap(DateTimeUtils::hour(dt), first_st->start_time,
-                                first_st->headway_secs, true));
+    if(first_st != nullptr) {
+        if(!first_st->is_frequency()) {
+            DateTimeUtils::update(working_dt, first_st->departure_time);
+        } else {
+            working_dt = dt;
+            const DateTime tmp_dt = f_departure_time(DateTimeUtils::hour(working_dt), first_st);
+            DateTimeUtils::update(working_dt, DateTimeUtils::hour(tmp_dt));
+        }
+        return std::make_pair(first_st, working_dt);
     }
 
     //Cette journey_pattern ne comporte aucun trip compatible
@@ -122,19 +127,26 @@ tardiest_stop_time(const type::JourneyPatternPoint* jpp,
             DateTimeUtils::date(dt), DateTimeUtils::hour(dt), data,
             reconstructing_path, accessibilite_params.vehicle_properties);
 
-    // If no trip was found, we look for one the day after
+    auto working_dt = dt;
+    // If no trip was found, we look for one the day before
     if(first_st == nullptr && DateTimeUtils::date(dt) > 0){
         idx = begin - data.dataRaptor.arrival_times.begin();
-        first_st = valid_drop_off(idx, end_idx, DateTimeUtils::date(dt) -1,
-                DateTimeUtils::SECONDS_PER_DAY, data, reconstructing_path,
+        working_dt = DateTimeUtils::set(DateTimeUtils::date(working_dt) - 1,
+                                        DateTimeUtils::SECONDS_PER_DAY - 1);
+        first_st = valid_drop_off(idx, end_idx, DateTimeUtils::date(working_dt),
+                DateTimeUtils::SECONDS_PER_DAY - 1, data, reconstructing_path,
                 accessibilite_params.vehicle_properties);
     }
 
     if(first_st != nullptr){
-        return std::make_pair(first_st,
-                !first_st->is_frequency() ? 0 :
-                    compute_gap(DateTimeUtils::hour(dt), first_st->start_time,
-                                first_st->headway_secs, false));
+        if(!first_st->is_frequency()) {
+            DateTimeUtils::update(working_dt, DateTimeUtils::hour(first_st->arrival_time), false);
+        } else {
+            working_dt = dt;
+            const DateTime tmp_dt = f_arrival_time(DateTimeUtils::hour(working_dt), first_st);
+            DateTimeUtils::update(working_dt, DateTimeUtils::hour(tmp_dt), false);
+        }
+        return std::make_pair(first_st, working_dt);
     }
 
     //Cette journey_pattern ne comporte aucun trip compatible

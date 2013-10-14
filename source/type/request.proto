@@ -7,6 +7,7 @@ message PlacesRequest {
     required int32 depth        = 3;
     required int32 count        = 4;
     repeated string admin_uris  = 5;
+    optional int32 search_type = 6;
 }
 
 message NextStopTimeRequest {
@@ -54,6 +55,7 @@ message PlacesNearbyRequest {
     repeated NavitiaType types  = 3;
     required int32 depth        = 4;
     required int32 count        = 5;
+    required int32 start_page   = 6;
 }
 
 message PTRefRequest {

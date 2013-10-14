@@ -51,7 +51,6 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
         }
     }
 
-    fill_modes(data);
     fill_default_objects(data);
     typedef boost::function<void(GtfsParser*, Data&, CsvReader&)> parse_function;
     typedef std::pair<std::string, parse_function> string_function;
@@ -59,6 +58,8 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
     filename_function_list.push_back(std::make_pair("contributor.txt", &GtfsParser::parse_contributor));
     filename_function_list.push_back(std::make_pair("company.txt", &GtfsParser::parse_company));
     filename_function_list.push_back(std::make_pair("agency.txt", &GtfsParser::parse_agency));
+    filename_function_list.push_back(std::make_pair("physical_mode.txt", &GtfsParser::parse_physical_modes));
+    filename_function_list.push_back(std::make_pair("commercial_mode.txt", &GtfsParser::parse_commercial_modes));
     filename_function_list.push_back(std::make_pair("stops.txt", &GtfsParser::parse_stops));
     filename_function_list.push_back(std::make_pair("routes.txt", &GtfsParser::parse_lines));
     filename_function_list.push_back(std::make_pair("transfers.txt", &GtfsParser::parse_transfers));
@@ -85,7 +86,6 @@ void GtfsParser::fill(Data & data, const std::string beginning_date){
             filename_function.second(this, data, csv);
         }
     }
-
     normalize_extcodes(data);
 }
 
@@ -96,9 +96,8 @@ void GtfsParser::fill_default_objects(Data & data){
     company->name = "compagnie par défaut";
     data.companies.push_back(company);
     company_map[company->uri] = company;
-}
 
-void GtfsParser::fill_modes(Data & data) {
+    // commercial_mode et physical_mode : par défaut
     ed::types::CommercialMode* commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "0";
     commercial_mode->name = "Tram";
@@ -146,14 +145,14 @@ void GtfsParser::fill_modes(Data & data) {
     commercial_mode->name = "Gondola";
     commercial_mode->uri = "0x6";
     data.commercial_modes.push_back(commercial_mode);
-    commercial_mode_map[commercial_mode->id] = commercial_mode;
+    commercial_mode_map[commercial_mode->uri] = commercial_mode;
 
     commercial_mode = new ed::types::CommercialMode();
     commercial_mode->id = "7";
     commercial_mode->name = "Funicular";
     commercial_mode->uri = "0x7";
     data.commercial_modes.push_back(commercial_mode);
-    commercial_mode_map[commercial_mode->id] = commercial_mode;
+    commercial_mode_map[commercial_mode->uri] = commercial_mode;
 
     for(ed::types::CommercialMode *mt : data.commercial_modes) {
         ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
@@ -161,7 +160,69 @@ void GtfsParser::fill_modes(Data & data) {
         mode->name = mt->name;
         mode->uri = mt->uri;
         data.physical_modes.push_back(mode);
-        mode_map[mode->id] = mode;
+        physical_mode_map[mode->id] = mode;
+    }
+
+}
+
+void GtfsParser::parse_physical_modes(Data & data, CsvReader &csv) {
+
+    std::vector<std::string> headers = {"physical_mode_id", "physical_mode_name"};
+    if(!csv.validate(headers)) {
+        LOG4CPLUS_FATAL(logger, "Erreur lors de la lecture " + csv.filename +
+                " il manque les colonnes  : " + csv.missing_headers(headers));
+        throw InvalidHeaders(csv.filename);
+    }
+
+    int id_c = csv.get_pos_col("physical_mode_id"), name_c = csv.get_pos_col("physical_mode_name");
+
+    bool line_read = false;
+    while(!csv.eof()) {
+        auto row = csv.next();
+        if(!row.empty()) {
+            if(line_read && id_c == -1) {
+                LOG4CPLUS_FATAL(logger, "Erreur lors de la lecture " + csv.filename +
+                        "le fichier comporte plus d'un contributeur et n'a pas de colonne contributor_id");
+                throw InvalidHeaders(csv.filename);
+            }
+            ed::types::PhysicalMode* mode = new ed::types::PhysicalMode();
+            mode->id = data.physical_modes.size() + 1;
+            mode->name = row[name_c];
+            mode->uri = row[id_c];
+            data.physical_modes.push_back(mode);
+            physical_mode_map[mode->uri] = mode;
+            line_read = true;
+        }
+    }
+}
+void GtfsParser::parse_commercial_modes(Data & data, CsvReader &csv) {
+
+    std::vector<std::string> headers = {"commercial_mode_id", "commercial_mode_name", "physical_mode_id"};
+    if(!csv.validate(headers)) {
+        LOG4CPLUS_FATAL(logger, "Erreur lors de la lecture " + csv.filename +
+                " il manque les colonnes  : " + csv.missing_headers(headers));
+        throw InvalidHeaders(csv.filename);
+    }
+
+    int id_c = csv.get_pos_col("commercial_mode_id"), name_c = csv.get_pos_col("commercial_mode_name");
+
+    bool line_read = false;
+    while(!csv.eof()) {
+        auto row = csv.next();
+        if(!row.empty()) {
+            if(line_read && id_c == -1) {
+                LOG4CPLUS_FATAL(logger, "Erreur lors de la lecture " + csv.filename +
+                        "le fichier comporte plus d'un contributeur et n'a pas de colonne contributor_id");
+                throw InvalidHeaders(csv.filename);
+            }
+            ed::types:: CommercialMode* commercial_mode = new ed::types::CommercialMode();
+            commercial_mode->id = data.commercial_modes.size() + 1;
+            commercial_mode->name = row[name_c];
+            commercial_mode->uri = row[id_c];
+            data.commercial_modes.push_back(commercial_mode);
+            commercial_mode_map[commercial_mode->uri] = commercial_mode;
+            line_read = true;
+        }
     }
 }
 void GtfsParser::parse_contributor(Data & data, CsvReader &csv){
@@ -661,7 +722,7 @@ void GtfsParser::parse_calendar_dates(Data & data, CsvReader & csv){
 
 void GtfsParser::parse_lines(Data & data, CsvReader &csv){
     std::vector<std::string> mandatory_headers = {"route_id", "route_short_name",
-        "route_long_name", "route_type"};
+                                                  "route_long_name", "route_type"};
     if(!csv.validate(mandatory_headers)) {
         LOG4CPLUS_FATAL(logger, "Erreur lors du parsing de " + csv.filename
                   + ". Il manque les colonnes : "
@@ -673,7 +734,8 @@ void GtfsParser::parse_lines(Data & data, CsvReader &csv){
     int id_c = csv.get_pos_col("route_id"), short_name_c = csv.get_pos_col("route_short_name"),
         long_name_c = csv.get_pos_col("route_long_name"), type_c = csv.get_pos_col("route_type"),
         desc_c = csv.get_pos_col("route_desc"),
-        color_c = csv.get_pos_col("route_color"), agency_c = csv.get_pos_col("agency_id");
+        color_c = csv.get_pos_col("route_color"), agency_c = csv.get_pos_col("agency_id"),
+        commercial_mode_c = csv.get_pos_col("commercial_mode_id");
     int ignored = 0;
 
     while(!csv.eof()) {
@@ -692,7 +754,11 @@ void GtfsParser::parse_lines(Data & data, CsvReader &csv){
                 line->color = row[color_c];
             line->additional_data = row[long_name_c];
 
-            std::unordered_map<std::string, nm::CommercialMode*>::iterator it= commercial_mode_map.find(row[type_c]);
+            std::unordered_map<std::string, nm::CommercialMode*>::iterator it;
+            if(commercial_mode_c != -1)
+                it= commercial_mode_map.find(row[commercial_mode_c]);
+            else it= commercial_mode_map.find(row[type_c]);
+
             if(it != commercial_mode_map.end())
                 line->commercial_mode = it->second;
             if(agency_c != -1) {
@@ -722,7 +788,7 @@ void GtfsParser::parse_lines(Data & data, CsvReader &csv){
 
 void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
     std::vector<std::string> mandatory_headers = {"route_id", "service_id",
-        "trip_id"};
+                                                  "trip_id"};
     if(!csv.validate(mandatory_headers)) {
         LOG4CPLUS_FATAL(logger, "Erreur lors du parsing de " + csv.filename
                   + ". Il manque les colonnes : "
@@ -744,6 +810,7 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
     int odt_type_c = csv.get_pos_col("odt_type");
     int company_id_c = csv.get_pos_col("company_id");
     int condition_c = csv.get_pos_col("trip_condition");
+    int physical_mode_c = csv.get_pos_col("physical_mode_id");
 
     int ignored = 0;
     int ignored_vj = 0;
@@ -760,8 +827,13 @@ void GtfsParser::parse_trips(Data & data, CsvReader &csv) {
         }
         else {
             nm::Line * line = it->second;
-            std::unordered_map<std::string, nm::PhysicalMode*>::iterator itm = mode_map.find(line->commercial_mode->id);
-            if(itm == mode_map.end()) {
+            std::unordered_map<std::string, nm::PhysicalMode*>::iterator itm;
+
+            if(physical_mode_c != -1){
+                itm = physical_mode_map.find(row[physical_mode_c]);
+            }else itm = physical_mode_map.find(line->commercial_mode->id);
+
+            if(itm == physical_mode_map.end()) {
                 LOG4CPLUS_WARN(logger, "Impossible de trouver le mode (au sens GTFS) " + line->commercial_mode->id
                           + " référencée par trip " + row[trip_c]);
                 ignored++;
@@ -884,9 +956,6 @@ void GtfsParser::parse_frequencies(Data &, CsvReader &csv) {
     }
 }
 
-
-
-
 void normalize_extcodes(Data & data){
     for(nm::StopArea * sa : data.stop_areas){
         boost::algorithm::replace_first(sa->uri, "StopArea:", "");
@@ -895,8 +964,6 @@ void normalize_extcodes(Data & data){
         boost::algorithm::replace_first(sp->uri, "StopPoint:", "");
     }
 }
-
-
 
 
 void GtfsParser::parse_stop_times(Data & data, CsvReader &csv) {

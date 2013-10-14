@@ -20,6 +20,8 @@ class Places(Resource):
                 description="The type of data to search")
         self.parsers["get"].add_argument("count", type=int,  default=10,
                 description="The maximum number of places returned")
+        self.parsers["get"].add_argument("search_type", type=int, default=0,
+                description="Type of search: firstletter or typeerror")
         self.parsers["get"].add_argument("admin_uri[]", type=str, action="append",
                 description="""If filled, will restrained the search within the
                     ²           given admin uris""")

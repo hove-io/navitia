@@ -9,6 +9,7 @@ from renderers import render, render_from_protobuf
 from werkzeug.wrappers import Response
 from find_extrem_datetimes import *
 from qualifier import qualifier
+from datetime import datetime, timedelta
 
 
 pb_type = {
@@ -81,6 +82,7 @@ class Script:
         req.places.q     = request['q']
         req.places.depth = request['depth']
         req.places.count = request['count']
+	req.places.search_type = request['search_type']
         if request["type[]"]:
             for type in request["type[]"]:
                 req.places.types.append(pb_type[type])
@@ -147,10 +149,11 @@ class Script:
     def places_nearby(self, request, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.places_nearby
-        req.places_nearby.uri      = request["uri"]
-        req.places_nearby.distance = request["distance"]
-        req.places_nearby.depth    = request["depth"]
-        req.places_nearby.count    = request["count"]
+        req.places_nearby.uri        = request["uri"]
+        req.places_nearby.distance   = request["distance"]
+        req.places_nearby.depth      = request["depth"]
+        req.places_nearby.count      = request["count"]
+        req.places_nearby.start_page = request["start_page"]
         if request["type[]"]:
             for type in request["type[]"]:
                 req.places_nearby.types.append(pb_type[type])
@@ -177,7 +180,7 @@ class Script:
             resp = qualifier().qualifier_one(req, region)
         else:
             resp = NavitiaManager().send_and_receive(req, region)
-        if resp.error and type_ == "rapid":
+        if not resp.HasField("error") and type_ == "rapid":
             #We are looking for the asap result
             earliest_dt = None
             earliest_i = None
@@ -196,7 +199,13 @@ class Script:
                     del resp.journeys[i]
         self.__fill_uris(resp)
         return resp
-
+    def journey_compare(self, j1, j2):
+        if datetime.strptime(j1.arrival_date_time, "%Y%m%dT%H%M%S") > datetime.strptime(j2.arrival_date_time, "%Y%m%dT%H%M%S") :
+            return 1
+        elif datetime.strptime(j1.arrival_date_time, "%Y%m%dT%H%M%S") == datetime.strptime(j2.arrival_date_time, "%Y%m%dT%H%M%S") :
+            return 0
+        else:
+            return -1
 
     def __on_journeys(self, requested_type, request, region):
         req = request_pb2.Request()
@@ -230,15 +239,13 @@ class Script:
         resp = self.get_journey(req, region, request["type"])
         if not resp.HasField("error"):
             while request["count"] and request["count"] > len(resp.journeys):
-                datetime = None
+                temp_datetime = None
                 if request["clockwise"]:
-                    datetime = resp.journeys[-1].departure_date_time
-                    last = str(int(datetime[-1])+1)
+                    temp_datetime = datetime.strptime(resp.journeys[-1].departure_date_time, "%Y%m%dT%H%M%S") + timedelta(seconds = 1)
                 else:
-                    datetime = resp.journeys[-1].arrival_date_time
-                    last = str(int(datetime[-1])-1)
-                datetime = datetime[:-1] + last
-                req.journeys.datetimes[0] = datetime
+                    temp_datetime = datetime.strptime(resp.journeys[-1].arrival_date_time, "%Y%m%dT%H%M%S") + timedelta(seconds = -1)
+
+                req.journeys.datetimes[0] = temp_datetime.strftime("%Y%m%dT%H%M%S")
                 tmp_resp = self.get_journey(req, region, request["type"])
                 if not tmp_resp.error and len(tmp_resp.journeys) == 0:
                     break
@@ -250,6 +257,8 @@ class Script:
                 to_delete.sort(reverse=True)
                 for i in to_delete:
                     del resp.journeys[i]
+            if not request["clockwise"]:
+                resp.journeys.sort(self.journey_compare)
         return resp
 
 

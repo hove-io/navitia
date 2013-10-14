@@ -54,7 +54,7 @@ int main(int argc, char * argv[])
 
     po::notify(vm);
 
-    pt::ptime start, end, now;
+    pt::ptime start, now;
     int read, sort, autocomplete, save;
 
     navitia::type::Data data;
@@ -101,8 +101,6 @@ int main(int argc, char * argv[])
     {Timer t("Construction des correspondances");  data.pt_data.build_connections();}
     */
     autocomplete = (pt::microsec_clock::local_time() - start).total_milliseconds();
-
-
     std::cout << "Debut sauvegarde ..." << std::endl;
 
     start = pt::microsec_clock::local_time();

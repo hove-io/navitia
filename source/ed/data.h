@@ -100,6 +100,11 @@ public:
           */
     void build_relations(navitia::type::PT_Data & data);
 
+    /**
+     * Finalise les start_time et end_time des stop_times en frequence
+     */
+    void finalize_frequency();
+
     /// Construit le contour de la région à partir des stops points
     std::string compute_bounding_box(navitia::type::PT_Data &data);
     ~Data(){

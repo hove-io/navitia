@@ -4,18 +4,17 @@
 namespace pt = boost::posix_time;
 
 namespace ed {
-VJ & VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs) {
 
-    uint32_t first_time = vj->stop_time_list.front()->arrival_time;
+VJ & VJ::frequency(uint32_t start_time, uint32_t end_time, uint32_t headway_secs) {
+    navitia::type::StopTime* first_st = vj->stop_time_list.front();
+    size_t nb_trips = std::ceil((end_time - start_time)/headway_secs);
     for(navitia::type::StopTime* st : vj->stop_time_list) {
         st->set_is_frequency(true);
-        st->start_time = start_time+(st->arrival_time - first_time);
-        st->end_time = end_time+(st->departure_time - first_time);
+        st->start_time = start_time+(st->arrival_time - first_st->arrival_time);
+        st->end_time = start_time + nb_trips * headway_secs + (st->departure_time - first_st->departure_time);
         st->headway_secs = headway_secs;
     }
-
     return *this;
-
 }
 
 
@@ -300,8 +299,4 @@ void builder::connection(const std::string & name1, const std::string & name2, f
          vj->stop_time_list.back()->set_pick_up_allowed(false);
      }
  }
-
-
-
-
 }

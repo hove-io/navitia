@@ -229,6 +229,7 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  uint32_t depth,
                                  int nbmax,
                                  const std::vector<std::string> &admins,
+                                 int search_type,
                                  const navitia::type::Data &d) {
 
     pbnavitia::Response pb_response;
@@ -242,22 +243,27 @@ pbnavitia::Response autocomplete(const std::string &q,
         std::vector<Autocomplete<nt::idx_t>::fl_quality> result;
         switch(type){
         case nt::Type_e::StopArea:
-            result = d.pt_data.stop_area_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin_ptr(d.pt_data.stop_areas, admin_ptr));
+            if (search_type==0){result = d.pt_data.stop_area_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin_ptr(d.pt_data.stop_areas, admin_ptr));}
+            else{result = d.pt_data.stop_area_autocomplete.find_partial_with_pattern(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin_ptr(d.pt_data.stop_areas, admin_ptr));}
             break;
         case nt::Type_e::StopPoint:
-            result = d.pt_data.stop_point_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin_ptr(d.pt_data.stop_points, admin_ptr));
+            if (search_type==0){result = d.pt_data.stop_point_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin_ptr(d.pt_data.stop_points, admin_ptr));}
+            else{result = d.pt_data.stop_point_autocomplete.find_partial_with_pattern(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin_ptr(d.pt_data.stop_points, admin_ptr));}
             break;
         case nt::Type_e::Admin:
-            result = d.geo_ref.fl_admin.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax,  valid_admin_ptr(d.geo_ref.admins, admin_ptr));
+            if (search_type==0){result = d.geo_ref.fl_admin.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin_ptr(d.geo_ref.admins, admin_ptr));}
+            else {result = d.geo_ref.fl_admin.find_partial_with_pattern(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin_ptr(d.geo_ref.admins, admin_ptr));}
             break;
         case nt::Type_e::Address:
-            result = d.geo_ref.find_ways(q, nbmax, valid_admin_ptr(d.geo_ref.ways, admin_ptr));
+            result = d.geo_ref.find_ways(q, nbmax, search_type, valid_admin_ptr(d.geo_ref.ways, admin_ptr));
             break;
         case nt::Type_e::POI:
-            result = d.geo_ref.fl_poi.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax,  valid_admin_ptr(d.geo_ref.pois, admin_ptr));
+            if (search_type==0){result = d.geo_ref.fl_poi.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin_ptr(d.geo_ref.pois, admin_ptr));}
+            else {result = d.geo_ref.fl_poi.find_partial_with_pattern(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, valid_admin_ptr(d.geo_ref.pois, admin_ptr));}
             break;
         case nt::Type_e::Line:
-            result = d.pt_data.line_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, [](type::idx_t){return true;});
+            if (search_type==0) {result = d.pt_data.line_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, [](type::idx_t){return true;});}
+            else {result = d.pt_data.line_autocomplete.find_complete(q, d.geo_ref.alias, d.geo_ref.synonymes, d.geo_ref.word_weight, nbmax, [](type::idx_t){return true;});}
             break;
         default: break;
         }

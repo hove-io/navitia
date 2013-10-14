@@ -15,6 +15,6 @@ struct GeographicalCoord;
 namespace proximitylist {
 pbnavitia::Response find(type::GeographicalCoord coord, double distance,
                          const std::vector<type::Type_e> & filter,
-                         uint32_t depth, uint32_t count,
+                         uint32_t depth, uint32_t count, uint32_t start_page,
                          const type::Data & data);
 }} // namespace navitia::proximitylist

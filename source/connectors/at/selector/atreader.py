@@ -78,6 +78,7 @@ class AtRealtimeReader(object):
     def __init__(self, config):
 
         self.message_list = []
+        self.perturbation_list = []
         self.__engine = create_engine(
             config.at_connection_string + '?charset=utf8',
             echo=False)
@@ -105,6 +106,7 @@ class AtRealtimeReader(object):
         self.msgmedia_table = Table('msgmedia', self.meta, autoload=True)
 
         self.label_impact_id = 'impact_id'
+        self.label_impact_state = 'impact_state'
         self.label_publication_start_date = 'publication_start_date'
         self.label_publication_end_date = 'publication_end_date'
         self.label_application_start_date = 'application_start_date'
@@ -134,6 +136,22 @@ class AtRealtimeReader(object):
     def set_last_execution_time(self, last_execution_time):
         last_exec_file = open(self.last_exec_file_name, 'w')
         last_exec_file.write(last_execution_time.strftime(self.datetime_format))
+
+    def create_pertubation(self, message):
+        pertubation = at.realtime_pb2.AtPerturbation()
+        pertubation.uri = message.uri
+        pertubation.object.object_uri  = message.object.object_uri
+        pertubation.object.object_type  = message.object.object_type
+        pertubation.start_application_date = \
+            message.start_publication_date
+        pertubation.end_application_date = \
+            message.end_application_date
+        pertubation.start_application_daily_hour = \
+            message.start_application_daily_hour
+        pertubation.end_application_daily_hour = \
+            message.end_application_daily_hour
+        pertubation.active_days = message.active_days
+        return pertubation
 
 
     def set_message(self, result_proxy):
@@ -169,7 +187,7 @@ class AtRealtimeReader(object):
                         get_datetime_to_second(
                             row[self.label_application_daily_end_hour])
                     message.active_days = \
-                        int_to_bitset(row[self.label_active_days])
+                        int_to_bitset(row[self.label_active_days]) + '1'
                     message.object.object_uri = row[
                         self.label_object_external_code]
                     message.object.object_type = \
@@ -179,6 +197,10 @@ class AtRealtimeReader(object):
                 localized_message.language = row[self.label_message_lang]
                 localized_message.body = row[self.label_message]
                 localized_message.title = row[self.label_title]
+
+                if row[self.label_impact_state] == 'Disrupt':
+                    self.perturbation_list.append(
+                        self.create_pertubation(message))
 
                 print str(
                     row[self.label_active_days]) + ' - ' + message.active_days
@@ -190,6 +212,8 @@ class AtRealtimeReader(object):
         return select([self.event_table.c.Event_ID,
                        self.impact_table.c.Impact_ID
                        .label(self.label_impact_id),
+                       self.impact_table.c.Impact_State
+                       .label(self.label_impact_state),
                        self.event_table.c.Event_PublicationStartDate
                        .label(self.label_publication_start_date),
                        self.event_table.c.Event_PublicationEndDate
@@ -260,7 +284,7 @@ class AtRealtimeReader(object):
                 result = conn.execute(s, media_media='Internet',
                                       event_publicationenddate=
                                       last_execution_time,
-                                      # datetime.datetime(2013, 9, 01),
+                                      #datetime.datetime(2013, 9, 01),
                                       event_closedate=datetime.datetime.now(),
                                       impact_modification_date=
                                       last_execution_time)

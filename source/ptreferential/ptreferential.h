@@ -20,7 +20,7 @@
 
 #include "type/data.h"
 #include "where.h"
-
+#include "utils/paginate.h"
 
 using navitia::type::Type_e;
 namespace navitia{ namespace ptref{
@@ -68,23 +68,6 @@ struct parsing_error : public ptref_error{
 std::vector<type::idx_t> make_query(type::Type_e requested_type,
                                     std::string request, const type::Data &data);
 
-/// Extrait les données à paginer
-template<typename T>
-std::vector<T> paginate(std::vector<T> &indexes,
-                                  int count, int start_page) {
-    std::vector<T> response;
-    if(count>=0 && start_page>=0) {
-        uint32_t begin_i = start_page * count;
-        uint32_t end_i = begin_i + count;
-        if(begin_i < indexes.size()) {
-            auto begin = indexes.begin() + begin_i;
-            auto end = (end_i < indexes.size()) ? indexes.begin() + end_i :
-                                                  indexes.end();
-            return std::vector<T>(begin, end);
-        }
-    }
-    return std::vector<T>();
-}
 
 /// Trouve le chemin d'un type de données à un autre
 /// Par exemple StopArea → StopPoint → JourneyPatternPoint

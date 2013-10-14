@@ -50,10 +50,22 @@ BEGIN
         (20, 'Unknown'),
         (21, 'Way'),
         (22, 'Admin'),
-        (23, 'POIType');
-
+        (23, 'POIType');        
         update public.database_version set version=2;
     ELSE
         RAISE NOTICE 'database already in version 1, skipping';
+    END CASE;
+END$$;
+
+DO $$
+    DECLARE db_version int;
+BEGIN
+    db_version := coalesce((select version from public.database_version limit 1), 0);
+    CASE WHEN db_version < 3
+        THEN
+        INSERT INTO navitia.connection_kind (id, name) VALUES (6, 'extension');
+        update public.database_version set version=3;
+    ELSE
+        RAISE NOTICE 'database already in version 3, skipping';
     END CASE;
 END$$;
