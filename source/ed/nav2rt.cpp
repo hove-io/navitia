@@ -13,7 +13,6 @@
 #include "ed/connectors/messages_connector.h"
 #include "ed/adapted.h"
 
-
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
@@ -68,6 +67,7 @@ int main(int argc, char * argv[])
     data.load(input);
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
+/*
     std::cout << "chargement des messages" << std::endl;
 
     ed::connectors::RealtimeLoaderConfig config;
@@ -82,7 +82,6 @@ int main(int argc, char * argv[])
         return 1;
     }
     std::cout << data.pt_data.message_holder.messages.size() << " messages chargés" << std::endl;
-
     std::cout << "application des messages sur data" << std::endl;
     ed::connectors::apply_messages(data);
 
@@ -101,16 +100,21 @@ int main(int argc, char * argv[])
     start = pt::microsec_clock::local_time();
     ed::AtAdaptedLoader adapter;
     adapter.apply(perturbations, data.pt_data);
-    //aprés avoir modifié les graphs; on retris
+    //aprés avoir modifié les graphs; on retrie
     data.pt_data.sort();
     apply_adapted = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
 
-
+*/
     std::cout << "Debut sauvegarde ..." << std::endl;
 
     start = pt::microsec_clock::local_time();
-    data.save(output);
+    try {
+        data.save(output);
+    } catch(const navitia::exception &e) {
+        std::cout << "Impossible de sauvegarder" << std::endl;
+        std::cout << e.what() << std::endl;
+    }
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     std::cout << "temps de traitement" << std::endl;

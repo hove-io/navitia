@@ -6,11 +6,14 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include "third_party/eos_portable_archive/portable_iarchive.hpp"
 #include "third_party/eos_portable_archive/portable_oarchive.hpp"
 #include "lz4_filter/filter.h"
 #include "utils/functions.h"
+#include "utils/exception.h"
 
 namespace pt = boost::posix_time;
 
@@ -86,12 +89,44 @@ void Data::save(const std::string & filename){
 }
 
 void Data::save_lz4(const std::string & filename) {
-    std::ofstream ofs(filename.c_str(),std::ios::out|std::ios::binary|std::ios::trunc);
-    boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
-    out.push(LZ4Compressor(2048*500), 1024*500, 1024*500);
-    out.push(ofs);
-    eos::portable_oarchive oa(out);
-    oa << *this;
+    boost::filesystem::path p(filename);
+    boost::filesystem::path dir = p.parent_path();
+    try {
+       boost::filesystem::is_directory(p);
+    } catch(const boost::filesystem::filesystem_error& e)
+    {
+       if(e.code() == boost::system::errc::permission_denied)
+           std::cout << "Search permission is denied for " << p << std::endl;
+       else
+           std::cout << "is_directory(" << p << ") failed with "
+                     << e.code().message() << '\n';
+       throw navitia::exception("Unable to write file");
+    }
+    try {
+        std::ofstream ofs(filename.c_str(),std::ios::out|std::ios::binary|std::ios::trunc);
+        boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
+        out.push(LZ4Compressor(2048*500), 1024*500, 1024*500);
+        out.push(ofs);
+        eos::portable_oarchive oa(out);
+        oa << *this;
+    } catch(const boost::filesystem::filesystem_error &e) {
+        if(e.code() == boost::system::errc::permission_denied)
+            std::cout << "Writing permission is denied for " << p << std::endl;
+        else if(e.code() == boost::system::errc::file_too_large)
+            std::cout << "The file " << filename << " is too large" << std::endl;
+        else if(e.code() == boost::system::errc::interrupted)
+            std::cout << "Writing was interrupted for " << p << std::endl;
+        else if(e.code() == boost::system::errc::no_buffer_space)
+            std::cout << "No buffer space while writing " << p << std::endl;
+        else if(e.code() == boost::system::errc::not_enough_memory)
+            std::cout << "Not enough memory while writing " << p << std::endl;
+        else if(e.code() == boost::system::errc::no_space_on_device)
+            std::cout << "No space on device while writing " << p << std::endl;
+        else if(e.code() == boost::system::errc::operation_not_permitted)
+            std::cout << "Operation not permitted while writing " << p << std::endl;
+        std::cout << e.what() << std::endl;
+       throw navitia::exception("Unable to write file");
+    }
 }
 
 void Data::build_uri(){
