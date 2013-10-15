@@ -26,7 +26,7 @@ class Ptref(Resource):
     def get(self, region):
         args = self.parsers["get"].parse_args()
         response = NavitiaManager().dispatch(args, region, self.resource_type)
-        return protobuf_to_dict(response), 200
+        return protobuf_to_dict(response, use_enum_labels=True), 200
 
 class StopAreas(Ptref):
     """ Retrieves all the stop areas of a region """
@@ -105,3 +105,9 @@ class PoiTypes(Ptref):
     def __init__(self):
         super(PoiTypes, self).__init__()
         self.resource_type = "poi_types"
+
+class Networks(Ptref):
+    """ Retrieves all the networks of a region """
+    def __init__(self):
+        super(Networks, self).__init__()
+        self.resource_type = "networks"

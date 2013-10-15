@@ -58,6 +58,7 @@ pbnavitia::Response find(type::GeographicalCoord coord, double distance,
     pbnavitia::Response response;
     int total_result = 0;
     std::vector<t_result > result;
+    auto end_pagination = (start_page+1)*count;
     for(nt::Type_e type : filter){
         std::vector<idx_coord> list;
         switch(type){
@@ -73,19 +74,24 @@ pbnavitia::Response find(type::GeographicalCoord coord, double distance,
         default: break;
         }
         if(!list.empty()) {
-            auto end_pagination = (start_page+1)*count;
+            total_result += list.size();
             auto nb_sort = (list.size() < end_pagination) ? list.size():end_pagination;
             std::partial_sort(list.begin(), list.begin() + nb_sort, list.end(),
                 [&](idx_coord a, idx_coord b)
                 {return coord.distance_to(a.second)< coord.distance_to(b.second);});
-            total_result = list.size();
-            list = paginate(list, count, start_page);
+            list.resize(nb_sort);
             for(auto idx_coord : list) {
                 result.push_back(t_result(idx_coord.first, idx_coord.second, type));
             }
         }
 
     }
+    auto nb_sort = (result.size() < end_pagination) ? result.size():end_pagination;
+    std::partial_sort(result.begin(), result.begin() + nb_sort, result.end(),
+        [&](t_result t1, t_result t2)
+        {   auto a = std::get<1>(t1); auto b = std::get<1>(t2);
+            return coord.distance_to(a)< coord.distance_to(b);});
+    result = paginate(result, count, start_page);
     create_pb(result, depth, data, response, coord);
     auto pagination = response.mutable_pagination();
     pagination->set_totalresult(total_result);

@@ -89,23 +89,23 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                     item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_jpp_idx]->stop_point->idx);
                     if(clockwise) {
                         if(current_st->is_frequency())
-                            DateTimeUtils::update(workingDate, current_st->f_departure_time(workingDate, !clockwise), !clockwise);
+                            DateTimeUtils::update(workingDate, current_st->f_departure_time(DateTimeUtils::hour(workingDate), !clockwise), !clockwise);
                         else
                             DateTimeUtils::update(workingDate, current_st->departure_time, !clockwise);
                         item.departures.push_back(workingDate);
                         if(current_st->is_frequency())
-                            DateTimeUtils::update(workingDate, current_st->f_arrival_time(workingDate, !clockwise), !clockwise);
+                            DateTimeUtils::update(workingDate, current_st->f_arrival_time(DateTimeUtils::hour(workingDate), !clockwise), !clockwise);
                         else
                             DateTimeUtils::update(workingDate, current_st->arrival_time, !clockwise);
                         item.arrivals.push_back(workingDate);
                     } else {
                         if(current_st->is_frequency())
-                            DateTimeUtils::update(workingDate, current_st->f_arrival_time(workingDate, !clockwise), !clockwise);
+                            DateTimeUtils::update(workingDate, current_st->f_arrival_time(DateTimeUtils::hour(workingDate), !clockwise), !clockwise);
                         else
                             DateTimeUtils::update(workingDate, current_st->arrival_time, !clockwise);
                         item.arrivals.push_back(workingDate);
                         if(current_st->is_frequency())
-                            DateTimeUtils::update(workingDate, current_st->f_departure_time(workingDate, !clockwise), !clockwise);
+                            DateTimeUtils::update(workingDate, current_st->f_departure_time(DateTimeUtils::hour(workingDate), !clockwise), !clockwise);
                         else
                             DateTimeUtils::update(workingDate, current_st->departure_time, !clockwise);
                         item.departures.push_back(workingDate);
@@ -131,12 +131,12 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                 item.orders.push_back(current_st->journey_pattern_point->order);
                 if(clockwise) {
                     if(current_st->is_frequency())
-                        DateTimeUtils::update(workingDate, current_st->f_departure_time(workingDate), !clockwise);
+                        DateTimeUtils::update(workingDate, current_st->f_departure_time(DateTimeUtils::hour(workingDate)), !clockwise);
                     else
                         DateTimeUtils::update(workingDate, current_st->departure_time, !clockwise);
                     item.departures.push_back(workingDate);
                     if(current_st->is_frequency())
-                        DateTimeUtils::update(workingDate, current_st->f_arrival_time(workingDate), !clockwise);
+                        DateTimeUtils::update(workingDate, current_st->f_arrival_time(DateTimeUtils::hour(workingDate)), !clockwise);
                     else
                         DateTimeUtils::update(workingDate, current_st->arrival_time, !clockwise);
 
@@ -145,12 +145,12 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                     item.departure = item.departures.back();
                 } else {
                     if(current_st->is_frequency())
-                        DateTimeUtils::update(workingDate, current_st->f_arrival_time(workingDate), !clockwise);
+                        DateTimeUtils::update(workingDate, current_st->f_arrival_time(DateTimeUtils::hour(workingDate)), !clockwise);
                     else
                         DateTimeUtils::update(workingDate, current_st->arrival_time, !clockwise);
                     item.arrivals.push_back(workingDate);
                     if(current_st->is_frequency())
-                        DateTimeUtils::update(workingDate, current_st->f_departure_time(workingDate), !clockwise);
+                        DateTimeUtils::update(workingDate, current_st->f_departure_time(DateTimeUtils::hour(workingDate)), !clockwise);
                     else
                         DateTimeUtils::update(workingDate, current_st->departure_time, !clockwise);
 

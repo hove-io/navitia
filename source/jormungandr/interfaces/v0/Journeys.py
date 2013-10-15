@@ -13,6 +13,7 @@ class Journeys(Resource):
     """ Compute journeys"""
     parsers = {}
     def __init__(self, *args, **kwargs):
+        types = ["all", "rapid"]
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("origin", type=str, required=True,
@@ -56,6 +57,8 @@ class Journeys(Resource):
                 description="Maximum car distance")
         parser_get.add_argument("forbidden_uris[]", type=str, action="append",
                 description="Uri you want to forbid")
+        parser_get.add_argument("type", type=option_value(types), default="all")
+        parser_get.add_argument("count", type=int)
 
     def get(self, region):
         args = self.parsers["get"].parse_args()
@@ -65,7 +68,7 @@ class Journeys(Resource):
             if before and after:
                 response.prev = before
                 response.next = after
-        return protobuf_to_dict(response), 200
+        return protobuf_to_dict(response, use_enum_labels=True), 200
 
 class Isochrone(Resource):
     """ Compute isochrones """
@@ -99,4 +102,4 @@ class Isochrone(Resource):
             if before and after:
                 response.prev = before
                 response.next = after
-        return protobuf_to_dict(response), 200
+        return protobuf_to_dict(response, use_enum_labels=True), 200
