@@ -149,10 +149,11 @@ class Script:
     def places_nearby(self, request, region):
         req = request_pb2.Request()
         req.requested_api = type_pb2.places_nearby
-        req.places_nearby.uri      = request["uri"]
-        req.places_nearby.distance = request["distance"]
-        req.places_nearby.depth    = request["depth"]
-        req.places_nearby.count    = request["count"]
+        req.places_nearby.uri        = request["uri"]
+        req.places_nearby.distance   = request["distance"]
+        req.places_nearby.depth      = request["depth"]
+        req.places_nearby.count      = request["count"]
+        req.places_nearby.start_page = request["start_page"]
         if request["type[]"]:
             for type in request["type[]"]:
                 req.places_nearby.types.append(pb_type[type])

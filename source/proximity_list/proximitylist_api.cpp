@@ -1,5 +1,6 @@
 #include "proximitylist_api.h"
 #include "type/pb_converter.h"
+#include "utils/paginate.h"
 
 namespace navitia { namespace proximitylist {
 /**
@@ -35,6 +36,14 @@ void create_pb(const std::vector<t_result>& result, uint32_t depth, const nt::Da
             place->set_distance(coord.distance_to(coord_item));
             place->set_embedded_type(pbnavitia::STOP_POINT);
             break;
+        case nt::Type_e::POI:
+            fill_pb_object(data.geo_ref.pois[idx], data, place->mutable_poi(), depth,
+                           current_date);
+            place->set_name(data.geo_ref.pois[idx]->name);
+            place->set_uri(data.geo_ref.pois[idx]->uri);
+            place->set_distance(coord.distance_to(coord_item));
+            place->set_embedded_type(pbnavitia::POI);
+            break;
         default:
             break;
         }
@@ -44,10 +53,10 @@ void create_pb(const std::vector<t_result>& result, uint32_t depth, const nt::Da
 
 pbnavitia::Response find(type::GeographicalCoord coord, double distance,
                          const std::vector<nt::Type_e> & filter,
-                         uint32_t depth, uint32_t count,
+                         uint32_t depth, uint32_t count, uint32_t start_page,
                          const type::Data & data) {
     pbnavitia::Response response;
-
+    int total_result = 0;
     std::vector<t_result > result;
     for(nt::Type_e type : filter){
         std::vector<idx_coord> list;
@@ -58,23 +67,31 @@ pbnavitia::Response find(type::GeographicalCoord coord, double distance,
         case nt::Type_e::StopPoint:
             list = data.pt_data.stop_point_proximity_list.find_within(coord, distance);
             break;
+        case nt::Type_e::POI:
+            list = data.geo_ref.poi_proximity_list.find_within(coord, distance);
+            break;
         default: break;
         }
         if(!list.empty()) {
-            auto nb_sort = (list.size()<count)? list.size() : count;
+            auto end_pagination = (start_page+1)*count;
+            auto nb_sort = (list.size() < end_pagination) ? list.size():end_pagination;
             std::partial_sort(list.begin(), list.begin() + nb_sort, list.end(),
                 [&](idx_coord a, idx_coord b)
                 {return coord.distance_to(a.second)< coord.distance_to(b.second);});
-            list.resize(nb_sort);
+            total_result = list.size();
+            list = paginate(list, count, start_page);
             for(auto idx_coord : list) {
                 result.push_back(t_result(idx_coord.first, idx_coord.second, type));
             }
-            if(result.size() > count)
-                result.resize(count);
         }
 
     }
     create_pb(result, depth, data, response, coord);
+    auto pagination = response.mutable_pagination();
+    pagination->set_totalresult(total_result);
+    pagination->set_startpage(start_page);
+    pagination->set_itemsperpage(count);
+    pagination->set_itemsonpage(result.size());
     return response;
 }
 }} // namespace navitia::proximitylist

@@ -6,6 +6,7 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "ptreferential/ptreferential.h"
+#include "utils/paginate.h"
 
 namespace pt = boost::posix_time;
 
@@ -154,7 +155,7 @@ departure_board(const std::string &request, const std::string &date,
             sps_routes.push_back(key);
     }
     size_t total_result = sps_routes.size();
-    sps_routes = ptref::paginate(sps_routes, count, start_page);
+    sps_routes = paginate(sps_routes, count, start_page);
     //Trie des vecteurs de date_times stop_times
     auto sort_predicate = [](datetime_stop_time dt1, datetime_stop_time dt2) {
                     return dt1.first < dt2.first;

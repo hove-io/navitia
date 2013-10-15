@@ -16,6 +16,7 @@ struct Departure_Type {
     Departure_Type() : rpidx(type::invalid_idx), count(0),
                        arrival(DateTimeUtils::inf), upper_bound(DateTimeUtils::inf), walking_time(0),
                        ratio(std::numeric_limits<float>::min()) {}
+
 };
 
 std::vector<Departure_Type>

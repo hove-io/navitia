@@ -4,6 +4,9 @@
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "type/datetime.h"
 #include "ptreferential/ptreferential.h"
+#include "utils/paginate.h"
+
+
 namespace pt = boost::posix_time;
 
 namespace navitia { namespace timetables {
@@ -28,7 +31,7 @@ next_passages(const std::string &request, const std::string &str_dt,
                             handler.date_time, handler.max_datetime,
                             nb_stoptimes, data, accessibilite_params);
     size_t total_result = passages_dt_st.size();
-    passages_dt_st = ptref::paginate(passages_dt_st, count, start_page);
+    passages_dt_st = paginate(passages_dt_st, count, start_page);
     auto now = pt::second_clock::local_time();
     pt::time_period action_period(navitia::to_posix_time(handler.date_time, data),
                                   navitia::to_posix_time(handler.max_datetime, data));

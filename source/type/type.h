@@ -633,6 +633,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages{
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        journey_pattern_point_list.resize(0);
         ar & uri & name & stop_area & coord & fare_zone & idx
             & journey_pattern_point_list & admin_list & _properties & messages;
     }
