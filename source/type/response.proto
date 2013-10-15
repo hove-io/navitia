@@ -70,6 +70,8 @@ enum TransferType {
     WALKING = 1;
     GUARANTEED = 2;
     EXTENSION = 3;
+    boarding = 4; 
+    landing = 5;
 }
 
 

@@ -144,6 +144,7 @@ def dt_represents(value):
     else:
         raise ValueError("Unable to parse datetime_represents")
 
+
 class add_journey_href(object):
     def __call__(self, f):
         @wraps(f)
@@ -175,6 +176,28 @@ class add_journey_href(object):
                                 "templated" : False
                                 }
                     ]
+            return objects
+        return wrapper
+
+class manage_boarding_landing(object):
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if objects[1] != 200:
+                return objects
+            if not "journeys" in objects[0].keys():
+                return objects
+            for journey in objects[0]['journeys']:
+                if "sections" in journey.keys():
+                    for section in journey['sections']:
+                        if "type" in section.keys() and "display_informations" in section.keys():
+                            display_informations = section["display_informations"]
+                            if "physical_mode" in display_informations.keys():
+                                if display_informations["physical_mode"] == "boarding" or\
+                                    display_informations["physical_mode"] == "landing":
+                                    section["type"] = "transfer"
+                                    section["transfer_type"] = display_informations["physical_mode"]
             return objects
         return wrapper
 
@@ -268,6 +291,7 @@ class Journeys(ResourceUri):
     @add_id_links()
     @add_journey_pagination()
     @add_journey_href()
+    @manage_boarding_landing()
     @marshal_with(journeys)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
