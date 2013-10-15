@@ -105,3 +105,9 @@ class PoiTypes(Ptref):
     def __init__(self):
         super(PoiTypes, self).__init__()
         self.resource_type = "poi_types"
+
+class Networks(Ptref):
+    """ Retrieves all the networks of a region """
+    def __init__(self):
+        super(Networks, self).__init__()
+        self.resource_type = "networks"
