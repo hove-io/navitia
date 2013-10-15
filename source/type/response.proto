@@ -64,14 +64,15 @@ enum SectionType {
     WAITING = 3;
     TRANSFER = 4;
     BIRD_FLY = 5;
+    boarding = 6; 
+    landing = 7;
 }
 
 enum TransferType {
     walking = 1;
     guaranteed = 2;
     stay_in = 3;
-    boarding = 4; 
-    landing = 5;
+
 }
 
 

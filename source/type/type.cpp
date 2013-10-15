@@ -42,6 +42,30 @@ bool VehicleJourney::has_date_time_estimated() const{
     return to_return;
 }
 
+bool VehicleJourney::has_boarding() const{
+    std::string physical_mode;
+    if ((this->journey_pattern != nullptr) && (this->journey_pattern->physical_mode != nullptr))
+        physical_mode = this->journey_pattern->physical_mode->name;
+    if (! physical_mode.empty()){
+        boost::to_lower(physical_mode);
+        return (physical_mode =="boarding");
+    }
+    return false;
+
+}
+
+bool VehicleJourney::has_landing() const{
+    std::string physical_mode;
+    if ((this->journey_pattern != nullptr) && (this->journey_pattern->physical_mode != nullptr))
+        physical_mode = this->journey_pattern->physical_mode->name;
+    if (! physical_mode.empty()){
+        boost::to_lower(physical_mode);
+        return (physical_mode == "landing");
+    }
+    return false;
+
+}
+
 bool ValidityPattern::is_valid(int duration) const {
     if(duration < 0){
 

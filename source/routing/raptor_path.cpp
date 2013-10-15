@@ -215,12 +215,14 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                 item->departure = previous_item.arrival;
                 item->arrival = item->departure + duration;
             } else {
-                PathItem waitingItem=PathItem();
-                waitingItem.departure = previous_item.arrival;
-                waitingItem.arrival = item->departure;
-                waitingItem.type = waiting;
-                waitingItem.stop_points.push_back(previous_item.stop_points.front());
-                to_insert.push_back(std::make_pair(item-path.items.begin(), waitingItem));
+                if(previous_item.type != stay_in){
+                    PathItem waitingItem=PathItem();
+                    waitingItem.departure = previous_item.arrival;
+                    waitingItem.arrival = item->departure;
+                    waitingItem.type = waiting;
+                    waitingItem.stop_points.push_back(previous_item.stop_points.front());
+                    to_insert.push_back(std::make_pair(item-path.items.begin(), waitingItem));
+                }
             }
             previous_item = *item;
         } else if(item->type == public_transport) {

@@ -576,6 +576,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;
+    bool has_boarding() const;
+    bool has_landing() const;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
     bool operator<(const VehicleJourney& other) const {
