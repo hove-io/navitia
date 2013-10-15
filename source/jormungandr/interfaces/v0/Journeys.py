@@ -68,7 +68,7 @@ class Journeys(Resource):
             if before and after:
                 response.prev = before
                 response.next = after
-        return protobuf_to_dict(response), 200
+        return protobuf_to_dict(response, use_enum_labels=True), 200
 
 class Isochrone(Resource):
     """ Compute isochrones """
@@ -102,4 +102,4 @@ class Isochrone(Resource):
             if before and after:
                 response.prev = before
                 response.next = after
-        return protobuf_to_dict(response), 200
+        return protobuf_to_dict(response, use_enum_labels=True), 200

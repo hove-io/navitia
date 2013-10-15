@@ -33,4 +33,4 @@ class PlacesNearby(Resource):
     def get(self, region):
         args = self.parsers["get"].parse_args()
         response = NavitiaManager().dispatch(args, region, "places_nearby")
-        return protobuf_to_dict(response), 200
+        return protobuf_to_dict(response, use_enum_labels=True), 200

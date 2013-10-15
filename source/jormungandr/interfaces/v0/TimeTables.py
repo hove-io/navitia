@@ -42,7 +42,7 @@ class NextDepartures(TimeTables):
 class NextArrivals(TimeTables):
     """Retrieves the next arrivals"""
     def __init__(self):
-        super(NextArrivals, self).__init__()
+        TimeTables.__init__(self)
         self.parsers["get"].add_argument("filter", "", type=str,
                 description="Filter to have the times you want")
         self.api = "next_arrivals"
@@ -50,7 +50,7 @@ class NextArrivals(TimeTables):
 class DepartureBoards(TimeTables):
     """Compute departure boards"""
     def __init__(self):
-        super(DepartureBoards, self).__init__()
+        TimeTables.__init__(self)
         self.parsers["get"].add_argument("filter", "", type=str,
                 description="Filter to have the times you want")
         self.api = "departure_boards"
