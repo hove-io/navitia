@@ -101,10 +101,10 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                 else {
                     pb_section->set_type(pbnavitia::TRANSFER);
                     switch(item.type) {
-                        case extension : pb_section->set_transfer_type(pbnavitia::EXTENSION); break;
-                        case guarantee : pb_section->set_transfer_type(pbnavitia::GUARANTEED); break;
+                        case stay_in : pb_section->set_transfer_type(pbnavitia::stay_in); break;
+                        case guarantee : pb_section->set_transfer_type(pbnavitia::guaranteed); break;
                         case waiting : pb_section->set_type(pbnavitia::WAITING); break;
-                        default :pb_section->set_transfer_type(pbnavitia::WALKING); break;
+                        default :pb_section->set_transfer_type(pbnavitia::walking); break;
                     }
 
                     boost::posix_time::time_period action_period(navitia::to_posix_time(item.departure, d), navitia::to_posix_time(item.arrival, d));

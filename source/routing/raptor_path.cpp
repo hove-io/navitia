@@ -55,7 +55,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
     while(!stop) {
         // Est-ce qu'on a une section marche à pied ?
         if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection ||
-           raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_extension ||
+           raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_stay_in ||
            raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_guarantee) {
             l = raptor_.labels[countb][current_jpp_idx];
             auto r2 = raptor_.labels[countb][raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx];
@@ -68,8 +68,8 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
             item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx]->stop_point->idx);
             if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection)
                 item.type = walking;
-            else if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_extension)
-                item.type = extension;
+            else if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_stay_in)
+                item.type = stay_in;
             else if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_guarantee)
                 item.type = guarantee;
             result.items.push_back(item);
@@ -210,7 +210,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
     std::vector<std::pair<int, PathItem>> to_insert;
     for(auto item = path.items.begin(); item!= path.items.end(); ++item) {
         if(previous_item.departure != DateTimeUtils::inf) {
-            if(item->type == walking || item->type == extension || item->type == guarantee) {
+            if(item->type == walking || item->type == stay_in || item->type == guarantee) {
                 auto duration = item->arrival - item->departure;
                 item->departure = previous_item.arrival;
                 item->arrival = item->departure + duration;

@@ -337,7 +337,7 @@ enum class ConnectionType {
     VJ = 3,
     Guaranteed = 4,
     Default = 5,
-    extension,
+    stay_in,
     guarantee,
     undefined
 };

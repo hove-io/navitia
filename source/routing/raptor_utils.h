@@ -28,7 +28,7 @@ enum class boarding_type {
     connection,
     uninitialized,
     departure,
-    connection_extension,
+    connection_stay_in,
     connection_guarantee
 };
 
