@@ -17,7 +17,7 @@ std::string PathItem::print(const navitia::type::PT_Data & data) const {
         ss << "transport en commun";
     else if(type == walking)
         ss << "marche";
-    else if(type == extension)
+    else if(type == stay_in)
         ss << "prolongement de service";
     else if(type ==guarantee)
         ss << "corresopondance garantie";

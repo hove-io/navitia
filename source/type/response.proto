@@ -67,9 +67,11 @@ enum SectionType {
 }
 
 enum TransferType {
-    WALKING = 1;
-    GUARANTEED = 2;
-    EXTENSION = 3;
+    walking = 1;
+    guaranteed = 2;
+    stay_in = 3;
+    boarding = 4; 
+    landing = 5;
 }
 
 

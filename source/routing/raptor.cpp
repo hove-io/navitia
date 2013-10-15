@@ -25,7 +25,7 @@ RAPTOR::journey_pattern_path_connections(const Visitor & visitor/*,
                 labels[count][jpp_idx] = dt;
                 best_labels[jpp_idx] = dt;
                 boardings[count][jpp_idx] = jpp_departure;
-                boarding_types[count][jpp_idx] = boarding_type::connection_extension;
+                boarding_types[count][jpp_idx] = boarding_type::connection_stay_in;
                 to_mark.push_back(jpp_idx);
             }
         }
