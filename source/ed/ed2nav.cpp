@@ -104,7 +104,12 @@ int main(int argc, char * argv[])
     std::cout << "Debut sauvegarde ..." << std::endl;
 
     start = pt::microsec_clock::local_time();
-    data.save(output);
+    try {
+        data.save(output);
+    } catch(const navitia::exception &e) {
+        std::cout << "Impossible de sauvegarder" << std::endl;
+        std::cout << e.what() << std::endl;
+    }
     save = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     std::cout << "temps de traitement" << std::endl;
