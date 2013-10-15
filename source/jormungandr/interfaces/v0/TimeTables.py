@@ -13,23 +13,23 @@ class TimeTables(Resource):
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
-        parsers_get = reqparse.RequestParser(argument_class=ArgumentDoc)
-        parsers_get.add_argument("from_datetime", type=str, required=True,
-                description=" The date from which you want the times")
-        parsers_get.add_argument("duration", type=int, default=3600,
-                description="""Maximum duration between the datetime and the
-                               last retrieved stop time""")
-        parsers_get.add_argument("nb_stoptimes", type=int, default=100,
-                description="Maximum number of stop times")
-        parsers_get.add_argument("depth", type=depth_argument, default=1,
-                description="Maximal depth of the returned objects")
-        parsers_get.add_argument("interface_version", type=depth_argument,
+        self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
+        self.parsers["get"].add_argument("from_datetime", type=str, required=True,
+               description=" The date from which you want the times")
+        self.parsers["get"].add_argument("duration", type=int, default=3600,
+               description="""Maximum duration between the datetime and the
+                              last retrieved stop time""")
+        self.parsers["get"].add_argument("nb_stoptimes", type=int, default=100,
+               description="Maximum number of stop times")
+        self.parsers["get"].add_argument("depth", type=depth_argument, default=1,
+               description="Maximal depth of the returned objects")
+        self.parsers["get"].add_argument("interface_version", type=depth_argument,
                                  default=0, hidden=True)
 
     def get(self, region):
         args = self.parsers["get"].parse_args()
         response = NavitiaManager().dispatch(args, region, self.api)
-        return protobuf_to_dict(response), 200
+        return protobuf_to_dict(response, use_enum_labels=True), 200
 
 class NextDepartures(TimeTables):
     """Retrieves the next departures"""
