@@ -107,12 +107,15 @@ getParetoFront(bool clockwise, const std::vector<std::pair<type::idx_t, double> 
                         DateTime dt = 0;
 
                         std::tie(st, dt) = best_stop_time(journey_pattern_point, l, accessibilite_params/*required_properties*/, !clockwise, data, true);
-                        if(clockwise) {
-                            auto arrival_time = !st->is_frequency() ? st->arrival_time : st->f_arrival_time(dt);
-                            DateTimeUtils::update(best_dt_jpp, arrival_time, !clockwise);
-                        } else {
-                            auto departure_time = !st->is_frequency() ? st->departure_time : st->f_departure_time(dt);
-                            DateTimeUtils::update(best_dt_jpp, departure_time, !clockwise);
+                        BOOST_ASSERT(st!=nullptr);
+                        if(st != nullptr) {
+                            if(clockwise) {
+                                auto arrival_time = !st->is_frequency() ? st->arrival_time : st->f_arrival_time(DateTimeUtils::hour(dt));
+                                DateTimeUtils::update(best_dt_jpp, arrival_time, !clockwise);
+                            } else {
+                                auto departure_time = !st->is_frequency() ? st->departure_time : st->f_departure_time(DateTimeUtils::hour(dt));
+                                DateTimeUtils::update(best_dt_jpp, departure_time, !clockwise);
+                            }
                         }
                     }
                     if(clockwise)

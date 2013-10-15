@@ -435,7 +435,7 @@ void RAPTOR::raptor_loop(Visitor visitor, /*const type::Properties &required_pro
                             else
                                 bound = b_dest.best_now;
 
-                            DateTimeUtils::update(workingDt, st->section_end_time(visitor.clockwise(), tmp_dt), visitor.clockwise());
+                            DateTimeUtils::update(workingDt, st->section_end_time(visitor.clockwise(), DateTimeUtils::hour(tmp_dt)), visitor.clockwise());
 
                             if(visitor.comp(workingDt, bound) && st->valid_end(visitor.clockwise())) {
                                 working_labels[jpp_idx] = workingDt;

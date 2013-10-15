@@ -714,38 +714,38 @@ struct StopTime : public Nameable {
     bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
 
     /// Heure de fin de stop_time : dans le sens avant, c'est la fin, sinon le départ
-    uint32_t section_end_time(bool clockwise, const DateTime dt = 0) const {
+    uint32_t section_end_time(bool clockwise, const u_int32_t hour = 0) const {
         if(this->is_frequency())
-            return clockwise ? this->f_arrival_time(dt) : this->f_departure_time(dt);
+            return clockwise ? this->f_arrival_time(hour) : this->f_departure_time(hour);
         else
             return clockwise ? arrival_time : departure_time;
     }
 
-    inline uint32_t f_arrival_time(const DateTime dt, bool clockwise = true) const {
+    inline uint32_t f_arrival_time(const u_int32_t hour, bool clockwise = true) const {
         if(clockwise) {
             if (this == this->vehicle_journey->stop_time_list.front())
-                return dt;
+                return hour;
             auto prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
-            return dt + this->arrival_time - prec_st->arrival_time;
+            return hour + this->arrival_time - prec_st->arrival_time;
         } else {
             if (this == this->vehicle_journey->stop_time_list.back())
-                return dt;
+                return hour;
             auto next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
-            return dt - (next_st->arrival_time - this->arrival_time);
+            return hour - (next_st->arrival_time - this->arrival_time);
         }
     }
 
-    inline uint32_t f_departure_time(const DateTime dt, bool clockwise = false) const {
+    inline uint32_t f_departure_time(const u_int32_t hour, bool clockwise = false) const {
         if(clockwise) {
             if (this == this->vehicle_journey->stop_time_list.front())
-                return dt;
+                return hour;
             auto prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
-            return dt + this->departure_time - prec_st->departure_time;
+            return hour + this->departure_time - prec_st->departure_time;
         } else {
             if (this == this->vehicle_journey->stop_time_list.back())
-                return dt;
+                return hour;
             auto next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
-            return dt - (next_st->departure_time - this->departure_time);
+            return hour - (next_st->departure_time - this->departure_time);
         }
     }
 
