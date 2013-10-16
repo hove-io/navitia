@@ -60,19 +60,19 @@ pbnavitia::Response Worker::status() {
     pbnavitia::Response result;
 
     auto status = result.mutable_status();
-
-    boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
-    status->set_publication_date(pt::to_iso_string((*data)->meta.publication_date));
-    status->set_start_production_date(bg::to_iso_string((*data)->meta.production_date.begin()));
-    status->set_end_production_date(bg::to_iso_string((*data)->meta.production_date.end()));
-    status->set_data_version((*data)->version);
-    status->set_navimake_version((*data)->meta.navimake_version);
+    const auto d = *data;
+    boost::shared_lock<boost::shared_mutex> lock(d->load_mutex);
+    status->set_publication_date(pt::to_iso_string(d->meta.publication_date));
+    status->set_start_production_date(bg::to_iso_string(d->meta.production_date.begin()));
+    status->set_end_production_date(bg::to_iso_string(d->meta.production_date.end()));
+    status->set_data_version(d->version);
+    status->set_navimake_version(d->meta.navimake_version);
     status->set_navitia_version(NAVITIA_VERSION);
-    status->set_loaded((*data)->loaded);
-    status->set_last_load_status((*data)->last_load);
-    status->set_last_load_at(pt::to_iso_string((*data)->last_load_at));
-    status->set_nb_threads((*data)->nb_threads);
-    for(auto data_sources: (*data)->meta.data_sources){
+    status->set_loaded(d->loaded);
+    status->set_last_load_status(d->last_load);
+    status->set_last_load_at(pt::to_iso_string(d->last_load_at));
+    status->set_nb_threads(d->nb_threads);
+    for(auto data_sources: d->meta.data_sources){
         status->add_data_sources(data_sources);
     }
     return result;
@@ -81,11 +81,12 @@ pbnavitia::Response Worker::status() {
 pbnavitia::Response Worker::metadatas() {
     pbnavitia::Response result;
     auto metadatas = result.mutable_metadatas();
-    metadatas->set_start_production_date(bg::to_iso_string((*data)->meta.production_date.begin()));
-    metadatas->set_end_production_date(bg::to_iso_string((*data)->meta.production_date.end()));
-    metadatas->set_shape((*data)->meta.shape);
+    const auto d = *data;
+    metadatas->set_start_production_date(bg::to_iso_string(d->meta.production_date.begin()));
+    metadatas->set_end_production_date(bg::to_iso_string(d->meta.production_date.end()));
+    metadatas->set_shape(d->meta.shape);
     metadatas->set_status("running");
-    for(type::Contributor* contributor : (*data)->pt_data.contributors){
+    for(type::Contributor* contributor : d->pt_data.contributors){
         metadatas->add_contributors(contributor->uri);
     }
     return result;
@@ -93,8 +94,8 @@ pbnavitia::Response Worker::metadatas() {
 
 void Worker::init_worker_data(){
     if((*this->data)->last_load_at != this->last_load_at || !calculateur){
-        calculateur = std::unique_ptr<navitia::routing::RAPTOR>(new navitia::routing::RAPTOR(*(*this->data)));
-        street_network_worker = std::unique_ptr<navitia::streetnetwork::StreetNetwork>(new navitia::streetnetwork::StreetNetwork((*this->data)->geo_ref));
+        calculateur = std::unique_ptr<routing::RAPTOR>(new routing::RAPTOR(*(*this->data)));
+        street_network_worker = std::unique_ptr<streetnetwork::StreetNetwork>(new streetnetwork::StreetNetwork((*this->data)->geo_ref));
         this->last_load_at = (*this->data)->last_load_at;
 
         LOG4CPLUS_INFO(logger, "instanciation du calculateur");
@@ -112,37 +113,55 @@ pbnavitia::Response Worker::load() {
 
 pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & request) {
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
-    return navitia::autocomplete::autocomplete(request.q(), vector_of_pb_types(request), request.depth(), request.count(), vector_of_admins(request), request.search_type(), *(*this->data));
+    return navitia::autocomplete::autocomplete(request.q(),
+            vector_of_pb_types(request), request.depth(), request.count(),
+            vector_of_admins(request), request.search_type(), *(*this->data));
 }
 
-pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest & request, pbnavitia::API api) {
+pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest &request,
+        pbnavitia::API api) {
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     this->init_worker_data();
     try {
         switch(api){
         case pbnavitia::NEXT_DEPARTURES:
-            return navitia::timetables::next_departures(request.departure_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(),type::AccessibiliteParams(), *(*this->data), request.count(), request.start_page());
+            return timetables::next_departures(request.departure_filter(),
+                    request.from_datetime(), request.duration(),
+                    request.nb_stoptimes(), request.depth(),
+                    type::AccessibiliteParams(), *(*this->data), request.count(),
+                    request.start_page());
         case pbnavitia::NEXT_ARRIVALS:
-            return navitia::timetables::next_arrivals(request.arrival_filter(), request.from_datetime(), request.duration(), request.nb_stoptimes(), request.depth(), type::AccessibiliteParams(), *(*this->data), request.count(), request.start_page());
+            return timetables::next_arrivals(request.arrival_filter(),
+                    request.from_datetime(), request.duration(),
+                    request.nb_stoptimes(), request.depth(),
+                    type::AccessibiliteParams(),
+                    *(*this->data), request.count(), request.start_page());
         case pbnavitia::STOPS_SCHEDULES:
-            return navitia::timetables::stops_schedule(request.departure_filter(), request.arrival_filter(), request.from_datetime(), request.duration(), request.depth(), *(*this->data));
+            return timetables::stops_schedule(request.departure_filter(),
+                    request.arrival_filter(), request.from_datetime(),
+                    request.duration(), request.depth(), *(*this->data));
         case pbnavitia::DEPARTURE_BOARDS:
-            return navitia::timetables::departure_board(request.departure_filter(), request.from_datetime(), request.duration(), request.interface_version(), request.count(), request.start_page(), *(*this->data));
+            return timetables::departure_board(request.departure_filter(),
+                    request.from_datetime(), request.duration(),
+                    request.interface_version(), request.count(),
+                    request.start_page(), *(*this->data));
         case pbnavitia::ROUTE_SCHEDULES:
-            return navitia::timetables::route_schedule(request.departure_filter(), request.from_datetime(), request.duration(), request.depth(),request.count(), request.start_page(), *(*this->data));
+            return timetables::route_schedule(request.departure_filter(),
+                    request.from_datetime(), request.duration(),
+                    request.depth(),request.count(), request.start_page(), *(*this->data));
         default:
             LOG4CPLUS_WARN(logger, "On a reçu une requête time table inconnue");
             pbnavitia::Response response;
-            fill_pb_error(pbnavitia::Error::unknown_api, "Unknown time table api",response.mutable_error());
-//            response.set_error("Unknown time table api");
+            fill_pb_error(pbnavitia::Error::unknown_api, "Unknown time table api",
+                    response.mutable_error());
             return response;
         }
 
     } catch (navitia::ptref::parsing_error error) {
         LOG4CPLUS_ERROR(logger, "Error in the ptref request  : "+ error.more);
         pbnavitia::Response response;
-        fill_pb_error(pbnavitia::Error::bad_filter, "Unknow filter : " + error.more,response.mutable_error());
-//        response.set_error("Unknow filter : " + error.more);
+        const auto str_error = "Unknow filter : " + error.more;
+        fill_pb_error(pbnavitia::Error::bad_filter, str_error, response.mutable_error());
         return response;
     }
 }
@@ -161,7 +180,8 @@ type::GeographicalCoord Worker::coord_of_entry_point(const type::EntryPoint & en
     if(entry_point.type == Type_e::Address){
         auto way = (*this->data)->geo_ref.way_map.find(entry_point.uri);
         if (way != (*this->data)->geo_ref.way_map.end()){
-            result = (*this->data)->geo_ref.ways[way->second]->nearest_coord(entry_point.house_number, (*this->data)->geo_ref.graph);
+            const auto geo_way = (*this->data)->geo_ref.ways[way->second];
+            result = geo_way->nearest_coord(entry_point.house_number, (*this->data)->geo_ref.graph);
         }
     } else if (entry_point.type == Type_e::StopPoint) {
         auto sp_it = (*this->data)->pt_data.stop_points_map.find(entry_point.uri);
@@ -256,12 +276,16 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
 
     if(api != pbnavitia::ISOCHRONE){
         return routing::make_response(*calculateur, origin, destination, datetimes,
-                                              request.clockwise(), request.streetnetwork_params().walking_speed(), request.streetnetwork_params().walking_distance(), accessibilite_params,
-                                              forbidden, *street_network_worker, request.max_duration(), request.max_transfers());
+                request.clockwise(), request.streetnetwork_params().walking_speed(),
+                request.streetnetwork_params().walking_distance(), accessibilite_params,
+                forbidden, *street_network_worker, request.max_duration(),
+                request.max_transfers());
     } else {
         return navitia::routing::make_isochrone(*calculateur, origin, request.datetimes(0),
-                                                        request.clockwise(), request.streetnetwork_params().walking_speed(), request.streetnetwork_params().walking_distance(), accessibilite_params,
-                                                forbidden, *street_network_worker, request.max_duration(), request.max_transfers());
+                request.clockwise(), request.streetnetwork_params().walking_speed(),
+                request.streetnetwork_params().walking_distance(), accessibilite_params,
+                forbidden, *street_network_worker, request.max_duration(),
+                request.max_transfers());
     }
 }
 
