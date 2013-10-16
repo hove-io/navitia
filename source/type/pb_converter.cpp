@@ -625,14 +625,14 @@ void fill_pb_object(const georef::POI* geopoi, const type::Data &data,
 
 void fill_pb_object(const navitia::type::StopTime* stop_time,
                     const nt::Data& data,
-                    pbnavitia::ScheduleStopTime* rs_stop_time, int,
+                    pbnavitia::ScheduleStopTime* rs_date_time, int,
                     const boost::posix_time::ptime&,
                     const boost::posix_time::time_period&,
                     const DateTime& date_time){
     if(stop_time != nullptr) {
-        rs_stop_time->set_stop_time(iso_string(DateTimeUtils::date(date_time),
+        rs_date_time->set_date_time(iso_string(DateTimeUtils::date(date_time),
                                     DateTimeUtils::hour(date_time), data));
-        pbnavitia::hasPropertie * hn = rs_stop_time->mutable_has_properties();
+        pbnavitia::hasPropertie * hn = rs_date_time->mutable_has_properties();
         if ((!stop_time->drop_off_allowed()) && stop_time->pick_up_allowed()){
             hn->add_additional_informations(pbnavitia::hasPropertie::PICK_UP_ONLY);
         }
@@ -660,7 +660,7 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
             }
         }
     }else {
-        rs_stop_time->set_stop_time("");
+        rs_date_time->set_date_time("");
     }
 }
 

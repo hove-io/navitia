@@ -148,7 +148,8 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
         case pbnavitia::ROUTE_SCHEDULES:
             return timetables::route_schedule(request.departure_filter(),
                     request.from_datetime(), request.duration(),
-                    request.depth(),request.count(), request.start_page(), *(*this->data));
+                    request.interface_version(), request.depth(),
+                    request.count(), request.start_page(), *(*this->data));
         default:
             LOG4CPLUS_WARN(logger, "On a reçu une requête time table inconnue");
             pbnavitia::Response response;
