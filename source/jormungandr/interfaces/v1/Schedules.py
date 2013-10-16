@@ -60,13 +60,13 @@ class Schedules(ResourceUri):
 
 
 date_time = {
-    "date_time" : fields.String(attribute="stop_time"),
+    "date_time" : fields.String(),
     "additional_informations" : additional_informations(),
     "links": notes_links
 }
 row = {
     "stop_point" : PbField(stop_point),
-    "date_times" : fields.List(fields.Nested(date_time), attribute="stop_times")
+    "date_times" : fields.List(fields.Nested(date_time))
 }
 
 header = {
@@ -93,6 +93,7 @@ class RouteSchedules(Schedules):
 
     def __init__(self):
         super(RouteSchedules, self).__init__("route_schedules")
+        self.parsers["get"].add_argument("interface_version", type=int, default=1, hidden=True)
     @marshal_with(route_schedules)
     @ManageError()
     def get(self, uri=None, region=None, lon= None, lat=None):
@@ -115,7 +116,7 @@ stop_schedules = {
 class StopSchedules(Schedules):
     def __init__(self):
         super(StopSchedules, self).__init__("departure_boards")
-        self.parsers["get"].add_argument("interface_version", type=int, default=1)
+        self.parsers["get"].add_argument("interface_version", type=int, default=1, hidden=True)
     @marshal_with(stop_schedules)
     @ManageError()
     def get(self, uri=None, region=None, lon= None, lat=None):
