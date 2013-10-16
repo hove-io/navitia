@@ -44,12 +44,30 @@ void create_pb(const std::vector<t_result>& result, uint32_t depth, const nt::Da
             place->set_distance(coord.distance_to(coord_item));
             place->set_embedded_type(pbnavitia::POI);
             break;
+        case nt::Type_e::Address:
+            fill_pb_object(data.geo_ref.ways[idx], data, place->mutable_address(),
+                           data.geo_ref.ways[idx]->nearest_number(coord), coord , depth);
+            place->set_name(data.geo_ref.ways[idx]->name);
+            place->set_uri(data.geo_ref.ways[idx]->uri + ":" + boost::lexical_cast<std::string>(data.geo_ref.ways[idx]->nearest_number(coord)));
+            place->set_distance(coord.distance_to(coord_item));
+            place->set_embedded_type(pbnavitia::ADDRESS);
         default:
             break;
         }
     }
 }
 
+template<typename T>
+void sort_cut(std::vector<T> &list, const uint32_t end_pagination,
+              const type::GeographicalCoord& coord) {
+    if(!list.empty()) {
+        auto nb_sort = (list.size() < end_pagination) ? list.size():end_pagination;
+        std::partial_sort(list.begin(), list.begin() + nb_sort, list.end(),
+            [&](idx_coord a, idx_coord b)
+            {return coord.distance_to(a.second)< coord.distance_to(b.second);});
+        list.resize(nb_sort);
+    }
+}
 
 pbnavitia::Response find(const type::GeographicalCoord& coord, const double distance,
                          const std::vector<nt::Type_e>& filter,
@@ -60,31 +78,33 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
     std::vector<t_result > result;
     auto end_pagination = (start_page+1)*count;
     for(nt::Type_e type : filter){
-        std::vector<idx_coord> list;
-        switch(type){
-        case nt::Type_e::StopArea:
-            list = data.pt_data.stop_area_proximity_list.find_within(coord, distance);
-            break;
-        case nt::Type_e::StopPoint:
-            list = data.pt_data.stop_point_proximity_list.find_within(coord, distance);
-            break;
-        case nt::Type_e::POI:
-            list = data.geo_ref.poi_proximity_list.find_within(coord, distance);
-            break;
-        default: break;
-        }
-        if(!list.empty()) {
+        if(type == nt::Type_e::Address) {
+           try {
+               georef::edge_t e = data.geo_ref.nearest_edge(coord, data.geo_ref.pl);
+               ++ total_result;
+               georef::Way *way = data.geo_ref.ways[data.geo_ref.graph[e].way_idx];
+               result.push_back(t_result(way->idx, coord, type));
+           } catch(proximitylist::NotFound) {}
+        } else{
+            std::vector< std::pair<type::idx_t, type::GeographicalCoord> > list;
+            switch(type){
+            case nt::Type_e::StopArea:
+                list = data.pt_data.stop_area_proximity_list.find_within(coord, distance);
+                break;
+            case nt::Type_e::StopPoint:
+                list = data.pt_data.stop_point_proximity_list.find_within(coord, distance);
+                break;
+            case nt::Type_e::POI:
+                list = data.geo_ref.poi_proximity_list.find_within(coord, distance);
+                break;
+            default: break;
+            }
             total_result += list.size();
-            auto nb_sort = (list.size() < end_pagination) ? list.size():end_pagination;
-            std::partial_sort(list.begin(), list.begin() + nb_sort, list.end(),
-                [&](idx_coord a, idx_coord b)
-                {return coord.distance_to(a.second)< coord.distance_to(b.second);});
-            list.resize(nb_sort);
+            sort_cut<idx_coord>(list, end_pagination, coord);
             for(auto idx_coord : list) {
                 result.push_back(t_result(idx_coord.first, idx_coord.second, type));
             }
         }
-
     }
     auto nb_sort = (result.size() < end_pagination) ? result.size():end_pagination;
     std::partial_sort(result.begin(), result.begin() + nb_sort, result.end(),
