@@ -16,7 +16,7 @@ class TimeTables(Resource):
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("from_datetime", type=str, required=True,
                description=" The date from which you want the times")
-        self.parsers["get"].add_argument("duration", type=int, default=3600,
+        self.parsers["get"].add_argument("duration", type=int, default=86400,
                description="""Maximum duration between the datetime and the
                               last retrieved stop time""")
         self.parsers["get"].add_argument("nb_stoptimes", type=int, default=100,
