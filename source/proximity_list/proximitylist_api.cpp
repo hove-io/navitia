@@ -51,9 +51,9 @@ void create_pb(const std::vector<t_result>& result, uint32_t depth, const nt::Da
 }
 
 
-pbnavitia::Response find(type::GeographicalCoord coord, double distance,
-                         const std::vector<nt::Type_e> & filter,
-                         uint32_t depth, uint32_t count, uint32_t start_page,
+pbnavitia::Response find(const type::GeographicalCoord& coord, const double distance,
+                         const std::vector<nt::Type_e>& filter,
+                         const uint32_t depth, const uint32_t count, const uint32_t start_page,
                          const type::Data & data) {
     pbnavitia::Response response;
     int total_result = 0;
