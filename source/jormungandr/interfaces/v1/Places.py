@@ -88,7 +88,9 @@ class PlacesNearby(ResourceUri):
                     except ValueError:
                         pass
                 else:
-                    abort(500, "Not implemented yet")
+                    abort(500, message="Not implemented yet")
+        else:
+            abort(404)
         response = NavitiaManager().dispatch(args, self.region, "places_nearby")
         return response, 200
 
