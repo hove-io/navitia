@@ -34,7 +34,7 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
             place->set_embedded_type(pbnavitia::STOP_POINT);
             break;
         case nt::Type_e::Address:
-            fill_pb_object(data.geo_ref.ways[result_item.idx], data, place->mutable_address(), result_item.house_number,result_item.coord, depth);
+            fill_pb_object(data.geo_ref.ways[result_item.idx], data, place->mutable_address(), result_item.house_number, result_item.coord, depth);
             place->set_name(data.geo_ref.ways[result_item.idx]->name);
             place->set_uri(data.geo_ref.ways[result_item.idx]->uri+":"+boost::lexical_cast<std::string>(result_item.house_number));
             place->set_quality(result_item.quality);
