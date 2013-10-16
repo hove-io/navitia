@@ -93,12 +93,12 @@ pbnavitia::Response Worker::metadatas() {
 }
 
 void Worker::init_worker_data(){
-    if((*this->data)->last_load_at != this->last_load_at || !calculateur){
-        calculateur = std::unique_ptr<routing::RAPTOR>(new routing::RAPTOR(*(*this->data)));
+    if((*this->data)->last_load_at != this->last_load_at || !planner){
+        planner = std::unique_ptr<routing::RAPTOR>(new routing::RAPTOR(*(*this->data)));
         street_network_worker = std::unique_ptr<streetnetwork::StreetNetwork>(new streetnetwork::StreetNetwork((*this->data)->geo_ref));
         this->last_load_at = (*this->data)->last_load_at;
 
-        LOG4CPLUS_INFO(logger, "instanciation du calculateur");
+        LOG4CPLUS_INFO(logger, "instanciation du planner");
     }
 }
 
@@ -275,13 +275,13 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     type::AccessibiliteParams accessibilite_params;
 
     if(api != pbnavitia::ISOCHRONE){
-        return routing::make_response(*calculateur, origin, destination, datetimes,
+        return routing::make_response(*planner, origin, destination, datetimes,
                 request.clockwise(), request.streetnetwork_params().walking_speed(),
                 request.streetnetwork_params().walking_distance(), accessibilite_params,
                 forbidden, *street_network_worker, request.max_duration(),
                 request.max_transfers());
     } else {
-        return navitia::routing::make_isochrone(*calculateur, origin, request.datetimes(0),
+        return navitia::routing::make_isochrone(*planner, origin, request.datetimes(0),
                 request.clockwise(), request.streetnetwork_params().walking_speed(),
                 request.streetnetwork_params().walking_distance(), accessibilite_params,
                 forbidden, *street_network_worker, request.max_duration(),
