@@ -48,11 +48,7 @@ def v1_routing(api):
     api.app.url_map.converters['lat'] = LatConverter
     api.app.url_map.converters['uri'] = UriConverter
     api.app.url_map.converters['id'] = IdConverter
-
-    #We redirect all the coverage uri ending by a /
-    @api.app.route('/v1/coverage/<path:uri>/')
-    def redirect_slash(uri):
-        return redirect('/v1/coverage/'+uri, code=301)
+    api.app.url_map.strict_slashes = False
 
     api.add_resource(Index.Index,
                      '/v1/',
@@ -64,12 +60,8 @@ def v1_routing(api):
     coord = coverage + '<lon:lon>;<lat:lat>/'
 
     api.add_resource(Coverage.Coverage,
-                     coverage[:-1],
                      coverage,
-                     region[:-1],
                      region,
-                     coord[:-1],
-                     coord,
                      endpoint='v1.coverage')
 
 
