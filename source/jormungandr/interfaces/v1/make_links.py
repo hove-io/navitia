@@ -230,7 +230,8 @@ class clean_links(object):
             if isinstance(data, OrderedDict) and "links" in data.keys():
                 for link in data['links']:
                     link['href'] = link['href'].replace("%7B", "{")\
-                                               .replace("%7D", "}")
+                                               .replace("%7D", "}")\
+                                               .replace("%3B", ";")
             if isinstance(response, tuple):
                 return data, code, header
             else:
