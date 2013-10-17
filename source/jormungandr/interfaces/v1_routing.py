@@ -4,25 +4,33 @@ from v1 import Coverage
 from v1 import Journeys
 from v1 import Schedules
 from v1 import Places
+from v1 import Coord
 from v1 import converters_collection_type
-from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
-from flask import redirect
+from werkzeug.routing import BaseConverter, FloatConverter, PathConverter, ValidationError
+from flask import redirect, current_app
 
 class RegionConverter(BaseConverter):
     """ The region you want to query"""
     def __init__(self, *args, **kwargs):
         BaseConverter.__init__(self, *args, **kwargs)
         self.type_ = "string"
+        self.regex = '[^(/;)]+'
+
 class LonConverter(FloatConverter):
     """ The longitude of where the coord you want to query"""
     def __init__(self, *args, **kwargs):
         FloatConverter.__init__(self, *args, **kwargs)
         self.type_ = "float"
+        self.regex = '-?\\d+(\\.\\d+)?'
+
 class LatConverter(FloatConverter):
     """ The latitude of where the coord you want to query"""
     def __init__(self, *args, **kwargs):
         FloatConverter.__init__(self, *args, **kwargs)
         self.type_ = "float"
+        self.regex = '-?\\d+(\\.\\d+)?'
+
+
 class UriConverter(PathConverter):
     """First part of the uri"""
     def __init__(self, *args, **kwargs):
