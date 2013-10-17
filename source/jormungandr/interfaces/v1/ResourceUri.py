@@ -1,5 +1,5 @@
 from flask.ext.restful import Resource
-from converters_collection_type import collections_to_resource_type
+from converters_collection_type import collections_to_resource_type, resource_type_to_collection
 from make_links import add_id_links, clean_links, add_pagination_links
 from functools import wraps
 from collections import OrderedDict
@@ -59,8 +59,10 @@ class add_computed_resources(object):
             kwargs["_external"] = True
             templated = True
             for key in data.keys():
-                if key != 'links' and key != 'pagination' and key != 'error':
+                if key in collections_to_resource_type.keys():
                     collection = key
+                if key in resource_type_to_collection.keys():
+                    collection = resource_type_to_collection[key]
             if collection is None:
                 return response
             kwargs["uri"] = collection + '/'
