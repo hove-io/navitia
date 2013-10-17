@@ -281,7 +281,7 @@ class Journeys(ResourceUri):
             if uri:
                 objects = uri.split("/")
                 if objects and len(objects) % 2 == 0:
-                    args["origin"] = objects[-1]
+                    args["origin"] =  self.transform_id(objects[-1])
                 else:
                     return {"error" : "Unable to compute journeys from this \
                                        object"}, 503
