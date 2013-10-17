@@ -70,7 +70,7 @@ class add_computed_resources(object):
                 templated = False
             else:
                 kwargs["uri"] += '{' + collection + ".id}"
-            if collection in ['stop_areas', 'stop_points', 'lines', 'routes']:
+            if collection in ['stop_areas', 'stop_points', 'lines', 'routes', 'addresses']:
                 for api in ['route_schedules', 'stop_schedules',
                             'arrivals', 'departures']:
                     data['links'].append({
@@ -78,7 +78,7 @@ class add_computed_resources(object):
                         "rel" : api,
                         "templated" : templated
                             })
-            if collection in ['stop_areas', 'stop_points']:
+            if collection in ['stop_areas', 'stop_points', 'addresses']:
                 data['links'].append({
                     "href" : url_for("v1.journeys", **kwargs),
                     "rel" : "journeys",
