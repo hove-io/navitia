@@ -5,17 +5,28 @@ import signal
 import os
 from conf import base_url
 from instance_manager import NavitiaManager, RegionNotFound
-from flask import Flask, url_for
+from flask import Flask, url_for, make_response
 from flask.ext.restful import Api
 from interfaces.v0_routing import v0_routing
 from interfaces.v1_routing import v1_routing
 from interfaces.documentation import v0_documentation, v1_documentation
 import os
 from werkzeug.serving import run_simple
+from flask import request
+import dict2xml
+
+def output_xml(data, code, headers=None):
+    """Makes a Flask response with a XML encoded body"""
+    data_xml = dict2xml.dict2xml({'response' :data})
+    resp = make_response(data_xml, code)
+    resp.headers.extend(headers or {})
+    return resp
 
 app = Flask(__name__)
 app.debug = True
 app.config.update(PROPAGATE_EXCEPTIONS=True)
+api = Api(app, catch_all_404s=True)
+api.representations['application/xml'] = output_xml
 api = Api(app)
 
 v1_routing(api)
