@@ -49,7 +49,7 @@ class add_pagination_links(object):
                     endpoint = "v1."+key+"."
                     endpoint += "id" if "id" in kwargs.keys() else "collection"
                 elif key in ["journeys", "stop_schedules", "route_schedules",
-                             "departures", "arrivals"]:
+                             "departures", "arrivals", "places_nearby"]:
                     endpoint = "v1."+key
             if pagination and endpoint:
                 pagination = data["pagination"]
