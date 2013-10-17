@@ -104,8 +104,9 @@ class add_address_id(object):
                         add_id(item)
                 elif isinstance(objects, dict) or\
                      isinstance(objects, OrderedDict):
-                         if 'embedded_type' in objects.keys() and\
-                            objects['embedded_type'] == 'address' :
+                         if ('embedded_type' in objects.keys() and\
+                            objects['embedded_type'] == 'address') or\
+                            'address' in objects.keys():
                             objects['id'] = objects['address']['coord']['lon']+';'+objects['address']['coord']['lat']
                             objects['address']['id'] = objects['id']
                          else :
