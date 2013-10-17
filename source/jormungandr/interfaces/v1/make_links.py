@@ -1,11 +1,10 @@
-from flask import request, url_for, Flask, Request
-import collections
+from flask import url_for
 from collections import OrderedDict
 from functools import wraps
 from converters_collection_type import resource_type_to_collection,\
                                        collections_to_resource_type
-from flask import Request
 from flask.ext.restful.utils import unpack
+
 
 class generate_links(object):
     def prepare_objetcs(self, objects, hasCollections=False):
