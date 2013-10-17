@@ -1,11 +1,10 @@
 #coding=utf-8
-from flask import Flask
 from flask.ext.restful import Resource, fields, marshal_with
 from instance_manager import NavitiaManager
-from flask import url_for, request
 from make_links import add_coverage_link, add_collection_links, clean_links
 from converters_collection_type import collections_to_resource_type
 from collections import OrderedDict
+
 
 region_fields = {
     "id": fields.String(attribute="region_id"),
