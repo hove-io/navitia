@@ -15,8 +15,8 @@ places = { "places" : NonNullList(NonNullNested(place))}
 
 class Places(ResourceUri):
     parsers = {}
-    def __init__(self):
-        super(Places, self).__init__()
+    def __init__(self, *args, **kwargs):
+        ResourceUri.__init__(self, *args, **kwargs)
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("q", type=unicode, required=True,
                 description="The data to search")
@@ -52,7 +52,8 @@ places_nearby = { "places_nearby" : NonNullList(NonNullNested(place_nearby)),
 
 class PlacesNearby(ResourceUri):
     parsers = {}
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        ResourceUri.__init__(self, *args, **kwargs)
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         self.parsers["get"].add_argument("type[]", type=str,
