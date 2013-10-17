@@ -221,10 +221,10 @@ class clean_links(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             response = f(*args, **kwargs)
-            if response[1] != 200:
-                return response
             if isinstance(response, tuple):
                 data, code, header = unpack(response)
+                if code!=200:
+                    return data, code, header
             else:
                 data = response
             if isinstance(data, OrderedDict) and "links" in data.keys():
