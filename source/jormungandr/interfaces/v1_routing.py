@@ -84,10 +84,10 @@ def v1_routing(api):
             coord + collection + '/<id:id>',
             region + '<uri:uri>/' + collection + '/<id:id>',
             coord + '<uri:uri>/' + collection + '/<id:id>',
-                        endpoint='v1.'+collection+'.id')
+                            endpoint='v1.'+collection+'.id')
         api.app.add_url_rule('/v1/coverage/'+collection+ '/<string:id>',
-                             'v1.'+collection+'.redirect',
-                             Uri.Redirect)
+            'v1.'+collection+'.redirect',
+            Uri.Redirect)
 
     api.add_resource(Places.Places,
                      region+'places',
@@ -137,4 +137,3 @@ def v1_routing(api):
                      '/v1/stop_schedules',
                      endpoint='v1.stop_schedules',
                      )
-
