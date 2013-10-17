@@ -188,7 +188,7 @@ class add_id_links(generate_links):
                     if not uri_id:
                         kwargs["id"] = "{"+obj+".id}"
                     endpoint = "v1."+kwargs["collection"]+"."
-                    endpoint += "id" if "region" in kwargs.keys()\
+                    endpoint += "id" if "region" in kwargs.keys() or "lon" in kwargs.keys()\
                                         else "redirect"
                     del kwargs["collection"]
                     url = url_for(endpoint, _external=True, **kwargs)
