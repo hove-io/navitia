@@ -72,7 +72,7 @@ class add_computed_resources(object):
                 kwargs["uri"] += '{' + collection + ".id}"
             if collection in ['stop_areas', 'stop_points', 'lines', 'routes', 'addresses']:
                 for api in ['route_schedules', 'stop_schedules',
-                            'arrivals', 'departures']:
+                            'arrivals', 'departures', "places_nearby"]:
                     data['links'].append({
                         "href" : url_for("v1."+api, **kwargs),
                         "rel" : api,
