@@ -110,13 +110,13 @@ pbnavitia::Response Worker::load() {
 }
 
 
-
 pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & request) {
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     return navitia::autocomplete::autocomplete(request.q(),
             vector_of_pb_types(request), request.depth(), request.count(),
             vector_of_admins(request), request.search_type(), *(*this->data));
 }
+
 
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest &request,
         pbnavitia::API api) {
@@ -167,6 +167,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     }
 }
 
+
 pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest &request) {
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     type::EntryPoint ep((*data)->get_type_of_id(request.uri()), request.uri());
@@ -175,6 +176,7 @@ pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest 
                                request.depth(), request.count(), request.start_page(),
                                *(*this->data));
 }
+
 
 type::GeographicalCoord Worker::coord_of_entry_point(const type::EntryPoint & entry_point) {
     type::GeographicalCoord result;
@@ -199,6 +201,7 @@ type::GeographicalCoord Worker::coord_of_entry_point(const type::EntryPoint & en
     }
     return result;
 }
+
 
 type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams & request, const bool use_second){
     type::StreetNetworkParams result;
@@ -234,6 +237,59 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
             break;
     }
     return result;
+}
+
+
+pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request) {
+    boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
+    this->init_worker_data();
+    pbnavitia::Response pb_response;
+
+    if(request.uri().size()>6 && request.uri().substr(0,6) == "coord:") {
+        type::EntryPoint ep(type::Type_e::Coord, request.uri());
+        auto coord = this->coord_of_entry_point(ep);
+        auto tmp = proximitylist::find(coord, 100, {type::Type_e::Address}, 1, 1, 0, *(*this->data));
+        if(tmp.places_nearby().size() == 1){
+            auto place = pb_response.add_places();
+            place->CopyFrom(tmp.places_nearby(0));
+        }
+        return pb_response;
+    }
+    pbnavitia::Place* place = pb_response.add_places();
+    auto it_sa = (*data)->pt_data.stop_areas_map.find(request.uri());
+    if(it_sa != (*data)->pt_data.stop_areas_map.end()) {
+        fill_pb_object(it_sa->second, **data, place->mutable_stop_area(), 1);
+        place->set_embedded_type(pbnavitia::STOP_AREA);
+        place->set_name(place->stop_area().name());
+        place->set_uri(place->stop_area().uri());
+    } else {
+        auto it_sp = (*data)->pt_data.stop_points_map.find(request.uri());
+        if(it_sp != (*data)->pt_data.stop_points_map.end()) {
+            fill_pb_object(it_sp->second, **data, place->mutable_stop_point(), 1);
+            place->set_embedded_type(pbnavitia::STOP_POINT);
+            place->set_name(place->stop_point().name());
+            place->set_uri(place->stop_point().uri());
+        } else {
+            auto it_poi = (*data)->geo_ref.poi_map.find(request.uri());
+            if(it_poi != (*data)->geo_ref.poi_map.end()) {
+                fill_pb_object((*data)->geo_ref.pois[it_poi->second], **data,
+                        place->mutable_poi(), 1);
+                place->set_embedded_type(pbnavitia::POI);
+                place->set_name(place->poi().name());
+                place->set_uri(place->poi().uri());
+            } else {
+                auto it_admin = (*data)->geo_ref.admin_map.find(request.uri());
+                if(it_admin != (*data)->geo_ref.admin_map.end()) {
+                    fill_pb_object((*data)->geo_ref.admins[it_admin->second],
+                            **data, place->mutable_administrative_region(), 1);
+                    place->set_embedded_type(pbnavitia::ADMIN);
+                    place->set_name(place->administrative_region().name());
+                    place->set_uri(place->administrative_region().uri());
+                }
+            }
+        }
+    }
+    return pb_response;
 }
 
 pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api) {
@@ -290,6 +346,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     }
 }
 
+
 pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     return navitia::ptref::query_pb(get_type(request.requested_type()),
@@ -309,6 +366,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
     case pbnavitia::STATUS: return status(); break;
     case pbnavitia::LOAD: return load(); break;
     case pbnavitia::places: return autocomplete(request.places()); break;
+    case pbnavitia::place_uri: return place_uri(request.place_uri()); break;
     case pbnavitia::ROUTE_SCHEDULES:
     case pbnavitia::NEXT_DEPARTURES:
     case pbnavitia::NEXT_ARRIVALS:
