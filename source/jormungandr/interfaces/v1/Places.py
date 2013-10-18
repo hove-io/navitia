@@ -43,6 +43,21 @@ class Places(ResourceUri):
         if len(places) == 0:
             args["search_type"] = 1
             response = NavitiaManager().dispatch(args, self.region, "places")
+
+class PlaceUri(ResourceUri):
+    @marshal_with(places)
+    def get(self, id, region=None, lon=None, lat=None):
+        self.region = NavitiaManager().get_region(region, lon, lat)
+        args = {}
+        if id.count(";") == 1:
+            lon, lat = id.split(";")
+            try:
+                args["uri"] = "coord:"+str(float(lon))+":"+str(float(lat))
+            except ValueError:
+                pass
+        if not "uri" in args.keys():
+            args["uri"] = id
+        response = NavitiaManager().dispatch(args, self.region, "place_uri")
         return response, 200
 
 place_nearby = deepcopy(place)

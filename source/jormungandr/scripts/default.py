@@ -31,7 +31,7 @@ class Script:
                      "connections", "journey_pattern_points",
                      "journey_patterns", "companies", "vehicle_journeys",
                      "pois", "poi_types", "journeys", "isochrone", "metadatas",
-                     "status", "load", "networks"]
+                     "status", "load", "networks", "place_uri"]
 
 
 
@@ -109,6 +109,11 @@ class Script:
 
         return resp
 
+    def place_uri(self, request, region):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.place_uri
+        req.place_uri.uri = request["uri"]
+        return NavitiaManager().send_and_receive(req, region)
 
     def __stop_times(self, request, region, departure_filter, arrival_filter, api):
         req = request_pb2.Request()

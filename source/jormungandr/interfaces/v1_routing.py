@@ -95,6 +95,12 @@ def v1_routing(api):
                      endpoint = 'v1.places'
                      )
 
+    api.add_resource(Places.PlaceUri,
+                     region+'places/<id:id>',
+                     coord+'places/<id:id>',
+                     endpoint = 'v1.place_uri'
+                     )
+
     api.add_resource(Places.PlacesNearby,
                      region+'places_nearby',
                      coord+'places_nearby',
