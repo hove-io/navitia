@@ -36,6 +36,7 @@ enum API {
     STOPS_SCHEDULES = 12;
     ISOCHRONE = 13;
     METADATAS = 14;
+    place_uri = 15;
 }
 
 enum VehicleJourneyType{
