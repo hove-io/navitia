@@ -16,6 +16,14 @@ from werkzeug.serving import run_simple
 from flask import request
 import dict2xml
 
+
+
+app = Flask(__name__)
+app.debug = True
+app.config.update(PROPAGATE_EXCEPTIONS=True)
+api = Api(app, catch_all_404s=True)
+
+@api.representation("application/xml")
 def output_xml(data, code, headers=None):
     """Makes a Flask response with a XML encoded body"""
     data_xml = dict2xml.dict2xml({'response' :data})
@@ -23,6 +31,8 @@ def output_xml(data, code, headers=None):
     resp.headers.extend(headers or {})
     return resp
 
+@api.representation("text/jsonp")
+@api.representation("application/jsonp")
 def output_jsonp(data, code, headers=None):
     resp = json.output_json(data, code, headers)
     callback = request.args.get('callback', False)
@@ -30,13 +40,6 @@ def output_jsonp(data, code, headers=None):
         resp.data = str(callback)+'(' + resp.data + ')'
     return resp
 
-app = Flask(__name__)
-app.debug = True
-app.config.update(PROPAGATE_EXCEPTIONS=True)
-api = Api(app, catch_all_404s=True)
-api.representations['application/xml'] = output_xml
-api.representations['application/jsonp'] = output_jsonp
-api.representations['text/jsonp'] = output_jsonp
 
 v1_routing(api)
 v0_routing(api)
