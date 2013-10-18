@@ -39,10 +39,7 @@ class Places(ResourceUri):
         self.region = NavitiaManager().get_region(region, lon, lat)
         args = self.parsers["get"].parse_args()
         response = NavitiaManager().dispatch(args, self.region, "places")
-        places = getattr(response, "places")
-        if len(places) == 0:
-            args["search_type"] = 1
-            response = NavitiaManager().dispatch(args, self.region, "places")
+        return response, 200
 
 class PlaceUri(ResourceUri):
     @marshal_with(places)

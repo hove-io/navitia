@@ -82,7 +82,7 @@ class Script:
         req.places.q     = request['q']
         req.places.depth = request['depth']
         req.places.count = request['count']
-	req.places.search_type = request['search_type']
+        req.places.search_type = request['search_type']
         if request["type[]"]:
             for type in request["type[]"]:
                 req.places.types.append(pb_type[type])
@@ -92,6 +92,9 @@ class Script:
                 req.places.admin_uris.append(admin_uri)
 
         resp = NavitiaManager().send_and_receive(req, region)
+        if len(resp.places) == 0 and search_type == 0:
+            request["search_type"] = 1
+            return self.places(request, region)
         self.__pagination(request, "places", resp)
 
         for place in resp.places:
