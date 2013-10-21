@@ -1,3 +1,17 @@
+navitia2 (0.70) UNRELEASED; urgency=low
+
+  * Separation des paquets
+  * Prolongements de service
+  * Correction des itineraires
+  * Amelioration de places nearby
+  * Prise en compte des aeroports
+  * Meilleure gestion des horaires en frequences
+  * Retro compatibilite de la v0
+  * Sortie JSONP
+  * Ajout de broke et Sindri
+
+ -- vlara <vlara@vlara-OptiPlex-790>  Mon, 21 Oct 2013 14:10:14 +0200
+
 navitia2 (0.63.00) unstable; urgency=low
 
   [ Alexandre Jacquin ]
