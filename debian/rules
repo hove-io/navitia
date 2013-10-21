@@ -1,0 +1,37 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE = 1
+
+PYTHON2=$(shell pyversions -vr)
+
+# Prevent setuptools/distribute from accessing the internet.
+export http_proxy = http://127.0.0.1:9
+
+%:
+	dh $@ --sourcedirectory=source --builddirectory=build_package --parallel --max-parallel=4
+
+override_dh_auto_configure:
+	dh_auto_configure -- -DCMAKE_BUILD_TYPE=Release
+
+override_dh_auto_build:
+	dh_auto_build -- -j4
+	cd source/pyed && python$* setup.py build
+	cd source/sindri && python$* setup.py build
+
+override_dh_auto_install:
+	dh_auto_install
+	cd source/pyed && python$* setup.py install --root=$(CURDIR)/debian/tmp --install-layout=deb
+	cd source/sindri && python$* setup.py install --root=$(CURDIR)/debian/tmp --install-layout=deb
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf source/pyed/build
+	rm -rf source/sindri/build
+
+override_dh_strip:
+	dh_strip -pnavitia-kraken --dbg-package=navitia-kraken-dbg
+	dh_strip -pnavitia-ed --dbg-package=navitia-ed-dbg
+
+#pour tester sous ubuntu:
+#override_dh_shlibdeps:
+#	dh_shlibdeps --dpkg-shlibdeps-params=--ignore-missing-info

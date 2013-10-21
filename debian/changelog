@@ -1,0 +1,498 @@
+navitia2 (0.70) UNRELEASED; urgency=low
+
+  * Separation des paquets
+  * Prolongements de service
+  * Correction des itineraires
+  * Amelioration de places nearby
+  * Prise en compte des aeroports
+  * Meilleure gestion des horaires en frequences
+  * Retro compatibilite de la v0
+  * Sortie JSONP
+  * Ajout de broke et Sindri
+
+ -- vlara <vlara@vlara-OptiPlex-790>  Mon, 21 Oct 2013 14:10:14 +0200
+
+navitia2 (0.63.00) unstable; urgency=low
+
+  [ Alexandre Jacquin ]
+  * Debian : Ajout de pyed
+  *
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Thu, 10 Oct 2013 11:58:55 +0200
+
+navitia2 (0.62.41) unstable; urgency=low
+
+  [ Vincent Lara ]
+  * Debian : Ajout de la dépendance à python-six
+  * Jormungandr : Correction des fichiers à installer
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 10 Sep 2013 11:40:18 +0200
+
+kraken (0.62.40) quantal; urgency=low
+
+  * Debut de qqc
+  * Jörmungandr : Suppression de apis et validation
+  * Instance manager : On ne va plus lire des valeurs par défaut dans la conf
+  * Jörmungandr : Definition des apis appelables dans le script
+  * ptref : On enlève un std::cout
+  * PbConverter : Début de lintage
+  * Jörmungandr : Mega refacto qui utilise une version custome de flask-restfull
+  * Add module flask-restful
+  * Jormungandr : Gestion des listes vides
+  * Submodule update
+  * Pulled down update to libutils
+  * Transverse : Compilation de utils en premier
+  * Raptor : Un bout de debug qui trainait
+  * Jormungandr : Prise en compte de nonnull
+  * Updated flask-restful
+  * Ptdata : get type ne renvoyait pas le bon type pour les adresses
+  * Jormungandr : Maj des CmakeLists
+  * Raptor : Hacke pour avoir des résultats
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 04 Sep 2013 19:09:59 +0200
+
+kraken (0.62.38) squeeze; urgency=low
+
+  * Autocomplete : Ajout des informations de pagination
+  * Kraken : Ajout de la pagination dans ptref
+  * Jörmungandr : Bouchon stop_schedules
+  * Jörmungandr : startPage devient start_page
+  * Jörmungandr : La pagination se fait maintenant dans kraken
+  * Jörmungandr : Lintage
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 13 Aug 2013 16:36:11 +0200
+
+kraken (0.62.37) quantal; urgency=low
+
+  [ Vincent Lara ]
+  * Debian : Correction du packaging de ed
+  * Jormungandr : Ajout de bouchons
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 13 Aug 2013 09:55:32 +0200
+
+kraken (0.62.36) quantal; urgency=low
+
+  [ l-vincent-l ]
+  * Update install.rst
+
+  [ Vincent Lara ]
+  * Ed : Gestion de mauvaises coordonnées
+  * Debian : Correction des dépendences de navitia-ed
+  * Jörmungandr : Hotfix pour les route_schedules
+  * Jormungandr : lintage output_v1
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 12 Aug 2013 18:46:07 +0200
+
+kraken (0.62.35) quantal; urgency=low
+
+  [ l-vincent-l ]
+  * Update install.rst
+
+  [ Vincent Lara ]
+  * Ed : Gestion de mauvaises coordonnées
+  * Debian : Correction des dépendences de navitia-ed
+  * Jörmungandr : Hotfix pour les route_schedules
+  * Jormungandr : lintage output_v1
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 12 Aug 2013 18:46:00 +0200
+
+kraken (0.62.35) quantal; urgency=low
+
+  * Debian : Correction des fichiers d'install
+  * Scripts : on les rend executable
+  * Version 0.62.34
+  * Jörmungandr : Suppression du deadlock sur jormungandr
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 02 Aug 2013 16:53:11 +0200
+
+kraken (0.62.34) quantal; urgency=low
+
+  * Cmake : Ajout de droit d'execution sur les programmes
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 02 Aug 2013 10:46:15 +0200
+
+kraken (0.62.33) quantal; urgency=low
+
+  * Version 0.62.31
+  * Debian : On enleve le postinst
+  * Version 0.62.33
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 01 Aug 2013 18:31:25 +0200
+
+kraken (0.62.31) quantal; urgency=low
+
+  [ Vincent Lara ]
+  * Ptref : Ajout de AFTER
+  * Build Helper : Ajout d'idx pour tous les objets
+  * Jormungandr : Correction du wsgi
+  * Version 0.62.30
+
+  [ Abderrahim Azime ]
+  * Definition d'un itérateur sur les segments d'un graph
+  * Ajout de trois listes temporaires pour ne pas binariser les graphes secondaires
+
+  [ Vincent Lara ]
+  * Kraken : Ajout de tcmalloc
+  * Debian : Découpe des paquets
+  * Kraken : Ajout de la dépendence à tcmalloc
+  * Debian : Version 0.62.31
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 01 Aug 2013 16:39:23 +0200
+
+kraken (0.62.30) squeeze; urgency=low
+
+  * Pyed : Version 0.38.3
+  * Kraken : Version 0.62.21
+  * Scripts : On doit être postgres pour les runner
+  * Jormungandr : le signal de kill n'est catché qu'en standalone
+  * Version 0.62.30
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 01 Aug 2013 10:04:42 +0200
+
+kraken (0.62.21) squeeze; urgency=low
+
+  * Pyed: Suppression de dameon
+  * Debian : Suppression de l'installation de pyed dans le postinst
+  * Debian : Ajout du répertoire source et options de compilation
+  * Debian : Ajout de fichiers install
+  * Dépendences : Ajout de libpq
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 31 Jul 2013 10:31:20 +0200
+
+kraken (0.62.20debian) squeeze; urgency=low
+
+  * Debian : fichier rules plus conventionnel
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 30 Jul 2013 10:56:41 +0200
+
+kraken (0.62.20ubuntu1) quantal; urgency=low
+
+  * Debian : rules plus conventionnel
+  * Debian : version 0.62.16
+  * Pyed : Suppression daemon
+  * Cmake : déplacement à la racine
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 30 Jul 2013 10:56:41 +0200
+
+kraken (0.62.20) squeeze; urgency=low
+
+  [ Abderrahim Azime ]
+  * Amélioration du flux "journeys" : 	1) Ajout des commentaires sur les horaires 	2) affichage de la direction dans StreetNetwork 	3) Ajout de l'heure de départ et d'arrivé dans StreetNetwork 	4) Ajout des informations PICK_UP_ONLY, DROP_OFF_ONLY, ON_DEMAND_TRANSPORT, DATE_TIME_ESTIMATED au niveau de l'horaire
+  * Mutualisation de la proporiété "AdditionalInformations" entre "journeys" et "route_schedules"
+  * ajout de "additional_information" dans une section de type odt
+  * Ajoute des équipements de la circulation dans le flux de "route_schedules"
+  * Modification des links dans "journeys"
+
+  [ Vincent Lara ]
+  * Pyed : Ajout de target file
+  * Cmake : ajout de postinst
+  * Debian : Ajout de changelog et de control
+  * Debian : Ajout de postinst
+  * Streetnetwork : Correction de la longueur d'un chemin
+
+  [ Abderrahim Azime ]
+  * Ajout de la table des contributeurs
+  * Ajout du type contributor, chargement dans la base et sa binarisation
+  * Suppression du contenu de la table contributor avant les insertions
+  * Création d'une compagnie par défaut : le TAD n'a pas de compagnie
+  * Ajout des contributor dans le flux de status
+
+  [ Vincent Lara ]
+  * Version 0.62.16ubuntu1
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 30 Jul 2013 10:38:13 +0200
+
+kraken (0.62.16ubuntu1) quantal; urgency=low
+
+  [ Abderrahim Azime ]
+  * - Prise en compte des coordonnées dans "journeys" - Création de l'origin et la destination dans la section "street_network"
+  * Import des données OSM : Ajout des voies qui ne sont pas dans la table de fusion
+
+  [ Vincent Lara ]
+  * Version 0.62.16
+  * Pyed : On mv avant de unzip
+  * Pyed : Erreurs d'inattention
+  * Pyed : version 0.37
+  * Jormungandr wsgi : On set les variables d'environnement
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 24 Jul 2013 10:30:06 +0200
+
+kraken (0.62.16) quantal; urgency=low
+
+  [ Abderrahim Azime ]
+  * refactoring de "route_schedule"
+  * Suppression des commentaires inutils, ajout des stoptimes dans le cas où est nuls
+  * faute d'orthographe
+  * Ajout de l'accessibilté dans le flux au niveau de la circulation (VehicleJourney)
+  * Amélioration de l'interface V1 de "journeys"
+  * Remplacement de "pt_display_informations" par "display_informations" pour journeys
+  * Binarisation de l'information "odt_type_id" de la circulation
+  * Nommage des types de TAD
+  * Intitialisation de l'odt_type de la circulation par "regular_line"
+  * Amélioration de l'interface V1 de l'api "journeys"
+  * Ajout des links dans l'api "journeys"
+
+  [ Vincent Lara ]
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 22 Jul 2013 16:53:10 +0200
+
+kraken (0.62.15) quantal; urgency=low
+
+  * Pyed : Ajout de exec_directory
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 22 Jul 2013 14:37:29 +0200
+
+kraken (0.62.14) quantal; urgency=low
+
+  * Pyed : Correction start => run
+  * Pyed : Ajout de target_directory, backup_directory
+  * Pyed : Version 0.33
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 22 Jul 2013 14:19:10 +0200
+
+kraken (0.62.13) quantal; urgency=low
+
+  * Pyed : Suppression de status
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 22 Jul 2013 10:37:40 +0200
+
+kraken (0.62.12) quantal; urgency=low
+
+  * Pyed : On enlève totalement pid_file
+  * Pyed : On enlève l'option start de pyed
+  * Pyed : Version 0.31
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Mon, 22 Jul 2013 10:26:49 +0200
+
+kraken (0.62.11) quantal; urgency=low
+
+  * Pyed : On enleve daemon.py
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 16:56:59 +0200
+
+kraken (0.62.10) quantal; urgency=low
+
+  * Postinst : Le bon !
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 16:11:36 +0200
+
+kraken (0.62.05ubuntu4) quantal; urgency=low
+
+  * Postinst : On ajoute les +x qui vont bien
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 15:22:05 +0200
+
+kraken (0.62.05ubuntu3) quantal; urgency=low
+
+  * Postinst : On se déplace dans /tmp/ avant de lancer l'installation
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 15:14:33 +0200
+
+kraken (0.62.05ubuntu2) quantal; urgency=low
+
+  * Un petit test
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 15:06:36 +0200
+
+kraken (0.62.05ubuntu1) quantal; urgency=low
+
+  * Postinst : On y croit
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 14:56:31 +0200
+
+kraken (0.62.05) quantal; urgency=low
+
+  * Postinst : Le voilà le bon !
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 14:51:49 +0200
+
+kraken (0.62.04ubuntu5) quantal; urgency=low
+
+  * Postinst : Cette fois ci c'est la bonne
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 14:47:13 +0200
+
+kraken (0.62.04ubuntu4) quantal; urgency=low
+
+  * Postinst : On enleve les accolades
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 14:39:58 +0200
+
+kraken (0.62.04ubuntu3) quantal; urgency=low
+
+  * Postinst : navitia => kraken
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 14:05:22 +0200
+
+kraken (0.62.04ubuntu2) quantal; urgency=low
+
+  * Ajout du script de post installation dans le packet
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 12:39:20 +0200
+
+kraken (0.62.04ubuntu1) quantal; urgency=low
+
+  * Changement de droit sur setup.py
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 12:09:54 +0200
+
+kraken (0.62.04) quantal; urgency=low
+
+  [ vlara ]
+  * UNRELEASED
+
+  [ Vincent Lara ]
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 12:20:39 +0200
+
+kraken (0.62.03ubuntu2) quantal; urgency=low
+
+  * Version 0.62.03
+  * Pyed : Montée en version de la librairie
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 12:09:54 +0200
+
+kraken (0.62.03ubuntu1) quantal; urgency=low
+
+  * Pyed : Erreur dans l'initialisation du main
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 11:56:27 +0200
+
+kraken (0.62.03) quantal; urgency=low
+
+  * Version 0.62.02
+  * SQL : Ajout du répertoire sql dans le CMakelists principal
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 19 Jul 2013 11:07:12 +0200
+
+kraken (0.62.02) quantal; urgency=low
+
+  [ Vincent Lara ]
+  * Ed : Installation des scripts sql
+
+  [ vlara ]
+  * UNRELEASED
+
+  [ Vincent Lara ]
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 18 Jul 2013 18:15:00 +0200
+
+kraken (0.62.01) quantal; urgency=low
+
+  * Version 0.62.0
+  * Suppression totale de gunicorn
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 18 Jul 2013 16:29:07 +0200
+
+kraken (0.62.0) quantal; urgency=low
+
+  * Pyed : Correction pour que le service fonctionne mieux.
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 18 Jul 2013 15:07:18 +0200
+
+kraken (0.61.9) quantal; urgency=low
+
+  * Version 0.61.8
+  * Debian : On va chercher le bon control
+  * Version 0.61.8
+  * On est plus dépendant de gunicorn
+  * Ed : Installation de gtfs2ed, osm2ed, ed2nav dans /usr/bin
+  * Installation de setup.py dans /tmp/
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 18 Jul 2013 11:08:28 +0200
+
+kraken (0.61.8) quantal; urgency=low
+
+  * Kraken : Suppression de la dépendance à gunicorn
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 17:28:33 +0200
+
+kraken (0.61.7) quantal; urgency=low
+
+  * Pyed : Ajout de l'installation de la librairie
+  * Pyed : Possibilité de changer l'utilisateur qui lance le démon
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 16:53:43 +0200
+
+kraken (0.61.6) quantal; urgency=low
+
+  * Changement du maintener dans le fichier de control
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 12:18:05 +0200
+
+kraken (0.61.5) quantal; urgency=low
+
+  [ vlara ]
+  * UNRELEASED
+
+  [ Vincent Lara ]
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 12:02:20 +0200
+
+kraken (0.61.4) quantal; urgency=low
+
+  * Version 0.61.3
+  * debian/rules : On va installer à la racine, ça devrait mieux aller.
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 11:50:52 +0200
+
+kraken (0.61.3) quantal; urgency=low
+
+  [ Abderrahim Azime ]
+  * Ajout de deux champs : 	* navitia.stop_time.date_time_estimated 	* navitia.vehicle_journey.odt_message
+  * Ajout des deux champs dans la base de données et import dans la base et binarisation de ces deux champs: 	* navitia.vehicle_journey.odt_message 	* navitia.stop_time.date_time_estimated
+  * amélioration de route_schedule : 	* Ajout des uris dans "display_informations" 	* Ajout des uris dans "headers" 	* Ajout des notes
+
+  [ Vincent Lara ]
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 11:20:52 +0200
+
+kraken (0.61.2) unstable; urgency=low
+
+  [ Abderrahim Azime ]
+  * amélioration de 'route_schedule'
+
+  [ Vincent Lara ]
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Wed, 17 Jul 2013 10:32:39 +0200
+
+kraken (0.61ubuntu1) unstable; urgency=low
+
+  [ Vincent Lara ]
+  ** SNAPSHOT build @04008af448bfdb845cea18ec9c66b8c035535de4 **
+
+  * Version 0.61
+
+  [ vlara ]
+  * UNRELEASED
+
+  [ Vincent Lara ]
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 16 Jul 2013 18:06:26 +0200
+
+kraken (0.61) unstable; urgency=low
+
+  [ Vincent Lara ]
+  * On va essayer de faire quelque chose de plus propre
+  * Cmake : Ajout d'une section au cpack debian
+
+  [ Vincent Lara ]
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 16 Jul 2013 17:00:38 +0200
+
+kraken (0.60.0-1ubuntu1) quantal; urgency=low
+
+  [ Vincent Lara ]
+  * Ajout d'un fichier d'instruction pour le build du package
+  * On va essayer de faire quelque chose de plus propre
+  * Cmake : Ajout d'une section au cpack debian
+
+  [ vlara ]
+
+ -- vlara <vlara@vlara-OptiPlex-790>  Tue, 16 Jul 2013 16:59:38 +0200
+
+kraken (0.60.0-1) unstable; urgency=low
+
+  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+
+ -- vlara <vlara@unknown>  Thu, 11 Jul 2013 15:46:01 +0200

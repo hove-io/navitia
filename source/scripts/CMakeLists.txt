@@ -1,2 +1,2 @@
-INSTALL_FILES(/usr/share/navitia/scripts FILES navimake_updater.sh update_data.sh)
-INSTALL_FILES(/etc/gunicorn.d/ FILES jormungandr)
+INSTALL_PROGRAMS(/usr/share/kraken/scripts FILES update_data.sh)
+INSTALL_PROGRAMS(/usr/share/ed/scripts FILES init_db.sh update_db.sh)

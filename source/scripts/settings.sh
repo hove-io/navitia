@@ -13,7 +13,7 @@ dbname='navitia'
 export PGPASSWORD='navitia'
 
 #emplacement des fichiers SQL
-sql_dir=/home/kinou/workspace/navitia/source/sql
+sql_dir=../sql
 
 #emplacement où sont installé les fichier SQL pour postgis
 postgis_dir='/usr/share/postgresql/9.1/contrib/postgis-1.5'

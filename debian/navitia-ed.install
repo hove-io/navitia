@@ -1,0 +1,8 @@
+usr/bin/gtfs2ed usr/bin
+usr/bin/osm2ed usr/bin
+usr/bin/ed2nav usr/bin
+usr/bin/pyed_service.py usr/bin
+usr/share/ed/* usr/share/ed
+usr/bin/nav2rt usr/bin
+usr/lib/python*/dist-packages/pyed
+usr/bin/pyed_service.py

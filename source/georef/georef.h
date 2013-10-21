@@ -2,7 +2,7 @@
 
 #include "autocomplete/autocomplete.h"
 #include "proximity_list/proximity_list.h"
-#include "adminref.h"
+
 
 #include "third_party/RTree/RTree.h"
 
@@ -13,6 +13,7 @@
 #include <boost/serialization/utility.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <map>
+#include "adminref.h"
 
 
 namespace nt = navitia::type;
@@ -22,7 +23,7 @@ namespace navitia { namespace georef {
 
 /** Propriétés Nœud (intersection entre deux routes) */
 struct Vertex {
-    type::GeographicalCoord coord;
+    nt::GeographicalCoord coord;
 
     Vertex(){}
     Vertex(double x, double y, bool is_meters = false) : coord(x, y){
@@ -31,7 +32,7 @@ struct Vertex {
         }
     }
 
-    Vertex(const type::GeographicalCoord& other) : coord(other.lon(), other.lat()){}
+    Vertex(const nt::GeographicalCoord& other) : coord(other.lon(), other.lat()){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & coord;
@@ -68,6 +69,9 @@ typedef boost::graph_traits<Graph>::vertex_descriptor vertex_t;
 /// Représentation d'un arc dans le graphe
 typedef boost::graph_traits<Graph>::edge_descriptor edge_t;
 
+/// Pour parcourir les segements du graphe
+typedef boost::graph_traits<Graph>::edge_iterator edge_iterator;
+
 
 /** le numéro de la maison :
     il représente un point dans la rue, voie */
@@ -95,7 +99,7 @@ struct Way :public nt::Nameable, nt::Header{
 public:
     std::string way_type;
     // liste des admins
-    std::vector<nt::idx_t> admin_list;
+    std::vector<Admin*> admin_list;
 
     std::vector< HouseNumber > house_number_left;
     std::vector< HouseNumber > house_number_right;
@@ -163,17 +167,18 @@ struct POIType;
 struct GeoRef {
 
     ///Liste des POIType et POI
-    std::vector<POIType> poitypes;
+    std::vector<POIType*> poitypes;
     std::map<std::string, nt::idx_t> poitype_map;
-    std::vector<POI> pois;
+    std::vector<POI*> pois;
     std::map<std::string, nt::idx_t> poi_map;
     proximitylist::ProximityList<type::idx_t> poi_proximity_list;
     /// Liste des voiries
-    std::vector<Way> ways;
+    std::vector<Way*> ways;
+
     std::map<std::string, nt::idx_t> way_map;
     /// données administratives
     std::map<std::string, nt::idx_t> admin_map;
-    std::vector<navitia::adminref::Admin> admins;
+    std::vector<Admin*> admins;
 
     RTree<nt::idx_t, double, 2> rtree;
 
@@ -237,20 +242,26 @@ struct GeoRef {
     void build_autocomplete_list();
 
     /// Normalisation des codes externes
-    void normalize_uri();
+    void normalize_extcode_way();
+    /// Normalisation des codes externes des admins
+    void normalize_extcode_admin();
+
+    /// Chargement de la liste map code externe idx sur poitype et poi
+    void build_poitypes();
+    void build_pois();
 
     /// Construit l’indexe spatial permettant de retrouver plus vite la commune à une coordonnées
     void build_rtree();
 
     /// Recherche d'une adresse avec un numéro en utilisant Autocomplete
-    std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax, std::function<bool(nt::idx_t)> keep_element) const;
+    std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax, const int search_type,std::function<bool(nt::idx_t)> keep_element) const;
 
 
     /** Projete chaque stop_point sur le filaire de voirie
 
         Retourne le nombre de stop_points effectivement accrochés
     */
-    int project_stop_points(const std::vector<type::StopPoint> & stop_points);
+    int project_stop_points(const std::vector<type::StopPoint*> & stop_points);
 
     /** Calcule le meilleur itinéraire entre deux listes de nœuds
      *
@@ -301,15 +312,9 @@ struct GeoRef {
 
     /// Reconstruit un itinéraire à partir de la destination et la liste des prédécesseurs
     Path build_path(vertex_t best_destination, std::vector<vertex_t> preds) const;
+    void add_way(const Way& w);
 
- private :
-    /// Normalisation des codes externes
-    void normalize_extcode_way();
-    /// Normalisation des codes externes des admins
-    void normalize_extcode_admin();
-    /// Chargement de la liste map code externe idx sur poitype et poi
-    void normalize_extcode_poitypes();
-    void normalize_extcode_pois();
+    ~GeoRef();
 };
 
 // Exception levée dès que l'on trouve une destination
@@ -375,7 +380,7 @@ struct POI : public nt::Nameable, nt::Header{
     const static type::Type_e type = type::Type_e::POI;
     int weight;
     nt::GeographicalCoord coord;
-    std::vector<nt::idx_t> admin_list;
+    std::vector<Admin*> admin_list;
     nt::idx_t poitype_idx;
 
     POI(): weight(0), poitype_idx(type::invalid_idx){}

@@ -27,7 +27,9 @@ type::idx_t StreetNetwork::get_offset(const type::Mode_e & mode){
 }
 
 
-std::vector< std::pair<type::idx_t, double> > StreetNetwork::find_nearest_stop_points(const type::GeographicalCoord & start_coord, const proximitylist::ProximityList<type::idx_t> & pl, double radius, bool use_second,nt::idx_t offset){
+std::vector< std::pair<type::idx_t, double> > StreetNetwork::find_nearest_stop_points(const type::GeographicalCoord & start_coord,
+                                                                                      const proximitylist::ProximityList<type::idx_t> & pl,
+                                                                                      double radius, bool use_second,nt::idx_t offset){
     // On cherche le segment le plus proche des coordonnées
     ng::ProjectionData nearest_edge = ng::ProjectionData(start_coord, this->geo_ref, this->geo_ref.pl);
 

@@ -4,80 +4,74 @@
 
 #include "routing/routing.h"
 
-using namespace navitia::type;
+using namespace navitia;
 
 BOOST_AUTO_TEST_CASE(ctor){
-    DateTime d(1,2);
-    BOOST_CHECK_EQUAL(d.hour(), 2);
-    BOOST_CHECK_EQUAL(d.date(), 1);
+    DateTime d = DateTimeUtils::set(1,2);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(d), 2);
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(d), 1);
 }
 
 BOOST_AUTO_TEST_CASE(date_update){
-    DateTime d(10, 10);
-    d.update(100);
-    BOOST_CHECK_EQUAL(d.date(), 10);
-    BOOST_CHECK_EQUAL(d.hour(), 100);
+    DateTime d = DateTimeUtils::set(10, 10);
+    DateTimeUtils::update(d, 100);
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(d), 10);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(d), 100);
 
-    d.update(50);
-    BOOST_CHECK_EQUAL(d.date(), 11);
-    BOOST_CHECK_EQUAL(d.hour(), 50);
+    DateTimeUtils::update(d,50);
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(d), 11);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(d), 50);
 }
 
 BOOST_AUTO_TEST_CASE(increment){
-    DateTime d(0, 0);
-    d.increment(10);
-    BOOST_CHECK_EQUAL(d.date(), 0);
-    BOOST_CHECK_EQUAL(d.hour(), 10);
+    DateTime d = DateTimeUtils::set(0, 0);
+    d += 10;
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(d), 0);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(d), 10);
 }
 
 BOOST_AUTO_TEST_CASE(passe_minuit){
-    DateTime d(10, 24*3600 - 1);
-
-    d.increment(10);
-    BOOST_CHECK_EQUAL(d.date(), 11);
-    BOOST_CHECK_EQUAL(d.hour(), 9);
+    DateTime d = DateTimeUtils::set(10, 24*3600 - 1);
+    d += 10;
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(d), 11);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(d), 9);
 }
 
 
 BOOST_AUTO_TEST_CASE(passe_minuit_update){
-    DateTime d(10, 23*3600);
-
-    d.update(10);
-    BOOST_CHECK_EQUAL(d.date(), 11);
-    BOOST_CHECK_EQUAL(d.hour(), 10);
+    DateTime d = DateTimeUtils::set(10, 23*3600);
+    d += 3600 + 10;
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(d), 11);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(d), 10);
 }
 
 BOOST_AUTO_TEST_CASE(passe_minuit_update_reverse){
-    DateTime d(1, 300);
-
-    d.update(23*3600, false);
-    BOOST_CHECK_EQUAL(d.date(), 0);
-    BOOST_CHECK_EQUAL(d.hour(), 23*3600);
+    DateTime d = DateTimeUtils::set(1, 300);
+    DateTimeUtils::update(d, 23*3600, false);
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(d), 0);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(d), 23*3600);
 }
 
-
 BOOST_AUTO_TEST_CASE(decrement){
-    DateTime d(2, 100);
-    d.decrement(50);
-    BOOST_CHECK_EQUAL(d.date(), 2);
-    BOOST_CHECK_EQUAL(d.hour(), 50);
-    d.decrement(100);
-    BOOST_CHECK_EQUAL(d.date(), 1);
-    BOOST_CHECK_EQUAL(d.hour(), 24*3600 - 50);
+    DateTime d = DateTimeUtils::set(2, 100);
+    d -= 50;
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(d), 2);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(d), 50);
+    d -= 100;
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(d), 1);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(d), 24*3600 - 50);
 }
 
 BOOST_AUTO_TEST_CASE(init2) {
-    DateTime d(1, 24*3600 + 10);
-    BOOST_CHECK_EQUAL(d.date(), 2);
-    BOOST_CHECK_EQUAL(d.hour(), 10);
+    DateTime d = DateTimeUtils::set(1, 24*3600 + 10);
+    BOOST_CHECK_EQUAL(DateTimeUtils::date(d), 2);
+    BOOST_CHECK_EQUAL(DateTimeUtils::hour(d), 10);
 }
 
-
 BOOST_AUTO_TEST_CASE(moins) {
-    DateTime d1(10, 8*3600);
-    DateTime d2(10, 9*3600);
-    DateTime d3(11, 5*3600);
-
+    DateTime d1 = DateTimeUtils::set(10, 8*3600);
+    DateTime d2 = DateTimeUtils::set(10, 9*3600);
+    DateTime d3 = DateTimeUtils::set(11, 5*3600);
     uint32_t t1 = d2 - d1;
     uint32_t t2 = d3 - d1;
     BOOST_CHECK_EQUAL(t1, 3600);
@@ -85,10 +79,10 @@ BOOST_AUTO_TEST_CASE(moins) {
 }
 
 BOOST_AUTO_TEST_CASE(freq_stop_time_validation){
-    StopTime st;
+    type::StopTime st;
     st.start_time = 8000;
     st.end_time = 9000;
-    st.properties.set(StopTime::IS_FREQUENCY);
+    st.properties.set(type::StopTime::IS_FREQUENCY);
     BOOST_CHECK(st.valid_hour(7999, true));
     BOOST_CHECK(st.valid_hour(8000, true));
     BOOST_CHECK(st.valid_hour(8500, true));

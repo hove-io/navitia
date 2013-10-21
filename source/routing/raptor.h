@@ -22,7 +22,9 @@ struct RAPTOR
 
     ///Contient les heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point à chaque tour
     std::vector<label_vector_t> labels;
-    std::vector<vector_idx> boardings;
+    std::vector<std::vector<const type::JourneyPatternPoint*> > boardings;
+    std::vector<std::vector<boarding_type> > boarding_types;
+
     ///Contient les meilleures heures d'arrivées, de départ, ainsi que la façon dont on est arrivé à chaque journey_pattern point
     label_vector_t best_labels;
     ///Contient tous les points d'arrivée, et la meilleure façon dont on est arrivé à destination
@@ -50,21 +52,23 @@ struct RAPTOR
 
 
 
-    void clear(const type::Data & data, bool clockwise, type::DateTime borne, int walking_duration);
+    void clear(const type::Data & data, bool clockwise, DateTime borne, int walking_duration);
 
     ///Initialise les structure retour et b_dest
     void clear_and_init(std::vector<Departure_Type> departures,
               std::vector<std::pair<type::idx_t, double> > destinations,
-              navitia::type::DateTime bound, const bool clockwise,
+              navitia::DateTime bound, const bool clockwise,
               const float walking_speed, const int walking_distance,
               const type::Properties &properties = 0);
 
 
     ///Lance un calcul d'itinéraire entre deux stop areas avec aussi une borne
-    std::vector<Path> 
-    compute(idx_t departure_idx, idx_t destination_idx, int departure_hour,
-            int departure_day, navitia::type::DateTime bound, bool clockwise = true,
-            const type::Properties &required_properties = 0, uint32_t
+    std::vector<Path>
+    compute(const type::StopArea* departure, const type::StopArea* destination,
+            int departure_hour, int departure_day, DateTime bound,
+            bool clockwise = true,
+            /*const type::Properties &required_properties = 0*/
+            const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(), uint32_t
             max_transfers=std::numeric_limits<uint32_t>::max());
 
 
@@ -75,9 +79,10 @@ struct RAPTOR
     std::vector<Path> 
     compute_all(const std::vector<std::pair<type::idx_t, double> > &departs,
                 const std::vector<std::pair<type::idx_t, double> > &destinations,
-                const navitia::type::DateTime &departure_datetime, const navitia::type::DateTime &bound=navitia::type::DateTime::inf,
+                const DateTime &departure_datetime, const DateTime &bound=DateTimeUtils::inf,
                 const uint32_t max_transfers=std::numeric_limits<int>::max(),
-                const float walking_speed=1.38, const int walking_distance = 1000, const type::Properties &required_properties=0,
+                const float walking_speed=1.38, const int walking_distance = 1000, /*const type::Properties &required_properties=0*/
+                const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
                 const std::vector<std::string> & forbidden = std::vector<std::string>(), bool clockwise=true);
 
 
@@ -88,8 +93,9 @@ struct RAPTOR
      */
     void
     isochrone(const std::vector<std::pair<type::idx_t, double> > &departures_,
-              const navitia::type::DateTime &departure_datetime, const navitia::type::DateTime &bound = navitia::type::DateTime::min, uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
-              float walking_speed=1.38, int walking_distance = 1000, const type::Properties &required_properties = 0,
+              const DateTime &departure_datetime, const DateTime &bound = DateTimeUtils::min, uint32_t max_transfers = std::numeric_limits<uint32_t>::max(),
+              float walking_speed=1.38, int walking_distance = 1000, /*const type::Properties &required_properties = 0*/
+              const type::AccessibiliteParams & accessibilite_params = type::AccessibiliteParams(),
               const std::vector<std::string>& forbidden = std::vector<std::string>(),
               bool clockwise = true);
 
@@ -99,7 +105,7 @@ struct RAPTOR
     void set_journey_patterns_valides(uint32_t date, const std::vector<std::string> & forbidden);
 
     ///Boucle principale, parcourt les journey_patterns,
-    void boucleRAPTOR(const type::Properties &required_properties, bool clockwise,
+    void boucleRAPTOR(/*const type::Properties &required_properties*/const type::AccessibiliteParams & accessibilite_params, bool clockwise,
                       bool global_pruning = true,
                       const uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
@@ -115,7 +121,7 @@ struct RAPTOR
 
     ///Boucle principale
     template<typename Visitor>
-    void raptor_loop(Visitor visitor, const type::Properties &required_properties, bool global_pruning = true, uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
+    void raptor_loop(Visitor visitor, /*const type::Properties &required_properties*/const type::AccessibiliteParams & accessibilite_params, bool global_pruning = true, uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
 
     /// Retourne à quel tour on a trouvé la meilleure solution pour ce journey_patternpoint
@@ -123,21 +129,19 @@ struct RAPTOR
     int best_round(type::idx_t journey_pattern_point_idx);
 
     inline boarding_type get_type(size_t count, type::idx_t journey_pattern_point) const {
-        return navitia::routing::get_type(count, journey_pattern_point, labels, boardings, data);
+        return navitia::routing::get_type(count, journey_pattern_point, boarding_types, data);
     }
 
-    inline type::idx_t get_boarding_jpp(size_t count, type::idx_t journey_pattern_point) const {
-        return navitia::routing::get_boarding_jpp(count, journey_pattern_point, labels, boardings, data);
+    inline const type::JourneyPatternPoint* get_boarding_jpp(size_t count, type::idx_t journey_pattern_point) const {
+        return navitia::routing::get_boarding_jpp(count, journey_pattern_point, boardings);
     }
 
-    inline std::pair<type::idx_t, uint32_t> get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const type::Properties &required_properties, bool clockwise) const {
-        return navitia::routing::get_current_stidx_gap(count, journey_pattern_point, labels, boardings, required_properties, clockwise, data);
+    inline std::pair<const navitia::type::StopTime*, unsigned int> get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point,
+                                                                                         const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/, bool clockwise) const {
+        return navitia::routing::get_current_stidx_gap(count, journey_pattern_point, labels, boarding_types, accessibilite_params/*required_properties*/, clockwise, data);
     }
 
     ~RAPTOR() {}
-
 };
-
-
 
 }}

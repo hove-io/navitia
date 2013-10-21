@@ -63,7 +63,7 @@ struct WhereWrapper {
 };
 
 /// Possible Operators
-enum Operator_e{EQ, NEQ, LT, GT, LEQ, GEQ, HAVING, DWITHIN};
+enum Operator_e{EQ, NEQ, LT, GT, LEQ, GEQ, HAVING, DWITHIN, AFTER};
 
 /// A specialized clause working on a member and comparing it to a value
 template<class T, class T2>

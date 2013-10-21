@@ -1,0 +1,8 @@
+INSTALL_FILES(/srv/jormungandr/interfaces/v0 __init__.py)
+INSTALL_FILES(/srv/jormungandr/interfaces Journeys.py)
+INSTALL_FILES(/srv/jormungandr/interfaces paginated_parser.py)
+INSTALL_FILES(/srv/jormungandr/interfaces parsers.py)
+INSTALL_FILES(/srv/jormungandr/interfaces Places.py)
+INSTALL_FILES(/srv/jormungandr/interfaces Ptref.py)
+INSTALL_FILES(/srv/jormungandr/interfaces Regions.py)
+INSTALL_FILES(/srv/jormungandr/interfaces TimeTables.py)

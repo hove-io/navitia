@@ -32,27 +32,28 @@ struct ValidityPatternTime {
 enum ItemType {
     public_transport,
     walking,
-    extension,
+    stay_in,
     guarantee,
     waiting
 };
 
 /** Étape d'un itinéraire*/
 struct PathItem{
-    navitia::type::DateTime arrival;
-    navitia::type::DateTime departure;
-    std::vector<navitia::type::DateTime> arrivals;
-    std::vector<navitia::type::DateTime> departures;
+    navitia::DateTime arrival;
+    navitia::DateTime departure;
+    std::vector<navitia::DateTime> arrivals;
+    std::vector<navitia::DateTime> departures;
+    std::vector<size_t> orders;
     type::idx_t vj_idx;
     std::vector<type::idx_t> stop_points;
     ItemType type;
 
-    PathItem(navitia::type::DateTime departure = navitia::type::DateTime::inf, navitia::type::DateTime arrival = navitia::type::DateTime::inf,
+    PathItem(navitia::DateTime departure = navitia::DateTimeUtils::inf, navitia::DateTime arrival = navitia::DateTimeUtils::inf,
             type::idx_t vj_idx = type::invalid_idx) :
         arrival(arrival), departure(departure), vj_idx(vj_idx), type(public_transport) {
-            if(departure != navitia::type::DateTime::inf)
+            if(departure != navitia::DateTimeUtils::inf)
                 departures.push_back(departure);
-            if(arrival != navitia::type::DateTime::inf)
+            if(arrival != navitia::DateTimeUtils::inf)
                 arrivals.push_back(arrival);
         }
 

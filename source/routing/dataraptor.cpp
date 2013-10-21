@@ -5,8 +5,8 @@ namespace navitia { namespace routing {
 
 void dataRAPTOR::load(const type::PT_Data &data)
 {
-    labels_const.assign(data.journey_pattern_points.size(), type::DateTime::inf);
-    labels_const_reverse.assign(data.journey_pattern_points.size(), type::DateTime::min);
+    labels_const.assign(data.journey_pattern_points.size(), DateTimeUtils::inf);
+    labels_const_reverse.assign(data.journey_pattern_points.size(), DateTimeUtils::min);
     boardings_const.assign(data.journey_pattern_points.size(), type::invalid_idx);
     
     foot_path_forward.clear();
@@ -15,195 +15,127 @@ void dataRAPTOR::load(const type::PT_Data &data)
     footpath_index_forward.clear();
     footpath_rp_backward.clear();
     footpath_rp_forward.clear();
-    std::vector<list_connections> footpath_temp_forward, footpath_temp_backward;
-    footpath_temp_forward.resize(data.journey_pattern_points.size());
-    footpath_temp_backward.resize(data.journey_pattern_points.size());
+    std::vector<std::map<navitia::type::idx_t, const navitia::type::StopPointConnection*> > footpath_temp_forward, footpath_temp_backward;
+    footpath_temp_forward.resize(data.stop_points.size());
+    footpath_temp_backward.resize(data.stop_points.size());
 
     //Construction des connexions entre journey_patternpoints
     //(sert pour les prolongements de service ainsi que les correpondances garanties
-    for(type::Connection rpc : data.journey_pattern_point_connections) {
-        footpath_rp_forward.insert(std::make_pair(rpc.departure_idx, rpc));
-        footpath_rp_backward.insert(std::make_pair(rpc.destination_idx, rpc));
+    for(const type::JourneyPatternPointConnection* jppc : data.journey_pattern_point_connections) {
+        footpath_rp_forward.insert(std::make_pair(jppc->departure->idx, jppc));
+        footpath_rp_backward.insert(std::make_pair(jppc->destination->idx, jppc));
     }
 
     //Construction de la liste des marche à pied à partir des connexions renseignées
-    for(type::Connection connection : data.connections) {
-        footpath_temp_forward[connection.departure_idx][connection.destination_idx] = connection;
-    }
-
-    for(type::Connection connection : data.connections) {
-        if(footpath_temp_backward[connection.destination_idx].find(connection.departure_idx) ==
-           footpath_temp_backward[connection.destination_idx].end() ) {
-            
-            type::Connection inverse;
-            inverse.duration = connection.duration;
-            inverse.departure_idx = connection.destination_idx;
-            inverse.destination_idx = connection.departure_idx;
-            footpath_temp_backward[inverse.departure_idx][inverse.destination_idx] = inverse;
-        } else if(footpath_temp_backward[connection.destination_idx][connection.departure_idx].duration > connection.duration) {
-            footpath_temp_backward[connection.destination_idx][connection.departure_idx].duration = connection.duration;
-        }
-
+    for(const type::StopPointConnection* connection : data.stop_point_connections) {
+        footpath_temp_forward[connection->departure->idx][connection->destination->idx] = connection;
+        footpath_temp_backward[connection->departure->idx][connection->destination->idx] = connection;
     }
 
 
+    //On rajoute des connexions entre les stops points d'un même stop area si elles n'existent pas
     footpath_index_forward.resize(data.stop_points.size());
     footpath_index_backward.resize(data.stop_points.size());
-    for(type::StopPoint sp : data.stop_points) {
-        footpath_index_forward[sp.idx].first = foot_path_forward.size();
-        footpath_index_backward[sp.idx].first = foot_path_backward.size();
+    for(const type::StopPoint* sp : data.stop_points) {
+        footpath_index_forward[sp->idx].first = foot_path_forward.size();
+        footpath_index_backward[sp->idx].first = foot_path_backward.size();
         int size_forward = 0, size_backward = 0;
-        for(auto conn : footpath_temp_forward[sp.idx]) {
+        for(auto conn : footpath_temp_forward[sp->idx]) {
             foot_path_forward.push_back(conn.second);
             ++size_forward;
         }
-        for(auto conn : footpath_temp_backward[sp.idx]) {
+        for(auto conn : footpath_temp_backward[sp->idx]) {
             foot_path_backward.push_back(conn.second);
             ++size_backward;
         }
-        //On rajoute des connexions entre les stops points d'un même stop area si elles n'existent pas
-        if(sp.stop_area_idx != type::invalid_idx) {
-            type::StopArea sa = data.stop_areas[sp.stop_area_idx];
-            for(type::idx_t spidx2 : sa.stop_point_list) {
-                if(sp.idx != spidx2) {
-                    type::Connection c;
-                    c.departure_idx = sp.idx;
-                    c.destination_idx = spidx2;
-                    c.duration = 2 * 60;
-                    if(footpath_temp_forward[sp.idx].find(spidx2) == footpath_temp_forward[sp.idx].end()) {
-                        foot_path_forward.push_back(c);
-                        ++size_forward;
-                    }
-                    if(footpath_temp_backward[spidx2].find(sp.idx) == footpath_temp_backward[spidx2].end()) {
-                        foot_path_backward.push_back(c);
-                        ++size_backward;
-                    }
-                }
 
-            }
-        }
-        footpath_index_forward[sp.idx].second = size_forward;
-        footpath_index_backward[sp.idx].second = size_backward;
+        footpath_index_forward[sp->idx].second = size_forward;
+        footpath_index_backward[sp->idx].second = size_backward;
     }
-
-
-
 
     typedef std::unordered_map<navitia::type::idx_t, vector_idx> idx_vector_idx;
     idx_vector_idx ridx_journey_pattern;
     
     arrival_times.clear();
     departure_times.clear();
-    st_idx_forward.clear();
-    st_idx_backward.clear();
+    st_idx_forward.clear(); // Nom a changer ce ne sont plus des idx mais des pointeurs
+    st_idx_backward.clear(); //
     first_stop_time.clear();
-    vp_idx_forward.clear();
-    vp_idx_backward.clear();
 
+    for(int i=0; i<=365; ++i) {
+        jp_validity_patterns.push_back(boost::dynamic_bitset<>(data.journey_patterns.size()));
+    }
 
-    //On recopie les validity patterns
-    for(auto vp : data.validity_patterns) 
-        validity_patterns.push_back(vp.days);
-
-    for(const type::JourneyPattern & journey_pattern : data.journey_patterns) {
+    for(const type::JourneyPattern* journey_pattern : data.journey_patterns) {
         first_stop_time.push_back(arrival_times.size());
-        nb_trips.push_back(journey_pattern.vehicle_journey_list.size());
+        nb_trips.push_back(journey_pattern->vehicle_journey_list.size());
+
         // On regroupe ensemble tous les horaires de tous les journey_pattern_point
-        for(unsigned int i=0; i < journey_pattern.journey_pattern_point_list.size(); ++i) {
-            std::vector<type::idx_t> vec_stdix;
-            for(type::idx_t vjidx : journey_pattern.vehicle_journey_list) {
-                vec_stdix.push_back(data.vehicle_journeys[vjidx].stop_time_list[i]);
+        for(unsigned int i=0; i < journey_pattern->journey_pattern_point_list.size(); ++i) {
+            std::vector<type::StopTime*> vec_st;
+            for(const type::VehicleJourney* vj : journey_pattern->vehicle_journey_list) {
+                vec_st.push_back(vj->stop_time_list[i]);
             }
-            std::sort(vec_stdix.begin(), vec_stdix.end(),
-                      [&](type::idx_t stidx1, type::idx_t stidx2)->bool{
-                        const type::StopTime & st1 = data.stop_times[stidx1];
-                        const type::StopTime & st2 = data.stop_times[stidx2];
+            std::sort(vec_st.begin(), vec_st.end(),
+                      [&](type::StopTime* st1, type::StopTime* st2)->bool{
                         uint32_t time1, time2;
-                        if(!st1.is_frequency())
-                            time1 = st1.departure_time % type::DateTime::SECONDS_PER_DAY;
+                        if(!st1->is_frequency())
+                            time1 = DateTimeUtils::hour(st1->departure_time);
                         else
-                            time1 = st1.end_time;
-                        if(!st2.is_frequency())
-                            time2 = st2.departure_time %type::DateTime::SECONDS_PER_DAY;
+                            time1 = DateTimeUtils::hour(st1->end_time);
+                        if(!st2->is_frequency())
+                            time2 = DateTimeUtils::hour(st2->departure_time);
                         else
-                            time2 = st2.end_time;
+                            time2 = DateTimeUtils::hour(st2->end_time);
+                        return (time1 == time2 && st1 < st2) || (time1 < time2);});
 
-                        return (time1 == time2 && stidx1 < stidx2) || (time1 < time2);});
+            st_idx_forward.insert(st_idx_forward.end(), vec_st.begin(), vec_st.end());
 
-
-            st_idx_forward.insert(st_idx_forward.end(), vec_stdix.begin(), vec_stdix.end());
-
-            for(auto stidx : vec_stdix) {
-                const auto & st = data.stop_times[stidx];
+            for(auto st : vec_st) {
                 uint32_t time;
-                if(!st.is_frequency())
-                    time = st.departure_time %type::DateTime::SECONDS_PER_DAY;
+                if(!st->is_frequency())
+                    time = DateTimeUtils::hour(st->departure_time);
                 else
-                    time = st.end_time;
+                    time = DateTimeUtils::hour(st->end_time);
                 departure_times.push_back(time);
-
-                // We create a new validity pattern for cross-midnight journeys
-                if(st.departure_time >type::DateTime::SECONDS_PER_DAY) {
-                    auto vp = data.validity_patterns[data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx].days;
-                    vp <<=1;
-                    auto it = std::find(validity_patterns.begin(), validity_patterns.end(), vp);
-                    if(it == validity_patterns.end()) {
-                        vp_idx_forward.push_back(validity_patterns.size());
-                        validity_patterns.push_back(vp);
-                    } else {
-                        vp_idx_forward.push_back(it - validity_patterns.begin());
-                    }
-                } else {
-                    vp_idx_forward.push_back(data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx);
-                }
             }
 
-            std::sort(vec_stdix.begin(), vec_stdix.end(),
-                  [&](type::idx_t stidx1, type::idx_t stidx2)->bool{
-                      const type::StopTime & st1 = data.stop_times[stidx1];
-                      const type::StopTime & st2 = data.stop_times[stidx2];
+            std::sort(vec_st.begin(), vec_st.end(),
+                  [&](type::StopTime* st1, type::StopTime* st2)->bool{
                       uint32_t time1, time2;
-                      if(!st1.is_frequency())
-                          time1 = st1.arrival_time %type::DateTime::SECONDS_PER_DAY;
+                      if(!st1->is_frequency())
+                          time1 = DateTimeUtils::hour(st1->arrival_time);
                       else
-                          time1 = st1.start_time;
-                      if(!st2.is_frequency())
-                          time2 = st2.arrival_time%type::DateTime::SECONDS_PER_DAY;
+                          time1 = DateTimeUtils::hour(st1->start_time);
+                      if(!st2->is_frequency())
+                          time2 = DateTimeUtils::hour(st2->arrival_time);
                       else
-                          time2 = st2.start_time;
+                          time2 = DateTimeUtils::hour(st2->start_time);
+                      return (time1 == time2 && st1 > st2) || (time1 > time2);});
 
-                      return (time1 == time2 && stidx1 > stidx2) || (time1 > time2);});
-
-
-            st_idx_backward.insert(st_idx_backward.end(), vec_stdix.begin(), vec_stdix.end());
-            for(auto stidx : vec_stdix) {
-                const auto & st = data.stop_times[stidx];
+            st_idx_backward.insert(st_idx_backward.end(), vec_st.begin(), vec_st.end());
+            for(auto st : vec_st) {
                 uint32_t time;
-                if(!st.is_frequency())
-                    time = st.arrival_time %type::DateTime::SECONDS_PER_DAY;
+                if(!st->is_frequency())
+                    time = DateTimeUtils::hour(st->arrival_time);
                 else
-                    time = st.start_time;
+                    time = DateTimeUtils::hour(st->start_time);
                 arrival_times.push_back(time);
-                if(st.arrival_time >type::DateTime::SECONDS_PER_DAY) {
-                    auto vp = data.validity_patterns[data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx].days;
-                    vp <<=1;;
-                    auto it = std::find(validity_patterns.begin(), validity_patterns.end(), vp);
-                    if(it == validity_patterns.end()) {
-                        vp_idx_backward.push_back(validity_patterns.size());
-                        validity_patterns.push_back(vp);
-                    } else {
-                        vp_idx_backward.push_back(it - validity_patterns.begin());
-                    }
-                } else {
-                    vp_idx_backward.push_back(data.vehicle_journeys[st.vehicle_journey_idx].validity_pattern_idx);
+            }
+        }
+
+        // On dit que le journey pattern est valide en date j s'il y a au moins une circulation à j-1/j+1
+        for(int i=0; i<=365; ++i) {
+            for(auto vj : journey_pattern->vehicle_journey_list) {
+                if(vj->validity_pattern->check2(i)) {
+                    jp_validity_patterns[i].set(journey_pattern->idx);
+                    break;
                 }
             }
-
         }
     }
 
 
 }
-
 
 }}

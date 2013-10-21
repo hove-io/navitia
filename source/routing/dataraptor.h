@@ -3,46 +3,41 @@
 #include "type/datetime.h"
 
 #include <boost/foreach.hpp>
+#include <boost/dynamic_bitset.hpp>
 namespace navitia { namespace routing {
 
 /** Données statiques qui ne sont pas modifiées pendant le calcul */
 struct dataRAPTOR {
 
-
     typedef std::pair<int, int> pair_int;
-    typedef std::vector<type::DateTime> label_vector_t;
-    typedef std::map<navitia::type::idx_t, navitia::type::Connection> list_connections;
+    typedef std::vector<DateTime> label_vector_t;
     typedef std::vector<navitia::type::idx_t> vector_idx;
 
 
-
-    std::vector<navitia::type::Connection> foot_path_forward;
+    std::vector<const navitia::type::StopPointConnection*> foot_path_forward;
     std::vector<pair_int> footpath_index_forward;
-    std::vector<navitia::type::Connection> foot_path_backward;
+    std::vector<const navitia::type::StopPointConnection*> foot_path_backward;
     std::vector<pair_int> footpath_index_backward;
-    std::multimap<navitia::type::idx_t, navitia::type::Connection> footpath_rp_forward;
-    std::multimap<navitia::type::idx_t, navitia::type::Connection> footpath_rp_backward;
+    std::multimap<navitia::type::idx_t,const navitia::type::JourneyPatternPointConnection*> footpath_rp_forward;
+    std::multimap<navitia::type::idx_t,const navitia::type::JourneyPatternPointConnection*> footpath_rp_backward;
     std::vector<uint32_t> arrival_times;
     std::vector<uint32_t> departure_times;
     std::vector<uint32_t> start_times_frequencies;
     std::vector<uint32_t> end_times_frequencies;
-    std::vector<std::bitset<366>> validity_patterns;
-    std::vector<type::idx_t> st_idx_forward;
-    std::vector<type::idx_t> st_idx_backward;
-    std::vector<type::idx_t> vp_idx_forward;
-    std::vector<type::idx_t> vp_idx_backward;
+    std::vector<type::StopTime*> st_idx_forward;// Nom a changer ce ne sont plus des idx mais des pointeurs
+    std::vector<type::StopTime*> st_idx_backward;
     std::vector<size_t> first_stop_time;
     std::vector<size_t> nb_trips;
-    std::vector<size_t> first_frequency;
-    std::vector<size_t> nb_frequencies;
     label_vector_t labels_const;
     label_vector_t labels_const_reverse;
     vector_idx boardings_const;
+    std::vector<boost::dynamic_bitset<> > jp_validity_patterns;
+
 
     dataRAPTOR()  {}
     void load(const navitia::type::PT_Data &data);
 
-    const std::multimap<navitia::type::idx_t, navitia::type::Connection> & footpath_rp(bool forward) const {
+    const std::multimap<navitia::type::idx_t, const navitia::type::JourneyPatternPointConnection*> & footpath_rp(bool forward) const {
         if(forward)
             return footpath_rp_forward;
         else
@@ -67,20 +62,21 @@ struct dataRAPTOR {
             return departure_times[get_stop_time_order(journey_pattern, orderVj, order)];
     }
 
-    inline type::idx_t get_connection_idx(type::idx_t jpp_idx_origin, type::idx_t jpp_idx_destination, bool clockwise,const navitia::type::PT_Data &data)  const {
+    inline type::idx_t get_route_connection_idx(type::idx_t jpp_idx_origin, type::idx_t jpp_idx_destination, bool clockwise,const navitia::type::PT_Data &/*data*/)  const {
         BOOST_FOREACH(auto conn, footpath_rp(clockwise).equal_range(jpp_idx_origin)) {
-            if(conn.second.destination_idx == jpp_idx_destination)
-                return conn.second.idx;
+            if(conn.second->destination->idx == jpp_idx_destination)
+                return conn.second->idx;
         }
-        
-        const std::vector<type::Connection> &foot_path = clockwise ? foot_path_forward : foot_path_backward;
+    }
+
+    inline type::idx_t get_stop_point_connection_idx(type::idx_t stop_point_idx_origin, type::idx_t stop_point_idx_destination, bool clockwise,const navitia::type::PT_Data &/*data*/)  const {
+
+        const std::vector<const type::StopPointConnection*> &foot_path = clockwise ? foot_path_forward : foot_path_backward;
         const std::vector<pair_int> &footpath_index = clockwise ? footpath_index_forward : footpath_index_backward;
-        type::idx_t origin_stop_point_idx = data.journey_pattern_points[jpp_idx_origin].stop_point_idx,
-                    destination_stop_point_idx = data.journey_pattern_points[jpp_idx_destination].stop_point_idx;
-        for(int i = footpath_index[origin_stop_point_idx].first; i < footpath_index[origin_stop_point_idx].second; ++i) {
-            auto &conn = foot_path[i];
-            if(conn.destination_idx == destination_stop_point_idx) {
-                return conn.idx;
+        for(int i = footpath_index[stop_point_idx_origin].first; i < footpath_index[stop_point_idx_origin].second; ++i) {
+            auto conn = foot_path[i];
+            if(conn->destination->idx == stop_point_idx_destination) {
+                return conn->idx;
             }
         }
         return type::invalid_idx;

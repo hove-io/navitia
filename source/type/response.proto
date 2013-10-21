@@ -21,6 +21,7 @@ message PTReferential {
 message Place {
     required string name = 1;
     required string uri = 2;
+    optional NavitiaType embedded_type = 3;
     optional StopArea stop_area = 4;
     optional Poi poi = 5;
     optional StopPoint stop_point = 6;
@@ -51,9 +52,10 @@ enum StreetNetworkMode {
 
 message StreetNetwork {
     optional double length = 1;
-    optional StreetNetworkMode mode = 2;
-    repeated PathItem path_items = 3;
-    repeated GeographicalCoord coordinates = 4;
+    optional double duration = 2;
+    optional StreetNetworkMode mode = 3;
+    repeated PathItem path_items = 4;
+    repeated GeographicalCoord coordinates = 5;
 }
 
 enum SectionType {
@@ -62,13 +64,17 @@ enum SectionType {
     WAITING = 3;
     TRANSFER = 4;
     BIRD_FLY = 5;
+    boarding = 6;
+    landing = 7;
 }
 
 enum TransferType {
-    WALKING = 1;
-    GUARANTEED = 2;
-    EXTENSION = 3;
+    walking = 1;
+    guaranteed = 2;
+    stay_in = 3;
+
 }
+
 
 message PtDisplayInfo {
     optional string network = 1;
@@ -78,6 +84,11 @@ message PtDisplayInfo {
     optional string color = 5;
     optional string commercial_mode = 6;
     optional string physical_mode = 7;
+  	optional string description = 8;
+  	optional Uris uris = 9;
+  	optional VehicleJourneyType vehicle_journey_type = 10;
+  	optional hasEquipments has_equipments = 11;
+  	optional string name = 12;
 }
 
 message Uris {
@@ -88,6 +99,7 @@ message Uris {
     optional string commercial_mode = 5;
     optional string physical_mode = 6;
     optional string network = 7;
+    optional string note = 8;
 }
 
 message Section {
@@ -113,6 +125,7 @@ message Section {
 
     optional string begin_date_time = 15;
     optional string end_date_time = 16;
+    optional addInfoVehicleJourney add_info_vehicle_journey = 17;
 }
 
 message Journey {
@@ -122,6 +135,9 @@ message Journey {
     optional string arrival_date_time = 4;
     optional string requested_date_time = 5;
     repeated Section sections = 6;
+    optional Place origin = 7;
+    optional Place destination = 8;
+    optional string type =9;
 }
 
 enum ResponseType {
@@ -141,6 +157,8 @@ message Planner {
     optional ResponseType response_type = 2;
     optional string before = 3;
     optional string after = 4;
+    //optional string error = 5;
+    optional Error error = 5;
 }
 
 message Status{
@@ -160,6 +178,7 @@ message Status{
     optional bool loaded = 10;
 
     optional int32 nb_threads = 11;
+
 }
 
 message PairStopTime {
@@ -167,18 +186,36 @@ message PairStopTime {
     required StopDateTime arrival = 2;
 }
 
+message ScheduleStopTime {
+    optional string date_time = 1;
+    optional hasPropertie has_properties = 2;
+}
+
 message RouteScheduleRow {
     required StopPoint stop_point = 1;
-    repeated string stop_times = 2;
+    repeated ScheduleStopTime date_times = 2;
+    repeated string stop_times = 3;
+}
+
+message addInfoVehicleJourney{
+	required VehicleJourneyType vehicle_journey_type = 1;
+	optional bool has_date_time_estimated = 2;
+}
+
+message Header{
+	required PtDisplayInfo pt_display_informations = 1;
+	required addInfoVehicleJourney add_info_vehicle_journey = 2;
 }
 
 message Table {
     repeated RouteScheduleRow rows = 1;
+    repeated Header headers = 2;
 }
 
 message RouteSchedule {
     required Table table = 1;
-    required Route route = 2;
+    required PtDisplayInfo pt_display_informations = 2;
+//    required Route route = 2;
 }
 
 message Passage {
@@ -207,22 +244,12 @@ message Load {
     required bool ok = 1;
 }
 
-message IsochroneItem {
-    required StopDateTime stop_date_time = 1;
-    required int32 duration = 2;
-    required int32 nb_changes = 3;
-}
-
-message Isochrone {
-    repeated IsochroneItem items = 1;
-    optional ResponseType response_type = 2;
-}
-
 message Metadatas {
     required string start_production_date = 1;
     required string end_production_date = 2;
     required string shape = 3;
     required string status = 4;
+    repeated string contributors = 12;
 }
 
 message Pagination {
@@ -234,9 +261,36 @@ message Pagination {
     optional string previousPage = 6;
 }
 
+message StopSchedule {
+    required Route route = 1;
+    required PtDisplayInfo pt_display_informations = 2;
+    required StopPoint stop_point = 3;
+    repeated ScheduleStopTime stop_date_times = 4;
+}
+
+
+message Error{
+	enum error_id{
+		bad_filter = 1;
+		unknown_api = 2;
+		date_out_of_bounds = 3;
+		unable_to_parse = 4;
+		bad_format = 5;
+		no_origin = 6;
+		no_destination = 7;
+		no_origin_nor_destionation = 8;
+		no_solution = 9;
+		unknown_object = 10;
+		service_unavailable = 11;
+	}
+	optional error_id id = 1;
+	optional string message = 2;
+}
+
 message Response{
-    optional string error = 2;
+    optional Error error = 2;
     optional string info = 3;
+    optional int32 status_code = 1;
 
     optional Status status = 4;
     //Places
@@ -244,7 +298,7 @@ message Response{
     repeated string bad_words = 12;
     repeated Place places = 13;
     repeated Place places_nearby = 14;
-    
+
     //Ptref
     repeated ValidityPattern validity_patterns = 15;
     repeated Line lines = 16;
@@ -261,19 +315,22 @@ message Response{
     repeated Route routes = 27;
     repeated Poi pois = 28;
     repeated PoiType poi_types = 29;
-    
+
+    //Journeys
     repeated Journey journeys = 30;
     optional ResponseType response_type = 31;
     optional string prev = 32;
     optional string next = 33;
-    
+
+    //TimeTables
     optional StopsSchedule stops_schedule = 34;
     repeated RouteSchedule route_schedules = 35;
     repeated DepartureBoard departure_boards = 36;
     repeated Passage next_departures = 37;
     repeated Passage next_arrivals = 38;
+    repeated StopSchedule stop_schedules = 39;
+
     optional Load load = 46;
-    optional Isochrone isochrone = 47;
     optional Metadatas metadatas = 48;
     optional Pagination pagination = 49;
 }

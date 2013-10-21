@@ -18,6 +18,7 @@ Jointures::Jointures() {
     ITERATE_NAVITIA_PT_TYPES(VERTEX_MAP)
     vertex_map[Type_e::POI] = boost::add_vertex(Type_e::POI, g);
     vertex_map[Type_e::POIType] = boost::add_vertex(Type_e::POIType, g);
+    vertex_map[Type_e::Connection] = boost::add_vertex(Type_e::Connection, g);
 
     // À partir d'un stop area, on peut avoir ses stop points
     boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::StopArea), g);
@@ -49,9 +50,11 @@ Jointures::Jointures() {
     boost::add_edge(vertex_map.at(Type_e::JourneyPatternPoint), vertex_map.at(Type_e::JourneyPattern), g);
     boost::add_edge(vertex_map.at(Type_e::VehicleJourney), vertex_map.at(Type_e::JourneyPattern), g);
 
-    // À partir d'un vehicle journey, on peut avoir le journey parttern, la companie créole, le mode physique et le validity pattern
+    // À partir d'un vehicle journey, on peut avoir le journey pattern, la compagnie créole, le mode physique et le validity pattern
     boost::add_edge(vertex_map.at(Type_e::JourneyPattern), vertex_map.at(Type_e::VehicleJourney), g);
-    boost::add_edge(vertex_map.at(Type_e::Company), vertex_map.at(Type_e::VehicleJourney), g);
+    // On a mis un poids plus fort sur company, pour obliger d’obtenir les lignes au travers des JPP->Routes
+    // Sinon il tente le raccourci Company->line
+    boost::add_edge(vertex_map.at(Type_e::Company), vertex_map.at(Type_e::VehicleJourney), Edge(2.5), g);
     boost::add_edge(vertex_map.at(Type_e::PhysicalMode), vertex_map.at(Type_e::VehicleJourney), g);
     boost::add_edge(vertex_map.at(Type_e::ValidityPattern), vertex_map.at(Type_e::VehicleJourney), g);
 

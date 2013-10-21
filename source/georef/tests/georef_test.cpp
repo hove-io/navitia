@@ -147,8 +147,8 @@ BOOST_AUTO_TEST_CASE(compute_directions){
     GeoRef sn;
     GraphBuilder b(sn);
     Way w;
-    w.name = "Jaures"; sn.ways.push_back(w);
-    w.name = "Hugo"; sn.ways.push_back(w);
+    w.name = "Jaures"; sn.add_way(w);
+    w.name = "Hugo"; sn.add_way(w);
 
     b("a", "b")("b","c")("c","d")("d","e");
     sn.graph[b.get("a","b")].way_idx = 0;
@@ -499,7 +499,6 @@ BOOST_AUTO_TEST_CASE(coord){
 BOOST_AUTO_TEST_CASE(build_autocomplete_test){
 
         navitia::georef::GeoRef geo_ref;
-        navitia::georef::Way way;
         navitia::georef::HouseNumber hn;
         navitia::georef::Graph graph;
         vertex_t debut, fin;
@@ -508,34 +507,41 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
         std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> result;
         int nbmax = 10;
 
+        navitia::georef::Way  way;
         way.name = "jeanne d'arc";
         way.way_type = "rue";
-        geo_ref.ways.push_back(way);
+        geo_ref.add_way(way);
+
 
         way.name = "jean jaures";
         way.way_type = "place";
-        geo_ref.ways.push_back(way);
+        geo_ref.add_way(way);
+
 
         way.name = "jean paul gaultier paris";
         way.way_type = "rue";
-        geo_ref.ways.push_back(way);
+        geo_ref.add_way(way);
+
 
         way.name = "jean jaures";
         way.way_type = "avenue";
-        geo_ref.ways.push_back(way);
+        geo_ref.add_way(way);
+
 
         way.name = "poniatowski";
         way.way_type = "boulevard";
-        geo_ref.ways.push_back(way);
+        geo_ref.add_way(way);
+
 
         way.name = "pente de Bray";
         way.way_type = "";
-        geo_ref.ways.push_back(way);
+        geo_ref.add_way(way);
 
         /*
        (2,4)       (2,4)       (2,18)       (2,54)
          4           4           18           54
        */
+
         way.name = "jean jaures";
         way.way_type = "rue";
         // Ajout des numéros et les noeuds
@@ -585,19 +591,19 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
         way.edges.push_back(std::make_pair(debut, fin));
         way.edges.push_back(std::make_pair(fin,debut));
 
-        geo_ref.ways.push_back(way);
+        geo_ref.add_way(way);
 
-        way.name = "jean zay";
+        /*way.name = "jean zay";
         way.way_type = "rue";
-        geo_ref.ways.push_back(way);
+        geo_ref.add_way(way);
 
         way.name = "jean paul gaultier";
         way.way_type = "place";
-        geo_ref.ways.push_back(way);
+        geo_ref.add_way(way);*/
 
         geo_ref.build_autocomplete_list();
 
-        result = geo_ref.find_ways("10 rue jean jaures", nbmax, [](int){return true;});
+        result = geo_ref.find_ways("10 rue jean jaures", nbmax, false, [](int){return true;});
         if (result.empty())
             result.clear();
 

@@ -10,7 +10,6 @@
 #include <boost/format.hpp>
 #include "routing/dataraptor.h"
 #include <atomic>
-#include "georef/adminref.h"
 
 namespace navitia { namespace type {
 
@@ -35,15 +34,15 @@ public:
     /// Référentiel de transport en commun
     PT_Data pt_data;
 
-
     navitia::georef::GeoRef geo_ref;
 
     /// Données précalculées pour le raptor
     routing::dataRAPTOR dataRaptor;
 
     /** Retourne la structure de données associée au type */
-    template<typename T>  std::vector<T> & get_data();
-    template<typename T>  std::vector<T> const & get_data() const;
+    /// TODO : attention aux perfs à faire la copie
+    template<typename T> std::vector<T*> & get_data();
+    template<typename T> std::vector<T*> get_data() const;
 
     /** Retourne tous les indices d'un type donné
       *
@@ -61,11 +60,11 @@ public:
       * retourne une liste d'indexes pointant vers target
       */
     std::vector<idx_t> get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const ;
-    
-    
+
+
     /// Fixe les villes des voiries du filaire
     // les admins des objets
-    void set_admins();
+//    void set_admins();
 
     /// Mutex servant à protéger le load des données
     boost::shared_mutex load_mutex;
@@ -75,11 +74,9 @@ public:
     bool last_load;
     boost::posix_time::ptime last_load_at;
 
-    std::atomic<bool> to_load;
-
 
     /// Constructeur de data, définit le nombre de threads, charge les données
-    Data() : nb_threads(8), version(0), loaded(false), last_load(true), to_load(true){
+    Data() : nb_threads(8), version(0), loaded(false), last_load(true){
         if(Configuration::is_instanciated()){
             init_logger();
             log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -122,6 +119,7 @@ public:
     /** Construit l'indexe Autocomplete */
     void build_autocomplete();
 
+
     /** Construit l'indexe ProximityList */
     void build_proximity_list();
 
@@ -130,7 +128,8 @@ public:
 
     Data& operator=(Data&& other);
 
-
+    /** Retourne le type de l'id donné */
+    Type_e get_type_of_id(const std::string & id);
 private:
     /** Charge les données binaires compressées en LZ4
       *
@@ -141,6 +140,7 @@ private:
 
     /** Sauvegarde les données en binaire compressé avec LZ4*/
     void save_lz4(const std::string & filename);
+
 
 };
 

@@ -8,106 +8,56 @@
 
 namespace boost{ namespace posix_time{ class ptime; }}
 
-namespace navitia { namespace type {
+namespace navitia{
+typedef uint32_t DateTime;
 
-struct Data;    
-/** On se crée une structure qui représente une date et heure
- *
- * C’est représenté par le nombre de secondes à partir de la période de production
- */
-struct DateTime {
+namespace DateTimeUtils{
 
-    uint32_t datetime;
+    const uint32_t SECONDS_PER_DAY = 86400;
 
-    static const uint32_t SECONDS_PER_DAY = 86400;
+    const navitia::DateTime inf = std::numeric_limits<uint32_t>::max();
+    const navitia::DateTime min = 0;
 
-    static const DateTime inf;
-    static const DateTime min;
+    inline navitia::DateTime set(int date, int hour) {
+        return date * SECONDS_PER_DAY + hour;
+    }
 
-    constexpr DateTime() : datetime(std::numeric_limits<uint32_t>::max()){}
-    constexpr DateTime(int date, int hour) : datetime(date*SECONDS_PER_DAY + hour) {}
-    DateTime(const DateTime & dt) : datetime(dt.datetime) {}
-
-    uint32_t hour() const {
+    inline uint32_t hour(navitia::DateTime datetime) {
         return datetime%SECONDS_PER_DAY;
     }
 
-    uint32_t date() const {
+    inline uint32_t date(navitia::DateTime datetime) {
         return datetime/SECONDS_PER_DAY;
     }
 
-
-    bool operator<(const DateTime &other) const {
-        return this->datetime < other.datetime;
-    }
-
-    bool operator<=(const DateTime &other) const {
-        return this->datetime <= other.datetime;
-    }
-
-    bool operator>(const DateTime  & other) const {
-        return this->datetime > other.datetime;
-    }
-
-    bool operator>=(const DateTime &other) const {
-        return this->datetime >= other.datetime;
-    }
-
-    bool operator==(const DateTime &other) const {
-        return this->datetime == other.datetime;
-    }
-
-    bool operator!=(const DateTime  &other) const {
-        return this->datetime != other.datetime;
-    }
-
-    void update(uint32_t hour, bool clockwise = true) {
-        uint32_t this_hour = this->hour();
-        if(hour>=SECONDS_PER_DAY)
-            hour -= SECONDS_PER_DAY;
+    inline void update(navitia::DateTime & datetime, uint32_t hh, bool clockwise = true) {
+        uint32_t this_hour = hour(datetime);
+        if(hh>=SECONDS_PER_DAY)
+            hh -= SECONDS_PER_DAY;
         if(clockwise){
-            datetime += ( hour>=this_hour ?0:SECONDS_PER_DAY) + hour - this_hour;
-        } else {
-            if(hour<=this_hour)
-                datetime += hour - this_hour;
+            datetime += (hh>=this_hour ?0:SECONDS_PER_DAY) + hh - this_hour;
+        }
+        else {
+            if(hh<=this_hour)
+                datetime += hh - this_hour;
             else {
-                if(this->date() > 0)
-                    datetime += hour - this_hour - SECONDS_PER_DAY;
+                if(date(datetime) > 0)
+                    datetime += hh - this_hour - SECONDS_PER_DAY;
                 else
                     datetime = 0;
             }
         }
     }
 
-    void increment(uint32_t secs){
-        datetime += secs;
-    }
-
-    void decrement(uint32_t secs){
-        datetime -= secs;
-    }
-};
-
-
-inline DateTime operator+(DateTime dt, int seconds) {
-    dt.increment(seconds);
-    return dt;
+}
+namespace type {
+class Data;
 }
 
-inline DateTime operator-(DateTime dt, int seconds) {
-    dt.decrement(seconds);
-    return dt;
+//std::ostream & operator<<(std::ostream & os, const DateTime &dt);
+std::string str(const DateTime &dt);
+std::string iso_string(DateTime datetime, const type::Data &d);
+std::string iso_string(int date, int hour, const type::Data &d);
+boost::posix_time::ptime to_posix_time(DateTime datetime, const type::Data &d);
+
 }
-
-inline int operator-(const DateTime &dt1, const DateTime &dt2) {
-    return dt1.datetime - dt2.datetime;
-}
-
-std::ostream & operator<<(std::ostream & os, const DateTime & dt);
-
-
-std::string iso_string(int date, int hour, const Data &d);
-std::string iso_string(DateTime &datetime, const Data &d);
-boost::posix_time::ptime to_posix_time(DateTime &datetime, const Data &d);
-
-} }

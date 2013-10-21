@@ -6,27 +6,21 @@ namespace navitia { namespace routing {
 //get_type(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<vector_idx> &boardings, const navitia::type::Data &data) {
 
 
-type::idx_t
-get_boarding_jpp(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<vector_idx> &boardings, const navitia::type::Data &data) {
-    auto type = get_type(count, journey_pattern_point, labels, boardings, data);
-    if(type == boarding_type::vj) {
-        return data.pt_data.stop_times[boardings[count][journey_pattern_point]].journey_pattern_point_idx;
-    } else if(type == boarding_type::connection){
-        return boardings[count][journey_pattern_point] - data.pt_data.stop_times.size();
-    } else {
-        return type::invalid_idx;
-    }
+const type::JourneyPatternPoint*
+get_boarding_jpp(size_t count, type::idx_t journey_pattern_point_idx, const std::vector<std::vector<const type::JourneyPatternPoint*> > &boardings) {
+    return boardings[count][journey_pattern_point_idx];
 }
 
 
-std::pair<type::idx_t, uint32_t>
-get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<vector_idx> &boardings,
-                      const type::Properties &required_properties, bool clockwise,  const navitia::type::Data &data) {
-    if(get_type(count, journey_pattern_point, labels, boardings, data) == boarding_type::vj) {
-        const type::JourneyPatternPoint & jpp = data.pt_data.journey_pattern_points[journey_pattern_point];
-        return best_stop_time(jpp, labels[count][journey_pattern_point], required_properties, clockwise, data, true);
+std::pair<const type::StopTime*, uint32_t>
+get_current_stidx_gap(size_t count, type::idx_t journey_pattern_point, const std::vector<label_vector_t> &labels, const std::vector<std::vector<boarding_type> > &boarding_types,
+                      /*const type::Properties &required_properties*/
+                      const type::AccessibiliteParams & accessibilite_params, bool clockwise,  const navitia::type::Data &data) {
+    if(get_type(count, journey_pattern_point, boarding_types, data) == boarding_type::vj) {
+        const type::JourneyPatternPoint* jpp = data.pt_data.journey_pattern_points[journey_pattern_point];
+        return best_stop_time(jpp, labels[count][journey_pattern_point], accessibilite_params/*required_properties*/, clockwise, data, true);
     }
-    return std::make_pair(type::invalid_idx, std::numeric_limits<uint32_t>::max());
+    return std::make_pair(nullptr, std::numeric_limits<uint32_t>::max());
 }
 
 }}

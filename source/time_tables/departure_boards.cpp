@@ -5,6 +5,8 @@
 
 #include "boost/lexical_cast.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
+#include "ptreferential/ptreferential.h"
+#include "utils/paginate.h"
 
 namespace pt = boost::posix_time;
 
@@ -12,14 +14,16 @@ namespace navitia { namespace timetables {
 
 std::vector<vector_datetime> make_columuns(const vector_dt_st &stop_times) {
     std::vector<vector_datetime> result;
-    type::DateTime prev_date = type::DateTime::inf;
+    DateTime prev_date = DateTimeUtils::inf;
 
     for(auto & item : stop_times) {
-        if(prev_date == type::DateTime:: inf || (prev_date.hour()/3600) != (item.first.hour()/3600)) {
+        if(prev_date == DateTimeUtils::inf ||
+                (DateTimeUtils::hour(prev_date)/3600) != (DateTimeUtils::hour(item.first)/3600)) {
             //On supprime les doublons
             if(result.size() > 0) {
-                auto it = std::unique(result.back().begin(), result.back().end());
-                result.back().resize(std::distance(result.back().begin(), it));
+                auto last = result.back();
+                auto it = std::unique(last.begin(), last.end());
+                last.resize(std::distance(last.begin(), it));
             }
             result.push_back(vector_datetime());
         }
@@ -27,7 +31,6 @@ std::vector<vector_datetime> make_columuns(const vector_dt_st &stop_times) {
         result.back().push_back(item.first);
         prev_date = item.first;
     }
-
 
     if(result.size() > 0) {
         auto it = std::unique(result.back().begin(), result.back().end());
@@ -37,7 +40,96 @@ std::vector<vector_datetime> make_columuns(const vector_dt_st &stop_times) {
     return result;
 }
 
-pbnavitia::Response departure_board(const std::string &request, const std::string &date, uint32_t duration, const type::Data &data) {
+
+pbnavitia::Response
+render_v0(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
+          DateTime datetime, DateTime max_datetime,
+          const type::Data &data) {
+    pbnavitia::Response response;
+    auto current_time = pt::second_clock::local_time();
+    pt::time_period action_period(to_posix_time(datetime, data),
+                                  to_posix_time(max_datetime, data));
+
+    auto sort_predicate =
+        [&](datetime_stop_time d1, datetime_stop_time d2) {
+            auto hour1 = DateTimeUtils::hour(d1.first) % DateTimeUtils::SECONDS_PER_DAY;
+            auto hour2 = DateTimeUtils::hour(d2.first) % DateTimeUtils::SECONDS_PER_DAY;
+            return std::abs(hour1 - DateTimeUtils::hour(datetime)) <
+                   std::abs(hour2 - DateTimeUtils::hour(datetime));
+        };
+
+    for(auto id_vec : map_route_stop_point) {
+
+        auto board = response.add_departure_boards();
+        fill_pb_object(data.pt_data.stop_points[id_vec.first.first], data,
+                       board->mutable_stop_point(), 1,
+                       current_time, action_period);
+        fill_pb_object(data.pt_data.routes[id_vec.first.second], data,
+                       board->mutable_route(), 2, current_time, action_period);
+
+        auto vec_st = id_vec.second;
+        std::sort(vec_st.begin(), vec_st.end(), sort_predicate);
+
+        for(auto vec : make_columuns(vec_st)) {
+            pbnavitia::BoardItem *item = board->add_board_items();
+
+            for(DateTime dt : vec) {
+                if(!item->has_hour()) {
+                    auto hours = DateTimeUtils::hour(dt)/3600;
+                    item->set_hour(boost::lexical_cast<std::string>(hours));
+                }
+                auto minutes = (DateTimeUtils::hour(dt)%3600)/60;
+                item->add_minutes(boost::lexical_cast<std::string>(minutes));
+            }
+        }
+    }
+    return response;
+}
+
+
+pbnavitia::Response
+render_v1(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
+          DateTime datetime, DateTime max_datetime,
+          const type::Data &data) {
+    pbnavitia::Response response;
+    auto current_time = pt::second_clock::local_time();
+    auto now = pt::second_clock::local_time();
+    pt::time_period action_period(to_posix_time(datetime, data),
+                                  to_posix_time(max_datetime, data));
+
+    for(auto id_vec : map_route_stop_point) {
+        auto schedule = response.add_stop_schedules();
+        //Each schedule has a stop_point and a route
+        fill_pb_object(data.pt_data.stop_points[id_vec.first.first], data,
+                       schedule->mutable_stop_point(), 0,
+                       current_time, action_period);
+
+        auto m_route = schedule->mutable_route();
+        fill_pb_object(data.pt_data.routes[id_vec.first.second], data,
+                               m_route, 0, current_time, action_period);
+        if (data.pt_data.routes[id_vec.first.second]->line != nullptr){
+            auto m_line = m_route->mutable_line();
+            fill_pb_object(data.pt_data.routes[id_vec.first.second]->line, data,
+                                   m_line, 0, current_time, action_period);
+        }
+        auto pt_display_information = schedule->mutable_pt_display_informations();
+        fill_pb_object(data.pt_data.routes[id_vec.first.second], data,
+                               pt_display_information, 0, current_time, action_period);
+        //Now we fill the stop_date_times
+        for(auto dt_st : id_vec.second) {
+            auto stop_date_time = schedule->add_stop_date_times();
+            fill_pb_object(dt_st.second, data, stop_date_time, 0,
+                           now, action_period, dt_st.first);
+        }
+    }
+    return response;
+}
+
+
+pbnavitia::Response
+departure_board(const std::string &request, const std::string &date,
+                uint32_t duration, int interface_version,
+                int count, int start_page, const type::Data &data) {
 
     RequestHandle handler("DEPARTURE_BOARD", request, date,  duration, data);
 
@@ -48,57 +140,67 @@ pbnavitia::Response departure_board(const std::string &request, const std::strin
         return handler.pb_response;
 
     std::map<stop_point_line, vector_dt_st> map_route_stop_point;
-    // On regroupe entre eux les stop_times appartenant au meme couple (stop_point, route)
-    // On veut en effet afficher les départs regroupés par route (une route étant une vague direction commerciale
-    for(type::idx_t journey_pattern_point_idx : handler.journey_pattern_points) {
-        auto stop_point_idx = data.pt_data.journey_pattern_points[journey_pattern_point_idx].stop_point_idx;
-        auto route_idx = data.pt_data.journey_patterns[data.pt_data.journey_pattern_points[journey_pattern_point_idx].journey_pattern_idx].route_idx;
-
-        auto stop_times = get_stop_times({journey_pattern_point_idx}, handler.date_time, handler.max_datetime, std::numeric_limits<int>::max(), data);
-
-        auto key = std::make_pair(stop_point_idx, route_idx);
-        auto iter = map_route_stop_point.find(key);
-        if(iter == map_route_stop_point.end()) {
-            iter = map_route_stop_point.insert(std::make_pair(key, vector_dt_st())).first;
-        }
-
-        iter->second.insert(iter->second.end(), stop_times.begin(), stop_times.end());
+    //Mapping route/stop_point
+    std::vector<stop_point_line> sps_routes;
+    for(auto jpp_idx : handler.journey_pattern_points) {
+        auto jpp = data.pt_data.journey_pattern_points[jpp_idx];
+        auto route_idx  = jpp->journey_pattern->route->idx;
+        auto sp_idx = jpp->stop_point->idx;
+        stop_point_line key = stop_point_line(sp_idx, route_idx);
+        auto find_predicate = [&](stop_point_line spl) {
+            return spl.first == key.first && spl.second == key.second;
+        };
+        auto it = std::find_if(sps_routes.begin(), sps_routes.end(), find_predicate);
+        if(it == sps_routes.end())
+            sps_routes.push_back(key);
     }
-
-    auto current_time = pt::second_clock::local_time();
-    pt::time_period action_period(to_posix_time(handler.date_time, data), to_posix_time(handler.max_datetime, data));
-
-    for(auto id_vec : map_route_stop_point) {
-
-        auto board = handler.pb_response.add_departure_boards();
-        fill_pb_object(id_vec.first.first, data, board->mutable_stop_point(), 1, current_time, action_period);
-        fill_pb_object(id_vec.first.second, data, board->mutable_route(), 2, current_time, action_period);
-
-        auto vec_st = id_vec.second;
-        std::sort(vec_st.begin(), vec_st.end(),
-                  [&](dt_st d1, dt_st d2) {
-                    return std::abs((d1.first.hour() % type::DateTime::SECONDS_PER_DAY)-handler.date_time.hour())
-                        <  std::abs((d2.first.hour() % type::DateTime::SECONDS_PER_DAY)-handler.date_time.hour());
-                  });
-
-        for(auto vec : make_columuns(vec_st)) {
-            pbnavitia::BoardItem *item = board->add_board_items();
-
-            for(type::DateTime dt : vec) {
-                if(!item->has_hour())
-                    item->set_hour(boost::lexical_cast<std::string>(dt.hour()/3600));
-                item->add_minutes(boost::lexical_cast<std::string>((dt.hour()%3600)/60));
+    size_t total_result = sps_routes.size();
+    sps_routes = paginate(sps_routes, count, start_page);
+    //Trie des vecteurs de date_times stop_times
+    auto sort_predicate = [](datetime_stop_time dt1, datetime_stop_time dt2) {
+                    return dt1.first < dt2.first;
+                };
+    // On regroupe entre eux les stop_times appartenant
+    // au meme couple (stop_point, route)
+    // On veut en effet afficher les départs regroupés par route
+    // (une route étant une vague direction commerciale
+    for(auto sp_route : sps_routes) {
+        std::vector<datetime_stop_time> stop_times;
+        const type::StopPoint* stop_point = data.pt_data.stop_points[sp_route.first];
+        const type::Route* route = data.pt_data.routes[sp_route.second];
+        auto jpps = stop_point->journey_pattern_point_list;
+        for(auto jpp : jpps) {
+            if(jpp->journey_pattern->route == route) {
+                auto tmp = get_stop_times({jpp->idx}, handler.date_time,
+                                                 handler.max_datetime,
+                                                 std::numeric_limits<int>::max(), data);
+                stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
             }
         }
+        std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
+        auto to_insert = std::pair<stop_point_line, vector_dt_st>(sp_route, stop_times);
+        map_route_stop_point.insert(to_insert);
     }
+
+    if(interface_version == 0) {
+        handler.pb_response = render_v0(map_route_stop_point,
+                                        handler.date_time,
+                                        handler.max_datetime, data);
+    } else if(interface_version == 1) {
+        handler.pb_response = render_v1(map_route_stop_point,
+                                        handler.date_time,
+                                        handler.max_datetime, data);
+    }
+
+
+    auto pagination = handler.pb_response.mutable_pagination();
+    pagination->set_totalresult(total_result);
+    pagination->set_startpage(start_page);
+    pagination->set_itemsperpage(count);
+    pagination->set_itemsonpage(std::max(handler.pb_response.departure_boards_size(),
+                                         handler.pb_response.stop_schedules_size()));
 
     return handler.pb_response;
 }
-
-
-
-
-
 }
-
 }

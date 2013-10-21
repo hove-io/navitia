@@ -9,3 +9,4 @@ documentation/build
 source/CMakeLists.txt.user
 tags
 *.pyc
+*_pb2.py

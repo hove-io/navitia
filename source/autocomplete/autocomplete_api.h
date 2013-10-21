@@ -18,6 +18,7 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  uint32_t depth,
                                  int nbmax,
                                  const std::vector <std::string> &admins,
+                                 int search_type,
                                  const type::Data &d);
 
 

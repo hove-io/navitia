@@ -13,8 +13,8 @@ struct GeographicalCoord;
 }
 
 namespace proximitylist {
-pbnavitia::Response find(type::GeographicalCoord coord, double distance,
+pbnavitia::Response find(const type::GeographicalCoord& coord, const double distance,
                          const std::vector<type::Type_e> & filter,
-                         uint32_t depth,
+                         const uint32_t depth, const uint32_t count, const uint32_t start_page,
                          const type::Data & data);
 }} // namespace navitia::proximitylist
