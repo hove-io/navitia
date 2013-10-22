@@ -385,6 +385,7 @@ void GeoRef::build_proximity_list(){
 
 void GeoRef::build_autocomplete_list(){
     int pos = 0;
+    fl_way.clear();
     for(Way* way : ways){
         // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin
         if ((!way->name.empty()) && (way->admin_list.size() > 0)){
@@ -406,6 +407,7 @@ void GeoRef::build_autocomplete_list(){
     }
     fl_way.build();
 
+    fl_poi.clear();
     //Remplir les poi dans la liste autocompletion
     for(const POI* poi : pois){
         // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin
@@ -426,6 +428,7 @@ void GeoRef::build_autocomplete_list(){
     }
     fl_poi.build();
 
+    fl_admin.clear();
     // les données administratives
     for(Admin* admin : admins){
         /*
