@@ -414,14 +414,12 @@ void GeoRef::build_autocomplete_list(){
         if ((!poi->name.empty()) && (poi->admin_list.size() > 0)){
             std::string key="";
             if (poi->visible){
-
                 for(Admin* admin : poi->admin_list){
                     if (admin->level == 8)
                     {
                         key += " " + admin->name;
                     }
                 }
-
                 fl_poi.add_string(poi->name + " " + key, poi->idx ,alias, synonymes);
             }
         }
@@ -431,13 +429,6 @@ void GeoRef::build_autocomplete_list(){
     fl_admin.clear();
     // les données administratives
     for(Admin* admin : admins){
-        /*
-        std::string key="";
-        for(Admin* adm : admin->admin_list){
-            key += " " + adm->name;
-        }
-        fl_admin.add_string(admin->name + " " + key, admin->idx ,alias, synonymes);
-        */
         fl_admin.add_string(admin->name, admin->idx ,alias, synonymes);
     }
     fl_admin.build();
