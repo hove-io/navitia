@@ -460,6 +460,7 @@ void GeoRef::build_rtree() {
 
 /** Normalisation des codes externes des rues*/
 void GeoRef::normalize_extcode_way(){
+    this->way_map.clear();
     for(Way* way : ways){
         way->uri = "address:"+ way->uri;
         this->way_map[way->uri] = way->idx;
@@ -468,6 +469,7 @@ void GeoRef::normalize_extcode_way(){
 
 
 void GeoRef::normalize_extcode_admin(){
+    this->admin_map.clear();
     for(Admin* admin : admins){
         admin->uri = "admin:" + admin->uri;
         this->admin_map[admin->uri] = admin->idx;
@@ -515,6 +517,7 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std
 
 int GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_points){
     int matched = 0;
+    this->projected_stop_points.clear();
     this->projected_stop_points.reserve(stop_points.size());
     for(const type::StopPoint* stop_point : stop_points){
         ProjectionData proj(stop_point->coord, *this, this->pl);
