@@ -40,7 +40,7 @@ class Watching():
 
     def check_messages(self):
         """"""
-        self.pyed_logger.info("connection to rabbitmq")
+        self.pyed_logger.debug("connection to rabbitmq")
         has_messages = False
         connection = pika.BlockingConnection(pika.ConnectionParameters(
             host=self.conf.get('broker', 'host'),
@@ -63,7 +63,7 @@ class Watching():
             channel.queue_bind(exchange=exchange_name,
                     queue=queue_name, routing_key=binding_key)
 
-        self.pyed_logger.info("start consumming: %s", queue_name)
+        self.pyed_logger.debug("start consumming: %s", queue_name)
 
         res = channel.basic_get(queue=queue_name, no_ack=True)
         if res[0]:
@@ -72,7 +72,7 @@ class Watching():
             channel.queue_purge(queue=queue_name)
 
         connection.close()
-        self.pyed_logger.info("rabbitmq connection closed")
+        self.pyed_logger.debug("rabbitmq connection closed")
         return has_messages
 
     def run(self):
