@@ -23,13 +23,13 @@ app.debug = True
 app.config.update(PROPAGATE_EXCEPTIONS=True)
 api = Api(app, catch_all_404s=True)
 
-@api.representation("application/xml")
-def output_xml(data, code, headers=None):
-    """Makes a Flask response with a XML encoded body"""
-    data_xml = dict2xml.dict2xml({'response' :data})
-    resp = make_response(data_xml, code)
-    resp.headers.extend(headers or {})
-    return resp
+#@api.representation("application/xml")
+#def output_xml(data, code, headers=None):
+#    """Makes a Flask response with a XML encoded body"""
+#    data_xml = dict2xml.dict2xml({'response' :data})
+#    resp = make_response(data_xml, code)
+#    resp.headers.extend(headers or {})
+#    return resp
 
 @api.representation("text/jsonp")
 @api.representation("application/jsonp")

@@ -1,3 +1,10 @@
+navitia2 (0.71.0) unstable; urgency=low
+
+   [ Vincent Lara ]
+  * Modification de l'emplacement de la v0
+
+ -- vlara <vincent.lara@canaltp.fr>  Tue, 22 Oct 2013 15:26:08 +0200
+
 navitia2 (0.70) UNRELEASED; urgency=low
 
   * Separation des paquets

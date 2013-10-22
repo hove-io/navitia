@@ -67,6 +67,8 @@ int main(int argc, char * argv[])
     data.load(input);
     read = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
+#define SIZE_EXT_CODE(type_name, collection_name)size_t collection_name##_size = data.pt_data.collection_name.size();\
+SIZE_EXT_CODE(CLEAR_EXT_CODE)
     std::cout << "chargement des messages" << std::endl;
 
     ed::connectors::RealtimeLoaderConfig config;
@@ -101,7 +103,21 @@ int main(int argc, char * argv[])
     adapter.apply(perturbations, data.pt_data);
     //aprés avoir modifié les graphs; on retrie
     data.pt_data.sort();
+#define COMP_SIZE1(type_name, collection_name)BOOST_ASSERT(collection_name##_size == data.pt_data.collection_name.size());\
+ITERATE_NAVITIA_PT_TYPES(COMP_SIZE1)
     apply_adapted = (pt::microsec_clock::local_time() - start).total_milliseconds();
+    data.build_proximity_list();
+#define COMP_SIZE2(type_name, collection_name)BOOST_ASSERT(collection_name##_size == data.pt_data.collection_name.size());\
+ITERATE_NAVITIA_PT_TYPES(COMP_SIZE2)
+    data.build_uri();
+#define COMP_SIZE3(type_name, collection_name)BOOST_ASSERT(collection_name##_size == data.pt_data.collection_name.size());\
+ITERATE_NAVITIA_PT_TYPES(COMP_SIZE3)
+
+    std::cout << "Construction de first letter" << std::endl;
+    data.build_autocomplete();
+
+#define COMP_SIZE(type_name, collection_name)BOOST_ASSERT(collection_name##_size == data.pt_data.collection_name.size());\
+ITERATE_NAVITIA_PT_TYPES(COMP_SIZE)
 
     std::cout << "Debut sauvegarde ..." << std::endl;
 
