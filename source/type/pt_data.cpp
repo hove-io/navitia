@@ -41,7 +41,6 @@ void PT_Data::sort(){
 }
 
 
-//void PT_Data::build_autocomplete(const std::map<std::string, std::string> & map_alias, const std::map<std::string, std::string> & map_synonymes){
 void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     this->stop_area_autocomplete.clear();
     for(const StopArea* sa : this->stop_areas){
