@@ -56,11 +56,11 @@ bool ValidityPattern::check(int day) const {
 
 
 bool CommercialMode::operator<(const CommercialMode& other) const {
-    return this->name < other.name;
+    return this->name < other.name || (this->name == other.name && *this < other);
 }
 
 bool PhysicalMode::operator<(const PhysicalMode& other) const {
-    return this->name < other.name;
+    return this->name < other.name || (this->name == other.name && *this < other);
 }
 
 bool Line::operator<(const Line& other) const {
