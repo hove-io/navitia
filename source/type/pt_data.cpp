@@ -105,7 +105,7 @@ void PT_Data::build_proximity_list() {
 }
 
 void PT_Data::build_uri() {
-#define NORMALIZE_EXT_CODE(type_name, collection_name) for(auto &element : collection_name) collection_name##_map[element->uri] = element;
+#define NORMALIZE_EXT_CODE(type_name, collection_name) for(auto element : collection_name) collection_name##_map[element->uri] = element;
     ITERATE_NAVITIA_PT_TYPES(NORMALIZE_EXT_CODE)
 }
 
