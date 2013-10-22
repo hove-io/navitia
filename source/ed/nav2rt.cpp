@@ -102,6 +102,10 @@ int main(int argc, char * argv[])
     //aprés avoir modifié les graphs; on retrie
     data.pt_data.sort();
     apply_adapted = (pt::microsec_clock::local_time() - start).total_milliseconds();
+    data.build_proximity_list();
+    data.build_uri();
+    std::cout << "Construction de first letter" << std::endl;
+    data.build_autocomplete();
 
     std::cout << "Debut sauvegarde ..." << std::endl;
 
