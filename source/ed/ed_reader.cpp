@@ -598,7 +598,7 @@ void EdReader::fill_stop_times(nt::Data& data, pqxx::work& work){
         "FROM navitia.stop_time;";
 
     pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){       
         nt::StopTime* stop = new nt::StopTime();
         const_it["arrival_time"].to(stop->arrival_time);
         const_it["departure_time"].to(stop->departure_time);
@@ -703,7 +703,7 @@ void EdReader::fill_pois(navitia::type::Data& data, pqxx::work& work){
 void EdReader::fill_ways(navitia::type::Data& data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, type FROM georef.way;";
     pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){        
         if(binary_search(this->way_no_ignore.begin(), this->way_no_ignore.end(), const_it["id"].as<idx_t>())){
             navitia::georef::Way* way = new navitia::georef::Way;
             const_it["uri"].to(way->uri);
@@ -715,13 +715,13 @@ void EdReader::fill_ways(navitia::type::Data& data, pqxx::work& work){
             data.geo_ref.ways.push_back(way);
             this->way_map[const_it["id"].as<idx_t>()] = way;
         }
-    }
+    }    
 }
 
 void EdReader::fill_house_numbers(navitia::type::Data& , pqxx::work& work){
     std::string request = "SELECT way_id, ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat, number, left_side FROM georef.house_number where way_id IS NOT NULL;";
     pqxx::result result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){        
         navitia::georef::HouseNumber hn;
         const_it["number"].to(hn.number);
         hn.coord.set_lon(const_it["lon"].as<double>());
@@ -833,6 +833,7 @@ void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work){
     pqxx::result result = work.exec(request);
     uint64_t idx = 0;
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        this->node_map[const_it["id"].as<uint64_t>()] = std::numeric_limits<uint64_t>::max();
         if(! binary_search(this->node_to_ignore.begin(), this->node_to_ignore.end(), const_it["id"].as<uint64_t>())){
             navitia::georef::Vertex v;
             v.coord.set_lon(const_it["lon"].as<double>());
@@ -866,10 +867,6 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
             if (const_it["bike"].as<bool>()){
                 boost::add_edge(data.geo_ref.bike_offset + source, data.geo_ref.bike_offset + target, e, data.geo_ref.graph);
             }
-            if (const_it["car"].as<bool>()){
-                boost::add_edge(data.geo_ref.car_offset + source, data.geo_ref.car_offset + target, e, data.geo_ref.graph);
-            }
-
         }
     }
 }
