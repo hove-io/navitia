@@ -12,7 +12,7 @@ class Places(Resource):
     def __init__(self):
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
-        self.parsers["get"].add_argument("q", type=str, required=True,
+        self.parsers["get"].add_argument("q", type=unicode, required=True,
                 description="The data to search")
         self.parsers["get"].add_argument("type[]", type=str, action="append",
                                  default=["stop_area","address",

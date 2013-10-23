@@ -92,7 +92,7 @@ class Script:
                 req.places.admin_uris.append(admin_uri)
 
         resp = NavitiaManager().send_and_receive(req, region)
-        if len(resp.places) == 0 and search_type == 0:
+        if len(resp.places) == 0 and request['search_type'] == 0:
             request["search_type"] = 1
             return self.places(request, region)
         self.__pagination(request, "places", resp)
