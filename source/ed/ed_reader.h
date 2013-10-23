@@ -50,7 +50,7 @@ private:
     std::unordered_map<idx_t, navitia::georef::POIType*> poi_type_map;
 
 //    std::unordered_map<uint64_t, idx_t> admin_map;
-    std::unordered_map<uint64_t, idx_t> node_map;
+    std::unordered_map<uint64_t, uint64_t> node_map;
 
     // ces deux vectors servent pour ne pas charger les graphes secondaires
     std::vector<uint64_t> way_no_ignore;
