@@ -138,8 +138,10 @@ bool VehicleJourney::operator<(const VehicleJourney& other) const {
 }
 
 bool ValidityPattern::operator <(const ValidityPattern &other) const {
-    BOOST_ASSERT(this->days.to_string() != other.days.to_string());
-    return this->days.to_string() < other.days.to_string();
+    //Il faut retablir l'insertion unique des pointeurs dans les connecteurs
+    //BOOST_ASSERT(this->days.to_string() != other.days.to_string());
+    //return this->days.to_string() < other.days.to_string();
+    return this < &other;
 }
 
 bool StopPointConnection::operator<(const StopPointConnection& other) const{
