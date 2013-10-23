@@ -109,9 +109,6 @@ ITERATE_NAVITIA_PT_TYPES(COMP_SIZE1)
     data.build_proximity_list();
 #define COMP_SIZE2(type_name, collection_name)BOOST_ASSERT(collection_name##_size == data.pt_data.collection_name.size());\
 ITERATE_NAVITIA_PT_TYPES(COMP_SIZE2)
-    data.build_uri();
-#define COMP_SIZE3(type_name, collection_name)BOOST_ASSERT(collection_name##_size == data.pt_data.collection_name.size());\
-ITERATE_NAVITIA_PT_TYPES(COMP_SIZE3)
 
     std::cout << "Construction de first letter" << std::endl;
     data.build_autocomplete();
