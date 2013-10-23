@@ -145,11 +145,27 @@ bool ValidityPattern::operator <(const ValidityPattern &other) const {
 }
 
 bool StopPointConnection::operator<(const StopPointConnection& other) const{
-    return *(this->departure) < *(other.departure);
+    if (this->departure == other.departure) {
+        if(this->destination == other.destination) {
+            return this < &other;
+        } else {
+            return *(this->destination) < *(other.destination);
+        }
+    } else {
+        return *(this->departure) < *(other.departure);
+    }
 }
 
 bool JourneyPatternPointConnection::operator<(const JourneyPatternPointConnection& other) const {
-    return *(this->departure) < *(other.departure);
+    if (this->departure == other.departure) {
+        if(this->destination == other.destination) {
+            return this < &other;
+        } else {
+            return *(this->destination) < *(other.destination);
+        }
+    } else {
+        return *(this->departure) < *(other.departure);
+    }
 }
 bool StopTime::operator<(const StopTime& other) const {
     if(this->vehicle_journey == other.vehicle_journey){
