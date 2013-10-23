@@ -278,10 +278,14 @@ void Visitor::insert_pois(){
     this->lotus.prepare_bulk_insert("navitia.poi", {"id","weight","coord", "name", "uri", "poi_type_id"});
     int32_t count =0;
     for(auto poi : pois){
-        Node n = nodes.at(poi.first);
-        count++;
-        std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
-        this->lotus.insert({std::to_string(count),std::to_string(poi.second.weight), point, poi.second.name, poi.second.uri,std::to_string(poi.second.poitype_idx)});
+        try{
+            Node n = nodes.at(poi.first);
+            count++;
+            std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
+            this->lotus.insert({std::to_string(count),std::to_string(poi.second.weight), point, poi.second.name, poi.second.uri,std::to_string(poi.second.poitype_idx)});
+        }catch(...){
+            std::cout << "Attention, le noued  : [" << poi.first << " est introuvable]." << std::endl;
+        }
     }
     lotus.finish_bulk_insert();
 }
