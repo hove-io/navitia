@@ -1,3 +1,9 @@
+navitia2 (0.72.1) unstable; urgency=low
+
+  * Patch sur l'import des pois
+
+ -- vlara <vincent.lara@canaltp.fr>  Wed, 23 Oct 2013 11:30:11 +0200
+
 navitia2 (0.72) unstable; urgency=low
 
   * Correction ed2nav
