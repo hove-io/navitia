@@ -172,7 +172,7 @@ bool StopTime::operator<(const StopTime& other) const {
         BOOST_ASSERT(this->journey_pattern_point->order != other.journey_pattern_point->order);
         return this->journey_pattern_point->order < other.journey_pattern_point->order;
     } else {
-        return *this->vehicle_journey < *other.vehicle_journey;
+        return *(this->vehicle_journey) < *(other.vehicle_journey);
     }
 }
 
