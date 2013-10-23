@@ -76,6 +76,15 @@ struct Autocomplete
         ar & word_dictionnary & word_quality_list &pattern_dictionnary;
     }
 
+    /// Efface les structures de données sérialisées
+    void clear() {
+        temp_word_map.clear();
+        word_dictionnary.clear();
+        temp_pattern_map.clear();
+        pattern_dictionnary.clear();
+        word_quality_list.clear();
+    }
+
     // Méthodes permettant de construire l'indexe
 
     /** Étant donné une chaîne de caractères et la position de l'élément qui nous intéresse :
@@ -133,6 +142,8 @@ struct Autocomplete
         }
         return pattern;
     }
+
+
 
     /** Construit la structure finale
       *

@@ -130,6 +130,8 @@ void Data::save_lz4(const std::string & filename) {
 }
 
 void Data::build_uri(){
+#define CLEAR_EXT_CODE(type_name, collection_name) this->pt_data.collection_name##_map.clear();
+ITERATE_NAVITIA_PT_TYPES(CLEAR_EXT_CODE)
     this->pt_data.build_uri();
     geo_ref.normalize_extcode_way();
     geo_ref.normalize_extcode_admin();
