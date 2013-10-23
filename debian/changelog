@@ -1,3 +1,9 @@
+navitia2 (0.72) unstable; urgency=low
+
+  * Correction ed2nav
+
+ -- vlara <vlara@vlara-OptiPlex-790>  Wed, 23 Oct 2013 11:03:42 +0200
+
 navitia2 (0.71.0) unstable; urgency=low
 
    [ Vincent Lara ]
