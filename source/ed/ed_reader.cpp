@@ -833,6 +833,7 @@ void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work){
     pqxx::result result = work.exec(request);
     uint64_t idx = 0;
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        this->node_map[const_it["id"].as<uint64_t>()] = std::numeric_limits<uint64_t>::max();
         if(! binary_search(this->node_to_ignore.begin(), this->node_to_ignore.end(), const_it["id"].as<uint64_t>())){
             navitia::georef::Vertex v;
             v.coord.set_lon(const_it["lon"].as<double>());
@@ -861,15 +862,16 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
             e.way_idx = way->idx;
             uint64_t source = this->node_map[const_it["source_node_id"].as<uint64_t>()];
             uint64_t target = this->node_map[const_it["target_node_id"].as<uint64_t>()];
-            data.geo_ref.ways[way->idx]->edges.push_back(std::make_pair(source, target));
-            boost::add_edge(source, target, e, data.geo_ref.graph);
-            if (const_it["bike"].as<bool>()){
-                boost::add_edge(data.geo_ref.bike_offset + source, data.geo_ref.bike_offset + target, e, data.geo_ref.graph);
+            if ((source != std::numeric_limits<uint64_t>::max()) && (target != std::numeric_limits<uint64_t>::max())){
+                data.geo_ref.ways[way->idx]->edges.push_back(std::make_pair(source, target));
+                boost::add_edge(source, target, e, data.geo_ref.graph);
+                if (const_it["bike"].as<bool>()){
+                    boost::add_edge(data.geo_ref.bike_offset + source, data.geo_ref.bike_offset + target, e, data.geo_ref.graph);
+                }
+                if (const_it["car"].as<bool>()){
+                    boost::add_edge(data.geo_ref.car_offset + source, data.geo_ref.car_offset + target, e, data.geo_ref.graph);
+                }
             }
-            if (const_it["car"].as<bool>()){
-                boost::add_edge(data.geo_ref.car_offset + source, data.geo_ref.car_offset + target, e, data.geo_ref.graph);
-            }
-
         }
     }
 }
