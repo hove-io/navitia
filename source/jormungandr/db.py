@@ -3,9 +3,6 @@ from app import app
 
 __ALL__ = ['engine', 'meta', 'key', 'user', 'instance', 'api', 'authorization']
 
-#TODO
-app.config['PG_CONNECTION_STRING'] = 'postgresql://navitia:navitia@localhost/jormun'
-
 engine = create_engine(app.config['PG_CONNECTION_STRING'])
 meta = MetaData(engine)
 key = Table('key', meta, autoload=True, schema='jormungandr')
