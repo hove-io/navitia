@@ -49,9 +49,11 @@ void Visitor::way_callback(uint64_t osmid, const CanalTP::Tags &tags, const std:
 
 void Visitor::relation_callback(uint64_t osmid, const CanalTP::Tags & tags, const CanalTP::References & refs){
     references[osmid] = refs;
-    if(tags.find("admin_level") != tags.end()){
+    const auto tmp_admin_level = tags.find("admin_level") ;
+    if(tmp_admin_level != tags.end()){
         OSMAdminRef inf;
-        inf.level = tags.at("admin_level");
+        inf.level = tmp_admin_level->second;
+
         std::vector<std::string> accepted_levels{"8", "9", "10"};
         if(std::find(accepted_levels.begin(), accepted_levels.end(), inf.level) != accepted_levels.end()){
             if(tags.find("ref:INSEE") != tags.end()){
@@ -66,6 +68,8 @@ void Visitor::relation_callback(uint64_t osmid, const CanalTP::Tags & tags, cons
             inf.refs = refs;
             OSMAdminRefs[osmid]=inf;
         }
+    } else {
+        std::cout << "Unable to find tag admin_level" << std::endl;
     }
 }
 
@@ -82,11 +86,16 @@ void Visitor::add_osm_housenumber(uint64_t osmid, const CanalTP::Tags & tags){
 
 
 void Visitor::insert_if_needed(uint64_t ref) {
-    Node & n = nodes.at(ref);
-    if(n.increment_use(this->node_idx)){
-        this->node_idx++;
-        std::string line = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
-        this->lotus.insert({std::to_string(ref), line});
+    const auto tmp_node = nodes.find(ref);
+    if(tmp_node != nodes.end()) {
+        Node & n = tmp_node->second;
+        if(n.increment_use(this->node_idx)){
+            this->node_idx++;
+            std::string line = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
+            this->lotus.insert({std::to_string(ref), line});
+        }
+    } else {
+        std::cout << "Unable to find node " << ref << std::endl;
     }
 }
 
@@ -125,26 +134,31 @@ void Visitor::insert_edges(){
 
             for(size_t i = 0; i < w.second.refs.size(); ++i){
                 uint64_t current_ref = w.second.refs[i];
-                Node current_node = nodes.at(current_ref);
+                const auto tmp_node = nodes.find(current_ref);
+                if(tmp_node != nodes.end()) {
+                    Node current_node = tmp_node->second;
 
-                if(i > 0) geog << ", ";
-                geog << current_node.lon() << " " << current_node.lat();
+                    if(i > 0) geog << ", ";
+                    geog << current_node.lon() << " " << current_node.lat();
 
-                if(i == 0) {
-                    source = current_ref;
-                }
-                // If a node is used more than once, it is an intersection, hence it's a node of the street network graph
-                else if(current_node.uses > 1){
-                    uint64_t target = current_ref;
-                    // TODO : gérer les modes
-                    geog << ")";
-                    this->lotus.insert({std::to_string(source), std::to_string(target), std::to_string(w.first), geog.str(),
-                                       std::to_string(w.second.properties[FOOT_FWD]), std::to_string(w.second.properties[CYCLE_FWD]), std::to_string(w.second.properties[CAR_FWD])});
-                    this->lotus.insert({std::to_string(target), std::to_string(source), std::to_string(w.first), geog.str(),
-                                       std::to_string(w.second.properties[FOOT_BWD]), std::to_string(w.second.properties[CYCLE_BWD]), std::to_string(w.second.properties[CAR_BWD])});
-                    source = target;
-                    geog.str("");
-                    geog << "LINESTRING(" << current_node.lon() << " " << current_node.lat();
+                    if(i == 0) {
+                        source = current_ref;
+                    }
+                    // If a node is used more than once, it is an intersection, hence it's a node of the street network graph
+                    else if(current_node.uses > 1){
+                        uint64_t target = current_ref;
+                        // TODO : gérer les modes
+                        geog << ")";
+                        this->lotus.insert({std::to_string(source), std::to_string(target), std::to_string(w.first), geog.str(),
+                                           std::to_string(w.second.properties[FOOT_FWD]), std::to_string(w.second.properties[CYCLE_FWD]), std::to_string(w.second.properties[CAR_FWD])});
+                        this->lotus.insert({std::to_string(target), std::to_string(source), std::to_string(w.first), geog.str(),
+                                           std::to_string(w.second.properties[FOOT_BWD]), std::to_string(w.second.properties[CYCLE_BWD]), std::to_string(w.second.properties[CAR_BWD])});
+                        source = target;
+                        geog.str("");
+                        geog << "LINESTRING(" << current_node.lon() << " " << current_node.lat();
+                    }
+                } else {
+                    std::cout << "Unable to find node " << current_ref << std::endl;
                 }
             }
         }
@@ -155,10 +169,15 @@ void Visitor::insert_edges(){
 
 void Visitor::insert_house_numbers(){
     this->lotus.prepare_bulk_insert("georef.house_number", {"coord", "number", "left_side"});
-    for(auto hn : housenumbers){
-        Node n = nodes.at(hn.first);
-        std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
-        this->lotus.insert({point, std::to_string(hn.second.number), std::to_string(hn.second.number % 2 == 0)});
+    for(auto hn : housenumbers) {
+        const auto tmp_node = nodes.find(hn.first);
+        if(tmp_node != nodes.end()) {
+            Node n = tmp_node->second;
+            std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
+            this->lotus.insert({point, std::to_string(hn.second.number), std::to_string(hn.second.number % 2 == 0)});
+        } else {
+            std::cout << "Unable to find node " << hn.first << std::endl;
+        }
     }
     lotus.finish_bulk_insert();
 }
@@ -167,13 +186,14 @@ navitia::type::GeographicalCoord Visitor::admin_centre_coord(const CanalTP::Refe
     navitia::type::GeographicalCoord best;
     for(CanalTP::Reference ref : refs){
         if (ref.member_type == OSMPBF::Relation_MemberType_NODE){
-            try{
-                Node n = nodes.at(ref.member_id);
+            const auto tmp_node = nodes.find(ref.member_id);
+            if(tmp_node != nodes.end()) {
+                Node n = tmp_node->second;
                 best.set_lon(n.lon());
                 best.set_lat(n.lat());
                 break;
-            }catch(...){
-                std::cout << "Attention, le noued  : [" << ref.member_id << " est introuvable]." << std::endl;
+            }else{
+                std::cout << "Unable to find node" << ref.member_id << std::endl;
             }
         }
     }
@@ -195,6 +215,7 @@ std::string Visitor::geometry_of_admin(const CanalTP::References & refs) const{
     std::string sep = "";
 
     for (auto osm_node_id : vec_id){
+
         const Node & node = this->nodes.at(osm_node_id);
         geom += sep + std::to_string(node.lon()) + " " + std::to_string(node.lat());
         sep = ",";
@@ -225,7 +246,12 @@ std::vector<uint64_t> Visitor::nodes_of_relation(const CanalTP::References & ref
                     }
                 }
                 else if (ref.member_type == OSMPBF::Relation_MemberType_RELATION && ref.role != "subarea"){
-                    current_nodes = nodes_of_relation(references.at(ref.member_id));
+                    const auto tmp_ref = references.find(ref.member_id);
+                    if(tmp_ref != references.end()) {
+                        current_nodes = nodes_of_relation(tmp_ref->second);
+                    } else {
+                        std::cout << "Unable to find reference " << std::endl;
+                    }
                 }
 
                 if (!current_nodes.empty()){
@@ -278,10 +304,14 @@ void Visitor::insert_pois(){
     this->lotus.prepare_bulk_insert("navitia.poi", {"id","weight","coord", "name", "uri", "poi_type_id"});
     int32_t count =0;
     for(auto poi : pois){
-        Node n = nodes.at(poi.first);
-        count++;
-        std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
-        this->lotus.insert({std::to_string(count),std::to_string(poi.second.weight), point, poi.second.name, poi.second.uri,std::to_string(poi.second.poitype_idx)});
+        try{
+            Node n = nodes.at(poi.first);
+            count++;
+            std::string point = "POINT(" + std::to_string(n.lon()) + " " + std::to_string(n.lat()) + ")";
+            this->lotus.insert({std::to_string(count),std::to_string(poi.second.weight), point, poi.second.name, poi.second.uri,std::to_string(poi.second.poitype_idx)});
+        }catch(...){
+            std::cout << "Attention, le noued  : [" << poi.first << " est introuvable]." << std::endl;
+        }
     }
     lotus.finish_bulk_insert();
 }

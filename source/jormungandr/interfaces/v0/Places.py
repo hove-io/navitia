@@ -6,13 +6,15 @@ from protobuf_to_dict import protobuf_to_dict
 from flask.ext.restful import reqparse
 from interfaces.parsers import depth_argument
 from interfaces.argument import ArgumentDoc
+from authentification import authentification_required
 
 class Places(Resource):
     """Retreives places"""
+    method_decorators = [authentification_required]
     def __init__(self):
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
-        self.parsers["get"].add_argument("q", type=str, required=True,
+        self.parsers["get"].add_argument("q", type=unicode, required=True,
                 description="The data to search")
         self.parsers["get"].add_argument("type[]", type=str, action="append",
                                  default=["stop_area","address",
@@ -31,4 +33,4 @@ class Places(Resource):
     def get(self, region):
         args = self.parsers["get"].parse_args()
         response = NavitiaManager().dispatch(args, region, "places")
-        return protobuf_to_dict(response), 200
+        return protobuf_to_dict(response, use_enum_labels=True), 200

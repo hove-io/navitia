@@ -18,7 +18,7 @@ pb_type = {
         'city': type_pb2.CITY,
         'address': type_pb2.ADDRESS,
         'poi': type_pb2.POI ,
-        'administrative_region' : type_pb2.ADMIN,
+        'administrative_region' : type_pb2.ADMINISTRATIVE_REGION,
         'line' : type_pb2.LINE
         }
 
@@ -31,7 +31,7 @@ class Script:
                      "connections", "journey_pattern_points",
                      "journey_patterns", "companies", "vehicle_journeys",
                      "pois", "poi_types", "journeys", "isochrone", "metadatas",
-                     "status", "load", "networks"]
+                     "status", "load", "networks", "place_uri"]
 
 
 
@@ -82,7 +82,7 @@ class Script:
         req.places.q     = request['q']
         req.places.depth = request['depth']
         req.places.count = request['count']
-	req.places.search_type = request['search_type']
+        req.places.search_type = request['search_type']
         if request["type[]"]:
             for type in request["type[]"]:
                 req.places.types.append(pb_type[type])
@@ -92,6 +92,9 @@ class Script:
                 req.places.admin_uris.append(admin_uri)
 
         resp = NavitiaManager().send_and_receive(req, region)
+        if len(resp.places) == 0 and request['search_type'] == 0:
+            request["search_type"] = 1
+            return self.places(request, region)
         self.__pagination(request, "places", resp)
 
         for place in resp.places:
@@ -109,6 +112,11 @@ class Script:
 
         return resp
 
+    def place_uri(self, request, region):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.place_uri
+        req.place_uri.uri = request["uri"]
+        return NavitiaManager().send_and_receive(req, region)
 
     def __stop_times(self, request, region, departure_filter, arrival_filter, api):
         req = request_pb2.Request()

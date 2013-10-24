@@ -385,6 +385,7 @@ void GeoRef::build_proximity_list(){
 
 void GeoRef::build_autocomplete_list(){
     int pos = 0;
+    fl_way.clear();
     for(Way* way : ways){
         // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin
         if ((!way->name.empty()) && (way->admin_list.size() > 0)){
@@ -406,35 +407,28 @@ void GeoRef::build_autocomplete_list(){
     }
     fl_way.build();
 
+    fl_poi.clear();
     //Remplir les poi dans la liste autocompletion
     for(const POI* poi : pois){
         // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin
         if ((!poi->name.empty()) && (poi->admin_list.size() > 0)){
             std::string key="";
             if (poi->visible){
-
                 for(Admin* admin : poi->admin_list){
                     if (admin->level == 8)
                     {
                         key += " " + admin->name;
                     }
                 }
-
                 fl_poi.add_string(poi->name + " " + key, poi->idx ,alias, synonymes);
             }
         }
     }
     fl_poi.build();
 
+    fl_admin.clear();
     // les données administratives
     for(Admin* admin : admins){
-        /*
-        std::string key="";
-        for(Admin* adm : admin->admin_list){
-            key += " " + adm->name;
-        }
-        fl_admin.add_string(admin->name + " " + key, admin->idx ,alias, synonymes);
-        */
         fl_admin.add_string(admin->name, admin->idx ,alias, synonymes);
     }
     fl_admin.build();
@@ -466,6 +460,7 @@ void GeoRef::build_rtree() {
 
 /** Normalisation des codes externes des rues*/
 void GeoRef::normalize_extcode_way(){
+    this->way_map.clear();
     for(Way* way : ways){
         way->uri = "address:"+ way->uri;
         this->way_map[way->uri] = way->idx;
@@ -474,6 +469,7 @@ void GeoRef::normalize_extcode_way(){
 
 
 void GeoRef::normalize_extcode_admin(){
+    this->admin_map.clear();
     for(Admin* admin : admins){
         admin->uri = "admin:" + admin->uri;
         this->admin_map[admin->uri] = admin->idx;
@@ -521,6 +517,7 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std
 
 int GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_points){
     int matched = 0;
+    this->projected_stop_points.clear();
     this->projected_stop_points.reserve(stop_points.size());
     for(const type::StopPoint* stop_point : stop_points){
         ProjectionData proj(stop_point->coord, *this, this->pl);

@@ -498,7 +498,7 @@ void  add_journey_pattern_point_connection(types::JourneyPatternPoint *rp1, type
         types::JourneyPatternPointConnection jppc;
         jppc.departure = rp1;
         jppc.destination = rp2;
-        jppc.connection_kind = nt::ConnectionType::extension;
+        jppc.connection_kind = nt::ConnectionType::stay_in;
         jppc.length = length;
         journey_pattern_point_connections.insert(std::make_pair(rp1->uri, jppc));
 

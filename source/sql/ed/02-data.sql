@@ -63,7 +63,7 @@ BEGIN
     db_version := coalesce((select version from public.database_version limit 1), 0);
     CASE WHEN db_version < 3
         THEN
-        INSERT INTO navitia.connection_kind (id, name) VALUES (6, 'extension');
+        INSERT INTO navitia.connection_kind (id, name) VALUES (6, 'stay_in');
         update public.database_version set version=3;
     ELSE
         RAISE NOTICE 'database already in version 3, skipping';

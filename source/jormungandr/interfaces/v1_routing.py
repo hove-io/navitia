@@ -4,25 +4,33 @@ from v1 import Coverage
 from v1 import Journeys
 from v1 import Schedules
 from v1 import Places
+from v1 import Coord
 from v1 import converters_collection_type
-from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
-from flask import redirect
+from werkzeug.routing import BaseConverter, FloatConverter, PathConverter, ValidationError
+from flask import redirect, current_app
 
 class RegionConverter(BaseConverter):
     """ The region you want to query"""
     def __init__(self, *args, **kwargs):
         BaseConverter.__init__(self, *args, **kwargs)
         self.type_ = "string"
+        self.regex = '[^(/;)]+'
+
 class LonConverter(FloatConverter):
     """ The longitude of where the coord you want to query"""
     def __init__(self, *args, **kwargs):
         FloatConverter.__init__(self, *args, **kwargs)
         self.type_ = "float"
+        self.regex = '-?\\d+(\\.\\d+)?'
+
 class LatConverter(FloatConverter):
     """ The latitude of where the coord you want to query"""
     def __init__(self, *args, **kwargs):
         FloatConverter.__init__(self, *args, **kwargs)
         self.type_ = "float"
+        self.regex = '-?\\d+(\\.\\d+)?'
+
+
 class UriConverter(PathConverter):
     """First part of the uri"""
     def __init__(self, *args, **kwargs):
@@ -40,11 +48,7 @@ def v1_routing(api):
     api.app.url_map.converters['lat'] = LatConverter
     api.app.url_map.converters['uri'] = UriConverter
     api.app.url_map.converters['id'] = IdConverter
-
-    #We redirect all the coverage uri ending by a /
-    @api.app.route('/v1/coverage/<path:uri>/')
-    def redirect_slash(uri):
-        return redirect('/v1/coverage/'+uri, code=301)
+    api.app.url_map.strict_slashes = False
 
     api.add_resource(Index.Index,
                      '/v1/',
@@ -56,14 +60,15 @@ def v1_routing(api):
     coord = coverage + '<lon:lon>;<lat:lat>/'
 
     api.add_resource(Coverage.Coverage,
-                     coverage[:-1],
                      coverage,
-                     region[:-1],
                      region,
-                     coord[:-1],
-                     coord,
                      endpoint='v1.coverage')
 
+    api.add_resource(Coord.Coord,
+                     region + 'coord',
+                     region + 'coord/<lon:lon>;<lat:lat>',
+                     coord,
+                     endpoint='v1.coord')
 
     collections = converters_collection_type.collections_to_resource_type.keys()
     for collection in collections:
@@ -79,15 +84,21 @@ def v1_routing(api):
             coord + collection + '/<id:id>',
             region + '<uri:uri>/' + collection + '/<id:id>',
             coord + '<uri:uri>/' + collection + '/<id:id>',
-                        endpoint='v1.'+collection+'.id')
+                            endpoint='v1.'+collection+'.id')
         api.app.add_url_rule('/v1/coverage/'+collection+ '/<string:id>',
-                             'v1.'+collection+'.redirect',
-                             Uri.Redirect)
+            'v1.'+collection+'.redirect',
+            Uri.Redirect)
 
     api.add_resource(Places.Places,
                      region+'places',
                      coord+'places',
                      endpoint = 'v1.places'
+                     )
+
+    api.add_resource(Places.PlaceUri,
+                     region+'places/<id:id>',
+                     coord+'places/<id:id>',
+                     endpoint = 'v1.place_uri'
                      )
 
     api.add_resource(Places.PlacesNearby,
@@ -132,4 +143,3 @@ def v1_routing(api):
                      '/v1/stop_schedules',
                      endpoint='v1.stop_schedules',
                      )
-

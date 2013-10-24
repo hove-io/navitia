@@ -9,7 +9,7 @@ Description: Kraken ed Jörmungandr
 Package: navitia-kraken
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
-Depends: libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf, libpqxx-3.1, libtcmalloc-minimal4, libboost-chrono1.49.0
+Depends: libzmq1, libboost-date-time1.49.0, libboost-serialization1.49.0, libboost-regex1.49.0, liblog4cplus-1.0-4, libprotobuf7, libboost-thread1.49.0, libboost-program-options1.49.0, libboost-filesystem1.49.0, python-zmq, python-werkzeug, python-shapely, libqt4-core, libqt4-sql, python-protobuf, libpqxx-3.1, libtcmalloc-minimal4, libboost-chrono1.49.0, libgoogle-perftools4
 Section: devel
 Priority: optional
 Description: Navitia Kraken
@@ -27,7 +27,7 @@ Description: Navitia-Ed
 Package: navitia-jormungandr
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
-Depends: python-zmq, python-werkzeug, python-shapely, python-protobuf, python-flask, python-six
+Depends: python-zmq, python-werkzeug, python-shapely, python-protobuf, python-flask, python-six, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext
 Section: devel
 Priority: optional
 Description: Navitia-Jormungandr
@@ -59,3 +59,12 @@ Depends:
     navitia-ed (= ${binary:Version}),
     ${misc:Depends}
 Description: debugging symbols for ed
+
+Package: navitia-tyr
+Architecture: all
+Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
+Depends: python-flask, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext
+Section: devel
+Priority: optional
+Description: Navitia-Tyr
+    Responsable de la gestion des utilisateurs de la base jormungandr

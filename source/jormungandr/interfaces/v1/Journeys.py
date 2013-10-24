@@ -144,6 +144,7 @@ def dt_represents(value):
     else:
         raise ValueError("Unable to parse datetime_represents")
 
+
 class add_journey_href(object):
     def __call__(self, f):
         @wraps(f)
@@ -280,7 +281,7 @@ class Journeys(ResourceUri):
             if uri:
                 objects = uri.split("/")
                 if objects and len(objects) % 2 == 0:
-                    args["origin"] = objects[-1]
+                    args["origin"] =  self.transform_id(objects[-1])
                 else:
                     return {"error" : "Unable to compute journeys from this \
                                        object"}, 503

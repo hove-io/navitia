@@ -64,12 +64,15 @@ enum SectionType {
     WAITING = 3;
     TRANSFER = 4;
     BIRD_FLY = 5;
+    boarding = 6; 
+    landing = 7;
 }
 
 enum TransferType {
-    WALKING = 1;
-    GUARANTEED = 2;
-    EXTENSION = 3;
+    walking = 1;
+    guaranteed = 2;
+    stay_in = 3;
+
 }
 
 
@@ -184,13 +187,14 @@ message PairStopTime {
 }
 
 message ScheduleStopTime {
-    optional string stop_time = 1;
+    optional string date_time = 1;
     optional hasPropertie has_properties = 2;
 }
 
 message RouteScheduleRow {
     required StopPoint stop_point = 1;
-    repeated ScheduleStopTime stop_times = 2;
+    repeated ScheduleStopTime date_times = 2;
+    repeated string stop_times = 3;
 }
 
 message addInfoVehicleJourney{

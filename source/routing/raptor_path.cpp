@@ -55,7 +55,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
     while(!stop) {
         // Est-ce qu'on a une section marche à pied ?
         if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection ||
-           raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_extension ||
+           raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_stay_in ||
            raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_guarantee) {
             l = raptor_.labels[countb][current_jpp_idx];
             auto r2 = raptor_.labels[countb][raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx];
@@ -68,8 +68,8 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
             item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx]->stop_point->idx);
             if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection)
                 item.type = walking;
-            else if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_extension)
-                item.type = extension;
+            else if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_stay_in)
+                item.type = stay_in;
             else if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_guarantee)
                 item.type = guarantee;
             result.items.push_back(item);
@@ -89,23 +89,23 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                     item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_jpp_idx]->stop_point->idx);
                     if(clockwise) {
                         if(current_st->is_frequency())
-                            DateTimeUtils::update(workingDate, current_st->f_departure_time(workingDate, !clockwise), !clockwise);
+                            DateTimeUtils::update(workingDate, current_st->f_departure_time(DateTimeUtils::hour(workingDate), !clockwise), !clockwise);
                         else
                             DateTimeUtils::update(workingDate, current_st->departure_time, !clockwise);
                         item.departures.push_back(workingDate);
                         if(current_st->is_frequency())
-                            DateTimeUtils::update(workingDate, current_st->f_arrival_time(workingDate, !clockwise), !clockwise);
+                            DateTimeUtils::update(workingDate, current_st->f_arrival_time(DateTimeUtils::hour(workingDate), !clockwise), !clockwise);
                         else
                             DateTimeUtils::update(workingDate, current_st->arrival_time, !clockwise);
                         item.arrivals.push_back(workingDate);
                     } else {
                         if(current_st->is_frequency())
-                            DateTimeUtils::update(workingDate, current_st->f_arrival_time(workingDate, !clockwise), !clockwise);
+                            DateTimeUtils::update(workingDate, current_st->f_arrival_time(DateTimeUtils::hour(workingDate), !clockwise), !clockwise);
                         else
                             DateTimeUtils::update(workingDate, current_st->arrival_time, !clockwise);
                         item.arrivals.push_back(workingDate);
                         if(current_st->is_frequency())
-                            DateTimeUtils::update(workingDate, current_st->f_departure_time(workingDate, !clockwise), !clockwise);
+                            DateTimeUtils::update(workingDate, current_st->f_departure_time(DateTimeUtils::hour(workingDate), !clockwise), !clockwise);
                         else
                             DateTimeUtils::update(workingDate, current_st->departure_time, !clockwise);
                         item.departures.push_back(workingDate);
@@ -131,12 +131,12 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                 item.orders.push_back(current_st->journey_pattern_point->order);
                 if(clockwise) {
                     if(current_st->is_frequency())
-                        DateTimeUtils::update(workingDate, current_st->f_departure_time(workingDate), !clockwise);
+                        DateTimeUtils::update(workingDate, current_st->f_departure_time(DateTimeUtils::hour(workingDate)), !clockwise);
                     else
                         DateTimeUtils::update(workingDate, current_st->departure_time, !clockwise);
                     item.departures.push_back(workingDate);
                     if(current_st->is_frequency())
-                        DateTimeUtils::update(workingDate, current_st->f_arrival_time(workingDate), !clockwise);
+                        DateTimeUtils::update(workingDate, current_st->f_arrival_time(DateTimeUtils::hour(workingDate)), !clockwise);
                     else
                         DateTimeUtils::update(workingDate, current_st->arrival_time, !clockwise);
 
@@ -145,12 +145,12 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                     item.departure = item.departures.back();
                 } else {
                     if(current_st->is_frequency())
-                        DateTimeUtils::update(workingDate, current_st->f_arrival_time(workingDate), !clockwise);
+                        DateTimeUtils::update(workingDate, current_st->f_arrival_time(DateTimeUtils::hour(workingDate)), !clockwise);
                     else
                         DateTimeUtils::update(workingDate, current_st->arrival_time, !clockwise);
                     item.arrivals.push_back(workingDate);
                     if(current_st->is_frequency())
-                        DateTimeUtils::update(workingDate, current_st->f_departure_time(workingDate), !clockwise);
+                        DateTimeUtils::update(workingDate, current_st->f_departure_time(DateTimeUtils::hour(workingDate)), !clockwise);
                     else
                         DateTimeUtils::update(workingDate, current_st->departure_time, !clockwise);
 
@@ -210,17 +210,19 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
     std::vector<std::pair<int, PathItem>> to_insert;
     for(auto item = path.items.begin(); item!= path.items.end(); ++item) {
         if(previous_item.departure != DateTimeUtils::inf) {
-            if(item->type == walking || item->type == extension || item->type == guarantee) {
+            if(item->type == walking || item->type == stay_in || item->type == guarantee) {
                 auto duration = item->arrival - item->departure;
                 item->departure = previous_item.arrival;
                 item->arrival = item->departure + duration;
             } else {
-                PathItem waitingItem=PathItem();
-                waitingItem.departure = previous_item.arrival;
-                waitingItem.arrival = item->departure;
-                waitingItem.type = waiting;
-                waitingItem.stop_points.push_back(previous_item.stop_points.front());
-                to_insert.push_back(std::make_pair(item-path.items.begin(), waitingItem));
+                if(previous_item.type != stay_in){
+                    PathItem waitingItem=PathItem();
+                    waitingItem.departure = previous_item.arrival;
+                    waitingItem.arrival = item->departure;
+                    waitingItem.type = waiting;
+                    waitingItem.stop_points.push_back(previous_item.stop_points.front());
+                    to_insert.push_back(std::make_pair(item-path.items.begin(), waitingItem));
+                }
             }
             previous_item = *item;
         } else if(item->type == public_transport) {

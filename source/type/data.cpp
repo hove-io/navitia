@@ -130,6 +130,8 @@ void Data::save_lz4(const std::string & filename) {
 }
 
 void Data::build_uri(){
+#define CLEAR_EXT_CODE(type_name, collection_name) this->pt_data.collection_name##_map.clear();
+ITERATE_NAVITIA_PT_TYPES(CLEAR_EXT_CODE)
     this->pt_data.build_uri();
     geo_ref.normalize_extcode_way();
     geo_ref.normalize_extcode_admin();
@@ -256,6 +258,8 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
 Type_e Data::get_type_of_id(const std::string & id) {
     if(id.size()>6 && id.substr(0,6) == "coord:")
         return Type_e::Coord;
+    if(id.size()>6 && id.substr(0,8) == "address:")
+        return Type_e::Address;
     #define GET_TYPE(type_name, collection_name) \
     auto collection_name##_map = pt_data.collection_name##_map;\
     if(collection_name##_map.find(id) != collection_name##_map.end())\
