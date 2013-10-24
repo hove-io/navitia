@@ -59,3 +59,12 @@ Depends:
     navitia-ed (= ${binary:Version}),
     ${misc:Depends}
 Description: debugging symbols for ed
+
+Package: navitia-tyr
+Architecture: all
+Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
+Depends: python-flask, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext
+Section: devel
+Priority: optional
+Description: Navitia-Tyr
+    Responsable de la gestion des utilisateurs de la base jormungandr
