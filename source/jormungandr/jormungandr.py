@@ -5,8 +5,7 @@ import signal
 import os
 from conf import base_url
 from instance_manager import NavitiaManager, RegionNotFound
-from flask import Flask, url_for, make_response
-from flask.ext.restful import Api
+from flask import url_for, make_response
 from flask.ext.restful.representations import json
 from interfaces.v0_routing import v0_routing
 from interfaces.v1_routing import v1_routing
@@ -15,13 +14,10 @@ import os
 from werkzeug.serving import run_simple
 from flask import request
 import dict2xml
+from app import app, api
 
 
 
-app = Flask(__name__)
-app.debug = True
-app.config.update(PROPAGATE_EXCEPTIONS=True)
-api = Api(app, catch_all_404s=True)
 
 #@api.representation("application/xml")
 #def output_xml(data, code, headers=None):
@@ -57,11 +53,9 @@ config_file = 'Jormungandr.ini' if not os.environ.has_key('JORMUNGANDR_CONFIG_FI
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, kill_thread)
     signal.signal(signal.SIGTERM, kill_thread)
-    NavitiaManager().set_config_file(config_file)
     NavitiaManager().initialisation()
     run_simple('localhost', 5000, app,
                use_debugger=True, use_evalex=True)
 
 else:
-    NavitiaManager().set_config_file(config_file)
     NavitiaManager().initialisation()
