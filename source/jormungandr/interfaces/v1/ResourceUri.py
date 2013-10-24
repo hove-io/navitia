@@ -109,22 +109,24 @@ class add_address_poi_id(object):
                         add_id(item, region, type_)
                 elif isinstance(objects, dict) or\
                      isinstance(objects, OrderedDict):
-                         if 'address' in objects.keys():
-                            lon = objects['address']['coord']['lon']
-                            lat = objects['address']['coord']['lat']
-                            objects['address']['id'] = lon +';'+ lat
-                         if 'poi' in objects.keys():
-                            old_id = objects['poi']['id']
-                            objects['poi']['id'] = 'poi:'+region+':'+ old_id
-                         if type_ == 'pois':
-                            objects['id'] = 'poi:'+region+':'+objects['id']
+                         for v in objects.keys():
+                             add_id(objects[v], region, v)
+                         if 'address' == type_:
+                            lon = objects['coord']['lon']
+                            lat = objects['coord']['lat']
+                            objects['id'] = lon +';'+ lat
+                         if type_ == 'poi' or type_ == 'pois' :
+                            old_id = objects['id']
+                            objects['id'] = 'poi:'+region+':'+ old_id
+                         if type_ == 'administrative_region' or\
+                            type_ == 'administrative_regions':
+                             old_id = objects['id']
+                             objects['id'] = 'admin:'+region+old_id[5:]
                          if 'embedded_type' in objects.keys() and\
                                 (objects['embedded_type'] == 'address'  or\
-                                  objects['embedded_type'] == 'poi'):
+                                  objects['embedded_type'] == 'poi' or\
+                                  objects['embedded_type'] == 'administrative_region'):
                             objects["id"] = objects[objects['embedded_type']]["id"]
-                         else:
-                             for v in objects.keys():
-                                 add_id(objects[v], region, v)
             if self.resource.region:
                 add_id(objects, self.resource.region)
             return objects
