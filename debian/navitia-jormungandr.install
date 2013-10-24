@@ -1,2 +1,2 @@
 srv/jormungandr/* srv/jormungandr
-/usr/share/jormungandr/
+usr/share/jormungandr
