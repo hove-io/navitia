@@ -5,7 +5,7 @@ from functools import wraps
 from collections import OrderedDict
 from flask import url_for
 from flask.ext.restful.utils import unpack
-
+from authentification import authentification_required
 
 class ResourceUri(Resource):
     def __init__(self, *args, **kwargs):
@@ -17,6 +17,7 @@ class ResourceUri(Resource):
         self.method_decorators.append(add_computed_resources(self))
         self.method_decorators.append(add_pagination_links())
         self.method_decorators.append(clean_links())
+        self.method_decorators.append(authentification_required)
 
 
     def get_filter(self, items):

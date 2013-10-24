@@ -16,6 +16,7 @@ from error import generate_error
 import logging
 import sys
 from renderers import protobuf_to_dict
+from app import app
 
 class Instance:
     def __init__(self):
@@ -70,11 +71,7 @@ class NavitiaManager(object):
     """
 
     def __init__(self):
-        self.config_file = None
-
-
-    def set_config_file(self, config_file):
-        self.config_file = config_file
+        pass
 
 
     def initialisation(self):
@@ -89,18 +86,8 @@ class NavitiaManager(object):
         self.context = zmq.Context()
         self.default_socket = None
 
-        if self.config_file is None:
-            return
-
-        conf_jormungandr = ConfigParser.ConfigParser()
-        conf_jormungandr.read(self.config_file)
-
         ini_files = []
-        if conf_jormungandr.has_option("instances", "dir"):
-            dir_ = conf_jormungandr.get("instances", "dir")
-            ini_files = glob.glob(dir_+"/*.ini")
-        if conf_jormungandr.has_section("instance"):
-            ini_files.append(self.config_file)
+        ini_files = glob.glob(app.config['INSTANCES_DIR'] + '/*.ini')
 
         for file_name in ini_files:
             conf = ConfigParser.ConfigParser()

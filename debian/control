@@ -27,7 +27,7 @@ Description: Navitia-Ed
 Package: navitia-jormungandr
 Architecture: amd64
 Maintainer: Vincent Lara <vincent.lara@canaltp.fr>
-Depends: python-zmq, python-werkzeug, python-shapely, python-protobuf, python-flask, python-six
+Depends: python-zmq, python-werkzeug, python-shapely, python-protobuf, python-flask, python-six, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext
 Section: devel
 Priority: optional
 Description: Navitia-Jormungandr
@@ -59,3 +59,12 @@ Depends:
     navitia-ed (= ${binary:Version}),
     ${misc:Depends}
 Description: debugging symbols for ed
+
+Package: navitia-tyr
+Architecture: all
+Maintainer: Alexandre Jacquin <alexandre.jacquin@canaltp.fr>
+Depends: python-flask, python-sqlalchemy, python-psycopg2, python-sqlalchemy-ext
+Section: devel
+Priority: optional
+Description: Navitia-Tyr
+    Responsable de la gestion des utilisateurs de la base jormungandr
