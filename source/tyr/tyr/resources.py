@@ -24,7 +24,7 @@ class FieldDate(fields.Raw):
 
 key_fields = {'id': fields.Raw, 'token': fields.Raw, 'valid_until': FieldDate}
 
-instance_fields = {'id': fields.Raw, 'name': fields.Raw}
+instance_fields = {'id': fields.Raw, 'name': fields.Raw, "free": fields.Raw}
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
 
 user_fields = {'id': fields.Raw, 'login': fields.Raw, 'email': fields.Raw}
@@ -39,8 +39,17 @@ class Api(restful.Resource):
         return marshal(models.Api.query.all(), api_fields)
 
 class Instance(restful.Resource):
+    @marshal_with(instance_fields)
     def get(self):
-        return marshal(models.Instance.query.all(), instance_fields)
+        parser = reqparse.RequestParser()
+        parser.add_argument('free', type=types.boolean, required=False,
+                case_sensitive=False, help='boolean for returning only free '
+                'or private instances')
+        args = parser.parse_args()
+        if args['free'] != None:
+            return models.Instance.query.filter_by(**args).all()
+        else:
+            return models.Instance.query.all()
 
 class User(restful.Resource):
     def get(self, user_id=None, login=None):

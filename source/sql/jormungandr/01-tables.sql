@@ -34,7 +34,8 @@ CREATE TABLE IF NOT EXISTS jormungandr.key(
 CREATE TABLE IF NOT EXISTS jormungandr.instance(
     id SERIAL PRIMARY KEY,
     key text UNIQUE NOT NULL,
-    name text
+    name text,
+    free bool default false
 );
 
 CREATE TABLE IF NOT EXISTS jormungandr.api(

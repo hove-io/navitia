@@ -56,11 +56,13 @@ class Instance(db.Model):
     __table_args__ = {"schema": "jormungandr"}
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True)
+    free = db.Column(db.Boolean)
 
     authorizations = db.relationship('Authorization', backref='instance', lazy='dynamic')
 
-    def __init__(self, name=None, authorizations=None):
+    def __init__(self, name=None, free=False, authorizations=None):
         self.name = name
+        self.free = free
         if authorizations:
             self.authorizations = authorizations
 
