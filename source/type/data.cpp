@@ -260,6 +260,8 @@ Type_e Data::get_type_of_id(const std::string & id) {
         return Type_e::Coord;
     if(id.size()>6 && id.substr(0,8) == "address:")
         return Type_e::Address;
+    if(id.size()>6 && id.substr(0,6) == "admin:")
+        return Type_e::Admin;
     #define GET_TYPE(type_name, collection_name) \
     auto collection_name##_map = pt_data.collection_name##_map;\
     if(collection_name##_map.find(id) != collection_name##_map.end())\

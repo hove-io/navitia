@@ -177,11 +177,11 @@ get_stop_points( const type::EntryPoint &ep, const type::Data & data,
             result.push_back(std::make_pair(it->second->idx, 0));
         }
     }else if(ep.type == type::Type_e::Address
-            || ep.type == type::Type_e::Coord){
-        result = worker.find_nearest_stop_points(ep.coordinates,
-                data.pt_data.stop_point_proximity_list,
-                ep.streetnetwork_params.distance, use_second,
-                ep.streetnetwork_params.offset);
+                || ep.type == type::Type_e::Coord || ep.type == type::Type_e::Admin){
+            result = worker.find_nearest_stop_points(ep.coordinates,
+                    data.pt_data.stop_point_proximity_list,
+                    ep.streetnetwork_params.distance, use_second,
+                    ep.streetnetwork_params.offset);
     }
     return result;
 }
