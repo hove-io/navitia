@@ -6,5 +6,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 api = restful.Api(app, catch_all_404s=True)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://navitia:navitia@localhost/jormun'
+app.config.from_object('tyr.default_settings')
+app.config.from_envvar('TYR_CONFIG_FILE')
+app.config['SQLALCHEMY_DATABASE_URI'] = app.config['PG_CONNECTION_STRING']
 db = SQLAlchemy(app)
