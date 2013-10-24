@@ -42,11 +42,11 @@ class Instance(restful.Resource):
     @marshal_with(instance_fields)
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('free', type=types.boolean, required=False,
+        parser.add_argument('is_free', type=types.boolean, required=False,
                 case_sensitive=False, help='boolean for returning only free '
                 'or private instances')
         args = parser.parse_args()
-        if args['free'] != None:
+        if args['is_free'] != None:
             return models.Instance.query.filter_by(**args).all()
         else:
             return models.Instance.query.all()
