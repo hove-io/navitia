@@ -26,7 +26,7 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
             place->set_quality(result_item.quality);
             place->set_uri(data.geo_ref.admins[result_item.idx]->uri);
             place->set_name(data.geo_ref.admins[result_item.idx]->name);
-            place->set_embedded_type(pbnavitia::ADMIN);
+            place->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
             break;
         case nt::Type_e::StopPoint:
             fill_pb_object(data.pt_data.stop_points[result_item.idx], data,
@@ -156,7 +156,7 @@ void update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result,
 
 int get_embedded_type_order(int n){
     switch(n){
-    case pbnavitia::ADMIN:
+    case pbnavitia::ADMINISTRATIVE_REGION:
         return 1;
         break;
      case pbnavitia::STOP_AREA:

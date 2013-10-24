@@ -33,7 +33,7 @@ nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     case pbnavitia::VEHICLE_JOURNEY: return nt::Type_e::VehicleJourney; break;
     case pbnavitia::POI: return nt::Type_e::POI; break;
     case pbnavitia::POITYPE: return nt::Type_e::POIType; break;
-    case pbnavitia::ADMIN: return nt::Type_e::Admin; break;
+    case pbnavitia::ADMINISTRATIVE_REGION: return nt::Type_e::Admin; break;
     default: return nt::Type_e::Unknown;
     }
 }
@@ -282,7 +282,7 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
                 if(it_admin != (*data)->geo_ref.admin_map.end()) {
                     fill_pb_object((*data)->geo_ref.admins[it_admin->second],
                             **data, place->mutable_administrative_region(), 1);
-                    place->set_embedded_type(pbnavitia::ADMIN);
+                    place->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
                     place->set_name(place->administrative_region().name());
                     place->set_uri(place->administrative_region().uri());
                 }
