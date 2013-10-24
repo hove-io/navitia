@@ -221,14 +221,14 @@ struct GeoRef {
     void init_offset(nt::idx_t);
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & ways & way_map & graph & vls_offset & bike_offset & car_offset & fl_admin & fl_way & pl & projected_stop_points & admins &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
+        ar & ways & way_map & graph & vls_offset & bike_offset & car_offset & fl_admin & fl_way & pl & projected_stop_points & admins & admin_map &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
     }
 
     template<class Archive> void load(Archive & ar, const unsigned int) {
         // La désérialisation d'une boost adjacency list ne vide pas le graphe
         // On avait donc une fuite de mémoire
         graph.clear();
-        ar & ways & way_map & graph & vls_offset & bike_offset & car_offset & fl_admin &fl_way & pl & projected_stop_points & admins &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
+        ar & ways & way_map & graph & vls_offset & bike_offset & car_offset & fl_admin & fl_way & pl & projected_stop_points & admins & admin_map & pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 

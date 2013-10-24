@@ -229,6 +229,10 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  const navitia::type::Data &d) {
 
     pbnavitia::Response pb_response;
+    if (q.length() == 0) {
+        fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent" ,pb_response.mutable_error());
+        return pb_response;
+    }
     int nbmax_temp = nbmax;
     nbmax = std::max(100, nbmax);
     bool addType = d.pt_data.stop_area_autocomplete.is_address_type(q, d.geo_ref.alias, d.geo_ref.synonymes);
