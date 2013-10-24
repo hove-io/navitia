@@ -1,3 +1,9 @@
+navitia2 (0.72.4) unstable; urgency=low
+
+  * Amelioration de la stabilite de osm2ed
+
+ -- vlara <vlara@vlara-OptiPlex-790>  Thu, 24 Oct 2013 09:14:23 +0200
+
 navitia2 (0.72.3) unstable; urgency=low
 
   * Amelioration des sorts
