@@ -56,11 +56,11 @@ bool ValidityPattern::check(int day) const {
 
 
 bool CommercialMode::operator<(const CommercialMode& other) const {
-    return this->name < other.name || (this->name == other.name && *this < other);
+    return this->name < other.name || (this->name == other.name && this < &other);
 }
 
 bool PhysicalMode::operator<(const PhysicalMode& other) const {
-    return this->name < other.name || (this->name == other.name && *this < other);
+    return this->name < other.name || (this->name == other.name && this < &other);
 }
 
 bool Line::operator<(const Line& other) const {
@@ -138,23 +138,41 @@ bool VehicleJourney::operator<(const VehicleJourney& other) const {
 }
 
 bool ValidityPattern::operator <(const ValidityPattern &other) const {
-    BOOST_ASSERT(this->days.to_string() != other.days.to_string());
-    return this->days.to_string() < other.days.to_string();
+    //Il faut retablir l'insertion unique des pointeurs dans les connecteurs
+    //BOOST_ASSERT(this->days.to_string() != other.days.to_string());
+    //return this->days.to_string() < other.days.to_string();
+    return this < &other;
 }
 
 bool StopPointConnection::operator<(const StopPointConnection& other) const{
-    return *(this->departure) < *(other.departure);
+    if (this->departure == other.departure) {
+        if(this->destination == other.destination) {
+            return this < &other;
+        } else {
+            return *(this->destination) < *(other.destination);
+        }
+    } else {
+        return *(this->departure) < *(other.departure);
+    }
 }
 
 bool JourneyPatternPointConnection::operator<(const JourneyPatternPointConnection& other) const {
-    return *(this->departure) < *(other.departure);
+    if (this->departure == other.departure) {
+        if(this->destination == other.destination) {
+            return this < &other;
+        } else {
+            return *(this->destination) < *(other.destination);
+        }
+    } else {
+        return *(this->departure) < *(other.departure);
+    }
 }
 bool StopTime::operator<(const StopTime& other) const {
     if(this->vehicle_journey == other.vehicle_journey){
         BOOST_ASSERT(this->journey_pattern_point->order != other.journey_pattern_point->order);
         return this->journey_pattern_point->order < other.journey_pattern_point->order;
     } else {
-        return *this->vehicle_journey < *other.vehicle_journey;
+        return *(this->vehicle_journey) < *(other.vehicle_journey);
     }
 }
 

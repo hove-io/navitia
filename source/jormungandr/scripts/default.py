@@ -18,7 +18,7 @@ pb_type = {
         'city': type_pb2.CITY,
         'address': type_pb2.ADDRESS,
         'poi': type_pb2.POI ,
-        'administrative_region' : type_pb2.ADMIN,
+        'administrative_region' : type_pb2.ADMINISTRATIVE_REGION,
         'line' : type_pb2.LINE
         }
 

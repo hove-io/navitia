@@ -13,7 +13,7 @@ class ResourceUri(Resource):
         self.region = None
         self.method_decorators = []
         self.method_decorators.append(add_id_links())
-        self.method_decorators.append(add_address_id(self))
+        self.method_decorators.append(add_address_poi_id(self))
         self.method_decorators.append(add_computed_resources(self))
         self.method_decorators.append(add_pagination_links())
         self.method_decorators.append(clean_links())
@@ -39,6 +39,8 @@ class ResourceUri(Resource):
                         filters.append(object_type+".coord DWITHIN("+lon+","+lat+",200)")
                     else:
                         filters.append(type_+".uri="+item)
+                elif type_ == 'poi':
+                    filters.append(type_+'.uri='+item.split(":")[-1])
                 else :
                     filters.append(type_+".uri="+item)
                 type_ = None
@@ -92,7 +94,8 @@ class add_computed_resources(object):
                 return data
         return wrapper
 
-class add_address_id(object):
+
+class add_address_poi_id(object):
     def __init__(self, resource):
         self.resource = resource
 
@@ -100,25 +103,34 @@ class add_address_id(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            def add_id(objects):
+            def add_id(objects, region, type_ = None):
                 if isinstance(objects, list) or isinstance(objects, tuple):
                     for item in objects:
-                        add_id(item)
+                        add_id(item, region, type_)
                 elif isinstance(objects, dict) or\
                      isinstance(objects, OrderedDict):
-                         if ('embedded_type' in objects.keys() and\
-                            objects['embedded_type'] == 'address') or\
-                            'address' in objects.keys():
-                            objects['id'] = objects['address']['coord']['lon']+';'+objects['address']['coord']['lat']
-                            objects['address']['id'] = objects['id']
-                         else :
-                             for v in objects.items():
-                                 add_id(v)
+                         for v in objects.keys():
+                             add_id(objects[v], region, v)
+                         if 'address' == type_:
+                            lon = objects['coord']['lon']
+                            lat = objects['coord']['lat']
+                            objects['id'] = lon +';'+ lat
+                         if type_ == 'poi' or type_ == 'pois' :
+                            old_id = objects['id']
+                            objects['id'] = 'poi:'+region+':'+ old_id
+                         if type_ == 'administrative_region' or\
+                            type_ == 'administrative_regions':
+                             old_id = objects['id']
+                             objects['id'] = 'admin:'+region+old_id[5:]
+                         if 'embedded_type' in objects.keys() and\
+                                (objects['embedded_type'] == 'address'  or\
+                                  objects['embedded_type'] == 'poi' or\
+                                  objects['embedded_type'] == 'administrative_region'):
+                            objects["id"] = objects[objects['embedded_type']]["id"]
             if self.resource.region:
-                add_id(objects)
+                add_id(objects, self.resource.region)
             return objects
         return wrapper
-
 
 
 class add_notes(object):
