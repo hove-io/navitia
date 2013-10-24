@@ -11,7 +11,7 @@ from tyr.app import app, db, api
 api.add_resource(resources.Instance, '/20131022/instances/')
 api.add_resource(resources.Api, '/20131022/apis/')
 api.add_resource(resources.User, '/20131022/users/', '/20131022/user/',
-        '/20131022/user/<int:user_id>/')
+        '/20131022/user/<int:user_id>/', '/20131022/user/<string:login>/')
 api.add_resource(resources.Key, '/20131022/user/<int:user_id>/keys/',
         '/20131022/user/<int:user_id>/key/',
         '/20131022/user/<int:user_id>/key/<int:key_id>/')
