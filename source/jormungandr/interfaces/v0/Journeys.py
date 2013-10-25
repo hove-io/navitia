@@ -8,10 +8,12 @@ from find_extrem_datetimes import extremes
 from flask.ext.restful import reqparse
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
+from authentification import authentification_required
 
 class Journeys(Resource):
     """ Compute journeys"""
     parsers = {}
+    method_decorators = [authentification_required]
     def __init__(self, *args, **kwargs):
         types = ["all", "rapid"]
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
@@ -72,6 +74,7 @@ class Journeys(Resource):
 
 class Isochrone(Resource):
     """ Compute isochrones """
+    method_decorators = [authentification_required]
     def __init__(self):
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser()

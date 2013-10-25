@@ -40,7 +40,11 @@ class Uri(ResourceUri):
             return {"error" : "No region"}, 404
         args = self.parsers["get"].parse_args()
         if(collection != None and id != None):
-            args["filter"] = collections_to_resource_type[collection]+".uri="+id
+            args["filter"] = collections_to_resource_type[collection]+".uri="
+            if collection != 'pois':
+                args["filter"] += id
+            else:
+                args["filter"] += id.split(":")[-1]
         elif(uri):
             if uri[-1] == "/":
                 uri = uri[:-1]

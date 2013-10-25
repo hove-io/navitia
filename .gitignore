@@ -10,3 +10,7 @@ source/CMakeLists.txt.user
 tags
 *.pyc
 *_pb2.py
+*.idea*
+.ycm_extra_conf.py
+DEBIAN/
+build_package/

@@ -14,8 +14,7 @@ Dependencies
 * libpqxx 3
 * libgoogle-perftools-dev
 * rabbitmq (>=3.1)
-* SimpleAmqpClient (https://github.com/alanxz/SimpleAmqpClient + https://github.com/alanxz/SimpleAmqpClient/issues/55)
-* pika (>=0.9.7)
+ pika (>=0.9.7)
 * psycopg2
 
 Build instruction

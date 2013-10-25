@@ -33,7 +33,7 @@ nt::Type_e get_type(pbnavitia::NavitiaType pb_type){
     case pbnavitia::VEHICLE_JOURNEY: return nt::Type_e::VehicleJourney; break;
     case pbnavitia::POI: return nt::Type_e::POI; break;
     case pbnavitia::POITYPE: return nt::Type_e::POIType; break;
-    case pbnavitia::ADMIN: return nt::Type_e::Admin; break;
+    case pbnavitia::ADMINISTRATIVE_REGION: return nt::Type_e::Admin; break;
     default: return nt::Type_e::Unknown;
     }
 }
@@ -198,6 +198,13 @@ type::GeographicalCoord Worker::coord_of_entry_point(const type::EntryPoint & en
            }
     } else if (entry_point.type == Type_e::Coord) {
         result = entry_point.coordinates;
+    } else if (entry_point.type == Type_e::Admin) {
+        auto it_admin = (*this->data)->geo_ref.admin_map.find(entry_point.uri);
+        if (it_admin != (*this->data)->geo_ref.admin_map.end()) {
+            const auto admin = (*this->data)->geo_ref.admins[it_admin->second];
+            result = admin->coord;
+        }
+
     }
     return result;
 }
@@ -282,7 +289,7 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
                 if(it_admin != (*data)->geo_ref.admin_map.end()) {
                     fill_pb_object((*data)->geo_ref.admins[it_admin->second],
                             **data, place->mutable_administrative_region(), 1);
-                    place->set_embedded_type(pbnavitia::ADMIN);
+                    place->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
                     place->set_name(place->administrative_region().name());
                     place->set_uri(place->administrative_region().uri());
                 }
@@ -299,7 +306,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     Type_e origin_type = (*data)->get_type_of_id(request.origin());
     type::EntryPoint origin = type::EntryPoint(origin_type, request.origin());
 
-    if (origin.type == type::Type_e::Address) {
+    if (origin.type == type::Type_e::Address || origin.type == type::Type_e::Admin) {
         origin.coordinates = this->coord_of_entry_point(origin);
     }
 
@@ -307,7 +314,7 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     if(api != pbnavitia::ISOCHRONE) {
         Type_e destination_type = (*data)->get_type_of_id(request.destination());
         destination = type::EntryPoint(destination_type, request.destination());
-        if (destination.type == type::Type_e::Address) {
+        if (destination.type == type::Type_e::Address || destination.type == type::Type_e::Admin) {
             destination.coordinates = this->coord_of_entry_point(destination);
         }
     }
@@ -321,11 +328,13 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
         datetimes.push_back(request.datetimes(i));
 
     /// Récupération des paramètres de rabattement au départ
-    if ((origin.type == type::Type_e::Address) || (origin.type == type::Type_e::Coord)){
+    if ((origin.type == type::Type_e::Address) || (origin.type == type::Type_e::Coord)
+            || (origin.type == type::Type_e::Admin)){
         origin.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params());
     }
     /// Récupération des paramètres de rabattement à l'arrivée
-    if ((destination.type == type::Type_e::Address) || (destination.type == type::Type_e::Coord)){
+    if ((destination.type == type::Type_e::Address) || (destination.type == type::Type_e::Coord)
+            || (destination.type == type::Type_e::Admin)){
         destination.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params(), false);
     }
 /// Accessibilité, il faut initialiser ce paramètre

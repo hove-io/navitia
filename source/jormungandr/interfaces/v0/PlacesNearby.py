@@ -6,10 +6,12 @@ from protobuf_to_dict import protobuf_to_dict
 from flask.ext.restful import reqparse
 from interfaces.parsers import depth_argument
 from interfaces.argument import ArgumentDoc
+from authentification import authentification_required
 
 
 class PlacesNearby(Resource):
     """Retreives places nearby a point"""
+    method_decorators = [authentification_required]
     def __init__(self):
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
