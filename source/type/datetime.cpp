@@ -22,13 +22,9 @@ std::string str(const DateTime & dt){
     return os.str();
 }
 
-std::string iso_string(DateTime datetime, const type::Data &d){
-    return boost::posix_time::to_iso_string(to_posix_time(datetime, d));
-}
 
-std::string iso_string(int date, int hour, const type::Data &d){
-    DateTime tmp = DateTimeUtils::set(date, hour);
-    return iso_string(tmp, d);
+std::string iso_string(const DateTime datetime, const type::Data &d){
+    return boost::posix_time::to_iso_string(to_posix_time(datetime, d));
 }
 
 
