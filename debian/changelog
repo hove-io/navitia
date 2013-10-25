@@ -1,3 +1,9 @@
+navitia2 (0.73.0) UNRELEASED; urgency=low
+
+  * De l'authentification
+
+ -- vlara <vlara@vlara-OptiPlex-790>  Fri, 25 Oct 2013 15:52:13 +0200
+
 navitia2 (0.72.4) unstable; urgency=low
 
   * Amelioration de la stabilite de osm2ed
