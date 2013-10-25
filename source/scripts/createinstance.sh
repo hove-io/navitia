@@ -33,7 +33,7 @@ then
 else
     isfree=false
 fi
-psql --set ON_ERROR_STOP=1 -h $server $dbname --username=$username -c "INSERT INTO jormungandr.instance VALUES (DEFAULT, '$instance', $isfree);"
+psql --set ON_ERROR_STOP=1 -h $server $dbname --username=$username -c "INSERT INTO jormungandr.instance (id, name, is_free) VALUES (DEFAULT, '$instance', $isfree);"
 
 
 unset PGPASSWORD
