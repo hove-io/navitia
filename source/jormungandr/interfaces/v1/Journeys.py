@@ -313,4 +313,7 @@ class Journeys(ResourceUri):
         if len(splitted_address) >=3 and splitted_address[0] == 'address':
             del splitted_address[1]
             return ':'.join(splitted_address)
+        if len(splitted_address) >=3 and splitted_address[0] == 'admin':
+            del splitted_address[1]
+            return ':'.join(splitted_address)
         return id

@@ -38,6 +38,8 @@ class Places(ResourceUri):
     def get(self, region=None, lon=None, lat=None):
         self.region = NavitiaManager().get_region(region, lon, lat)
         args = self.parsers["get"].parse_args()
+        if len(args['q']) == 0:
+            abort(400, message="Search word absent")
         response = NavitiaManager().dispatch(args, self.region, "places")
         return response, 200
 

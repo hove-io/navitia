@@ -427,9 +427,14 @@ void GeoRef::build_autocomplete_list(){
     fl_poi.build();
 
     fl_admin.clear();
-    // les données administratives
     for(Admin* admin : admins){
-        fl_admin.add_string(admin->name, admin->idx ,alias, synonymes);
+        std::string key="";
+
+        if (!admin->post_code.empty())
+        {
+            key = admin->post_code;
+        }
+        fl_admin.add_string(admin->name + " " + key, admin->idx ,alias, synonymes);
     }
     fl_admin.build();
 }

@@ -56,8 +56,7 @@ class Data;
 
 //std::ostream & operator<<(std::ostream & os, const DateTime &dt);
 std::string str(const DateTime &dt);
-std::string iso_string(DateTime datetime, const type::Data &d);
-std::string iso_string(int date, int hour, const type::Data &d);
+std::string iso_string(const DateTime dt, const type::Data &d);
 boost::posix_time::ptime to_posix_time(DateTime datetime, const type::Data &d);
 
 }

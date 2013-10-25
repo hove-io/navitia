@@ -7,9 +7,11 @@ from flask.ext.restful import reqparse
 from interfaces.parsers import depth_argument
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
+from authentification import authentification_required
 
 class Ptref(Resource):
     parsers = {}
+    method_decorators = [authentification_required]
     def __init__(self):
         super(Ptref, self).__init__()
         self.resource_type = "Unknown"

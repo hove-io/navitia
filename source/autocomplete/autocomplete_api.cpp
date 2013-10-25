@@ -26,7 +26,7 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
             place->set_quality(result_item.quality);
             place->set_uri(data.geo_ref.admins[result_item.idx]->uri);
             place->set_name(data.geo_ref.admins[result_item.idx]->name);
-            place->set_embedded_type(pbnavitia::ADMIN);
+            place->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
             break;
         case nt::Type_e::StopPoint:
             fill_pb_object(data.pt_data.stop_points[result_item.idx], data,
@@ -156,7 +156,7 @@ void update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_result,
 
 int get_embedded_type_order(int n){
     switch(n){
-    case pbnavitia::ADMIN:
+    case pbnavitia::ADMINISTRATIVE_REGION:
         return 1;
         break;
      case pbnavitia::STOP_AREA:
@@ -229,6 +229,10 @@ pbnavitia::Response autocomplete(const std::string &q,
                                  const navitia::type::Data &d) {
 
     pbnavitia::Response pb_response;
+    if (q.length() == 0) {
+        fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent" ,pb_response.mutable_error());
+        return pb_response;
+    }
     int nbmax_temp = nbmax;
     nbmax = std::max(100, nbmax);
     bool addType = d.pt_data.stop_area_autocomplete.is_address_type(q, d.geo_ref.alias, d.geo_ref.synonymes);
