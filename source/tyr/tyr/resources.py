@@ -24,7 +24,7 @@ class FieldDate(fields.Raw):
 
 key_fields = {'id': fields.Raw, 'token': fields.Raw, 'valid_until': FieldDate}
 
-instance_fields = {'id': fields.Raw, 'name': fields.Raw, "free": fields.Raw}
+instance_fields = {'id': fields.Raw, 'name': fields.Raw, "is_free": fields.Raw}
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
 
 user_fields = {'id': fields.Raw, 'login': fields.Raw, 'email': fields.Raw}
