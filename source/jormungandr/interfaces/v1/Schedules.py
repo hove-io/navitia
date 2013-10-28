@@ -35,6 +35,8 @@ class Schedules(ResourceUri):
                 description="Number of schedules per page")
         parser_get.add_argument("start_page", type=int, default=0,
                 description="The current page")
+        parser_get.add_argument("max_stop_date_times", type=int, default=10,
+                description="Maximum number of schedule per stop_point/route")
         self.method_decorators.append(add_notes(self))
 
 

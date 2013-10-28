@@ -142,7 +142,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     request.duration(), request.depth(), *(*this->data));
         case pbnavitia::DEPARTURE_BOARDS:
             return timetables::departure_board(request.departure_filter(),
-                    request.from_datetime(), request.duration(),
+                    request.from_datetime(), request.duration(),request.max_stop_date_times(),
                     request.interface_version(), request.count(),
                     request.start_page(), *(*this->data));
         case pbnavitia::ROUTE_SCHEDULES:

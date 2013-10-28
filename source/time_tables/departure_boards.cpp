@@ -128,7 +128,8 @@ render_v1(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
 
 pbnavitia::Response
 departure_board(const std::string &request, const std::string &date,
-                uint32_t duration, int interface_version,
+                uint32_t duration, uint32_t max_stop_date_times,
+                int interface_version,
                 int count, int start_page, const type::Data &data) {
 
     RequestHandle handler("DEPARTURE_BOARD", request, date,  duration, data);
@@ -173,7 +174,7 @@ departure_board(const std::string &request, const std::string &date,
             if(jpp->journey_pattern->route == route) {
                 auto tmp = get_stop_times({jpp->idx}, handler.date_time,
                                                  handler.max_datetime,
-                                                 std::numeric_limits<int>::max(), data);
+                                                 max_stop_date_times, data);
                 stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
             }
         }
