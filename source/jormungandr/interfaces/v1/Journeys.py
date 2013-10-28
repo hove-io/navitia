@@ -51,7 +51,6 @@ class GeoJson(fields.Raw):
             try:
                 if obj.HasField("street_network"):
                     coords = obj.street_network.coordinates
-                    length = obj.street_network.length
                 else:
                     return None
             except ValueError:
@@ -68,7 +67,7 @@ class GeoJson(fields.Raw):
                 "type" : "LineString",
                 "coordinates" : [],
                 "properties" : [{
-                    "length" : length
+                    "length" : 0 if not obj.HasField("length") else obj.length
                     }]
         }
         for coord in coords:
@@ -115,7 +114,7 @@ section = {
     "transfer_type" : enum_type(),
     "stop_date_times" : NonNullList(NonNullNested(stop_date_time)),
     "departure_date_time" : fields.String(attribute="begin_date_time"),
-    "arrival_date_time" : fields.String(attribute="end_date_time")
+    "arrival_date_time" : fields.String(attribute="end_date_time"),
 }
 
 

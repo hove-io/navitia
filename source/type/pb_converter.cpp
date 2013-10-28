@@ -493,6 +493,7 @@ void fill_street_section(const type::EntryPoint &ori_dest,
         pbnavitia::StreetNetwork * sn = section->mutable_street_network();
         create_pb(ori_dest, path, data, sn);
         section->set_duration(sn->length()/ori_dest.streetnetwork_params.speed);
+        section->set_length(sn->length());
         navitia::georef::Way* way;
         type::GeographicalCoord coord;
         if(path.path_items.size() > 0){
