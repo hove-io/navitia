@@ -133,6 +133,8 @@ void Data::build_uri(){
 #define CLEAR_EXT_CODE(type_name, collection_name) this->pt_data.collection_name##_map.clear();
 ITERATE_NAVITIA_PT_TYPES(CLEAR_EXT_CODE)
     this->pt_data.build_uri();
+    geo_ref.build_pois();
+    geo_ref.build_poitypes();
     geo_ref.normalize_extcode_way();
     geo_ref.normalize_extcode_admin();
 }
