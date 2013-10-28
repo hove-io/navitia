@@ -7,8 +7,7 @@ from functools import wraps
 import db
 from instance_manager import NavitiaManager, RegionNotFound
 import datetime
-
-
+import base64
 
 def authentification_required(func):
     """
@@ -33,25 +32,44 @@ def authentification_required(func):
 
     return wrapper
 
+def get_token():
+    parser = reqparse.RequestParser()
+    parser.add_argument('Authorization', type=str, location='headers')
+    request_args = parser.parse_args()
+
+    if not request_args['Authorization']:
+        return None
+
+    args = request_args['Authorization'].split(' ')
+    if len(args) > 1:
+        try:
+            _, b64 = request_args['Authorization'].split(' ')
+            decoded = base64.decodestring(b64)
+            return decoded.split(':')[0]
+        except ValueError:
+            return None
+    else:
+        return args[0]
+
+
+
 def authenticate(region, api, abort=False):
     if current_app.config.has_key('PUBLIC') \
             and current_app.config['PUBLIC']:
         #si jormungandr est en mode public: on zap l'authentification
         return True
 
-    parser = reqparse.RequestParser()
-    parser.add_argument('Authorization', type=str, location='headers')
-    request_args = parser.parse_args()
+    token = get_token()
 
-    if not request_args['Authorization']:
+    if not token:
         if abort:
             flask.ext.restful.abort(401)
         else:
             return False
 
-    user = db.get_user(request_args['Authorization'], datetime.datetime.now())
+    user = db.get_user(token, datetime.datetime.now())
     if user:
-        if user.had_access(region, api):
+        if user.has_access(region, api):
             return True
         else:
             if abort:
