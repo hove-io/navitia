@@ -68,6 +68,7 @@ def authenticate(region, api, abort=False):
             return False
 
     user = db.get_user(token, datetime.datetime.now())
+
     if user:
         if user.has_access(region, api):
             return True
