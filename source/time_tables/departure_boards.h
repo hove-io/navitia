@@ -11,7 +11,8 @@ typedef std::vector<datetime_stop_time> vector_dt_st;
 
 pbnavitia::Response departure_board(const std::string &filter,
                                     const std::string &date,
-                                    uint32_t duration, int interface_version,
+                                    uint32_t duration, uint32_t max_stop_date_times,
+                                    int interface_version,
                                     int count, int start_page, const type::Data &data);
 }
 
