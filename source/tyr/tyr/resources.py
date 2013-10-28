@@ -63,7 +63,7 @@ class User(restful.Resource):
         else:
             return marshal(models.User.query.all(), user_fields)
 
-    def put(self):
+    def post(self):
         user = None
         parser = reqparse.RequestParser()
         parser.add_argument('login', type=unicode, required=True,
@@ -83,7 +83,7 @@ class User(restful.Resource):
             raise
 
 
-    def post(self, user_id):
+    def put(self, user_id):
         user = models.User.query.get_or_404(user_id)
         parser = reqparse.RequestParser()
         parser.add_argument('email', type=unicode, required=True,
@@ -120,7 +120,7 @@ class Key(restful.Resource):
             raise
 
     @marshal_with(user_fields_full)
-    def put(self, user_id):
+    def post(self, user_id):
         parser = reqparse.RequestParser()
         parser.add_argument('valid_until', type=types.date, required=False,
                 case_sensitive=False, help='date de fin de validité de la clé')
@@ -149,7 +149,7 @@ class Key(restful.Resource):
         return user
 
     @marshal_with(user_fields_full)
-    def post(self, user_id, key_id):
+    def put(self, user_id, key_id):
         parser = reqparse.RequestParser()
         parser.add_argument('valid_until', type=types.date, required=True,
                 case_sensitive=False, help='date de fin de validité de la clé')
@@ -191,7 +191,7 @@ class Authorization(restful.Resource):
 
 
 
-    def put(self, user_id):
+    def post(self, user_id):
         parser = reqparse.RequestParser()
         parser.add_argument('api_id', type=int, required=True,
                 case_sensitive=False, help='api_id is required')
