@@ -11,12 +11,6 @@ using namespace navitia;
 using namespace routing;
 namespace po = boost::program_options;
 
-std::string iso_string(const nt::Data & d, int date, int hour){
-    boost::posix_time::ptime date_time(d.meta.production_date.begin() + boost::gregorian::days(date));
-    date_time += boost::posix_time::seconds(hour);
-    return boost::posix_time::to_iso_string(date_time);
-}
-
 struct PathDemand {
     type::idx_t start;
     type::idx_t target;
