@@ -20,7 +20,7 @@ class User(object):
         self.login = None
         self.email = None
 
-    def had_access(self, instance_name, api_name):
+    def has_access(self, instance_name, api_name):
         conn = None
         try:
             conn = engine.connect()

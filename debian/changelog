@@ -1,9 +1,8 @@
-navitia2 (0.73.1) unstable; urgency=low
+navitia2 (0.73.2) unstable; urgency=low
 
   * De l'authentification
-  *
 
- -- vlara <vlara@vlara-OptiPlex-790>  Mon, 28 Oct 2013 10:29:22 +0100
+ -- vlara <vincent.lara@canaltp.fr>  Mon, 28 Oct 2013 10:29:22 +0100
 
 navitia2 (0.72.4) unstable; urgency=low
 

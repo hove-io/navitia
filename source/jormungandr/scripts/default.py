@@ -134,6 +134,7 @@ class Script:
         st.count = 10 if not "count" in request.keys() else request["count"]
         st.start_page = 0 if not "start_page" in request.keys()\
                            else request["start_page"]
+        st.max_stop_date_times = 10 if not "max_stop_date_times" in request.keys() else request["max_stop_date_times"]
         resp = NavitiaManager().send_and_receive(req, region)
         return resp
 
