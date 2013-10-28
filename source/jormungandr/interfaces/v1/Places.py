@@ -93,7 +93,7 @@ class PlacesNearby(ResourceUri):
             if uri[-1] == '/':
                 uri = uri[:-1]
             uris = uri.split("/")
-            if len(uris) > 1 and uris[0] != "coord" and uris[0] != "addresses":
+            if len(uris) > 1 and uris[-1].count(";") == 0:
                 args["uri"] = uris[-1]
             else:
                 coord = uris[-1].split(";")
