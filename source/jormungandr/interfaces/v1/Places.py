@@ -54,6 +54,8 @@ class PlaceUri(ResourceUri):
                 args["uri"] = "coord:"+str(float(lon))+":"+str(float(lat))
             except ValueError:
                 pass
+        elif id[:3] == "poi":
+            args["uri"] = id.split(":")[-1]
         if not "uri" in args.keys():
             args["uri"] = id
         response = NavitiaManager().dispatch(args, self.region, "place_uri")
