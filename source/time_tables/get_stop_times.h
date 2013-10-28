@@ -6,9 +6,6 @@
 namespace navitia { namespace timetables {
 typedef std::pair<DateTime, const type::StopTime*> datetime_stop_time;
 
-std::string iso_string(const nt::Data & d, int date, int hour);
-
-
 /**
  * @brief get_stop_times : Renvoie tous les departures partant de la liste des journey_pattern points
  * @param journey_pattern_points : Les journey_pattern points à partir desquels on veut les départs

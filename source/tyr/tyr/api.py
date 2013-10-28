@@ -22,3 +22,11 @@ api.add_resource(resources.Authorization,
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
+
+
+@app.errorhandler(Exception)
+def error_handler(exception):
+    """
+    se charge de générer la réponse d'erreur au bon format
+    """
+    app.logger.exception('')
