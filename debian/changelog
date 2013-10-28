@@ -1,8 +1,9 @@
-navitia2 (0.73.0) UNRELEASED; urgency=low
+navitia2 (0.73.2) unstable; urgency=low
 
   * De l'authentification
+  *
 
- -- vlara <vlara@vlara-OptiPlex-790>  Fri, 25 Oct 2013 15:52:13 +0200
+ -- vlara <vlara@vlara-OptiPlex-790>  Mon, 28 Oct 2013 13:39:53 +0100
 
 navitia2 (0.72.4) unstable; urgency=low
 
