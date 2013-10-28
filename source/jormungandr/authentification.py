@@ -6,7 +6,8 @@ from flask import current_app
 from functools import wraps
 import db
 from instance_manager import NavitiaManager, RegionNotFound
-import logging
+import datetime
+
 
 
 def authentification_required(func):
@@ -38,7 +39,6 @@ def authenticate(region, api, abort=False):
         #si jormungandr est en mode public: on zap l'authentification
         return True
 
-
     parser = reqparse.RequestParser()
     parser.add_argument('Authorization', type=str, location='headers')
     request_args = parser.parse_args()
@@ -49,34 +49,18 @@ def authenticate(region, api, abort=False):
         else:
             return False
 
-    auth = authentication_with_db(region, request_args['Authorization'], api)
-    if auth:
-        return True
-    else:
-        if abort:
-            flask.ext.restful.abort(403)
-        else:
-            return False
-
-
-def authentication_with_db(region, token, api):
-    conn = None
-    try:
-        conn = db.engine.connect()
-        query = db.user.join(db.key) \
-                .join(db.authorization) \
-                .join(db.instance) \
-                .join(db.api) \
-                .select() \
-                .where(db.api.c.name == api) \
-                .where(db.instance.c.name == region) \
-                .where(db.key.c.token == token)
-
-        res = conn.execute(query)
-        if res.rowcount > 0:
+    user = db.get_user(request_args['Authorization'], datetime.datetime.now())
+    if user:
+        if user.had_access(region, api):
             return True
         else:
+            if abort:
+                flask.ext.restful.abort(403)
+            else:
+                return False
+    else:
+        if abort:
+            flask.ext.restful.abort(401)
+        else:
             return False
-    finally:
-        if conn:
-            conn.close()
+
