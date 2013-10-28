@@ -28,8 +28,8 @@ instance_fields = {'id': fields.Raw, 'name': fields.Raw, "is_free": fields.Raw}
 api_fields = {'id': fields.Raw, 'name': fields.Raw}
 
 user_fields = {'id': fields.Raw, 'login': fields.Raw, 'email': fields.Raw}
-user_fields_full = {'id': fields.Raw, 'login': fields.Raw, 'email': fields.Raw, \
-        'keys': fields.List(fields.Nested(key_fields)),
+user_fields_full = {'id': fields.Raw, 'login': fields.Raw, \
+        'email': fields.Raw, 'keys': fields.List(fields.Nested(key_fields)),
         'authorizations': fields.List(fields.Nested(
             {'instance': fields.Nested(instance_fields),
                 'api':fields.Nested(api_fields)}))}
