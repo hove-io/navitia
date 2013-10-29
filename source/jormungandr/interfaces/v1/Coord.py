@@ -1,10 +1,10 @@
 from flask.ext.restful import marshal_with, abort, marshal
-from instance_manager import NavitiaManager, RegionNotFound
+from instance_manager import NavitiaManager
 from ResourceUri import ResourceUri
 from interfaces.v1.fields import address
 from type_pb2 import _NAVITIATYPE
 from collections import OrderedDict
-
+#from exceptions import RegionNotFound
 
 class Coord(ResourceUri):
     def get(self, region=None, lon=None, lat=None, id=None, *args, **kwargs):
@@ -16,10 +16,7 @@ class Coord(ResourceUri):
             lon, lat = splitted
 
         if region is None:
-            try:
-                self.region = NavitiaManager().get_region("", lon, lat)
-            except RegionNotFound:
-                abort(404, message="No region found for these coordinates")
+            self.region = NavitiaManager().get_region("", lon, lat)
         else:
             self.region = region
         result.update(regions=[self.region])
