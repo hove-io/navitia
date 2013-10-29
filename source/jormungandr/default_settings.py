@@ -7,3 +7,4 @@ PG_CONNECTION_STRING='postgresql://navitia:navitia@localhost/jormun'
 
 #désactivation de l'authentification
 PUBLIC=True
+PROPAGATE_EXCEPTIONS=True
