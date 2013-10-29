@@ -2,8 +2,7 @@ from sqlalchemy import Table, MetaData, select, create_engine, join
 from app import app
 from sqlalchemy.sql import and_, or_, not_
 
-from redis import Redis
-import cPickle
+from cache import Cache
 
 __ALL__ = ['engine', 'meta', 'key', 'user', 'instance', 'api', 'authorization' \
         'get_user']
@@ -17,8 +16,11 @@ _api = Table('api', meta, autoload=True, schema='jormungandr')
 _authorization = Table('authorization', meta, autoload=True,
         schema='jormungandr')
 
-_redis = Redis(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'],
+_cache = Cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'],
         db=app.config['REDIS_DB'], password=app.config['REDIS_PASSWORD'])
+
+
+
 
 class User(object):
     def __init__(self):
@@ -50,27 +52,21 @@ class User(object):
 
     def has_access(self, instance_name, api_name):
         key = '%d_%s_%s' % (self.id, instance_name, api_name)
-        cached = _redis.get(key)
-        if cached:
-            return cPickle.loads(cached)
-        else:
+        res = _cache.get(key)
+        if not res:
             res = self._has_access(instance_name, api_name)
-            _redis.set(key, cPickle.dumps(res))
-            _redis.expire(key, 300)
-            return res
+            _cache.set(key, res, 300)
+        return res
 
 
 
 
 def get_user(token, valid_until):
-    cached = _redis.get(token)
-    if cached:
-        return cPickle.loads(cached)
-    else:
+    user = _cache.get(token)
+    if not user:
         user = get_user_with_db(token, valid_until)
-        _redis.set(token, cPickle.dumps(user))
-        _redis.expire(token, 300)
-        return user
+        _cache.set(token, user, 300)
+    return user
 
 def get_user_with_db(token, valid_until):
     conn = None
