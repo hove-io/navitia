@@ -14,37 +14,44 @@
 #include "utils/logger.h"
 
 void doWork(zmq::context_t & context, navitia::type::Data** data) {
-    zmq::socket_t socket (context, ZMQ_REP);
-    socket.connect ("inproc://workers");
-    bool run = true;
-    navitia::Worker w(data);
     auto logger = log4cplus::Logger::getInstance("worker");
-    while(run) {
-        zmq::message_t request;
-        try{
-            // Wait for next request from client
-            socket.recv(&request);
-        }catch(zmq::error_t){
-            //on gére le cas du sighup durant un recv
-            continue;
-        }
-
-        pbnavitia::Request pb_req;
-        pbnavitia::Response result;
-        if(pb_req.ParseFromArray(request.data(), request.size())){
-            auto api = pb_req.requested_api();
-            if(api != pbnavitia::METADATAS){
-                LOG4CPLUS_TRACE(logger, "receive request: " << pb_req.DebugString());
+    try{
+        zmq::socket_t socket (context, ZMQ_REP);
+        socket.connect ("inproc://workers");
+        bool run = true;
+        navitia::Worker w(data);
+        while(run) {
+            zmq::message_t request;
+            try{
+                // Wait for next request from client
+                socket.recv(&request);
+            }catch(zmq::error_t){
+                //on gére le cas du sighup durant un recv
+                continue;
             }
-            result = w.dispatch(pb_req);
-        }else{
-           LOG4CPLUS_WARN(logger, "receive invalid protobuf");
-           result.mutable_error()->set_id(pbnavitia::Error::invalid_protobuf_request);
-        }
 
-        zmq::message_t reply(result.ByteSize());
-        result.SerializeToArray(reply.data(), result.ByteSize());
-        socket.send(reply);
+            pbnavitia::Request pb_req;
+            pbnavitia::Response result;
+            if(pb_req.ParseFromArray(request.data(), request.size())){
+                auto api = pb_req.requested_api();
+                if(api != pbnavitia::METADATAS){
+                    LOG4CPLUS_DEBUG(logger, "receive request: "
+                            << pb_req.DebugString());
+                }
+                result = w.dispatch(pb_req);
+               LOG4CPLUS_TRACE(logger, "response: " << result.DebugString());
+            }else{
+               LOG4CPLUS_WARN(logger, "receive invalid protobuf");
+               result.mutable_error()->set_id(
+                       pbnavitia::Error::invalid_protobuf_request);
+            }
+
+            zmq::message_t reply(result.ByteSize());
+            result.SerializeToArray(reply.data(), result.ByteSize());
+            socket.send(reply);
+        }
+    }catch(const std::exception& e){
+        LOG4CPLUS_ERROR(logger, "worker die: " << e.what());
     }
 }
 
