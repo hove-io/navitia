@@ -31,30 +31,7 @@ Data& Data::operator=(Data&& other){
 
     return *this;
 }
-/*
-void Data::set_admins(){
-    // les points d'arrêts
-    for(StopPoint* stop_point : pt_data.stop_points){
-        std::vector<navitia::type::idx_t> admins=geo_ref.find_admins(stop_point->coord);
-        for(navitia::type::idx_t idx : admins){
-            stop_point->admin_list.push_back(idx);
-        }
-    }
-    // les zones d'arrêts
-    for(StopArea* stop_area : pt_data.stop_areas){
-        std::vector<navitia::type::idx_t> admins=geo_ref.find_admins(stop_area->coord);
-        for(navitia::type::idx_t idx : admins){
-            stop_area->admin_list.push_back(idx);
-        }
-    }
-    // POI
-    for (navitia::georef::POI* poi : geo_ref.pois){
-        std::vector<navitia::type::idx_t> admins=geo_ref.find_admins(poi->coord);
-        for(navitia::type::idx_t idx : admins){
-            poi->admin_list.push_back(idx);
-        }
-    }
-}*/
+
 
 bool Data::load(const std::string & filename) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
