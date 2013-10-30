@@ -29,7 +29,6 @@ class Worker {
 
         void init_worker_data();
 
-        pbnavitia::Response load();
         pbnavitia::Response status();
         pbnavitia::Response metadatas();
         pbnavitia::Response autocomplete(const pbnavitia::PlacesRequest &request);

@@ -102,14 +102,6 @@ void Worker::init_worker_data(){
     }
 }
 
-pbnavitia::Response Worker::load() {
-    pbnavitia::Response result;
-    result.mutable_load()->set_ok(true);
-
-    return result;
-}
-
-
 pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & request) {
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     return navitia::autocomplete::autocomplete(request.q(),
@@ -367,29 +359,31 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request){
 }
 
 
-pbnavitia::Response Worker::dispatch(const pbnavitia::Request & request) {
+pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     pbnavitia::Response result ;
     if (! (*data)->loaded){
-        fill_pb_error(pbnavitia::Error::service_unavailable, "The service is loading data",result.mutable_error());
+        fill_pb_error(pbnavitia::Error::service_unavailable, "The service is loading data", result.mutable_error());
         return result;
     }
     switch(request.requested_api()){
-    case pbnavitia::STATUS: return status(); break;
-    case pbnavitia::LOAD: return load(); break;
-    case pbnavitia::places: return autocomplete(request.places()); break;
-    case pbnavitia::place_uri: return place_uri(request.place_uri()); break;
-    case pbnavitia::ROUTE_SCHEDULES:
-    case pbnavitia::NEXT_DEPARTURES:
-    case pbnavitia::NEXT_ARRIVALS:
-    case pbnavitia::STOPS_SCHEDULES:
-    case pbnavitia::DEPARTURE_BOARDS:
-        return next_stop_times(request.next_stop_times(), request.requested_api()); break;
-    case pbnavitia::ISOCHRONE:
-    case pbnavitia::PLANNER: return journeys(request.journeys(), request.requested_api()); break;
-    case pbnavitia::places_nearby: return proximity_list(request.places_nearby()); break;
-    case pbnavitia::PTREFERENTIAL: return pt_ref(request.ptref()); break;
-    case pbnavitia::METADATAS : return metadatas(); break;
-    default: break;
+        case pbnavitia::STATUS: return status(); break;
+        case pbnavitia::places: return autocomplete(request.places()); break;
+        case pbnavitia::place_uri: return place_uri(request.place_uri()); break;
+        case pbnavitia::ROUTE_SCHEDULES:
+        case pbnavitia::NEXT_DEPARTURES:
+        case pbnavitia::NEXT_ARRIVALS:
+        case pbnavitia::STOPS_SCHEDULES:
+        case pbnavitia::DEPARTURE_BOARDS:
+            return next_stop_times(request.next_stop_times(), request.requested_api()); break;
+        case pbnavitia::ISOCHRONE:
+        case pbnavitia::PLANNER: return journeys(request.journeys(), request.requested_api()); break;
+        case pbnavitia::places_nearby: return proximity_list(request.places_nearby()); break;
+        case pbnavitia::PTREFERENTIAL: return pt_ref(request.ptref()); break;
+        case pbnavitia::METADATAS : return metadatas(); break;
+        default:
+            LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
+            fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", result.mutable_error());
+            break;
     }
 
     return result;
