@@ -32,7 +32,10 @@ void doWork(zmq::context_t & context, navitia::type::Data** data) {
         pbnavitia::Request pb_req;
         //@TODO check que la désérialization à réussi
         pb_req.ParseFromArray(request.data(), request.size());
-        LOG4CPLUS_TRACE(logger, "receive request: " << API_Name(pb_req.requested_api()));
+        auto api = pb_req.requested_api();
+        if(api != pbnavitia::METADATAS){
+            LOG4CPLUS_TRACE(logger, "receive request: " << pb_req.DebugString());
+        }
 
         auto result = w.dispatch(pb_req);
 
