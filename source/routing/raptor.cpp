@@ -381,7 +381,8 @@ struct raptor_reverse_visitor {
 
 
 template<typename Visitor>
-void RAPTOR::raptor_loop(Visitor visitor, /*const type::Properties &required_properties*/const type::AccessibiliteParams & accessibilite_params, bool global_pruning, uint32_t max_transfers) {
+void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & accessibilite_params,
+        bool global_pruning, uint32_t max_transfers) {
     const type::JourneyPatternPoint* tmp = nullptr;
 
     bool end = false;
@@ -437,7 +438,8 @@ void RAPTOR::raptor_loop(Visitor visitor, /*const type::Properties &required_pro
 
                             DateTimeUtils::update(workingDt, st->section_end_time(visitor.clockwise(), DateTimeUtils::hour(tmp_dt)), visitor.clockwise());
 
-                            if(visitor.comp(workingDt, bound) && st->valid_end(visitor.clockwise())) {
+                            if(visitor.comp(workingDt, bound) && st->valid_end(visitor.clockwise())
+                                    && jpp->stop_point->accessible(accessibilite_params.properties)) {
                                 working_labels[jpp_idx] = workingDt;
                                 best_labels[jpp_idx] = working_labels[jpp_idx];
                                 boardings[count][jpp_idx] = boarding;
@@ -448,7 +450,9 @@ void RAPTOR::raptor_loop(Visitor visitor, /*const type::Properties &required_pro
                                     end = false;
                                 }
                             } else if(workingDt == bound &&
-                                      get_type(this->count-1, jpp_idx) == boarding_type::uninitialized && st->valid_end(visitor.clockwise())) {
+                                      get_type(this->count-1, jpp_idx) == boarding_type::uninitialized
+                                      && st->valid_end(visitor.clockwise())
+                                      && jpp->stop_point->accessible(accessibilite_params.properties)) {
                                 if(b_dest.add_best(visitor, jpp_idx, workingDt, this->count)) {
                                     working_labels[jpp_idx] = workingDt;
                                     best_labels[jpp_idx] = workingDt;
