@@ -17,7 +17,8 @@ _authorization = Table('authorization', meta, autoload=True,
         schema='jormungandr')
 
 _cache = Cache(host=app.config['REDIS_HOST'], port=app.config['REDIS_PORT'],
-        db=app.config['REDIS_DB'], password=app.config['REDIS_PASSWORD'])
+        db=app.config['REDIS_DB'], password=app.config['REDIS_PASSWORD'],
+        disabled=app.config['CACHE_DISABLED'])
 
 
 
@@ -55,7 +56,7 @@ class User(object):
         res = _cache.get(key)
         if not res:
             res = self._has_access(instance_name, api_name)
-            _cache.set(key, res, 300)
+            _cache.set(key, res, app.config['AUTH_CACHE_TTL'])
         return res
 
 
@@ -65,7 +66,7 @@ def get_user(token, valid_until):
     user = _cache.get(token)
     if not user:
         user = get_user_with_db(token, valid_until)
-        _cache.set(token, user, 300)
+        _cache.set(token, user, app.config['AUTH_CACHE_TTL'])
     return user
 
 def get_user_with_db(token, valid_until):
