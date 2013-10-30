@@ -41,7 +41,7 @@ bool Data::load(const std::string & filename) {
         last_load_at = pt::microsec_clock::local_time();
         last_load = true;
         loaded = true;
-    } catch(std::exception& ex) {
+    } catch(const std::exception& ex) {
         LOG4CPLUS_ERROR(logger, boost::format("le chargement des données à échoué: %s") % ex.what());
         last_load = false;
     } catch(...) {
@@ -66,6 +66,7 @@ void Data::save(const std::string & filename){
 }
 
 void Data::save_lz4(const std::string & filename) {
+    auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     boost::filesystem::path p(filename);
     boost::filesystem::path dir = p.parent_path();
     try {
@@ -73,10 +74,10 @@ void Data::save_lz4(const std::string & filename) {
     } catch(const boost::filesystem::filesystem_error& e)
     {
        if(e.code() == boost::system::errc::permission_denied)
-           std::cout << "Search permission is denied for " << p << std::endl;
+           LOG4CPLUS_ERROR(logger, "Search permission is denied for " << p);
        else
-           std::cout << "is_directory(" << p << ") failed with "
-                     << e.code().message() << '\n';
+           LOG4CPLUS_ERROR(logger, "is_directory(" << p << ") failed with "
+                     << e.code().message());
        throw navitia::exception("Unable to write file");
     }
     try {
@@ -88,20 +89,20 @@ void Data::save_lz4(const std::string & filename) {
         oa << *this;
     } catch(const boost::filesystem::filesystem_error &e) {
         if(e.code() == boost::system::errc::permission_denied)
-            std::cout << "Writing permission is denied for " << p << std::endl;
+            LOG4CPLUS_ERROR(logger, "Writing permission is denied for " << p);
         else if(e.code() == boost::system::errc::file_too_large)
-            std::cout << "The file " << filename << " is too large" << std::endl;
+            LOG4CPLUS_ERROR(logger, "The file " << filename << " is too large");
         else if(e.code() == boost::system::errc::interrupted)
-            std::cout << "Writing was interrupted for " << p << std::endl;
+            LOG4CPLUS_ERROR(logger, "Writing was interrupted for " << p);
         else if(e.code() == boost::system::errc::no_buffer_space)
-            std::cout << "No buffer space while writing " << p << std::endl;
+            LOG4CPLUS_ERROR(logger, "No buffer space while writing " << p);
         else if(e.code() == boost::system::errc::not_enough_memory)
-            std::cout << "Not enough memory while writing " << p << std::endl;
+            LOG4CPLUS_ERROR(logger, "Not enough memory while writing " << p);
         else if(e.code() == boost::system::errc::no_space_on_device)
-            std::cout << "No space on device while writing " << p << std::endl;
+            LOG4CPLUS_ERROR(logger, "No space on device while writing " << p);
         else if(e.code() == boost::system::errc::operation_not_permitted)
-            std::cout << "Operation not permitted while writing " << p << std::endl;
-        std::cout << e.what() << std::endl;
+            LOG4CPLUS_ERROR(logger, "Operation not permitted while writing " << p);
+        LOG4CPLUS_ERROR(logger, e.what());
        throw navitia::exception("Unable to write file");
     }
 }
