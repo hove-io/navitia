@@ -241,7 +241,7 @@ class Script:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.journeys.forbidden_uris.append(forbidden_uri)
         resp = self.get_journey(req, region, request["type"])
-        if not resp.HasField("error"):
+        if len(resp.journeys) > 0:
             while request["count"] and request["count"] > len(resp.journeys):
                 temp_datetime = None
                 if request["clockwise"]:
@@ -251,7 +251,7 @@ class Script:
 
                 req.journeys.datetimes[0] = temp_datetime.strftime("%Y%m%dT%H%M%S")
                 tmp_resp = self.get_journey(req, region, request["type"])
-                if not tmp_resp.error and len(tmp_resp.journeys) == 0:
+                if len(tmp_resp.journeys) == 0:
                     break
                 else:
                     resp.journeys.extend(tmp_resp.journeys)
