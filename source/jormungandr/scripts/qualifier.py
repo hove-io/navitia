@@ -33,17 +33,17 @@ class qualifier:
 
     def qualifier_one(self, req, region):
         params = []
-        params.append({"mode":"walking","walking_speed":14*0.277777778, "walking_distance":1500,
+        params.append({"mode":"walking","walking_speed":1.68, "walking_distance":1500,
                        "bike_speed":req.journeys.streetnetwork_params.bike_speed,
                        "bike_distance":req.journeys.streetnetwork_params.bike_distance,
                         "car_speed":req.journeys.streetnetwork_params.car_speed,
                         "car_distance":req.journeys.streetnetwork_params.car_distance})
-        params.append({"mode":"bike","bike_speed":14*0.277777778, "bike_distance":4000,
+        params.append({"mode":"bike","bike_speed":8.8, "bike_distance":4000,
                         "walking_speed":req.journeys.streetnetwork_params.walking_speed,
                         "walking_distance":req.journeys.streetnetwork_params.walking_distance,
                         "car_speed":req.journeys.streetnetwork_params.car_speed,
                         "car_distance":req.journeys.streetnetwork_params.car_distance})
-        params.append({"mode":"car","car_speed": 20*0.277777778,"car_distance" :20*1000,
+        params.append({"mode":"car","car_speed": 16.8,"car_distance" :20*1000,
                         "walking_speed":req.journeys.streetnetwork_params.walking_speed,
                         "walking_distance":req.journeys.streetnetwork_params.walking_distance,
                         "bike_speed":req.journeys.streetnetwork_params.bike_speed,
