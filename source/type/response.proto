@@ -151,15 +151,13 @@ enum ResponseType {
     NO_SOLUTION = 7;
     CONNECTION_LIMITATION = 8;
     DURATION_LIMITATION = 9;
-}
+    }
 
 message Planner {
     repeated Journey journeys = 1;
     optional ResponseType response_type = 2;
     optional string before = 3;
     optional string after = 4;
-    //optional string error = 5;
-    optional Error error = 5;
 }
 
 message Status{
@@ -271,27 +269,28 @@ message StopSchedule {
 
 
 message Error{
-	enum error_id{
-		bad_filter = 1;
-		unknown_api = 2;
-		date_out_of_bounds = 3;
-		unable_to_parse = 4;
-		bad_format = 5;
-		no_origin = 6;
-		no_destination = 7;
-		no_origin_nor_destionation = 8;
-		no_solution = 9;
-		unknown_object = 10;
-		service_unavailable = 11;
-	}
-	optional error_id id = 1;
-	optional string message = 2;
+    enum error_id{
+        bad_filter = 1;
+        unknown_api = 2;
+        date_out_of_bounds = 3;
+        unable_to_parse = 4;
+        bad_format = 5;
+        no_origin = 6;
+        no_destination = 7;
+        no_origin_nor_destionation = 8;
+        no_solution = 9;
+        unknown_object = 10;
+        service_unavailable = 11;
+        invalid_protobuf_request = 12;
+    }
+    optional error_id id = 1;
+    optional string message = 2;
 }
 
 message Response{
+    optional int32 status_code = 1;
     optional Error error = 2;
     optional string info = 3;
-    optional int32 status_code = 1;
 
     optional Status status = 4;
     //Places

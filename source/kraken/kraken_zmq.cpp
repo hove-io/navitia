@@ -30,14 +30,17 @@ void doWork(zmq::context_t & context, navitia::type::Data** data) {
         }
 
         pbnavitia::Request pb_req;
-        //@TODO check que la désérialization à réussi
-        pb_req.ParseFromArray(request.data(), request.size());
-        auto api = pb_req.requested_api();
-        if(api != pbnavitia::METADATAS){
-            LOG4CPLUS_TRACE(logger, "receive request: " << pb_req.DebugString());
+        pbnavitia::Response result;
+        if(pb_req.ParseFromArray(request.data(), request.size())){
+            auto api = pb_req.requested_api();
+            if(api != pbnavitia::METADATAS){
+                LOG4CPLUS_TRACE(logger, "receive request: " << pb_req.DebugString());
+            }
+            result = w.dispatch(pb_req);
+        }else{
+           LOG4CPLUS_WARN(logger, "receive invalid protobuf");
+           result.mutable_error()->set_id(pbnavitia::Error::invalid_protobuf_request);
         }
-
-        auto result = w.dispatch(pb_req);
 
         zmq::message_t reply(result.ByteSize());
         result.SerializeToArray(reply.data(), result.ByteSize());
