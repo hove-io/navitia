@@ -116,7 +116,7 @@ void Visitor::count_nodes_uses() {
             }
         }
 
-    }    
+    }
 
     lotus.finish_bulk_insert();
 }
@@ -130,7 +130,7 @@ void Visitor::insert_edges(){
         if(w.second.properties.any()){
             uint64_t source = 0;
             geog.str("");
-            geog << "LINESTRING("; 
+            geog << "LINESTRING(";
 
             for(size_t i = 0; i < w.second.refs.size(); ++i){
                 uint64_t current_ref = w.second.refs[i];

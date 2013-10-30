@@ -498,7 +498,7 @@ BOOST_AUTO_TEST_CASE(coord){
 // Test de autocomplete
 BOOST_AUTO_TEST_CASE(build_autocomplete_test){
 
-        navitia::georef::GeoRef geo_ref;        
+        navitia::georef::GeoRef geo_ref;
         navitia::georef::HouseNumber hn;
         navitia::georef::Graph graph;
         vertex_t debut, fin;

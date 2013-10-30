@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(required_files) {
 }
 
 BOOST_AUTO_TEST_CASE(parse_agencies) {
-    std::vector<std::string> fields={"agency_id", "agency_name", "agency_url", 
+    std::vector<std::string> fields={"agency_id", "agency_name", "agency_url",
         "agency_timezone", "agency_lang", "agency_phone", "agency_fare_url"},
     required_fields = {"agency_name", "agency_url", "agency_timezone"};
 
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(parse_agencies) {
         sstream << ", ACME,,,,,";
         ed::Data data;
         ed::connectors::GtfsParser parser(std::string(FIXTURES_DIR) + gtfs_path);
-        CsvReader csv(sstream, ',' , true); 
+        CsvReader csv(sstream, ',' , true);
     }
 }
 

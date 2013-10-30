@@ -1,3 +1,40 @@
+navitia2 (0.73.2) unstable; urgency=low
+
+  * De l'authentification
+
+ -- vlara <vincent.lara@canaltp.fr>  Mon, 28 Oct 2013 10:29:22 +0100
+
+navitia2 (0.72.4) unstable; urgency=low
+
+  * Amelioration de la stabilite de osm2ed
+
+ -- vlara <vlara@vlara-OptiPlex-790>  Thu, 24 Oct 2013 09:14:23 +0200
+
+navitia2 (0.72.3) unstable; urgency=low
+
+  * Amelioration des sorts
+  * Ajout des symboles de debug
+
+ -- vlara <vincent.lara@canaltp.fr>  Wed, 23 Oct 2013 17:21:28 +0200
+
+navitia2 (0.72.2) stable; urgency=low
+
+  * Patch mineur
+
+ -- vlara <vincent.lara@canaltp.fr>  Wed, 23 Oct 2013 14:13:00 +0200
+
+navitia2 (0.72.1) unstable; urgency=low
+
+  * Patch sur l'import des pois
+
+ -- vlara <vincent.lara@canaltp.fr>  Wed, 23 Oct 2013 11:30:11 +0200
+
+navitia2 (0.72) unstable; urgency=low
+
+  * Correction ed2nav
+
+ -- vlara <vlara@vlara-OptiPlex-790>  Wed, 23 Oct 2013 11:03:42 +0200
+
 navitia2 (0.71.0) unstable; urgency=low
 
    [ Vincent Lara ]
@@ -5,11 +42,25 @@ navitia2 (0.71.0) unstable; urgency=low
 
  -- vlara <vincent.lara@canaltp.fr>  Tue, 22 Oct 2013 15:26:08 +0200
 
+navitia2 (0.70) UNRELEASED; urgency=low
+
+  * Separation des paquets
+  * Prolongements de service
+  * Correction des itineraires
+  * Amelioration de places nearby
+  * Prise en compte des aeroports
+  * Meilleure gestion des horaires en frequences
+  * Retro compatibilite de la v0
+  * Sortie JSONP
+  * Ajout de broke et Sindri
+
+ -- vlara <vlara@vlara-OptiPlex-790>  Mon, 21 Oct 2013 14:10:14 +0200
+
 navitia2 (0.63.00) unstable; urgency=low
 
   [ Alexandre Jacquin ]
   * Debian : Ajout de pyed
-  * 
+  *
 
  -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Thu, 10 Oct 2013 11:58:55 +0200
 

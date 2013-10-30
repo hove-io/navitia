@@ -46,8 +46,8 @@ enum VehicleJourneyType{
     stop_point_to_stop_point = 3;     // TAD rabattement arrêt à arrêt
     address_to_stop_point = 4;         // TAD rabattement adresse à arrêt
     odt_point_to_point = 5;           // TAD point à point (Commune à Commune)
-    
-    
+
+
     //regular = 0;
     //odt_with_stop_time = 1;
     //odt_with_zone = 2;
@@ -129,7 +129,7 @@ message JourneyPattern {
 
 message Note{
     required string uri = 1;
-    optional string note = 2;	
+    optional string note = 2;
 }
 
 message hasPropertie{
@@ -152,7 +152,7 @@ message hasEquipments{
         has_audible_announcement = 5;
         has_appropriate_escort = 6;
         has_appropriate_signage = 7;
-        has_school_vehicle = 8;        
+        has_school_vehicle = 8;
         has_wheelchair_boarding = 9;
 		has_sheltered = 10;
 		has_elevator = 11;
@@ -164,7 +164,7 @@ message hasEquipments{
 
 message StopDateTime {
     optional string arrival_date_time = 1;
-    optional string departure_date_time = 2;    
+    optional string departure_date_time = 2;
     optional StopPoint stop_point = 3;
     optional hasPropertie has_properties = 4;
 }
@@ -201,7 +201,7 @@ message VehicleJourney {
     optional bool audible_announcement = 20;
     optional bool appropriate_escort = 21;
     optional bool appropriate_signage = 22;
-    optional bool school_vehicle = 23;   
+    optional bool school_vehicle = 23;
 }
 
 message JourneyPatternPoint{

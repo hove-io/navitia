@@ -1,4 +1,4 @@
-""" 
+"""
 Function to launch a bin
 """
 import subprocess

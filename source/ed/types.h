@@ -134,7 +134,7 @@ struct Line : public Header, Nameable {
     std::string additional_data;
     std::string color;
     int sort;
-    
+
     CommercialMode* commercial_mode;
     Network* network;
     Company* company;
@@ -271,7 +271,7 @@ struct StopTime : public Nameable {
     bool is_frequency;
     bool wheelchair_boarding;
     bool date_time_estimated;
-    
+
     uint32_t local_traffic_zone;
 
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<int>::max()), end_time(std::numeric_limits<int>::max()),

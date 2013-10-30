@@ -1,7 +1,7 @@
 #coding=utf-8
 from flask import Flask, request, url_for
 from flask.ext.restful import fields, reqparse, marshal_with
-from instance_manager import NavitiaManager, RegionNotFound
+from instance_manager import NavitiaManager
 from protobuf_to_dict import protobuf_to_dict
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, place,\
@@ -9,6 +9,7 @@ from fields import stop_point, stop_area, route, line, physical_mode,\
                    display_informations_vj,additional_informations_vj,error
 
 from interfaces.parsers import option_value
+#from exceptions import RegionNotFound
 from ResourceUri import ResourceUri, add_notes
 import datetime
 from functools import wraps
@@ -51,7 +52,6 @@ class GeoJson(fields.Raw):
             try:
                 if obj.HasField("street_network"):
                     coords = obj.street_network.coordinates
-                    length = obj.street_network.length
                 else:
                     return None
             except ValueError:
@@ -68,7 +68,7 @@ class GeoJson(fields.Raw):
                 "type" : "LineString",
                 "coordinates" : [],
                 "properties" : [{
-                    "length" : length
+                    "length" : 0 if not obj.HasField("length") else obj.length
                     }]
         }
         for coord in coords:
@@ -115,7 +115,7 @@ section = {
     "transfer_type" : enum_type(),
     "stop_date_times" : NonNullList(NonNullNested(stop_date_time)),
     "departure_date_time" : fields.String(attribute="begin_date_time"),
-    "arrival_date_time" : fields.String(attribute="end_date_time")
+    "arrival_date_time" : fields.String(attribute="end_date_time"),
 }
 
 
@@ -293,8 +293,8 @@ class Journeys(ResourceUri):
                 self.region = NavitiaManager().key_of_id(args["destination"])
             if "destination" in args.keys():
                 args["destination"] = self.transform_id(args["destination"])
-            else:
-                raise RegionNotFound("")
+            #else:
+            #    raise RegionNotFound("")
         if not args["datetime"]:
             args["datetime"] = datetime.now().strftime("%Y%m%dT1337")
         api = None

@@ -14,12 +14,12 @@ def on_index(request, region = None ):
 
 def on_regions(request, format):
     response = {'regions': []}
-    for region in NavitiaManager().instances.keys() : 
+    for region in NavitiaManager().instances.keys() :
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
         try:
             resp = NavitiaManager().send_and_receive(req, region)
-            resp_dict = protobuf_to_dict(resp) 
+            resp_dict = protobuf_to_dict(resp)
             if 'metadatas' in resp_dict.keys():
                 resp_dict['metadatas']['region_id'] = region
                 response['regions'].append(resp_dict['metadatas'])

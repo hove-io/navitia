@@ -4,7 +4,7 @@ import sys
 import signal
 import os
 from conf import base_url
-from instance_manager import NavitiaManager, RegionNotFound
+from instance_manager import NavitiaManager
 from flask import url_for, make_response
 from flask.ext.restful.representations import json
 from interfaces.v0_routing import v0_routing
@@ -17,8 +17,6 @@ import dict2xml
 from app import app, api
 
 
-
-
 #@api.representation("application/xml")
 #def output_xml(data, code, headers=None):
 #    """Makes a Flask response with a XML encoded body"""
@@ -26,6 +24,7 @@ from app import app, api
 #    resp = make_response(data_xml, code)
 #    resp.headers.extend(headers or {})
 #    return resp
+
 
 @api.representation("text/jsonp")
 @api.representation("application/jsonp")
@@ -41,9 +40,6 @@ v1_routing(api)
 v0_routing(api)
 v0_documentation(api)
 v1_documentation(api)
-@app.errorhandler(RegionNotFound)
-def region_not_found(error):
-    return {"error" : error.value}, 404
 
 def kill_thread(signal, frame):
     NavitiaManager().stop()
@@ -55,7 +51,7 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, kill_thread)
     NavitiaManager().initialisation()
     run_simple('localhost', 5000, app,
-               use_debugger=True, use_evalex=True)
+               use_evalex=True)
 
 else:
     NavitiaManager().initialisation()

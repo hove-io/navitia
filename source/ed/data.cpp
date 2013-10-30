@@ -414,7 +414,7 @@ void Data::build_journey_pattern_points(){
 }
 
 void Data::build_journey_pattern_point_connections(){
-    std::multimap<std::string, types::VehicleJourney*> block_vj; 
+    std::multimap<std::string, types::VehicleJourney*> block_vj;
     std::multimap<std::string, types::JourneyPatternPointConnection> journey_pattern_point_connections;
     for(types::VehicleJourney *vj: this->vehicle_journeys) {
         if(vj->block_id != "")

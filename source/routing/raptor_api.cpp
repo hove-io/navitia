@@ -72,6 +72,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                     pb_section->set_type(pbnavitia::PUBLIC_TRANSPORT);
                     boost::posix_time::ptime departure_ptime , arrival_ptime;
                     vj = d.pt_data.vehicle_journeys[item.vj_idx];
+                    int length = 0;
                     for(size_t i=0;i<item.stop_points.size();++i){
                         if ((!vj->has_boarding()) && (!vj->has_landing())){
                             pbnavitia::StopDateTime * stop_time = pb_section->add_stop_date_times();
@@ -95,6 +96,11 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                                 departure_ptime = p_deptime;
                             // L'heure d'arrivée au dernier stop point
                             arrival_ptime = p_arrtime;
+                            if(i>0) {
+                                const auto & previous_coord = d.pt_data.stop_points[item.stop_points[i-1]]->coord;
+                                const auto & current_coord = d.pt_data.stop_points[item.stop_points[i]]->coord;
+                                length += previous_coord.distance_to(current_coord);
+                            }
                         }
                     }
                     if (item.stop_points.size() > 1){
@@ -104,6 +110,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                         fill_pb_placemark(d.pt_data.stop_points[item.stop_points[0]], d, pb_section->mutable_origin(), 1, now, action_period);
                         fill_pb_placemark(d.pt_data.stop_points[item.stop_points[item.stop_points.size()-1]], d, pb_section->mutable_destination(), 1, now, action_period);
                     }
+                    pb_section->set_length(length);
                     if( item.vj_idx != type::invalid_idx){ // TODO : réfléchir si ça peut vraiment arriver
                         boost::posix_time::time_period action_period(departure_ptime, arrival_ptime);
                         fill_section(pb_section, item.vj_idx, d, now, action_period);
@@ -119,8 +126,11 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                     }
 
                     boost::posix_time::time_period action_period(navitia::to_posix_time(item.departure, d), navitia::to_posix_time(item.arrival, d));
-                    fill_pb_placemark(d.pt_data.stop_points[item.stop_points.front()], d, pb_section->mutable_origin(), 1, now, action_period);
-                    fill_pb_placemark(d.pt_data.stop_points[item.stop_points.back()], d, pb_section->mutable_destination(), 1, now, action_period);
+                    const auto& origin_sp = d.pt_data.stop_points[item.stop_points.front()];
+                    const auto& destination_sp = d.pt_data.stop_points[item.stop_points.back()];
+                    fill_pb_placemark(origin_sp, d, pb_section->mutable_origin(), 1, now, action_period);
+                    fill_pb_placemark(destination_sp, d, pb_section->mutable_destination(), 1, now, action_period);
+                    pb_section->set_length(origin_sp->coord.distance_to(destination_sp->coord));
                 }
                 auto dep_time = iso_string(item.departure, d);
                 pb_section->set_begin_date_time(dep_time);

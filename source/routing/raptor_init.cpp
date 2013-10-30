@@ -282,7 +282,7 @@ float getWalkingTime(int count, type::idx_t jpp_idx, const std::vector<std::pair
         } else {
             const type::JourneyPatternPoint* boarding = get_boarding_jpp(cnt, current_jpp->idx, boardings);
             if(boarding_type_value == boarding_type::connection) {
-                type::idx_t connection_idx = data.dataRaptor.get_stop_point_connection_idx(boarding->stop_point->idx, 
+                type::idx_t connection_idx = data.dataRaptor.get_stop_point_connection_idx(boarding->stop_point->idx,
                                                                                            current_jpp->stop_point->idx,
                                                                                            clockwise, data.pt_data);
                 if(connection_idx != type::invalid_idx)

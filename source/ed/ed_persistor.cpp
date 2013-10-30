@@ -385,7 +385,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
         values.push_back(std::to_string(stop->headway_secs));
         values.push_back(std::to_string(stop->ODT));
         values.push_back(std::to_string(stop->pick_up_allowed));
-        values.push_back(std::to_string(stop->drop_off_allowed));        
+        values.push_back(std::to_string(stop->drop_off_allowed));
         values.push_back(std::to_string(stop->is_frequency));
 
         if(stop->journey_pattern_point != NULL){
@@ -398,7 +398,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
         }else{
             values.push_back(lotus.null_value);
         }
-        values.push_back(stop->comment);        
+        values.push_back(stop->comment);
         values.push_back(std::to_string(stop->date_time_estimated));
         this->lotus.insert(values);
     }
@@ -498,7 +498,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
             values.push_back(std::to_string(vj->theoric_vehicle_journey->idx));
         }else{
             //@TODO WTF??
-            values.push_back(lotus.null_value);        
+            values.push_back(lotus.null_value);
         }
         values.push_back(std::to_string(vj->to_ulog()));
         values.push_back(std::to_string(static_cast<int>(vj->vehicle_journey_type)));

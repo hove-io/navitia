@@ -39,7 +39,7 @@ void EdReader::fill(navitia::type::Data& data){
     this->fill_stop_point_connections(data, work);
     this->fill_journey_pattern_point_connections(data, work);
     this->fill_poi_types(data, work);
-    this->fill_pois(data, work);    
+    this->fill_pois(data, work);
     this->fill_ways(data, work);
     this->fill_house_numbers(data, work);
     this->fill_vertex(data, work);
@@ -843,14 +843,14 @@ void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work){
             idx++;
         }
     }
-    navitia::georef::vertex_t Conunt_v = boost::num_vertices(data.geo_ref.graph);    
+    navitia::georef::vertex_t Conunt_v = boost::num_vertices(data.geo_ref.graph);
     data.geo_ref.init_offset(Conunt_v);
 }
 
 void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
     std::string request = "select e.source_node_id, target_node_id, e.way_id, ST_LENGTH(the_geog) AS leng,";
                 request += "e.pedestrian_allowed as map,e.cycles_allowed as bike,e.cars_allowed as car from georef.edge e;";
-    pqxx::result result = work.exec(request);    
+    pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
         navitia::georef::Way* way = this->way_map[const_it["way_id"].as<uint64_t>()];
         std::string source, target;

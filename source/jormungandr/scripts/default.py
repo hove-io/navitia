@@ -2,15 +2,10 @@
 import type_pb2
 import request_pb2
 import response_pb2
-from protobuf_to_dict import protobuf_to_dict
-
-from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
-from renderers import render, render_from_protobuf
-from werkzeug.wrappers import Response
-from find_extrem_datetimes import *
+from instance_manager import NavitiaManager
+from renderers import render_from_protobuf
 from qualifier import qualifier
 from datetime import datetime, timedelta
-
 
 pb_type = {
         'stop_area': type_pb2.STOP_AREA,
@@ -260,12 +255,16 @@ class Script:
                     break
                 else:
                     resp.journeys.extend(tmp_resp.journeys)
-
+            to_delete = []
             if request["count"] and len(resp.journeys) > request["count"]:
                 to_delete = range(request["count"], len(resp.journeys))
-                to_delete.sort(reverse=True)
-                for i in to_delete:
-                    del resp.journeys[i]
+            if request['destination']:
+                for i in range(0, len(resp.journeys)):
+                    if resp.journeys[i].type == "" and not i in to_delete:
+                        to_delete.append(i)
+            to_delete.sort(reverse=True)
+            for i in to_delete:
+                del resp.journeys[i]
             if not request["clockwise"]:
                 resp.journeys.sort(self.journey_compare)
         return resp

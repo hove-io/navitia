@@ -225,7 +225,7 @@ struct Autocomplete
             }
         }
         return result;
-    }    
+    }
 
     /** Définit un fonctor permettant de parcourir notqualityre structure un peu particulière : trier par la valeur "nb_found"*/
     /** associé au valeur du vector<T> */
@@ -247,7 +247,7 @@ struct Autocomplete
         bool operator()(T a, T b) const{
             return fl_result.at(a).quality > fl_result.at(b).quality;
         }
-    };    
+    };
 
     std::vector<fl_quality> sort_and_truncate(std::vector<fl_quality> input, size_t nbmax) const {
         typename std::vector<fl_quality>::iterator middle_iterator;

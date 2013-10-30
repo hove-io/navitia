@@ -30,7 +30,7 @@ We hope you got the source code from git.
 
    ``mkdir build``
    ``cd build``
-   
+
 3. Run cmake
 
    ``cmake ../source``
@@ -55,9 +55,9 @@ Testing
    #. We suppose you create a data directory at the root of the kraken directory where you unziped the data
 
    #. Transform the data : ``./navimake -i ../data/ -o ../data/data.nav.lz4``
- 
+
    #. Go to the navitia directory cd navitia
- 
+
    #. Create the navitia.ini file with the following content ::
 
        [GENERAL]

@@ -292,6 +292,8 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
                     place->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
                     place->set_name(place->administrative_region().name());
                     place->set_uri(place->administrative_region().uri());
+                } else {
+                    pb_response.clear_places();
                 }
             }
         }

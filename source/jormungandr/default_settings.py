@@ -22,3 +22,7 @@ CACHE_DISABLED = False
 
 #durée de vie des info d'authentification dans le cache en secondes
 AUTH_CACHE_TTL = 300
+
+ERROR_HANDLER_FILE = 'jormungandr.log'
+ERROR_HANDLER_TYPE = 'rotating' # can be timedrotating
+ERROR_HANDLER_PARAMS = {'maxBytes' : 20000000, 'backupCount' : 5}

@@ -242,7 +242,7 @@ nt::StopPoint* StopPoint::get_navitia_type() const {
     nt_stop_point->name = this->name;
     nt_stop_point->coord = this->coord;
     nt_stop_point->fare_zone = this->fare_zone;
-    
+
     if(this->stop_area != NULL)
         nt_stop_point->stop_area->idx = this->stop_area->idx;
 
@@ -312,7 +312,7 @@ nt::JourneyPattern* JourneyPattern::get_navitia_type() const {
     nt_journey_pattern->uri = this->uri;
     nt_journey_pattern->name = this->name;
     nt_journey_pattern->is_frequence = this->is_frequence;
-    
+
     if(this->route != NULL)
         nt_journey_pattern->route->idx = this->route->idx;
 

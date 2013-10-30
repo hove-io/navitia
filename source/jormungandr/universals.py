@@ -33,4 +33,4 @@ def on_universal_places_nearby(request, format):
         return NavitiaManager().dispatch(request, region, "places_nearby", format)
     else:
         return generate_error("Unable to deduce the region from the uri. Is it a valid coordinate?", status=404)
-   
+

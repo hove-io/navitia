@@ -50,7 +50,7 @@ BEGIN
         (20, 'Unknown'),
         (21, 'Way'),
         (22, 'Admin'),
-        (23, 'POIType');        
+        (23, 'POIType');
         update public.database_version set version=2;
     ELSE
         RAISE NOTICE 'database already in version 1, skipping';
