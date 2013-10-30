@@ -51,7 +51,7 @@ render_v0(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
                                   to_posix_time(max_datetime, data));
 
     auto sort_predicate =
-        [&](datetime_stop_time d1, datetime_stop_time d2) {
+        [&](datetime_stop_time d1, datetime_stop_time d2)->bool {
             auto hour1 = DateTimeUtils::hour(d1.first) % DateTimeUtils::SECONDS_PER_DAY;
             auto hour2 = DateTimeUtils::hour(d2.first) % DateTimeUtils::SECONDS_PER_DAY;
             return std::abs(hour1 - DateTimeUtils::hour(datetime)) <

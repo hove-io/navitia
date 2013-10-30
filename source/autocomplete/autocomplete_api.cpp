@@ -325,7 +325,7 @@ pbnavitia::Response autocomplete(const std::string &q,
         mutable_places->RemoveLast();
     }
 
-    auto compare_attributs = [](pbnavitia::Place a, pbnavitia::Place b) {
+    auto compare_attributs = [](pbnavitia::Place a, pbnavitia::Place b)->bool {
         if (a.embedded_type() != b.embedded_type()){
             const auto a_order = get_embedded_type_order(a.embedded_type());
             const auto b_order = get_embedded_type_order(b.embedded_type());

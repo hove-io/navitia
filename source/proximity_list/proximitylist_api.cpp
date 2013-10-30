@@ -108,9 +108,10 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
     }
     auto nb_sort = (result.size() < end_pagination) ? result.size():end_pagination;
     std::partial_sort(result.begin(), result.begin() + nb_sort, result.end(),
-        [&](t_result t1, t_result t2)
-        {   auto a = std::get<1>(t1); auto b = std::get<1>(t2);
-            return coord.distance_to(a)< coord.distance_to(b);});
+        [&](t_result t1, t_result t2)->bool {
+            auto a = std::get<1>(t1); auto b = std::get<1>(t2);
+            return coord.distance_to(a)< coord.distance_to(b);
+        });
     result = paginate(result, count, start_page);
     create_pb(result, depth, data, response, coord);
     auto pagination = response.mutable_pagination();
