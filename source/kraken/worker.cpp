@@ -60,8 +60,8 @@ pbnavitia::Response Worker::status() {
     pbnavitia::Response result;
 
     auto status = result.mutable_status();
+    boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     const auto d = *data;
-    boost::shared_lock<boost::shared_mutex> lock(d->load_mutex);
     status->set_publication_date(pt::to_iso_string(d->meta.publication_date));
     status->set_start_production_date(bg::to_iso_string(d->meta.production_date.begin()));
     status->set_end_production_date(bg::to_iso_string(d->meta.production_date.end()));
@@ -81,12 +81,13 @@ pbnavitia::Response Worker::status() {
 pbnavitia::Response Worker::metadatas() {
     pbnavitia::Response result;
     auto metadatas = result.mutable_metadatas();
+    boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     const auto d = *data;
     metadatas->set_start_production_date(bg::to_iso_string(d->meta.production_date.begin()));
     metadatas->set_end_production_date(bg::to_iso_string(d->meta.production_date.end()));
     metadatas->set_shape(d->meta.shape);
     metadatas->set_status("running");
-    for(type::Contributor* contributor : d->pt_data.contributors){
+    for(const type::Contributor* contributor : d->pt_data.contributors){
         metadatas->add_contributors(contributor->uri);
     }
     return result;
@@ -150,7 +151,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
             return response;
         }
 
-    } catch (navitia::ptref::parsing_error error) {
+    } catch (const navitia::ptref::parsing_error& error) {
         LOG4CPLUS_ERROR(logger, "Error in the ptref request  : "+ error.more);
         pbnavitia::Response response;
         const auto str_error = "Unknow filter : " + error.more;
@@ -244,7 +245,7 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
     this->init_worker_data();
     pbnavitia::Response pb_response;
 
-    if(request.uri().size()>6 && request.uri().substr(0,6) == "coord:") {
+    if(request.uri().size() > 6 && request.uri().substr(0, 6) == "coord:") {
         type::EntryPoint ep(type::Type_e::Coord, request.uri());
         auto coord = this->coord_of_entry_point(ep);
         auto tmp = proximitylist::find(coord, 100, {type::Type_e::Address}, 1, 1, 0, *(*this->data));
