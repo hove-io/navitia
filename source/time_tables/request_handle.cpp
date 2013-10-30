@@ -3,7 +3,7 @@
 
 namespace navitia { namespace timetables {
 
-RequestHandle::RequestHandle(const std::string &API, const std::string &request,
+RequestHandle::RequestHandle(const std::string& /*api*/, const std::string &request,
                              const std::string &str_dt, uint32_t duration,
                              const type::Data &data) :
     date_time(DateTimeUtils::inf), max_datetime(DateTimeUtils::inf){
@@ -15,13 +15,13 @@ RequestHandle::RequestHandle(const std::string &API, const std::string &request,
              // On regarde si la date + duration ne déborde pas de la période de production
             fill_pb_error(pbnavitia::Error::date_out_of_bounds, "date is not in data production period",pb_response.mutable_error());
         }
-		if(! pb_response.has_error()){
-		    date_time = DateTimeUtils::set((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
-		    max_datetime = date_time + duration;
-		    const auto jpp_t = type::Type_e::JourneyPatternPoint;
-		    journey_pattern_points = ptref::make_query(jpp_t, request, data);
-		    total_result = journey_pattern_points.size();
-		}
+        if(! pb_response.has_error()){
+            date_time = DateTimeUtils::set((ptime.date() - data.meta.production_date.begin()).days(), ptime.time_of_day().total_seconds());
+            max_datetime = date_time + duration;
+            const auto jpp_t = type::Type_e::JourneyPatternPoint;
+            journey_pattern_points = ptref::make_query(jpp_t, request, data);
+            total_result = journey_pattern_points.size();
+        }
     } catch(const ptref::parsing_error &parse_error) {
         fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse Datetime" + parse_error.more,pb_response.mutable_error());
     } catch(const ptref::ptref_error &ptref_error){

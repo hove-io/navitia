@@ -745,6 +745,8 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& ,
     add_info_vehicle_journey->set_vehicle_journey_type(get_pb_odt_type(vj->vehicle_journey_type));
     add_info_vehicle_journey->set_has_date_time_estimated(vj->has_date_time_estimated());
 }
+
+
 void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& message,
                     pbnavitia::Error* error, int ,
                     const boost::posix_time::ptime& , const boost::posix_time::time_period& ){
