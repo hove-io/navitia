@@ -7,14 +7,13 @@
 namespace navitia { namespace type {
 
 std::string VehicleJourney::get_direction() const {
-    std::string to_return;
-    try {
-        if ((this->journey_pattern != nullptr) && (!this->journey_pattern->journey_pattern_point_list.empty()))
-            to_return = this->journey_pattern->journey_pattern_point_list.back()->stop_point->name;
-    }catch(...){
-
+    if ((this->journey_pattern != nullptr) && (!this->journey_pattern->journey_pattern_point_list.empty())){
+        const auto jpp = this->journey_pattern->journey_pattern_point_list.back();
+        if(jpp->stop_point != nullptr){
+            return jpp->stop_point->name;
+        }
     }
-    return to_return;
+    return "";
 }
 
 std::vector<boost::shared_ptr<Message>> HasMessages::get_applicable_messages(
