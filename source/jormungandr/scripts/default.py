@@ -245,9 +245,19 @@ class Script:
             while request["count"] and request["count"] > len(resp.journeys):
                 temp_datetime = None
                 if request["clockwise"]:
-                    temp_datetime = datetime.strptime(resp.journeys[-1].departure_date_time, "%Y%m%dT%H%M%S") + timedelta(seconds = 1)
+                    str_dt = ""
+                    if resp.journeys[-1].HasField("departure_date_time"):
+                        temp_datetime = datetime.strptime(resp.journeys[-1].departure_date_time, "%Y%m%dT%H%M%S") + timedelta(seconds = 1)
+                    else:
+                        duration = int(resp.journeys[-1].duration) + 1
+                        temp_datetime = datetime.strptime(req.journeys.datetimes[0], "%Y%m%dT%H%M%S") + timedelta(seconds=duration)
                 else:
-                    temp_datetime = datetime.strptime(resp.journeys[-1].arrival_date_time, "%Y%m%dT%H%M%S") + timedelta(seconds = -1)
+                    if resp.journeys[-1].HasField("arrival_date_time"):
+                        temp_datetime = datetime.strptime(resp.journeys[-1].arrival_date_time, "%Y%m%dT%H%M%S") + timedelta(seconds = -1)
+                    else:
+                        duration = int(resp.journeys[-1].duration) -1
+                        temp_datetime = datetime.strptime(req.journeys.datetimes[0], "%Y%m%dT%H%M%S") + timedelta(seconds=duration)
+
 
                 req.journeys.datetimes[0] = temp_datetime.strftime("%Y%m%dT%H%M%S")
                 tmp_resp = self.get_journey(req, region, request["type"])
