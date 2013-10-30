@@ -56,6 +56,8 @@ class PlaceUri(ResourceUri):
                 pass
         elif id[:3] == "poi":
             args["uri"] = id.split(":")[-1]
+        elif id[:5] == "admin":
+            args["uri"] = "admin:"+id.split(":")[-1]
         if not "uri" in args.keys():
             args["uri"] = id
         response = NavitiaManager().dispatch(args, self.region, "place_uri")
@@ -93,19 +95,22 @@ class PlacesNearby(ResourceUri):
             if uri[-1] == '/':
                 uri = uri[:-1]
             uris = uri.split("/")
-            if len(uris) > 1 and uris[-1].count(";") == 0:
-                args["uri"] = uris[-1]
-            else:
-                coord = uris[-1].split(";")
-                if len(coord) == 2:
+            if len(uris) > 1:
+                id = uris[-1]
+                if id.count(";") == 1:
+                    lon, lat = id.split(";")
                     try:
-                        lon = str(float(coord[0]))
-                        lat = str(float(coord[1]))
-                        args["uri"] = "coord:"+lon+":"+lat
+                        args["uri"] = "coord:"+str(float(lon))+":"+str(float(lat))
                     except ValueError:
                         pass
+                elif id[:3] == "poi":
+                    args["uri"] = id.split(":")[-1]
+                elif id[:5] == "admin":
+                    args["uri"] = "admin:"+id.split(":")[-1]
                 else:
-                    abort(500, message="Not implemented yet")
+                    args["uri"] = id
+            else:
+                abort(404)
         else:
             abort(404)
         response = NavitiaManager().dispatch(args, self.region, "places_nearby")
