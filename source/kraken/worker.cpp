@@ -205,6 +205,12 @@ type::GeographicalCoord Worker::coord_of_entry_point(const type::EntryPoint & en
             result = admin->coord;
         }
 
+    } else if(entry_point.type == Type_e::POI){
+        auto poi = (*this->data)->geo_ref.poi_map.find(entry_point.uri);
+        if (poi != (*this->data)->geo_ref.poi_map.end()){
+            const auto geo_poi = (*this->data)->geo_ref.pois[poi->second];
+            result = geo_poi->coord;
+        }
     }
     return result;
 }
