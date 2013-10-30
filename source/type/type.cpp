@@ -48,7 +48,7 @@ bool VehicleJourney::has_boarding() const{
         physical_mode = this->journey_pattern->physical_mode->name;
     if (! physical_mode.empty()){
         boost::to_lower(physical_mode);
-        return (physical_mode =="boarding");
+        return (physical_mode == "boarding");
     }
     return false;
 

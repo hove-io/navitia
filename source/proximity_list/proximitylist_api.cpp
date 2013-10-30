@@ -76,12 +76,12 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
     pbnavitia::Response response;
     int total_result = 0;
     std::vector<t_result > result;
-    auto end_pagination = (start_page+1)*count;
+    auto end_pagination = (start_page+1) * count;
     for(nt::Type_e type : filter){
         if(type == nt::Type_e::Address) {
            try {
                georef::edge_t e = data.geo_ref.nearest_edge(coord, data.geo_ref.pl);
-               ++ total_result;
+               ++total_result;
                georef::Way *way = data.geo_ref.ways[data.geo_ref.graph[e].way_idx];
                result.push_back(t_result(way->idx, coord, type));
            } catch(proximitylist::NotFound) {}
@@ -108,7 +108,7 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
     }
     auto nb_sort = (result.size() < end_pagination) ? result.size():end_pagination;
     std::partial_sort(result.begin(), result.begin() + nb_sort, result.end(),
-        [&](t_result t1, t_result t2)->bool {
+        [coord](t_result t1, t_result t2)->bool {
             auto a = std::get<1>(t1); auto b = std::get<1>(t2);
             return coord.distance_to(a)< coord.distance_to(b);
         });

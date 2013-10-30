@@ -11,16 +11,16 @@ message PlacesRequest {
 }
 
 message NextStopTimeRequest {
-    required string departure_filter   	= 1;
-    required string arrival_filter     	= 2;
-    required string from_datetime      	= 3;
-    required int32 duration            	= 4;
-    required int32 depth               	= 5;
-    required int32 nb_stoptimes        	= 7;
-    optional int32 interface_version   	= 8;
-    required int32 start_page          	= 9;
-    required int32 count              	= 10;
-    required int32 max_stop_date_times	= 11;
+    required string departure_filter    = 1;
+    required string arrival_filter      = 2;
+    required string from_datetime       = 3;
+    required int32 duration             = 4;
+    required int32 depth                = 5;
+    required int32 nb_stoptimes         = 7;
+    optional int32 interface_version    = 8;
+    required int32 start_page           = 9;
+    required int32 count                = 10;
+    required int32 max_stop_date_times  = 11;
 }
 
 message StreetNetworkParams{

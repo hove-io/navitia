@@ -26,7 +26,7 @@ enum API {
     places = 1;
     PTREFERENTIAL = 2;
     PLANNER = 4;
-    LOAD = 5;
+    LOAD = 5; ///@deprecated
     places_nearby = 6;
     STATUS = 7;
     NEXT_DEPARTURES = 8;
@@ -133,18 +133,18 @@ message Note{
 }
 
 message hasPropertie{
-	enum AdditionalInformation{
-		PICK_UP_ONLY = 1;
-		DROP_OFF_ONLY = 2;
-		ON_DEMAND_TRANSPORT = 3;
-		DATE_TIME_ESTIMATED = 4;
-	}
-	repeated AdditionalInformation additional_informations= 1;
-	repeated Note notes = 5;
+    enum AdditionalInformation{
+        PICK_UP_ONLY = 1;
+        DROP_OFF_ONLY = 2;
+        ON_DEMAND_TRANSPORT = 3;
+        DATE_TIME_ESTIMATED = 4;
+    }
+    repeated AdditionalInformation additional_informations= 1;
+    repeated Note notes = 5;
 }
 
 message hasEquipments{
-	enum Equipment{
+    enum Equipment{
         has_wheelchair_accessibility = 1;
         has_bike_accepted = 2;
         has_air_conditioned = 3;
@@ -154,12 +154,12 @@ message hasEquipments{
         has_appropriate_signage = 7;
         has_school_vehicle = 8;
         has_wheelchair_boarding = 9;
-		has_sheltered = 10;
-		has_elevator = 11;
-		has_escalator = 12;
-		has_bike_depot = 13;
-	}
-	repeated Equipment has_equipments = 1;
+        has_sheltered = 10;
+        has_elevator = 11;
+        has_escalator = 12;
+        has_bike_depot = 13;
+    }
+    repeated Equipment has_equipments = 1;
 }
 
 message StopDateTime {

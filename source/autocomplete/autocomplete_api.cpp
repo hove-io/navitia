@@ -230,7 +230,7 @@ pbnavitia::Response autocomplete(const std::string &q,
 
     pbnavitia::Response pb_response;
     if (q.length() == 0) {
-        fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent" ,pb_response.mutable_error());
+        fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent", pb_response.mutable_error());
         return pb_response;
     }
     int nbmax_temp = nbmax;
