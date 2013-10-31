@@ -13,16 +13,33 @@ import logging
 from renderers import protobuf_to_dict
 from jormungandr_exceptions import ApiNotFound, RegionNotFound, DeadSocketException
 from app import app
+import Queue
+from contextlib import contextmanager
 
 
 class Instance:
     def __init__(self):
         self.geom = None
-        self.socket = None
+        self._sockets = Queue.Queue()
         self.socket_path = None
-        self.poller = zmq.Poller()
-        self.lock = Lock()
         self.script = None
+        self.nb_created_socket = 0
+
+    @contextmanager
+    def socket(self, context):
+        socket = None
+        try:
+            socket = self._sockets.get(block=False)
+        except Queue.Empty:
+            socket = context.socket(zmq.REQ)
+            socket.connect(self.socket_path)
+            self.nb_created_socket += 1
+        try:
+            yield socket
+        finally:
+            if not socket.closed:
+                self._sockets.put(socket)
+
 
 
 @singleton
@@ -58,9 +75,6 @@ class NavitiaManager(object):
             conf.read(file_name)
             instance =  Instance()
             instance.socket_path = conf.get('instance' , 'socket')
-            instance.socket = self.context.socket(zmq.REQ)
-            instance.socket.connect(instance.socket_path)
-            instance.poller.register(instance.socket, zmq.POLLIN)
             if conf.has_option('instance', 'script') :
                 instance.script = importlib.import_module(conf.get('instance','script')).Script()
             else:
@@ -85,25 +99,19 @@ class NavitiaManager(object):
     def send_and_receive(self, request, region = None, timeout=10000):
         if region in self.instances:
             instance = self.instances[region]
-            instance.lock.acquire()
-            instance.socket.send(request.SerializeToString())#, zmq.NOBLOCK, copy=False)
-            socks = dict(instance.poller.poll(timeout))
-            if socks.get(instance.socket) == zmq.POLLIN:
-                pb = instance.socket.recv()
-                instance.lock.release()
-                resp = response_pb2.Response()
-                resp.ParseFromString(pb)
-                return resp
-            else :
-                instance.socket.setsockopt(zmq.LINGER, 0)
-                instance.socket.close()
-                instance.poller.unregister(instance.socket)
-                instance.socket = self.context.socket(zmq.REQ)
-                instance.socket.connect(instance.socket_path)
-                instance.poller.register(instance.socket)
-                instance.lock.release()
-                logging.error("La requête : " + request.SerializeToString() + " a echoue")
-                raise DeadSocketException(region, instance.socket_path)
+            with instance.socket(self.context) as socket:
+                socket.send(request.SerializeToString())
+                if socket.poll(timeout=timeout) > 0:
+                    pb = socket.recv()
+                    resp = response_pb2.Response()
+                    resp.ParseFromString(pb)
+                    return resp
+                else :
+                    socket.setsockopt(zmq.LINGER, 0)
+                    socket.close()
+                    logging.error("La requête : " +
+                            request.SerializeToString() + " a echoue " + instance.socket_path)
+                    raise DeadSocketException(region, instance.socket_path)
         else:
             raise RegionNotFound(region=region)
 
