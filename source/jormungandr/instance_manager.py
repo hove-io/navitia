@@ -24,6 +24,7 @@ class Instance:
         self.socket_path = None
         self.script = None
         self.nb_created_socket = 0
+        self.lock = Lock()
 
     @contextmanager
     def socket(self, context):
@@ -33,7 +34,9 @@ class Instance:
         except Queue.Empty:
             socket = context.socket(zmq.REQ)
             socket.connect(self.socket_path)
+            self.lock.acquire()
             self.nb_created_socket += 1
+            self.lock.release()
         try:
             yield socket
         finally:
