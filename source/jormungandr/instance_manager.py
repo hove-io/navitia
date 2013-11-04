@@ -112,8 +112,8 @@ class NavitiaManager(object):
                 else :
                     socket.setsockopt(zmq.LINGER, 0)
                     socket.close()
-                    logging.error("La requête : " +
-                            request.SerializeToString() + " a echoue " + instance.socket_path)
+                    logging.error("La requête : " + unicode(request)
+                            + " a echoue " + instance.socket_path)
                     raise DeadSocketException(region, instance.socket_path)
         else:
             raise RegionNotFound(region=region)
