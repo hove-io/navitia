@@ -17,7 +17,7 @@ pb_type = {
         'line' : type_pb2.LINE
         }
 
-class Script:
+class Script(object):
     def __init__(self):
         self.apis = ["places", "places_nearby", "next_departures",
                      "next_arrivals", "route_schedules", "stops_schedules",
