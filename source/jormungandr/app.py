@@ -25,6 +25,8 @@ if app.config.has_key('ERROR_HANDLER_TYPE') and\
             handler.setLevel(app.config['ERROR_HANDLER_LEVEL'])
         app.logger.addHandler(handler)
 
+app.logger.setLevel(app.config['LOG_LEVEL'])
+
 got_request_exception.connect(log_exception, app)
 
 api = Api(app, catch_all_404s=True)
