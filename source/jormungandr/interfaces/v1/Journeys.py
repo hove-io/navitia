@@ -206,6 +206,27 @@ class add_journey_pagination(object):
                     "templated" : False,
                     "type" : "next"
                     })
+
+            datetime_first, datetime_last = self.first_and_last(objects[0])
+            if not datetime_first is None and not datetime_last is None:
+                if not "links" in objects[0]:
+                    objects[0]["links"] = []
+
+                args = request.args.copy()
+                args["datetime"] = datetime_first.strftime("%Y%m%dT%H%M%S")
+                args["datetime_represents"] = "departure"
+                objects[0]["links"].append({
+                    "href" : url_for("v1.journeys", _external=True, **args),
+                    "templated" : False,
+                    "type" : "first"
+                    })
+                args["datetime"] = datetime_last.strftime("%Y%m%dT%H%M%S")
+                args["datetime_represents"] = "arrival"
+                objects[0]["links"].append({
+                    "href" : url_for("v1.journeys", _external=True, **args),
+                    "templated" : False,
+                    "type" : "last"
+                    })
             return objects
         return wrapper
 
@@ -219,12 +240,31 @@ class add_journey_pagination(object):
             asap_journey = min(list_journeys, key=itemgetter('arrival_date_time'))
         except:
             return (None, None)
-        if asap_journey['arrival_date_time'] and ['asap_journey.departure_date_time']:
+        if asap_journey['arrival_date_time'] and asap_journey['departure_date_time']:
             minute = timedelta(minutes = 1)
             datetime_after = datetime.strptime(asap_journey['departure_date_time'], "%Y%m%dT%H%M%S") + minute
             datetime_before = datetime.strptime(asap_journey['arrival_date_time'], "%Y%m%dT%H%M%S") - minute
 
         return (datetime_before, datetime_after)
+
+    def first_and_last(self, resp):
+        datetime_first = None
+        datetime_last = None
+        try:
+            list_journeys = [journey for journey in resp['journeys']\
+                                if 'arrival_date_time' in journey.keys() and\
+                                    journey['arrival_date_time'] != '' and\
+                                    'departure_date_time' in journey.keys() and\
+                                    journey['departure_date_time'] != '']
+            asap_journey_min = min(list_journeys, key=itemgetter('departure_date_time'))
+            asap_journey_max = max(list_journeys, key=itemgetter('arrival_date_time'))
+        except:
+            return (None, None)
+        if asap_journey_min['departure_date_time'] and asap_journey_max['arrival_date_time']:
+            datetime_first = datetime.combine(datetime.strptime(asap_journey_min['departure_date_time'], "%Y%m%dT%H%M%S").date(), datetime.strptime('0000','%H%M').time())
+            datetime_last = datetime.combine(datetime.strptime(asap_journey_max['arrival_date_time'], "%Y%m%dT%H%M%S").date(), datetime.strptime('2359','%H%M').time())
+
+        return (datetime_first, datetime_last)
 
 class Journeys(ResourceUri):
     def __init__(self):
