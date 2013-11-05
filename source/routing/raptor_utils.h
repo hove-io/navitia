@@ -36,7 +36,7 @@ struct best_dest {
     std::vector<float> rpidx_distance;
     DateTime best_now;
     unsigned int best_now_rpid;
-    unsigned int count;
+    size_t count;
     float max_walking;
 
     void add_destination(unsigned int rpid, const float dist_to_dest) {
@@ -46,14 +46,14 @@ struct best_dest {
     bool is_dest(unsigned int rpid) const {return rpidx_distance[rpid] != std::numeric_limits<float>::max();}
 
     template<typename Visitor>
-    inline bool add_best(const Visitor & v, unsigned int rpid, const DateTime &t, int cnt) {
+    inline bool add_best(const Visitor & v, unsigned int rpid, const DateTime &t, size_t cnt) {
         if(v.clockwise())
             return add_best_clockwise(rpid, t, cnt);
         else
             return add_best_unclockwise(rpid, t, cnt);
     }
 
-    inline bool add_best_clockwise(unsigned int rpid, const DateTime &t, int cnt) {
+    inline bool add_best_clockwise(unsigned int rpid, const DateTime &t, size_t cnt) {
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
             if((best_now == DateTimeUtils::inf) ||
                ((t != DateTimeUtils::inf) && (t + rpidx_distance[rpid]) <= (best_now))) {
@@ -67,7 +67,7 @@ struct best_dest {
         return false;
     }
 
-    inline bool add_best_unclockwise(unsigned int rpid, const DateTime &t, int cnt) {
+    inline bool add_best_unclockwise(unsigned int rpid, const DateTime &t, size_t cnt) {
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
             if((best_now <= max_walking) ||
                ((t != DateTimeUtils::min) && (t - rpidx_distance[rpid]) >= (best_now))) {
@@ -86,7 +86,7 @@ struct best_dest {
         memset32<float>(&rpidx_distance[0], nb_rpid, std::numeric_limits<float>::max());
         best_now = DateTimeUtils::inf;
         best_now_rpid = type::invalid_idx;
-        count = 0;
+        count = std::numeric_limits<size_t>::max();
         max_walking = max_walking_;
     }
 
