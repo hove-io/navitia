@@ -1,3 +1,9 @@
+navitia2 (0.74.0) UNRELEASED; urgency=low
+
+  * On a du vrai multithread
+
+ -- vlara <vlara@vlara-OptiPlex-790>  Mon, 04 Nov 2013 09:26:39 +0100
+
 navitia2 (0.73.2) unstable; urgency=low
 
   * De l'authentification

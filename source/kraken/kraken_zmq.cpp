@@ -12,6 +12,9 @@
 #include <string>
 #include <iostream>
 #include "utils/logger.h"
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+namespace pt = boost::posix_time;
 
 void doWork(zmq::context_t & context, navitia::type::Data** data) {
     auto logger = log4cplus::Logger::getInstance("worker");
@@ -32,8 +35,10 @@ void doWork(zmq::context_t & context, navitia::type::Data** data) {
 
             pbnavitia::Request pb_req;
             pbnavitia::Response result;
+            pt::ptime start = pt::microsec_clock::local_time();
+            pbnavitia::API api = pbnavitia::UNKNOWN_API;
             if(pb_req.ParseFromArray(request.data(), request.size())){
-                auto api = pb_req.requested_api();
+                /*auto*/ api = pb_req.requested_api();
                 if(api != pbnavitia::METADATAS){
                     LOG4CPLUS_DEBUG(logger, "receive request: "
                             << pb_req.DebugString());
@@ -45,10 +50,14 @@ void doWork(zmq::context_t & context, navitia::type::Data** data) {
                result.mutable_error()->set_id(
                        pbnavitia::Error::invalid_protobuf_request);
             }
-
             zmq::message_t reply(result.ByteSize());
             result.SerializeToArray(reply.data(), result.ByteSize());
             socket.send(reply);
+
+            if(api != pbnavitia::METADATAS){
+                LOG4CPLUS_DEBUG(logger, "processing time : "
+                        << (pt::microsec_clock::local_time() - start).total_milliseconds());
+            }
         }
     }catch(const std::exception& e){
         LOG4CPLUS_ERROR(logger, "worker die: " << e.what());

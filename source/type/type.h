@@ -751,7 +751,7 @@ struct StopTime : public Nameable {
         }
     }
 
-    DateTime section_end_date(int date, bool clockwise) const {return DateTimeUtils::set(date, this->section_end_time(clockwise));}
+    DateTime section_end_date(int date, bool clockwise) const {return DateTimeUtils::set(date, this->section_end_time(clockwise) % DateTimeUtils::SECONDS_PER_DAY);}
 
 
     /** Is this hour valid : only concerns frequency data
