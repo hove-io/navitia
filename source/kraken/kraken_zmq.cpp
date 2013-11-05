@@ -36,7 +36,7 @@ void doWork(zmq::context_t & context, navitia::type::Data** data) {
             pbnavitia::Request pb_req;
             pbnavitia::Response result;
             pt::ptime start = pt::microsec_clock::local_time();
-            pbnavitia::API api;
+            pbnavitia::API api = pbnavitia::UNKNOWN_API;
             if(pb_req.ParseFromArray(request.data(), request.size())){
                 /*auto*/ api = pb_req.requested_api();
                 if(api != pbnavitia::METADATAS){
