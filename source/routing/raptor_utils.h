@@ -56,7 +56,8 @@ struct best_dest {
     inline bool add_best_clockwise(unsigned int rpid, const DateTime &t, size_t cnt) {
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
             if((best_now == DateTimeUtils::inf) ||
-               ((t != DateTimeUtils::inf) && (t + rpidx_distance[rpid]) <= (best_now))) {
+               ((t != DateTimeUtils::inf) &&
+                (((t + rpidx_distance[rpid]) < best_now) || (((t + rpidx_distance[rpid]) == best_now) && (count > cnt))))) {
                 best_now = t + rpidx_distance[rpid];
                 //best_now.departure = best_now.departure + rpidx_distance[rpid];
                 best_now_rpid = rpid;
@@ -70,7 +71,8 @@ struct best_dest {
     inline bool add_best_unclockwise(unsigned int rpid, const DateTime &t, size_t cnt) {
         if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
             if((best_now <= max_walking) ||
-               ((t != DateTimeUtils::min) && (t - rpidx_distance[rpid]) >= (best_now))) {
+               ((t != DateTimeUtils::min) &&
+                (((t - rpidx_distance[rpid]) > best_now) || (((t - rpidx_distance[rpid]) == best_now) && (count > cnt))))) {
                 best_now = t - rpidx_distance[rpid];
                 //best_now.departure = t.departure - rpidx_distance[rpid];
                 best_now_rpid = rpid;
