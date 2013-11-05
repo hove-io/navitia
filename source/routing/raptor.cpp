@@ -226,7 +226,7 @@ RAPTOR::compute_all(const std::vector<std::pair<type::idx_t, double> > &departur
     boucleRAPTOR(/*required_properties*/accessibilite_params, clockwise, false, max_transfers);
     //auto tmp = makePathes(calc_dest, bound, walking_speed, accessibilite_params, *this, clockwise);
     //result.insert(result.end(), tmp.begin(), tmp.end());
-    // Aucune solution n’a pas été trouvée :'(
+    // Aucune solution n’a été trouvée :'(
     if(b_dest.best_now_rpid == type::invalid_idx) {
         return result;
     } else {
