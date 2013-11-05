@@ -100,6 +100,7 @@ message Uris {
     optional string physical_mode = 6;
     optional string network = 7;
     optional string note = 8;
+    optional string journey_pattern = 9;
 }
 
 message Section {

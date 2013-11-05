@@ -699,6 +699,7 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
     if ((vj->journey_pattern != nullptr) && (vj->journey_pattern->route)){
         fill_pb_object(vj->journey_pattern->route, data, pt_display_info,max_depth,now,action_period);
         uris->set_route(vj->journey_pattern->route->uri);
+        uris->set_journey_pattern(vj->journey_pattern->uri);
     }
     pt_display_info->set_headsign(vj->name);
     pt_display_info->set_direction(vj->get_direction());
