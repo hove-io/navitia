@@ -312,36 +312,37 @@ class Journeys(ResourceUri):
     @marshal_with(journeys)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
-        args = self.parsers["get"].parse_args()
+        args = self.parsers['get'].parse_args()
         #TODO : Changer le protobuff pour que ce soit propre
-        args["destination_mode"] = "vls" if args["destination_mode"] == "br" else args["destination_mode"]
-        args["origin_mode"] = "vls" if args["origin_mode"] == "br" else args["origin_mode"]
-        if not region is None or (not lon is None and not lat is None):
+        args['destination_mode'] = 'vls' if args['destination_mode'] == 'br' else args['destination_mode']
+        args['origin_mode'] = 'vls' if args['origin_mode'] == 'br' else args['origin_mode']
+        if region or (lon and lat):
             self.region = NavitiaManager().get_region(region, lon, lat)
             if uri:
-                objects = uri.split("/")
+                objects = uri.split('/')
                 if objects and len(objects) % 2 == 0:
-                    args["origin"] =  self.transform_id(objects[-1])
+                    args['origin'] =  self.transform_id(objects[-1])
                 else:
-                    return {"error" : "Unable to compute journeys from this \
-                                       object"}, 503
+                    return {'error' : 'Unable to compute journeys from this " \
+                                       "object'}, 503
         else:
-            if "origin" in args.keys():
-                self.region = NavitiaManager().key_of_id(args["origin"])
-                args["origin"] = self.transform_id(args["origin"])
-            elif "destination" in args.keys():
-                self.region = NavitiaManager().key_of_id(args["destination"])
-            if "destination" in args.keys():
-                args["destination"] = self.transform_id(args["destination"])
+            if args['origin']:
+                self.region = NavitiaManager().key_of_id(args['origin'])
+                args['origin'] = self.transform_id(args['origin'])
+            elif args['destination']:
+                self.region = NavitiaManager().key_of_id(args['destination'])
+            if args['destination']:
+                args['destination'] = self.transform_id(args['destination'])
             #else:
             #    raise RegionNotFound("")
-        if not args["datetime"]:
-            args["datetime"] = datetime.now().strftime("%Y%m%dT1337")
+        if not args['datetime']:
+            args['datetime'] = datetime.now().strftime('%Y%m%dT1337')
         api = None
-        if "destination" in args.keys() and args["destination"]:
-            api = "journeys"
+        if args['destination']:
+            api = 'journeys'
         else:
-            api = "isochrone"
+            api = 'isochrone'
+
         response = NavitiaManager().dispatch(args, self.region, api)
         return response
 
