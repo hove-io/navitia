@@ -72,7 +72,7 @@ row = {
 }
 
 header = {
-    "display_informations" :  display_informations_vj(),
+    "display_informations" :  PbField(display_informations_vj, attribute='pt_display_informations'),
     "additional_informations" : additional_informations_vj(),
     "links" : UrisToLinks()
 }
@@ -83,7 +83,7 @@ table_field = {
 
 route_schedule_fields = {
     "table" : PbField(table_field),
-    "display_informations" : display_informations_route()
+    "display_informations" : PbField(display_informations_route, attribute='pt_display_informations')
 }
 
 route_schedules = {
@@ -105,7 +105,7 @@ class RouteSchedules(Schedules):
 stop_schedule = {
     "stop_point" : PbField(stop_point),
     "route" : PbField(route, attribute="route"),
-    "display_informations" : display_informations_route(),
+    "display_informations" : PbField(display_informations_route, attribute='pt_display_informations'),
     "stop_date_times" : fields.List(fields.Nested(date_time)),
     "links" : UrisToLinks()
 }

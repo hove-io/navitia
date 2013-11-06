@@ -89,6 +89,7 @@ message PtDisplayInfo {
   	optional VehicleJourneyType vehicle_journey_type = 10;
   	optional hasEquipments has_equipments = 11;
   	optional string name = 12;
+  	repeated Message messages = 13;
 }
 
 message Uris {
@@ -139,6 +140,7 @@ message Journey {
     optional Place origin = 7;
     optional Place destination = 8;
     optional string type =9;
+    optional MessageStatus status = 10;
 }
 
 enum ResponseType {

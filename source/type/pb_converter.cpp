@@ -543,6 +543,17 @@ void fill_message(const boost::shared_ptr<type::Message> message,
         const type::Data&, pbnavitia::Message* pb_message, int,
         const boost::posix_time::ptime&, const boost::posix_time::time_period&){
     pb_message->set_uri(message->uri);
+    switch(message->message_status){
+        case type::MessageStatus::information:
+            pb_message->set_message_status(pbnavitia::MessageStatus::information);
+            break;
+        case type::MessageStatus::warning:
+            pb_message->set_message_status(pbnavitia::MessageStatus::warning);
+            break;
+        case type::MessageStatus::disrupt:
+            pb_message->set_message_status(pbnavitia::MessageStatus::disrupt);
+            break;
+    }
     auto it = message->localized_messages.find("fr");
     if(it !=  message->localized_messages.end()){
         pb_message->set_message(it->second.body);
@@ -665,18 +676,24 @@ void fill_pb_object(const navitia::type::StopTime* stop_time,
     }
 }
 
-void fill_pb_object(const nt::Route* r, const nt::Data& ,
-                    pbnavitia::PtDisplayInfo* pt_display_info, int ,
-                    const pt::ptime& , const pt::time_period& ){
+void fill_pb_object(const nt::Route* r, const nt::Data& data,
+                    pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
+                    const pt::ptime& now, const pt::time_period& action_period){
     if(r == nullptr)
         return ;
     pbnavitia::Uris* uris = pt_display_info->mutable_uris();
     uris->set_route(r->uri);
+    for(auto message : r->get_applicable_messages(now, action_period)){
+        fill_message(message, data, pt_display_info->add_messages(), max_depth-1, now, action_period);
+    }
     pt_display_info->set_direction(r->name);
     if (r->line != nullptr){
         pt_display_info->set_color(r->line->color);
         pt_display_info->set_code(r->line->code);
         pt_display_info->set_name(r->line->name);
+        for(auto message : r->line->get_applicable_messages(now, action_period)){
+            fill_message(message, data, pt_display_info->add_messages(), max_depth-1, now, action_period);
+        }
         uris->set_line(r->line->uri);
         if (r->line->network != nullptr){
             pt_display_info->set_network(r->line->network->name);
@@ -687,6 +704,7 @@ void fill_pb_object(const nt::Route* r, const nt::Data& ,
             uris->set_commercial_mode(r->line->commercial_mode->uri);
         }
     }
+
 }
 void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
                     pbnavitia::PtDisplayInfo* pt_display_info, int max_depth,
@@ -699,6 +717,9 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
     if ((vj->journey_pattern != nullptr) && (vj->journey_pattern->route)){
         fill_pb_object(vj->journey_pattern->route, data, pt_display_info,max_depth,now,action_period);
         uris->set_route(vj->journey_pattern->route->uri);
+    }
+    for(auto message : vj->get_applicable_messages(now, action_period)){
+        fill_message(message, data, pt_display_info->add_messages(), max_depth-1, now, action_period);
     }
     pt_display_info->set_headsign(vj->name);
     pt_display_info->set_direction(vj->get_direction());
