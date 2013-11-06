@@ -64,6 +64,9 @@ BEGIN
     CASE WHEN db_version < 3
         THEN
         INSERT INTO navitia.connection_kind (id, name) VALUES (6, 'stay_in');
+		insert into realtime.message_status values (0, 'information'), 
+		(1, 'warning'),
+		(2, 'disrupt');
         update public.database_version set version=3;
     ELSE
         RAISE NOTICE 'database already in version 3, skipping';
