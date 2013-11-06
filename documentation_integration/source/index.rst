@@ -134,7 +134,7 @@ Errors
 When there's an error you'll receive a response with a error object containing an id
 
 Example
-#######
+*******
 
 .. code-block:: json
 
@@ -251,7 +251,7 @@ Parameters
 ##########
 
 +---------+---------------+-----------------+----------------------------------------+-------------------------------------+
-| Required| Parameter     | Type            | Description                            | Default value                       |
+| Required| Name          | Type            | Description                            | Default value                       |
 +=========+===============+=================+========================================+=====================================+
 | yep     | q             | string          | The search term                        |                                     |
 +---------+---------------+-----------------+----------------------------------------+-------------------------------------+
@@ -302,7 +302,7 @@ Parameters
 ##########
 
 +---------+---------------+-----------------+------------------------------------------+-------------------------------------+
-| Required| Parameter     | Type            | Description                              | Default value                       |
+| Required| name          | Type            | Description                              | Default value                       |
 +=========+===============+=================+==========================================+=====================================+
 | nop     | distance      | int             | Distance range in meters                 | 500                                 |
 +---------+---------------+-----------------+------------------------------------------+-------------------------------------+
@@ -346,32 +346,63 @@ Journeys
 This api compute journeys.
 If used within the coverage api, it will retrieve the next journeys from the selected public transport object or coordinates.
 
+There are two ways to access this api.
+The first one, is : http://api.navitia.io/v1/{a_path_to_resource}/journeys it will retrieve all the journeys from the resource.
+The other one is the most used http//api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={datetime}.
+
 Parameters
 ##########
+
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| Required | Name                | Type        Description                               | Default value   |
++==========+=====================+===========+===========================================+=================+
+| yep      | from                | id        | The id of the departure of your journey   |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | to                  | id        | The id of the arrival of your journey     |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| yep      | datetime            | datetime  | A datetime                                |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | datetime_represents | String    | Can be *departure* or *arrival*.          | departure       |
+|          |                     |           | If it's departure, the request will       |                 |
+|          |                     |           | retrieve the journeys after datetime.     |                 |
+|          |                     |           | If it's arrival it will retrieve journeys |                 |
+|          |                     |           | arriving before datetime.                 |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | forbidden_uris[]    | id        | If you want to avoid lines, modes ...     |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | count               | int       | Number of journeys                        |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | type                | String    | Allows you to filter the journeys.        | all             |
+|          |                     |           | Can be rapid, all ...                     |                 |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+| nop      | max_nb_tranfers     | int       | Maximum of number transfers               | 10              |
++----------+---------------------+-----------+-------------------------------------------+-----------------+
+
 
 Objects
 #######
 
 * Journey object
 
-=================== ======================= ======================================================================
-Field               Type                    Description
-=================== ======================= ======================================================================
-duration            int                     Duration of the journey
-nb_transfers        int                     Number of transfers in the journey
-departure_date_time :ref:`datetime`         Departure date and time of the journey
-requested_date_time :ref:`datetime`         Requested date and time of the journey
-arrival_date_time   :ref:`datetime`         Arrival date and time of the journey
-sections            array of :ref:`section` All the sections of the journey
-from                :ref:`place`            The place from where the journey starts
-to                  :ref:`place`            The place from where the journey starts
-links               :ref:`link`             Links related to this journey
-type                *enum* string           Use to qualified a journey can be ``comfort``, ``rapid``, ``healthy``
-=================== ======================= ======================================================================
+=================== ================== ======================================================================
+Field               Type               Description
+=================== ================== ======================================================================
+duration            int                Duration of the journey
+nb_transfers        int                Number of transfers in the journey
+departure_date_time datetime_          Departure date and time of the journey
+requested_date_time datetime_          Requested date and time of the journey
+arrival_date_time   datetime_          Arrival date and time of the journey
+sections            array of section_  All the sections of the journey
+from                place_             The place from where the journey starts
+to                  place_             The place from where the journey starts
+links               link_              Links related to this journey
+type                *enum* string      Use to qualified a journey can be ``comfort``, ``rapid``, ``healthy``
+=================== ================== ======================================================================
 
 .. note::
     When used with just a "from" or a "to" parameter, it will not contain the sections parameter nor the from (if the from parametre was given).
 
+.. _section:
 
 * Section object
 
@@ -387,39 +418,151 @@ type                *enum* string           Use to qualified a journey can be ``
 +--------------------------+------------------------------------+--------------------------------------------------------+
 | duration                 | int                                |  Duration of this section                              |
 +--------------------------+------------------------------------+--------------------------------------------------------+
-| from                     | :ref:`place`                       |  Origin place of this section                          |
+| from                     | place_                             |  Origin place of this section                          |
 +--------------------------+------------------------------------+--------------------------------------------------------+
-| to                       | :ref:`place`                       |  Destination place of this section                     |
+| to                       | place_                             |  Destination place of this section                     |
 +--------------------------+------------------------------------+--------------------------------------------------------+
-| links                    | Array of :ref:`link`               |  Links related to this section                         |
+| links                    | Array of link_                     |  Links related to this section                         |
 +--------------------------+------------------------------------+--------------------------------------------------------+
-| display_informations     | :ref:`display_informations`        |  Usefull information to display                        |
+| display_informations     | display_informations_              |  Usefull information to display                        |
 +--------------------------+------------------------------------+--------------------------------------------------------+
 | additionnal_informations | *enum* string                      |  Other informations : TODO                             |
 +--------------------------+------------------------------------+--------------------------------------------------------+
 | geojson                  | `GeoJson <http://www.geojson.org>` |                                                        |
 +--------------------------+------------------------------------+--------------------------------------------------------+
-| path                     | Array of :ref:`path`               | The path of this section                               |
+| path                     | Array of path_                     | The path of this section                               |
 +--------------------------+------------------------------------+--------------------------------------------------------+
 | transfer_type            | *enum* string                      | The type of this transfer it can be : ``WALKING``,     |
 |                          |                                    | ``GUARANTEED``, ``EXTENSION``                          |
 +--------------------------+------------------------------------+--------------------------------------------------------+
-| stop_date_times          | Array of :ref:`stop_date_time`     | List of the stop times of this section                 |
+| stop_date_times          | Array of stop_date_time_           | List of the stop times of this section                 |
 +--------------------------+------------------------------------+--------------------------------------------------------+
-| departure_date_time      | :ref:`stop_date_time`              | Date and time of departure                             |
+| departure_date_time      | stop_date_time_                    | Date and time of departure                             |
 +--------------------------+------------------------------------+--------------------------------------------------------+
-| arrival_date_time        | :ref:`stop_date_time`              | Date and time of arrival                               |
+| arrival_date_time        | stop_date_time_                    | Date and time of arrival                               |
 +--------------------------+------------------------------------+--------------------------------------------------------+
 
 
 Route Schedules
 ***************
 
+This api give you access to schedules of routes.
+The response is made of an array of route_schedule, and another one of :ref:`note`.
+You can access it via that kind of url : http://api.navitia.io/v1/{a_path_to_a_resource}/route_schedules
+
+Parameters
+##########
+
++----------+---------------------+-----------+------------------------------+---------------+
+| Required | Name                | Type      | Description                  | Default Value |
++==========+=====================+===========+==============================+===============+
+| yep      | from_datetime       | date_time | The date_time from           |               |
+|          |                     |           | which you want the schedules |               |
++----------+---------------------+-----------+------------------------------+---------------+
+| nop      | duration            | int       | Maximum duration in seconds  | 86400         |
+|          |                     |           | between from_datetime        |               |
+|          |                     |           | and the retrieved datetimes. |               |
++----------+---------------------+-----------+------------------------------+---------------+
+| nop      | max_stop_date_times | int       | Maximum number of            |               |
+|          |                     |           | stop_date_times per          |               |
+|          |                     |           | schedule.                    |               |
++----------+---------------------+-----------+------------------------------+---------------+
+
+Objects
+#######
+
+* route_schedule object
+
+===================== =========================== ==============================================
+Field                 Type                        Description
+===================== =========================== ==============================================
+display_informations  :ref:`display_informations` Usefull information about the route to display
+Table                 table_                      The schedule table
+===================== =========================== ==============================================
+
+.. _table:
+
+* table object
+
+======= ================= ====================================
+Field   Type              Description
+======= ================= ====================================
+Headers Array of header_  Informations about vehicle journeys
+Rows    Array of row_     A row of the schedule
+======= ================= ====================================
+
+.. _header:
+
+* header object
+
++--------------------------+-----------------------------+-----------------------------------+
+| Field                    | Type                        | Description                       |
++==========================+=============================+===================================+
+| additionnal_informations | Array of String             | Other informations : TODO enum    |
++--------------------------+-----------------------------+-----------------------------------+
+| display_informations     | :ref:`display_informations` | Usefull informations about the    |
+|                          |                             | the vehicle journey to display    |
++--------------------------+-----------------------------+-----------------------------------+
+| links                    | Array of link_              | Links to line_, vehicle_journey_, |
+|                          |                             | route_, commercial_mode_,         |
+|                          |                             | physical_mode_, network_          |
++--------------------------+-----------------------------+-----------------------------------+
+
+.. _row:
+
+* row object
+
++------------+---------------------------+---------------------------+
+| Field      | Type                      | Description               |
++============+===========================+===========================+
+| date_times | Array of :ref:`date_time` | Array of date_time        |
++------------+---------------------------+---------------------------+
+| stop_point | :ref:`stop_point`         | The stop point of the row |
++------------+---------------------------+---------------------------+
+
+
+
 Stop Schedules
 **************
 
+This api give you access to schedules of stops.
+The response is made of an array of stop_schedule, and another one of :ref:`note`.
+You can access it via that kind of url : http://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules
+
+Parameters
+##########
+
++----------+---------------------+-----------+------------------------------+---------------+
+| Required | Name                | Type      | Description                  | Default Value |
++==========+=====================+===========+==============================+===============+
+| yep      | from_datetime       | date_time | The date_time from           |               |
+|          |                     |           | which you want the schedules |               |
++----------+---------------------+-----------+------------------------------+---------------+
+| nop      | duration            | int       | Maximum duration in seconds  | 86400         |
+|          |                     |           | between from_datetime        |               |
+|          |                     |           | and the retrieved datetimes. |               |
++----------+---------------------+-----------+------------------------------+---------------+
+
+Objects
+#######
+
+* stop_schedule object
+
+===================== =============================== ==============================================
+Field                 Type                            Description
+===================== =============================== ==============================================
+display_informations  :ref:`display_informations`     Usefull information about the route to display
+route                 :ref:`route`                    The route of the schedule
+stop_date_times       Array of stop_date_time_        When does a bus stops at the stop point
+stop_point            :ref:`stop_point`               The stop point of the schedule
+===================== =============================== ==============================================
+
 Departures
 **********
+
+
+
+
 
 Arrivals
 ********
@@ -651,3 +794,82 @@ coord                 :ref:`coord`                Coordinates of the adress
 level                 int                         Level of the admin
 zip_code              string                      Zip code of the admin
 ===================== =========================== ==================================================================
+
+
+Other objects
+*************
+
+.. _date_time:
+
+date_time
+############
+
++--------------------------+----------------------+--------------------------------+
+| Field                    | Type                 | Description                    |
++==========================+======================+================================+
+| additionnal_informations | Array of String      | Other informations : TODO enum |
++--------------------------+----------------------+--------------------------------+
+| date_times               | Array of String      | Date time                      |
++--------------------------+----------------------+--------------------------------+
+| links                    | Array of link_       | internal links to notes        |
++--------------------------+----------------------+--------------------------------+
+
+.. _note:
+
+note
+####
+
+===== ====== ========================
+Field Type   Description
+===== ====== ========================
+id    String id of the note
+value String The content of the note
+===== ====== ========================
+
+.. _stop_date_time:
+
+stop_date_time
+##############
+
+========== ============ ============
+Field      Type         Description
+========== ============ ============
+date_time  date_time_   A date time
+stop_point stop_point_  A stop point
+========== ============ ============
+
+.. _display_informations:
+
+display_informations
+####################
+
+=============== =============== ==================================
+Field           Type            Description
+=============== =============== ==================================
+network         String          The name of the network
+direction       String          A direction
+commercial_mode String          The commercial mode
+physical_mode   String          The physical mode
+label           String          The label of the object
+color           String          The hexadecimal code of the line
+code            String          The code of the line
+description     String          A description
+equipments      Array of String
+=============== =============== ==================================
+
+.. _link:
+
+link
+####
+
+
+
+Special Parameters
+******************
+
+.. _datetime:
+
+datetime
+########
+
+A date time with the format YYYYMMDDTHHMMSS
