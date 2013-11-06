@@ -437,9 +437,9 @@ type                *enum* string      Use to qualified a journey can be ``comfo
 +--------------------------+------------------------------------+--------------------------------------------------------+
 | stop_date_times          | Array of stop_date_time_           | List of the stop times of this section                 |
 +--------------------------+------------------------------------+--------------------------------------------------------+
-| departure_date_time      | stop_date_time_                    | Date and time of departure                             |
+| departure_date_time      | date_time_                         | Date and time of departure                             |
 +--------------------------+------------------------------------+--------------------------------------------------------+
-| arrival_date_time        | stop_date_time_                    | Date and time of arrival                               |
+| arrival_date_time        | date_time_                         | Date and time of arrival                               |
 +--------------------------+------------------------------------+--------------------------------------------------------+
 
 
@@ -548,21 +548,47 @@ Objects
 
 * stop_schedule object
 
-===================== =============================== ==============================================
-Field                 Type                            Description
-===================== =============================== ==============================================
-display_informations  :ref:`display_informations`     Usefull information about the route to display
-route                 :ref:`route`                    The route of the schedule
-stop_date_times       Array of stop_date_time_        When does a bus stops at the stop point
-stop_point            :ref:`stop_point`               The stop point of the schedule
-===================== =============================== ==============================================
+===================== ====================== ==============================================
+Field                 Type                   Description
+===================== ====================== ==============================================
+display_informations  display_informations_  Usefull information about the route to display
+route                 route_                 The route of the schedule
+date_times            Array of date_time_    When does a bus stops at the stop point
+stop_point            stop_point_            The stop point of the schedule
+===================== ====================== ==============================================
 
 Departures
 **********
 
+This api retrieves a list of departures from a datetime of a selected object.
+Departures are ordered chronigically in growing order.
 
+Parameters
+##########
 
++----------+---------------------+-----------+------------------------------+---------------+
+| Required | Name                | Type      | Description                  | Default Value |
++==========+=====================+===========+==============================+===============+
+| yep      | from_datetime       | date_time | The date_time from           |               |
+|          |                     |           | which you want the schedules |               |
++----------+---------------------+-----------+------------------------------+---------------+
+| nop      | duration            | int       | Maximum duration in seconds  | 86400         |
+|          |                     |           | between from_datetime        |               |
+|          |                     |           | and the retrieved datetimes. |               |
++----------+---------------------+-----------+------------------------------+---------------+
 
+Objects
+#######
+
+* departure object
+
+===================== ========================= ========================================
+Field                 Type                      Description
+===================== ========================= ========================================
+route                 route_                    The route of the schedule
+stop_date_time        Array of stop_date_time_  When does a bus stops at the stop point
+stop_point            stop_point_               The stop point of the schedule
+===================== ========================= ========================================
 
 Arrivals
 ********
