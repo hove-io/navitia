@@ -6,7 +6,6 @@ from jormungandr_exceptions import log_exception
 app = Flask(__name__)
 app.config.from_object('default_settings')
 app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
-app.debug = True
 
 if app.config.has_key('ERROR_HANDLER_TYPE') and\
         app.config.has_key('ERROR_HANDLER_FILE'):
