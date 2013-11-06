@@ -16,6 +16,7 @@ from datetime import datetime
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
 from errors import ManageError
+from flask.ext.restful.types import natural
 
 class Schedules(ResourceUri):
     parsers = {}
@@ -35,7 +36,7 @@ class Schedules(ResourceUri):
                 description="Number of schedules per page")
         parser_get.add_argument("start_page", type=int, default=0,
                 description="The current page")
-        parser_get.add_argument("max_date_times", type=int, default=1000,
+        parser_get.add_argument("max_date_times", type=natural,
                 description="Maximum number of schedule per stop_point/route")
         self.method_decorators.append(add_notes(self))
 
