@@ -159,6 +159,7 @@ class AtRealtimeReader(object):
 
         :param result_proxy:
         """
+        status = at.type_pb2.Message.DESCRIPTOR.fields_by_name['message_status'].enum_type.values_by_name
         last_impact_id = -1
         for row in result_proxy:
             try:
@@ -192,6 +193,9 @@ class AtRealtimeReader(object):
                         self.label_object_external_code]
                     message.object.object_type = \
                         get_navitia_type(row[self.label_object_type])
+
+                    status_str = row[self.label_impact_state].lower()
+                    message.message_status= status[status_str].number
 
                 localized_message = message.localized_messages.add()
                 localized_message.language = row[self.label_message_lang]
