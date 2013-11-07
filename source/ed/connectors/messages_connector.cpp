@@ -17,7 +17,7 @@ std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
         "end_publication_date::timestamp, start_application_date::timestamp, "
         "end_application_date::timestamp, start_application_daily_hour::time, "
         "end_application_daily_hour::time, active_days, object_uri, "
-        "object_type_id, language, body, title "
+        "object_type_id, language, body, title, message_status_id "
         "FROM realtime.message m "
         "JOIN realtime.localized_message l ON l.message_id = m.id "
         "order by id";
@@ -51,6 +51,9 @@ std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
 
             message->object_type = static_cast<navitia::type::Type_e>(
                     cursor["object_type_id"].as<int>());
+
+            message->message_status = static_cast<navitia::type::MessageStatus>(
+                    cursor["message_status_id"].as<int>());
 
             message->application_daily_start_hour = pt::duration_from_string(
                     cursor["start_application_daily_hour"].as<std::string>());
@@ -93,6 +96,7 @@ void apply_messages(navitia::type::Data& data){
             if(it != data.pt_data.stop_areas_map.end()){
                 it->second->messages.push_back(message_pair.second);
             }
+
         }
 
         if(message_pair.second->object_type ==  navitia::type::Type_e::StopPoint){
@@ -103,8 +107,8 @@ void apply_messages(navitia::type::Data& data){
         }
 
         if(message_pair.second->object_type ==  navitia::type::Type_e::Route){
-            auto it = data.pt_data.stop_points_map.find(message_pair.second->object_uri);
-            if(it != data.pt_data.stop_points_map.end()){
+            auto it = data.pt_data.routes_map.find(message_pair.second->object_uri);
+            if(it != data.pt_data.routes_map.end()){
                 it->second->messages.push_back(message_pair.second);
             }
         }

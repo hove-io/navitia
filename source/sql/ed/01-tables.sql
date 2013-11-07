@@ -438,6 +438,10 @@ create table if NOT EXISTS navitia.object_type(
     name text NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS realtime.message_status(
+    id int primary key,
+	name TEXT NOT NULL    
+);
 
 CREATE TABLE IF NOT EXISTS realtime.message(
     id BIGSERIAL primary key,
@@ -450,7 +454,8 @@ CREATE TABLE IF NOT EXISTS realtime.message(
     end_application_daily_hour timetz NOT NULL,
     active_days bit(8) NOT NULL,
     object_uri text NOT NULL,
-    object_type_id int NOT NULL REFERENCES navitia.object_type
+    object_type_id int NOT NULL REFERENCES navitia.object_type,
+    message_status_id int NOT NULL REFERENCES realtime.message_status
 );
 
 
@@ -473,3 +478,5 @@ CREATE TABLE IF NOT EXISTS realtime.at_perturbation(
     object_uri text NOT NULL,
     object_type_id int NOT NULL REFERENCES navitia.object_type
 );
+
+

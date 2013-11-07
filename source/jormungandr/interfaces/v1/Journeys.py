@@ -6,11 +6,12 @@ from protobuf_to_dict import protobuf_to_dict
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, place,\
                    PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
-                   display_informations_vj,additional_informations_vj,error
+                   display_informations_vj,additional_informations_vj,error,has_equipments,\
+                   generic_message
 
 from interfaces.parsers import option_value
 #from exceptions import RegionNotFound
-from ResourceUri import ResourceUri, add_notes
+from ResourceUri import ResourceUri, add_notes,update_journeys_status
 import datetime
 from functools import wraps
 from make_links import add_id_links, clean_links
@@ -22,6 +23,7 @@ from datetime import datetime, timedelta
 import sys
 from copy import copy
 from datetime import datetime
+
 
 class SectionLinks(fields.Raw):
     def __init__(self, **kwargs):
@@ -98,7 +100,6 @@ class section_place(PbField):
             return None
         else:
             return super(PbField, self).output(key, obj)
-
 section = {
     "type": section_type(attribute="type"),
     "mode" : enum_type(attribute="street_network.mode"),
@@ -106,7 +107,7 @@ section = {
     "from" : section_place(place, attribute="origin"),
     "to": section_place(place, attribute="destination"),
     "links" : SectionLinks(attribute="uris"),
-    "display_informations" : display_informations_vj(),
+    "display_informations" : PbField(display_informations_vj, attribute='pt_display_informations'),
     "additional_informations" : additional_informations_vj(),
     "geojson" : GeoJson(),
     "path" : NonNullList(NonNullNested({"length":fields.Integer(),
@@ -128,7 +129,8 @@ journey = {
     'sections' : NonNullList(NonNullNested(section)),
     'from' : PbField(place, attribute='origin'),
     'to' : PbField(place, attribute='destination'),
-    'type' : fields.String()
+    'type' : fields.String(),
+    "status" : enum_type(attribute="message_status")
 }
 
 journeys = {
@@ -303,6 +305,7 @@ class Journeys(ResourceUri):
 #a supprimer
         parser_get.add_argument("max_duration", type=int, default=36000)
         self.method_decorators.append(add_notes(self))
+        self.method_decorators.append(update_journeys_status(self))
 
 
     @clean_links()

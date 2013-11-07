@@ -6,6 +6,7 @@ from collections import OrderedDict
 from flask import url_for
 from flask.ext.restful.utils import unpack
 from authentification import authentification_required
+import type_pb2
 
 class ResourceUri(Resource):
     def __init__(self, *args, **kwargs):
@@ -169,6 +170,50 @@ class add_notes(object):
                     result_note = add_note(data)
                     [result.append(item) for item in result_note if not item in result]
                     data["notes"].extend(result)
+
+            if isinstance(objects, tuple):
+                return data, code, header
+            else:
+                return data
+
+        return wrapper
+
+class update_journeys_status(object):
+    def __init__(self, resource):
+        self.resource = resource
+
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if isinstance(objects, tuple):
+                data, code, header = unpack(objects)
+            else:
+                data = objects
+
+            def update_status(journey, _items):
+
+                if isinstance(_items, list) or isinstance(_items, tuple):
+                    for item in _items:
+                        update_status(journey,item)
+
+                elif isinstance(_items, dict) or\
+                     isinstance(_items, OrderedDict):
+                         if 'messages' in _items.keys():
+                            for msg in _items["messages"]:
+                                if not "status" in journey.keys():
+                                    journey["status"] = msg["level"]
+                                else:
+                                    message_status = type_pb2.Message.DESCRIPTOR.fields_by_name['message_status'].enum_type.values_by_name
+                                    if message_status[journey["status"]] < message_status[msg["level"]]:
+                                        journey["status"] = msg["level"]
+                         else :
+                             for v in _items.items():
+                                 update_status(journey,v)
+
+            if self.resource.region:
+               for journey in data["journeys"]:
+                    update_status(journey, journey)
 
             if isinstance(objects, tuple):
                 return data, code, header
