@@ -20,47 +20,43 @@ def is_car(section):
 
 def qualifier_one(journeys):
 
-    trip_type = {"rapid" : -1, "rapid_plus" : -1,
-                  "comfort" : -1, "healthy" : -1}
+    trip_type = {"rapid" : None, "rapid_plus" : None,
+                  "comfort" : None, "healthy" : None}
 
     if journeys:
-        trip_type["rapid"] = 0
-    index = -1
+        trip_type["rapid"] = journeys[0]
+
     for journey in journeys:
-        index = index + 1
-        if journeys[trip_type["rapid"]].arrival_date_time > journey.arrival_date_time :
-            trip_type["rapid"] = index
+        if trip_type["rapid"].arrival_date_time > journey.arrival_date_time :
+            trip_type["rapid"] = journey
 
-    if trip_type["rapid"] > -1 :
-        index = -1
+    if trip_type["rapid"]:
         for journey in journeys :
-            index = index + 1
-            if (journey.duration < (1.2*journeys[trip_type["rapid"]].duration)) and \
-                    (journey.nb_transfers < journeys[trip_type["rapid"]].nb_transfers) :
-                trip_type["rapid_plus"] = index
+            if (journey.duration < (1.2 * trip_type["rapid"].duration)) and \
+                    (journey.nb_transfers < trip_type["rapid"].nb_transfers):
+                trip_type["rapid_plus"] = journey
 
-        if trip_type["rapid_plus"] > -1 :
+        if trip_type["rapid_plus"]:
             trip_type["rapid"] = trip_type["rapid_plus"]
-        index = -1
-        rapid_duration = get_rabattement_duration(journeys[trip_type["rapid"]])
+
+        rapid_duration = get_rabattement_duration(trip_type["rapid"])
         for journey in journeys:
-            index = index + 1
-            if index == trip_type['rapid']:
+            if journey == trip_type['rapid']:
                 continue
 
-            if journey.duration < 1.5*journeys[trip_type["rapid"]].duration :
+            if journey.duration < (trip_type["rapid"].duration * 1.5):
                 current_duration = get_rabattement_duration(journey)
                 sections = journey.sections
                 if (not is_car(sections[0])) and (not is_car(sections[-1])) \
                         and current_duration > (rapid_duration * 1.1):
-                    trip_type["healthy"] = index
-                if journey.nb_transfers < journeys[trip_type["rapid"]].nb_transfers \
+                    trip_type["healthy"] = journey
+                if journey.nb_transfers < trip_type["rapid"].nb_transfers \
                         or current_duration < rapid_duration:
-                    trip_type["comfort"] = index
-        if trip_type["rapid"] > -1 :
-            journeys[trip_type["rapid"]].type =  "rapid"
-        if trip_type["comfort"] > -1 :
-            journeys[trip_type["comfort"]].type = "comfort"
-        if trip_type["healthy"] > -1 :
-            journeys[trip_type["healthy"]].type = "healthy"
+                    trip_type["comfort"] = journey
+        if trip_type["rapid"]:
+            trip_type["rapid"].type =  "rapid"
+        if trip_type["comfort"]:
+            trip_type["comfort"].type = "comfort"
+        if trip_type["healthy"]:
+            trip_type["healthy"].type = "healthy"
 
