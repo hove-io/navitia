@@ -458,6 +458,15 @@ CREATE TABLE IF NOT EXISTS realtime.message(
     message_status_id int NOT NULL REFERENCES realtime.message_status
 );
 
+DO $$ 
+    BEGIN
+        BEGIN
+            ALTER TABLE realtime.message ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column is_active already exists in realtime.message.';
+        END;
+    END;
+$$
 
 CREATE TABLE IF NOT EXISTS realtime.localized_message(
     message_id BIGINT NOT NULL REFERENCES realtime.message,
@@ -478,5 +487,15 @@ CREATE TABLE IF NOT EXISTS realtime.at_perturbation(
     object_uri text NOT NULL,
     object_type_id int NOT NULL REFERENCES navitia.object_type
 );
+
+DO $$ 
+    BEGIN
+        BEGIN
+            ALTER TABLE realtime.at_perturbation ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column is_active already exists in realtime.at_perturbation.';
+        END;
+    END;
+$$
 
 
