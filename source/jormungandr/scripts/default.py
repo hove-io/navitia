@@ -284,15 +284,21 @@ class Script(object):
                 else:
                     resp.journeys.extend(tmp_resp.journeys)
             to_delete = []
-            if request["count"] and len(resp.journeys) > request["count"]:
-                to_delete = range(request["count"], len(resp.journeys))
             if request['destination']:
                 for i in range(0, len(resp.journeys)):
                     if resp.journeys[i].type == "" and not i in to_delete:
                         to_delete.append(i)
+
             to_delete.sort(reverse=True)
             for i in to_delete:
                 del resp.journeys[i]
+
+            if request["count"] and len(resp.journeys) > request["count"]:
+                to_delete = range(request["count"], len(resp.journeys))
+                to_delete.sort(reverse=True)
+                for i in to_delete:
+                    del resp.journeys[i]
+
             if not request["clockwise"]:
                 resp.journeys.sort(self.journey_compare)
         return resp
