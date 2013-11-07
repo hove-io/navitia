@@ -6,11 +6,12 @@ from protobuf_to_dict import protobuf_to_dict
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, place,\
                    PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
-                   display_informations_vj,additional_informations_vj,error
+                   display_informations_vj,additional_informations_vj,error,has_equipments,\
+                   generic_message
 
 from interfaces.parsers import option_value
 #from exceptions import RegionNotFound
-from ResourceUri import ResourceUri, add_notes
+from ResourceUri import ResourceUri, add_notes,update_journeys_status
 import datetime
 from functools import wraps
 from make_links import add_id_links, clean_links
@@ -22,6 +23,7 @@ from datetime import datetime, timedelta
 import sys
 from copy import copy
 from datetime import datetime
+
 
 class SectionLinks(fields.Raw):
     def __init__(self, **kwargs):
@@ -98,7 +100,6 @@ class section_place(PbField):
             return None
         else:
             return super(PbField, self).output(key, obj)
-
 section = {
     "type": section_type(attribute="type"),
     "mode" : enum_type(attribute="street_network.mode"),
@@ -106,7 +107,7 @@ section = {
     "from" : section_place(place, attribute="origin"),
     "to": section_place(place, attribute="destination"),
     "links" : SectionLinks(attribute="uris"),
-    "display_informations" : display_informations_vj(),
+    "display_informations" : PbField(display_informations_vj, attribute='pt_display_informations'),
     "additional_informations" : additional_informations_vj(),
     "geojson" : GeoJson(),
     "path" : NonNullList(NonNullNested({"length":fields.Integer(),
@@ -128,7 +129,8 @@ journey = {
     'sections' : NonNullList(NonNullNested(section)),
     'from' : PbField(place, attribute='origin'),
     'to' : PbField(place, attribute='destination'),
-    'type' : fields.String()
+    'type' : fields.String(),
+    "status" : enum_type(attribute="message_status")
 }
 
 journeys = {
@@ -206,6 +208,27 @@ class add_journey_pagination(object):
                     "templated" : False,
                     "type" : "next"
                     })
+
+            datetime_first, datetime_last = self.first_and_last(objects[0])
+            if not datetime_first is None and not datetime_last is None:
+                if not "links" in objects[0]:
+                    objects[0]["links"] = []
+
+                args = request.args.copy()
+                args["datetime"] = datetime_first.strftime("%Y%m%dT%H%M%S")
+                args["datetime_represents"] = "departure"
+                objects[0]["links"].append({
+                    "href" : url_for("v1.journeys", _external=True, **args),
+                    "templated" : False,
+                    "type" : "first"
+                    })
+                args["datetime"] = datetime_last.strftime("%Y%m%dT%H%M%S")
+                args["datetime_represents"] = "arrival"
+                objects[0]["links"].append({
+                    "href" : url_for("v1.journeys", _external=True, **args),
+                    "templated" : False,
+                    "type" : "last"
+                    })
             return objects
         return wrapper
 
@@ -219,12 +242,31 @@ class add_journey_pagination(object):
             asap_journey = min(list_journeys, key=itemgetter('arrival_date_time'))
         except:
             return (None, None)
-        if asap_journey['arrival_date_time'] and ['asap_journey.departure_date_time']:
+        if asap_journey['arrival_date_time'] and asap_journey['departure_date_time']:
             minute = timedelta(minutes = 1)
             datetime_after = datetime.strptime(asap_journey['departure_date_time'], "%Y%m%dT%H%M%S") + minute
             datetime_before = datetime.strptime(asap_journey['arrival_date_time'], "%Y%m%dT%H%M%S") - minute
 
         return (datetime_before, datetime_after)
+
+    def first_and_last(self, resp):
+        datetime_first = None
+        datetime_last = None
+        try:
+            list_journeys = [journey for journey in resp['journeys']\
+                                if 'arrival_date_time' in journey.keys() and\
+                                    journey['arrival_date_time'] != '' and\
+                                    'departure_date_time' in journey.keys() and\
+                                    journey['departure_date_time'] != '']
+            asap_journey_min = min(list_journeys, key=itemgetter('departure_date_time'))
+            asap_journey_max = max(list_journeys, key=itemgetter('arrival_date_time'))
+        except:
+            return (None, None)
+        if asap_journey_min['departure_date_time'] and asap_journey_max['arrival_date_time']:
+            datetime_first = datetime.combine(datetime.strptime(asap_journey_min['departure_date_time'], "%Y%m%dT%H%M%S").date(), datetime.strptime('0000','%H%M').time())
+            datetime_last = datetime.combine(datetime.strptime(asap_journey_max['arrival_date_time'], "%Y%m%dT%H%M%S").date(), datetime.strptime('2359','%H%M').time())
+
+        return (datetime_first, datetime_last)
 
 class Journeys(ResourceUri):
     def __init__(self):
@@ -263,6 +305,7 @@ class Journeys(ResourceUri):
 #a supprimer
         parser_get.add_argument("max_duration", type=int, default=36000)
         self.method_decorators.append(add_notes(self))
+        self.method_decorators.append(update_journeys_status(self))
 
 
     @clean_links()
@@ -272,36 +315,37 @@ class Journeys(ResourceUri):
     @marshal_with(journeys)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
-        args = self.parsers["get"].parse_args()
+        args = self.parsers['get'].parse_args()
         #TODO : Changer le protobuff pour que ce soit propre
-        args["destination_mode"] = "vls" if args["destination_mode"] == "br" else args["destination_mode"]
-        args["origin_mode"] = "vls" if args["origin_mode"] == "br" else args["origin_mode"]
-        if not region is None or (not lon is None and not lat is None):
+        args['destination_mode'] = 'vls' if args['destination_mode'] == 'br' else args['destination_mode']
+        args['origin_mode'] = 'vls' if args['origin_mode'] == 'br' else args['origin_mode']
+        if region or (lon and lat):
             self.region = NavitiaManager().get_region(region, lon, lat)
             if uri:
-                objects = uri.split("/")
+                objects = uri.split('/')
                 if objects and len(objects) % 2 == 0:
-                    args["origin"] =  self.transform_id(objects[-1])
+                    args['origin'] =  self.transform_id(objects[-1])
                 else:
-                    return {"error" : "Unable to compute journeys from this \
-                                       object"}, 503
+                    return {'error' : 'Unable to compute journeys from this " \
+                                       "object'}, 503
         else:
-            if "origin" in args.keys():
-                self.region = NavitiaManager().key_of_id(args["origin"])
-                args["origin"] = self.transform_id(args["origin"])
-            elif "destination" in args.keys():
-                self.region = NavitiaManager().key_of_id(args["destination"])
-            if "destination" in args.keys():
-                args["destination"] = self.transform_id(args["destination"])
+            if args['origin']:
+                self.region = NavitiaManager().key_of_id(args['origin'])
+                args['origin'] = self.transform_id(args['origin'])
+            elif args['destination']:
+                self.region = NavitiaManager().key_of_id(args['destination'])
+            if args['destination']:
+                args['destination'] = self.transform_id(args['destination'])
             #else:
             #    raise RegionNotFound("")
-        if not args["datetime"]:
-            args["datetime"] = datetime.now().strftime("%Y%m%dT1337")
+        if not args['datetime']:
+            args['datetime'] = datetime.now().strftime('%Y%m%dT1337')
         api = None
-        if "destination" in args.keys() and args["destination"]:
-            api = "journeys"
+        if args['destination']:
+            api = 'journeys'
         else:
-            api = "isochrone"
+            api = 'isochrone'
+
         response = NavitiaManager().dispatch(args, self.region, api)
         return response
 

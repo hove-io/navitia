@@ -387,8 +387,8 @@ void GeoRef::build_autocomplete_list(){
     int pos = 0;
     fl_way.clear();
     for(Way* way : ways){
-        // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin
-        if ((!way->name.empty()) && (way->admin_list.size() > 0)){
+        // A ne pas ajouter dans le disctionnaire si pas ne nom
+        if (!way->name.empty()) {
             std::string key="";
             for(Admin* admin : way->admin_list){
                 //Ajout du nom de l'admin de niveau 8
@@ -411,7 +411,8 @@ void GeoRef::build_autocomplete_list(){
     //Remplir les poi dans la liste autocompletion
     for(const POI* poi : pois){
         // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin
-        if ((!poi->name.empty()) && (poi->admin_list.size() > 0)){
+        //if ((!poi->name.empty()) && (poi->admin_list.size() > 0)){
+        if (!poi->name.empty()) {
             std::string key="";
             if (poi->visible){
                 for(Admin* admin : poi->admin_list){

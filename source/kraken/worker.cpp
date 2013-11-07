@@ -59,9 +59,9 @@ std::vector<std::string> vector_of_admins(const T & admin){
 pbnavitia::Response Worker::status() {
     pbnavitia::Response result;
 
-    auto status = result.mutable_status();
-    boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
+    auto status = result.mutable_status();    
     const auto d = *data;
+    boost::shared_lock<boost::shared_mutex> lock(d->load_mutex);
     status->set_publication_date(pt::to_iso_string(d->meta.publication_date));
     status->set_start_production_date(bg::to_iso_string(d->meta.production_date.begin()));
     status->set_end_production_date(bg::to_iso_string(d->meta.production_date.end()));
@@ -103,6 +103,7 @@ void Worker::init_worker_data(){
     }
 }
 
+
 pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & request) {
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
     return navitia::autocomplete::autocomplete(request.q(),
@@ -135,7 +136,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     request.duration(), request.depth(), *(*this->data));
         case pbnavitia::DEPARTURE_BOARDS:
             return timetables::departure_board(request.departure_filter(),
-                    request.from_datetime(), request.duration(),request.max_stop_date_times(),
+                    request.from_datetime(), request.duration(),request.max_date_times(),
                     request.interface_version(), request.count(),
                     request.start_page(), *(*this->data));
         case pbnavitia::ROUTE_SCHEDULES:
@@ -260,10 +261,10 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
             place->CopyFrom(tmp.places_nearby(0));
         }
         return pb_response;
-    }
-    pbnavitia::Place* place = pb_response.add_places();
+    }    
     auto it_sa = (*data)->pt_data.stop_areas_map.find(request.uri());
     if(it_sa != (*data)->pt_data.stop_areas_map.end()) {
+        pbnavitia::Place* place = pb_response.add_places();
         fill_pb_object(it_sa->second, **data, place->mutable_stop_area(), 1);
         place->set_embedded_type(pbnavitia::STOP_AREA);
         place->set_name(place->stop_area().name());
@@ -271,6 +272,7 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
     } else {
         auto it_sp = (*data)->pt_data.stop_points_map.find(request.uri());
         if(it_sp != (*data)->pt_data.stop_points_map.end()) {
+            pbnavitia::Place* place = pb_response.add_places();
             fill_pb_object(it_sp->second, **data, place->mutable_stop_point(), 1);
             place->set_embedded_type(pbnavitia::STOP_POINT);
             place->set_name(place->stop_point().name());
@@ -278,6 +280,7 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
         } else {
             auto it_poi = (*data)->geo_ref.poi_map.find(request.uri());
             if(it_poi != (*data)->geo_ref.poi_map.end()) {
+                pbnavitia::Place* place = pb_response.add_places();
                 fill_pb_object((*data)->geo_ref.pois[it_poi->second], **data,
                         place->mutable_poi(), 1);
                 place->set_embedded_type(pbnavitia::POI);
@@ -286,13 +289,14 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
             } else {
                 auto it_admin = (*data)->geo_ref.admin_map.find(request.uri());
                 if(it_admin != (*data)->geo_ref.admin_map.end()) {
+                    pbnavitia::Place* place = pb_response.add_places();
                     fill_pb_object((*data)->geo_ref.admins[it_admin->second],
                             **data, place->mutable_administrative_region(), 1);
                     place->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
                     place->set_name(place->administrative_region().name());
                     place->set_uri(place->administrative_region().uri());
-                } else {
-                    pb_response.clear_places();
+                }else{
+                    fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse : "+request.uri(),  pb_response.mutable_error());
                 }
             }
         }

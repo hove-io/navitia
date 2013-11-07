@@ -135,7 +135,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                 auto dep_time = iso_string(item.departure, d);
                 pb_section->set_begin_date_time(dep_time);
                 auto arr_time = iso_string(item.arrival, d);
-                pb_section->set_end_date_time(dep_time);
+                pb_section->set_end_date_time(arr_time);
 
                 if(departure_time == DateTimeUtils::inf)
                     departure_time = item.departure;

@@ -58,8 +58,9 @@ void PT_Data::sort(){
 void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     this->stop_area_autocomplete.clear();
     for(const StopArea* sa : this->stop_areas){
-        // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin
-        if ((!sa->name.empty()) && (sa->admin_list.size() > 0)){
+        // A ne pas ajouter dans le disctionnaire si pas ne nom
+        //if ((!sa->name.empty()) && (sa->admin_list.size() > 0)){
+        if (!sa->name.empty()) {
             std::string key="";
             for( navitia::georef::Admin* admin : sa->admin_list){
                 if (admin->level ==8){key +=" " + admin->name;}
@@ -72,8 +73,8 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
 
     this->stop_point_autocomplete.clear();
     for(const StopPoint* sp : this->stop_points){
-        // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin
-        if ((!sp->name.empty()) && (sp->admin_list.size() > 0)){
+        // A ne pas ajouter dans le disctionnaire si pas ne nom
+        if (!sp->name.empty()) {
             std::string key="";
             for(navitia::georef::Admin* admin : sp->admin_list){
                 if (admin->level == 8){key += key + " " + admin->name;}
