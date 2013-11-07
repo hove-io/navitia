@@ -4,7 +4,7 @@ import request_pb2
 import response_pb2
 from instance_manager import NavitiaManager
 from renderers import render_from_protobuf
-from qualifier import qualifier
+from qualifier import qualifier_one
 from datetime import datetime, timedelta
 
 pb_type = {
@@ -27,6 +27,9 @@ class Script(object):
                      "journey_patterns", "companies", "vehicle_journeys",
                      "pois", "poi_types", "journeys", "isochrone", "metadatas",
                      "status", "load", "networks", "place_uri"]
+
+        #mode used for going to TC network
+        self.fallback_mode = ['walking', 'bike', 'car']
 
 
 
@@ -122,12 +125,12 @@ class Script(object):
         st.from_datetime = request["from_datetime"]
         st.duration      = request["duration"]
         st.depth         = request["depth"]
-        st.nb_stoptimes  = 0 if not "nb_stoptimes" in request.keys()\
+        st.nb_stoptimes  = 0 if not "nb_stoptimes" in request.keys() \
                              else request["nb_stoptimes"]
-        st.interface_version = 0 if not "interface_version" in request.keys()\
+        st.interface_version = 0 if not "interface_version" in request.keys() \
                                   else request["interface_version"]
         st.count = 10 if not "count" in request.keys() else request["count"]
-        st.start_page = 0 if not "start_page" in request.keys()\
+        st.start_page = 0 if not "start_page" in request.keys() \
                            else request["start_page"]
         st.max_date_times = 10 if not "max_date_times" in request.keys() else request["max_date_times"]
         resp = NavitiaManager().send_and_receive(req, region)
@@ -179,18 +182,27 @@ class Script(object):
                         section.uris.physical_mode = section.pt_display_informations.uris.physical_mode
                         section.uris.network = section.pt_display_informations.uris.network
 
-    def get_journey(self, req, region, type_):
+    def get_journey(self, req, region, trip_type):
+        resp = None
         if req.requested_api == type_pb2.PLANNER :
-            resp = qualifier().qualifier_one(req, region)
+            for mode in self.fallback_mode:
+                req.journeys.streetnetwork_params.origin_mode = mode
+                req.journeys.streetnetwork_params.destination_mode = mode
+                resp = NavitiaManager().send_and_receive(req, region)
+
+                if resp.response_type == response_pb2.ITINERARY_FOUND:
+                    qualifier_one(resp.journeys)
+                    break#result found, no need to inspect other fallback mode
         else:
             resp = NavitiaManager().send_and_receive(req, region)
-        if not resp.HasField("error") and type_ == "rapid":
+
+        if resp and not resp.HasField("error") and trip_type == "rapid":
             #We are looking for the asap result
             earliest_dt = None
             earliest_i = None
             for i in range(0, len(resp.journeys)):
-                if not earliest_dt or\
-                       earliest_dt > resp.journeys[i].arrival_date_time:
+                if not earliest_dt \
+                       or earliest_dt > resp.journeys[i].arrival_date_time:
                     earliest_dt = resp.journeys[i].arrival_date_time
                     earliest_i = i
             if earliest_dt:
@@ -203,6 +215,8 @@ class Script(object):
                     del resp.journeys[i]
         self.__fill_uris(resp)
         return resp
+
+
     def journey_compare(self, j1, j2):
         if datetime.strptime(j1.arrival_date_time, "%Y%m%dT%H%M%S") > datetime.strptime(j2.arrival_date_time, "%Y%m%dT%H%M%S") :
             return 1
@@ -211,18 +225,19 @@ class Script(object):
         else:
             return -1
 
+
     def __on_journeys(self, requested_type, request, region):
         req = request_pb2.Request()
         req.requested_api = requested_type
         req.journeys.origin = request["origin"]
         if request["destination"]:
-            req.journeys.destination = request["destination"] #if "destination" in request.keys() else ""
+            req.journeys.destination = request["destination"]
         req.journeys.datetimes.append(request["datetime"])
         req.journeys.clockwise = request["clockwise"]
         req.journeys.streetnetwork_params.walking_speed = request["walking_speed"]
         req.journeys.streetnetwork_params.walking_distance = request["walking_distance"]
         req.journeys.streetnetwork_params.origin_mode = request["origin_mode"]
-        req.journeys.streetnetwork_params.destination_mode = request["destination_mode"] if "destination_mode" in request else ""
+        req.journeys.streetnetwork_params.destination_mode = request["destination_mode"]
         req.journeys.streetnetwork_params.bike_speed = request["bike_speed"]
         req.journeys.streetnetwork_params.bike_distance = request["bike_distance"]
         req.journeys.streetnetwork_params.car_speed = request["car_speed"]
@@ -233,6 +248,7 @@ class Script(object):
         req.journeys.streetnetwork_params.destination_filter = request["destination_filter"] if "destination_filter" in request else ""
         req.journeys.max_duration = request["max_duration"]
         req.journeys.max_transfers = request["max_transfers"]
+
         if req.journeys.streetnetwork_params.origin_mode == "bike_rental":
             req.journeys.streetnetwork_params.origin_mode = "vls"
         if req.journeys.streetnetwork_params.destination_mode == "bike_rental":
@@ -240,6 +256,8 @@ class Script(object):
         if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.journeys.forbidden_uris.append(forbidden_uri)
+
+        #call to kraken
         resp = self.get_journey(req, region, request["type"])
         if len(resp.journeys) > 0:
             while request["count"] and request["count"] > len(resp.journeys):
