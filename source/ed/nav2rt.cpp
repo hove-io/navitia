@@ -21,6 +21,7 @@ int main(int argc, char * argv[])
     init_logger();
     std::string output, input, connection_string, media_lang,
         media_media;
+    uint32_t shift_days;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Affiche l'aide")
@@ -28,6 +29,7 @@ int main(int argc, char * argv[])
         ("config-file", po::value<std::string>(), "chemin vers le fichier de configuration")
         ("output,o", po::value<std::string>(&output)->default_value("rtdata.nav.lz4"), "Fichier de sortie")
         ("input,i", po::value<std::string>(&input)->default_value("data.nav.lz4"), "Fichier d'entrée")
+        ("shift-days,d", po::value<uint32_t>(&shift_days)->default_value(2), "Elargissement de la période de publication")
         ("connection-string", po::value<std::string>(&connection_string)->required(), "parametres de connexion à la base de données: host=localhost user=navitia dbname=navitia password=navitia");
 
 
@@ -71,8 +73,8 @@ int main(int argc, char * argv[])
 SIZE_EXT_CODE(CLEAR_EXT_CODE)
     std::cout << "chargement des messages" << std::endl;
 
-    ed::connectors::RealtimeLoaderConfig config;
-    config.connection_string = connection_string;
+    ed::connectors::RealtimeLoaderConfig config(connection_string, shift_days);
+//    config.connection_string = connection_string;
     try{
         start = pt::microsec_clock::local_time();
         data.pt_data.message_holder.messages = ed::connectors::load_messages(

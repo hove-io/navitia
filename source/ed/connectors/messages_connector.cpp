@@ -20,6 +20,7 @@ std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
         "object_type_id, language, body, title, message_status_id "
         "FROM realtime.message m "
         "JOIN realtime.localized_message l ON l.message_id = m.id "
+        "where end_publication_date::date >= now() - INTERVAL '"+std::to_string(conf.shift_days)+" day' "
         "order by id";
     //on tris par id pour les regrouper ensemble
     std::unique_ptr<pqxx::connection> conn;
@@ -137,7 +138,8 @@ std::vector<navitia::type::AtPerturbation> load_at_perturbations(
         "end_application_date::timestamp, start_application_daily_hour::time, "
         "end_application_daily_hour::time, active_days, object_uri, "
         "object_type_id "
-        "FROM realtime.at_perturbation";
+        "FROM realtime.at_perturbation "
+        "where end_application_date::date >= now() - INTERVAL '"+std::to_string(conf.shift_days)+" day ";
     std::unique_ptr<pqxx::connection> conn;
     try{
         conn = std::unique_ptr<pqxx::connection>(

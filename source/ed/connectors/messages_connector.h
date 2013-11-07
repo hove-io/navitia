@@ -11,6 +11,9 @@ namespace ed{ namespace connectors{
 
 struct RealtimeLoaderConfig{
     std::string connection_string;
+    uint32_t shift_days;
+
+    RealtimeLoaderConfig(const std::string& connectionstring, const uint32_t shiftdays) : connection_string(connectionstring), shift_days(shiftdays){}
 };
 
 std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
