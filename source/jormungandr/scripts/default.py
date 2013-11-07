@@ -6,6 +6,7 @@ from instance_manager import NavitiaManager
 from renderers import render_from_protobuf
 from qualifier import qualifier_one
 from datetime import datetime, timedelta
+import itertools
 
 pb_type = {
         'stop_area': type_pb2.STOP_AREA,
@@ -27,11 +28,6 @@ class Script(object):
                      "journey_patterns", "companies", "vehicle_journeys",
                      "pois", "poi_types", "journeys", "isochrone", "metadatas",
                      "status", "load", "networks", "place_uri"]
-
-        #mode used for going to TC network
-        self.fallback_mode = ['walking', 'bike', 'car']
-
-
 
 
     def __pagination(self, request, ressource_name, resp):
@@ -184,17 +180,16 @@ class Script(object):
 
     def get_journey(self, req, region, trip_type):
         resp = None
-        if req.requested_api == type_pb2.PLANNER :
-            for mode in self.fallback_mode:
-                req.journeys.streetnetwork_params.origin_mode = mode
-                req.journeys.streetnetwork_params.destination_mode = mode
-                resp = NavitiaManager().send_and_receive(req, region)
 
-                if resp.response_type == response_pb2.ITINERARY_FOUND:
-                    qualifier_one(resp.journeys)
-                    break#result found, no need to inspect other fallback mode
-        else:
+        for origin_mode, destination_mode in itertools.product(
+                self.origin_modes, self.destination_modes):
+            req.journeys.streetnetwork_params.origin_mode = origin_mode
+            req.journeys.streetnetwork_params.destination_mode = destination_mode
             resp = NavitiaManager().send_and_receive(req, region)
+            if resp.response_type == response_pb2.ITINERARY_FOUND:
+                if req.requested_api == type_pb2.PLANNER:
+                    qualifier_one(resp.journeys)
+                break#result found, no need to inspect other fallback mode
 
         if resp and not resp.HasField("error") and trip_type == "rapid":
             #We are looking for the asap result
@@ -236,8 +231,6 @@ class Script(object):
         req.journeys.clockwise = request["clockwise"]
         req.journeys.streetnetwork_params.walking_speed = request["walking_speed"]
         req.journeys.streetnetwork_params.walking_distance = request["walking_distance"]
-        req.journeys.streetnetwork_params.origin_mode = request["origin_mode"]
-        req.journeys.streetnetwork_params.destination_mode = request["destination_mode"]
         req.journeys.streetnetwork_params.bike_speed = request["bike_speed"]
         req.journeys.streetnetwork_params.bike_distance = request["bike_distance"]
         req.journeys.streetnetwork_params.car_speed = request["car_speed"]
@@ -248,6 +241,9 @@ class Script(object):
         req.journeys.streetnetwork_params.destination_filter = request["destination_filter"] if "destination_filter" in request else ""
         req.journeys.max_duration = request["max_duration"]
         req.journeys.max_transfers = request["max_transfers"]
+
+        self.origin_modes = request["origin_mode"]
+        self.destination_modes = request["destination_mode"]
 
         if req.journeys.streetnetwork_params.origin_mode == "bike_rental":
             req.journeys.streetnetwork_params.origin_mode = "vls"
