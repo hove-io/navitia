@@ -33,12 +33,12 @@ class Journeys(Resource):
                 description="Maximum transfers you want in your journey")
         parser_get.add_argument("origin_mode",
                                 type=option_value(["walking", "car", "bike", "br"]),
-                                action="append", default="walking",
+                                action="append", default=['walking', 'bike', 'car'],
                 description="""The list of modes you want at the beggining of
                                your journey""")
         parser_get.add_argument("destination_mode",
                                 type=option_value(["walking", "car", "bike", "br"]),
-                                default="walking",
+                                default=['walking', 'bike', 'car'], action="append",
                 description="""The list of modes you want at the end of
                                your journey""")
         parser_get.add_argument("walking_speed", type=float, default=1.68,
@@ -86,7 +86,7 @@ class Isochrone(Resource):
         parser_get.add_argument("max_transfers", type=int, default=10)
         parser_get.add_argument("origin_mode",
                       type=option_value(["walking", "car", "bike", "br"]),
-                      action="append", default="walking")
+                      action="append", default=["walking"])
         parser_get.add_argument("walking_speed", type=float, default=1.68)
         parser_get.add_argument("walking_distance", type=int, default=1000)
         parser_get.add_argument("bike_speed", type=float, default=8.8)
