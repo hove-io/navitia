@@ -44,7 +44,9 @@ void doWork(zmq::context_t & context, navitia::type::Data** data) {
                             << pb_req.DebugString());
                 }
                 result = w.dispatch(pb_req);
-               LOG4CPLUS_TRACE(logger, "response: " << result.DebugString());
+                if(api != pbnavitia::METADATAS){
+                   LOG4CPLUS_TRACE(logger, "response: " << result.DebugString());
+                }
             }else{
                LOG4CPLUS_WARN(logger, "receive invalid protobuf");
                result.mutable_error()->set_id(
