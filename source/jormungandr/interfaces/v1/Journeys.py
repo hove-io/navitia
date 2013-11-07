@@ -285,12 +285,12 @@ class Journeys(ResourceUri):
                            dest="max_transfers")
         parser_get.add_argument("first_section_mode",
                            type=option_value(modes),
-                           default="walking",
-                           dest="origin_mode")
+                           default=["walking", "bike", "car"],
+                           dest="origin_mode", action="append")
         parser_get.add_argument("last_section_mode",
                            type=option_value(modes),
-                           default="walking",
-                           dest="destination_mode")
+                           default=["walking", "bike", "car"],
+                           dest="destination_mode", action="append")
         parser_get.add_argument("walking_speed", type=float, default=1.68)
         parser_get.add_argument("walking_distance", type=int, default=1000)
         parser_get.add_argument("bike_speed", type=float, default=8.8)
@@ -326,8 +326,8 @@ class Journeys(ResourceUri):
                 if objects and len(objects) % 2 == 0:
                     args['origin'] =  self.transform_id(objects[-1])
                 else:
-                    return {'error' : 'Unable to compute journeys from this " \
-                                       "object'}, 503
+                    return {'error' : 'Unable to compute journeys from this ' \
+                                       'object'}, 503
         else:
             if args['origin']:
                 self.region = NavitiaManager().key_of_id(args['origin'])
