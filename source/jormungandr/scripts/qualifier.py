@@ -9,7 +9,7 @@ def get_rabattement_duration(journey):
         current_duration = sections[0].duration
     if sections[-1].type == response_pb2.STREET_NETWORK:
         current_duration = current_duration + sections[-1].duration
-        return current_duration
+    return current_duration
 
 
 def is_car(section):
