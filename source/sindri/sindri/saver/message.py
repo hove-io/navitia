@@ -30,6 +30,8 @@ def build_message_dict(message):
     result['end_application_daily_hour'] = from_time(
             message.end_application_daily_hour)
 
+    result['message_status'] = message.message_status
+
 
     return result
 
