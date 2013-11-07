@@ -1,9 +1,11 @@
 #include "raptor_path.h"
 #include "raptor.h"
+
+
 namespace navitia { namespace routing {
 
-    
-std::vector<Path> 
+
+std::vector<Path>
 makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
            DateTime dt, const float walking_speed,
            const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/, const RAPTOR &raptor_, bool clockwise) {
@@ -205,7 +207,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
     return result;
 }
 
- void patch_datetimes(Path &path){
+void patch_datetimes(Path &path){
     PathItem previous_item;
     std::vector<std::pair<int, PathItem>> to_insert;
     for(auto item = path.items.begin(); item!= path.items.end(); ++item) {

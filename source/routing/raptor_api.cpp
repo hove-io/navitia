@@ -174,29 +174,59 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
 
 
 std::vector<std::pair<type::idx_t, double> >
-get_stop_points( const type::EntryPoint &ep, const type::Data & data,
-        streetnetwork::StreetNetwork & worker, bool use_second = false/*,
-                                                                        const int walking_distance = 1000*/){
+get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
+        streetnetwork::StreetNetwork & worker, bool use_second = false){
     std::vector<std::pair<type::idx_t, double> > result;
 
     if(ep.type == type::Type_e::StopArea){
-        auto it = data.pt_data.stop_areas_map.find(ep.uri);
-        if(it!= data.pt_data.stop_areas_map.end()) {
+        auto it = pt_data.stop_areas_map.find(ep.uri);
+        if(it!= pt_data.stop_areas_map.end()) {
             for(auto stop_point : it->second->stop_point_list) {
                 result.push_back(std::make_pair(stop_point->idx, 0));
             }
         }
     }else if(ep.type == type::Type_e::StopPoint){
-        auto it = data.pt_data.stop_points_map.find(ep.uri);
-        if(it != data.pt_data.stop_points_map.end()){
+        auto it = pt_data.stop_points_map.find(ep.uri);
+        if(it != pt_data.stop_points_map.end()){
             result.push_back(std::make_pair(it->second->idx, 0));
         }
     }else if(ep.type == type::Type_e::Address
                 || ep.type == type::Type_e::Coord || ep.type == type::Type_e::Admin){
             result = worker.find_nearest_stop_points(ep.coordinates,
-                    data.pt_data.stop_point_proximity_list,
+                    pt_data.stop_point_proximity_list,
                     ep.streetnetwork_params.distance, use_second,
                     ep.streetnetwork_params.offset);
+    }
+    //On va chercher tous les journey_pattern_points en correspondance
+    //avec ceux déjà trouvés.
+    for(const auto & jpp_idx_distance : result) {
+        const auto jpp_idx = jpp_idx_distance.first;
+        const auto & jpp = pt_data.journey_pattern_points[jpp_idx];
+        const auto & stop_point = pt_data.stop_points[jpp->idx];
+        const auto connections_idx = stop_point->get(type::Type_e::StopPointConnection, pt_data);
+
+        for(const auto connection_idx : connections_idx) {
+            const auto * connection = pt_data.stop_point_connections[connection_idx];
+            const auto destination = connection->destination;
+            auto find_predicate = [&](std::pair<type::idx_t, double> idx_distance)->bool {
+                return destination->idx == idx_distance.first;
+            };
+            auto it = std::find_if(result.begin(), result.end(), find_predicate);
+            if(it != result.end()) {
+                continue;
+            }
+            auto distance = worker.get_distance(ep.coordinates, destination->coord,
+                                        use_second, ep.streetnetwork_params.offset);
+            /*
+             * On mettra ce traitement quand on aura trouvé un moyen de refaire path...
+             * if(distance == std::numeric_limits<double>::max()) {
+            //Fallback si le stop point n'est pas rattaché au filaire de voirie
+            //On recalcule une distance en pensant qu'on marche à 1.68 m/s
+                distance = connection.duration * 1.68
+            }*/
+
+            result.push_back(std::pair<type::idx_t, double>(destination->idx, distance));
+        }
     }
     return result;
 }
@@ -249,8 +279,8 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
         return response;
     }
     worker.init();
-    auto departures = get_stop_points(origin, raptor.data, worker);
-    auto destinations = get_stop_points(destination, raptor.data, worker, true);
+    auto departures = get_stop_points(origin, raptor.data.pt_data, worker);
+    auto destinations = get_stop_points(destination, raptor.data.pt_data, worker, true);
     if(departures.size() == 0 && destinations.size() == 0){
         fill_pb_error(pbnavitia::Error::no_origin_nor_destionation, "no origin point, no destination point",response.mutable_error());
         response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
@@ -322,7 +352,7 @@ pbnavitia::Response make_isochrone(RAPTOR &raptor,
     }
     datetime = tmp_datetime.front();
     worker.init();
-    auto departures = get_stop_points(origin, raptor.data, worker);
+    auto departures = get_stop_points(origin, raptor.data.pt_data, worker);
 
     if(departures.size() == 0){
         response.set_response_type(pbnavitia::NO_ORIGIN_POINT);

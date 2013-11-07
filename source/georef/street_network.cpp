@@ -27,9 +27,10 @@ type::idx_t StreetNetwork::get_offset(const type::Mode_e & mode){
 }
 
 
-std::vector< std::pair<type::idx_t, double> > StreetNetwork::find_nearest_stop_points(const type::GeographicalCoord & start_coord,
-                                                                                      const proximitylist::ProximityList<type::idx_t> & pl,
-                                                                                      double radius, bool use_second,nt::idx_t offset){
+std::vector< std::pair<type::idx_t, double> >
+StreetNetwork::find_nearest_stop_points(const type::GeographicalCoord & start_coord,
+                                        const proximitylist::ProximityList<type::idx_t> & pl,
+                                        double radius, bool use_second,nt::idx_t offset){
     // On cherche le segment le plus proche des coordonnées
     ng::ProjectionData nearest_edge = ng::ProjectionData(start_coord, this->geo_ref, this->geo_ref.pl);
 
@@ -79,7 +80,7 @@ StreetNetwork::find_nearest_stop_points(const ng::ProjectionData & start, double
         geo_ref.dijkstra(start.target, dist, preds, distance_visitor(radius, dist));
     }catch(ng::DestinationFound){}
 
-    double max = std::numeric_limits<float>::max();
+    const double max = std::numeric_limits<float>::max();
 
     for(auto element: elements){
 //        const ng::ProjectionData & projection = geo_ref.projected_stop_points[element.first];
@@ -104,36 +105,111 @@ StreetNetwork::find_nearest_stop_points(const ng::ProjectionData & start, double
     return result;
 }
 
+double StreetNetwork::get_distance(const type::GeographicalCoord & start_coord,
+                                   const type::GeographicalCoord & target_coord,
+                                   bool use_second, nt::idx_t offset,
+                                   bool init) {
+    const double max = std::numeric_limits<float>::max();
+    ng::ProjectionData start_edge = ng::ProjectionData(start_coord, this->geo_ref, this->geo_ref.pl);
+    if(!start_edge.found)
+        return max;
+    start_edge.inc_vertex(offset);
+
+    ng::ProjectionData target_edge = ng::ProjectionData(target_coord, this->geo_ref, this->geo_ref.pl);
+    if(!target_edge.found)
+        return max;
+    target_edge.inc_vertex(offset);
+
+    if(!use_second) {
+        departure_launch = true;
+        this->departure = start_edge;
+        return get_distance(start_edge, target_edge, distances, predecessors, init);
+    } else {
+        arrival_launch = true;
+        this->destination = start_edge;
+        return get_distance(start_edge, target_edge, distances2, predecessors2, init);
+    }
+    return max;
+}
+
+
+double StreetNetwork::get_distance(const ng::ProjectionData & start,
+                                   const ng::ProjectionData & target,
+                                   std::vector<float> & dist,
+                                   std::vector<ng::vertex_t> & preds, bool init) {
+    if(init) {
+        geo_ref.init(dist, preds);
+    }
+    const double max = std::numeric_limits<float>::max();
+    if(dist[target.source] == max) {
+        dist[start.source] = start.source_distance;
+        try {
+            geo_ref.dijkstra(start.source, dist, preds, ng::target_unique_visitor(target.source));
+        } catch(ng::DestinationFound) {}
+        dist[start.target] = start.target_distance;
+        try {
+            geo_ref.dijkstra(start.source, dist, preds, ng::target_unique_visitor(target.source));
+        } catch(ng::DestinationFound) {}
+    }
+
+    if(dist[target.target] == max) {
+        dist[start.source] = start.source_distance;
+        try {
+            geo_ref.dijkstra(start.source, dist, preds, ng::target_unique_visitor(target.target));
+        } catch(ng::DestinationFound) {}
+        dist[start.target] = start.target_distance;
+        try {
+            geo_ref.dijkstra(start.target, dist, preds, ng::target_unique_visitor(target.target));
+        } catch(ng::DestinationFound) {}
+    }
+
+    double best_dist = max;
+    if(dist[target.source] < max){
+        best_dist = dist[target.source] + target.source_distance;
+    }
+    if(dist[target.target] < max){
+        best_dist= std::min(best_dist, dist[target.target] + target.target_distance);
+    }
+    return best_dist;
+}
+
+
 ng::Path StreetNetwork::get_path(type::idx_t idx, bool use_second){
     ng::Path result;
     if(!use_second){
-        if(!departure_launched() || (distances[idx] == std::numeric_limits<float>::max() && this->idx_projection.find(idx) == idx_projection.end()))
+        if(!departure_launched()
+            || (distances[idx] == std::numeric_limits<float>::max()
+                && this->idx_projection.find(idx) == idx_projection.end()))
             return result;
 
-        ng::ProjectionData projection = idx_projection[idx];        
+        ng::ProjectionData projection = idx_projection[idx];
 
-        if(distances[projection.source] + projection.source_distance < distances[projection.target] + projection.target_distance){
+        const auto dist_source = distances[projection.source] + projection.source_distance;
+        const auto dist_target = distances[projection.target] + projection.target_distance;
+        if(dist_source < dist_target){
             result = this->geo_ref.build_path(projection.source, this->predecessors);
-            result.length = distances[projection.source] + projection.source_distance;
-        }
-        else{
+            result.length = dist_source;
+        } else {
             result = this->geo_ref.build_path(projection.target, this->predecessors);
-            result.length = distances[projection.target] + projection.target_distance;
+            result.length = dist_target;
         }
         result.coordinates.push_front(departure.projected);
     } else {
-        if(!arrival_launched() || (distances2[idx] == std::numeric_limits<float>::max() && this->idx_projection2.find(idx) == idx_projection2.end()))
+        if(!arrival_launched()
+            || (distances2[idx] == std::numeric_limits<float>::max() &&
+                this->idx_projection2.find(idx) == idx_projection2.end()))
             return result;
 
         ng::ProjectionData projection = idx_projection2[idx];
 
-        if(distances2[projection.source] + projection.source_distance < distances2[projection.target] + projection.target_distance){
+        const auto dist_source = distances2[projection.source] + projection.source_distance;
+        const auto dist_target = distances2[projection.target] + projection.target_distance;
+        if(dist_source < dist_target){
             result = this->geo_ref.build_path(projection.source, this->predecessors2);
-            result.length = distances2[projection.source] + projection.source_distance;
-        }
-        else{
+            result.length = dist_source;
+        } else {
             result = this->geo_ref.build_path(projection.target, this->predecessors2);
-            result.length = distances2[projection.target] + projection.target_distance;
+            result.length = dist_target;
         }
         std::reverse(result.path_items.begin(), result.path_items.end());
         std::reverse(result.coordinates.begin(), result.coordinates.end());
