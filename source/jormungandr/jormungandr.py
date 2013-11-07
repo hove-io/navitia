@@ -3,7 +3,6 @@
 import sys
 import signal
 import os
-from conf import base_url
 from instance_manager import NavitiaManager
 from flask import url_for, make_response
 from flask.ext.restful.representations import json
