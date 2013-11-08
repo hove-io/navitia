@@ -194,11 +194,8 @@ void RAPTOR::clear_and_init(std::vector<Departure_Type> departs,
                 if(journey_patterns_valides.test(journey_pattern_point->journey_pattern->idx) &&
                         ((clockwise && (bound == DateTimeUtils::inf || best_labels[jppidx] > bound)) ||
                         ((!clockwise) && (bound == DateTimeUtils::min || best_labels[jppidx] < bound)))) {
-                        b_dest.add_destination(jppidx, item.second/walking_speed);
-                        //if(clockwise)
-                            best_labels[jppidx] = bound;
-                        //else
-                            //best_labels[rpidx].departure = borne;
+                        b_dest.add_destination(jppidx, item.second/walking_speed, clockwise);
+                        best_labels[jppidx] = bound;
                     }
             }
         }
