@@ -92,6 +92,19 @@ All the resources return a response containing a links object, a paging object, 
 Authentification
 ================
 
+You must authentificate to use **navitia.io**. When you register we give you a authentification key to the API.
+
+There is two ways for authentification, you can use a `Basic HTTP authentification`_, where the username is the key, and without password.
+
+The other method is to pass directly the key in the `HTTP Authorization header`_ like that:
+
+.. code-block:: none
+
+    Authorization: mysecretkey
+
+.. _Basic HTTP authentification: http://tools.ietf.org/html/rfc2617#section-2
+.. _HTTP Authorization header: http://tools.ietf.org/html/rfc2616#section-14.8
+
 .. _paging:
 
 Paging
