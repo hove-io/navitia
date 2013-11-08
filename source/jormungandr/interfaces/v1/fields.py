@@ -106,7 +106,7 @@ class get_label(fields.Raw):
             return obj.code
         else :
             if obj.name != '':
-                return line.name
+                return obj.name
 
 generic_message = {
     "level" : enum_type(attribute="message_status"),
