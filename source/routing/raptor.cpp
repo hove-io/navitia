@@ -368,7 +368,6 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
     DateTime workingDt = visitor.worst_datetime();
     uint32_t l_zone = std::numeric_limits<uint32_t>::max();
 
-    this->foot_path(visitor, accessibilite_params.properties/*required_properties*/);
     while(!end && count <= max_transfers) {
         ++count;
         end = true;
