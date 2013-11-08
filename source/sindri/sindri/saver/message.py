@@ -32,7 +32,6 @@ def build_message_dict(message):
 
     result['message_status'] = message.message_status
 
-
     return result
 
 def build_localized_message_dict(localized_msg, message_id):

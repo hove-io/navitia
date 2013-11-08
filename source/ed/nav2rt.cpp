@@ -74,7 +74,6 @@ SIZE_EXT_CODE(CLEAR_EXT_CODE)
     std::cout << "chargement des messages" << std::endl;
 
     ed::connectors::RealtimeLoaderConfig config(connection_string, shift_days);
-//    config.connection_string = connection_string;
     try{
         start = pt::microsec_clock::local_time();
         data.pt_data.message_holder.messages = ed::connectors::load_messages(

@@ -195,7 +195,7 @@ class AtRealtimeReader(object):
                         get_navitia_type(row[self.label_object_type])
 
                     status_str = row[self.label_impact_state].lower()
-                    message.message_status= status[status_str].number
+                    message.message_status = status[status_str].number
 
                 localized_message = message.localized_messages.add()
                 localized_message.language = row[self.label_message_lang]
