@@ -177,7 +177,7 @@ std::vector<std::pair<type::idx_t, double> >
 get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
         streetnetwork::StreetNetwork & worker, bool use_second = false){
     std::vector<std::pair<type::idx_t, double> > result;
-
+    bool init = false;
     if(ep.type == type::Type_e::StopArea){
         auto it = pt_data.stop_areas_map.find(ep.uri);
         if(it!= pt_data.stop_areas_map.end()) {
@@ -192,10 +192,11 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
         }
     }else if(ep.type == type::Type_e::Address
                 || ep.type == type::Type_e::Coord || ep.type == type::Type_e::Admin){
-            result = worker.find_nearest_stop_points(ep.coordinates,
-                    pt_data.stop_point_proximity_list,
-                    ep.streetnetwork_params.distance, use_second,
-                    ep.streetnetwork_params.offset);
+        init = true;
+        result = worker.find_nearest_stop_points(ep.coordinates,
+                pt_data.stop_point_proximity_list,
+                ep.streetnetwork_params.distance, use_second,
+                ep.streetnetwork_params.offset);
     }
     //On va chercher tous les journey_pattern_points en correspondance
     //avec ceux déjà trouvés.
@@ -216,7 +217,8 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
                 continue;
             }
             auto distance = worker.get_distance(ep.coordinates, destination->coord,
-                                        use_second, ep.streetnetwork_params.offset);
+                                        use_second, ep.streetnetwork_params.offset,
+                                        init);
             /*
              * On mettra ce traitement quand on aura trouvé un moyen de refaire path...
              * if(distance == std::numeric_limits<double>::max()) {
@@ -226,6 +228,7 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
             }*/
 
             result.push_back(std::pair<type::idx_t, double>(destination->idx, distance));
+            init = true;
         }
     }
     return result;
