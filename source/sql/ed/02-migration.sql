@@ -1,4 +1,4 @@
-DO $$ 
+DO $$
     BEGIN
         BEGIN
             ALTER TABLE realtime.message ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE;
