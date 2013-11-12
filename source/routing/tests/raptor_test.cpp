@@ -429,52 +429,6 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
     BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
 
-
-BOOST_AUTO_TEST_CASE(marche_a_pied_fin){
-    ed::builder b("20120614");
-    b.vj("A")("stop1", 8000)("stop2", 8200);
-    b.vj("B")("stop3", 30000)("stop4",40000);
-    b.connection("stop2", "stop3", 10*60);
-    b.connection("stop3", "stop2", 10*60);
-
-    b.data.pt_data.index();
-    b.data.build_raptor();
-    b.data.build_uri();
-    RAPTOR raptor(b.data);
-    type::PT_Data & d = b.data.pt_data;
-
-    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 7900, 0, DateTimeUtils::inf);
-    BOOST_REQUIRE_EQUAL(res1.size(), 1);
-
-    auto res = res1.back();
-
-    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
-    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], d.stop_points_map["stop3"]->idx);
-    BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[1].arrival), 8200 + 60*10);
-
-    res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 7900, 0, DateTimeUtils::set(0, 9200));
-    BOOST_REQUIRE_EQUAL(res1.size(), 1);
-
-    res = res1.back();
-
-    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
-    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], d.stop_points_map["stop3"]->idx);
-    BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[1].arrival), 8200 + 60*10);
-
-    res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 7900, 0, DateTimeUtils::set(0, 8200+10*60));
-    BOOST_REQUIRE_EQUAL(res1.size(), 1);
-
-    res = res1.back();
-
-    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
-    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], d.stop_points_map["stop3"]->idx);
-    BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[1].arrival), 8200 + 60*10);
-
-    res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 7900, 0, DateTimeUtils::set(0, (8200+10*60)-1));
-    BOOST_REQUIRE_EQUAL(res1.size(), 0);
-}
-
-
 BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000)("stop2", 23*3600+59*60);
@@ -516,52 +470,6 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
     BOOST_CHECK_EQUAL(DateTimeUtils::date(res.items[3].arrival), 1);
 
     res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop4"], 7900, 0, DateTimeUtils::set(1 , (2*3600+20)-1));
-    BOOST_REQUIRE_EQUAL(res1.size(), 0);
-}
-
-
-BOOST_AUTO_TEST_CASE(marche_a_pied_debut) {
-    ed::builder b("20120614");
-    b.vj("A")("stop1", 8000)("stop20", 8200);
-    b.vj("B")("stop2", 30000)("stop3",40000);
-    b.vj("C")("stop2", 7900 + 10*60-1)("stop3", 9500);
-    b.connection("stop1", "stop2", 10*60);
-    b.connection("stop2", "stop1", 10*60);
-
-    b.data.pt_data.index();
-    b.data.build_raptor();
-    b.data.build_uri();
-    RAPTOR raptor(b.data);
-    type::PT_Data & d = b.data.pt_data;
-
-    auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 7900, 0, DateTimeUtils::inf);
-    BOOST_REQUIRE_EQUAL(res1.size(), 1);
-
-    auto res = res1.back();
-
-    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
-    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], d.stop_areas_map["stop3"]->idx);
-    BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[1].arrival), 40000);
-
-    res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 7900, 0, DateTimeUtils::set(0, 50000));
-    BOOST_REQUIRE_EQUAL(res1.size(), 1);
-
-    res = res1.back();
-
-    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
-    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], d.stop_areas_map["stop3"]->idx);
-    BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[1].arrival), 40000);
-
-    res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 7900, 0, DateTimeUtils::set(0, 40000));
-    BOOST_REQUIRE_EQUAL(res1.size(), 1);
-
-    res = res1.back();
-
-    BOOST_REQUIRE_EQUAL(res.items.size(), 2);
-    BOOST_CHECK_EQUAL(res.items[1].stop_points[1], d.stop_areas_map["stop3"]->idx);
-    BOOST_CHECK_EQUAL(DateTimeUtils::hour(res.items[1].arrival), 40000);
-
-    res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop3"], 7900, 0, DateTimeUtils::set(0, 40000 - 1));
     BOOST_REQUIRE_EQUAL(res1.size(), 0);
 }
 
