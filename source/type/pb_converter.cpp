@@ -182,17 +182,9 @@ void fill_pb_object(const nt::JourneyPattern* jp, const nt::Data& data,
 
     journey_pattern->set_name(jp->name);
     journey_pattern->set_uri(jp->uri);
-    if(depth > 0 && jp->route != nullptr)
+    if(depth > 0 && jp->route != nullptr) {
         fill_pb_object(jp->route, data, journey_pattern->mutable_route(),
                 depth-1, now, action_period);
-
-    if(depth > 0) {
-        /*auto messages = data.pt_data.message_holder
-            .find_messages(jp->uri, now, action_period);
-        for(const auto& message : messages){
-            fill_message(message, data, journey_pattern->add_messages(),
-                    depth-1, now, action_period);
-        }*/
     }
 }
 
@@ -361,16 +353,14 @@ void fill_pb_object(const nt::VehicleJourney* vj, const nt::Data& data,
                        depth-1);
     }
     if(depth > 0) {
-        //fill_pb_object(vj->physical_mode, data, vehicle_journey->mutable_physical_mode(), max_depth-1, now, action_period);
-
         fill_pb_object(vj->validity_pattern, data, vehicle_journey->mutable_validity_pattern(), max_depth-1);
         fill_pb_object(vj->adapted_validity_pattern, data, vehicle_journey->mutable_adapted_validity_pattern(), max_depth-1);
-
     }
 
     for(auto message : vj->get_applicable_messages(now, action_period)){
         fill_message(message, data, vehicle_journey->add_messages(), max_depth-1, now, action_period);
     }
+
     //si on a un vj théorique rataché à notre vj, on récupére les messages qui le concerne
     if(vj->theoric_vehicle_journey != nullptr){
         for(auto message : vj->theoric_vehicle_journey->get_applicable_messages(now, action_period)){
@@ -460,9 +450,6 @@ void fill_pb_object(const nt::JourneyPatternPoint* jpp, const nt::Data& data,
                            depth - 1, now, action_period);
         }
     }
-    /*for(auto message : data.pt_data.message_holder.find_messages(jpp->uri, now, action_period)){
-        fill_message(message, data, journey_pattern_point->add_messages(), max_depth-1, now, action_period);
-    }*/
 }
 
 
@@ -585,6 +572,7 @@ void fill_street_section(const type::EntryPoint &ori_dest,
                          pbnavitia::Section* section, int max_depth,
                          const pt::ptime& now,
                          const pt::time_period& action_period){
+    int depth = (max_depth <= 3) ? max_depth : 3;
     if(path.path_items.size() > 0) {
         section->set_type(pbnavitia::STREET_NETWORK);
         pbnavitia::StreetNetwork * sn = section->mutable_street_network();
@@ -599,14 +587,14 @@ void fill_street_section(const type::EntryPoint &ori_dest,
             orig_place = section->mutable_origin();
             coord = path.coordinates.front();
             fill_pb_placemark(way,  data, orig_place, way->nearest_number(coord), coord,
-                              max_depth,  now, action_period);
+                              depth,  now, action_period);
 
             pbnavitia::Place* dest_place = section->mutable_destination();
             way = data.geo_ref.ways[path.path_items.back().way_idx];
             dest_place = section->mutable_destination();
             coord = path.coordinates.back();
             fill_pb_placemark(way,  data, dest_place, way->nearest_number(coord), coord,
-                                    max_depth,  now, action_period);
+                                    depth,  now, action_period);
         }
     }
 }
