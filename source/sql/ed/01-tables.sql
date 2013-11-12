@@ -455,9 +455,9 @@ CREATE TABLE IF NOT EXISTS realtime.message(
     active_days bit(8) NOT NULL,
     object_uri text NOT NULL,
     object_type_id int NOT NULL REFERENCES navitia.object_type,
-    message_status_id int NOT NULL REFERENCES realtime.message_status
+    message_status_id int NOT NULL REFERENCES realtime.message_status,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
-
 
 CREATE TABLE IF NOT EXISTS realtime.localized_message(
     message_id BIGINT NOT NULL REFERENCES realtime.message,
@@ -476,7 +476,9 @@ CREATE TABLE IF NOT EXISTS realtime.at_perturbation(
     end_application_daily_hour timetz NOT NULL,
     active_days bit(8) NOT NULL,
     object_uri text NOT NULL,
-    object_type_id int NOT NULL REFERENCES navitia.object_type
+    object_type_id int NOT NULL REFERENCES navitia.object_type,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
+
 
 
