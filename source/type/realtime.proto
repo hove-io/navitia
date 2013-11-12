@@ -27,6 +27,7 @@ message Message{
     optional string active_days = 9;
 
     repeated LocalizedMessage localized_messages = 10;
+    required MessageStatus message_status = 11;
 }
 
 message AtPerturbation{
