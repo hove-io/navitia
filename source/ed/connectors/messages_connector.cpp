@@ -27,7 +27,7 @@ std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
     std::unique_ptr<pqxx::connection> conn;
     try{
         conn = std::unique_ptr<pqxx::connection>(new pqxx::connection(conf.connection_string));
-        (*conn).prepare("messages", request)("timestamp")("INTERVAL", pqxx::prepare::treat_string);
+        conn->prepare("messages", request)("timestamp")("INTERVAL", pqxx::prepare::treat_string);
         std::string st_current_time = boost::posix_time::to_iso_string(current_time);
         std::string st_shift_days =  std::to_string(conf.shift_days) + " days";
         pqxx::work work(*conn, "chargement des messages");
@@ -35,9 +35,7 @@ std::map<std::string, boost::shared_ptr<navitia::type::Message>> load_messages(
     }catch(const pqxx::pqxx_exception &e){
         throw navitia::exception(e.base().what());
 
-    }catch(...){
-              throw navitia::exception("Unable to prepare the sql query");
-          }
+    }
 
     std::map<std::string, boost::shared_ptr<navitia::type::Message>> messages;
     boost::shared_ptr<navitia::type::Message> message;
@@ -148,7 +146,7 @@ std::vector<navitia::type::AtPerturbation> load_at_perturbations(
     std::unique_ptr<pqxx::connection> conn;
     try{
         conn = std::unique_ptr<pqxx::connection>(new pqxx::connection(conf.connection_string));
-        (*conn).prepare("messages", request)("timestamp")("INTERVAL", pqxx::prepare::treat_string);
+        conn->prepare("messages", request)("timestamp")("INTERVAL", pqxx::prepare::treat_string);
         std::string st_current_time = boost::posix_time::to_iso_string(current_time);
         std::string st_shift_days =  std::to_string(conf.shift_days) + " days";
         pqxx::work work(*conn, "chargement des perturbations at");
@@ -157,10 +155,7 @@ std::vector<navitia::type::AtPerturbation> load_at_perturbations(
     }catch(const pqxx::pqxx_exception &e){
         throw navitia::exception(e.base().what());
 
-    }catch(...){
-        throw navitia::exception("Unable to prepare the sql query");
     }
-
 
     std::vector<navitia::type::AtPerturbation> perturbations;
     for(auto cursor = result.begin(); cursor != result.end(); ++cursor){
