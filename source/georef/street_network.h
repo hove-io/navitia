@@ -11,7 +11,7 @@ namespace navitia { namespace streetnetwork {
 // Visiteur qui s'arrête au bout d'une certaine distance
 struct distance_visitor : public boost::dijkstra_visitor<> {
     double max_distance;
-    const std::vector<float> & distances;
+    const std::vector<float>& distances;
     distance_visitor(float max_distance, const std::vector<float> & distances) :
         max_distance(max_distance), distances(distances){}
 
@@ -26,7 +26,7 @@ struct distance_visitor : public boost::dijkstra_visitor<> {
 struct StreetNetwork {
 public:
 
-    StreetNetwork(const ng::GeoRef & geo_ref);
+    StreetNetwork(const ng::GeoRef& geo_ref);
 
     /**
      *  Met à jour les indicateurs pour savoir si les calculs ont été lancés
@@ -46,13 +46,13 @@ public:
     type::idx_t get_offset(const type::Mode_e &);
     /** Calcule quels sont les stop point atteignables en radius mètres de marche à pied
      */
-    std::vector< std::pair<type::idx_t, double> > find_nearest_stop_points(
-            const type::GeographicalCoord & start_coord,
-            const proximitylist::ProximityList<type::idx_t> & pl,
+    std::vector<std::pair<type::idx_t, double>> find_nearest_stop_points(
+            const type::GeographicalCoord& start_coord,
+            const proximitylist::ProximityList<type::idx_t>& pl,
             double radius, bool use_second, nt::idx_t offset);
 
-    double get_distance(const type::GeographicalCoord & start_coord,
-                        const type::idx_t & target_idx,
+    double get_distance(const type::GeographicalCoord& start_coord,
+                        const type::idx_t& target_idx,
                         bool use_second, nt::idx_t offset,
                         bool init=false);
 
@@ -65,17 +65,17 @@ public:
 private:
     const ng::GeoRef & geo_ref;
 
-    std::vector< std::pair<type::idx_t, double> > find_nearest_stop_points(
-            const ng::ProjectionData & start, double radius,
-            const std::vector< std::pair<type::idx_t, type::GeographicalCoord> > & elements,
-            std::vector<float> & dist, std::vector<ng::vertex_t> & preds,
-            std::map<type::idx_t, ng::ProjectionData> & idx_proj, nt::idx_t offset);
+    std::vector<std::pair<type::idx_t, double>> find_nearest_stop_points(
+            const ng::ProjectionData& start, double radius,
+            const std::vector<std::pair<type::idx_t, type::GeographicalCoord>>& elements,
+            std::vector<float>& dist, std::vector<ng::vertex_t>& preds,
+            std::map<type::idx_t, ng::ProjectionData>& idx_proj, nt::idx_t offset);
 
-    double get_distance(const ng::ProjectionData & start,
-            const ng::ProjectionData & target, const type::idx_t target_idx,
-            std::vector<float> & dist,
-            std::vector<ng::vertex_t> & preds,
-            std::map<type::idx_t, ng::ProjectionData> & idx_proj, bool init);
+    double get_distance(const ng::ProjectionData& start,
+            const ng::ProjectionData& target, const type::idx_t target_idx,
+            std::vector<float>& dist,
+            std::vector<ng::vertex_t>& preds,
+            std::map<type::idx_t, ng::ProjectionData>& idx_proj, bool init);
 
     /// Points de départ et d'arrivée fournis par la requête
     ng::ProjectionData departure;
@@ -98,4 +98,4 @@ private:
     bool departure_launch;
     bool arrival_launch;
 };
-}}
+}}//namespace navitia::georef

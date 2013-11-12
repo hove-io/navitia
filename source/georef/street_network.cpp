@@ -27,9 +27,9 @@ type::idx_t StreetNetwork::get_offset(const type::Mode_e & mode){
 }
 
 
-std::vector< std::pair<type::idx_t, double> >
-StreetNetwork::find_nearest_stop_points(const type::GeographicalCoord & start_coord,
-                                        const proximitylist::ProximityList<type::idx_t> & pl,
+std::vector<std::pair<type::idx_t, double>>
+StreetNetwork::find_nearest_stop_points(const type::GeographicalCoord& start_coord,
+                                        const proximitylist::ProximityList<type::idx_t>& pl,
                                         double radius, bool use_second,nt::idx_t offset){
     // On cherche le segment le plus proche des coordonnées
     ng::ProjectionData nearest_edge = ng::ProjectionData(start_coord, this->geo_ref, this->geo_ref.pl);
@@ -59,13 +59,13 @@ StreetNetwork::find_nearest_stop_points(const type::GeographicalCoord & start_co
     }
 }
 
-std::vector< std::pair<type::idx_t, double> >
-StreetNetwork::find_nearest_stop_points(const ng::ProjectionData & start, double radius,
-                                        const std::vector< std::pair<type::idx_t, type::GeographicalCoord> > & elements,
-                                        std::vector<float> & dist,
-                                        std::vector<ng::vertex_t> & preds,
-                                        std::map<type::idx_t, ng::ProjectionData> & idx_proj,nt::idx_t offset){
-    std::vector< std::pair<type::idx_t, double> > result;
+std::vector<std::pair<type::idx_t, double>>
+StreetNetwork::find_nearest_stop_points(const ng::ProjectionData& start, double radius,
+                                        const std::vector<std::pair<type::idx_t, type::GeographicalCoord>>& elements,
+                                        std::vector<float>& dist,
+                                        std::vector<ng::vertex_t>& preds,
+                                        std::map<type::idx_t, ng::ProjectionData>& idx_proj,nt::idx_t offset){
+    std::vector<std::pair<type::idx_t, double>> result;
     geo_ref.init(dist, preds);
     idx_proj.clear();
 
@@ -104,8 +104,8 @@ StreetNetwork::find_nearest_stop_points(const ng::ProjectionData & start, double
     return result;
 }
 
-double StreetNetwork::get_distance(const type::GeographicalCoord & start_coord,
-                                   const type::idx_t & target_idx,
+double StreetNetwork::get_distance(const type::GeographicalCoord& start_coord,
+                                   const type::idx_t& target_idx,
                                    bool use_second, nt::idx_t offset,
                                    bool init) {
     const double max = std::numeric_limits<float>::max();
@@ -132,12 +132,12 @@ double StreetNetwork::get_distance(const type::GeographicalCoord & start_coord,
 }
 
 
-double StreetNetwork::get_distance(const ng::ProjectionData & start,
-                                   const ng::ProjectionData & target,
+double StreetNetwork::get_distance(const ng::ProjectionData& start,
+                                   const ng::ProjectionData& target,
                                    const type::idx_t target_idx,
-                                   std::vector<float> & dist,
-                                   std::vector<ng::vertex_t> & preds,
-                                   std::map<type::idx_t, ng::ProjectionData> & idx_proj,
+                                   std::vector<float>& dist,
+                                   std::vector<ng::vertex_t>& preds,
+                                   std::map<type::idx_t, ng::ProjectionData>& idx_proj,
                                    bool init) {
     const double max = std::numeric_limits<float>::max();
     double best_dist = max;
