@@ -83,7 +83,6 @@ StreetNetwork::find_nearest_stop_points(const ng::ProjectionData & start, double
     const double max = std::numeric_limits<float>::max();
 
     for(auto element: elements){
-//        const ng::ProjectionData & projection = geo_ref.projected_stop_points[element.first];
         ng::ProjectionData projection = geo_ref.projected_stop_points[element.first];
         // Est-ce que le stop point a pu être raccroché au street network
         if(projection.found){
@@ -106,7 +105,7 @@ StreetNetwork::find_nearest_stop_points(const ng::ProjectionData & start, double
 }
 
 double StreetNetwork::get_distance(const type::GeographicalCoord & start_coord,
-                                   const type::GeographicalCoord & target_coord,
+                                   const type::idx_t & target_idx,
                                    bool use_second, nt::idx_t offset,
                                    bool init) {
     const double max = std::numeric_limits<float>::max();
@@ -115,19 +114,19 @@ double StreetNetwork::get_distance(const type::GeographicalCoord & start_coord,
         return max;
     start_edge.inc_vertex(offset);
 
-    ng::ProjectionData target_edge = ng::ProjectionData(target_coord, this->geo_ref, this->geo_ref.pl);
-    if(!target_edge.found)
+    ng::ProjectionData projection = geo_ref.projected_stop_points[target_idx];
+    if(!projection.found)
         return max;
-    target_edge.inc_vertex(offset);
+    projection.inc_vertex(offset);
 
     if(!use_second) {
         departure_launch = true;
         this->departure = start_edge;
-        return get_distance(start_edge, target_edge, distances, predecessors, init);
+        return get_distance(start_edge, projection, target_idx, distances, predecessors, idx_projection, init);
     } else {
         arrival_launch = true;
         this->destination = start_edge;
-        return get_distance(start_edge, target_edge, distances2, predecessors2, init);
+        return get_distance(start_edge, projection, target_idx, distances2, predecessors2, idx_projection2, init);
     }
     return max;
 }
@@ -135,12 +134,20 @@ double StreetNetwork::get_distance(const type::GeographicalCoord & start_coord,
 
 double StreetNetwork::get_distance(const ng::ProjectionData & start,
                                    const ng::ProjectionData & target,
+                                   const type::idx_t target_idx,
                                    std::vector<float> & dist,
-                                   std::vector<ng::vertex_t> & preds, bool init) {
-    if(init) {
-        geo_ref.init(dist, preds);
-    }
+                                   std::vector<ng::vertex_t> & preds,
+                                   std::map<type::idx_t, ng::ProjectionData> & idx_proj,
+                                   bool init) {
     const double max = std::numeric_limits<float>::max();
+    double best_dist = max;
+    if(!init) {
+        geo_ref.init(dist, preds);
+        idx_proj.clear();
+    }
+    if(dist.size() < target.source) {
+        return best_dist;
+    }
     if(dist[target.source] == max) {
         dist[start.source] = start.source_distance;
         try {
@@ -152,6 +159,9 @@ double StreetNetwork::get_distance(const ng::ProjectionData & start,
         } catch(ng::DestinationFound) {}
     }
 
+    if(dist.size() < target.target) {
+        return best_dist;
+    }
     if(dist[target.target] == max) {
         dist[start.source] = start.source_distance;
         try {
@@ -163,12 +173,16 @@ double StreetNetwork::get_distance(const ng::ProjectionData & start,
         } catch(ng::DestinationFound) {}
     }
 
-    double best_dist = max;
     if(dist[target.source] < max){
         best_dist = dist[target.source] + target.source_distance;
+        idx_proj[target_idx] = target;
     }
     if(dist[target.target] < max){
-        best_dist= std::min(best_dist, dist[target.target] + target.target_distance);
+        const auto tmp_dist_target = dist[target.target] + target.target_distance;
+        if(tmp_dist_target < best_dist) {
+            best_dist= tmp_dist_target;
+            idx_proj[target_idx] = target;
+        }
     }
     return best_dist;
 }

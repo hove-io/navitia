@@ -52,8 +52,9 @@ public:
             double radius, bool use_second, nt::idx_t offset);
 
     double get_distance(const type::GeographicalCoord & start_coord,
-                const type::GeographicalCoord & target_coord,
-                bool use_second, nt::idx_t offset, bool init = false);
+                        const type::idx_t & target_idx,
+                        bool use_second, nt::idx_t offset,
+                        bool init=false);
 
     /// Reconstruit l'itinéraire piéton à partir de l'idx
     ng::Path get_path(type::idx_t idx, bool use_second = false);
@@ -71,8 +72,10 @@ private:
             std::map<type::idx_t, ng::ProjectionData> & idx_proj, nt::idx_t offset);
 
     double get_distance(const ng::ProjectionData & start,
-            const ng::ProjectionData & target, std::vector<float> & dist,
-            std::vector<ng::vertex_t> & preds, bool init);
+            const ng::ProjectionData & target, const type::idx_t target_idx,
+            std::vector<float> & dist,
+            std::vector<ng::vertex_t> & preds,
+            std::map<type::idx_t, ng::ProjectionData> & idx_proj, bool init);
 
     /// Points de départ et d'arrivée fournis par la requête
     ng::ProjectionData departure;
