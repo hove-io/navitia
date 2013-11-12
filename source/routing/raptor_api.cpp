@@ -51,7 +51,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
                 const auto temp = worker.get_path(path.items.front().stop_points.front());
                 if(temp.path_items.size() > 0) {
                     pbnavitia::Section * pb_section = pb_journey->add_sections();
-                    fill_street_section(origin, temp , d, pb_section, 1);
+                    fill_street_section(origin, temp, d, pb_section, 1);
                     const auto walking_time = temp.length/origin.streetnetwork_params.speed;
                     departure_time = path.items.front().departure - walking_time;
                     auto arr_time = path.items.front().departure;
@@ -200,10 +200,10 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
     }
     //On va chercher tous les journey_pattern_points en correspondance
     //avec ceux déjà trouvés.
-    for(const auto & jpp_idx_distance : result) {
-        const auto jpp_idx = jpp_idx_distance.first;
-        const auto & jpp = pt_data.journey_pattern_points[jpp_idx];
-        const auto & stop_point = pt_data.stop_points[jpp->idx];
+    std::vector<std::pair<type::idx_t, double> > tmp_result;
+    for(const auto & sp_idx_distance : result) {
+        const auto sp_idx = sp_idx_distance.first;
+        const auto stop_point = pt_data.stop_points[sp_idx];
         const auto connections_idx = stop_point->get(type::Type_e::StopPointConnection, pt_data);
 
         for(const auto connection_idx : connections_idx) {
@@ -212,11 +212,13 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
             auto find_predicate = [&](std::pair<type::idx_t, double> idx_distance)->bool {
                 return destination->idx == idx_distance.first;
             };
-            auto it = std::find_if(result.begin(), result.end(), find_predicate);
-            if(it != result.end()) {
+            if(std::find_if(result.begin(), result.end(), find_predicate) != result.end()) {
+                continue;
+            } else if(std::find_if(tmp_result.begin(), tmp_result.end(), find_predicate) != tmp_result.end()) {
                 continue;
             }
-            auto distance = worker.get_distance(ep.coordinates, destination->coord,
+
+            auto distance = worker.get_distance(ep.coordinates, destination->idx,
                                         use_second, ep.streetnetwork_params.offset,
                                         init);
             /*
@@ -227,10 +229,11 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
                 distance = connection.duration * 1.68
             }*/
 
-            result.push_back(std::pair<type::idx_t, double>(destination->idx, distance));
+            tmp_result.push_back(std::pair<type::idx_t, double>(destination->idx, distance));
             init = true;
         }
     }
+    result.insert(result.end(), tmp_result.begin(), tmp_result.end());
     return result;
 }
 
