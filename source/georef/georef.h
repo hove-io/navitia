@@ -330,6 +330,15 @@ struct target_visitor : public boost::dijkstra_visitor<> {
     }
 };
 
+// Visiteur qui lève une exception dès que la cible souhaitée est atteinte
+struct target_unique_visitor : public boost::dijkstra_visitor<> {
+    const vertex_t & destination;
+    target_unique_visitor(const vertex_t & destination) : destination(destination){}
+    void finish_vertex(vertex_t u, const Graph&){
+        if(u == destination)
+            throw DestinationFound();
+    }
+};
 
 /** Lorsqu'on a une coordonnée, il faut l'accrocher au filaire. Cette structure contient l'accroche
   *

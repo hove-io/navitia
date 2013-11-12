@@ -1,9 +1,11 @@
 #include "raptor_path.h"
 #include "raptor.h"
+
+
 namespace navitia { namespace routing {
 
-    
-std::vector<Path> 
+
+std::vector<Path>
 makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
            DateTime dt, const float walking_speed,
            const type::AccessibiliteParams & accessibilite_params/*const type::Properties &required_properties*/, const RAPTOR &raptor_, bool clockwise) {
@@ -17,11 +19,11 @@ makePathes(std::vector<std::pair<type::idx_t, double> > destinations,
                 if(raptor_.get_type(i, dest_idx) != boarding_type::uninitialized) {
                     DateTime current_dt = raptor_.labels[i][dest_idx];
                     if(clockwise)
-                        current_dt = current_dt + spid_dist.second/walking_speed;
+                        current_dt = current_dt + std::ceil(spid_dist.second/walking_speed);
                     else
-                        current_dt = current_dt - spid_dist.second/walking_speed;
-                    if(        (clockwise && ((best_dt == DateTimeUtils::inf && current_dt <= dt) || (best_dt != DateTimeUtils::inf && current_dt < best_dt)))
-                            ||(!clockwise && ((best_dt == DateTimeUtils::min && current_dt >= dt) || (best_dt != DateTimeUtils::min && current_dt > best_dt))) ){
+                        current_dt = current_dt - std::floor(spid_dist.second/walking_speed);
+                    if((clockwise && ((best_dt == DateTimeUtils::inf && current_dt <= dt) || (best_dt != DateTimeUtils::inf && current_dt < best_dt)))
+                       ||(!clockwise && ((best_dt == DateTimeUtils::min && current_dt >= dt) || (best_dt != DateTimeUtils::min && current_dt > best_dt))) ){
                         best_dt = current_dt ;
                         best_jpp = dest_idx;
                     }
@@ -205,7 +207,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
     return result;
 }
 
- void patch_datetimes(Path &path){
+void patch_datetimes(Path &path){
     PathItem previous_item;
     std::vector<std::pair<int, PathItem>> to_insert;
     for(auto item = path.items.begin(); item!= path.items.end(); ++item) {

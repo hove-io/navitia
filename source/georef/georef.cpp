@@ -97,7 +97,7 @@ nt::GeographicalCoord Way::get_geographical_coord(const std::vector< HouseNumber
 
         /// Dans le cas où le numéro recherché est dans la liste et <> à tous les numéros
         return extrapol_geographical_coord(number);
-    }    
+    }
     nt::GeographicalCoord to_return;
     return to_return;
 }

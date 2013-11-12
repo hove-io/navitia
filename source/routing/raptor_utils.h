@@ -33,34 +33,56 @@ enum class boarding_type {
 };
 
 struct best_dest {
-    std::vector<float> rpidx_distance;
+    std::vector<u_int32_t> jpp_idx_duration;
     DateTime best_now;
-    unsigned int best_now_rpid;
+    unsigned int best_now_jpp_idx;
     size_t count;
     float max_walking;
 
-    void add_destination(unsigned int rpid, const float dist_to_dest) {
-        rpidx_distance[rpid] = dist_to_dest;
+    void add_destination(type::idx_t jpp_idx, const float duration_to_dest, bool clockwise) {
+        jpp_idx_duration[jpp_idx] = clockwise ? std::ceil(duration_to_dest) : std::floor(duration_to_dest);
     }
 
-    bool is_dest(unsigned int rpid) const {return rpidx_distance[rpid] != std::numeric_limits<float>::max();}
+
+    inline bool is_eligible_solution(type::idx_t jpp_idx) {
+        return jpp_idx_duration[jpp_idx] != std::numeric_limits<u_int32_t>::max();
+    }
+
 
     template<typename Visitor>
-    inline bool add_best(const Visitor & v, unsigned int rpid, const DateTime &t, size_t cnt) {
-        if(v.clockwise())
-            return add_best_clockwise(rpid, t, cnt);
-        else
-            return add_best_unclockwise(rpid, t, cnt);
+    inline bool add_best(const Visitor & v, type::idx_t jpp_idx, const DateTime &t, size_t cnt) {
+        if(is_eligible_solution(jpp_idx)) {
+            if(v.clockwise())
+                return add_best_clockwise(jpp_idx, t, cnt);
+            else
+                return add_best_unclockwise(jpp_idx, t, cnt);
+        }
+        return false;
     }
 
-    inline bool add_best_clockwise(unsigned int rpid, const DateTime &t, size_t cnt) {
-        if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
-            if((best_now == DateTimeUtils::inf) ||
-               ((t != DateTimeUtils::inf) &&
-                (((t + rpidx_distance[rpid]) < best_now) || (((t + rpidx_distance[rpid]) == best_now) && (count > cnt))))) {
-                best_now = t + rpidx_distance[rpid];
-                //best_now.departure = best_now.departure + rpidx_distance[rpid];
-                best_now_rpid = rpid;
+
+    inline bool add_best_clockwise(type::idx_t jpp_idx, const DateTime &t, size_t cnt) {
+        if(t != DateTimeUtils ::inf) {
+            const auto tmp_dt = t + jpp_idx_duration[jpp_idx];
+            if((tmp_dt < best_now) || ((tmp_dt == best_now) && (count > cnt))) {
+                best_now = tmp_dt;
+                //best_now.departure = best_now.departure + jpp_idx_distance[rpid];
+                best_now_jpp_idx = jpp_idx;
+                count = cnt;
+                return true;
+            }
+         }
+
+        return false;
+    }
+
+    inline bool add_best_unclockwise(type::idx_t jpp_idx, const DateTime &t, size_t cnt) {
+        if(t != DateTimeUtils::min) {
+            const auto tmp_dt = t - jpp_idx_duration[jpp_idx];
+            if((tmp_dt > best_now) || ((tmp_dt == best_now) && (count > cnt))) {
+                best_now = tmp_dt;
+                //best_now.departure = t.departure - jpp_idx_distance[rpid];
+                best_now_jpp_idx = jpp_idx;
                 count = cnt;
                 return true;
             }
@@ -68,40 +90,23 @@ struct best_dest {
         return false;
     }
 
-    inline bool add_best_unclockwise(unsigned int rpid, const DateTime &t, size_t cnt) {
-        if(rpidx_distance[rpid] != std::numeric_limits<float>::max()) {
-            if((best_now <= max_walking) ||
-               ((t != DateTimeUtils::min) &&
-                (((t - rpidx_distance[rpid]) > best_now) || (((t - rpidx_distance[rpid]) == best_now) && (count > cnt))))) {
-                best_now = t - rpidx_distance[rpid];
-                //best_now.departure = t.departure - rpidx_distance[rpid];
-                best_now_rpid = rpid;
-                count = cnt;
-                return true;
-                }
-            }
-        return false;
-    }
-
-    void reinit(const size_t nb_rpid, const float max_walking_ = 0) {
-        rpidx_distance.resize(nb_rpid);
-        memset32<float>(&rpidx_distance[0], nb_rpid, std::numeric_limits<float>::max());
+    void reinit(const size_t nb_jpp_idx, const float max_walking_ = 0) {
+        jpp_idx_duration.resize(nb_jpp_idx);
+        memset32<u_int32_t>(&jpp_idx_duration[0], nb_jpp_idx, std::numeric_limits<u_int32_t>::max());
         best_now = DateTimeUtils::inf;
-        best_now_rpid = type::invalid_idx;
+        best_now_jpp_idx = type::invalid_idx;
         count = std::numeric_limits<size_t>::max();
         max_walking = max_walking_;
     }
 
-    void reinit(size_t nb_rpid, const DateTime &borne, const float max_walking = 0) {
-        reinit(nb_rpid, max_walking);
+    void reinit(size_t nb_jpp_idx, const DateTime &borne, const float max_walking = 0) {
+        reinit(nb_jpp_idx, max_walking);
         best_now = borne;
     }
 
     void reverse() {
         best_now = DateTimeUtils::min;
     }
-
-
 };
 
 inline
