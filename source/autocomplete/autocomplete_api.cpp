@@ -13,46 +13,24 @@ void create_pb(const std::vector<Autocomplete<nt::idx_t>::fl_quality>& result,
         pbnavitia::Place* place = pb_response.add_places();
         switch(type){
         case nt::Type_e::StopArea:
-            fill_pb_object(data.pt_data.stop_areas[result_item.idx], data,
-                    place->mutable_stop_area(), depth);
-            place->set_name(data.pt_data.stop_areas[result_item.idx]->name);
-            place->set_uri(data.pt_data.stop_areas[result_item.idx]->uri);
+            fill_pb_placemark(data.pt_data.stop_areas[result_item.idx], data,place, depth);
             place->set_quality(result_item.quality);
-            place->set_embedded_type(pbnavitia::STOP_AREA);
             break;
         case nt::Type_e::Admin:
-            fill_pb_object(data.geo_ref.admins[result_item.idx], data,
-                    place->mutable_administrative_region(), depth);
+            fill_pb_placemark(data.geo_ref.admins[result_item.idx], data, place, depth);
             place->set_quality(result_item.quality);
-            place->set_uri(data.geo_ref.admins[result_item.idx]->uri);
-            place->set_name(data.geo_ref.admins[result_item.idx]->name);
-            place->set_embedded_type(pbnavitia::ADMINISTRATIVE_REGION);
             break;
         case nt::Type_e::StopPoint:
-            fill_pb_object(data.pt_data.stop_points[result_item.idx], data,
-                    place->mutable_stop_point(), depth);
-            place->set_name(data.pt_data.stop_points[result_item.idx]->name);
-            place->set_uri(data.pt_data.stop_points[result_item.idx]->uri);
+            fill_pb_placemark(data.pt_data.stop_points[result_item.idx], data, place, depth);
             place->set_quality(result_item.quality);
-            place->set_embedded_type(pbnavitia::STOP_POINT);
             break;
         case nt::Type_e::Address:
-            fill_pb_object(data.geo_ref.ways[result_item.idx], data,
-                    place->mutable_address(), result_item.house_number,
-                    result_item.coord, depth);
-            place->set_name(data.geo_ref.ways[result_item.idx]->name);
-            place->set_uri(data.geo_ref.ways[result_item.idx]->uri+":"+
-                    boost::lexical_cast<std::string>(result_item.house_number));
+            fill_pb_placemark(data.geo_ref.ways[result_item.idx], data, place, result_item.house_number, result_item.coord, depth);
             place->set_quality(result_item.quality);
-            place->set_embedded_type(pbnavitia::ADDRESS);
             break;
         case nt::Type_e::POI:
-            fill_pb_object(data.geo_ref.pois[result_item.idx], data,
-                    place->mutable_poi(), depth);
-            place->set_name(data.geo_ref.pois[result_item.idx]->name);
-            place->set_uri(data.geo_ref.pois[result_item.idx]->uri);
+            fill_pb_placemark(data.geo_ref.pois[result_item.idx], data, place, depth);
             place->set_quality(result_item.quality);
-            place->set_embedded_type(pbnavitia::POI);
             break;
         case nt::Type_e::Line:
             fill_pb_object(data.pt_data.lines[result_item.idx], data,

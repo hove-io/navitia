@@ -192,22 +192,23 @@ class update_journeys_status(object):
                 data = objects
 
             def update_status(journey, _items):
+
                 if isinstance(_items, list) or isinstance(_items, tuple):
                     for item in _items:
                         update_status(journey, item)
                 elif isinstance(_items, dict) or\
                          isinstance(_items, OrderedDict):
-                    if _items.has_key("messages"):
-                        for msg in _items["messages"]:
-                            if not "status" in journey.keys():
-                                journey["status"] = msg["level"]
-                            else:
-                                message_status = type_pb2.Message.DESCRIPTOR.fields_by_name['message_status'].enum_type.values_by_name
-                                if message_status[journey["status"]] < message_status[msg["level"]]:
+                         if 'messages' in _items.keys():
+                            for msg in _items["messages"]:
+                                if not "status" in journey.keys():
                                     journey["status"] = msg["level"]
-                    else:
-                         for v in _items.items():
-                             update_status(journey, v)
+                                else:
+                                    message_status = type_pb2.Message.DESCRIPTOR.fields_by_name['message_status'].enum_type.values_by_name
+                                    if message_status[journey["status"]] < message_status[msg["level"]]:
+                                        journey["status"] = msg["level"]
+                         else:
+                             for v in _items.items():
+                                 update_status(journey, v)
 
             if self.resource.region and data.has_key("journeys"):
                for journey in data["journeys"]:

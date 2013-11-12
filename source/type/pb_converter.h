@@ -33,6 +33,22 @@ void fill_pb_placemark(const type::StopPoint* stop_point, const type::Data &data
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
 
+void fill_pb_placemark(navitia::georef::Way* way, const type::Data &data, pbnavitia::Place* place, int house_number, type::GeographicalCoord& coord, int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period);
+
+void fill_pb_placemark(const type::StopArea* stop_area, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period);
+
+void fill_pb_placemark(navitia::georef::Admin* admin, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period);
+
+void fill_pb_placemark(navitia::georef::POI* poi, const type::Data &data, pbnavitia::Place* place, int max_depth = 0,
+        const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
+        const boost::posix_time::time_period& action_period = null_time_period);
+
 void fill_street_section(const type::EntryPoint &ori_dest, const georef::Path & path, const type::Data &data, pbnavitia::Section* section, int max_depth = 0,
         const boost::posix_time::ptime& now = boost::posix_time::not_a_date_time,
         const boost::posix_time::time_period& action_period = null_time_period);
