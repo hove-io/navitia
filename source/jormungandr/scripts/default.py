@@ -91,19 +91,6 @@ class Script(object):
             return self.places(request, region)
         self.__pagination(request, "places", resp)
 
-        for place in resp.places:
-            if place.HasField("address"):
-                post_code = place.address.name
-            if place.address.house_number > 0:
-                post_code = str(place.address.house_number) + " " + place.address.name
-
-            for ad in place.address.administrative_regions:
-                if ad.zip_code != "":
-                    post_code = post_code + ", " + ad.zip_code + " " + ad.name
-                else:
-                    post_code = post_code + ", " + ad.name
-                place.name = post_code
-
         return resp
 
     def place_uri(self, request, region):
