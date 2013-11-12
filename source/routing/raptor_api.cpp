@@ -165,7 +165,8 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path> &paths
             pb_journey->set_duration(arrival_time - departure_time);
         }
     } else {
-        fill_pb_error(pbnavitia::Error::no_solution, "no solution for journey",pb_response.mutable_error());
+        fill_pb_error(pbnavitia::Error::no_solution, "no solution found for this journey",
+                pb_response.mutable_error());
         pb_response.set_response_type(pbnavitia::NO_SOLUTION);
     }
 
@@ -252,7 +253,7 @@ make_response(RAPTOR &raptor, const type::EntryPoint &origin,
     auto departures = get_stop_points(origin, raptor.data, worker);
     auto destinations = get_stop_points(destination, raptor.data, worker, true);
     if(departures.size() == 0 && destinations.size() == 0){
-        fill_pb_error(pbnavitia::Error::no_origin_nor_destionation, "no origin point, no destination point",response.mutable_error());
+        fill_pb_error(pbnavitia::Error::no_origin_nor_destionation, "no origin point nor destination point",response.mutable_error());
         response.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
         return response;
     }
