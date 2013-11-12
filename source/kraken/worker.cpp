@@ -311,7 +311,8 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     Type_e origin_type = (*data)->get_type_of_id(request.origin());
     type::EntryPoint origin = type::EntryPoint(origin_type, request.origin());
 
-    if (origin.type == type::Type_e::Address || origin.type == type::Type_e::Admin) {
+    if (origin.type == type::Type_e::Address || origin.type == type::Type_e::Admin
+            || origin.type == type::Type_e::StopArea || origin.type == type::Type_e::StopPoint) {
         origin.coordinates = this->coord_of_entry_point(origin);
     }
 
@@ -319,7 +320,8 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
     if(api != pbnavitia::ISOCHRONE) {
         Type_e destination_type = (*data)->get_type_of_id(request.destination());
         destination = type::EntryPoint(destination_type, request.destination());
-        if (destination.type == type::Type_e::Address || destination.type == type::Type_e::Admin) {
+        if (destination.type == type::Type_e::Address || destination.type == type::Type_e::Admin
+                || destination.type == type::Type_e::StopArea || destination.type == type::Type_e::StopPoint) {
             destination.coordinates = this->coord_of_entry_point(destination);
         }
     }
