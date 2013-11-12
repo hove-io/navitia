@@ -91,19 +91,6 @@ class Script(object):
             return self.places(request, region)
         self.__pagination(request, "places", resp)
 
-        for place in resp.places:
-            if place.HasField("address"):
-                post_code = place.address.name
-            if place.address.house_number > 0:
-                post_code = str(place.address.house_number) + " " + place.address.name
-
-            for ad in place.address.administrative_regions:
-                if ad.zip_code != "":
-                    post_code = post_code + ", " + ad.zip_code + " " + ad.name
-                else:
-                    post_code = post_code + ", " + ad.name
-                place.name = post_code
-
         return resp
 
     def place_uri(self, request, region):
@@ -128,7 +115,8 @@ class Script(object):
         st.count = 10 if not "count" in request.keys() else request["count"]
         st.start_page = 0 if not "start_page" in request.keys() \
                            else request["start_page"]
-        st.max_date_times = 10 if not "max_date_times" in request.keys() else request["max_date_times"]
+        if not request["max_date_times"] is None:
+            st.max_date_times = request["max_date_times"]
         resp = NavitiaManager().send_and_receive(req, region)
         return resp
 

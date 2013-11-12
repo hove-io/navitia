@@ -115,6 +115,7 @@ pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & reques
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest &request,
         pbnavitia::API api) {
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
+    uint32_t max_date_times = request.has_max_date_times()?request.max_date_times():std::numeric_limits<int>::max();
     this->init_worker_data();
     try {
         switch(api){
@@ -136,7 +137,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
                     request.duration(), request.depth(), *(*this->data));
         case pbnavitia::DEPARTURE_BOARDS:
             return timetables::departure_board(request.departure_filter(),
-                    request.from_datetime(), request.duration(),request.max_date_times(),
+                    request.from_datetime(), request.duration(),max_date_times,
                     request.interface_version(), request.count(),
                     request.start_page(), *(*this->data));
         case pbnavitia::ROUTE_SCHEDULES:
