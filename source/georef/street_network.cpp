@@ -151,12 +151,14 @@ double StreetNetwork::get_distance(const ng::ProjectionData& start,
     if(dist[target.source] == max) {
         dist[start.source] = start.source_distance;
         try {
-            geo_ref.dijkstra(start.source, dist, preds, ng::target_unique_visitor(target.source));
+            geo_ref.dijkstra(start.source, dist, preds, ng::target_unique_visitor(target.source, start.source));
         } catch(ng::DestinationFound) {}
+        catch(ng::DestinationNotFound) { return max; }
         dist[start.target] = start.target_distance;
         try {
-            geo_ref.dijkstra(start.source, dist, preds, ng::target_unique_visitor(target.source));
+            geo_ref.dijkstra(start.source, dist, preds, ng::target_unique_visitor(target.source, start.source));
         } catch(ng::DestinationFound) {}
+        catch(ng::DestinationNotFound) { return max; }
     }
 
     if(dist.size() < target.target) {
@@ -165,12 +167,14 @@ double StreetNetwork::get_distance(const ng::ProjectionData& start,
     if(dist[target.target] == max) {
         dist[start.source] = start.source_distance;
         try {
-            geo_ref.dijkstra(start.source, dist, preds, ng::target_unique_visitor(target.target));
+            geo_ref.dijkstra(start.source, dist, preds, ng::target_unique_visitor(target.target, start.source));
         } catch(ng::DestinationFound) {}
+        catch(ng::DestinationNotFound) { return max; }
         dist[start.target] = start.target_distance;
         try {
-            geo_ref.dijkstra(start.target, dist, preds, ng::target_unique_visitor(target.target));
+            geo_ref.dijkstra(start.target, dist, preds, ng::target_unique_visitor(target.target, start.source));
         } catch(ng::DestinationFound) {}
+        catch(ng::DestinationNotFound) { return max; }
     }
 
     if(dist[target.source] < max){
