@@ -257,6 +257,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
 
 //connexion->connection_kind = types::ConnectionType::Walking;
     connexion->duration = length;
+    connexion->display_duration=length;
 
     data.pt_data.stop_point_connections.push_back(connexion);
 }

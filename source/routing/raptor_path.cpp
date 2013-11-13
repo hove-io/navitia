@@ -55,7 +55,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
     PathItem item;
     // On boucle tant
     while(!stop) {
-        // Est-ce qu'on a une section marche à pied ?
+        // Est-ce qu'on a une section marche à pied ?        
         if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection ||
            raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_stay_in ||
            raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_guarantee) {
@@ -63,19 +63,28 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
             auto destination_jpp = raptor_.data.pt_data.journey_pattern_points[raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx];
             auto destination = destination_jpp->stop_point;
             auto connections_idx = departure->get(type::Type_e::Connection, raptor_.data.pt_data);
-            int display_duration =0;
+            navitia::type::StopPointConnection * stoppoint_connection = nullptr;
             for (auto idx : connections_idx){
                 auto connection = raptor_.data.pt_data.stop_point_connections[idx];
-                if((departure->idx == connection->departure->idx) && (destination->idx == connection->destination->idx)){
-                    display_duration = connection->display_duration;
+                if(destination->idx == connection->destination->idx){
+                    stoppoint_connection = connection;
                     break;
                 }
             }
             l = raptor_.labels[countb][current_jpp_idx];
-            if(clockwise) {
-                item = PathItem(l - display_duration, l);
-            } else {
-                item = PathItem(l, l + display_duration);
+            if (stoppoint_connection == nullptr){
+                auto r2 = raptor_.labels[countb][raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx];
+                if(clockwise) {
+                   item = PathItem(r2, l);
+                } else {
+                   item = PathItem(l, r2);
+                }
+            }else{
+                if(clockwise) {
+                    item = PathItem(l - stoppoint_connection->display_duration, l);
+                } else {
+                    item = PathItem(l, l + stoppoint_connection->display_duration);
+                }
             }
             item.stop_points.push_back(departure->idx);
             item.stop_points.push_back(destination->idx);
