@@ -27,3 +27,13 @@ DO $$
         END;
     END;
 $$;
+
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.connection ADD COLUMN display_duration integer NOT NULL;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column display_duration already exists in navitia.connection.';
+        END;
+    END;
+$$;
