@@ -17,3 +17,13 @@ DO $$
         END;
     END;
 $$;
+
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE realtime.message ADD COLUMN message_status_id int NOT NULL REFERENCES realtime.message_status;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column message_status_id already exists in realtime.message.';
+        END;
+    END;
+$$;
