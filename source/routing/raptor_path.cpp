@@ -64,7 +64,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
             auto destination = destination_jpp->stop_point;
             auto connections_idx = departure->get(type::Type_e::Connection, raptor_.data.pt_data);            
             l = raptor_.labels[countb][current_jpp_idx];
-            auto find_precidate = [&](type::idx_t idx)->bool {
+            auto find_predicate = [&](type::idx_t idx)->bool {
                 const auto connection = raptor_.data.pt_data.stop_point_connections[idx];
                 return destination->idx == connection->destination->idx;
             };
@@ -78,7 +78,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                    item = PathItem(l, r2);
                 }
             } else {
-                const auto stop_point_connection = *it;
+                const auto stop_point_connection = raptor_.data.pt_data.stop_point_connections[*it];
                 if(clockwise) {
                     item = PathItem(l - stop_point_connection->display_duration, l);
                 } else {
