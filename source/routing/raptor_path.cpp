@@ -55,7 +55,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
     PathItem item;
     // On boucle tant
     while(!stop) {
-        // Est-ce qu'on a une section marche à pied ?        
+        // Est-ce qu'on a une section marche à pied ?
         if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection ||
            raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_stay_in ||
            raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_guarantee) {
@@ -63,16 +63,16 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
             auto destination_jpp = raptor_.data.pt_data.journey_pattern_points[raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx];
             auto destination = destination_jpp->stop_point;
             auto connections_idx = departure->get(type::Type_e::Connection, raptor_.data.pt_data);
-            navitia::type::StopPointConnection * stoppoint_connection = nullptr;
+            navitia::type::StopPointConnection* stop_point_connection = nullptr;
             for (auto idx : connections_idx){
                 auto connection = raptor_.data.pt_data.stop_point_connections[idx];
                 if(destination->idx == connection->destination->idx){
-                    stoppoint_connection = connection;
+                    stop_point_connection = connection;
                     break;
                 }
             }
             l = raptor_.labels[countb][current_jpp_idx];
-            if (stoppoint_connection == nullptr){
+            if (stop_point_connection == nullptr){
                 auto r2 = raptor_.labels[countb][raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx];
                 if(clockwise) {
                    item = PathItem(r2, l);
@@ -81,9 +81,9 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
                 }
             }else{
                 if(clockwise) {
-                    item = PathItem(l - stoppoint_connection->display_duration, l);
+                    item = PathItem(l - stop_point_connection->display_duration, l);
                 } else {
-                    item = PathItem(l, l + stoppoint_connection->display_duration);
+                    item = PathItem(l, l + stop_point_connection->display_duration);
                 }
             }
             item.stop_points.push_back(departure->idx);
