@@ -60,6 +60,16 @@ enum MessageStatus{
 	disrupt = 2;
 }
 
+enum ResponseStatus{
+	no_departure_this_date = 0;
+	no_active_mode_this_date = 1;
+	no_active_circulation_this_date = 2;
+	no_direct_route_this_date = 3;
+	no_departure_stoppoint = 4;
+	terminus = 5;
+	date_out_of_bound = 6;
+}
+
 message Message{
     optional string uri = 1;
     optional string message = 2;
