@@ -62,24 +62,23 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
             auto departure = raptor_.data.pt_data.journey_pattern_points[current_jpp_idx]->stop_point;
             auto destination_jpp = raptor_.data.pt_data.journey_pattern_points[raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx];
             auto destination = destination_jpp->stop_point;
-            auto connections_idx = departure->get(type::Type_e::Connection, raptor_.data.pt_data);
-            navitia::type::StopPointConnection* stop_point_connection = nullptr;
-            for (auto idx : connections_idx){
-                auto connection = raptor_.data.pt_data.stop_point_connections[idx];
-                if(destination->idx == connection->destination->idx){
-                    stop_point_connection = connection;
-                    break;
-                }
-            }
+            auto connections_idx = departure->get(type::Type_e::Connection, raptor_.data.pt_data);            
             l = raptor_.labels[countb][current_jpp_idx];
-            if (stop_point_connection == nullptr){
+            auto find_precidate = [&](type::idx_t idx)->bool {
+                const auto connection = raptor_.data.pt_data.stop_point_connections[idx];
+                return destination->idx == connection->destination->idx;
+            };
+
+            auto it = std::find_if(connections_idx.begin(), connections_idx.end(), find_predicate);
+            if(it == connections_idx.end()) {
                 auto r2 = raptor_.labels[countb][raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx];
                 if(clockwise) {
                    item = PathItem(r2, l);
                 } else {
                    item = PathItem(l, r2);
                 }
-            }else{
+            } else {
+                const auto stop_point_connection = *it;
                 if(clockwise) {
                     item = PathItem(l - stop_point_connection->display_duration, l);
                 } else {
