@@ -242,9 +242,9 @@ class manage_response_status(object):
                 for one_stop_schedule in stop_schedules:
                     if 'date_times' in one_stop_schedule.keys():
                         if len(one_stop_schedule["date_times"]) == 0:
-                                one_stop_schedule["status"] = "no_departure_this_date"
+                                one_stop_schedule["status"] = "no_departure_this_day"
                     else:
-                        one_stop_schedule["status"] = "no_departure_this_date"
+                        one_stop_schedule["status"] = "no_departure_this_day"
 
             if isinstance(objects, tuple):
                 return data, code, header
