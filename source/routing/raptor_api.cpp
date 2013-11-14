@@ -202,6 +202,7 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
     //On va chercher tous les journey_pattern_points en correspondance
     //avec ceux déjà trouvés.
     std::vector<std::pair<type::idx_t, double> > tmp_result;
+    const auto max_distance = 1.10 * ep.streetnetwork_params.distance;
     for(const auto & sp_idx_distance : result) {
         const auto sp_idx = sp_idx_distance.first;
         const auto stop_point = pt_data.stop_points[sp_idx];
@@ -220,7 +221,7 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
             }
 
             auto distance = worker.get_distance(ep.coordinates, destination->idx,
-                                        use_second, ep.streetnetwork_params.offset,
+                                        use_second, ep.streetnetwork_params.offset, max_distance,
                                         init);
             /*
              * On mettra ce traitement quand on aura trouvé un moyen de refaire path...
@@ -229,7 +230,6 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
             //On recalcule une distance en pensant qu'on marche à 1.68 m/s
                 distance = connection.duration * 1.68
             }*/
-
             tmp_result.push_back(std::pair<type::idx_t, double>(destination->idx, distance));
             init = true;
         }
