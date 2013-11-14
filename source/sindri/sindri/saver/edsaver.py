@@ -61,7 +61,7 @@ class EdRealtimeSaver(object):
             raise FunctionalError(str(e))
         except sqlalchemy.exc.SQLAlchemyError, e:
             logger.exception('error durring transaction')
-            if not e.connection_invalidated:
+            if not hasattr(e, 'connection_invalidated') or not e.connection_invalidated:
                 transaction.rollback()
             raise TechnicalError('problem with databases: ' + str(e))
         except:
