@@ -30,13 +30,14 @@ struct StopPointConnection: public Header, hasProperties {
 
     StopPoint* departure;
     StopPoint* destination;
+    int display_duration;
     int duration;
     int max_duration;
     ConnectionType connection_kind;
 
     navitia::type::StopPointConnection* get_navitia_type() const;
 
-    StopPointConnection() : departure(NULL), destination(NULL), duration(0),
+    StopPointConnection() : departure(NULL), destination(NULL), display_duration(0),duration(0),
         max_duration(0), connection_kind(ConnectionType::Default){}
 
    bool operator<(const StopPointConnection& other) const;

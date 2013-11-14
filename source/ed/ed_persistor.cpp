@@ -273,7 +273,7 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
 
 void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPointConnection*>& connections){
     this->lotus.prepare_bulk_insert("navitia.connection", {"departure_stop_point_id", "destination_stop_point_id", "connection_type_id",
-                                    "duration", "max_duration", "properties_id"});
+                                    "display_duration","duration", "max_duration", "properties_id"});
 
     //@TODO properties!!
     for(types::StopPointConnection* co : connections){
@@ -281,6 +281,9 @@ void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPoi
         values.push_back(std::to_string(co->departure->idx));
         values.push_back(std::to_string(co->destination->idx));
         values.push_back(std::to_string(static_cast<int>(co->connection_kind)));
+        // la durée de la correspondance à afficher
+        values.push_back(std::to_string(co->display_duration));
+        // la durée réelle de la correspondance
         values.push_back(std::to_string(co->duration));
         values.push_back(std::to_string(co->max_duration));
         values.push_back(std::to_string(co->to_ulog()));

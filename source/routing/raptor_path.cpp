@@ -59,15 +59,34 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
         if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection ||
            raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_stay_in ||
            raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_guarantee) {
+            auto departure = raptor_.data.pt_data.journey_pattern_points[current_jpp_idx]->stop_point;
+            auto destination_jpp = raptor_.data.pt_data.journey_pattern_points[raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx];
+            auto destination = destination_jpp->stop_point;
+            auto connections_idx = departure->get(type::Type_e::Connection, raptor_.data.pt_data);            
             l = raptor_.labels[countb][current_jpp_idx];
-            auto r2 = raptor_.labels[countb][raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx];
-            if(clockwise) {
-                item = PathItem(r2, l);
+            auto find_predicate = [&](type::idx_t idx)->bool {
+                const auto connection = raptor_.data.pt_data.stop_point_connections[idx];
+                return destination->idx == connection->destination->idx;
+            };
+
+            auto it = std::find_if(connections_idx.begin(), connections_idx.end(), find_predicate);
+            if(it == connections_idx.end()) {
+                auto r2 = raptor_.labels[countb][raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx];
+                if(clockwise) {
+                   item = PathItem(r2, l);
+                } else {
+                   item = PathItem(l, r2);
+                }
             } else {
-                item = PathItem(l, r2);
+                const auto stop_point_connection = raptor_.data.pt_data.stop_point_connections[*it];
+                if(clockwise) {
+                    item = PathItem(l - stop_point_connection->display_duration, l);
+                } else {
+                    item = PathItem(l, l + stop_point_connection->display_duration);
+                }
             }
-            item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[current_jpp_idx]->stop_point->idx);
-            item.stop_points.push_back(raptor_.data.pt_data.journey_pattern_points[raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx]->stop_point->idx);
+            item.stop_points.push_back(departure->idx);
+            item.stop_points.push_back(destination->idx);
             if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection)
                 item.type = walking;
             else if(raptor_.get_type(countb, current_jpp_idx) == boarding_type::connection_stay_in)

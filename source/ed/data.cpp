@@ -75,6 +75,7 @@ void Data::complete(){
                         connection->destination  = sp2->second;
                         connection->connection_kind = types::ConnectionType::StopArea;
                         connection->duration = 120;
+                        connection->display_duration = connection->duration;
                         connection->uri = sp1->second->uri +"=>"+sp2->second->uri;
                         stop_point_connections.push_back(connection);
                         conns.insert(std::make_pair(connection->departure->uri, connection->destination->uri));
@@ -95,6 +96,7 @@ void Data::complete(){
                         connection->destination  = sp1->second;
                         connection->connection_kind = types::ConnectionType::StopArea;
                         connection->duration = 120;
+                        connection->display_duration = connection->duration;
                         connection->uri = sp2->second->uri +"=>"+sp1->second->uri;
                         stop_point_connections.push_back(connection);
                         conns.insert(std::make_pair(connection->departure->uri, connection->destination->uri));
