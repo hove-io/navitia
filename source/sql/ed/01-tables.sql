@@ -338,6 +338,7 @@ CREATE TABLE IF NOT EXISTS navitia.connection (
     properties_id BIGINT REFERENCES navitia.properties,
     duration INTEGER NOT NULL,
     max_duration INTEGER NOT NULL,
+    display_duration INTEGER NOT NULL,
     CONSTRAINT connection_pk PRIMARY KEY (departure_stop_point_id, destination_stop_point_id)
 );
 
@@ -459,6 +460,7 @@ CREATE TABLE IF NOT EXISTS realtime.message(
     is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+
 CREATE TABLE IF NOT EXISTS realtime.localized_message(
     message_id BIGINT NOT NULL REFERENCES realtime.message,
     language text NOT NULL,
@@ -479,6 +481,5 @@ CREATE TABLE IF NOT EXISTS realtime.at_perturbation(
     object_type_id int NOT NULL REFERENCES navitia.object_type,
     is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
-
 
 

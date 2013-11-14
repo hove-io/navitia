@@ -365,15 +365,16 @@ struct Connection: public Header, hasProperties{
     const static Type_e type = Type_e::Connection;
     T* departure;
     T* destination;
+    int display_duration;
     int duration;
     int max_duration;
     ConnectionType connection_type;
 
-    Connection() : departure(nullptr), destination(nullptr), duration(0),
+    Connection() : departure(nullptr), destination(nullptr), display_duration(0), duration(0),
         max_duration(0){};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & uri & departure & destination & duration & max_duration & _properties;
+        ar & id & idx & uri & departure & destination & display_duration & duration & max_duration & _properties;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
