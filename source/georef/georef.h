@@ -336,16 +336,22 @@ struct target_unique_visitor : public boost::dijkstra_visitor<> {
     const vertex_t & destination;
     const vertex_t & source;
     bool source_visited;
-    target_unique_visitor(const vertex_t & destination, const vertex_t & source) : destination(destination), source(source), source_visited(false){}
+    const double max_distance;
+    const std::vector<float>& distances;
+
+    target_unique_visitor(const vertex_t & destination, const vertex_t & source, double max_distance, const std::vector<float>& distances) :
+        destination(destination), source(source), source_visited(false), max_distance(max_distance), distances(distances){}
     void finish_vertex(vertex_t u, const Graph&){
         if(u == destination)
             throw DestinationFound();
-        if(u == source) {
+        else if(u == source) {
             if(!source_visited) {
                 source_visited = true;
             } else {
                 throw DestinationNotFound();
             }
+        } else if(distances[u] > max_distance) {
+            throw DestinationNotFound();
         }
     }
 };

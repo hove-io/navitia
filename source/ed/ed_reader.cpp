@@ -429,12 +429,10 @@ void EdReader::fill_validity_patterns(nt::Data& data, pqxx::work& work){
 
 
 void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
-//    std::string request = "SELECT departure_stop_point_id, destination_stop_point_id, connection_type_id, "
-//                          "duration, max_duration FROM navitia.connection";
     std::string request = "SELECT conn.departure_stop_point_id as departure_stop_point_id,";
                 request += "conn.destination_stop_point_id as destination_stop_point_id,";
                 request += "conn.connection_type_id as connection_type_id,";
-                request += "conn.duration as duration, conn.max_duration as max_duration,";
+                request += "conn.display_duration as display_duration, conn.duration as duration, conn.max_duration as max_duration,";
                 request += "pr.wheelchair_boarding as wheelchair_boarding,";
                 request += "pr.sheltered as sheltered,";
                 request += "pr.elevator as elevator,";
@@ -457,6 +455,7 @@ void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
             stop_point_connection->departure = it_departure->second;
             stop_point_connection->destination = it_destination->second;
             stop_point_connection->connection_type = static_cast<nt::ConnectionType>(const_it["connection_type_id"].as<int>());
+            stop_point_connection->display_duration = const_it["display_duration"].as<int>();
             stop_point_connection->duration = const_it["duration"].as<int>();
             stop_point_connection->max_duration = const_it["max_duration"].as<int>();
 
