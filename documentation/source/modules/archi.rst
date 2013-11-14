@@ -116,7 +116,7 @@ Le tableau suivant présente les transformations possibles :
 |vehicle_journey | AAA1111               | vehicle_journey:AAA:1111   |
 +----------------+-----------------------+----------------------------+
 
-AAA : représente de le traigramme du contributeur.
+AAA : représente le traigramme du contributeur.
 
 Brokk
 -----
