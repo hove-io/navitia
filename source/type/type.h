@@ -337,7 +337,7 @@ enum class ConnectionType {
     VJ = 3,
     Guaranteed = 4,
     Default = 5,
-    extension,
+    stay_in,
     guarantee,
     undefined
 };
@@ -365,15 +365,16 @@ struct Connection: public Header, hasProperties{
     const static Type_e type = Type_e::Connection;
     T* departure;
     T* destination;
+    int display_duration;
     int duration;
     int max_duration;
     ConnectionType connection_type;
 
-    Connection() : departure(nullptr), destination(nullptr), duration(0),
+    Connection() : departure(nullptr), destination(nullptr), display_duration(0), duration(0),
         max_duration(0){};
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-        ar & id & idx & uri & departure & destination & duration & max_duration & _properties;
+        ar & id & idx & uri & departure & destination & display_duration & duration & max_duration & _properties;
     }
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
@@ -576,6 +577,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties, HasMessage
     }
     std::string get_direction() const;
     bool has_date_time_estimated() const;
+    bool has_boarding() const;
+    bool has_landing() const;
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
 
     bool operator<(const VehicleJourney& other) const {
@@ -633,6 +636,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages{
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
+        journey_pattern_point_list.resize(0);
         ar & uri & name & stop_area & coord & fare_zone & idx
             & journey_pattern_point_list & admin_list & _properties & messages;
     }
@@ -713,42 +717,42 @@ struct StopTime : public Nameable {
     bool valid_end(bool clockwise) const {return clockwise ? drop_off_allowed() : pick_up_allowed();}
 
     /// Heure de fin de stop_time : dans le sens avant, c'est la fin, sinon le départ
-    uint32_t section_end_time(bool clockwise, const DateTime dt = 0) const {
+    uint32_t section_end_time(bool clockwise, const u_int32_t hour = 0) const {
         if(this->is_frequency())
-            return clockwise ? this->f_arrival_time(dt) : this->f_departure_time(dt);
+            return clockwise ? this->f_arrival_time(hour) : this->f_departure_time(hour);
         else
             return clockwise ? arrival_time : departure_time;
     }
 
-    inline uint32_t f_arrival_time(const DateTime dt, bool clockwise = true) const {
+    inline uint32_t f_arrival_time(const u_int32_t hour, bool clockwise = true) const {
         if(clockwise) {
             if (this == this->vehicle_journey->stop_time_list.front())
-                return dt;
+                return hour;
             auto prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
-            return dt + this->arrival_time - prec_st->arrival_time;
+            return hour + this->arrival_time - prec_st->arrival_time;
         } else {
             if (this == this->vehicle_journey->stop_time_list.back())
-                return dt;
+                return hour;
             auto next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
-            return dt - (next_st->arrival_time - this->arrival_time);
+            return hour - (next_st->arrival_time - this->arrival_time);
         }
     }
 
-    inline uint32_t f_departure_time(const DateTime dt, bool clockwise = false) const {
+    inline uint32_t f_departure_time(const u_int32_t hour, bool clockwise = false) const {
         if(clockwise) {
             if (this == this->vehicle_journey->stop_time_list.front())
-                return dt;
+                return hour;
             auto prec_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order-1];
-            return dt + this->departure_time - prec_st->departure_time;
+            return hour + this->departure_time - prec_st->departure_time;
         } else {
             if (this == this->vehicle_journey->stop_time_list.back())
-                return dt;
+                return hour;
             auto next_st = this->vehicle_journey->stop_time_list[this->journey_pattern_point->order+1];
-            return dt - (next_st->departure_time - this->departure_time);
+            return hour - (next_st->departure_time - this->departure_time);
         }
     }
 
-    DateTime section_end_date(int date, bool clockwise) const {return DateTimeUtils::set(date, this->section_end_time(clockwise));}
+    DateTime section_end_date(int date, bool clockwise) const {return DateTimeUtils::set(date, this->section_end_time(clockwise) % DateTimeUtils::SECONDS_PER_DAY);}
 
 
     /** Is this hour valid : only concerns frequency data

@@ -27,7 +27,7 @@ struct EdReader{
 
     void fill(navitia::type::Data& nav_data);
 
-private:    
+private:
     //map d'id en base vers le poiteur de l'objet instancié
     std::unordered_map<idx_t, navitia::type::Network*> network_map;
     std::unordered_map<idx_t, navitia::type::CommercialMode*> commercial_mode_map;
@@ -45,12 +45,12 @@ private:
 
     //map d'id en base(osmid) vers l'idx de l'objet
     std::unordered_map<idx_t, navitia::georef::Admin*> admin_map;
-    std::unordered_map<idx_t, navitia::georef::Way*> way_map;    
+    std::unordered_map<idx_t, navitia::georef::Way*> way_map;
     std::unordered_map<idx_t, navitia::georef::POI*> poi_map;
     std::unordered_map<idx_t, navitia::georef::POIType*> poi_type_map;
 
 //    std::unordered_map<uint64_t, idx_t> admin_map;
-    std::unordered_map<uint64_t, idx_t> node_map;
+    std::unordered_map<uint64_t, uint64_t> node_map;
 
     // ces deux vectors servent pour ne pas charger les graphes secondaires
     std::vector<uint64_t> way_no_ignore;

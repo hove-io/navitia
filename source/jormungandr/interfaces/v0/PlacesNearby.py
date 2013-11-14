@@ -6,10 +6,12 @@ from protobuf_to_dict import protobuf_to_dict
 from flask.ext.restful import reqparse
 from interfaces.parsers import depth_argument
 from interfaces.argument import ArgumentDoc
+from authentification import authentification_required
 
 
 class PlacesNearby(Resource):
     """Retreives places nearby a point"""
+    method_decorators = [authentification_required]
     def __init__(self):
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
@@ -33,4 +35,4 @@ class PlacesNearby(Resource):
     def get(self, region):
         args = self.parsers["get"].parse_args()
         response = NavitiaManager().dispatch(args, region, "places_nearby")
-        return protobuf_to_dict(response), 200
+        return protobuf_to_dict(response, use_enum_labels=True), 200

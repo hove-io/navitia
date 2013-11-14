@@ -75,6 +75,7 @@ void Data::complete(){
                         connection->destination  = sp2->second;
                         connection->connection_kind = types::ConnectionType::StopArea;
                         connection->duration = 120;
+                        connection->display_duration = connection->duration;
                         connection->uri = sp1->second->uri +"=>"+sp2->second->uri;
                         stop_point_connections.push_back(connection);
                         conns.insert(std::make_pair(connection->departure->uri, connection->destination->uri));
@@ -95,6 +96,7 @@ void Data::complete(){
                         connection->destination  = sp1->second;
                         connection->connection_kind = types::ConnectionType::StopArea;
                         connection->duration = 120;
+                        connection->display_duration = connection->duration;
                         connection->uri = sp2->second->uri +"=>"+sp1->second->uri;
                         stop_point_connections.push_back(connection);
                         conns.insert(std::make_pair(connection->departure->uri, connection->destination->uri));
@@ -414,7 +416,7 @@ void Data::build_journey_pattern_points(){
 }
 
 void Data::build_journey_pattern_point_connections(){
-    std::multimap<std::string, types::VehicleJourney*> block_vj; 
+    std::multimap<std::string, types::VehicleJourney*> block_vj;
     std::multimap<std::string, types::JourneyPatternPointConnection> journey_pattern_point_connections;
     for(types::VehicleJourney *vj: this->vehicle_journeys) {
         if(vj->block_id != "")
@@ -498,7 +500,7 @@ void  add_journey_pattern_point_connection(types::JourneyPatternPoint *rp1, type
         types::JourneyPatternPointConnection jppc;
         jppc.departure = rp1;
         jppc.destination = rp2;
-        jppc.connection_kind = nt::ConnectionType::extension;
+        jppc.connection_kind = nt::ConnectionType::stay_in;
         jppc.length = length;
         journey_pattern_point_connections.insert(std::make_pair(rp1->uri, jppc));
 

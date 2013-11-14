@@ -15,6 +15,9 @@ def v0_routing(api):
     api.add_resource(Ptref.StopAreas,
                      '/v0/<region:region>/stop_areas.json',
                      endpoint='v0.stop_areas')
+    api.add_resource(Ptref.Networks,
+                     '/v0/<region:region>/networks.json',
+                     endpoint='v0.networks')
     api.add_resource(Ptref.StopPoints,
                      '/v0/<region:region>/stop_points.json',
                      endpoint='v0.stop_points')

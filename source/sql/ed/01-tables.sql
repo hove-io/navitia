@@ -238,7 +238,7 @@ CREATE TABLE IF NOT EXISTS navitia.journey_pattern (
 DO $$
 BEGIN
 --pour migrer les données il faut que la table VJ existe
-    CASE WHEN ((SELECT COUNT(1) = 0 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='navitia.journey_pattern' AND COLUMN_NAME='physical_mode_id') 
+    CASE WHEN ((SELECT COUNT(1) = 0 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='navitia.journey_pattern' AND COLUMN_NAME='physical_mode_id')
         AND (SELECT COUNT(1) = 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME='navitia.vehicle_journey' AND COLUMN_NAME='physical_mode_id'))
     THEN
     -- Ajout de la nouvelle colonne
@@ -338,6 +338,7 @@ CREATE TABLE IF NOT EXISTS navitia.connection (
     properties_id BIGINT REFERENCES navitia.properties,
     duration INTEGER NOT NULL,
     max_duration INTEGER NOT NULL,
+    display_duration INTEGER NOT NULL,
     CONSTRAINT connection_pk PRIMARY KEY (departure_stop_point_id, destination_stop_point_id)
 );
 
@@ -438,6 +439,10 @@ create table if NOT EXISTS navitia.object_type(
     name text NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS realtime.message_status(
+    id int primary key,
+	name TEXT NOT NULL    
+);
 
 CREATE TABLE IF NOT EXISTS realtime.message(
     id BIGSERIAL primary key,
@@ -450,7 +455,9 @@ CREATE TABLE IF NOT EXISTS realtime.message(
     end_application_daily_hour timetz NOT NULL,
     active_days bit(8) NOT NULL,
     object_uri text NOT NULL,
-    object_type_id int NOT NULL REFERENCES navitia.object_type
+    object_type_id int NOT NULL REFERENCES navitia.object_type,
+    message_status_id int NOT NULL REFERENCES realtime.message_status,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 
@@ -471,5 +478,8 @@ CREATE TABLE IF NOT EXISTS realtime.at_perturbation(
     end_application_daily_hour timetz NOT NULL,
     active_days bit(8) NOT NULL,
     object_uri text NOT NULL,
-    object_type_id int NOT NULL REFERENCES navitia.object_type
+    object_type_id int NOT NULL REFERENCES navitia.object_type,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
+
+

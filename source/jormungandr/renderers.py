@@ -31,9 +31,9 @@ def render(dico, formats, callback, status=200):
 
 def search_links(dico):
     result = {}
-    if dico.has_key("links") : 
+    if dico.has_key("links") :
         for link in dico['links']:
-            if 'templated' in link and link['templated'] : 
+            if 'templated' in link and link['templated'] :
                 if link['rel'] == "related":
                     for key, val in dico.iteritems():
                         if key!="links" and key !="pagination":
@@ -54,7 +54,7 @@ def add_a(obj, links, last_type):
 def add_links(obj):
     links = search_links(obj)
     result = add_links_recc(obj, links)
-    
+
     #if obj.has_key("links"):
     #    for link in obj["links"]:
     #        if 'templated' in link and not link['templated']:
@@ -65,7 +65,7 @@ def add_links(obj):
 def add_links_recc(obj, links, last_type=None):
     if type(obj) == type({}):
         for key, value in obj.iteritems():
-            object_type = last_type 
+            object_type = last_type
             if key=="id":
                 obj[key] = add_a(value, links, object_type)
             if key=="href" and last_type != "links":

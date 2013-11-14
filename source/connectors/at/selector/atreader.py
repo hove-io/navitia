@@ -153,6 +153,14 @@ class AtRealtimeReader(object):
         pertubation.active_days = message.active_days
         return pertubation
 
+    def get_status_message(self, status):
+        if status.lower() == "information" :
+            return 0
+        if status.lower() == "warning" :
+            return 1
+        if status.lower() == "disrupt" :
+            return 2
+        return None
 
     def set_message(self, result_proxy):
         """
@@ -192,6 +200,9 @@ class AtRealtimeReader(object):
                         self.label_object_external_code]
                     message.object.object_type = \
                         get_navitia_type(row[self.label_object_type])
+
+
+                    message.message_status = self.get_status_message(row[self.label_impact_state])
 
                 localized_message = message.localized_messages.add()
                 localized_message.language = row[self.label_message_lang]

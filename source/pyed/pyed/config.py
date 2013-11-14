@@ -1,5 +1,5 @@
 """
-Class to read the Configuration 
+Class to read the Configuration
 """
 #coding=utf-8
 import logging
@@ -15,7 +15,7 @@ class Config:
     """
     Reads a pyed configuration file
 
-    The file has to contain a instance section with the params name and the 
+    The file has to contain a instance section with the params name and the
     path of the directory where there is the following file tree :
     source/ (the directory where to put the data you want to be computed)
     backup/ (you'll find directories with backup data of the data computed)

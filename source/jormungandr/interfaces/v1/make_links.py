@@ -1,11 +1,10 @@
-from flask import request, url_for, Flask, Request
-import collections
+from flask import url_for
 from collections import OrderedDict
 from functools import wraps
 from converters_collection_type import resource_type_to_collection,\
                                        collections_to_resource_type
-from flask import Request
 from flask.ext.restful.utils import unpack
+
 
 class generate_links(object):
     def prepare_objetcs(self, objects, hasCollections=False):
@@ -50,7 +49,7 @@ class add_pagination_links(object):
                     endpoint = "v1."+key+"."
                     endpoint += "id" if "id" in kwargs.keys() else "collection"
                 elif key in ["journeys", "stop_schedules", "route_schedules",
-                             "departures", "arrivals"]:
+                             "departures", "arrivals", "places_nearby"]:
                     endpoint = "v1."+key
             if pagination and endpoint:
                 pagination = data["pagination"]
@@ -189,7 +188,7 @@ class add_id_links(generate_links):
                     if not uri_id:
                         kwargs["id"] = "{"+obj+".id}"
                     endpoint = "v1."+kwargs["collection"]+"."
-                    endpoint += "id" if "region" in kwargs.keys()\
+                    endpoint += "id" if "region" in kwargs.keys() or "lon" in kwargs.keys()\
                                         else "redirect"
                     del kwargs["collection"]
                     url = url_for(endpoint, _external=True, **kwargs)
@@ -221,16 +220,17 @@ class clean_links(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             response = f(*args, **kwargs)
-            if response[1] != 200:
-                return response
             if isinstance(response, tuple):
                 data, code, header = unpack(response)
+                if code!=200:
+                    return data, code, header
             else:
                 data = response
             if isinstance(data, OrderedDict) and "links" in data.keys():
                 for link in data['links']:
                     link['href'] = link['href'].replace("%7B", "{")\
-                                               .replace("%7D", "}")
+                                               .replace("%7D", "}")\
+                                               .replace("%3B", ";")
             if isinstance(response, tuple):
                 return data, code, header
             else:

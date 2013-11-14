@@ -221,14 +221,14 @@ struct GeoRef {
     void init_offset(nt::idx_t);
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & ways & way_map & graph & vls_offset & bike_offset & car_offset & fl_admin & fl_way & pl & projected_stop_points & admins &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
+        ar & ways & way_map & graph & vls_offset & bike_offset & car_offset & fl_admin & fl_way & pl & projected_stop_points & admins & admin_map &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
     }
 
     template<class Archive> void load(Archive & ar, const unsigned int) {
         // La désérialisation d'une boost adjacency list ne vide pas le graphe
         // On avait donc une fuite de mémoire
         graph.clear();
-        ar & ways & way_map & graph & vls_offset & bike_offset & car_offset & fl_admin &fl_way & pl & projected_stop_points & admins &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
+        ar & ways & way_map & graph & vls_offset & bike_offset & car_offset & fl_admin & fl_way & pl & projected_stop_points & admins & admin_map & pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
@@ -319,6 +319,7 @@ struct GeoRef {
 
 // Exception levée dès que l'on trouve une destination
 struct DestinationFound{};
+struct DestinationNotFound{};
 
 // Visiteur qui lève une exception dès qu'une des cibles souhaitées est atteinte
 struct target_visitor : public boost::dijkstra_visitor<> {
@@ -330,6 +331,30 @@ struct target_visitor : public boost::dijkstra_visitor<> {
     }
 };
 
+// Visiteur qui lève une exception dès que la cible souhaitée est atteinte
+struct target_unique_visitor : public boost::dijkstra_visitor<> {
+    const vertex_t & destination;
+    const vertex_t & source;
+    bool source_visited;
+    const double max_distance;
+    const std::vector<float>& distances;
+
+    target_unique_visitor(const vertex_t & destination, const vertex_t & source, double max_distance, const std::vector<float>& distances) :
+        destination(destination), source(source), source_visited(false), max_distance(max_distance), distances(distances){}
+    void finish_vertex(vertex_t u, const Graph&){
+        if(u == destination)
+            throw DestinationFound();
+        else if(u == source) {
+            if(!source_visited) {
+                source_visited = true;
+            } else {
+                throw DestinationNotFound();
+            }
+        } else if(distances[u] > max_distance) {
+            throw DestinationNotFound();
+        }
+    }
+};
 
 /** Lorsqu'on a une coordonnée, il faut l'accrocher au filaire. Cette structure contient l'accroche
   *

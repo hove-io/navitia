@@ -18,7 +18,7 @@ enum NavitiaType {
     ROUTE = 23;
     POI = 24;
     POITYPE = 25;
-    ADMIN = 26;
+    ADMINISTRATIVE_REGION = 26;
 }
 
 
@@ -26,7 +26,7 @@ enum API {
     places = 1;
     PTREFERENTIAL = 2;
     PLANNER = 4;
-    LOAD = 5;
+    LOAD = 5; ///@deprecated
     places_nearby = 6;
     STATUS = 7;
     NEXT_DEPARTURES = 8;
@@ -36,6 +36,8 @@ enum API {
     STOPS_SCHEDULES = 12;
     ISOCHRONE = 13;
     METADATAS = 14;
+    place_uri = 15;
+    UNKNOWN_API = 16;
 }
 
 enum VehicleJourneyType{
@@ -45,17 +47,24 @@ enum VehicleJourneyType{
     stop_point_to_stop_point = 3;     // TAD rabattement arrêt à arrêt
     address_to_stop_point = 4;         // TAD rabattement adresse à arrêt
     odt_point_to_point = 5;           // TAD point à point (Commune à Commune)
-    
-    
+
+
     //regular = 0;
     //odt_with_stop_time = 1;
     //odt_with_zone = 2;
+}
+
+enum MessageStatus{
+	information = 0;
+	warning = 1;
+	disrupt = 2;
 }
 
 message Message{
     optional string uri = 1;
     optional string message = 2;
     optional string title = 3;
+    optional MessageStatus message_status = 4;
 }
 
 message GeographicalCoord {
@@ -128,22 +137,22 @@ message JourneyPattern {
 
 message Note{
     required string uri = 1;
-    optional string note = 2;	
+    optional string note = 2;
 }
 
 message hasPropertie{
-	enum AdditionalInformation{
-		PICK_UP_ONLY = 1;
-		DROP_OFF_ONLY = 2;
-		ON_DEMAND_TRANSPORT = 3;
-		DATE_TIME_ESTIMATED = 4;
-	}
-	repeated AdditionalInformation additional_informations= 1;
-	repeated Note notes = 5;
+    enum AdditionalInformation{
+        PICK_UP_ONLY = 1;
+        DROP_OFF_ONLY = 2;
+        ON_DEMAND_TRANSPORT = 3;
+        DATE_TIME_ESTIMATED = 4;
+    }
+    repeated AdditionalInformation additional_informations= 1;
+    repeated Note notes = 5;
 }
 
 message hasEquipments{
-	enum Equipment{
+    enum Equipment{
         has_wheelchair_accessibility = 1;
         has_bike_accepted = 2;
         has_air_conditioned = 3;
@@ -151,19 +160,19 @@ message hasEquipments{
         has_audible_announcement = 5;
         has_appropriate_escort = 6;
         has_appropriate_signage = 7;
-        has_school_vehicle = 8;        
+        has_school_vehicle = 8;
         has_wheelchair_boarding = 9;
-		has_sheltered = 10;
-		has_elevator = 11;
-		has_escalator = 12;
-		has_bike_depot = 13;
-	}
-	repeated Equipment has_equipments = 1;
+        has_sheltered = 10;
+        has_elevator = 11;
+        has_escalator = 12;
+        has_bike_depot = 13;
+    }
+    repeated Equipment has_equipments = 1;
 }
 
 message StopDateTime {
     optional string arrival_date_time = 1;
-    optional string departure_date_time = 2;    
+    optional string departure_date_time = 2;
     optional StopPoint stop_point = 3;
     optional hasPropertie has_properties = 4;
 }
@@ -200,7 +209,7 @@ message VehicleJourney {
     optional bool audible_announcement = 20;
     optional bool appropriate_escort = 21;
     optional bool appropriate_signage = 22;
-    optional bool school_vehicle = 23;   
+    optional bool school_vehicle = 23;
 }
 
 message JourneyPatternPoint{

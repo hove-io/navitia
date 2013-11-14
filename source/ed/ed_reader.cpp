@@ -39,7 +39,7 @@ void EdReader::fill(navitia::type::Data& data){
     this->fill_stop_point_connections(data, work);
     this->fill_journey_pattern_point_connections(data, work);
     this->fill_poi_types(data, work);
-    this->fill_pois(data, work);    
+    this->fill_pois(data, work);
     this->fill_ways(data, work);
     this->fill_house_numbers(data, work);
     this->fill_vertex(data, work);
@@ -429,12 +429,10 @@ void EdReader::fill_validity_patterns(nt::Data& data, pqxx::work& work){
 
 
 void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
-//    std::string request = "SELECT departure_stop_point_id, destination_stop_point_id, connection_type_id, "
-//                          "duration, max_duration FROM navitia.connection";
     std::string request = "SELECT conn.departure_stop_point_id as departure_stop_point_id,";
                 request += "conn.destination_stop_point_id as destination_stop_point_id,";
                 request += "conn.connection_type_id as connection_type_id,";
-                request += "conn.duration as duration, conn.max_duration as max_duration,";
+                request += "conn.display_duration as display_duration, conn.duration as duration, conn.max_duration as max_duration,";
                 request += "pr.wheelchair_boarding as wheelchair_boarding,";
                 request += "pr.sheltered as sheltered,";
                 request += "pr.elevator as elevator,";
@@ -457,6 +455,7 @@ void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
             stop_point_connection->departure = it_departure->second;
             stop_point_connection->destination = it_destination->second;
             stop_point_connection->connection_type = static_cast<nt::ConnectionType>(const_it["connection_type_id"].as<int>());
+            stop_point_connection->display_duration = const_it["display_duration"].as<int>();
             stop_point_connection->duration = const_it["duration"].as<int>();
             stop_point_connection->max_duration = const_it["max_duration"].as<int>();
 
@@ -832,7 +831,8 @@ void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work){
     std::string request = "select id, ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat from georef.node;";
     pqxx::result result = work.exec(request);
     uint64_t idx = 0;
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){        
+    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
+        this->node_map[const_it["id"].as<uint64_t>()] = std::numeric_limits<uint64_t>::max();
         if(! binary_search(this->node_to_ignore.begin(), this->node_to_ignore.end(), const_it["id"].as<uint64_t>())){
             navitia::georef::Vertex v;
             v.coord.set_lon(const_it["lon"].as<double>());
@@ -842,7 +842,7 @@ void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work){
             idx++;
         }
     }
-    navitia::georef::vertex_t Conunt_v = boost::num_vertices(data.geo_ref.graph);    
+    navitia::georef::vertex_t Conunt_v = boost::num_vertices(data.geo_ref.graph);
     data.geo_ref.init_offset(Conunt_v);
 }
 
@@ -861,15 +861,16 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
             e.way_idx = way->idx;
             uint64_t source = this->node_map[const_it["source_node_id"].as<uint64_t>()];
             uint64_t target = this->node_map[const_it["target_node_id"].as<uint64_t>()];
-            data.geo_ref.ways[way->idx]->edges.push_back(std::make_pair(source, target));
-            boost::add_edge(source, target, e, data.geo_ref.graph);
-            if (const_it["bike"].as<bool>()){
-                boost::add_edge(data.geo_ref.bike_offset + source, data.geo_ref.bike_offset + target, e, data.geo_ref.graph);
+            if ((source != std::numeric_limits<uint64_t>::max()) && (target != std::numeric_limits<uint64_t>::max())){
+                data.geo_ref.ways[way->idx]->edges.push_back(std::make_pair(source, target));
+                boost::add_edge(source, target, e, data.geo_ref.graph);
+                if (const_it["bike"].as<bool>()){
+                    boost::add_edge(data.geo_ref.bike_offset + source, data.geo_ref.bike_offset + target, e, data.geo_ref.graph);
+                }
+                if (const_it["car"].as<bool>()){
+                    boost::add_edge(data.geo_ref.car_offset + source, data.geo_ref.car_offset + target, e, data.geo_ref.graph);
+                }
             }
-            if (const_it["car"].as<bool>()){
-                boost::add_edge(data.geo_ref.car_offset + source, data.geo_ref.car_offset + target, e, data.geo_ref.graph);
-            }
-
         }
     }
 }

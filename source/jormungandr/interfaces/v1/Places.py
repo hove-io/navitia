@@ -15,8 +15,8 @@ places = { "places" : NonNullList(NonNullNested(place))}
 
 class Places(ResourceUri):
     parsers = {}
-    def __init__(self):
-        super(Places, self).__init__()
+    def __init__(self, *args, **kwargs):
+        ResourceUri.__init__(self, *args, **kwargs)
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("q", type=unicode, required=True,
                 description="The data to search")
@@ -38,11 +38,29 @@ class Places(ResourceUri):
     def get(self, region=None, lon=None, lat=None):
         self.region = NavitiaManager().get_region(region, lon, lat)
         args = self.parsers["get"].parse_args()
+        if len(args['q']) == 0:
+            abort(400, message="Search word absent")
         response = NavitiaManager().dispatch(args, self.region, "places")
-        places = getattr(response, "places")
-        if len(places) == 0:
-            args["search_type"] = 1
-            response = NavitiaManager().dispatch(args, self.region, "places")
+        return response, 200
+
+class PlaceUri(ResourceUri):
+    @marshal_with(places)
+    def get(self, id, region=None, lon=None, lat=None):
+        self.region = NavitiaManager().get_region(region, lon, lat)
+        args = {}
+        if id.count(";") == 1:
+            lon, lat = id.split(";")
+            try:
+                args["uri"] = "coord:"+str(float(lon))+":"+str(float(lat))
+            except ValueError:
+                pass
+        elif id[:3] == "poi":
+            args["uri"] = id.split(":")[-1]
+        elif id[:5] == "admin":
+            args["uri"] = "admin:"+id.split(":")[-1]
+        if not "uri" in args.keys():
+            args["uri"] = id
+        response = NavitiaManager().dispatch(args, self.region, "place_uri")
         return response, 200
 
 place_nearby = deepcopy(place)
@@ -52,7 +70,8 @@ places_nearby = { "places_nearby" : NonNullList(NonNullNested(place_nearby)),
 
 class PlacesNearby(ResourceUri):
     parsers = {}
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        ResourceUri.__init__(self, *args, **kwargs)
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         self.parsers["get"].add_argument("type[]", type=str,
@@ -77,18 +96,23 @@ class PlacesNearby(ResourceUri):
                 uri = uri[:-1]
             uris = uri.split("/")
             if len(uris) > 1:
-                args["uri"] = uris[-1]
-            else:
-                coord = uri.split(";")
-                if len(coord) == 2:
+                id = uris[-1]
+                if id.count(";") == 1:
+                    lon, lat = id.split(";")
                     try:
-                        lon = str(float(coord[0]))
-                        lat = str(float(coord[1]))
-                        args["uri"] = "coord:"+lon+":"+lat
+                        args["uri"] = "coord:"+str(float(lon))+":"+str(float(lat))
                     except ValueError:
                         pass
+                elif id[:3] == "poi":
+                    args["uri"] = id.split(":")[-1]
+                elif id[:5] == "admin":
+                    args["uri"] = "admin:"+id.split(":")[-1]
                 else:
-                    abort(500, "Not implemented yet")
+                    args["uri"] = id
+            else:
+                abort(404)
+        else:
+            abort(404)
         response = NavitiaManager().dispatch(args, self.region, "places_nearby")
         return response, 200
 

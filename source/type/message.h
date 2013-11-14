@@ -32,6 +32,12 @@ enum Jours {
     Fer = 0x80
 };
 
+enum MessageStatus{
+    information = 0,
+    warning = 1,
+    disrupt = 2
+};
+
 struct LocalizedMessage{
     std::string title;
     std::string body;
@@ -75,13 +81,14 @@ struct AtPerturbation{
 struct Message: public AtPerturbation{
     boost::posix_time::time_period publication_period;
     std::map<std::string, LocalizedMessage> localized_messages;
+    MessageStatus message_status;
 
     Message(): publication_period(boost::posix_time::not_a_date_time, boost::posix_time::seconds(0)){}
 
     template<class Archive> void serialize(Archive & ar, const unsigned int){
         ar & uri & object_type & object_uri & publication_period
             & application_period & application_daily_start_hour
-            & application_daily_end_hour & active_days & localized_messages;
+            & application_daily_end_hour & active_days & localized_messages & message_status;
     }
 
     bool is_valid(const boost::posix_time::ptime& now, const boost::posix_time::time_period& action_time)const;

@@ -6,11 +6,14 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include "third_party/eos_portable_archive/portable_iarchive.hpp"
 #include "third_party/eos_portable_archive/portable_oarchive.hpp"
 #include "lz4_filter/filter.h"
 #include "utils/functions.h"
+#include "utils/exception.h"
 
 namespace pt = boost::posix_time;
 
@@ -28,30 +31,7 @@ Data& Data::operator=(Data&& other){
 
     return *this;
 }
-/*
-void Data::set_admins(){
-    // les points d'arrêts
-    for(StopPoint* stop_point : pt_data.stop_points){
-        std::vector<navitia::type::idx_t> admins=geo_ref.find_admins(stop_point->coord);
-        for(navitia::type::idx_t idx : admins){
-            stop_point->admin_list.push_back(idx);
-        }
-    }
-    // les zones d'arrêts
-    for(StopArea* stop_area : pt_data.stop_areas){
-        std::vector<navitia::type::idx_t> admins=geo_ref.find_admins(stop_area->coord);
-        for(navitia::type::idx_t idx : admins){
-            stop_area->admin_list.push_back(idx);
-        }
-    }
-    // POI
-    for (navitia::georef::POI* poi : geo_ref.pois){
-        std::vector<navitia::type::idx_t> admins=geo_ref.find_admins(poi->coord);
-        for(navitia::type::idx_t idx : admins){
-            poi->admin_list.push_back(idx);
-        }
-    }
-}*/
+
 
 bool Data::load(const std::string & filename) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -61,7 +41,7 @@ bool Data::load(const std::string & filename) {
         last_load_at = pt::microsec_clock::local_time();
         last_load = true;
         loaded = true;
-    } catch(std::exception& ex) {
+    } catch(const std::exception& ex) {
         LOG4CPLUS_ERROR(logger, boost::format("le chargement des données à échoué: %s") % ex.what());
         last_load = false;
     } catch(...) {
@@ -86,16 +66,53 @@ void Data::save(const std::string & filename){
 }
 
 void Data::save_lz4(const std::string & filename) {
-    std::ofstream ofs(filename.c_str(),std::ios::out|std::ios::binary|std::ios::trunc);
-    boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
-    out.push(LZ4Compressor(2048*500), 1024*500, 1024*500);
-    out.push(ofs);
-    eos::portable_oarchive oa(out);
-    oa << *this;
+    auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    boost::filesystem::path p(filename);
+    boost::filesystem::path dir = p.parent_path();
+    try {
+       boost::filesystem::is_directory(p);
+    } catch(const boost::filesystem::filesystem_error& e)
+    {
+       if(e.code() == boost::system::errc::permission_denied)
+           LOG4CPLUS_ERROR(logger, "Search permission is denied for " << p);
+       else
+           LOG4CPLUS_ERROR(logger, "is_directory(" << p << ") failed with "
+                     << e.code().message());
+       throw navitia::exception("Unable to write file");
+    }
+    try {
+        std::ofstream ofs(filename.c_str(),std::ios::out|std::ios::binary|std::ios::trunc);
+        boost::iostreams::filtering_streambuf<boost::iostreams::output> out;
+        out.push(LZ4Compressor(2048*500), 1024*500, 1024*500);
+        out.push(ofs);
+        eos::portable_oarchive oa(out);
+        oa << *this;
+    } catch(const boost::filesystem::filesystem_error &e) {
+        if(e.code() == boost::system::errc::permission_denied)
+            LOG4CPLUS_ERROR(logger, "Writing permission is denied for " << p);
+        else if(e.code() == boost::system::errc::file_too_large)
+            LOG4CPLUS_ERROR(logger, "The file " << filename << " is too large");
+        else if(e.code() == boost::system::errc::interrupted)
+            LOG4CPLUS_ERROR(logger, "Writing was interrupted for " << p);
+        else if(e.code() == boost::system::errc::no_buffer_space)
+            LOG4CPLUS_ERROR(logger, "No buffer space while writing " << p);
+        else if(e.code() == boost::system::errc::not_enough_memory)
+            LOG4CPLUS_ERROR(logger, "Not enough memory while writing " << p);
+        else if(e.code() == boost::system::errc::no_space_on_device)
+            LOG4CPLUS_ERROR(logger, "No space on device while writing " << p);
+        else if(e.code() == boost::system::errc::operation_not_permitted)
+            LOG4CPLUS_ERROR(logger, "Operation not permitted while writing " << p);
+        LOG4CPLUS_ERROR(logger, e.what());
+       throw navitia::exception("Unable to write file");
+    }
 }
 
 void Data::build_uri(){
+#define CLEAR_EXT_CODE(type_name, collection_name) this->pt_data.collection_name##_map.clear();
+ITERATE_NAVITIA_PT_TYPES(CLEAR_EXT_CODE)
     this->pt_data.build_uri();
+    geo_ref.build_pois();
+    geo_ref.build_poitypes();
     geo_ref.normalize_extcode_way();
     geo_ref.normalize_extcode_admin();
 }
@@ -221,6 +238,10 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
 Type_e Data::get_type_of_id(const std::string & id) {
     if(id.size()>6 && id.substr(0,6) == "coord:")
         return Type_e::Coord;
+    if(id.size()>6 && id.substr(0,8) == "address:")
+        return Type_e::Address;
+    if(id.size()>6 && id.substr(0,6) == "admin:")
+        return Type_e::Admin;
     #define GET_TYPE(type_name, collection_name) \
     auto collection_name##_map = pt_data.collection_name##_map;\
     if(collection_name##_map.find(id) != collection_name##_map.end())\

@@ -51,7 +51,7 @@ render_v0(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
                                   to_posix_time(max_datetime, data));
 
     auto sort_predicate =
-        [&](datetime_stop_time d1, datetime_stop_time d2) {
+        [&](datetime_stop_time d1, datetime_stop_time d2)->bool {
             auto hour1 = DateTimeUtils::hour(d1.first) % DateTimeUtils::SECONDS_PER_DAY;
             auto hour2 = DateTimeUtils::hour(d2.first) % DateTimeUtils::SECONDS_PER_DAY;
             return std::abs(hour1 - DateTimeUtils::hour(datetime)) <
@@ -115,10 +115,10 @@ render_v1(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
         auto pt_display_information = schedule->mutable_pt_display_informations();
         fill_pb_object(data.pt_data.routes[id_vec.first.second], data,
                                pt_display_information, 0, current_time, action_period);
-        //Now we fill the stop_date_times
+        //Now we fill the date_times
         for(auto dt_st : id_vec.second) {
-            auto stop_date_time = schedule->add_stop_date_times();
-            fill_pb_object(dt_st.second, data, stop_date_time, 0,
+            auto date_time = schedule->add_date_times();
+            fill_pb_object(dt_st.second, data, date_time, 0,
                            now, action_period, dt_st.first);
         }
     }
@@ -128,7 +128,8 @@ render_v1(const std::map<stop_point_line, vector_dt_st> &map_route_stop_point,
 
 pbnavitia::Response
 departure_board(const std::string &request, const std::string &date,
-                uint32_t duration, int interface_version,
+                uint32_t duration, uint32_t max_date_times,
+                int interface_version,
                 int count, int start_page, const type::Data &data) {
 
     RequestHandle handler("DEPARTURE_BOARD", request, date,  duration, data);
@@ -173,7 +174,7 @@ departure_board(const std::string &request, const std::string &date,
             if(jpp->journey_pattern->route == route) {
                 auto tmp = get_stop_times({jpp->idx}, handler.date_time,
                                                  handler.max_datetime,
-                                                 std::numeric_limits<int>::max(), data);
+                                                 max_date_times, data);
                 stop_times.insert(stop_times.end(), tmp.begin(), tmp.end());
             }
         }

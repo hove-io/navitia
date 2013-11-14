@@ -12,6 +12,8 @@ from ResourceUri import ResourceUri
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
 from errors import ManageError
+from Coord import Coord
+
 
 class Uri(ResourceUri):
     parsers = {}
@@ -38,7 +40,11 @@ class Uri(ResourceUri):
             return {"error" : "No region"}, 404
         args = self.parsers["get"].parse_args()
         if(collection != None and id != None):
-            args["filter"] = collections_to_resource_type[collection]+".uri="+id
+            args["filter"] = collections_to_resource_type[collection]+".uri="
+            if collection != 'pois':
+                args["filter"] += id
+            else:
+                args["filter"] += id.split(":")[-1]
         elif(uri):
             if uri[-1] == "/":
                 uri = uri[:-1]
@@ -287,25 +293,22 @@ def networks(is_collection):
 
 
 def addresses(is_collection):
-    class Addresses(Uri):
+    class Addresses(Coord):
         """ Not implemented yet"""
-        def __init__(self):
-            Uri.__init__(self, is_collection, "addresses")
-        def get(*args, **kwargs):
-            abort(500, message="Not implemented yet")
+        def __init__(self, *args, **kwargs):
+            Coord.__init__(self, *args, **kwargs)
 
     return Addresses
 
 
 
 def coords(is_collection):
-    class Coords(Uri):
+    class Coords(Coord):
         """ Not implemented yet"""
-        def __init__(self):
+        def __init__(self, *args, **kwargs):
             Uri.__init__(self, is_collection, "coords")
-        def get(*args, **kwargs):
+        def get(self, *args, **kwargs):
             abort(500, message="Not implemented yet")
-
     return Coords
 
 

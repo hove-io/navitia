@@ -40,6 +40,7 @@ struct Filter {
     Filter() {}
 };
 
+//@TODO heriter de navitia::exception
 struct ptref_error : public std::exception {
     std::string more;
 

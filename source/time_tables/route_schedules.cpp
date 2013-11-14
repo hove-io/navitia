@@ -4,7 +4,7 @@
 #include "type/pb_converter.h"
 #include "ptreferential/ptreferential.h"
 #include "utils/paginate.h"
-
+#include "type/datetime.h"
 
 namespace pt = boost::posix_time;
 
@@ -89,8 +89,9 @@ get_vehicle_jorney(const std::vector<std::vector<datetime_stop_time> >& stop_tim
 
 pbnavitia::Response
 route_schedule(const std::string& filter, const std::string &str_dt,
-               uint32_t duration, const uint32_t max_depth,
-               int count, int start_page, type::Data &d) {
+               uint32_t duration, uint32_t interface_version,
+               const uint32_t max_depth, int count, int start_page,
+               type::Data &d) {
     RequestHandle handler("ROUTE_SCHEDULE", filter, str_dt, duration, d);
 
     if(handler.pb_response.has_error()) {
@@ -139,14 +140,19 @@ route_schedule(const std::string& filter, const std::string &str_dt,
         for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {
             type::idx_t spidx=thermometer.get_thermometer()[i];
             const type::StopPoint* sp = d.pt_data.stop_points[spidx];
+            //version v1
             pbnavitia::RouteScheduleRow* row = table->add_rows();
             fill_pb_object(sp, d, row->mutable_stop_point(), max_depth,
                            now, action_period);
             for(unsigned int j=0; j<stop_times.size(); ++j) {
                 datetime_stop_time dt_stop_time  = matrice[i][j];
-                auto rs_st = row->add_stop_times();
-                fill_pb_object(dt_stop_time.second, d, rs_st, max_depth,
-                               now, action_period, dt_stop_time.first);
+                if(interface_version == 1) {
+                    auto pb_dt = row->add_date_times();
+                    fill_pb_object(dt_stop_time.second, d, pb_dt, max_depth,
+                                   now, action_period, dt_stop_time.first);
+                } else if(interface_version == 0) {
+                    row->add_stop_times(navitia::iso_string(dt_stop_time.first, d));
+                }
             }
         }
     }

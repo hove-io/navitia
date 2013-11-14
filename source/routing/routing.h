@@ -32,7 +32,7 @@ struct ValidityPatternTime {
 enum ItemType {
     public_transport,
     walking,
-    extension,
+    stay_in,
     guarantee,
     waiting
 };

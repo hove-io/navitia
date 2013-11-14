@@ -75,18 +75,6 @@ class additional_informations_vj(fields.Raw):
                 result.append("regular")
         return result
 
-class display_informations_route(fields.Raw):
-    def output(self, key, obj):
-        display_information = getattr(obj, "pt_display_informations")
-        result = {}
-        result["network"] = display_information.network
-        result["direction"] = display_information.direction
-        result["commercial_mode"] = display_information.commercial_mode
-        result["label"] = display_information.name if display_information.code == "" else display_information.code
-        result["color"] = display_information.color
-        result["code"] = display_information.code
-        return result
-
 class has_equipments():
     def output(self, key, obj):
         if obj.HasField("has_equipments"):
@@ -95,18 +83,6 @@ class has_equipments():
             return [str.lower(enum.values_by_number[v].name) for v in properties.has_equipments]
         else:
             return []
-
-class display_informations_vj(display_informations_route):
-    def output(self, key, obj):
-        display_information = getattr(obj, "pt_display_informations")
-        result = super(display_informations_vj, self).output(key, obj)
-        result["description"] = display_information.description
-        result["physical_mode"] = display_information.physical_mode
-        #result["equipments"] = self.has_equipments()
-        properties = getattr(display_information, "has_equipments")
-        enum = properties.DESCRIPTOR.enum_types_by_name["Equipment"]
-        result["equipments"] = [str.lower(enum.values_by_number[v].name) for v in properties.has_equipments]
-        return result
 
 class notes(fields.Raw):
     def output(self, key, obj):
@@ -124,17 +100,41 @@ class notes_links(fields.Raw):
             r.append({"id": note_.uri, "type": "notes", "value": note_.note})
         return r
 
-class get_label():
+class get_label(fields.Raw):
     def output(self, key, obj):
-        line = getattr(obj, "line")
-        if line.code != '':
-            return line.code
+        if obj.code != '':
+            return obj.code
         else :
-            if line.name != '':
-                return line.name
-            else:
-                route = getattr(obj, "route")
-                return route.name
+            if obj.name != '':
+                return obj.name
+
+generic_message = {
+    "level" : enum_type(attribute="message_status"),
+    "value" : fields.String(attribute="message")
+}
+
+display_informations_route ={
+        "network" : fields.String(attribute="network"),
+        "direction" : fields.String(attribute="direction"),
+        "commercial_mode": fields.String(attribute="commercial_mode"),
+        "label": get_label(attribute="display_information"),
+        "color" : fields.String(attribute="color"),
+        "code" : fields.String(attribute="code"),
+        "messages" : NonNullList(NonNullNested(generic_message))
+}
+
+display_informations_vj ={
+    "description": fields.String(attribute="description"),
+    "physical_mode": fields.String(attribute="physical_mode"),
+    "commercial_mode": fields.String(attribute="commercial_mode"),
+    "network" : fields.String(attribute="network"),
+    "direction" : fields.String(attribute="direction"),
+    "label": get_label(attribute="display_information"),
+    "color" : fields.String(attribute="color"),
+    "code" : fields.String(attribute="code"),
+    "equipments" : fields.List(fields.Nested(has_equipments())),
+    "messages" : NonNullList(NonNullNested(generic_message))
+}
 
 coord = {
     "lon" : fields.Float(),
@@ -155,23 +155,29 @@ generic_type_admin = deepcopy(generic_type)
 generic_type_admin["administrative_regions"] = NonNullList(NonNullNested(admin))
 
 stop_point = deepcopy(generic_type_admin)
+stop_point["messages"] = NonNullList(NonNullNested(generic_message))
 stop_area = deepcopy(generic_type_admin)
+stop_area["messages"] = NonNullList(NonNullNested(generic_message))
 journey_pattern_point = deepcopy(generic_type)
 journey_pattern = deepcopy(generic_type)
 journey_pattern["journey_pattern_points"] = NonNullList(NonNullNested(journey_pattern_point))
 vehicle_journey = deepcopy(generic_type)
+vehicle_journey["messages"] = NonNullList(NonNullNested(generic_message))
 vehicle_journey["journey_pattern"] = PbField(journey_pattern)
 line = deepcopy(generic_type)
+line["messages"] = NonNullList(NonNullNested(generic_message))
 line["code"] = fields.String()
 line["color"] = fields.String()
 
 route = deepcopy(generic_type)
+route["messages"] = NonNullList(NonNullNested(generic_message))
 route["is_frequence"] = fields.String
 route["line"] = PbField(line)
 line["routes"] = NonNullList(NonNullNested(route))
 journey_pattern["route"] = PbField(route)
 
 network = deepcopy(generic_type)
+route["network"] = NonNullList(NonNullNested(generic_message))
 network["lines"] = NonNullList(NonNullNested(line))
 line["network"] = PbField(network)
 

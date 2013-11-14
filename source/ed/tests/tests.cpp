@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(connection_transformer){
 
     origin->idx = 8;
     destination->idx = 523;
-    
+
     connection.id = "12";
     connection.idx = 32;
     connection.uri = "connection_12";

@@ -30,13 +30,14 @@ struct StopPointConnection: public Header, hasProperties {
 
     StopPoint* departure;
     StopPoint* destination;
+    int display_duration;
     int duration;
     int max_duration;
     ConnectionType connection_kind;
 
     navitia::type::StopPointConnection* get_navitia_type() const;
 
-    StopPointConnection() : departure(NULL), destination(NULL), duration(0),
+    StopPointConnection() : departure(NULL), destination(NULL), display_duration(0),duration(0),
         max_duration(0), connection_kind(ConnectionType::Default){}
 
    bool operator<(const StopPointConnection& other) const;
@@ -134,7 +135,7 @@ struct Line : public Header, Nameable {
     std::string additional_data;
     std::string color;
     int sort;
-    
+
     CommercialMode* commercial_mode;
     Network* network;
     Company* company;
@@ -271,7 +272,7 @@ struct StopTime : public Nameable {
     bool is_frequency;
     bool wheelchair_boarding;
     bool date_time_estimated;
-    
+
     uint32_t local_traffic_zone;
 
     StopTime(): arrival_time(0), departure_time(0), start_time(std::numeric_limits<int>::max()), end_time(std::numeric_limits<int>::max()),

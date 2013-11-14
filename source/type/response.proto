@@ -64,12 +64,15 @@ enum SectionType {
     WAITING = 3;
     TRANSFER = 4;
     BIRD_FLY = 5;
+    boarding = 6;
+    landing = 7;
 }
 
 enum TransferType {
-    WALKING = 1;
-    GUARANTEED = 2;
-    EXTENSION = 3;
+    walking = 1;
+    guaranteed = 2;
+    stay_in = 3;
+
 }
 
 
@@ -86,6 +89,7 @@ message PtDisplayInfo {
   	optional VehicleJourneyType vehicle_journey_type = 10;
   	optional hasEquipments has_equipments = 11;
   	optional string name = 12;
+  	repeated Message messages = 13;
 }
 
 message Uris {
@@ -97,6 +101,7 @@ message Uris {
     optional string physical_mode = 6;
     optional string network = 7;
     optional string note = 8;
+    optional string journey_pattern = 9;
 }
 
 message Section {
@@ -123,6 +128,7 @@ message Section {
     optional string begin_date_time = 15;
     optional string end_date_time = 16;
     optional addInfoVehicleJourney add_info_vehicle_journey = 17;
+    optional int32 length = 18;
 }
 
 message Journey {
@@ -135,6 +141,7 @@ message Journey {
     optional Place origin = 7;
     optional Place destination = 8;
     optional string type =9;
+    optional MessageStatus status = 10;
 }
 
 enum ResponseType {
@@ -147,15 +154,13 @@ enum ResponseType {
     NO_SOLUTION = 7;
     CONNECTION_LIMITATION = 8;
     DURATION_LIMITATION = 9;
-}
+    }
 
 message Planner {
     repeated Journey journeys = 1;
     optional ResponseType response_type = 2;
     optional string before = 3;
     optional string after = 4;
-    //optional string error = 5;
-    optional Error error = 5;
 }
 
 message Status{
@@ -184,13 +189,14 @@ message PairStopTime {
 }
 
 message ScheduleStopTime {
-    optional string stop_time = 1;
+    optional string date_time = 1;
     optional hasPropertie has_properties = 2;
 }
 
 message RouteScheduleRow {
     required StopPoint stop_point = 1;
-    repeated ScheduleStopTime stop_times = 2;
+    repeated ScheduleStopTime date_times = 2;
+    repeated string stop_times = 3;
 }
 
 message addInfoVehicleJourney{
@@ -261,32 +267,33 @@ message StopSchedule {
     required Route route = 1;
     required PtDisplayInfo pt_display_informations = 2;
     required StopPoint stop_point = 3;
-    repeated ScheduleStopTime stop_date_times = 4;
+    repeated ScheduleStopTime date_times = 4;
 }
 
 
 message Error{
-	enum error_id{
-		bad_filter = 1;
-		unknown_api = 2;
-		date_out_of_bounds = 3;
-		unable_to_parse = 4;
-		bad_format = 5;
-		no_origin = 6;
-		no_destination = 7;
-		no_origin_nor_destionation = 8;
-		no_solution = 9;
-		unknown_object = 10;
-		service_unavailable = 11;
-	}
-	optional error_id id = 1;
-	optional string message = 2;
+    enum error_id{
+        bad_filter = 1;
+        unknown_api = 2;
+        date_out_of_bounds = 3;
+        unable_to_parse = 4;
+        bad_format = 5;
+        no_origin = 6;
+        no_destination = 7;
+        no_origin_nor_destionation = 8;
+        no_solution = 9;
+        unknown_object = 10;
+        service_unavailable = 11;
+        invalid_protobuf_request = 12;
+    }
+    optional error_id id = 1;
+    optional string message = 2;
 }
 
 message Response{
+    optional int32 status_code = 1;
     optional Error error = 2;
     optional string info = 3;
-    optional int32 status_code = 1;
 
     optional Status status = 4;
     //Places

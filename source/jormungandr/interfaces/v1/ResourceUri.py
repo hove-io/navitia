@@ -1,11 +1,12 @@
 from flask.ext.restful import Resource
-from converters_collection_type import collections_to_resource_type
+from converters_collection_type import collections_to_resource_type, resource_type_to_collection
 from make_links import add_id_links, clean_links, add_pagination_links
 from functools import wraps
 from collections import OrderedDict
 from flask import url_for
 from flask.ext.restful.utils import unpack
-
+from authentification import authentification_required
+import type_pb2
 
 class ResourceUri(Resource):
     def __init__(self, *args, **kwargs):
@@ -13,10 +14,11 @@ class ResourceUri(Resource):
         self.region = None
         self.method_decorators = []
         self.method_decorators.append(add_id_links())
-        self.method_decorators.append(add_address_id(self))
+        self.method_decorators.append(add_address_poi_id(self))
         self.method_decorators.append(add_computed_resources(self))
         self.method_decorators.append(add_pagination_links())
         self.method_decorators.append(clean_links())
+        self.method_decorators.append(authentification_required)
 
 
     def get_filter(self, items):
@@ -29,7 +31,7 @@ class ResourceUri(Resource):
             if not type_:
                 type_ = collections_to_resource_type[item]
             else:
-                if type_ == "coord":
+                if type_ == "coord" or type_ == "address":
                     splitted_coord = item.split(";")
                     if len(splitted_coord) == 2:
                         lon, lat = splitted_coord
@@ -39,6 +41,8 @@ class ResourceUri(Resource):
                         filters.append(object_type+".coord DWITHIN("+lon+","+lat+",200)")
                     else:
                         filters.append(type_+".uri="+item)
+                elif type_ == 'poi':
+                    filters.append(type_+'.uri='+item.split(":")[-1])
                 else :
                     filters.append(type_+".uri="+item)
                 type_ = None
@@ -59,8 +63,10 @@ class add_computed_resources(object):
             kwargs["_external"] = True
             templated = True
             for key in data.keys():
-                if key != 'links' and key != 'pagination' and key != 'error':
+                if key in collections_to_resource_type.keys():
                     collection = key
+                if key in resource_type_to_collection.keys():
+                    collection = resource_type_to_collection[key]
             if collection is None:
                 return response
             kwargs["uri"] = collection + '/'
@@ -70,15 +76,15 @@ class add_computed_resources(object):
                 templated = False
             else:
                 kwargs["uri"] += '{' + collection + ".id}"
-            if collection in ['stop_areas', 'stop_points', 'lines', 'routes']:
+            if collection in ['stop_areas', 'stop_points', 'lines', 'routes', 'addresses']:
                 for api in ['route_schedules', 'stop_schedules',
-                            'arrivals', 'departures']:
+                            'arrivals', 'departures', "places_nearby"]:
                     data['links'].append({
                         "href" : url_for("v1."+api, **kwargs),
                         "rel" : api,
                         "templated" : templated
                             })
-            if collection in ['stop_areas', 'stop_points']:
+            if collection in ['stop_areas', 'stop_points', 'addresses']:
                 data['links'].append({
                     "href" : url_for("v1.journeys", **kwargs),
                     "rel" : "journeys",
@@ -90,7 +96,8 @@ class add_computed_resources(object):
                 return data
         return wrapper
 
-class add_address_id(object):
+
+class add_address_poi_id(object):
     def __init__(self, resource):
         self.resource = resource
 
@@ -98,24 +105,34 @@ class add_address_id(object):
         @wraps(f)
         def wrapper(*args, **kwargs):
             objects = f(*args, **kwargs)
-            def add_id(objects):
+            def add_id(objects, region, type_ = None):
                 if isinstance(objects, list) or isinstance(objects, tuple):
                     for item in objects:
-                        add_id(item)
+                        add_id(item, region, type_)
                 elif isinstance(objects, dict) or\
                      isinstance(objects, OrderedDict):
+                         for v in objects.keys():
+                             add_id(objects[v], region, v)
+                         if 'address' == type_:
+                            lon = objects['coord']['lon']
+                            lat = objects['coord']['lat']
+                            objects['id'] = lon +';'+ lat
+                         if type_ == 'poi' or type_ == 'pois' :
+                            old_id = objects['id']
+                            objects['id'] = 'poi:'+region+':'+ old_id
+                         if type_ == 'administrative_region' or\
+                            type_ == 'administrative_regions':
+                             old_id = objects['id']
+                             objects['id'] = 'admin:'+region+old_id[5:]
                          if 'embedded_type' in objects.keys() and\
-                            objects['embedded_type'] == 'address' :
-                            objects['id'] = objects['address']['coord']['lon']+';'+objects['address']['coord']['lat']
-                            objects['address']['id'] = objects['id']
-                         else :
-                             for v in objects.items():
-                                 add_id(v)
+                                (objects['embedded_type'] == 'address'  or\
+                                  objects['embedded_type'] == 'poi' or\
+                                  objects['embedded_type'] == 'administrative_region'):
+                            objects["id"] = objects[objects['embedded_type']]["id"]
             if self.resource.region:
-                add_id(objects)
+                add_id(objects, self.resource.region)
             return objects
         return wrapper
-
 
 
 class add_notes(object):
@@ -153,6 +170,49 @@ class add_notes(object):
                     result_note = add_note(data)
                     [result.append(item) for item in result_note if not item in result]
                     data["notes"].extend(result)
+
+            if isinstance(objects, tuple):
+                return data, code, header
+            else:
+                return data
+
+        return wrapper
+
+class update_journeys_status(object):
+    def __init__(self, resource):
+        self.resource = resource
+
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            if isinstance(objects, tuple):
+                data, code, header = unpack(objects)
+            else:
+                data = objects
+
+            def update_status(journey, _items):
+
+                if isinstance(_items, list) or isinstance(_items, tuple):
+                    for item in _items:
+                        update_status(journey, item)
+                elif isinstance(_items, dict) or\
+                         isinstance(_items, OrderedDict):
+                         if 'messages' in _items.keys():
+                            for msg in _items["messages"]:
+                                if not "status" in journey.keys():
+                                    journey["status"] = msg["level"]
+                                else:
+                                    message_status = type_pb2.Message.DESCRIPTOR.fields_by_name['message_status'].enum_type.values_by_name
+                                    if message_status[journey["status"]] < message_status[msg["level"]]:
+                                        journey["status"] = msg["level"]
+                         else:
+                             for v in _items.items():
+                                 update_status(journey, v)
+
+            if self.resource.region and data.has_key("journeys"):
+               for journey in data["journeys"]:
+                    update_status(journey, journey)
 
             if isinstance(objects, tuple):
                 return data, code, header

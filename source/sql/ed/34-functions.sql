@@ -54,7 +54,7 @@ LANGUAGE SQL;
 -- Chargement de la table georef.fusion_ways
 CREATE OR REPLACE FUNCTION georef.fusion_ways_by_admin_name() RETURNS VOID AS $$
 delete from georef.fusion_ways; -- Netoyage de la table
-insert into georef.fusion_ways(id, way_id) 
+insert into georef.fusion_ways(id, way_id)
 select test2.id, test1.way_id from
 (
 SELECT a.id as admin_id, w.name as way_name, w.id as way_id
@@ -72,7 +72,7 @@ SELECT a.id as admin_id, w.name as way_name, w.id as way_id
   and a.level=8
   group by a.id, w.name
   order by a.id, w.name)test2
-  on(test1.admin_id = test2.admin_id and test1.way_name = test2.way_name) 
+  on(test1.admin_id = test2.admin_id and test1.way_name = test2.way_name)
 $$
 LANGUAGE SQL;
 
@@ -85,8 +85,8 @@ RETURN (select tmp.way_id from(
 select ed.way_id, ST_Distance(ed.the_geog, point_in) as distance
 from georef.edge ed
 where st_dwithin(
-		point_in, 
-		ed.the_geog,100) 
+		point_in,
+		ed.the_geog,100)
 AND st_expand(ed.the_geog::geometry, 100) && point_in::geometry
 
 order by distance
@@ -124,7 +124,7 @@ $$
 LANGUAGE SQL;
 -- Ajout des voies qui ne sont pas dans la table de fusion : cas voie appartient à un seul admin avec un level 9
 CREATE OR REPLACE FUNCTION georef.complate_fusion_ways() RETURNS VOID AS $$
-insert into georef.fusion_ways(id, way_id)  
+insert into georef.fusion_ways(id, way_id)
  select georef.way.id, georef.way.id from georef.way
 where georef.way.id in ( select w.id from georef.way w
 left outer join georef.fusion_ways fw
@@ -135,14 +135,14 @@ LANGUAGE SQL;
 
 
 CREATE OR REPLACE FUNCTION georef.add_way_name() RETURNS VOID AS $$
-UPDATE georef.way  
+UPDATE georef.way
 SET name = 'NC:' || CAST(id as varchar)
 where name = ''
 $$
 LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION georef.clean_way() RETURNS VOID AS $$
-delete from georef.way 
+delete from georef.way
 where id in ( select w.id from georef.way w
 left outer join georef.fusion_ways fw
 on(w.id=fw.id)
@@ -177,7 +177,7 @@ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION navitia.match_admin_to_admin() RETURNS VOID AS $$
 INSERT INTO navitia.rel_admin_admin(master_admin_id, admin_id)
-select distinct ad1.id, ad2.id 
+select distinct ad1.id, ad2.id
 from navitia.admin ad1, navitia.admin ad2
 WHERE st_within(ad2.coord::geometry, ad1.boundary::geometry)
 AND ad2.coord && ad1.boundary -- On force l’utilisation des indexes spatiaux en comparant les bounding boxes

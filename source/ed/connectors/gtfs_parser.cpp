@@ -197,7 +197,7 @@ void GtfsParser::parse_physical_modes(Data & data, CsvReader &csv) {
 }
 void GtfsParser::parse_commercial_modes(Data & data, CsvReader &csv) {
 
-    std::vector<std::string> headers = {"commercial_mode_id", "commercial_mode_name", "physical_mode_id"};
+    std::vector<std::string> headers = {"commercial_mode_id", "commercial_mode_name"};
     if(!csv.validate(headers)) {
         LOG4CPLUS_FATAL(logger, "Erreur lors de la lecture " + csv.filename +
                 " il manque les colonnes  : " + csv.missing_headers(headers));
@@ -518,7 +518,8 @@ void GtfsParser::parse_transfers(Data & data, CsvReader & csv) {
 
     int from_c = csv.get_pos_col("from_stop_id"),
         to_c = csv.get_pos_col("to_stop_id"),
-        time_c = csv.get_pos_col("min_transfer_time");
+        time_c = csv.get_pos_col("min_transfer_time"),
+        real_time_c = csv.get_pos_col("real_min_transfer_time");
     int wheelchair_c = csv.get_pos_col("wheelchair_boarding"),
          sheltered_c = csv.get_pos_col("sheltered"), elevator_c = csv.get_pos_col("elevator"),
             escalator_c = csv.get_pos_col("escalator"), bike_accepted_c = csv.get_pos_col("bike_accepted"),
@@ -589,14 +590,24 @@ void GtfsParser::parse_transfers(Data & data, CsvReader & csv) {
                 if(appropriate_signage_c != -1 && row[appropriate_signage_c] == "1")
                     connection->set_property(navitia::type::hasProperties::APPOPRIATE_SIGNAGE);
 
-                if(time_c != -1) {
+                if(real_time_c != -1) {
                     try{
-                        connection->duration = boost::lexical_cast<int>(row[time_c]);
+                        connection->duration = boost::lexical_cast<int>(row[real_time_c]);
                     } catch (...) {
                         connection->duration = 120;
                     }
                 } else {
                    connection->duration = 120;
+                }
+
+                if(time_c != -1) {
+                    try{
+                        connection->display_duration = boost::lexical_cast<int>(row[time_c]);
+                    } catch (...) {
+                        connection->display_duration = connection->duration;
+                    }
+                } else {
+                   connection->display_duration = connection->duration;
                 }
 
                 data.stop_point_connections.push_back(connection);

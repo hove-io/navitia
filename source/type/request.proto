@@ -7,19 +7,20 @@ message PlacesRequest {
     required int32 depth        = 3;
     required int32 count        = 4;
     repeated string admin_uris  = 5;
-    optional int32 search_type = 6;
+    optional int32 search_type  = 6;
 }
 
 message NextStopTimeRequest {
-    required string departure_filter = 1;
-    required string arrival_filter   = 2;
-    required string from_datetime    = 3;
-    required int32 duration          = 4;
-    required int32 depth             = 5;
-    required int32 nb_stoptimes      = 7;
-    optional int32 interface_version = 8;
-    required int32 start_page        = 9;
-    required int32 count             = 10;
+    required string departure_filter    = 1;
+    required string arrival_filter      = 2;
+    required string from_datetime       = 3;
+    required int32 duration             = 4;
+    required int32 depth                = 5;
+    required int32 nb_stoptimes         = 7;
+    optional int32 interface_version    = 8;
+    required int32 start_page           = 9;
+    required int32 count                = 10;
+    required int32 max_date_times       = 11;
 }
 
 message StreetNetworkParams{
@@ -47,6 +48,7 @@ message JourneysRequest {
     required int32 max_duration                         = 6;
     required int32 max_transfers                        = 7;
     optional StreetNetworkParams streetnetwork_params   = 8;
+    required bool wheelchair                            = 9;
 }
 
 message PlacesNearbyRequest {
@@ -56,6 +58,10 @@ message PlacesNearbyRequest {
     required int32 depth        = 4;
     required int32 count        = 5;
     required int32 start_page   = 6;
+}
+
+message PlaceUriRequest {
+    required string uri = 1;
 }
 
 message PTRefRequest {
@@ -74,5 +80,5 @@ message Request {
     optional PlacesNearbyRequest places_nearby      = 4;
     optional JourneysRequest journeys               = 5;
     optional PTRefRequest ptref                     = 6;
-
+    optional PlaceUriRequest place_uri              = 7;
 }

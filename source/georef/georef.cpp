@@ -97,7 +97,7 @@ nt::GeographicalCoord Way::get_geographical_coord(const std::vector< HouseNumber
 
         /// Dans le cas où le numéro recherché est dans la liste et <> à tous les numéros
         return extrapol_geographical_coord(number);
-    }    
+    }
     nt::GeographicalCoord to_return;
     return to_return;
 }
@@ -385,9 +385,10 @@ void GeoRef::build_proximity_list(){
 
 void GeoRef::build_autocomplete_list(){
     int pos = 0;
+    fl_way.clear();
     for(Way* way : ways){
-        // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin
-        if ((!way->name.empty()) && (way->admin_list.size() > 0)){
+        // A ne pas ajouter dans le disctionnaire si pas ne nom
+        if (!way->name.empty()) {
             std::string key="";
             for(Admin* admin : way->admin_list){
                 //Ajout du nom de l'admin de niveau 8
@@ -406,36 +407,35 @@ void GeoRef::build_autocomplete_list(){
     }
     fl_way.build();
 
+    fl_poi.clear();
     //Remplir les poi dans la liste autocompletion
     for(const POI* poi : pois){
         // A ne pas ajouter dans le disctionnaire si pas ne nom ou n'a pas d'admin
-        if ((!poi->name.empty()) && (poi->admin_list.size() > 0)){
+        //if ((!poi->name.empty()) && (poi->admin_list.size() > 0)){
+        if (!poi->name.empty()) {
             std::string key="";
             if (poi->visible){
-
                 for(Admin* admin : poi->admin_list){
                     if (admin->level == 8)
                     {
                         key += " " + admin->name;
                     }
                 }
-
                 fl_poi.add_string(poi->name + " " + key, poi->idx ,alias, synonymes);
             }
         }
     }
     fl_poi.build();
 
-    // les données administratives
+    fl_admin.clear();
     for(Admin* admin : admins){
-        /*
         std::string key="";
-        for(Admin* adm : admin->admin_list){
-            key += " " + adm->name;
+
+        if (!admin->post_code.empty())
+        {
+            key = admin->post_code;
         }
         fl_admin.add_string(admin->name + " " + key, admin->idx ,alias, synonymes);
-        */
-        fl_admin.add_string(admin->name, admin->idx ,alias, synonymes);
     }
     fl_admin.build();
 }
@@ -443,6 +443,7 @@ void GeoRef::build_autocomplete_list(){
 
 /** Chargement de la liste poitype_map : mappage entre codes externes et idx des POITypes*/
 void GeoRef::build_poitypes(){
+   this->poitype_map.clear();
    for(const POIType* ptype : poitypes){
        this->poitype_map[ptype->uri] = ptype->idx;
    }
@@ -450,6 +451,7 @@ void GeoRef::build_poitypes(){
 
 /** Chargement de la liste poi_map : mappage entre codes externes et idx des POIs*/
 void GeoRef::build_pois(){
+    this->poi_map.clear();
    for(const POI* poi : pois){
        this->poi_map[poi->uri] = poi->idx;
    }
@@ -466,6 +468,7 @@ void GeoRef::build_rtree() {
 
 /** Normalisation des codes externes des rues*/
 void GeoRef::normalize_extcode_way(){
+    this->way_map.clear();
     for(Way* way : ways){
         way->uri = "address:"+ way->uri;
         this->way_map[way->uri] = way->idx;
@@ -474,6 +477,7 @@ void GeoRef::normalize_extcode_way(){
 
 
 void GeoRef::normalize_extcode_admin(){
+    this->admin_map.clear();
     for(Admin* admin : admins){
         admin->uri = "admin:" + admin->uri;
         this->admin_map[admin->uri] = admin->idx;
@@ -521,6 +525,7 @@ std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> GeoRef::find_ways(const std
 
 int GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_points){
     int matched = 0;
+    this->projected_stop_points.clear();
     this->projected_stop_points.reserve(stop_points.size());
     for(const type::StopPoint* stop_point : stop_points){
         ProjectionData proj(stop_point->coord, *this, this->pl);

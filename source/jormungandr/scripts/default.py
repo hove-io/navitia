@@ -2,15 +2,11 @@
 import type_pb2
 import request_pb2
 import response_pb2
-from protobuf_to_dict import protobuf_to_dict
-
-from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
-from renderers import render, render_from_protobuf
-from werkzeug.wrappers import Response
-from find_extrem_datetimes import *
-from qualifier import qualifier
+from instance_manager import NavitiaManager
+from renderers import render_from_protobuf
+from qualifier import qualifier_one
 from datetime import datetime, timedelta
-
+import itertools
 
 pb_type = {
         'stop_area': type_pb2.STOP_AREA,
@@ -18,11 +14,11 @@ pb_type = {
         'city': type_pb2.CITY,
         'address': type_pb2.ADDRESS,
         'poi': type_pb2.POI ,
-        'administrative_region' : type_pb2.ADMIN,
+        'administrative_region' : type_pb2.ADMINISTRATIVE_REGION,
         'line' : type_pb2.LINE
         }
 
-class Script:
+class Script(object):
     def __init__(self):
         self.apis = ["places", "places_nearby", "next_departures",
                      "next_arrivals", "route_schedules", "stops_schedules",
@@ -31,9 +27,7 @@ class Script:
                      "connections", "journey_pattern_points",
                      "journey_patterns", "companies", "vehicle_journeys",
                      "pois", "poi_types", "journeys", "isochrone", "metadatas",
-                     "status", "load", "networks"]
-
-
+                     "status", "load", "networks", "place_uri"]
 
 
     def __pagination(self, request, ressource_name, resp):
@@ -82,7 +76,7 @@ class Script:
         req.places.q     = request['q']
         req.places.depth = request['depth']
         req.places.count = request['count']
-	req.places.search_type = request['search_type']
+        req.places.search_type = request['search_type']
         if request["type[]"]:
             for type in request["type[]"]:
                 req.places.types.append(pb_type[type])
@@ -92,23 +86,18 @@ class Script:
                 req.places.admin_uris.append(admin_uri)
 
         resp = NavitiaManager().send_and_receive(req, region)
+        if len(resp.places) == 0 and request['search_type'] == 0:
+            request["search_type"] = 1
+            return self.places(request, region)
         self.__pagination(request, "places", resp)
-
-        for place in resp.places:
-            if place.HasField("address"):
-                post_code = place.address.name
-            if place.address.house_number > 0:
-                post_code = str(place.address.house_number) + " " + place.address.name
-
-            for ad in place.address.administrative_regions:
-                if ad.zip_code != "":
-                    post_code = post_code + ", " + ad.zip_code + " " + ad.name
-                else:
-                    post_code = post_code + ", " + ad.name
-                place.name = post_code
 
         return resp
 
+    def place_uri(self, request, region):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.place_uri
+        req.place_uri.uri = request["uri"]
+        return NavitiaManager().send_and_receive(req, region)
 
     def __stop_times(self, request, region, departure_filter, arrival_filter, api):
         req = request_pb2.Request()
@@ -119,13 +108,14 @@ class Script:
         st.from_datetime = request["from_datetime"]
         st.duration      = request["duration"]
         st.depth         = request["depth"]
-        st.nb_stoptimes  = 0 if not "nb_stoptimes" in request.keys()\
+        st.nb_stoptimes  = 0 if not "nb_stoptimes" in request.keys() \
                              else request["nb_stoptimes"]
-        st.interface_version = 0 if not "interface_version" in request.keys()\
+        st.interface_version = 0 if not "interface_version" in request.keys() \
                                   else request["interface_version"]
         st.count = 10 if not "count" in request.keys() else request["count"]
-        st.start_page = 0 if not "start_page" in request.keys()\
+        st.start_page = 0 if not "start_page" in request.keys() \
                            else request["start_page"]
+        st.max_date_times = 10 if not "max_date_times" in request.keys() else request["max_date_times"]
         resp = NavitiaManager().send_and_receive(req, region)
         return resp
 
@@ -175,18 +165,26 @@ class Script:
                         section.uris.physical_mode = section.pt_display_informations.uris.physical_mode
                         section.uris.network = section.pt_display_informations.uris.network
 
-    def get_journey(self, req, region, type_):
-        if req.requested_api == type_pb2.PLANNER :
-            resp = qualifier().qualifier_one(req, region)
-        else:
+    def get_journey(self, req, region, trip_type):
+        resp = None
+
+        for origin_mode, destination_mode in itertools.product(
+                self.origin_modes, self.destination_modes):
+            req.journeys.streetnetwork_params.origin_mode = origin_mode
+            req.journeys.streetnetwork_params.destination_mode = destination_mode
             resp = NavitiaManager().send_and_receive(req, region)
-        if not resp.HasField("error") and type_ == "rapid":
+            if resp.response_type == response_pb2.ITINERARY_FOUND:
+                if req.requested_api == type_pb2.PLANNER:
+                    qualifier_one(resp.journeys)
+                break#result found, no need to inspect other fallback mode
+
+        if resp and not resp.HasField("error") and trip_type == "rapid":
             #We are looking for the asap result
             earliest_dt = None
             earliest_i = None
             for i in range(0, len(resp.journeys)):
-                if not earliest_dt or\
-                       earliest_dt > resp.journeys[i].arrival_date_time:
+                if not earliest_dt \
+                       or earliest_dt > resp.journeys[i].arrival_date_time:
                     earliest_dt = resp.journeys[i].arrival_date_time
                     earliest_i = i
             if earliest_dt:
@@ -199,6 +197,8 @@ class Script:
                     del resp.journeys[i]
         self.__fill_uris(resp)
         return resp
+
+
     def journey_compare(self, j1, j2):
         if datetime.strptime(j1.arrival_date_time, "%Y%m%dT%H%M%S") > datetime.strptime(j2.arrival_date_time, "%Y%m%dT%H%M%S") :
             return 1
@@ -207,18 +207,17 @@ class Script:
         else:
             return -1
 
+
     def __on_journeys(self, requested_type, request, region):
         req = request_pb2.Request()
         req.requested_api = requested_type
         req.journeys.origin = request["origin"]
         if request["destination"]:
-            req.journeys.destination = request["destination"] #if "destination" in request.keys() else ""
+            req.journeys.destination = request["destination"]
         req.journeys.datetimes.append(request["datetime"])
         req.journeys.clockwise = request["clockwise"]
         req.journeys.streetnetwork_params.walking_speed = request["walking_speed"]
         req.journeys.streetnetwork_params.walking_distance = request["walking_distance"]
-        req.journeys.streetnetwork_params.origin_mode = request["origin_mode"]
-        req.journeys.streetnetwork_params.destination_mode = request["destination_mode"] if "destination_mode" in request else ""
         req.journeys.streetnetwork_params.bike_speed = request["bike_speed"]
         req.journeys.streetnetwork_params.bike_distance = request["bike_distance"]
         req.journeys.streetnetwork_params.car_speed = request["car_speed"]
@@ -229,6 +228,11 @@ class Script:
         req.journeys.streetnetwork_params.destination_filter = request["destination_filter"] if "destination_filter" in request else ""
         req.journeys.max_duration = request["max_duration"]
         req.journeys.max_transfers = request["max_transfers"]
+        req.journeys.wheelchair = request["wheelchair"]
+
+        self.origin_modes = request["origin_mode"]
+        self.destination_modes = request["destination_mode"]
+
         if req.journeys.streetnetwork_params.origin_mode == "bike_rental":
             req.journeys.streetnetwork_params.origin_mode = "vls"
         if req.journeys.streetnetwork_params.destination_mode == "bike_rental":
@@ -236,27 +240,49 @@ class Script:
         if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.journeys.forbidden_uris.append(forbidden_uri)
+
+        #call to kraken
         resp = self.get_journey(req, region, request["type"])
-        if not resp.HasField("error"):
+        if len(resp.journeys) > 0:
             while request["count"] and request["count"] > len(resp.journeys):
                 temp_datetime = None
                 if request["clockwise"]:
-                    temp_datetime = datetime.strptime(resp.journeys[-1].departure_date_time, "%Y%m%dT%H%M%S") + timedelta(seconds = 1)
+                    str_dt = ""
+                    if resp.journeys[-1].HasField("departure_date_time"):
+                        temp_datetime = datetime.strptime(resp.journeys[-1].departure_date_time, "%Y%m%dT%H%M%S") + timedelta(seconds = 1)
+                    else:
+                        duration = int(resp.journeys[-1].duration) + 1
+                        temp_datetime = datetime.strptime(req.journeys.datetimes[0], "%Y%m%dT%H%M%S") + timedelta(seconds=duration)
                 else:
-                    temp_datetime = datetime.strptime(resp.journeys[-1].arrival_date_time, "%Y%m%dT%H%M%S") + timedelta(seconds = -1)
+                    if resp.journeys[-1].HasField("arrival_date_time"):
+                        temp_datetime = datetime.strptime(resp.journeys[-1].arrival_date_time, "%Y%m%dT%H%M%S") + timedelta(seconds = -1)
+                    else:
+                        duration = int(resp.journeys[-1].duration) -1
+                        temp_datetime = datetime.strptime(req.journeys.datetimes[0], "%Y%m%dT%H%M%S") + timedelta(seconds=duration)
+
 
                 req.journeys.datetimes[0] = temp_datetime.strftime("%Y%m%dT%H%M%S")
                 tmp_resp = self.get_journey(req, region, request["type"])
-                if not tmp_resp.error and len(tmp_resp.journeys) == 0:
+                if len(tmp_resp.journeys) == 0:
                     break
                 else:
                     resp.journeys.extend(tmp_resp.journeys)
+            to_delete = []
+            if request['destination']:
+                for i in range(0, len(resp.journeys)):
+                    if resp.journeys[i].type == "" and not i in to_delete:
+                        to_delete.append(i)
+
+            to_delete.sort(reverse=True)
+            for i in to_delete:
+                del resp.journeys[i]
 
             if request["count"] and len(resp.journeys) > request["count"]:
                 to_delete = range(request["count"], len(resp.journeys))
                 to_delete.sort(reverse=True)
                 for i in to_delete:
                     del resp.journeys[i]
+
             if not request["clockwise"]:
                 resp.journeys.sort(self.journey_compare)
         return resp

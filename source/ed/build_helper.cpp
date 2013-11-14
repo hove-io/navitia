@@ -165,6 +165,20 @@ SA::SA(builder & b, const std::string & sa_name, double x, double y, bool wheelc
     if(wheelchair_boarding)
         sa->set_property(types::hasProperties::WHEELCHAIR_BOARDING);
     b.sas[sa_name] = sa;
+
+    auto sp = new navitia::type::StopPoint();
+    sp->idx = b.data.pt_data.stop_points.size();
+    b.data.pt_data.stop_points.push_back(sp);
+    sp->name = "stop_point:"+ sa_name;
+    sp->uri = sp->name;
+    if(wheelchair_boarding)
+        sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+    sp->coord.set_lon(x);
+    sp->coord.set_lat(y);
+
+    sp->stop_area = sa;
+    b.sps[sp->name] = sp;
+    sa->stop_point_list.push_back(sp);
 }
 
 SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelchair_boarding){
@@ -243,6 +257,7 @@ void builder::connection(const std::string & name1, const std::string & name2, f
 
 //connexion->connection_kind = types::ConnectionType::Walking;
     connexion->duration = length;
+    connexion->display_duration = length;
 
     data.pt_data.stop_point_connections.push_back(connexion);
 }

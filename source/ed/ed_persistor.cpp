@@ -273,7 +273,7 @@ void EdPersistor::insert_lines(const std::vector<types::Line*>& lines){
 
 void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPointConnection*>& connections){
     this->lotus.prepare_bulk_insert("navitia.connection", {"departure_stop_point_id", "destination_stop_point_id", "connection_type_id",
-                                    "duration", "max_duration", "properties_id"});
+                                    "display_duration","duration", "max_duration", "properties_id"});
 
     //@TODO properties!!
     for(types::StopPointConnection* co : connections){
@@ -281,6 +281,9 @@ void EdPersistor::insert_stop_point_connections(const std::vector<types::StopPoi
         values.push_back(std::to_string(co->departure->idx));
         values.push_back(std::to_string(co->destination->idx));
         values.push_back(std::to_string(static_cast<int>(co->connection_kind)));
+        // la durée de la correspondance à afficher
+        values.push_back(std::to_string(co->display_duration));
+        // la durée réelle de la correspondance
         values.push_back(std::to_string(co->duration));
         values.push_back(std::to_string(co->max_duration));
         values.push_back(std::to_string(co->to_ulog()));
@@ -385,7 +388,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
         values.push_back(std::to_string(stop->headway_secs));
         values.push_back(std::to_string(stop->ODT));
         values.push_back(std::to_string(stop->pick_up_allowed));
-        values.push_back(std::to_string(stop->drop_off_allowed));        
+        values.push_back(std::to_string(stop->drop_off_allowed));
         values.push_back(std::to_string(stop->is_frequency));
 
         if(stop->journey_pattern_point != NULL){
@@ -398,7 +401,7 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
         }else{
             values.push_back(lotus.null_value);
         }
-        values.push_back(stop->comment);        
+        values.push_back(stop->comment);
         values.push_back(std::to_string(stop->date_time_estimated));
         this->lotus.insert(values);
     }
@@ -498,7 +501,7 @@ void EdPersistor::insert_vehicle_journeys(const std::vector<types::VehicleJourne
             values.push_back(std::to_string(vj->theoric_vehicle_journey->idx));
         }else{
             //@TODO WTF??
-            values.push_back(lotus.null_value);        
+            values.push_back(lotus.null_value);
         }
         values.push_back(std::to_string(vj->to_ulog()));
         values.push_back(std::to_string(static_cast<int>(vj->vehicle_journey_type)));

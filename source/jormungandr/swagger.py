@@ -23,13 +23,13 @@ def convertType(validator):
         return "string"
 
 
-def api_doc(apis, api = None) : 
+def api_doc(apis, api = None) :
     response = {}
     response['apiVersion'] = "0.2"
     response['swaggerVersion'] = "1.1"
     response['basePath'] = ""
     response['apis'] = []
-    
+
     if api:
         if api in apis:
             params = []
@@ -92,7 +92,7 @@ def api_doc(apis, api = None) :
                                               ['json', 'xml', 'pb']}
                 params.append(formats)
 
-            
+
             response['apis'].append({
                     "path" : path,
                     "description" : apis[api]["description"] if "description" in apis[api] else "",
@@ -107,12 +107,12 @@ def api_doc(apis, api = None) :
             if "universal" in apis[api] and apis[api]["universal"]:
                 params_universal = copy.deepcopy(params)
                 i = 0
-                for param in params_universal : 
+                for param in params_universal :
                     #if param['dataType'] == convertType(entrypoint):
                     #    param['description'] += " (can only be a coord)"
                     if param['name'] == 'region':
                         del params_universal[i]
-                    i+=1                
+                    i+=1
                 response['apis'].append({
                         "path" : "/{version}/"+api+".{content-type}",
                         "description" : apis[api]["description"] if "description" in apis[api] else "",

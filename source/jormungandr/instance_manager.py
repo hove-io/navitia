@@ -1,6 +1,4 @@
 # coding=utf-8
-
-import json
 from shapely import geometry, geos, wkt
 import ConfigParser
 import zmq
@@ -11,53 +9,40 @@ import response_pb2
 import glob
 from singleton import singleton
 import importlib
-from renderers import render_from_protobuf
-from error import generate_error
 import logging
-import sys
 from renderers import protobuf_to_dict
+from jormungandr_exceptions import ApiNotFound, RegionNotFound, DeadSocketException
+from app import app
+import Queue
+from contextlib import contextmanager
+
 
 class Instance:
     def __init__(self):
         self.geom = None
-        self.socket = None
+        self._sockets = Queue.Queue()
         self.socket_path = None
-        self.poller = zmq.Poller()
-        self.lock = Lock()
         self.script = None
+        self.nb_created_socket = 0
+        self.lock = Lock()
 
+    @contextmanager
+    def socket(self, context):
+        socket = None
+        try:
+            socket = self._sockets.get(block=False)
+        except Queue.Empty:
+            socket = context.socket(zmq.REQ)
+            socket.connect(self.socket_path)
+            self.lock.acquire()
+            self.nb_created_socket += 1
+            self.lock.release()
+        try:
+            yield socket
+        finally:
+            if not socket.closed:
+                self._sockets.put(socket)
 
-class DeadSocketException(Exception):
-    def __init__(self, message):
-        Exception.__init__(self, message)
-
-
-class RegionNotFound(Exception):
-    def __init__(self, region=None, lon=None, lat=None, object_id=None):
-        if region == lon == lat == None == object_id:
-            self.value = "No region nor coordinates given"
-        elif region and lon == lat == object_id == None:
-            self.value = "The region {0} doesn't exists".format(region)
-        elif region == object_id == None and lon and lat:
-            self.vaue = "No region available for the coordinates \
-                    : {lon}, {lat}".format(lon=lon, lat=lat)
-        elif region == lon == lat == None and object_id:
-            self.value = "Invalid id : {id}".format(id=object_id)
-        else:
-            self.value = "Unable to parse region"
-
-    def __str__(self):
-        return repr(self.value)
-
-
-class ApiNotFound(Exception):
-    def __init__(self, message):
-        Exception.__init__(self, message)
-
-
-class InvalidArguments(Exception):
-    def __init__(self, message):
-        Exception.__init__(self, message)
 
 
 @singleton
@@ -70,11 +55,7 @@ class NavitiaManager(object):
     """
 
     def __init__(self):
-        self.config_file = None
-
-
-    def set_config_file(self, config_file):
-        self.config_file = config_file
+        pass
 
 
     def initialisation(self):
@@ -89,27 +70,14 @@ class NavitiaManager(object):
         self.context = zmq.Context()
         self.default_socket = None
 
-        if self.config_file is None:
-            return
-
-        conf_jormungandr = ConfigParser.ConfigParser()
-        conf_jormungandr.read(self.config_file)
-
         ini_files = []
-        if conf_jormungandr.has_option("instances", "dir"):
-            dir_ = conf_jormungandr.get("instances", "dir")
-            ini_files = glob.glob(dir_+"/*.ini")
-        if conf_jormungandr.has_section("instance"):
-            ini_files.append(self.config_file)
+        ini_files = glob.glob(app.config['INSTANCES_DIR'] + '/*.ini')
 
         for file_name in ini_files:
             conf = ConfigParser.ConfigParser()
             conf.read(file_name)
             instance =  Instance()
             instance.socket_path = conf.get('instance' , 'socket')
-            instance.socket = self.context.socket(zmq.REQ)
-            instance.socket.connect(instance.socket_path)
-            instance.poller.register(instance.socket, zmq.POLLIN)
             if conf.has_option('instance', 'script') :
                 instance.script = importlib.import_module(conf.get('instance','script')).Script()
             else:
@@ -124,43 +92,29 @@ class NavitiaManager(object):
     def dispatch(self, arguments, region, api, request=None):
         if region in self.instances:
             if api in self.instances[region].script.apis:
-                try:
-                    api_func = getattr(self.instances[region].script, api)
-                    return api_func(arguments, region)
-                except DeadSocketException, e:
-                    if request:
-                        log = logging.getLogger("werkzeug")
-                        log.error(request.url)
-                    return generate_error(e.message, status=503)
-#except AttributeError:
-#                    return generate_error("Unknown api : " + api, status=404)
+                api_func = getattr(self.instances[region].script, api)
+                return api_func(arguments, region)
             else:
-                return generate_error("Unknown api : " + api, status=404)
+                raise ApiNotFound(api)
         else:
-             return generate_error(region + " not found", status=404)
+            raise RegionNotFound(region)
 
     def send_and_receive(self, request, region = None, timeout=10000):
         if region in self.instances:
             instance = self.instances[region]
-            instance.lock.acquire()
-            instance.socket.send(request.SerializeToString())#, zmq.NOBLOCK, copy=False)
-            socks = dict(instance.poller.poll(timeout))
-            if socks.get(instance.socket) == zmq.POLLIN:
-                pb = instance.socket.recv()
-                instance.lock.release()
-                resp = response_pb2.Response()
-                resp.ParseFromString(pb)
-                return resp
-            else :
-                instance.socket.setsockopt(zmq.LINGER, 0)
-                instance.socket.close()
-                instance.poller.unregister(instance.socket)
-                instance.socket = self.context.socket(zmq.REQ)
-                instance.socket.connect(instance.socket_path)
-                instance.poller.register(instance.socket)
-                instance.lock.release()
-                logging.error("La requête : " + request.SerializeToString() + " a echoue")
-                raise DeadSocketException(region+" is a dead socket (" + instance.socket_path + ")")
+            with instance.socket(self.context) as socket:
+                socket.send(request.SerializeToString())
+                if socket.poll(timeout=timeout) > 0:
+                    pb = socket.recv()
+                    resp = response_pb2.Response()
+                    resp.ParseFromString(pb)
+                    return resp
+                else :
+                    socket.setsockopt(zmq.LINGER, 0)
+                    socket.close()
+                    logging.error(u"La requête : " + unicode(request)
+                            + u" a echoue " + instance.socket_path)
+                    raise DeadSocketException(region, instance.socket_path)
         else:
             raise RegionNotFound(region=region)
 
@@ -177,11 +131,6 @@ class NavitiaManager(object):
                         for contributor in metadatas.contributors:
                             self.contributors[str(contributor)] = key
                         instance.geom = wkt.loads(metadatas.shape)
-                    #except:
-                    #    pass
-                except DeadSocketException:
-                    pass
-                    #print e
                 except geos.ReadingError:
                     instance.geom = None
             self.thread_event.wait(timer)
@@ -258,13 +207,9 @@ class NavitiaManager(object):
         for key_region in regions :
             req = request_pb2.Request()
             req.requested_api = type_pb2.METADATAS
-            try:
-                resp = self.send_and_receive(req, key_region)
-                resp_dict = protobuf_to_dict(resp)
-                if 'metadatas' in resp_dict.keys():
-                    resp_dict['metadatas']['region_id'] = key_region
-                    response['regions'].append(resp_dict['metadatas'])
-            except DeadSocketException :
-                response['regions'].append({"region_id" : key_region,
-                                            "status" : "not running"})
+            resp = self.send_and_receive(req, key_region)
+            resp_dict = protobuf_to_dict(resp)
+            if 'metadatas' in resp_dict.keys():
+                resp_dict['metadatas']['region_id'] = key_region
+                response['regions'].append(resp_dict['metadatas'])
         return response

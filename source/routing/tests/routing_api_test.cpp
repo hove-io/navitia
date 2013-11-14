@@ -511,5 +511,106 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     BOOST_REQUIRE_EQUAL(pathitem.name(), "rue fc");
     pathitem = section.street_network().path_items(2);
     BOOST_REQUIRE_EQUAL(pathitem.name(), "rue ef");
+}
+
+
+/*
+ *     A(0,0)             B(0,0.01)                       C(0,0.020)           D(0,0.03)
+ *       x-------------------x                            x-----------------x
+ *           SP1______ SP2                                   SP3_______SP4
+ *          (0,0.005)     (0,0.007)                        (0,021)   (0,0.025)
+ *
+ *
+ *       Un vj de SP2 à SP3
+ */
+
+
+BOOST_AUTO_TEST_CASE(map_depart_arrivee) {
+    namespace ng = navitia::georef;
+    int AA = 0;
+    int BB = 1;
+    int CC = 2;
+    int DD = 3;
+    ed::builder b("20120614");
+
+    type::GeographicalCoord A(0, 0, false);
+    type::GeographicalCoord B(0, 0.1, false);
+    type::GeographicalCoord C(0, 0.02, false);
+    type::GeographicalCoord D(0, 0.03, false);
+    type::GeographicalCoord SP1(0, 0.005, false);
+    type::GeographicalCoord SP2(0, 0.007, false);
+    type::GeographicalCoord SP3(0, 0.021, false);
+    type::GeographicalCoord SP4(0, 0.025, false);
+
+    b.data.geo_ref.init_offset(0);
+    ng::Way* way;
+
+    way = new ng::Way();
+    way->name = "rue ab"; // A->B
+    way->idx = 0;
+    way->way_type = "rue";
+    b.data.geo_ref.ways.push_back(way);
+
+    way = new ng::Way();
+    way->name = "rue cd"; // C->D
+    way->idx = 1;
+    way->way_type = "rue";
+    b.data.geo_ref.ways.push_back(way);
+
+
+    boost::add_edge(AA, BB, ng::Edge(0,10), b.data.geo_ref.graph);
+    boost::add_edge(BB, AA, ng::Edge(0,10), b.data.geo_ref.graph);
+    b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(AA, BB));
+    b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(BB, AA));
+
+    boost::add_edge(CC, DD, ng::Edge(0,50), b.data.geo_ref.graph);
+    boost::add_edge(DD, CC, ng::Edge(0,50), b.data.geo_ref.graph);
+    b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(AA, BB));
+    b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(BB, AA));
+
+    b.sa("stop_area:stop1", SP1.lon(), SP2.lat());
+    b.sa("stop_area:stop2", SP2.lon(), SP2.lat());
+    b.sa("stop_area:stop3", SP3.lon(), SP2.lat());
+    b.sa("stop_area:stop4", SP4.lon(), SP2.lat());
+
+    b.connection("stop_point:stop_area:stop1", "stop_point:stop_area:stop2", 120);
+    b.connection("stop_point:stop_area:stop2", "stop_point:stop_area:stop1", 120);
+    b.connection("stop_point:stop_area:stop3", "stop_point:stop_area:stop4", 120);
+    b.connection("stop_point:stop_area:stop4", "stop_point:stop_area:stop3", 120);
+    b.vj("A")("stop_point:stop_area:stop2", 8*3600 +10*60, 8*3600 + 11 * 60)
+            ("stop_point:stop_area:stop3", 8*3600 + 20 * 60 ,8*3600 + 21*60);
+    b.generate_dummy_basis();
+    b.data.pt_data.index();
+    b.data.build_raptor();
+    b.data.build_uri();
+    b.data.build_proximity_list();
+    b.data.meta.production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
+    streetnetwork::StreetNetwork sn_worker(b.data.geo_ref);
+
+    RAPTOR raptor(b.data);
+
+    std::string origin_uri = "stop_area:stop1";
+    type::Type_e origin_type = b.data.get_type_of_id(origin_uri);
+    type::EntryPoint origin(origin_type, origin_uri);
+    origin.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
+    origin.streetnetwork_params.offset = 0;
+    origin.streetnetwork_params.distance = 15;
+    std::string destination_uri = "stop_area:stop4";
+    type::Type_e destination_type = b.data.get_type_of_id(destination_uri);
+    type::EntryPoint destination(destination_type, destination_uri);
+    destination.streetnetwork_params.mode = navitia::type::Mode_e::Walking;
+    destination.streetnetwork_params.offset = 0;
+    destination.streetnetwork_params.distance = 5;
+    std::vector<std::string> datetimes({"20120614T080000"});
+    std::vector<std::string> forbidden;
+
+    pbnavitia::Response resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, type::AccessibiliteParams(), forbidden, sn_worker);
+
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    pbnavitia::Journey journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    BOOST_REQUIRE_EQUAL(journey.sections(0).type(), pbnavitia::SectionType::STREET_NETWORK);
+    BOOST_REQUIRE_EQUAL(journey.sections(1).type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_REQUIRE_EQUAL(journey.sections(2).type(), pbnavitia::SectionType::STREET_NETWORK);
 
 }

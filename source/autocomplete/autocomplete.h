@@ -76,6 +76,15 @@ struct Autocomplete
         ar & word_dictionnary & word_quality_list &pattern_dictionnary;
     }
 
+    /// Efface les structures de données sérialisées
+    void clear() {
+        temp_word_map.clear();
+        word_dictionnary.clear();
+        temp_pattern_map.clear();
+        pattern_dictionnary.clear();
+        word_quality_list.clear();
+    }
+
     // Méthodes permettant de construire l'indexe
 
     /** Étant donné une chaîne de caractères et la position de l'élément qui nous intéresse :
@@ -133,6 +142,8 @@ struct Autocomplete
         }
         return pattern;
     }
+
+
 
     /** Construit la structure finale
       *
@@ -214,7 +225,7 @@ struct Autocomplete
             }
         }
         return result;
-    }    
+    }
 
     /** Définit un fonctor permettant de parcourir notqualityre structure un peu particulière : trier par la valeur "nb_found"*/
     /** associé au valeur du vector<T> */
@@ -236,7 +247,7 @@ struct Autocomplete
         bool operator()(T a, T b) const{
             return fl_result.at(a).quality > fl_result.at(b).quality;
         }
-    };    
+    };
 
     std::vector<fl_quality> sort_and_truncate(std::vector<fl_quality> input, size_t nbmax) const {
         typename std::vector<fl_quality>::iterator middle_iterator;
