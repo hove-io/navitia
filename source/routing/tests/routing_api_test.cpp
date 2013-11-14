@@ -515,10 +515,10 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
 
 
 /*
- *     A(0,0)             B(0,10)                       C(0,50)           D(0,60)
+ *     A(0,0)             B(0,0.01)                       C(0,0.020)           D(0,0.03)
  *       x-------------------x                            x-----------------x
  *           SP1______ SP2                                   SP3_______SP4
- *          (0,1)     (0,5)                                  (0,51)   (0,55)
+ *          (0,0.005)     (0,0.007)                        (0,021)   (0,0.025)
  *
  *
  *       Un vj de SP2 à SP3
@@ -534,13 +534,13 @@ BOOST_AUTO_TEST_CASE(map_depart_arrivee) {
     ed::builder b("20120614");
 
     type::GeographicalCoord A(0, 0, false);
-    type::GeographicalCoord B(0, 10, false);
-    type::GeographicalCoord C(0, 50, false);
-    type::GeographicalCoord D(0, 60, false);
-    type::GeographicalCoord SP1(0, 1, false);
-    type::GeographicalCoord SP2(0, 5, false);
-    type::GeographicalCoord SP3(0, 51, false);
-    type::GeographicalCoord SP4(0, 55, false);
+    type::GeographicalCoord B(0, 0.1, false);
+    type::GeographicalCoord C(0, 0.02, false);
+    type::GeographicalCoord D(0, 0.03, false);
+    type::GeographicalCoord SP1(0, 0.005, false);
+    type::GeographicalCoord SP2(0, 0.007, false);
+    type::GeographicalCoord SP3(0, 0.021, false);
+    type::GeographicalCoord SP4(0, 0.025, false);
 
     b.data.geo_ref.init_offset(0);
     ng::Way* way;

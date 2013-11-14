@@ -220,8 +220,8 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
                 continue;
             }
 
-            auto distance = worker.get_distance(ep.coordinates, destination->idx,
-                                        use_second, ep.streetnetwork_params.offset, max_distance,
+            auto distance = worker.get_distance(ep.coordinates, destination->idx, max_distance,
+                                        use_second, ep.streetnetwork_params.offset,
                                         init);
             /*
              * On mettra ce traitement quand on aura trouvé un moyen de refaire path...
