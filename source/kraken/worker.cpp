@@ -115,7 +115,7 @@ pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & reques
 pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest &request,
         pbnavitia::API api) {
     boost::shared_lock<boost::shared_mutex> lock((*data)->load_mutex);
-    uint32_t max_date_times = request.has_max_date_times()?request.max_date_times():std::numeric_limits<int>::max();
+    int32_t max_date_times = request.has_max_date_times() ? request.max_date_times() : std::numeric_limits<int>::max();
     this->init_worker_data();
     try {
         switch(api){
