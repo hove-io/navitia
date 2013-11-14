@@ -1,6 +1,7 @@
 #coding=utf-8
 from flask import Flask, request, url_for
 from flask.ext.restful import fields, reqparse, marshal_with
+from flask.ext.restful.types import boolean
 from instance_manager import NavitiaManager
 from protobuf_to_dict import protobuf_to_dict
 from fields import stop_point, stop_area, route, line, physical_mode,\
@@ -304,6 +305,7 @@ class Journeys(ResourceUri):
         parser_get.add_argument("type", type=option_value(types), default="all")
 #a supprimer
         parser_get.add_argument("max_duration", type=int, default=36000)
+        parser_get.add_argument("wheelchair", type=boolean, default=False)
         self.method_decorators.append(add_notes(self))
         self.method_decorators.append(update_journeys_status(self))
 

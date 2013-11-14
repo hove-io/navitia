@@ -345,8 +345,9 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
         destination.streetnetwork_params = this->streetnetwork_params_of_entry_point(request.streetnetwork_params(), false);
     }
 /// Accessibilité, il faut initialiser ce paramètre
+    //HOT FIX degueulasse
     type::AccessibiliteParams accessibilite_params;
-
+    accessibilite_params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, request.wheelchair());
     if(api != pbnavitia::ISOCHRONE){
         return routing::make_response(*planner, origin, destination, datetimes,
                 request.clockwise(), request.streetnetwork_params().walking_speed(),
