@@ -212,8 +212,11 @@ class Script(object):
         req = request_pb2.Request()
         req.requested_api = requested_type
         req.journeys.origin = request["origin"]
-        if request["destination"]:
+        if request.has_key("destination") and request["destination"]:
             req.journeys.destination = request["destination"]
+            self.destination_modes = request["destination_mode"]
+        else:
+            self.destination_modes = ["walking"]
         req.journeys.datetimes.append(request["datetime"])
         req.journeys.clockwise = request["clockwise"]
         req.journeys.streetnetwork_params.walking_speed = request["walking_speed"]
@@ -231,7 +234,6 @@ class Script(object):
         req.journeys.wheelchair = request["wheelchair"]
 
         self.origin_modes = request["origin_mode"]
-        self.destination_modes = request["destination_mode"]
 
         if req.journeys.streetnetwork_params.origin_mode == "bike_rental":
             req.journeys.streetnetwork_params.origin_mode = "vls"
@@ -240,10 +242,11 @@ class Script(object):
         if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.journeys.forbidden_uris.append(forbidden_uri)
-
+        if not request.has_key("type"):
+            request["type"] = "all"
         #call to kraken
         resp = self.get_journey(req, region, request["type"])
-        if len(resp.journeys) > 0:
+        if len(resp.journeys) > 0 and request.has_key("count"):
             while request["count"] and request["count"] > len(resp.journeys):
                 temp_datetime = None
                 if request["clockwise"]:

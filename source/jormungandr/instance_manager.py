@@ -145,8 +145,11 @@ class NavitiaManager(object):
             Return the region key, or None if it doesn't exists
         """
 #Il s'agit d'une coordonnée
-        if object_id.count(";") == 1:
-            lon, lat = object_id.split(";")
+        if object_id.count(";") == 1 or object_id[:6] == "coord:":
+            if object_id.count(";") == 1:
+                lon, lat = object_id.split(";")
+            else:
+                lon, lat = object_id[6:].split(":")
             try:
                 flon = float(lon)
                 flat = float(lat)

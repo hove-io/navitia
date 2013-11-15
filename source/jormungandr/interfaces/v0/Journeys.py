@@ -6,6 +6,7 @@ from interfaces.parsers import true_false, option_value
 from protobuf_to_dict import protobuf_to_dict
 from find_extrem_datetimes import extremes
 from flask.ext.restful import reqparse
+from flask.ext.restful.types import boolean
 from interfaces.argument import ArgumentDoc
 from interfaces.parsers import depth_argument
 from authentification import authentification_required
@@ -60,10 +61,13 @@ class Journeys(Resource):
         parser_get.add_argument("forbidden_uris[]", type=str, action="append",
                 description="Uri you want to forbid")
         parser_get.add_argument("type", type=option_value(types), default="all")
+        parser_get.add_argument("wheelchair", type=boolean, default=False)
         parser_get.add_argument("count", type=int)
 
-    def get(self, region):
+    def get(self, region=None):
         args = self.parsers["get"].parse_args()
+        if region is None:
+            region = NavitiaManager().key_of_id(args["origin"])
         response = NavitiaManager().dispatch(args, region, "journeys")
         if response.journeys:
             (before, after) = extremes(response, request)
@@ -96,9 +100,12 @@ class Isochrone(Resource):
         parser_get.add_argument("car_speed", type=float, default=16.8)
         parser_get.add_argument("car_distance", type=int, default=15000)
         parser_get.add_argument("forbidden_uris[]", type=str, action="append")
+        parser_get.add_argument("wheelchair", type=boolean, default=False)
 
-    def get(self, region):
+    def get(self, region=None):
         args = self.parsers["get"].parse_args()
+        if region is None:
+            region = NavitiaManager().key_of_id(args["origin"])
         response = NavitiaManager().dispatch(args, region, "isochrone")
         if response.journeys:
             (before, after) = extremes(response, request)
