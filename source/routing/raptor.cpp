@@ -45,8 +45,9 @@ template<typename Visitor>
 void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_properties) {
 
     int last = 0;
-    std::vector<const type::StopPointConnection*>::const_iterator it = (v.clockwise()) ? data.dataRaptor.foot_path_forward.begin() :
-                                                                                data.dataRaptor.foot_path_backward.begin();
+    const auto foot_path_list = v.clockwise() ? data.dataRaptor.foot_path_forward :
+                                                data.dataRaptor.foot_path_backward;
+    auto it = foot_path_list.begin();
     auto &current_labels = labels[count];
     auto &current_boardings = boardings[count];
     auto &current_boarding_types = boarding_types[count];
@@ -82,7 +83,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                        current_boardings[jpp_idx] = data.pt_data.journey_pattern_points[best_jpp];
                        current_boarding_types[jpp_idx] = boarding_type::connection;
 
-                       if(!b_dest.is_eligible_solution(jpp_idx)
+                       if(!b_dest.add_best(v, jpp_idx, best_departure, count)
                                && v.comp(jpp->order, Q[jpp->journey_pattern->idx])) {
                            Q[jpp->journey_pattern->idx] = jpp->order;
                        }
@@ -112,7 +113,7 @@ void RAPTOR::foot_path(const Visitor & v, const type::Properties &required_prope
                                     current_boardings[destination_jpp_idx] = data.pt_data.journey_pattern_points[best_jpp];
                                     current_boarding_types[destination_jpp_idx] = boarding_type::connection;
 
-                                    if(!b_dest.is_eligible_solution(destination_jpp_idx)
+                                    if(!b_dest.add_best(v, destination_jpp_idx, next, count)
                                            && v.comp(destination_jpp->order, Q[destination_jpp->journey_pattern->idx])) {
                                         Q[destination_jpp->journey_pattern->idx] = destination_jpp->order;
                                    }
@@ -368,6 +369,7 @@ void RAPTOR::raptor_loop(Visitor visitor, const type::AccessibiliteParams & acce
     DateTime workingDt = visitor.worst_datetime();
     uint32_t l_zone = std::numeric_limits<uint32_t>::max();
 
+    this->foot_path(visitor, accessibilite_params.properties);
     while(!end && count <= max_transfers) {
         ++count;
         end = true;

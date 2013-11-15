@@ -525,7 +525,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
  */
 
 
-BOOST_AUTO_TEST_CASE(map_depart_arrivee) {
+/*BOOST_AUTO_TEST_CASE(map_depart_arrivee) {
     namespace ng = navitia::georef;
     int AA = 0;
     int BB = 1;
@@ -613,4 +613,4 @@ BOOST_AUTO_TEST_CASE(map_depart_arrivee) {
     BOOST_REQUIRE_EQUAL(journey.sections(1).type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
     BOOST_REQUIRE_EQUAL(journey.sections(2).type(), pbnavitia::SectionType::STREET_NETWORK);
 
-}
+}*/
