@@ -26,7 +26,7 @@ class Places(Resource):
                 description="Type of search: firstletter or typeerror")
         self.parsers["get"].add_argument("admin_uri[]", type=str, action="append",
                 description="""If filled, will restrained the search within the
-                    ²           given admin uris""")
+                               given admin uris""")
         self.parsers["get"].add_argument("depth", type=depth_argument, default=1,
                 description="The depth of the objects")
 
