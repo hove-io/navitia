@@ -103,11 +103,11 @@ La transformation n'est éffectué que pour les objets suivants :
 Le tableau suivant présente les transformations possibles :
 
 +----------------+-----------------------+----------------------------+
-|Object      	 |ExternalCode(NAViTi1)  |Uri(NAViTi2)                |
+|Object          |ExternalCode(NAViTi1)  |Uri(NAViTi2)                |
 +================+=======================+============================+
-|stop_point      | AAA1111               | stop_point:AAA:1111        |
+|stop_point      | AAA1111               | stop_point:AAA:SP:1111     |
 +----------------+-----------------------+----------------------------+
-|stop_area       | AAA1111               | stop_area:AAA:1111         |
+|stop_area       | AAA1111               | stop_area:AAA:SA:1111      |
 +----------------+-----------------------+----------------------------+
 |network         | AAA1111               | network:AAA:1111           |
 +----------------+-----------------------+----------------------------+
