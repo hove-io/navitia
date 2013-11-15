@@ -66,6 +66,7 @@ def v0_routing(api):
                      endpoint='v0.journeys')
     api.add_resource(Journeys.Isochrone,
                      '/v0/<region:region>/isochrone.json',
+                     '/v0/isochrone.json',
                      endpoint='v0.isochrone')
     api.add_resource(TimeTables.NextDepartures,
                      '/v0/<region:region>/next_departures.json',

@@ -100,9 +100,12 @@ class Isochrone(Resource):
         parser_get.add_argument("car_speed", type=float, default=16.8)
         parser_get.add_argument("car_distance", type=int, default=15000)
         parser_get.add_argument("forbidden_uris[]", type=str, action="append")
+        parser_get.add_argument("wheelchair", type=boolean, default=False)
 
-    def get(self, region):
+    def get(self, region=None):
         args = self.parsers["get"].parse_args()
+        if region is None:
+            region = NavitiaManager().key_of_id(args["origin"])
         response = NavitiaManager().dispatch(args, region, "isochrone")
         if response.journeys:
             (before, after) = extremes(response, request)
