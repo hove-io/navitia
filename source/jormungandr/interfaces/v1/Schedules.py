@@ -122,7 +122,6 @@ class StopSchedules(Schedules):
         self.method_decorators.append(manage_response_status(self))
     @marshal_with(stop_schedules)
     @ManageError()
-
     def get(self, uri=None, region=None, lon= None, lat=None):
         return super(StopSchedules, self).get(uri=uri, region=region, lon=lon, lat=lat)
 
