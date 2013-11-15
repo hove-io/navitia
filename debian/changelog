@@ -4,6 +4,12 @@ navitia2 (0.75.1) unstable; urgency=low
 
  -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 15 Nov 2013 09:21:55 +0100
 
+navitia2 (0.75.0) unstable; urgency=low
+
+  * Accessibilite
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Thu, 14 Nov 2013 16:59:55 +0100
+
 navitia2 (0.74.1) unstable; urgency=low
 
   * On a du vrai multithread
