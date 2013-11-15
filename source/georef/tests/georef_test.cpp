@@ -608,3 +608,36 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
             result.clear();
 
     }
+
+BOOST_AUTO_TEST_CASE(two_scc) {
+    using namespace navitia::type;
+
+    GeoRef sn;
+    GraphBuilder b(sn);
+
+    /*       1             2
+     *       +             +
+     *    o------o   o---o------o
+     *    a      b   c   d      e
+     */
+
+    b("a",0,0)("b",100,0)("c",200,0)("d",300,0)("e",400,0);
+    b("a","b",100)("b","a",100)("c","d",100)("d","c",100)("d","e",100)("e","d",100);
+
+    GeographicalCoord c1(50,10, false);
+    GeographicalCoord c2(350,20, false);
+    navitia::proximitylist::ProximityList<idx_t> pl;
+    pl.add(c1, 0);
+    pl.add(c2, 1);
+    pl.build();
+
+    sn.projected_stop_points.push_back(ProjectionData(c1, sn, sn.pl));
+    sn.projected_stop_points.push_back(ProjectionData(c2, sn, sn.pl));
+
+    GeographicalCoord o(0,0);
+
+    StreetNetwork w(sn);
+
+    auto max = w.get_distance(c1, 1, false, 0, false);
+    BOOST_CHECK_EQUAL(max, std::numeric_limits<float>::max());
+}

@@ -52,7 +52,7 @@ public:
             double radius, bool use_second, nt::idx_t offset);
 
     double get_distance(const type::GeographicalCoord& start_coord,
-                        const type::idx_t& target_idx,
+                        const type::idx_t& target_idx, const double radius,
                         bool use_second, nt::idx_t offset,
                         bool init=false);
 
@@ -73,7 +73,7 @@ private:
 
     double get_distance(const ng::ProjectionData& start,
             const ng::ProjectionData& target, const type::idx_t target_idx,
-            std::vector<float>& dist,
+            const double radius, std::vector<float>& dist,
             std::vector<ng::vertex_t>& preds,
             std::map<type::idx_t, ng::ProjectionData>& idx_proj, bool init);
 

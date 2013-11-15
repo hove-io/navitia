@@ -48,6 +48,7 @@ message JourneysRequest {
     required int32 max_duration                         = 6;
     required int32 max_transfers                        = 7;
     optional StreetNetworkParams streetnetwork_params   = 8;
+    required bool wheelchair                            = 9;
 }
 
 message PlacesNearbyRequest {

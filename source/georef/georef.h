@@ -319,6 +319,7 @@ struct GeoRef {
 
 // Exception levée dès que l'on trouve une destination
 struct DestinationFound{};
+struct DestinationNotFound{};
 
 // Visiteur qui lève une exception dès qu'une des cibles souhaitées est atteinte
 struct target_visitor : public boost::dijkstra_visitor<> {
@@ -333,10 +334,25 @@ struct target_visitor : public boost::dijkstra_visitor<> {
 // Visiteur qui lève une exception dès que la cible souhaitée est atteinte
 struct target_unique_visitor : public boost::dijkstra_visitor<> {
     const vertex_t & destination;
-    target_unique_visitor(const vertex_t & destination) : destination(destination){}
+    const vertex_t & source;
+    bool source_visited;
+    const double max_distance;
+    const std::vector<float>& distances;
+
+    target_unique_visitor(const vertex_t & destination, const vertex_t & source, double max_distance, const std::vector<float>& distances) :
+        destination(destination), source(source), source_visited(false), max_distance(max_distance), distances(distances){}
     void finish_vertex(vertex_t u, const Graph&){
         if(u == destination)
             throw DestinationFound();
+        else if(u == source) {
+            if(!source_visited) {
+                source_visited = true;
+            } else {
+                throw DestinationNotFound();
+            }
+        } else if(distances[u] > max_distance) {
+            throw DestinationNotFound();
+        }
     }
 };
 

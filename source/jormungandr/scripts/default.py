@@ -228,6 +228,7 @@ class Script(object):
         req.journeys.streetnetwork_params.destination_filter = request["destination_filter"] if "destination_filter" in request else ""
         req.journeys.max_duration = request["max_duration"]
         req.journeys.max_transfers = request["max_transfers"]
+        req.journeys.wheelchair = request["wheelchair"]
 
         self.origin_modes = request["origin_mode"]
         self.destination_modes = request["destination_mode"]

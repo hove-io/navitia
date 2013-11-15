@@ -17,3 +17,23 @@ DO $$
         END;
     END;
 $$;
+
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE realtime.message ADD COLUMN message_status_id int NOT NULL REFERENCES realtime.message_status;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column message_status_id already exists in realtime.message.';
+        END;
+    END;
+$$;
+
+DO $$
+    BEGIN
+        BEGIN
+            ALTER TABLE navitia.connection ADD COLUMN display_duration integer NOT NULL DEFAULT 0;
+        EXCEPTION
+            WHEN duplicate_column THEN RAISE NOTICE 'column display_duration already exists in navitia.connection.';
+        END;
+    END;
+$$;

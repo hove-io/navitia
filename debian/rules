@@ -1,12 +1,6 @@
 #!/usr/bin/make -f
 
 export DH_VERBOSE = 1
-
-PYTHON2=$(shell pyversions -vr)
-
-# Prevent setuptools/distribute from accessing the internet.
-export http_proxy = http://127.0.0.1:9
-
 %:
 	dh $@ --sourcedirectory=source --builddirectory=build_package --parallel --max-parallel=4
 

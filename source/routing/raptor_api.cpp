@@ -201,40 +201,6 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
     }
     //On va chercher tous les journey_pattern_points en correspondance
     //avec ceux déjà trouvés.
-    std::vector<std::pair<type::idx_t, double> > tmp_result;
-    for(const auto & sp_idx_distance : result) {
-        const auto sp_idx = sp_idx_distance.first;
-        const auto stop_point = pt_data.stop_points[sp_idx];
-        const auto connections_idx = stop_point->get(type::Type_e::StopPointConnection, pt_data);
-
-        for(const auto connection_idx : connections_idx) {
-            const auto * connection = pt_data.stop_point_connections[connection_idx];
-            const auto destination = connection->destination;
-            auto find_predicate = [&](std::pair<type::idx_t, double> idx_distance)->bool {
-                return destination->idx == idx_distance.first;
-            };
-            if(std::find_if(result.begin(), result.end(), find_predicate) != result.end()) {
-                continue;
-            } else if(std::find_if(tmp_result.begin(), tmp_result.end(), find_predicate) != tmp_result.end()) {
-                continue;
-            }
-
-            auto distance = worker.get_distance(ep.coordinates, destination->idx,
-                                        use_second, ep.streetnetwork_params.offset,
-                                        init);
-            /*
-             * On mettra ce traitement quand on aura trouvé un moyen de refaire path...
-             * if(distance == std::numeric_limits<double>::max()) {
-            //Fallback si le stop point n'est pas rattaché au filaire de voirie
-            //On recalcule une distance en pensant qu'on marche à 1.68 m/s
-                distance = connection.duration * 1.68
-            }*/
-
-            tmp_result.push_back(std::pair<type::idx_t, double>(destination->idx, distance));
-            init = true;
-        }
-    }
-    result.insert(result.end(), tmp_result.begin(), tmp_result.end());
     return result;
 }
 
@@ -249,7 +215,9 @@ parse_datetimes(RAPTOR &raptor,const std::vector<std::string> &datetimes_str,
             boost::posix_time::ptime ptime;
             ptime = boost::posix_time::from_iso_string(datetime);
             if(!raptor.data.meta.production_date.contains(ptime.date())) {
-                fill_pb_error(pbnavitia::Error::date_out_of_bounds, "date is not in data production period",response.mutable_error());
+                fill_pb_error(pbnavitia::Error::date_out_of_bounds,
+                                "date is not in data production period",
+                                response.mutable_error());
                 response.set_response_type(pbnavitia::DATE_OUT_OF_BOUNDS);
             }
             datetimes.push_back(ptime);

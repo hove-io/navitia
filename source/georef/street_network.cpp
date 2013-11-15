@@ -105,9 +105,11 @@ StreetNetwork::find_nearest_stop_points(const ng::ProjectionData& start, double 
 }
 
 double StreetNetwork::get_distance(const type::GeographicalCoord& start_coord,
-                                   const type::idx_t& target_idx,
+                                   const type::idx_t& target_idx, const double radius,
                                    bool use_second, nt::idx_t offset,
                                    bool init) {
+    georef::Graph::edge_iterator ei, e_end;
+
     const double max = std::numeric_limits<float>::max();
     ng::ProjectionData start_edge = ng::ProjectionData(start_coord, this->geo_ref, this->geo_ref.pl);
     if(!start_edge.found)
@@ -122,11 +124,11 @@ double StreetNetwork::get_distance(const type::GeographicalCoord& start_coord,
     if(!use_second) {
         departure_launch = true;
         this->departure = start_edge;
-        return get_distance(start_edge, projection, target_idx, distances, predecessors, idx_projection, init);
+        return get_distance(start_edge, projection, target_idx, radius, distances, predecessors, idx_projection, init);
     } else {
         arrival_launch = true;
         this->destination = start_edge;
-        return get_distance(start_edge, projection, target_idx, distances2, predecessors2, idx_projection2, init);
+        return get_distance(start_edge, projection, target_idx, radius, distances2, predecessors2, idx_projection2, init);
     }
     return max;
 }
@@ -135,6 +137,7 @@ double StreetNetwork::get_distance(const type::GeographicalCoord& start_coord,
 double StreetNetwork::get_distance(const ng::ProjectionData& start,
                                    const ng::ProjectionData& target,
                                    const type::idx_t target_idx,
+                                   const double radius,
                                    std::vector<float>& dist,
                                    std::vector<ng::vertex_t>& preds,
                                    std::map<type::idx_t, ng::ProjectionData>& idx_proj,
@@ -151,12 +154,16 @@ double StreetNetwork::get_distance(const ng::ProjectionData& start,
     if(dist[target.source] == max) {
         dist[start.source] = start.source_distance;
         try {
-            geo_ref.dijkstra(start.source, dist, preds, ng::target_unique_visitor(target.source));
+            geo_ref.dijkstra(start.source, dist, preds,
+                             ng::target_unique_visitor(target.source, start.source, radius, dist));
         } catch(ng::DestinationFound) {}
+        catch(ng::DestinationNotFound) { return max; }
         dist[start.target] = start.target_distance;
         try {
-            geo_ref.dijkstra(start.source, dist, preds, ng::target_unique_visitor(target.source));
+            geo_ref.dijkstra(start.source, dist, preds,
+                             ng::target_unique_visitor(target.source, start.source, radius, dist));
         } catch(ng::DestinationFound) {}
+        catch(ng::DestinationNotFound) { return max; }
     }
 
     if(dist.size() < target.target) {
@@ -165,12 +172,16 @@ double StreetNetwork::get_distance(const ng::ProjectionData& start,
     if(dist[target.target] == max) {
         dist[start.source] = start.source_distance;
         try {
-            geo_ref.dijkstra(start.source, dist, preds, ng::target_unique_visitor(target.target));
+            geo_ref.dijkstra(start.source, dist, preds,
+                             ng::target_unique_visitor(target.target, start.source, radius, dist));
         } catch(ng::DestinationFound) {}
+        catch(ng::DestinationNotFound) { return max; }
         dist[start.target] = start.target_distance;
         try {
-            geo_ref.dijkstra(start.target, dist, preds, ng::target_unique_visitor(target.target));
+            geo_ref.dijkstra(start.target, dist, preds,
+                             ng::target_unique_visitor(target.target, start.source, radius, dist));
         } catch(ng::DestinationFound) {}
+        catch(ng::DestinationNotFound) { return max; }
     }
 
     if(dist[target.source] < max){
