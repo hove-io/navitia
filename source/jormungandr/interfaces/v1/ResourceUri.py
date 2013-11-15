@@ -237,18 +237,15 @@ class manage_response_status(object):
             else:
                 data = objects
 
-            def response_status(data):
-                if 'stop_schedules' in data.keys():
-                    stop_schedules = data["stop_schedules"]
-                    for one_stop_schedule in stop_schedules:
-                        if 'date_times' in one_stop_schedule.keys():
-                            if len(one_stop_schedule["date_times"]) == 0:
+            if 'stop_schedules' in data.keys():
+                stop_schedules = data["stop_schedules"]
+                for one_stop_schedule in stop_schedules:
+                    if 'date_times' in one_stop_schedule.keys():
+                        if len(one_stop_schedule["date_times"]) == 0:
                                 one_stop_schedule["status"] = "no_departure_this_date"
-                        else:
-                            one_stop_schedule["status"] = "no_departure_this_date"
+                    else:
+                        one_stop_schedule["status"] = "no_departure_this_date"
 
-            if self.resource.region:
-                    response_status(data)
             if isinstance(objects, tuple):
                 return data, code, header
             else:
