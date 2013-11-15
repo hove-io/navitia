@@ -267,8 +267,15 @@ struct GeographicalCoord{
     void set_xy(double x, double y){this->set_lon(x*M_TO_DEG); this->set_lat(y*M_TO_DEG);}
 
     /// Ordre des coordonnées utilisé par ProximityList
-    bool operator<(GeographicalCoord other) const {return this->_lon < other._lon;}
-    bool operator != (GeographicalCoord other) const {return this->_lon != other._lon;}
+    bool operator<(GeographicalCoord other) const {
+        if ( fabs(lon() - other.lon()) > std::numeric_limits<double>::epsilon() )
+            return lon() < other.lon();
+        return lat() < other.lat();
+    }
+    bool operator != (GeographicalCoord other) const {
+        return fabs(lon() - other.lon()) > std::numeric_limits<double>::epsilon()
+                || fabs(lat() - other.lat()) > std::numeric_limits<double>::epsilon() ;
+    }
 
 
     constexpr static double DEG_TO_RAD = 0.01745329238;
