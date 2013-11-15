@@ -9,6 +9,7 @@ from flask.ext.restful.representations import json
 from interfaces.v0_routing import v0_routing
 from interfaces.v1_routing import v1_routing
 from interfaces.documentation import v0_documentation, v1_documentation
+from index import index
 import os
 from werkzeug.serving import run_simple
 from flask import request
@@ -34,7 +35,7 @@ def output_jsonp(data, code, headers=None):
         resp.data = str(callback)+'(' + resp.data + ')'
     return resp
 
-
+index(api)
 v1_routing(api)
 v0_routing(api)
 v0_documentation(api)
