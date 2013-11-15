@@ -1,3 +1,9 @@
+navitia2 (0.75.1) unstable; urgency=low
+
+  * hotfix : We go back to connections at the endings of journeys
+
+ -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 15 Nov 2013 09:21:55 +0100
+
 navitia2 (0.75.0) unstable; urgency=low
 
   * Accessibilite
