@@ -1,15 +1,3 @@
-navitia2 (0.76.0) UNRELEASED; urgency=low
-
-  * Added new features 
-
- -- Vincent Lara <vincent.lara@canaltp.fr>  Tue, 03 Dec 2013 11:12:20 +0100
-
-navitia2 (0.75.3) unstable; urgency=low
-
-  * Ajout d'un index
-
- -- Vincent Lara <vincent.lara@canaltp.fr>  Fri, 15 Nov 2013 14:13:44 +0100
-
 navitia2 (0.75.2) unstable; urgency=low
 
   * Ajout api dans v0
