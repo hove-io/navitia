@@ -1,14 +1,33 @@
 project(Kraken)
 cmake_minimum_required(VERSION 2.6)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
-
-SET(KRAKEN_VERSION_MAJOR 0)
-SET(KRAKEN_VERSION_MINOR 75)
-SET(KRAKEN_VERSION_PATCH 2)
+set(CMAKE_INSTALL_PREFIX "/")
 
 IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE Debug)
 ENDIF(NOT CMAKE_BUILD_TYPE)
+
+IF(WIN32)
+    ADD_DEFINITIONS(-D_WIN32_WINNT=0x0501)
+    IF(MSVC)
+        IF(CMAKE_CL_64)
+            SET(LIB_PREFIX "C:/lib64/")
+        ELSE(CMAKE_CL_64)
+            SET(LIB_PREFIX "C:/lib32/")
+        ENDIF(CMAKE_CL_64)
+        SET(BOOST_ROOT "${LIB_PREFIX}boost/")
+
+        # Sur un système ayant les 2 versions 32 et 64 bits on considère que Qt est installé à un endroit précis
+        FIND_PROGRAM(QMAKE "${LIB_PREFIX}qt-4.7/bin/qmake.exe")
+        IF(QMAKE)
+            SET(QT_QMAKE_EXECUTABLE "${LIB_PREFIX}qt-4.7/bin/qmake.exe")
+        ENDIF(QMAKE)
+    ELSEIF(MINGW)
+        SET (BOOST_INCLUDEDIR "c:/mingw/include")
+    ENDIF(MSVC)
+ENDIF(WIN32)
+
+
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
     SET(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra -std=c++0x -Woverloaded-virtual -Wundef -rdynamic -g")
@@ -17,23 +36,26 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    SET(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libstdc++ -ftemplate-depth=512 -ferror-limit=10 -pthread")
+    SET(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libstdc++  -ferror-limit=10 -pthread")
     SET(CMAKE_C_FLAGS "-ferror-limit=10 -I/usr/local/include/c++/v1 -pthread")
 endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -fno-omit-frame-pointer")
 
-#Fixture directory for unit testing
+
+
+#gestion des fixtures pour les test unitaire
 SET(FIXTURES_DIR ${CMAKE_SOURCE_DIR}/../fixtures/)
 
 
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
-FIND_PACKAGE(Boost 1.47.0 COMPONENTS unit_test_framework thread regex
-    serialization date_time filesystem system regex chrono iostreams
-    program_options REQUIRED)
+INCLUDE (CheckIncludeFiles)
+CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
+FIND_PACKAGE(Boost 1.40.0 REQUIRED)
 
 
+SET(KRAKEN_VERSION_MAJOR 0)
+SET(KRAKEN_VERSION_MINOR 75)
+SET(KRAKEN_VERSION_PATCH 3)
 
 #ajout a l'include path le repertoirre de compilation, pour géré le config.h
 include_directories(${CMAKE_CURRENT_BINARY_DIR}
@@ -65,15 +87,15 @@ add_subdirectory(jormungandr)
 add_subdirectory(pyed)
 add_subdirectory(sql)
 
+
 add_subdirectory(scripts)
 
-INCLUDE (CheckIncludeFiles)
-INCLUDE (CheckIncludeFileCXX)
-set(CMAKE_REQUIRED_INCLUDES "/usr/include")
-CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
-CHECK_INCLUDE_FILE_CXX("log4cplus/loggingmacros.h" HAVE_LOGGINGMACROS_H)
+
 
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
+SET(CPACK_PACKAGE_VERSION_MAJOR ${KRAKEN_VERSION_MAJOR})
+SET(CPACK_PACKAGE_VERSION_MINOR ${KRAKEN_VERSION_MINOR})
+SET(CPACK_PACKAGE_VERSION_PATCH ${KRAKEN_VERSION_PATCH})
 
 #THIRD PARTY
 #on prend simpleamqpclient en lib static
