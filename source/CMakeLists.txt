@@ -54,7 +54,7 @@ FIND_PACKAGE(Boost 1.40.0 REQUIRED)
 
 
 SET(KRAKEN_VERSION_MAJOR 0)
-SET(KRAKEN_VERSION_MINOR 74)
+SET(KRAKEN_VERSION_MINOR 75)
 SET(KRAKEN_VERSION_PATCH 1)
 
 #ajout a l'include path le repertoirre de compilation, pour géré le config.h
