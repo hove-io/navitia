@@ -62,9 +62,11 @@ def v0_routing(api):
                      endpoint='v0.places_nearby')
     api.add_resource(Journeys.Journeys,
                      '/v0/<region:region>/journeys.json',
+                     '/v0/journeys.json',
                      endpoint='v0.journeys')
     api.add_resource(Journeys.Isochrone,
                      '/v0/<region:region>/isochrone.json',
+                     '/v0/isochrone.json',
                      endpoint='v0.isochrone')
     api.add_resource(TimeTables.NextDepartures,
                      '/v0/<region:region>/next_departures.json',
