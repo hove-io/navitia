@@ -14,6 +14,7 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <map>
 #include "adminref.h"
+#include "utils/logger.h"
 
 
 namespace nt = navitia::type;
@@ -336,11 +337,11 @@ struct target_unique_visitor : public boost::dijkstra_visitor<> {
     const vertex_t & destination;
     const vertex_t & source;
     bool source_visited;
-    const double max_distance;
     const std::vector<float>& distances;
 
-    target_unique_visitor(const vertex_t & destination, const vertex_t & source, double max_distance, const std::vector<float>& distances) :
-        destination(destination), source(source), source_visited(false), max_distance(max_distance), distances(distances){}
+    target_unique_visitor(const vertex_t & destination, const vertex_t & source, const std::vector<float>& distances) :
+        destination(destination), source(source), source_visited(false), distances(distances){}
+
     void finish_vertex(vertex_t u, const Graph&){
         if(u == destination)
             throw DestinationFound();
@@ -348,10 +349,10 @@ struct target_unique_visitor : public boost::dijkstra_visitor<> {
             if(!source_visited) {
                 source_visited = true;
             } else {
+                auto logger = log4cplus::Logger::getInstance("worker");
+                LOG4CPLUS_ERROR(logger, "source found twice in dijkstra");
                 throw DestinationNotFound();
             }
-        } else if(distances[u] > max_distance) {
-            throw DestinationNotFound();
         }
     }
 };

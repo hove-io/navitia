@@ -641,18 +641,18 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages{
     std::vector<navitia::georef::Admin*> admin_list;
     Network* network;
     std::vector<JourneyPatternPoint*> journey_pattern_point_list;
+    std::vector<StopPointConnection*> stop_point_connection_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         journey_pattern_point_list.resize(0);
         ar & uri & name & stop_area & coord & fare_zone & idx
-            & journey_pattern_point_list & admin_list & _properties & messages;
+            & journey_pattern_point_list & admin_list & _properties & messages & stop_point_connection_list;
     }
 
     StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}
 
     std::vector<idx_t> get(Type_e type, const PT_Data & data) const;
     bool operator<(const StopPoint & other) const { return this < &other; }
-
 
 };
 

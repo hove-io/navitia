@@ -262,7 +262,10 @@ void Data::build_relations(navitia::type::PT_Data &data){
 
     //for(navitia::type::Network & network: data.networks){}
 
-    //for(navitia::type::Connection & connection: data.connections){}
+    for(navitia::type::StopPointConnection* connection: data.stop_point_connections) {
+        connection->departure->stop_point_connection_list.push_back(connection);
+        connection->destination->stop_point_connection_list.push_back(connection);
+    }
 
     for(navitia::type::JourneyPatternPoint* journey_pattern_point : data.journey_pattern_points){
         journey_pattern_point->journey_pattern->journey_pattern_point_list.push_back(journey_pattern_point);
