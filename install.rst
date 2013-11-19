@@ -8,13 +8,13 @@ Dependencies
 * gcc 4.7 or newer
 * cmake
 * log4cplus
-* osmpbf
+* osmpbf (https://github.com/scrosby/OSM-binary)
 * boost
-* zeromq
+* zeromq 2.2
 * libpqxx 3
 * libgoogle-perftools-dev
 * rabbitmq (>=3.1)
- pika (>=0.9.7)
+* pika (>=0.9.7)
 * psycopg2
 
 Build instruction

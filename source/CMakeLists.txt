@@ -48,8 +48,6 @@ SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -fno-omit-frame-po
 SET(FIXTURES_DIR ${CMAKE_SOURCE_DIR}/../fixtures/)
 
 
-INCLUDE (CheckIncludeFiles)
-CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
 FIND_PACKAGE(Boost 1.40.0 REQUIRED)
 
 
@@ -87,15 +85,17 @@ add_subdirectory(jormungandr)
 add_subdirectory(pyed)
 add_subdirectory(sql)
 
-
 add_subdirectory(scripts)
 
+INCLUDE (CheckIncludeFiles)
+INCLUDE (CheckIncludeFileCXX)
+set(CMAKE_REQUIRED_INCLUDES "/usr/include")
+CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
+CHECK_INCLUDE_FILE_CXX("log4cplus/loggingmacros.h" HAVE_LOGGINGMACROS_H)
 
+ADD_DEFINITIONS(-DBOOST_SYSTEM_NO_DEPRECATED=1)
 
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
-SET(CPACK_PACKAGE_VERSION_MAJOR ${KRAKEN_VERSION_MAJOR})
-SET(CPACK_PACKAGE_VERSION_MINOR ${KRAKEN_VERSION_MINOR})
-SET(CPACK_PACKAGE_VERSION_PATCH ${KRAKEN_VERSION_PATCH})
 
 #THIRD PARTY
 #on prend simpleamqpclient en lib static
