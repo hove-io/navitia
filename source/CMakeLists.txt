@@ -7,27 +7,6 @@ IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE Debug)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
-IF(WIN32)
-    ADD_DEFINITIONS(-D_WIN32_WINNT=0x0501)
-    IF(MSVC)
-        IF(CMAKE_CL_64)
-            SET(LIB_PREFIX "C:/lib64/")
-        ELSE(CMAKE_CL_64)
-            SET(LIB_PREFIX "C:/lib32/")
-        ENDIF(CMAKE_CL_64)
-        SET(BOOST_ROOT "${LIB_PREFIX}boost/")
-
-        # Sur un système ayant les 2 versions 32 et 64 bits on considère que Qt est installé à un endroit précis
-        FIND_PROGRAM(QMAKE "${LIB_PREFIX}qt-4.7/bin/qmake.exe")
-        IF(QMAKE)
-            SET(QT_QMAKE_EXECUTABLE "${LIB_PREFIX}qt-4.7/bin/qmake.exe")
-        ENDIF(QMAKE)
-    ELSEIF(MINGW)
-        SET (BOOST_INCLUDEDIR "c:/mingw/include")
-    ENDIF(MSVC)
-ENDIF(WIN32)
-
-
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
     SET(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra -std=c++0x -Woverloaded-virtual -Wundef -rdynamic -g")
