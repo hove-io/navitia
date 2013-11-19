@@ -38,17 +38,21 @@ SET(DATA_SRC
 
 add_library(data ${DATA_SRC})
 
-FIND_PACKAGE(Boost 1.48.0 COMPONENTS serialization unit_test_framework  date_time filesystem system regex REQUIRED)
+SET(BOOST_LIBS ${Boost_FILESYSTEM_LIBRARY}
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY} ${Boost_SERIALIZATION_LIBRARY}
+    ${Boost_DATE_TIME_LIBRARY}  ${Boost_REGEX_LIBRARY})
+
 add_executable(type_test tests/test.cpp)
-target_link_libraries(type_test types data utils ${Boost_LIBRARIES} log4cplus)
+target_link_libraries(type_test types data utils ${BOOST_LIBS} log4cplus)
 
 ADD_TEST(type_test ${EXECUTABLE_OUTPUT_PATH}/type_test --report_level=no)
 
 add_executable(datetime_test tests/datetime.cpp)
-target_link_libraries(datetime_test ${Boost_LIBRARIES} log4cplus)
+target_link_libraries(datetime_test ${BOOST_LIBS} log4cplus)
 ADD_TEST(datetime_test ${EXECUTABLE_OUTPUT_PATH}/datetime_test --report_level=no)
 
 
 add_executable(accessible_test tests/accessible.cpp)
-target_link_libraries(accessible_test ${Boost_LIBRARIES} log4cplus)
+target_link_libraries(accessible_test ${BOOST_LIBS} log4cplus)
 ADD_TEST(accessible_test ${EXECUTABLE_OUTPUT_PATH}/accessible_test --report_level=no)

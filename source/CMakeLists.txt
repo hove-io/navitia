@@ -1,12 +1,14 @@
 project(Kraken)
 cmake_minimum_required(VERSION 2.6)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
-set(CMAKE_INSTALL_PREFIX "/")
+
+SET(KRAKEN_VERSION_MAJOR 0)
+SET(KRAKEN_VERSION_MINOR 74)
+SET(KRAKEN_VERSION_PATCH 1)
 
 IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE Debug)
 ENDIF(NOT CMAKE_BUILD_TYPE)
-
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
     SET(CMAKE_CXX_FLAGS "-Wall -pedantic -Wextra -std=c++0x -Woverloaded-virtual -Wundef -rdynamic -g")
@@ -21,18 +23,17 @@ endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -fno-omit-frame-pointer")
 
-
-
-#gestion des fixtures pour les test unitaire
+#Fixture directory for unit testing
 SET(FIXTURES_DIR ${CMAKE_SOURCE_DIR}/../fixtures/)
 
 
-FIND_PACKAGE(Boost 1.40.0 REQUIRED)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+FIND_PACKAGE(Boost 1.47.0 COMPONENTS unit_test_framework thread regex
+    serialization date_time filesystem system regex chrono iostreams
+    program_options REQUIRED)
 
 
-SET(KRAKEN_VERSION_MAJOR 0)
-SET(KRAKEN_VERSION_MINOR 74)
-SET(KRAKEN_VERSION_PATCH 1)
 
 #ajout a l'include path le repertoirre de compilation, pour géré le config.h
 include_directories(${CMAKE_CURRENT_BINARY_DIR}
