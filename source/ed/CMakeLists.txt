@@ -10,9 +10,6 @@ SET(SOURCE_LIB
 
 add_library(ed ${SOURCE_LIB})
 
-FIND_PACKAGE(Qt4 REQUIRED QtCore QtSql)
-include_directories(${QT_INCLUDE_DIR})
-
 FIND_PACKAGE(Boost 1.48.0 COMPONENTS program_options filesystem system serialization date_time thread regex REQUIRED)
 FIND_LIBRARY(OSMPBF osmpbf)
 
