@@ -9,7 +9,7 @@
 #include <QtSql/qsqlrecord.h>
 #include <boost/format.hpp>
 #include "utils/exception.h"
-#include <log4cplus/logger.h>
+#include "utils/logger.h"
 
 
 namespace pt = boost::posix_time;

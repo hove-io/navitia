@@ -1,4 +1,7 @@
-FIND_PACKAGE(Boost 1.40.0 COMPONENTS program_options filesystem system serialization date_time thread regex REQUIRED)
 
 add_executable(validator validator.cpp)
-target_link_libraries(validator data routing types georef utils autocomplete ${Boost_LIBRARIES} log4cplus)
+target_link_libraries(validator data routing types georef utils autocomplete
+    ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_DATE_TIME_LIBRARY}
+    ${Boost_THREAD_LIBRARY} ${Boost_REGEX_LIBRARY}
+    ${Boost_SERIALIZATION_LIBRARY} ${Boost_FILESYSTEM_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY} log4cplus)
