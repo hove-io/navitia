@@ -37,6 +37,7 @@ SET(DATA_SRC
 )
 
 add_library(data ${DATA_SRC})
+target_link_libraries(data ${Boost_LIBRARIES} log4cplus)
 
 SET(BOOST_LIBS ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
