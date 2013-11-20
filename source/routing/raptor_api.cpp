@@ -32,22 +32,12 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
     pbnavitia::Response pb_response;
     boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
 
-    if (paths.empty()) {
-        auto temp = worker.get_direct_path();
-        if (temp.path_items.empty()) {
-            fill_pb_error(pbnavitia::Error::no_solution, "no solution found for this journey",
-            pb_response.mutable_error());
-            pb_response.set_response_type(pbnavitia::NO_SOLUTION);
-
-            return pb_response;
-        }
-
+    auto temp = worker.get_direct_path();
+    if(!temp.path_items.empty()) {
         pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
         pbnavitia::Journey* pb_journey = pb_response.add_journeys();
         pb_journey->set_duration(temp.length);
         fill_street_section(origin, temp, d, pb_journey->add_sections(), 1);
-
-        return pb_response;
     }
 
     pb_response.set_response_type(pbnavitia::ITINERARY_FOUND);
@@ -190,6 +180,13 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         pb_journey->set_arrival_date_time(str_arrival);
         pb_journey->set_duration(arrival_time - departure_time);
     }
+    if (pb_response.journeys().size() == 0) {
+        fill_pb_error(pbnavitia::Error::no_solution, "no solution found for this journey",
+        pb_response.mutable_error());
+        pb_response.set_response_type(pbnavitia::NO_SOLUTION);
+
+        return pb_response;
+    }
 
     return pb_response;
 }
@@ -199,7 +196,6 @@ std::vector<std::pair<type::idx_t, double> >
 get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
         streetnetwork::StreetNetwork & worker, bool use_second = false){
     std::vector<std::pair<type::idx_t, double> > result;
-    bool init = false;
     if(ep.type == type::Type_e::StopArea){
         auto it = pt_data.stop_areas_map.find(ep.uri);
         if(it!= pt_data.stop_areas_map.end()) {
@@ -214,7 +210,6 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
         }
     }else if(ep.type == type::Type_e::Address
                 || ep.type == type::Type_e::Coord || ep.type == type::Type_e::Admin){
-        init = true;
         result = worker.find_nearest_stop_points(ep.coordinates,
                 pt_data.stop_point_proximity_list,
                 ep.streetnetwork_params.distance, use_second,
