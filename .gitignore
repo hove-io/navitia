@@ -14,3 +14,6 @@ tags
 .ycm_extra_conf.py
 DEBIAN/
 build_package/
+*.log
+source/scripts/settings_jormungandr.sh
+

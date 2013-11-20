@@ -20,7 +20,7 @@ message NextStopTimeRequest {
     optional int32 interface_version    = 8;
     required int32 start_page           = 9;
     required int32 count                = 10;
-    required int32 max_date_times       = 11;
+    optional int32 max_date_times       = 11;
 }
 
 message StreetNetworkParams{
