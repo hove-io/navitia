@@ -254,7 +254,7 @@ ng::Path StreetNetwork::get_direct_path() {
 
     double min_dist = std::numeric_limits<float>::max();
     ng::vertex_t target = std::numeric_limits<size_t>::max();
-    for(ng::vertex_t u = 0; u != num_vertices; ++u){
+    for(ng::vertex_t u = 0; u != num_vertices; ++u) {
         if((distances[u] != std::numeric_limits<float>::max()) && (distances2[u] != std::numeric_limits<float>::max())
                 && ((distances[u] + distances2[u]) < min_dist)) {
             target = u;
@@ -268,7 +268,7 @@ ng::Path StreetNetwork::get_direct_path() {
         auto path2 = this->geo_ref.build_path(target, this->predecessors2);
         for(auto p = path2.path_items.rbegin(); p != path2.path_items.rend(); ++p) {
             result.path_items.push_back(*p);
-            result.length+= p->length;
+            result.length += p->length;
         }
         for(auto c = path2.coordinates.rbegin(); c != path2.coordinates.rend(); ++c) {
             result.coordinates.push_back(*c);
