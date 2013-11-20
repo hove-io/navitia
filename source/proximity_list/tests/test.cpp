@@ -147,30 +147,81 @@ BOOST_AUTO_TEST_CASE(test_api) {
     sa->idx = 0;
     data.pt_data.stop_areas.push_back(sa);
     sa = new navitia::type::StopArea();
-    sa->coord.set_lon(-1.552044);
-    sa->coord.set_lat(47.212516);
+    sa->coord.set_lon(-1.554384);
+    sa->coord.set_lat(47.217804);
     sa->idx = 1;
     data.pt_data.stop_areas.push_back(sa);
     data.build_proximity_list();
     navitia::type::GeographicalCoord c;
     c.set_lon(-1.554514);
     c.set_lat(47.218515);
-    auto result = find(c, 700,
+    auto result = find(c, 200,
                     {navitia::type::Type_e::StopArea, navitia::type::Type_e::POI},
                     "", 1, 10, 0, data);
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 2);
     //One object out of the range
+    sa = new navitia::type::StopArea();
+    sa->coord.set_lon(-1.556949);
+    sa->coord.set_lat(47.217231);
+    sa->idx = 2;
+    data.pt_data.stop_areas.push_back(sa);
+    data.build_proximity_list();
+    result.Clear();
+    result = find(c, 200,
+                    {navitia::type::Type_e::StopArea, navitia::type::Type_e::POI},
+                    "", 1, 10, 0, data);
+    BOOST_CHECK_EQUAL(result.places_nearby().size(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(test_api_type) {
-    //Everything of the same type in the range
-    //Everything of the same type and one out of the range
-    //Two types and everything in the range
-    //Two types and one out of the range
+    navitia::type::Data data;
+    //One object not in asked type and everything in the range
+    auto sa = new navitia::type::StopArea();
+    sa->coord.set_lon(-1.554514);
+    sa->coord.set_lat(47.218515);
+    sa->idx = 0;
+    data.pt_data.stop_areas.push_back(sa);
+
+    auto poi  = new navitia::georef::POI();
+    poi->coord.set_lon(-1.554514);
+    poi->coord.set_lat(47.218515);
+    data.geo_ref.pois.push_back(poi);
+    data.build_proximity_list();
+    navitia::type::GeographicalCoord c;
+    c.set_lon(-1.554514);
+    c.set_lat(47.218515);
+    auto result = find(c, 200,
+                    {navitia::type::Type_e::StopArea},
+                    "", 1, 10, 0, data);
+    BOOST_CHECK_EQUAL(result.places_nearby().size(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(test_filter) {
-    //We ask for a stop_area inside the range
-    //We ask for a stop_area outside the range
+    navitia::type::Data data;
+    //One object not in asked type and everything in the range
+    auto sa = new navitia::type::StopArea();
+    sa->coord.set_lon(-1.554514);
+    sa->coord.set_lat(47.218515);
+    sa->idx = 0;
+    sa->name = "pouet";
+    data.pt_data.stop_areas.push_back(sa);
+    data.build_proximity_list();
+    navitia::type::GeographicalCoord c;
+    c.set_lon(-1.554514);
+    c.set_lat(47.218515);
+    auto result = find(c, 200,
+                    {navitia::type::Type_e::StopArea},
+                    "stop_area.name=pouet", 1, 10, 0, data);
+    BOOST_CHECK_EQUAL(result.places_nearby().size(), 1);
+    result.Clear();
+    result = find(c, 200,
+                    {navitia::type::Type_e::StopArea},
+                    "stop_area.name=paspouet", 1, 10, 0, data);
+    BOOST_CHECK_EQUAL(result.places_nearby().size(), 0);
 
+    //Bad request
+    result = find(c, 200,
+                    {navitia::type::Type_e::StopArea},
+                    "stop_area.name=paspouet bachibouzouk", 1, 10, 0, data);
+    BOOST_CHECK_EQUAL(result.error().id(), pbnavitia::Error::unable_to_parse);
 }
