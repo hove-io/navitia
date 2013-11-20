@@ -137,3 +137,40 @@ BOOST_AUTO_TEST_CASE(find_nearest){
     std::sort(tmp.begin(), tmp.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
 }
+
+BOOST_AUTO_TEST_CASE(test_api) {
+    navitia::type::Data data;
+    //Everything in the range
+    auto sa = new navitia::type::StopArea();
+    sa->coord.set_lon(-1.554514);
+    sa->coord.set_lat(47.218515);
+    sa->idx = 0;
+    data.pt_data.stop_areas.push_back(sa);
+    sa = new navitia::type::StopArea();
+    sa->coord.set_lon(-1.552044);
+    sa->coord.set_lat(47.212516);
+    sa->idx = 1;
+    data.pt_data.stop_areas.push_back(sa);
+    data.build_proximity_list();
+    navitia::type::GeographicalCoord c;
+    c.set_lon(-1.554514);
+    c.set_lat(47.218515);
+    auto result = find(c, 700,
+                    {navitia::type::Type_e::StopArea, navitia::type::Type_e::POI},
+                    "", 1, 10, 0, data);
+    BOOST_CHECK_EQUAL(result.places_nearby().size(), 2);
+    //One object out of the range
+}
+
+BOOST_AUTO_TEST_CASE(test_api_type) {
+    //Everything of the same type in the range
+    //Everything of the same type and one out of the range
+    //Two types and everything in the range
+    //Two types and one out of the range
+}
+
+BOOST_AUTO_TEST_CASE(test_filter) {
+    //We ask for a stop_area inside the range
+    //We ask for a stop_area outside the range
+
+}
