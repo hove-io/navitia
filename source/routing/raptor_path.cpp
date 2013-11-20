@@ -62,7 +62,7 @@ makePath(type::idx_t destination_idx, unsigned int countb, bool clockwise,
             auto departure = raptor_.data.pt_data.journey_pattern_points[current_jpp_idx]->stop_point;
             auto destination_jpp = raptor_.data.pt_data.journey_pattern_points[raptor_.get_boarding_jpp(countb, current_jpp_idx)->idx];
             auto destination = destination_jpp->stop_point;
-            auto connections_idx = departure->get(type::Type_e::Connection, raptor_.data.pt_data);            
+            auto connections_idx = departure->get(type::Type_e::Connection, raptor_.data.pt_data);
             l = raptor_.labels[countb][current_jpp_idx];
             auto find_predicate = [&](type::idx_t idx)->bool {
                 const auto connection = raptor_.data.pt_data.stop_point_connections[idx];

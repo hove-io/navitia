@@ -78,6 +78,8 @@ class PlacesNearby(ResourceUri):
                                  action="append", default=["stop_area", "stop_point",
                                                            "poi"],
                 description="Type of the objects to return")
+        self.parsers["get"].add_argument("filter", type=str, default="",
+                description="Filter your objects")
         self.parsers["get"].add_argument("distance", type=int, default=500,
                 description="Distance range of the query")
         self.parsers["get"].add_argument("count", type=int, default=10,
@@ -113,6 +115,7 @@ class PlacesNearby(ResourceUri):
                 abort(404)
         else:
             abort(404)
+        args["filter"] = args["filter"].replace(".id", ".uri")
         response = NavitiaManager().dispatch(args, self.region, "places_nearby")
         return response, 200
 

@@ -147,6 +147,7 @@ class Script(object):
         if request["type[]"]:
             for type in request["type[]"]:
                 req.places_nearby.types.append(pb_type[type])
+        req.places_nearby.filter = request["filter"]
         resp = NavitiaManager().send_and_receive(req, region)
         self.__pagination(request, "places_nearby", resp)
         return resp

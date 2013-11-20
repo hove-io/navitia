@@ -167,8 +167,8 @@ pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest 
     type::EntryPoint ep((*data)->get_type_of_id(request.uri()), request.uri());
     auto coord = this->coord_of_entry_point(ep);
     return proximitylist::find(coord, request.distance(), vector_of_pb_types(request),
-                               request.depth(), request.count(), request.start_page(),
-                               *(*this->data));
+                request.filter(), request.depth(), request.count(),
+                request.start_page(), *(*this->data));
 }
 
 
@@ -255,13 +255,13 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request)
     if(request.uri().size() > 6 && request.uri().substr(0, 6) == "coord:") {
         type::EntryPoint ep(type::Type_e::Coord, request.uri());
         auto coord = this->coord_of_entry_point(ep);
-        auto tmp = proximitylist::find(coord, 100, {type::Type_e::Address}, 1, 1, 0, *(*this->data));
+        auto tmp = proximitylist::find(coord, 100, {type::Type_e::Address}, "", 1, 1, 0, *(*this->data));
         if(tmp.places_nearby().size() == 1){
             auto place = pb_response.add_places();
             place->CopyFrom(tmp.places_nearby(0));
         }
         return pb_response;
-    }    
+    }
     auto it_sa = (*data)->pt_data.stop_areas_map.find(request.uri());
     if(it_sa != (*data)->pt_data.stop_areas_map.end()) {
         pbnavitia::Place* place = pb_response.add_places();

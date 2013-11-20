@@ -186,7 +186,7 @@ ement="false" autoIncrementSequenceName="journey_pattern_point_id_seq_1" default
   <table id="TAB55" populated="true" UUID="0294999f-b2cf-4642-ad6f-e48a862d7646" name="line" objectType="TABLE" physicalName="line" >
    <remarks></remarks>
    <folder id="FOLTAB551" populated="true" name="Columns" physicalName="Columns" type="1">
-    <column id="COL56" populated="true" UUID="713a  
+    <column id="COL56" populated="true" UUID="713a
 -3fbe-4f47-a37f-4bf7e2780276" autoIncrement="true" autoIncrementSequenceName="line_id_seq" defaultValue="" name="lid" nullable="0" physicalName="lid" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
@@ -446,7 +446,7 @@ lable="0" physicalName="end_time" precision="0" referenceCount="1" scale="0" sou
     <column id="COL131" populated="true" UUID="d3804f88-f96c-4270-8dfc-2c7ead22e711" autoIncrement="false" autoIncrementSequenceName="journey_pattern_point_id_seq_9" defaultValue="" name="line_id" nullable="0" physicalName="line_id" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
-    <column id="COL132" populated="true" UUID="285b643d-87bf-41fa-9948-ac8b1ff6cb11" autoIncrement="false" autoIncrementSequenceName="journey_pattern_point_id_seq_10" defaultValue="" name="company_id" nullable="0" physicalName="company_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName=" 
+    <column id="COL132" populated="true" UUID="285b643d-87bf-41fa-9948-ac8b1ff6cb11" autoIncrement="false" autoIncrementSequenceName="journey_pattern_point_id_seq_10" defaultValue="" name="company_id" nullable="0" physicalName="company_id" precision="0" primaryKeySeq="1" referenceCount="1" scale="0" sourceDataTypeName="
  serDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>
     </column>
@@ -536,7 +536,7 @@ lable="0" physicalName="end_time" precision="0" referenceCount="1" scale="0" sou
     <column id="COL158" populated="true" UUID="0c3e89b0-9678-4141-85fe-f326bae07355" autoIncrement="false" autoIncrementSequenceName="journey_pattern_point_connection_length_seq" defaultValue="" name="length" nullable="0" physicalName="length" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="4" userDefinedTypeUUID="63b011c7-c81f-4c75-8271-632b3c87f727" >
      <remarks></remarks>
     </column>
-    <column id="COL159" populated="true" UUID=" 
+    <column id="COL159" populated="true" UUID="
 6358-0ef1-4893-ad74-86a72539c21a" autoIncrement="false" autoIncrementSequenceName="journey_pattern_point_connection_uri_seq" defaultValue="" name="uri" nullable="0" physicalName="uri" precision="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="2005" userDefinedTypeUUID="9c22ed40-2868-4d9e-96ca-789234a53c8f" >
      <remarks></remarks>
     </column>
@@ -726,7 +726,7 @@ lable="0" physicalName="end_time" precision="0" referenceCount="1" scale="0" sou
   </table>
   <table id="TAB216" populated="true" UUID="71e2452f-8f02-40f4-90b0-9afcead0cfef" name="alias" objectType="TABLE" physicalName="alias" >
    <remarks></remarks>
-   <folder 
+   <folder
 d="FOLTAB2161" populated="true" name="Columns" physicalName="Columns" type="1">
     <column id="COL217" populated="true" UUID="21c2bfe0-22a6-427c-a127-99f660d066ff" autoIncrement="true" autoIncrementSequenceName="alias_aid_seq" defaultValue="" name="aid" nullable="0" physicalName="aid" precision="0" primaryKeySeq="0" referenceCount="1" scale="0" sourceDataTypeName="UserDefinedSQLType" type="-5" userDefinedTypeUUID="433cc8af-284d-4abb-8ef7-08ebcb34dbf1" >
      <remarks></remarks>

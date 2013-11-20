@@ -24,6 +24,8 @@ class PlacesNearby(Resource):
                 description="Type of the objects to return")
         self.parsers["get"].add_argument("distance", type=int, default=500,
                 description="Distance range of the query")
+        self.parsers["get"].add_argument("filter", type=str, default="",
+                description="Filter places")
         self.parsers["get"].add_argument("count", type=int, default=10,
                 description="Number of elements per page")
         self.parsers["get"].add_argument("depth", type=depth_argument, default=1,

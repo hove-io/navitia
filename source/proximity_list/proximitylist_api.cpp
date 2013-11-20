@@ -1,6 +1,8 @@
 #include "proximitylist_api.h"
 #include "type/pb_converter.h"
 #include "utils/paginate.h"
+#include "ptreferential/ptreferential.h"
+
 
 namespace navitia { namespace proximitylist {
 /**
@@ -70,14 +72,14 @@ void sort_cut(std::vector<T> &list, const uint32_t end_pagination,
 }
 
 pbnavitia::Response find(const type::GeographicalCoord& coord, const double distance,
-                         const std::vector<nt::Type_e>& filter,
+                         const std::vector<nt::Type_e>& types, const std::string& filter,
                          const uint32_t depth, const uint32_t count, const uint32_t start_page,
                          const type::Data & data) {
     pbnavitia::Response response;
     int total_result = 0;
     std::vector<t_result > result;
     auto end_pagination = (start_page+1) * count;
-    for(nt::Type_e type : filter){
+    for(nt::Type_e type : types){
         if(type == nt::Type_e::Address) {
            try {
                georef::edge_t e = data.geo_ref.nearest_edge(coord, data.geo_ref.pl);
@@ -86,7 +88,21 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
                result.push_back(t_result(way->idx, coord, type));
            } catch(proximitylist::NotFound) {}
         } else{
-            std::vector< std::pair<type::idx_t, type::GeographicalCoord> > list;
+            vector_idx_coord list;
+            std::vector<type::idx_t> indexes;
+            if(filter != "") {
+                try {
+                    indexes = ptref::make_query(type, filter, data);
+                } catch(const ptref::parsing_error &parse_error) {
+                    fill_pb_error(pbnavitia::Error::unable_to_parse,
+                                  "Unable to parse :" + parse_error.more, response.mutable_error());
+                    return response;
+                } catch(const ptref::ptref_error &pt_error) {
+                    fill_pb_error(pbnavitia::Error::bad_filter,
+                                  "ptref : " + pt_error.more, response.mutable_error());
+                    return response;
+                }
+            }
             switch(type){
             case nt::Type_e::StopArea:
                 list = data.pt_data.stop_area_proximity_list.find_within(coord, distance);
@@ -99,9 +115,26 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
                 break;
             default: break;
             }
-            total_result += list.size();
-            sort_cut<idx_coord>(list, end_pagination, coord);
-            for(auto idx_coord : list) {
+            //We find the intersection between indexes and list
+            auto it_indexes = indexes.begin();
+            auto it_list = list.begin();
+            vector_idx_coord final_list;
+            if(filter=="") {
+                final_list = list;
+            } else {
+                while(it_indexes != indexes.end() && it_list != list.end()) {
+                    if(*it_indexes < it_list->first) ++it_indexes;
+                    else if(it_list->first < *it_indexes) ++ it_list;
+                    else {
+                        final_list.push_back(*it_list);
+                        ++it_list;
+                        ++it_indexes;
+                    }
+                }
+            }
+            total_result += final_list.size();
+            sort_cut<idx_coord>(final_list, end_pagination, coord);
+            for(auto idx_coord : final_list) {
                 result.push_back(t_result(idx_coord.first, idx_coord.second, type));
             }
         }

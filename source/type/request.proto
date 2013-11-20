@@ -55,9 +55,10 @@ message PlacesNearbyRequest {
     required string uri         = 1;
     required double distance    = 2;
     repeated NavitiaType types  = 3;
-    required int32 depth        = 4;
-    required int32 count        = 5;
-    required int32 start_page   = 6;
+    optional string filter      = 4;
+    required int32 depth        = 5;
+    required int32 count        = 6;
+    required int32 start_page   = 7;
 }
 
 message PlaceUriRequest {

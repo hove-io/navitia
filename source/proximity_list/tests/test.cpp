@@ -3,6 +3,9 @@
 
 #include <boost/test/unit_test.hpp>
 #include "proximity_list/proximity_list.h"
+#include "proximity_list/proximitylist_api.h"
+#include "type/data.h"
+#include "georef/georef.h"
 
 using namespace navitia::type;
 using namespace navitia::proximitylist;
@@ -73,7 +76,7 @@ BOOST_AUTO_TEST_CASE(find_nearest){
     c.set_lon(M_TO_DEG *4); c.set_lat(M_TO_DEG *7); pl.add(c, 4); coords.push_back(c);
     c.set_lon(M_TO_DEG *8); c.set_lat(M_TO_DEG *1); pl.add(c, 5); coords.push_back(c);
     c.set_lon(M_TO_DEG *7); c.set_lat(M_TO_DEG *2); pl.add(c, 6); coords.push_back(c);
-    
+
     pl.build();
 
     std::vector<unsigned int> expected {1,4,2,6,5,3};
@@ -133,4 +136,92 @@ BOOST_AUTO_TEST_CASE(find_nearest){
     for(auto p : tmp1) tmp.push_back(p.first);
     std::sort(tmp.begin(), tmp.end());
     BOOST_CHECK_EQUAL_COLLECTIONS(tmp.begin(), tmp.end(), expected.begin(), expected.end());
+}
+
+BOOST_AUTO_TEST_CASE(test_api) {
+    navitia::type::Data data;
+    //Everything in the range
+    auto sa = new navitia::type::StopArea();
+    sa->coord.set_lon(-1.554514);
+    sa->coord.set_lat(47.218515);
+    sa->idx = 0;
+    data.pt_data.stop_areas.push_back(sa);
+    sa = new navitia::type::StopArea();
+    sa->coord.set_lon(-1.554384);
+    sa->coord.set_lat(47.217804);
+    sa->idx = 1;
+    data.pt_data.stop_areas.push_back(sa);
+    data.build_proximity_list();
+    navitia::type::GeographicalCoord c;
+    c.set_lon(-1.554514);
+    c.set_lat(47.218515);
+    auto result = find(c, 200,
+                    {navitia::type::Type_e::StopArea, navitia::type::Type_e::POI},
+                    "", 1, 10, 0, data);
+    BOOST_CHECK_EQUAL(result.places_nearby().size(), 2);
+    //One object out of the range
+    sa = new navitia::type::StopArea();
+    sa->coord.set_lon(-1.556949);
+    sa->coord.set_lat(47.217231);
+    sa->idx = 2;
+    data.pt_data.stop_areas.push_back(sa);
+    data.build_proximity_list();
+    result.Clear();
+    result = find(c, 200,
+                    {navitia::type::Type_e::StopArea, navitia::type::Type_e::POI},
+                    "", 1, 10, 0, data);
+    BOOST_CHECK_EQUAL(result.places_nearby().size(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(test_api_type) {
+    navitia::type::Data data;
+    //One object not in asked type and everything in the range
+    auto sa = new navitia::type::StopArea();
+    sa->coord.set_lon(-1.554514);
+    sa->coord.set_lat(47.218515);
+    sa->idx = 0;
+    data.pt_data.stop_areas.push_back(sa);
+
+    auto poi  = new navitia::georef::POI();
+    poi->coord.set_lon(-1.554514);
+    poi->coord.set_lat(47.218515);
+    data.geo_ref.pois.push_back(poi);
+    data.build_proximity_list();
+    navitia::type::GeographicalCoord c;
+    c.set_lon(-1.554514);
+    c.set_lat(47.218515);
+    auto result = find(c, 200,
+                    {navitia::type::Type_e::StopArea},
+                    "", 1, 10, 0, data);
+    BOOST_CHECK_EQUAL(result.places_nearby().size(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(test_filter) {
+    navitia::type::Data data;
+    //One object not in asked type and everything in the range
+    auto sa = new navitia::type::StopArea();
+    sa->coord.set_lon(-1.554514);
+    sa->coord.set_lat(47.218515);
+    sa->idx = 0;
+    sa->name = "pouet";
+    data.pt_data.stop_areas.push_back(sa);
+    data.build_proximity_list();
+    navitia::type::GeographicalCoord c;
+    c.set_lon(-1.554514);
+    c.set_lat(47.218515);
+    auto result = find(c, 200,
+                    {navitia::type::Type_e::StopArea},
+                    "stop_area.name=pouet", 1, 10, 0, data);
+    BOOST_CHECK_EQUAL(result.places_nearby().size(), 1);
+    result.Clear();
+    result = find(c, 200,
+                    {navitia::type::Type_e::StopArea},
+                    "stop_area.name=paspouet", 1, 10, 0, data);
+    BOOST_CHECK_EQUAL(result.places_nearby().size(), 0);
+
+    //Bad request
+    result = find(c, 200,
+                    {navitia::type::Type_e::StopArea},
+                    "stop_area.name=paspouet bachibouzouk", 1, 10, 0, data);
+    BOOST_CHECK_EQUAL(result.error().id(), pbnavitia::Error::unable_to_parse);
 }
