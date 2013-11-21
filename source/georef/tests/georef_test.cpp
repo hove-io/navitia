@@ -638,6 +638,6 @@ BOOST_AUTO_TEST_CASE(two_scc) {
 
     StreetNetwork w(sn);
 
-    auto max = w.get_distance(c1, 1, false, 0, false);
+    auto max = w.get_distance(c1, c2, 1, false, 0, false);
     BOOST_CHECK_EQUAL(max, std::numeric_limits<float>::max());
 }

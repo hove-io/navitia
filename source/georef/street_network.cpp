@@ -1,6 +1,7 @@
 #include "street_network.h"
 #include "type/data.h"
 #include "georef.h"
+#include <chrono>
 
 namespace ng = navitia::georef;
 
@@ -31,8 +32,8 @@ std::vector<std::pair<type::idx_t, double>>
 StreetNetwork::find_nearest_stop_points(const type::GeographicalCoord& start_coord,
                                         const proximitylist::ProximityList<type::idx_t>& pl,
                                         double radius, bool use_second,nt::idx_t offset){
-    // On cherche le segment le plus proche des coordonnées
-    ng::ProjectionData nearest_edge = ng::ProjectionData(start_coord, this->geo_ref, this->geo_ref.pl);
+    // we look for the nearest edge from the start coorinate in the right transport mode (walk, bike, car, ...) (ie offset)
+    ng::ProjectionData nearest_edge = ng::ProjectionData(start_coord, this->geo_ref, offset, this->geo_ref.pl);
 
     if(!nearest_edge.found)
         return std::vector< std::pair<nt::idx_t, double> >();
@@ -41,9 +42,6 @@ StreetNetwork::find_nearest_stop_points(const type::GeographicalCoord& start_coo
     std::vector< std::pair<nt::idx_t, type::GeographicalCoord> > elements = pl.find_within(start_coord, radius);
     if(elements.empty())
         return std::vector< std::pair<nt::idx_t, double> >();
-
-    /// Incérmentation de début d'exploration dans graphe selon le mode : marche, vélo ou voiture
-    nearest_edge.inc_vertex(offset);
 
     // Est-ce qu'on calcule au départ ou à l'arrivée
     // Les résultats sont gardés pour reconstruire l'itinéraire routier après avoir calculé l'itinéraire TC
@@ -83,11 +81,9 @@ StreetNetwork::find_nearest_stop_points(const ng::ProjectionData& start, double 
     const double max = std::numeric_limits<float>::max();
 
     for(auto element: elements){
-        ng::ProjectionData projection = geo_ref.projected_stop_points[element.first];
+        ng::ProjectionData projection = ng::ProjectionData(element.second, this->geo_ref, offset, this->geo_ref.pl);//TODO save stop point projection on all network
         // Est-ce que le stop point a pu être raccroché au street network
         if(projection.found){
-            /// Incérmentation de début d'exploration dans graphe selon le mode : marche, vélo ou voiture
-            projection.inc_vertex(offset);
             double best_dist = max;
             if(dist[projection.source] < max){
                 best_dist = dist[projection.source] + projection.source_distance;
@@ -104,31 +100,29 @@ StreetNetwork::find_nearest_stop_points(const ng::ProjectionData& start, double 
     return result;
 }
 
-double StreetNetwork::get_distance(const type::GeographicalCoord& start_coord,
-                                   const type::idx_t& target_idx, const double radius,
+double StreetNetwork::get_distance(const type::GeographicalCoord& start_coord, const type::GeographicalCoord& target_coord,
+                                   const type::idx_t& target_idx,
                                    bool use_second, nt::idx_t offset,
                                    bool init) {
-    georef::Graph::edge_iterator ei, e_end;
-
     const double max = std::numeric_limits<float>::max();
-    ng::ProjectionData start_edge = ng::ProjectionData(start_coord, this->geo_ref, this->geo_ref.pl);
+    ng::ProjectionData start_edge = ng::ProjectionData(start_coord, this->geo_ref, offset, this->geo_ref.pl);
     if(!start_edge.found)
         return max;
-    start_edge.inc_vertex(offset);
+    assert(boost::edge(start_edge.source, start_edge.target, geo_ref.graph).second);
 
-    ng::ProjectionData projection = geo_ref.projected_stop_points[target_idx];
+    ng::ProjectionData projection = ng::ProjectionData(target_coord, this->geo_ref, offset, this->geo_ref.pl); //TODO save stop point projection on all network
     if(!projection.found)
         return max;
-    projection.inc_vertex(offset);
+    assert(boost::edge(projection.source, projection.target, geo_ref.graph).second );
 
     if(!use_second) {
         departure_launch = true;
         this->departure = start_edge;
-        return get_distance(start_edge, projection, target_idx, radius, distances, predecessors, idx_projection, init);
+        return get_distance(start_edge, projection, target_idx, distances, predecessors, idx_projection, init);
     } else {
         arrival_launch = true;
         this->destination = start_edge;
-        return get_distance(start_edge, projection, target_idx, radius, distances2, predecessors2, idx_projection2, init);
+        return get_distance(start_edge, projection, target_idx, distances2, predecessors2, idx_projection2, init);
     }
     return max;
 }
@@ -137,64 +131,63 @@ double StreetNetwork::get_distance(const type::GeographicalCoord& start_coord,
 double StreetNetwork::get_distance(const ng::ProjectionData& start,
                                    const ng::ProjectionData& target,
                                    const type::idx_t target_idx,
-                                   const double radius,
                                    std::vector<float>& dist,
                                    std::vector<ng::vertex_t>& preds,
                                    std::map<type::idx_t, ng::ProjectionData>& idx_proj,
                                    bool init) {
-    const double max = std::numeric_limits<float>::max();
+    const float max = std::numeric_limits<float>::max();
     double best_dist = max;
     if(!init) {
         geo_ref.init(dist, preds);
+        dist[start.source] = start.source_distance;
+        dist[start.target] = start.target_distance;
         idx_proj.clear();
     }
-    if(dist.size() < target.source) {
-        return best_dist;
-    }
+    auto logger = log4cplus::Logger::getInstance("Logger");
+
     if(dist[target.source] == max) {
-        dist[start.source] = start.source_distance;
+        bool found = false;
         try {
             geo_ref.dijkstra(start.source, dist, preds,
-                             ng::target_unique_visitor(target.source, start.source, dist));
-        } catch(ng::DestinationFound) {}
-        catch(ng::DestinationNotFound) { return max; }
-        dist[start.target] = start.target_distance;
+                             ng::target_unique_visitor(target.source));
+        } catch(ng::DestinationFound) { found = true; }
+
+        //if no way has been found, we can stop the search
+        if ( ! found ) {
+            LOG4CPLUS_WARN(logger, "unable to find a way from start edge [" << start.source << "-" << start.target
+                           << "] to [" << target.source << "-" << target.target << "]");
+
+            return max;
+        }
         try {
             geo_ref.dijkstra(start.target, dist, preds,
-                             ng::target_unique_visitor(target.source, start.target, dist));
-        } catch(ng::DestinationFound) {}
-        catch(ng::DestinationNotFound) { return max; }
+                             ng::target_unique_visitor(target.source));
+        } catch(ng::DestinationFound) { found = true; }
     }
 
-    if(dist.size() < target.target) {
-        return best_dist;
-    }
     if(dist[target.target] == max) {
-        dist[start.source] = start.source_distance;
+        bool found = false;
         try {
             geo_ref.dijkstra(start.source, dist, preds,
-                             ng::target_unique_visitor(target.target, start.source, dist));
-        } catch(ng::DestinationFound) {}
-        catch(ng::DestinationNotFound) { return max; }
-        dist[start.target] = start.target_distance;
+                             ng::target_unique_visitor(target.target));
+        } catch(ng::DestinationFound) {found = true;}
         try {
             geo_ref.dijkstra(start.target, dist, preds,
-                             ng::target_unique_visitor(target.target, start.target, dist));
-        } catch(ng::DestinationFound) {}
-        catch(ng::DestinationNotFound) { return max; }
+                             ng::target_unique_visitor(target.target));
+         } catch(ng::DestinationFound) { found = true; }
     }
 
-    if(dist[target.source] < max){
-        best_dist = dist[target.source] + target.source_distance;
+    assert(dist[target.source] != max && dist[target.target] != max); //if we succeded in the first search, we must have found the other distances
+
+    best_dist = dist[target.source] + target.source_distance;
+    idx_proj[target_idx] = target;
+
+    const auto tmp_dist_target = dist[target.target] + target.target_distance;
+    if(tmp_dist_target < best_dist) {
+        best_dist= tmp_dist_target;
         idx_proj[target_idx] = target;
     }
-    if(dist[target.target] < max){
-        const auto tmp_dist_target = dist[target.target] + target.target_distance;
-        if(tmp_dist_target < best_dist) {
-            best_dist= tmp_dist_target;
-            idx_proj[target_idx] = target;
-        }
-    }
+
     return best_dist;
 }
 

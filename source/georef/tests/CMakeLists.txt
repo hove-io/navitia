@@ -2,11 +2,16 @@ FIND_PACKAGE(Boost 1.44 COMPONENTS unit_test_framework thread regex serializatio
 
 
 SET(GEOREF_SRC_TEST
-    georef_test.cpp
     builder.h
     builder.cpp
 )
-add_executable(georef_test ${GEOREF_SRC_TEST})
-target_link_libraries(georef_test georef utils ${Boost_LIBRARIES} log4cplus)
+add_library(georef_test_utils ${GEOREF_SRC_TEST})
 
+add_executable(georef_test georef_test.cpp)
+target_link_libraries(georef_test georef_test_utils georef utils ${Boost_LIBRARIES} log4cplus)
 ADD_TEST(georef_test ${EXECUTABLE_OUTPUT_PATH}/georef_test --report_level=no)
+
+add_executable(street_network_test street_network_test.cpp)
+target_link_libraries(street_network_test georef_test_utils georef data autocomplete utils ${Boost_LIBRARIES} log4cplus)
+ADD_TEST(street_network_test ${EXECUTABLE_OUTPUT_PATH}/street_network_test --report_level=no)
+

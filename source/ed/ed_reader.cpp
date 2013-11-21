@@ -491,6 +491,10 @@ void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
             }
 
             data.pt_data.stop_point_connections.push_back(stop_point_connection);
+
+            //add the connection in the stop points
+            stop_point_connection->departure->stop_point_connection_list.push_back(stop_point_connection);
+            stop_point_connection->destination->stop_point_connection_list.push_back(stop_point_connection);
         }
     }
 }

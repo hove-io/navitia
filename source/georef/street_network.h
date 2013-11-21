@@ -51,10 +51,10 @@ public:
             const proximitylist::ProximityList<type::idx_t>& pl,
             double radius, bool use_second, nt::idx_t offset);
 
-    double get_distance(const type::GeographicalCoord& start_coord,
-                        const type::idx_t& target_idx, const double radius,
+    double get_distance(const type::GeographicalCoord& start_coord, const type::GeographicalCoord& target_coord,
+                        const type::idx_t& target_idx,
                         bool use_second, nt::idx_t offset,
-                        bool init=false);
+                        bool init);
 
     /// Reconstruit l'itinéraire piéton à partir de l'idx
     ng::Path get_path(type::idx_t idx, bool use_second = false);
@@ -73,7 +73,7 @@ private:
 
     double get_distance(const ng::ProjectionData& start,
             const ng::ProjectionData& target, const type::idx_t target_idx,
-            const double radius, std::vector<float>& dist,
+            std::vector<float>& dist,
             std::vector<ng::vertex_t>& preds,
             std::map<type::idx_t, ng::ProjectionData>& idx_proj, bool init);
 

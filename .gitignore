@@ -1,6 +1,7 @@
 stats
 debug
 release
+fast
 Doc
 qtcreator-build
 ui_mainwindow.h
@@ -14,3 +15,4 @@ tags
 .ycm_extra_conf.py
 DEBIAN/
 build_package/
+*.log

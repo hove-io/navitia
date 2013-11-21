@@ -373,7 +373,7 @@ std::vector<idx_t> StopPoint::get(Type_e type, const PT_Data & data) const {
     case Type_e::StopPointConnection:
         for (const StopPointConnection* stop_cnx : stop_point_connection_list)
             result.push_back(stop_cnx->idx);
-            break;
+        break;
     default: break;
     }
     return result;

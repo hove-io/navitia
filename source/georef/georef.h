@@ -282,6 +282,7 @@ struct GeoRef {
 
     edge_t nearest_edge(const type::GeographicalCoord &coordinates) const;
     edge_t nearest_edge(const type::GeographicalCoord &coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
+    edge_t nearest_edge(const type::GeographicalCoord &coordinates, type::idx_t offset, const proximitylist::ProximityList<vertex_t>& prox) const;
     vertex_t nearest_vertex(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const;
 
     edge_t nearest_edge(const type::GeographicalCoord & coordinates, const vertex_t & u) const;
@@ -308,7 +309,6 @@ struct GeoRef {
                                                visitor,
                                                color
                                                );
-
     }
 
     /// Reconstruit un itinéraire à partir de la destination et la liste des prédécesseurs
@@ -325,6 +325,7 @@ struct DestinationNotFound{};
 // Visiteur qui lève une exception dès qu'une des cibles souhaitées est atteinte
 struct target_visitor : public boost::dijkstra_visitor<> {
     const std::vector<vertex_t> & destinations;
+    size_t cpt;
     target_visitor(const std::vector<vertex_t> & destinations) : destinations(destinations){}
     void finish_vertex(vertex_t u, const Graph&){
         if(std::find(destinations.begin(), destinations.end(), u) != destinations.end())
@@ -335,25 +336,13 @@ struct target_visitor : public boost::dijkstra_visitor<> {
 // Visiteur qui lève une exception dès que la cible souhaitée est atteinte
 struct target_unique_visitor : public boost::dijkstra_visitor<> {
     const vertex_t & destination;
-    const vertex_t & source;
-    bool source_visited;
-    const std::vector<float>& distances;
 
-    target_unique_visitor(const vertex_t & destination, const vertex_t & source, const std::vector<float>& distances) :
-        destination(destination), source(source), source_visited(false), distances(distances){}
+    target_unique_visitor(const vertex_t & destination) :
+        destination(destination){}
 
     void finish_vertex(vertex_t u, const Graph&){
         if(u == destination)
             throw DestinationFound();
-        else if(u == source) {
-            if(!source_visited) {
-                source_visited = true;
-            } else {
-                auto logger = log4cplus::Logger::getInstance("worker");
-                LOG4CPLUS_ERROR(logger, "source found twice in dijkstra");
-                throw DestinationNotFound();
-            }
-        }
     }
 };
 
@@ -381,11 +370,15 @@ struct ProjectionData {
     ProjectionData() : found(false), source_distance(-1), target_distance(-1){}
     /// Initialise la structure à partir d'une coordonnée et d'un graphe sur lequel on projette
     ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, const proximitylist::ProximityList<vertex_t> &prox);
+    /// Initialise la structure à partir d'une coordonnée, d'un graphe sur lequel on projette et d'un offset qui correspond au mode de transport
+    ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, type::idx_t offset, const proximitylist::ProximityList<vertex_t> &prox);
     /// Incrémentation des noeuds suivant le mode de transport au début et à la fin : marche, vélo ou voiture
     void inc_vertex(const vertex_t);    
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & source & target & projected & source_distance & target_distance & found;
     }
+
+    void init(const type::GeographicalCoord & coord, const GeoRef & sn, edge_t nearest_edge);
 };
 
 /** Nommage d'un POI (point of interest). **/
