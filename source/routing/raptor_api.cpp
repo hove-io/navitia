@@ -3,6 +3,7 @@
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "type/datetime.h"
 #include <unordered_set>
+#include <chrono>
 
 
 namespace navitia { namespace routing {
@@ -198,7 +199,7 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "calcul des stop points pour l'entry point : [" << ep.coordinates.lat()
               << "," << ep.coordinates.lon() << "]");
-    bool init = false;
+    bool init_done = false;
     if(ep.type == type::Type_e::StopArea){
         auto it = pt_data.stop_areas_map.find(ep.uri);
         if(it!= pt_data.stop_areas_map.end()) {
@@ -213,7 +214,7 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
         }
     }else if(ep.type == type::Type_e::Address
                 || ep.type == type::Type_e::Coord || ep.type == type::Type_e::Admin){
-        init = true;
+        init_done = true;
         result = worker.find_nearest_stop_points(ep.coordinates,
                 pt_data.stop_point_proximity_list,
                 ep.streetnetwork_params.distance, use_second,
@@ -225,17 +226,12 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
     std::unordered_set<type::idx_t> visited_stop_points;
     for (const auto & sp_idx_distance : result) { visited_stop_points.insert(sp_idx_distance.first); }
 
-    size_t cpt(0), cpt_all_cnx(0);
     for(const auto & sp_idx_distance : result) {
         const auto sp_idx = sp_idx_distance.first;
         const auto stop_point = pt_data.stop_points[sp_idx];
         const auto connections_idx = stop_point->get(type::Type_e::StopPointConnection, pt_data);
-
         for(const auto connection_idx : connections_idx) {
             const auto* connection = pt_data.stop_point_connections[connection_idx];
-            LOG4CPLUS_DEBUG(logger, "ajout de la connection proche : "
-                      << connection->departure->name << "->" << connection->destination->name);
-            cpt_all_cnx++;
 
             const auto destination = connection->destination;
             if (visited_stop_points.find(destination->idx) != visited_stop_points.end()) {
@@ -243,10 +239,9 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
             }
             visited_stop_points.insert(destination->idx);
 
-            cpt++;
-            auto distance = worker.get_distance(ep.coordinates, destination->idx,
+            auto distance = worker.get_distance(ep.coordinates, destination->coord, destination->idx,
                                         use_second, ep.streetnetwork_params.offset,
-                                        init);
+                                        init_done);
             /*
              * On mettra ce traitement quand on aura trouvé un moyen de refaire path...
              * if(distance == std::numeric_limits<double>::max()) {
@@ -255,12 +250,11 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
                 distance = connection.duration * 1.68
             }*/
 
-            tmp_result.push_back(std::pair<type::idx_t, double>(destination->idx, distance));
-            init = true;
+            tmp_result.push_back({destination->idx, distance});
+            init_done = true;
         }
     }
-    LOG4CPLUS_DEBUG(logger, "taille results : " << result.size() << " et tmp : " << tmp_result.size()
-                    << " cpt = " << cpt << " cpt_all_cnx " << cpt_all_cnx);
+
     result.insert(result.end(), tmp_result.begin(), tmp_result.end());
     return result;
 }

@@ -285,17 +285,37 @@ ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoR
     }
 
     if(found) {
-        // On cherche les coordonnées des extrémités de ce segment
-        this->source = boost::source(edge, sn.graph);
-        this->target = boost::target(edge, sn.graph);
-        type::GeographicalCoord vertex1_coord = sn.graph[this->source].coord;
-        type::GeographicalCoord vertex2_coord = sn.graph[this->target].coord;
-        // On projette le nœud sur le segment
-        this->projected = coord.project(vertex1_coord, vertex2_coord).first;
-        // On calcule la distance « initiale » déjà parcourue avant d'atteindre ces extrémité d'où on effectue le calcul d'itinéraire
-        this->source_distance = projected.distance_to(vertex1_coord);
-        this->target_distance = projected.distance_to(vertex2_coord);
+        init(coord, sn, edge);
     }
+}
+
+ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoRef & sn, type::idx_t offset, const proximitylist::ProximityList<vertex_t> &prox){
+    edge_t edge;
+    found = true;
+    try {
+        edge = sn.nearest_edge(coord, offset, prox);
+    } catch(proximitylist::NotFound) {
+        found = false;
+        this->source = std::numeric_limits<vertex_t>::max();
+        this->target = std::numeric_limits<vertex_t>::max();
+    }
+
+    if(found) {
+        init(coord, sn, edge);
+    }
+}
+
+void ProjectionData::init(const type::GeographicalCoord & coord, const GeoRef & sn, edge_t nearest_edge) {
+    // On cherche les coordonnées des extrémités de ce segment
+    this->source = boost::source(nearest_edge, sn.graph);
+    this->target = boost::target(nearest_edge, sn.graph);
+    type::GeographicalCoord vertex1_coord = sn.graph[this->source].coord;
+    type::GeographicalCoord vertex2_coord = sn.graph[this->target].coord;
+    // On projette le nœud sur le segment
+    this->projected = coord.project(vertex1_coord, vertex2_coord).first;
+    // On calcule la distance « initiale » déjà parcourue avant d'atteindre ces extrémité d'où on effectue le calcul d'itinéraire
+    this->source_distance = projected.distance_to(vertex1_coord);
+    this->target_distance = projected.distance_to(vertex2_coord);
 }
 
 void ProjectionData::inc_vertex(const vertex_t value){
@@ -541,14 +561,24 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates) const {
 }
 
 vertex_t GeoRef::nearest_vertex(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t> &prox) const {
-    vertex_t u;
-    try {
-        u = prox.find_nearest(coordinates);
-    } catch(proximitylist::NotFound) {
-        throw proximitylist::NotFound();
-    }
-    return u;
+    return prox.find_nearest(coordinates);
 }
+
+/// Get the nearest_edge with at least one vertex in the graph corresponding to the offset (walking, bike, ...)
+edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, type::idx_t offset, const proximitylist::ProximityList<vertex_t>& prox) const {
+    auto vertexes_within = prox.find_within(coordinates);
+    for (const auto pair_coord : vertexes_within) {
+        //we increment the index to get the vertex in the other graph
+        const auto new_vertex = pair_coord.first + offset;
+
+        try {
+            edge_t edge_in_graph = nearest_edge(coordinates, new_vertex);
+            return edge_in_graph;
+        } catch(proximitylist::NotFound) {}
+    }
+    throw proximitylist::NotFound();
+}
+
 
 edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const vertex_t & u) const{
 
