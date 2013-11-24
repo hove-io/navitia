@@ -3,3 +3,7 @@ INSTALL_FILES(/srv/jormungandr FILES find_extrem_datetimes.py instance_manager.p
 
 add_subdirectory("scripts")
 add_subdirectory("interfaces")
+
+add_test(jormungandr nosetests --where=${CMAKE_CURRENT_SOURCE_DIR})
+set_tests_properties(jormungandr PROPERTIES ENVIRONMENT
+    PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR})
