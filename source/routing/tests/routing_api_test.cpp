@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
       |             /                                                                            |
       B------------------------------------------------------------------------------------------- C
       |
-     |
+      |
       |
       S
 
@@ -140,6 +140,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
             *) la voie MAP est : A->B
             *) la voie cyclable, voiture et MAP : S->B
             *) entre A et B que le transport en commun
+            *) entre A et R que la marche a pied
 
 
 
@@ -451,10 +452,11 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
     origin.streetnetwork_params.offset = b.data.geo_ref.bike_offset;
     origin.streetnetwork_params.speed = 13;
-    origin.streetnetwork_params.distance = S.distance_to(B) + B.distance_to(K) + J.distance_to(I) + H.distance_to(G) + G.distance_to(A) + 1;
+    double total_distance = S.distance_to(B) + B.distance_to(K) + K.distance_to(J) + J.distance_to(I) + I.distance_to(H) + H.distance_to(G) + G.distance_to(A) + A.distance_to(R) + 1;
+    origin.streetnetwork_params.distance = total_distance;
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Bike;
     destination.streetnetwork_params.offset = b.data.geo_ref.bike_offset;
-    destination.streetnetwork_params.distance = 5;
+    destination.streetnetwork_params.distance = total_distance;
     resp = make_response(raptor, origin, destination, datetimes, true, 1.38, 1000, type::AccessibiliteParams()/*false*/, forbidden, sn_worker);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);

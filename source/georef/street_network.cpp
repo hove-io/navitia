@@ -184,8 +184,7 @@ double StreetNetwork::get_distance(const ng::ProjectionData& start,
 
     const auto tmp_dist_target = dist[target.target] + target.target_distance;
     if(tmp_dist_target < best_dist) {
-        best_dist= tmp_dist_target;
-        idx_proj[target_idx] = target;
+        best_dist = tmp_dist_target;
     }
 
     return best_dist;
@@ -245,7 +244,7 @@ ng::Path StreetNetwork::get_direct_path() {
     //Cherche s'il y a des nœuds en commun, et retient le chemin le plus court
     size_t num_vertices = boost::num_vertices(geo_ref.graph);
 
-    double min_dist = std::numeric_limits<float>::max();
+    float min_dist = std::numeric_limits<float>::max();
     ng::vertex_t target = std::numeric_limits<size_t>::max();
     for(ng::vertex_t u = 0; u != num_vertices; ++u) {
         if((distances[u] != std::numeric_limits<float>::max()) && (distances2[u] != std::numeric_limits<float>::max())
