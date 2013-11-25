@@ -360,9 +360,11 @@ std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCo
 }
 
 void GeoRef::init_offset(nt::idx_t value){
-    vls_offset = value;
-    bike_offset = 2 * value;
-    car_offset = 3 * value;
+    //TODO ? with something like boost::enum we could even handle loops and only define the different transport modes in the enum
+    offsets[TransportationMode::Walk] = 0;
+    offsets[TransportationMode::BSS] = value;
+    offsets[TransportationMode::Bike] = 2 * value;
+    offsets[TransportationMode::Car] = 3 * value;
 
     /// Pour la gestion du vls
     for(vertex_t v = 0; v<value; ++v){
