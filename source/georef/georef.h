@@ -15,12 +15,21 @@
 #include <map>
 #include "adminref.h"
 #include "utils/logger.h"
+#include "utils/flat_enum_map.h"
 
 
 namespace nt = navitia::type;
 namespace nf = navitia::autocomplete;
 
 namespace navitia { namespace georef {
+
+enum class TransportationMode {
+    Walk = 0,
+    BSS, //Bike Sharing System
+    Bike,
+    Car,
+    size //add a size value not to have to specialize the enum_size_trait
+};
 
 /** Propriétés Nœud (intersection entre deux routes) */
 struct Vertex {
@@ -160,7 +169,6 @@ struct Rect{
     }
 };
 
-
 //Forward declarations
 struct POI;
 struct POIType;
@@ -208,28 +216,29 @@ struct GeoRef {
         3) pour la gestion du vélo
         4) pour la gestion de la voiture
     */
-    nt::idx_t vls_offset; // VLS
-    nt::idx_t bike_offset; // Vélo
-    nt::idx_t car_offset; // voiture
+    flat_enum_map<TransportationMode, nt::idx_t> offsets;
+    nt::idx_t vls_offset;
+    nt::idx_t bike_offset;
+    nt::idx_t car_offset;
 
     /// Liste des alias
     std::map<std::string, std::string> alias;
     std::map<std::string, std::string> synonymes;
     int word_weight; //Pas serialisé : lu dans le fichier ini
 
-    GeoRef(): vls_offset(0), bike_offset(0), car_offset(0), word_weight(0){}
+    GeoRef(): word_weight(0){}
 
     void init_offset(nt::idx_t);
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & ways & way_map & graph & vls_offset & bike_offset & car_offset & fl_admin & fl_way & pl & projected_stop_points & admins & admin_map &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
+        ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points & admins & admin_map &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
     }
 
     template<class Archive> void load(Archive & ar, const unsigned int) {
         // La désérialisation d'une boost adjacency list ne vide pas le graphe
         // On avait donc une fuite de mémoire
         graph.clear();
-        ar & ways & way_map & graph & vls_offset & bike_offset & car_offset & fl_admin & fl_way & pl & projected_stop_points & admins & admin_map & pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
+        ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points & admins & admin_map & pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
