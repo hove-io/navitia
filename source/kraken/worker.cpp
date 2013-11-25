@@ -223,17 +223,17 @@ type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbna
     }
     switch(result.mode){
         case type::Mode_e::Bike:
-            result.offset = (*data)->geo_ref.bike_offset;
+            result.offset = (*data)->geo_ref.offsets[navitia::type::Mode_e::Bike];
             result.distance = request.bike_distance();
             result.speed = request.bike_speed();
             break;
         case type::Mode_e::Car:
-            result.offset = (*data)->geo_ref.car_offset;
+            result.offset = (*data)->geo_ref.offsets[navitia::type::Mode_e::Car];
             result.distance = request.car_distance();
             result.speed = request.car_speed();
             break;
         case type::Mode_e::Vls:
-            result.offset = (*data)->geo_ref.vls_offset;
+            result.offset = (*data)->geo_ref.offsets[navitia::type::Mode_e::Vls];
             result.distance = request.vls_distance();
             result.speed = request.vls_speed();
             break;

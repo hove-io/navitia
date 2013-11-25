@@ -361,10 +361,10 @@ std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCo
 
 void GeoRef::init_offset(nt::idx_t value){
     //TODO ? with something like boost::enum we could even handle loops and only define the different transport modes in the enum
-    offsets[TransportationMode::Walk] = 0;
-    offsets[TransportationMode::BSS] = value;
-    offsets[TransportationMode::Bike] = 2 * value;
-    offsets[TransportationMode::Car] = 3 * value;
+    offsets[nt::Mode_e::Walking] = 0;
+    offsets[nt::Mode_e::Vls] = value;
+    offsets[nt::Mode_e::Bike] = 2 * value;
+    offsets[nt::Mode_e::Car] = 3 * value;
 
     /// Pour la gestion du vls
     for(vertex_t v = 0; v<value; ++v){
@@ -385,13 +385,13 @@ void GeoRef::init_offset(nt::idx_t value){
 void GeoRef::build_proximity_list(){
     pl.clear(); // vider avant de reconstruire
 
-    if(this->vls_offset == 0){
+    if(this->offsets[navitia::type::Mode_e::Vls] == 0){
         BOOST_FOREACH(vertex_t u, boost::vertices(this->graph)){
             pl.add(graph[u].coord, u);
         }
     }else{
         // Ne pas construire le proximitylist avec les noeuds utilisés par les arcs pour la recherche vélo, voiture
-        for(vertex_t v = 0; v < this->vls_offset; ++v){
+        for(vertex_t v = 0; v < this->offsets[navitia::type::Mode_e::Vls]; ++v){
             pl.add(graph[v].coord, v);
         }
     }

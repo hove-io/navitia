@@ -17,17 +17,6 @@ void StreetNetwork::init() {
 bool StreetNetwork::departure_launched() {return departure_launch;}
 bool StreetNetwork::arrival_launched() {return arrival_launch;}
 
-type::idx_t StreetNetwork::get_offset(const type::Mode_e & mode){
-    switch(mode){
-    case type::Mode_e::Bike:
-        return geo_ref.bike_offset;
-    case type::Mode_e::Car:
-        return geo_ref.car_offset;
-    default: return 0;
-    }
-}
-
-
 std::vector<std::pair<type::idx_t, double>>
 StreetNetwork::find_nearest_stop_points(const type::GeographicalCoord& start_coord,
                                         const proximitylist::ProximityList<type::idx_t>& pl,

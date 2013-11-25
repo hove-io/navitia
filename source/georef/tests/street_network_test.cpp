@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(idempotence) {
     type::idx_t target_idx(sp->idx);
 
     const bool use_second = false;
-    type::idx_t offset = worker.get_offset(type::Mode_e::Walking);
+    type::idx_t offset = worker.geo_ref.offsets[type::Mode_e::Walking];
 
     double distance = worker.get_distance(start, sp->coord, target_idx, use_second, offset, false);
 
