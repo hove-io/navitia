@@ -23,14 +23,6 @@ namespace nf = navitia::autocomplete;
 
 namespace navitia { namespace georef {
 
-enum class TransportationMode {
-    Walk = 0,
-    BSS, //Bike Sharing System
-    Bike,
-    Car,
-    size //add a size value not to have to specialize the enum_size_trait
-};
-
 /** Propriétés Nœud (intersection entre deux routes) */
 struct Vertex {
     nt::GeographicalCoord coord;
@@ -216,10 +208,10 @@ struct GeoRef {
         3) pour la gestion du vélo
         4) pour la gestion de la voiture
     */
-    flat_enum_map<TransportationMode, nt::idx_t> offsets;
-    nt::idx_t vls_offset;
-    nt::idx_t bike_offset;
-    nt::idx_t car_offset;
+    flat_enum_map<nt::Mode_e, nt::idx_t> offsets;
+//    nt::idx_t offsets[navitia::type::Mode_e::Vls];
+//    nt::idx_t offsets[TransportationMode::Bike];
+//    nt::idx_t offsets[TransportationMode::Car];
 
     /// Liste des alias
     std::map<std::string, std::string> alias;

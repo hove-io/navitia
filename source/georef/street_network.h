@@ -43,7 +43,6 @@ public:
      */
     bool arrival_launched();
 
-    type::idx_t get_offset(const type::Mode_e &);
     /** Calcule quels sont les stop point atteignables en radius mètres de marche à pied
      */
     std::vector<std::pair<type::idx_t, double>> find_nearest_stop_points(
