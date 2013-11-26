@@ -1,6 +1,6 @@
 from werkzeug.wrappers import Response
 import os, re
-from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
+from instance_manager import InstanceManager, DeadSocketException, RegionNotFound
 from error import generate_error
 import request_pb2, type_pb2
 from renderers import protobuf_to_dict, render, render_from_protobuf
@@ -14,11 +14,11 @@ def on_index(request, region = None ):
 
 def on_regions(request, format):
     response = {'regions': []}
-    for region in NavitiaManager().instances.keys() :
+    for region in InstanceManager().instances.keys() :
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
         try:
-            resp = NavitiaManager().send_and_receive(req, region)
+            resp = InstanceManager().send_and_receive(req, region)
             resp_dict = protobuf_to_dict(resp)
             if 'metadatas' in resp_dict.keys():
                 resp_dict['metadatas']['region_id'] = region
@@ -37,7 +37,7 @@ def find_region(uri):
         try:
             lon = float(uri_re.group(1))
             lat = float(uri_re.group(2))
-            region = NavitiaManager().key_of_coord(lon, lat)
+            region = InstanceManager().key_of_coord(lon, lat)
         except:
             pass
     return region
@@ -68,5 +68,5 @@ def on_api(request, region, api, format):
         return generate_error(e.message)
     except ApiNotFound, e:
         return generate_error("Unknown api : " + api, 404)
-    response = NavitiaManager().dispatch(arguments, region, api, request)
+    response = InstanceManager().dispatch(arguments, region, api, request)
     return render_from_protobuf(response, format, request.args.get("callback"))

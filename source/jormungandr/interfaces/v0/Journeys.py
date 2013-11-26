@@ -1,7 +1,7 @@
 # coding=utf-8
 from flask import Flask, request
 from flask.ext.restful import Resource, fields
-from instance_manager import NavitiaManager
+from instance_manager import InstanceManager
 from interfaces.parsers import true_false, option_value
 from protobuf_to_dict import protobuf_to_dict
 from find_extrem_datetimes import extremes
@@ -67,8 +67,8 @@ class Journeys(Resource):
     def get(self, region=None):
         args = self.parsers["get"].parse_args()
         if region is None:
-            region = NavitiaManager().key_of_id(args["origin"])
-        response = NavitiaManager().dispatch(args, region, "journeys")
+            region = InstanceManager().key_of_id(args["origin"])
+        response = InstanceManager().dispatch(args, region, "journeys")
         if response.journeys:
             (before, after) = extremes(response, request)
             if before and after:
@@ -105,8 +105,8 @@ class Isochrone(Resource):
     def get(self, region=None):
         args = self.parsers["get"].parse_args()
         if region is None:
-            region = NavitiaManager().key_of_id(args["origin"])
-        response = NavitiaManager().dispatch(args, region, "isochrone")
+            region = InstanceManager().key_of_id(args["origin"])
+        response = InstanceManager().dispatch(args, region, "isochrone")
         if response.journeys:
             (before, after) = extremes(response, request)
             if before and after:

@@ -1,5 +1,5 @@
 from validate import *
-from instance_manager import NavitiaManager
+from instance_manager import InstanceManager
 import copy
 
 def convertType(validator):
@@ -71,7 +71,7 @@ def api_doc(apis, api = None) :
                 regions['required'] = True
                 regions['allowMultiple'] = False
                 regions['allowableValues'] = {"valueType":"LIST", "values":[]}
-                for key in NavitiaManager().instances.keys():
+                for key in InstanceManager().instances.keys():
                     regions['allowableValues']["values"].append(key)
                 params.append(regions)
                 path += "{region}/"

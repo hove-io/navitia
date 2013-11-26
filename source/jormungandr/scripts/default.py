@@ -2,7 +2,6 @@
 import type_pb2
 import request_pb2
 import response_pb2
-from instance_manager import NavitiaManager
 from renderers import render_from_protobuf
 from qualifier import qualifier_one
 from datetime import datetime, timedelta
@@ -49,28 +48,28 @@ class Script(object):
                 resp.pagination.nextPage = query_args+"start_page=%i"% page
 
 
-    def status(self, request, region):
+    def status(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.STATUS
-        resp = NavitiaManager().send_and_receive(req, region)
+        resp = instance.send_and_receive(req)
         return resp
 
-    def metadatas(self, request, region):
+    def metadatas(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
-        resp = NavitiaManager().send_and_receive(req, region)
+        resp = instance.send_and_receive(req)
         return resp
 
 
 
-    def load(self, request, region, format):
+    def load(self, request, instance, format):
         req = request_pb2.Request()
         req.requested_api = type_pb2.LOAD
-        resp = NavitiaManager().send_and_receive(req, region)
+        resp = instance.send_and_receive(req)
         return render_from_protobuf(resp, format, request.arguments.get('callback'))
 
 
-    def places(self, request, region):
+    def places(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.places
         req.places.q     = request['q']
@@ -85,7 +84,7 @@ class Script(object):
             for admin_uri in request["admin_uri[]"]:
                 req.places.admin_uris.append(admin_uri)
 
-        resp = NavitiaManager().send_and_receive(req, region)
+        resp = instance.send_and_receive(req)
         if len(resp.places) == 0 and request['search_type'] == 0:
             request["search_type"] = 1
             return self.places(request, region)
@@ -93,13 +92,13 @@ class Script(object):
 
         return resp
 
-    def place_uri(self, request, region):
+    def place_uri(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
         req.place_uri.uri = request["uri"]
-        return NavitiaManager().send_and_receive(req, region)
+        return instance.send_and_receive(req)
 
-    def __stop_times(self, request, region, departure_filter, arrival_filter, api):
+    def __stop_times(self, request, instance, departure_filter, arrival_filter, api):
         req = request_pb2.Request()
         req.requested_api = api
         st = req.next_stop_times
@@ -117,27 +116,27 @@ class Script(object):
                            else request["start_page"]
         if request["max_date_times"]:
             st.max_date_times = request["max_date_times"]
-        resp = NavitiaManager().send_and_receive(req, region)
+        resp = instance.send_and_receive(req)
         return resp
 
 
-    def route_schedules(self, request, region):
-        return self.__stop_times(request, region, request["filter"], "", type_pb2.ROUTE_SCHEDULES)
+    def route_schedules(self, request, instance):
+        return self.__stop_times(request, instance, request["filter"], "", type_pb2.ROUTE_SCHEDULES)
 
-    def next_arrivals(self, request, region):
-        return self.__stop_times(request, region, "", request["filter"], type_pb2.NEXT_ARRIVALS)
+    def next_arrivals(self, request, instance):
+        return self.__stop_times(request, instance, "", request["filter"], type_pb2.NEXT_ARRIVALS)
 
-    def next_departures(self, request, region):
-        return self.__stop_times(request, region, request["filter"], "", type_pb2.NEXT_DEPARTURES)
+    def next_departures(self, request, instance):
+        return self.__stop_times(request, instance, request["filter"], "", type_pb2.NEXT_DEPARTURES)
 
-    def stops_schedules(self, request, region):
-        return self.__stop_times(request, region, request["departure_filter"], request["arrival_filter"],type_pb2.STOPS_SCHEDULES)
+    def stops_schedules(self, request, instance):
+        return self.__stop_times(request, instance, request["departure_filter"], request["arrival_filter"],type_pb2.STOPS_SCHEDULES)
 
-    def departure_boards(self, request, region):
-        return self.__stop_times(request, region, request["filter"], "", type_pb2.DEPARTURE_BOARDS)
+    def departure_boards(self, request, instance):
+        return self.__stop_times(request, instance, request["filter"], "", type_pb2.DEPARTURE_BOARDS)
 
 
-    def places_nearby(self, request, region):
+    def places_nearby(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.places_nearby
         req.places_nearby.uri        = request["uri"]
@@ -149,7 +148,7 @@ class Script(object):
             for type in request["type[]"]:
                 req.places_nearby.types.append(pb_type[type])
         req.places_nearby.filter = request["filter"]
-        resp = NavitiaManager().send_and_receive(req, region)
+        resp = instance.send_and_receive(req)
         self.__pagination(request, "places_nearby", resp)
         return resp
 
@@ -167,14 +166,14 @@ class Script(object):
                         section.uris.physical_mode = section.pt_display_informations.uris.physical_mode
                         section.uris.network = section.pt_display_informations.uris.network
 
-    def get_journey(self, req, region, trip_type):
+    def get_journey(self, req, instance, trip_type):
         resp = None
 
         for origin_mode, destination_mode in itertools.product(
                 self.origin_modes, self.destination_modes):
             req.journeys.streetnetwork_params.origin_mode = origin_mode
             req.journeys.streetnetwork_params.destination_mode = destination_mode
-            resp = NavitiaManager().send_and_receive(req, region)
+            resp = instance.send_and_receive(req)
             if resp.response_type == response_pb2.ITINERARY_FOUND:
                 if req.requested_api == type_pb2.PLANNER:
                     qualifier_one(resp.journeys)
@@ -210,7 +209,7 @@ class Script(object):
             return -1
 
 
-    def __on_journeys(self, requested_type, request, region):
+    def __on_journeys(self, requested_type, request, instance):
         req = request_pb2.Request()
         req.requested_api = requested_type
         req.journeys.origin = request["origin"]
@@ -247,7 +246,7 @@ class Script(object):
         if not request.has_key("type"):
             request["type"] = "all"
         #call to kraken
-        resp = self.get_journey(req, region, request["type"])
+        resp = self.get_journey(req, instance, request["type"])
         if len(resp.journeys) > 0 and request.has_key("count"):
             while request["count"] and request["count"] > len(resp.journeys):
                 temp_datetime = None
@@ -267,7 +266,7 @@ class Script(object):
 
 
                 req.journeys.datetimes[0] = temp_datetime.strftime("%Y%m%dT%H%M%S")
-                tmp_resp = self.get_journey(req, region, request["type"])
+                tmp_resp = self.get_journey(req, instance, request["type"])
                 if len(tmp_resp.journeys) == 0:
                     break
                 else:
@@ -293,14 +292,14 @@ class Script(object):
         return resp
 
 
-    def journeys(self, request, region):
-        return self.__on_journeys(type_pb2.PLANNER, request, region)
+    def journeys(self, request, instance):
+        return self.__on_journeys(type_pb2.PLANNER, request, instance)
 
 
-    def isochrone(self, request, region):
-        return self.__on_journeys(type_pb2.ISOCHRONE, request, region)
+    def isochrone(self, request, instance):
+        return self.__on_journeys(type_pb2.ISOCHRONE, request, instance)
 
-    def __on_ptref(self, resource_name, requested_type, request, region):
+    def __on_ptref(self, resource_name, requested_type, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.PTREFERENTIAL
 
@@ -310,48 +309,48 @@ class Script(object):
         req.ptref.start_page = request["start_page"]
         req.ptref.count      = request["count"]
 
-        resp = NavitiaManager().send_and_receive(req, region)
+        resp = instance.send_and_receive(req)
         self.__pagination(request, resource_name, resp)
         return resp
 
-    def stop_areas(self, request, region):
-        return self.__on_ptref("stop_areas", type_pb2.STOP_AREA, request, region)
+    def stop_areas(self, request, instance):
+        return self.__on_ptref("stop_areas", type_pb2.STOP_AREA, request, instance)
 
-    def stop_points(self, request, region):
-        return self.__on_ptref("stop_points", type_pb2.STOP_POINT, request, region)
+    def stop_points(self, request, instance):
+        return self.__on_ptref("stop_points", type_pb2.STOP_POINT, request, instance)
 
-    def lines(self, request, region):
-        return self.__on_ptref("lines", type_pb2.LINE, request, region)
+    def lines(self, request, instance):
+        return self.__on_ptref("lines", type_pb2.LINE, request, instance)
 
-    def routes(self, request, region):
-        return self.__on_ptref("routes", type_pb2.ROUTE, request,  region)
+    def routes(self, request, instance):
+        return self.__on_ptref("routes", type_pb2.ROUTE, request,  instance)
 
-    def networks(self, request, region):
-        return self.__on_ptref("networks", type_pb2.NETWORK, request, region)
+    def networks(self, request, instance):
+        return self.__on_ptref("networks", type_pb2.NETWORK, request, instance)
 
-    def physical_modes(self, request, region):
-        return self.__on_ptref("physical_modes", type_pb2.PHYSICAL_MODE, request, region)
+    def physical_modes(self, request, instance):
+        return self.__on_ptref("physical_modes", type_pb2.PHYSICAL_MODE, request, instance)
 
-    def commercial_modes(self, request, region):
-        return self.__on_ptref("commercial_modes", type_pb2.COMMERCIAL_MODE, request, region)
+    def commercial_modes(self, request, instance):
+        return self.__on_ptref("commercial_modes", type_pb2.COMMERCIAL_MODE, request, instance)
 
-    def connections(self, request, region):
-        return self.__on_ptref("connections", type_pb2.CONNECTION, request, region)
+    def connections(self, request, instance):
+        return self.__on_ptref("connections", type_pb2.CONNECTION, request, instance)
 
-    def journey_pattern_points(self, request, region):
-        return self.__on_ptref("journey_pattern_points", type_pb2.JOURNEY_PATTERN_POINT, request,  region)
+    def journey_pattern_points(self, request, instance):
+        return self.__on_ptref("journey_pattern_points", type_pb2.JOURNEY_PATTERN_POINT, request,  instance)
 
-    def journey_patterns(self, request, region):
-        return self.__on_ptref("journey_patterns", type_pb2.JOURNEY_PATTERN, request, region)
+    def journey_patterns(self, request, instance):
+        return self.__on_ptref("journey_patterns", type_pb2.JOURNEY_PATTERN, request, instance)
 
-    def companies(self, request, region):
-        return self.__on_ptref("companies", type_pb2.COMPANY, request, region)
+    def companies(self, request, instance):
+        return self.__on_ptref("companies", type_pb2.COMPANY, request, instance)
 
-    def vehicle_journeys(self, request, region):
-        return self.__on_ptref("vehicle_journeys", type_pb2.VEHICLE_JOURNEY, request, region)
+    def vehicle_journeys(self, request, instance):
+        return self.__on_ptref("vehicle_journeys", type_pb2.VEHICLE_JOURNEY, request, instance)
 
-    def pois(self, request, region):
-        return self.__on_ptref("pois", type_pb2.POI, request, region)
+    def pois(self, request, instance):
+        return self.__on_ptref("pois", type_pb2.POI, request, instance)
 
-    def poi_types(self, request, region):
-        return self.__on_ptref("poi_types", type_pb2.POITYPE, request, region)
+    def poi_types(self, request, instance):
+        return self.__on_ptref("poi_types", type_pb2.POITYPE, request, instance)

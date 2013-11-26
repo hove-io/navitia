@@ -5,7 +5,7 @@ import flask.ext.restful
 from flask import current_app
 from functools import wraps
 import db
-from instance_manager import NavitiaManager, RegionNotFound
+from instance_manager import InstanceManager, RegionNotFound
 import datetime
 import base64
 
@@ -22,7 +22,7 @@ def authentification_required(func):
             region = kwargs['region']
         elif kwargs.has_key('lon') and kwargs.has_key('lat'):
             try:
-                region = NavitiaManager().key_of_coord(lon=kwargs['lon'],
+                region = InstanceManager().key_of_coord(lon=kwargs['lon'],
                         lat=kwargs['lat'])
             except RegionNotFound:
                 pass

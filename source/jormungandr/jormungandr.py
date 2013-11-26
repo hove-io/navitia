@@ -3,7 +3,7 @@
 import sys
 import signal
 import os
-from instance_manager import NavitiaManager
+from instance_manager import InstanceManager
 from flask import url_for, make_response
 from flask.ext.restful.representations import json
 from interfaces.v0_routing import v0_routing
@@ -42,16 +42,17 @@ v0_documentation(api)
 v1_documentation(api)
 
 def kill_thread(signal, frame):
-    NavitiaManager().stop()
+    InstanceManager().stop()
     sys.exit(0)
 config_file = 'Jormungandr.ini' if not os.environ.has_key('JORMUNGANDR_CONFIG_FILE')\
                                 else os.environ['JORMUNGANDR_CONFIG_FILE']
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, kill_thread)
     signal.signal(signal.SIGTERM, kill_thread)
-    NavitiaManager().initialisation()
+    InstanceManager().initialisation()
+    app.config['DEBUG'] = True
     run_simple('localhost', 5000, app,
                use_evalex=True)
 
 else:
-    NavitiaManager().initialisation()
+    InstanceManager().initialisation()
