@@ -325,6 +325,9 @@ Parameters
 | nop     | admin_uri\[\] | array of string | If filled, will restrained the search    | ""                                  |
 |         |               |                 | within the given admin uris              |                                     |
 +---------+---------------+-----------------+------------------------------------------+-------------------------------------+
+| nop     | filter        | string          | Use to restrain returned objects.        |                                     |
+|         |               |                 | for example : places_type.id=theater     |                                     |
++---------+---------------+-----------------+------------------------------------------+-------------------------------------+
 
 Example
 ########
