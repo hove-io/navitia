@@ -85,6 +85,38 @@ ce qui permet à toutes les instances intéressé de pouvoir recevoir ces flux.
 Les éléments insérés dans l'exchange **doivent etre persistant** ce qui se réalise en fixant la propriété *delivry_mode* à **2**.
 Ceci permettra à Sindri de gérer la reprise sur incident
 
+Transformation des codes externes en uris
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Le connecteur permet de transformer les codes externes NAViTiA1 en URIs NAViTiA2.
+
+La transformation n'est éffectué que pour les objets suivants :
+
+- stop_point
+- stop_area
+- network
+- line
+- vehicle_journey
+
+.. warning::
+   Les impacts sur les objets *Route* et *RoutePoint* ne sont pas pris en compte par NAViTiA2.
+
+Le tableau suivant présente les transformations possibles :
+
++----------------+-----------------------+----------------------------+
+|Object          |ExternalCode(NAViTi1)  |Uri(NAViTi2)                |
++================+=======================+============================+
+|stop_point      | AAA1111               | stop_point:AAA:SP:1111     |
++----------------+-----------------------+----------------------------+
+|stop_area       | AAA1111               | stop_area:AAA:SA:1111      |
++----------------+-----------------------+----------------------------+
+|network         | AAA1111               | network:AAA:1111           |
++----------------+-----------------------+----------------------------+
+|line            | AAA1111               | line:AAA:1111              |
++----------------+-----------------------+----------------------------+
+|vehicle_journey | AAA1111               | vehicle_journey:AAA:1111   |
++----------------+-----------------------+----------------------------+
+
+AAA : représente le traigramme du contributeur.
 
 Brokk
 -----

@@ -162,6 +162,25 @@ class AtRealtimeReader(object):
             return 2
         return None
 
+    def external_code2uri(self, external_code, object_type):
+        object_uri = external_code
+        try:
+            if object_type.lower() == 'stoppoint':
+                object_uri = ":".join(["stop_point", external_code[:3], "SP", external_code[3:]])
+            elif object_type.lower() == 'vehiclejourney':
+                object_uri = ":".join(["vehicle_journey", external_code[:3], external_code[3:]])
+            elif object_type.lower() == 'line':
+                object_uri = ":".join(["line", external_code[:3], external_code[3:]])
+            elif object_type.lower() == 'network':
+                object_uri = ":".join(["network", external_code])
+            elif object_type.lower() == 'stoparea':
+                object_uri = ":".join(["stop_area", external_code[:3],"SA", external_code[3:]])
+            else:
+                object_uri = external_code
+        except:
+            logging.getLogger('connector').warn("Impossible to transform the external code: %s", str(object_uri))
+        return object_uri
+
     def set_message(self, result_proxy):
         """
 
@@ -196,8 +215,8 @@ class AtRealtimeReader(object):
                             row[self.label_application_daily_end_hour])
                     message.active_days = \
                         int_to_bitset(row[self.label_active_days]) + '1'
-                    message.object.object_uri = row[
-                        self.label_object_external_code]
+                    message.object.object_uri = \
+                        self.external_code2uri(row[self.label_object_external_code], row[self.label_object_type])
                     message.object.object_type = \
                         get_navitia_type(row[self.label_object_type])
 
