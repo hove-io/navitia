@@ -29,7 +29,10 @@ class ResourceUri(Resource):
 
         for item in items:
             if not type_:
-                type_ = collections_to_resource_type[item]
+                if item != "coord":
+                    type_ = collections_to_resource_type[item]
+                else:
+                    type_ = "coord"
             else:
                 if type_ == "coord" or type_ == "address":
                     splitted_coord = item.split(";")
