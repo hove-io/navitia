@@ -1,6 +1,3 @@
-FIND_PACKAGE(Boost 1.44 COMPONENTS unit_test_framework thread regex serialization REQUIRED)
-
-
 SET(GEOREF_SRC_TEST
     builder.h
     builder.cpp
