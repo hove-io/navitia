@@ -1,6 +1,6 @@
 # coding=utf8
 from conf import base_url
-from instance_manager import NavitiaManager, DeadSocketException, RegionNotFound
+from instance_manager import InstanceManager, DeadSocketException, RegionNotFound
 from renderers import render
 import request_pb2, type_pb2,response_pb2
 from uri import collections_to_resource_type, resource_type_to_collection
@@ -680,7 +680,7 @@ def coverage(request, region_name=None, format=None):
         link["templated"] = region_name == None
 
     if not region_name:
-        regions = NavitiaManager().instances.keys()
+        regions = InstanceManager().instances.keys()
     else:
         regions = {region_name}
 
@@ -689,7 +689,7 @@ def coverage(request, region_name=None, format=None):
     req.requested_api = type_pb2.METADATAS
     for r_name in regions:
         try:
-            resp = NavitiaManager().send_and_receive(req, r_name)
+            resp = InstanceManager().send_and_receive(req, r_name)
             result['regions'].append(renderer.region(resp.metadatas, r_name))
         except DeadSocketException :
             if region_name:
@@ -715,7 +715,7 @@ def coord(request, lon_, lat_):
 
     result_dict = {"coord" : {"lon":lon, "lat": lat,
                    "regions" : []}, "links":[]}
-    region_key = NavitiaManager().key_of_coord(lon, lat)
+    region_key = InstanceManager().key_of_coord(lon, lat)
     if(region_key):
         result_dict["coord"]["regions"].append({"id":region_key})
     url_coord = base_url + "/v1/coverage/" + lon_ + ";" + lat_

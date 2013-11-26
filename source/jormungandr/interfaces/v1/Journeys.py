@@ -2,7 +2,7 @@
 from flask import Flask, request, url_for
 from flask.ext.restful import fields, reqparse, marshal_with
 from flask.ext.restful.types import boolean
-from instance_manager import NavitiaManager
+from instance_manager import InstanceManager
 from protobuf_to_dict import protobuf_to_dict
 from fields import stop_point, stop_area, route, line, physical_mode,\
                    commercial_mode, company, network, pagination, place,\
@@ -322,7 +322,7 @@ class Journeys(ResourceUri):
         args['destination_mode'] = 'vls' if args['destination_mode'] == 'br' else args['destination_mode']
         args['origin_mode'] = 'vls' if args['origin_mode'] == 'br' else args['origin_mode']
         if region or (lon and lat):
-            self.region = NavitiaManager().get_region(region, lon, lat)
+            self.region = InstanceManager().get_region(region, lon, lat)
             if uri:
                 objects = uri.split('/')
                 if objects and len(objects) % 2 == 0:
@@ -332,10 +332,10 @@ class Journeys(ResourceUri):
                                        'object'}, 503
         else:
             if args['origin']:
-                self.region = NavitiaManager().key_of_id(args['origin'])
+                self.region = InstanceManager().key_of_id(args['origin'])
                 args['origin'] = self.transform_id(args['origin'])
             elif args['destination']:
-                self.region = NavitiaManager().key_of_id(args['destination'])
+                self.region = InstanceManager().key_of_id(args['destination'])
             if args['destination']:
                 args['destination'] = self.transform_id(args['destination'])
             #else:
@@ -348,7 +348,7 @@ class Journeys(ResourceUri):
         else:
             api = 'isochrone'
 
-        response = NavitiaManager().dispatch(args, self.region, api)
+        response = InstanceManager().dispatch(args, self.region, api)
         return response
 
     def transform_id(self, id):

@@ -15,7 +15,7 @@ from app import app
 from instance import Instance
 
 @singleton
-class NavitiaManager(object):
+class InstanceManager(object):
     """ Permet de coordonner les différents NAViTiA gérés par le front-end
     Un identifiant correspond à une socket ZMQ Navitia où se connecter
     Plusieurs identifiants peuvent se connecter à une même socket
