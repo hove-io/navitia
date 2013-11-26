@@ -252,15 +252,15 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     GeographicalCoord o(0,0);
 
     StreetNetwork w(sn);
-    auto res = w.find_nearest_stop_points(o, pl, 10, false,0);
+    auto res = w.find_nearest_stop_points(o, pl, 10, false, Mode_e::Walking);
     BOOST_CHECK_EQUAL(res.size(), 0);
 
-    res = w.find_nearest_stop_points(o, pl, 100, false,0);
+    res = w.find_nearest_stop_points(o, pl, 100, false, Mode_e::Walking);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].first , 0);
     BOOST_CHECK_CLOSE(res[0].second, 50, 1);
 
-    res = w.find_nearest_stop_points(o, pl, 1000, false,0);
+    res = w.find_nearest_stop_points(o, pl, 1000, false, Mode_e::Walking);
     std::sort(res.begin(), res.end());
     BOOST_CHECK_EQUAL(res.size(), 2);
     BOOST_CHECK_EQUAL(res[0].first , 0);
@@ -651,6 +651,6 @@ BOOST_AUTO_TEST_CASE(two_scc) {
 
     StreetNetwork w(sn);
 
-    auto max = w.get_distance(c1, c2, 1, false, 0, false);
+    auto max = w.get_distance(c1, 1, false, Mode_e::Walking, false);
     BOOST_CHECK_EQUAL(max, std::numeric_limits<float>::max());
 }
