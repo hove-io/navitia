@@ -84,8 +84,10 @@ BOOST_AUTO_TEST_CASE(idempotence) {
     data.pt_data.stop_points.push_back(sp);
     geo_ref.project_stop_points(data.pt_data.stop_points);
 
-    const ProjectionData proj = geo_ref.projected_stop_points[sp->idx];
-    BOOST_REQUIRE(proj.found); //we have to be able to project this point
+    const GeoRef::ProjectionByMode& projections = geo_ref.projected_stop_points[sp->idx];
+    const ProjectionData proj = projections[type::Mode_e::Walking];
+
+    BOOST_REQUIRE(proj.found); //we have to be able to project this point (on the walking graph)
 
     geo_ref.build_proximity_list();
 

@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "georef/georef.h"
+#include "type/data.h"
 #include "builder.h"
 #include"georef/street_network.h"
 
@@ -239,8 +240,14 @@ BOOST_AUTO_TEST_CASE(compute_nearest){
     pl.add(c2, 1);
     pl.build();
 
-    sn.projected_stop_points.push_back(ProjectionData(c1, sn, sn.pl));
-    sn.projected_stop_points.push_back(ProjectionData(c2, sn, sn.pl));
+    StopPoint* sp1 = new StopPoint();
+    sp1->coord = c1;
+    StopPoint* sp2 = new StopPoint();
+    sp2->coord = c2;
+    std::vector<StopPoint*> stop_points;
+    stop_points.push_back(sp1);
+    stop_points.push_back(sp2);
+    sn.project_stop_points(stop_points);
 
     GeographicalCoord o(0,0);
 
@@ -631,8 +638,14 @@ BOOST_AUTO_TEST_CASE(two_scc) {
     pl.add(c2, 1);
     pl.build();
 
-    sn.projected_stop_points.push_back(ProjectionData(c1, sn, sn.pl));
-    sn.projected_stop_points.push_back(ProjectionData(c2, sn, sn.pl));
+    StopPoint* sp1 = new StopPoint();
+    sp1->coord = c1;
+    StopPoint* sp2 = new StopPoint();
+    sp2->coord = c2;
+    std::vector<StopPoint*> stop_points;
+    stop_points.push_back(sp1);
+    stop_points.push_back(sp2);
+    sn.project_stop_points(stop_points);
 
     GeographicalCoord o(0,0);
 
