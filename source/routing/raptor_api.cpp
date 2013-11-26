@@ -218,7 +218,7 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
         result = worker.find_nearest_stop_points(ep.coordinates,
                 pt_data.stop_point_proximity_list,
                 ep.streetnetwork_params.distance, use_second,
-                ep.streetnetwork_params.offset);
+                ep.streetnetwork_params.mode);
     }
     //On va chercher tous les stop_points en correspondance
     //avec ceux déjà trouvés.
@@ -239,8 +239,8 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
             }
             visited_stop_points.insert(destination->idx);
 
-            auto distance = worker.get_distance(ep.coordinates, destination->coord, destination->idx,
-                                        use_second, ep.streetnetwork_params.offset,
+            auto distance = worker.get_distance(ep.coordinates, destination->idx,
+                                        use_second, ep.streetnetwork_params.mode,
                                         init_done);
             /*
              * On mettra ce traitement quand on aura trouvé un moyen de refaire path...

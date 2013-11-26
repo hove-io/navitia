@@ -94,9 +94,8 @@ BOOST_AUTO_TEST_CASE(idempotence) {
     type::idx_t target_idx(sp->idx);
 
     const bool use_second = false;
-    type::idx_t offset = worker.geo_ref.offsets[type::Mode_e::Walking];
 
-    double distance = worker.get_distance(start, sp->coord, target_idx, use_second, offset, false);
+    double distance = worker.get_distance(start, target_idx, use_second, type::Mode_e::Walking, false);
 
     //we have to find a way to get there
     BOOST_REQUIRE_NE(distance, std::numeric_limits<float>::max());
@@ -115,7 +114,7 @@ BOOST_AUTO_TEST_CASE(idempotence) {
 
     //we ask again with the init again
     {
-        double other_distance = worker.get_distance(start, sp->coord, target_idx, use_second, offset, false);
+        double other_distance = worker.get_distance(start, target_idx, use_second, type::Mode_e::Walking, false);
 
         computation_results other_res {other_distance, worker};
 
@@ -130,7 +129,7 @@ BOOST_AUTO_TEST_CASE(idempotence) {
 
     //we ask again without a init
     {
-        double other_distance = worker.get_distance(start, sp->coord, target_idx, use_second, offset, true);
+        double other_distance = worker.get_distance(start, target_idx, use_second, type::Mode_e::Walking, true);
 
         computation_results other_res {other_distance, worker};
         //we have to find a way to get there

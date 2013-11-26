@@ -20,7 +20,9 @@ bool StreetNetwork::arrival_launched() {return arrival_launch;}
 std::vector<std::pair<type::idx_t, double>>
 StreetNetwork::find_nearest_stop_points(const type::GeographicalCoord& start_coord,
                                         const proximitylist::ProximityList<type::idx_t>& pl,
-                                        double radius, bool use_second,nt::idx_t offset){
+                                        double radius, bool use_second,nt::Mode_e mode) {
+
+    nt::idx_t offset = this->geo_ref.offsets[mode];
     // we look for the nearest edge from the start coorinate in the right transport mode (walk, bike, car, ...) (ie offset)
     ng::ProjectionData nearest_edge = ng::ProjectionData(start_coord, this->geo_ref, offset, this->geo_ref.pl);
 
@@ -37,12 +39,12 @@ StreetNetwork::find_nearest_stop_points(const type::GeographicalCoord& start_coo
     if(!use_second) {
         departure_launch = true;
         this->departure = nearest_edge;
-        return find_nearest_stop_points(nearest_edge, radius, elements, distances, predecessors, idx_projection, offset);
+        return find_nearest_stop_points(nearest_edge, radius, elements, distances, predecessors, idx_projection, mode);
     }
     else{
         arrival_launch = true;
         this->destination = nearest_edge;
-        return find_nearest_stop_points(nearest_edge, radius, elements, distances2, predecessors2, idx_projection2, offset);
+        return find_nearest_stop_points(nearest_edge, radius, elements, distances2, predecessors2, idx_projection2, mode);
     }
 }
 
@@ -51,7 +53,7 @@ StreetNetwork::find_nearest_stop_points(const ng::ProjectionData& start, double 
                                         const std::vector<std::pair<type::idx_t, type::GeographicalCoord>>& elements,
                                         std::vector<float>& dist,
                                         std::vector<ng::vertex_t>& preds,
-                                        std::map<type::idx_t, ng::ProjectionData>& idx_proj,nt::idx_t offset){
+                                        std::map<type::idx_t, ng::ProjectionData>& idx_proj,nt::Mode_e mode){
     std::vector<std::pair<type::idx_t, double>> result;
     geo_ref.init(dist, preds);
     idx_proj.clear();
@@ -70,7 +72,7 @@ StreetNetwork::find_nearest_stop_points(const ng::ProjectionData& start, double 
     const double max = std::numeric_limits<float>::max();
 
     for(auto element: elements){
-        ng::ProjectionData projection = ng::ProjectionData(element.second, this->geo_ref, offset, this->geo_ref.pl);//TODO save stop point projection on all network
+        ng::ProjectionData projection = this->geo_ref.projected_stop_points[element.first][mode];
         // Est-ce que le stop point a pu être raccroché au street network
         if(projection.found){
             double best_dist = max;
@@ -89,17 +91,18 @@ StreetNetwork::find_nearest_stop_points(const ng::ProjectionData& start, double 
     return result;
 }
 
-double StreetNetwork::get_distance(const type::GeographicalCoord& start_coord, const type::GeographicalCoord& target_coord,
+double StreetNetwork::get_distance(const type::GeographicalCoord& start_coord,
                                    const type::idx_t& target_idx,
-                                   bool use_second, nt::idx_t offset,
+                                   bool use_second, nt::Mode_e mode,
                                    bool init) {
     const double max = std::numeric_limits<float>::max();
+    nt::idx_t offset = this->geo_ref.offsets[mode];
     ng::ProjectionData start_edge = ng::ProjectionData(start_coord, this->geo_ref, offset, this->geo_ref.pl);
     if(!start_edge.found)
         return max;
     assert(boost::edge(start_edge.source, start_edge.target, geo_ref.graph).second);
 
-    ng::ProjectionData projection = ng::ProjectionData(target_coord, this->geo_ref, offset, this->geo_ref.pl); //TODO save stop point projection on all network
+    ng::ProjectionData projection = this->geo_ref.projected_stop_points[target_idx][mode];
     if(!projection.found)
         return max;
     assert(boost::edge(projection.source, projection.target, geo_ref.graph).second );
@@ -155,15 +158,14 @@ double StreetNetwork::get_distance(const ng::ProjectionData& start,
     }
 
     if(dist[target.target] == max) {
-        bool found = false;
         try {
             geo_ref.dijkstra(start.source, dist, preds,
                              ng::target_unique_visitor(target.target));
-        } catch(ng::DestinationFound) {found = true;}
+        } catch(ng::DestinationFound) {}
         try {
             geo_ref.dijkstra(start.target, dist, preds,
                              ng::target_unique_visitor(target.target));
-         } catch(ng::DestinationFound) { found = true; }
+         } catch(ng::DestinationFound) {}
     }
 
     assert(dist[target.source] != max && dist[target.target] != max); //if we succeded in the first search, we must have found the other distances
