@@ -360,9 +360,11 @@ std::vector<navitia::type::idx_t> GeoRef::find_admins(const type::GeographicalCo
 }
 
 void GeoRef::init_offset(nt::idx_t value){
-    vls_offset = value;
-    bike_offset = 2 * value;
-    car_offset = 3 * value;
+    //TODO ? with something like boost::enum we could even handle loops and only define the different transport modes in the enum
+    offsets[nt::Mode_e::Walking] = 0;
+    offsets[nt::Mode_e::Vls] = value;
+    offsets[nt::Mode_e::Bike] = 2 * value;
+    offsets[nt::Mode_e::Car] = 3 * value;
 
     /// Pour la gestion du vls
     for(vertex_t v = 0; v<value; ++v){
@@ -383,13 +385,13 @@ void GeoRef::init_offset(nt::idx_t value){
 void GeoRef::build_proximity_list(){
     pl.clear(); // vider avant de reconstruire
 
-    if(this->vls_offset == 0){
+    if(this->offsets[navitia::type::Mode_e::Vls] == 0){
         BOOST_FOREACH(vertex_t u, boost::vertices(this->graph)){
             pl.add(graph[u].coord, u);
         }
     }else{
         // Ne pas construire le proximitylist avec les noeuds utilisés par les arcs pour la recherche vélo, voiture
-        for(vertex_t v = 0; v < this->vls_offset; ++v){
+        for(vertex_t v = 0; v < this->offsets[navitia::type::Mode_e::Vls]; ++v){
             pl.add(graph[v].coord, v);
         }
     }
@@ -547,13 +549,31 @@ int GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_points
     int matched = 0;
     this->projected_stop_points.clear();
     this->projected_stop_points.reserve(stop_points.size());
-    for(const type::StopPoint* stop_point : stop_points){
-        ProjectionData proj(stop_point->coord, *this, this->pl);
-        this->projected_stop_points.push_back(proj);
-        if(proj.found)
+
+    for(const type::StopPoint* stop_point : stop_points) {
+        std::pair<GeoRef::ProjectionByMode, bool> pair = project_stop_point(stop_point);
+
+        this->projected_stop_points.push_back(pair.first);
+        if(pair.second)
             matched++;
     }
     return matched;
+}
+
+std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type::StopPoint* stop_point) const {
+    bool one_proj_found = false;
+    ProjectionByMode projections;
+
+    for (const auto& pair : offsets) {
+        type::idx_t offset = pair.second;
+        type::Mode_e transportation_mode = pair.first;
+
+        ProjectionData proj(stop_point->coord, *this, offset, this->pl);
+        projections[transportation_mode] = proj;
+        if(proj.found)
+            one_proj_found = true;
+    }
+    return {projections, one_proj_found};
 }
 
 edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates) const {

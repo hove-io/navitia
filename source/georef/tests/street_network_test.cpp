@@ -84,17 +84,18 @@ BOOST_AUTO_TEST_CASE(idempotence) {
     data.pt_data.stop_points.push_back(sp);
     geo_ref.project_stop_points(data.pt_data.stop_points);
 
-    const ProjectionData proj = geo_ref.projected_stop_points[sp->idx];
-    BOOST_REQUIRE(proj.found); //we have to be able to project this point
+    const GeoRef::ProjectionByMode& projections = geo_ref.projected_stop_points[sp->idx];
+    const ProjectionData proj = projections[type::Mode_e::Walking];
+
+    BOOST_REQUIRE(proj.found); //we have to be able to project this point (on the walking graph)
 
     geo_ref.build_proximity_list();
 
     type::idx_t target_idx(sp->idx);
 
     const bool use_second = false;
-    type::idx_t offset = worker.get_offset(type::Mode_e::Walking);
 
-    double distance = worker.get_distance(start, sp->coord, target_idx, use_second, offset, false);
+    double distance = worker.get_distance(start, target_idx, use_second, type::Mode_e::Walking, false);
 
     //we have to find a way to get there
     BOOST_REQUIRE_NE(distance, std::numeric_limits<float>::max());
@@ -113,7 +114,7 @@ BOOST_AUTO_TEST_CASE(idempotence) {
 
     //we ask again with the init again
     {
-        double other_distance = worker.get_distance(start, sp->coord, target_idx, use_second, offset, false);
+        double other_distance = worker.get_distance(start, target_idx, use_second, type::Mode_e::Walking, false);
 
         computation_results other_res {other_distance, worker};
 
@@ -128,7 +129,7 @@ BOOST_AUTO_TEST_CASE(idempotence) {
 
     //we ask again without a init
     {
-        double other_distance = worker.get_distance(start, sp->coord, target_idx, use_second, offset, true);
+        double other_distance = worker.get_distance(start, target_idx, use_second, type::Mode_e::Walking, true);
 
         computation_results other_res {other_distance, worker};
         //we have to find a way to get there

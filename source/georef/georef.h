@@ -15,6 +15,7 @@
 #include <map>
 #include "adminref.h"
 #include "utils/logger.h"
+#include "utils/flat_enum_map.h"
 
 
 namespace nt = navitia::type;
@@ -160,7 +161,6 @@ struct Rect{
     }
 };
 
-
 //Forward declarations
 struct POI;
 struct POIType;
@@ -195,8 +195,9 @@ struct GeoRef {
     /// Indexe tous les nœuds
     proximitylist::ProximityList<vertex_t> pl;
 
-    /// Pour chaque stop_point, on associe la projection sur le filaire
-    std::vector<ProjectionData> projected_stop_points;
+    /// for all stop_point, we store it's projection on each graph
+    typedef flat_enum_map<nt::Mode_e, ProjectionData> ProjectionByMode;
+    std::vector<ProjectionByMode> projected_stop_points;
 
     /// Graphe pour effectuer le calcul d'itinéraire
     Graph graph;
@@ -208,28 +209,26 @@ struct GeoRef {
         3) pour la gestion du vélo
         4) pour la gestion de la voiture
     */
-    nt::idx_t vls_offset; // VLS
-    nt::idx_t bike_offset; // Vélo
-    nt::idx_t car_offset; // voiture
+    flat_enum_map<nt::Mode_e, nt::idx_t> offsets;
 
     /// Liste des alias
     std::map<std::string, std::string> alias;
     std::map<std::string, std::string> synonymes;
     int word_weight; //Pas serialisé : lu dans le fichier ini
 
-    GeoRef(): vls_offset(0), bike_offset(0), car_offset(0), word_weight(0){}
+    GeoRef(): word_weight(0){}
 
     void init_offset(nt::idx_t);
 
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & ways & way_map & graph & vls_offset & bike_offset & car_offset & fl_admin & fl_way & pl & projected_stop_points & admins & admin_map &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
+        ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points & admins & admin_map &  pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
     }
 
     template<class Archive> void load(Archive & ar, const unsigned int) {
         // La désérialisation d'une boost adjacency list ne vide pas le graphe
         // On avait donc une fuite de mémoire
         graph.clear();
-        ar & ways & way_map & graph & vls_offset & bike_offset & car_offset & fl_admin & fl_way & pl & projected_stop_points & admins & admin_map & pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
+        ar & ways & way_map & graph & offsets & fl_admin & fl_way & pl & projected_stop_points & admins & admin_map & pois & fl_poi & poitypes &poitype_map & poi_map & alias & synonymes & poi_proximity_list;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
@@ -263,6 +262,13 @@ struct GeoRef {
         Retourne le nombre de stop_points effectivement accrochés
     */
     int project_stop_points(const std::vector<type::StopPoint*> & stop_points);
+
+    /** project the stop point on all transportation mode
+      * return a pair with :
+      * - the projected array
+      * - a boolean corresponding to the fact that at least one projection has been found
+    */
+    std::pair<ProjectionByMode, bool> project_stop_point(const type::StopPoint* stop_point) const;
 
     /** Calcule le meilleur itinéraire entre deux listes de nœuds
      *

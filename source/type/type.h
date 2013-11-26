@@ -16,6 +16,7 @@
 #include <boost/geometry/geometries/polygon.hpp>
 
 #include "datetime.h"
+#include "utils/flat_enum_map.h"
 
 namespace mpl = boost::mpl;
 namespace navitia { namespace georef {
@@ -79,6 +80,7 @@ enum class Mode_e{
     Bike = 1,       // Vélo
     Car = 2,        // Voiture
     Vls = 3         // Vls
+    //Note: if a new transportation mode is added, don't forget to update the associated enum_size_trait<type::Mode_e>
 };
 
 struct PT_Data;
@@ -859,7 +861,16 @@ struct EntryPoint {
     EntryPoint() : type(Type_e::Unknown), house_number(-1) {}
 };
 
-} } //namespace navitia::type
+} //namespace navitia::type
+
+//trait to access the number of elements in the Mode_e enum
+template <>
+struct enum_size_trait<type::Mode_e> {
+    static constexpr typename get_enum_type<type::Mode_e>::type size() {
+        return 4;
+    }
+};
+} //namespace navitia
 
 
 // Adaptateurs permettant d'utiliser boost::geometry avec les geographical coord
