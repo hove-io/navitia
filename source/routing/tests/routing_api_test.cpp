@@ -305,100 +305,101 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     b.data.geo_ref.ways[0]->edges.push_back(std::make_pair(BB, AA));
 
 // A->E
-    boost::add_edge(AA , EE, ng::Edge(1,5), b.data.geo_ref.graph);
-    boost::add_edge(EE , AA, ng::Edge(1,5), b.data.geo_ref.graph);
-    boost::add_edge(AA + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], EE + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(1,5), b.data.geo_ref.graph);
-    boost::add_edge(EE + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], AA + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(1,5), b.data.geo_ref.graph);
+    boost::add_edge(AA , EE, ng::Edge(1,A.distance_to(E)), b.data.geo_ref.graph);
+    boost::add_edge(EE , AA, ng::Edge(1,A.distance_to(E)), b.data.geo_ref.graph);
+    boost::add_edge(AA + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], EE + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(1,A.distance_to(E)), b.data.geo_ref.graph);
+    boost::add_edge(EE + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], AA + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(1,A.distance_to(E)), b.data.geo_ref.graph);
     b.data.geo_ref.ways[1]->edges.push_back(std::make_pair(AA, EE));
     b.data.geo_ref.ways[1]->edges.push_back(std::make_pair(EE, AA));
 
 // E->F
-    boost::add_edge(EE , FF , ng::Edge(2,5), b.data.geo_ref.graph);
-    boost::add_edge(FF , EE , ng::Edge(2,5), b.data.geo_ref.graph);
-    boost::add_edge(EE + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], FF + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(2,5), b.data.geo_ref.graph);
-    boost::add_edge(FF + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], EE + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(2,5), b.data.geo_ref.graph);
+    boost::add_edge(EE , FF , ng::Edge(2,E.distance_to(F)), b.data.geo_ref.graph);
+    boost::add_edge(FF , EE , ng::Edge(2,E.distance_to(F)), b.data.geo_ref.graph);
+    boost::add_edge(EE + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], FF + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(2,E.distance_to(F)), b.data.geo_ref.graph);
+    boost::add_edge(FF + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], EE + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(2,E.distance_to(F)), b.data.geo_ref.graph);
     b.data.geo_ref.ways[2]->edges.push_back(std::make_pair(EE , FF));
     b.data.geo_ref.ways[2]->edges.push_back(std::make_pair(FF , EE));
 
 // F->C
-    boost::add_edge(FF , CC , ng::Edge(3,5), b.data.geo_ref.graph);
-    boost::add_edge(CC , FF , ng::Edge(3,5), b.data.geo_ref.graph);
-    boost::add_edge(FF + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], CC + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(3,5), b.data.geo_ref.graph);
-    boost::add_edge(CC + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], FF + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(3,5), b.data.geo_ref.graph);
+    boost::add_edge(FF , CC , ng::Edge(3,F.distance_to(C)), b.data.geo_ref.graph);
+    boost::add_edge(CC , FF , ng::Edge(3,F.distance_to(C)), b.data.geo_ref.graph);
+    boost::add_edge(FF + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], CC + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(3,F.distance_to(C)), b.data.geo_ref.graph);
+    boost::add_edge(CC + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], FF + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(3,F.distance_to(C)), b.data.geo_ref.graph);
     b.data.geo_ref.ways[3]->edges.push_back(std::make_pair(FF , CC));
     b.data.geo_ref.ways[3]->edges.push_back(std::make_pair(CC , FF));
 
 // C->B
-    boost::add_edge(CC , BB , ng::Edge(4,5), b.data.geo_ref.graph);
-    boost::add_edge(BB , CC , ng::Edge(4,5), b.data.geo_ref.graph);
+    boost::add_edge(CC , BB , ng::Edge(4,C.distance_to(B)), b.data.geo_ref.graph);
+    boost::add_edge(BB , CC , ng::Edge(4,C.distance_to(B)), b.data.geo_ref.graph);
     boost::add_edge(CC + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], BB + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(4,5), b.data.geo_ref.graph);
     boost::add_edge(BB + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], CC + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(4,5), b.data.geo_ref.graph);
     b.data.geo_ref.ways[4]->edges.push_back(std::make_pair(CC , BB));
     b.data.geo_ref.ways[4]->edges.push_back(std::make_pair(BB , CC));
 
 // A->G
-    boost::add_edge(AA , GG , ng::Edge(5,5), b.data.geo_ref.graph);
-    boost::add_edge(GG , AA , ng::Edge(5,5), b.data.geo_ref.graph);
-    boost::add_edge(AA + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], GG + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(5,5), b.data.geo_ref.graph);
-    boost::add_edge(GG + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], AA + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(5,5), b.data.geo_ref.graph);
+    double distance_ag = A.distance_to(G) - .5;//the cost of the edge is a bit less than the distance not to get a conflict with the projection
+    boost::add_edge(AA , GG , ng::Edge(5,distance_ag), b.data.geo_ref.graph);
+    boost::add_edge(GG , AA , ng::Edge(5,distance_ag), b.data.geo_ref.graph);
+    boost::add_edge(AA + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], GG + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(5,distance_ag), b.data.geo_ref.graph);
+    boost::add_edge(GG + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], AA + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(5,distance_ag), b.data.geo_ref.graph);
     b.data.geo_ref.ways[5]->edges.push_back(std::make_pair(AA , GG));
     b.data.geo_ref.ways[5]->edges.push_back(std::make_pair(GG , AA));
 
 // G->H
-    boost::add_edge(GG , HH , ng::Edge(6,5), b.data.geo_ref.graph);
-    boost::add_edge(HH , GG , ng::Edge(6,5), b.data.geo_ref.graph);
-    boost::add_edge(GG + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], HH + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(6,5), b.data.geo_ref.graph);
-    boost::add_edge(HH + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], GG + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(6,5), b.data.geo_ref.graph);
+    boost::add_edge(GG , HH , ng::Edge(6,G.distance_to(H)), b.data.geo_ref.graph);
+    boost::add_edge(HH , GG , ng::Edge(6,G.distance_to(H)), b.data.geo_ref.graph);
+    boost::add_edge(GG + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], HH + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(6,G.distance_to(H)), b.data.geo_ref.graph);
+    boost::add_edge(HH + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], GG + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(6,G.distance_to(H)), b.data.geo_ref.graph);
     b.data.geo_ref.ways[6]->edges.push_back(std::make_pair(GG , HH));
     b.data.geo_ref.ways[6]->edges.push_back(std::make_pair(HH , GG));
 
 // H->I
-    boost::add_edge(HH , II , ng::Edge(7,5), b.data.geo_ref.graph);
-    boost::add_edge(II , HH , ng::Edge(7,5), b.data.geo_ref.graph);
-    boost::add_edge(HH + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], II + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(7,5), b.data.geo_ref.graph);
-    boost::add_edge(II + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], HH + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(7,5), b.data.geo_ref.graph);
+    boost::add_edge(HH , II , ng::Edge(7,H.distance_to(I)), b.data.geo_ref.graph);
+    boost::add_edge(II , HH , ng::Edge(7,H.distance_to(I)), b.data.geo_ref.graph);
+    boost::add_edge(HH + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], II + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(7,H.distance_to(I)), b.data.geo_ref.graph);
+    boost::add_edge(II + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], HH + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(7,H.distance_to(I)), b.data.geo_ref.graph);
     b.data.geo_ref.ways[7]->edges.push_back(std::make_pair(HH , II));
     b.data.geo_ref.ways[7]->edges.push_back(std::make_pair(II , HH));
 
 // I->J
-    boost::add_edge(II , JJ , ng::Edge(8,5), b.data.geo_ref.graph);
-    boost::add_edge(JJ , II , ng::Edge(8,5), b.data.geo_ref.graph);
-    boost::add_edge(II + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], JJ + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(8,5), b.data.geo_ref.graph);
-    boost::add_edge(JJ + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], II + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(8,5), b.data.geo_ref.graph);
+    boost::add_edge(II , JJ , ng::Edge(8,I.distance_to(J)), b.data.geo_ref.graph);
+    boost::add_edge(JJ , II , ng::Edge(8,I.distance_to(J)), b.data.geo_ref.graph);
+    boost::add_edge(II + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], JJ + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(8,I.distance_to(J)), b.data.geo_ref.graph);
+    boost::add_edge(JJ + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], II + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(8,I.distance_to(J)), b.data.geo_ref.graph);
     b.data.geo_ref.ways[8]->edges.push_back(std::make_pair(II , JJ));
     b.data.geo_ref.ways[8]->edges.push_back(std::make_pair(JJ , II));
 
 // J->K
-    boost::add_edge(JJ , KK , ng::Edge(9,5), b.data.geo_ref.graph);
-    boost::add_edge(KK , JJ , ng::Edge(9,5), b.data.geo_ref.graph);
-    boost::add_edge(JJ + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], KK + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(9,5), b.data.geo_ref.graph);
-    boost::add_edge(KK + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], JJ + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(9,5), b.data.geo_ref.graph);
+    boost::add_edge(JJ , KK , ng::Edge(9,J.distance_to(K)), b.data.geo_ref.graph);
+    boost::add_edge(KK , JJ , ng::Edge(9,J.distance_to(K)), b.data.geo_ref.graph);
+    boost::add_edge(JJ + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], KK + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(9,J.distance_to(K)), b.data.geo_ref.graph);
+    boost::add_edge(KK + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], JJ + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(9,J.distance_to(K)), b.data.geo_ref.graph);
     b.data.geo_ref.ways[9]->edges.push_back(std::make_pair(JJ , KK));
     b.data.geo_ref.ways[9]->edges.push_back(std::make_pair(KK , JJ));
 
 // K->B
-    boost::add_edge(KK , BB , ng::Edge(10,5), b.data.geo_ref.graph);
-    boost::add_edge(BB , KK , ng::Edge(10,5), b.data.geo_ref.graph);
-    boost::add_edge(KK + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], BB + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(10,5), b.data.geo_ref.graph);
-    boost::add_edge(BB + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], KK + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(10,5), b.data.geo_ref.graph);
+    boost::add_edge(KK , BB , ng::Edge(10,K.distance_to(B)), b.data.geo_ref.graph);
+    boost::add_edge(BB , KK , ng::Edge(10,K.distance_to(B)), b.data.geo_ref.graph);
+    boost::add_edge(KK + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], BB + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(10,K.distance_to(B)), b.data.geo_ref.graph);
+    boost::add_edge(BB + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], KK + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(10,K.distance_to(B)), b.data.geo_ref.graph);
     b.data.geo_ref.ways[10]->edges.push_back(std::make_pair(KK , BB));
     b.data.geo_ref.ways[10]->edges.push_back(std::make_pair(BB , KK));
 
 // A->R
-    boost::add_edge(AA, RR, ng::Edge(11,10), b.data.geo_ref.graph);
-    boost::add_edge(RR, AA, ng::Edge(11,10), b.data.geo_ref.graph);
+    boost::add_edge(AA, RR, ng::Edge(11,A.distance_to(R)), b.data.geo_ref.graph);
+    boost::add_edge(RR, AA, ng::Edge(11,A.distance_to(R)), b.data.geo_ref.graph);
     b.data.geo_ref.ways[11]->edges.push_back(std::make_pair(AA, RR));
     b.data.geo_ref.ways[11]->edges.push_back(std::make_pair(RR, AA));
 
 // B->S
-    boost::add_edge(BB, SS, ng::Edge(12,10), b.data.geo_ref.graph);
-    boost::add_edge(SS, BB, ng::Edge(12,10), b.data.geo_ref.graph);
+    boost::add_edge(BB, SS, ng::Edge(12,B.distance_to(S)), b.data.geo_ref.graph);
+    boost::add_edge(SS, BB, ng::Edge(12,B.distance_to(S)), b.data.geo_ref.graph);
     b.data.geo_ref.ways[12]->edges.push_back(std::make_pair(BB, SS));
     b.data.geo_ref.ways[12]->edges.push_back(std::make_pair(SS, BB));
-    boost::add_edge(BB + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], SS + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(12,5), b.data.geo_ref.graph);
-    boost::add_edge(SS + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], BB + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(12,5), b.data.geo_ref.graph);
-    boost::add_edge(BB + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], SS + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(12,5), b.data.geo_ref.graph);
-    boost::add_edge(SS + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], BB + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(12,5), b.data.geo_ref.graph);
+    boost::add_edge(BB + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], SS + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(12,B.distance_to(S)), b.data.geo_ref.graph);
+    boost::add_edge(SS + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], BB + b.data.geo_ref.offsets[navitia::type::Mode_e::Bike], ng::Edge(12,B.distance_to(S)), b.data.geo_ref.graph);
+    boost::add_edge(BB + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], SS + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(12,B.distance_to(S)), b.data.geo_ref.graph);
+    boost::add_edge(SS + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], BB + b.data.geo_ref.offsets[navitia::type::Mode_e::Car], ng::Edge(12,B.distance_to(S)), b.data.geo_ref.graph);
 
     b.sa("stopA", A.lon(), A.lat());
     b.sa("stopR", R.lon(), R.lat());
@@ -469,7 +470,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     BOOST_REQUIRE_EQUAL(section.destination().address().name(), "rue ag");
     BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 10);
     BOOST_REQUIRE_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Bike);
-    BOOST_REQUIRE_EQUAL(section.street_network().length(), 30);
+    BOOST_REQUIRE_EQUAL(section.street_network().length(), 19);
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 6);
 
     pathitem = section.street_network().path_items(0);
@@ -485,7 +486,7 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     pathitem = section.street_network().path_items(5);
     BOOST_REQUIRE_EQUAL(pathitem.name(), "rue ag");
 
-// Voiture
+    // Car
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Car;
     origin.streetnetwork_params.offset = b.data.geo_ref.offsets[navitia::type::Mode_e::Car];
     origin.streetnetwork_params.speed = 13;
@@ -502,17 +503,17 @@ BOOST_AUTO_TEST_CASE(journey_streetnetworkmode){
     section = journey.sections(0);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::STREET_NETWORK);
     BOOST_REQUIRE_EQUAL(section.origin().address().name(), "rue cb");
-    BOOST_REQUIRE_EQUAL(section.destination().address().name(), "rue ae");
-    BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 8);
+    BOOST_REQUIRE_EQUAL(section.destination().address().name(), "rue fc");
+    BOOST_REQUIRE_EQUAL(section.street_network().coordinates_size(), 6);
     BOOST_REQUIRE_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Car);
-    BOOST_REQUIRE_EQUAL(section.street_network().length(), 20);
-    BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 4);
+    BOOST_REQUIRE_EQUAL(section.street_network().length(), 7);
+    BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 2);
+    //since R is not accessible by car, we project R in the closest edge in the car graph
+    //this edge is F-C, so this is the end of the journey (the rest of it is as the crow flies)
     pathitem = section.street_network().path_items(0);
     BOOST_REQUIRE_EQUAL(pathitem.name(), "rue cb");
     pathitem = section.street_network().path_items(1);
     BOOST_REQUIRE_EQUAL(pathitem.name(), "rue fc");
-    pathitem = section.street_network().path_items(2);
-    BOOST_REQUIRE_EQUAL(pathitem.name(), "rue ef");
 }
 
 
