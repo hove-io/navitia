@@ -195,8 +195,9 @@ struct GeoRef {
     /// Indexe tous les nœuds
     proximitylist::ProximityList<vertex_t> pl;
 
-    /// Pour chaque stop_point, on associe la projection sur le filaire
-    std::vector<ProjectionData> projected_stop_points;
+    /// for all stop_point, we store it's projection on each graph
+    typedef flat_enum_map<nt::Mode_e, ProjectionData> ProjectionByMode;
+    std::vector<ProjectionByMode> projected_stop_points;
 
     /// Graphe pour effectuer le calcul d'itinéraire
     Graph graph;
@@ -209,9 +210,6 @@ struct GeoRef {
         4) pour la gestion de la voiture
     */
     flat_enum_map<nt::Mode_e, nt::idx_t> offsets;
-//    nt::idx_t offsets[navitia::type::Mode_e::Vls];
-//    nt::idx_t offsets[TransportationMode::Bike];
-//    nt::idx_t offsets[TransportationMode::Car];
 
     /// Liste des alias
     std::map<std::string, std::string> alias;
@@ -264,6 +262,13 @@ struct GeoRef {
         Retourne le nombre de stop_points effectivement accrochés
     */
     int project_stop_points(const std::vector<type::StopPoint*> & stop_points);
+
+    /** project the stop point on all transportation mode
+      * return a pair with :
+      * - the projected array
+      * - a boolean corresponding to the fact that at least one projection has been found
+    */
+    std::pair<ProjectionByMode, bool> project_stop_point(const type::StopPoint* stop_point) const;
 
     /** Calcule le meilleur itinéraire entre deux listes de nœuds
      *

@@ -549,13 +549,31 @@ int GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_points
     int matched = 0;
     this->projected_stop_points.clear();
     this->projected_stop_points.reserve(stop_points.size());
-    for(const type::StopPoint* stop_point : stop_points){
-        ProjectionData proj(stop_point->coord, *this, this->pl);
-        this->projected_stop_points.push_back(proj);
-        if(proj.found)
+
+    for(const type::StopPoint* stop_point : stop_points) {
+        std::pair<GeoRef::ProjectionByMode, bool> pair = project_stop_point(stop_point);
+
+        this->projected_stop_points.push_back(pair.first);
+        if(pair.second)
             matched++;
     }
     return matched;
+}
+
+std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type::StopPoint* stop_point) const {
+    bool one_proj_found = false;
+    ProjectionByMode projections;
+
+    for (const auto& pair : offsets) {
+        type::idx_t offset = pair.second;
+        type::Mode_e transportation_mode = pair.first;
+
+        ProjectionData proj(stop_point->coord, *this, offset, this->pl);
+        projections[transportation_mode] = proj;
+        if(proj.found)
+            one_proj_found = true;
+    }
+    return {projections, one_proj_found};
 }
 
 edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates) const {
