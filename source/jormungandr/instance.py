@@ -4,7 +4,7 @@ import Queue
 from threading import Lock
 import zmq
 import response_pb2
-
+import logging
 
 class Instance(object):
     def __init__(self, context):
