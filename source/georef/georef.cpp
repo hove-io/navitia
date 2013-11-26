@@ -318,11 +318,6 @@ void ProjectionData::init(const type::GeographicalCoord & coord, const GeoRef & 
     this->target_distance = projected.distance_to(vertex2_coord);
 }
 
-void ProjectionData::inc_vertex(const vertex_t value){
-    this->source += value;
-    this->target += value;
-}
-
 
 Path GeoRef::compute(const type::GeographicalCoord & start_coord, const type::GeographicalCoord & dest_coord) const{
     ProjectionData start(start_coord, *this, this->pl);

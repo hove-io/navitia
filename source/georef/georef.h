@@ -331,7 +331,6 @@ struct DestinationNotFound{};
 // Visiteur qui lève une exception dès qu'une des cibles souhaitées est atteinte
 struct target_visitor : public boost::dijkstra_visitor<> {
     const std::vector<vertex_t> & destinations;
-    size_t cpt;
     target_visitor(const std::vector<vertex_t> & destinations) : destinations(destinations){}
     void finish_vertex(vertex_t u, const Graph&){
         if(std::find(destinations.begin(), destinations.end(), u) != destinations.end())
@@ -374,12 +373,11 @@ struct ProjectionData {
     double target_distance;
 
     ProjectionData() : found(false), source_distance(-1), target_distance(-1){}
-    /// Initialise la structure à partir d'une coordonnée et d'un graphe sur lequel on projette
+    /// Project the coordinate on the graph
     ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, const proximitylist::ProximityList<vertex_t> &prox);
-    /// Initialise la structure à partir d'une coordonnée, d'un graphe sur lequel on projette et d'un offset qui correspond au mode de transport
+    /// Project the coordinate on the graph corresponding to the transportation mode of the offset
     ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, type::idx_t offset, const proximitylist::ProximityList<vertex_t> &prox);
-    /// Incrémentation des noeuds suivant le mode de transport au début et à la fin : marche, vélo ou voiture
-    void inc_vertex(const vertex_t);    
+
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & source & target & projected & source_distance & target_distance & found;
     }
