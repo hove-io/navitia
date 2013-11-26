@@ -315,10 +315,10 @@ struct raptor_visitor {
         return a + b;
     }
 
-    constexpr bool clockwise(){return true;}
-    constexpr int init_queue_item() {return std::numeric_limits<int>::max();}
-    constexpr DateTime worst_datetime(){return DateTimeUtils::inf;}
-    constexpr type::JourneyPatternPoint* type::JourneyPatternPointConnection::* journey_pattern_point(){return &type::JourneyPatternPointConnection::destination;}
+    constexpr bool clockwise() const{return true;}
+    constexpr int init_queue_item() const{return std::numeric_limits<int>::max();}
+    constexpr DateTime worst_datetime() const{return DateTimeUtils::inf;}
+    constexpr type::JourneyPatternPoint* type::JourneyPatternPointConnection::* journey_pattern_point() const{return &type::JourneyPatternPointConnection::destination;}
 };
 
 
@@ -351,10 +351,10 @@ struct raptor_reverse_visitor {
         return a - b;
     }
 
-    constexpr bool clockwise() {return false;}
-    constexpr int init_queue_item() {return -1;}
-    constexpr DateTime worst_datetime(){return DateTimeUtils::min;}
-    constexpr type::JourneyPatternPoint* type::JourneyPatternPointConnection::* journey_pattern_point(){return &type::JourneyPatternPointConnection::departure;}
+    constexpr bool clockwise() const{return false;}
+    constexpr int init_queue_item() const{return -1;}
+    constexpr DateTime worst_datetime() const{return DateTimeUtils::min;}
+    constexpr type::JourneyPatternPoint* type::JourneyPatternPointConnection::* journey_pattern_point() const{return &type::JourneyPatternPointConnection::departure;}
 };
 
 
