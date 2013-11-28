@@ -306,6 +306,7 @@ class Journeys(ResourceUri):
 #a supprimer
         parser_get.add_argument("max_duration", type=int, default=36000)
         parser_get.add_argument("wheelchair", type=boolean, default=False)
+        parser_get.add_argument("debug", type=boolean, default=False, hidden=True)
         self.method_decorators.append(add_notes(self))
         self.method_decorators.append(update_journeys_status(self))
 
