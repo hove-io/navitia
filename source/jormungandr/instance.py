@@ -5,9 +5,11 @@ from threading import Lock
 import zmq
 import response_pb2
 import logging
+from jormungandr_exceptions import DeadSocketException
+
 
 class Instance(object):
-    def __init__(self, context):
+    def __init__(self, context, name):
         self.geom = None
         self._sockets = Queue.Queue()
         self.socket_path = None
@@ -15,6 +17,7 @@ class Instance(object):
         self.nb_created_socket = 0
         self.lock = Lock()
         self.context = context
+        self.name = name
 
 
     @contextmanager
@@ -48,6 +51,6 @@ class Instance(object):
                 socket.close()
                 logging.error(u"La requête : " + unicode(request)
                         + u" a echoue " + self.socket_path)
-                raise DeadSocketException(region, self.socket_path)
+                raise DeadSocketException(self.name, self.socket_path)
 
 

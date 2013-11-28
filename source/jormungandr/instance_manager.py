@@ -46,7 +46,7 @@ class InstanceManager(object):
             logging.info("Initialisation, reading file : " + file_name)
             conf = ConfigParser.ConfigParser()
             conf.read(file_name)
-            instance = Instance(self.context)
+            instance = Instance(self.context, conf.get('instance' , 'key'))
             instance.socket_path = conf.get('instance' , 'socket')
             if conf.has_option('instance', 'script') :
                 instance.script = importlib.import_module(conf.get('instance','script')).Script()
