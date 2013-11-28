@@ -491,6 +491,10 @@ void EdReader::fill_stop_point_connections(nt::Data& data, pqxx::work& work){
             }
 
             data.pt_data.stop_point_connections.push_back(stop_point_connection);
+
+            //add the connection in the stop points
+            stop_point_connection->departure->stop_point_connection_list.push_back(stop_point_connection);
+            stop_point_connection->destination->stop_point_connection_list.push_back(stop_point_connection);
         }
     }
 }
@@ -865,10 +869,10 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work){
                 data.geo_ref.ways[way->idx]->edges.push_back(std::make_pair(source, target));
                 boost::add_edge(source, target, e, data.geo_ref.graph);
                 if (const_it["bike"].as<bool>()){
-                    boost::add_edge(data.geo_ref.bike_offset + source, data.geo_ref.bike_offset + target, e, data.geo_ref.graph);
+                    boost::add_edge(data.geo_ref.offsets[navitia::type::Mode_e::Bike] + source, data.geo_ref.offsets[navitia::type::Mode_e::Bike] + target, e, data.geo_ref.graph);
                 }
                 if (const_it["car"].as<bool>()){
-                    boost::add_edge(data.geo_ref.car_offset + source, data.geo_ref.car_offset + target, e, data.geo_ref.graph);
+                    boost::add_edge(data.geo_ref.offsets[navitia::type::Mode_e::Car] + source, data.geo_ref.offsets[navitia::type::Mode_e::Car] + target, e, data.geo_ref.graph);
                 }
             }
         }
@@ -894,8 +898,8 @@ void EdReader::fill_graph_vls(navitia::type::Data& data, pqxx::work& work){
             navitia::georef::Edge edge;
             edge.length = 0;
             edge.way_idx = data.geo_ref.graph[e].way_idx;
-            boost::add_edge(v + data.geo_ref.vls_offset, v + data.geo_ref.bike_offset, edge, data.geo_ref.graph);
-            boost::add_edge(v + data.geo_ref.bike_offset, v + data.geo_ref.vls_offset, edge, data.geo_ref.graph);
+            boost::add_edge(v + data.geo_ref.offsets[navitia::type::Mode_e::Vls], v + data.geo_ref.offsets[navitia::type::Mode_e::Bike], edge, data.geo_ref.graph);
+            boost::add_edge(v + data.geo_ref.offsets[navitia::type::Mode_e::Bike], v + data.geo_ref.offsets[navitia::type::Mode_e::Vls], edge, data.geo_ref.graph);
         }catch(...){
             std::cout<<"Impossible de trouver le noued le plus proche à la station vls poi_id = "<<const_it["id"].as<std::string>()<<std::endl;
         }

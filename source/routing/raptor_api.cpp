@@ -2,6 +2,8 @@
 #include "type/pb_converter.h"
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "type/datetime.h"
+#include <unordered_set>
+#include <chrono>
 
 
 namespace navitia { namespace routing {
@@ -155,7 +157,7 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         if(path.items.size() > 0 && path.items.back().stop_points.size() > 0) {
             auto temp = worker.get_path(path.items.back().stop_points.back(), true);
             if(temp.path_items.size() > 0) {
-                //add a junction between the routing path and the walking one if needed
+               //add a junction between the routing path and the walking one if needed
                 nt::GeographicalCoord routing_last_coord = d.pt_data.stop_points[path.items.back().stop_points.back()]->coord;
                 if (temp.coordinates.front() != routing_last_coord) {
                     temp.coordinates.push_front(routing_last_coord);
@@ -163,12 +165,11 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
 
                 pbnavitia::Section* pb_section = pb_journey->add_sections();
                 fill_street_section(destination, temp, d, pb_section, 1);
-
                 auto begin_section_time = arrival_time;
                 const auto str_begin = iso_string(begin_section_time, d);
                 pb_section->set_begin_date_time(str_begin);
                 const auto walking_time = temp.length / destination.streetnetwork_params.speed;
-                arrival_time =  arrival_time + walking_time;
+                arrival_time = arrival_time + walking_time;
                 const auto str_end = iso_string(arrival_time, d);
                 pb_section->set_end_date_time(str_end);
                 pb_section->set_duration(arrival_time - begin_section_time);
@@ -180,12 +181,11 @@ pbnavitia::Response make_pathes(const std::vector<navitia::routing::Path>& paths
         pb_journey->set_arrival_date_time(str_arrival);
         pb_journey->set_duration(arrival_time - departure_time);
     }
-    if (pb_response.journeys().size() == 0) {
+
+	if (pb_response.journeys().size() == 0) {
         fill_pb_error(pbnavitia::Error::no_solution, "no solution found for this journey",
         pb_response.mutable_error());
         pb_response.set_response_type(pbnavitia::NO_SOLUTION);
-
-        return pb_response;
     }
 
     return pb_response;
@@ -196,6 +196,10 @@ std::vector<std::pair<type::idx_t, double> >
 get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
         streetnetwork::StreetNetwork & worker, bool use_second = false){
     std::vector<std::pair<type::idx_t, double> > result;
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    LOG4CPLUS_DEBUG(logger, "calcul des stop points pour l'entry point : [" << ep.coordinates.lat()
+              << "," << ep.coordinates.lon() << "]");
+    bool init_done = false;
     if(ep.type == type::Type_e::StopArea){
         auto it = pt_data.stop_areas_map.find(ep.uri);
         if(it!= pt_data.stop_areas_map.end()) {
@@ -210,13 +214,48 @@ get_stop_points( const type::EntryPoint &ep, const type::PT_Data & pt_data,
         }
     }else if(ep.type == type::Type_e::Address
                 || ep.type == type::Type_e::Coord || ep.type == type::Type_e::Admin){
+        init_done = true;
         result = worker.find_nearest_stop_points(ep.coordinates,
                 pt_data.stop_point_proximity_list,
                 ep.streetnetwork_params.distance, use_second,
-                ep.streetnetwork_params.offset);
+                ep.streetnetwork_params.mode);
     }
-    //On va chercher tous les journey_pattern_points en correspondance
+    //On va chercher tous les stop_points en correspondance
     //avec ceux déjà trouvés.
+    std::vector<std::pair<type::idx_t, double> > tmp_result;
+    std::unordered_set<type::idx_t> visited_stop_points;
+    for (const auto & sp_idx_distance : result) { visited_stop_points.insert(sp_idx_distance.first); }
+
+    for(const auto & sp_idx_distance : result) {
+        const auto sp_idx = sp_idx_distance.first;
+        const auto stop_point = pt_data.stop_points[sp_idx];
+        const auto connections_idx = stop_point->get(type::Type_e::StopPointConnection, pt_data);
+        for(const auto connection_idx : connections_idx) {
+            const auto* connection = pt_data.stop_point_connections[connection_idx];
+
+            const auto destination = connection->destination;
+            if (visited_stop_points.find(destination->idx) != visited_stop_points.end()) {
+                continue;
+            }
+            visited_stop_points.insert(destination->idx);
+
+            auto distance = worker.get_distance(ep.coordinates, destination->idx,
+                                        use_second, ep.streetnetwork_params.mode,
+                                        init_done);
+            /*
+             * On mettra ce traitement quand on aura trouvé un moyen de refaire path...
+             * if(distance == std::numeric_limits<double>::max()) {
+            //Fallback si le stop point n'est pas rattaché au filaire de voirie
+            //On recalcule une distance en pensant qu'on marche à 1.68 m/s
+                distance = connection.duration * 1.68
+            }*/
+
+            tmp_result.push_back({destination->idx, distance});
+            init_done = true;
+        }
+    }
+
+    result.insert(result.end(), tmp_result.begin(), tmp_result.end());
     return result;
 }
 
