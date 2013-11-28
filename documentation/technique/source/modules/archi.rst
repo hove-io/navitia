@@ -27,7 +27,9 @@ Le modéle de la base est disponible dans "documentation/annexe/model.architect"
 
 gtfs2ed
 ~~~~~~~
-gtfs2ed est responsable de l'intégration d'un fichier gtfs++ dans ED
+gtfs2ed est responsable de l'intégration d'un fichier gtfs++ dans ED.
+
+Il est aussi le responsable de création de toutes les correspondances entre les codes externes NAViTiA 1 et les URIs NAViTiA2 sous la forme (clef,valeur), ces correspndances **doivent être persistantes** et exposées via REDIS au connecteur temps réel.
 
 osm2ed
 ~~~~~~
@@ -85,6 +87,9 @@ ce qui permet à toutes les instances intéressé de pouvoir recevoir ces flux.
 Les éléments insérés dans l'exchange **doivent etre persistant** ce qui se réalise en fixant la propriété *delivry_mode* à **2**.
 Ceci permettra à Sindri de gérer la reprise sur incident
 
+Correspondance entre codes externes et uris
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Lors de la construction des messages par le connecteur temps réel, ce dernier récupère l'URI de chaque objet TC qui correspond au code externe à partir des données exposées par REDIS.
 
 Brokk
 -----
